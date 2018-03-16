@@ -4,19 +4,21 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.testing.cache;
+package org.hibernate.cache.jcache.internal;
+
+import javax.cache.Cache;
 
 import org.hibernate.cache.cfg.spi.CollectionDataCachingConfig;
 import org.hibernate.cache.cfg.spi.DomainDataRegionBuildingContext;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
 import org.hibernate.cache.cfg.spi.EntityDataCachingConfig;
 import org.hibernate.cache.cfg.spi.NaturalIdDataCachingConfig;
-import org.hibernate.cache.spi.support.AbstractDomainDataRegion;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
+import org.hibernate.cache.spi.support.AbstractDomainDataRegion;
 import org.hibernate.cache.spi.support.CollectionNonStrictReadWriteAccess;
 import org.hibernate.cache.spi.support.CollectionReadOnlyAccess;
 import org.hibernate.cache.spi.support.CollectionReadWriteAccess;
@@ -40,19 +42,22 @@ public class DomainDataRegionImpl extends AbstractDomainDataRegion {
 
 	public DomainDataRegionImpl(
 			DomainDataRegionConfig regionConfig,
-			CachingRegionFactory regionFactory,
+			JCacheRegionFactory regionFactory,
+			Cache underlyingCache,
 			DomainDataRegionBuildingContext buildingContext) {
-		super( regionConfig, regionFactory, new DomainDataStorageAccessImpl(), buildingContext );
+		super(
+				regionConfig,
+				regionFactory,
+				new DomainDataJCacheAccessImpl( underlyingCache ),
+				buildingContext
+		);
 
-		this.effectiveKeysFactory = buildingContext.getEnforcedCacheKeysFactory() != null
-				? buildingContext.getEnforcedCacheKeysFactory()
-				: regionFactory.getCacheKeysFactory();
+		this.effectiveKeysFactory = regionFactory.determineKeysFactoryToUse( buildingContext );
 	}
 
 	public CacheKeysFactory getEffectiveKeysFactory() {
 		return effectiveKeysFactory;
 	}
-
 
 	@Override
 	public EntityDataAccess generateEntityAccess(EntityDataCachingConfig entityAccessConfig) {
@@ -66,7 +71,7 @@ public class DomainDataRegionImpl extends AbstractDomainDataRegion {
 				return new EntityReadOnlyAccess(
 						this,
 						effectiveKeysFactory,
-						new DomainDataStorageAccessImpl(),
+						getStorageAccess(),
 						entityAccessConfig
 				);
 			}
@@ -74,7 +79,7 @@ public class DomainDataRegionImpl extends AbstractDomainDataRegion {
 				return new EntityReadWriteAccess(
 						this,
 						effectiveKeysFactory,
-						new DomainDataStorageAccessImpl(),
+						getStorageAccess(),
 						entityAccessConfig
 				);
 			}
@@ -82,22 +87,27 @@ public class DomainDataRegionImpl extends AbstractDomainDataRegion {
 				return new EntityNonStrictReadWriteAccess(
 						this,
 						effectiveKeysFactory,
-						new DomainDataStorageAccessImpl(),
+						getStorageAccess(),
 						entityAccessConfig
 				);
 			}
 			case TRANSACTIONAL: {
-				return new EntityTransactionalAccess(
-						this,
-						effectiveKeysFactory,
-						new DomainDataStorageAccessImpl(),
-						entityAccessConfig
-				);
+				return generateTransactionalEntityDataAccess( this, entityAccessConfig );
 			}
 			default: {
 				throw new IllegalArgumentException( "Unrecognized cache AccessType - " + accessType );
 			}
 		}
+	}
+
+	protected EntityDataAccess generateTransactionalEntityDataAccess(
+			DomainDataRegionImpl domainDataRegion,
+			EntityDataCachingConfig entityAccessConfig) {
+		throw generateTransactionalNotSupportedException();
+	}
+
+	private UnsupportedOperationException generateTransactionalNotSupportedException() {
+		return new UnsupportedOperationException( "Cache provider [" + getRegionFactory() + "] does not support `" + AccessType.TRANSACTIONAL.getExternalName() + "` access" );
 	}
 
 	@Override
@@ -112,7 +122,7 @@ public class DomainDataRegionImpl extends AbstractDomainDataRegion {
 				return new NaturalIdReadOnlyAccess(
 						this,
 						effectiveKeysFactory,
-						new DomainDataStorageAccessImpl(),
+						getStorageAccess(),
 						naturalIdDataCachingConfig
 				);
 			}
@@ -120,7 +130,7 @@ public class DomainDataRegionImpl extends AbstractDomainDataRegion {
 				return new NaturalIdReadWriteAccess(
 						this,
 						effectiveKeysFactory,
-						new DomainDataStorageAccessImpl(),
+						getStorageAccess(),
 						naturalIdDataCachingConfig
 				);
 			}
@@ -128,22 +138,23 @@ public class DomainDataRegionImpl extends AbstractDomainDataRegion {
 				return new NaturalIdNonStrictReadWriteAccess(
 						this,
 						effectiveKeysFactory,
-						new DomainDataStorageAccessImpl(),
+						getStorageAccess(),
 						naturalIdDataCachingConfig
 				);
 			}
 			case TRANSACTIONAL: {
-				return new NaturalIdTransactionalAccess(
-						this,
-						effectiveKeysFactory,
-						new DomainDataStorageAccessImpl(),
-						naturalIdDataCachingConfig
-				);
+				return generateTransactionalNaturalIdDataAccess( this, naturalIdDataCachingConfig );
 			}
 			default: {
 				throw new IllegalArgumentException( "Unrecognized cache AccessType - " + accessType );
 			}
 		}
+	}
+
+	protected NaturalIdDataAccess generateTransactionalNaturalIdDataAccess(
+			DomainDataRegionImpl domainDataRegion,
+			NaturalIdDataCachingConfig config) {
+		throw generateTransactionalNotSupportedException();
 	}
 
 	@Override
@@ -157,7 +168,7 @@ public class DomainDataRegionImpl extends AbstractDomainDataRegion {
 				return new CollectionReadOnlyAccess(
 						this,
 						effectiveKeysFactory,
-						new DomainDataStorageAccessImpl(),
+						getStorageAccess(),
 						config
 				);
 			}
@@ -165,7 +176,7 @@ public class DomainDataRegionImpl extends AbstractDomainDataRegion {
 				return new CollectionReadWriteAccess(
 						this,
 						effectiveKeysFactory,
-						new DomainDataStorageAccessImpl(),
+						getStorageAccess(),
 						config
 				);
 			}
@@ -173,21 +184,22 @@ public class DomainDataRegionImpl extends AbstractDomainDataRegion {
 				return new CollectionNonStrictReadWriteAccess(
 						this,
 						effectiveKeysFactory,
-						new DomainDataStorageAccessImpl(),
+						getStorageAccess(),
 						config
 				);
 			}
 			case TRANSACTIONAL: {
-				return new CollectionTransactionAccess(
-						this,
-						effectiveKeysFactory,
-						new DomainDataStorageAccessImpl(),
-						config
-				);
+				return generateTransactionalCollectionDataAccess( this, config );
 			}
 			default: {
 				throw new IllegalArgumentException( "Unrecognized cache AccessType - " + config.getAccessType() );
 			}
 		}
+	}
+
+	protected CollectionDataAccess generateTransactionalCollectionDataAccess(
+			DomainDataRegionImpl domainDataRegion,
+			CollectionDataCachingConfig entityAccessConfig) {
+		throw generateTransactionalNotSupportedException();
 	}
 }

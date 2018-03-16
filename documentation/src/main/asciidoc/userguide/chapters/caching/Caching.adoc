@@ -525,7 +525,7 @@ To use the `JCacheRegionFactory`, you need to specify the following configuratio
 ----
 <property
     name="hibernate.cache.region.factory_class"
-    value="org.hibernate.cache.jcache.JCacheRegionFactory"/>
+    value="jcache"/>
 ----
 ====
 

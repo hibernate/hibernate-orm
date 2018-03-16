@@ -17,7 +17,6 @@ import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.cache.CachingRegionFactory;
-import org.hibernate.testing.cache.EntityReadWriteAccess;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 

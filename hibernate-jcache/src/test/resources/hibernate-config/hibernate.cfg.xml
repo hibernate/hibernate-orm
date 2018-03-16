@@ -19,7 +19,7 @@
         <property name="cache.use_query_cache">true</property>
         <property name="cache.use_second_level_cache">true</property>
         <property name="cache.use_structured_entries">true</property>
-        <property name="cache.region.factory_class">org.hibernate.cache.jcache.JCacheRegionFactory</property>
+        <property name="cache.region.factory_class">jcache</property>
         <property name="net.sf.ehcache.configurationResourceName">/hibernate-config/ehcache.xml</property>
         <!-- Echo all executed SQL to stdout -->
         <property name="show_sql">true</property>

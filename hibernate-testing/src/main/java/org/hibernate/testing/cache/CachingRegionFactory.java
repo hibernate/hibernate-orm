@@ -15,14 +15,13 @@ import org.hibernate.cache.cfg.spi.DomainDataRegionBuildingContext;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.spi.CacheKeysFactory;
-import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.cache.spi.DomainDataRegion;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cache.spi.support.RegionNameQualifier;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import org.jboss.logging.Logger;
 
@@ -38,6 +37,7 @@ public class CachingRegionFactory implements RegionFactory {
 	private final CacheKeysFactory cacheKeysFactory;
 
 	private Properties properties;
+	private SessionFactoryOptions options;
 
 	public CachingRegionFactory() {
 		this( DefaultCacheKeysFactory.INSTANCE, null );
@@ -63,6 +63,7 @@ public class CachingRegionFactory implements RegionFactory {
 
 	@Override
 	public void start(SessionFactoryOptions settings, Map configValues) throws CacheException {
+		options = settings;
 	}
 
 	@Override
@@ -83,6 +84,11 @@ public class CachingRegionFactory implements RegionFactory {
 	}
 
 	@Override
+	public String qualify(String regionName) {
+		return RegionNameQualifier.INSTANCE.qualify( regionName, options );
+	}
+
+	@Override
 	public long nextTimestamp() {
 //		return System.currentTimeMillis();
 		return Timestamper.next();
@@ -91,11 +97,6 @@ public class CachingRegionFactory implements RegionFactory {
 	@Override
 	public long getTimeout() {
 		return Timestamper.ONE_MS * 60000;
-	}
-
-	@Override
-	public CacheTransactionSynchronization createTransactionContext(SharedSessionContractImplementor session) {
-		return new CacheTransactionSynchronizationImpl( this );
 	}
 
 	@Override
@@ -109,14 +110,14 @@ public class CachingRegionFactory implements RegionFactory {
 	public QueryResultsRegion buildQueryResultsRegion(
 			String regionName,
 			SessionFactoryImplementor sessionFactory) {
-		return new QueryResultsRegionImpl( regionName, sessionFactory );
+		return new QueryResultsRegionImpl( regionName, this );
 	}
 
 	@Override
 	public TimestampsRegion buildTimestampsRegion(
 			String regionName,
 			SessionFactoryImplementor sessionFactory) {
-		return new TimestampsRegionImpl( regionName, sessionFactory );
+		return new TimestampsRegionImpl( regionName, this );
 	}
 
 }

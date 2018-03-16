@@ -59,7 +59,11 @@ public interface RegionFactory extends Service, Stoppable {
 	 */
 	AccessType getDefaultAccessType();
 
-	CacheTransactionSynchronization createTransactionContext(SharedSessionContractImplementor session);
+	String qualify(String regionName);
+
+	default CacheTransactionSynchronization createTransactionContext(SharedSessionContractImplementor session) {
+		return new StandardCacheTransactionSynchronization( this );
+	}
 
 	/**
 	 * Generate a timestamp.  This value is generally used for purpose of

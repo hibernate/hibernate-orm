@@ -729,6 +729,8 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			List result = q.getResultList();
 			assertNotNull( result );
 			assertEquals( 1, result.size() );
+
+			em.getTransaction().commit();
 		}
 		catch (Exception e){
 			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
@@ -765,6 +767,8 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			List result = q.getResultList();
 			assertNotNull( result );
 			assertEquals( 1, result.size() );
+
+			em.getTransaction().commit();
 		}
 		catch (Exception e){
 			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
@@ -800,6 +804,8 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			List result = q.getResultList();
 			assertNotNull( result );
 			assertEquals( 1, result.size() );
+
+			em.getTransaction().commit();
 		}
 		catch (Exception e){
 			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {

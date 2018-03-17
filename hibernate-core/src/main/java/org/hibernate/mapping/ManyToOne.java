@@ -32,6 +32,7 @@ public class ManyToOne extends ToOne {
 				getReferencedEntityName(),
 				referenceToPrimaryKey, 
 				getReferencedPropertyName(),
+				getPropertyName(),
 				isLazy(),
 				isUnwrapProxy(),
 				isIgnoreNotFound(),

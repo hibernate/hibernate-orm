@@ -16,10 +16,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.jdbc.Size;
-import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.*;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.Loadable;
 
 /**
  * A many-to-one association to an entity.
@@ -27,6 +26,7 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Gavin King
  */
 public class ManyToOneType extends EntityType {
+	private final String propertyName;
 	private final boolean ignoreNotFound;
 	private boolean isLogicalOneToOne;
 
@@ -54,7 +54,7 @@ public class ManyToOneType extends EntityType {
 
 
 	/**
-	 * @deprecated Use {@link #ManyToOneType(TypeFactory.TypeScope, String, boolean, String, boolean, boolean, boolean, boolean ) } instead.
+	 * @deprecated Use {@link #ManyToOneType(TypeFactory.TypeScope, String, boolean, String, String, boolean, boolean, boolean, boolean ) } instead.
 	 */
 	@Deprecated
 	public ManyToOneType(
@@ -69,6 +69,10 @@ public class ManyToOneType extends EntityType {
 		this( scope, referencedEntityName, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, ignoreNotFound, isLogicalOneToOne );
 	}
 
+	/**
+	 * @deprecated Use {@link #ManyToOneType(TypeFactory.TypeScope, String, boolean, String, String, boolean, boolean, boolean, boolean ) } instead.
+	 */
+	@Deprecated
 	public ManyToOneType(
 			TypeFactory.TypeScope scope,
 			String referencedEntityName,
@@ -78,13 +82,28 @@ public class ManyToOneType extends EntityType {
 			boolean unwrapProxy,
 			boolean ignoreNotFound,
 			boolean isLogicalOneToOne) {
+		this( scope, referencedEntityName, referenceToPrimaryKey, uniqueKeyPropertyName, null, lazy, unwrapProxy, ignoreNotFound, isLogicalOneToOne );
+	}
+
+	public ManyToOneType(
+			TypeFactory.TypeScope scope,
+			String referencedEntityName,
+			boolean referenceToPrimaryKey,
+			String uniqueKeyPropertyName,
+			String propertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			boolean ignoreNotFound,
+			boolean isLogicalOneToOne) {
 		super( scope, referencedEntityName, referenceToPrimaryKey, uniqueKeyPropertyName, !lazy, unwrapProxy );
+		this.propertyName = propertyName;
 		this.ignoreNotFound = ignoreNotFound;
 		this.isLogicalOneToOne = isLogicalOneToOne;
 	}
 
 	public ManyToOneType(ManyToOneType original, String superTypeEntityName) {
 		super( original, superTypeEntityName );
+		this.propertyName = original.propertyName;
 		this.ignoreNotFound = original.ignoreNotFound;
 		this.isLogicalOneToOne = original.isLogicalOneToOne;
 	}
@@ -92,6 +111,11 @@ public class ManyToOneType extends EntityType {
 	@Override
 	protected boolean isNullable() {
 		return ignoreNotFound;
+	}
+
+	@Override
+	public String getPropertyName() {
+		return propertyName;
 	}
 
 	@Override
@@ -208,6 +232,27 @@ public class ManyToOneType extends EntityType {
 		// the ids are fully resolved, so compare them with isDirty(), not isModified()
 		return getIdentifierOrUniqueKeyType( session.getFactory() )
 				.isDirty( old, getIdentifier( current, session ), session );
+	}
+
+	@Override
+	public Object resolve(Object value, SharedSessionContractImplementor session, Object owner, Boolean overridingEager) throws HibernateException {
+		Object resolvedValue = super.resolve(value, session, owner, overridingEager);
+		if ( isLogicalOneToOne && value != null && getPropertyName() != null ) {
+			EntityEntry entry = session.getPersistenceContext().getEntry( owner );
+			if ( entry != null ) {
+				final Loadable ownerPersister = (Loadable) session.getFactory().getMetamodel().entityPersister( entry.getEntityName() );
+				EntityUniqueKey entityKey = new EntityUniqueKey(
+						ownerPersister.getEntityName(),
+						getPropertyName(),
+						value,
+						this,
+						ownerPersister.getEntityMode(),
+						session.getFactory()
+				);
+				session.getPersistenceContext().addEntity( entityKey, owner );
+			}
+		}
+		return resolvedValue;
 	}
 
 	@Override

@@ -97,6 +97,7 @@ public class ToOneFkSecondPass extends FkSecondPass {
 								+ manyToOne.getReferencedEntityName()
 				);
 			}
+			manyToOne.setPropertyName( path );
 			BinderHelper.createSyntheticPropertyReference( columns, ref, null, manyToOne, false, buildingContext );
 			TableBinder.bindFk( ref, null, columns, manyToOne, unique, buildingContext );
 			/*

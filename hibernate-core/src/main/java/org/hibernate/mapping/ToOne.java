@@ -24,6 +24,7 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 	private FetchMode fetchMode;
 	protected String referencedPropertyName;
 	private String referencedEntityName;
+	private String propertyName;
 	private boolean embedded;
 	private boolean lazy = true;
 	protected boolean unwrapProxy;
@@ -59,6 +60,15 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 	public void setReferencedEntityName(String referencedEntityName) {
 		this.referencedEntityName = referencedEntityName==null ? 
 				null : referencedEntityName.intern();
+	}
+
+	public String getPropertyName() {
+		return propertyName;
+	}
+
+	public void setPropertyName(String propertyName) {
+		this.propertyName = propertyName==null ?
+				null : propertyName.intern();
 	}
 
 	@Override

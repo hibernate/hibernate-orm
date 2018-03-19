@@ -187,7 +187,7 @@ public abstract class AbstractEntityPersister
 	private final boolean[] propertyUniqueness;
 	private final boolean[] propertySelectable;
 
-	private final List<Integer> lobProperties = new ArrayList<Integer>();
+	private final List<Integer> lobProperties = new ArrayList<>();
 
 	//information about lazy properties of this class
 	private final String[] lazyPropertyNames;
@@ -224,7 +224,7 @@ public abstract class AbstractEntityPersister
 	// dynamic filters attached to the class-level
 	private final FilterHelper filterHelper;
 
-	private final Set<String> affectingFetchProfileNames = new HashSet<String>();
+	private final Set<String> affectingFetchProfileNames = new HashSet<>();
 
 	private final Map uniqueKeyLoaders = new HashMap();
 	private final Map lockers = new HashMap();
@@ -1576,8 +1576,8 @@ public abstract class AbstractEntityPersister
 				.toStatementString();
 	}
 
-	protected static interface InclusionChecker {
-		public boolean includeProperty(int propertyNumber);
+	protected interface InclusionChecker {
+		boolean includeProperty(int propertyNumber);
 	}
 
 	protected String concretePropertySelectFragment(String alias, final boolean[] includeProperty) {
@@ -1675,7 +1675,7 @@ public abstract class AbstractEntityPersister
 
 		// todo : cache this sql...
 		String versionIncrementString = generateVersionIncrementUpdateString();
-		PreparedStatement st = null;
+		PreparedStatement st;
 		try {
 			st = session
 					.getJdbcCoordinator()
@@ -3376,7 +3376,7 @@ public abstract class AbstractEntityPersister
 	public void update(
 			final Serializable id,
 			final Object[] fields,
-			final int[] dirtyFields,
+			int[] dirtyFields,
 			final boolean hasDirtyCollection,
 			final Object[] oldFields,
 			final Object oldVersion,
@@ -3386,12 +3386,32 @@ public abstract class AbstractEntityPersister
 
 		// apply any pre-update in-memory value generation
 		if ( getEntityMetamodel().hasPreUpdateGeneratedValues() ) {
-			final InMemoryValueGenerationStrategy[] strategies = getEntityMetamodel().getInMemoryValueGenerationStrategies();
-			for ( int i = 0; i < strategies.length; i++ ) {
-				if ( strategies[i] != null && strategies[i].getGenerationTiming().includesUpdate() ) {
-					fields[i] = strategies[i].getValueGenerator().generateValue( (Session) session, object );
-					setPropertyValue( object, i, fields[i] );
-					// todo : probably best to add to dirtyFields if not-null
+			final InMemoryValueGenerationStrategy[] valueGenerationStrategies = getEntityMetamodel().getInMemoryValueGenerationStrategies();
+			int valueGenerationStrategiesSize = valueGenerationStrategies.length;
+			if ( valueGenerationStrategiesSize != 0 ) {
+				int[] fieldsPreUpdateNeeded = new int[valueGenerationStrategiesSize];
+				for ( int i = 0; i < valueGenerationStrategiesSize; i++ ) {
+					if ( valueGenerationStrategies[i] != null && valueGenerationStrategies[i].getGenerationTiming()
+							.includesUpdate() ) {
+						fields[i] = valueGenerationStrategies[i].getValueGenerator().generateValue(
+								(Session) session,
+								object
+						);
+						setPropertyValue( object, i, fields[i] );
+						fieldsPreUpdateNeeded[i] = i;
+					}
+				}
+//				if ( fieldsPreUpdateNeeded.length != 0 ) {
+//					if ( dirtyFields != null ) {
+//						dirtyFields = ArrayHelper.join( fieldsPreUpdateNeeded, dirtyFields );
+//					}
+//					else if ( hasDirtyCollection ) {
+//						dirtyFields = fieldsPreUpdateNeeded;
+//					}
+//					// no dirty fields and no dirty collections so no update needed ???
+//				}
+				if ( fieldsPreUpdateNeeded.length != 0 && dirtyFields != null ) {
+					dirtyFields = ArrayHelper.join( fieldsPreUpdateNeeded, dirtyFields );
 				}
 			}
 		}
@@ -3674,7 +3694,7 @@ public abstract class AbstractEntityPersister
 				alias,
 				innerJoin,
 				includeSubclasses,
-				Collections.<String>emptySet()
+				Collections.emptySet()
 		).toFromFragmentString();
 	}
 
@@ -3699,7 +3719,7 @@ public abstract class AbstractEntityPersister
 				alias,
 				innerJoin,
 				includeSubclasses,
-				Collections.<String>emptySet()
+				Collections.emptySet()
 		).toWhereFragmentString();
 	}
 
@@ -5380,7 +5400,6 @@ public abstract class AbstractEntityPersister
 	// EntityDefinition impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private EntityIdentifierDefinition entityIdentifierDefinition;
-	private Iterable<AttributeDefinition> embeddedCompositeIdentifierAttributes;
 	private Iterable<AttributeDefinition> attributeDefinitions;
 
 	@Override
@@ -5405,8 +5424,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public String[][] getPolymorphicJoinColumns(String lhsTableAlias, String propertyPath) {
-		Set<String> subclassEntityNames = (Set<String>) getEntityMetamodel()
-				.getSubclassEntityNames();
+		Set<String> subclassEntityNames = getEntityMetamodel().getSubclassEntityNames();
 		// We will collect all the join columns from the LHS subtypes here
 		List<String[]> polymorphicJoinColumns = new ArrayList<>( subclassEntityNames.size() );
 
@@ -5522,7 +5540,7 @@ public abstract class AbstractEntityPersister
 		//			to try and drive SQL generation on these (which we do ultimately).  A possible solution there
 		//			would be to delay all SQL generation until postInstantiate
 
-		Map<String, AttributeDefinition> attributeDefinitionsByName = new LinkedHashMap<String, AttributeDefinition>();
+		Map<String, AttributeDefinition> attributeDefinitionsByName = new LinkedHashMap<>();
 		collectAttributeDefinitions( attributeDefinitionsByName, getEntityMetamodel() );
 
 
@@ -5542,7 +5560,7 @@ public abstract class AbstractEntityPersister
 //		}
 
 		this.attributeDefinitions = Collections.unmodifiableList(
-				new ArrayList<AttributeDefinition>( attributeDefinitionsByName.values() )
+				new ArrayList<>( attributeDefinitionsByName.values() )
 		);
 //		// todo : leverage the attribute definitions housed on EntityMetamodel
 //		// 		for that to work, we'd have to be able to walk our super entity persister(s)

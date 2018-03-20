@@ -3,6 +3,29 @@ Hibernate 5.1 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changed in 5.1.13.Final (March 19, 2018)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/31639
+https://hibernate.atlassian.net/issues/?jql=project%20%3D%2010031%20AND%20fixVersion%20%3D%2031639%20ORDER%20BY%20priority%20DESC%2C%20key%20ASC
+
+** Bug
+    * [HHH-10333] - Schema validation: incorrect use of schema and catalog filters
+    * [HHH-11286] - Schema-validation fails with Oracle
+    * [HHH-11440] - In hibernate 5.2.4 hbm2ddl.auto=validate does not work with oracle
+    * [HHH-11986] - @LazyGroup is ignored on LazyToOne association with 'mappedBy'
+    * [HHH-12059] - hibernate.hbm2ddl.auto=update stopped working in Oracle since 5.1.4
+    * [HHH-12074] - order_inserts: flush during transaction causes incorrect insert ordering and subsequent constraint violation
+    * [HHH-12086] - Batch order_inserts: flush during transaction causes incorrect insert ordering and subsequent constraint violation
+    * [HHH-12105] - Batch order_inserts: flush during transaction causes incorrect insert ordering and subsequent constraint violation
+    * [HHH-12308] - InsertOrderingDuplicateTest fails using Oracle
+    * [HHH-12355] - Insert fails on one-to-one mapping when an intermediate embeddable type is between mappings when using ordered inserts.
+
+** Improvement
+    * [HHH-12113] - The JDBC batch sorting algorithm can be simplified due to latest modifications
+
+** Task
+    * [HHH-12406] - Add a test for HHH-11440
+
 Changed in 5.1.12.Final (January 26, 2018)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/31629

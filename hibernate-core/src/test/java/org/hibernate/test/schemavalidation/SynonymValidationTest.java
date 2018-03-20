@@ -21,11 +21,14 @@ import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 
 import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Allows the BaseCoreFunctionalTestCase to create the schema using TestEntity.  The test method validates against an
@@ -66,6 +69,51 @@ public class SynonymValidationTest extends BaseNonConfigCoreFunctionalTestCase {
 				.applySetting(
 						AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY,
 						JdbcMetadaAccessStrategy.INDIVIDUALLY
+				)
+				.build();
+		try {
+			final MetadataSources metadataSources = new MetadataSources( ssr );
+			metadataSources.addAnnotatedClass( TestEntityWithSynonym.class );
+			metadataSources.addAnnotatedClass( TestEntity.class );
+
+			new SchemaValidator().validate( metadataSources.buildMetadata() );
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( ssr );
+		}
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12406")
+	public void testSynonymUsingDefaultStrategySchemaValidator() {
+		// Hibernate should use JdbcMetadaAccessStrategy.INDIVIDUALLY when
+		// AvailableSettings.ENABLE_SYNONYMS is true.
+		ssr = new StandardServiceRegistryBuilder()
+				.applySetting( AvailableSettings.ENABLE_SYNONYMS, "true" )
+				.build();
+		try {
+			final MetadataSources metadataSources = new MetadataSources( ssr );
+			metadataSources.addAnnotatedClass( TestEntityWithSynonym.class );
+			metadataSources.addAnnotatedClass( TestEntity.class );
+
+			new SchemaValidator().validate( metadataSources.buildMetadata() );
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( ssr );
+		}
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12406")
+	public void testSynonymUsingGroupedSchemaValidator() {
+		// Hibernate should use JdbcMetadaAccessStrategy.INDIVIDUALLY when
+		// AvailableSettings.ENABLE_SYNONYMS is true,
+		// even if JdbcMetadaAccessStrategy.GROUPED is specified.
+		ssr = new StandardServiceRegistryBuilder()
+				.applySetting( AvailableSettings.ENABLE_SYNONYMS, "true" )
+				.applySetting(
+						AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY,
+						JdbcMetadaAccessStrategy.GROUPED
 				)
 				.build();
 		try {

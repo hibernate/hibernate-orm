@@ -76,7 +76,6 @@ public class ElementCollectionMapTest extends BaseEntityManagerFunctionalTestCas
 		@ElementCollection
 		@CollectionTable(name = "phone_register")
 		@Column(name = "since")
-		@MapKeyJoinColumn(name = "phone_id", referencedColumnName = "id")
 		private Map<Phone, Date> phoneRegister = new HashMap<>();
 
 		public Person() {}

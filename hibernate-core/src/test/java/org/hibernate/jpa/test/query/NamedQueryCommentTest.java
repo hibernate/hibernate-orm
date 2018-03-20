@@ -115,7 +115,7 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 
 			assertNotNull(
 				connectionProvider.getPreparedStatement(
-					"/* INDEX (game idx_game_title) */ select namedquery0_.id as id1_0_, namedquery0_.title as title2_0_ from game namedquery0_ where namedquery0_.title=?"
+					"/* COMMENT_SELECT_INDEX_game_title */ select namedquery0_.id as id1_0_, namedquery0_.title as title2_0_ from game namedquery0_ where namedquery0_.title=?"
 				)
 			);
 		} );
@@ -162,7 +162,7 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 
 			assertNotNull(
 				connectionProvider.getPreparedStatement(
-					"/* INDEX (game idx_game_title)  */ update game set title = ? where id = ?"
+					"/* COMMENT_INDEX_game_title */ update game set title = ? where id = ?"
 				)
 			);
 		} );
@@ -186,7 +186,7 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 
 			assertNotNull(
 				connectionProvider.getPreparedStatement(
-					"/* INDEX (game idx_game_title)  */ update game set title = ? where id = ?"
+					"/* COMMENT_INDEX_game_title */ update game set title = ? where id = ?"
 				)
 			);
 		} );
@@ -212,7 +212,7 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 
 			assertNotNull(
 				connectionProvider.getPreparedStatement(
-					"update /*+ INDEX (game idx_game_id) */ game set title = ? where id = ?"
+					"/* COMMENT_INDEX_game_title */ update /*+ INDEX (game idx_game_id) */ game set title = ? where id = ?"
 				)
 			);
 		} );
@@ -238,7 +238,7 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 
 			assertNotNull(
 				connectionProvider.getPreparedStatement(
-					"update game set title = ? where id = ?"
+					"/* COMMENT_INDEX_game_title */ update game set title = ? where id = ?"
 				)
 			);
 		} );
@@ -264,7 +264,7 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 
 			assertNotNull(
 				connectionProvider.getPreparedStatement(
-					"select namedquery0_.id as id1_0_, namedquery0_.title as title2_0_ from game namedquery0_  USE INDEX (idx_game_id) where namedquery0_.title=?"
+					"/* COMMENT_SELECT_INDEX_game_title */ select namedquery0_.id as id1_0_, namedquery0_.title as title2_0_ from game namedquery0_  USE INDEX (idx_game_id) where namedquery0_.title=?"
 				)
 			);
 		} );
@@ -281,7 +281,7 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 	@NamedQuery(
 			name = "SelectNamedQuery",
 			query = "select g from Game g where title = :title",
-			comment = "INDEX (game idx_game_title)"
+			comment = "COMMENT_SELECT_INDEX_game_title"
 	)
 	@NamedQuery(
 			name = "UpdateNamedQuery",
@@ -297,7 +297,7 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 	@NamedNativeQuery(
 			name = "UpdateNamedNativeQuery",
 			query = "update game set title = :title where id = :id",
-			comment = "INDEX (game idx_game_title) ",
+			comment = "COMMENT_INDEX_game_title",
 			resultClass = Game.class
 	)
 	public static class Game {

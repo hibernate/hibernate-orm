@@ -6,11 +6,11 @@
  */
 package org.hibernate.cache.internal;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.AvailableSettings;
@@ -72,29 +72,23 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 			);
 		}
 
+		if ( regionFactory == NoCachingRegionFactory.INSTANCE ) {
+			// todo (5.3) : make this configurable?
+			boolean allowDefaulting = true;
+			if ( allowDefaulting ) {
+				final StrategySelector selector = registry.getService( StrategySelector.class );
+				final Collection<RegionFactory> implementors = selector.getRegisteredStrategyImplementors( RegionFactory.class );
+				if ( implementors != null && implementors.size() == 1 ) {
+					regionFactory = selector.resolveStrategy( RegionFactory.class, implementors.iterator().next() );
+				}
+				else {
+					LOG.debugf( "Cannot default RegionFactory based on registered strategies as `%s` RegionFactory strategies were registered" );
+				}
+			}
+		}
+
 		LOG.debugf( "Cache region factory : %s", regionFactory.getClass().getName() );
 
 		return regionFactory;
-	}
-
-	/**
-	 * Map legacy names unto the new corollary.
-	 *
-	 * TODO: temporary hack for org.hibernate.cfg.SettingsFactory.createRegionFactory()
-	 *
-	 * @param name The (possibly legacy) factory name
-	 *
-	 * @return The factory name to use.
-	 */
-	public static String mapLegacyNames(final String name) {
-		if ( "org.hibernate.cache.EhCacheRegionFactory".equals( name ) ) {
-			return "org.hibernate.cache.ehcache.EhCacheRegionFactory";
-		}
-
-		if ( "org.hibernate.cache.SingletonEhCacheRegionFactory".equals( name ) ) {
-			return "org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory";
-		}
-
-		return name;
 	}
 }

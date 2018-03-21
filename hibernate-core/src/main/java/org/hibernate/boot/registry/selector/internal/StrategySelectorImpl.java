@@ -6,6 +6,9 @@
  */
 package org.hibernate.boot.registry.selector.internal;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -168,6 +171,16 @@ public class StrategySelectorImpl implements StrategySelector {
 				(Callable<T>) () -> defaultValue,
 				creator
 		);
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public Collection getRegisteredStrategyImplementors(Class strategy) {
+		final Map<String, Class> registrations = namedStrategyImplementorByStrategyMap.get( strategy );
+		if ( registrations == null ) {
+			return Collections.emptySet();
+		}
+		return new HashSet( registrations.values() );
 	}
 
 	@SuppressWarnings("unchecked")

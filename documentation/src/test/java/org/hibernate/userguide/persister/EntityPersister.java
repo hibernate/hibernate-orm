@@ -7,6 +7,8 @@
 package org.hibernate.userguide.persister;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cache.spi.access.EntityDataAccess;
+import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
@@ -21,8 +23,8 @@ public class EntityPersister
 
     public EntityPersister(
             PersistentClass persistentClass,
-            EntityRegionAccessStrategy cache,
-            NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
+            EntityDataAccess cache,
+            NaturalIdDataAccess naturalIdRegionAccessStrategy,
             PersisterCreationContext creationContext)
             throws HibernateException {
         super( persistentClass, cache, naturalIdRegionAccessStrategy, creationContext );

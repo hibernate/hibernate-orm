@@ -8,6 +8,7 @@ package org.hibernate.userguide.persister;
 
 import org.hibernate.MappingException;
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.mapping.Collection;
 import org.hibernate.persister.collection.OneToManyPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
@@ -22,7 +23,7 @@ public class CollectionPersister
 
     public CollectionPersister(
             Collection collectionBinding,
-            CollectionRegionAccessStrategy cacheAccessStrategy,
+            CollectionDataAccess cacheAccessStrategy,
             PersisterCreationContext creationContext)
             throws MappingException, CacheException {
         super( collectionBinding, cacheAccessStrategy, creationContext );

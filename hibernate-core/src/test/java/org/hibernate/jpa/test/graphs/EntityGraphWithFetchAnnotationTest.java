@@ -49,7 +49,7 @@ public class EntityGraphWithFetchAnnotationTest
 	}
 
 	@Override
-	public void buildEntityManagerFactory() throws Exception {
+	public void buildEntityManagerFactory() {
 		connectionProvider = new PreparedStatementSpyConnectionProvider();
 		super.buildEntityManagerFactory();
 	}

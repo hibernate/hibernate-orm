@@ -35,7 +35,7 @@ public class EmbeddableWithOneToMany_HHH_11302_xml_Test extends
 		};
 	}
 
-	public void buildEntityManagerFactory() throws Exception {
+	public void buildEntityManagerFactory() {
 		try {
 			super.buildEntityManagerFactory();
 			fail( "Should throw AnnotationException!" );

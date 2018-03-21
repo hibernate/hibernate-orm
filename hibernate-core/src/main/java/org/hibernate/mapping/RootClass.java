@@ -17,6 +17,7 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.SingletonIterator;
 
 /**
@@ -312,7 +313,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 	}
 
 	public void setCacheRegionName(String cacheRegionName) {
-		this.cacheRegionName = cacheRegionName;
+		this.cacheRegionName = StringHelper.nullIfEmpty( cacheRegionName );
 	}
 
 	public boolean isLazyPropertiesCacheable() {

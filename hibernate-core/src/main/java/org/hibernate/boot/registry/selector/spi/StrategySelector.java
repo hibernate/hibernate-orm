@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.registry.selector.spi;
 
+import java.util.Collection;
 import java.util.concurrent.Callable;
 
 import org.hibernate.service.Service;
@@ -139,4 +140,11 @@ public interface StrategySelector extends Service {
 	<T> T resolveStrategy(Class<T> strategy, Object strategyReference, Callable<T> defaultResolver, StrategyCreator<T> creator);
 
 	<T> T resolveStrategy(Class<T> strategy, Object strategyReference, T defaultValue, StrategyCreator<T> creator);
+
+	/**
+	 * Retrieve all of the registered implementors of the given strategy.  Useful
+	 * to allow defaulting the choice to the single registered implementor when
+	 * only one is registered
+	 */
+	<T> Collection<T> getRegisteredStrategyImplementors(Class<T> strategy);
 }

@@ -13,6 +13,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 
@@ -90,8 +91,9 @@ public class MetamodelGraphWalker {
 	private void visitEntityDefinition(EntityDefinition entityDefinition) {
 		strategy.startingEntity( entityDefinition );
 
+		AbstractEntityPersister persister = (AbstractEntityPersister) entityDefinition.getEntityPersister();
 		visitIdentifierDefinition( entityDefinition.getEntityKeyDefinition() );
-		visitAttributes( entityDefinition );
+		visitAttributes( entityDefinition, persister);
 
 		strategy.finishingEntity( entityDefinition );
 	}
@@ -122,17 +124,17 @@ public class MetamodelGraphWalker {
 		strategy.finishingEntityIdentifier( identifierDefinition );
 	}
 
-	private void visitAttributes(AttributeSource attributeSource) {
+	private void visitAttributes(AttributeSource attributeSource, AbstractEntityPersister sourcePersister) {
 		final Iterable<AttributeDefinition> attributeDefinitions = attributeSource.getAttributes();
 		if ( attributeDefinitions == null ) {
 			return;
 		}
 		for ( AttributeDefinition attributeDefinition : attributeDefinitions ) {
-			visitAttributeDefinition( attributeDefinition );
+			visitAttributeDefinition( attributeDefinition, sourcePersister);
 		}
 	}
 
-	private void visitAttributeDefinition(AttributeDefinition attributeDefinition) {
+	private void visitAttributeDefinition(AttributeDefinition attributeDefinition, AbstractEntityPersister sourcePersister) {
 		final PropertyPath subPath = currentPropertyPath.append( attributeDefinition.getName() );
 		log.debug( "Visiting attribute path : " + subPath.getFullPath() );
 
@@ -146,6 +148,14 @@ public class MetamodelGraphWalker {
 				strategy.foundCircularAssociation( associationAttributeDefinition );
 				// EARLY EXIT!!!
 				return;
+			}
+
+			if ( sourcePersister != null ) {
+				String[] columns = sourcePersister.toColumns(attributeDefinition.getName());
+				// Empty columns means that the attribute is not resolvable on this persister
+				if ( columns.length == 0 ) {
+					return;
+				}
 			}
 		}
 
@@ -196,7 +206,7 @@ public class MetamodelGraphWalker {
 	private void visitCompositeDefinition(CompositionDefinition compositionDefinition) {
 		strategy.startingComposite( compositionDefinition );
 
-		visitAttributes( compositionDefinition );
+		visitAttributes( compositionDefinition, null );
 
 		strategy.finishingComposite( compositionDefinition );
 	}

@@ -21,6 +21,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.FilterConfiguration;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.CollectionType;
@@ -460,7 +461,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	}
 
 	public void setCacheRegionName(String cacheRegionName) {
-		this.cacheRegionName = cacheRegionName;
+		this.cacheRegionName = StringHelper.nullIfEmpty( cacheRegionName );
 	}
 
 

@@ -33,7 +33,7 @@ public class BasicTypeElementCollectionTest extends BaseEntityManagerFunctionalT
 	}
 
 	@Override
-	public void buildEntityManagerFactory() throws Exception {
+	public void buildEntityManagerFactory() {
 		super.buildEntityManagerFactory();
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Person person = new Person();

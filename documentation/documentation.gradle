@@ -13,6 +13,7 @@ ext {
 			'documentation',
 			'hibernate-entitymanager',
 			'hibernate-infinispan',
+			'hibernate-ehcache',
 			'hibernate-java8',
 			'hibernate-orm-modules',
 			'release'
@@ -43,15 +44,17 @@ dependencies {
 
 	testCompile( 'org.apache.commons:commons-lang3:3.4' )
 
-	testCompile( project(':hibernate-ehcache') )
 	testCompile( project(':hibernate-envers') )
 	testCompile( project(':hibernate-spatial') )
 	testCompile( project(path: ':hibernate-core', configuration: 'tests') )
 
 	testCompile( project(':hibernate-testing') )
 
+	testCompile "org.osgi:org.osgi.core:4.3.1"
+
 	testCompile( libraries.mockito )
 	testCompile( libraries.mockito_inline )
+
 	testRuntime( libraries.h2 )
 	testRuntime( libraries.hsqldb )
 	testRuntime( libraries.postgresql )
@@ -59,7 +62,8 @@ dependencies {
 	testRuntime( libraries.mariadb )
 	testRuntime( libraries.mssql )
 
-	testCompile "org.osgi:org.osgi.core:4.3.1"
+	testCompile( project( ':hibernate-jcache' ) )
+	testRuntime( libraries.ehcache3 )
 }
 
 
@@ -263,6 +267,14 @@ task renderIntegrationGuide(type: AsciidoctorTask, group: 'Documentation') {
 		}
 	}
 }
+
+// Testing
+
+// resources inherently exclude sources
+sourceSets.test.resources {
+	setSrcDirs( ['src/test/java','src/test/resources'] )
+}
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // grouping tasks

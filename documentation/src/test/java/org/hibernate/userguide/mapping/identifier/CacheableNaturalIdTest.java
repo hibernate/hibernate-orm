@@ -7,13 +7,15 @@
 package org.hibernate.userguide.mapping.identifier;
 
 import java.util.Map;
+import javax.cache.configuration.MutableConfiguration;
 import javax.persistence.Entity;
+import javax.persistence.EntityManager;
 import javax.persistence.Id;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdCache;
-import org.hibernate.cache.ehcache.EhCacheRegionFactory;
+import org.hibernate.cache.jcache.JCacheHelper;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
@@ -28,6 +30,16 @@ import static org.junit.Assert.assertEquals;
 public class CacheableNaturalIdTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
+	public void buildEntityManagerFactory() {
+		JCacheHelper.locateStandardCacheManager().createCache( "org.hibernate.cache.spi.TimestampsRegion", new MutableConfiguration<>() );
+		JCacheHelper.locateStandardCacheManager().createCache( "org.hibernate.cache.spi.QueryResultsRegion", new MutableConfiguration<>() );
+		JCacheHelper.locateStandardCacheManager().createCache( "org.hibernate.userguide.mapping.identifier.CacheableNaturalIdTest$Book##NaturalId", new MutableConfiguration<>() );
+//		JCacheHelper.locateStandardCacheManager().createCache( "", new MutableConfiguration<>() );
+
+		super.buildEntityManagerFactory();
+	}
+
+	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 			Book.class
@@ -38,7 +50,7 @@ public class CacheableNaturalIdTest extends BaseEntityManagerFunctionalTestCase 
 	@SuppressWarnings( "unchecked" )
 	protected void addConfigOptions(Map options) {
 		options.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, Boolean.TRUE.toString() );
-		options.put( AvailableSettings.CACHE_REGION_FACTORY, EhCacheRegionFactory.class.getName() );
+		options.put( AvailableSettings.CACHE_REGION_FACTORY, "jcache" );
 		options.put( AvailableSettings.USE_QUERY_CACHE, Boolean.TRUE.toString() );
 		options.put( AvailableSettings.GENERATE_STATISTICS, Boolean.TRUE.toString() );
 		options.put( AvailableSettings.CACHE_REGION_PREFIX, "" );

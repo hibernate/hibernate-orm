@@ -145,7 +145,7 @@ distributions {
 
             // todo : this closure is problematic as it does not write into the hibernate-release-$project.version directory
             // due to http://issues.gradle.org/browse/GRADLE-1450
-            [ 'hibernate-c3p0', 'hibernate-proxool', 'hibernate-ehcache' ].each { feature ->
+            [ 'hibernate-c3p0', 'hibernate-proxool' ].each { feature ->
                 final String shortName = feature.substring( 'hibernate-'.length() )
 // WORKAROUND http://issues.gradle.org/browse/GRADLE-1450
 //                into('lib/optional/' + shortName) {

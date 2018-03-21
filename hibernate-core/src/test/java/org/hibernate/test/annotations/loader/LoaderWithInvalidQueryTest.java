@@ -35,7 +35,7 @@ public class LoaderWithInvalidQueryTest extends BaseEntityManagerFunctionalTestC
 	}
 
 	@Override
-	public void buildEntityManagerFactory() throws Exception {
+	public void buildEntityManagerFactory() {
 		try {
 			super.buildEntityManagerFactory();
 		}

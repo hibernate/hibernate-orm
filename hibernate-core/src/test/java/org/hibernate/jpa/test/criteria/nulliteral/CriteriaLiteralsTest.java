@@ -58,7 +58,7 @@ public class CriteriaLiteralsTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Override
-	public void buildEntityManagerFactory() throws Exception {
+	public void buildEntityManagerFactory() {
 		connectionProvider = new PreparedStatementSpyConnectionProvider();
 		super.buildEntityManagerFactory();
 	}

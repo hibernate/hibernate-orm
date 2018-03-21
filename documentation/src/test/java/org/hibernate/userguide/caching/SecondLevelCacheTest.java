@@ -22,7 +22,6 @@ import org.hibernate.CacheMode;
 import org.hibernate.Session;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.cache.ehcache.EhCacheRegionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -54,7 +53,7 @@ public class SecondLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
     @SuppressWarnings( "unchecked" )
     protected void addConfigOptions(Map options) {
         options.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, Boolean.TRUE.toString() );
-        options.put( AvailableSettings.CACHE_REGION_FACTORY, EhCacheRegionFactory.class.getName() );
+        options.put( AvailableSettings.CACHE_REGION_FACTORY, "jcache" );
         options.put( AvailableSettings.USE_QUERY_CACHE, Boolean.TRUE.toString() );
         options.put( AvailableSettings.GENERATE_STATISTICS, Boolean.TRUE.toString() );
         //options.put( AvailableSettings.CACHE_REGION_PREFIX, "" );

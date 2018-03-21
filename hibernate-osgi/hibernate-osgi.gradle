@@ -270,39 +270,6 @@ karafFeatures {
 				dependency = true
 			}
 		}
-		hibernateEhcache {
-			name = 'hibernate-ehcache'
-			description = 'Feature for easily adding Ehcache-based caching support to hibernate-orm'
-			dependencyFeatureNames = ['hibernate-orm']
-			projects = [rootProject.childProjects.'hibernate-ehcache']
-			bundle {
-				match group: 'org.hibernate', module: 'hibernate-core'
-				include = false
-			}
-			bundle {
-				match group: 'org.hibernate', module: 'hibernate-osgi'
-				include = false
-			}
-			bundle {
-				match group: 'org.jboss.logging', module: 'jboss-logging'
-				include = false
-			}
-			bundle {
-				match group: 'org.jboss.logging', module: 'jboss-logging-annotations'
-				include = false
-			}
-			bundle {
-				match group: 'org.jboss.logging', module: 'jboss-logging-processor'
-				include = false
-			}
-			bundle {
-				match {
-					group = 'net.sf.ehcache'
-					module = 'ehcache'
-				}
-				dependency = true
-			}
-		}
 	}
 }
 

@@ -5,17 +5,31 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+apply from: rootProject.file( 'gradle/base-information.gradle' )
+apply from: rootProject.file( 'gradle/publishing-repos.gradle' )
+apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
+apply plugin: 'maven-publish'
+apply plugin: 'maven-publish-auth'
 
-description = 'Integration for Ehcache into Hibernate as a second-level caching service'
+description = "(deprecated - use `org.hibernate:hibernate-jcache:${project.version}` + `org.ehcache:ehcache:3.0.0` instead)"
 
-dependencies {
-    compile project( ':hibernate-core' )
-    compile( libraries.ehcache )
-
-    testCompile project( ':hibernate-testing' )
+ext {
+    relocatedGroupId  = 'org.hibernate'
+    relocatedArtifactId  = 'hibernate-jcache'
+    relocatedVersion = project.version
 }
 
-test {
-    forkEvery 1
+publishing {
+    publications {
+        publishedArtifacts {
+            pom.withXml {
+                def relocation = asNode().appendNode( 'distributionManagement' ).appendNode( 'relocation' )
+                relocation.appendNode( 'groupId', project.relocatedGroupId)
+                relocation.appendNode( 'artifactId', project.relocatedArtifactId )
+                relocation.appendNode( 'version', project.relocatedVersion )
+            }
+        }
+    }
 }
+
+task release( dependsOn: bintrayUpload )

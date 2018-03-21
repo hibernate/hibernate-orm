@@ -43,6 +43,26 @@ public class NamingHelperTest extends BaseUnitTestCase {
 		assertEquals( "FKdgopp1hqnm8c1o6sfbb3tbeh", fkNameUtf8 );
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-12357")
+	public void generateHashedFkNameUSingUtf8() {
+		Identifier booksDe = new Identifier( "Bücher", false );
+		Identifier authorsDe = new Identifier( "Autoren", false );
+		Identifier authorId = new Identifier( "autor_id", false );
+
+		defaultCharset.set( StandardCharsets.ISO_8859_1 );
+
+		String fkNameLatin1 = NamingHelper.withCharset( "UTF8" ).generateHashedFkName( "FK", booksDe, authorsDe, authorId );
+
+		assertEquals( "FKdgopp1hqnm8c1o6sfbb3tbeh", fkNameLatin1 );
+
+		defaultCharset.set( StandardCharsets.UTF_8 );
+
+		String fkNameUtf8 = NamingHelper.withCharset( "UTF8" ).generateHashedFkName( "FK", booksDe, authorsDe, authorId );
+
+		assertEquals( "FKdgopp1hqnm8c1o6sfbb3tbeh", fkNameUtf8 );
+	}
+
 	public static class DefaultCharset extends ExternalResource {
 
 		private Charset prev;

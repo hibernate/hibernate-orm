@@ -103,7 +103,7 @@ public class CachingRegionFactory implements RegionFactory {
 	public DomainDataRegion buildDomainDataRegion(
 			DomainDataRegionConfig regionConfig,
 			DomainDataRegionBuildingContext buildingContext) {
-		return new DomainDataRegionImpl( regionConfig, this, buildingContext );
+		return new DomainDataRegionImpl( regionConfig, this, cacheKeysFactory, buildingContext );
 	}
 
 	@Override

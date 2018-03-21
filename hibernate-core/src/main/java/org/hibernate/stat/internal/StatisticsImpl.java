@@ -11,10 +11,12 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.hibernate.cache.spi.QueryResultRegionAccess;
+import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.Service;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -279,6 +281,27 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		getEntityStatistics( entityName ).incrementOptimisticFailureCount();
 	}
 
+	@Override
+	public void entityCachePut(NavigableRole entityName, String regionName) {
+		secondLevelCachePutCount.getAndIncrement();
+		getDomainDataRegionStatistics( regionName ).incrementPutCount();
+		getEntityStatistics( entityName.getFullPath() ).incrementCachePutCount();
+	}
+
+	@Override
+	public void entityCacheHit(NavigableRole entityName, String regionName) {
+		secondLevelCacheHitCount.getAndIncrement();
+		getDomainDataRegionStatistics( regionName ).incrementHitCount();
+		getEntityStatistics( entityName.getFullPath() ).incrementCacheHitCount();
+	}
+
+	@Override
+	public void entityCacheMiss(NavigableRole entityName, String regionName) {
+		secondLevelCacheMissCount.getAndIncrement();
+		getDomainDataRegionStatistics( regionName ).incrementMissCount();
+		getEntityStatistics( entityName.getFullPath() ).incrementCacheMissCount();
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Collection stats
@@ -360,6 +383,27 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		getCollectionStatistics( role ).incrementRemoveCount();
 	}
 
+	@Override
+	public void collectionCachePut(NavigableRole collectionRole, String regionName) {
+		secondLevelCachePutCount.getAndIncrement();
+		getDomainDataRegionStatistics( regionName ).incrementPutCount();
+		getCollectionStatistics( collectionRole.getFullPath() ).incrementCachePutCount();
+	}
+
+	@Override
+	public void collectionCacheHit(NavigableRole collectionRole, String regionName) {
+		secondLevelCacheHitCount.getAndIncrement();
+		getDomainDataRegionStatistics( regionName ).incrementHitCount();
+		getCollectionStatistics( collectionRole.getFullPath() ).incrementCacheHitCount();
+	}
+
+	@Override
+	public void collectionCacheMiss(NavigableRole collectionRole, String regionName) {
+		secondLevelCacheMissCount.getAndIncrement();
+		getDomainDataRegionStatistics( regionName ).incrementMissCount();
+		getCollectionStatistics( collectionRole.getFullPath() ).incrementCacheMissCount();
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Natural-id stats
@@ -429,35 +473,40 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	}
 
 	@Override
-	public void naturalIdCachePut(String rootEntityName) {
+	public void naturalIdCachePut(
+			NavigableRole rootEntityName,
+			String regionName) {
 		naturalIdCachePutCount.getAndIncrement();
 
-		final EntityPersister rootEntityPersister = sessionFactory.getMetamodel().entityPersister( rootEntityName );
-		final String regionName = rootEntityPersister.getNaturalIdCacheAccessStrategy().getRegion().getName();
-
 		getDomainDataRegionStatistics( regionName ).incrementPutCount();
+
+		getNaturalIdStatistics( rootEntityName.getFullPath() ).incrementCachePutCount();
 
 		getNaturalIdCacheStatistics( qualify( regionName ) ).incrementPutCount();
 	}
 
 	@Override
-	public void naturalIdCacheHit(String rootEntityName) {
+	public void naturalIdCacheHit(
+			NavigableRole rootEntityName,
+			String regionName) {
 		naturalIdCacheHitCount.getAndIncrement();
 
-		final EntityPersister rootEntityPersister = sessionFactory.getMetamodel().entityPersister( rootEntityName );
-		final String regionName = rootEntityPersister.getNaturalIdCacheAccessStrategy().getRegion().getName();
 		getDomainDataRegionStatistics( regionName ).incrementHitCount();
+
+		getNaturalIdStatistics( rootEntityName.getFullPath() ).incrementCacheHitCount();
 
 		getNaturalIdCacheStatistics( qualify( regionName ) ).incrementHitCount();
 	}
 
 	@Override
-	public void naturalIdCacheMiss(String rootEntityName) {
+	public void naturalIdCacheMiss(
+			NavigableRole rootEntityName,
+			String regionName) {
 		naturalIdCacheMissCount.getAndIncrement();
 
-		final EntityPersister rootEntityPersister = sessionFactory.getMetamodel().entityPersister( rootEntityName );
-		final String regionName = rootEntityPersister.getNaturalIdCacheAccessStrategy().getRegion().getName();
 		getDomainDataRegionStatistics( regionName ).incrementMissCount();
+
+		getNaturalIdStatistics( rootEntityName.getFullPath() ).incrementCacheMissCount();
 
 		getNaturalIdCacheStatistics( qualify( regionName ) ).incrementMissCount();
 	}
@@ -528,6 +577,12 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 						throw new IllegalArgumentException( "Unknown cache region : " + regionName );
 					}
 
+					if ( region instanceof QueryResultsRegion ) {
+						throw new IllegalArgumentException(
+								"Region name [" + regionName + "] referred to a query result region, not a domain data region"
+						);
+					}
+
 					return new CacheRegionStatisticsImpl( region );
 				}
 		);
@@ -558,24 +613,26 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public CacheRegionStatisticsImpl getCacheRegionStatistics(String regionName) {
-		final CacheRegionStatisticsImpl existing = l2CacheStatsMap.get( regionName );
-		if ( existing != null ) {
-			return existing;
-		}
-
 		if ( sessionFactory == null ) {
 			return null;
 		}
 
-		// first try domain data region
-		try {
-			return getDomainDataRegionStatistics( regionName );
-		}
-		catch (IllegalArgumentException ignore) {
+		if ( ! sessionFactory.getSessionFactoryOptions().isSecondLevelCacheEnabled() ) {
+			return null;
 		}
 
-		// and fallback to query result region
-		return getQueryRegionStatistics( regionName );
+		return l2CacheStatsMap.computeIfAbsent(
+				regionName,
+				s -> {
+					final Region region = sessionFactory.getCache().getRegion( regionName );
+
+					if ( region == null ) {
+						throw new IllegalArgumentException( "Unknown cache region : " + regionName );
+					}
+
+					return new CacheRegionStatisticsImpl( region );
+				}
+		);
 	}
 
 	@Override
@@ -611,24 +668,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	@Override
 	public long getUpdateTimestampsCachePutCount() {
 		return updateTimestampsCachePutCount.get();
-	}
-
-	@Override
-	public void secondLevelCachePut(String regionName) {
-		secondLevelCachePutCount.getAndIncrement();
-		getDomainDataRegionStatistics( regionName ).incrementPutCount();
-	}
-
-	@Override
-	public void secondLevelCacheHit(String regionName) {
-		secondLevelCacheHitCount.getAndIncrement();
-		getDomainDataRegionStatistics( regionName ).incrementHitCount();
-	}
-
-	@Override
-	public void secondLevelCacheMiss(String regionName) {
-		secondLevelCacheMissCount.getAndIncrement();
-		getDomainDataRegionStatistics( regionName ).incrementMissCount();
 	}
 
 	@Override

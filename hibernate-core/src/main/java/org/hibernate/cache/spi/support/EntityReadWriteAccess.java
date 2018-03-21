@@ -11,6 +11,7 @@ import java.util.Comparator;
 import org.hibernate.cache.cfg.spi.EntityDataCachingConfig;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -40,8 +41,13 @@ public class EntityReadWriteAccess extends AbstractReadWriteAccess implements En
 	}
 
 	@Override
-	protected RegionAccessType getAccessType() {
-		return RegionAccessType.ENTITY;
+	public AccessType getAccessType() {
+		return AccessType.READ_WRITE;
+	}
+
+	@Override
+	protected AccessedDataClassification getAccessedDataClassification() {
+		return AccessedDataClassification.ENTITY;
 	}
 
 	@Override

@@ -11,6 +11,8 @@ import javax.cache.Cache;
 import org.hibernate.cache.spi.support.DomainDataStorageAccess;
 
 /**
+ * DomainDataStorageAccess implementation wrapping a JCache {@link Cache} reference.
+ *
  * @author Steve Ebersole
  */
 public class DomainDataJCacheAccessImpl extends JCacheAccessImpl implements DomainDataStorageAccess {

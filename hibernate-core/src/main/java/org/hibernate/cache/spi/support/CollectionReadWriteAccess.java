@@ -11,6 +11,7 @@ import java.util.Comparator;
 import org.hibernate.cache.cfg.spi.CollectionDataCachingConfig;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -41,8 +42,13 @@ public class CollectionReadWriteAccess extends AbstractReadWriteAccess implement
 	}
 
 	@Override
-	protected RegionAccessType getAccessType() {
-		return RegionAccessType.COLLECTION;
+	protected AccessedDataClassification getAccessedDataClassification() {
+		return AccessedDataClassification.COLLECTION;
+	}
+
+	@Override
+	public AccessType getAccessType() {
+		return AccessType.READ_WRITE;
 	}
 
 	@Override

@@ -6,6 +6,7 @@
  */
 package org.hibernate.cache.spi;
 
+import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.support.StorageAccess;
 
 /**
@@ -16,4 +17,14 @@ import org.hibernate.cache.spi.support.StorageAccess;
  */
 public interface DirectAccessRegion extends Region {
 	StorageAccess getStorageAccess();
+
+	@Override
+	default void clear() {
+		getStorageAccess().clearCache();
+	}
+
+	@Override
+	default void destroy() throws CacheException {
+		getStorageAccess().release();
+	}
 }

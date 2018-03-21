@@ -22,13 +22,25 @@ public class RegionNameQualifier {
 		if ( prefix == null ) {
 			return regionName;
 		}
-		else {
-			if ( regionName.startsWith( prefix ) ) {
-				return regionName.substring( prefix.length() );
-			}
 
-			return prefix + regionName;
+		return qualify( prefix, regionName );
+	}
+
+	public String qualify(String prefix, String regionName) {
+		if ( regionName.startsWith( prefix + '.' ) ) {
+			return regionName;
 		}
+
+		return prefix + '.' + regionName;
+	}
+
+
+	public boolean isQualified(String regionName, SessionFactoryOptions options) {
+		return isQualified( options.getCacheRegionPrefix(), regionName );
+	}
+
+	public boolean isQualified(String prefix, String regionName) {
+		return prefix != null && regionName.startsWith( prefix );
 	}
 
 	private RegionNameQualifier() {

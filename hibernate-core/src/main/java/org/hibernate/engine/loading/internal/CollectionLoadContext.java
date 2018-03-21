@@ -362,7 +362,10 @@ public class CollectionLoadContext {
 				);
 
 				if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-					factory.getStatistics().secondLevelCachePut( persister.getCacheAccessStrategy().getRegion().getName() );
+					factory.getStatistics().collectionCachePut(
+							persister.getNavigableRole(),
+							persister.getCacheAccessStrategy().getRegion().getName()
+					);
 				}
 			}
 			finally {

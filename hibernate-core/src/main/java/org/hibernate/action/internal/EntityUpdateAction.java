@@ -29,6 +29,7 @@ import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.type.TypeHelper;
 
 /**
@@ -195,7 +196,10 @@ public final class EntityUpdateAction extends EntityAction {
 
 				final boolean put = cacheUpdate( persister, previousVersion, ck );
 				if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-					factory.getStatistics().secondLevelCachePut( getPersister().getCacheAccessStrategy().getRegion().getName() );
+					factory.getStatistics().entityCachePut(
+							StatsHelper.INSTANCE.getRootEntityRole( persister ),
+							getPersister().getCacheAccessStrategy().getRegion().getName()
+					);
 				}
 			}
 		}
@@ -327,7 +331,10 @@ public final class EntityUpdateAction extends EntityAction {
 				final boolean put = cacheAfterUpdate( cache, ck );
 
 				if ( put && getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-					getSession().getFactory().getStatistics().secondLevelCachePut( cache.getRegion().getName() );
+					session.getFactory().getStatistics().entityCachePut(
+							StatsHelper.INSTANCE.getRootEntityRole( persister ),
+							getPersister().getCacheAccessStrategy().getRegion().getName()
+					);
 				}
 			}
 			else {

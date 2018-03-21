@@ -9,8 +9,10 @@ package org.hibernate.testing.cache;
 import org.hibernate.cache.cfg.spi.EntityDataCachingConfig;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.support.AbstractEntityDataAccess;
+import org.hibernate.cache.spi.support.DomainDataStorageAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -20,9 +22,9 @@ public class EntityTransactionalAccess extends AbstractEntityDataAccess {
 	public EntityTransactionalAccess(
 			DomainDataRegion region,
 			CacheKeysFactory keysFactory,
-			DomainDataStorageAccessImpl domainDataStorageAccess,
-			EntityDataCachingConfig entityAccessConfig) {
-		super( region, keysFactory, domainDataStorageAccess );
+			DomainDataStorageAccess storageAccess,
+			EntityDataCachingConfig accessConfig) {
+		super( region, keysFactory, storageAccess );
 	}
 
 	@Override
@@ -64,5 +66,10 @@ public class EntityTransactionalAccess extends AbstractEntityDataAccess {
 			Object previousVersion,
 			SoftLock lock) {
 		return false;
+	}
+
+	@Override
+	public AccessType getAccessType() {
+		return AccessType.TRANSACTIONAL;
 	}
 }

@@ -122,12 +122,16 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 
 		if ( factory.getStatistics().isStatisticsEnabled() ) {
 			if ( ce == null ) {
-				factory.getStatistics()
-						.secondLevelCacheMiss( cacheAccessStrategy.getRegion().getName() );
+				factory.getStatistics().collectionCacheMiss(
+						persister.getNavigableRole(),
+						cacheAccessStrategy.getRegion().getName()
+				);
 			}
 			else {
-				factory.getStatistics()
-						.secondLevelCacheHit( cacheAccessStrategy.getRegion().getName() );
+				factory.getStatistics().collectionCacheHit(
+						persister.getNavigableRole(),
+						cacheAccessStrategy.getRegion().getName()
+				);
 			}
 		}
 

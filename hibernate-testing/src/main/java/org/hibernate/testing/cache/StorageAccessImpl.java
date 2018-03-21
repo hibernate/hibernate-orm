@@ -6,16 +6,18 @@
  */
 package org.hibernate.testing.cache;
 
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.hibernate.cache.spi.support.StorageAccess;
 
 /**
+ * StorageAccess impl wrapping a simple data Map (ConcurrentMap)
+ *
  * @author Steve Ebersole
  */
-public class StorageAcccessImpl implements StorageAccess {
-	private Map data;
+public class StorageAccessImpl implements StorageAccess {
+	private ConcurrentMap data;
 
 	@Override
 	public Object getFromCache(Object key) {
@@ -26,11 +28,13 @@ public class StorageAcccessImpl implements StorageAccess {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public void putIntoCache(Object key, Object value) {
 		getOrMakeDataMap().put( key, value );
 	}
 
-	protected Map getOrMakeDataMap() {
+	@SuppressWarnings("WeakerAccess")
+	protected ConcurrentMap getOrMakeDataMap() {
 		if ( data == null ) {
 			data = new ConcurrentHashMap();
 		}

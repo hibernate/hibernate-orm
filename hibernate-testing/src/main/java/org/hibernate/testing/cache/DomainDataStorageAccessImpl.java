@@ -11,7 +11,7 @@ import org.hibernate.cache.spi.support.DomainDataStorageAccess;
 /**
  * @author Steve Ebersole
  */
-public class DomainDataStorageAccessImpl extends StorageAcccessImpl implements DomainDataStorageAccess {
+public class DomainDataStorageAccessImpl extends StorageAccessImpl implements DomainDataStorageAccess {
 	@Override
 	public void putFromLoad(Object key, Object value) {
 		getOrMakeDataMap().put( key, value );

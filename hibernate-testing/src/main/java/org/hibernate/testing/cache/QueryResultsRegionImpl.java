@@ -8,15 +8,23 @@ package org.hibernate.testing.cache;
 
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.cache.spi.support.AbstractRegion;
+import org.hibernate.cache.spi.support.DirectAccessRegionTemplate;
+import org.hibernate.cache.spi.support.StorageAccess;
 
 /**
  * @author Steve Ebersole
  */
-public class QueryResultsRegionImpl extends AbstractRegion implements QueryResultsRegion {
+public class QueryResultsRegionImpl extends DirectAccessRegionTemplate implements QueryResultsRegion {
+	private final StorageAccessImpl storageAccess = new StorageAccessImpl();
+
 	public QueryResultsRegionImpl(
 			String name,
 			RegionFactory regionFactory) {
-		super( name, regionFactory, new StorageAcccessImpl() );
+		super( name, regionFactory );
+	}
+
+	@Override
+	public StorageAccess getStorageAccess() {
+		return storageAccess;
 	}
 }

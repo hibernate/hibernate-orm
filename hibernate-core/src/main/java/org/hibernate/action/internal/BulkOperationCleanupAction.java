@@ -70,7 +70,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			}
 
 			if ( persister.hasNaturalIdentifier() && persister.hasNaturalIdCache() ) {
-				naturalIdCleanups.add( new NaturalIdCleanup( factory.getCache().getNaturalIdRegionAccess( persister.getNavigableRole() ) ) );
+				naturalIdCleanups.add( new NaturalIdCleanup( factory.getCache().getNaturalIdCacheRegionAccessStrategy( persister.getNavigableRole() ) ) );
 			}
 
 			final Set<String> roles = factory.getMetamodel().getCollectionRolesByEntityParticipant( persister.getEntityName() );

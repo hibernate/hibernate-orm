@@ -6,7 +6,6 @@
  */
 package org.hibernate.cache.spi.support;
 
-import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
 
@@ -16,12 +15,10 @@ import org.hibernate.cache.spi.RegionFactory;
 public abstract class AbstractRegion implements Region {
 	private final String name;
 	private final RegionFactory regionFactory;
-	private final StorageAccess storageAccess;
 
-	public AbstractRegion(String name, RegionFactory regionFactory, StorageAccess storageAccess) {
-		this.name = regionFactory.qualify( name );
+	public AbstractRegion(String name, RegionFactory regionFactory) {
+		this.name = name;
 		this.regionFactory = regionFactory;
-		this.storageAccess = storageAccess;
 	}
 
 	@Override
@@ -34,17 +31,4 @@ public abstract class AbstractRegion implements Region {
 		return regionFactory;
 	}
 
-	public StorageAccess getStorageAccess() {
-		return storageAccess;
-	}
-
-	@Override
-	public void clear() {
-		storageAccess.clearCache();
-	}
-
-	@Override
-	public void destroy() throws CacheException {
-		storageAccess.release();
-	}
 }

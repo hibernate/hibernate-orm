@@ -20,6 +20,7 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -247,7 +248,10 @@ public class NaturalIdXrefDelegate {
 		final SessionFactoryImplementor factory = session().getFactory();
 		if ( pk != null ) {
 			if ( factory.getStatistics().isStatisticsEnabled() ) {
-				factory.getStatistics().naturalIdCacheHit( persister.getRootEntityName() );
+				factory.getStatistics().naturalIdCacheHit(
+						StatsHelper.INSTANCE.getRootEntityRole( persister ),
+						naturalIdCacheAccessStrategy.getRegion().getName()
+				);
 			}
 
 			if ( LOG.isTraceEnabled() ) {
@@ -272,7 +276,10 @@ public class NaturalIdXrefDelegate {
 			entityNaturalIdResolutionCache.naturalIdToPkMap.put( cachedNaturalId, pk );
 		}
 		else if ( factory.getStatistics().isStatisticsEnabled() ) {
-			factory.getStatistics().naturalIdCacheMiss( persister.getRootEntityName() );
+			factory.getStatistics().naturalIdCacheMiss(
+					StatsHelper.INSTANCE.getRootEntityRole( persister ),
+					naturalIdCacheAccessStrategy.getRegion().getName()
+			);
 		}
 
 		return pk;

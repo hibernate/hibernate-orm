@@ -21,6 +21,9 @@ public interface DomainDataRegion extends Region {
 	 * Build a EntityRegionAccess instance representing access to entity data
 	 * stored in this cache region using the given AccessType.
 	 *
+	 * @apiNote Calling this method is illegal if the given entity is
+	 * not cached
+	 *
 	 * @param rootEntityRole The root entity name for the hierarchy whose data
 	 * we want to access
 	 *
@@ -32,6 +35,9 @@ public interface DomainDataRegion extends Region {
 	 * Build a NaturalIdRegionAccess instance representing access to natural-id
 	 * data stored in this cache region using the given AccessType.
 	 *
+	 * @apiNote Calling this method is illegal if the given entity is
+	 * not cached
+	 *
 	 * @param rootEntityRole The NavigableRole of the root entity whose
 	 * natural-id data we want to access
 	 *
@@ -42,6 +48,9 @@ public interface DomainDataRegion extends Region {
 	/**
 	 * Build a CollectionRegionAccess instance representing access to collection
 	 * data stored in this cache region using the given AccessType.
+	 *
+	 * @apiNote Calling this method is illegal if the given entity is
+	 * not cached
 	 *
 	 * @param collectionRole The NavigableRole of the collection whose data
 	 * we want to access

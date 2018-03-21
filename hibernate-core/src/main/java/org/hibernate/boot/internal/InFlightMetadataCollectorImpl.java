@@ -324,7 +324,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 		final AccessType accessType = AccessType.fromExternalName( collection.getCacheConcurrencyStrategy() );
 		if ( accessType != null ) {
-			locateCacheRegionConfigBuilder( collection.getCacheConcurrencyStrategy() ).addCollectionConfig(
+			locateCacheRegionConfigBuilder( collection.getCacheRegionName() ).addCollectionConfig(
 					collection,
 					accessType
 			);

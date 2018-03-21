@@ -127,7 +127,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 		for ( final PersistentClass model : mappingMetadata.getEntityBindings() ) {
 			final NavigableRole rootEntityRole = new NavigableRole( model.getRootClass().getEntityName() );
 			final EntityDataAccess accessStrategy = sessionFactory.getCache().getEntityRegionAccess( rootEntityRole );
-			final NaturalIdDataAccess naturalIdAccessStrategy = sessionFactory.getCache().getNaturalIdRegionAccess( rootEntityRole );
+			final NaturalIdDataAccess naturalIdAccessStrategy = sessionFactory.getCache().getNaturalIdCacheRegionAccessStrategy( rootEntityRole );
 
 			final EntityPersister cp = persisterFactory.createEntityPersister(
 					model,
@@ -260,7 +260,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 		for ( Collection collection : mappingMetadata.getCollectionBindings() ) {
 			final AccessType accessType = AccessType.fromExternalName( collection.getCacheConcurrencyStrategy() );
 			if ( accessType != null ) {
-				regionConfigBuilders.computeIfAbsent( collection.getCacheConcurrencyStrategy(), DomainDataRegionConfigImpl.Builder::new )
+				regionConfigBuilders.computeIfAbsent( collection.getCacheRegionName(), DomainDataRegionConfigImpl.Builder::new )
 						.addCollectionConfig( collection, accessType );
 			}
 		}

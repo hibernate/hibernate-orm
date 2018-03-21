@@ -10,6 +10,7 @@ import org.hibernate.cache.cfg.spi.EntityDataCachingConfig;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
 import org.hibernate.cache.spi.SecondLevelCacheLogger;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -33,6 +34,11 @@ public class EntityReadOnlyAccess extends AbstractEntityDataAccess {
 		if ( config.isMutable() ) {
 			SecondLevelCacheLogger.INSTANCE.readOnlyCachingMutableEntity( config.getNavigableRole() );
 		}
+	}
+
+	@Override
+	public AccessType getAccessType() {
+		return AccessType.READ_ONLY;
 	}
 
 	@Override

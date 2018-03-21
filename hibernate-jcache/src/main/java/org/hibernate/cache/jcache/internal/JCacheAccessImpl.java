@@ -11,13 +11,12 @@ import javax.cache.Cache;
 import org.hibernate.cache.spi.support.StorageAccess;
 
 /**
+ * StorageAccess implementation wrapping a JCache {@link Cache} reference.
+ *
  * @author Steve Ebersole
  */
 @SuppressWarnings("unchecked")
 public class JCacheAccessImpl implements StorageAccess {
-	// todo (5.3) : consider RegionFactory support in hibernate-core based on StorageAccess
-	//		plus the DomainDataStorageAccess defined here
-
 	private final Cache underlyingCache;
 
 	public JCacheAccessImpl(Cache underlyingCache) {

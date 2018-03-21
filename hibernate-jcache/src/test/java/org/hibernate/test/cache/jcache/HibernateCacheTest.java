@@ -1,63 +1,44 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.cache;
+package org.hibernate.test.cache.jcache;
 
-import org.hibernate.cache.jcache.access.ItemValueExtractor;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.stat.QueryStatistics;
+import org.hibernate.cache.jcache.internal.DomainDataRegionImpl;
+import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.cache.spi.support.AbstractReadWriteAccess;
+import org.hibernate.jcache.test.BaseFunctionalTest;
+import org.hibernate.jcache.test.domain.Event;
+import org.hibernate.jcache.test.domain.EventManager;
+import org.hibernate.jcache.test.domain.Item;
+import org.hibernate.jcache.test.domain.Person;
+import org.hibernate.jcache.test.domain.PhoneNumber;
+import org.hibernate.jcache.test.domain.VersionedItem;
 import org.hibernate.stat.CacheRegionStatistics;
+import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.domain.Event;
-import org.hibernate.test.domain.EventManager;
-import org.hibernate.test.domain.Item;
-import org.hibernate.test.domain.Person;
-import org.hibernate.test.domain.PhoneNumber;
-import org.hibernate.test.domain.VersionedItem;
+import org.hibernate.testing.junit4.ExtraAssertions;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
  * @author Chris Dennis
  * @author Brett Meyer
  */
-public class HibernateCacheTest extends BaseNonConfigCoreFunctionalTestCase {
-
-	private static final String REGION_PREFIX = "hibernate.test.";
-
-	public HibernateCacheTest() {
-		System.setProperty( "derby.system.home", "target/derby" );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	protected void addSettings(Map settings) {
-		super.addSettings( settings );
-		settings.put( AvailableSettings.GENERATE_STATISTICS, "true" );
-	}
-
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.configure( "hibernate-config/hibernate.cfg.xml" );
-	}
-
+public class HibernateCacheTest extends BaseFunctionalTest {
 	@Test
 	public void testQueryCacheInvalidation() throws Exception {
 		Session s = sessionFactory().openSession();
@@ -71,10 +52,10 @@ public class HibernateCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		CacheRegionStatistics slcs = sessionFactory()
 				.getStatistics()
-				.getDomainDataRegionStatistics( REGION_PREFIX + Item.class.getName() );
+				.getDomainDataRegionStatistics( Item.class.getName() );
 
 		assertThat( slcs.getPutCount(), equalTo( 1L ) );
-		assertThat( slcs.getEntries().size(), equalTo( 1 ) );
+		assertTrue( sessionFactory().getCache().containsEntity( Item.class, i.getId() ) );
 
 		s = sessionFactory().openSession();
 		t = s.beginTransaction();
@@ -89,17 +70,24 @@ public class HibernateCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.close();
 
 		assertThat( slcs.getPutCount(), equalTo( 2L ) );
+		assertTrue( sessionFactory().getCache().containsEntity( Item.class, i.getId() ) );
 
-		Object entry = slcs.getEntries().get( i.getId() );
-		Map map;
-		if ( entry instanceof Map ) {
-			map = (Map) entry;
-		}
-		else {
-			map = ItemValueExtractor.getValue( entry );
-		}
-		assertThat( (String) map.get( "description" ), equalTo( "A bog standard item" ) );
-		assertThat( (String) map.get( "name" ), equalTo( "widget" ) );
+		final DomainDataRegionImpl region = (DomainDataRegionImpl) sessionFactory().getMetamodel()
+				.entityPersister( Item.class )
+				.getCacheAccessStrategy()
+				.getRegion();
+		final Object fromCache = region.getCacheStorageAccess().getFromCache(
+				region.getEffectiveKeysFactory().createEntityKey(
+						i.getId(),
+						sessionFactory().getMetamodel().entityPersister( Item.class ),
+						sessionFactory(),
+						null
+				)
+		);
+		assertNotNull( fromCache );
+		ExtraAssertions.assertTyping( AbstractReadWriteAccess.Item.class, fromCache );
+//		assertThat( (String) map.get( "description" ), equalTo( "A bog standard item" ) );
+//		assertThat( (String) map.get( "name" ), equalTo( "widget" ) );
 
 		// cleanup
 		s = sessionFactory().openSession();
@@ -109,15 +97,15 @@ public class HibernateCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.close();
 	}
 
-	@Test
-	public void testEmptySecondLevelCacheEntry() throws Exception {
-		sessionFactory().getCache().evictEntityRegion( Item.class.getName() );
-		Statistics stats = sessionFactory().getStatistics();
-		stats.clear();
-		CacheRegionStatistics statistics = stats.getDomainDataRegionStatistics( REGION_PREFIX + Item.class.getName() );
-		Map cacheEntries = statistics.getEntries();
-		assertThat( cacheEntries.size(), equalTo( 0 ) );
-	}
+//	@Test
+//	public void testEmptySecondLevelCacheEntry() throws Exception {
+//		sessionFactory().getCache().evictEntityRegion( Item.class.getName() );
+//		Statistics stats = sessionFactory().getStatistics();
+//		stats.clear();
+//		CacheRegionStatistics statistics = stats.getDomainDataRegionStatistics( Item.class.getName() );
+//		Map cacheEntries = statistics.getEntries();
+//		assertThat( cacheEntries.size(), equalTo( 0 ) );
+//	}
 
 	@Test
 	public void testStaleWritesLeaveCacheConsistent() {
@@ -163,27 +151,42 @@ public class HibernateCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 			}
 		}
 
-		// check the version value in the cache...
-		CacheRegionStatistics slcs = sessionFactory().getStatistics()
-				.getDomainDataRegionStatistics( REGION_PREFIX + VersionedItem.class.getName() );
-		assertNotNull(slcs);
-		final Map entries = slcs.getEntries();
-		Object entry = entries.get( item.getId() );
-		Long cachedVersionValue;
-		if ( entry instanceof SoftLock ) {
-			//FIXME don't know what to test here
-			//cachedVersionValue = new Long( ( (ReadWriteCache.Lock) entry).getUnlockTimestamp() );
-		}
-		else {
-			cachedVersionValue = (Long) ( (Map) entry ).get( "_version" );
-			assertThat( initialVersion, equalTo( cachedVersionValue ) );
-		}
+//		// check the version value in the cache...
+//		CacheRegionStatistics slcs = sessionFactory().getStatistics()
+//				.getDomainDataRegionStatistics( VersionedItem.class.getName() );
+//		assertNotNull(slcs);
+//		final Map entries = slcs.getEntries();
+//		Object entry = entries.get( item.getId() );
+//		Long cachedVersionValue;
+//		if ( entry instanceof SoftLock ) {
+//			//FIXME don't know what to test here
+//			//cachedVersionValue = new Long( ( (ReadWriteCache.Lock) entry).getUnlockTimestamp() );
+//		}
+//		else {
+//			cachedVersionValue = (Long) ( (Map) entry ).get( "_version" );
+//			assertThat( initialVersion, equalTo( cachedVersionValue ) );
+//		}
 
+		final DomainDataRegionImpl region = (DomainDataRegionImpl) sessionFactory().getMetamodel()
+				.entityPersister( Item.class )
+				.getCacheAccessStrategy()
+				.getRegion();
+		final Object fromCache = region.getCacheStorageAccess().getFromCache(
+				region.getEffectiveKeysFactory().createEntityKey(
+						item.getId(),
+						sessionFactory().getMetamodel().entityPersister( Item.class ),
+						sessionFactory(),
+						null
+				)
+		);
+		assertTrue(
+				fromCache == null || fromCache instanceof SoftLock
+		);
 
 		// cleanup
 		s = sessionFactory().openSession();
 		txn = s.beginTransaction();
-		item = (VersionedItem) s.load( VersionedItem.class, item.getId() );
+		item = s.load( VersionedItem.class, item.getId() );
 		s.delete( item );
 		txn.commit();
 		s.close();

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.cache.spi;
+package org.hibernate.engine.spi;
 
 import java.io.Serializable;
 import java.util.Locale;
@@ -13,10 +13,15 @@ import java.util.Set;
 import org.hibernate.Cache;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
+import org.hibernate.cache.spi.QueryCache;
+import org.hibernate.cache.spi.QueryResultRegionAccess;
+import org.hibernate.cache.spi.Region;
+import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.cache.spi.TimestampsRegionAccess;
+import org.hibernate.cache.spi.UpdateTimestampsCache;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.Service;
@@ -28,9 +33,12 @@ import org.hibernate.service.Service;
  *
  * @author Strong Liu
  * @author Steve Ebersole
+ *
+ * @deprecated Moved to {@link org.hibernate.cache.spi.CacheImplementor}
  */
+@Deprecated
 @SuppressWarnings("unused")
-public interface CacheImplementor extends Service, Cache, org.hibernate.engine.spi.CacheImplementor, Serializable {
+public interface CacheImplementor extends Service, Cache, Serializable {
 	@Override
 	SessionFactoryImplementor getSessionFactory();
 

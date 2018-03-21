@@ -37,6 +37,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
@@ -231,7 +232,10 @@ public final class TwoPhaseLoad {
 					);
 
 					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-						factory.getStatistics().secondLevelCachePut( cache.getRegion().getName() );
+						factory.getStatistics().entityCachePut(
+								StatsHelper.INSTANCE.getRootEntityRole( persister ),
+								cache.getRegion().getName()
+						);
 					}
 				}
 				finally {

@@ -193,7 +193,7 @@ public class DisabledCaching implements CacheImplementor {
 	}
 
 	@Override
-	public NaturalIdDataAccess getNaturalIdRegionAccess(NavigableRole rootEntityName) {
+	public NaturalIdDataAccess getNaturalIdCacheRegionAccessStrategy(NavigableRole rootEntityName) {
 		return null;
 	}
 

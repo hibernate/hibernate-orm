@@ -43,8 +43,6 @@ public abstract class AbstractNaturalIdDataAccess extends AbstractCachedDomainDa
 	}
 
 
-
-
 	@Override
 	public boolean insert(SharedSessionContractImplementor session, Object key, Object value) {
 		addToCache( key, value );

@@ -31,6 +31,11 @@ public class CacheRegionStatisticsImpl implements CacheRegionStatistics, SecondL
 	}
 
 	@Override
+	public String getRegionName() {
+		return region.getName();
+	}
+
+	@Override
 	public long getHitCount() {
 		return hitCount.get();
 	}

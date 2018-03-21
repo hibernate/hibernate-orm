@@ -224,6 +224,10 @@ public interface MetadataBuildingOptions {
 
 	List<AttributeConverterInfo> getAttributeConverters();
 
+	default String getSchemaCharset() {
+		return null;
+	}
+
 //	/**
 //	 * Obtain the selected strategy for resolving members identifying persistent attributes
 //	 *

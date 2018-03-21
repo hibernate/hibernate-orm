@@ -622,6 +622,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 		private boolean autoQuoteKeywords;
 
+		private String schemaCharset;
+
 //		private PersistentAttributeMemberResolver persistentAttributeMemberResolver =
 //				StandardPersistentAttributeMemberResolver.INSTANCE;
 
@@ -765,6 +767,12 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			);
 
 			this.reflectionManager = generateDefaultReflectionManager();
+
+			this.schemaCharset = configService.getSetting(
+					AvailableSettings.HBM2DDL_CHARSET_NAME,
+					String.class,
+					null
+			);
 		}
 
 		private ArrayList<MetadataSourceType> resolveInitialSourceProcessOrdering(ConfigurationService configService) {
@@ -947,6 +955,10 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			return attributeConverterInfoMap != null
 					? new ArrayList<>( attributeConverterInfoMap.values() )
 					: Collections.emptyList();
+		}
+
+		public String getSchemaCharset() {
+			return schemaCharset;
 		}
 
 		void addAttributeConverterInfo(AttributeConverterInfo info) {

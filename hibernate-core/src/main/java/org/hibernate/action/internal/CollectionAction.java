@@ -12,7 +12,7 @@ import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -76,7 +76,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		// bidirectional association and it is one of the earlier entity actions which actually updates
 		// the database (this action is responsible for second-level cache invalidation only)
 		if ( persister.hasCache() ) {
-			final CollectionRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+			final CollectionDataAccess cache = persister.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey(
 					key,
 					persister,
@@ -129,7 +129,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 
 	protected final void evict() throws CacheException {
 		if ( persister.hasCache() ) {
-			final CollectionRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+			final CollectionDataAccess cache = persister.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey(
 					key, 
 					persister,
@@ -173,7 +173,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 
 		@Override
 		public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
-			final CollectionRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+			final CollectionDataAccess cache = persister.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey(
 					key,
 					persister,

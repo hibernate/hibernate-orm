@@ -14,25 +14,65 @@ import java.io.Serializable;
  * Note that for a cached query, the cache miss is equals to the db count
  *
  * @author Gavin King
+ * @author Steve Ebersole
  */
 public interface QueryStatistics extends Serializable {
+	/**
+	 * How many times has this query been executed?
+	 */
 	long getExecutionCount();
 
-	long getCacheHitCount();
-
-	long getCachePutCount();
-
-	long getCacheMissCount();
-
+	/**
+	 * How many ResultSet rows have been processed for this query ?
+	 */
 	long getExecutionRowCount();
 
+	/**
+	 * What is the average amount time taken to execute this query?
+	 */
 	long getExecutionAvgTime();
 
+	/**
+	 * What is the max amount time taken to execute this query?
+	 */
 	long getExecutionMaxTime();
 
+	/**
+	 * What is the min amount time taken to execute this query?
+	 */
 	long getExecutionMinTime();
 
+	/**
+	 * How long, cumulatively, have all executions of this query taken?
+	 */
 	long getExecutionTotalTime();
 
 	double getExecutionAvgTimeAsDouble();
+
+	/**
+	 * The number of cache hits for this query.
+	 *
+	 * @apiNote Note that a query can be saved into different
+	 * regions at different times.  This value represents the
+	 * sum total across all of those regions
+	 */
+	long getCacheHitCount();
+
+	/**
+	 * The number of cache misses for this query
+	 *
+	 * @apiNote Note that a query can be saved into different
+	 * regions at different times.  This value represents the
+	 * sum total across all of those regions
+	 */
+	long getCacheMissCount();
+
+	/**
+	 * The number of cache puts for this query
+	 *
+	 * @apiNote Note that a query can be saved into different
+	 * regions at different times.  This value represents the
+	 * sum total across all of those regions
+	 */
+	long getCachePutCount();
 }

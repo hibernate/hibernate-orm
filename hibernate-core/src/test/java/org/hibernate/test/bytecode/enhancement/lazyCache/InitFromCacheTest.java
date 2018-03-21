@@ -6,20 +6,8 @@
  */
 package org.hibernate.test.bytecode.enhancement.lazyCache;
 
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.Formula;
-import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.cache.BaseRegion;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
+import java.util.Date;
+import java.util.Locale;
 import javax.persistence.Basic;
 import javax.persistence.Cacheable;
 import javax.persistence.Entity;
@@ -27,10 +15,25 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import java.util.Date;
-import java.util.Locale;
+
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Formula;
+import org.hibernate.cache.spi.access.EntityDataAccess;
+import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.persister.entity.EntityPersister;
+
+import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import static org.hibernate.Hibernate.isPropertyInitialized;
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -73,16 +76,25 @@ public class InitFromCacheTest extends BaseCoreFunctionalTestCase {
     @Test
     public void execute() {
 
-        doInHibernate( this::sessionFactory, s -> {
-            Document d = (Document) s.createQuery( "from Document fetch all properties" ).uniqueResult();
-            assertTrue( isPropertyInitialized( d, "text" ) );
-            assertTrue( isPropertyInitialized( d, "summary" ) );
+        doInHibernate(
+        		this::sessionFactory,
+				s -> {
+					Document d = (Document) s.createQuery( "from Document fetch all properties" ).uniqueResult();
+					assertTrue( isPropertyInitialized( d, "text" ) );
+					assertTrue( isPropertyInitialized( d, "summary" ) );
 
-            BaseRegion region = (BaseRegion) persister.getCacheAccessStrategy().getRegion();
-            Object cacheKey = persister.getCacheAccessStrategy().generateCacheKey( d.id, persister, sessionFactory(), null );
-            StandardCacheEntryImpl cacheEntry = (StandardCacheEntryImpl) region.getDataMap().get( cacheKey );
-            assertNotNull( cacheEntry );
-        } );
+					final EntityDataAccess entityDataAccess = persister.getCacheAccessStrategy();
+					final Object cacheKey = entityDataAccess.generateCacheKey(
+							d.id,
+							persister,
+							sessionFactory(),
+							null
+					);
+					final Object cachedItem = entityDataAccess.get( (SharedSessionContractImplementor) s, cacheKey );
+					assertNotNull( cachedItem );
+					assertTyping( StandardCacheEntryImpl.class, cachedItem );
+                }
+        );
 
         sessionFactory().getStatistics().clear();
 

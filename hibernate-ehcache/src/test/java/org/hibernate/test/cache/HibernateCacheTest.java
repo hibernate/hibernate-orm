@@ -14,10 +14,9 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.ehcache.internal.strategy.ItemValueExtractor;
-import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.stat.QueryStatistics;
-import org.hibernate.stat.SecondLevelCacheStatistics;
+import org.hibernate.stat.CacheRegionStatistics;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -70,9 +69,9 @@ public class HibernateCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		SecondLevelCacheStatistics slcs = sessionFactory()
+		CacheRegionStatistics slcs = sessionFactory()
 				.getStatistics()
-				.getSecondLevelCacheStatistics( REGION_PREFIX + Item.class.getName() );
+				.getDomainDataRegionStatistics( REGION_PREFIX + Item.class.getName() );
 
 		assertThat( slcs.getPutCount(), equalTo( 1L ) );
 		assertThat( slcs.getElementCountInMemory(), equalTo( 1L ) );
@@ -116,7 +115,7 @@ public class HibernateCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 		sessionFactory().getCache().evictEntityRegion( Item.class.getName() );
 		Statistics stats = sessionFactory().getStatistics();
 		stats.clear();
-		SecondLevelCacheStatistics statistics = stats.getSecondLevelCacheStatistics( REGION_PREFIX + Item.class.getName() );
+		CacheRegionStatistics statistics = stats.getDomainDataRegionStatistics( REGION_PREFIX + Item.class.getName() );
 		Map cacheEntries = statistics.getEntries();
 		assertThat( cacheEntries.size(), equalTo( 0 ) );
 	}
@@ -166,8 +165,8 @@ public class HibernateCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 		}
 
 		// check the version value in the cache...
-		SecondLevelCacheStatistics slcs = sessionFactory().getStatistics()
-				.getSecondLevelCacheStatistics( REGION_PREFIX + VersionedItem.class.getName() );
+		CacheRegionStatistics slcs = sessionFactory().getStatistics()
+				.getDomainDataRegionStatistics( REGION_PREFIX + VersionedItem.class.getName() );
 		assertNotNull(slcs);
 		final Map entries = slcs.getEntries();
 		Object entry = entries.get( item.getId() );

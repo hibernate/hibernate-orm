@@ -9,7 +9,7 @@ package org.hibernate.event.internal;
 import java.io.Serializable;
 
 import org.hibernate.HibernateException;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.CacheHelper;
@@ -78,7 +78,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 				}
 
 				if ( source.getFactory().getStatistics().isStatisticsEnabled() ) {
-					source.getFactory().getStatisticsImplementor().fetchCollection(
+					source.getFactory().getStatistics().fetchCollection(
 							ce.getLoadedPersister().getRole()
 					);
 				}
@@ -116,18 +116,22 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 		}
 
 		final SessionFactoryImplementor factory = source.getFactory();
-		final CollectionRegionAccessStrategy cacheAccessStrategy = persister.getCacheAccessStrategy();
+		final CollectionDataAccess cacheAccessStrategy = persister.getCacheAccessStrategy();
 		final Object ck = cacheAccessStrategy.generateCacheKey( id, persister, factory, source.getTenantIdentifier() );
 		final Object ce = CacheHelper.fromSharedCache( source, ck, persister.getCacheAccessStrategy() );
 
 		if ( factory.getStatistics().isStatisticsEnabled() ) {
 			if ( ce == null ) {
-				factory.getStatisticsImplementor()
-						.secondLevelCacheMiss( cacheAccessStrategy.getRegion().getName() );
+				factory.getStatistics().collectionCacheMiss(
+						persister.getNavigableRole(),
+						cacheAccessStrategy.getRegion().getName()
+				);
 			}
 			else {
-				factory.getStatisticsImplementor()
-						.secondLevelCacheHit( cacheAccessStrategy.getRegion().getName() );
+				factory.getStatistics().collectionCacheHit(
+						persister.getNavigableRole(),
+						cacheAccessStrategy.getRegion().getName()
+				);
 			}
 		}
 

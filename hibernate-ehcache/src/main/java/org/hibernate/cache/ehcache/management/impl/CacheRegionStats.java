@@ -19,7 +19,7 @@ import javax.management.openmbean.TabularData;
 import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
 
-import org.hibernate.stat.SecondLevelCacheStatistics;
+import org.hibernate.stat.CacheRegionStatistics;
 
 /**
  * Bean for exposing region stats
@@ -122,7 +122,7 @@ public class CacheRegionStats implements Serializable {
 	 * @param region The region name
 	 * @param src The SecondLevelCacheStatistics reference
 	 */
-	public CacheRegionStats(String region, SecondLevelCacheStatistics src) {
+	public CacheRegionStats(String region, CacheRegionStatistics src) {
 		this( region );
 
 		try {

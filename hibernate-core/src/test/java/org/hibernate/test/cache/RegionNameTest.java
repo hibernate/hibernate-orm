@@ -22,6 +22,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.CacheImplementor;
 import org.hibernate.internal.util.compare.EqualsHelper;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.stat.NaturalIdCacheStatistics;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
@@ -48,6 +49,11 @@ public class RegionNameTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	private final String cachePrefix = "app1";
 	private final String localName = "a.b.c";
+	private final String prefixedName = cachePrefix + '.' + localName;
+
+	private final NavigableRole personRole = new NavigableRole( Person.class.getName() );
+	private final NavigableRole personNameRole = personRole;
+	private final NavigableRole personNickNamesRole = personRole.append( "nickNames" );
 
 	@Override
 	protected void addSettings(Map settings) {
@@ -69,6 +75,8 @@ public class RegionNameTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		final Statistics stats = sessionFactory().getStatistics();
 
+		assertEquals( 2, stats.getSecondLevelCacheRegionNames().length );
+
 		final SecondLevelCacheStatistics secondLevelCacheStatistics = stats.getSecondLevelCacheStatistics( regionName );
 		assert secondLevelCacheStatistics != null;
 
@@ -81,21 +89,29 @@ public class RegionNameTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	public void testLegacyStatsSpi() {
-		// these need to be the prefixed name
-		final String regionName = cachePrefix + '.' + localName;
+		// NOTE : these calls actually did change - the ability to provide
+		// some better stats to the user
+
+//		// these need to be the prefixed name
+//		final String regionName = cachePrefix + '.' + localName;
+		final String regionName = localName;
 
 		final StatisticsImplementor statistics = sessionFactory().getStatistics();
 		statistics.clear();
 
-		statistics.naturalIdCacheHit( regionName );
-		statistics.naturalIdCacheMiss( regionName );
-		statistics.naturalIdCachePut( regionName );
+		statistics.naturalIdCacheHit( personNameRole, regionName );
+		statistics.naturalIdCacheMiss( personNameRole, regionName );
+		statistics.naturalIdCachePut( personNameRole, regionName );
 
-		statistics.secondLevelCacheHit( regionName );
-		statistics.secondLevelCacheMiss( regionName );
-		statistics.secondLevelCachePut( regionName );
+		statistics.entityCacheHit( personRole, regionName );
+		statistics.entityCacheMiss( personRole, regionName );
+		statistics.entityCachePut( personRole, regionName );
 
-		statistics.getNaturalIdCacheStatistics( regionName );
+		statistics.collectionCacheHit( personNickNamesRole, regionName );
+		statistics.collectionCacheMiss( personNickNamesRole, regionName );
+		statistics.collectionCachePut( personNickNamesRole, regionName );
+
+		statistics.getNaturalIdCacheStatistics( cachePrefix + regionName );
 
 		// stats for queries cannot be accessed second level cache regions map
 		final String queryString = "select p from Person p";
@@ -107,7 +123,7 @@ public class RegionNameTest extends BaseNonConfigCoreFunctionalTestCase {
 				session -> session.createQuery( queryString ).setCacheable( true ).setCacheRegion( queryCacheRegionName ).list()
 		);
 
-		final SecondLevelCacheStatistics queryCacheStats = statistics.getSecondLevelCacheStatistics( regionName );
+		final SecondLevelCacheStatistics queryCacheStats = statistics.getSecondLevelCacheStatistics( prefixedQueryCacheRegionName );
 		assert queryCacheStats != null;
 
 		// note that
@@ -138,9 +154,13 @@ public class RegionNameTest extends BaseNonConfigCoreFunctionalTestCase {
 		if ( !foundRegion ) {
 			fail( "Could not find region [" + regionName + "] in reported list of region names" );
 		}
-		assert cache.getEntityRegionAccess( regionName ) != null;
-		assert cache.getNaturalIdCacheRegionAccessStrategy( regionName ) != null;
-		assert cache.getCollectionRegionAccess(regionName ) != null;
+
+		final NavigableRole personEntityName = new NavigableRole( Person.class.getName() );
+		final NavigableRole nickNamesRole = personEntityName.append( "nickNames");
+
+		assert cache.getEntityRegionAccess( personEntityName ) != null;
+		assert cache.getNaturalIdCacheRegionAccessStrategy( personEntityName ) != null;
+		assert cache.getCollectionRegionAccess( nickNamesRole ) != null;
 	}
 
 

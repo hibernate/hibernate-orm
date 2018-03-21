@@ -62,6 +62,10 @@ public class TransactionCoordinatorOwnerTestingImpl implements TransactionCoordi
 	}
 
 	@Override
+	public void startTransactionBoundary() {
+	}
+
+	@Override
 	public void afterTransactionBegin() {
 		log.debug( "#afterTransactionBegin called" );
 		beginCount++;

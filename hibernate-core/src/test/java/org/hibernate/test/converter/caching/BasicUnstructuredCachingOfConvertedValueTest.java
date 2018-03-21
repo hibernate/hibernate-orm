@@ -9,14 +9,14 @@ package org.hibernate.test.converter.caching;
 import java.util.Map;
 
 import org.hibernate.Session;
+import org.hibernate.cache.spi.DomainDataRegion;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.cache.CachingRegionFactory;
-import org.hibernate.testing.cache.EntityRegionImpl;
-import org.hibernate.testing.cache.ReadWriteEntityRegionAccessStrategy;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -36,7 +36,7 @@ public class BasicUnstructuredCachingOfConvertedValueTest extends BaseNonConfigC
 	@SuppressWarnings("unchecked")
 	public void basicCacheStructureTest() {
 		EntityPersister persister =  sessionFactory().getMetamodel().entityPersisters().get( Address.class.getName() );
-		EntityRegionImpl region = (EntityRegionImpl) persister.getCacheAccessStrategy().getRegion();
+		final DomainDataRegion region = persister.getCacheAccessStrategy().getRegion();
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// test during store...
@@ -49,9 +49,21 @@ public class BasicUnstructuredCachingOfConvertedValueTest extends BaseNonConfigC
 		session.close();
 
 		{
-			final Object cachedItem = region.getDataMap().values().iterator().next();
-			final StandardCacheEntryImpl state = (StandardCacheEntryImpl) ( (ReadWriteEntityRegionAccessStrategy.Item) cachedItem ).getValue();
-			assertThat( state.getDisassembledState()[postalAreaAttributeIndex], instanceOf( PostalArea.class ) );
+			inSession(
+					s -> {
+						final EntityDataAccess entityDataAccess = region.getEntityDataAccess( persister.getNavigableRole() );
+						final Object cacheKey = entityDataAccess.generateCacheKey(
+								1,
+								persister,
+								sessionFactory(),
+								null
+						);
+						final Object cachedItem = entityDataAccess.get( s, cacheKey );
+						final StandardCacheEntryImpl state = (StandardCacheEntryImpl) cachedItem;
+						// this is the point of the Jira.. that this "should be" the converted value
+						assertThat( state.getDisassembledState()[postalAreaAttributeIndex], instanceOf( PostalArea.class ) );
+					}
+			);
 		}
 
 		assertThat( PostalAreaConverter.toDatabaseCallCount, is(1) );
@@ -60,7 +72,7 @@ public class BasicUnstructuredCachingOfConvertedValueTest extends BaseNonConfigC
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// test during load...
 		PostalAreaConverter.clearCounts();
-		region.evictAll();
+		sessionFactory().getCache().evictAll();
 
 		session = openSession();
 		session.getTransaction().begin();
@@ -69,9 +81,21 @@ public class BasicUnstructuredCachingOfConvertedValueTest extends BaseNonConfigC
 		session.close();
 
 		{
-			final Object cachedItem = region.getDataMap().values().iterator().next();
-			final StandardCacheEntryImpl state = (StandardCacheEntryImpl) ( (ReadWriteEntityRegionAccessStrategy.Item) cachedItem ).getValue();
-			assertThat( state.getDisassembledState()[postalAreaAttributeIndex], instanceOf( PostalArea.class ) );
+			inSession(
+					s -> {
+						final EntityDataAccess entityDataAccess = region.getEntityDataAccess( persister.getNavigableRole() );
+						final Object cacheKey = entityDataAccess.generateCacheKey(
+								1,
+								persister,
+								sessionFactory(),
+								null
+						);
+						final Object cachedItem = entityDataAccess.get( s, cacheKey );
+						final StandardCacheEntryImpl state = (StandardCacheEntryImpl) cachedItem;
+						// this is the point of the Jira.. that this "should be" the converted value
+						assertThat( state.getDisassembledState()[postalAreaAttributeIndex], instanceOf( PostalArea.class ) );
+					}
+			);
 		}
 
 		assertThat( PostalAreaConverter.toDatabaseCallCount, is(0) );

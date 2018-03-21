@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
@@ -27,6 +27,7 @@ import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.event.spi.PreInsertEvent;
 import org.hibernate.event.spi.PreInsertEventListener;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.stat.internal.StatsHelper;
 
 /**
  * The action for performing an entity insertion, for entities not defined to use IDENTITY generation.
@@ -116,13 +117,16 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 					session
 			);
 			cacheEntry = persister.getCacheEntryStructure().structure( ce );
-			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+			final EntityDataAccess cache = persister.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey( id, persister, factory, session.getTenantIdentifier() );
 
 			final boolean put = cacheInsert( persister, ck );
 
 			if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-				factory.getStatistics().secondLevelCachePut( cache.getRegion().getName() );
+				factory.getStatistics().entityCachePut(
+						StatsHelper.INSTANCE.getRootEntityRole( persister ),
+						cache.getRegion().getName()
+				);
 			}
 		}
 
@@ -211,20 +215,22 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 	public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) throws HibernateException {
 		final EntityPersister persister = getPersister();
 		if ( success && isCachePutEnabled( persister, getSession() ) ) {
-			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
-			SessionFactoryImplementor sessionFactoryImplementor = session.getFactory();
-			final Object ck = cache.generateCacheKey( getId(), persister, sessionFactoryImplementor, session.getTenantIdentifier() );
+			final EntityDataAccess cache = persister.getCacheAccessStrategy();
+			SessionFactoryImplementor factory = session.getFactory();
+			final Object ck = cache.generateCacheKey( getId(), persister, factory, session.getTenantIdentifier() );
 			final boolean put = cacheAfterInsert( cache, ck );
 
-			if ( put && sessionFactoryImplementor.getStatistics().isStatisticsEnabled() ) {
-				sessionFactoryImplementor.getStatisticsImplementor()
-						.secondLevelCachePut( cache.getRegion().getName() );
+			if ( put && factory.getStatistics().isStatisticsEnabled() ) {
+				factory.getStatistics().entityCachePut(
+						StatsHelper.INSTANCE.getRootEntityRole( persister ),
+						cache.getRegion().getName()
+				);
 			}
 		}
 		postCommitInsert( success );
 	}
 
-	private boolean cacheAfterInsert(EntityRegionAccessStrategy cache, Object ck) {
+	private boolean cacheAfterInsert(EntityDataAccess cache, Object ck) {
 		SharedSessionContractImplementor session = getSession();
 		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 		try {

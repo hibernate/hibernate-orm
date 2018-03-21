@@ -7,7 +7,9 @@
 package org.hibernate.engine.spi;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.internal.CacheImpl;
+import org.hibernate.cache.internal.DisabledCaching;
+import org.hibernate.cache.internal.EnabledCaching;
+import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
 
@@ -25,7 +27,9 @@ public class CacheInitiator implements SessionFactoryServiceInitiator<CacheImple
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryOptions sessionFactoryOptions,
 			ServiceRegistryImplementor registry) {
-		return new CacheImpl( sessionFactory );
+		return sessionFactoryOptions.isSecondLevelCacheEnabled()
+				? new EnabledCaching( sessionFactory )
+				: new DisabledCaching( sessionFactory );
 	}
 
 	@Override

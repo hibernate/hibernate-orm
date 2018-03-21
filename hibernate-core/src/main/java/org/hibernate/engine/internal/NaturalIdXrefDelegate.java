@@ -15,11 +15,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -107,7 +108,7 @@ public class NaturalIdXrefDelegate {
 		}
 
 		if ( persister.hasNaturalIdCache() ) {
-			final NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy = persister
+			final NaturalIdDataAccess naturalIdCacheAccessStrategy = persister
 					.getNaturalIdCacheAccessStrategy();
 			final Object naturalIdCacheKey = naturalIdCacheAccessStrategy.generateCacheKey( naturalIdValues, persister, session() );
 			naturalIdCacheAccessStrategy.evict( naturalIdCacheKey );
@@ -238,7 +239,7 @@ public class NaturalIdXrefDelegate {
 		}
 
 		// Try resolution from second-level cache
-		final NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy = persister.getNaturalIdCacheAccessStrategy();
+		final NaturalIdDataAccess naturalIdCacheAccessStrategy = persister.getNaturalIdCacheAccessStrategy();
 		final Object naturalIdCacheKey = naturalIdCacheAccessStrategy.generateCacheKey( naturalIdValues, persister, session() );
 
 		pk = CacheHelper.fromSharedCache( session(), naturalIdCacheKey, naturalIdCacheAccessStrategy );
@@ -247,7 +248,8 @@ public class NaturalIdXrefDelegate {
 		final SessionFactoryImplementor factory = session().getFactory();
 		if ( pk != null ) {
 			if ( factory.getStatistics().isStatisticsEnabled() ) {
-				factory.getStatisticsImplementor().naturalIdCacheHit(
+				factory.getStatistics().naturalIdCacheHit(
+						StatsHelper.INSTANCE.getRootEntityRole( persister ),
 						naturalIdCacheAccessStrategy.getRegion().getName()
 				);
 			}
@@ -274,7 +276,10 @@ public class NaturalIdXrefDelegate {
 			entityNaturalIdResolutionCache.naturalIdToPkMap.put( cachedNaturalId, pk );
 		}
 		else if ( factory.getStatistics().isStatisticsEnabled() ) {
-			factory.getStatisticsImplementor().naturalIdCacheMiss( naturalIdCacheAccessStrategy.getRegion().getName() );
+			factory.getStatistics().naturalIdCacheMiss(
+					StatsHelper.INSTANCE.getRootEntityRole( persister ),
+					naturalIdCacheAccessStrategy.getRegion().getName()
+			);
 		}
 
 		return pk;

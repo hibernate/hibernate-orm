@@ -11,7 +11,7 @@
 
 <hibernate-mapping>
 
-    <class name="org.hibernate.test.domain.PhoneNumber" table="PHONE_NUMBERS">
+    <class name="org.hibernate.jcache.test.domain.PhoneNumber" table="PHONE_NUMBERS">
         <composite-id>
             <key-property column="PERSON_ID" name="personId" type="java.lang.Long"/>
             <key-property column="NUMBER_TYPE" name="numberType" type="java.lang.String"/>

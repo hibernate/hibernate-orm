@@ -28,6 +28,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderFactory;
+import org.hibernate.cache.cfg.internal.DomainDataRegionConfigImpl;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.dialect.function.SQLFunction;
@@ -77,6 +78,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String, ResultSetMappingDefinition> sqlResultSetMappingMap;
 	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
 	private final Map<String, SQLFunction> sqlFunctionMap;
+	private final java.util.Collection<DomainDataRegionConfigImpl.Builder> cacheRegionConfigBuilders;
 	private final Database database;
 
 	public MetadataImpl(
@@ -98,6 +100,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			Map<String, ResultSetMappingDefinition> sqlResultSetMappingMap,
 			Map<String, NamedEntityGraphDefinition> namedEntityGraphMap,
 			Map<String, SQLFunction> sqlFunctionMap,
+			java.util.Collection<DomainDataRegionConfigImpl.Builder> cacheRegionConfigBuilders,
 			Database database) {
 		this.uuid = uuid;
 		this.metadataBuildingOptions = metadataBuildingOptions;
@@ -117,6 +120,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		this.sqlResultSetMappingMap = sqlResultSetMappingMap;
 		this.namedEntityGraphMap = namedEntityGraphMap;
 		this.sqlFunctionMap = sqlFunctionMap;
+		this.cacheRegionConfigBuilders = cacheRegionConfigBuilders;
 		this.database = database;
 	}
 

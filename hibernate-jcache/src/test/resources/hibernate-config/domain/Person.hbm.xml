@@ -11,7 +11,7 @@
 
 <hibernate-mapping>
 
-    <class name="org.hibernate.test.domain.Person" table="PERSON" lazy="true">
+    <class name="org.hibernate.jcache.test.domain.Person" table="PERSON" lazy="true">
         <id name="id" column="PERSON_ID">
             <generator class="native"/>
         </id>
@@ -22,7 +22,7 @@
         <list name="events" table="PERSON_EVENT" lazy="true">
             <key column="PERSON_ID"/>
             <list-index column="EVENT_ORDER"/>
-            <many-to-many column="EVENT_ID" class="org.hibernate.test.domain.Event"/>
+            <many-to-many column="EVENT_ID" class="org.hibernate.jcache.test.domain.Event"/>
         </list>
 
         <bag name="talismans" table="PERSON_TALISMAN" lazy="true">
@@ -37,7 +37,7 @@
 
         <set name="phoneNumbers" cascade="all" lazy="true">
             <key column="PERSON_ID"/>
-            <one-to-many class="org.hibernate.test.domain.PhoneNumber"/>
+            <one-to-many class="org.hibernate.jcache.test.domain.PhoneNumber"/>
         </set>
 
 

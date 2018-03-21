@@ -20,7 +20,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.criterion.DetachedCriteria;
@@ -33,13 +33,10 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
-
-import org.jboss.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -101,14 +98,14 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 		Hibernate.initialize( sp.getOrders() );
 		CollectionPersister persister = sessionFactory().getCollectionPersister( Salesperson.class.getName() + ".orders" );
 		assertTrue( "No cache for collection", persister.hasCache() );
-		CollectionRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+		CollectionDataAccess cache = persister.getCacheAccessStrategy();
 		Object cacheKey = cache.generateCacheKey(
 				testData.steveId,
 				persister,
 				sessionFactory(),
 				session.getTenantIdentifier()
 		);
-		CollectionCacheEntry cachedData = ( CollectionCacheEntry ) cache.get( ( SessionImplementor ) session, cacheKey, ts );
+		CollectionCacheEntry cachedData = ( CollectionCacheEntry ) cache.get( ( SessionImplementor ) session, cacheKey );
 		assertNotNull( "collection was not in cache", cachedData );
 
 		session.close();
@@ -127,7 +124,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 				sessionFactory(),
 				session.getTenantIdentifier()
 		);
-		CollectionCacheEntry cachedData2 = ( CollectionCacheEntry ) persister.getCacheAccessStrategy().get( ( SessionImplementor ) session, cacheKey2, ts );
+		CollectionCacheEntry cachedData2 = ( CollectionCacheEntry ) persister.getCacheAccessStrategy().get( ( SessionImplementor ) session, cacheKey2 );
 		assertNotNull( "collection no longer in cache!", cachedData2 );
 		assertSame( "Different cache values!", cachedData, cachedData2 );
 

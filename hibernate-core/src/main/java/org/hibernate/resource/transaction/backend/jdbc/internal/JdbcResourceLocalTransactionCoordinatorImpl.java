@@ -11,7 +11,6 @@ import java.util.List;
 import javax.persistence.RollbackException;
 import javax.transaction.Status;
 
-import org.hibernate.TransactionException;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
@@ -158,7 +157,15 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		if(this.timeOut > 0) {
 			transactionCoordinatorOwner.setTransactionTimeOut( this.timeOut );
 		}
+
+
+		// report entering into a "transactional context"
+		transactionCoordinatorOwner.startTransactionBoundary();
+
+		// trigger the Transaction-API-only after-begin callback
 		transactionCoordinatorOwner.afterTransactionBegin();
+
+		// notify all registered observers
 		for ( TransactionObserver observer : observers() ) {
 			observer.afterBegin();
 		}

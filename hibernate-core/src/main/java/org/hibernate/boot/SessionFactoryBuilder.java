@@ -15,7 +15,7 @@ import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.NullPrecedence;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.cache.spi.QueryCacheFactory;
+import org.hibernate.cache.spi.TimestampsRegionAccessFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
@@ -491,7 +491,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#QUERY_CACHE_FACTORY
 	 */
-	SessionFactoryBuilder applyQueryCacheFactory(QueryCacheFactory factory);
+	SessionFactoryBuilder applyTimestampsRegionAccessFactory(TimestampsRegionAccessFactory factory);
 
 	/**
 	 * Apply a prefix to prepended to all cache region names for this SessionFactory.

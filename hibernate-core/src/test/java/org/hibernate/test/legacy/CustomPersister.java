@@ -19,8 +19,8 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityDataAccess;
+import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
@@ -43,6 +43,7 @@ import org.hibernate.internal.StaticFilterAliasGenerator;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.MultiLoadOptions;
 import org.hibernate.persister.spi.PersisterCreationContext;
@@ -66,8 +67,8 @@ public class CustomPersister implements EntityPersister {
 	@SuppressWarnings("UnusedParameters")
 	public CustomPersister(
 			PersistentClass model,
-			EntityRegionAccessStrategy cacheAccessStrategy,
-			NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
+			EntityDataAccess cacheAccessStrategy,
+			NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			PersisterCreationContext creationContext) {
 		this.factory = creationContext.getSessionFactory();
 		this.entityMetamodel = new EntityMetamodel( model, this, factory );
@@ -83,6 +84,11 @@ public class CustomPersister implements EntityPersister {
 
 	public SessionFactoryImplementor getFactory() {
 		return factory;
+	}
+
+	@Override
+	public NavigableRole getNavigableRole() {
+		return new NavigableRole( getEntityName() );
 	}
 
 	@Override
@@ -472,7 +478,7 @@ public class CustomPersister implements EntityPersister {
 		return false;
 	}
 
-	public EntityRegionAccessStrategy getCacheAccessStrategy() {
+	public EntityDataAccess getCacheAccessStrategy() {
 		return null;
 	}
 	
@@ -480,7 +486,7 @@ public class CustomPersister implements EntityPersister {
 		return false;
 	}
 
-	public NaturalIdRegionAccessStrategy getNaturalIdCacheAccessStrategy() {
+	public NaturalIdDataAccess getNaturalIdCacheAccessStrategy() {
 		return null;
 	}
 
@@ -679,7 +685,6 @@ public class CustomPersister implements EntityPersister {
 		return null;
 	}
 
-	@Override
 	public Comparator getVersionComparator() {
 		return null;
 	}

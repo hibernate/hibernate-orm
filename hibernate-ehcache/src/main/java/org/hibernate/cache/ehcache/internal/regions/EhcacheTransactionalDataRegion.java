@@ -19,8 +19,6 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.nonstop.HibernateNonstopCacheExceptionHandler;
 import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory;
-import org.hibernate.cache.spi.CacheDataDescription;
-import org.hibernate.cache.spi.TransactionalDataRegion;
 
 /**
  * An Ehcache specific TransactionalDataRegion.

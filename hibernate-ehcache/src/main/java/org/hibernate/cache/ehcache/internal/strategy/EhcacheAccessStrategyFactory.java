@@ -10,9 +10,6 @@ import org.hibernate.cache.ehcache.internal.regions.EhcacheCollectionRegion;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheEntityRegion;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheNaturalIdRegion;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 
 /**
  * Factory to create {@link org.hibernate.cache.spi.access.RegionAccessStrategy} instance

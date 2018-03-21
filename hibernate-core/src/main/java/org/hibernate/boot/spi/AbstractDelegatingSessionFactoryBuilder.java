@@ -17,7 +17,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
-import org.hibernate.cache.spi.QueryCacheFactory;
+import org.hibernate.cache.spi.TimestampsRegionAccessFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
@@ -279,8 +279,8 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public T applyQueryCacheFactory(QueryCacheFactory factory) {
-		delegate.applyQueryCacheFactory( factory );
+	public SessionFactoryBuilder applyTimestampsRegionAccessFactory(TimestampsRegionAccessFactory factory) {
+		delegate.applyTimestampsRegionAccessFactory( factory );
 		return getThis();
 	}
 

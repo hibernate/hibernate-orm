@@ -209,7 +209,7 @@ public class HibernateStatsImpl extends AbstractEmitterBean implements Hibernate
 		for ( String region : statistics.getSecondLevelCacheRegionNames() ) {
 			final CacheRegionStats l2CacheStats = new CacheRegionStats(
 					region,
-					statistics.getSecondLevelCacheStatistics( region )
+					statistics.getDomainDataRegionStatistics( region )
 			);
 			list.add( l2CacheStats.toCompositeData() );
 		}

@@ -6,10 +6,12 @@
  */
 package org.hibernate.boot.spi;
 
+import java.util.Collection;
 import java.util.Set;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
+import org.hibernate.cache.cfg.internal.DomainDataRegionConfigImpl;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.mapping.MappedSuperclass;

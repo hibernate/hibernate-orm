@@ -172,6 +172,9 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		getSynchronizationCallbackCoordinator().synchronizationRegistered();
 		synchronizationRegistered = true;
 		log.debug( "Hibernate RegisteredSynchronization successfully registered with JTA platform" );
+
+		// report entering into a "transactional context"
+		getTransactionCoordinatorOwner().startTransactionBoundary();
 	}
 
 	@Override

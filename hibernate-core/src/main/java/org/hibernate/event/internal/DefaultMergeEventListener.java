@@ -316,8 +316,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			}
 			else if ( isVersionChanged( entity, source, persister, target ) ) {
 				if ( source.getFactory().getStatistics().isStatisticsEnabled() ) {
-					source.getFactory().getStatisticsImplementor()
-							.optimisticFailure( entityName );
+					source.getFactory().getStatistics().optimisticFailure( entityName );
 				}
 				throw new StaleObjectStateException( entityName, id );
 			}

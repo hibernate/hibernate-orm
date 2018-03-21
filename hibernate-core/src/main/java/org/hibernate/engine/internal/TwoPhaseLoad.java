@@ -13,7 +13,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
@@ -37,6 +37,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
@@ -200,7 +201,7 @@ public final class TwoPhaseLoad {
 
 			final Object version = Versioning.getVersion( hydratedState, persister );
 			final CacheEntry entry = persister.buildCacheEntry( entity, hydratedState, version, session );
-			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+			final EntityDataAccess cache = persister.getCacheAccessStrategy();
 			final Object cacheKey = cache.generateCacheKey( id, persister, factory, session.getTenantIdentifier() );
 
 			// explicit handling of caching for rows just inserted and then somehow forced to be read
@@ -226,13 +227,15 @@ public final class TwoPhaseLoad {
 							session,
 							cacheKey,
 							persister.getCacheEntryStructure().structure( entry ),
-							session.getTimestamp(),
 							version,
 							useMinimalPuts( session, entityEntry )
 					);
 
 					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-						factory.getStatistics().secondLevelCachePut( cache.getRegion().getName() );
+						factory.getStatistics().entityCachePut(
+								StatsHelper.INSTANCE.getRootEntityRole( persister ),
+								cache.getRegion().getName()
+						);
 					}
 				}
 				finally {

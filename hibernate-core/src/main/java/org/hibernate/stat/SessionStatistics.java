@@ -17,21 +17,21 @@ public interface SessionStatistics {
 	/**
 	 * Get the number of entity instances associated with the session
 	 */
-	public int getEntityCount();
+	int getEntityCount();
 	/**
 	 * Get the number of collection instances associated with the session
 	 */
-	public int getCollectionCount();
+	int getCollectionCount();
 
 	/**
 	 * Get the set of all <tt>EntityKey</tt>s
 	 * @see org.hibernate.engine.spi.EntityKey
 	 */
-	public Set getEntityKeys();
+	Set getEntityKeys();
 	/**
 	 * Get the set of all <tt>CollectionKey</tt>s
 	 * @see org.hibernate.engine.spi.CollectionKey
 	 */
-	public Set getCollectionKeys();
+	Set getCollectionKeys();
 	
 }

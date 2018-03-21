@@ -13,13 +13,14 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.type.CollectionType;
@@ -47,7 +48,7 @@ import org.hibernate.type.Type;
  *         by the persister
  *     </li>
  *     <li>
- *         {@link CollectionRegionAccessStrategy} - the second level caching strategy for this collection
+ *         {@link CollectionDataAccess} - the second level caching strategy for this collection
  *     </li>
  *     <li>
  *         {@link org.hibernate.persister.spi.PersisterCreationContext} - access to additional
@@ -72,7 +73,10 @@ public interface CollectionPersister extends CollectionDefinition {
 	/**
 	 * Get the cache
 	 */
-	CollectionRegionAccessStrategy getCacheAccessStrategy();
+	CollectionDataAccess getCacheAccessStrategy();
+
+	NavigableRole getNavigableRole();
+
 	/**
 	 * Get the cache structure
 	 */

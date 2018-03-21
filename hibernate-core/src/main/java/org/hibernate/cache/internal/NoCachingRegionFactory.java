@@ -6,19 +6,21 @@
  */
 package org.hibernate.cache.internal;
 
-import java.util.Properties;
+import java.util.Map;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.NoCacheRegionFactoryAvailableException;
-import org.hibernate.cache.spi.CacheDataDescription;
-import org.hibernate.cache.spi.CollectionRegion;
-import org.hibernate.cache.spi.EntityRegion;
-import org.hibernate.cache.spi.NaturalIdRegion;
+import org.hibernate.cache.cfg.spi.DomainDataRegionBuildingContext;
+import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
+import org.hibernate.cache.spi.CacheTransactionSynchronization;
+import org.hibernate.cache.spi.DomainDataRegion;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Factory used if no caching enabled in config...
@@ -38,11 +40,16 @@ public class NoCachingRegionFactory implements RegionFactory {
 	}
 
 	@Override
-	public void start(SessionFactoryOptions settings, Properties properties) throws CacheException {
+	public void start(SessionFactoryOptions settings, Map configValues) throws CacheException {
 	}
 
 	@Override
 	public void stop() {
+	}
+
+	@Override
+	public String qualify(String regionName) {
+		return regionName;
 	}
 
 	@Override
@@ -57,36 +64,29 @@ public class NoCachingRegionFactory implements RegionFactory {
 
 	@Override
 	public long nextTimestamp() {
-		return System.currentTimeMillis() / 100;
+		return System.currentTimeMillis();
 	}
 
 	@Override
-	public EntityRegion buildEntityRegion(String regionName, Properties properties, CacheDataDescription metadata)
-			throws CacheException {
+	public CacheTransactionSynchronization createTransactionContext(SharedSessionContractImplementor session) {
+		return new NoCachingTransactionSynchronizationImpl( this );
+	}
+
+	@Override
+	public DomainDataRegion buildDomainDataRegion(
+			DomainDataRegionConfig regionConfig, DomainDataRegionBuildingContext buildingContext) {
 		throw new NoCacheRegionFactoryAvailableException();
 	}
 
 	@Override
-	public NaturalIdRegion buildNaturalIdRegion(String regionName, Properties properties, CacheDataDescription metadata)
-			throws CacheException {
+	public QueryResultsRegion buildQueryResultsRegion(
+			String regionName, SessionFactoryImplementor sessionFactory) {
 		throw new NoCacheRegionFactoryAvailableException();
 	}
 
 	@Override
-	public CollectionRegion buildCollectionRegion(
-			String regionName,
-			Properties properties,
-			CacheDataDescription metadata) throws CacheException {
-		throw new NoCacheRegionFactoryAvailableException();
-	}
-
-	@Override
-	public QueryResultsRegion buildQueryResultsRegion(String regionName, Properties properties) throws CacheException {
-		throw new NoCacheRegionFactoryAvailableException();
-	}
-
-	@Override
-	public TimestampsRegion buildTimestampsRegion(String regionName, Properties properties) throws CacheException {
+	public TimestampsRegion buildTimestampsRegion(
+			String regionName, SessionFactoryImplementor sessionFactory) {
 		throw new NoCacheRegionFactoryAvailableException();
 	}
 }

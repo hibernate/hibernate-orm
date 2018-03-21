@@ -14,7 +14,14 @@ import java.io.Serializable;
  * @author Gavin King
  */
 public interface CacheRegionStatistics extends Serializable {
-	long NO_EXTENDED_STAT_SUPPORT_RETURN = Long.MIN_VALUE;;
+	/**
+	 * The value returned from {@link #getElementCountInMemory},
+	 * {@link #getElementCountOnDisk()} and {@link #getSizeInMemory()}
+	 * for cache providers that do not support such "extended" statistics.
+	 */
+	long NO_EXTENDED_STAT_SUPPORT_RETURN = Long.MIN_VALUE;
+
+	String getRegionName();
 
 	/**
 	 * The number of cache puts into the region since the last Statistics
@@ -37,7 +44,8 @@ public interface CacheRegionStatistics extends Serializable {
 	/**
 	 * The number of elements currently in memory within the cache provider.
 	 *
-	 * This is an optional value contingent upon the underlying provider defining
+	 * This is an optional value contingent upon the underlying cache provider
+	 * providing extended stats support via
 	 * {@link org.hibernate.cache.spi.ExtendedStatisticsSupport}.  If the provider
 	 * does not support extended stats, {@link #NO_EXTENDED_STAT_SUPPORT_RETURN}
 	 * is returned instead.
@@ -47,7 +55,8 @@ public interface CacheRegionStatistics extends Serializable {
 	/**
 	 * The number of elements currently stored to disk within the cache provider.
 	 *
-	 * This is an optional value contingent upon the underlying provider defining
+	 * This is an optional value contingent upon the underlying cache provider
+	 * providing extended stats support via
 	 * {@link org.hibernate.cache.spi.ExtendedStatisticsSupport}.  If the provider
 	 * does not support extended stats, {@link #NO_EXTENDED_STAT_SUPPORT_RETURN}
 	 * is returned instead.
@@ -57,7 +66,8 @@ public interface CacheRegionStatistics extends Serializable {
 	/**
 	 * The size that the in-memory elements take up within the cache provider.
 	 *
-	 * This is an optional value contingent upon the underlying provider defining
+	 * This is an optional value contingent upon the underlying cache provider
+	 * providing extended stats support via
 	 * {@link org.hibernate.cache.spi.ExtendedStatisticsSupport}.  If the provider
 	 * does not support extended stats, {@link #NO_EXTENDED_STAT_SUPPORT_RETURN}
 	 * is returned instead.

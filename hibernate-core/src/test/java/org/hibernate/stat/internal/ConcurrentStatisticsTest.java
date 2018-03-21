@@ -42,13 +42,7 @@ public class ConcurrentStatisticsTest extends BaseCoreFunctionalTestCase {
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
 		configuration.setProperty( AvailableSettings.CACHE_REGION_PREFIX, REGION_PREFIX );
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-
-		configuration.setProperty( AvailableSettings.CACHE_REGION_PREFIX, "my-app" );
+		configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
 	}
 
 	@After

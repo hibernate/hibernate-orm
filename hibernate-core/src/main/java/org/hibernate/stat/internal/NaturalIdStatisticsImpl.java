@@ -41,8 +41,8 @@ public class NaturalIdStatisticsImpl extends AbstractCacheableDataStatistics imp
 
 	NaturalIdStatisticsImpl(EntityPersister rootEntityDescriptor) {
 		super(
-				() -> rootEntityDescriptor.getCacheAccessStrategy() != null
-						? rootEntityDescriptor.getCacheAccessStrategy().getRegion()
+				() -> rootEntityDescriptor.getNaturalIdCacheAccessStrategy() != null
+						? rootEntityDescriptor.getNaturalIdCacheAccessStrategy().getRegion()
 						: null
 		);
 		this.rootEntityName = rootEntityDescriptor.getRootEntityName();

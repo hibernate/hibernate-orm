@@ -9,24 +9,29 @@ package org.hibernate.cache.jcache.internal;
 import javax.cache.Cache;
 
 import org.hibernate.cache.spi.TimestampsRegion;
-import org.hibernate.cache.spi.support.AbstractRegion;
+import org.hibernate.cache.spi.support.DirectAccessRegionTemplate;
+import org.hibernate.cache.spi.support.StorageAccess;
 
 /**
- * A timestamps region specific wrapper around an Ehcache instance.
+ * Access to a JCache Cache used to store "update timestamps".
  *
  * @author Chris Dennis
  * @author Abhishek Sanoujam
  * @author Alex Snaps
  */
-public class TimestampsRegionImpl extends AbstractRegion implements TimestampsRegion {
+public class TimestampsRegionImpl extends DirectAccessRegionTemplate implements TimestampsRegion {
+	private final JCacheAccessImpl cacheAccess;
+
 	public TimestampsRegionImpl(
 			String regionName,
 			JCacheRegionFactory regionFactory,
 			Cache cache) {
-		super(
-				regionName,
-				regionFactory,
-				new JCacheAccessImpl( cache )
-		);
+		super( regionName, regionFactory );
+		this.cacheAccess = new JCacheAccessImpl( cache );
+	}
+
+	@Override
+	public StorageAccess getStorageAccess() {
+		return cacheAccess;
 	}
 }

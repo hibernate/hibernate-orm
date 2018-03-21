@@ -9,6 +9,7 @@ package org.hibernate.cache.spi.support;
 import org.hibernate.cache.cfg.spi.NaturalIdDataCachingConfig;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -25,6 +26,11 @@ public class NaturalIdNonStrictReadWriteAccess extends AbstractNaturalIdDataAcce
 			DomainDataStorageAccess storageAccess,
 			NaturalIdDataCachingConfig config) {
 		super( region, keysFactory, storageAccess, config );
+	}
+
+	@Override
+	public AccessType getAccessType() {
+		return AccessType.NONSTRICT_READ_WRITE;
 	}
 
 	@Override

@@ -16,6 +16,8 @@ import org.hibernate.cache.cfg.spi.DomainDataRegionBuildingContext;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
 import org.hibernate.cache.cfg.spi.EntityDataCachingConfig;
 import org.hibernate.cache.cfg.spi.NaturalIdDataCachingConfig;
+import org.hibernate.cache.internal.DefaultCacheKeysFactory;
+import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
@@ -24,36 +26,59 @@ import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 
+import org.jboss.logging.Logger;
+
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractDomainDataRegion extends AbstractRegion implements DomainDataRegion {
-	private final SessionFactoryImplementor sessionFactory;
+	private static final Logger log = Logger.getLogger( AbstractDomainDataRegion.class );
 
-	private final Map<NavigableRole,EntityDataAccess> entityDataAccessMap;
-	private final Map<NavigableRole,NaturalIdDataAccess> naturalIdDataAccessMap;
-	private final Map<NavigableRole,CollectionDataAccess> collectionDataAccessMap;
+	private final SessionFactoryImplementor sessionFactory;
+	private final CacheKeysFactory effectiveKeysFactory;
+
+	private Map<NavigableRole,EntityDataAccess> entityDataAccessMap;
+	private Map<NavigableRole,NaturalIdDataAccess> naturalIdDataAccessMap;
+	private Map<NavigableRole,CollectionDataAccess> collectionDataAccessMap;
 
 	public AbstractDomainDataRegion(
 			DomainDataRegionConfig regionConfig,
 			RegionFactory regionFactory,
-			DomainDataStorageAccess storageAccess,
+			CacheKeysFactory defaultKeysFactory,
 			DomainDataRegionBuildingContext buildingContext) {
-		super( regionFactory.qualify( regionConfig.getRegionName() ), regionFactory, storageAccess );
+//		super( regionFactory.qualify( regionConfig.getRegionName() ), regionFactory );
+		super( regionConfig.getRegionName(), regionFactory );
+
 		this.sessionFactory = buildingContext.getSessionFactory();
+
+		this.effectiveKeysFactory = buildingContext.getEnforcedCacheKeysFactory() != null
+				? buildingContext.getEnforcedCacheKeysFactory()
+				: defaultKeysFactory != null ? defaultKeysFactory : DefaultCacheKeysFactory.INSTANCE;
+	}
+
+	/**
+	 * Should be called at the end of the subtype's constructor, or at least after the
+	 * `#super(...)` (aka, this type's constructor) call.  It's a timing issue - we need access
+	 * to the DomainDataStorageAccess in DomainDataRegionTemplate but in methods initiated
+	 * (atm) from AbstractDomainDataRegion's constructor
+	 */
+	protected void completeInstantiation(
+			DomainDataRegionConfig regionConfig,
+			DomainDataRegionBuildingContext buildingContext) {
+		log.tracef( "DomainDataRegion created [%s]; key-factory = %s", regionConfig.getRegionName(), effectiveKeysFactory );
 
 		this.entityDataAccessMap = generateEntityDataAccessMap( regionConfig );
 		this.naturalIdDataAccessMap = generateNaturalIdDataAccessMap( regionConfig );
 		this.collectionDataAccessMap = generateCollectionDataAccessMap( regionConfig );
+
 	}
 
 	public SessionFactoryImplementor getSessionFactory() {
 		return sessionFactory;
 	}
 
-	@Override
-	public DomainDataStorageAccess getStorageAccess() {
-		return (DomainDataStorageAccess) super.getStorageAccess();
+	public CacheKeysFactory getEffectiveKeysFactory() {
+		return effectiveKeysFactory;
 	}
 
 	@Override
@@ -154,8 +179,6 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 		for ( CollectionDataAccess cacheAccess : collectionDataAccessMap.values() ) {
 			cacheAccess.evictAll();
 		}
-
-		getStorageAccess().release();
 	}
 
 

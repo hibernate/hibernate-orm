@@ -24,6 +24,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 public interface CachedDomainDataAccess {
 	DomainDataRegion getRegion();
 
+	AccessType getAccessType();
+
 	/**
 	 * Determine whether this region contains data for the given key.
 	 * <p/>

@@ -10,6 +10,8 @@ package org.hibernate.stat;
  * @author Steve Ebersole
  */
 public interface CacheableDataStatistics {
+	long NOT_CACHED_COUNT = Long.MIN_VALUE;
+
 	/**
 	 * The name of the region where this data is cached.
 	 */
@@ -26,7 +28,6 @@ public interface CacheableDataStatistics {
 	 * configured cache region since the last Statistics clearing
 	 */
 	long getCacheHitCount();
-
 
 	/**
 	 * The number of unsuccessful cache look-ups for this data from its

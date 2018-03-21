@@ -120,7 +120,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		}
 	}
 
-	protected abstract RegionAccessType getAccessType();
+	protected abstract AccessedDataClassification getAccessedDataClassification();
 
 	@Override
 	public final boolean putFromLoad(

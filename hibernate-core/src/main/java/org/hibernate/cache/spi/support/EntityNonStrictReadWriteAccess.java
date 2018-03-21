@@ -10,6 +10,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.cfg.spi.EntityDataCachingConfig;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -28,6 +29,10 @@ public class EntityNonStrictReadWriteAccess extends AbstractEntityDataAccess {
 		super( domainDataRegion, keysFactory, storageAccess );
 	}
 
+	@Override
+	public AccessType getAccessType() {
+		return AccessType.NONSTRICT_READ_WRITE;
+	}
 
 	@Override
 	public boolean insert(

@@ -37,6 +37,7 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public interface NaturalIdDataAccess extends CachedDomainDataAccess {
 
+
 	/**
 	 * To create instances of NaturalIdCacheKey for this region, Hibernate will invoke this method
 	 * exclusively so that generated implementations can generate optimised keys.

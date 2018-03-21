@@ -11,12 +11,12 @@
 
 <hibernate-mapping>
 
-    <class name="org.hibernate.test.domain.Account" table="ACCOUNT" lazy="false">
+    <class name="org.hibernate.jcache.test.domain.Account" table="ACCOUNT" lazy="false">
         <id name="id" column="ACCOUNT_ID">
             <generator class="native"/>
         </id>
 
-        <many-to-one name="person" class="org.hibernate.test.domain.Person" cascade="save-update,lock"
+        <many-to-one name="person" class="org.hibernate.jcache.test.domain.Person" cascade="save-update,lock"
                      column="person_id"
                      unique="true"
                      not-null="true"/>

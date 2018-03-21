@@ -44,6 +44,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
@@ -651,12 +652,14 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		final Object ce = CacheHelper.fromSharedCache( source, ck, persister.getCacheAccessStrategy() );
 		if ( source.getFactory().getStatistics().isStatisticsEnabled() ) {
 			if ( ce == null ) {
-				source.getFactory().getStatistics().secondLevelCacheMiss(
+				source.getFactory().getStatistics().entityCacheMiss(
+						StatsHelper.INSTANCE.getRootEntityRole( persister ),
 						cache.getRegion().getName()
 				);
 			}
 			else {
-				source.getFactory().getStatistics().secondLevelCacheHit(
+				source.getFactory().getStatistics().entityCacheHit(
+						StatsHelper.INSTANCE.getRootEntityRole( persister ),
 						cache.getRegion().getName()
 				);
 			}

@@ -12,19 +12,34 @@ import java.util.function.Supplier;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.stat.CacheableDataStatistics;
 
+import org.jboss.logging.Logger;
+
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractCacheableDataStatistics implements CacheableDataStatistics {
+	private static final Logger log = Logger.getLogger( AbstractCacheableDataStatistics.class );
+
 	private final String cacheRegionName;
 
-	private final AtomicLong cacheHitCount = new AtomicLong();
-	private final AtomicLong cacheMissCount = new AtomicLong();
-	private final AtomicLong cachePutCount = new AtomicLong();
+	private final AtomicLong cacheHitCount;
+	private final AtomicLong cacheMissCount;
+	private final AtomicLong cachePutCount;
 
 	public AbstractCacheableDataStatistics(Supplier<Region> regionSupplier) {
 		final Region region = regionSupplier.get();
-		this.cacheRegionName = region != null ? region.getName() : null;
+		if ( region == null ) {
+			this.cacheRegionName = null;
+			this.cacheHitCount = null;
+			this.cacheMissCount = null;
+			this.cachePutCount = null;
+		}
+		else {
+			this.cacheRegionName = region.getName();
+			this.cacheHitCount = new AtomicLong();
+			this.cacheMissCount = new AtomicLong();
+			this.cachePutCount = new AtomicLong();
+		}
 	}
 
 	@Override
@@ -33,18 +48,30 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 	}
 
 	public long getCacheHitCount() {
+		if ( cacheRegionName == null ) {
+			return NOT_CACHED_COUNT;
+		}
+
 		return cacheHitCount.get();
 	}
 
 	public long getCachePutCount() {
+		if ( cacheRegionName == null ) {
+			return NOT_CACHED_COUNT;
+		}
+
 		return cachePutCount.get();
 	}
 
 	public long getCacheMissCount() {
+		if ( cacheRegionName == null ) {
+			return NOT_CACHED_COUNT;
+		}
+
 		return cacheMissCount.get();
 	}
 
-	void incrementCacheHitCount() {
+	public void incrementCacheHitCount() {
 		if ( cacheRegionName == null ) {
 			throw new IllegalStateException( "Illegal attempt to increment cache hit count for non-cached data" );
 		}
@@ -52,7 +79,7 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 		cacheHitCount.getAndIncrement();
 	}
 
-	void incrementCacheMissCount() {
+	public void incrementCacheMissCount() {
 		if ( cacheRegionName == null ) {
 			throw new IllegalStateException( "Illegal attempt to increment cache miss count for non-cached data" );
 		}
@@ -60,7 +87,7 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 		cacheMissCount.getAndIncrement();
 	}
 
-	void incrementCachePutCount() {
+	public void incrementCachePutCount() {
 		if ( cacheRegionName == null ) {
 			throw new IllegalStateException( "Illegal attempt to increment cache put count for non-cached data" );
 		}
@@ -69,12 +96,13 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 	}
 
 	protected void appendCacheStats(StringBuilder buf) {
+		buf.append( ",cacheRegion=" ).append( cacheRegionName );
+
 		if ( cacheRegionName == null ) {
 			return;
 		}
 
-		buf.append( ",cacheRegion=" ).append( cacheRegionName )
-				.append( ",cacheHitCount=" ).append( getCacheHitCount() )
+		buf.append( ",cacheHitCount=" ).append( getCacheHitCount() )
 				.append( ",cacheMissCount=" ).append( getCacheMissCount() )
 				.append( ",cachePutCount=" ).append( getCachePutCount() );
 

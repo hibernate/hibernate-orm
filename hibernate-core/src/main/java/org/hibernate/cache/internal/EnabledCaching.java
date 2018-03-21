@@ -84,9 +84,10 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 			timestampsRegionAccess = sessionFactory.getSessionFactoryOptions()
 					.getTimestampsRegionAccessFactory()
 					.buildTimestampsRegionAccess( this, timestampsRegion );
+			legacySecondLevelCacheNames.add( timestampsRegion.getName() );
 
 			final QueryResultsRegion queryResultsRegion = regionFactory.buildQueryResultsRegion(
-					QueryResultRegionAccessImpl.class.getName(),
+					QueryResultsRegion.class.getName(),
 					sessionFactory
 			);
 			regionsByName.put( queryResultsRegion.getName(), queryResultsRegion );
@@ -111,7 +112,9 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 				throw new HibernateException(
 						String.format(
 								Locale.ROOT,
-								"Region returned from RegionFactory was named differently than requested name.  Expecting `%s`, but found `%s`",
+								"Region [%s] returned from RegionFactory [%s] was named differently than requested name.  Expecting `%s`, but found `%s`",
+								region,
+								getRegionFactory().getClass().getName(),
 								regionConfig.getRegionName(),
 								region.getName()
 						)
@@ -494,6 +497,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 				timestampsRegionAccess
 		);
 		namedQueryResultsRegionAccess.put( regionName, regionAccess );
+		legacySecondLevelCacheNames.add( regionName );
 		return regionAccess;
 	}
 
@@ -578,7 +582,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	@Override
-	public NaturalIdDataAccess getNaturalIdRegionAccess(NavigableRole rootEntityName) {
+	public NaturalIdDataAccess getNaturalIdCacheRegionAccessStrategy(NavigableRole rootEntityName) {
 		return naturalIdAccessMap.get( rootEntityName );
 	}
 

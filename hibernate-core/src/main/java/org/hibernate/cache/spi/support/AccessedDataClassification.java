@@ -9,7 +9,7 @@ package org.hibernate.cache.spi.support;
 /**
  * @author Steve Ebersole
  */
-public enum RegionAccessType {
+public enum AccessedDataClassification {
 	ENTITY,
 	NATURAL_ID,
 	COLLECTION,

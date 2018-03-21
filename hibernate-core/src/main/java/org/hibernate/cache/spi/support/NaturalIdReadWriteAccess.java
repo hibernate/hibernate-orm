@@ -11,6 +11,7 @@ import java.util.Comparator;
 import org.hibernate.cache.cfg.spi.NaturalIdDataCachingConfig;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -35,8 +36,13 @@ public class NaturalIdReadWriteAccess extends AbstractReadWriteAccess implements
 	}
 
 	@Override
-	protected RegionAccessType getAccessType() {
-		return RegionAccessType.NATURAL_ID;
+	protected AccessedDataClassification getAccessedDataClassification() {
+		return AccessedDataClassification.NATURAL_ID;
+	}
+
+	@Override
+	public AccessType getAccessType() {
+		return AccessType.READ_WRITE;
 	}
 
 	@Override

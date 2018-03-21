@@ -11,21 +11,21 @@
 
 <hibernate-mapping>
 
-    <class name="org.hibernate.test.domain.Event" table="EVENTS">
+    <class name="org.hibernate.jcache.test.domain.Event" table="EVENTS">
         <cache usage="read-write"/>
         <id name="id" column="EVENT_ID">
             <generator class="native"/>
         </id>
         <property name="date" type="timestamp" column="EVENT_DATE"/>
         <property name="title"/>
-        <many-to-one name="organizer" column="EVENT_ORGANIZER" class="org.hibernate.test.domain.Person"/>
+        <many-to-one name="organizer" column="EVENT_ORGANIZER" class="org.hibernate.jcache.test.domain.Person"/>
 
         <set name="participants" table="PERSON_EVENT" lazy="false"
              inverse="true" cascade="lock">
             <cache usage="read-write"/>
             <key column="EVENT_ID"/>
             <many-to-many column="PERSON_ID"
-                          class="org.hibernate.test.domain.Person"/>
+                          class="org.hibernate.jcache.test.domain.Person"/>
         </set>
     </class>
 

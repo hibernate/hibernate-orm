@@ -11,7 +11,7 @@
 
 <hibernate-mapping>
 
-    <class name="org.hibernate.test.domain.HolidayCalendar" table="CALENDAR" lazy="false">
+    <class name="org.hibernate.jcache.test.domain.HolidayCalendar" table="CALENDAR" lazy="false">
         <id name="id" column="CALENDAR_ID">
             <generator class="native"/>
         </id>

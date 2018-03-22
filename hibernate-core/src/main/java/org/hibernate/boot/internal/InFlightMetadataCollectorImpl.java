@@ -48,6 +48,7 @@ import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
@@ -1400,8 +1401,17 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 
 		@Override
-		public void addSecondaryTable(Identifier logicalName, Join secondaryTableJoin) {
-			if ( Identifier.areEqual( primaryTableLogicalName, logicalName ) ) {
+		public void addSecondaryTable(QualifiedTableName logicalQualifiedTableName, Join secondaryTableJoin) {
+			Identifier logicalName = logicalQualifiedTableName.getTableName();
+			if ( Identifier.areEqual(
+				Identifier.toIdentifier(
+					new QualifiedTableName(
+						Identifier.toIdentifier( primaryTable.getCatalog() ),
+						Identifier.toIdentifier( primaryTable.getSchema() ),
+						primaryTableLogicalName
+					).render()
+				),
+				Identifier.toIdentifier( logicalQualifiedTableName.render() ) ) ) {
 				throw new DuplicateSecondaryTableException( logicalName );
 			}
 

@@ -10,6 +10,7 @@ import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.sql.Connection;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -122,20 +123,31 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 				return instantiateExplicitConnectionProvider( providerClass );
 			}
 			else {
-				String providerName = explicitSetting.toString();
-				if ( LEGACY_CONNECTION_PROVIDER_MAPPING.containsKey( providerName ) ) {
-					final String actualProviderName = LEGACY_CONNECTION_PROVIDER_MAPPING.get( providerName );
-					DeprecationLogger.DEPRECATION_LOGGER.connectionProviderClassDeprecated( providerName, actualProviderName );
-					providerName = actualProviderName;
-				}
+				String providerName = StringHelper.nullIfEmpty( explicitSetting.toString() );
+				if ( providerName != null ) {
+					if ( LEGACY_CONNECTION_PROVIDER_MAPPING.containsKey( providerName ) ) {
+						final String actualProviderName = LEGACY_CONNECTION_PROVIDER_MAPPING.get( providerName );
+						DeprecationLogger.DEPRECATION_LOGGER.connectionProviderClassDeprecated(
+								providerName,
+								actualProviderName
+						);
+						providerName = actualProviderName;
+					}
 
-				LOG.instantiatingExplicitConnectionProvider( providerName );
-				final Class providerClass = strategySelector.selectStrategyImplementor( ConnectionProvider.class, providerName );
-				try {
-					return instantiateExplicitConnectionProvider( providerClass );
-				}
-				catch (Exception e) {
-					throw new HibernateException( "Could not instantiate connection provider [" + providerName + "]", e );
+					LOG.instantiatingExplicitConnectionProvider( providerName );
+					final Class providerClass = strategySelector.selectStrategyImplementor(
+							ConnectionProvider.class,
+							providerName
+					);
+					try {
+						return instantiateExplicitConnectionProvider( providerClass );
+					}
+					catch (Exception e) {
+						throw new HibernateException(
+								"Could not instantiate connection provider [" + providerName + "]",
+								e
+						);
+					}
 				}
 			}
 		}
@@ -145,6 +157,16 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		}
 
 		ConnectionProvider connectionProvider = null;
+
+		final Class<? extends ConnectionProvider> singleRegisteredProvider = getSingleRegisteredProvider( strategySelector );
+		if ( singleRegisteredProvider != null ) {
+			try {
+				connectionProvider = singleRegisteredProvider.newInstance();
+			}
+			catch (IllegalAccessException | InstantiationException e) {
+				throw new HibernateException( "Could not instantiate singular-registered ConnectionProvider", e );
+			}
+		}
 
 		if ( connectionProvider == null ) {
 			if ( c3p0ConfigDefined( configurationValues ) ) {
@@ -212,6 +234,15 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		}
 
 		return connectionProvider;
+	}
+
+	private Class<? extends ConnectionProvider> getSingleRegisteredProvider(StrategySelector strategySelector) {
+		final Collection<Class<? extends ConnectionProvider>> implementors = strategySelector.getRegisteredStrategyImplementors( ConnectionProvider.class );
+		if ( implementors != null && implementors.size() == 1 ) {
+			return implementors.iterator().next();
+		}
+
+		return null;
 	}
 
 	private ConnectionProvider instantiateExplicitConnectionProvider(Class providerClass) {

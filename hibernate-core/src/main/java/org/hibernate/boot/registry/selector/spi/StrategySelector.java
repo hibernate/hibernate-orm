@@ -146,5 +146,5 @@ public interface StrategySelector extends Service {
 	 * to allow defaulting the choice to the single registered implementor when
 	 * only one is registered
 	 */
-	<T> Collection<T> getRegisteredStrategyImplementors(Class<T> strategy);
+	<T> Collection<Class<? extends T>> getRegisteredStrategyImplementors(Class<T> strategy);
 }

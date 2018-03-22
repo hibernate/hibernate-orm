@@ -36,7 +36,7 @@ public class ParameterTranslationsImpl implements ParameterTranslations {
 	 *
 	 * @param parameterSpecifications The parameter specifications
 	 */
-	ParameterTranslationsImpl(List<ParameterSpecification> parameterSpecifications) {
+	public ParameterTranslationsImpl(List<ParameterSpecification> parameterSpecifications) {
 		Map<String, NamedParameterInformationImpl> namedParameters = null;
 		Map<Integer, PositionalParameterInformationImpl> ordinalParameters = null;
 

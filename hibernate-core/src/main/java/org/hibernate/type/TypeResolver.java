@@ -19,7 +19,10 @@ import org.hibernate.usertype.UserType;
  * Acts as the contract for getting types and as the mediator between {@link BasicTypeRegistry} and {@link TypeFactory}.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated (since 5.3) No replacement, access to and handling of Types will be much different in 6.0
  */
+@Deprecated
 public class TypeResolver implements Serializable {
 	private final BasicTypeRegistry basicTypeRegistry;
 	private final TypeFactory typeFactory;

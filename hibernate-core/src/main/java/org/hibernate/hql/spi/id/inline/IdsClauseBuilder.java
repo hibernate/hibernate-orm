@@ -14,6 +14,7 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.LiteralType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Builds the where clause that wraps the identifiers to be updated/deleted.
@@ -35,6 +36,23 @@ public abstract class IdsClauseBuilder {
 	protected IdsClauseBuilder(
 			Dialect dialect,
 			Type identifierType,
+			TypeConfiguration typeConfiguration,
+			String[] columns,
+			List<Object[]> ids) {
+		this.dialect = dialect;
+		this.identifierType = identifierType;
+		this.typeResolver = typeConfiguration.getTypeResolver();
+		this.columns = columns;
+		this.ids = ids;
+	}
+
+	/**
+	 * @deprecated Use {{@link IdsClauseBuilder#IdsClauseBuilder(Dialect, Type, TypeConfiguration, String[], List)}} instead.
+	 */
+	@Deprecated
+	protected IdsClauseBuilder(
+			Dialect dialect,
+			Type identifierType,
 			TypeResolver typeResolver,
 			String[] columns,
 			List<Object[]> ids) {
@@ -49,6 +67,14 @@ public abstract class IdsClauseBuilder {
 		return identifierType;
 	}
 
+	/**
+	 * Retrieve the {@link Type} resolver associated with this factory.
+	 *
+	 * @return The type resolver
+	 *
+	 * @deprecated (since 5.3) No replacement, access to and handling of Types will be much different in 6.0
+	 */
+	@Deprecated
 	public TypeResolver getTypeResolver() {
 		return typeResolver;
 	}

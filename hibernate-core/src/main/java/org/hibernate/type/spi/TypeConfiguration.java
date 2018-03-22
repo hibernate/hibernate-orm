@@ -19,6 +19,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.type.BasicTypeRegistry;
+import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
 import org.hibernate.type.TypeResolver;
 
@@ -69,8 +70,14 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	/**
 	 * Temporarily needed to support deprecations
-	 * @deprecated
+	 *
+	 * Retrieve the {@link Type} resolver associated with this factory.
+	 *
+	 * @return The type resolver
+	 *
+	 * @deprecated (since 5.3) No replacement, access to and handling of Types will be much different in 6.0
 	 */
+	@Deprecated
 	public TypeResolver getTypeResolver(){
 		return typeResolver;
 	}

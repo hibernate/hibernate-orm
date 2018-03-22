@@ -237,9 +237,11 @@ public interface MetadataBuildingOptions {
 	 */
 	List<MetadataSourceType> getSourceProcessOrdering();
 
-default String getSchemaCharset() {
+	default String getSchemaCharset() {
 		return null;
-	}/**
+	}
+
+	/**
 	 * Access to any SQL functions explicitly registered with the MetadataBuilder.  This
 	 * does not include Dialect defined functions, etc.
 	 *

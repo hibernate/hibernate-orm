@@ -38,9 +38,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
-import org.hibernate.type.TypeFactory;
-import org.hibernate.type.TypeResolver;
-import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 

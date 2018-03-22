@@ -77,9 +77,11 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 			boolean allowDefaulting = true;
 			if ( allowDefaulting ) {
 				final StrategySelector selector = registry.getService( StrategySelector.class );
-				final Collection<RegionFactory> implementors = selector.getRegisteredStrategyImplementors( RegionFactory.class );
+				final Collection<Class<? extends RegionFactory>> implementors = selector.getRegisteredStrategyImplementors( RegionFactory.class );
 				if ( implementors != null && implementors.size() == 1 ) {
 					regionFactory = selector.resolveStrategy( RegionFactory.class, implementors.iterator().next() );
+					configurationValues.put( AvailableSettings.CACHE_REGION_FACTORY, regionFactory );
+					configurationValues.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
 				}
 				else {
 					LOG.debugf( "Cannot default RegionFactory based on registered strategies as `%s` RegionFactory strategies were registered" );

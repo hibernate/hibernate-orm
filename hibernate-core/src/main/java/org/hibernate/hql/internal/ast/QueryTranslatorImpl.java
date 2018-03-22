@@ -38,6 +38,7 @@ import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.hql.internal.ast.tree.InsertStatement;
 import org.hibernate.hql.internal.ast.tree.QueryNode;
 import org.hibernate.hql.internal.ast.tree.Statement;
+import org.hibernate.hql.internal.ast.tree.UpdateStatement;
 import org.hibernate.hql.internal.ast.util.ASTPrinter;
 import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.hql.internal.ast.util.NodeTraverser;
@@ -501,6 +502,10 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	@Override
 	public boolean isManipulationStatement() {
 		return sqlAst.needsExecutor();
+	}
+	@Override
+	public boolean isUpdateStatement() {
+		return SqlTokenTypes.UPDATE == sqlAst.getStatementType();
 	}
 	@Override
 	public void validateScrollability() throws HibernateException {

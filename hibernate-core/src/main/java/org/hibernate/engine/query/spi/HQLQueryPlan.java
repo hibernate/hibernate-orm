@@ -450,4 +450,8 @@ public class HQLQueryPlan implements Serializable {
 	public boolean isSelect() {
 		return !translators[0].isManipulationStatement();
 	}
+
+	public boolean isUpdate() {
+		return translators[0].isUpdateStatement();
+	}
 }

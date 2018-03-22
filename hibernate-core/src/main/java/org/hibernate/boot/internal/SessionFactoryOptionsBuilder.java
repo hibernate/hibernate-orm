@@ -55,6 +55,7 @@ import org.hibernate.jpa.JpaCompliance;
 import org.hibernate.jpa.spi.JpaComplianceImpl;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -88,6 +89,7 @@ import static org.hibernate.cfg.AvailableSettings.FAIL_ON_PAGINATION_OVER_COLLEC
 import static org.hibernate.cfg.AvailableSettings.FLUSH_BEFORE_COMPLETION;
 import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
 import static org.hibernate.cfg.AvailableSettings.HQL_BULK_ID_STRATEGY;
+import static org.hibernate.cfg.AvailableSettings.IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE;
 import static org.hibernate.cfg.AvailableSettings.INTERCEPTOR;
 import static org.hibernate.cfg.AvailableSettings.JDBC_TIME_ZONE;
 import static org.hibernate.cfg.AvailableSettings.JDBC_TYLE_PARAMS_ZERO_BASE;
@@ -229,6 +231,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private TimeZone jdbcTimeZone;
 	private boolean queryParametersValidationEnabled;
 	private LiteralHandlingMode criteriaLiteralHandlingMode;
+	private ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
 
 	private Map<String, SQLFunction> sqlFunctions;
 
@@ -468,6 +471,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH,
 				configurationSettings,
 				false
+		);
+
+		this.immutableEntityUpdateQueryHandlingMode = ImmutableEntityUpdateQueryHandlingMode.interpret(
+			configurationSettings.get( IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE )
 		);
 	}
 
@@ -950,6 +957,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public LiteralHandlingMode getCriteriaLiteralHandlingMode() {
 		return this.criteriaLiteralHandlingMode;
+	}
+
+	@Override
+	public ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
+		return immutableEntityUpdateQueryHandlingMode;
 	}
 
 	@Override

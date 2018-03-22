@@ -171,5 +171,9 @@ public interface QueryTranslator {
 
 	boolean isManipulationStatement();
 
+	default boolean isUpdateStatement() {
+		return getQueryString().toLowerCase().trim().startsWith( "update" );
+	}
+
 	Class getDynamicInstantiationResultType();
 }

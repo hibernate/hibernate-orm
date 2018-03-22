@@ -4,6 +4,31 @@ Hibernate 5 Changelog
 Note: Please refer to JIRA to learn more about each issue.
 
 
+Changes in 5.2.16.Final (March 22, 2018)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/31645
+
+** Bug
+    * [HHH-3813] - Automatic flush to the join table before a criteria query
+    * [HHH-11867] - @UpdateTimestamp not working with @Inheritance( strategy = JOINED )
+    * [HHH-11924] - ElementCollection ignore converter for XML mapping
+    * [HHH-12221] - Incorrect formatting of SQL statement on logging when entities/tables or fields/columns named like keywords (e.g. "group" or "order").
+    * [HHH-12314] - CriteriaAPI - Cannot use a not clause on a join, with explicit "on"  argument
+    * [HHH-12374] - Order inserts sorting code gives up too soon
+    * [HHH-12375] - 5.2.15 regression: 'could not resolve property: attributes of: org.hibernate.test.inheritance.discriminator.JoinedInheritanceTest$BaseEntity' with FetchType.EAGER
+    * [HHH-12380] - Stackoverflow when order_inserts=true
+    * [HHH-12383] - JoinedSubclassEntityPersister throws ClassCastException for AnyType
+    * [HHH-12388] - User Guide and Javadoc typo fixes
+    * [HHH-12392] - Caching SchemaResolver delegate with multiple data sources
+    * [HHH-12412] - QueryException Thrown on Abstract Property of Abstract Class
+
+** Task
+    * [HHH-12406] - Add a test for HHH-11440
+
+** Improvement
+    * [HHH-12364] - ElementCollectionMapTest contains unnecessary MapKeyJoinColumn
+
+
 Changes in 5.2.15.Final (March 08, 2018)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/31642

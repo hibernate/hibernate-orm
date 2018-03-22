@@ -66,7 +66,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 						.getEntityRegionAccess( persister.getNavigableRole() );
 				if ( entityDataAccess != null ) {
 					entityCleanups.add( new EntityCleanup( entityDataAccess ) );
-				}				entityCleanups.add( new EntityCleanup( entityDataAccess ) );
+				}
 			}
 
 			if ( persister.hasNaturalIdentifier() && persister.hasNaturalIdCache() ) {

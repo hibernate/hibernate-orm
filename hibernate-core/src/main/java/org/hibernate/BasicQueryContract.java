@@ -17,7 +17,7 @@ import org.hibernate.type.Type;
  * @deprecated (since 5.2) use {@link CommonQueryContract} instead.
  */
 @Deprecated
-public interface BasicQueryContract {
+public interface BasicQueryContract<T extends BasicQueryContract> {
 	/**
 	 * (Re)set the current FlushMode in effect for this query.
 	 *
@@ -55,7 +55,7 @@ public interface BasicQueryContract {
 	 *
 	 * @see #getHibernateFlushMode()
 	 */
-	CommonQueryContract setHibernateFlushMode(FlushMode flushMode);
+	T setHibernateFlushMode(FlushMode flushMode);
 
 	/**
 	 * Obtain the CacheMode in effect for this query.  By default, the query inherits the CacheMode of the Session
@@ -80,7 +80,7 @@ public interface BasicQueryContract {
 	 *
 	 * @see #getCacheMode()
 	 */
-	CommonQueryContract setCacheMode(CacheMode cacheMode);
+	T setCacheMode(CacheMode cacheMode);
 
 	/**
 	 * Are the results of this query eligible for second level query caching?  This is different that second level
@@ -105,7 +105,7 @@ public interface BasicQueryContract {
 	 *
 	 * @see #isCacheable
 	 */
-	CommonQueryContract setCacheable(boolean cacheable);
+	T setCacheable(boolean cacheable);
 
 	/**
 	 * Obtain the name of the second level query cache region in which query results will be stored (if they are
@@ -127,7 +127,7 @@ public interface BasicQueryContract {
 	 *
 	 * @see #getCacheRegion()
 	 */
-	CommonQueryContract setCacheRegion(String cacheRegion);
+	T setCacheRegion(String cacheRegion);
 
 	/**
 	 * Obtain the query timeout <b>in seconds</b>.  This value is eventually passed along to the JDBC query via
@@ -152,7 +152,7 @@ public interface BasicQueryContract {
 	 *
 	 * @see #getTimeout()
 	 */
-	CommonQueryContract setTimeout(int timeout);
+	T setTimeout(int timeout);
 
 	/**
 	 * Obtain the JDBC fetch size hint in effect for this query.  This value is eventually passed along to the JDBC
@@ -178,7 +178,7 @@ public interface BasicQueryContract {
 	 *
 	 * @see #getFetchSize()
 	 */
-	CommonQueryContract setFetchSize(int fetchSize);
+	T setFetchSize(int fetchSize);
 
 	/**
 	 * Should entities and proxies loaded by this Query be put in read-only mode? If the
@@ -224,7 +224,7 @@ public interface BasicQueryContract {
 	 * are to be put in read-only mode; {@code false} indicates that entities and proxies
 	 * loaded by the query will be put in modifiable mode
 	 */
-	CommonQueryContract setReadOnly(boolean readOnly);
+	T setReadOnly(boolean readOnly);
 
 	/**
 	 * Return the Hibernate types of the query results.

@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.Type;
 
@@ -118,10 +119,22 @@ public interface ClassMetadata {
 
 	/**
 	 * Return the values of the mapped properties of the object
+	 *
+	 * @deprecated (since 5.3) Use the form accepting SharedSessionContractImplementor
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings({"UnusedDeclaration"})
+	default Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SessionImplementor session)
+			throws HibernateException {
+		return getPropertyValuesToInsert( entity, mergeMap, (SharedSessionContractImplementor) session );
+	}
+
+	/**
+	 * Return the values of the mapped properties of the object
 	 */
 	@SuppressWarnings( {"UnusedDeclaration"})
-	Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SharedSessionContractImplementor session)
-	throws HibernateException;
+	Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SharedSessionContractImplementor session) throws HibernateException;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -132,6 +145,22 @@ public interface ClassMetadata {
 	 * The persistent class, or null
 	 */
 	Class getMappedClass();
+
+	/**
+	 * Create a class instance initialized with the given identifier
+	 *
+	 * @param id The identifier value to use (may be null to represent no value)
+	 * @param session The session from which the request originated.
+	 *
+	 * @return The instantiated entity.
+	 *
+	 * @deprecated (since 5.3) Use the form accepting SharedSessionContractImplementor
+	 * instead
+	 */
+	@Deprecated
+	default Object instantiate(Serializable id, SessionImplementor session) {
+		return instantiate( id, (SharedSessionContractImplementor) session );
+	}
 
 	/**
 	 * Create a class instance initialized with the given identifier
@@ -183,8 +212,37 @@ public interface ClassMetadata {
 	 * @param session The session from which the request originated
 	 *
 	 * @return The identifier
+	 *
+	 * @deprecated Use {@link #getIdentifier(Object, SharedSessionContractImplementor)} instead
+	 */
+	@Deprecated
+	default Serializable getIdentifier(Object entity, SessionImplementor session) {
+		return getIdentifier( entity, (SharedSessionContractImplementor) session );
+	}
+
+	/**
+	 * Get the identifier of an instance (throw an exception if no identifier property)
+	 *
+	 * @param entity The entity for which to get the identifier
+	 * @param session The session from which the request originated
+	 *
+	 * @return The identifier
 	 */
 	Serializable getIdentifier(Object entity, SharedSessionContractImplementor session);
+
+	/**
+	 * Inject the identifier value into the given entity.
+	 *
+	 * @param entity The entity to inject with the identifier value.
+	 * @param id The value to be injected as the identifier.
+	 * @param session The session from which is requests originates
+	 *
+	 * @deprecated Use {@link #setIdentifier(Object, Serializable, SharedSessionContractImplementor)} instead
+	 */
+	@Deprecated
+	default void setIdentifier(Object entity, Serializable id, SessionImplementor session) {
+		setIdentifier( entity, id, (SharedSessionContractImplementor) session );
+	}
 
 	/**
 	 * Inject the identifier value into the given entity.

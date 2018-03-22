@@ -6,6 +6,7 @@
  */
 package org.hibernate;
 
+import java.io.Closeable;
 import java.io.Serializable;
 import java.sql.Connection;
 
@@ -25,7 +26,7 @@ import java.sql.Connection;
  *
  * @author Gavin King
  */
-public interface StatelessSession extends SharedSessionContract, AutoCloseable {
+public interface StatelessSession extends SharedSessionContract, AutoCloseable, Closeable {
 	/**
 	 * Close the stateless session and release the JDBC connection.
 	 */

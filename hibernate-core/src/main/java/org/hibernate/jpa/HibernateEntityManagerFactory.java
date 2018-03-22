@@ -13,6 +13,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.metamodel.EntityType;
 
 import org.hibernate.Metamodel;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
@@ -49,6 +50,22 @@ public interface HibernateEntityManagerFactory extends EntityManagerFactory, Ser
 
 	@Override
 	Metamodel getMetamodel();
+
+	/**
+	 * Returns the name of the factory. The name is either can be specified via the property <i>hibernate.ejb.entitymanager_factory_name</i>.
+	 * If the property is not set the persistence unit name is used. If persistence unit name is not available, a unique
+	 * name will be generated.
+	 *
+	 * @return the name of the factory.
+	 *
+	 * @deprecated - no longer necessary.  all references can be directly replaced with
+	 * calls to {@link SessionFactoryOptions#getSessionFactoryName()}
+	 * via {@link #getSessionFactory()} -> {@link SessionFactoryImplementor#getSessionFactoryOptions()}
+	 */
+	@Deprecated
+	default String getEntityManagerFactoryName() {
+		return (String) getProperties().get( AvailableSettings.ENTITY_MANAGER_FACTORY_NAME );
+	}
 
 	/**
 	 * Find an entity type by name

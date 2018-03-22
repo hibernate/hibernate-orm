@@ -6,6 +6,7 @@
  */
 package org.hibernate.engine;
 
+import java.io.Closeable;
 import java.util.Iterator;
 
 import org.hibernate.JDBCException;
@@ -18,7 +19,7 @@ import org.hibernate.JDBCException;
  *
  * @author Gavin King
  */
-public interface HibernateIterator extends Iterator, AutoCloseable {
+public interface HibernateIterator extends Iterator, AutoCloseable, Closeable {
 	/**
 	 * Close the Hibernate query result iterator
 	 *

@@ -6,6 +6,7 @@
  */
 package org.hibernate;
 
+import java.io.Closeable;
 import java.io.Serializable;
 import java.sql.Connection;
 import javax.persistence.EntityManager;
@@ -80,7 +81,7 @@ import org.hibernate.stat.SessionStatistics;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface Session extends SharedSessionContract, EntityManager, HibernateEntityManager, AutoCloseable {
+public interface Session extends SharedSessionContract, EntityManager, HibernateEntityManager, AutoCloseable, Closeable {
 	/**
 	 * Obtain a {@link Session} builder with the ability to grab certain information from this session.
 	 *
@@ -681,8 +682,10 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 * @param queryString a Hibernate query fragment.
 	 *
 	 * @return The query instance for manipulation and execution
+	 *
+	 * @deprecated (since 5.3)
 	 */
-	org.hibernate.query.Query createFilter(Object collection, String queryString);
+	org.hibernate.Query createFilter(Object collection, String queryString);
 
 	/**
 	 * Completely clear the session. Evict all loaded instances and cancel all pending

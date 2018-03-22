@@ -207,6 +207,10 @@ public final class Settings {
 		return sessionFactoryOptions.isJtaTrackByThread();
 	}
 
+	public boolean isStrictJPAQLCompliance() {
+		return sessionFactoryOptions.isStrictJpaQueryLanguageCompliance();
+	}
+
 	public Map getQuerySubstitutions() {
 		return sessionFactoryOptions.getQuerySubstitutions();
 	}

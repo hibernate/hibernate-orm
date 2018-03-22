@@ -38,6 +38,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MultiIdentifierLoadAccess;
 import org.hibernate.NaturalIdLoadAccess;
+import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.ScrollMode;
 import org.hibernate.Session;
@@ -953,7 +954,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public org.hibernate.query.Query createFilter(Object collection, String queryString) {
+	public Query createFilter(Object collection, String queryString) {
 		return delegate.createFilter( collection, queryString );
 	}
 

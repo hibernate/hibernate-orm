@@ -14,5 +14,5 @@ package org.hibernate.query;
  * @author Steve Ebersole
  * @author Gavin King
  */
-public interface CommonQueryContract extends org.hibernate.BasicQueryContract {
+public interface CommonQueryContract extends org.hibernate.BasicQueryContract<CommonQueryContract> {
 }

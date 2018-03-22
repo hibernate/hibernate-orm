@@ -6,6 +6,7 @@
  */
 package org.hibernate;
 
+import java.io.Closeable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Blob;
@@ -30,7 +31,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-public interface ScrollableResults extends AutoCloseable {
+public interface ScrollableResults extends AutoCloseable, Closeable {
 
 	/**
 	 * Release resources immediately.

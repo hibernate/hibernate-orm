@@ -65,7 +65,7 @@ public interface SQLQuery<T> extends Query<T>, SynchronizeableQuery<T> {
 	 *
 	 * @return this, for method chaining
 	 */
-	NativeQuery<T> setResultSetMapping(String name);
+	SQLQuery<T> setResultSetMapping(String name);
 
 	/**
 	 * Is this native-SQL query known to be callable?
@@ -90,7 +90,7 @@ public interface SQLQuery<T> extends Query<T>, SynchronizeableQuery<T> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addScalar(String columnAlias);
+	SQLQuery<T> addScalar(String columnAlias);
 
 	/**
 	 * Declare a scalar query result.
@@ -102,7 +102,7 @@ public interface SQLQuery<T> extends Query<T>, SynchronizeableQuery<T> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addScalar(String columnAlias, Type type);
+	SQLQuery<T> addScalar(String columnAlias, Type type);
 
 	/**
 	 * Add a new root return mapping, returning a {@link NativeQuery.RootReturn} to allow further definition.
@@ -138,7 +138,7 @@ public interface SQLQuery<T> extends Query<T>, SynchronizeableQuery<T> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addEntity(String entityName);
+	SQLQuery<T> addEntity(String entityName);
 
 	/**
 	 * Declare a "root" entity.
@@ -148,7 +148,7 @@ public interface SQLQuery<T> extends Query<T>, SynchronizeableQuery<T> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addEntity(String tableAlias, String entityName);
+	SQLQuery<T> addEntity(String tableAlias, String entityName);
 
 	/**
 	 * Declare a "root" entity, specifying a lock mode.
@@ -159,7 +159,7 @@ public interface SQLQuery<T> extends Query<T>, SynchronizeableQuery<T> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addEntity(String tableAlias, String entityName, LockMode lockMode);
+	SQLQuery<T> addEntity(String tableAlias, String entityName, LockMode lockMode);
 
 	/**
 	 * Declare a "root" entity, without specifying an alias.  The expectation here is that the table alias is the
@@ -169,7 +169,7 @@ public interface SQLQuery<T> extends Query<T>, SynchronizeableQuery<T> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addEntity(Class entityType);
+	SQLQuery<T> addEntity(Class entityType);
 
 	/**
 	 * Declare a "root" entity.
@@ -179,7 +179,7 @@ public interface SQLQuery<T> extends Query<T>, SynchronizeableQuery<T> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addEntity(String tableAlias, Class entityType);
+	SQLQuery<T> addEntity(String tableAlias, Class entityType);
 
 	/**
 	 * Declare a "root" entity, specifying a lock mode.
@@ -190,7 +190,7 @@ public interface SQLQuery<T> extends Query<T>, SynchronizeableQuery<T> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addEntity(String tableAlias, Class entityClass, LockMode lockMode);
+	SQLQuery<T> addEntity(String tableAlias, Class entityClass, LockMode lockMode);
 
 	/**
 	 * Declare a join fetch result.
@@ -214,7 +214,7 @@ public interface SQLQuery<T> extends Query<T>, SynchronizeableQuery<T> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addJoin(String tableAlias, String path);
+	SQLQuery<T> addJoin(String tableAlias, String path);
 
 	/**
 	 * Declare a join fetch result.
@@ -228,7 +228,7 @@ public interface SQLQuery<T> extends Query<T>, SynchronizeableQuery<T> {
 	 *
 	 * @since 3.6
 	 */
-	NativeQuery<T> addJoin(String tableAlias, String ownerTableAlias, String joinPropertyName);
+	SQLQuery<T> addJoin(String tableAlias, String ownerTableAlias, String joinPropertyName);
 
 	/**
 	 * Declare a join fetch result, specifying a lock mode.
@@ -239,7 +239,7 @@ public interface SQLQuery<T> extends Query<T>, SynchronizeableQuery<T> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addJoin(String tableAlias, String path, LockMode lockMode);
+	SQLQuery<T> addJoin(String tableAlias, String path, LockMode lockMode);
 
 	/**
 	 * Allows access to further control how properties within a root or join fetch are mapped back from the result set.

@@ -683,8 +683,9 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 *
 	 * @return The query instance for manipulation and execution
 	 *
-	 * @deprecated (since 5.3)
+	 * @deprecated (since 5.3) with no real replacement.
 	 */
+	@Deprecated
 	org.hibernate.Query createFilter(Object collection, String queryString);
 
 	/**

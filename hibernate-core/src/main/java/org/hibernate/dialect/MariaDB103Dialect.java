@@ -7,12 +7,21 @@
 package org.hibernate.dialect;
 
 
+import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.type.StandardBasicTypes;
+
 /**
  * An SQL dialect for MariaDB 10.3 and later, provides sequence support.
  * 
  * @author Philippe Marschall
  */
-public class MariaDB103Dialect extends MariaDB53Dialect {
+public class MariaDB103Dialect extends MariaDB102Dialect {
+
+	public MariaDB103Dialect() {
+		super();
+
+		registerFunction( "chr", new StandardSQLFunction( "chr", StandardBasicTypes.CHARACTER) );
+	}
 
 	@Override
 	public boolean supportsSequences() {
@@ -20,13 +29,8 @@ public class MariaDB103Dialect extends MariaDB53Dialect {
 	}
 
 	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return "next value for " + sequenceName;
-	}
-
-	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "select " + getSelectSequenceNextValString( sequenceName );
+	public boolean supportsPooledSequences() {
+		return true;
 	}
 
 	@Override
@@ -40,18 +44,18 @@ public class MariaDB103Dialect extends MariaDB53Dialect {
 	}
 
 	@Override
-	public boolean supportsPooledSequences() {
-		return true;
+	public String getSequenceNextValString(String sequenceName) {
+		return "select " + getSelectSequenceNextValString( sequenceName );
 	}
 
 	@Override
-	protected String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize) {
-		return getCreateSequenceString( sequenceName ) + " start " + initialValue + " increment " + incrementSize;
+	public String getSelectSequenceNextValString(String sequenceName) {
+		return "nextval(" + sequenceName + ")";
 	}
 
 	@Override
 	public String getQuerySequencesString() {
-		return "show full tables where Table_type = 'SEQUENCE'";
+		return "select table_name from information_schema.TABLES where table_type='SEQUENCE'";
 	}
 
 }

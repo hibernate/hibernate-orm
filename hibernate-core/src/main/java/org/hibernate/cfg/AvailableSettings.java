@@ -8,8 +8,10 @@ package org.hibernate.cfg;
 
 import java.util.function.Supplier;
 
+import org.hibernate.HibernateException;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
+import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -1746,4 +1748,24 @@ public interface AvailableSettings {
 	 * @since 5.2.13
 	 */
 	String FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH = "hibernate.query.fail_on_pagination_over_collection_fetch";
+
+	/**
+	 * This setting defines how {@link org.hibernate.annotations.Immutable} entities are handled when executing a
+	 * bulk update {@link javax.persistence.Query}.
+	 *
+	 * By default, the ({@link ImmutableEntityUpdateQueryHandlingMode#WARNING}) mode is used, meaning that
+	 * a warning log message is issued when an {@link org.hibernate.annotations.Immutable} entity
+	 * is to be updated via a bulk update statement.
+	 *
+	 * If the ({@link ImmutableEntityUpdateQueryHandlingMode#EXCEPTION}) mode is used, then a
+	 * {@link HibernateException} is thrown instead.
+	 * </p>
+	 * Valid options are defined by the {@link ImmutableEntityUpdateQueryHandlingMode} enum.
+	 * </p>
+	 * The default value is {@link ImmutableEntityUpdateQueryHandlingMode#WARNING}
+	 *
+	 * @since 5.2.17
+	 * @see org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode
+	 */
+	String IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE = "hibernate.query.immutable_entity_update_query_handling_mode";
 }

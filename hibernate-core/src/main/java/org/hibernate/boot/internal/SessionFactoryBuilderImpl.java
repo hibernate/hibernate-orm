@@ -54,6 +54,7 @@ import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -579,6 +580,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 
 		private boolean failOnPaginationOverCollectionFetchEnabled;
 		private boolean jpaProxyComplianceEnabled;
+		private ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
 
 		public SessionFactoryOptionsStateStandardImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
@@ -804,6 +806,10 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 					JPA_PROXY_COMPLIANCE,
 					configurationSettings,
 					false
+			);
+
+			this.immutableEntityUpdateQueryHandlingMode = ImmutableEntityUpdateQueryHandlingMode.interpret(
+				configurationSettings.get( IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE )
 			);
 		}
 
@@ -1268,6 +1274,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		public boolean isJpaProxyComplianceEnabled() {
 			return this.jpaProxyComplianceEnabled;
 		}
+
+		@Override
+		public ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
+			return immutableEntityUpdateQueryHandlingMode;
+		}
 	}
 
 	private static Supplier<? extends Interceptor> interceptorSupplier(Class<? extends Interceptor> clazz) {
@@ -1626,5 +1637,10 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public boolean isJpaProxyComplianceEnabled() {
 		return options.isJpaProxyComplianceEnabled();
+	}
+
+	@Override
+	public ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
+		return options.getImmutableEntityUpdateQueryHandlingMode();
 	}
 }

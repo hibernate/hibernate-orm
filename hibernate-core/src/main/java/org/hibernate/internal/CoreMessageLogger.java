@@ -1786,4 +1786,10 @@ public interface CoreMessageLogger extends BasicLogger {
 					"issue HHH-11936 for details."
 	)
 	void emptyCompositesEnabled();
+
+	@LogMessage(level = WARN)
+	@Message(value = "The query: [%s] attempts to update an immutable entity: %s",
+			id = 487)
+	void immutableEntityUpdateQuery(String sourceQuery, String querySpaces);
+
 }

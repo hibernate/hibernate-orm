@@ -163,6 +163,7 @@ import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.UnknownSqlResultSetMappingException;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.Query;
 import org.hibernate.query.criteria.internal.compile.CompilableCriteria;
 import org.hibernate.query.criteria.internal.compile.CriteriaCompiler;
@@ -1505,6 +1506,8 @@ public final class SessionImpl
 		HQLQueryPlan plan = getQueryPlan( query, false );
 		autoFlushIfRequired( plan.getQuerySpaces() );
 
+		verifyImmutableEntityUpdate( plan );
+
 		boolean success = false;
 		int result = 0;
 		try {
@@ -1516,6 +1519,42 @@ public final class SessionImpl
 			delayedAfterCompletion();
 		}
 		return result;
+	}
+
+	private void verifyImmutableEntityUpdate(HQLQueryPlan plan) {
+		if ( plan.isUpdate() ) {
+			for ( EntityPersister entityPersister : getSessionFactory().getMetamodel().entityPersisters().values() ) {
+				if ( !entityPersister.isMutable() ) {
+					List<Serializable> entityQuerySpaces = new ArrayList<>(
+							Arrays.asList( entityPersister.getQuerySpaces() )
+					);
+					entityQuerySpaces.retainAll( plan.getQuerySpaces() );
+
+					if ( !entityQuerySpaces.isEmpty() ) {
+						ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode = getSessionFactory()
+								.getSessionFactoryOptions()
+								.getImmutableEntityUpdateQueryHandlingMode();
+
+						String querySpaces = Arrays.toString( entityQuerySpaces.toArray() );
+
+						switch ( immutableEntityUpdateQueryHandlingMode ) {
+							case WARNING:
+								log.immutableEntityUpdateQuery(plan.getSourceQuery(), querySpaces);
+								break;
+							case EXCEPTION:
+								throw new HibernateException(
+									"The query: [" + plan.getSourceQuery() + "] attempts to update an immutable entity: " + querySpaces
+								);
+							default:
+								throw new UnsupportedOperationException(
+									"The "+ immutableEntityUpdateQueryHandlingMode + " is not supported!"
+								);
+
+						}
+					}
+				}
+			}
+		}
 	}
 
 	@Override

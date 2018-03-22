@@ -25,6 +25,7 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -33,6 +34,8 @@ import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.function.Supplier;
+
+import static org.hibernate.cfg.AvailableSettings.IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE;
 
 /**
  * Standard implementation of SessionFactoryOptions
@@ -133,6 +136,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private LiteralHandlingMode criteriaLiteralHandlingMode;
 	private final boolean failOnPaginationOverCollectionFetchEnabled;
 	private final boolean jpaProxyComplianceEnabled;
+	private ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
 
 	public SessionFactoryOptionsImpl(SessionFactoryOptionsState state) {
 		this.serviceRegistry = state.getServiceRegistry();
@@ -219,6 +223,8 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.failOnPaginationOverCollectionFetchEnabled = state.isFailOnPaginationOverCollectionFetchEnabled();
 
 		this.jpaProxyComplianceEnabled = state.isJpaProxyComplianceEnabled();
+
+		this.immutableEntityUpdateQueryHandlingMode = state.getImmutableEntityUpdateQueryHandlingMode();
 	}
 
 	@Override
@@ -573,5 +579,10 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public boolean isJpaProxyComplianceEnabled() {
 		return jpaProxyComplianceEnabled;
+	}
+
+	@Override
+	public ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
+		return immutableEntityUpdateQueryHandlingMode;
 	}
 }

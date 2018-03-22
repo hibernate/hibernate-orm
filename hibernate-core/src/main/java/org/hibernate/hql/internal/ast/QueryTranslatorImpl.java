@@ -498,6 +498,10 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		return sqlAst.needsExecutor();
 	}
 	@Override
+	public boolean isUpdateStatement() {
+		return SqlTokenTypes.UPDATE == sqlAst.getStatementType();
+	}
+	@Override
 	public void validateScrollability() throws HibernateException {
 		// Impl Note: allows multiple collection fetches as long as the
 		// entire fecthed graph still "points back" to a single

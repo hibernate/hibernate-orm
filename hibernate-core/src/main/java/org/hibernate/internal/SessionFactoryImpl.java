@@ -127,7 +127,6 @@ import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.type.SerializableType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
@@ -176,7 +175,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	// todo : org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor too?
 
-	private final transient MetamodelImpl metamodel;
+	private final transient MetamodelImplementor metamodel;
 	private final transient CriteriaBuilderImpl criteriaBuilder;
 	private final PersistenceUnitUtil jpaPersistenceUnitUtil;
 	private final transient CacheImplementor cacheAccess;
@@ -192,7 +191,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient Map<String, FilterDefinition> filters;
 	private final transient Map<String, FetchProfile> fetchProfiles;
 
-	private final transient TypeResolver typeResolver;
 	private final transient TypeHelper typeHelper;
 
 	public SessionFactoryImpl(
@@ -253,10 +251,8 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		for ( SessionFactoryObserver sessionFactoryObserver : options.getSessionFactoryObservers() ) {
 			this.observer.addObserver( sessionFactoryObserver );
 		}
-		TypeConfiguration typeConfiguration = metadata.getTypeConfiguration();
-		typeConfiguration.scope( this );
-		this.typeResolver = typeConfiguration.getTypeResolver();
-		this.typeHelper = new TypeLocatorImpl( typeResolver );
+
+		this.typeHelper = new TypeLocatorImpl( metadata.getTypeConfiguration().getTypeResolver() );
 
 		this.filters = new HashMap<>();
 		this.filters.putAll( metadata.getFilterDefinitions() );
@@ -303,8 +299,11 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			LOG.debug( "Instantiated session factory" );
 
-			this.metamodel = new MetamodelImpl( this );
-			this.metamodel.initialize( metadata, determineJpaMetaModelPopulationSetting( properties ) );
+			this.metamodel = metadata.getTypeConfiguration().scope( this , bootstrapContext);
+			( (MetamodelImpl) this.metamodel ).initialize(
+					metadata,
+					determineJpaMetaModelPopulationSetting( properties )
+			);
 
 			//Named Queries:
 			this.namedQueryRepository = metadata.buildNamedQueryRepository( this );
@@ -571,7 +570,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	 */
 	@Deprecated
 	public TypeResolver getTypeResolver() {
-		return typeResolver;
+		return metamodel.getTypeConfiguration().getTypeResolver();
 	}
 
 	public QueryPlanCache getQueryPlanCache() {

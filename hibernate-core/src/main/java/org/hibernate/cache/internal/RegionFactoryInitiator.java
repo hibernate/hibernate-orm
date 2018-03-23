@@ -82,31 +82,32 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 		final StrategySelector selector = registry.getService( StrategySelector.class );
 		final Collection<Class<? extends RegionFactory>> implementors = selector.getRegisteredStrategyImplementors( RegionFactory.class );
 
-		if ( ( useSecondLevelCache != null && useSecondLevelCache == TRUE )
-				|| ( useQueryCache != null && useQueryCache == TRUE ) ) {
-			// if either are explicitly defined and one is TRUE, we need a RegionFactory
-			if ( setting == null && implementors.size() != 1 ) {
+		if ( setting == null && implementors.size() != 1 ) {
+			// if either are explicitly defined as TRUE we need a RegionFactory
+			if ( ( useSecondLevelCache != null && useSecondLevelCache == TRUE )
+					|| ( useQueryCache != null && useQueryCache == TRUE ) ) {
 				throw new CacheException( "Caching was explicitly requested, but no RegionFactory was defined and there is not a single registered RegionFactory" );
 			}
-			final RegionFactory regionFactory = registry.getService( StrategySelector.class ).resolveStrategy(
-					RegionFactory.class,
-					setting,
-					(RegionFactory) null,
-					new StrategyCreatorRegionFactoryImpl( p )
-			);
+		}
 
-			if ( regionFactory != null ) {
-				return regionFactory;
-			}
+		final RegionFactory regionFactory = registry.getService( StrategySelector.class ).resolveStrategy(
+				RegionFactory.class,
+				setting,
+				(RegionFactory) null,
+				new StrategyCreatorRegionFactoryImpl( p )
+		);
+
+		if ( regionFactory != null ) {
+			return regionFactory;
 		}
 
 
 		if ( implementors.size() == 1 ) {
-			final RegionFactory regionFactory = selector.resolveStrategy( RegionFactory.class, implementors.iterator().next() );
-			configurationValues.put( AvailableSettings.CACHE_REGION_FACTORY, regionFactory );
+			final RegionFactory registeredFactory = selector.resolveStrategy( RegionFactory.class, implementors.iterator().next() );
+			configurationValues.put( AvailableSettings.CACHE_REGION_FACTORY, registeredFactory );
 			configurationValues.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
 
-			return regionFactory;
+			return registeredFactory;
 		}
 		else {
 			LOG.debugf(

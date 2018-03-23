@@ -65,6 +65,7 @@ import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Hibernate implementation of the JPA {@link javax.persistence.metamodel.Metamodel} contract.
@@ -94,8 +95,11 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 	private final transient Map<String,EntityGraph> entityGraphMap = new ConcurrentHashMap<>();
 
-	public MetamodelImpl(SessionFactoryImplementor sessionFactory) {
+	private final TypeConfiguration typeConfiguration;
+
+	public MetamodelImpl(SessionFactoryImplementor sessionFactory, TypeConfiguration typeConfiguration) {
 		this.sessionFactory = sessionFactory;
+		this.typeConfiguration = typeConfiguration;
 	}
 
 	/**
@@ -492,6 +496,11 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 //		this.mappedSuperclassTypeMap = mappedSuperclassTypeMap;
 //		this.entityTypesByEntityName = entityTypesByEntityName;
 //	}
+
+	@Override
+	public TypeConfiguration getTypeConfiguration() {
+		return typeConfiguration;
+	}
 
 	@Override
 	public SessionFactoryImplementor getSessionFactory() {

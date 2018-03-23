@@ -21,6 +21,11 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
+ * An SPI extension to the JPA {@link javax.persistence.metamodel.Metamodel}
+ * via ({@link org.hibernate.Metamodel}
+ *
+ * @apiNote Most of that functionality has been moved to {@link TypeConfiguration} instead,
+ * accessible via {@link #getTypeConfiguration()}
  * @author Steve Ebersole
  */
 public interface MetamodelImplementor extends Metamodel {
@@ -31,9 +36,21 @@ public interface MetamodelImplementor extends Metamodel {
 	 */
 	TypeConfiguration getTypeConfiguration();
 
+	/**
+	 * Access to the SessionFactory that this Metamodel instance is bound to.
+	 *
+	 * @return The SessionFactory
+	 *
+	 * @deprecated (5.3) Use {@link TypeConfiguration#getSessionFactory()} instead.
+	 */
 	@Override
+	@Deprecated
 	SessionFactoryImplementor getSessionFactory();
 
+	/**
+	 * @deprecated (5.3) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#getEntityNameResolvers()}
+	 */
+	@Deprecated
 	Collection<EntityNameResolver> getEntityNameResolvers();
 
 	/**
@@ -46,7 +63,10 @@ public interface MetamodelImplementor extends Metamodel {
 	 * @return The located EntityPersister, never {@code null}
 	 *
 	 * @throws org.hibernate.UnknownEntityTypeException If a matching EntityPersister cannot be located
+	 *
+	 * @deprecated (5.3) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#resolveEntityPersister(Class)} ()}
 	 */
+	@Deprecated
 	EntityPersister locateEntityPersister(Class byClass);
 
 	/**
@@ -57,7 +77,10 @@ public interface MetamodelImplementor extends Metamodel {
 	 * @return The located EntityPersister, never {@code null}
 	 *
 	 * @throws org.hibernate.UnknownEntityTypeException If a matching EntityPersister cannot be located
+	 *
+	 * @deprecated (5.3) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#resolveEntityPersister(String)}} instead.
 	 */
+	@Deprecated
 	EntityPersister locateEntityPersister(String byName);
 
 	/**
@@ -68,7 +91,10 @@ public interface MetamodelImplementor extends Metamodel {
 	 * @return The entity persister
 	 *
 	 * @throws MappingException Indicates persister for that class could not be found.
+	 *
+	 * @deprecated (5.3) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#entityPersister(String)} }
 	 */
+	@Deprecated
 	EntityPersister entityPersister(Class entityClass);
 
 	/**
@@ -79,14 +105,20 @@ public interface MetamodelImplementor extends Metamodel {
 	 * @return The persister
 	 *
 	 * @throws MappingException Indicates persister could not be found with that name.
+	 *
+	 * @deprecated (5.3) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#entityPersister(String)} }
 	 */
+	@Deprecated
 	EntityPersister entityPersister(String entityName);
 
 	/**
 	 * Get all entity persisters as a Map, which entity name its the key and the persister is the value.
 	 *
 	 * @return The Map contains all entity persisters.
+	 *
+	 * @deprecated (5.3) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#entityPersisters()} instead.
 	 */
+	@Deprecated
 	Map<String,EntityPersister> entityPersisters();
 
 	/**
@@ -97,14 +129,20 @@ public interface MetamodelImplementor extends Metamodel {
 	 * @return The persister
 	 *
 	 * @throws MappingException Indicates persister could not be found with that role.
+	 *
+	 * @deprecated (5.3) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#collectionPersister(String)}
 	 */
+	@Deprecated
 	CollectionPersister collectionPersister(String role);
 
 	/**
 	 * Get all collection persisters as a Map, which collection role as the key and the persister is the value.
 	 *
 	 * @return The Map contains all collection persisters.
+	 *
+	 * @deprecated (5.3) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#collectionPersisters()}
 	 */
+	@Deprecated
 	Map<String,CollectionPersister> collectionPersisters();
 
 	/**
@@ -114,21 +152,32 @@ public interface MetamodelImplementor extends Metamodel {
 	 * @param entityName The entity name for which to get the collection roles.
 	 *
 	 * @return set of all the collection roles in which the given entityName participates.
+	 *
+	 * @deprecated (6.0) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#getCollectionRolesByEntityParticipant}
 	 */
+	@Deprecated
 	Set<String> getCollectionRolesByEntityParticipant(String entityName);
 
 	/**
 	 * Get the names of all entities known to this Metamodel
 	 *
 	 * @return All of the entity names
+	 *
+	 * @deprecated (5.3) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#entityPersisters()}
+	 * instead to access the keys
 	 */
+	@Deprecated
 	String[] getAllEntityNames();
 
 	/**
 	 * Get the names of all collections known to this Metamodel
 	 *
 	 * @return All of the entity names
+	 *
+	 * @deprecated (5.3) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#collectionPersisters()}
+	 * and collect the Map keys which are the entity names
 	 */
+	@Deprecated
 	String[] getAllCollectionRoles();
 
 	<T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph);

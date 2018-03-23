@@ -355,7 +355,7 @@ class MetadataContext {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.trace( "Building old-school composite identifier [" + ownerType.getJavaType().getName() + ']' );
 		}
-		Set<SingularAttribute<? super X, ?>> attributes = new HashSet<SingularAttribute<? super X, ?>>();
+		Set<SingularAttribute<? super X, ?>> attributes = new HashSet<>();
 		while ( propertyIterator.hasNext() ) {
 			attributes.add( attributeFactory.buildIdAttribute( ownerType, propertyIterator.next() ) );
 		}
@@ -386,7 +386,7 @@ class MetadataContext {
 		}
 	}
 
-	private final Set<Class> processedMetamodelClasses = new HashSet<Class>();
+	private final Set<Class> processedMetamodelClasses = new HashSet<>();
 
 	private <X> void registerAttributes(Class metamodelClass, AbstractManagedType<X> managedType) {
 		if ( !processedMetamodelClasses.add( metamodelClass ) ) {
@@ -514,6 +514,6 @@ class MetadataContext {
 	}
 
 	public Set<MappedSuperclass> getUnusedMappedSuperclasses() {
-		return new HashSet<MappedSuperclass>( knownMappedSuperclasses );
+		return new HashSet<>( knownMappedSuperclasses );
 	}
 }

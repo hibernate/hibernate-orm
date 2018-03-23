@@ -11,11 +11,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import javax.persistence.EntityGraph;
 import javax.persistence.NamedAttributeNode;
 import javax.persistence.NamedEntityGraph;
@@ -27,18 +25,13 @@ import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MappedSuperclassType;
 
 import org.hibernate.EntityNameResolver;
-import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.UnknownEntityTypeException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.cfg.internal.DomainDataRegionConfigImpl;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cache.spi.access.CollectionDataAccess;
-import org.hibernate.cache.spi.access.EntityDataAccess;
-import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.EntityGraphImplementor;
@@ -55,16 +48,9 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Queryable;
-import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.persister.spi.PersisterFactory;
-import org.hibernate.tuple.entity.EntityTuplizer;
-import org.hibernate.type.AssociationType;
-import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -76,17 +62,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	// todo : Integrate EntityManagerLogger into CoreMessageLogger
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( MetamodelImpl.class );
-	private static final Object ENTITY_NAME_RESOLVER_MAP_VALUE = new Object();
 
 	private final SessionFactoryImplementor sessionFactory;
-
-	private final Map<String,String> imports = new ConcurrentHashMap<>();
-	private final Map<String,EntityPersister> entityPersisterMap = new ConcurrentHashMap<>();
-	private final Map<Class,String> entityProxyInterfaceMap = new ConcurrentHashMap<>();
-	private final Map<String,CollectionPersister> collectionPersisterMap = new ConcurrentHashMap<>();
-	private final Map<String,Set<String>> collectionRolesByEntityParticipant = new ConcurrentHashMap<>();
-	private final ConcurrentMap<EntityNameResolver,Object> entityNameResolvers = new ConcurrentHashMap<>();
-
+	private final TypeConfiguration typeConfiguration;
 
 	private final Map<Class<?>, EntityTypeImpl<?>> jpaEntityTypeMap = new ConcurrentHashMap<>();
 	private final Map<Class<?>, EmbeddableTypeImpl<?>> jpaEmbeddableTypeMap = new ConcurrentHashMap<>();
@@ -94,8 +72,6 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	private final Map<String, EntityTypeImpl<?>> jpaEntityTypesByEntityName = new ConcurrentHashMap<>();
 
 	private final transient Map<String,EntityGraph> entityGraphMap = new ConcurrentHashMap<>();
-
-	private final TypeConfiguration typeConfiguration;
 
 	public MetamodelImpl(SessionFactoryImplementor sessionFactory, TypeConfiguration typeConfiguration) {
 		this.sessionFactory = sessionFactory;
@@ -110,109 +86,8 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	 * @param jpaMetaModelPopulationSetting Should the JPA Metamodel be built as well?
 	 */
 	public void initialize(MetadataImplementor mappingMetadata, JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting) {
-		this.imports.putAll( mappingMetadata.getImports() );
-
 		primeSecondLevelCacheRegions( mappingMetadata );
-
-		final PersisterCreationContext persisterCreationContext = new PersisterCreationContext() {
-			@Override
-			public SessionFactoryImplementor getSessionFactory() {
-				return sessionFactory;
-			}
-
-			@Override
-			public MetadataImplementor getMetadata() {
-				return mappingMetadata;
-			}
-		};
-
-		final PersisterFactory persisterFactory = sessionFactory.getServiceRegistry().getService( PersisterFactory.class );
-
-		for ( final PersistentClass model : mappingMetadata.getEntityBindings() ) {
-			final NavigableRole rootEntityRole = new NavigableRole( model.getRootClass().getEntityName() );
-			final EntityDataAccess accessStrategy = sessionFactory.getCache().getEntityRegionAccess( rootEntityRole );
-			final NaturalIdDataAccess naturalIdAccessStrategy = sessionFactory.getCache().getNaturalIdCacheRegionAccessStrategy( rootEntityRole );
-
-			final EntityPersister cp = persisterFactory.createEntityPersister(
-					model,
-					accessStrategy,
-					naturalIdAccessStrategy,
-					persisterCreationContext
-			);
-			entityPersisterMap.put( model.getEntityName(), cp );
-
-			if ( cp.getConcreteProxyClass() != null
-					&& cp.getConcreteProxyClass().isInterface()
-					&& !Map.class.isAssignableFrom( cp.getConcreteProxyClass() )
-					&& cp.getMappedClass() != cp.getConcreteProxyClass() ) {
-				// IMPL NOTE : we exclude Map based proxy interfaces here because that should
-				//		indicate MAP entity mode.0
-
-				if ( cp.getMappedClass().equals( cp.getConcreteProxyClass() ) ) {
-					// this part handles an odd case in the Hibernate test suite where we map an interface
-					// as the class and the proxy.  I cannot think of a real life use case for that
-					// specific test, but..
-					log.debugf( "Entity [%s] mapped same interface [%s] as class and proxy", cp.getEntityName(), cp.getMappedClass() );
-				}
-				else {
-					final String old = entityProxyInterfaceMap.put( cp.getConcreteProxyClass(), cp.getEntityName() );
-					if ( old != null ) {
-						throw new HibernateException(
-								String.format(
-										Locale.ENGLISH,
-										"Multiple entities [%s, %s] named the same interface [%s] as their proxy which is not supported",
-										old,
-										cp.getEntityName(),
-										cp.getConcreteProxyClass().getName()
-								)
-						);
-					}
-				}
-			}
-		}
-
-		for ( final Collection model : mappingMetadata.getCollectionBindings() ) {
-			final NavigableRole navigableRole = new NavigableRole( model.getRole() );
-
-			final CollectionDataAccess accessStrategy = sessionFactory.getCache().getCollectionRegionAccess(
-					navigableRole );
-
-			final CollectionPersister persister = persisterFactory.createCollectionPersister(
-					model,
-					accessStrategy,
-					persisterCreationContext
-			);
-			collectionPersisterMap.put( model.getRole(), persister );
-			Type indexType = persister.getIndexType();
-			if ( indexType != null && indexType.isAssociationType() && !indexType.isAnyType() ) {
-				String entityName = ( (AssociationType) indexType ).getAssociatedEntityName( sessionFactory );
-				Set<String> roles = collectionRolesByEntityParticipant.get( entityName );
-				if ( roles == null ) {
-					roles = new HashSet<>();
-					collectionRolesByEntityParticipant.put( entityName, roles );
-				}
-				roles.add( persister.getRole() );
-			}
-			Type elementType = persister.getElementType();
-			if ( elementType.isAssociationType() && !elementType.isAnyType() ) {
-				String entityName = ( ( AssociationType ) elementType ).getAssociatedEntityName( sessionFactory );
-				Set<String> roles = collectionRolesByEntityParticipant.get( entityName );
-				if ( roles == null ) {
-					roles = new HashSet<>();
-					collectionRolesByEntityParticipant.put( entityName, roles );
-				}
-				roles.add( persister.getRole() );
-			}
-		}
-
-		// after *all* persisters and named queries are registered
-		entityPersisterMap.values().forEach( EntityPersister::generateEntityDefinition );
-
-		for ( EntityPersister persister : entityPersisterMap.values() ) {
-			persister.postInstantiate();
-			registerEntityNameResolvers( persister, entityNameResolvers );
-		}
-		collectionPersisterMap.values().forEach( CollectionPersister::postInstantiate );
+		typeConfiguration.initialize( mappingMetadata );
 
 		if ( jpaMetaModelPopulationSetting != JpaMetaModelPopulationSetting.DISABLED ) {
 			MetadataContext context = new MetadataContext(
@@ -235,7 +110,6 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 			applyNamedEntityGraphs( mappingMetadata.getNamedEntityGraphs().values() );
 		}
-
 	}
 
 	private void primeSecondLevelCacheRegions(MetadataImplementor mappingMetadata) {
@@ -363,25 +237,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 	@Override
 	public java.util.Collection<EntityNameResolver> getEntityNameResolvers() {
-		return entityNameResolvers.keySet();
-	}
-
-	private static void registerEntityNameResolvers(EntityPersister persister, Map<EntityNameResolver,Object> entityNameResolvers) {
-		if ( persister.getEntityMetamodel() == null || persister.getEntityMetamodel().getTuplizer() == null ) {
-			return;
-		}
-		registerEntityNameResolvers( persister.getEntityMetamodel().getTuplizer(), entityNameResolvers );
-	}
-
-	private static void registerEntityNameResolvers(EntityTuplizer tuplizer, Map<EntityNameResolver,Object> entityNameResolvers) {
-		EntityNameResolver[] resolvers = tuplizer.getEntityNameResolvers();
-		if ( resolvers == null ) {
-			return;
-		}
-
-		for ( EntityNameResolver resolver : resolvers ) {
-			entityNameResolvers.put( resolver, ENTITY_NAME_RESOLVER_MAP_VALUE );
-		}
+		return typeConfiguration.getEntityNameResolvers();
 	}
 
 	private static void handleUnusedMappedSuperclasses(MetadataContext context) {
@@ -504,7 +360,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 	@Override
 	public SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory;
+		return typeConfiguration.getSessionFactory();
 	}
 
 	@Override
@@ -548,7 +404,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 		final int setSize = CollectionHelper.determineProperSizing(
 				jpaEntityTypeMap.size() + jpaMappedSuperclassTypeMap.size() + jpaEmbeddableTypeMap.size()
 		);
-		final Set<ManagedType<?>> managedTypes = new HashSet<ManagedType<?>>( setSize );
+		final Set<ManagedType<?>> managedTypes = new HashSet<>( setSize );
 		managedTypes.addAll( jpaEntityTypeMap.values() );
 		managedTypes.addAll( jpaMappedSuperclassTypeMap.values() );
 		managedTypes.addAll( jpaEmbeddableTypeMap.values() );
@@ -573,11 +429,10 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 	@Override
 	public String getImportedClassName(String className) {
-		String result = imports.get( className );
+		String result = typeConfiguration.getImports().get( className );
 		if ( result == null ) {
 			try {
 				sessionFactory.getServiceRegistry().getService( ClassLoaderService.class ).classForName( className );
-				imports.put( className, className );
 				return className;
 			}
 			catch ( ClassLoadingException cnfe ) {
@@ -601,70 +456,22 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	 * @throws MappingException
 	 */
 	public String[] getImplementors(String className) throws MappingException {
-
-		final Class clazz;
-		try {
-			clazz = getSessionFactory().getServiceRegistry().getService( ClassLoaderService.class ).classForName( className );
-		}
-		catch (ClassLoadingException e) {
-			return new String[] { className }; //for a dynamic-class
-		}
-
-		ArrayList<String> results = new ArrayList<>();
-		for ( EntityPersister checkPersister : entityPersisters().values() ) {
-			if ( ! Queryable.class.isInstance( checkPersister ) ) {
-				continue;
-			}
-			final Queryable checkQueryable = Queryable.class.cast( checkPersister );
-			final String checkQueryableEntityName = checkQueryable.getEntityName();
-			final boolean isMappedClass = className.equals( checkQueryableEntityName );
-			if ( checkQueryable.isExplicitPolymorphism() ) {
-				if ( isMappedClass ) {
-					return new String[] { className }; //NOTE EARLY EXIT
-				}
-			}
-			else {
-				if ( isMappedClass ) {
-					results.add( checkQueryableEntityName );
-				}
-				else {
-					final Class mappedClass = checkQueryable.getMappedClass();
-					if ( mappedClass != null && clazz.isAssignableFrom( mappedClass ) ) {
-						final boolean assignableSuperclass;
-						if ( checkQueryable.isInherited() ) {
-							Class mappedSuperclass = entityPersister( checkQueryable.getMappedSuperclass() ).getMappedClass();
-							assignableSuperclass = clazz.isAssignableFrom( mappedSuperclass );
-						}
-						else {
-							assignableSuperclass = false;
-						}
-						if ( !assignableSuperclass ) {
-							results.add( checkQueryableEntityName );
-						}
-					}
-				}
-			}
-		}
-		return results.toArray( new String[results.size()] );
+		return typeConfiguration.getImplementors( className );
 	}
 
 	@Override
 	public Map<String, EntityPersister> entityPersisters() {
-		return entityPersisterMap;
+		return typeConfiguration.entityPersisters();
 	}
 
 	@Override
 	public CollectionPersister collectionPersister(String role) {
-		final CollectionPersister persister = collectionPersisterMap.get( role );
-		if ( persister == null ) {
-			throw new MappingException( "Could not locate CollectionPersister for role : " + role );
-		}
-		return persister;
+		return typeConfiguration.collectionPersister( role );
 	}
 
 	@Override
 	public Map<String, CollectionPersister> collectionPersisters() {
-		return collectionPersisterMap;
+		return typeConfiguration.collectionPersisters();
 	}
 
 	@Override
@@ -674,53 +481,32 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 	@Override
 	public EntityPersister entityPersister(String entityName) throws MappingException {
-		EntityPersister result = entityPersisterMap.get( entityName );
-		if ( result == null ) {
-			throw new MappingException( "Unknown entity: " + entityName );
-		}
-		return result;
+		return typeConfiguration.entityPersister( entityName );
 	}
-
 
 	@Override
 	public EntityPersister locateEntityPersister(Class byClass) {
-		EntityPersister entityPersister = entityPersisterMap.get( byClass.getName() );
-		if ( entityPersister == null ) {
-			String mappedEntityName = entityProxyInterfaceMap.get( byClass );
-			if ( mappedEntityName != null ) {
-				entityPersister = entityPersisterMap.get( mappedEntityName );
-			}
-		}
-
-		if ( entityPersister == null ) {
-			throw new UnknownEntityTypeException( "Unable to locate persister: " + byClass.getName() );
-		}
-
-		return entityPersister;
+		return typeConfiguration.resolveEntityPersister( byClass );
 	}
 
 	@Override
 	public EntityPersister locateEntityPersister(String byName) {
-		final EntityPersister entityPersister = entityPersisterMap.get( byName );
-		if ( entityPersister == null ) {
-			throw new UnknownEntityTypeException( "Unable to locate persister: " + byName );
-		}
-		return entityPersister;
+		return typeConfiguration.resolveEntityPersister( byName );
 	}
 
 	@Override
 	public Set<String> getCollectionRolesByEntityParticipant(String entityName) {
-		return collectionRolesByEntityParticipant.get( entityName );
+		return typeConfiguration.getCollectionRolesByEntityParticipant( entityName );
 	}
 
 	@Override
 	public String[] getAllEntityNames() {
-		return ArrayHelper.toStringArray( entityPersisterMap.keySet() );
+		return ArrayHelper.toStringArray( typeConfiguration.entityPersisters().keySet() );
 	}
 
 	@Override
 	public String[] getAllCollectionRoles() {
-		return ArrayHelper.toStringArray( entityPersisterMap.keySet() );
+		return ArrayHelper.toStringArray( typeConfiguration.collectionPersisters().keySet() );
 	}
 
 	@Override

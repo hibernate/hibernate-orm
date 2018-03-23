@@ -29,7 +29,6 @@ import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.Query;
 import javax.persistence.SynchronizationType;
 import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.ConnectionAcquisitionMode;
@@ -300,11 +299,10 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			LOG.debug( "Instantiated session factory" );
 
 			this.metamodel = metadata.getTypeConfiguration().scope( this , bootstrapContext);
-			( (MetamodelImpl) this.metamodel ).initialize(
+			((MetamodelImpl)metamodel).initialize(
 					metadata,
 					determineJpaMetaModelPopulationSetting( properties )
 			);
-
 			//Named Queries:
 			this.namedQueryRepository = metadata.buildNamedQueryRepository( this );
 
@@ -604,13 +602,13 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 
 
-	// todo : (5.2) review synchronizationType, persistenceContextType, transactionType usage
-
-	// SynchronizationType -> should we auto enlist in transactions
-	private transient SynchronizationType synchronizationType;
-
-	// PersistenceContextType -> influences FlushMode and 'autoClose'
-	private transient PersistenceContextType persistenceContextType;
+//	// todo : (5.2) review synchronizationType, persistenceContextType, transactionType usage
+//
+//	// SynchronizationType -> should we auto enlist in transactions
+//	private transient SynchronizationType synchronizationType;
+//
+//	// PersistenceContextType -> influences FlushMode and 'autoClose'
+//	private transient PersistenceContextType persistenceContextType;
 
 
 	@Override
@@ -1165,7 +1163,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		//todo : expose setting
 		private SessionOwnerBehavior sessionOwnerBehavior = SessionOwnerBehavior.LEGACY_NATIVE;
-		private PersistenceUnitTransactionType persistenceUnitTransactionType;
 
 		SessionBuilderImpl(SessionFactoryImpl sessionFactory) {
 			this.sessionFactory = sessionFactory;

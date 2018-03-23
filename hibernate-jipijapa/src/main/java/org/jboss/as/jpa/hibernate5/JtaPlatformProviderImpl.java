@@ -9,11 +9,10 @@ package org.jboss.as.jpa.hibernate5;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformProvider;
 
-
 /**
  * @author Scott Marlow
  */
-public class DefaultJtaPlatform implements JtaPlatformProvider {
+public class JtaPlatformProviderImpl implements JtaPlatformProvider {
 
     private static volatile JBossAppServerJtaPlatform delegate;
 
@@ -22,7 +21,7 @@ public class DefaultJtaPlatform implements JtaPlatformProvider {
     }
 
     public static void setDelegate(JBossAppServerJtaPlatform delegate) {
-        DefaultJtaPlatform.delegate = delegate;
+        JtaPlatformProviderImpl.delegate = delegate;
     }
 
     @Override

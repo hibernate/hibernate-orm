@@ -12,7 +12,6 @@ ext {
     junitVersion = '4.12'
     h2Version = '1.4.196'
     bytemanVersion = '4.0.1' //Compatible with JDK10
-    infinispanVersion = '9.2.0.Final'
     jnpVersion = '5.0.6.CR1'
 
     hibernateValidatorVersion = '6.0.7.Final'
@@ -115,15 +114,6 @@ ext {
             validator:       "org.hibernate.validator:hibernate-validator:${hibernateValidatorVersion}",
             // EL required by Hibernate Validator at test runtime
             expression_language: "org.glassfish:javax.el:${elVersion}",
-
-            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~  infinsipan
-            infinispan:      "org.infinispan:infinispan-core:${infinispanVersion}",
-            infinispan_hibernate_cache_commons: "org.infinispan:infinispan-hibernate-cache-commons:${infinispanVersion}",
-            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~  infinispan test
-            infinispan_test: "org.infinispan:infinispan-core:${infinispanVersion}:tests@jar",
-            jboss_common_core: "org.jboss:jboss-common-core:2.2.16.GA@jar",
-            jnp_client:      "org.jboss.naming:jnp-client:${jnpVersion}",
-            jnp_server:      "org.jboss.naming:jnpserver:${jnpVersion}",
 
 			c3p0:            "com.mchange:c3p0:0.9.5.2",
             ehcache:         "net.sf.ehcache:ehcache:2.10.3",

@@ -18,11 +18,13 @@ import org.hibernate.criterion.Criterion;
 import org.hibernate.spatial.HSMessageLogger;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.criterion.SpatialRestrictions;
+import org.hibernate.spatial.dialect.hana.HANASpatialDialect;
 import org.hibernate.spatial.integration.jts.GeomEntity;
 import org.hibernate.spatial.testing.SpatialDialectMatcher;
 import org.hibernate.spatial.testing.SpatialFunctionalTestCase;
 
 import org.hibernate.testing.Skip;
+import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
 import org.jboss.logging.Logger;
@@ -31,6 +33,7 @@ import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 @Skip(condition = SpatialDialectMatcher.class, message = "No Spatial Dialect")
+@SkipForDialect(value = HANASpatialDialect.class, comment = "The HANA dialect is tested via org.hibernate.spatial.dialect.hana.TestHANASpatialFunctions", jiraKey = "HHH-12426")
 public class TestSpatialRestrictions extends SpatialFunctionalTestCase {
 
 	private static HSMessageLogger LOG = Logger.getMessageLogger(

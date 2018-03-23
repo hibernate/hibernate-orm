@@ -17,39 +17,45 @@ import javax.persistence.Id;
  */
 @Entity
 public class Distributor implements Serializable {
-    private Integer id;
-    private String name;
+	private Integer id;
+	private String name;
 
-    @Id
-    @GeneratedValue
-    public Integer getId() {
-        return id;
-    }
+	@Id
+	@GeneratedValue
+	public Integer getId() {
+		return id;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public boolean equals(Object o) {
-        if (this == o) { return true; }
-        if (!(o instanceof Distributor)) { return false; }
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( !( o instanceof Distributor ) ) {
+			return false;
+		}
 
-        final Distributor distributor = (Distributor) o;
+		final Distributor distributor = (Distributor) o;
 
-        if (!name.equals(distributor.name)) { return false; }
+		if ( !name.equals( distributor.name ) ) {
+			return false;
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    public int hashCode() {
-        return name.hashCode();
-    }
+	public int hashCode() {
+		return name.hashCode();
+	}
 }

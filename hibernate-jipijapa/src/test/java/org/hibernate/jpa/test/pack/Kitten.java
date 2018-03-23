@@ -17,45 +17,45 @@ import javax.persistence.Id;
 @Entity
 public class Kitten {
 
-    private Integer id;
-    private String name;
+	private Integer id;
+	private String name;
 
-    @Id
-    @GeneratedValue
-    public Integer getId() {
-        return id;
-    }
+	@Id
+	@GeneratedValue
+	public Integer getId() {
+		return id;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    /**
-     * Constructs a <code>String</code> with all attributes
-     * in name = value format.
-     *
-     * @return a <code>String</code> representation
-     * of this object.
-     */
-    public String toString() {
-        final String TAB = "    ";
+	/**
+	 * Constructs a <code>String</code> with all attributes
+	 * in name = value format.
+	 *
+	 * @return a <code>String</code> representation
+	 * of this object.
+	 */
+	public String toString() {
+		final String TAB = "    ";
 
-        String retValue = "";
+		String retValue = "";
 
-        retValue = "Kitten ( "
-                + super.toString() + TAB
-                + "id = " + this.id + TAB
-                + "name = " + this.name + TAB
-                + " )";
+		retValue = "Kitten ( "
+				+ super.toString() + TAB
+				+ "id = " + this.id + TAB
+				+ "name = " + this.name + TAB
+				+ " )";
 
-        return retValue;
-    }
+		return retValue;
+	}
 }

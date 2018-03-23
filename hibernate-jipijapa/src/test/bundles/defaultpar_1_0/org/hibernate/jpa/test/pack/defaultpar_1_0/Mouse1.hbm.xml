@@ -12,7 +12,7 @@
 
 <hibernate-mapping
         package="org.hibernate.jpa.test.pack.defaultpar_1_0"
-        >
+>
 
     <class name="Mouse1">
 

@@ -15,16 +15,16 @@ import javax.persistence.Id;
  */
 @Entity
 public class Money {
-    private Integer id;
+	private Integer id;
 
-    @Id
-    @GeneratedValue
-    public Integer getId() {
-        return id;
-    }
+	@Id
+	@GeneratedValue
+	public Integer getId() {
+		return id;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
 }

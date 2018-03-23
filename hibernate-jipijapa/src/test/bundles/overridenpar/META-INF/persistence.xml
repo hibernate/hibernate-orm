@@ -12,10 +12,11 @@
              version="2.0">
     <persistence-unit name="overridenpar">
         <jta-data-source>java:/unreachableDS</jta-data-source>
-		<properties>
+        <properties>
             <property name="hibernate.dialect" value="@db.dialect@"/>
             <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
-			<property name="hibernate.cache.region.factory_class" value="org.hibernate.testing.cache.CachingRegionFactory" />
+            <property name="hibernate.cache.region.factory_class"
+                      value="org.hibernate.testing.cache.CachingRegionFactory"/>
         </properties>
     </persistence-unit>
 </persistence>

@@ -13,6 +13,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.hibernate.jpa.boot.spi.Bootstrap;
+
 import org.jipijapa.plugin.spi.EntityManagerFactoryBuilder;
 
 /**
@@ -22,27 +23,28 @@ import org.jipijapa.plugin.spi.EntityManagerFactoryBuilder;
  */
 public class TwoPhaseBootstrapImpl implements EntityManagerFactoryBuilder {
 
-    final org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder entityManagerFactoryBuilder;
+	private final org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder entityManagerFactoryBuilder;
 
-    public TwoPhaseBootstrapImpl(final PersistenceUnitInfo info, final Map map) {
-        entityManagerFactoryBuilder =
-                    Bootstrap.getEntityManagerFactoryBuilder(info, map);
-    }
+	@SuppressWarnings("WeakerAccess")
+	public TwoPhaseBootstrapImpl(final PersistenceUnitInfo info, final Map map) {
+		entityManagerFactoryBuilder =
+				Bootstrap.getEntityManagerFactoryBuilder( info, map );
+	}
 
-    @Override
-    public EntityManagerFactory build() {
-        return entityManagerFactoryBuilder.build();
-    }
+	@Override
+	public EntityManagerFactory build() {
+		return entityManagerFactoryBuilder.build();
+	}
 
-    @Override
-    public void cancel() {
-        entityManagerFactoryBuilder.cancel();
-    }
+	@Override
+	public void cancel() {
+		entityManagerFactoryBuilder.cancel();
+	}
 
-    @Override
-    public EntityManagerFactoryBuilder withValidatorFactory(Object validatorFactory) {
-        entityManagerFactoryBuilder.withValidatorFactory(validatorFactory);
-        return this;
-    }
+	@Override
+	public EntityManagerFactoryBuilder withValidatorFactory(Object validatorFactory) {
+		entityManagerFactoryBuilder.withValidatorFactory( validatorFactory );
+		return this;
+	}
 
 }

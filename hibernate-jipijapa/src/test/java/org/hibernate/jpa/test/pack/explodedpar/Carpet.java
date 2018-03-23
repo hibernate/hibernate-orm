@@ -15,24 +15,24 @@ import javax.persistence.Id;
  */
 @Entity
 public class Carpet {
-    private Integer id;
-    private String country;
+	private Integer id;
+	private String country;
 
-    @Id
-    @GeneratedValue
-    public Integer getId() {
-        return id;
-    }
+	@Id
+	@GeneratedValue
+	public Integer getId() {
+		return id;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    public String getCountry() {
-        return country;
-    }
+	public String getCountry() {
+		return country;
+	}
 
-    public void setCountry(String country) {
-        this.country = country;
-    }
+	public void setCountry(String country) {
+		this.country = country;
+	}
 }

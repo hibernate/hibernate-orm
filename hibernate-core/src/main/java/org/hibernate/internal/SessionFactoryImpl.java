@@ -404,8 +404,9 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			if ( !propertyName.startsWith( org.hibernate.jpa.AvailableSettings.EVENT_LISTENER_PREFIX ) ) {
 				continue;
 			}
-			final String eventTypeName = propertyName.substring( org.hibernate.jpa.AvailableSettings.EVENT_LISTENER_PREFIX
-																		 .length() + 1 );
+			final String eventTypeName = propertyName.substring(
+					org.hibernate.jpa.AvailableSettings.EVENT_LISTENER_PREFIX.length() + 1
+			);
 			final EventType eventType = EventType.resolveEventTypeByName( eventTypeName );
 			final EventListenerGroup eventListenerGroup = eventListenerRegistry.getEventListenerGroup( eventType );
 			for ( String listenerImpl : ( (String) entry.getValue() ).split( " ," ) ) {

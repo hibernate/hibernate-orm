@@ -37,6 +37,11 @@ public interface MetadataImplementor extends Metadata, Mapping {
 	 */
 	MetadataBuildingOptions getMetadataBuildingOptions();
 
+	/**
+	 * Access to the TypeConfiguration
+	 *
+	 * @return Access to the TypeConfiguration
+	 */
 	TypeConfiguration getTypeConfiguration();
 
 	/**

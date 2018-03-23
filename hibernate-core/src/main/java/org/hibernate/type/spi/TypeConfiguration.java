@@ -7,25 +7,27 @@
 package org.hibernate.type.spi;
 
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.SessionFactoryRegistry;
+import org.hibernate.metamodel.internal.MetamodelImpl;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
 import org.hibernate.type.TypeResolver;
 
-import org.jboss.logging.Logger;
-
-import static org.hibernate.internal.CoreLogging.logger;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
@@ -57,6 +59,9 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	private final BasicTypeRegistry basicTypeRegistry;
 
+	private final Map<String,String> importMap = new ConcurrentHashMap<>();
+
+
 	// temporarily needed to support deprecations
 	private final TypeResolver typeResolver;
 
@@ -86,6 +91,10 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return basicTypeRegistry;
 	}
 
+	public Map<String, String> getImportMap() {
+		return Collections.unmodifiableMap( importMap );
+	}
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Scoping
 
@@ -108,10 +117,24 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		scope.setMetadataBuildingContext( metadataBuildingContext );
 	}
 
-	public void scope(SessionFactoryImpl sessionFactory) {
+	public MetamodelImplementor scope(SessionFactoryImplementor sessionFactory,  BootstrapContext bootstrapContext) {
 		log.debugf( "Scoping TypeConfiguration [%s] to SessionFactoryImpl [%s]", this, sessionFactory );
 		scope.setSessionFactory( sessionFactory );
 		typeFactory.injectSessionFactory( sessionFactory );
+		log.debugf( "Scoping TypeConfiguration [%s] to SessionFactory [%s]", this, sessionFactory );
+
+		for ( Map.Entry<String, String> importEntry : scope.metadataBuildingContext.getMetadataCollector().getImports().entrySet() ) {
+			if ( importMap.containsKey( importEntry.getKey() ) ) {
+				continue;
+			}
+
+			importMap.put( importEntry.getKey(), importEntry.getValue() );
+		}
+
+		scope.setSessionFactory( sessionFactory );
+		sessionFactory.addObserver( this );
+		MetamodelImpl metamodel = new MetamodelImpl( sessionFactory, this );
+		return metamodel;
 	}
 
 	/**

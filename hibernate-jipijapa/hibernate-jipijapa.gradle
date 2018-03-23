@@ -13,9 +13,10 @@ dependencies {
     compile project( ':hibernate-core' )
     compile( libraries.jipijapa_spi )
     compile( libraries.jboss_vfs )
-    compile( libraries.infinispan_hibernate_cache_commons )
-    
+//    compile( libraries.infinispan_hibernate_cache_commons )
+
     testCompile project( ':hibernate-testing' )
+    testCompile( libraries.shrinkwrap )
 }
 
 test {

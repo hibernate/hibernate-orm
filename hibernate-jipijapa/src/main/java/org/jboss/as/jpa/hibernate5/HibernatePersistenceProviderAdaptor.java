@@ -7,17 +7,16 @@
 
 package org.jboss.as.jpa.hibernate5;
 
-import static org.jboss.as.jpa.hibernate5.JpaLogger.JPA_LOGGER;
-
 import java.util.Map;
 import java.util.Properties;
-
 import javax.enterprise.inject.spi.BeanManager;
 import javax.persistence.SharedCacheMode;
 import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.hibernate.cfg.AvailableSettings;
+
 import org.jboss.as.jpa.hibernate5.management.HibernateManagementAdaptor;
+
 import org.jipijapa.cache.spi.Classification;
 import org.jipijapa.event.impl.internal.Notification;
 import org.jipijapa.plugin.spi.EntityManagerFactoryBuilder;
@@ -28,6 +27,8 @@ import org.jipijapa.plugin.spi.PersistenceUnitMetadata;
 import org.jipijapa.plugin.spi.Platform;
 import org.jipijapa.plugin.spi.TwoPhaseBootstrapCapable;
 
+import static org.jboss.as.jpa.hibernate5.JpaLogger.JPA_LOGGER;
+
 /**
  * Implements the PersistenceProviderAdaptor for Hibernate
  *
@@ -36,11 +37,10 @@ import org.jipijapa.plugin.spi.TwoPhaseBootstrapCapable;
 public class HibernatePersistenceProviderAdaptor implements PersistenceProviderAdaptor, TwoPhaseBootstrapCapable {
 
     public static final String NAMING_STRATEGY_JPA_COMPLIANT_IMPL = "org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl";
+    private static final String HIBERNATE_EXTENDED_BEANMANAGER = "org.hibernate.resource.beans.container.spi.ExtendedBeanManager";
     private volatile JtaManager jtaManager;
     private volatile Platform platform;
-    private static final String SHARED_CACHE_MODE = "javax.persistence.sharedCache.mode";
     private static final String NONE = SharedCacheMode.NONE.name();
-    private static final String HIBERNATE_EXTENDED_BEANMANAGER = "org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager";
 
     @Override
     public void injectJtaManager(JtaManager jtaManager) {
@@ -85,7 +85,7 @@ public class HibernatePersistenceProviderAdaptor implements PersistenceProviderA
     @Override
     public void addProviderDependencies(PersistenceUnitMetadata pu) {
         final Properties properties = pu.getProperties();
-        final String sharedCacheMode = properties.getProperty(SHARED_CACHE_MODE);
+        final String sharedCacheMode = properties.getProperty( AvailableSettings.JPA_SHARED_CACHE_MODE );
 
         if ( Classification.NONE.equals(platform.defaultCacheClassification())) {
             if (!SharedCacheMode.NONE.equals(pu.getSharedCacheMode())) {
@@ -103,12 +103,12 @@ public class HibernatePersistenceProviderAdaptor implements PersistenceProviderA
                 ||
                 (sharedCacheMode != null && (!NONE.equals(sharedCacheMode)))
                 || (!SharedCacheMode.NONE.equals(pu.getSharedCacheMode()) && (!SharedCacheMode.UNSPECIFIED.equals(pu.getSharedCacheMode())))) {
-            HibernateSecondLevelCache.addSecondLevelCacheDependencies(pu.getProperties(), pu.getScopedPersistenceUnitName());
+//            HibernateSecondLevelCache.addSecondLevelCacheDependencies(pu.getProperties(), pu.getScopedPersistenceUnitName());
             JPA_LOGGER.tracef("second level cache enabled for %s", pu.getScopedPersistenceUnitName());
         } else {
             JPA_LOGGER.tracef("second level cache disabled for %s, pu %s property = %s, pu.getSharedCacheMode = %s",
                     pu.getScopedPersistenceUnitName(),
-                    SHARED_CACHE_MODE,
+                              AvailableSettings.JPA_SHARED_CACHE_MODE,
                     sharedCacheMode,
                     pu.getSharedCacheMode().toString());
         }

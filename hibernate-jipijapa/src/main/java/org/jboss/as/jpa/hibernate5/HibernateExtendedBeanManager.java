@@ -11,7 +11,7 @@ import java.util.ArrayList;
 
 import javax.enterprise.inject.spi.BeanManager;
 
-import org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager;
+import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 
 /**
  * HibernateExtendedBeanManager helps defer the registering of entity listeners, with the CDI BeanManager until
@@ -49,7 +49,7 @@ public class HibernateExtendedBeanManager implements ExtendedBeanManager {
 
     public void beanManagerIsAvailableForUse() {
         for (LifecycleListener hibernateCallback : lifecycleListeners) {
-            hibernateCallback.beanManagerInitialized(beanManager);
+            hibernateCallback.beanManagerInitialized( beanManager );
         }
     }
 

@@ -106,6 +106,7 @@ public interface BootstrapContext {
 	 * we migrate away from Hibernate Commons Annotations to Jandex for annotation handling
 	 * and XMl->annotation merging.
 	 */
+	@Deprecated
 	ReflectionManager getReflectionManager();
 
 	/**

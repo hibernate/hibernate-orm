@@ -102,9 +102,10 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 	 * @deprecated Use {@link EventListenerRegistryImpl#EventListenerRegistryImpl(BootstrapContext, SessionFactoryImplementor)} instead
 	 */
 	@Deprecated
-	EventListenerRegistryImpl(SessionFactoryImplementor sessionFactory,
-							  SessionFactoryOptions sessionFactoryOptions,
-							  ServiceRegistryImplementor registry) {
+	EventListenerRegistryImpl(
+			SessionFactoryImplementor sessionFactory,
+			SessionFactoryOptions sessionFactoryOptions,
+			ServiceRegistryImplementor registry) {
 		this.sessionFactory = sessionFactory;
 
 		this.callbackRegistry = new CallbackRegistryImpl();

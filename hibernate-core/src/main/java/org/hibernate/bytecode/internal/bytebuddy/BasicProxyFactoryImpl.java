@@ -9,8 +9,6 @@ package org.hibernate.bytecode.internal.bytebuddy;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -27,8 +25,6 @@ import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatchers;
 
 public class BasicProxyFactoryImpl implements BasicProxyFactory {
-
-	private static final ConcurrentMap<Set<Class>, Class> CACHE = new ConcurrentHashMap<Set<Class>, Class>();
 
 	private static final Class[] NO_INTERFACES = new Class[0];
 
@@ -47,29 +43,19 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 			key.addAll( Arrays.asList( interfaces ) );
 		}
 
-		Class proxyClass = CACHE.get( key );
-
-		if ( proxyClass == null ) {
-			proxyClass = new ByteBuddy()
-					.with( TypeValidation.DISABLED )
-					.with( new AuxiliaryType.NamingStrategy.SuffixingRandom( "HibernateBasicProxy" ) )
-					.subclass( superClass == null ? Object.class : superClass )
-					.implement( interfaces == null ? NO_INTERFACES : interfaces )
-					.defineField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE )
-					.method( ElementMatchers.isVirtual().and( ElementMatchers.not( ElementMatchers.isFinalizer() ) ) )
-					.intercept( MethodDelegation.toField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME ) )
-					.implement( ProxyConfiguration.class )
-					.intercept( FieldAccessor.ofField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME ).withAssigner( Assigner.DEFAULT, Assigner.Typing.DYNAMIC ) )
-					.make()
-					.load( BasicProxyFactory.class.getClassLoader() )
-					.getLoaded();
-			Class previousProxy = CACHE.putIfAbsent( key, proxyClass );
-			if ( previousProxy != null ) {
-				proxyClass = previousProxy;
-			}
-		}
-
-		this.proxyClass = proxyClass;
+		this.proxyClass = new ByteBuddy()
+			.with( TypeValidation.DISABLED )
+			.with( new AuxiliaryType.NamingStrategy.SuffixingRandom( "HibernateBasicProxy" ) )
+			.subclass( superClass == null ? Object.class : superClass )
+			.implement( interfaces == null ? NO_INTERFACES : interfaces )
+			.defineField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE )
+			.method( ElementMatchers.isVirtual().and( ElementMatchers.not( ElementMatchers.isFinalizer() ) ) )
+			.intercept( MethodDelegation.toField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME ) )
+			.implement( ProxyConfiguration.class )
+			.intercept( FieldAccessor.ofField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME ).withAssigner( Assigner.DEFAULT, Assigner.Typing.DYNAMIC ) )
+			.make()
+			.load( BasicProxyFactory.class.getClassLoader() )
+			.getLoaded();
 	}
 
 	public Object getProxy() {

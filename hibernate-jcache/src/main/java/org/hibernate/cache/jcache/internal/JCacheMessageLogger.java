@@ -11,6 +11,7 @@ import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 
 import org.hibernate.cache.spi.Region;
+import org.hibernate.cache.spi.SecondLevelCacheLogger;
 import org.hibernate.internal.CoreMessageLogger;
 
 import static org.jboss.logging.Logger.Level.ERROR;
@@ -24,19 +25,27 @@ public interface JCacheMessageLogger extends CoreMessageLogger {
 
 	static final int NAMESPACE = 40000;
 
+	/**
+	 * @deprecated (since 5.3) Use {@link SecondLevelCacheLogger#attemptToStartAlreadyStartedCacheProvider()}
+	 */
 	@LogMessage(level = WARN)
 	@Message(
 			value = "Attempt to restart an already started JCacheRegionFactory.  Use sessionFactory.close() between " +
 					"repeated calls to buildSessionFactory. Using previously created JCacheRegionFactory.",
 			id = NAMESPACE + 1
 	)
+	@Deprecated
 	void attemptToRestartAlreadyStartedJCacheProvider();
 
+	/**
+	 * @deprecated (since 5.3) Use {@link SecondLevelCacheLogger#attemptToStopAlreadyStoppedCacheProvider()}
+	 */
 	@LogMessage(level = WARN)
 	@Message(
 			value = "Attempt to restop an already stopped JCacheRegionFactory.",
 			id = NAMESPACE + 2
 	)
+	@Deprecated
 	void attemptToRestopAlreadyStoppedJCacheProvider();
 
 	@LogMessage(level = ERROR)

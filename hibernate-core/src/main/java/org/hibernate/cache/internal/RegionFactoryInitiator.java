@@ -12,12 +12,16 @@ import java.util.Properties;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
 
 /**
  * Initiator for the {@link RegionFactory} service.
@@ -39,58 +43,78 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
 	public RegionFactory initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
-		final Properties p = new Properties();
-		if (configurationValues != null) {
-			p.putAll( configurationValues );
-		}
-		
-		final boolean useSecondLevelCache = ConfigurationHelper.getBoolean(
-				AvailableSettings.USE_SECOND_LEVEL_CACHE,
-				configurationValues,
-				true
-		);
-		final boolean useQueryCache = ConfigurationHelper.getBoolean(
-				AvailableSettings.USE_QUERY_CACHE,
-				configurationValues
-		);
-
-		RegionFactory regionFactory = NoCachingRegionFactory.INSTANCE;
-
-		// The cache provider is needed when we either have second-level cache enabled
-		// or query cache enabled.  Note that useSecondLevelCache is enabled by default
-		if ( useSecondLevelCache || useQueryCache ) {
-			final Object setting = configurationValues != null
-					? configurationValues.get( AvailableSettings.CACHE_REGION_FACTORY )
-					: null;
-			regionFactory = registry.getService( StrategySelector.class ).resolveStrategy(
-					RegionFactory.class,
-					setting,
-					NoCachingRegionFactory.INSTANCE,
-					new StrategyCreatorRegionFactoryImpl( p )
-			);
-		}
-
-		if ( regionFactory == NoCachingRegionFactory.INSTANCE ) {
-			// todo (5.3) : make this configurable?
-			boolean allowDefaulting = true;
-			if ( allowDefaulting ) {
-				final StrategySelector selector = registry.getService( StrategySelector.class );
-				final Collection<Class<? extends RegionFactory>> implementors = selector.getRegisteredStrategyImplementors( RegionFactory.class );
-				if ( implementors != null && implementors.size() == 1 ) {
-					regionFactory = selector.resolveStrategy( RegionFactory.class, implementors.iterator().next() );
-					configurationValues.put( AvailableSettings.CACHE_REGION_FACTORY, regionFactory );
-					configurationValues.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
-				}
-				else {
-					LOG.debugf( "Cannot default RegionFactory based on registered strategies as `%s` RegionFactory strategies were registered" );
-				}
-			}
-		}
+		final RegionFactory regionFactory = resolveRegionFactory( configurationValues, registry );
 
 		LOG.debugf( "Cache region factory : %s", regionFactory.getClass().getName() );
 
 		return regionFactory;
+	}
+
+
+	@SuppressWarnings({"unchecked", "WeakerAccess"})
+	protected RegionFactory resolveRegionFactory(Map configurationValues, ServiceRegistryImplementor registry) {
+		final Properties p = new Properties();
+		p.putAll( configurationValues );
+
+		final Boolean useSecondLevelCache = ConfigurationHelper.getBooleanWrapper(
+				AvailableSettings.USE_SECOND_LEVEL_CACHE,
+				configurationValues,
+				null
+		);
+		final Boolean useQueryCache = ConfigurationHelper.getBooleanWrapper(
+				AvailableSettings.USE_QUERY_CACHE,
+				configurationValues,
+				null
+		);
+
+		// We should immediately return NoCachingRegionFactory if either:
+		//		1) both are explicitly FALSE
+		//		2) USE_SECOND_LEVEL_CACHE is FALSE and USE_QUERY_CACHE is null
+		if ( useSecondLevelCache != null && useSecondLevelCache == FALSE ) {
+			if ( useQueryCache == null || useQueryCache == FALSE ) {
+				return NoCachingRegionFactory.INSTANCE;
+			}
+		}
+
+		final Object setting = configurationValues.get( AvailableSettings.CACHE_REGION_FACTORY );
+
+		final StrategySelector selector = registry.getService( StrategySelector.class );
+		final Collection<Class<? extends RegionFactory>> implementors = selector.getRegisteredStrategyImplementors( RegionFactory.class );
+
+		if ( ( useSecondLevelCache != null && useSecondLevelCache == TRUE )
+				|| ( useQueryCache != null && useQueryCache == TRUE ) ) {
+			// if either are explicitly defined and one is TRUE, we need a RegionFactory
+			if ( setting == null && implementors.size() != 1 ) {
+				throw new CacheException( "Caching was explicitly requested, but no RegionFactory was defined and there is not a single registered RegionFactory" );
+			}
+			final RegionFactory regionFactory = registry.getService( StrategySelector.class ).resolveStrategy(
+					RegionFactory.class,
+					setting,
+					(RegionFactory) null,
+					new StrategyCreatorRegionFactoryImpl( p )
+			);
+
+			if ( regionFactory != null ) {
+				return regionFactory;
+			}
+		}
+
+
+		if ( implementors.size() == 1 ) {
+			final RegionFactory regionFactory = selector.resolveStrategy( RegionFactory.class, implementors.iterator().next() );
+			configurationValues.put( AvailableSettings.CACHE_REGION_FACTORY, regionFactory );
+			configurationValues.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
+
+			return regionFactory;
+		}
+		else {
+			LOG.debugf(
+					"Cannot default RegionFactory based on registered strategies as `%s` RegionFactory strategies were registered",
+					implementors
+			);
+		}
+
+		return NoCachingRegionFactory.INSTANCE;
 	}
 }

@@ -15,6 +15,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hibernate.cache.spi.DomainDataRegion;
+import org.hibernate.cache.spi.SecondLevelCacheLogger;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -179,6 +180,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 
 	@SuppressWarnings("WeakerAccess")
 	protected void handleLockExpiry(SharedSessionContractImplementor session, Object key, Lockable lock) {
+		SecondLevelCacheLogger.INSTANCE.softLockedCacheExpired( getRegion().getName(), key );
 		log.info( "Cached entry expired : " + key );
 
 		// create new lock that times out immediately

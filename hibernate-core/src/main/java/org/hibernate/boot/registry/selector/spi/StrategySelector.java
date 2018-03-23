@@ -145,6 +145,8 @@ public interface StrategySelector extends Service {
 	 * Retrieve all of the registered implementors of the given strategy.  Useful
 	 * to allow defaulting the choice to the single registered implementor when
 	 * only one is registered
+	 *
+	 * @return The implementors.  Should never return {@code null}
 	 */
 	<T> Collection<Class<? extends T>> getRegisteredStrategyImplementors(Class<T> strategy);
 }

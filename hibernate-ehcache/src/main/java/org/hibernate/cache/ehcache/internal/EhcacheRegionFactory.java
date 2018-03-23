@@ -4,24 +4,25 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.cache.jcache.internal;
+package org.hibernate.cache.ehcache.internal;
 
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.cache.Cache;
-import javax.cache.CacheManager;
-import javax.cache.Caching;
-import javax.cache.spi.CachingProvider;
+
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.config.Configuration;
+import net.sf.ehcache.config.ConfigurationFactory;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.cfg.spi.DomainDataRegionBuildingContext;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
+import org.hibernate.cache.ehcache.ConfigSettings;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
-import org.hibernate.cache.jcache.ConfigSettings;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
 import org.hibernate.cache.spi.QueryResultsRegion;
@@ -35,15 +36,14 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.cache.ehcache.ConfigSettings.EHCACHE_CONFIGURATION_RESOURCE_NAME;
+
 /**
+ * @author Steve Ebersole
  * @author Alex Snaps
  */
-public class JCacheRegionFactory implements RegionFactory {
-
-	private static final JCacheMessageLogger LOG = Logger.getMessageLogger(
-			JCacheMessageLogger.class,
-			JCacheRegionFactory.class.getName()
-	);
+public class EhcacheRegionFactory implements RegionFactory {
+	private static final Logger LOG = Logger.getLogger( EhcacheRegionFactory.class );
 
 	private final AtomicBoolean started = new AtomicBoolean( false );
 	private final CacheKeysFactory cacheKeysFactory;
@@ -51,16 +51,20 @@ public class JCacheRegionFactory implements RegionFactory {
 	private volatile CacheManager cacheManager;
 	private SessionFactoryOptions options;
 
-	public JCacheRegionFactory() {
+	public EhcacheRegionFactory() {
 		this( DefaultCacheKeysFactory.INSTANCE );
 	}
 
-	public JCacheRegionFactory(CacheKeysFactory cacheKeysFactory) {
+	public EhcacheRegionFactory(CacheKeysFactory cacheKeysFactory) {
 		this.cacheKeysFactory = cacheKeysFactory;
 	}
 
 	public CacheManager getCacheManager() {
 		return cacheManager;
+	}
+
+	public SessionFactoryOptions getOptions() {
+		return options;
 	}
 
 	@Override
@@ -103,42 +107,101 @@ public class JCacheRegionFactory implements RegionFactory {
 		}
 	}
 
-	protected CacheManager getCacheManager(SessionFactoryOptions settings, Map properties) {
+	private CacheManager getCacheManager(SessionFactoryOptions settings, Map properties) {
 		final Object explicitCacheManager = properties.get( ConfigSettings.CACHE_MANAGER );
 		if ( explicitCacheManager != null ) {
 			return useExplicitCacheManager( settings, explicitCacheManager );
 		}
 
-		final CachingProvider cachingProvider = getCachingProvider( properties );
-		final CacheManager cacheManager;
-		final String cacheManagerUri = getProp( properties, ConfigSettings.CONFIG_URI );
-		if ( cacheManagerUri != null ) {
-			URI uri;
-			try {
-				uri = new URI( cacheManagerUri );
-			}
-			catch ( URISyntaxException e ) {
-				throw new CacheException( "Couldn't create URI from " + cacheManagerUri, e );
-			}
-			// todo (5.3) : shouldn't this use Hibernate's AggregatedClassLoader?
-			cacheManager = cachingProvider.getCacheManager( uri, cachingProvider.getDefaultClassLoader() );
-		}
-		else {
-			cacheManager = cachingProvider.getCacheManager();
-		}
-		return cacheManager;
+		return useNormalCacheManager( settings, properties );
 	}
 
-	protected CachingProvider getCachingProvider(final Map properties){
-		final CachingProvider cachingProvider;
-		final String provider = getProp( properties, ConfigSettings.PROVIDER );
-		if ( provider != null ) {
-			cachingProvider = Caching.getCachingProvider( provider );
+	protected CacheManager resolveCacheManager(SessionFactoryOptions settings, Map properties) {
+		return useNormalCacheManager( settings, properties );
+	}
+
+	/**
+	 * Locate the CacheManager during start-up.  protected to allow for subclassing
+	 * such as SingletonEhcacheRegionFactory
+	 */
+	protected static CacheManager useNormalCacheManager(SessionFactoryOptions settings, Map properties) {
+		try {
+			String configurationResourceName = null;
+			if ( properties != null ) {
+				configurationResourceName = (String) properties.get( EHCACHE_CONFIGURATION_RESOURCE_NAME );
+			}
+			if ( configurationResourceName == null || configurationResourceName.length() == 0 ) {
+				final Configuration configuration = ConfigurationFactory.parseConfiguration();
+				return new CacheManager( configuration );
+			}
+			else {
+				final URL url = loadResource( configurationResourceName, settings );
+				final Configuration configuration = HibernateEhcacheUtils.loadAndCorrectConfiguration( url );
+				return new CacheManager( configuration );
+			}
 		}
-		else {
-			cachingProvider = Caching.getCachingProvider();
+		catch (net.sf.ehcache.CacheException e) {
+			if ( e.getMessage().startsWith(
+					"Cannot parseConfiguration CacheManager. Attempt to create a new instance of " +
+							"CacheManager using the diskStorePath"
+			) ) {
+				throw new CacheException(
+						"Attempt to restart an already started EhCacheRegionFactory. " +
+								"Use sessionFactory.close() between repeated calls to buildSessionFactory. " +
+								"Consider using SingletonEhCacheRegionFactory. Error from ehcache was: " + e.getMessage()
+				);
+			}
+			else {
+				throw new CacheException( e );
+			}
 		}
-		return cachingProvider;
+	}
+
+	private static URL loadResource(String configurationResourceName, SessionFactoryOptions settings) {
+		URL url = settings.getServiceRegistry()
+				.getService( ClassLoaderService.class )
+				.locateResource( configurationResourceName );
+
+		if ( url == null ) {
+			final ClassLoader standardClassloader = Thread.currentThread().getContextClassLoader();
+			if ( standardClassloader != null ) {
+				url = standardClassloader.getResource( configurationResourceName );
+			}
+			if ( url == null ) {
+				url = EhcacheRegionFactory.class.getResource( configurationResourceName );
+			}
+			if ( url == null ) {
+				try {
+					url = new URL( configurationResourceName );
+				}
+				catch ( MalformedURLException e ) {
+					// ignore
+				}
+			}
+		}
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf(
+					"Creating EhCacheRegionFactory from a specified resource: %s.  Resolved to URL: %s",
+					configurationResourceName,
+					url
+			);
+		}
+		if ( url == null ) {
+			EhCacheMessageLogger.INSTANCE.unableToLoadConfiguration( configurationResourceName );
+		}
+
+		return url;
+	}
+
+	/**
+	 * Load a resource from the classpath.
+	 */
+	protected URL loadResource(String configurationResourceName) {
+		if ( ! isStarted() ) {
+			throw new IllegalStateException( "Cannot load resource through a non-started EhcacheRegionFactory" );
+		}
+
+		return loadResource( configurationResourceName, options );
 	}
 
 	private CacheManager useExplicitCacheManager(SessionFactoryOptions settings, Object setting) {
@@ -167,16 +230,20 @@ public class JCacheRegionFactory implements RegionFactory {
 	public void stop() {
 		if ( started.compareAndSet( true, false ) ) {
 			synchronized ( this ) {
-				// todo (5.3) : if this is a manager instance that was provided to us we should probably not close it...
-				//		- when the explicit `setting` passed to `#useExplicitCacheManager` is
-				//		a CacheManager instance
-				cacheManager.close();
+				releaseCacheManager();
 				cacheManager = null;
 			}
 		}
 		else {
-			LOG.attemptToRestopAlreadyStoppedJCacheProvider();
+			SecondLevelCacheLogger.INSTANCE.attemptToStopAlreadyStoppedCacheProvider();
 		}
+	}
+
+	protected void releaseCacheManager() {
+		// todo (5.3) : if this is a manager instance that was provided to us we should probably not close it...
+		//		- when the explicit `setting` passed to `#useExplicitCacheManager` is
+		//		a CacheManager instance
+		cacheManager.shutdown();
 	}
 
 	@Override
@@ -219,7 +286,7 @@ public class JCacheRegionFactory implements RegionFactory {
 		);
 	}
 
-	protected Cache<Object, Object> getOrCreateCache(String unqualifiedRegionName, SessionFactoryImplementor sessionFactory) {
+	protected Cache getOrCreateCache(String unqualifiedRegionName, SessionFactoryImplementor sessionFactory) {
 		checkStatus();
 		assert !RegionNameQualifier.INSTANCE.isQualified( unqualifiedRegionName, sessionFactory.getSessionFactoryOptions() );
 
@@ -228,14 +295,14 @@ public class JCacheRegionFactory implements RegionFactory {
 				sessionFactory.getSessionFactoryOptions()
 		);
 
-		final Cache<Object, Object> cache = cacheManager.getCache( qualifiedRegionName );
+		final Cache cache = cacheManager.getCache( qualifiedRegionName );
 		if ( cache == null ) {
 			return createCache( qualifiedRegionName );
 		}
 		return cache;
 	}
 
-	protected Cache<Object, Object> createCache(String regionName) {
+	protected Cache createCache(String regionName) {
 		throw new CacheException( "On-the-fly creation of JCache Cache objects is not supported [" + regionName + "]" );
 	}
 

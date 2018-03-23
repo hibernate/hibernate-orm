@@ -14,15 +14,16 @@ import org.jboss.logging.annotations.MessageLogger;
 /**
  * JipiJapa message range is 20200-20299
  * note: keep duplicate messages in sync between different sub-projects that use the same messages
+ *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  * @author Scott Marlow
  */
 @MessageLogger(projectCode = "JIPI")
 public interface JpaLogger extends BasicLogger {
 
-    /**
-     * A logger with the category {@code org.jboss.jpa}.
-     */
-    JpaLogger JPA_LOGGER = Logger.getMessageLogger(JpaLogger.class, "org.jipijapa");
+	/**
+	 * A logger with the category {@code org.jboss.jpa}.
+	 */
+	JpaLogger JPA_LOGGER = Logger.getMessageLogger( JpaLogger.class, "org.jipijapa" );
 
 }

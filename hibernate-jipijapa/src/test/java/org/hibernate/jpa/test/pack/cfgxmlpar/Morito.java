@@ -15,24 +15,24 @@ import javax.persistence.Id;
  */
 @Entity
 public class Morito {
-    private Integer id;
-    private String power;
+	private Integer id;
+	private String power;
 
-    @Id
-    @GeneratedValue
-    public Integer getId() {
-        return id;
-    }
+	@Id
+	@GeneratedValue
+	public Integer getId() {
+		return id;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    public String getPower() {
-        return power;
-    }
+	public String getPower() {
+		return power;
+	}
 
-    public void setPower(String power) {
-        this.power = power;
-    }
+	public void setPower(String power) {
+		this.power = power;
+	}
 }

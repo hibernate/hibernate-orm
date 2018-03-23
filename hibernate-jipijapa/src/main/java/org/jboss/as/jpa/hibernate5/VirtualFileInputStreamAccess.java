@@ -11,6 +11,7 @@ import java.io.InputStream;
 
 import org.hibernate.boot.archive.spi.ArchiveException;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
+
 import org.jboss.vfs.VirtualFile;
 
 
@@ -21,27 +22,28 @@ import org.jboss.vfs.VirtualFile;
  * @author Steve Ebersole
  */
 public class VirtualFileInputStreamAccess implements InputStreamAccess {
-    private final String name;
-    private final VirtualFile virtualFile;
+	private final String name;
+	private final VirtualFile virtualFile;
 
-    public VirtualFileInputStreamAccess(String name, VirtualFile virtualFile) {
-        this.name = name;
-        this.virtualFile = virtualFile;
-    }
+	@SuppressWarnings("WeakerAccess")
+	public VirtualFileInputStreamAccess(String name, VirtualFile virtualFile) {
+		this.name = name;
+		this.virtualFile = virtualFile;
+	}
 
-    @Override
-    public String getStreamName() {
-        return name;
-    }
+	@Override
+	public String getStreamName() {
+		return name;
+	}
 
-    @Override
-    public InputStream accessInputStream() {
-        try {
-            return virtualFile.openStream();
-        }
-        catch (IOException e) {
-            throw new ArchiveException( "Unable to open VirtualFile-based InputStream", e );
-        }
-    }
+	@Override
+	public InputStream accessInputStream() {
+		try {
+			return virtualFile.openStream();
+		}
+		catch (IOException e) {
+			throw new ArchiveException( "Unable to open VirtualFile-based InputStream", e );
+		}
+	}
 
 }

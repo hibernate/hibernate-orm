@@ -22,35 +22,33 @@ import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
  * @author Scott Marlow
  */
 public class HibernateExtendedBeanManager implements ExtendedBeanManager {
-    private final ArrayList<LifecycleListener> lifecycleListeners = new ArrayList<>();
-    private final BeanManager beanManager;
+	private final ArrayList<LifecycleListener> lifecycleListeners = new ArrayList<>();
+	private final BeanManager beanManager;
 
-    public HibernateExtendedBeanManager(BeanManager beanManager) {
-        this.beanManager = beanManager;
-    }
+	public HibernateExtendedBeanManager(BeanManager beanManager) {
+		this.beanManager = beanManager;
+	}
 
-    /**
-     * Hibernate calls registerLifecycleListener to register N callbacks to be notified
-     * when the CDI BeanManager can safely be used.  The CDI BeanManager can safely be used
-     * when the CDI AfterDeploymentValidation event is reached.
-     *
-     * @param lifecycleListener
-     *
-     * Note: Caller (BeanManagerAfterDeploymentValidation) is expected to synchronize calls to
-     * registerLifecycleListener() + beanManagerIsAvailableForUse(), which protects
-     * HibernateExtendedBeanManager.lifecycleListeners from being read/written from multiple concurrent threads.
-     * There are many writer threads (one per deployed persistence unit) and one reader/writer thread expected
-     * to be triggered by one AfterDeploymentValidation event per deployment.
-     */
-    @Override
-    public void registerLifecycleListener(LifecycleListener lifecycleListener) {
-        lifecycleListeners.add(lifecycleListener);
-    }
+	/**
+	 * Hibernate calls registerLifecycleListener to register N callbacks to be notified
+	 * when the CDI BeanManager can safely be used.  The CDI BeanManager can safely be used
+	 * when the CDI AfterDeploymentValidation event is reached.
+	 *
+	 * @param lifecycleListener Note: Caller (BeanManagerAfterDeploymentValidation) is expected to synchronize calls to
+	 * registerLifecycleListener() + beanManagerIsAvailableForUse(), which protects
+	 * HibernateExtendedBeanManager.lifecycleListeners from being read/written from multiple concurrent threads.
+	 * There are many writer threads (one per deployed persistence unit) and one reader/writer thread expected
+	 * to be triggered by one AfterDeploymentValidation event per deployment.
+	 */
+	@Override
+	public void registerLifecycleListener(LifecycleListener lifecycleListener) {
+		lifecycleListeners.add( lifecycleListener );
+	}
 
-    public void beanManagerIsAvailableForUse() {
-        for (LifecycleListener hibernateCallback : lifecycleListeners) {
-            hibernateCallback.beanManagerInitialized( beanManager );
-        }
-    }
+	public void beanManagerIsAvailableForUse() {
+		for ( LifecycleListener hibernateCallback : lifecycleListeners ) {
+			hibernateCallback.beanManagerInitialized( beanManager );
+		}
+	}
 
 }

@@ -12,7 +12,7 @@
 
 <hibernate-mapping
         package="org.hibernate.jpa.test.pack.excludehbmpar"
-        >
+>
 
     <class name="Mouse">
 

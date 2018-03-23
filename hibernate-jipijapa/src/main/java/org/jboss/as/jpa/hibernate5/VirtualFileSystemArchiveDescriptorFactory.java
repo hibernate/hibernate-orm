@@ -11,6 +11,7 @@ import java.net.URL;
 
 import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
 import org.hibernate.boot.archive.spi.ArchiveDescriptor;
+
 import org.jboss.vfs.VFS;
 
 
@@ -21,15 +22,16 @@ import org.jboss.vfs.VFS;
  * @author Steve Ebersole
  */
 public class VirtualFileSystemArchiveDescriptorFactory extends StandardArchiveDescriptorFactory {
-    public static final VirtualFileSystemArchiveDescriptorFactory INSTANCE = new VirtualFileSystemArchiveDescriptorFactory();
+	@SuppressWarnings("WeakerAccess")
+	public static final VirtualFileSystemArchiveDescriptorFactory INSTANCE = new VirtualFileSystemArchiveDescriptorFactory();
 
-    @Override
-    public ArchiveDescriptor buildArchiveDescriptor(URL url, String entryBase) {
-        try {
-            return new VirtualFileSystemArchiveDescriptor( VFS.getChild( url.toURI() ), entryBase );
-        }
-        catch (URISyntaxException e) {
-            throw new IllegalArgumentException( e );
-        }
-    }
+	@Override
+	public ArchiveDescriptor buildArchiveDescriptor(URL url, String entryBase) {
+		try {
+			return new VirtualFileSystemArchiveDescriptor( VFS.getChild( url.toURI() ), entryBase );
+		}
+		catch (URISyntaxException e) {
+			throw new IllegalArgumentException( e );
+		}
+	}
 }

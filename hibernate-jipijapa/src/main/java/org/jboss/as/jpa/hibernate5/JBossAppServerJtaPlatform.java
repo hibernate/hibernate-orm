@@ -13,44 +13,47 @@ import javax.transaction.TransactionSynchronizationRegistry;
 import org.hibernate.engine.transaction.jta.platform.internal.JtaSynchronizationStrategy;
 import org.hibernate.engine.transaction.jta.platform.internal.SynchronizationRegistryAccess;
 import org.hibernate.engine.transaction.jta.platform.internal.SynchronizationRegistryBasedSynchronizationStrategy;
+
 import org.jipijapa.plugin.spi.JtaManager;
 
 
 /**
  * @author Steve Ebersole
  */
-public class JBossAppServerJtaPlatform extends  org.hibernate.engine.transaction.jta.platform.internal.JBossAppServerJtaPlatform {
+@SuppressWarnings({"unused", "WeakerAccess"})
+public class JBossAppServerJtaPlatform
+		extends org.hibernate.engine.transaction.jta.platform.internal.JBossAppServerJtaPlatform {
 
-    private final JtaSynchronizationStrategy synchronizationStrategy;
+	private final JtaSynchronizationStrategy synchronizationStrategy;
 
-    protected JtaManager getJtaManager() {
-        return jtaManager;
-    }
+	protected JtaManager getJtaManager() {
+		return jtaManager;
+	}
 
-    private final JtaManager jtaManager;
+	private final JtaManager jtaManager;
 
-    public JBossAppServerJtaPlatform(final JtaManager jtaManager) {
-        this.jtaManager = jtaManager;
-        this.synchronizationStrategy = new SynchronizationRegistryBasedSynchronizationStrategy(new SynchronizationRegistryAccess() {
-            @Override
-            public TransactionSynchronizationRegistry getSynchronizationRegistry() {
-                return jtaManager.getSynchronizationRegistry();
-            }
-        });
-    }
+	public JBossAppServerJtaPlatform(final JtaManager jtaManager) {
+		this.jtaManager = jtaManager;
+		this.synchronizationStrategy = new SynchronizationRegistryBasedSynchronizationStrategy( new SynchronizationRegistryAccess() {
+			@Override
+			public TransactionSynchronizationRegistry getSynchronizationRegistry() {
+				return jtaManager.getSynchronizationRegistry();
+			}
+		} );
+	}
 
-    @Override
-    protected boolean canCacheTransactionManager() {
-        return true;
-    }
+	@Override
+	protected boolean canCacheTransactionManager() {
+		return true;
+	}
 
-    @Override
-    protected TransactionManager locateTransactionManager() {
-        return jtaManager.locateTransactionManager();
-    }
+	@Override
+	protected TransactionManager locateTransactionManager() {
+		return jtaManager.locateTransactionManager();
+	}
 
-    @Override
-    protected JtaSynchronizationStrategy getSynchronizationStrategy() {
-        return synchronizationStrategy;
-    }
+	@Override
+	protected JtaSynchronizationStrategy getSynchronizationStrategy() {
+		return synchronizationStrategy;
+	}
 }

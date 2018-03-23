@@ -14,18 +14,18 @@ import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformProvider;
  */
 public class JtaPlatformProviderImpl implements JtaPlatformProvider {
 
-    private static volatile JBossAppServerJtaPlatform delegate;
+	private static volatile JBossAppServerJtaPlatform delegate;
 
-    public static JBossAppServerJtaPlatform getDelegate() {
-        return delegate;
-    }
+	public static JBossAppServerJtaPlatform getDelegate() {
+		return delegate;
+	}
 
-    public static void setDelegate(JBossAppServerJtaPlatform delegate) {
-        JtaPlatformProviderImpl.delegate = delegate;
-    }
+	public static void setDelegate(JBossAppServerJtaPlatform delegate) {
+		JtaPlatformProviderImpl.delegate = delegate;
+	}
 
-    @Override
-    public JtaPlatform getProvidedJtaPlatform() {
-        return delegate;
-    }
+	@Override
+	public JtaPlatform getProvidedJtaPlatform() {
+		return delegate;
+	}
 }

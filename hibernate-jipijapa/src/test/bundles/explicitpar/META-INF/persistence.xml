@@ -13,7 +13,7 @@
     <persistence-unit name="manager1" transaction-type="RESOURCE_LOCAL">
         <jar-file>@buildDirName@/packages/externaljar.jar</jar-file>
         <class>org.hibernate.jpa.test.Cat</class>
-		<class>org.hibernate.jpa.test.Kitten</class>
+        <class>org.hibernate.jpa.test.Kitten</class>
         <class>org.hibernate.jpa.test.Distributor</class>
         <class>org.hibernate.jpa.test.Item</class>
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
@@ -33,7 +33,8 @@
             <property name="hibernate.max_fetch_depth" value="3"/>
             <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
             <property name="hibernate.generate_statistics" value="true"/>
-			<property name="hibernate.cache.region.factory_class" value="org.hibernate.testing.cache.CachingRegionFactory" />
+            <property name="hibernate.cache.region.factory_class"
+                      value="org.hibernate.testing.cache.CachingRegionFactory"/>
             <property name="hibernate.ejb.naming_strategy" value="org.hibernate.jpa.test.MyNamingStrategy"/>
             <!-- test naming strategy and fall back to element content -->
             <!-- property name="hibernate.ejb.naming_strategy">MyNamingStrategy</property -->

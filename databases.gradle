@@ -106,6 +106,13 @@ ext {
                         'jdbc.user'  : 'HIBERNATE_TEST',
                         'jdbc.pass'  : 'H1bernate_test',
                         'jdbc.url'   : 'jdbc:sap://localhost:30015/'
+                ],
+                hana_vlad : [
+                        'db.dialect' : 'org.hibernate.dialect.HANAColumnStoreDialect',
+                        'jdbc.driver': 'com.sap.db.jdbc.Driver',
+                        'jdbc.user'  : 'VLAD',
+                        'jdbc.pass'  : 'V1ad_test',
+                        'jdbc.url'   : 'jdbc:sap://localhost:39015/'
                 ]
         ]
 }

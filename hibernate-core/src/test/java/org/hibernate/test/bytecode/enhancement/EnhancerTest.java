@@ -13,6 +13,9 @@ import org.hibernate.test.bytecode.enhancement.lazy.group.LazyGroupMappedByTestT
 import org.hibernate.test.bytecode.enhancement.lazy.group.LazyGroupUpdateTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.group.SimpleLazyGroupUpdateTestTask;
 import org.hibernate.test.bytecode.enhancement.association.InheritedAttributeAssociationTestTask;
+import org.hibernate.test.bytecode.enhancement.lazy.notfound.LazyNotFoundManyToOneNonUpdatableNonInsertableTestTask;
+import org.hibernate.test.bytecode.enhancement.lazy.notfound.LazyNotFoundOneToOneNonUpdatableNonInsertableTestTask;
+import org.hibernate.test.bytecode.enhancement.lazy.notfound.LazyNotFoundOneToOneTestTask;
 import org.hibernate.test.bytecode.enhancement.otherentityentrycontext.OtherEntityEntryContextTestTask;
 import org.hibernate.test.bytecode.enhancement.cascade.CascadeWithFkConstraintTestTask;
 import org.hibernate.test.bytecode.enhancement.merge.MergeEnhancedEntityTestTask;
@@ -137,6 +140,14 @@ public class EnhancerTest extends BaseUnitTestCase {
 				return false;
 			}
 		} );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12226" )
+	public void testLazyNotFound() {
+		EnhancerTestUtils.runEnhancerTestTask( LazyNotFoundOneToOneTestTask.class );
+		EnhancerTestUtils.runEnhancerTestTask( LazyNotFoundManyToOneNonUpdatableNonInsertableTestTask.class );
+		EnhancerTestUtils.runEnhancerTestTask( LazyNotFoundOneToOneNonUpdatableNonInsertableTestTask.class );
 	}
 
 	@Test

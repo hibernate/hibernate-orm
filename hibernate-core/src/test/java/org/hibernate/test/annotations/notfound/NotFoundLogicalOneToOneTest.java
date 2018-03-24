@@ -16,13 +16,13 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 
+import org.hibernate.Session;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertNull;
 
 /**
@@ -38,27 +38,33 @@ public class NotFoundLogicalOneToOneTest extends BaseCoreFunctionalTestCase {
 		fiveC.setName( "Five cents" );
 		fiveC.setCurrency( euro );
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		Session session = openSession();
+		session.getTransaction().begin();
+		{
 					session.persist( euro );
 					session.persist( fiveC );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		session = openSession();
+		session.getTransaction().begin();
+		{
 					session.delete( euro );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		session = openSession();
+		session.getTransaction().begin();
+		{
 					Coin coin = session.get( Coin.class, fiveC.getId() );
 					assertNull( coin.getCurrency() );
 
 					session.delete( coin );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Override

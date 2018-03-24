@@ -12,13 +12,13 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 
+import org.hibernate.Session;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -39,31 +39,37 @@ public class NotFoundOneToOneNonInsertableNonUpdateableTest extends BaseCoreFunc
 	@Test
 	public void testOneToOne() {
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		Session session = openSession();
+		session.getTransaction().begin();
+		{
 					Person person = new Person();
 					person.id = ID;
 					person.personInfo = new PersonInfo();
 					person.personInfo.id = ID;
 					session.persist( person );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		session = openSession();
+		session.getTransaction().begin();
+		{
 					session.delete( session.get( PersonInfo.class, ID ) );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		session = openSession();
+		session.getTransaction().begin();
+		{
 					Person person = session.get( Person.class, ID );
 					assertNotNull( person );
 					assertNull( person.personInfo );
 
 					session.delete( person );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Entity(name="Person")

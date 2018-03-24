@@ -17,64 +17,81 @@ import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import org.hibernate.Hibernate;
+import org.hibernate.Session;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.test.bytecode.enhancement.AbstractEnhancerTestTask;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 @TestForIssue( jiraKey = "HHH-12226")
-@RunWith( BytecodeEnhancerRunner.class )
-public class LazyNotFoundManyToOneNonUpdatableNonInsertableTest extends BaseCoreFunctionalTestCase {
+public class LazyNotFoundOneToOneNonUpdatableNonInsertableTestTask extends AbstractEnhancerTestTask {
 	private static int ID = 1;
 
 	@Override
-	protected Class<?>[] getAnnotatedClasses() {
+	public Class<?>[] getAnnotatedClasses() {
 		return new Class[] {
 				User.class,
 				Lazy.class
 		};
 	}
 
-	@Test
-	public void test() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+	@Override
+	public void prepare() {
+		Configuration cfg = new Configuration();
+		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "false" );
+		super.prepare( cfg );
+
+		Session session = getFactory().openSession();
+		session.beginTransaction();
+		{
 					Lazy p = new Lazy();
 					p.id = ID;
 					User u = new User();
 					u.id = ID;
 					u.setLazy( p );
 					session.persist( u );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		session = getFactory().openSession();
+		session.beginTransaction();
+		{
 					session.delete( session.get( Lazy.class, ID ) );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
+	}
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					User user = session.find( User.class, ID );
+	@Override
+	public void execute() {
+		Session session = getFactory().openSession();
+		session.beginTransaction();
+		{
+					User user = session.get( User.class, ID );
 					assertFalse( Hibernate.isPropertyInitialized( user, "lazy" ) );
 					assertNull( user.getLazy() );
-				}
-		);
+					assertTrue( Hibernate.isPropertyInitialized( user, "lazy" ) );
+		}
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	@Override
+	protected void cleanup() {
 	}
 
 	@Entity(name="User")
@@ -84,7 +101,7 @@ public class LazyNotFoundManyToOneNonUpdatableNonInsertableTest extends BaseCore
 		@Id
 		private Integer id;
 
-		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, optional = true)
+		@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, optional = true)
 		@LazyToOne(value = LazyToOneOption.NO_PROXY)
 		@NotFound(action = NotFoundAction.IGNORE)
 		@JoinColumn(

@@ -9,8 +9,8 @@ package org.hibernate.cache.internal;
 import java.io.Serializable;
 
 import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.cache.spi.TimestampsRegionAccess;
 import org.hibernate.cache.spi.TimestampsRegion;
+import org.hibernate.cache.spi.TimestampsRegionAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -57,7 +57,7 @@ public class TimestampsRegionAccessEnabledImpl implements TimestampsRegionAccess
 
 				//put() has nowait semantics, is this really appropriate?
 				//note that it needs to be async replication, never local or sync
-				timestampsRegion.getStorageAccess().putIntoCache( space, ts );
+				timestampsRegion.putIntoCache( space, ts );
 			}
 			finally {
 				session.getEventListenerManager().cachePutEnd();
@@ -84,7 +84,7 @@ public class TimestampsRegionAccessEnabledImpl implements TimestampsRegionAccess
 
 			try {
 				session.getEventListenerManager().cachePutStart();
-				timestampsRegion.getStorageAccess().putIntoCache( space, ts );
+				timestampsRegion.putIntoCache( space, ts );
 			}
 			finally {
 				session.getEventListenerManager().cachePutEnd();
@@ -135,7 +135,7 @@ public class TimestampsRegionAccessEnabledImpl implements TimestampsRegionAccess
 		Long ts = null;
 		try {
 			session.getEventListenerManager().cacheGetStart();
-			ts = (Long) timestampsRegion.getStorageAccess().getFromCache( space );
+			ts = (Long) timestampsRegion.getFromCache( space );
 		}
 		finally {
 			session.getEventListenerManager().cacheGetEnd( ts != null );

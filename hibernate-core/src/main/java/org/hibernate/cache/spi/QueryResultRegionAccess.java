@@ -36,7 +36,7 @@ public interface QueryResultRegionAccess extends QueryCache {
 	 */
 	@Override
 	default void clear() throws CacheException {
-		getRegion().getStorageAccess().clearCache();
+		getRegion().clear();
 	}
 
 	/**

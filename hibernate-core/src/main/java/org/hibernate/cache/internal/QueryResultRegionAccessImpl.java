@@ -93,7 +93,7 @@ public class QueryResultRegionAccessImpl implements QueryResultRegionAccess {
 
 		try {
 			session.getEventListenerManager().cachePutStart();
-			cacheRegion.getStorageAccess().putIntoCache( key, cacheItem );
+			cacheRegion.putIntoCache( key, cacheItem );
 		}
 		finally {
 			session.getEventListenerManager().cachePutEnd();
@@ -189,7 +189,7 @@ public class QueryResultRegionAccessImpl implements QueryResultRegionAccess {
 		CacheItem cachedItem = null;
 		try {
 			session.getEventListenerManager().cacheGetStart();
-			cachedItem = (CacheItem) cacheRegion.getStorageAccess().getFromCache( key );
+			cachedItem = (CacheItem) cacheRegion.getFromCache( key );
 		}
 		finally {
 			session.getEventListenerManager().cacheGetEnd( cachedItem != null );
@@ -284,11 +284,6 @@ public class QueryResultRegionAccessImpl implements QueryResultRegionAccess {
 	@Override
 	public String toString() {
 		return "QueryResultsCache(" + cacheRegion.getName() + ')';
-	}
-
-	@Override
-	public void clear() throws CacheException {
-		cacheRegion.getStorageAccess().clearCache();
 	}
 
 	public static class CacheItem implements Serializable {

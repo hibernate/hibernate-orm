@@ -16,4 +16,37 @@ public abstract class DirectAccessRegionTemplate extends AbstractRegion implemen
 	public DirectAccessRegionTemplate(String name, RegionFactory regionFactory) {
 		super( name, regionFactory );
 	}
+
+	public abstract StorageAccess getStorageAccess();
+
+	@Override
+	public boolean contains(Object key) {
+		return getStorageAccess().contains( key );
+	}
+
+	@Override
+	public Object getFromCache(Object key) {
+		return getStorageAccess().getFromCache( key );
+	}
+
+	@Override
+	public void putIntoCache(Object key, Object value) {
+		getStorageAccess().putIntoCache( key, value );
+	}
+
+	@Override
+	public void removeFromCache(Object key) {
+		getStorageAccess().removeFromCache( key );
+	}
+
+	@Override
+	public void clear() {
+		getStorageAccess().clearCache();
+	}
+
+	@Override
+	public void destroy() {
+		getStorageAccess().release();
+	}
+
 }

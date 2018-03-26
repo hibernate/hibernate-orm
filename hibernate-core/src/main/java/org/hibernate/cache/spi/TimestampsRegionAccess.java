@@ -95,7 +95,7 @@ public interface TimestampsRegionAccess extends UpdateTimestampsCache {
 
 	@Override
 	default void clear() throws CacheException {
-		getRegion().getStorageAccess().clearCache();
+		getRegion().clear();
 	}
 
 	@Override

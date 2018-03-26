@@ -69,7 +69,11 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.AbstractStandardBasicType;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
@@ -287,6 +291,21 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	@Override
 	public void contributeType(CompositeUserType type, String[] keys) {
 		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
+	}
+
+	@Override
+	public void contributeJavaTypeDescriptor(JavaTypeDescriptor descriptor) {
+		this.bootstrapContext.getTypeConfiguration().getJavaTypeDescriptorRegistry().addDescriptor( descriptor );
+	}
+
+	@Override
+	public void contributeSqlTypeDescriptor(SqlTypeDescriptor descriptor) {
+		this.bootstrapContext.getTypeConfiguration().getSqlTypeDescriptorRegistry().addDescriptor( descriptor );
+	}
+
+	@Override
+	public TypeConfiguration getTypeConfiguration() {
+		return bootstrapContext.getTypeConfiguration();
 	}
 
 	@Override

@@ -16,10 +16,12 @@ import javax.persistence.Table;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.Immutable;
+import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -36,19 +38,15 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Steve Ebersole
  */
 public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected void configureBootstrapServiceRegistryBuilder(BootstrapServiceRegistryBuilder bsrb) {
-		super.configureBootstrapServiceRegistryBuilder( bsrb );
 
-		// Let's tell Hibernate to treat MutableState2 as immutable
-		JavaTypeDescriptorRegistry.INSTANCE.addDescriptor(
-				new JavaTypeDescriptorRegistry.FallbackJavaTypeDescriptor( MutableState2.class ) {
-					@Override
-					public MutabilityPlan getMutabilityPlan() {
-						return ImmutableMutabilityPlan.INSTANCE;
-					}
-				}
-		);
+	@Override
+	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
+		((MetadataBuilderImpl)metadataBuilder).contributeJavaTypeDescriptor(new JavaTypeDescriptorRegistry.FallbackJavaTypeDescriptor( MutableState2.class ) {
+			@Override
+			public MutabilityPlan getMutabilityPlan() {
+				return ImmutableMutabilityPlan.INSTANCE;
+			}
+		});
 	}
 
 	@Override
@@ -71,6 +69,16 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 	public void testIt() {
 		// set up test data
 		Session session = openSession();
+		( (MetamodelImplementor) session.getMetamodel() ).getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry()
+				.addDescriptor(
+						new JavaTypeDescriptorRegistry.FallbackJavaTypeDescriptor( MutableState2.class ) {
+							@Override
+							public MutabilityPlan getMutabilityPlan() {
+								return ImmutableMutabilityPlan.INSTANCE;
+							}
+						}
+				);
 		session.beginTransaction();
 		session.persist( new TheEntity(1) );
 		session.getTransaction().commit();

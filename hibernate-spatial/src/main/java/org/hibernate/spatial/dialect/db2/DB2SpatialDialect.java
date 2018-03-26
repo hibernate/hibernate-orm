@@ -15,8 +15,10 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
 import org.hibernate.spatial.GeolatteGeometryType;
 import org.hibernate.spatial.HibernateSpatialConfigurationSettings;
+import org.hibernate.spatial.JTSGeometryJavaTypeDescriptor;
 import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.SpatialAggregate;
 import org.hibernate.spatial.SpatialDialect;
@@ -52,6 +54,9 @@ public class DB2SpatialDialect extends DB2Dialect implements SpatialDialect {
 		final DB2GeometryTypeDescriptor typeDescriptor = mkDescriptor( serviceRegistry );
 		typeContributions.contributeType( new GeolatteGeometryType( typeDescriptor ) );
 		typeContributions.contributeType( new JTSGeometryType( typeDescriptor ) );
+
+		typeContributions.contributeJavaTypeDescriptor( GeolatteGeometryJavaTypeDescriptor.INSTANCE );
+		typeContributions.contributeJavaTypeDescriptor( JTSGeometryJavaTypeDescriptor.INSTANCE );
 	}
 
 	private DB2GeometryTypeDescriptor mkDescriptor(ServiceRegistry serviceRegistry) {

@@ -35,7 +35,6 @@ public class JTSGeometryJavaTypeDescriptor extends AbstractTypeDescriptor<Geomet
 	 */
 	public JTSGeometryJavaTypeDescriptor() {
 		super( Geometry.class );
-		JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
 	}
 
 	@Override

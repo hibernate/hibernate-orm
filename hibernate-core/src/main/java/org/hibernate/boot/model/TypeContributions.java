@@ -7,6 +7,9 @@
 package org.hibernate.boot.model;
 
 import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
@@ -23,4 +26,14 @@ public interface TypeContributions {
 	void contributeType(UserType type, String... keys);
 
 	void contributeType(CompositeUserType type, String... keys);
+
+	/*
+	 * Add the JavaTypeDescriptor to the
+	 * @param descriptor
+	 */
+	void contributeJavaTypeDescriptor(JavaTypeDescriptor descriptor);
+
+	void contributeSqlTypeDescriptor(SqlTypeDescriptor descriptor);
+
+	TypeConfiguration getTypeConfiguration();
 }

@@ -57,6 +57,7 @@ import org.hibernate.type.descriptor.sql.LobTypeMappings;
 import org.hibernate.type.descriptor.sql.NationalizedTypeMappings;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
 
 /**
@@ -69,11 +70,11 @@ public class SimpleValue implements KeyValue {
 	public static final String DEFAULT_ID_GEN_STRATEGY = "assigned";
 
 	private MetadataBuildingContext buildingContext;
-	private MetadataImplementor metadata;
+	private final MetadataImplementor metadata;
 
-	private final List<Selectable> columns = new ArrayList<Selectable>();
-	private final List<Boolean> insertability = new ArrayList<Boolean>();
-	private final List<Boolean> updatability = new ArrayList<Boolean>();
+	private final List<Selectable> columns = new ArrayList<>();
+	private final List<Boolean> insertability = new ArrayList<>();
+	private final List<Boolean> updatability = new ArrayList<>();
 
 	private String typeName;
 	private Properties typeParameters;
@@ -112,6 +113,7 @@ public class SimpleValue implements KeyValue {
 
 	public SimpleValue(MetadataBuildingContext buildingContext) {
 		this(buildingContext.getMetadataCollector());
+		this.buildingContext = buildingContext;
 	}
 
 	public SimpleValue(MetadataBuildingContext buildingContext, Table table) {
@@ -575,7 +577,7 @@ public class SimpleValue implements KeyValue {
 
 					@Override
 					public JavaTypeDescriptorRegistry getJavaTypeDescriptorRegistry() {
-						return JavaTypeDescriptorRegistry.INSTANCE;
+						return metadata.getTypeConfiguration().getJavaTypeDescriptorRegistry();
 					}
 				}
 		);
@@ -621,7 +623,10 @@ public class SimpleValue implements KeyValue {
 				.getService( JdbcServices.class )
 				.getJdbcEnvironment()
 				.getDialect()
-				.remapSqlTypeDescriptor( SqlTypeDescriptorRegistry.INSTANCE.getDescriptor( jdbcTypeCode ) );
+				.remapSqlTypeDescriptor(
+						metadata.getTypeConfiguration()
+								.getSqlTypeDescriptorRegistry()
+								.getDescriptor( jdbcTypeCode ) );
 
 		// and finally construct the adapter, which injects the AttributeConverter calls into the binding/extraction
 		// 		process...

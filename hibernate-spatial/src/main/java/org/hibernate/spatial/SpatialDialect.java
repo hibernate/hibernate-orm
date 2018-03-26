@@ -28,7 +28,7 @@ public interface SpatialDialect extends Serializable {
 	 *
 	 * @return SQL fragment  {@code SpatialRelateExpression}
 	 */
-	public String getSpatialRelateSQL(String columnName, int spatialRelation);
+	String getSpatialRelateSQL(String columnName, int spatialRelation);
 
 	/**
 	 * Returns the SQL fragment for the SQL WHERE-expression when parsing
@@ -40,7 +40,7 @@ public interface SpatialDialect extends Serializable {
 	 *
 	 * @return Rhe SQL fragment for the {@code SpatialFilterExpression}
 	 */
-	public String getSpatialFilterExpression(String columnName);
+	String getSpatialFilterExpression(String columnName);
 
 	/**
 	 * Returns the SQL fragment for the specfied Spatial aggregate expression.
@@ -50,7 +50,7 @@ public interface SpatialDialect extends Serializable {
 	 *
 	 * @return The SQL fragment for the projection
 	 */
-	public String getSpatialAggregateSQL(String columnName, int aggregation);
+	String getSpatialAggregateSQL(String columnName, int aggregation);
 
 	/**
 	 * Returns The SQL fragment when parsing a <code>DWithinExpression</code>.
@@ -59,7 +59,7 @@ public interface SpatialDialect extends Serializable {
 	 *
 	 * @return The SQL fragment when parsing a <code>DWithinExpression</code>.
 	 */
-	public String getDWithinSQL(String columnName);
+	String getDWithinSQL(String columnName);
 
 	/**
 	 * Returns the SQL fragment when parsing a <code>HavingSridExpression</code>.
@@ -68,7 +68,7 @@ public interface SpatialDialect extends Serializable {
 	 *
 	 * @return The SQL fragment for a <code>HavingSridExpression</code>.
 	 */
-	public String getHavingSridSQL(String columnName);
+	String getHavingSridSQL(String columnName);
 
 
 	/**
@@ -80,7 +80,7 @@ public interface SpatialDialect extends Serializable {
 	 *
 	 * @return The SQL fragment for the isempty function
 	 */
-	public String getIsEmptySQL(String columnName, boolean isEmpty);
+	String getIsEmptySQL(String columnName, boolean isEmpty);
 
 	/**
 	 * Returns true if this <code>SpatialDialect</code> supports a specific filtering function.
@@ -88,7 +88,7 @@ public interface SpatialDialect extends Serializable {
 	 *
 	 * @return True if filtering is supported
 	 */
-	public boolean supportsFiltering();
+	boolean supportsFiltering();
 
 	/**
 	 * Does this dialect supports the specified <code>SpatialFunction</code>.
@@ -97,6 +97,6 @@ public interface SpatialDialect extends Serializable {
 	 *
 	 * @return True if this <code>SpatialDialect</code> supports the spatial function specified by the function parameter.
 	 */
-	public boolean supports(SpatialFunction function);
+	boolean supports(SpatialFunction function);
 
 }

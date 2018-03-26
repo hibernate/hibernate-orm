@@ -91,6 +91,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 	protected Collection(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		this(buildingContext.getMetadataCollector(), owner);
+		this.buildingContext = buildingContext;
 	}
 
 	/**

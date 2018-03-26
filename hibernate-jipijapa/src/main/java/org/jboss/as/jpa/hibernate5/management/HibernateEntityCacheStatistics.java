@@ -88,9 +88,9 @@ public class HibernateEntityCacheStatistics extends HibernateAbstractStatistics 
 		if ( sessionFactory != null ) {
 			// The entity class name is prefixed by the application scoped persistence unit name
 
-			return sessionFactory.getStatistics().getSecondLevelCacheStatistics( scopedPersistenceUnitName + "." +
-																						 pathAddress.getValue(
-																								 HibernateStatistics.ENTITYCACHE ) );
+			return sessionFactory.getStatistics().getSecondLevelCacheStatistics(
+					scopedPersistenceUnitName + "." + pathAddress.getValue( HibernateStatistics.ENTITYCACHE )
+			);
 		}
 		return null;
 	}

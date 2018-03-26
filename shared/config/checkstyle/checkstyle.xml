@@ -75,8 +75,8 @@
     </module>
 
     <module name="RegexpMultiline">
-        <property name="format" value="\S\r?\n(\r?\n)+\z" />
-        <property name="message" value="Only one new line is allowed at the end of a file" />
+        <property name="format" value="\S(r?\n){5,}\z" />
+        <property name="message" value="Files should end with no more than 5 (empty) new lines" />
     </module>
 
 

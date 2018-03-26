@@ -60,7 +60,7 @@ public abstract class AbstractTypeDescriptor<T> implements JavaTypeDescriptor<T>
 	}
 
 	/**
-	 * @deprecated Use {@link #getJavaTypeClass()} instead
+	 * @deprecated Use {@link #getJavaType()} instead
 	 */
 	@Override
 	@Deprecated

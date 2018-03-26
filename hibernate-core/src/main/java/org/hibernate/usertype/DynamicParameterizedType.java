@@ -19,32 +19,32 @@ import java.lang.annotation.Annotation;
  * @author Janario Oliveira
  */
 public interface DynamicParameterizedType extends ParameterizedType {
-	public static final String PARAMETER_TYPE = "org.hibernate.type.ParameterType";
+	String PARAMETER_TYPE = "org.hibernate.type.ParameterType";
 
-	public static final String IS_DYNAMIC = "org.hibernate.type.ParameterType.dynamic";
+	String IS_DYNAMIC = "org.hibernate.type.ParameterType.dynamic";
 
-	public static final String RETURNED_CLASS = "org.hibernate.type.ParameterType.returnedClass";
-	public static final String IS_PRIMARY_KEY = "org.hibernate.type.ParameterType.primaryKey";
-	public static final String ENTITY = "org.hibernate.type.ParameterType.entityClass";
-	public static final String PROPERTY = "org.hibernate.type.ParameterType.propertyName";
-	public static final String ACCESS_TYPE = "org.hibernate.type.ParameterType.accessType";
-	public static final String XPROPERTY = "org.hibernate.type.ParameterType.xproperty";
+	String RETURNED_CLASS = "org.hibernate.type.ParameterType.returnedClass";
+	String IS_PRIMARY_KEY = "org.hibernate.type.ParameterType.primaryKey";
+	String ENTITY = "org.hibernate.type.ParameterType.entityClass";
+	String PROPERTY = "org.hibernate.type.ParameterType.propertyName";
+	String ACCESS_TYPE = "org.hibernate.type.ParameterType.accessType";
+	String XPROPERTY = "org.hibernate.type.ParameterType.xproperty";
 
-	public static interface ParameterType {
+	interface ParameterType {
 
-		public Class getReturnedClass();
+		Class getReturnedClass();
 
-		public Annotation[] getAnnotationsMethod();
+		Annotation[] getAnnotationsMethod();
 
-		public String getCatalog();
+		String getCatalog();
 
-		public String getSchema();
+		String getSchema();
 
-		public String getTable();
+		String getTable();
 
-		public boolean isPrimaryKey();
+		boolean isPrimaryKey();
 
-		public String[] getColumns();
+		String[] getColumns();
 
 	}
 }

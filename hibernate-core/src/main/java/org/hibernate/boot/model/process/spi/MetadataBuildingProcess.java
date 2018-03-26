@@ -38,6 +38,9 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
@@ -348,6 +351,21 @@ public class MetadataBuildingProcess {
 				getBasicTypeRegistry().register( type, keys );
 			}
 
+			@Override
+			public void contributeJavaTypeDescriptor(JavaTypeDescriptor descriptor) {
+				bootstrapContext.getTypeConfiguration().getJavaTypeDescriptorRegistry().addDescriptor( descriptor );
+			}
+
+			@Override
+			public void contributeSqlTypeDescriptor(SqlTypeDescriptor descriptor) {
+				bootstrapContext.getTypeConfiguration().getSqlTypeDescriptorRegistry().addDescriptor( descriptor );
+			}
+
+			@Override
+			public TypeConfiguration getTypeConfiguration() {
+				return bootstrapContext.getTypeConfiguration();
+			}
+
 			final BasicTypeRegistry getBasicTypeRegistry() {
 				return bootstrapContext.getTypeConfiguration().getBasicTypeRegistry();
 			}
@@ -371,7 +389,4 @@ public class MetadataBuildingProcess {
 			);
 		}
 	}
-
-
-
 }

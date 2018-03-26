@@ -33,7 +33,6 @@ public class GeolatteGeometryJavaTypeDescriptor extends AbstractTypeDescriptor<G
 	 */
 	public GeolatteGeometryJavaTypeDescriptor() {
 		super( Geometry.class );
-		JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
 	}
 
 	@Override

@@ -17,6 +17,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.spi.TypeConfigurationAware;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
@@ -165,7 +166,17 @@ public final class TypeFactory implements Serializable {
 	}
 
 	public CustomType custom(Class<UserType> typeClass, Properties parameters) {
-		return custom( typeClass, parameters, typeScope );
+		try {
+			UserType userType = typeClass.newInstance();
+			if ( TypeConfigurationAware.class.isInstance( userType ) ) {
+				( (TypeConfigurationAware) userType ).setTypeConfiguration( typeConfiguration );
+			}
+			injectParameters( userType, parameters );
+			return new CustomType( userType );
+		}
+		catch (Exception e) {
+			throw new MappingException( "Unable to instantiate custom type: " + typeClass.getName(), e );
+		}
 	}
 
 	/**

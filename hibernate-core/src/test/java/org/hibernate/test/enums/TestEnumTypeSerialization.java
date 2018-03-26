@@ -10,7 +10,7 @@ import java.util.Properties;
 
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.type.EnumType;
-import org.hibernate.usertype.DynamicParameterizedType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.junit.Test;
 
@@ -25,9 +25,11 @@ import static org.junit.Assert.assertTrue;
 public class TestEnumTypeSerialization extends BaseUnitTestCase {
 	@Test
 	public void testSerializability() {
+		TypeConfiguration typeConfiguration = new TypeConfiguration();
 		{
 			// test ordinal mapping
-			EnumType enumType = new EnumType();
+			EnumType enumType = new EnumType( );
+			enumType.setTypeConfiguration( typeConfiguration );
 			Properties properties = new Properties();
 			properties.put( EnumType.ENUM, UnspecifiedEnumTypeEntity.E1.class.getName() );
 			enumType.setParameterValues( properties );
@@ -38,6 +40,7 @@ public class TestEnumTypeSerialization extends BaseUnitTestCase {
 		{
 			// test named mapping
 			EnumType enumType = new EnumType();
+			enumType.setTypeConfiguration( typeConfiguration );
 			Properties properties = new Properties();
 			properties.put( EnumType.ENUM, UnspecifiedEnumTypeEntity.E1.class.getName() );
 			properties.put( EnumType.NAMED, "true" );

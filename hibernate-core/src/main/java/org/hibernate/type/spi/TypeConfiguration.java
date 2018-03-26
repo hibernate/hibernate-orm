@@ -27,6 +27,8 @@ import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
 import org.hibernate.type.TypeResolver;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
@@ -46,7 +48,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  *
  * @author Steve Ebersole
  *
- * @since 6.0
+ * @since 5.3
  */
 @Incubating
 public class TypeConfiguration implements SessionFactoryObserver, Serializable {
@@ -55,8 +57,10 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	// todo : (
 	private final Scope scope;
 	private final TypeFactory typeFactory;
-	private boolean initialized = false;
 
+	// things available during both boot and runtime ("active") lifecycle phases
+	private final JavaTypeDescriptorRegistry javaTypeDescriptorRegistry;
+	private final SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry;
 	private final BasicTypeRegistry basicTypeRegistry;
 
 	private final Map<String,String> importMap = new ConcurrentHashMap<>();
@@ -66,11 +70,12 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	private final TypeResolver typeResolver;
 
 	public TypeConfiguration() {
-		this.scope = new Scope( );
+		this.scope = new Scope();
+		this.javaTypeDescriptorRegistry = new JavaTypeDescriptorRegistry( this );
+		this.sqlTypeDescriptorRegistry = new SqlTypeDescriptorRegistry( this );
 		basicTypeRegistry = new BasicTypeRegistry();
 		typeFactory = new TypeFactory( this );
 		typeResolver = new TypeResolver( this, typeFactory );
-		this.initialized = true;
 	}
 
 	/**
@@ -89,6 +94,15 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	public BasicTypeRegistry getBasicTypeRegistry() {
 		return basicTypeRegistry;
+	}
+
+
+	public JavaTypeDescriptorRegistry getJavaTypeDescriptorRegistry() {
+		return javaTypeDescriptorRegistry;
+	}
+
+	public SqlTypeDescriptorRegistry getSqlTypeDescriptorRegistry() {
+		return sqlTypeDescriptorRegistry;
 	}
 
 	public Map<String, String> getImportMap() {
@@ -133,8 +147,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 		scope.setSessionFactory( sessionFactory );
 		sessionFactory.addObserver( this );
-		MetamodelImpl metamodel = new MetamodelImpl( sessionFactory, this );
-		return metamodel;
+		return new MetamodelImpl( sessionFactory, this );
 	}
 
 	/**

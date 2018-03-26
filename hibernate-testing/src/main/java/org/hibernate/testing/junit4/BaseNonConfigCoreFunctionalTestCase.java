@@ -145,7 +145,6 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder();
 		initialize( metadataBuilder );
 		configureMetadataBuilder( metadataBuilder );
-
 		metadata = (MetadataImplementor) metadataBuilder.build();
 		applyCacheSettings( metadata );
 		afterMetadataBuilt( metadata );

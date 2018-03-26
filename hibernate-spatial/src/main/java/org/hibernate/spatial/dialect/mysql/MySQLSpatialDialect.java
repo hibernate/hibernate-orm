@@ -12,7 +12,9 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
 import org.hibernate.spatial.GeolatteGeometryType;
+import org.hibernate.spatial.JTSGeometryJavaTypeDescriptor;
 import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
@@ -47,6 +49,9 @@ public class MySQLSpatialDialect extends MySQLDialect implements SpatialDialect 
 		);
 		typeContributions.contributeType( new GeolatteGeometryType( MySQLGeometryTypeDescriptor.INSTANCE ) );
 		typeContributions.contributeType( new JTSGeometryType( MySQLGeometryTypeDescriptor.INSTANCE ) );
+
+		typeContributions.contributeJavaTypeDescriptor( GeolatteGeometryJavaTypeDescriptor.INSTANCE );
+		typeContributions.contributeJavaTypeDescriptor( JTSGeometryJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

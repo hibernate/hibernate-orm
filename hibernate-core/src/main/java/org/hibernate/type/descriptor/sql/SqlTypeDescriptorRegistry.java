@@ -18,6 +18,7 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
@@ -25,15 +26,23 @@ import org.jboss.logging.Logger;
  * Basically a map from JDBC type code (int) -> {@link SqlTypeDescriptor}
  *
  * @author Steve Ebersole
+ *
+ * @deprecated (5.3) Use {@link org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry} instead.
  */
-public class SqlTypeDescriptorRegistry {
+@Deprecated
+public class SqlTypeDescriptorRegistry implements Serializable {
+
+	/**
+	 * @deprecated (5.3) Use {@link TypeConfiguration#getSqlTypeDescriptorRegistry()} instead.
+	 */
+	@Deprecated
 	public static final SqlTypeDescriptorRegistry INSTANCE = new SqlTypeDescriptorRegistry();
 
 	private static final Logger log = Logger.getLogger( SqlTypeDescriptorRegistry.class );
 
 	private ConcurrentHashMap<Integer,SqlTypeDescriptor> descriptorMap = new ConcurrentHashMap<Integer, SqlTypeDescriptor>();
 
-	private SqlTypeDescriptorRegistry() {
+	protected SqlTypeDescriptorRegistry() {
 		addDescriptor( BooleanTypeDescriptor.INSTANCE );
 
 		addDescriptor( BitTypeDescriptor.INSTANCE );
@@ -67,10 +76,18 @@ public class SqlTypeDescriptorRegistry {
 		addDescriptor( NClobTypeDescriptor.DEFAULT );
 	}
 
+	/**
+	 * @deprecated (5.3) Use {@link org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry#addDescriptor(SqlTypeDescriptor)} instead.
+	 */
+	@Deprecated
 	public void addDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
 		descriptorMap.put( sqlTypeDescriptor.getSqlType(), sqlTypeDescriptor );
 	}
 
+	/**
+	 * @deprecated (5.3) Use {@link org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry#getDescriptor(int)} instead.
+	 */
+	@Deprecated
 	public SqlTypeDescriptor getDescriptor(int jdbcTypeCode) {
 		SqlTypeDescriptor descriptor = descriptorMap.get( Integer.valueOf( jdbcTypeCode ) );
 		if ( descriptor != null ) {

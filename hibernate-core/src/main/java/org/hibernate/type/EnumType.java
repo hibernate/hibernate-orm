@@ -28,7 +28,8 @@ import org.hibernate.metamodel.model.convert.internal.NamedEnumValueConverter;
 import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.spi.TypeConfigurationAware;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.LoggableUserType;
@@ -58,7 +59,8 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 @SuppressWarnings("unchecked")
-public class EnumType<T extends Enum> implements EnhancedUserType, DynamicParameterizedType,LoggableUserType, Serializable {
+public class EnumType<T extends Enum>
+		implements EnhancedUserType, DynamicParameterizedType, LoggableUserType, TypeConfigurationAware, Serializable {
 	private static final Logger LOG = CoreLogging.logger( EnumType.class );
 
 	public static final String ENUM = "enumClass";
@@ -66,7 +68,10 @@ public class EnumType<T extends Enum> implements EnhancedUserType, DynamicParame
 	public static final String TYPE = "type";
 
 	private Class enumClass;
+
 	private EnumValueConverter enumValueConverter;
+
+	private TypeConfiguration typeConfiguration;
 
 	@Override
 	public void setParameterValues(Properties parameters) {
@@ -95,7 +100,9 @@ public class EnumType<T extends Enum> implements EnhancedUserType, DynamicParame
 				throw new AssertionFailure( "Unknown EnumType: " + enumType );
 			}
 
-			final EnumJavaTypeDescriptor enumJavaDescriptor = (EnumJavaTypeDescriptor) JavaTypeDescriptorRegistry.INSTANCE.getDescriptor( enumClass );
+			final EnumJavaTypeDescriptor enumJavaDescriptor = (EnumJavaTypeDescriptor) typeConfiguration
+					.getJavaTypeDescriptorRegistry()
+					.getDescriptor( enumClass );
 
 			if ( isOrdinal ) {
 				this.enumValueConverter = new OrdinalEnumValueConverter( enumJavaDescriptor );
@@ -150,8 +157,9 @@ public class EnumType<T extends Enum> implements EnhancedUserType, DynamicParame
 	}
 
 	private EnumValueConverter interpretParameters(Properties parameters) {
-		final EnumJavaTypeDescriptor javaTypeDescriptor = (EnumJavaTypeDescriptor) JavaTypeDescriptorRegistry.INSTANCE.getDescriptor( enumClass );
-
+		final EnumJavaTypeDescriptor javaTypeDescriptor = (EnumJavaTypeDescriptor) typeConfiguration
+				.getJavaTypeDescriptorRegistry()
+				.getDescriptor( enumClass );
 		if ( parameters.containsKey( NAMED ) ) {
 			final boolean useNamed = ConfigurationHelper.getBoolean( NAMED, parameters );
 			if ( useNamed ) {
@@ -277,6 +285,16 @@ public class EnumType<T extends Enum> implements EnhancedUserType, DynamicParame
 	@Override
 	public Object replace(Object original, Object target, Object owner) throws HibernateException {
 		return original;
+	}
+
+	@Override
+	public TypeConfiguration getTypeConfiguration() {
+		return typeConfiguration;
+	}
+
+	@Override
+	public void setTypeConfiguration(TypeConfiguration typeConfiguration) {
+		this.typeConfiguration = typeConfiguration;
 	}
 
 	@Override

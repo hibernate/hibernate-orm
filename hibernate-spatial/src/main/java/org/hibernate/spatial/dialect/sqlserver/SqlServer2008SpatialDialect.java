@@ -12,7 +12,9 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
 import org.hibernate.spatial.GeolatteGeometryType;
+import org.hibernate.spatial.JTSGeometryJavaTypeDescriptor;
 import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
@@ -104,6 +106,9 @@ public class SqlServer2008SpatialDialect extends SQLServer2008Dialect implements
 		);
 		typeContributions.contributeType( new GeolatteGeometryType( SqlServer2008GeometryTypeDescriptor.INSTANCE ) );
 		typeContributions.contributeType( new JTSGeometryType( SqlServer2008GeometryTypeDescriptor.INSTANCE ) );
+
+		typeContributions.contributeJavaTypeDescriptor( GeolatteGeometryJavaTypeDescriptor.INSTANCE );
+		typeContributions.contributeJavaTypeDescriptor( JTSGeometryJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

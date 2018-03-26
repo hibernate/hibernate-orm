@@ -28,5 +28,9 @@
         <module name="org.jboss.logging"/>
         <module name="org.jboss.vfs"/>
         <module name="org.hibernate.commons-annotations"/>
+        <module name="org.infinispan" services="import"/>
+<!-- need an ORM 5.3 slot version of this service created
+        <module name="org.infinispan.hibernate-cache" services="import"/>
+--> 
     </dependencies>
 </module>

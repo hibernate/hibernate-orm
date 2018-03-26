@@ -12,7 +12,6 @@ ext {
     junitVersion = '4.12'
     h2Version = '1.4.196'
     bytemanVersion = '4.0.1' //Compatible with JDK10
-    infinispanVersion = '8.2.5.Final'
     jnpVersion = '5.0.6.CR1'
 
     hibernateValidatorVersion = '6.0.7.Final'
@@ -116,14 +115,6 @@ ext {
             // EL required by Hibernate Validator at test runtime
             expression_language: "org.glassfish:javax.el:${elVersion}",
 
-            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~  infinsipan
-            infinispan:      "org.infinispan:infinispan-core:${infinispanVersion}",
-            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~  infinispan test
-            infinispan_test: "org.infinispan:infinispan-core:${infinispanVersion}:tests@jar",
-            jboss_common_core: "org.jboss:jboss-common-core:2.2.16.GA@jar",
-            jnp_client:      "org.jboss.naming:jnp-client:${jnpVersion}",
-            jnp_server:      "org.jboss.naming:jnpserver:${jnpVersion}",
-
 			c3p0:            "com.mchange:c3p0:0.9.5.2",
             ehcache:         "net.sf.ehcache:ehcache:2.10.3",
             ehcache3:        "org.ehcache:ehcache:3.0.0",
@@ -148,6 +139,8 @@ ext {
             shrinkwrap_descriptors_impl_javaee: "org.jboss.shrinkwrap.descriptors:shrinkwrap-descriptors-impl-javaee:${shrinkwrapDescriptorsVersion}",
 
             wildfly_arquillian_container_managed: "org.wildfly.arquillian:wildfly-arquillian-container-managed:${wildflyArquillianContainerVersion}",
+            jboss_vfs: "org.jboss:jboss-vfs:3.2.11.Final",
+            jipijapa_spi: "org.wildfly:jipijapa-spi:12.0.0.Final",
 
             jboss_ejb_spec_jar          : 'org.jboss.spec.javax.ejb:jboss-ejb-api_3.2_spec:1.0.0.Final',
             jboss_annotation_spec_jar   : 'org.jboss.spec.javax.annotation:jboss-annotations-api_1.2_spec:1.0.0.Final'

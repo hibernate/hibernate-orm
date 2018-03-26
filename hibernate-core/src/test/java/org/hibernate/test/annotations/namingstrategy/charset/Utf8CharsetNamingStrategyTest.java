@@ -8,7 +8,8 @@
 // $Id$
 package org.hibernate.test.annotations.namingstrategy.charset;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 
 /**
  * @author Vlad Mihalcea
@@ -22,16 +23,31 @@ public class Utf8CharsetNamingStrategyTest extends AbstractCharsetNamingStrategy
 
 	@Override
 	protected String expectedUniqueKeyName() {
-		return "UKpm66tdjkgtsca5x2uwux487t5";
+		if ( this.serviceRegistry.getService( JdbcServices.class ).getDialect() instanceof AbstractHANADialect ) {
+			return "UKinnacp0woeltj5l0k4vgabf8k"; // Non-ASCII, non-alphanumeric identifiers are quoted on HANA
+		}
+		else {
+			return "UKpm66tdjkgtsca5x2uwux487t5";
+		}
 	}
 
 	@Override
 	protected String expectedForeignKeyName() {
-		return "FKgvrnki5fwp3qo0hfp1bu1jj0q";
+		if ( this.serviceRegistry.getService( JdbcServices.class ).getDialect() instanceof AbstractHANADialect ) {
+			return "FKe1lr9dd16cmmon53r7m736yev"; // Non-ASCII, non-alphanumeric identifiers are quoted on HANA
+		}
+		else {
+			return "FKgvrnki5fwp3qo0hfp1bu1jj0q";
+		}
 	}
 
 	@Override
 	protected String expectedIndexName() {
-		return "IDXpm66tdjkgtsca5x2uwux487t5";
+		if ( this.serviceRegistry.getService( JdbcServices.class ).getDialect() instanceof AbstractHANADialect ) {
+			return "IDXinnacp0woeltj5l0k4vgabf8k"; // Non-ASCII, non-alphanumeric identifiers are quoted on HANA
+		}
+		else {
+			return "IDXpm66tdjkgtsca5x2uwux487t5";
+		}
 	}
 }

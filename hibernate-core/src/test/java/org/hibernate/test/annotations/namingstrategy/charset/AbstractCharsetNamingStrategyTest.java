@@ -40,11 +40,11 @@ import static org.junit.Assert.assertEquals;
 @TestForIssue( jiraKey = "HHH-12357" )
 public abstract class AbstractCharsetNamingStrategyTest extends BaseUnitTestCase {
 
-	private ServiceRegistry serviceRegistry;
+	protected ServiceRegistry serviceRegistry;
 
 	@Before
     public void setUp() {
-		Map properties = new HashMap( Environment.getProperties() );
+		Map<Object, Object> properties = new HashMap<>( Environment.getProperties() );
 		properties.put( AvailableSettings.HBM2DDL_CHARSET_NAME, charsetName() );
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( properties );
 	}

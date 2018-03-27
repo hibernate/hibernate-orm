@@ -20,12 +20,20 @@ import org.hibernate.tool.api.metadata.MetadataDescriptor;
 @Mojo(name = "hbm2java", defaultPhase = GENERATE_SOURCES)
 public class Hbm2JavaMojo extends AbstractHbm2xMojo {
 
+    /** The directory into which the JPA entities will be generated. */
     @Parameter(defaultValue = "${project.build.directory}/generated-sources/")
     private File outputDirectory;
+
+    /** Code will contain EJB 3 features, e.g. using annotations from javax.persistence
+     * and org.hibernate.annotations. */
     @Parameter(defaultValue = "false")
     private boolean ejb3;
+    
+    /** Code will contain JDK 5 constructs such as generics and static imports. */
     @Parameter(defaultValue = "false")
     private boolean jdk5;
+
+    /** A path used for looking up user-edited templates. */
     @Parameter
     private String templatePath;
 

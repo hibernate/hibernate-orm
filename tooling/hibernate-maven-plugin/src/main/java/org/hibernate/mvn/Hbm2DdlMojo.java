@@ -21,18 +21,44 @@ import static org.apache.maven.plugins.annotations.LifecyclePhase.GENERATE_RESOU
 @Mojo(name = "hbm2ddl", defaultPhase = GENERATE_RESOURCES)
 public class Hbm2DdlMojo extends AbstractHbm2xMojo {
 
+    /** The directory into which the DDLs will be generated. */
     @Parameter(defaultValue = "${project.build.directory}/generated-resources/")
     private File outputDirectory;
+
+    /** The default filename of the generated DDL script. */
     @Parameter(defaultValue = "schema.ddl")
     private String outputFileName;
+
+    /** The type of output to produce.
+     * <ul>
+     *   <li>DATABASE: Export to the database.</li>
+     *   <li>SCRIPT (default): Write to a script file.</li>
+     *   <li>STDOUT: Write to {@link System#out}.</li>
+     * </ul> */
     @Parameter(defaultValue = "SCRIPT")
     private Set<TargetType> targetTypes;
+
+    /**
+     * The DDLs statements to create.
+     * <ul>
+     *   <li>NONE: None - duh :P.</li>
+     *   <li>CREATE (default): Create only.</li>
+     *   <li>DROP: Drop only.</li>
+     *   <li>BOTH: Drop and then create.</li>
+     * </ul>
+     */
     @Parameter(defaultValue = "CREATE")
     private SchemaExport.Action schemaExportAction;
+
+    /** Set the end of statement delimiter. */
     @Parameter(defaultValue = ";")
     private String delimiter;
+
+    /** Should we format the sql strings? */
     @Parameter(defaultValue = "true")
     private boolean format;
+ 
+    /** Should we stop once an error occurs? */
     @Parameter(defaultValue = "true")
     private boolean haltOnError;
 

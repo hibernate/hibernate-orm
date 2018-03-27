@@ -6,6 +6,8 @@
  */
 package org.hibernate.cache.spi;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+
 /**
  * Specialized Region whose data is accessed directly - not requiring
  * key/item wrapping, e.g.
@@ -13,13 +15,13 @@ package org.hibernate.cache.spi;
  * @author Steve Ebersole
  */
 public interface DirectAccessRegion extends Region {
-	default boolean contains(Object key) {
-		return getFromCache( key ) != null;
+	default boolean contains(SharedSessionContractImplementor session, Object key) {
+		return getFromCache( session, key ) != null;
 	}
 
-	Object getFromCache(Object key);
+	Object getFromCache(SharedSessionContractImplementor session, Object key);
 
-	void putIntoCache(Object key, Object value);
+	void putIntoCache(SharedSessionContractImplementor session, Object key, Object value);
 
-	void removeFromCache(Object key);
+	void removeFromCache(SharedSessionContractImplementor session, Object key);
 }

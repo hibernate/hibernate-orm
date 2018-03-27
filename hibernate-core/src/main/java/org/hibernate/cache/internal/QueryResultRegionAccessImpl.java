@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
-import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.cache.spi.QueryResultRegionAccess;
 import org.hibernate.cache.spi.QueryResultsRegion;
@@ -93,7 +92,7 @@ public class QueryResultRegionAccessImpl implements QueryResultRegionAccess {
 
 		try {
 			session.getEventListenerManager().cachePutStart();
-			cacheRegion.putIntoCache( key, cacheItem );
+			cacheRegion.putIntoCache( session, key, cacheItem );
 		}
 		finally {
 			session.getEventListenerManager().cachePutEnd();
@@ -189,7 +188,7 @@ public class QueryResultRegionAccessImpl implements QueryResultRegionAccess {
 		CacheItem cachedItem = null;
 		try {
 			session.getEventListenerManager().cacheGetStart();
-			cachedItem = (CacheItem) cacheRegion.getFromCache( key );
+			cachedItem = (CacheItem) cacheRegion.getFromCache( session, key );
 		}
 		finally {
 			session.getEventListenerManager().cacheGetEnd( cachedItem != null );

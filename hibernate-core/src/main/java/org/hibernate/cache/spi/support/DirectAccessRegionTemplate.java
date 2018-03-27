@@ -8,6 +8,7 @@ package org.hibernate.cache.spi.support;
 
 import org.hibernate.cache.spi.DirectAccessRegion;
 import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * @author Steve Ebersole
@@ -20,22 +21,22 @@ public abstract class DirectAccessRegionTemplate extends AbstractRegion implemen
 	public abstract StorageAccess getStorageAccess();
 
 	@Override
-	public boolean contains(Object key) {
+	public boolean contains(SharedSessionContractImplementor session, Object key) {
 		return getStorageAccess().contains( key );
 	}
 
 	@Override
-	public Object getFromCache(Object key) {
+	public Object getFromCache(SharedSessionContractImplementor session, Object key) {
 		return getStorageAccess().getFromCache( key );
 	}
 
 	@Override
-	public void putIntoCache(Object key, Object value) {
+	public void putIntoCache(SharedSessionContractImplementor session, Object key, Object value) {
 		getStorageAccess().putIntoCache( key, value );
 	}
 
 	@Override
-	public void removeFromCache(Object key) {
+	public void removeFromCache(SharedSessionContractImplementor session, Object key) {
 		getStorageAccess().removeFromCache( key );
 	}
 

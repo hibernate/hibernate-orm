@@ -8,16 +8,24 @@ package org.hibernate.cache.spi.support;
 
 import org.hibernate.cache.spi.DirectAccessRegion;
 import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
+ * Bridge between DirectAccessRegion and StorageAccess
+ *
  * @author Steve Ebersole
  */
 public abstract class DirectAccessRegionTemplate extends AbstractRegion implements DirectAccessRegion {
-	public DirectAccessRegionTemplate(String name, RegionFactory regionFactory) {
+	private final StorageAccess storageAccess;
+
+	public DirectAccessRegionTemplate(String name, RegionFactory regionFactory, StorageAccess storageAccess) {
 		super( name, regionFactory );
+		this.storageAccess = storageAccess;
 	}
 
-	public abstract StorageAccess getStorageAccess();
+	public StorageAccess getStorageAccess() {
+		return storageAccess;
+	}
 
 	@Override
 	public boolean contains(Object key) {
@@ -25,23 +33,23 @@ public abstract class DirectAccessRegionTemplate extends AbstractRegion implemen
 	}
 
 	@Override
-	public Object getFromCache(Object key) {
-		return getStorageAccess().getFromCache( key );
+	public Object getFromCache(Object key, SharedSessionContractImplementor session) {
+		return getStorageAccess().getFromCache( key, session );
 	}
 
 	@Override
-	public void putIntoCache(Object key, Object value) {
-		getStorageAccess().putIntoCache( key, value );
+	public void putIntoCache(Object key, Object value, SharedSessionContractImplementor session) {
+		getStorageAccess().putIntoCache( key, value, session );
 	}
 
 	@Override
-	public void removeFromCache(Object key) {
-		getStorageAccess().removeFromCache( key );
+	public void removeFromCache(Object key, SharedSessionContractImplementor session) {
+		getStorageAccess().removeFromCache( key, session );
 	}
 
 	@Override
 	public void clear() {
-		getStorageAccess().clearCache();
+		getStorageAccess().evictData();
 	}
 
 	@Override

@@ -22,7 +22,7 @@ import org.hibernate.type.Type;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface QueryResultRegionAccess extends QueryCache {
+public interface QueryResultsCache extends QueryCache {
 	/**
 	 * The underlying cache region being used.
 	 */

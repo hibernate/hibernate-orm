@@ -168,7 +168,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 			final String tableName = getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema );
 			return String.format(
 					Locale.ROOT,
-					"%s drop constraint %s",
+					"%s evictData constraint %s",
 					dialect.getAlterTableString( tableName ),
 					dialect.quote( getName() )
 			);

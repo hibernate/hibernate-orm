@@ -34,37 +34,24 @@ public abstract class AbstractCachedDomainDataAccess implements CachedDomainData
 		return region;
 	}
 
-	protected Object getFromCache(Object key) {
-		log.debugf( "Locating entry in cache storage [region=`%s`] : %s", key );
-		return storageAccess.getFromCache( key );
-	}
-
-	@SuppressWarnings({"unchecked", "WeakerAccess"})
-	protected void addToCache(Object key, Object value) {
-		log.debugf( "Adding entry to cache storage [region=`%s`] : %s -> %s", getRegion().getName(), key, value );
-		storageAccess.putIntoCache( key, value );
-	}
-
-	@SuppressWarnings({"unchecked", "WeakerAccess"})
-	protected void removeFromCache(Object key) {
-		log.debugf( "Removing entry from cache storage [region=`%s`] : %s", key );
-		storageAccess.removeFromCache( key );
+	protected DomainDataStorageAccess getStorageAccess() {
+		return storageAccess;
 	}
 
 	@SuppressWarnings({"unchecked", "WeakerAccess"})
 	protected void clearCache() {
 		log.debugf( "Clearing cache data map [region=`%s`]" );
-		storageAccess.clearCache();
+		getStorageAccess().evictData();
 	}
 
 	@Override
 	public boolean contains(Object key) {
-		return storageAccess.contains( key );
+		return getStorageAccess().contains( key );
 	}
 
 	@Override
 	public Object get(SharedSessionContractImplementor session, Object key) {
-		return getFromCache( key );
+		return getStorageAccess().getFromCache( key, session );
 	}
 
 	@Override
@@ -73,7 +60,7 @@ public abstract class AbstractCachedDomainDataAccess implements CachedDomainData
 			Object key,
 			Object value,
 			Object version) {
-		addToCache( key, value );
+		getStorageAccess().putFromLoad( key, value, session );
 		return true;
 	}
 
@@ -102,7 +89,7 @@ public abstract class AbstractCachedDomainDataAccess implements CachedDomainData
 
 	@Override
 	public void remove(SharedSessionContractImplementor session, Object key) {
-		removeFromCache( key );
+		getStorageAccess().removeFromCache( key, session );
 	}
 
 	@Override
@@ -112,16 +99,16 @@ public abstract class AbstractCachedDomainDataAccess implements CachedDomainData
 
 	@Override
 	public void evict(Object key) {
-		removeFromCache( key );
+		getStorageAccess().evictData( key );
 	}
 
 	@Override
 	public void evictAll() {
-		clearCache();
+		getStorageAccess().evictData();
 	}
 
 	@Override
 	public void destroy() {
-		storageAccess.release();
+		getStorageAccess().release();
 	}
 }

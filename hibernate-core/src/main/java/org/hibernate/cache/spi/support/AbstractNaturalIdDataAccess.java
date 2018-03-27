@@ -45,7 +45,7 @@ public abstract class AbstractNaturalIdDataAccess extends AbstractCachedDomainDa
 
 	@Override
 	public boolean insert(SharedSessionContractImplementor session, Object key, Object value) {
-		addToCache( key, value );
+		getStorageAccess().putIntoCache( key, value, session );
 		return true;
 	}
 
@@ -56,7 +56,7 @@ public abstract class AbstractNaturalIdDataAccess extends AbstractCachedDomainDa
 
 	@Override
 	public boolean update(SharedSessionContractImplementor session, Object key, Object value) {
-		addToCache( key, value );
+		getStorageAccess().putIntoCache( key, value, session );
 		return true;
 	}
 

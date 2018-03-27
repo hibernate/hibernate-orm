@@ -9,7 +9,6 @@ package org.hibernate.cache.jcache.internal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
@@ -23,34 +22,21 @@ import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.jcache.ConfigSettings;
 import org.hibernate.cache.spi.CacheKeysFactory;
-import org.hibernate.cache.spi.DomainDataRegion;
-import org.hibernate.cache.spi.QueryResultsRegion;
-import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.cache.spi.SecondLevelCacheLogger;
-import org.hibernate.cache.spi.TimestampsRegion;
-import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cache.spi.support.DomainDataStorageAccess;
+import org.hibernate.cache.spi.support.RegionFactoryTemplate;
 import org.hibernate.cache.spi.support.RegionNameQualifier;
-import org.hibernate.cache.spi.support.SimpleTimestamper;
+import org.hibernate.cache.spi.support.StorageAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-
-import org.jboss.logging.Logger;
 
 /**
  * @author Alex Snaps
  */
-public class JCacheRegionFactory implements RegionFactory {
-
-	private static final JCacheMessageLogger LOG = Logger.getMessageLogger(
-			JCacheMessageLogger.class,
-			JCacheRegionFactory.class.getName()
-	);
-
-	private final AtomicBoolean started = new AtomicBoolean( false );
+public class JCacheRegionFactory extends RegionFactoryTemplate {
 	private final CacheKeysFactory cacheKeysFactory;
 
 	private volatile CacheManager cacheManager;
-	private SessionFactoryOptions options;
 
+	@SuppressWarnings("unused")
 	public JCacheRegionFactory() {
 		this( DefaultCacheKeysFactory.INSTANCE );
 	}
@@ -59,51 +45,84 @@ public class JCacheRegionFactory implements RegionFactory {
 		this.cacheKeysFactory = cacheKeysFactory;
 	}
 
+	@SuppressWarnings("unused")
 	public CacheManager getCacheManager() {
 		return cacheManager;
 	}
 
 	@Override
-	public boolean isMinimalPutsEnabledByDefault() {
-		return true;
+	protected CacheKeysFactory getImplicitCacheKeysFactory() {
+		return cacheKeysFactory;
 	}
 
 	@Override
-	public AccessType getDefaultAccessType() {
-		return AccessType.READ_WRITE;
+	protected DomainDataStorageAccess createDomainDataStorageAccess(
+			DomainDataRegionConfig regionConfig,
+			DomainDataRegionBuildingContext buildingContext) {
+		return new JCacheAccessImpl(
+				getOrCreateCache( regionConfig.getRegionName(), buildingContext.getSessionFactory() )
+		);
 	}
 
-	@Override
-	public long nextTimestamp() {
-		return SimpleTimestamper.next();
-	}
+	@SuppressWarnings("WeakerAccess")
+	protected Cache<Object, Object> getOrCreateCache(String unqualifiedRegionName, SessionFactoryImplementor sessionFactory) {
+		verifyStarted();
+		assert !RegionNameQualifier.INSTANCE.isQualified( unqualifiedRegionName, sessionFactory.getSessionFactoryOptions() );
 
-	@Override
-	public long getTimeout() {
-		return SimpleTimestamper.timeOut();
-	}
+		final String qualifiedRegionName = RegionNameQualifier.INSTANCE.qualify(
+				unqualifiedRegionName,
+				sessionFactory.getSessionFactoryOptions()
+		);
 
-	@Override
-	public void start(SessionFactoryOptions settings, Map configValues) throws CacheException {
-		if ( started.compareAndSet( false, true ) ) {
-			synchronized ( this ) {
-				this.options = settings;
-				try {
-					this.cacheManager = getCacheManager( settings, configValues );
-				}
-				finally {
-					if ( this.cacheManager == null ) {
-						started.set( false );
-					}
-				}
-			}
+		final Cache<Object, Object> cache = cacheManager.getCache( qualifiedRegionName );
+		if ( cache == null ) {
+			return createCache( qualifiedRegionName );
 		}
-		else {
-			SecondLevelCacheLogger.INSTANCE.attemptToStartAlreadyStartedCacheProvider();
+		return cache;
+	}
+
+	@SuppressWarnings("WeakerAccess")
+	protected Cache<Object, Object> createCache(String regionName) {
+		throw new CacheException( "On-the-fly creation of JCache Cache objects is not supported [" + regionName + "]" );
+	}
+
+	@Override
+	protected StorageAccess createQueryResultsRegionStorageAccess(
+			String regionName,
+			SessionFactoryImplementor sessionFactory) {
+		return new JCacheAccessImpl(
+				getOrCreateCache( regionName, sessionFactory )
+		);
+	}
+
+	@Override
+	protected StorageAccess createTimestampsRegionStorageAccess(
+			String regionName,
+			SessionFactoryImplementor sessionFactory) {
+		return new JCacheAccessImpl(
+				getOrCreateCache( regionName, sessionFactory )
+		);
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Lifecycle
+
+	@Override
+	protected boolean isStarted() {
+		return super.isStarted() && cacheManager != null;
+	}
+
+	@Override
+	protected void prepareForUse(SessionFactoryOptions settings, Map configValues) {
+		this.cacheManager = resolveCacheManager( settings, configValues );
+		if ( this.cacheManager == null ) {
+			throw new CacheException( "Could not locate/create CacheManager" );
 		}
 	}
 
-	protected CacheManager getCacheManager(SessionFactoryOptions settings, Map properties) {
+	@SuppressWarnings("WeakerAccess")
+	protected CacheManager resolveCacheManager(SessionFactoryOptions settings, Map properties) {
 		final Object explicitCacheManager = properties.get( ConfigSettings.CACHE_MANAGER );
 		if ( explicitCacheManager != null ) {
 			return useExplicitCacheManager( settings, explicitCacheManager );
@@ -129,6 +148,11 @@ public class JCacheRegionFactory implements RegionFactory {
 		return cacheManager;
 	}
 
+	private String getProp(Map properties, String prop) {
+		return properties != null ? (String) properties.get( prop ) : null;
+	}
+
+	@SuppressWarnings("WeakerAccess")
 	protected CachingProvider getCachingProvider(final Map properties){
 		final CachingProvider cachingProvider;
 		final String provider = getProp( properties, ConfigSettings.PROVIDER );
@@ -141,6 +165,7 @@ public class JCacheRegionFactory implements RegionFactory {
 		return cachingProvider;
 	}
 
+	@SuppressWarnings("unchecked")
 	private CacheManager useExplicitCacheManager(SessionFactoryOptions settings, Object setting) {
 		if ( setting instanceof CacheManager ) {
 			return (CacheManager) setting;
@@ -164,92 +189,15 @@ public class JCacheRegionFactory implements RegionFactory {
 	}
 
 	@Override
-	public void stop() {
-		if ( started.compareAndSet( true, false ) ) {
-			synchronized ( this ) {
-				// todo (5.3) : if this is a manager instance that was provided to us we should probably not close it...
-				//		- when the explicit `setting` passed to `#useExplicitCacheManager` is
-				//		a CacheManager instance
-				cacheManager.close();
-				cacheManager = null;
-			}
+	protected void releaseFromUse() {
+		try {
+			// todo (5.3) : if this is a manager instance that was provided to us we should probably not close it...
+			//		- when the explicit `setting` passed to `#useExplicitCacheManager` is
+			//		a CacheManager instance
+			cacheManager.close();
 		}
-		else {
-			LOG.attemptToRestopAlreadyStoppedJCacheProvider();
+		finally {
+			cacheManager = null;
 		}
-	}
-
-	@Override
-	public String qualify(String regionName) {
-		return RegionNameQualifier.INSTANCE.qualify( regionName, options );
-	}
-
-	@Override
-	public QueryResultsRegion buildQueryResultsRegion(
-			String regionName,
-			SessionFactoryImplementor sessionFactory) {
-		return new QueryResultsRegionImpl(
-				regionName,
-				this,
-				getOrCreateCache( regionName, sessionFactory )
-		);
-	}
-
-	@Override
-	public TimestampsRegion buildTimestampsRegion(
-			String regionName,
-			SessionFactoryImplementor sessionFactory) {
-		return new TimestampsRegionImpl(
-				regionName,
-				this,
-				getOrCreateCache( regionName, sessionFactory )
-		);
-	}
-
-	@Override
-	public DomainDataRegion buildDomainDataRegion(
-			DomainDataRegionConfig regionConfig,
-			DomainDataRegionBuildingContext buildingContext) {
-		return new DomainDataRegionImpl(
-				regionConfig,
-				this,
-				getOrCreateCache( regionConfig.getRegionName(), buildingContext.getSessionFactory() ),
-				cacheKeysFactory,
-				buildingContext
-		);
-	}
-
-	protected Cache<Object, Object> getOrCreateCache(String unqualifiedRegionName, SessionFactoryImplementor sessionFactory) {
-		checkStatus();
-		assert !RegionNameQualifier.INSTANCE.isQualified( unqualifiedRegionName, sessionFactory.getSessionFactoryOptions() );
-
-		final String qualifiedRegionName = RegionNameQualifier.INSTANCE.qualify(
-				unqualifiedRegionName,
-				sessionFactory.getSessionFactoryOptions()
-		);
-
-		final Cache<Object, Object> cache = cacheManager.getCache( qualifiedRegionName );
-		if ( cache == null ) {
-			return createCache( qualifiedRegionName );
-		}
-		return cache;
-	}
-
-	protected Cache<Object, Object> createCache(String regionName) {
-		throw new CacheException( "On-the-fly creation of JCache Cache objects is not supported [" + regionName + "]" );
-	}
-
-	protected String getProp(Map properties, String prop) {
-		return properties != null ? (String) properties.get( prop ) : null;
-	}
-
-	protected void checkStatus() {
-		if ( ! isStarted() ) {
-			throw new IllegalStateException( "JCacheRegionFactory not yet started!" );
-		}
-	}
-
-	boolean isStarted() {
-		return started.get() && cacheManager != null;
 	}
 }

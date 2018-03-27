@@ -14,11 +14,10 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.cache.jcache.internal.DomainDataRegionImpl;
 import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.cache.spi.support.DomainDataRegionTemplate;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.jcache.test.TestHelper;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -194,17 +193,23 @@ public class InsertedDataTest extends BaseUnitTestCase {
 		);
 
 
-		final DomainDataRegionImpl region = (DomainDataRegionImpl) sessionFactory().getCache().getRegion( "item" );
-		final Object fromCache = region.getCacheStorageAccess().getFromCache(
-				region.getEffectiveKeysFactory().createEntityKey(
-						1L,
-						sessionFactory().getMetamodel().entityPersister( CacheableItem.class ),
-						sessionFactory(),
-						null
-				)
+		inTransaction(
+				sessionFactory,
+				s -> {
+					final DomainDataRegionTemplate region = (DomainDataRegionTemplate) sessionFactory().getCache().getRegion( "item" );
+					final Object fromCache = region.getCacheStorageAccess().getFromCache(
+							region.getEffectiveKeysFactory().createEntityKey(
+									1L,
+									sessionFactory().getMetamodel().entityPersister( CacheableItem.class ),
+									sessionFactory(),
+									null
+							),
+							s
+					);
+					assertNotNull( fromCache );
+					ExtraAssertions.assertTyping( SoftLock.class, fromCache );
+				}
 		);
-		assertNotNull( fromCache );
-		ExtraAssertions.assertTyping( SoftLock.class, fromCache );
 
 		inTransaction(
 				sessionFactory,

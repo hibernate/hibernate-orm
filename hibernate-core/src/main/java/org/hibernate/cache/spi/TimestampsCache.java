@@ -18,12 +18,15 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @author Steve Ebersole
  */
-public interface TimestampsRegionAccess extends UpdateTimestampsCache {
+public interface TimestampsCache extends UpdateTimestampsCache {
+	/**
+	 * The region used to store all timestamps data
+	 */
 	TimestampsRegion getRegion();
 
 	/**
 	 * Perform pre-invalidation of the passed spaces (table names)
-	 * using the passed region for storing update-timestamps
+	 * against the timestamps region data
 	 */
 	void preInvalidate(
 			String[] spaces,
@@ -31,7 +34,7 @@ public interface TimestampsRegionAccess extends UpdateTimestampsCache {
 
 	/**
 	 * Perform invalidation of the passed spaces (table names)
-	 * using the passed region for storing update-timestamps
+	 * against the timestamps region data
 	 */
 	void invalidate(
 			String[] spaces,

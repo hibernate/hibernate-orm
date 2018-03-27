@@ -51,9 +51,12 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 
 		this.sessionFactory = buildingContext.getSessionFactory();
 
+		if ( defaultKeysFactory == null ) {
+			defaultKeysFactory = DefaultCacheKeysFactory.INSTANCE;
+		}
 		this.effectiveKeysFactory = buildingContext.getEnforcedCacheKeysFactory() != null
 				? buildingContext.getEnforcedCacheKeysFactory()
-				: defaultKeysFactory != null ? defaultKeysFactory : DefaultCacheKeysFactory.INSTANCE;
+				: defaultKeysFactory;
 	}
 
 	/**

@@ -6,13 +6,10 @@
  */
 package org.hibernate.jcache.test;
 
-import org.hibernate.cache.jcache.internal.DomainDataRegionImpl;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
-import org.hibernate.jcache.test.BaseFunctionalTest;
-import org.hibernate.jcache.test.TestHelper;
+import org.hibernate.cache.spi.support.DomainDataRegionTemplate;
 import org.hibernate.jcache.test.domain.Event;
 import org.hibernate.jcache.test.domain.Item;
 import org.hibernate.jcache.test.domain.VersionedItem;
@@ -36,7 +33,7 @@ public class DomainDataRegionTest extends BaseFunctionalTest {
 	@Test
 	public void testBasicUsage() {
 		final Region region = sessionFactory().getCache().getRegion( TestHelper.entityRegionNames[0] );
-		final DomainDataRegionImpl domainDataRegion = assertTyping( DomainDataRegionImpl.class, region );
+		final DomainDataRegionTemplate domainDataRegion = assertTyping( DomainDataRegionTemplate.class, region );
 
 		// see if we can get access to all of the access objects we think should be defined in this region
 

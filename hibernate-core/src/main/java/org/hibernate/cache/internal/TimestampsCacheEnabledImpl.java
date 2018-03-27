@@ -10,24 +10,24 @@ import java.io.Serializable;
 
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
-import org.hibernate.cache.spi.TimestampsRegionAccess;
+import org.hibernate.cache.spi.TimestampsCache;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import org.jboss.logging.Logger;
 
 /**
- * Standard implementation of QuerySpaceStalenessStrategy
+ * Standard implementation of TimestampsCache
  *
  * @author Steve Ebersole
  */
-public class TimestampsRegionAccessEnabledImpl implements TimestampsRegionAccess {
-	private static final Logger log = Logger.getLogger( TimestampsRegionAccessEnabledImpl.class );
+public class TimestampsCacheEnabledImpl implements TimestampsCache {
+	private static final Logger log = Logger.getLogger( TimestampsCacheEnabledImpl.class );
 	private static final boolean DEBUG_ENABLED = log.isDebugEnabled();
 
 	private final TimestampsRegion timestampsRegion;
 
-	public TimestampsRegionAccessEnabledImpl(TimestampsRegion timestampsRegion) {
+	public TimestampsCacheEnabledImpl(TimestampsRegion timestampsRegion) {
 		this.timestampsRegion = timestampsRegion;
 	}
 
@@ -57,7 +57,7 @@ public class TimestampsRegionAccessEnabledImpl implements TimestampsRegionAccess
 
 				//put() has nowait semantics, is this really appropriate?
 				//note that it needs to be async replication, never local or sync
-				timestampsRegion.putIntoCache( space, ts );
+				timestampsRegion.putIntoCache( space, ts, session );
 			}
 			finally {
 				session.getEventListenerManager().cachePutEnd();
@@ -84,7 +84,7 @@ public class TimestampsRegionAccessEnabledImpl implements TimestampsRegionAccess
 
 			try {
 				session.getEventListenerManager().cachePutStart();
-				timestampsRegion.putIntoCache( space, ts );
+				timestampsRegion.putIntoCache( space, ts, session );
 			}
 			finally {
 				session.getEventListenerManager().cachePutEnd();
@@ -135,7 +135,7 @@ public class TimestampsRegionAccessEnabledImpl implements TimestampsRegionAccess
 		Long ts = null;
 		try {
 			session.getEventListenerManager().cacheGetStart();
-			ts = (Long) timestampsRegion.getFromCache( space );
+			ts = (Long) timestampsRegion.getFromCache( space, session );
 		}
 		finally {
 			session.getEventListenerManager().cacheGetEnd( ts != null );

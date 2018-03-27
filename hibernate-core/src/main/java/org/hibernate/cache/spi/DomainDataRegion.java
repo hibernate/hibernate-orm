@@ -12,7 +12,13 @@ import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 
 /**
- * A Region for cacheable domain data - entity, collection, natural-id
+ * A Region for cacheable domain data - entity, collection, natural-id.
+ *
+ * Generally speaking, this type of data has:
+ *
+ * 		* specific key and value wrapping that needs to be applied
+ * 		* specific access patterns ({@link EntityDataAccess}, etc),
+ * 			including some form of locking
  *
  * @author Steve Ebersole
  */

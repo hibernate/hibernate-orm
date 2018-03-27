@@ -6,22 +6,57 @@
  */
 package org.hibernate.cache.spi.support;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+
 /**
+ * A general read/write abstraction over the specific "cache"
+ * object from the caching provider
+ *
  * @author Steve Ebersole
  */
 public interface StorageAccess {
-	default boolean contains(Object key) {
-		return getFromCache( key ) != null;
+	/**
+	 * Does the cache contain this key?
+	 */
+	boolean contains(Object key);
+
+	/**
+	 * Get an item from the cache.
+	 */
+	Object getFromCache(Object key, SharedSessionContractImplementor session);
+
+	/**
+	 * Put an item into the cache
+	 */
+	void putIntoCache(Object key, Object value, SharedSessionContractImplementor session);
+
+	/**
+	 * Remove an item from the cache by key
+	 */
+	default void removeFromCache(Object key, SharedSessionContractImplementor session) {
+		evictData( key );
 	}
 
-	Object getFromCache(Object key);
+	/**
+	 * Clear data from the cache
+	 */
+	default void clearCache(SharedSessionContractImplementor session) {
+		evictData();
+	}
 
-	void putIntoCache(Object key, Object value);
+	/**
+	 * Clear all data regardless of transaction/locking
+	 */
+	void evictData();
 
-	void removeFromCache(Object key);
+	/**
+	 * Remove the entry regardless of transaction/locking
+	 */
+	void evictData(Object key);
 
-	void clearCache();
-
+	/***
+	 * Release any resources.  Called during cache shutdown
+	 */
 	void release();
 
 }

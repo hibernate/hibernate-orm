@@ -11,10 +11,9 @@ import javax.cache.CacheManager;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.jcache.JCacheHelper;
-import org.hibernate.cache.jcache.internal.DomainDataJCacheAccessImpl;
-import org.hibernate.cache.jcache.internal.DomainDataRegionImpl;
-import org.hibernate.cache.jcache.internal.JCacheRegionFactory;
+import org.hibernate.cache.jcache.internal.JCacheAccessImpl;
 import org.hibernate.cache.spi.Region;
+import org.hibernate.cache.spi.support.DomainDataRegionTemplate;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.spi.ServiceException;
 
@@ -27,6 +26,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.hibernate.testing.transaction.TransactionUtil2.inSession;
 import static org.junit.Assert.fail;
 
 /**
@@ -71,22 +71,27 @@ public class StorageAccessTests extends BaseUnitTestCase {
 	public void testBasicStorageAccessUse() {
 		try (final SessionFactoryImplementor sessionFactory = TestHelper.buildStandardSessionFactory( true ) ) {
 			final Region region = sessionFactory.getCache().getRegion( TestHelper.entityRegionNames[0] );
-			final DomainDataRegionImpl jcacheRegion = (DomainDataRegionImpl) region;
 
-			final DomainDataJCacheAccessImpl access = jcacheRegion.getCacheStorageAccess();
+			final JCacheAccessImpl access = (JCacheAccessImpl) ( (DomainDataRegionTemplate) region ).getCacheStorageAccess();
 			final Cache jcache = access.getUnderlyingCache();
 
-			access.putIntoCache( "key", "value" );
-			assertThat( jcache.get( "key" ), equalTo( "value" ) );
-			assertThat( access.getFromCache( "key" ), equalTo( "value" ) );
+			inSession(
+					sessionFactory,
+					s -> {
+						access.putIntoCache( "key", "value", s );
+						assertThat( jcache.get( "key" ), equalTo( "value" ) );
+						assertThat( access.getFromCache( "key", s ), equalTo( "value" ) );
 
-			access.removeFromCache( "key" );
-			assertThat( jcache.get( "key" ), nullValue() );
-			assertThat( access.getFromCache( "key" ), nullValue() );
+						access.removeFromCache( "key", s );
+						assertThat( jcache.get( "key" ), nullValue() );
+						assertThat( access.getFromCache( "key", s ), nullValue() );
+					}
+			);
 		}
 	}
 
 	@Test
+	@SuppressWarnings({"EmptyTryBlock", "unused"})
 	public void testCachesReleasedOnSessionFactoryClose() {
 		try (SessionFactoryImplementor sessionFactory = TestHelper.buildStandardSessionFactory( true ) ) {
 		}

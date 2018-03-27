@@ -1066,7 +1066,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	String unableToDetermineTransactionStatusAfterCommit();
 
 	@LogMessage(level = WARN)
-	@Message(value = "Unable to drop temporary id table after use [%s]", id = 314)
+	@Message(value = "Unable to evictData temporary id table after use [%s]", id = 314)
 	void unableToDropTemporaryIdTable(String message);
 
 	@LogMessage(level = ERROR)
@@ -1738,7 +1738,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void executingImportScript(String scriptName);
 
 	@LogMessage(level = INFO)
-	@Message(value = "Starting delayed drop of schema as part of SessionFactory shut-down'", id = 477)
+	@Message(value = "Starting delayed evictData of schema as part of SessionFactory shut-down'", id = 477)
 	void startingDelayedSchemaDrop();
 
 	@LogMessage(level = ERROR)

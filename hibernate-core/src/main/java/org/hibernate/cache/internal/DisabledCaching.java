@@ -12,10 +12,10 @@ import java.util.Set;
 
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
 import org.hibernate.cache.spi.CacheImplementor;
-import org.hibernate.cache.spi.QueryResultRegionAccess;
+import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.cache.spi.TimestampsRegionAccess;
+import org.hibernate.cache.spi.TimestampsCache;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
@@ -154,22 +154,22 @@ public class DisabledCaching implements CacheImplementor {
 	}
 
 	@Override
-	public TimestampsRegionAccess getTimestampsRegionAccess() {
+	public TimestampsCache getTimestampsCache() {
 		return null;
 	}
 
 	@Override
-	public QueryResultRegionAccess getDefaultQueryResultsRegionAccess() {
+	public QueryResultsCache getDefaultQueryResultsCache() {
 		return null;
 	}
 
 	@Override
-	public QueryResultRegionAccess getQueryResultsRegionAccess(String regionName) {
+	public QueryResultsCache getQueryResultsCache(String regionName) {
 		return null;
 	}
 
 	@Override
-	public QueryResultRegionAccess getQueryResultsRegionAccessStrictly(String regionName) {
+	public QueryResultsCache getQueryResultsCacheStrictly(String regionName) {
 		return null;
 	}
 

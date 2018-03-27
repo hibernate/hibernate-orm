@@ -34,11 +34,11 @@ import org.jboss.logging.Logger;
  * 			DomainDataStorageAccess reference
  * 		* Custom RegionFactory implementation that creates its custom DomainDataRegionTemplate
  *
- * todo (5.3.) : move this javadoc into DomainDataRegion and/or package javadoc
+ * todo (5.3) : move this javadoc into DomainDataRegion and/or package javadoc
  *
  * @author Steve Ebersole
  */
-public abstract class DomainDataRegionTemplate extends AbstractDomainDataRegion {
+public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 	private static final Logger log = Logger.getLogger( DomainDataRegionTemplate.class );
 
 	private final DomainDataStorageAccess storageAccess;
@@ -56,7 +56,10 @@ public abstract class DomainDataRegionTemplate extends AbstractDomainDataRegion 
 		completeInstantiation( regionConfig, buildingContext );
 	}
 
-	protected DomainDataStorageAccess getCacheStorageAccess() {
+	/**
+	 * Public for testing purposes
+	 */
+	public DomainDataStorageAccess getCacheStorageAccess() {
 		return storageAccess;
 	}
 

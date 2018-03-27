@@ -8,10 +8,14 @@ package org.hibernate.cache.spi;
 
 /**
  * Responsible for building the TimestampsRegionAccessFactory to use for
- * managing query results in regards to staleness
+ * managing query results in regards to staleness of the underlying
+ * tables (sometimes called "query spaces" or "table spaces")
  *
  * @author Steve Ebersole
  */
-public interface TimestampsRegionAccessFactory {
-	TimestampsRegionAccess buildTimestampsRegionAccess(CacheImplementor cacheManager, TimestampsRegion timestampsRegion);
+public interface TimestampsCacheFactory {
+	/**
+	 * Build the TimestampsCache
+	 */
+	TimestampsCache buildTimestampsCache(CacheImplementor cacheManager, TimestampsRegion timestampsRegion);
 }

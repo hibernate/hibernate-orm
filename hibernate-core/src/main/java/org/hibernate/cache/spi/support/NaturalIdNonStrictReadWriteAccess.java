@@ -35,12 +35,12 @@ public class NaturalIdNonStrictReadWriteAccess extends AbstractNaturalIdDataAcce
 
 	@Override
 	public void unlockItem(SharedSessionContractImplementor session, Object key, SoftLock lock) {
-		removeFromCache( key );
+		getStorageAccess().removeFromCache( key, session );
 	}
 
 	@Override
 	public void remove(SharedSessionContractImplementor session, Object key) {
-		removeFromCache( key );
+		getStorageAccess().removeFromCache( key, session );
 	}
 
 	@Override
@@ -55,7 +55,7 @@ public class NaturalIdNonStrictReadWriteAccess extends AbstractNaturalIdDataAcce
 
 	@Override
 	public boolean update(SharedSessionContractImplementor session, Object key, Object value) {
-		removeFromCache( key );
+		getStorageAccess().removeFromCache( key, session );
 		return false;
 	}
 }

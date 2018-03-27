@@ -67,7 +67,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		log.debugf( "Getting cached data from region [`%s` (%s)] by key [%s]", getRegion().getName(), key );
 		try {
 			readLock.lock();
-			Lockable item = (Lockable) getFromCache( key );
+			Lockable item = (Lockable) getStorageAccess().getFromCache( key, session );
 
 			if ( item == null ) {
 				log.debugf( "Cache miss : region = `%s`, key = `%s`", getRegion().getName(), key );
@@ -98,11 +98,15 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		try {
 			log.debugf( "Caching data from load [region=`%s` (%s)] : key[%s] -> value[%s]", getRegion().getName(), getAccessType(), key, value );
 			writeLock.lock();
-			Lockable item = (Lockable) getFromCache( key );
+			Lockable item = (Lockable) getStorageAccess().getFromCache( key, session );
 
 			boolean writable = item == null || item.isWriteable( session.getTransactionStartTimestamp(), version, getVersionComparator() );
 			if ( writable ) {
-				addToCache( key, new Item( value, version, session.getTransactionStartTimestamp() ) );
+				getStorageAccess().putIntoCache(
+						key,
+						new Item( value, version, session.getTransactionStartTimestamp() ),
+						session
+				);
 				return true;
 			}
 			else {
@@ -141,11 +145,11 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 			long timeout = getRegion().getRegionFactory().nextTimestamp() + getRegion().getRegionFactory().getTimeout();
 			log.debugf( "Locking cache item [region=`%s` (%s)] : `%s` (timeout=%s, version=%s)", getRegion().getName(), getAccessType(), key, timeout, version );
 
-			Lockable item = (Lockable) getFromCache( key );
+			Lockable item = (Lockable) getStorageAccess().getFromCache( key, session );
 			final SoftLockImpl lock = ( item == null )
 					? new SoftLockImpl( timeout, uuid, nextLockId(), version )
 					: item.lock( timeout, uuid, nextLockId() );
-			addToCache( key, lock );
+			getStorageAccess().putIntoCache( key, lock, session );
 			return lock;
 		}
 		finally {
@@ -158,7 +162,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		try {
 			log.debugf( "Unlocking cache item [region=`%s` (%s)] : %s", getRegion().getName(), getAccessType(), key );
 			writeLock.lock();
-			Lockable item = (Lockable) getFromCache( key );
+			Lockable item = (Lockable) getStorageAccess().getFromCache( key, session );
 
 			if ( ( item != null ) && item.isUnlockable( lock ) ) {
 				decrementLock( session, key, (SoftLockImpl) item );
@@ -175,7 +179,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 	@SuppressWarnings("WeakerAccess")
 	protected void decrementLock(SharedSessionContractImplementor session, Object key, SoftLockImpl lock) {
 		lock.unlock( getRegion().getRegionFactory().nextTimestamp() );
-		addToCache( key, lock );
+		getStorageAccess().putIntoCache( key, lock, session );
 	}
 
 	@SuppressWarnings("WeakerAccess")
@@ -188,12 +192,12 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		SoftLockImpl newLock = new SoftLockImpl( ts, uuid, nextLockId.getAndIncrement(), null );
 		//newLock.unlock( ts );
 		newLock.unlock( ts - getRegion().getRegionFactory().getTimeout() );
-		addToCache( key, newLock );
+		getStorageAccess().putIntoCache( key, newLock, session );
 	}
 
 	@Override
 	public void remove(SharedSessionContractImplementor session, Object key) {
-		if ( getFromCache( key ) instanceof SoftLock ) {
+		if ( getStorageAccess().getFromCache( key, session ) instanceof SoftLock ) {
 			log.debugf( "Skipping #remove call in read-write access to maintain SoftLock : %s", key );
 			// don'tm do anything... we want the SoftLock to remain in place
 		}

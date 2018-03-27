@@ -9,19 +9,28 @@ package org.hibernate.cache.spi;
 import org.hibernate.cache.CacheException;
 
 /**
- * Defines a contract for accessing a particular named region within the 
- * underlying cache implementation.
+ * Contract for a named "region".  The concept of a Region might not
+ * necessarily correlate to a specific concept in the underlying caching
+ * provider - it is just a thing that can be referenced by name later.
+ *
+ * Region is the base contract defining some common characteristics
+ * regardless of the type of data intended to be stored within this
+ * Region.  The more specific sub-types are {@link DomainDataRegion}
+ * (storing entity, collection and natural-id data) and
+ * {@link DirectAccessRegion} (storing query result and timestamp
+ * data).
  *
  * @author Steve Ebersole
  */
 public interface Region {
 	/**
 	 * Retrieve the name of this region.
-	 *
-	 * @return The region name
 	 */
 	String getName();
 
+	/**
+	 * The RegionFactory that generated this Region
+	 */
 	RegionFactory getRegionFactory();
 
 	/**

@@ -12,12 +12,11 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
-import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.QueryKey;
-import org.hibernate.cache.spi.QueryResultRegionAccess;
+import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.QuerySpacesHelper;
-import org.hibernate.cache.spi.TimestampsRegionAccess;
+import org.hibernate.cache.spi.TimestampsCache;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -27,24 +26,24 @@ import org.hibernate.type.TypeHelper;
 
 /**
  * The standard implementation of the Hibernate QueryCache interface.  Works
- * hind-in-hand with {@link TimestampsRegionAccess} to help in recognizing
+ * hind-in-hand with {@link TimestampsCache} to help in recognizing
  * stale query results.
  *
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class QueryResultRegionAccessImpl implements QueryResultRegionAccess {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( QueryResultRegionAccessImpl.class );
+public class QueryResultsCacheImpl implements QueryResultsCache {
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( QueryResultsCacheImpl.class );
 
 	private static final boolean DEBUGGING = LOG.isDebugEnabled();
 	private static final boolean TRACING = LOG.isTraceEnabled();
 
 	private final QueryResultsRegion cacheRegion;
-	private final TimestampsRegionAccess timestampsCache;
+	private final TimestampsCache timestampsCache;
 
-	QueryResultRegionAccessImpl(
+	QueryResultsCacheImpl(
 			QueryResultsRegion cacheRegion,
-			TimestampsRegionAccess timestampsCache) {
+			TimestampsCache timestampsCache) {
 		this.cacheRegion = cacheRegion;
 		this.timestampsCache = timestampsCache;
 	}
@@ -93,7 +92,7 @@ public class QueryResultRegionAccessImpl implements QueryResultRegionAccess {
 
 		try {
 			session.getEventListenerManager().cachePutStart();
-			cacheRegion.putIntoCache( key, cacheItem );
+			cacheRegion.putIntoCache( key, cacheItem, session );
 		}
 		finally {
 			session.getEventListenerManager().cachePutEnd();
@@ -189,7 +188,7 @@ public class QueryResultRegionAccessImpl implements QueryResultRegionAccess {
 		CacheItem cachedItem = null;
 		try {
 			session.getEventListenerManager().cacheGetStart();
-			cachedItem = (CacheItem) cacheRegion.getFromCache( key );
+			cachedItem = (CacheItem) cacheRegion.getFromCache( key, session );
 		}
 		finally {
 			session.getEventListenerManager().cacheGetEnd( cachedItem != null );

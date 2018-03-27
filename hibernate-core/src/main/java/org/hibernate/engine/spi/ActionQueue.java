@@ -663,7 +663,7 @@ public class ActionQueue {
 				afterTransactionProcesses.addSpaceToInvalidate( (String) s );
 			}
 			// Performance win: If we are processing an ExecutableList, this will only be called once
-			session.getFactory().getCache().getTimestampsRegionAccess().preInvalidate( spaces, session );
+			session.getFactory().getCache().getTimestampsCache().preInvalidate( spaces, session );
 		}
 	}
 
@@ -992,7 +992,7 @@ public class ActionQueue {
 			}
 
 			if ( session.getFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
-				session.getFactory().getCache().getTimestampsRegionAccess().invalidate(
+				session.getFactory().getCache().getTimestampsCache().invalidate(
 						querySpacesToInvalidate.toArray( new String[querySpacesToInvalidate.size()] ),
 						session
 				);

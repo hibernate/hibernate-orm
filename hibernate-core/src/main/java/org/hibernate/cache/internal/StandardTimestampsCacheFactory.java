@@ -7,24 +7,24 @@
 package org.hibernate.cache.internal;
 
 import org.hibernate.cache.spi.CacheImplementor;
-import org.hibernate.cache.spi.TimestampsRegionAccess;
-import org.hibernate.cache.spi.TimestampsRegionAccessFactory;
+import org.hibernate.cache.spi.TimestampsCache;
+import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 
 /**
  * Standard Hibernate implementation of the QueryCacheFactory interface.  Returns instances of
- * {@link QueryResultRegionAccessImpl}.
+ * {@link QueryResultsCacheImpl}.
  */
-public class StandardTimestampsRegionAccessFactory implements TimestampsRegionAccessFactory {
+public class StandardTimestampsCacheFactory implements TimestampsCacheFactory {
 	/**
 	 * Singleton access
 	 */
-	public static final StandardTimestampsRegionAccessFactory INSTANCE = new StandardTimestampsRegionAccessFactory();
+	public static final StandardTimestampsCacheFactory INSTANCE = new StandardTimestampsCacheFactory();
 
 	@Override
-	public TimestampsRegionAccess buildTimestampsRegionAccess(
+	public TimestampsCache buildTimestampsCache(
 			CacheImplementor cacheManager,
 			TimestampsRegion timestampsRegion) {
-		return new TimestampsRegionAccessEnabledImpl( timestampsRegion );
+		return new TimestampsCacheEnabledImpl( timestampsRegion );
 	}
 }

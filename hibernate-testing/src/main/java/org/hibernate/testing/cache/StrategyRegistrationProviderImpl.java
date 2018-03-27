@@ -6,9 +6,7 @@
  */
 package org.hibernate.testing.cache;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.boot.registry.selector.StrategyRegistration;

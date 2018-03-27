@@ -9,18 +9,24 @@ package org.hibernate.testing.cache;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.hibernate.cache.spi.support.StorageAccess;
+import org.hibernate.cache.spi.support.DomainDataStorageAccess;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * StorageAccess impl wrapping a simple data Map (ConcurrentMap)
  *
  * @author Steve Ebersole
  */
-public class StorageAccessImpl implements StorageAccess {
+public class MapStorageAccessImpl implements DomainDataStorageAccess {
 	private ConcurrentMap data;
 
 	@Override
-	public Object getFromCache(Object key) {
+	public boolean contains(Object key) {
+		return data != null && data.containsKey( key );
+	}
+
+	@Override
+	public Object getFromCache(Object key, SharedSessionContractImplementor session) {
 		if ( data == null ) {
 			return null;
 		}
@@ -29,7 +35,7 @@ public class StorageAccessImpl implements StorageAccess {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void putIntoCache(Object key, Object value) {
+	public void putIntoCache(Object key, Object value, SharedSessionContractImplementor session) {
 		getOrMakeDataMap().put( key, value );
 	}
 
@@ -42,7 +48,7 @@ public class StorageAccessImpl implements StorageAccess {
 	}
 
 	@Override
-	public void removeFromCache(Object key) {
+	public void removeFromCache(Object key, SharedSessionContractImplementor session) {
 		if ( data == null ) {
 			return;
 		}
@@ -51,7 +57,7 @@ public class StorageAccessImpl implements StorageAccess {
 	}
 
 	@Override
-	public void clearCache() {
+	public void clearCache(SharedSessionContractImplementor session) {
 		if ( data == null ) {
 			return;
 		}
@@ -60,8 +66,24 @@ public class StorageAccessImpl implements StorageAccess {
 	}
 
 	@Override
+	public void evictData() {
+		if ( data != null ) {
+			data.clear();
+		}
+	}
+
+	@Override
+	public void evictData(Object key) {
+		if ( data != null ) {
+			data.remove( key );
+		}
+	}
+
+	@Override
 	public void release() {
-		clearCache();
-		data = null;
+		if ( data != null ) {
+			data.clear();
+			data = null;
+		}
 	}
 }

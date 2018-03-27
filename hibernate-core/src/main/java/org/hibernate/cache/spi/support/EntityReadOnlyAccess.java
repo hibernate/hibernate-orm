@@ -49,7 +49,7 @@ public class EntityReadOnlyAccess extends AbstractEntityDataAccess {
 
 	@Override
 	public boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value, Object version) {
-		addToCache( key, value );
+		getStorageAccess().putIntoCache( key, value, session );
 		return true;
 	}
 

@@ -73,9 +73,13 @@ public class NaturalIdReadWriteAccess extends AbstractReadWriteAccess implements
 	public boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value) {
 		try {
 			writeLock().lock();
-			Lockable item = (Lockable) getFromCache( key );
+			Lockable item = (Lockable) getStorageAccess().getFromCache( key, session );
 			if ( item == null ) {
-				addToCache( key, new Item( value, null, getRegion().getRegionFactory().nextTimestamp() ) );
+				getStorageAccess().putIntoCache(
+						key,
+						new Item( value, null, getRegion().getRegionFactory().nextTimestamp() ),
+						session
+				);
 				return true;
 			}
 			else {
@@ -96,7 +100,7 @@ public class NaturalIdReadWriteAccess extends AbstractReadWriteAccess implements
 	public boolean afterUpdate(SharedSessionContractImplementor session, Object key, Object value, SoftLock lock) {
 		try {
 			writeLock().lock();
-			Lockable item = (Lockable) getFromCache( key );
+			Lockable item = (Lockable) getStorageAccess().getFromCache( key, session );
 
 			if ( item != null && item.isUnlockable( lock ) ) {
 				SoftLockImpl lockItem = (SoftLockImpl) item;
@@ -105,7 +109,11 @@ public class NaturalIdReadWriteAccess extends AbstractReadWriteAccess implements
 					return false;
 				}
 				else {
-					addToCache( key, new Item( value, null, getRegion().getRegionFactory().nextTimestamp() ) );
+					getStorageAccess().putIntoCache(
+							key,
+							new Item( value, null, getRegion().getRegionFactory().nextTimestamp() ),
+							session
+					);
 					return true;
 				}
 			}

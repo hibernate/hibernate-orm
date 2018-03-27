@@ -33,7 +33,7 @@ public class EntityTransactionalAccess extends AbstractEntityDataAccess {
 			Object key,
 			Object value,
 			Object version) {
-		addToCache( key, value );
+		getStorageAccess().putIntoCache( key, value, session );
 		return true;
 	}
 
@@ -53,7 +53,7 @@ public class EntityTransactionalAccess extends AbstractEntityDataAccess {
 			Object value,
 			Object currentVersion,
 			Object previousVersion) {
-		addToCache( key, value );
+		getStorageAccess().putIntoCache( key, value, session );
 		return true;
 	}
 

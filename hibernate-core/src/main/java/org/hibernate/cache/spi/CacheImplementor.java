@@ -74,14 +74,14 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 *
 	 * @since 5.3
 	 */
-	TimestampsRegionAccess getTimestampsRegionAccess();
+	TimestampsCache getTimestampsCache();
 
 	/**
 	 * Access to the "default" region used to store query results when caching
 	 * was requested but no region was explicitly named.  Will return {@code null}
 	 * if Hibernate is not configured for query result caching
 	 */
-	QueryResultRegionAccess getDefaultQueryResultsRegionAccess();
+	QueryResultsCache getDefaultQueryResultsCache();
 
 	/**
 	 * Get query cache by <tt>region name</tt> or create a new one if none exist.
@@ -90,7 +90,7 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 *
 	 * Will return {@code null} if Hibernate is not configured for query result caching
 	 */
-	QueryResultRegionAccess getQueryResultsRegionAccess(String regionName);
+	QueryResultsCache getQueryResultsCache(String regionName);
 
 	/**
 	 * Get the named QueryResultRegionAccess but not creating one if it
@@ -101,13 +101,13 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 *
 	 * @since 5.3
 	 */
-	QueryResultRegionAccess getQueryResultsRegionAccessStrictly(String regionName);
+	QueryResultsCache getQueryResultsCacheStrictly(String regionName);
 
 	/**
 	 * Clean up the default query cache
 	 */
 	default void evictQueries() throws HibernateException {
-		QueryResultRegionAccess cache = getDefaultQueryResultsRegionAccess();
+		QueryResultsCache cache = getDefaultQueryResultsCache();
 		if ( cache != null ) {
 			cache.clear();
 		}
@@ -177,39 +177,39 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	/**
 	 * Get {@code UpdateTimestampsCache} instance managed by the {@code SessionFactory}.
 	 *
-	 * @deprecated Use {@link #getTimestampsRegionAccess} instead
+	 * @deprecated Use {@link #getTimestampsCache} instead
 	 */
 	@Deprecated
 	default UpdateTimestampsCache getUpdateTimestampsCache() {
-		return getTimestampsRegionAccess();
+		return getTimestampsCache();
 	}
 
 	/**
 	 * Get the default {@code QueryCache}.
 	 *
-	 * @deprecated Use {@link #getDefaultQueryResultsRegionAccess} instead.
+	 * @deprecated Use {@link #getDefaultQueryResultsCache} instead.
 	 */
 	@Deprecated
 	default QueryCache getQueryCache() {
-		return getDefaultQueryResultsRegionAccess();
+		return getDefaultQueryResultsCache();
 	}
 
 	/**
 	 * Get the default {@code QueryCache}.
 	 *
-	 * @deprecated Use {@link #getDefaultQueryResultsRegionAccess} instead.
+	 * @deprecated Use {@link #getDefaultQueryResultsCache} instead.
 	 */
 	@Deprecated
 	default QueryCache getDefaultQueryCache() {
-		return getDefaultQueryResultsRegionAccess();
+		return getDefaultQueryResultsCache();
 	}
 
 	/**
-	 * @deprecated Use {@link #getQueryResultsRegionAccess(String)} instead, but using unqualified name
+	 * @deprecated Use {@link #getQueryResultsCache(String)} instead, but using unqualified name
 	 */
 	@Deprecated
 	default QueryCache getQueryCache(String regionName) throws HibernateException {
-		return getQueryResultsRegionAccess( unqualifyRegionName( regionName ) );
+		return getQueryResultsCache( unqualifyRegionName( regionName ) );
 	}
 
 

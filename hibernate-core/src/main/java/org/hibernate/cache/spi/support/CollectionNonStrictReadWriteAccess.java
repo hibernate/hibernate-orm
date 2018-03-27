@@ -35,6 +35,6 @@ public class CollectionNonStrictReadWriteAccess extends AbstractCollectionDataAc
 
 	@Override
 	public void unlockItem(SharedSessionContractImplementor session, Object key, SoftLock lock) {
-		removeFromCache( key );
+		getStorageAccess().removeFromCache( key, session );
 	}
 }

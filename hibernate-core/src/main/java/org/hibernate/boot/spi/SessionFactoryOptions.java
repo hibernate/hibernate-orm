@@ -22,7 +22,7 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.cache.spi.TimestampsRegionAccessFactory;
+import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.function.SQLFunction;
@@ -182,7 +182,7 @@ public interface SessionFactoryOptions {
 
 	boolean isQueryCacheEnabled();
 
-	TimestampsRegionAccessFactory getTimestampsRegionAccessFactory();
+	TimestampsCacheFactory getTimestampsCacheFactory();
 
 	String getCacheRegionPrefix();
 

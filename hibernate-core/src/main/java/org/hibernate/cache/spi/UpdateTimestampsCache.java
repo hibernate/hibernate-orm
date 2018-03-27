@@ -22,7 +22,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @author Gavin King
  * @author Mikheil Kapanadze
  *
- * @deprecated Use {@link TimestampsRegionAccess} instead
+ * @deprecated Use {@link TimestampsCache} instead
  */
 @SuppressWarnings("unused")
 @Deprecated

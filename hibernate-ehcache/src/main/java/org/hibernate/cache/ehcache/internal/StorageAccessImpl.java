@@ -12,18 +12,22 @@ import net.sf.ehcache.constructs.nonstop.NonStopCacheException;
 import net.sf.ehcache.hibernate.nonstop.HibernateNonstopCacheExceptionHandler;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.support.StorageAccess;
+import org.hibernate.cache.spi.support.DomainDataStorageAccess;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import org.jboss.logging.Logger;
 
 /**
+ * Implementation of StorageAccess for "talking to" Ehcache
+ *
  * @author Steve Ebersole
  */
-public class StorageAccessImpl implements StorageAccess  {
+public class StorageAccessImpl implements DomainDataStorageAccess  {
 	private static final Logger LOG = Logger.getLogger( StorageAccessImpl.class );
 
 	private final Cache cache;
 
+	@SuppressWarnings("WeakerAccess")
 	public StorageAccessImpl(Cache cache) {
 		this.cache = cache;
 	}
@@ -32,9 +36,13 @@ public class StorageAccessImpl implements StorageAccess  {
 		return cache;
 	}
 
+	@Override
+	public boolean contains(Object key) {
+		return getCache().isKeyInCache( key );
+	}
 
 	@Override
-	public Object getFromCache(Object key) {
+	public Object getFromCache(Object key, SharedSessionContractImplementor session) {
 		try {
 			final Element element = getCache().get( key );
 			if ( element == null ) {
@@ -57,7 +65,7 @@ public class StorageAccessImpl implements StorageAccess  {
 	}
 
 	@Override
-	public void putIntoCache(Object key, Object value) {
+	public void putIntoCache(Object key, Object value, SharedSessionContractImplementor session) {
 		try {
 			final Element element = new Element( key, value );
 			getCache().put( element );
@@ -77,7 +85,7 @@ public class StorageAccessImpl implements StorageAccess  {
 	}
 
 	@Override
-	public void removeFromCache(Object key) {
+	public void evictData(Object key) {
 		try {
 			getCache().remove( key );
 		}
@@ -96,7 +104,7 @@ public class StorageAccessImpl implements StorageAccess  {
 	}
 
 	@Override
-	public void clearCache() {
+	public void evictData() {
 		try {
 			getCache().removeAll();
 		}

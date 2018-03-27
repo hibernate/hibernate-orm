@@ -25,12 +25,12 @@ import org.hibernate.cache.cfg.spi.NaturalIdDataCachingConfig;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
-import org.hibernate.cache.spi.QueryResultRegionAccess;
+import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
-import org.hibernate.cache.spi.TimestampsRegionAccess;
+import org.hibernate.cache.spi.TimestampsCache;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
@@ -61,10 +61,10 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	private final Map<NavigableRole,NaturalIdDataAccess> naturalIdAccessMap = new ConcurrentHashMap<>();
 	private final Map<NavigableRole,CollectionDataAccess> collectionAccessMap = new ConcurrentHashMap<>();
 
-	private final TimestampsRegionAccess timestampsRegionAccess;
+	private final TimestampsCache timestampsCache;
 
-	private final QueryResultRegionAccess defaultQueryResultsRegionAccess;
-	private final Map<String, QueryResultRegionAccess> namedQueryResultsRegionAccess = new ConcurrentHashMap<>();
+	private final QueryResultsCache defaultQueryResultsCache;
+	private final Map<String, QueryResultsCache> namedQueryResultsCacheMap = new ConcurrentHashMap<>();
 
 
 	private final Set<String> legacySecondLevelCacheNames = new LinkedHashSet<>();
@@ -81,9 +81,9 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 					TimestampsRegion.class.getName(),
 					sessionFactory
 			);
-			timestampsRegionAccess = sessionFactory.getSessionFactoryOptions()
-					.getTimestampsRegionAccessFactory()
-					.buildTimestampsRegionAccess( this, timestampsRegion );
+			timestampsCache = sessionFactory.getSessionFactoryOptions()
+					.getTimestampsCacheFactory()
+					.buildTimestampsCache( this, timestampsRegion );
 			legacySecondLevelCacheNames.add( timestampsRegion.getName() );
 
 			final QueryResultsRegion queryResultsRegion = regionFactory.buildQueryResultsRegion(
@@ -91,14 +91,14 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 					sessionFactory
 			);
 			regionsByName.put( queryResultsRegion.getName(), queryResultsRegion );
-			defaultQueryResultsRegionAccess = new QueryResultRegionAccessImpl(
+			defaultQueryResultsCache = new QueryResultsCacheImpl(
 					queryResultsRegion,
-					timestampsRegionAccess
+					timestampsCache
 			);
 		}
 		else {
-			timestampsRegionAccess = new TimestampsRegionAccessDisabledImpl();
-			defaultQueryResultsRegionAccess = null;
+			timestampsCache = new TimestampsCacheDisabledImpl();
+			defaultQueryResultsCache = null;
 		}
 	}
 
@@ -197,8 +197,8 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	@Override
-	public TimestampsRegionAccess getTimestampsRegionAccess() {
-		return timestampsRegionAccess;
+	public TimestampsCache getTimestampsCache() {
+		return timestampsCache;
 	}
 
 
@@ -410,35 +410,35 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	@Override
 	public boolean containsQuery(String regionName) {
-		final QueryResultRegionAccess cacheAccess = getQueryResultsRegionAccessStrictly( regionName );
-		return cacheAccess != null;
+		final QueryResultsCache cache = getQueryResultsCacheStrictly( regionName );
+		return cache != null;
 	}
 
 	@Override
 	public void evictDefaultQueryRegion() {
-		evictQueryResultRegion( defaultQueryResultsRegionAccess );
+		evictQueryResultRegion( defaultQueryResultsCache );
 	}
 
 	@Override
 	public void evictQueryRegion(String regionName) {
-		final QueryResultRegionAccess cacheAccess = getQueryResultsRegionAccess( regionName );
-		if ( cacheAccess == null ) {
+		final QueryResultsCache cache = getQueryResultsCache( regionName );
+		if ( cache == null ) {
 			return;
 		}
 
-		evictQueryResultRegion( cacheAccess );
+		evictQueryResultRegion( cache );
 	}
 
-	private void evictQueryResultRegion(QueryResultRegionAccess cacheAccess) {
-		if ( cacheAccess == null ) {
+	private void evictQueryResultRegion(QueryResultsCache cache) {
+		if ( cache == null ) {
 			return;
 		}
 
 		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Evicting query cache, region: %s", cacheAccess.getRegion().getName() );
+			LOG.debugf( "Evicting query cache, region: %s", cache.getRegion().getName() );
 		}
 
-		cacheAccess.clear();
+		cache.clear();
 	}
 
 	@Override
@@ -447,30 +447,30 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 			LOG.debug( "Evicting cache of all query regions." );
 		}
 
-		evictQueryResultRegion( defaultQueryResultsRegionAccess );
+		evictQueryResultRegion( defaultQueryResultsCache );
 
-		for ( QueryResultRegionAccess cacheAccess : namedQueryResultsRegionAccess.values() ) {
-			evictQueryResultRegion( cacheAccess );
+		for ( QueryResultsCache cache : namedQueryResultsCacheMap.values() ) {
+			evictQueryResultRegion( cache );
 		}
 	}
 
 	@Override
-	public QueryResultRegionAccess getDefaultQueryResultsRegionAccess() {
-		return defaultQueryResultsRegionAccess;
+	public QueryResultsCache getDefaultQueryResultsCache() {
+		return defaultQueryResultsCache;
 	}
 
 	@Override
-	public QueryResultRegionAccess getQueryResultsRegionAccess(String regionName) throws HibernateException {
+	public QueryResultsCache getQueryResultsCache(String regionName) throws HibernateException {
 		if ( !getSessionFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
 			return null;
 		}
 
 
-		if ( regionName == null || regionName.equals( getDefaultQueryResultsRegionAccess().getRegion().getName() ) ) {
-			return getDefaultQueryResultsRegionAccess();
+		if ( regionName == null || regionName.equals( getDefaultQueryResultsCache().getRegion().getName() ) ) {
+			return getDefaultQueryResultsCache();
 		}
 
-		final QueryResultRegionAccess existing = namedQueryResultsRegionAccess.get( regionName );
+		final QueryResultsCache existing = namedQueryResultsCacheMap.get( regionName );
 		if ( existing != null ) {
 			return existing;
 		}
@@ -479,24 +479,24 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	@Override
-	public QueryResultRegionAccess getQueryResultsRegionAccessStrictly(String regionName) {
+	public QueryResultsCache getQueryResultsCacheStrictly(String regionName) {
 		if ( !getSessionFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
 			return null;
 		}
 
-		return namedQueryResultsRegionAccess.get( regionName );
+		return namedQueryResultsCacheMap.get( regionName );
 	}
 
-	protected QueryResultRegionAccess makeQueryResultsRegionAccess(String regionName) {
+	protected QueryResultsCache makeQueryResultsRegionAccess(String regionName) {
 		final QueryResultsRegion region = (QueryResultsRegion) regionsByName.computeIfAbsent(
 				regionName,
 				this::makeQueryResultsRegion
 		);
-		final QueryResultRegionAccessImpl regionAccess = new QueryResultRegionAccessImpl(
+		final QueryResultsCacheImpl regionAccess = new QueryResultsCacheImpl(
 				region,
-				timestampsRegionAccess
+				timestampsCache
 		);
-		namedQueryResultsRegionAccess.put( regionName, regionAccess );
+		namedQueryResultsCacheMap.put( regionName, regionAccess );
 		legacySecondLevelCacheNames.add( regionName );
 		return regionAccess;
 	}

@@ -15,7 +15,7 @@ import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.NullPrecedence;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.cache.spi.TimestampsRegionAccessFactory;
+import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
@@ -38,6 +38,7 @@ import java.util.function.Supplier;
  *
  * @since 5.0
  */
+@SuppressWarnings("UnusedReturnValue")
 public interface SessionFactoryBuilder {
 	/**
 	 * Apply a Bean Validation ValidatorFactory to the SessionFactory being built.
@@ -491,7 +492,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#QUERY_CACHE_FACTORY
 	 */
-	SessionFactoryBuilder applyTimestampsRegionAccessFactory(TimestampsRegionAccessFactory factory);
+	SessionFactoryBuilder applyTimestampsCacheFactory(TimestampsCacheFactory factory);
 
 	/**
 	 * Apply a prefix to prepended to all cache region names for this SessionFactory.

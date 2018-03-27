@@ -33,7 +33,7 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
 import org.hibernate.cache.spi.FilterKey;
 import org.hibernate.cache.spi.QueryKey;
-import org.hibernate.cache.spi.QueryResultRegionAccess;
+import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
@@ -2512,7 +2512,7 @@ public abstract class Loader {
 			final Set<Serializable> querySpaces,
 			final Type[] resultTypes) {
 
-		QueryResultRegionAccess queryCache = factory.getCache().getQueryResultsRegionAccess( queryParameters.getCacheRegion() );
+		QueryResultsCache queryCache = factory.getCache().getQueryResultsCache( queryParameters.getCacheRegion() );
 
 		QueryKey key = generateQueryKey( session, queryParameters );
 
@@ -2589,7 +2589,7 @@ public abstract class Loader {
 			final QueryParameters queryParameters,
 			final Set<Serializable> querySpaces,
 			final Type[] resultTypes,
-			final QueryResultRegionAccess queryCache,
+			final QueryResultsCache queryCache,
 			final QueryKey key) {
 		List result = null;
 
@@ -2647,7 +2647,7 @@ public abstract class Loader {
 			final SharedSessionContractImplementor session,
 			final QueryParameters queryParameters,
 			final Type[] resultTypes,
-			final QueryResultRegionAccess queryCache,
+			final QueryResultsCache queryCache,
 			final QueryKey key,
 			final List result) {
 		if ( session.getCacheMode().isPutEnabled() ) {

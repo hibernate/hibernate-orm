@@ -82,9 +82,13 @@ public class EntityReadWriteAccess extends AbstractReadWriteAccess implements En
 	public boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value, Object version) {
 		try {
 			writeLock().lock();
-			Lockable item = (Lockable) getFromCache( key );
+			Lockable item = (Lockable) getStorageAccess().getFromCache( key, session );
 			if ( item == null ) {
-				addToCache(  key, new Item( value, version, getRegion().getRegionFactory().nextTimestamp() ) );
+				getStorageAccess().putIntoCache(
+						key,
+						new Item( value, version, getRegion().getRegionFactory().nextTimestamp() ),
+						session
+				);
 				return true;
 			}
 			else {
@@ -116,7 +120,7 @@ public class EntityReadWriteAccess extends AbstractReadWriteAccess implements En
 			SoftLock lock) {
 		try {
 			writeLock().lock();
-			Lockable item = (Lockable) getFromCache( key );
+			Lockable item = (Lockable) getStorageAccess().getFromCache( key, session );
 
 			if ( item != null && item.isUnlockable( lock ) ) {
 				SoftLockImpl lockItem = (SoftLockImpl) item;
@@ -125,7 +129,11 @@ public class EntityReadWriteAccess extends AbstractReadWriteAccess implements En
 					return false;
 				}
 				else {
-					addToCache( key, new Item( value, currentVersion, getRegion().getRegionFactory().nextTimestamp() ) );
+					getStorageAccess().putIntoCache(
+							key,
+							new Item( value, currentVersion, getRegion().getRegionFactory().nextTimestamp() ),
+							session
+					);
 					return true;
 				}
 			}

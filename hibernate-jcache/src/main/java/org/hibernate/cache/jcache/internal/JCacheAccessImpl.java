@@ -8,7 +8,8 @@ package org.hibernate.cache.jcache.internal;
 
 import javax.cache.Cache;
 
-import org.hibernate.cache.spi.support.StorageAccess;
+import org.hibernate.cache.spi.support.DomainDataStorageAccess;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * StorageAccess implementation wrapping a JCache {@link Cache} reference.
@@ -16,7 +17,7 @@ import org.hibernate.cache.spi.support.StorageAccess;
  * @author Steve Ebersole
  */
 @SuppressWarnings("unchecked")
-public class JCacheAccessImpl implements StorageAccess {
+public class JCacheAccessImpl implements DomainDataStorageAccess {
 	private final Cache underlyingCache;
 
 	public JCacheAccessImpl(Cache underlyingCache) {
@@ -28,22 +29,37 @@ public class JCacheAccessImpl implements StorageAccess {
 	}
 
 	@Override
-	public Object getFromCache(Object key) {
+	public boolean contains(Object key) {
+		return underlyingCache.containsKey( key );
+	}
+
+	@Override
+	public Object getFromCache(Object key, SharedSessionContractImplementor session) {
 		return underlyingCache.get( key );
 	}
 
 	@Override
-	public void putIntoCache(Object key, Object value) {
+	public void putIntoCache(Object key, Object value, SharedSessionContractImplementor session) {
 		underlyingCache.put( key, value );
 	}
 
 	@Override
-	public void removeFromCache(Object key) {
+	public void removeFromCache(Object key, SharedSessionContractImplementor session) {
 		underlyingCache.remove( key );
 	}
 
 	@Override
-	public void clearCache() {
+	public void evictData(Object key) {
+		underlyingCache.remove( key );
+	}
+
+	@Override
+	public void clearCache(SharedSessionContractImplementor session) {
+		underlyingCache.clear();
+	}
+
+	@Override
+	public void evictData() {
 		underlyingCache.clear();
 	}
 

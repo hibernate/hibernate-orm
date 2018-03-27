@@ -13,7 +13,7 @@ import javax.persistence.GeneratedValue;
 import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
-import org.hibernate.cache.spi.TimestampsRegionAccessFactory;
+import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jpa.JpaCompliance;
 import org.hibernate.query.internal.ParameterMetadataImpl;
@@ -1055,7 +1055,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String USE_QUERY_CACHE = "hibernate.cache.use_query_cache";
 
 	/**
-	 * The {@link TimestampsRegionAccessFactory} implementation class.
+	 * The {@link TimestampsCacheFactory} implementation class.
 	 */
 	String QUERY_CACHE_FACTORY = "hibernate.cache.query_cache_factory";
 

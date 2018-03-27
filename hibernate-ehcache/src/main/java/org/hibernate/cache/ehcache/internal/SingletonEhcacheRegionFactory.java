@@ -11,9 +11,7 @@ import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.config.Configuration;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
@@ -79,9 +77,9 @@ public class SingletonEhcacheRegionFactory extends EhcacheRegionFactory {
 	}
 
 	@Override
-	protected void releaseCacheManager() {
+	protected void releaseFromUse() {
 		if ( REFERENCE_COUNT.decrementAndGet() == 0 ) {
-			getCacheManager().shutdown();
+			super.releaseFromUse();
 		}
 	}
 }

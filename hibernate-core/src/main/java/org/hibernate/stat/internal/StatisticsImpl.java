@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.hibernate.cache.spi.QueryResultRegionAccess;
+import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -599,8 +599,8 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 			return null;
 		}
 
-		final QueryResultRegionAccess regionAccess = sessionFactory.getCache()
-				.getQueryResultsRegionAccessStrictly( regionName );
+		final QueryResultsCache regionAccess = sessionFactory.getCache()
+				.getQueryResultsCacheStrictly( regionName );
 		if ( regionAccess == null ) {
 			return null;
 		}
@@ -770,7 +770,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	private CacheRegionStatisticsImpl getQueryRegionStats(String regionName) {
 		return l2CacheStatsMap.computeIfAbsent(
 				regionName,
-				s -> new CacheRegionStatisticsImpl( sessionFactory.getCache().getQueryResultsRegionAccess( regionName ).getRegion() )
+				s -> new CacheRegionStatisticsImpl( sessionFactory.getCache().getQueryResultsCache( regionName ).getRegion() )
 		);
 	}
 

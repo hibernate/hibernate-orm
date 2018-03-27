@@ -6,7 +6,7 @@
  */
 package org.hibernate.cache.internal;
 
-import org.hibernate.cache.spi.TimestampsRegionAccess;
+import org.hibernate.cache.spi.TimestampsCache;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -18,8 +18,8 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class TimestampsRegionAccessDisabledImpl implements TimestampsRegionAccess {
-	private static final Logger log = Logger.getLogger( TimestampsRegionAccessDisabledImpl.class );
+public class TimestampsCacheDisabledImpl implements TimestampsCache {
+	private static final Logger log = Logger.getLogger( TimestampsCacheDisabledImpl.class );
 
 	@Override
 	public TimestampsRegion getRegion() {

@@ -30,7 +30,7 @@ public class DomainDataRegionImpl extends DomainDataRegionTemplate {
 		super(
 				regionConfig,
 				regionFactory,
-				new DomainDataStorageAccessImpl(),
+				new MapStorageAccessImpl(),
 				defaultKeysFactory,
 				buildingContext
 		);

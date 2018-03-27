@@ -11,9 +11,10 @@ import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cache.jcache.internal.DomainDataRegionImpl;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.support.AbstractReadWriteAccess;
+import org.hibernate.cache.spi.support.DomainDataRegionTemplate;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jcache.test.BaseFunctionalTest;
 import org.hibernate.jcache.test.domain.Event;
 import org.hibernate.jcache.test.domain.EventManager;
@@ -72,7 +73,7 @@ public class HibernateCacheTest extends BaseFunctionalTest {
 		assertThat( slcs.getPutCount(), equalTo( 2L ) );
 		assertTrue( sessionFactory().getCache().containsEntity( Item.class, i.getId() ) );
 
-		final DomainDataRegionImpl region = (DomainDataRegionImpl) sessionFactory().getMetamodel()
+		final DomainDataRegionTemplate region = (DomainDataRegionTemplate) sessionFactory().getMetamodel()
 				.entityPersister( Item.class )
 				.getCacheAccessStrategy()
 				.getRegion();
@@ -82,7 +83,8 @@ public class HibernateCacheTest extends BaseFunctionalTest {
 						sessionFactory().getMetamodel().entityPersister( Item.class ),
 						sessionFactory(),
 						null
-				)
+				),
+				(SharedSessionContractImplementor) s
 		);
 		assertNotNull( fromCache );
 		ExtraAssertions.assertTyping( AbstractReadWriteAccess.Item.class, fromCache );
@@ -167,7 +169,7 @@ public class HibernateCacheTest extends BaseFunctionalTest {
 //			assertThat( initialVersion, equalTo( cachedVersionValue ) );
 //		}
 
-		final DomainDataRegionImpl region = (DomainDataRegionImpl) sessionFactory().getMetamodel()
+		final DomainDataRegionTemplate region = (DomainDataRegionTemplate) sessionFactory().getMetamodel()
 				.entityPersister( Item.class )
 				.getCacheAccessStrategy()
 				.getRegion();
@@ -177,7 +179,8 @@ public class HibernateCacheTest extends BaseFunctionalTest {
 						sessionFactory().getMetamodel().entityPersister( Item.class ),
 						sessionFactory(),
 						null
-				)
+				),
+				(SharedSessionContractImplementor) s
 		);
 		assertTrue(
 				fromCache == null || fromCache instanceof SoftLock

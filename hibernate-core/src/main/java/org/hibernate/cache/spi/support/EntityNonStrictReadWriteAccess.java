@@ -55,7 +55,7 @@ public class EntityNonStrictReadWriteAccess extends AbstractEntityDataAccess {
 			Object value,
 			Object currentVersion,
 			Object previousVersion) {
-		removeFromCache( key );
+		getStorageAccess().removeFromCache( key, session );
 		return false;
 	}
 
@@ -76,11 +76,11 @@ public class EntityNonStrictReadWriteAccess extends AbstractEntityDataAccess {
 	 */
 	@Override
 	public void unlockItem(SharedSessionContractImplementor session, Object key, SoftLock lock) throws CacheException {
-		removeFromCache( key );
+		getStorageAccess().removeFromCache( key, session );
 	}
 
 	@Override
 	public void remove(SharedSessionContractImplementor session, Object key) {
-		removeFromCache( key );
+		getStorageAccess().removeFromCache( key, session );
 	}
 }

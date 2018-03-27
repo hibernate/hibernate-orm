@@ -17,8 +17,8 @@ import org.hibernate.type.Type;
 /**
  * @author Steve Ebersole
  *
- * @deprecated Use {@link QueryResultRegionAccess} instead -
- * {@link CacheImplementor#getQueryResultsRegionAccess} rather than
+ * @deprecated Use {@link QueryResultsCache} instead -
+ * {@link CacheImplementor#getQueryResultsCache} rather than
  * {@link CacheImplementor#getQueryCache}
  */
 @Deprecated

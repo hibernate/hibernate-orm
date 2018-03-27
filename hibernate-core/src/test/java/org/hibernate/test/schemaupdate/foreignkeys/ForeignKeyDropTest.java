@@ -45,7 +45,7 @@ import static org.junit.Assert.assertThat;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-12271")
-@RequiresDialectFeature(DialectChecks.SupportDropCOnstraints.class)
+@RequiresDialectFeature(DialectChecks.SupportDropConstraints.class)
 public class ForeignKeyDropTest extends BaseUnitTestCase {
 	private File output;
 	private MetadataImplementor metadata;
@@ -71,7 +71,7 @@ public class ForeignKeyDropTest extends BaseUnitTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11236")
-	public void testForeignKeyDropIsCOrrectlyGenerated() throws Exception {
+	public void testForeignKeyDropIsCorrectlyGenerated() throws Exception {
 
 		schemaExport
 				.drop( EnumSet.of( TargetType.SCRIPT, TargetType.DATABASE ), metadata );

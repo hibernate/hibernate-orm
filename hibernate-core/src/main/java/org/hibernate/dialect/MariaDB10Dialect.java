@@ -21,4 +21,9 @@ public class MariaDB10Dialect extends MariaDB53Dialect {
 		registerFunction( "to_base64", new StandardSQLFunction( "to_base64", StandardBasicTypes.STRING ) );
 		registerFunction( "from_base64", new StandardSQLFunction( "from_base64", StandardBasicTypes.STRING ) );
 	}
+
+	@Override
+	public boolean supportsIfExistsBeforeConstraintName() {
+		return true;
+	}
 }

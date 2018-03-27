@@ -230,7 +230,7 @@ abstract public class DialectChecks {
 		}
 	}
 
-	public static class SupportDropCOnstraints implements DialectCheck {
+	public static class SupportDropConstraints implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return dialect.dropConstraints();
 		}

@@ -296,13 +296,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			return null;
 		}
 		Object cached = copyCache.get( original );
-		if ( cached == null ) {
-			// Avoid creation of invalid managed -> managed mapping in copyCache when traversing
-			// cascade loop (@OneToMany(cascade=ALL) with associated @ManyToOne(cascade=ALL)) in entity graph
-			if ( copyCache.containsValue( original ) ) {
-				cached = original;
-			}
-		}
 		if ( cached != null ) {
 			return cached;
 		}
@@ -312,10 +305,19 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			}
 			if ( session.getContextEntityIdentifier( original ) == null &&
 					ForeignKeys.isTransient( associatedEntityName, original, Boolean.FALSE, session ) ) {
-				final Object copy = session.getEntityPersister( associatedEntityName, original )
-						.instantiate( null, session );
-				copyCache.put( original, copy );
-				return copy;
+				// original is transient; it is possible that original is a "managed" entity that has
+				// not been made persistent yet, so check if copyCache contains original as a "managed" value
+				// that corresponds with some "merge" value.
+				if ( copyCache.containsValue( original ) ) {
+					return original;
+				}
+				else {
+					// the transient entity is not "managed"; add the merge/managed pair to copyCache
+					final Object copy = session.getEntityPersister( associatedEntityName, original )
+							.instantiate( null, session );
+					copyCache.put( original, copy );
+					return copy;
+				}
 			}
 			else {
 				Object id = getIdentifier( original, session );

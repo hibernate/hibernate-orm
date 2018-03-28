@@ -17,12 +17,12 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
+import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
@@ -62,15 +62,18 @@ public class MergeManagedAndCopiesAllowedTest extends BaseCoreFunctionalTestCase
 		a.b.d = new D();
 		a.b.d.dEs.add( new E() );
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		Session session = openSession();
+		session.getTransaction().begin();
+		{
 					session.persist( a );
-				}
-		);
+		}
+		session.getTransaction().commit();;
+		session.close();
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					A aGet= session.get( A.class, a.id );
+		session = openSession();
+		session.getTransaction().begin();
+		{
+					A aGet = session.get( A.class, a.id );
 					aGet.b.c = new C();
 					Set<E> copies = new HashSet<>();
 					for ( E e : aGet.b.d.dEs ) {
@@ -78,17 +81,20 @@ public class MergeManagedAndCopiesAllowedTest extends BaseCoreFunctionalTestCase
 					}
 					aGet.b.c.cEs.addAll( copies );
 					session.merge( aGet );
-				}
-		);
+		}
+		session.getTransaction().commit();;
+		session.close();
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		session = openSession();
+		session.getTransaction().begin();
+		{
 					A aGet= session.get( A.class, a.id );
 					E e = aGet.b.c.cEs.iterator().next();
 					assertSame( e, aGet.b.d.dEs.iterator().next() );
 					assertEquals( "description", e.description );
-				}
-		);
+		}
+		session.getTransaction().commit();;
+		session.close();
 	}
 
 	@Entity(name = "A")

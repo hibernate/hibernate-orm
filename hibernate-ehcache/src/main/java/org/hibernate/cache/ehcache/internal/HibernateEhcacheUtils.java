@@ -8,13 +8,13 @@ package org.hibernate.cache.ehcache.internal;
 
 import java.net.URL;
 import java.util.Map;
-import java.util.UUID;
 
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.Configuration;
 import net.sf.ehcache.config.ConfigurationFactory;
 import net.sf.ehcache.config.NonstopConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
+
 import org.hibernate.boot.spi.SessionFactoryOptions;
 
 import static org.hibernate.cache.ehcache.ConfigSettings.EHCACHE_CONFIGURATION_CACHE_MANAGER_NAME;
@@ -75,7 +75,7 @@ public final class HibernateEhcacheUtils {
 				configuration.setName( sessionFactoryName );
 			}
 			else {
-				configuration.setName( "Hibernate " + UUID.randomUUID().toString() );
+				configuration.setName( "Hibernate " + settings.getUuid() );
 			}
 		}
 	}

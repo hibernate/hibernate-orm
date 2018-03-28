@@ -24,6 +24,8 @@ public interface SessionFactoryBuilderImplementor extends SessionFactoryBuilder 
 	 * directly into Hibernate contracts (SessionFactory, Session); intended to provide
 	 * transition help in cases where we need to know the difference in JPA/native use for
 	 * various reasons.
+	 * Use {@link BootstrapContext#markAsJpaBootstrap()}
+	 *
 	 */
 	@Deprecated
 	void markAsJpaBootstrap();

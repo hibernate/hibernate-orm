@@ -29,7 +29,6 @@ import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.Query;
 import javax.persistence.SynchronizationType;
 import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.ConnectionAcquisitionMode;
@@ -51,6 +50,7 @@ import org.hibernate.TypeHelper;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.CacheImplementor;
@@ -174,7 +174,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	// todo : org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor too?
 
-	private final transient MetamodelImpl metamodel;
+	private final transient MetamodelImplementor metamodel;
 	private final transient CriteriaBuilderImpl criteriaBuilder;
 	private final PersistenceUnitUtil jpaPersistenceUnitUtil;
 	private final transient CacheImplementor cacheAccess;
@@ -190,20 +190,23 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient Map<String, FilterDefinition> filters;
 	private final transient Map<String, FetchProfile> fetchProfiles;
 
-	private final transient TypeResolver typeResolver;
 	private final transient TypeHelper typeHelper;
-	private transient StatisticsImplementor statisticsImplementor;
 
-
-	public SessionFactoryImpl(final MetadataImplementor metadata, SessionFactoryOptions options) {
+	public SessionFactoryImpl(
+			final BootstrapContext bootstrapContext,
+			final MetadataImplementor metadata,
+			SessionFactoryOptions options) {
 		LOG.debug( "Building session factory" );
 
 		this.sessionFactoryOptions = options;
 		this.settings = new Settings( options, metadata );
 
-		this.serviceRegistry = options.getServiceRegistry()
+		this.serviceRegistry = options
+				.getServiceRegistry()
 				.getService( SessionFactoryServiceRegistryFactory.class )
-				.buildServiceRegistry( this, options );
+				.buildServiceRegistry( this, bootstrapContext, options );
+
+		prepareEventListeners( metadata );
 
 		final CfgXmlAccessService cfgXmlAccessService = serviceRegistry.getService( CfgXmlAccessService.class );
 
@@ -248,8 +251,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			this.observer.addObserver( sessionFactoryObserver );
 		}
 
-		this.typeResolver = metadata.getTypeResolver().scope( this );
-		this.typeHelper = new TypeLocatorImpl( typeResolver );
+		this.typeHelper = new TypeLocatorImpl( metadata.getTypeConfiguration().getTypeResolver() );
 
 		this.filters = new HashMap<>();
 		this.filters.putAll( metadata.getFilterDefinitions() );
@@ -296,9 +298,11 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			LOG.debug( "Instantiated session factory" );
 
-			this.metamodel = new MetamodelImpl( this );
-			this.metamodel.initialize( metadata, determineJpaMetaModelPopulationSetting( properties ) );
-
+			this.metamodel = metadata.getTypeConfiguration().scope( this , bootstrapContext);
+			((MetamodelImpl)metamodel).initialize(
+					metadata,
+					determineJpaMetaModelPopulationSetting( properties )
+			);
 			//Named Queries:
 			this.namedQueryRepository = metadata.buildNamedQueryRepository( this );
 
@@ -388,6 +392,41 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			}
 			close();
 			throw e;
+		}
+	}
+
+	private void prepareEventListeners(MetadataImplementor metadata) {
+		final EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
+		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
+		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+
+		eventListenerRegistry.prepare( metadata );
+
+		for ( Map.Entry entry : ( (Map<?, ?>) cfgService.getSettings() ).entrySet() ) {
+			if ( !String.class.isInstance( entry.getKey() ) ) {
+				continue;
+			}
+			final String propertyName = (String) entry.getKey();
+			if ( !propertyName.startsWith( org.hibernate.jpa.AvailableSettings.EVENT_LISTENER_PREFIX ) ) {
+				continue;
+			}
+			final String eventTypeName = propertyName.substring(
+					org.hibernate.jpa.AvailableSettings.EVENT_LISTENER_PREFIX.length() + 1
+			);
+			final EventType eventType = EventType.resolveEventTypeByName( eventTypeName );
+			final EventListenerGroup eventListenerGroup = eventListenerRegistry.getEventListenerGroup( eventType );
+			for ( String listenerImpl : ( (String) entry.getValue() ).split( " ," ) ) {
+				eventListenerGroup.appendListener( instantiate( listenerImpl, classLoaderService ) );
+			}
+		}
+	}
+
+	private Object instantiate(String listenerImpl, ClassLoaderService classLoaderService) {
+		try {
+			return classLoaderService.classForName( listenerImpl ).newInstance();
+		}
+		catch (Exception e) {
+			throw new HibernateException( "Could not instantiate requested listener [" + listenerImpl + "]", e );
 		}
 	}
 
@@ -521,8 +560,16 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		return null;
 	}
 
+	/**
+	 * Retrieve the {@link Type} resolver associated with this factory.
+	 *
+	 * @return The type resolver
+	 *
+	 * @deprecated (since 5.3) No replacement, access to and handling of Types will be much different in 6.0
+	 */
+	@Deprecated
 	public TypeResolver getTypeResolver() {
-		return typeResolver;
+		return metamodel.getTypeConfiguration().getTypeResolver();
 	}
 
 	public QueryPlanCache getQueryPlanCache() {
@@ -555,13 +602,13 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 
 
-	// todo : (5.2) review synchronizationType, persistenceContextType, transactionType usage
-
-	// SynchronizationType -> should we auto enlist in transactions
-	private transient SynchronizationType synchronizationType;
-
-	// PersistenceContextType -> influences FlushMode and 'autoClose'
-	private transient PersistenceContextType persistenceContextType;
+//	// todo : (5.2) review synchronizationType, persistenceContextType, transactionType usage
+//
+//	// SynchronizationType -> should we auto enlist in transactions
+//	private transient SynchronizationType synchronizationType;
+//
+//	// PersistenceContextType -> influences FlushMode and 'autoClose'
+//	private transient PersistenceContextType persistenceContextType;
 
 
 	@Override
@@ -1116,7 +1163,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		//todo : expose setting
 		private SessionOwnerBehavior sessionOwnerBehavior = SessionOwnerBehavior.LEGACY_NATIVE;
-		private PersistenceUnitTransactionType persistenceUnitTransactionType;
 
 		SessionBuilderImpl(SessionFactoryImpl sessionFactory) {
 			this.sessionFactory = sessionFactory;

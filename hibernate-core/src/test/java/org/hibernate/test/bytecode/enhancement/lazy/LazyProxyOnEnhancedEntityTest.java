@@ -8,11 +8,12 @@ package org.hibernate.test.bytecode.enhancement.lazy;
 
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
+import org.hibernate.event.internal.DefaultFlushEventListener;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
-import org.hibernate.jpa.event.internal.core.JpaFlushEventListener;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
@@ -63,7 +64,6 @@ public class LazyProxyOnEnhancedEntityTest extends BaseCoreFunctionalTestCase {
     @Test
     public void test() {
         EventListenerRegistry registry = sessionFactory().getServiceRegistry().getService( EventListenerRegistry.class );
-        registry.prependListeners( EventType.FLUSH, new JpaFlushEventListener() );
         registry.prependListeners( EventType.LOAD, new ImmediateLoadTrap() );
 
         doInJPA( this::sessionFactory, em -> {

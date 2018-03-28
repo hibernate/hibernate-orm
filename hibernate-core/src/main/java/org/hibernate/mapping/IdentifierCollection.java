@@ -7,6 +7,7 @@
 package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.Mapping;
 
@@ -19,8 +20,16 @@ public abstract class IdentifierCollection extends Collection {
 
 	private KeyValue identifier;
 
+	/**
+	 * @deprecated Use {@link IdentifierCollection#IdentifierCollection(MetadataBuildingContext, PersistentClass)} instead.
+ 	 */
+	@Deprecated
 	public IdentifierCollection(MetadataImplementor metadata, PersistentClass owner) {
 		super( metadata, owner );
+	}
+
+	public IdentifierCollection(MetadataBuildingContext buildingContext, PersistentClass owner) {
+		super( buildingContext, owner );
 	}
 
 	public KeyValue getIdentifier() {
@@ -49,12 +58,6 @@ public abstract class IdentifierCollection extends Collection {
 			PrimaryKey pk = new PrimaryKey( getCollectionTable() );
 			pk.addColumns( getIdentifier().getColumnIterator() );
 			getCollectionTable().setPrimaryKey(pk);
-		}
-		else {
-			// don't create a unique key, 'cos some
-			// databases don't like a UK on nullable
-			// columns
-			//getCollectionTable().createUniqueKey( getIdentifier().getConstraintColumns() );
 		}
 		// create an index on the key columns??
 	}

@@ -26,6 +26,7 @@ public abstract class AbstractDelegatingSessionFactoryBuilderImplementor<T exten
 	}
 
 	@SuppressWarnings("deprecation")
+
 	@Override
 	public void markAsJpaBootstrap() {
 		delegate().markAsJpaBootstrap();

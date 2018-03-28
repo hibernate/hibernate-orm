@@ -8,7 +8,12 @@ package org.hibernate;
 
 import javax.persistence.metamodel.EntityType;
 
+import org.hibernate.type.spi.TypeConfiguration;
+
 /**
+ * Hibernate's extension to the JPA {@link javax.persistence.metamodel.Metamodel}
+ * contract.  Most calls simply get delegated in some form to {@link TypeConfiguration}
+ *
  * @author Steve Ebersole
  */
 public interface Metamodel extends javax.persistence.metamodel.Metamodel {
@@ -16,7 +21,10 @@ public interface Metamodel extends javax.persistence.metamodel.Metamodel {
 	 * Access to the SessionFactory that this Metamodel instance is bound to.
 	 *
 	 * @return The SessionFactory
+	 *
+	 * @deprecated since 5.3 Use {@link TypeConfiguration#getSessionFactory()} instead.
 	 */
+	@Deprecated
 	SessionFactory getSessionFactory();
 
 	/**
@@ -40,7 +48,10 @@ public interface Metamodel extends javax.persistence.metamodel.Metamodel {
 
 	/**
 	 * Get the names of all persistent classes that implement/extend the given interface/class
+	 *
+	 * @deprecated (5.3) Use {@link TypeConfiguration#getImplementors(String)} instead.
 	 */
+	@Deprecated
 	String[] getImplementors(String entityName);
 
 }

@@ -11,6 +11,7 @@ import java.util.Objects;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.service.ServiceRegistry;
@@ -28,11 +29,19 @@ public class OneToMany implements Value {
 
 	private String referencedEntityName;
 	private PersistentClass associatedClass;
-	private boolean embedded;
 	private boolean ignoreNotFound;
 
+	/**
+	 * @deprecated Use {@link OneToMany#OneToMany(MetadataBuildingContext, PersistentClass)} instead.
+	 */
+	@Deprecated
 	public OneToMany(MetadataImplementor metadata, PersistentClass owner) throws MappingException {
 		this.metadata = metadata;
+		this.referencingTable = ( owner == null ) ? null : owner.getTable();
+	}
+
+	public OneToMany(MetadataBuildingContext buildingContext, PersistentClass owner) throws MappingException {
+		this.metadata = buildingContext.getMetadataCollector();
 		this.referencingTable = ( owner == null ) ? null : owner.getTable();
 	}
 

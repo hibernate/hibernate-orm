@@ -14,6 +14,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
+import org.hibernate.service.spi.SessionFactoryServiceInitiatorContext;
 import org.hibernate.stat.spi.StatisticsFactory;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
@@ -39,11 +40,23 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 	}
 
 	@Override
+	public StatisticsImplementor initiateService(SessionFactoryServiceInitiatorContext context) {
+		final Object configValue = context.getServiceRegistry()
+				.getService( ConfigurationService.class )
+				.getSettings()
+				.get( STATS_BUILDER );
+		return initiateServiceInternal( context.getSessionFactory(), configValue, context.getServiceRegistry() );
+	}
+
+	@Override
 	public StatisticsImplementor initiateService(
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryOptions sessionFactoryOptions,
 			ServiceRegistryImplementor registry) {
-		final Object configValue = registry.getService( ConfigurationService.class ).getSettings().get( STATS_BUILDER );
+		final Object configValue = registry
+				.getService( ConfigurationService.class )
+				.getSettings()
+				.get( STATS_BUILDER );
 		return initiateServiceInternal( sessionFactory, configValue, registry );
 	}
 

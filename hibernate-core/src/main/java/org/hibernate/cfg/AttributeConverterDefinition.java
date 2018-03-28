@@ -159,7 +159,7 @@ public class AttributeConverterDefinition implements AttributeConverterInfo {
 	private ParameterizedType extractAttributeConverterParameterizedType(Type base) {
 		if ( base != null ) {
 			Class clazz = extractClass( base );
-			List<Type> types = new ArrayList<Type>();
+			List<Type> types = new ArrayList<>();
 			types.add( clazz.getGenericSuperclass() );
 			types.addAll( Arrays.asList( clazz.getGenericInterfaces() ) );
 			for ( Type type : types ) {
@@ -243,15 +243,6 @@ public class AttributeConverterDefinition implements AttributeConverterInfo {
 		return databaseColumnType;
 	}
 
-	private static Class extractType(TypeVariable typeVariable) {
-		java.lang.reflect.Type[] boundTypes = typeVariable.getBounds();
-		if ( boundTypes == null || boundTypes.length != 1 ) {
-			return null;
-		}
-
-		return (Class) boundTypes[0];
-	}
-
 	private static Class extractClass(Type type) {
 		if ( type instanceof Class ) {
 			return (Class) type;
@@ -283,7 +274,7 @@ public class AttributeConverterDefinition implements AttributeConverterInfo {
 		return new InstanceBasedConverterDescriptor(
 				getAttributeConverter(),
 				isAutoApply(),
-				context.getMetadataCollector().getClassmateContext()
+				context.getBootstrapContext().getClassmateContext()
 		);
 	}
 }

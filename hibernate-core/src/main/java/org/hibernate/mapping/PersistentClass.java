@@ -54,20 +54,20 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	private String discriminatorValue;
 	private boolean lazy;
-	private ArrayList properties = new ArrayList();
-	private ArrayList declaredProperties = new ArrayList();
-	private final ArrayList<Subclass> subclasses = new ArrayList<Subclass>();
-	private final ArrayList subclassProperties = new ArrayList();
-	private final ArrayList subclassTables = new ArrayList();
+	private java.util.List<Property> properties = new ArrayList<>();
+	private java.util.List<Property> declaredProperties = new ArrayList<>();
+	private final java.util.List<Subclass> subclasses = new ArrayList<>();
+	private final java.util.List<Property> subclassProperties = new ArrayList<>();
+	private final java.util.List<Table> subclassTables = new ArrayList<>();
 	private boolean dynamicInsert;
 	private boolean dynamicUpdate;
 	private int batchSize = -1;
 	private boolean selectBeforeUpdate;
 	private java.util.Map metaAttributes;
-	private ArrayList<Join> joins = new ArrayList<Join>();
-	private final ArrayList subclassJoins = new ArrayList();
-	private final java.util.List filters = new ArrayList();
-	protected final java.util.Set synchronizedTables = new HashSet();
+	private java.util.List<Join> joins = new ArrayList<>();
+	private final java.util.List<Join> subclassJoins = new ArrayList<>();
+	private final java.util.List<FilterConfiguration> filters = new ArrayList<>();
+	protected final java.util.Set<String> synchronizedTables = new HashSet<>();
 	private String loaderName;
 	private Boolean isAbstract;
 	private boolean hasSubselectLoadableCollections;
@@ -125,7 +125,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 		try {
 			if ( mappedClass == null ) {
-				mappedClass = metadataBuildingContext.getClassLoaderAccess().classForName( className );
+				mappedClass = metadataBuildingContext.getBootstrapContext().getClassLoaderAccess().classForName( className );
 			}
 			return mappedClass;
 		}
@@ -140,7 +140,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		}
 		try {
 			if ( proxyInterface == null ) {
-				proxyInterface = metadataBuildingContext.getClassLoaderAccess().classForName( proxyInterfaceName );
+				proxyInterface = metadataBuildingContext.getBootstrapContext().getClassLoaderAccess().classForName( proxyInterfaceName );
 			}
 			return proxyInterface;
 		}
@@ -330,7 +330,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		iters.add( getPropertyClosureIterator() );
 		iters.add( subclassProperties.iterator() );
 		for ( int i = 0; i < subclassJoins.size(); i++ ) {
-			Join join = (Join) subclassJoins.get( i );
+			Join join = subclassJoins.get( i );
 			iters.add( join.getPropertyIterator() );
 		}
 		return new JoinedIterator( iters );
@@ -635,7 +635,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	}
 
 	private void checkPropertyDuplication() throws MappingException {
-		HashSet<String> names = new HashSet<String>();
+		HashSet<String> names = new HashSet<>();
 		Iterator iter = getPropertyIterator();
 		while ( iter.hasNext() ) {
 			Property prop = (Property) iter.next();
@@ -727,7 +727,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		ArrayList iterators = new ArrayList();
 		iterators.add( properties.iterator() );
 		for ( int i = 0; i < joins.size(); i++ ) {
-			Join join = (Join) joins.get( i );
+			Join join = joins.get( i );
 			iterators.add( join.getPropertyIterator() );
 		}
 		return new JoinedIterator( iterators );
@@ -987,7 +987,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		ArrayList iterators = new ArrayList();
 		iterators.add( declaredProperties.iterator() );
 		for ( int i = 0; i < joins.size(); i++ ) {
-			Join join = (Join) joins.get( i );
+			Join join = joins.get( i );
 			iterators.add( join.getDeclaredPropertyIterator() );
 		}
 		return new JoinedIterator( iterators );

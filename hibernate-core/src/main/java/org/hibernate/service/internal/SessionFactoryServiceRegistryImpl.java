@@ -8,6 +8,7 @@ package org.hibernate.service.internal;
 
 import java.util.List;
 
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -18,16 +19,21 @@ import org.hibernate.service.spi.ServiceBinding;
 import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
+import org.hibernate.service.spi.SessionFactoryServiceInitiatorContext;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 /**
  * @author Steve Ebersole
  */
-public class SessionFactoryServiceRegistryImpl extends AbstractServiceRegistryImpl implements SessionFactoryServiceRegistry  {
+public class SessionFactoryServiceRegistryImpl
+		extends AbstractServiceRegistryImpl
+		implements SessionFactoryServiceRegistry, SessionFactoryServiceInitiatorContext {
 
 	private final SessionFactoryOptions sessionFactoryOptions;
 	private final SessionFactoryImplementor sessionFactory;
 	private EventListenerRegistry cachedEventListenerRegistry;
+
+	private final BootstrapContext bootstrapContext;
 
 	@SuppressWarnings( {"unchecked"})
 	public SessionFactoryServiceRegistryImpl(
@@ -35,11 +41,13 @@ public class SessionFactoryServiceRegistryImpl extends AbstractServiceRegistryIm
 			List<SessionFactoryServiceInitiator> initiators,
 			List<ProvidedService> providedServices,
 			SessionFactoryImplementor sessionFactory,
+			BootstrapContext bootstrapContext,
 			SessionFactoryOptions sessionFactoryOptions) {
 		super( parent );
 
 		this.sessionFactory = sessionFactory;
 		this.sessionFactoryOptions = sessionFactoryOptions;
+		this.bootstrapContext = bootstrapContext;
 
 		// for now, just use the standard initiator list
 		for ( SessionFactoryServiceInitiator initiator : initiators ) {
@@ -51,12 +59,13 @@ public class SessionFactoryServiceRegistryImpl extends AbstractServiceRegistryIm
 			createServiceBinding( providedService );
 		}
 
+		bootstrapContext = null;
 	}
 
 	@Override
 	public <R extends Service> R initiateService(ServiceInitiator<R> serviceInitiator) {
 		SessionFactoryServiceInitiator<R> sessionFactoryServiceInitiator = (SessionFactoryServiceInitiator<R>) serviceInitiator;
-		return sessionFactoryServiceInitiator.initiateService( sessionFactory, sessionFactoryOptions, this );
+		return sessionFactoryServiceInitiator.initiateService( this );
 	}
 
 	@Override
@@ -64,6 +73,26 @@ public class SessionFactoryServiceRegistryImpl extends AbstractServiceRegistryIm
 		if ( Configurable.class.isInstance( serviceBinding.getService() ) ) {
 			( (Configurable) serviceBinding.getService() ).configure( getService( ConfigurationService.class ).getSettings() );
 		}
+	}
+
+	@Override
+	public BootstrapContext getBootstrapContext() {
+		return bootstrapContext;
+	}
+
+	@Override
+	public SessionFactoryImplementor getSessionFactory() {
+		return sessionFactory;
+	}
+
+	@Override
+	public SessionFactoryOptions getSessionFactoryOptions() {
+		return sessionFactoryOptions;
+	}
+
+	@Override
+	public ServiceRegistryImplementor getServiceRegistry() {
+		return this;
 	}
 
 	@Override

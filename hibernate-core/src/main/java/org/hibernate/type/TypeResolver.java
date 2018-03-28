@@ -10,8 +10,8 @@ import java.io.Serializable;
 import java.util.Properties;
 
 import org.hibernate.MappingException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
@@ -19,24 +19,36 @@ import org.hibernate.usertype.UserType;
  * Acts as the contract for getting types and as the mediator between {@link BasicTypeRegistry} and {@link TypeFactory}.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated (since 5.3) No replacement, access to and handling of Types will be much different in 6.0
  */
+@Deprecated
 public class TypeResolver implements Serializable {
 	private final BasicTypeRegistry basicTypeRegistry;
 	private final TypeFactory typeFactory;
 
-	public TypeResolver() {
-		this(  new BasicTypeRegistry(), new TypeFactory() );
-	}
-
-	public TypeResolver(BasicTypeRegistry basicTypeRegistry, TypeFactory typeFactory) {
-		this.basicTypeRegistry = basicTypeRegistry;
+	public TypeResolver(TypeConfiguration typeConfiguration, TypeFactory typeFactory){
+		this.basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 		this.typeFactory = typeFactory;
 	}
 
-	public TypeResolver scope(SessionFactoryImplementor factory) {
-		typeFactory.injectSessionFactory( factory );
-		return new TypeResolver( basicTypeRegistry.shallowCopy(), typeFactory );
-	}
+//	public TypeResolver() {
+//		this( new BasicTypeRegistry(), new TypeFactory() );
+//	}
+//
+//	/**
+//	 * @deprecated (since 5.3)
+//	 */
+//	@Deprecated
+//	public TypeResolver(BasicTypeRegistry basicTypeRegistry, TypeFactory typeFactory) {
+//		this.basicTypeRegistry = basicTypeRegistry;
+//		this.typeFactory = typeFactory;
+//	}
+
+//	public TypeResolver scope(SessionFactoryImplementor factory) {
+//		typeFactory.injectSessionFactory( factory );
+//		return new TypeResolver( basicTypeRegistry.shallowCopy(), typeFactory );
+//	}
 
 	public void registerTypeOverride(BasicType type) {
 		basicTypeRegistry.register( type );

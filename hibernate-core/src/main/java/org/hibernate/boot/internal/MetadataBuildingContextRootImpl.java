@@ -7,6 +7,7 @@
 package org.hibernate.boot.internal;
 
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MappingDefaults;
@@ -17,19 +18,19 @@ import org.hibernate.boot.spi.MetadataBuildingOptions;
  * @author Steve Ebersole
  */
 public class MetadataBuildingContextRootImpl implements MetadataBuildingContext {
+	private final BootstrapContext bootstrapContext;
 	private final MetadataBuildingOptions options;
 	private final MappingDefaults mappingDefaults;
-	private final ClassLoaderAccess classLoaderAccess;
 	private final InFlightMetadataCollector metadataCollector;
 	private final ObjectNameNormalizer objectNameNormalizer;
 
 	public MetadataBuildingContextRootImpl(
+			BootstrapContext bootstrapContext,
 			MetadataBuildingOptions options,
-			ClassLoaderAccess classLoaderAccess,
 			InFlightMetadataCollector metadataCollector) {
+		this.bootstrapContext = bootstrapContext;
 		this.options = options;
 		this.mappingDefaults = options.getMappingDefaults();
-		this.classLoaderAccess = classLoaderAccess;
 		this.metadataCollector = metadataCollector;
 		this.objectNameNormalizer = new ObjectNameNormalizer() {
 			@Override
@@ -37,6 +38,11 @@ public class MetadataBuildingContextRootImpl implements MetadataBuildingContext 
 				return MetadataBuildingContextRootImpl.this;
 			}
 		};
+	}
+
+	@Override
+	public BootstrapContext getBootstrapContext() {
+		return bootstrapContext;
 	}
 
 	@Override
@@ -56,7 +62,7 @@ public class MetadataBuildingContextRootImpl implements MetadataBuildingContext 
 
 	@Override
 	public ClassLoaderAccess getClassLoaderAccess() {
-		return classLoaderAccess;
+		return bootstrapContext.getClassLoaderAccess();
 	}
 
 	@Override

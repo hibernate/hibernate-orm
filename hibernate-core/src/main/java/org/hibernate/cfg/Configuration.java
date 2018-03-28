@@ -650,7 +650,6 @@ public class Configuration {
 	 */
 	public SessionFactory buildSessionFactory(ServiceRegistry serviceRegistry) throws HibernateException {
 		log.debug( "Building session factory using provided StandardServiceRegistry" );
-
 		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder( (StandardServiceRegistry) serviceRegistry );
 		if ( implicitNamingStrategy != null ) {
 			metadataBuilder.applyImplicitNamingStrategy( implicitNamingStrategy );
@@ -686,7 +685,6 @@ public class Configuration {
 				metadataBuilder.applyAttributeConverter( attributeConverterDefinition );
 			}
 		}
-
 
 		final Metadata metadata = metadataBuilder.build();
 

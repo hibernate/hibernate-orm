@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.cfg.annotations;
+
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.PrimitiveArray;
@@ -15,6 +16,6 @@ import org.hibernate.mapping.PrimitiveArray;
 public class PrimitiveArrayBinder extends ArrayBinder {
 	@Override
 	protected Collection createCollection(PersistentClass persistentClass) {
-		return new PrimitiveArray( getBuildingContext().getMetadataCollector(), persistentClass );
+		return new PrimitiveArray( getBuildingContext(), persistentClass );
 	}
 }

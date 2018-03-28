@@ -6,6 +6,7 @@
  */
 package org.hibernate.mapping;
 
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.type.CollectionType;
 
@@ -15,8 +16,17 @@ import org.hibernate.type.CollectionType;
  * @author Gavin King
  */
 public class Bag extends Collection {
+
+	/**
+	 * @deprecated Use {@link Bag#Bag(MetadataBuildingContext, PersistentClass)} instead.
+	 */
+	@Deprecated
 	public Bag(MetadataImplementor metadata, PersistentClass owner) {
 		super( metadata, owner );
+	}
+
+	public Bag(MetadataBuildingContext buildingContext, PersistentClass owner) {
+		super( buildingContext, owner );
 	}
 
 	public CollectionType getDefaultCollectionType() {

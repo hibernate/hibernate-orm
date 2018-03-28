@@ -50,6 +50,7 @@ public class EhcacheRegionFactory extends RegionFactoryTemplate {
 
 	public EhcacheRegionFactory(CacheKeysFactory cacheKeysFactory) {
 		this.cacheKeysFactory = cacheKeysFactory;
+		DeprecationLogger.INSTANCE.logDeprecation();
 	}
 
 	public CacheManager getCacheManager() {

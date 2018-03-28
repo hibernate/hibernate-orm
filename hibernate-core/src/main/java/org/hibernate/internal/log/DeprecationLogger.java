@@ -24,9 +24,11 @@ import static org.jboss.logging.Logger.Level.WARN;
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 90000001, max = 90001000 )
 public interface DeprecationLogger extends BasicLogger {
+	String CATEGORY = "org.hibernate.orm.deprecation";
+
 	DeprecationLogger DEPRECATION_LOGGER = Logger.getMessageLogger(
 			DeprecationLogger.class,
-			"org.hibernate.orm.deprecation"
+			CATEGORY
 	);
 
 	/**

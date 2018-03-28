@@ -13,16 +13,18 @@ import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.LogMessage;
 import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
+import org.jboss.logging.annotations.ValidIdRange;
 
 import static org.jboss.logging.Logger.Level.WARN;
 
 /**
  * The jboss-logging {@link MessageLogger} for the hibernate-ehcache module.  It reserves message ids ranging from
- * 20001 to 25000 inclusively.
+ * 20099 to 20099 (allow 20100 for our DeprecationLogger) inclusively.
  * <p/>
  * New messages must be added after the last message defined to ensure message codes are unique.
  */
 @MessageLogger(projectCode = "HHH")
+@ValidIdRange( min = 20001, max = 20099)
 public interface EhCacheMessageLogger extends CoreMessageLogger {
 	EhCacheMessageLogger INSTANCE = Logger.getMessageLogger(
 			EhCacheMessageLogger.class,

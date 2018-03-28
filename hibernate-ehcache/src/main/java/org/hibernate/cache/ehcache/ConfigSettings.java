@@ -12,8 +12,6 @@ import net.sf.ehcache.CacheManager;
  * @author Steve Ebersole
  */
 public interface ConfigSettings {
-	String SIMPLE_FACTORY_NAME = "jcache";
-
 	String PROP_PREFIX = "hibernate.cache.ehcache.";
 
 	/**

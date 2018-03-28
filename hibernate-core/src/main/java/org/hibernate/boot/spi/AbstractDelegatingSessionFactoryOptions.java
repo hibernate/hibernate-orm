@@ -52,6 +52,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public String getUuid() {
+		return delegate().getUuid();
+	}
+
+	@Override
 	public StandardServiceRegistry getServiceRegistry() {
 		return delegate.getServiceRegistry();
 	}

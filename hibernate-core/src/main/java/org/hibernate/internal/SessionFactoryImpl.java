@@ -31,7 +31,6 @@ import javax.persistence.SynchronizationType;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
@@ -87,7 +86,6 @@ import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
@@ -155,10 +153,9 @@ import static org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting.det
 public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SessionFactoryImpl.class );
 
-	private static final IdentifierGenerator UUID_GENERATOR = UUIDGenerator.buildSessionFactoryUniqueIdentifierGenerator();
-
 	private final String name;
 	private final String uuid;
+
 	private transient boolean isClosed;
 
 	private final transient SessionFactoryObserverChain observer = new SessionFactoryObserverChain();
@@ -216,12 +213,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		this.name = sfName;
-		try {
-			uuid = (String) UUID_GENERATOR.generate( null, null );
-		}
-		catch (Exception e) {
-			throw new AssertionFailure("Could not generate UUID");
-		}
+		this.uuid = options.getUuid();
 
 		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
@@ -374,7 +366,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			this.observer.sessionFactoryCreated( this );
 
 			SessionFactoryRegistry.INSTANCE.addSessionFactory(
-					uuid,
+					getUuid(),
 					name,
 					settings.isSessionFactoryNameAlsoJndiName(),
 					this,
@@ -538,7 +530,10 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		return new DeserializationResolver() {
 			@Override
 			public SessionFactoryImplementor resolve() {
-				return (SessionFactoryImplementor) SessionFactoryRegistry.INSTANCE.findSessionFactory( uuid, name );
+				return (SessionFactoryImplementor) SessionFactoryRegistry.INSTANCE.findSessionFactory(
+						uuid,
+						name
+				);
 			}
 		};
 	}
@@ -770,7 +765,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		SessionFactoryRegistry.INSTANCE.removeSessionFactory(
-				uuid,
+				getUuid(),
 				name,
 				settings.isSessionFactoryNameAlsoJndiName(),
 				serviceRegistry.getService( JndiService.class )
@@ -1504,7 +1499,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	 * @throws IOException Can be thrown by the stream
 	 */
 	private void writeObject(ObjectOutputStream out) throws IOException {
-		LOG.debugf( "Serializing: %s", uuid );
+		LOG.debugf( "Serializing: %s", getUuid() );
 		out.defaultWriteObject();
 		LOG.trace( "Serialized" );
 	}
@@ -1520,7 +1515,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
 		LOG.trace( "Deserializing" );
 		in.defaultReadObject();
-		LOG.debugf( "Deserialized: %s", uuid );
+		LOG.debugf( "Deserialized: %s", getUuid() );
 	}
 
 	/**
@@ -1534,7 +1529,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	 */
 	private Object readResolve() throws InvalidObjectException {
 		LOG.trace( "Resolving serialized SessionFactory" );
-		return locateSessionFactoryOnDeserialization( uuid, name );
+		return locateSessionFactoryOnDeserialization( getUuid(), name );
 	}
 
 	private static SessionFactory locateSessionFactoryOnDeserialization(String uuid, String name) throws InvalidObjectException{
@@ -1564,7 +1559,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	 * @throws IOException Indicates problems writing out the serial data stream
 	 */
 	void serialize(ObjectOutputStream oos) throws IOException {
-		oos.writeUTF( uuid );
+		oos.writeUTF( getUuid() );
 		oos.writeBoolean( name != null );
 		if ( name != null ) {
 			oos.writeUTF( name );

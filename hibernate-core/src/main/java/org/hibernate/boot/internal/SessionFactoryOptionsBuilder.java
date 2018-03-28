@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.function.Supplier;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
@@ -44,6 +45,8 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
+import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.UUIDGenerator;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.JpaCompliance;
@@ -132,6 +135,9 @@ import static org.hibernate.jpa.AvailableSettings.DISCARD_PC_ON_CLOSE;
 public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private static final Logger log = Logger.getLogger( SessionFactoryOptionsBuilder.class );
 
+	private static final IdentifierGenerator UUID_GENERATOR = UUIDGenerator.buildSessionFactoryUniqueIdentifierGenerator();
+
+	private final String uuid;
 	private final StandardServiceRegistry serviceRegistry;
 
 	// integration
@@ -230,6 +236,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@SuppressWarnings({"WeakerAccess", "deprecation"})
 	public SessionFactoryOptionsBuilder(StandardServiceRegistry serviceRegistry) {
+		try {
+			uuid = (String) UUID_GENERATOR.generate( null, null );
+		}
+		catch (Exception e) {
+			throw new AssertionFailure( "Could not generate UUID");
+		}
+
 		this.serviceRegistry = serviceRegistry;
 
 		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
@@ -592,6 +605,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SessionFactoryOptionsState
+
+	@Override
+	public String getUuid() {
+		return this.uuid;
+	}
 
 	@Override
 	public StandardServiceRegistry getServiceRegistry() {

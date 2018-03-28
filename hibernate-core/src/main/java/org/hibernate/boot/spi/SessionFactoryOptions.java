@@ -26,6 +26,7 @@ import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.jpa.JpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
@@ -41,6 +42,20 @@ import org.hibernate.tuple.entity.EntityTuplizerFactory;
  * @since 5.0
  */
 public interface SessionFactoryOptions {
+	/**
+	 * Get the UUID unique to this SessionFactoryOptions.  Will be the
+	 * same value available as {@link SessionFactoryImplementor#getUuid()}.
+	 *
+	 * @apiNote The value is generated as a {@link java.util.UUID}, but kept
+	 * as a String.
+	 *
+	 * @return The UUID for this SessionFactory.
+	 *
+	 * @see org.hibernate.internal.SessionFactoryRegistry#getSessionFactory
+	 * @see SessionFactoryImplementor#getUuid
+	 */
+	String getUuid();
+
 	/**
 	 * The service registry to use in building the factory.
 	 *

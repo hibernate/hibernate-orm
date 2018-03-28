@@ -21,10 +21,23 @@ import org.hibernate.usertype.UserType;
 public interface TypeContributions {
 	void contributeType(BasicType type);
 
+	/**
+	 * @deprecated (since 5.3) It will be replaced by {@link #contributeType(BasicType)}
+	 * but do not move to it before 6.0
+	 */
+	@Deprecated
 	void contributeType(BasicType type, String... keys);
 
+	/**
+	 * @deprecated (since 5.3) It will be replaced by {@link #contributeType(BasicType)}
+	 * but do not move to it before 6.0
+	 */
 	void contributeType(UserType type, String... keys);
 
+	/**
+	 * @deprecated (since 5.3) It will be replaced by {@link #contributeType(BasicType)}
+	 * but do not move to it before 6.0
+	 */
 	void contributeType(CompositeUserType type, String... keys);
 
 	/*

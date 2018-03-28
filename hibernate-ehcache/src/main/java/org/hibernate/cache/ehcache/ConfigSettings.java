@@ -23,4 +23,6 @@ public interface ConfigSettings {
 	 * This is the legacy property name.  No need to change it to fit under {@link #PROP_PREFIX}
 	 */
 	String EHCACHE_CONFIGURATION_RESOURCE_NAME = "net.sf.ehcache.configurationResourceName";
+
+	String EHCACHE_CONFIGURATION_CACHE_MANAGER_NAME = "net.sf.ehcache.cacheManagerName";
 }

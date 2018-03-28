@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import net.sf.ehcache.CacheManager;
 
+import net.sf.ehcache.config.Configuration;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -20,6 +21,8 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.cache.ehcache.ConfigSettings.EHCACHE_CONFIGURATION_RESOURCE_NAME;
+import static org.hibernate.cache.ehcache.internal.HibernateEhcacheUtils.overwriteCacheManagerIfConfigured;
+import static org.hibernate.cache.ehcache.internal.HibernateEhcacheUtils.setCacheManagerNameIfNeeded;
 
 /**
  * @author Steve Ebersole
@@ -64,7 +67,9 @@ public class SingletonEhcacheRegionFactory extends EhcacheRegionFactory {
 
 			try {
 				REFERENCE_COUNT.incrementAndGet();
-				return CacheManager.create( HibernateEhcacheUtils.loadAndCorrectConfiguration( url ) );
+				Configuration config = HibernateEhcacheUtils.loadAndCorrectConfiguration( url );
+				setCacheManagerNameIfNeeded( settings, config, properties );
+				return CacheManager.create( config );
 			}
 			catch (RuntimeException e) {
 				REFERENCE_COUNT.decrementAndGet();

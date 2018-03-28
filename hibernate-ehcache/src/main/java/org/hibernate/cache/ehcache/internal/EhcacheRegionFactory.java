@@ -32,6 +32,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.cache.ehcache.ConfigSettings.EHCACHE_CONFIGURATION_RESOURCE_NAME;
+import static org.hibernate.cache.ehcache.internal.HibernateEhcacheUtils.setCacheManagerNameIfNeeded;
 
 /**
  * @author Steve Ebersole
@@ -145,11 +146,13 @@ public class EhcacheRegionFactory extends RegionFactoryTemplate {
 			}
 			if ( configurationResourceName == null || configurationResourceName.length() == 0 ) {
 				final Configuration configuration = ConfigurationFactory.parseConfiguration();
+				setCacheManagerNameIfNeeded( settings, configuration, properties );
 				return new CacheManager( configuration );
 			}
 			else {
 				final URL url = loadResource( configurationResourceName, settings );
 				final Configuration configuration = HibernateEhcacheUtils.loadAndCorrectConfiguration( url );
+				setCacheManagerNameIfNeeded( settings, configuration, properties );
 				return new CacheManager( configuration );
 			}
 		}

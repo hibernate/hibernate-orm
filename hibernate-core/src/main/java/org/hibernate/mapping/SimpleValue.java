@@ -26,6 +26,7 @@ import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
@@ -56,6 +57,7 @@ import org.hibernate.type.descriptor.sql.LobTypeMappings;
 import org.hibernate.type.descriptor.sql.NationalizedTypeMappings;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
 
 /**
@@ -67,11 +69,12 @@ public class SimpleValue implements KeyValue {
 
 	public static final String DEFAULT_ID_GEN_STRATEGY = "assigned";
 
+	private MetadataBuildingContext buildingContext;
 	private final MetadataImplementor metadata;
 
-	private final List<Selectable> columns = new ArrayList<Selectable>();
-	private final List<Boolean> insertability = new ArrayList<Boolean>();
-	private final List<Boolean> updatability = new ArrayList<Boolean>();
+	private final List<Selectable> columns = new ArrayList<>();
+	private final List<Boolean> insertability = new ArrayList<>();
+	private final List<Boolean> updatability = new ArrayList<>();
 
 	private String typeName;
 	private Properties typeParameters;
@@ -91,12 +94,30 @@ public class SimpleValue implements KeyValue {
 	private ConverterDescriptor attributeConverterDescriptor;
 	private Type type;
 
+	/**
+	 * @deprecated Use {@link SimpleValue#SimpleValue(MetadataBuildingContext)} instead.
+	 */
+	@Deprecated
 	public SimpleValue(MetadataImplementor metadata) {
 		this.metadata = metadata;
 	}
 
+	/**
+	 * @deprecated Use {@link SimpleValue#SimpleValue(MetadataBuildingContext, Table)} instead.
+	 */
+	@Deprecated
 	public SimpleValue(MetadataImplementor metadata, Table table) {
 		this( metadata );
+		this.table = table;
+	}
+
+	public SimpleValue(MetadataBuildingContext buildingContext) {
+		this(buildingContext.getMetadataCollector());
+		this.buildingContext = buildingContext;
+	}
+
+	public SimpleValue(MetadataBuildingContext buildingContext, Table table) {
+		this( buildingContext );
 		this.table = table;
 	}
 
@@ -180,7 +201,8 @@ public class SimpleValue implements KeyValue {
 	public void setTypeName(String typeName) {
 		if ( typeName != null && typeName.startsWith( AttributeConverterTypeAdapter.NAME_PREFIX ) ) {
 			final String converterClassName = typeName.substring( AttributeConverterTypeAdapter.NAME_PREFIX.length() );
-			final ClassLoaderService cls = getMetadata().getMetadataBuildingOptions()
+			final ClassLoaderService cls = getMetadata()
+					.getMetadataBuildingOptions()
 					.getServiceRegistry()
 					.getService( ClassLoaderService.class );
 			try {
@@ -188,7 +210,7 @@ public class SimpleValue implements KeyValue {
 				this.attributeConverterDescriptor = new ClassBasedConverterDescriptor(
 						converterClass,
 						false,
-						( ( InFlightMetadataCollector) getMetadata() ).getClassmateContext()
+						( (InFlightMetadataCollector) getMetadata() ).getClassmateContext()
 				);
 				return;
 			}
@@ -446,7 +468,7 @@ public class SimpleValue implements KeyValue {
 			createParameterImpl();
 		}
 
-		Type result = metadata.getTypeResolver().heuristicType( typeName, typeParameters );
+		Type result = getMetadata().getTypeConfiguration().getTypeResolver().heuristicType( typeName, typeParameters );
 		// if this is a byte[] version/timestamp, then we need to use RowVersionType
 		// instead of BinaryType (HHH-10413)
 		if ( isVersion && BinaryType.class.isInstance( result ) ) {
@@ -488,7 +510,14 @@ public class SimpleValue implements KeyValue {
 			if ( className == null ) {
 				throw new MappingException( "Attribute types for a dynamic entity must be explicitly specified: " + propertyName );
 			}
-			typeName = ReflectHelper.reflectedPropertyClass( className, propertyName, metadata.getMetadataBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class ) ).getName();
+			typeName = ReflectHelper.reflectedPropertyClass(
+					className,
+					propertyName,
+					getMetadata()
+							.getMetadataBuildingOptions()
+							.getServiceRegistry()
+							.getService( ClassLoaderService.class )
+			).getName();
 			// todo : to fully support isNationalized here we need do the process hinted at above
 			// 		essentially, much of the logic from #buildAttributeConverterTypeAdapter wrt resolving
 			//		a (1) SqlTypeDescriptor, a (2) JavaTypeDescriptor and dynamically building a BasicType
@@ -540,14 +569,15 @@ public class SimpleValue implements KeyValue {
 				new JpaAttributeConverterCreationContext() {
 					@Override
 					public ManagedBeanRegistry getManagedBeanRegistry() {
-						return getMetadata().getMetadataBuildingOptions()
+						return getMetadata()
+								.getMetadataBuildingOptions()
 								.getServiceRegistry()
 								.getService( ManagedBeanRegistry.class );
 					}
 
 					@Override
 					public JavaTypeDescriptorRegistry getJavaTypeDescriptorRegistry() {
-						return JavaTypeDescriptorRegistry.INSTANCE;
+						return metadata.getTypeConfiguration().getJavaTypeDescriptorRegistry();
 					}
 				}
 		);
@@ -587,11 +617,16 @@ public class SimpleValue implements KeyValue {
 		}
 
 		// find the standard SqlTypeDescriptor for that JDBC type code (allow itr to be remapped if needed!)
-		final SqlTypeDescriptor sqlTypeDescriptor = metadata.getMetadataBuildingOptions().getServiceRegistry()
+		final SqlTypeDescriptor sqlTypeDescriptor = getMetadata()
+				.getMetadataBuildingOptions()
+				.getServiceRegistry()
 				.getService( JdbcServices.class )
 				.getJdbcEnvironment()
 				.getDialect()
-				.remapSqlTypeDescriptor( SqlTypeDescriptorRegistry.INSTANCE.getDescriptor( jdbcTypeCode ) );
+				.remapSqlTypeDescriptor(
+						metadata.getTypeConfiguration()
+								.getSqlTypeDescriptorRegistry()
+								.getDescriptor( jdbcTypeCode ) );
 
 		// and finally construct the adapter, which injects the AttributeConverter calls into the binding/extraction
 		// 		process...
@@ -704,7 +739,8 @@ public class SimpleValue implements KeyValue {
 					? null
 					: xProperty.getAnnotations();
 
-			final ClassLoaderService classLoaderService = getMetadata().getMetadataBuildingOptions()
+			final ClassLoaderService classLoaderService = getMetadata()
+					.getMetadataBuildingOptions()
 					.getServiceRegistry()
 					.getService( ClassLoaderService.class );
 			typeParameters.put(

@@ -22,16 +22,35 @@ public interface SessionFactoryServiceInitiator<R extends Service> extends Servi
 	 * <p/>
 	 * Note for implementors: signature is guaranteed to change once redesign of SessionFactory building is complete
 	 *
+	 * @param context Access to initialization contextual info
+	 *
+	 * @return The initiated service.
+	 */
+	default R initiateService(SessionFactoryServiceInitiatorContext context) {
+		return initiateService(
+				context.getSessionFactory(),
+				context.getSessionFactoryOptions(),
+				context.getServiceRegistry()
+		);
+	}
+
+	/**
+	 * Initiates the managed service.
+	 * <p/>
+	 * Note for implementors: signature is guaranteed to change once redesign of SessionFactory building is complete
+	 *
 	 * @param sessionFactory The session factory.  Note the the session factory is still in flux; care needs to be taken
 	 * in regards to what you call.
 	 * @param sessionFactoryOptions Options specified for building the SessionFactory
 	 * @param registry The service registry.  Can be used to locate services needed to fulfill initiation.
 	 *
 	 * @return The initiated service.
+	 *
+	 * @deprecated Use {@link SessionFactoryServiceInitiator#initiateService(SessionFactoryServiceInitiatorContext)} instead.
 	 */
-	public R initiateService(
+	@Deprecated
+	R initiateService(
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryOptions sessionFactoryOptions,
 			ServiceRegistryImplementor registry);
-
 }

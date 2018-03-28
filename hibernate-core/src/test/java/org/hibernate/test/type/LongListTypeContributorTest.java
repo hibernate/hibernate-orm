@@ -40,6 +40,12 @@ public class LongListTypeContributorTest extends BaseEntityManagerFunctionalTest
 	}
 
 	@Override
+	protected void afterEntityManagerFactoryBuilt() {
+		entityManagerFactory().getMetamodel().getTypeConfiguration().getJavaTypeDescriptorRegistry()
+				.addDescriptor( StringifiedCollectionTypeContributor.StringifiedCollectionJavaTypeDescriptor.INSTANCE );
+	}
+
+	@Override
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
 		options.put( "hibernate.type_contributors", (TypeContributorList) () -> Arrays.asList(
@@ -136,7 +142,7 @@ public class LongListTypeContributorTest extends BaseEntityManagerFunctionalTest
 
 		@Override
 		public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-			JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( StringifiedCollectionJavaTypeDescriptor.INSTANCE );
+//			JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( StringifiedCollectionJavaTypeDescriptor.INSTANCE );
 			typeContributions.contributeType( StringifiedCollectionType.INSTANCE );
 		}
 

@@ -18,11 +18,19 @@ import org.hibernate.Metamodel;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
  */
 public interface MetamodelImplementor extends Metamodel {
+	/**
+	 * Access to the TypeConfiguration in effect for this SessionFactory/Metamodel
+	 *
+	 * @return Access to the TypeConfiguration
+	 */
+	TypeConfiguration getTypeConfiguration();
+
 	@Override
 	SessionFactoryImplementor getSessionFactory();
 

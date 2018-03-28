@@ -35,7 +35,7 @@ import org.hibernate.mapping.Table;
  */
 public class IdBagBinder extends BagBinder {
 	protected Collection createCollection(PersistentClass persistentClass) {
-		return new org.hibernate.mapping.IdentifierBag( getBuildingContext().getMetadataCollector(), persistentClass );
+		return new org.hibernate.mapping.IdentifierBag( getBuildingContext(), persistentClass );
 	}
 
 	@Override
@@ -65,7 +65,7 @@ public class IdBagBinder extends BagBinder {
 							null,
 							property,
 							null, //default access should not be useful
-							buildingContext.getBuildingOptions().getReflectionManager()
+							buildingContext.getBootstrapContext().getReflectionManager()
 					),
 					"id"
 			);

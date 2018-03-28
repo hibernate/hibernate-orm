@@ -23,5 +23,5 @@ public interface TypeContributor {
 	 * @param typeContributions The callback for adding contributed types
 	 * @param serviceRegistry The service registry
 	 */
-	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry);
+	void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry);
 }

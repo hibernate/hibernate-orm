@@ -7,6 +7,7 @@
 package org.hibernate.boot.spi.delegation;
 
 import org.hibernate.boot.spi.AbstractDelegatingMetadataBuilderImplementor;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuilderImplementor;
 
 /**
@@ -24,5 +25,10 @@ public class TestDelegatingMetadataBuilderImplementor extends AbstractDelegating
 	@Override
 	protected TestDelegatingMetadataBuilderImplementor getThis() {
 		return this;
+	}
+
+	@Override
+	public BootstrapContext getBootstrapContext() {
+		return delegate().getBootstrapContext();
 	}
 }

@@ -9,7 +9,6 @@ package org.hibernate.jpa.event.internal;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import org.hibernate.jpa.event.spi.AbstractCallback;
 import org.hibernate.jpa.event.spi.CallbackType;
 
 /**

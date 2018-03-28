@@ -7,6 +7,9 @@
 package org.hibernate.boot.model;
 
 import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
@@ -18,9 +21,32 @@ import org.hibernate.usertype.UserType;
 public interface TypeContributions {
 	void contributeType(BasicType type);
 
+	/**
+	 * @deprecated (since 5.3) It will be replaced by {@link #contributeType(BasicType)}
+	 * but do not move to it before 6.0
+	 */
+	@Deprecated
 	void contributeType(BasicType type, String... keys);
 
+	/**
+	 * @deprecated (since 5.3) It will be replaced by {@link #contributeType(BasicType)}
+	 * but do not move to it before 6.0
+	 */
 	void contributeType(UserType type, String... keys);
 
+	/**
+	 * @deprecated (since 5.3) It will be replaced by {@link #contributeType(BasicType)}
+	 * but do not move to it before 6.0
+	 */
 	void contributeType(CompositeUserType type, String... keys);
+
+	/*
+	 * Add the JavaTypeDescriptor to the
+	 * @param descriptor
+	 */
+	void contributeJavaTypeDescriptor(JavaTypeDescriptor descriptor);
+
+	void contributeSqlTypeDescriptor(SqlTypeDescriptor descriptor);
+
+	TypeConfiguration getTypeConfiguration();
 }

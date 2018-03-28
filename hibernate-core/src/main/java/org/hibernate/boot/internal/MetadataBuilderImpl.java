@@ -8,28 +8,20 @@ package org.hibernate.boot.internal;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import javax.persistence.AttributeConverter;
 import javax.persistence.SharedCacheMode;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.common.reflection.ClassLoaderDelegate;
-import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.annotations.common.reflection.java.JavaReflectionManager;
-import org.hibernate.annotations.common.util.StandardClassLoaderDelegateImpl;
 import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.scan.spi.Scanner;
@@ -55,6 +47,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.BasicTypeRegistration;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuilderImplementor;
@@ -68,7 +61,6 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.MetadataSourceType;
-import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
@@ -77,13 +69,15 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.AbstractStandardBasicType;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
 import org.jboss.jandex.IndexView;
-
-import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -92,13 +86,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( MetadataBuilderImpl.class );
 
 	private final MetadataSources sources;
+	private final BootstrapContextImpl bootstrapContext;
 	private final MetadataBuildingOptionsImpl options;
 
 	public MetadataBuilderImpl(MetadataSources sources) {
-		this(
-				sources,
-				getStandardServiceRegistry( sources.getServiceRegistry() )
-		);
+		this( sources, getStandardServiceRegistry( sources.getServiceRegistry() ) );
 	}
 
 	private static StandardServiceRegistry getStandardServiceRegistry(ServiceRegistry serviceRegistry) {
@@ -129,6 +121,9 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	public MetadataBuilderImpl(MetadataSources sources, StandardServiceRegistry serviceRegistry) {
 		this.sources = sources;
 		this.options = new MetadataBuildingOptionsImpl( serviceRegistry );
+		this.bootstrapContext = new BootstrapContextImpl( serviceRegistry, options );
+		//this is needed only fro implementig deprecated method
+		options.setBootstrapContext( bootstrapContext );
 
 		for ( MetadataSourcesContributor contributor :
 				sources.getServiceRegistry()
@@ -183,13 +178,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public MetadataBuilder applyReflectionManager(ReflectionManager reflectionManager) {
-		this.options.reflectionManager = reflectionManager;
-		this.options.reflectionManager.injectClassLoaderDelegate( this.options.getHcannClassLoaderDelegate() );
-		return this;
-	}
-
-	@Override
 	public MetadataBuilder applySharedCacheMode(SharedCacheMode sharedCacheMode) {
 		this.options.sharedCacheMode = sharedCacheMode;
 		return this;
@@ -203,31 +191,31 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	@Override
 	public MetadataBuilder applyIndexView(IndexView jandexView) {
-		this.options.jandexView = jandexView;
+		this.bootstrapContext.injectJandexView( jandexView );
 		return this;
 	}
 
 	@Override
 	public MetadataBuilder applyScanOptions(ScanOptions scanOptions) {
-		this.options.scanOptions = scanOptions;
+		this.bootstrapContext.injectScanOptions( scanOptions );
 		return this;
 	}
 
 	@Override
 	public MetadataBuilder applyScanEnvironment(ScanEnvironment scanEnvironment) {
-		this.options.scanEnvironment = scanEnvironment;
+		this.bootstrapContext.injectScanEnvironment( scanEnvironment );
 		return this;
 	}
 
 	@Override
 	public MetadataBuilder applyScanner(Scanner scanner) {
-		this.options.scannerSetting = scanner;
+		this.bootstrapContext.injectScanner( scanner );
 		return this;
 	}
 
 	@Override
 	public MetadataBuilder applyArchiveDescriptorFactory(ArchiveDescriptorFactory factory) {
-		this.options.archiveDescriptorFactory = factory;
+		this.bootstrapContext.injectArchiveDescriptorFactory( factory );
 		return this;
 	}
 
@@ -306,17 +294,29 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
+	public void contributeJavaTypeDescriptor(JavaTypeDescriptor descriptor) {
+		this.bootstrapContext.getTypeConfiguration().getJavaTypeDescriptorRegistry().addDescriptor( descriptor );
+	}
+
+	@Override
+	public void contributeSqlTypeDescriptor(SqlTypeDescriptor descriptor) {
+		this.bootstrapContext.getTypeConfiguration().getSqlTypeDescriptorRegistry().addDescriptor( descriptor );
+	}
+
+	@Override
+	public TypeConfiguration getTypeConfiguration() {
+		return bootstrapContext.getTypeConfiguration();
+	}
+
+	@Override
 	public MetadataBuilder applyCacheRegionDefinition(CacheRegionDefinition cacheRegionDefinition) {
-		if ( options.cacheRegionDefinitions == null ) {
-			options.cacheRegionDefinitions = new ArrayList<CacheRegionDefinition>();
-		}
-		options.cacheRegionDefinitions.add( cacheRegionDefinition );
+		this.bootstrapContext.addCacheRegionDefinition( cacheRegionDefinition );
 		return this;
 	}
 
 	@Override
 	public MetadataBuilder applyTempClassLoader(ClassLoader tempClassLoader) {
-		options.tempClassLoader = tempClassLoader;
+		this.bootstrapContext.injectJpaTempClassLoader( tempClassLoader );
 		return this;
 	}
 
@@ -331,34 +331,27 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		return this;
 	}
 
-
 	@Override
 	public MetadataBuilder applySqlFunction(String functionName, SQLFunction function) {
-		if ( this.options.sqlFunctionMap == null ) {
-			this.options.sqlFunctionMap = new HashMap<String, SQLFunction>();
-		}
-		this.options.sqlFunctionMap.put( functionName, function );
+		this.bootstrapContext.addSqlFunction( functionName, function );
 		return this;
 	}
 
 	@Override
 	public MetadataBuilder applyAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {
-		if ( this.options.auxiliaryDatabaseObjectList == null ) {
-			this.options.auxiliaryDatabaseObjectList = new ArrayList<AuxiliaryDatabaseObject>();
-		}
-		this.options.auxiliaryDatabaseObjectList.add( auxiliaryDatabaseObject );
+		this.bootstrapContext.addAuxiliaryDatabaseObject( auxiliaryDatabaseObject );
 		return this;
 	}
 
 	@Override
 	public MetadataBuilder applyAttributeConverter(AttributeConverterDefinition definition) {
-		this.options.addAttributeConverterInfo( definition );
+		this.bootstrapContext.addAttributeConverterInfo( definition );
 		return this;
 	}
 
 	@Override
 	public MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass) {
-		options.addAttributeConverterInfo(
+		this.bootstrapContext.addAttributeConverterInfo(
 				new AttributeConverterInfo() {
 					@Override
 					public Class<? extends AttributeConverter> getConverterClass() {
@@ -367,7 +360,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 					@Override
 					public ConverterDescriptor toConverterDescriptor(MetadataBuildingContext context) {
-						return new ClassBasedConverterDescriptor( attributeConverterClass, null, context.getMetadataCollector().getClassmateContext() );
+						return new ClassBasedConverterDescriptor(
+								attributeConverterClass,
+								null,
+								context.getBootstrapContext().getClassmateContext()
+						);
 					}
 				}
 		);
@@ -376,7 +373,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	@Override
 	public MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass, boolean autoApply) {
-		options.addAttributeConverterInfo(
+		this.bootstrapContext.addAttributeConverterInfo(
 				new AttributeConverterInfo() {
 					@Override
 					public Class<? extends AttributeConverter> getConverterClass() {
@@ -385,7 +382,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 					@Override
 					public ConverterDescriptor toConverterDescriptor(MetadataBuildingContext context) {
-						return new ClassBasedConverterDescriptor( attributeConverterClass, autoApply, context.getMetadataCollector().getClassmateContext() );
+						return new ClassBasedConverterDescriptor(
+								attributeConverterClass,
+								autoApply,
+								context.getBootstrapContext().getClassmateContext()
+						);
 					}
 				}
 		);
@@ -394,7 +395,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	@Override
 	public MetadataBuilder applyAttributeConverter(AttributeConverter attributeConverter) {
-		options.addAttributeConverterInfo(
+		this.bootstrapContext.addAttributeConverterInfo(
 				new AttributeConverterInfo() {
 					@Override
 					public Class<? extends AttributeConverter> getConverterClass() {
@@ -403,7 +404,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 					@Override
 					public ConverterDescriptor toConverterDescriptor(MetadataBuildingContext context) {
-						return new InstanceBasedConverterDescriptor( attributeConverter, null, context.getMetadataCollector().getClassmateContext() );
+						return new InstanceBasedConverterDescriptor(
+								attributeConverter,
+								null,
+								context.getBootstrapContext().getClassmateContext()
+						);
 					}
 				}
 		);
@@ -412,7 +417,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	@Override
 	public MetadataBuilder applyAttributeConverter(AttributeConverter attributeConverter, boolean autoApply) {
-		options.addAttributeConverterInfo(
+		this.bootstrapContext.addAttributeConverterInfo(
 				new AttributeConverterInfo() {
 					@Override
 					public Class<? extends AttributeConverter> getConverterClass() {
@@ -421,7 +426,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 					@Override
 					public ConverterDescriptor toConverterDescriptor(MetadataBuildingContext context) {
-						return new InstanceBasedConverterDescriptor( attributeConverter, autoApply, context.getMetadataCollector().getClassmateContext() );
+						return new InstanceBasedConverterDescriptor(
+								attributeConverter,
+								autoApply,
+								context.getBootstrapContext().getClassmateContext()
+						);
 					}
 				}
 		);
@@ -445,11 +454,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		return this;
 	}
 
-//	public MetadataBuilder with(PersistentAttributeMemberResolver resolver) {
-//		options.persistentAttributeMemberResolver = resolver;
-//		return this;
-//	}
-
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T extends MetadataBuilder> T unwrap(Class<T> type) {
@@ -467,7 +471,12 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			}
 		}
 
-		return MetadataBuildingProcess.build( sources, options );
+		return MetadataBuildingProcess.build( sources, bootstrapContext, options );
+	}
+
+	@Override
+	public BootstrapContext getBootstrapContext() {
+		return bootstrapContext;
 	}
 
 	@Override
@@ -586,27 +595,17 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			implements MetadataBuildingOptions, JpaOrmXmlPersistenceUnitDefaultAware {
 		private final StandardServiceRegistry serviceRegistry;
 		private final MappingDefaultsImpl mappingDefaults;
+		// todo (6.0) : remove bootstrapContext property along with the deprecated methods
+		private BootstrapContext bootstrapContext;
 
-		private ArrayList<BasicTypeRegistration> basicTypeRegistrations = new ArrayList<BasicTypeRegistration>();
-
-		private IndexView jandexView;
-		private ClassLoader tempClassLoader;
-
-		private ScanOptions scanOptions;
-		private ScanEnvironment scanEnvironment;
-		private Object scannerSetting;
-		private ArchiveDescriptorFactory archiveDescriptorFactory;
+		private ArrayList<BasicTypeRegistration> basicTypeRegistrations = new ArrayList<>();
 
 		private ImplicitNamingStrategy implicitNamingStrategy;
 		private PhysicalNamingStrategy physicalNamingStrategy;
 
-		private ReflectionManager reflectionManager;
-		private ClassLoaderDelegate hcannClassLoaderDelegate;
-
 		private SharedCacheMode sharedCacheMode;
 		private AccessType defaultCacheAccessType;
 		private MultiTenancyStrategy multiTenancyStrategy;
-		private ArrayList<CacheRegionDefinition> cacheRegionDefinitions;
 		private boolean explicitDiscriminatorsForJoinedInheritanceSupported;
 		private boolean implicitDiscriminatorsForJoinedInheritanceSupported;
 		private boolean implicitlyForceDiscriminatorInSelect;
@@ -614,18 +613,9 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private boolean specjProprietarySyntaxEnabled;
 		private ArrayList<MetadataSourceType> sourceProcessOrdering;
 
-		private HashMap<String,SQLFunction> sqlFunctionMap;
-		private ArrayList<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
-		private HashMap<Class,AttributeConverterInfo> attributeConverterInfoMap;
-
 		private IdGeneratorInterpreterImpl idGenerationTypeInterpreter = new IdGeneratorInterpreterImpl();
 
-		private boolean autoQuoteKeywords;
-
 		private String schemaCharset;
-
-//		private PersistentAttributeMemberResolver persistentAttributeMemberResolver =
-//				StandardPersistentAttributeMemberResolver.INSTANCE;
 
 		public MetadataBuildingOptionsImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
@@ -634,25 +624,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
 
 			this.mappingDefaults = new MappingDefaultsImpl( serviceRegistry );
-
-//			jandexView = (IndexView) configService.getSettings().get( AvailableSettings.JANDEX_INDEX );
-
-			this.scanOptions = new StandardScanOptions(
-					(String) configService.getSettings().get( AvailableSettings.SCANNER_DISCOVERY ),
-					false
-			);
-			// ScanEnvironment must be set explicitly
-			this.scannerSetting = configService.getSettings().get( AvailableSettings.SCANNER );
-			if ( this.scannerSetting == null ) {
-				this.scannerSetting = configService.getSettings().get( AvailableSettings.SCANNER_DEPRECATED );
-				if ( this.scannerSetting != null ) {
-					DEPRECATION_LOGGER.logDeprecatedScannerSetting();
-				}
-			}
-			this.archiveDescriptorFactory = strategySelector.resolveStrategy(
-					ArchiveDescriptorFactory.class,
-					configService.getSettings().get( AvailableSettings.SCANNER_ARCHIVE_INTERPRETER )
-			);
 
 			this.multiTenancyStrategy =  MultiTenancyStrategy.determineMultiTenancyStrategy( configService.getSettings() );
 
@@ -730,7 +701,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					configService.getSettings().get( AvailableSettings.IMPLICIT_NAMING_STRATEGY ),
 					new Callable<ImplicitNamingStrategy>() {
 						@Override
-						public ImplicitNamingStrategy call() throws Exception {
+						public ImplicitNamingStrategy call() {
 							return strategySelector.resolveDefaultableStrategy(
 									ImplicitNamingStrategy.class,
 									"default",
@@ -766,8 +737,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					false
 			);
 
-			this.reflectionManager = generateDefaultReflectionManager();
-
 			this.schemaCharset = configService.getSetting(
 					AvailableSettings.HBM2DDL_CHARSET_NAME,
 					String.class,
@@ -776,7 +745,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		private ArrayList<MetadataSourceType> resolveInitialSourceProcessOrdering(ConfigurationService configService) {
-			final ArrayList<MetadataSourceType> initialSelections = new ArrayList<MetadataSourceType>();
+			final ArrayList<MetadataSourceType> initialSelections = new ArrayList<>();
 
 			final String sourceProcessOrderingSetting = configService.getSetting(
 					AvailableSettings.ARTIFACT_PROCESSING_ORDER,
@@ -784,7 +753,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			);
 			if ( sourceProcessOrderingSetting != null ) {
 				final String[] orderChoices = StringHelper.split( ",; ", sourceProcessOrderingSetting, false );
-				initialSelections.addAll( CollectionHelper.<MetadataSourceType>arrayList( orderChoices.length ) );
+				initialSelections.addAll( CollectionHelper.arrayList( orderChoices.length ) );
 				for ( String orderChoice : orderChoices ) {
 					initialSelections.add( MetadataSourceType.parsePrecedence( orderChoice ) );
 				}
@@ -795,32 +764,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			}
 
 			return initialSelections;
-		}
-
-		private ReflectionManager generateDefaultReflectionManager() {
-			final JavaReflectionManager reflectionManager = new JavaReflectionManager();
-			reflectionManager.setMetadataProvider( new JPAMetadataProvider( this ) );
-			reflectionManager.injectClassLoaderDelegate( getHcannClassLoaderDelegate() );
-			return reflectionManager;
-		}
-
-		public ClassLoaderDelegate getHcannClassLoaderDelegate() {
-			if ( hcannClassLoaderDelegate == null ) {
-				hcannClassLoaderDelegate = new ClassLoaderDelegate() {
-					private final  ClassLoaderService classLoaderService = getServiceRegistry().getService( ClassLoaderService.class );
-
-					@Override
-					public <T> Class<T> classForName(String className) throws ClassLoadingException {
-						try {
-							return classLoaderService.classForName( className );
-						}
-						catch (org.hibernate.boot.registry.classloading.spi.ClassLoadingException e) {
-							return StandardClassLoaderDelegateImpl.INSTANCE.classForName( className );
-						}
-					}
-				};
-			}
-			return hcannClassLoaderDelegate;
 		}
 
 		@Override
@@ -839,33 +782,38 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
+		public ReflectionManager getReflectionManager() {
+			return bootstrapContext.getReflectionManager();
+		}
+
+		@Override
 		public IndexView getJandexView() {
-			return jandexView;
+			return bootstrapContext.getJandexView();
 		}
 
 		@Override
 		public ScanOptions getScanOptions() {
-			return scanOptions;
+			return bootstrapContext.getScanOptions();
 		}
 
 		@Override
 		public ScanEnvironment getScanEnvironment() {
-			return scanEnvironment;
+			return bootstrapContext.getScanEnvironment();
 		}
 
 		@Override
 		public Object getScanner() {
-			return scannerSetting;
+			return bootstrapContext.getScanner();
 		}
 
 		@Override
 		public ArchiveDescriptorFactory getArchiveDescriptorFactory() {
-			return archiveDescriptorFactory;
+			return bootstrapContext.getArchiveDescriptorFactory();
 		}
 
 		@Override
 		public ClassLoader getTempClassLoader() {
-			return tempClassLoader;
+			return bootstrapContext.getJpaTempClassLoader();
 		}
 
 		@Override
@@ -876,11 +824,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public PhysicalNamingStrategy getPhysicalNamingStrategy() {
 			return physicalNamingStrategy;
-		}
-
-		@Override
-		public ReflectionManager getReflectionManager() {
-			return reflectionManager;
 		}
 
 		@Override
@@ -905,7 +848,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 		@Override
 		public List<CacheRegionDefinition> getCacheRegionDefinitions() {
-			return cacheRegionDefinitions;
+			return new ArrayList<>( bootstrapContext.getCacheRegionDefinitions() );
 		}
 
 		@Override
@@ -940,42 +883,22 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 		@Override
 		public Map<String, SQLFunction> getSqlFunctions() {
-			return sqlFunctionMap == null ? Collections.<String, SQLFunction>emptyMap() : sqlFunctionMap;
+			return bootstrapContext.getSqlFunctions();
 		}
 
 		@Override
 		public List<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectList() {
-			return auxiliaryDatabaseObjectList == null
-					? Collections.<AuxiliaryDatabaseObject>emptyList()
-					: auxiliaryDatabaseObjectList;
+			return new ArrayList<>( bootstrapContext.getAuxiliaryDatabaseObjectList());
 		}
 
 		@Override
 		public List<AttributeConverterInfo> getAttributeConverters() {
-			return attributeConverterInfoMap != null
-					? new ArrayList<>( attributeConverterInfoMap.values() )
-					: Collections.emptyList();
+			return new ArrayList<>( bootstrapContext.getAttributeConverters() );
 		}
 
+		@Override
 		public String getSchemaCharset() {
 			return schemaCharset;
-		}
-
-		void addAttributeConverterInfo(AttributeConverterInfo info) {
-			if ( this.attributeConverterInfoMap == null ) {
-				this.attributeConverterInfoMap = new HashMap<>();
-			}
-
-			final Object old = this.attributeConverterInfoMap.put( info.getConverterClass(), info );
-
-			if ( old != null ) {
-				throw new AssertionFailure(
-						String.format(
-								"AttributeConverter class [%s] registered multiple times",
-								info.getConverterClass()
-						)
-				);
-			}
 		}
 
 		/**
@@ -1001,9 +924,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			}
 		}
 
-		//		@Override
-//		public PersistentAttributeMemberResolver getPersistentAttributeMemberResolver() {
-//			return persistentAttributeMemberResolver;
-//		}
+		public void setBootstrapContext(BootstrapContextImpl bootstrapContext) {
+			this.bootstrapContext = bootstrapContext;
+		}
 	}
 }

@@ -14,6 +14,8 @@ import org.hibernate.boot.MetadataBuilder;
  * @author Steve Ebersole
  */
 public interface MetadataBuilderImplementor extends MetadataBuilder {
+	BootstrapContext getBootstrapContext();
+
 	/**
 	 * Get the options being collected on this MetadataBuilder that will ultimately be used in
 	 * building the Metadata.

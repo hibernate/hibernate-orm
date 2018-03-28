@@ -8,6 +8,7 @@ package org.hibernate.event.service.spi;
 
 import java.io.Serializable;
 
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.service.Service;
 
@@ -18,16 +19,18 @@ import org.hibernate.service.Service;
  * @author Steve Ebersole
  */
 public interface EventListenerRegistry extends Service, Serializable {
-	public <T> EventListenerGroup<T> getEventListenerGroup(EventType<T> eventType);
+	void prepare(MetadataImplementor metadata);
 
-	public void addDuplicationStrategy(DuplicationStrategy strategy);
+	<T> EventListenerGroup<T> getEventListenerGroup(EventType<T> eventType);
 
-	public <T> void setListeners(EventType<T> type, Class<? extends T>... listeners);
-	public <T> void setListeners(EventType<T> type, T... listeners);
+	void addDuplicationStrategy(DuplicationStrategy strategy);
 
-	public <T> void appendListeners(EventType<T> type, Class<? extends T>... listeners);
-	public <T> void appendListeners(EventType<T> type, T... listeners);
+	<T> void setListeners(EventType<T> type, Class<? extends T>... listeners);
+	<T> void setListeners(EventType<T> type, T... listeners);
 
-	public <T> void prependListeners(EventType<T> type, Class<? extends T>... listeners);
-	public <T> void prependListeners(EventType<T> type, T... listeners);
+	<T> void appendListeners(EventType<T> type, Class<? extends T>... listeners);
+	<T> void appendListeners(EventType<T> type, T... listeners);
+
+	<T> void prependListeners(EventType<T> type, Class<? extends T>... listeners);
+	<T> void prependListeners(EventType<T> type, T... listeners);
 }

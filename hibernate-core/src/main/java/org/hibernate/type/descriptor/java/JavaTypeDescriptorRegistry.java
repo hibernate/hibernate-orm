@@ -16,20 +16,26 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
-
-import org.jboss.logging.Logger;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Basically a map from {@link Class} -> {@link JavaTypeDescriptor}
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Use (5.3) Use {@link org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry} instead
  */
-public class JavaTypeDescriptorRegistry {
+@Deprecated
+public class JavaTypeDescriptorRegistry implements Serializable {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( JavaTypeDescriptorRegistry.class );
 
+	/**
+	 * @deprecated (5.3) Use {@link TypeConfiguration#getJavaTypeDescriptorRegistry()} instead.
+	 */
+	@Deprecated
 	public static final JavaTypeDescriptorRegistry INSTANCE = new JavaTypeDescriptorRegistry();
 
-	private ConcurrentHashMap<Class,JavaTypeDescriptor> descriptorsByClass = new ConcurrentHashMap<>();
+	private ConcurrentHashMap<Class, JavaTypeDescriptor> descriptorsByClass = new ConcurrentHashMap<>();
 
 	public JavaTypeDescriptorRegistry() {
 		addDescriptorInternal( ByteTypeDescriptor.INSTANCE );
@@ -78,26 +84,34 @@ public class JavaTypeDescriptorRegistry {
 	}
 
 	private JavaTypeDescriptor addDescriptorInternal(JavaTypeDescriptor descriptor) {
-		return descriptorsByClass.put( descriptor.getJavaTypeClass(), descriptor );
+		JavaTypeDescriptor javaTypeDescriptor = descriptorsByClass.put( descriptor.getJavaType(), descriptor );
+		return javaTypeDescriptor;
 	}
 
 	/**
 	 * Adds the given descriptor to this registry
 	 *
 	 * @param descriptor The descriptor to add.
+	 *
+	 * @deprecated (5.3) Use {@link org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry#addDescriptor(JavaTypeDescriptor)} instead.
 	 */
+	@Deprecated
 	public void addDescriptor(JavaTypeDescriptor descriptor) {
 		JavaTypeDescriptor old = addDescriptorInternal( descriptor );
 		if ( old != null ) {
 			log.debugf(
 					"JavaTypeDescriptorRegistry entry replaced : %s -> %s (was %s)",
-					descriptor.getJavaTypeClass(),
+					descriptor.getJavaType(),
 					descriptor,
 					old
 			);
 		}
 	}
 
+	/**
+	 * @deprecated (5.3) Use {@link org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry#getDescriptor(Class)} instead.
+	 */
+	@Deprecated
 	@SuppressWarnings("unchecked")
 	public <T> JavaTypeDescriptor<T> getDescriptor(Class<T> cls) {
 		if ( cls == null ) {
@@ -116,7 +130,7 @@ public class JavaTypeDescriptorRegistry {
 		}
 
 		// find the first "assignable" match
-		for ( Map.Entry<Class,JavaTypeDescriptor> entry : descriptorsByClass.entrySet() ) {
+		for ( Map.Entry<Class, JavaTypeDescriptor> entry : descriptorsByClass.entrySet() ) {
 			if ( entry.getKey().isAssignableFrom( cls ) ) {
 				log.debugf( "Using  cached JavaTypeDescriptor instance for Java class [%s]", cls.getName() );
 				return entry.getValue();
@@ -135,7 +149,7 @@ public class JavaTypeDescriptorRegistry {
 		);
 		checkEqualsAndHashCode( cls );
 
-		return new FallbackJavaTypeDescriptor<T>( cls );
+		return new FallbackJavaTypeDescriptor<>( cls );
 	}
 
 	@SuppressWarnings("unchecked")
@@ -148,7 +162,7 @@ public class JavaTypeDescriptorRegistry {
 
 	public static class FallbackJavaTypeDescriptor<T> extends AbstractTypeDescriptor<T> {
 		protected FallbackJavaTypeDescriptor(final Class<T> type) {
-			super(type, createMutabilityPlan(type));
+			super( type, createMutabilityPlan( type ) );
 		}
 
 		@SuppressWarnings("unchecked")
@@ -176,7 +190,7 @@ public class JavaTypeDescriptorRegistry {
 		@Override
 		public T fromString(String string) {
 			throw new HibernateException(
-					"Not known how to convert String to given type [" + getJavaTypeClass().getName() + "]"
+					"Not known how to convert String to given type [" + getJavaType().getName() + "]"
 			);
 		}
 
@@ -192,5 +206,4 @@ public class JavaTypeDescriptorRegistry {
 			return (T) value;
 		}
 	}
-
 }

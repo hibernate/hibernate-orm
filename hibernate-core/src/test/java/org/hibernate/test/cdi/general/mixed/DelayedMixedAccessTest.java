@@ -13,7 +13,6 @@ import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.event.spi.JpaIntegrator;
 import org.hibernate.resource.beans.container.internal.CdiBeanContainerBuilder;
 import org.hibernate.resource.beans.container.internal.CdiBeanContainerDelayedAccessImpl;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
@@ -44,9 +43,7 @@ public class DelayedMixedAccessTest implements BeanContainer.LifecycleOptions {
 	@Test
 	public void testDelayedMixedAccess() {
 		try ( final SeContainer cdiContainer = Helper.createSeContainer() ) {
-			BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder()
-					.applyIntegrator( new JpaIntegrator() )
-					.build();
+			BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
 
 			final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr )
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )

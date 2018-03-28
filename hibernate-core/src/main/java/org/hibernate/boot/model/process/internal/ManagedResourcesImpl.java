@@ -19,6 +19,7 @@ import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.process.spi.ManagedResources;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.cfg.AttributeConverterDefinition;
 
@@ -32,11 +33,9 @@ public class ManagedResourcesImpl implements ManagedResources {
 	private Set<String> annotatedPackageNames = new LinkedHashSet<String>();
 	private List<Binding> mappingFileBindings = new ArrayList<Binding>();
 
-	public static ManagedResourcesImpl baseline(MetadataSources sources, MetadataBuildingOptions metadataBuildingOptions) {
+	public static ManagedResourcesImpl baseline(MetadataSources sources, BootstrapContext bootstrapContext) {
 		final ManagedResourcesImpl impl = new ManagedResourcesImpl();
-		for ( AttributeConverterInfo converterInfo : metadataBuildingOptions.getAttributeConverters() ) {
-			impl.addAttributeConverterDefinition( converterInfo );
-		}
+		bootstrapContext.getAttributeConverters().forEach( impl::addAttributeConverterDefinition );
 		impl.annotatedClassReferences.addAll( sources.getAnnotatedClasses() );
 		impl.annotatedClassNames.addAll( sources.getAnnotatedClassNames() );
 		impl.annotatedPackageNames.addAll( sources.getAnnotatedPackages() );

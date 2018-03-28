@@ -12,10 +12,11 @@ import java.util.Arrays;
 import org.hibernate.AssertionFailure;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.HibernateException;
-import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.action.internal.DelayedPostInsertIdentifier;
 import org.hibernate.action.internal.EntityUpdateAction;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
@@ -29,6 +30,9 @@ import org.hibernate.event.spi.FlushEntityEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.jpa.event.spi.CallbackRegistry;
+import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
+import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
@@ -38,8 +42,15 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-public class DefaultFlushEntityEventListener implements FlushEntityEventListener {
+public class DefaultFlushEntityEventListener implements FlushEntityEventListener, CallbackRegistryConsumer {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultFlushEntityEventListener.class );
+
+	private CallbackRegistry callbackRegistry;
+
+	@Override
+	public void injectCallbackRegistry(CallbackRegistry callbackRegistry) {
+		this.callbackRegistry = callbackRegistry;
+	}
 
 	/**
 	 * make sure user didn't mangle the id
@@ -341,7 +352,14 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			EntityEntry entry,
 			final Object[] values,
 			EntityPersister persister) {
-		return session.getInterceptor().onFlushDirty(
+		boolean isDirty = false;
+		if ( entry.getStatus() != Status.DELETED ) {
+			if ( callbackRegistry.preUpdate( entity ) ) {
+				isDirty = copyState( entity, persister.getPropertyTypes(), values, session.getFactory() );
+			}
+		}
+
+		final boolean answerFromInterceptor =  session.getInterceptor().onFlushDirty(
 				entity,
 				entry.getId(),
 				values,
@@ -349,6 +367,25 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				persister.getPropertyNames(),
 				persister.getPropertyTypes()
 		);
+
+		return answerFromInterceptor || isDirty;
+	}
+
+	private boolean copyState(Object entity, Type[] types, Object[] state, SessionFactory sf) {
+		// copy the entity state into the state array and return true if the state has changed
+		ClassMetadata metadata = sf.getClassMetadata( entity.getClass() );
+		Object[] newState = metadata.getPropertyValues( entity );
+		int size = newState.length;
+		boolean isDirty = false;
+		for ( int index = 0; index < size; index++ ) {
+			if ( ( state[index] == LazyPropertyInitializer.UNFETCHED_PROPERTY &&
+					newState[index] != LazyPropertyInitializer.UNFETCHED_PROPERTY ) ||
+					( state[index] != newState[index] && !types[index].isEqual( state[index], newState[index] ) ) ) {
+				isDirty = true;
+				state[index] = newState[index];
+			}
+		}
+		return isDirty;
 	}
 
 	/**
@@ -499,7 +536,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			else {
 				// see if the custom dirtiness strategy can tell us...
 				class DirtyCheckContextImpl implements CustomEntityDirtinessStrategy.DirtyCheckContext {
-					int[] found;
+					private int[] found;
 
 					@Override
 					public void doDirtyChecking(CustomEntityDirtinessStrategy.AttributeChecker attributeChecker) {
@@ -513,7 +550,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				session.getFactory().getCustomEntityDirtinessStrategy().findDirty(
 						entity,
 						persister,
-						(Session) session,
+						session,
 						context
 				);
 				dirtyProperties = context.found;

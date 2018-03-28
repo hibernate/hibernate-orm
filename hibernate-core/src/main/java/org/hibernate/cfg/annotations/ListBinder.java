@@ -48,7 +48,7 @@ public class ListBinder extends CollectionBinder {
 
 	@Override
 	protected Collection createCollection(PersistentClass persistentClass) {
-		return new org.hibernate.mapping.List( getBuildingContext().getMetadataCollector(), persistentClass );
+		return new org.hibernate.mapping.List( getBuildingContext(), persistentClass );
 	}
 
 	@Override

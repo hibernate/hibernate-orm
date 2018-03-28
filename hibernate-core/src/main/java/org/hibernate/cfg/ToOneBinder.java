@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.cfg;
+
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 
@@ -42,7 +43,7 @@ public class ToOneBinder {
 
 	public static XClass getTargetEntity(PropertyData propertyData, MetadataBuildingContext buildingContext) {
 		XProperty property = propertyData.getProperty();
-		return buildingContext.getBuildingOptions().getReflectionManager().toXClass( getTargetEntityClass( property ) );
+		return buildingContext.getBootstrapContext().getReflectionManager().toXClass( getTargetEntityClass( property ) );
 	}
 
 	private static Class<?> getTargetEntityClass(XProperty property) {

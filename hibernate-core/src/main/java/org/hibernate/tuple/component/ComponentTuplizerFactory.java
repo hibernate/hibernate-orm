@@ -16,6 +16,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.internal.util.ReflectHelper;
@@ -33,11 +34,19 @@ public class ComponentTuplizerFactory implements Serializable {
 
 	private final ClassLoaderAccess classLoaderAccess;
 
+	/**
+	 * @deprecated Use {@link ComponentTuplizerFactory#ComponentTuplizerFactory(BootstrapContext)} instead.
+	 */
+	@Deprecated
 	public ComponentTuplizerFactory(MetadataBuildingOptions metadataBuildingOptions) {
 		classLoaderAccess = new ClassLoaderAccessImpl(
 				metadataBuildingOptions.getTempClassLoader(),
 				metadataBuildingOptions.getServiceRegistry().getService( ClassLoaderService.class )
 		);
+	}
+
+	public ComponentTuplizerFactory(BootstrapContext bootstrapContext) {
+		classLoaderAccess = bootstrapContext.getClassLoaderAccess();
 	}
 
 	/**

@@ -73,7 +73,8 @@ public final class HibernateEhcacheUtils {
 			String sessionFactoryName = settings.getSessionFactoryName();
 			if (sessionFactoryName != null) {
 				configuration.setName( sessionFactoryName );
-			} else {
+			}
+			else {
 				configuration.setName( "Hibernate " + UUID.randomUUID().toString() );
 			}
 		}

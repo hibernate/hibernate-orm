@@ -6,6 +6,8 @@
  */
 package org.hibernate.type.descriptor.java.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -17,22 +19,25 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @since 5.3
  */
-public class JavaTypeDescriptorRegistry extends org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry {
+public class JavaTypeDescriptorRegistry
+		extends org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry
+		implements Serializable {
 
-	private TypeConfiguration typeConfiguration;
+	private final TypeConfiguration typeConfiguration;
+	private final org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry javaTypeDescriptorRegistry;
 
 	public JavaTypeDescriptorRegistry(TypeConfiguration typeConfiguration) {
-
 		this.typeConfiguration = typeConfiguration;
+		javaTypeDescriptorRegistry = org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry.INSTANCE;
 	}
 
 	@Override
 	public <T> JavaTypeDescriptor<T> getDescriptor(Class<T> javaType) {
-		return super.getDescriptor( javaType );
+		return javaTypeDescriptorRegistry.getDescriptor( javaType );
 	}
 
 	@Override
 	public void addDescriptor(JavaTypeDescriptor descriptor) {
-		super.addDescriptor( descriptor );
+		javaTypeDescriptorRegistry.addDescriptor( descriptor );
 	}
 }

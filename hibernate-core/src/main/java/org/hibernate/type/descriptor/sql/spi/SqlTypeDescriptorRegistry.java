@@ -6,6 +6,8 @@
  */
 package org.hibernate.type.descriptor.sql.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -17,20 +19,25 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @since 5.3
  */
-public class SqlTypeDescriptorRegistry extends org.hibernate.type.descriptor.sql.SqlTypeDescriptorRegistry {
-	private TypeConfiguration typeConfiguration;
+public class SqlTypeDescriptorRegistry
+		extends org.hibernate.type.descriptor.sql.SqlTypeDescriptorRegistry
+		implements Serializable {
+
+	private final TypeConfiguration typeConfiguration;
+	private final org.hibernate.type.descriptor.sql.SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry;
 
 	public SqlTypeDescriptorRegistry(TypeConfiguration typeConfiguration) {
 		this.typeConfiguration = typeConfiguration;
+		sqlTypeDescriptorRegistry = org.hibernate.type.descriptor.sql.SqlTypeDescriptorRegistry.INSTANCE;
 	}
 
 	@Override
 	public void addDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-		super.addDescriptor( sqlTypeDescriptor );
+		sqlTypeDescriptorRegistry.addDescriptor( sqlTypeDescriptor );
 	}
 
 	@Override
 	public SqlTypeDescriptor getDescriptor(int jdbcTypeCode) {
-		return super.getDescriptor( jdbcTypeCode );
+		return sqlTypeDescriptorRegistry.getDescriptor( jdbcTypeCode );
 	}
 }

@@ -286,10 +286,35 @@ public final class TypeFactory implements Serializable {
 		);
 	}
 
+	/**
+	 * @deprecated Use {@link #manyToOne(String, boolean, String, String, boolean, boolean, boolean, boolean)} instead.
+	 */
+	@Deprecated
 	public EntityType manyToOne(
 			String persistentClass,
 			boolean referenceToPrimaryKey,
 			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			boolean ignoreNotFound,
+			boolean isLogicalOneToOne) {
+		return manyToOne(
+				persistentClass,
+				referenceToPrimaryKey,
+				uniqueKeyPropertyName,
+				null,
+				lazy,
+				unwrapProxy,
+				ignoreNotFound,
+				isLogicalOneToOne
+		);
+	}
+
+	public EntityType manyToOne(
+			String persistentClass,
+			boolean referenceToPrimaryKey,
+			String uniqueKeyPropertyName,
+			String propertyName,
 			boolean lazy,
 			boolean unwrapProxy,
 			boolean ignoreNotFound,
@@ -299,6 +324,7 @@ public final class TypeFactory implements Serializable {
 				persistentClass,
 				referenceToPrimaryKey,
 				uniqueKeyPropertyName,
+				propertyName,
 				lazy,
 				unwrapProxy,
 				ignoreNotFound,

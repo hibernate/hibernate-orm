@@ -62,15 +62,16 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			spacesList.addAll( Arrays.asList( (String[]) persister.getQuerySpaces() ) );
 
 			if ( persister.canWriteToCache() ) {
-				final EntityDataAccess entityDataAccess = factory.getCache()
-						.getEntityRegionAccess( persister.getNavigableRole() );
+				final EntityDataAccess entityDataAccess = persister.getCacheAccessStrategy();
 				if ( entityDataAccess != null ) {
-					entityCleanups.add( new EntityCleanup( entityDataAccess ) );
+					entityCleanups.add( new EntityCleanup( entityDataAccess, session ) );
 				}
 			}
 
 			if ( persister.hasNaturalIdentifier() && persister.hasNaturalIdCache() ) {
-				naturalIdCleanups.add( new NaturalIdCleanup( factory.getCache().getNaturalIdCacheRegionAccessStrategy( persister.getNavigableRole() ) ) );
+				naturalIdCleanups.add(
+						new NaturalIdCleanup( persister.getNaturalIdCacheAccessStrategy(), session )
+				);
 			}
 
 			final Set<String> roles = factory.getMetamodel().getCollectionRolesByEntityParticipant( persister.getEntityName() );
@@ -78,7 +79,12 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 				for ( String role : roles ) {
 					final CollectionPersister collectionPersister = factory.getMetamodel().collectionPersister( role );
 					if ( collectionPersister.hasCache() ) {
-						collectionCleanups.add( new CollectionCleanup( factory.getCache().getCollectionRegionAccess( collectionPersister.getNavigableRole() ) ) );
+						collectionCleanups.add(
+								new CollectionCleanup(
+										collectionPersister.getCacheAccessStrategy(),
+										session
+								)
+						);
 					}
 				}
 			}
@@ -111,10 +117,10 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 				spacesList.addAll( Arrays.asList( entitySpaces ) );
 
 				if ( persister.canWriteToCache() ) {
-					entityCleanups.add( new EntityCleanup( persister.getCacheAccessStrategy() ) );
+					entityCleanups.add( new EntityCleanup( persister.getCacheAccessStrategy(), session ) );
 				}
 				if ( persister.hasNaturalIdentifier() && persister.hasNaturalIdCache() ) {
-					naturalIdCleanups.add( new NaturalIdCleanup( persister.getNaturalIdCacheAccessStrategy() ) );
+					naturalIdCleanups.add( new NaturalIdCleanup( persister.getNaturalIdCacheAccessStrategy(), session ) );
 				}
 
 				final Set<String> roles = session.getFactory().getMetamodel().getCollectionRolesByEntityParticipant( persister.getEntityName() );
@@ -123,7 +129,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 						final CollectionPersister collectionPersister = factory.getMetamodel().collectionPersister( role );
 						if ( collectionPersister.hasCache() ) {
 							collectionCleanups.add(
-									new CollectionCleanup( collectionPersister.getCacheAccessStrategy() )
+									new CollectionCleanup( collectionPersister.getCacheAccessStrategy(), session )
 							);
 						}
 					}
@@ -208,10 +214,12 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		private final EntityDataAccess cacheAccess;
 		private final SoftLock cacheLock;
 
-		private EntityCleanup(EntityDataAccess cacheAccess) {
+		private EntityCleanup(
+				EntityDataAccess cacheAccess,
+				SharedSessionContractImplementor session) {
 			this.cacheAccess = cacheAccess;
 			this.cacheLock = cacheAccess.lockRegion();
-			cacheAccess.removeAll();
+			cacheAccess.removeAll( session );
 		}
 
 		private void release() {
@@ -223,10 +231,12 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		private final CollectionDataAccess cacheAccess;
 		private final SoftLock cacheLock;
 
-		private CollectionCleanup(CollectionDataAccess cacheAccess) {
+		private CollectionCleanup(
+				CollectionDataAccess cacheAccess,
+				SharedSessionContractImplementor session) {
 			this.cacheAccess = cacheAccess;
 			this.cacheLock = cacheAccess.lockRegion();
-			cacheAccess.removeAll();
+			cacheAccess.removeAll( session );
 		}
 
 		private void release() {
@@ -238,10 +248,12 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		private final NaturalIdDataAccess naturalIdCacheAccessStrategy;
 		private final SoftLock cacheLock;
 
-		public NaturalIdCleanup(NaturalIdDataAccess naturalIdCacheAccessStrategy) {
+		public NaturalIdCleanup(
+				NaturalIdDataAccess naturalIdCacheAccessStrategy,
+				SharedSessionContractImplementor session) {
 			this.naturalIdCacheAccessStrategy = naturalIdCacheAccessStrategy;
 			this.cacheLock = naturalIdCacheAccessStrategy.lockRegion();
-			naturalIdCacheAccessStrategy.removeAll();
+			naturalIdCacheAccessStrategy.removeAll( session );
 		}
 
 		private void release() {

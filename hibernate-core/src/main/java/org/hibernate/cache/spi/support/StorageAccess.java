@@ -10,16 +10,14 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * A general read/write abstraction over the specific "cache"
- * object from the caching provider
+ * object from the caching provider.
+ *
+ * @apiNote Similar to {@link org.hibernate.cache.spi.access.CachedDomainDataAccess},
+ * some methods represent "transactional" (access to Session) and some are non-"transactional"
  *
  * @author Steve Ebersole
  */
 public interface StorageAccess {
-	/**
-	 * Does the cache contain this key?
-	 */
-	boolean contains(Object key);
-
 	/**
 	 * Get an item from the cache.
 	 */
@@ -45,6 +43,11 @@ public interface StorageAccess {
 	}
 
 	/**
+	 * Does the cache contain this key?
+	 */
+	boolean contains(Object key);
+
+	/**
 	 * Clear all data regardless of transaction/locking
 	 */
 	void evictData();
@@ -54,9 +57,8 @@ public interface StorageAccess {
 	 */
 	void evictData(Object key);
 
-	/***
+	/**
 	 * Release any resources.  Called during cache shutdown
 	 */
 	void release();
-
 }

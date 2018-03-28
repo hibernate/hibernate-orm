@@ -28,11 +28,6 @@ public abstract class DirectAccessRegionTemplate extends AbstractRegion implemen
 	}
 
 	@Override
-	public boolean contains(Object key) {
-		return getStorageAccess().contains( key );
-	}
-
-	@Override
 	public Object getFromCache(Object key, SharedSessionContractImplementor session) {
 		return getStorageAccess().getFromCache( key, session );
 	}
@@ -40,11 +35,6 @@ public abstract class DirectAccessRegionTemplate extends AbstractRegion implemen
 	@Override
 	public void putIntoCache(Object key, Object value, SharedSessionContractImplementor session) {
 		getStorageAccess().putIntoCache( key, value, session );
-	}
-
-	@Override
-	public void removeFromCache(Object key, SharedSessionContractImplementor session) {
-		getStorageAccess().removeFromCache( key, session );
 	}
 
 	@Override

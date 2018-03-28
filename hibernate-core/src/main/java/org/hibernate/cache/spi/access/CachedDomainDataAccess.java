@@ -6,7 +6,6 @@
  */
 package org.hibernate.cache.spi.access;
 
-
 import java.io.Serializable;
 import javax.persistence.Cache;
 
@@ -18,27 +17,33 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * Base contract for accessing the underlying cached data for a particular
  * Navigable of the user's domain model in a transactionally ACID manner.
  *
+ * @apiNote Note that the following methods are not considered "transactional"
+ * in this sense : {@link #contains}, {@link #lockRegion}, {@link #unlockRegion},
+ * {@link #evict}, {@link #evictAll}.  The semantics of these methods come
+ * from JPA's {@link Cache} contract.
+ *
+ * @implSpec The "non transactional" methods noted in the `@apiNote` should
+ * be implemented to ignore any locking.  In other words, if {@link #evict}
+ * is called that item should be forcibly removed from the cache regardless of
+ * whether anything has locked it.
+ *
  * @author Steve Ebersole
  * @author Gail Badner
  */
 public interface CachedDomainDataAccess {
+	/**
+	 * The region containing the data being accessed
+	 */
 	DomainDataRegion getRegion();
 
+	/**
+	 * The type of access implemented
+	 */
 	AccessType getAccessType();
 
-	/**
-	 * Determine whether this region contains data for the given key.
-	 * <p/>
-	 * The semantic here is whether the cache contains data visible for the
-	 * current call context.  This should be viewed as a "best effort", meaning
-	 * blocking should be avoid if possible.
-	 *
-	 * @param key The cache key
-	 *
-	 * @return True if the underlying cache contains corresponding data; false
-	 * otherwise.
-	 */
-	boolean contains(Object key);
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Transactional
 
 	/**
 	 * Attempt to retrieve an object from the cache. Mainly used in attempting
@@ -111,15 +116,6 @@ public interface CachedDomainDataAccess {
 	SoftLock lockItem(SharedSessionContractImplementor session, Object key, Object version);
 
 	/**
-	 * Lock the entire region
-	 *
-	 * @return A representation of our lock on the item; or {@code null}.
-	 *
-	 * @throws CacheException Propagated from underlying cache provider
-	 */
-	SoftLock lockRegion();
-
-	/**
 	 * Called when we have finished the attempted update/delete (which may or
 	 * may not have been successful), after transaction completion.  This method
 	 * is used by "asynchronous" concurrency strategies.
@@ -133,16 +129,6 @@ public interface CachedDomainDataAccess {
 	void unlockItem(SharedSessionContractImplementor session, Object key, SoftLock lock);
 
 	/**
-	 * Called after we have finished the attempted invalidation of the entire
-	 * region
-	 *
-	 * @param lock The lock previously obtained from {@link #lockRegion}
-	 *
-	 * @throws CacheException Propagated from underlying cache provider
-	 */
-	void unlockRegion(SoftLock lock);
-
-	/**
 	 * Called afterQuery an item has become stale (beforeQuery the transaction completes).
 	 * This method is used by "synchronous" concurrency strategies.
 	 *
@@ -154,11 +140,50 @@ public interface CachedDomainDataAccess {
 	void remove(SharedSessionContractImplementor session, Object key);
 
 	/**
-	 * Called to evict data from the entire region
+	 * Remove all data for this accessed type
+	 *
+	 * @throws CacheException Propagated from underlying cache provider
+	 * @param session
+	 */
+	void removeAll(SharedSessionContractImplementor session);
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Non-transactional
+
+	/**
+	 * Determine whether this region contains data for the given key.
+	 * <p/>
+	 * The semantic here is whether the cache contains data visible for the
+	 * current call context.  This should be viewed as a "best effort", meaning
+	 * blocking should be avoid if possible.
+	 *
+	 * @param key The cache key
+	 *
+	 * @return True if the underlying cache contains corresponding data; false
+	 * otherwise.
+	 */
+	boolean contains(Object key);
+
+	/**
+	 * Lock the entire region
+	 *
+	 * @return A representation of our lock on the item; or {@code null}.
 	 *
 	 * @throws CacheException Propagated from underlying cache provider
 	 */
-	void removeAll();
+	SoftLock lockRegion();
+
+	/**
+	 * Called after we have finished the attempted invalidation of the entire
+	 * region
+	 *
+	 * @param lock The lock previously obtained from {@link #lockRegion}
+	 *
+	 * @throws CacheException Propagated from underlying cache provider
+	 */
+	void unlockRegion(SoftLock lock);
 
 	/**
 	 * Forcibly evict an item from the cache immediately without regard for transaction

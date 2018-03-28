@@ -93,8 +93,8 @@ public abstract class AbstractCachedDomainDataAccess implements CachedDomainData
 	}
 
 	@Override
-	public void removeAll() {
-		clearCache();
+	public void removeAll(SharedSessionContractImplementor session) {
+		getStorageAccess().clearCache( session );
 	}
 
 	@Override

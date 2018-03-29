@@ -208,10 +208,11 @@ public final class TypeFactory implements Serializable {
 			boolean lazy,
 			boolean unwrapProxy,
 			String entityName,
-			String propertyName) {
+			String propertyName,
+			boolean constrained) {
 		return new OneToOneType(
 				typeScope, persistentClass, foreignKeyType, referenceToPrimaryKey,
-				uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName
+				uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName, constrained
 		);
 	}
 
@@ -223,10 +224,11 @@ public final class TypeFactory implements Serializable {
 			boolean lazy,
 			boolean unwrapProxy,
 			String entityName,
-			String propertyName) {
+			String propertyName,
+			boolean constrained) {
 		return new SpecialOneToOneType(
 				typeScope, persistentClass, foreignKeyType, referenceToPrimaryKey,
-				uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName
+				uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName, constrained
 		);
 	}
 

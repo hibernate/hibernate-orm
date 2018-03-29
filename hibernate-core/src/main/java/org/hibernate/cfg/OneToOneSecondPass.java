@@ -46,6 +46,7 @@ public class OneToOneSecondPass implements SecondPass {
 	private boolean optional;
 	private String cascadeStrategy;
 	private Ejb3JoinColumn[] joinColumns;
+	private ForeignKeyDirection foreignKeyDirection;
 
 	//that suck, we should read that from the property mainly
 	public OneToOneSecondPass(
@@ -60,7 +61,8 @@ public class OneToOneSecondPass implements SecondPass {
 			boolean optional,
 			String cascadeStrategy,
 			Ejb3JoinColumn[] columns,
-			MetadataBuildingContext buildingContext) {
+			MetadataBuildingContext buildingContext,
+			ForeignKeyDirection foreignKeyDirection) {
 		this.ownerEntity = ownerEntity;
 		this.ownerProperty = ownerProperty;
 		this.mappedBy = mappedBy;
@@ -73,6 +75,7 @@ public class OneToOneSecondPass implements SecondPass {
 		this.optional = optional;
 		this.cascadeStrategy = cascadeStrategy;
 		this.joinColumns = columns;
+		this.foreignKeyDirection = foreignKeyDirection;
 	}
 
 	//TODO refactor this code, there is a lot of duplication in this method
@@ -94,16 +97,8 @@ public class OneToOneSecondPass implements SecondPass {
 		if ( !optional ) {
 			value.setConstrained( true );
 		}
-		if ( value.isReferenceToPrimaryKey() ) {
-			value.setForeignKeyType( ForeignKeyDirection.TO_PARENT );
-		}
-		else {
-			value.setForeignKeyType(
-					value.isConstrained()
-							? ForeignKeyDirection.FROM_PARENT
-							: ForeignKeyDirection.TO_PARENT
-			);
-		}
+		value.setForeignKeyType(foreignKeyDirection);
+
 		PropertyBinder binder = new PropertyBinder();
 		binder.setName( propertyName );
 		binder.setValue( value );

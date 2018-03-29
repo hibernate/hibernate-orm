@@ -161,6 +161,7 @@ import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.UnionSubclass;
+import org.hibernate.type.ForeignKeyDirection;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
@@ -3135,6 +3136,10 @@ public final class AnnotationBinder {
 				}
 			}
 		}
+		ForeignKeyDirection foreignKeyDirection = !BinderHelper.isEmptyAnnotationValue( mappedBy )
+				? ForeignKeyDirection.TO_PARENT
+				: ForeignKeyDirection.FROM_PARENT;
+
 		if ( trueOneToOne || mapToPK || !BinderHelper.isEmptyAnnotationValue( mappedBy ) ) {
 			//is a true one-to-one
 			//FIXME referencedColumnName ignored => ordering may fail.
@@ -3150,7 +3155,8 @@ public final class AnnotationBinder {
 					optional,
 					cascadeStrategy,
 					joinColumns,
-					context
+					context,
+					foreignKeyDirection
 			);
 			if ( inSecondPass ) {
 				secondPass.doSecondPass( context.getMetadataCollector().getEntityBindingMap() );

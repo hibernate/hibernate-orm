@@ -46,6 +46,8 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.type.spi.TypeConfiguration;
+
 import org.jboss.logging.Logger;
 
 /**

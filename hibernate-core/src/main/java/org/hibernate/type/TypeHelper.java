@@ -18,7 +18,10 @@ import java.util.Map;
  * Collection of convenience methods relating to operations across arrays of types...
  *
  * @author Steve Ebersole
+ *
+ * @deprecated with no real replacement.  this was always intended as an internal class
  */
+@Deprecated
 public class TypeHelper {
 	/**
 	 * Disallow instantiation

@@ -48,6 +48,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
+import org.hibernate.id.uuid.LocalObjectUuidHelper;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.JpaCompliance;
@@ -240,12 +241,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.serviceRegistry = serviceRegistry;
 		this.jpaBootstrap = context.isJpaBootstrap();
 
-		try {
-			uuid = (String) UUID_GENERATOR.generate( null, null );
-		}
-		catch (Exception e) {
-			throw new AssertionFailure( "Could not generate UUID");
-		}
+		this.uuid = LocalObjectUuidHelper.generateLocalObjectUuid();
 
 		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
 		ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );

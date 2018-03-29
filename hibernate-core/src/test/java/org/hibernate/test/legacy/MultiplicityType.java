@@ -24,6 +24,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 
 public class MultiplicityType implements CompositeUserType {
@@ -40,8 +41,7 @@ public class MultiplicityType implements CompositeUserType {
 			new ManyToOneType(
 					new TypeFactory.TypeScope() {
 						@Override
-						public SessionFactoryImplementor resolveFactory() {
-							// todo : can we tie this into org.hibernate.type.TypeFactory.TypeScopeImpl() somehow?
+						public TypeConfiguration getTypeConfiguration() {
 							throw new HibernateException( "Cannot access SessionFactory from here" );
 						}
 					},

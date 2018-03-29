@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.spi;
 
+import java.io.InvalidObjectException;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
@@ -19,6 +20,7 @@ import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.id.uuid.LocalObjectUuidHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.metamodel.internal.MetamodelImpl;
@@ -29,6 +31,7 @@ import org.hibernate.type.TypeFactory;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
+import org.hibernate.type.internal.TypeConfigurationRegistry;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
@@ -54,28 +57,36 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	private static final CoreMessageLogger log = messageLogger( Scope.class );
 
-	// todo : (
+	private final String uuid = LocalObjectUuidHelper.generateLocalObjectUuid();
+
 	private final Scope scope;
-	private final TypeFactory typeFactory;
+	private final transient TypeFactory typeFactory;
 
 	// things available during both boot and runtime ("active") lifecycle phases
-	private final JavaTypeDescriptorRegistry javaTypeDescriptorRegistry;
-	private final SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry;
-	private final BasicTypeRegistry basicTypeRegistry;
+	private final transient JavaTypeDescriptorRegistry javaTypeDescriptorRegistry;
+	private final transient SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry;
+	private final transient BasicTypeRegistry basicTypeRegistry;
 
-	private final Map<String,String> importMap = new ConcurrentHashMap<>();
+	private final transient Map<String,String> importMap = new ConcurrentHashMap<>();
 
 
 	// temporarily needed to support deprecations
-	private final TypeResolver typeResolver;
+	private final transient TypeResolver typeResolver;
 
 	public TypeConfiguration() {
 		this.scope = new Scope();
 		this.javaTypeDescriptorRegistry = new JavaTypeDescriptorRegistry( this );
 		this.sqlTypeDescriptorRegistry = new SqlTypeDescriptorRegistry( this );
-		basicTypeRegistry = new BasicTypeRegistry();
-		typeFactory = new TypeFactory( this );
-		typeResolver = new TypeResolver( this, typeFactory );
+
+		this.basicTypeRegistry = new BasicTypeRegistry();
+		this.typeFactory = new TypeFactory( this );
+		this.typeResolver = new TypeResolver( this, typeFactory );
+
+		TypeConfigurationRegistry.INSTANCE.registerTypeConfiguration( this );
+	}
+
+	public String getUuid() {
+		return uuid;
 	}
 
 	/**
@@ -134,7 +145,6 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	public MetamodelImplementor scope(SessionFactoryImplementor sessionFactory,  BootstrapContext bootstrapContext) {
 		log.debugf( "Scoping TypeConfiguration [%s] to SessionFactoryImpl [%s]", this, sessionFactory );
 		scope.setSessionFactory( sessionFactory );
-		typeFactory.injectSessionFactory( sessionFactory );
 		log.debugf( "Scoping TypeConfiguration [%s] to SessionFactory [%s]", this, sessionFactory );
 
 		for ( Map.Entry<String, String> importEntry : scope.metadataBuildingContext.getMetadataCollector().getImports().entrySet() ) {
@@ -178,11 +188,18 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	@Override
 	public void sessionFactoryClosed(SessionFactory factory) {
 		log.tracef( "Handling #sessionFactoryClosed from [%s] for TypeConfiguration", factory );
+
+		TypeConfigurationRegistry.INSTANCE.deregisterTypeConfiguration( this );
+
 		scope.unsetSessionFactory( factory );
 
 		// todo (6.0) : finish this
 		//		release Database, descriptor Maps, etc... things that are only
 		// 		valid while the TypeConfiguration is scoped to SessionFactory
+	}
+
+	public SessionFactoryImplementor resolveSessionFactory() {
+		return scope.resolveSessionFactory();
 	}
 
 	/**
@@ -278,5 +295,55 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			log.debugf( "Un-scoping TypeConfiguration [%s] from SessionFactory [%s]", this, factory );
 			this.sessionFactory = null;
 		}
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Custom serialization hook
+
+		private Object readResolve() throws InvalidObjectException {
+			if ( sessionFactory == null ) {
+				if ( sessionFactoryName != null || sessionFactoryUuid != null ) {
+					sessionFactory = (SessionFactoryImplementor) SessionFactoryRegistry.INSTANCE.findSessionFactory(
+							sessionFactoryUuid,
+							sessionFactoryName
+					);
+
+					if ( sessionFactory == null ) {
+						throw new HibernateException(
+								"Could not find a SessionFactory [uuid=" + sessionFactoryUuid + ",name=" + sessionFactoryName + "]"
+						);
+					}
+				}
+			}
+
+			return this;
+		}
+
+		public SessionFactoryImplementor resolveSessionFactory() {
+//			if ( sessionFactory == null ) {
+//				if ( sessionFactoryName != null || sessionFactoryUuid != null ) {
+//					sessionFactory = (SessionFactoryImplementor) SessionFactoryRegistry.INSTANCE.findSessionFactory(
+//							sessionFactoryUuid,
+//							sessionFactoryName
+//					);
+//
+//					if ( sessionFactory == null ) {
+//						throw new HibernateException(
+//								"Could not find a SessionFactory [uuid=" + sessionFactoryUuid + ",name=" + sessionFactoryName + "]"
+//						);
+//					}
+//				}
+//			}
+			return sessionFactory;
+		}
+
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Custom serialization hook
+
+	private Object readResolve() throws InvalidObjectException {
+		log.trace( "Resolving serialized TypeConfiguration - readResolve" );
+		return TypeConfigurationRegistry.INSTANCE.findTypeConfiguration( getUuid() );
 	}
 }

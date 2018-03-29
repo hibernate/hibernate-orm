@@ -33,37 +33,28 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  *
  * @author Gavin King
  * @author Steve Ebersole
+ *
+ * @deprecated Use {@link TypeConfiguration} instead
  */
+@Deprecated
 @SuppressWarnings({"unchecked"})
 public final class TypeFactory implements Serializable {
 	private static final CoreMessageLogger LOG = messageLogger( TypeFactory.class );
 
-	private final TypeScopeImpl typeScope = new TypeScopeImpl();
-
+	/**
+	 * @deprecated Use {@link TypeConfiguration}/{@link TypeConfiguration.Scope} instead
+	 */
+	@Deprecated
 	public interface TypeScope extends Serializable {
-		SessionFactoryImplementor resolveFactory();
+		TypeConfiguration getTypeConfiguration();
 	}
 
 	private final TypeConfiguration typeConfiguration;
+	private final TypeScope typeScope;
 
 	public TypeFactory(TypeConfiguration typeConfiguration) {
 		this.typeConfiguration = typeConfiguration;
-	}
-
-	private static class TypeScopeImpl implements TypeFactory.TypeScope {
-		private transient SessionFactoryImplementor factory;
-
-		public void injectSessionFactory(SessionFactoryImplementor factory) {
-			this.factory = factory;
-		}
-
-		public SessionFactoryImplementor resolveFactory() {
-			return factory;
-		}
-	}
-
-	public void injectSessionFactory(SessionFactoryImplementor factory) {
-		typeScope.injectSessionFactory( factory );
+		this.typeScope = (TypeScope) () -> typeConfiguration;
 	}
 
 	public SessionFactoryImplementor resolveSessionFactory() {

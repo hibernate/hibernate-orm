@@ -180,7 +180,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		}
 
 		if ( entityName == null ) {
-			for ( EntityNameResolver resolver : scope.resolveFactory().getMetamodel().getEntityNameResolvers() ) {
+			for ( EntityNameResolver resolver : scope.getTypeConfiguration().getSessionFactory().getMetamodel().getEntityNameResolvers() ) {
 				entityName = resolver.resolveEntityName( entity );
 				if ( entityName != null ) {
 					break;
@@ -193,7 +193,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 			entityName = object.getClass().getName();
 		}
 
-		return scope.resolveFactory().getMetamodel().entityPersister( entityName );
+		return scope.getTypeConfiguration().getSessionFactory().getMetamodel().entityPersister( entityName );
 	}
 
 	@Override

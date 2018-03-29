@@ -198,10 +198,6 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		// 		valid while the TypeConfiguration is scoped to SessionFactory
 	}
 
-	public SessionFactoryImplementor resolveSessionFactory() {
-		return scope.resolveSessionFactory();
-	}
-
 	/**
 	 * Encapsulation of lifecycle concerns for a TypeConfiguration, mainly in
 	 * regards to eventually being associated with a SessionFactory.  Goes
@@ -317,25 +313,6 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 			return this;
 		}
-
-		public SessionFactoryImplementor resolveSessionFactory() {
-//			if ( sessionFactory == null ) {
-//				if ( sessionFactoryName != null || sessionFactoryUuid != null ) {
-//					sessionFactory = (SessionFactoryImplementor) SessionFactoryRegistry.INSTANCE.findSessionFactory(
-//							sessionFactoryUuid,
-//							sessionFactoryName
-//					);
-//
-//					if ( sessionFactory == null ) {
-//						throw new HibernateException(
-//								"Could not find a SessionFactory [uuid=" + sessionFactoryUuid + ",name=" + sessionFactoryName + "]"
-//						);
-//					}
-//				}
-//			}
-			return sessionFactory;
-		}
-
 	}
 
 

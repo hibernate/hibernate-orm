@@ -169,6 +169,12 @@ public class BasicTypeRegistry implements Serializable {
 		register( new CompositeCustomType( type, keys ) );
 	}
 
+	public void unregister(String... keys) {
+		for ( String key : keys ) {
+			registry.remove( key );
+		}
+	}
+
 	public BasicType getRegisteredType(String key) {
 		return registry.get( key );
 	}

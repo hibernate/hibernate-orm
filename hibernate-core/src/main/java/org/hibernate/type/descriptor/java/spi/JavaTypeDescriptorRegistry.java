@@ -7,9 +7,12 @@
 package org.hibernate.type.descriptor.java.spi;
 
 import java.io.Serializable;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import org.jboss.logging.Logger;
 
 /**
  * Basically a map from {@link Class} -> {@link JavaTypeDescriptor}
@@ -19,25 +22,41 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @since 5.3
  */
-public class JavaTypeDescriptorRegistry
-		extends org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry
-		implements Serializable {
+public class JavaTypeDescriptorRegistry implements Serializable {
+	private static final Logger log = Logger.getLogger( JavaTypeDescriptorRegistry.class );
 
-	private final TypeConfiguration typeConfiguration;
-	private final org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry javaTypeDescriptorRegistry;
 
+	private ConcurrentHashMap<Class, JavaTypeDescriptor> descriptorsByClass = new ConcurrentHashMap<>();
+
+	@SuppressWarnings("unused")
 	public JavaTypeDescriptorRegistry(TypeConfiguration typeConfiguration) {
-		this.typeConfiguration = typeConfiguration;
-		javaTypeDescriptorRegistry = org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry.INSTANCE;
 	}
 
-	@Override
 	public <T> JavaTypeDescriptor<T> getDescriptor(Class<T> javaType) {
-		return javaTypeDescriptorRegistry.getDescriptor( javaType );
+		return RegistryHelper.INSTANCE.resolveDescriptor(
+				descriptorsByClass,
+				javaType,
+				() -> {
+					log.debugf(
+							"Could not find matching scoped JavaTypeDescriptor for requested Java class [%s]; " +
+									"falling back to static registry",
+							javaType.getName()
+					);
+
+					return org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry.INSTANCE.getDescriptor( javaType );
+				}
+		);
 	}
 
-	@Override
 	public void addDescriptor(JavaTypeDescriptor descriptor) {
-		javaTypeDescriptorRegistry.addDescriptor( descriptor );
+		JavaTypeDescriptor old = descriptorsByClass.put( descriptor.getJavaType(), descriptor );
+		if ( old != null ) {
+			log.debugf(
+					"JavaTypeDescriptorRegistry entry replaced : %s -> %s (was %s)",
+					descriptor.getJavaType(),
+					descriptor,
+					old
+			);
+		}
 	}
 }

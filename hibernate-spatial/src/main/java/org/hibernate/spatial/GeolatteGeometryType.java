@@ -27,6 +27,18 @@ import org.geolatte.geom.Polygon;
  */
 public class GeolatteGeometryType extends AbstractSingleColumnStandardBasicType<Geometry> implements Spatial {
 
+	public static final String[] REG_KEYS = {
+			Geometry.class.getCanonicalName(),
+			Point.class.getCanonicalName(),
+			Polygon.class.getCanonicalName(),
+			MultiPolygon.class.getCanonicalName(),
+			LineString.class.getCanonicalName(),
+			MultiLineString.class.getCanonicalName(),
+			MultiPoint.class.getCanonicalName(),
+			GeometryCollection.class.getCanonicalName(),
+			"geolatte_geometry"
+	};
+
 	/**
 	 * Constructs an instance with the specified {@code SqlTypeDescriptor}
 	 *
@@ -38,17 +50,7 @@ public class GeolatteGeometryType extends AbstractSingleColumnStandardBasicType<
 
 	@Override
 	public String[] getRegistrationKeys() {
-		return new String[] {
-				Geometry.class.getCanonicalName(),
-				Point.class.getCanonicalName(),
-				Polygon.class.getCanonicalName(),
-				MultiPolygon.class.getCanonicalName(),
-				LineString.class.getCanonicalName(),
-				MultiLineString.class.getCanonicalName(),
-				MultiPoint.class.getCanonicalName(),
-				GeometryCollection.class.getCanonicalName(),
-				"geolatte_geometry"
-		};
+		return REG_KEYS;
 	}
 
 	@Override

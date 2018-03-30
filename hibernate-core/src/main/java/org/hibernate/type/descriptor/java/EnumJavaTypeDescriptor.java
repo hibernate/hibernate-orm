@@ -15,7 +15,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  */
 public class EnumJavaTypeDescriptor<T extends Enum> extends AbstractTypeDescriptor<T> {
 	@SuppressWarnings("unchecked")
-	protected EnumJavaTypeDescriptor(Class<T> type) {
+	public EnumJavaTypeDescriptor(Class<T> type) {
 		super( type, ImmutableMutabilityPlan.INSTANCE );
 		//JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
 	}

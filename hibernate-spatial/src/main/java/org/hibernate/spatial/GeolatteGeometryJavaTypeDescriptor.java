@@ -7,9 +7,12 @@
 
 package org.hibernate.spatial;
 
+import java.sql.Types;
+
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 import org.geolatte.geom.Geometry;
 import org.geolatte.geom.codec.Wkt;
@@ -33,6 +36,11 @@ public class GeolatteGeometryJavaTypeDescriptor extends AbstractTypeDescriptor<G
 	 */
 	public GeolatteGeometryJavaTypeDescriptor() {
 		super( Geometry.class );
+	}
+
+	@Override
+	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.ARRAY );
 	}
 
 	@Override

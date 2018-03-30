@@ -1,3 +1,5 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -8,13 +10,27 @@
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'hibernate-matrix-testing'
 
+ext {
+	db = project.hasProperty('db') ? project.getProperty('db') : 'h2'
+	dbBundle = [
+			h2 : [
+					'db.dialect' : 'org.hibernate.spatial.dialect.h2geodb.GeoDBDialect',
+					'jdbc.driver': 'org.h2.Driver',
+					'jdbc.user'  : 'sa',
+					'jdbc.pass'  : '',
+					'jdbc.url'   : 'jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000',
+			]
+	]
+}
+
 description = 'Integrate support for Spatial/GIS data into Hibernate O/RM'
 
 dependencies {
-    compile(project(':hibernate-core'))
+    compile( project(':hibernate-core') )
+    compile( libraries.geolatte )
 
-    compile('org.postgresql:postgresql:42.1.4')
-    compile([group: 'org.geolatte', name: 'geolatte-geom', version: '1.3.0'])
+    compile( 'org.postgresql:postgresql:42.1.4' )
+
     compile(libraries.dom4j) {
         transitive = false
     }
@@ -40,3 +56,25 @@ sourceSets.test.resources {
     setSrcDirs(['src/test/java', 'src/test/resources'])
 }
 
+processTestResources {
+	doLast {
+		copy {
+			from( sourceSets.test.java.srcDirs ) {
+				include '**/*.properties'
+				include '**/*.xml'
+			}
+			into sourceSets.test.java.outputDir
+		}
+		copy {
+			from file( 'src/test/resources' )
+			into file( "${buildDir}/resources/test" )
+			exclude 'src/test/resources/arquillian.xml'
+			exclude 'src/test/resources/hibernate.properties'
+		}
+		copy {
+			from file( 'src/test/resources/hibernate.properties' )
+			into file( "${buildDir}/resources/test" )
+			filter( ReplaceTokens, tokens: dbBundle[db] )
+		}
+	}
+}

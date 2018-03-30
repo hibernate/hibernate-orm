@@ -10,6 +10,7 @@ import javax.persistence.AttributeConverter;
 
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -20,8 +21,8 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R> {
 	private final ManagedBean<AttributeConverter<O,R>> attributeConverterBean;
 	private final JavaTypeDescriptor<AttributeConverter<O, R>> converterJavaTypeDescriptor;
-	private final JavaTypeDescriptor<O> domainJavaTypeDescriptor;
-	private final JavaTypeDescriptor<R> relationalJavaTypeDescriptor;
+	private final BasicJavaDescriptor<O> domainJavaTypeDescriptor;
+	private final BasicJavaDescriptor<R> relationalJavaTypeDescriptor;
 
 	public JpaAttributeConverterImpl(
 			ManagedBean<AttributeConverter<O, R>> attributeConverterBean,
@@ -30,8 +31,13 @@ public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R
 			JavaTypeDescriptor<R> relationalJavaTypeDescriptor) {
 		this.attributeConverterBean = attributeConverterBean;
 		this.converterJavaTypeDescriptor = converterJavaTypeDescriptor;
-		this.domainJavaTypeDescriptor = domainJavaTypeDescriptor;
-		this.relationalJavaTypeDescriptor = relationalJavaTypeDescriptor;
+		this.domainJavaTypeDescriptor = (BasicJavaDescriptor<O>) domainJavaTypeDescriptor;
+		this.relationalJavaTypeDescriptor = (BasicJavaDescriptor<R>) relationalJavaTypeDescriptor;
+	}
+
+	@Override
+	public ManagedBean<AttributeConverter<O, R>> getConverterBean() {
+		return attributeConverterBean;
 	}
 
 	@Override
@@ -50,12 +56,12 @@ public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R
 	}
 
 	@Override
-	public JavaTypeDescriptor<O> getDomainJavaTypeDescriptor() {
+	public BasicJavaDescriptor<O> getDomainJavaTypeDescriptor() {
 		return domainJavaTypeDescriptor;
 	}
 
 	@Override
-	public JavaTypeDescriptor<R> getRelationalJavaTypeDescriptor() {
+	public BasicJavaDescriptor<R> getRelationalJavaTypeDescriptor() {
 		return relationalJavaTypeDescriptor;
 	}
 }

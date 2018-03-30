@@ -69,7 +69,7 @@ dependencies {
     testCompile( libraries.classmate )
     testCompile( libraries.mockito )
     testCompile( libraries.mockito_inline )
-    testCompile( 'joda-time:joda-time:2.3' )
+    testCompile( libraries.jodaTime )
 
     testCompile( libraries.cdi ) {
         // we need to force it to make sure we influence the one coming from arquillian

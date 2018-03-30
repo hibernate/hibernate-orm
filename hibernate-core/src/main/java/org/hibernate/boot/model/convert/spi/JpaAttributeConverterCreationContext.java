@@ -7,7 +7,7 @@
 package org.hibernate.boot.model.convert.spi;
 
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 
 /**
  * Access to information that implementors of

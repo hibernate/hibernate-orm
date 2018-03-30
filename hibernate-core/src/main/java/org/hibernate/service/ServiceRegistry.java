@@ -11,7 +11,7 @@ package org.hibernate.service;
  *
  * @author Steve Ebersole
  */
-public interface ServiceRegistry {
+public interface ServiceRegistry extends AutoCloseable {
 	/**
 	 * Retrieve this registry's parent registry.
 	 * 
@@ -56,4 +56,6 @@ public interface ServiceRegistry {
 		return service;
 	}
 
+	@Override
+	void close();
 }

@@ -64,7 +64,7 @@ public class StandardServiceRegistryBuilder {
 	 * @param bootstrapServiceRegistry Provided bootstrap registry to use.
 	 */
 	public StandardServiceRegistryBuilder(BootstrapServiceRegistry bootstrapServiceRegistry) {
-		this( bootstrapServiceRegistry,  LoadedConfig.baseline() );
+		this( bootstrapServiceRegistry, LoadedConfig.baseline() );
 	}
 
 	/**
@@ -72,7 +72,9 @@ public class StandardServiceRegistryBuilder {
 	 *
 	 * @param bootstrapServiceRegistry Provided bootstrap registry to use.
 	 */
-	public StandardServiceRegistryBuilder(BootstrapServiceRegistry bootstrapServiceRegistry, LoadedConfig loadedConfigBaseline) {
+	public StandardServiceRegistryBuilder(
+			BootstrapServiceRegistry bootstrapServiceRegistry,
+			LoadedConfig loadedConfigBaseline) {
 		this.settings = Environment.getProperties();
 		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
 		this.configLoader = new ConfigLoader( bootstrapServiceRegistry );
@@ -103,7 +105,7 @@ public class StandardServiceRegistryBuilder {
 
 	/**
 	 * Read settings from a {@link java.util.Properties} file by resource name.
-	 *
+	 * <p>
 	 * Differs from {@link #configure()} and {@link #configure(String)} in that here we expect to read a
 	 * {@link java.util.Properties} file while for {@link #configure} we read the XML variant.
 	 *
@@ -114,7 +116,7 @@ public class StandardServiceRegistryBuilder {
 	 * @see #configure()
 	 * @see #configure(String)
 	 */
-	@SuppressWarnings( {"unchecked"})
+	@SuppressWarnings({"unchecked"})
 	public StandardServiceRegistryBuilder loadProperties(String resourceName) {
 		settings.putAll( configLoader.loadProperties( resourceName ) );
 		return this;
@@ -122,7 +124,7 @@ public class StandardServiceRegistryBuilder {
 
 	/**
 	 * Read settings from a {@link java.util.Properties} file by File reference
-	 *
+	 * <p>
 	 * Differs from {@link #configure()} and {@link #configure(String)} in that here we expect to read a
 	 * {@link java.util.Properties} file while for {@link #configure} we read the XML variant.
 	 *
@@ -133,7 +135,7 @@ public class StandardServiceRegistryBuilder {
 	 * @see #configure()
 	 * @see #configure(String)
 	 */
-	@SuppressWarnings( {"unchecked"})
+	@SuppressWarnings({"unchecked"})
 	public StandardServiceRegistryBuilder loadProperties(File file) {
 		settings.putAll( configLoader.loadProperties( file ) );
 		return this;
@@ -171,7 +173,7 @@ public class StandardServiceRegistryBuilder {
 		return configure( configLoader.loadConfigXmlUrl( url ) );
 	}
 
-	@SuppressWarnings( {"unchecked"})
+	@SuppressWarnings({"unchecked"})
 	public StandardServiceRegistryBuilder configure(LoadedConfig loadedConfig) {
 		aggregatedCfgXml.merge( loadedConfig );
 		settings.putAll( loadedConfig.getConfigurationValues() );
@@ -187,7 +189,7 @@ public class StandardServiceRegistryBuilder {
 	 *
 	 * @return this, for method chaining
 	 */
-	@SuppressWarnings( {"unchecked", "UnusedDeclaration"})
+	@SuppressWarnings({"unchecked", "UnusedDeclaration"})
 	public StandardServiceRegistryBuilder applySetting(String settingName, Object value) {
 		settings.put( settingName, value );
 		return this;
@@ -200,7 +202,7 @@ public class StandardServiceRegistryBuilder {
 	 *
 	 * @return this, for method chaining
 	 */
-	@SuppressWarnings( {"unchecked", "UnusedDeclaration"})
+	@SuppressWarnings({"unchecked", "UnusedDeclaration"})
 	public StandardServiceRegistryBuilder applySettings(Map settings) {
 		this.settings.putAll( settings );
 		return this;
@@ -213,7 +215,7 @@ public class StandardServiceRegistryBuilder {
 	 *
 	 * @return this, for method chaining
 	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
+	@SuppressWarnings({"UnusedDeclaration"})
 	public StandardServiceRegistryBuilder addInitiator(StandardServiceInitiator initiator) {
 		initiators.add( initiator );
 		return this;
@@ -227,7 +229,7 @@ public class StandardServiceRegistryBuilder {
 	 *
 	 * @return this, for method chaining
 	 */
-	@SuppressWarnings( {"unchecked"})
+	@SuppressWarnings({"unchecked"})
 	public StandardServiceRegistryBuilder addService(final Class serviceRole, final Service service) {
 		providedServices.add( new ProvidedService( serviceRole, service ) );
 		return this;
@@ -289,9 +291,11 @@ public class StandardServiceRegistryBuilder {
 
 	@SuppressWarnings("deprecation")
 	private void applyServiceContributingIntegrators() {
-		for ( Integrator integrator : bootstrapServiceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
+		for ( Integrator integrator : bootstrapServiceRegistry.getService( IntegratorService.class )
+				.getIntegrators() ) {
 			if ( org.hibernate.integrator.spi.ServiceContributingIntegrator.class.isInstance( integrator ) ) {
-				org.hibernate.integrator.spi.ServiceContributingIntegrator.class.cast( integrator ).prepareServices( this );
+				org.hibernate.integrator.spi.ServiceContributingIntegrator.class.cast( integrator ).prepareServices(
+						this );
 			}
 		}
 	}

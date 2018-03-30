@@ -50,13 +50,13 @@ import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.converter.AttributeConverterSqlTypeDescriptorAdapter;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
+import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.descriptor.sql.JdbcTypeJavaClassMappings;
 import org.hibernate.type.descriptor.sql.LobTypeMappings;
 import org.hibernate.type.descriptor.sql.NationalizedTypeMappings;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
 
@@ -576,13 +576,13 @@ public class SimpleValue implements KeyValue {
 					}
 
 					@Override
-					public JavaTypeDescriptorRegistry getJavaTypeDescriptorRegistry() {
+					public org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry getJavaTypeDescriptorRegistry() {
 						return metadata.getTypeConfiguration().getJavaTypeDescriptorRegistry();
 					}
 				}
 		);
 
-		final JavaTypeDescriptor entityAttributeJavaTypeDescriptor = jpaAttributeConverter.getDomainJavaTypeDescriptor();
+		final BasicJavaDescriptor entityAttributeJavaTypeDescriptor = jpaAttributeConverter.getDomainJavaTypeDescriptor();
 
 
 		// build the SqlTypeDescriptor adapter ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -591,7 +591,11 @@ public class SimpleValue implements KeyValue {
 		//		corresponding to the AttributeConverter's declared "databaseColumnJavaType" (how we read that value out
 		// 		of ResultSets).  See JdbcTypeJavaClassMappings for details.  Again, given example, this should return
 		// 		VARCHAR/CHAR
-		int jdbcTypeCode = JdbcTypeJavaClassMappings.INSTANCE.determineJdbcTypeCodeForJavaClass( jpaAttributeConverter.getRelationalJavaTypeDescriptor().getJavaType() );
+		final SqlTypeDescriptor recommendedSqlType = jpaAttributeConverter.getRelationalJavaTypeDescriptor().getJdbcRecommendedSqlType(
+				// todo (6.0) : handle the other JdbcRecommendedSqlTypeMappingContext methods
+				metadata::getTypeConfiguration
+		);
+		int jdbcTypeCode = recommendedSqlType.getSqlType();
 		if ( isLob() ) {
 			if ( LobTypeMappings.INSTANCE.hasCorrespondingLobCode( jdbcTypeCode ) ) {
 				jdbcTypeCode = LobTypeMappings.INSTANCE.getCorrespondingLobCode( jdbcTypeCode );

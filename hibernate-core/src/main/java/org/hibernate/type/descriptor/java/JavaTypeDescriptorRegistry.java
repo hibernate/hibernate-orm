@@ -7,7 +7,6 @@
 package org.hibernate.type.descriptor.java;
 
 import java.io.Serializable;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.HibernateException;
@@ -16,6 +15,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.spi.RegistryHelper;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -84,8 +84,7 @@ public class JavaTypeDescriptorRegistry implements Serializable {
 	}
 
 	private JavaTypeDescriptor addDescriptorInternal(JavaTypeDescriptor descriptor) {
-		JavaTypeDescriptor javaTypeDescriptor = descriptorsByClass.put( descriptor.getJavaType(), descriptor );
-		return javaTypeDescriptor;
+		return descriptorsByClass.put( descriptor.getJavaType(), descriptor );
 	}
 
 	/**
@@ -113,43 +112,26 @@ public class JavaTypeDescriptorRegistry implements Serializable {
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
-	public <T> JavaTypeDescriptor<T> getDescriptor(Class<T> cls) {
-		if ( cls == null ) {
-			throw new IllegalArgumentException( "Class passed to locate Java type descriptor cannot be null" );
-		}
+	public <J> JavaTypeDescriptor<J> getDescriptor(Class<J> cls) {
+		return RegistryHelper.INSTANCE.resolveDescriptor(
+				descriptorsByClass,
+				cls,
+				() -> {
+					if ( Serializable.class.isAssignableFrom( cls ) ) {
+						return new SerializableTypeDescriptor( cls );
+					}
 
-		JavaTypeDescriptor<T> descriptor = descriptorsByClass.get( cls );
-		if ( descriptor != null ) {
-			return descriptor;
-		}
+					log.debugf(
+							"Could not find matching JavaTypeDescriptor for requested Java class [%s]; using fallback.  " +
+									"This means Hibernate does not know how to perform certain basic operations in relation to this Java type." +
+									"",
+							cls.getName()
+					);
+					checkEqualsAndHashCode( cls );
 
-		if ( cls.isEnum() ) {
-			descriptor = new EnumJavaTypeDescriptor( cls );
-			descriptorsByClass.put( cls, descriptor );
-			return descriptor;
-		}
-
-		// find the first "assignable" match
-		for ( Map.Entry<Class, JavaTypeDescriptor> entry : descriptorsByClass.entrySet() ) {
-			if ( entry.getKey().isAssignableFrom( cls ) ) {
-				log.debugf( "Using  cached JavaTypeDescriptor instance for Java class [%s]", cls.getName() );
-				return entry.getValue();
-			}
-		}
-
-		if ( Serializable.class.isAssignableFrom( cls ) ) {
-			return new SerializableTypeDescriptor( cls );
-		}
-
-		log.debugf(
-				"Could not find matching JavaTypeDescriptor for requested Java class [%s]; using fallback.  " +
-						"This means Hibernate does not know how to perform certain basic operations in relation to this Java type." +
-						"",
-				cls.getName()
+					return new FallbackJavaTypeDescriptor<>( cls );
+				}
 		);
-		checkEqualsAndHashCode( cls );
-
-		return new FallbackJavaTypeDescriptor<>( cls );
 	}
 
 	@SuppressWarnings("unchecked")

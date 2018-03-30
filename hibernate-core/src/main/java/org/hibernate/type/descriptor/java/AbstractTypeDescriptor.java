@@ -16,9 +16,14 @@ import org.hibernate.internal.util.compare.EqualsHelper;
 /**
  * Abstract adapter for Java type descriptors.
  *
+ * @apiNote This abstract descriptor implements BasicJavaDescriptor
+ * because we currently only categorize "basic" JavaTypeDescriptors,
+ * as in the {@link javax.persistence.metamodel.Type.PersistenceType#BASIC}
+ * sense
+ *
  * @author Steve Ebersole
  */
-public abstract class AbstractTypeDescriptor<T> implements JavaTypeDescriptor<T>, Serializable {
+public abstract class AbstractTypeDescriptor<T> implements BasicJavaDescriptor<T>, Serializable {
 	private final Class<T> type;
 	private final MutabilityPlan<T> mutabilityPlan;
 	private final Comparator<T> comparator;

@@ -91,7 +91,7 @@ public abstract class AbstractStandardBasicType<T>
 	@Override
 	public String[] getRegistrationKeys() {
 		return registerUnderJavaType()
-				? new String[] { getName(), javaTypeDescriptor.getJavaTypeClass().getName() }
+				? new String[] { getName(), javaTypeDescriptor.getJavaType().getName() }
 				: new String[] { getName() };
 	}
 
@@ -128,7 +128,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	@Override
 	public final Class getReturnedClass() {
-		return javaTypeDescriptor.getJavaTypeClass();
+		return javaTypeDescriptor.getJavaType();
 	}
 
 	@Override

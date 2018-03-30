@@ -29,11 +29,9 @@ public class SerializableTypeDescriptor<T extends Serializable> extends Abstract
 
 	// unfortunately the param types cannot be the same so use something other than 'T' here to make that obvious
 	public static class SerializableMutabilityPlan<S extends Serializable> extends MutableMutabilityPlan<S> {
+		public static final SerializableMutabilityPlan<Serializable> INSTANCE = new SerializableMutabilityPlan<>();
 
-		public static final SerializableMutabilityPlan<Serializable> INSTANCE
-				= new SerializableMutabilityPlan<Serializable>( );
-
-		public SerializableMutabilityPlan() {
+		private SerializableMutabilityPlan() {
 		}
 
 		@Override
@@ -124,7 +122,7 @@ public class SerializableTypeDescriptor<T extends Serializable> extends Abstract
 				throw new HibernateException( e );
 			}
 		}
-		else if ( getJavaTypeClass().isInstance( value ) ) {
+		else if ( getJavaType().isInstance( value ) ) {
 			return (T) value;
 		}
 		throw unknownWrap( value.getClass() );
@@ -136,6 +134,6 @@ public class SerializableTypeDescriptor<T extends Serializable> extends Abstract
 
 	@SuppressWarnings({ "unchecked" })
 	protected T fromBytes(byte[] bytes) {
-		return (T) SerializationHelper.deserialize( bytes, getJavaTypeClass().getClassLoader() );
+		return (T) SerializationHelper.deserialize( bytes, getJavaType().getClassLoader() );
 	}
 }

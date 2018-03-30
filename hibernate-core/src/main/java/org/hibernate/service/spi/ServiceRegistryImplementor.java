@@ -25,6 +25,11 @@ public interface ServiceRegistryImplementor extends ServiceRegistry {
 	 */
 	<R extends Service> ServiceBinding<R> locateServiceBinding(Class<R> serviceRole);
 
+	@Override
+	default void close() {
+		destroy();
+	}
+
 	/**
 	 * Release resources
 	 */

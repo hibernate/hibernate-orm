@@ -11,7 +11,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.jpa.test.jee.OrmVersionTest;
+import org.hibernate.test.jpa.xml.versions.JpaXsdVersionsTest;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 
 import org.junit.Test;
@@ -26,7 +26,7 @@ public class NewBootProcessTest {
 
 		HibernatePersistenceProvider persistenceProvider = new HibernatePersistenceProvider();
 		final EntityManagerFactory emf = persistenceProvider.createContainerEntityManagerFactory(
-				new OrmVersionTest.PersistenceUnitInfoImpl( "my-test" ) {
+				new JpaXsdVersionsTest.PersistenceUnitInfoImpl( "my-test" ) {
 					@Override
 					public URL getPersistenceUnitRootUrl() {
 						// just get any known url...

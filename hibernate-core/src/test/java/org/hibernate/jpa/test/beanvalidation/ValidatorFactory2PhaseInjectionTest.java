@@ -17,7 +17,7 @@ import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
-import org.hibernate.jpa.test.jee.OrmVersionTest;
+import org.hibernate.test.jpa.xml.versions.JpaXsdVersionsTest;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
@@ -49,7 +49,7 @@ public class ValidatorFactory2PhaseInjectionTest extends BaseUnitTestCase {
 	@Test
 	public void testInjectionAvailabilityFromEmf() {
 		EntityManagerFactoryBuilder emfb = Bootstrap.getEntityManagerFactoryBuilder(
-				new OrmVersionTest.PersistenceUnitInfoImpl( "my-test" ) {
+				new JpaXsdVersionsTest.PersistenceUnitInfoImpl( "my-test" ) {
 					@Override
 					public URL getPersistenceUnitRootUrl() {
 						// just get any known url...

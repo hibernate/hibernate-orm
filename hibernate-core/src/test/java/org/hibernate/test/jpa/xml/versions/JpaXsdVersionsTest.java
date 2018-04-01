@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.jpa.test.jee;
+package org.hibernate.test.jpa.xml.versions;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -34,11 +34,11 @@ import org.junit.Test;
  *
  * @author Steve Ebersole
  */
-public class OrmVersionTest {
+public class JpaXsdVersionsTest {
     @Test
 	public void testOrm1() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "orm1-test", "1.0" )
-				.addMappingFileName( "org/hibernate/jpa/test/jee/valid-orm-1.xml" );
+				.addMappingFileName( "org/hibernate/test/jpa/xml/versions/valid-orm-1_0.xml" );
 		HibernatePersistenceProvider hp = new HibernatePersistenceProvider();
 		EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, Collections.EMPTY_MAP );
 		try {
@@ -50,9 +50,37 @@ public class OrmVersionTest {
 	}
 
     @Test
-	public void testOrm2() {
+	public void testOrm20() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "orm2-test", "2.0" )
-				.addMappingFileName( "org/hibernate/jpa/test/jee/valid-orm-2.xml" );
+				.addMappingFileName( "org/hibernate/test/jpa/xml/versions/valid-orm-2_0.xml" );
+		HibernatePersistenceProvider hp = new HibernatePersistenceProvider();
+		EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, Collections.EMPTY_MAP );
+		try {
+			emf.getMetamodel().entity( Lighter.class ); // exception if not entity
+		}
+		finally {
+			emf.close();
+		}
+	}
+
+    @Test
+	public void testOrm21() {
+		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "orm2-test", "2.1" )
+				.addMappingFileName( "org/hibernate/test/jpa/xml/versions/valid-orm-2_1.xml" );
+		HibernatePersistenceProvider hp = new HibernatePersistenceProvider();
+		EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, Collections.EMPTY_MAP );
+		try {
+			emf.getMetamodel().entity( Lighter.class ); // exception if not entity
+		}
+		finally {
+			emf.close();
+		}
+	}
+
+    @Test
+	public void testOrm22() {
+		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "orm2-test", "2.2")
+				.addMappingFileName( "org/hibernate/test/jpa/xml/versions/valid-orm-2_2.xml" );
 		HibernatePersistenceProvider hp = new HibernatePersistenceProvider();
 		EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, Collections.EMPTY_MAP );
 		try {
@@ -66,7 +94,7 @@ public class OrmVersionTest {
     @Test
 	public void testInvalidOrm1() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "invalid-orm1-test", "1.0" )
-				.addMappingFileName( "org/hibernate/jpa/test/jee/invalid-orm-1.xml" );
+				.addMappingFileName( "org/hibernate/test/jpa/xml/versions/invalid-orm-1_0.xml" );
 		HibernatePersistenceProvider hp = new HibernatePersistenceProvider();
 		EntityManagerFactory emf = null;
 		try {
@@ -94,7 +122,7 @@ public class OrmVersionTest {
 		private final String persistenceSchemaVersion;
 
 		public PersistenceUnitInfoImpl(String name) {
-			this( name, "2.0" );
+			this( name, "2.2" );
 		}
 
 		public PersistenceUnitInfoImpl(String name, String persistenceSchemaVersion) {

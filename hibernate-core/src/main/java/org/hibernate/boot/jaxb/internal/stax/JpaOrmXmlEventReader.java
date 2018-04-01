@@ -21,6 +21,9 @@ import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 import javax.xml.stream.util.EventReaderDelegate;
 
+import org.hibernate.boot.xsd.LocalXsdResolver;
+import org.hibernate.boot.xsd.MappingXsdSupport;
+
 /**
  * A JPA {@code orm.xml} specific StAX EVentReader to handle a few oddities.
  *
@@ -43,9 +46,6 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 
 	private static final String ROOT_ELEMENT_NAME = "entity-mappings";
 	private static final String VERSION_ATTRIBUTE_NAME = "version";
-
-	private static final String DEFAULT_VERSION = "2.1";
-	private static final List<String> VALID_VERSIONS = Arrays.asList( "1.0", "2.0", "2.1" );
 
 	private final XMLEventFactory xmlEventFactory;
 
@@ -88,14 +88,14 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 		// so that the event we ask it to generate for us has the same location info
 		xmlEventFactory.setLocation( startElement.getLocation() );
 		return xmlEventFactory.createStartElement(
-				new QName( LocalSchema.ORM.getNamespaceUri(), startElement.getName().getLocalPart() ),
+				new QName( MappingXsdSupport.INSTANCE.latestJpaDescriptor().getNamespaceUri(), startElement.getName().getLocalPart() ),
 				newElementAttributeList.iterator(),
 				newNamespaceList.iterator()
 		);
 	}
 
 	private List<Attribute> mapAttributes(StartElement startElement) {
-		final List<Attribute> mappedAttributes = new ArrayList<Attribute>();
+		final List<Attribute> mappedAttributes = new ArrayList<>();
 
 		Iterator<Attribute> existingAttributesIterator = existingXmlAttributesIterator( startElement );
 		while ( existingAttributesIterator.hasNext() ) {
@@ -125,11 +125,11 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 			if ( VERSION_ATTRIBUTE_NAME.equals( originalAttribute.getName().getLocalPart() ) ) {
 				final String specifiedVersion = originalAttribute.getValue();
 
-				if ( !VALID_VERSIONS.contains( specifiedVersion ) ) {
+				if ( !LocalXsdResolver.isValidJpaVersion( specifiedVersion ) ) {
 					throw new BadVersionException( specifiedVersion );
 				}
 
-				return xmlEventFactory.createAttribute( VERSION_ATTRIBUTE_NAME, DEFAULT_VERSION );
+				return xmlEventFactory.createAttribute( VERSION_ATTRIBUTE_NAME, LocalXsdResolver.latestJpaVerison() );
 			}
 		}
 
@@ -156,7 +156,7 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 		}
 
 		if ( mappedNamespaces.isEmpty() ) {
-			mappedNamespaces.add( xmlEventFactory.createNamespace( LocalSchema.ORM.getNamespaceUri() ) );
+			mappedNamespaces.add( xmlEventFactory.createNamespace( MappingXsdSupport.INSTANCE.latestJpaDescriptor().getNamespaceUri() ) );
 		}
 
 		return mappedNamespaces;
@@ -170,7 +170,7 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 	private Namespace mapNamespace(Namespace originalNamespace) {
 		if ( NAMESPACE_URIS_TO_MAP.contains( originalNamespace.getNamespaceURI() ) ) {
 			// this is a namespace "to map" so map it
-			return xmlEventFactory.createNamespace( originalNamespace.getPrefix(), LocalSchema.ORM.getNamespaceUri() );
+			return xmlEventFactory.createNamespace( originalNamespace.getPrefix(), MappingXsdSupport.INSTANCE.latestJpaDescriptor().getNamespaceUri() );
 		}
 
 		return originalNamespace;
@@ -183,7 +183,7 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 		// so that the event we ask it to generate for us has the same location info
 		xmlEventFactory.setLocation( endElement.getLocation() );
 		return xmlEventFactory.createEndElement(
-				new QName( LocalSchema.ORM.getNamespaceUri(), endElement.getName().getLocalPart() ),
+				new QName( MappingXsdSupport.INSTANCE.latestJpaDescriptor().getNamespaceUri(), endElement.getName().getLocalPart() ),
 				targetNamespaces.iterator()
 		);
 	}

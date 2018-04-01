@@ -18,7 +18,11 @@ import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
+ *
+ * @deprecated No longer used locally.  See {@link org.hibernate.boot.xsd.MappingXsdSupport}
+ * and {@link org.hibernate.boot.xsd.ConfigXsdSupport}
  */
+@Deprecated
 public enum LocalSchema {
 	ORM(
 			"http://www.hibernate.org/xsd/orm/mapping",

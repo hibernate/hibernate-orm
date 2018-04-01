@@ -19,6 +19,8 @@ import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 import javax.xml.stream.util.EventReaderDelegate;
 
+import org.hibernate.boot.xsd.MappingXsdSupport;
+
 /**
  * A StAX EventReader for {@code hbm.xml} files to add namespaces in documents
  * not containing namespaces.
@@ -65,7 +67,7 @@ public class HbmEventReader extends EventReaderDelegate {
 
 		if ( "".equals( startElement.getName().getNamespaceURI() ) ) {
 			// add the default namespace mapping
-			targetNamespaces.add( xmlEventFactory.createNamespace( LocalSchema.HBM.getNamespaceUri() ) );
+			targetNamespaces.add( xmlEventFactory.createNamespace( MappingXsdSupport.INSTANCE.hbmXsd().getNamespaceUri() ) );
 		}
 
 		// transfer any namespaces directly, unless it is in the "to map" list in which case
@@ -75,7 +77,7 @@ public class HbmEventReader extends EventReaderDelegate {
 			Namespace namespace = originalNamespaces.next();
 			if ( NAMESPACE_URIS_TO_MAP.contains( namespace.getNamespaceURI() ) ) {
 				// this is a namespace "to map" so map it
-				namespace = xmlEventFactory.createNamespace( namespace.getPrefix(), LocalSchema.HBM.getNamespaceUri() );
+				namespace = xmlEventFactory.createNamespace( namespace.getPrefix(), MappingXsdSupport.INSTANCE.hbmXsd().getNamespaceUri() );
 			}
 			targetNamespaces.add( namespace );
 		}
@@ -84,7 +86,7 @@ public class HbmEventReader extends EventReaderDelegate {
 		// so that the event we ask it to generate for us has the same location info
 		xmlEventFactory.setLocation( startElement.getLocation() );
 		return xmlEventFactory.createStartElement(
-				new QName( LocalSchema.HBM.getNamespaceUri(), startElement.getName().getLocalPart() ),
+				new QName( MappingXsdSupport.INSTANCE.hbmXsd().getNamespaceUri(), startElement.getName().getLocalPart() ),
 				startElement.getAttributes(),
 				targetNamespaces.iterator()
 		);

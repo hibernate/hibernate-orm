@@ -20,9 +20,9 @@ import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.internal.stax.HbmEventReader;
 import org.hibernate.boot.jaxb.internal.stax.JpaOrmXmlEventReader;
-import org.hibernate.boot.jaxb.internal.stax.LocalSchema;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.xsd.MappingXsdSupport;
 import org.hibernate.internal.util.config.ConfigurationException;
 
 import org.jboss.logging.Logger;
@@ -38,10 +38,12 @@ public class MappingBinder extends AbstractBinder {
 	private static final Logger log = Logger.getLogger( MappingBinder.class );
 
 	private final XMLEventFactory xmlEventFactory = XMLEventFactory.newInstance();
+	private final MappingXsdSupport xsdSupport = new MappingXsdSupport();
+
 	private JAXBContext hbmJaxbContext;
 
 	public MappingBinder(ClassLoaderService classLoaderService) {
-		super( classLoaderService );
+		this( classLoaderService, true );
 	}
 
 	public MappingBinder(ClassLoaderService classLoaderService, boolean validateXml) {
@@ -58,8 +60,8 @@ public class MappingBinder extends AbstractBinder {
 			log.debugf( "Performing JAXB binding of hbm.xml document : %s", origin.toString() );
 
 			XMLEventReader hbmReader = new HbmEventReader( staxEventReader, xmlEventFactory );
-			JaxbHbmHibernateMapping hbmBindings = jaxb( hbmReader, LocalSchema.HBM.getSchema(), hbmJaxbContext(), origin );
-			return new Binding<JaxbHbmHibernateMapping>( hbmBindings, origin );
+			JaxbHbmHibernateMapping hbmBindings = jaxb( hbmReader, xsdSupport.hbmXsd().getSchema(), hbmJaxbContext(), origin );
+			return new Binding<>( hbmBindings, origin );
 		}
 		else {
 //			final XMLEventReader reader = new JpaOrmXmlEventReader( staxEventReader );
@@ -67,7 +69,7 @@ public class MappingBinder extends AbstractBinder {
 
 			try {
 				final XMLEventReader reader = new JpaOrmXmlEventReader( staxEventReader, xmlEventFactory );
-				return new Binding<Document>( toDom4jDocument( reader, origin), origin );
+				return new Binding<>( toDom4jDocument( reader, origin ), origin );
 			}
 			catch (JpaOrmXmlEventReader.BadVersionException e) {
 				throw new UnsupportedOrmXsdVersionException( e.getRequestedVersion(), origin );

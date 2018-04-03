@@ -6,8 +6,8 @@
  */
 
 plugins {
-  id "org.wildfly.build.provision"   version '0.0.5'
-  id "org.wildfly.build.featurepack" version '0.0.5'
+  id "org.wildfly.build.provision"   version '0.0.6'
+  id "org.wildfly.build.featurepack" version '0.0.6'
 }
 
 apply from: rootProject.file( 'gradle/base-information.gradle' )
@@ -74,6 +74,8 @@ featurepack {
 	variables['bytebuddySlot'] = bytebuddyVersion
 	//Dependency on another Feature Pack:
 	dependency "org.wildfly:wildfly-feature-pack:${project.wildflyVersion}" // It will assume it is "zip" by default
+	//Ensure we declare all source repositories explicitly
+	autoAddRepositories = false
 }
 
 task createCoreFeaturePackZip( type: Zip, dependsOn: [featurepack] ) {
@@ -100,6 +102,8 @@ provision {
 	}*/
 	variables['wildfly.version'] = project.wildflyVersion
 	variables['hibernate-orm.version'] = rootProject.hibernateVersion
+	//Ensure we declare all source repositories explicitly
+	autoAddRepositories = false
 }
 
 dependencies {

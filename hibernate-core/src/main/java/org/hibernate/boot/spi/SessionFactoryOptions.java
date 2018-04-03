@@ -262,4 +262,3 @@ public interface SessionFactoryOptions {
 		return ImmutableEntityUpdateQueryHandlingMode.WARNING;
 	}
 }
-

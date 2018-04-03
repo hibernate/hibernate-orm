@@ -264,14 +264,12 @@ public interface MetadataBuildingOptions {
 	List<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectList();
 
 	/**
-	 * /**
-	 * 	 * Access to collected AttributeConverter definitions.
-	 * 	 * <p/>
+	 * Access to collected AttributeConverter definitions.
 	 *
 	 * @return The AttributeConverterInfo registered through MetadataBuilder
 	 *
-	 *  @deprecated Use {@link BootstrapContext#getAttributeConverters()} instead
+	 * @deprecated Use {@link BootstrapContext#getAttributeConverters()} instead
 	 */
-@Deprecated
+	@Deprecated
 	List<AttributeConverterInfo> getAttributeConverters();
 }

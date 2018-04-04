@@ -228,6 +228,27 @@ public interface AvailableSettings {
 	// Hibernate specific settings
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
+	/**
+	 * Setting that indicates whether to build the JPA types. Accepts
+	 * 3 values:<ul>
+	 *     <li>
+	 *         <b>enabled</b> - Do the build
+	 *     </li>
+	 *     <li>
+	 *         <b>disabled</b> - Do not so the build
+	 *     </li>
+	 *     <li>
+	 *         <b>ignoreUnsupported</b> - Do the build, but ignore any non-JPA features that would otherwise
+	 *         result in a failure.
+	 *     </li>
+	 * </ul>
+	 *
+	 * @deprecated use {@link org.hibernate.cfg.AvailableSettings#STATIC_METAMODEL_POPULATION} instead
+	 */
+	@Deprecated
+	String JPA_METAMODEL_POPULATION = "hibernate.ejb.metamodel.population";
+
 	/**
 	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#INTERCEPTOR} instead
 	 */

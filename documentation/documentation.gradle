@@ -71,6 +71,7 @@ dependencies {
 	testRuntime( libraries.mysql )
 	testRuntime( libraries.mariadb )
 	testRuntime( libraries.mssql )
+	testRuntime( libraries.hana )
 
 	testCompile "org.osgi:org.osgi.core:4.3.1"
 

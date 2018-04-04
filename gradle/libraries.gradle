@@ -109,7 +109,7 @@ ext {
             oracle:          'com.oracle.jdbc:ojdbc7:12.1.0.2',
             mssql:           'com.microsoft.sqlserver:mssql-jdbc:6.1.0.jre8',
             db2:             'com.ibm.db2:db2jcc:10.5',
-            hana:            'com.sap.db.jdbc:ngdbc:2.2.1', // for HANA 1 the minimum required client version is 1.120.20
+            hana:            'com.sap.cloud.db.jdbc:ngdbc:2.2.16', // for HANA 1 the minimum required client version is 1.120.20
 
             jodaTime:        "joda-time:joda-time:${jodaTimeVersion}",
 

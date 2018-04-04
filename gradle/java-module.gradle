@@ -81,6 +81,7 @@ dependencies {
 	testRuntime( libraries.mariadb )
 	testRuntime( libraries.mssql )
 	testRuntime( libraries.informix )
+	testRuntime( libraries.hana )
 
 	asciidoclet 'org.asciidoctor:asciidoclet:1.+'
 

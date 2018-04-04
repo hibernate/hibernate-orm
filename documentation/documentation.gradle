@@ -61,6 +61,7 @@ dependencies {
 	testRuntime( libraries.mysql )
 	testRuntime( libraries.mariadb )
 	testRuntime( libraries.mssql )
+	testRuntime( libraries.hana )
 
 	testCompile( project( ':hibernate-jcache' ) )
 	testRuntime( libraries.ehcache3 )

@@ -10,6 +10,13 @@
  */
 package org.hibernate.spatial.testing.dialects.h2geodb;
 
+<<<<<<< HEAD
+=======
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Polygon;
+import org.geolatte.geom.jts.JTS;
+>>>>>>> feature/spatial-restriction-geometrytype
 import org.hibernate.spatial.dialect.h2geodb.GeoDbWkb;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.NativeSQLStatement;

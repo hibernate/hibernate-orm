@@ -7,6 +7,13 @@
 
 package org.hibernate.spatial.testing.dialects.oracle;
 
+<<<<<<< HEAD
+=======
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Polygon;
+import org.geolatte.geom.jts.JTS;
+>>>>>>> feature/spatial-restriction-geometrytype
 import org.hibernate.spatial.JTSGeometryJavaTypeDescriptor;
 import org.hibernate.spatial.dialect.oracle.SDOGeometryValueExtractor;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;

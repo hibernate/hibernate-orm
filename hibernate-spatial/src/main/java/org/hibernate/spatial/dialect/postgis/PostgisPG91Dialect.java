@@ -7,7 +7,7 @@
 package org.hibernate.spatial.dialect.postgis;
 
 import java.util.Map;
-
+import org.geolatte.geom.GeometryType;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.PostgreSQL91Dialect;
 import org.hibernate.dialect.function.SQLFunction;
@@ -153,5 +153,10 @@ public class PostgisPG91Dialect extends PostgreSQL91Dialect implements SpatialDi
 	@Override
 	public boolean supports(SpatialFunction function) {
 		return support.supports( function );
+	}
+
+	@Override
+	public SpatialDialect delegate() {
+		return support;
 	}
 }

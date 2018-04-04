@@ -31,6 +31,7 @@ import org.hibernate.spatial.testing.NativeSQLStatement;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Polygon;
 import org.geolatte.geom.jts.JTS;
 
 /**
@@ -276,4 +277,8 @@ public class DB2ExpectationsFactory extends AbstractExpectationsFactory {
 		return geometry == null ? null : JTS.to( geometry );
 	}
 
+	@Override
+	protected NativeSQLStatement createNativeGeometryTypeStatement(Polygon geom) {
+		throw new UnsupportedOperationException();
+	}
 }

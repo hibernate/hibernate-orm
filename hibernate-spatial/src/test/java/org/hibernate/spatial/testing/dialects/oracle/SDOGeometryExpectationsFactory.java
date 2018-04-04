@@ -15,6 +15,7 @@ import org.hibernate.spatial.testing.NativeSQLStatement;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Polygon;
 import org.geolatte.geom.jts.JTS;
 
 /**
@@ -63,6 +64,11 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 				"select t.id, 1 from GEOMTEST T where MDSYS.SDO_WITHIN_DISTANCE(t.GEOM, SDO_GEOMETRY(? , 4326), 'distance = " + distance + "') = 'TRUE' and t.GEOM.SDO_SRID = 4326",
 				geom.toText()
 		);
+	}
+	@Override
+	protected NativeSQLStatement createNativeGeometryTypeStatement(Polygon geom) {
+		// TODO
+		return createNativeSQLStatementAllWKTParams("select t.id, MDSYS.ST_GEOMETRY.SDO_GTYPE=2003 from GEOMTEST t", geom.toText());
 	}
 
 	@Override

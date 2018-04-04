@@ -16,6 +16,7 @@ import org.hibernate.spatial.testing.NativeSQLStatement;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Polygon;
 import org.geolatte.geom.jts.JTS;
 
 
@@ -292,6 +293,12 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 				+ distance
 				+ " ) from GEOMTEST t where st_dwithin(t.geom, ST_GeomFromText(?, 4326), "
 				+ distance + ") = 'true' and ST_SRID(t.geom) = 4326";
+		return createNativeSQLStatementAllWKTParams( sql, geom.toText() );
+	}
+
+	@Override
+	protected NativeSQLStatement createNativeGeometryTypeStatement(Polygon geom) {
+		String sql = "select t.id, st_geometrytype(t.geom) = 'ST_Polygon' from GeomTest t";
 		return createNativeSQLStatementAllWKTParams( sql, geom.toText() );
 	}
 

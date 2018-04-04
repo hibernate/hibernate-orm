@@ -100,5 +100,8 @@ public class OracleSpatialSDO10gDialect extends Oracle10gDialect implements Spat
 		return !function.equals( SpatialFunction.crosses ) && ( getFunctions().get( function.toString() ) != null );
 	}
 
-
+	@Override
+	public SpatialDialect delegate() {
+		return sdoSupport;
+	}
 }

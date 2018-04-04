@@ -51,7 +51,7 @@ public abstract class AbstractExpectationsFactory {
 	private final static int TEST_SRID = 4326;
 	private static final int MAX_BYTE_LEN = 1024;
 	private final DataSourceUtils dataSourceUtils;
-
+	
 	public AbstractExpectationsFactory(DataSourceUtils dataSourceUtils) {
 		this.dataSourceUtils = dataSourceUtils;
 	}
@@ -293,6 +293,10 @@ public abstract class AbstractExpectationsFactory {
 		return retrieveExpected( createNativeDwithinStatement( geom, distance ), BOOLEAN );
 	}
 
+	public Map<Integer, Boolean> getGeometryType(Polygon geom) throws SQLException {
+		return retrieveExpected( createNativeGeometryTypeStatement(geom), BOOLEAN);
+	}
+
 	/**
 	 * Returns the expected result of the havingSRID operator
 	 *
@@ -476,6 +480,14 @@ public abstract class AbstractExpectationsFactory {
 	 * @return
 	 */
 	protected abstract NativeSQLStatement createNativeDwithinStatement(Point geom, double distance);
+
+	/**
+	 * Returns a statement corresponding to the HQL statement:
+	 * "SELECT id, geometrytype(geom) from GeomEntity where geometrytype(geom) = '&lt;typename&gt;';" whereas <tt>&lt;typename&gt;</tt> is the concrete geometry type name for a specific dbms (e.g. <tt>ST_Polygon</tt> for PostGIS)
+	 * @param testPolygon the test geometry
+	 * @return
+	 */
+	protected abstract NativeSQLStatement createNativeGeometryTypeStatement(Polygon testPolygon);
 
 	/**
 	 * Returns a statement corresponding to the HQL statement:
@@ -781,8 +793,7 @@ public abstract class AbstractExpectationsFactory {
 		try {
 			cn = createConnection();
 			preparedStatement = nativeSQLStatement.prepare( cn );
-			LOG.info( "Native SQL is: " + nativeSQLStatement.toString() );
-
+			LOG.info( "Native SQL is: " + preparedStatement.toString() );
 			results = preparedStatement.executeQuery();
 			while ( results.next() ) {
 				int id = results.getInt( 1 );
@@ -794,22 +805,14 @@ public abstract class AbstractExpectationsFactory {
 						expected.put( id, (T) results.getString( 2 ) );
 						break;
 					case INTEGER:
-						{
-							Long value = Long.valueOf( results.getLong( 2 ) );
-							if ( results.wasNull() ) {
-								value = null; // This is required because the Hibernate BasicExtractor also checks ResultSet#wasNull which can lead to a mismatch between the expected and the actual results
-							}
-							expected.put( id, (T) value );
-						}
-					break;
+						expected.put( id, (T) Long.valueOf( results.getLong( 2 ) ) );
+						break;
 					case DOUBLE:
-						{
-							Double value = Double.valueOf( results.getDouble( 2 ) );
-							if ( results.wasNull() ) {
-								value = null; //this is required because SQL Server converts automatically null to 0.0
-							}
-							expected.put( id, (T) value );
+						Double value = Double.valueOf( results.getDouble( 2 ) );
+						if ( results.wasNull() ) {
+							value = null; //this is required because SQL Server converts automatically null to 0.0
 						}
+						expected.put( id, (T) value );
 						break;
 					case BOOLEAN:
 						expected.put( id, (T) Boolean.valueOf( results.getBoolean( 2 ) ) );
@@ -819,7 +822,7 @@ public abstract class AbstractExpectationsFactory {
 						//this code is a hack to deal with Oracle Spatial that returns Blob's for asWKB() function
 						//TODO -- clean up
 						if ( val instanceof Blob ) {
-							val = (T) ( (Blob) val ).getBytes( 1, MAX_BYTE_LEN );
+							val = (T) ((Blob) val).getBytes( 1, MAX_BYTE_LEN );
 						}
 						expected.put( id, val );
 				}
@@ -856,10 +859,6 @@ public abstract class AbstractExpectationsFactory {
 			public PreparedStatement prepare(Connection connection) throws SQLException {
 				return connection.prepareStatement( sql );
 			}
-
-			public String toString() {
-				return sql;
-			}
 		};
 	}
 
@@ -871,10 +870,6 @@ public abstract class AbstractExpectationsFactory {
 					pstmt.setString( i, wkt );
 				}
 				return pstmt;
-			}
-
-			public String toString() {
-				return String.format( "sql; %s, wkt: %s", sql, wkt );
 			}
 		};
 	}
@@ -888,10 +883,6 @@ public abstract class AbstractExpectationsFactory {
 					pstmt.setObject( i++, param );
 				}
 				return pstmt;
-			}
-
-			public String toString() {
-				return sql;
 			}
 		};
 	}

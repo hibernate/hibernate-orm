@@ -17,6 +17,7 @@ import org.jboss.logging.Logger;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Polygon;
 import org.geolatte.geom.jts.JTS;
 
 /**
@@ -61,6 +62,12 @@ public class PostgisExpectationsFactory extends AbstractExpectationsFactory {
 	@Override
 	protected NativeSQLStatement createNativeDwithinStatement(Point geom, double distance) {
 		String sql = "select t.id, st_dwithin(t.geom, ST_GeomFromText(?, 4326), " + distance + " ) from GeomTest t where st_dwithin(t.geom, ST_GeomFromText(?, 4326), " + distance + ") = 'true' and ST_SRID(t.geom) = 4326";
+		return createNativeSQLStatementAllWKTParams( sql, geom.toText() );
+	}
+
+	@Override
+	protected NativeSQLStatement createNativeGeometryTypeStatement(Polygon geom) {
+		String sql = "select t.id, ST_GeometryType(t.geom) = 'ST_Polygon' from GeomTest t";
 		return createNativeSQLStatementAllWKTParams( sql, geom.toText() );
 	}
 

@@ -51,6 +51,13 @@ ext {
                         'jdbc.pass'  : 'hibernateormtest',
                         'jdbc.url'   : 'jdbc:mysql://localhost/hibernate_orm_test'
                 ],
+                mysql_spatial : [
+                        'db.dialect' : 'org.hibernate.spatial.dialect.mysql.MySQL56SpatialDialect',
+                        'jdbc.driver': 'com.mysql.jdbc.Driver',
+                        'jdbc.user'  : 'hibernateormtest',
+                        'jdbc.pass'  : 'hibernateormtest',
+                        'jdbc.url'   : 'jdbc:mysql://localhost/hibernate_orm_test'
+                ],
                 mysql_docker : [
                         'db.dialect' : 'org.hibernate.dialect.MySQL57Dialect',
                         'jdbc.driver': 'com.mysql.jdbc.Driver',
@@ -79,8 +86,22 @@ ext {
                         'jdbc.pass'  : 'hibernate_orm_test',
                         'jdbc.url'   : 'jdbc:oracle:thin:@localhost:1521/xe'
                 ],
+                oracle_spatial : [
+                        'db.dialect' : 'org.hibernate.spatial.dialect.oracle.OracleSpatial10gDialect',
+                        'jdbc.driver': 'oracle.jdbc.driver.OracleDriver',
+                        'jdbc.user'  : 'hibernate_orm_test',
+                        'jdbc.pass'  : 'hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:oracle:thin:@localhost:1521/xe'
+                ],
                 mssql : [
                         'db.dialect' : 'org.hibernate.dialect.SQLServer2012Dialect',
+                        'jdbc.driver': 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
+                        'jdbc.user'  : 'hibernate_orm_test',
+                        'jdbc.pass'  : 'hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:sqlserver://localhost;instance=SQLEXPRESS;databaseName=hibernate_orm_test'
+                ],
+                mssql_spatial : [
+                        'db.dialect' : 'org.hibernate.spatial.dialect.sqlserver.SqlServer2008SpatialDialect',
                         'jdbc.driver': 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
@@ -100,6 +121,13 @@ ext {
                         'jdbc.pass'  : 'db2inst1-pwd',
                         'jdbc.url'   : 'jdbc:db2://127.0.0.1:50000/hibern8'
                 ],
+                db2_spatial : [
+                        'db.dialect' : 'org.hibernate.spatial.dialect.db2.DB2SpatialDialect',
+                        'jdbc.driver': 'com.ibm.db2.jcc.DB2Driver',
+                        'jdbc.user'  : 'db2inst1',
+                        'jdbc.pass'  : 'db2inst1-pwd',
+                        'jdbc.url'   : 'jdbc:db2://127.0.0.1:50000/hibern8'
+                ],
                 hana : [
                         'db.dialect' : 'org.hibernate.dialect.HANAColumnStoreDialect',
                         'jdbc.driver': 'com.sap.db.jdbc.Driver',
@@ -113,6 +141,6 @@ ext {
                         'jdbc.user'  : 'VLAD',
                         'jdbc.pass'  : 'V1ad_test',
                         'jdbc.url'   : 'jdbc:sap://localhost:39015/'
-                ]
+                ],
         ]
 }

@@ -8,6 +8,7 @@ package org.hibernate.spatial.dialect.hana;
 
 import java.sql.Types;
 
+import org.geolatte.geom.GeometryType;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.HANAColumnStoreDialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -339,6 +340,16 @@ public class HANASpatialDialect extends HANAColumnStoreDialect implements Spatia
 	@Override
 	public String getIsEmptySQL(String columnName, boolean isEmpty) {
 		return columnName + ".ST_IsEmpty() = " + ( isEmpty ? 1 : 0 );
+	}
+
+	@Override
+	public String getGeometryTypeSQL(String columnName) {
+		return columnName + ".ST_GeometryType() = ?";
+	}
+
+	@Override
+	public String getGeometryTypeName(GeometryType geometryType) {
+		return "ST_" + geometryType.getCamelCased();
 	}
 
 	@Override

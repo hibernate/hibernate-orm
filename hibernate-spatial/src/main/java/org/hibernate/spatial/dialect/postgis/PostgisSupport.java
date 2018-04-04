@@ -7,7 +7,7 @@
 package org.hibernate.spatial.dialect.postgis;
 
 import java.io.Serializable;
-
+import org.geolatte.geom.GeometryType;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
@@ -154,6 +154,16 @@ public class PostgisSupport implements SpatialDialect, Serializable {
 	public String getIsEmptySQL(String columnName, boolean isEmpty) {
 		final String emptyExpr = " ST_IsEmpty(" + columnName + ") ";
 		return isEmpty ? emptyExpr : "( NOT " + emptyExpr + ")";
+	}
+
+	@Override
+	public String getGeometryTypeSQL(String columnName) {
+		return "( ST_GeometryType(" + columnName + ") = ?)";
+	}
+
+	@Override
+	public String getGeometryTypeName(GeometryType geometryType) {
+		return "ST_" + geometryType.getCamelCased();
 	}
 
 	/**

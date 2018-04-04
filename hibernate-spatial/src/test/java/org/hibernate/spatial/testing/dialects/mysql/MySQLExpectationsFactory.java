@@ -13,6 +13,7 @@ import org.hibernate.spatial.testing.NativeSQLStatement;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Polygon;
 import org.geolatte.geom.ByteBuffer;
 import org.geolatte.geom.codec.Wkb;
 import org.geolatte.geom.codec.WkbDecoder;
@@ -56,6 +57,12 @@ public class MySQLExpectationsFactory extends AbstractExpectationsFactory {
 	@Override
 	protected NativeSQLStatement createNativeDwithinStatement(Point geom, double distance) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	protected NativeSQLStatement createNativeGeometryTypeStatement(Polygon geom) {
+		String sql = "select t.id, geometrytype(t.geom) = 'Polygon' from GeomTest t";
+		return createNativeSQLStatementAllWKTParams( sql, geom.toText() );
 	}
 
 	@Override

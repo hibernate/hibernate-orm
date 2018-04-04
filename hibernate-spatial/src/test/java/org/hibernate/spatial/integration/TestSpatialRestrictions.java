@@ -10,7 +10,8 @@ package org.hibernate.spatial.integration;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
-
+import static junit.framework.Assert.assertEquals;
+import org.geolatte.geom.GeometryType;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -26,6 +27,8 @@ import org.hibernate.spatial.testing.SpatialFunctionalTestCase;
 import org.hibernate.testing.Skip;
 import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
+
+import org.hibernate.testing.Skip;
 
 import org.jboss.logging.Logger;
 
@@ -166,6 +169,16 @@ public class TestSpatialRestrictions extends SpatialFunctionalTestCase {
 		}
 		Map<Integer, Boolean> dbexpected = expectationsFactory.getIsNotEmpty();
 		Criterion spatialCriterion = SpatialRestrictions.isNotEmpty( "geom" );
+		retrieveAndCompare( dbexpected, spatialCriterion );
+	}
+
+	@Test
+	public void geometryType() throws SQLException {
+		if ( !isSupportedByDialect( SpatialFunction.geometrytype ) ) {
+			return;
+		}
+		Map<Integer, Boolean> dbexpected = expectationsFactory.getGeometryType( expectationsFactory.getTestPolygon() );
+		Criterion spatialCriterion = SpatialRestrictions.geometryType("geom", GeometryType.POLYGON);
 		retrieveAndCompare( dbexpected, spatialCriterion );
 	}
 

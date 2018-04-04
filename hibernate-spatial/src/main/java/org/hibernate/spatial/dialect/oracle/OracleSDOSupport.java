@@ -7,6 +7,7 @@
 package org.hibernate.spatial.dialect.oracle;
 
 import java.io.Serializable;
+import org.geolatte.geom.GeometryType;
 
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
@@ -305,6 +306,24 @@ class OracleSDOSupport implements SpatialDialect, Serializable {
 	@Override
 	public String getIsEmptySQL(String columnName, boolean isEmpty) {
 		return String.format( "( MDSYS.ST_GEOMETRY(%s).ST_ISEMPTY() = %d )", columnName, isEmpty ? 1 : 0 );
+	}
+
+	/**
+	 * Returns the SQL fragment when parsing a
+	 * <code>GeometryTypeFilterExpression</code> expression
+	 *
+	 * @param columnName The geometry column
+	 *
+	 * @return The SQL fragment for the geometrytype function
+	 */
+	@Override
+	public String getGeometryTypeSQL(String columnName) {
+		return String.format( " (MDSYS.ST_GEOMETRY(%s).GET_GTYPE() = ?)", columnName );
+	}
+
+	@Override
+	public String getGeometryTypeName(GeometryType geometryType) {
+		return geometryType.name();
 	}
 
 	/**

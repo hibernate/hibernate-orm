@@ -1097,4 +1097,9 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 				"select t.id, t.geom.ST_ZMin() from GeomTest t where t.geom.ST_SRID() = "
 						+ getTestSrid() );
 	}
+
+	@Override
+	protected NativeSQLStatement createNativeGeometryTypeStatement(Polygon geom) {
+		throw new UnsupportedOperationException();
+	}
 }

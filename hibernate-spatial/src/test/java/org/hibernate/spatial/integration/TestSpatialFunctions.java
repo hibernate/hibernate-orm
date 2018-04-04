@@ -7,6 +7,8 @@
 
 package org.hibernate.spatial.integration;
 
+import com.vividsolutions.jts.geom.Geometry;
+import static java.lang.String.format;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;

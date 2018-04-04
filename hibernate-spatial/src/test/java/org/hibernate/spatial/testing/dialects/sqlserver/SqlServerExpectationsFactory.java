@@ -13,6 +13,7 @@ import org.hibernate.spatial.testing.NativeSQLStatement;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Polygon;
 import org.geolatte.geom.codec.db.sqlserver.Decoders;
 import org.geolatte.geom.jts.JTS;
 
@@ -222,6 +223,12 @@ public class SqlServerExpectationsFactory extends AbstractExpectationsFactory {
 	@Override
 	protected NativeSQLStatement createNativeDwithinStatement(Point geom, double distance) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	protected NativeSQLStatement createNativeGeometryTypeStatement(Polygon geom) {
+		String sql = "select this_.id as id1_0_0_, this_.geom as geom2_0_0_, this_.type as type3_0_0_ from geomtest this_ where (this_.geom.STGeometryType() = ?) ";
+		return createNativeSQLStatementAllWKTParams( sql, geom.toText() );
 	}
 
 	@Override

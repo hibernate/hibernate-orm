@@ -12,6 +12,8 @@ import org.hibernate.spatial.SpatialRelation;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 
+import org.geolatte.geom.GeometryType;
+
 /**
  * A factory for spatial criteria.
  * <p>
@@ -246,6 +248,20 @@ public class SpatialRestrictions {
 	 */
 	public static Criterion isNotEmpty(String propertyName) {
 		return new IsEmptyExpression( propertyName, false );
+	}
+
+	/**
+	 * Apply an "geometry type filter" constraint to the named property
+	 *
+	 * @param propertyName The name of the property
+	 * @param filterValue The filter value
+	 *
+	 * @return A GeometryTypeFilterExpression
+	 *
+	 * @see GeometryTypeFilterExpression
+	 */
+	public static Criterion geometryType(String propertyName, GeometryType filterValue) {
+		return new GeometryTypeFilterExpression(propertyName, filterValue);
 	}
 
 	/**

@@ -627,10 +627,6 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			);
 		}
 
-		if ( parameterListBindingMap != null ) {
-			parameterListBindingMap.clear();
-		}
-
 		return queryString;
 	}
 

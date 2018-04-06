@@ -71,6 +71,14 @@ hence we can save a database roundtrip.
 +
 If enabled Hibernate will initialize the entity Proxy even when accessing its identifier.
 
+`*hibernate.jpa.compliance.global_id_generators*` (e.g. `true` or `false` (default value) )::
+The JPA spec says that the scope of TableGenerator and SequenceGenerator names is global to the persistence unit (across all generator types).
++
+Traditionally, Hibernate has considered the names locally scoped.
++
+If enabled, the names used by `@TableGenerator` and `@SequenceGenerator` will be considered global so configuring two different generators
+with the same name will cause a `java.lang.IllegalArgumentException' to be thrown at boot time.
+
 [[configurations-database-connection]]
 === Database connection properties
 

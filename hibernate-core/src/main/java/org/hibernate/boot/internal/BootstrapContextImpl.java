@@ -36,6 +36,8 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.jpa.internal.JpaComplianceImpl;
+import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
@@ -50,6 +52,8 @@ public class BootstrapContextImpl implements BootstrapContext {
 	private static final Logger log = Logger.getLogger( BootstrapContextImpl.class );
 
 	private final StandardServiceRegistry serviceRegistry;
+
+	private final MutableJpaCompliance jpaCompliance;
 
 	private final TypeConfiguration typeConfiguration;
 
@@ -87,6 +91,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
 		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
 
+		this.jpaCompliance = new JpaComplianceImpl( configService.getSettings(), false );
 		this.scanOptions = new StandardScanOptions(
 				(String) configService.getSettings().get( AvailableSettings.SCANNER_DISCOVERY ),
 				false
@@ -110,6 +115,11 @@ public class BootstrapContextImpl implements BootstrapContext {
 	@Override
 	public StandardServiceRegistry getServiceRegistry() {
 		return serviceRegistry;
+	}
+
+	@Override
+	public MutableJpaCompliance getJpaCompliance() {
+		return jpaCompliance;
 	}
 
 	@Override

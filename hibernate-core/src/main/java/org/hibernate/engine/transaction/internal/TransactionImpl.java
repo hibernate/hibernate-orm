@@ -13,7 +13,7 @@ import org.hibernate.TransactionException;
 import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.internal.CoreLogging;
-import org.hibernate.jpa.JpaCompliance;
+import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 

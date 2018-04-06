@@ -8,7 +8,7 @@ package org.hibernate.resource.transaction.spi;
 
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
-import org.hibernate.jpa.JpaCompliance;
+import org.hibernate.jpa.spi.JpaCompliance;
 
 /**
  * Models the coordination of all transaction related flows.

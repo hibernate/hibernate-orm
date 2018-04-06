@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa;
+package org.hibernate.jpa.spi;
 
 import org.hibernate.Transaction;
 
@@ -89,4 +89,12 @@ public interface JpaCompliance {
 	 * @return {@code true} says to act the spec-defined way.
 	 */
 	boolean isJpaCacheComplianceEnabled();
+
+	/**
+	 * Should the the scope of {@link javax.persistence.TableGenerator#name()} and {@link javax.persistence.SequenceGenerator#name()} be
+	 * considered globally or locally defined?
+	 *
+	 * @return {@code true} indicates the generator name scope is considered global.
+	 */
+	boolean isGlobalGeneratorScopeEnabled();
 }

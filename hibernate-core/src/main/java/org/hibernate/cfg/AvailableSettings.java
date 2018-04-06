@@ -16,7 +16,7 @@ import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.internal.log.DeprecationLogger;
-import org.hibernate.jpa.JpaCompliance;
+import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
@@ -1845,6 +1845,18 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * @since 5.3
 	 */
 	String JPA_CACHING_COMPLIANCE = "hibernate.jpa.compliance.caching";
+
+	/**
+	 * Determine if the scope of {@link javax.persistence.TableGenerator#name()} and {@link javax.persistence.SequenceGenerator#name()} should be
+	 * considered globally or locally defined.
+	 *
+	 * If enabled, the names will considered globally scoped so defining two different generators with the same name
+	 * will cause a name collision and an exception will be thrown during the bootstrap phase.
+	 *
+	 * @see JpaCompliance#isGlobalGeneratorScopeEnabled()
+	 * @since 5.2.17
+	 */
+	String JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE = "hibernate.jpa.compliance.global_id_generators";
 
 	/**
 	 * True/False setting indicating if the value stored in the table used by the {@link javax.persistence.TableGenerator}

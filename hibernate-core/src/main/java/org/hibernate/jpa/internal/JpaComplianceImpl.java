@@ -4,24 +4,25 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.spi;
+package org.hibernate.jpa.internal;
 
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.jpa.JpaCompliance;
+import org.hibernate.jpa.spi.MutableJpaCompliance;
 
 /**
  * @author Steve Ebersole
  */
-public class JpaComplianceImpl implements JpaCompliance {
+public class JpaComplianceImpl implements MutableJpaCompliance {
 	private boolean queryCompliance;
 	private boolean transactionCompliance;
 	private boolean listCompliance;
 	private boolean closedCompliance;
 	private boolean proxyCompliance;
 	private boolean cachingCompliance;
+	private final boolean globalGeneratorNameScopeCompliance;
 
 
 	@SuppressWarnings("ConstantConditions")
@@ -58,6 +59,11 @@ public class JpaComplianceImpl implements JpaCompliance {
 				configurationSettings,
 				jpaByDefault
 		);
+		globalGeneratorNameScopeCompliance = ConfigurationHelper.getBoolean(
+				AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE,
+				configurationSettings,
+				jpaByDefault
+		);
 	}
 
 	@Override
@@ -88,6 +94,11 @@ public class JpaComplianceImpl implements JpaCompliance {
 	@Override
 	public boolean isJpaCacheComplianceEnabled() {
 		return cachingCompliance;
+	}
+
+	@Override
+	public boolean isGlobalGeneratorScopeEnabled() {
+		return globalGeneratorNameScopeCompliance;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

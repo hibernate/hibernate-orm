@@ -7,7 +7,6 @@
 package org.hibernate.boot.spi;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 import org.hibernate.annotations.common.reflection.ReflectionManager;
@@ -20,6 +19,7 @@ import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
@@ -33,6 +33,8 @@ import org.jboss.jandex.IndexView;
  */
 public interface BootstrapContext {
 	StandardServiceRegistry getServiceRegistry();
+
+	MutableJpaCompliance getJpaCompliance();
 
 	TypeConfiguration getTypeConfiguration();
 

@@ -51,7 +51,6 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
-import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -60,6 +59,7 @@ import org.hibernate.boot.spi.NaturalIdUniqueKeyBinder;
 import org.hibernate.cache.cfg.internal.DomainDataRegionConfigImpl.Builder;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AnnotatedClassType;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.CopyIdentifierComponentSecondPass;
 import org.hibernate.cfg.CreateKeySecondPass;
 import org.hibernate.cfg.FkSecondPass;
@@ -493,11 +493,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			return;
 		}
 		final IdentifierGeneratorDefinition old = idGeneratorDefinitionMap.put( generator.getName(), generator );
-		if ( old != null ) {
-			if ( !old.equals( generator ) ) {
-				throw new IllegalArgumentException( "Duplicate generator name " + old.getName() );
+		if ( old != null && !old.equals( generator ) ) {
+			if ( bootstrapContext.getJpaCompliance().isGlobalGeneratorScopeEnabled() ) {
+				throw new IllegalArgumentException( "Duplicate generator name " + old.getName() + " you will likely want to set the property " + AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE + " to false " );
 			}
-//			log.duplicateGeneratorName( old.getName() );
+			else {
+				log.duplicateGeneratorName( old.getName() );
+			}
 		}
 	}
 

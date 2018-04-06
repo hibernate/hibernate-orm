@@ -13,6 +13,9 @@ import javax.persistence.Id;
 import javax.persistence.TableGenerator;
 
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -26,11 +29,18 @@ public class TableGeneratorMultipleDefinitionTest extends BaseUnitTestCase {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testDuplicateGeneratorNamesDefinition() {
-		new MetadataSources().addAnnotatedClass( TestEntity1.class )
-				.addAnnotatedClass( TestEntity2.class )
-				.buildMetadata()
-				.buildSessionFactory().close();
-
+		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+				.applySetting( AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, "true" )
+				.build();
+		try {
+			new MetadataSources( ssr )
+					.addAnnotatedClass( TestEntity2.class )
+					.addAnnotatedClass( TestEntity1.class )
+					.buildMetadata();
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( ssr );
+		}
 	}
 
 	@Entity(name = "TestEntity1")

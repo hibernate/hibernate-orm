@@ -173,44 +173,10 @@ set clobfield = lo_from_bytea( 0, cast( clobfield as bytea ) ),
 
 === Change in the `@TableGenerator` and `@SequenceGenerator` name scope
 
-In order to be compliant with the JPA specification, from 5.2.13 generators names are considered global (e.g. https://hibernate.atlassian.net/browse/HHH-12157[HHH-12157]) .
-Configuring two generators, even if with different types but with the same name will now cause a `java.lang.IllegalArgumentException' to be thrown at boot time.
-
-For example, the following mappings are no longer valid:
-
-[source,java]
-----
-@Entity
-@TableGenerator(name = "ID_GENERATOR", ... )
-public class FirstEntity {
-    ....
-}
-
-@Entity
-@TableGenerator(name = "ID_GENERATOR", ... )
-public class SecondEntity {
-    ....
-}
-----
-
-or
-
-[source,java]
-----
-@Entity
-@TableGenerator(name = "ID_GENERATOR", ... )
-public class FirstEntity {
-    ....
-}
-
-@Entity
-@SequenceGenerator(name="ID_GENERATOR", ... )
-public class SecondEntity {
-    ....
-}
-----
-
-The solution is to make all generators unique so that there are no two generators with the same name.
+[IMPORTANT]
+From 5.2.13 the id generator name scope was considered global but realizing this change may cause troubles for few existing projects (https://hibernate.atlassian.net/browse/HHH-12454[HHH-12454]), starting *from 5.2.17* the scope of the id generators names
+will be considered local by default (which is the pre-5.2.13 behavior) and a new configuration setting `hibernate.jpa.compliance.global_id_generators`
+can be used to enable the JPA compliant global scoping.
 
 == Misc
 

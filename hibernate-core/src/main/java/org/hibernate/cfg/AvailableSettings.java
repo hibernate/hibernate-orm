@@ -1742,6 +1742,17 @@ public interface AvailableSettings {
 	String JPA_PROXY_COMPLIANCE = "hibernate.jpa.compliance.proxy";
 
 	/**
+	 * Determine if the scope of {@link javax.persistence.TableGenerator#name()} and {@link javax.persistence.SequenceGenerator#name()} should be
+	 * considered globally or locally defined.
+	 *
+	 * If enabled, the names will considered globally scoped so defining two different generators with the same name
+	 * will cause a name collision and an exception will be thrown during the bootstrap phase.
+	 *
+	 * @since 5.2.17
+	 */
+	String JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE = "hibernate.jpa.compliance.global_id_generators";
+
+	/**
 	 * Raises an exception when in-memory pagination over collection fetch is about to be performed.
 	 * Disabled by default. Set to true to enable.
 	 *

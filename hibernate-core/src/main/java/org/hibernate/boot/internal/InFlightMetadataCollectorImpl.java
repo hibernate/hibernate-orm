@@ -71,6 +71,7 @@ import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
@@ -99,6 +100,8 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.type.TypeResolver;
+
+import static org.hibernate.cfg.AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE;
 
 /**
  * The implementation of the in-flight Metadata collector contract.
@@ -443,11 +446,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			return;
 		}
 		final IdentifierGeneratorDefinition old = idGeneratorDefinitionMap.put( generator.getName(), generator );
-		if ( old != null ) {
-			if ( !old.equals( generator ) ) {
-				throw new IllegalArgumentException( "Duplicate generator name " + old.getName() );
+		if ( old != null && !old.equals( generator ) ) {
+			if ( options.isJpaGeneratorGlobalScopeComplianceEnabled() ) {
+				throw new IllegalArgumentException( "Duplicate generator name " + old.getName() + " you will likely want to set the property " + JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE + " to false " );
 			}
-//			log.duplicateGeneratorName( old.getName() );
+			else {
+				log.duplicateGeneratorName( old.getName() );
+			}
 		}
 	}
 

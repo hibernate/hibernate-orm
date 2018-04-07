@@ -107,13 +107,24 @@ public class IdBagBinder extends BagBinder {
 				generatorType = null;
 			}
 
-			SecondPass secondPass = new IdGeneratorResolverSecondPass(
-					id,
-					generatorType,
-					generator,
-					getBuildingContext()
-			);
-			buildingContext.getMetadataCollector().addSecondPass( secondPass );
+			if ( buildingContext.getBuildingOptions().isJpaGeneratorGlobalScopeComplianceEnabled() ) {
+				SecondPass secondPass = new IdGeneratorResolverSecondPass(
+						id,
+						generatorType,
+						generator,
+						getBuildingContext()
+				);
+				buildingContext.getMetadataCollector().addSecondPass( secondPass );
+			}
+			else {
+				BinderHelper.makeIdGenerator(
+						id,
+						generatorType,
+						generator,
+						getBuildingContext(),
+						localGenerators
+				);
+			}
 		}
 		return result;
 	}

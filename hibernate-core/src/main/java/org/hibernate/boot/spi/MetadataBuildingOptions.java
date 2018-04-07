@@ -25,8 +25,12 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.engine.config.spi.ConfigurationService;
 
 import org.jboss.jandex.IndexView;
+
+import static org.hibernate.cfg.AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE;
+import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 
 /**
  * Describes the options used while building the Metadata object (during
@@ -227,4 +231,13 @@ public interface MetadataBuildingOptions {
 //	 * @return The select resolver strategy
 //	 */
 //	PersistentAttributeMemberResolver getPersistentAttributeMemberResolver();
+
+	default boolean isJpaGeneratorGlobalScopeComplianceEnabled() {
+		ConfigurationService cfgService = getServiceRegistry().getService( ConfigurationService.class );
+		return cfgService.getSetting(
+				JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE,
+				BOOLEAN,
+				false
+		);
+	}
 }

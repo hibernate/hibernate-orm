@@ -186,6 +186,13 @@ If true, generated identifier properties are reset to default values when object
 `*hibernate.id.optimizer.pooled.preferred*` (e.g. `none`, `hilo`, `legacy-hilo`, `pooled` (default value), `pooled-lo`, `pooled-lotl` or a fully-qualified name of the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/id/enhanced/Optimizer.html[`Optimizer`] implementation)::
 When a generator specified an increment-size and an optimizer was not explicitly specified, which of the _pooled_ optimizers should be preferred?
 
+`*hibernate.jpa.compliance.global_id_generators*` (e.g. `true` or `false` (default value) )::
+The JPA spec says that the scope of TableGenerator and SequenceGenerator names is global to the persistence unit (across all generator types).
++
+Traditionally, Hibernate has considered the names locally scoped.
++
+If enabled, the names used by `@TableGenerator` and `@SequenceGenerator` will be considered global so configuring two different generators
+with the same name will cause a `java.lang.IllegalArgumentException' to be thrown at boot time.
 ==== Quoting options
 
 `*hibernate.globally_quoted_identifiers*` (e.g. `true` or `false` (default value))::

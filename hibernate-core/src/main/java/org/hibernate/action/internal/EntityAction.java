@@ -12,6 +12,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.action.spi.Executable;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -21,6 +22,8 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 
+import org.jboss.logging.Logger;
+
 /**
  * Base class for actions relating to insert/update/delete of an entity
  * instance.
@@ -29,6 +32,7 @@ import org.hibernate.pretty.MessageHelper;
  */
 public abstract class EntityAction
 		implements Executable, Serializable, Comparable, AfterTransactionCompletionProcess {
+	private static final Logger LOG = Logger.getLogger(EntityAction.class);
 
 	private final String entityName;
 	private final Serializable id;
@@ -97,7 +101,19 @@ public abstract class EntityAction
 	 */
 	public final Serializable getId() {
 		if ( id instanceof DelayedPostInsertIdentifier ) {
-			final Serializable eeId = session.getPersistenceContext().getEntry( instance ).getId();
+			final EntityEntry entry = session.getPersistenceContext().getEntry( instance );
+			if ( entry == null ) {
+				if ( LOG.isDebugEnabled() ) {
+					LOG.debugf(
+							"Skipping action - the persistence context does not contain any entry for the entity [%s]. This may occur if an entity is created and then deleted in the same transaction/flush.",
+							instance
+					);
+				}
+				// If an Entity is created and then deleted in the same Transaction, when Action#postDelete() calls this method the persistence context
+				// does not contain anymore an entry.
+				return null;
+			}
+			final Serializable eeId = entry.getId();
 			return eeId instanceof DelayedPostInsertIdentifier ? null : eeId;
 		}
 		return id;

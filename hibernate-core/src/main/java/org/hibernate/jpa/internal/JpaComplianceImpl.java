@@ -6,64 +6,35 @@
  */
 package org.hibernate.jpa.internal;
 
-import java.util.Map;
-
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.jpa.spi.MutableJpaCompliance;
+import org.hibernate.jpa.spi.JpaCompliance;
 
 /**
- * @author Steve Ebersole
+ * @author Andrea Boriero
  */
-public class JpaComplianceImpl implements MutableJpaCompliance {
+public class JpaComplianceImpl implements JpaCompliance {
 	private boolean queryCompliance;
 	private boolean transactionCompliance;
 	private boolean listCompliance;
 	private boolean closedCompliance;
 	private boolean proxyCompliance;
 	private boolean cachingCompliance;
-	private final boolean globalGeneratorNameScopeCompliance;
+	private boolean globalGeneratorNameScopeCompliance;
 
-
-	@SuppressWarnings("ConstantConditions")
-	public JpaComplianceImpl(Map configurationSettings, boolean jpaByDefault) {
-		final Object legacyQueryCompliance = configurationSettings.get( AvailableSettings.JPAQL_STRICT_COMPLIANCE );
-
-		queryCompliance = ConfigurationHelper.getBoolean(
-				AvailableSettings.JPA_QUERY_COMPLIANCE,
-				configurationSettings,
-				ConfigurationHelper.toBoolean( legacyQueryCompliance, jpaByDefault )
-		);
-		transactionCompliance = ConfigurationHelper.getBoolean(
-				AvailableSettings.JPA_TRANSACTION_COMPLIANCE,
-				configurationSettings,
-				jpaByDefault
-		);
-		listCompliance = ConfigurationHelper.getBoolean(
-				AvailableSettings.JPA_LIST_COMPLIANCE,
-				configurationSettings,
-				jpaByDefault
-		);
-		closedCompliance = ConfigurationHelper.getBoolean(
-				AvailableSettings.JPA_CLOSED_COMPLIANCE,
-				configurationSettings,
-				jpaByDefault
-		);
-		proxyCompliance = ConfigurationHelper.getBoolean(
-				AvailableSettings.JPA_PROXY_COMPLIANCE,
-				configurationSettings,
-				jpaByDefault
-		);
-		cachingCompliance = ConfigurationHelper.getBoolean(
-				AvailableSettings.JPA_CACHING_COMPLIANCE,
-				configurationSettings,
-				jpaByDefault
-		);
-		globalGeneratorNameScopeCompliance = ConfigurationHelper.getBoolean(
-				AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE,
-				configurationSettings,
-				jpaByDefault
-		);
+	private JpaComplianceImpl(
+			boolean queryCompliance,
+			boolean transactionCompliance,
+			boolean listCompliance,
+			boolean closedCompliance,
+			boolean proxyCompliance,
+			boolean cachingCompliance,
+			boolean globalGeneratorNameScopeCompliance) {
+		this.queryCompliance = queryCompliance;
+		this.transactionCompliance = transactionCompliance;
+		this.listCompliance = listCompliance;
+		this.closedCompliance = closedCompliance;
+		this.proxyCompliance = proxyCompliance;
+		this.cachingCompliance = cachingCompliance;
+		this.globalGeneratorNameScopeCompliance = globalGeneratorNameScopeCompliance;
 	}
 
 	@Override
@@ -101,30 +72,63 @@ public class JpaComplianceImpl implements MutableJpaCompliance {
 		return globalGeneratorNameScopeCompliance;
 	}
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Mutators
+	public static class JpaComplianceBuilder {
+		private boolean queryCompliance;
+		private boolean transactionCompliance;
+		private boolean listCompliance;
+		private boolean closedCompliance;
+		private boolean proxyCompliance;
+		private boolean cachingCompliance;
+		private boolean globalGeneratorNameScopeCompliance;
 
-	public void setQueryCompliance(boolean queryCompliance) {
-		this.queryCompliance = queryCompliance;
-	}
+		public JpaComplianceBuilder() {
+		}
 
-	public void setTransactionCompliance(boolean transactionCompliance) {
-		this.transactionCompliance = transactionCompliance;
-	}
+		public JpaComplianceBuilder setQueryCompliance(boolean queryCompliance) {
+			this.queryCompliance = queryCompliance;
+			return this;
+		}
 
-	public void setListCompliance(boolean listCompliance) {
-		this.listCompliance = listCompliance;
-	}
+		public JpaComplianceBuilder setTransactionCompliance(boolean transactionCompliance) {
+			this.transactionCompliance = transactionCompliance;
+			return this;
+		}
 
-	public void setClosedCompliance(boolean closedCompliance) {
-		this.closedCompliance = closedCompliance;
-	}
+		public JpaComplianceBuilder setListCompliance(boolean listCompliance) {
+			this.listCompliance = listCompliance;
+			return this;
+		}
 
-	public void setProxyCompliance(boolean proxyCompliance) {
-		this.proxyCompliance = proxyCompliance;
-	}
+		public JpaComplianceBuilder setClosedCompliance(boolean closedCompliance) {
+			this.closedCompliance = closedCompliance;
+			return this;
+		}
 
-	public void setCachingCompliance(boolean cachingCompliance) {
-		this.cachingCompliance = cachingCompliance;
+		public JpaComplianceBuilder setProxyCompliance(boolean proxyCompliance) {
+			this.proxyCompliance = proxyCompliance;
+			return this;
+		}
+
+		public JpaComplianceBuilder setCachingCompliance(boolean cachingCompliance) {
+			this.cachingCompliance = cachingCompliance;
+			return this;
+		}
+
+		public JpaComplianceBuilder setGlobalGeneratorNameCompliance(boolean globalGeneratorNameCompliance) {
+			this.globalGeneratorNameScopeCompliance = globalGeneratorNameCompliance;
+			return this;
+		}
+
+		JpaCompliance createJpaCompliance() {
+			return new JpaComplianceImpl(
+					queryCompliance,
+					transactionCompliance,
+					listCompliance,
+					closedCompliance,
+					proxyCompliance,
+					cachingCompliance,
+					globalGeneratorNameScopeCompliance
+			);
+		}
 	}
 }

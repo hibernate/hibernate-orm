@@ -36,7 +36,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.jpa.internal.JpaComplianceImpl;
+import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -91,7 +91,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
 		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
 
-		this.jpaCompliance = new JpaComplianceImpl( configService.getSettings(), false );
+		this.jpaCompliance = new MutableJpaComplianceImpl( configService.getSettings(), false );
 		this.scanOptions = new StandardScanOptions(
 				(String) configService.getSettings().get( AvailableSettings.SCANNER_DISCOVERY ),
 				false

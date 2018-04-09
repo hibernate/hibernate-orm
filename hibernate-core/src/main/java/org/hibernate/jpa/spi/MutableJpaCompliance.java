@@ -21,4 +21,6 @@ public interface MutableJpaCompliance extends JpaCompliance {
 	void setProxyCompliance(boolean proxyCompliance);
 
 	void setCachingCompliance(boolean cachingCompliance);
+
+	JpaCompliance immutableCopy();
 }

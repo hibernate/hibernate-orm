@@ -975,7 +975,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@Override
 	public JpaCompliance getJpaCompliance() {
-		return jpaCompliance;
+		return jpaCompliance.immutableCopy();
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

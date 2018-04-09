@@ -7,9 +7,11 @@
 package org.hibernate.engine.internal;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
@@ -29,6 +31,7 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
@@ -90,7 +93,6 @@ public final class Cascade {
 			final String[] propertyNames = persister.getPropertyNames();
 			final CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
 			final boolean hasUninitializedLazyProperties = persister.hasUninitializedLazyProperties( parent );
-			final int componentPathStackDepth = 0;
 			for ( int i = 0; i < types.length; i++) {
 				final CascadeStyle style = cascadeStyles[ i ];
 				final String propertyName = propertyNames[ i ];
@@ -152,7 +154,7 @@ public final class Cascade {
 							action,
 							cascadePoint,
 							eventSource,
-							componentPathStackDepth,
+							null,
 							parent,
 							child,
 							types[ i ],
@@ -177,7 +179,7 @@ public final class Cascade {
 						cascadeLogicalOneToOneOrphanRemoval(
 								action,
 								eventSource,
-								componentPathStackDepth,
+								null,
 								parent,
 								persister.getPropertyValue( parent, i ),
 								types[ i ],
@@ -202,7 +204,7 @@ public final class Cascade {
 			final CascadingAction action,
 			final CascadePoint cascadePoint,
 			final EventSource eventSource,
-			final int componentPathStackDepth,
+			List<String> componentPath,
 			final Object parent,
 			final Object child,
 			final Type type,
@@ -219,7 +221,7 @@ public final class Cascade {
 							action,
 							cascadePoint,
 							eventSource,
-							componentPathStackDepth,
+							componentPath,
 							parent,
 							child,
 							type,
@@ -230,23 +232,28 @@ public final class Cascade {
 				}
 			}
 			else if ( type.isComponentType() ) {
+				if ( componentPath == null ) {
+					componentPath = new ArrayList<>();
+				}
+				componentPath.add( propertyName );
 				cascadeComponent(
 						action,
 						cascadePoint,
 						eventSource,
-						componentPathStackDepth,
+						componentPath,
 						parent,
 						child,
 						(CompositeType) type,
 						anything
 				);
+				componentPath.remove( componentPath.size() - 1 );
 			}
 		}
 
 		cascadeLogicalOneToOneOrphanRemoval(
 				action,
 				eventSource,
-				componentPathStackDepth,
+				componentPath,
 				parent,
 				child,
 				type,
@@ -258,7 +265,7 @@ public final class Cascade {
 	private static void cascadeLogicalOneToOneOrphanRemoval(
 			final CascadingAction action,
 			final EventSource eventSource,
-			final int componentPathStackDepth,
+			final List<String> componentPath,
 			final Object parent,
 			final Object child,
 			final Type type,
@@ -277,26 +284,26 @@ public final class Cascade {
 				final EntityEntry entry = persistenceContext.getEntry( parent );
 				if ( entry != null && entry.getStatus() != Status.SAVING ) {
 					Object loadedValue;
-					if ( componentPathStackDepth == 0 ) {
+					if ( componentPath == null ) {
 						// association defined on entity
 						loadedValue = entry.getLoadedValue( propertyName );
 					}
 					else {
 						// association defined on component
-						// 		todo : this is currently unsupported because of the fact that
-						//		we do not know the loaded state of this value properly
-						//		and doing so would be very difficult given how components and
-						//		entities are loaded (and how 'loaded state' is put into the
-						//		EntityEntry).  Solutions here are to either:
-						//			1) properly account for components as a 2-phase load construct
-						//			2) just assume the association was just now orphaned and
-						// 				issue the orphan delete.  This would require a special
-						//				set of SQL statements though since we do not know the
-						//				orphaned value, something a delete with a subquery to
-						// 				match the owner.
-//							final EntityType entityType = (EntityType) type;
-//							final String getPropertyPath = composePropertyPath( entityType.getPropertyName() );
-						loadedValue = null;
+						// Since the loadedState in the EntityEntry is a flat domain type array
+						// We first have to extract the component object and then ask the component type
+						// recursively to give us the value of the sub-property of that object
+						loadedValue = entry.getLoadedValue( componentPath.get( 0 ) );
+						ComponentType componentType = (ComponentType) entry.getPersister().getPropertyType( componentPath.get( 0 ) );
+						if ( componentPath.size() != 1 ) {
+							for ( int i = 1; i < componentPath.size(); i++ ) {
+								final int subPropertyIndex = componentType.getPropertyIndex( componentPath.get( i ) );
+								loadedValue = componentType.getPropertyValue( loadedValue, subPropertyIndex );
+								componentType = (ComponentType) componentType.getSubtypes()[subPropertyIndex];
+							}
+						}
+
+						loadedValue = componentType.getPropertyValue( loadedValue, componentType.getPropertyIndex( propertyName ) );
 					}
 
 					// orphaned if the association was nulled (child == null) or receives a new value while the
@@ -367,7 +374,7 @@ public final class Cascade {
 			final CascadingAction action,
 			final CascadePoint cascadePoint,
 			final EventSource eventSource,
-			final int componentPathStackDepth,
+			final List<String> componentPath,
 			final Object parent,
 			final Object child,
 			final CompositeType componentType,
@@ -379,7 +386,7 @@ public final class Cascade {
 		for ( int i = 0; i < types.length; i++ ) {
 			final CascadeStyle componentPropertyStyle = componentType.getCascadeStyle( i );
 			final String subPropertyName = propertyNames[i];
-			if ( componentPropertyStyle.doCascade( action ) ) {
+			if ( componentPropertyStyle.doCascade( action ) || componentPropertyStyle.hasOrphanDelete() && action.deleteOrphans() ) {
 				if (children == null) {
 					// Get children on demand.
 					children = componentType.getPropertyValues( child, eventSource );
@@ -388,7 +395,7 @@ public final class Cascade {
 						action,
 						cascadePoint,
 						eventSource,
-						componentPathStackDepth + 1,
+						componentPath,
 						parent,
 						children[i],
 						types[i],
@@ -405,7 +412,7 @@ public final class Cascade {
 			final CascadingAction action,
 			final CascadePoint cascadePoint,
 			final EventSource eventSource,
-			final int componentPathStackDepth,
+			final List<String> componentPath,
 			final Object parent,
 			final Object child,
 			final Type type,
@@ -420,7 +427,7 @@ public final class Cascade {
 					action,
 					cascadePoint,
 					eventSource,
-					componentPathStackDepth,
+					componentPath,
 					parent,
 					child,
 					style,
@@ -437,7 +444,7 @@ public final class Cascade {
 			final CascadingAction action,
 			final CascadePoint cascadePoint,
 			final EventSource eventSource,
-			final int componentPathStackDepth,
+			final List<String> componentPath,
 			final Object parent,
 			final Object child,
 			final CascadeStyle style,
@@ -457,7 +464,7 @@ public final class Cascade {
 				action,
 				elementsCascadePoint,
 				eventSource,
-				componentPathStackDepth,
+				componentPath,
 				parent,
 				child,
 				type,
@@ -504,7 +511,7 @@ public final class Cascade {
 			final CascadingAction action,
 			final CascadePoint cascadePoint,
 			final EventSource eventSource,
-			final int componentPathStackDepth,
+			final List<String> componentPath,
 			final Object parent,
 			final Object child,
 			final CollectionType collectionType,
@@ -526,7 +533,7 @@ public final class Cascade {
 						action,
 						cascadePoint,
 						eventSource,
-						componentPathStackDepth,
+						componentPath,
 						parent,
 						itr.next(),
 						elemType,

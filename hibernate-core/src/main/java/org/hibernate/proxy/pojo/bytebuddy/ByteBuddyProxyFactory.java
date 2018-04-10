@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import org.hibernate.HibernateException;
+import org.hibernate.bytecode.internal.bytebuddy.ByteBuddyState;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
@@ -42,9 +43,6 @@ import static net.bytebuddy.matcher.ElementMatchers.*;
 
 public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 	private static final CoreMessageLogger LOG = messageLogger( ByteBuddyProxyFactory.class );
-
-	private static final TypeCache<TypeCache.SimpleKey> CACHE =
-			new TypeCache.WithInlineExpunction<TypeCache.SimpleKey>(TypeCache.Sort.SOFT);
 
 	private Class persistentClass;
 	private String entityName;
@@ -92,7 +90,9 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 		}
 		key.addAll( Arrays.<Class<?>>asList( interfaces ) );
 
-		return CACHE.findOrInsert( persistentClass.getClassLoader(), new TypeCache.SimpleKey(key), () ->
+		final TypeCache<TypeCache.SimpleKey> cacheForProxies = ByteBuddyState.getCacheForProxies();
+
+		return cacheForProxies.findOrInsert( persistentClass.getClassLoader(), new TypeCache.SimpleKey(key), () ->
 			new ByteBuddy()
 			.ignore( isSynthetic().and( named( "getMetaClass" ).and( returns( td -> "groovy.lang.MetaClass".equals( td.getName() ) ) ) ) )
 			.with(TypeValidation.DISABLED)
@@ -108,7 +108,7 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 			.intercept(FieldAccessor.ofField(ProxyConfiguration.INTERCEPTOR_FIELD_NAME).withAssigner(Assigner.DEFAULT, Assigner.Typing.DYNAMIC))
 			.make()
 			.load(persistentClass.getClassLoader())
-			.getLoaded(), CACHE);
+			.getLoaded(), cacheForProxies );
 	}
 
 	@Override

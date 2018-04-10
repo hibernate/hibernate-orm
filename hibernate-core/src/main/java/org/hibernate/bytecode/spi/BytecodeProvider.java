@@ -48,4 +48,16 @@ public interface BytecodeProvider {
 	 * @return An enhancer to perform byte code manipulations.
 	 */
 	Enhancer getEnhancer(EnhancementContext enhancementContext);
+
+	/**
+	 * Some BytecodeProvider implementations will have classloader specific caching.
+	 * These caches are useful at runtime but need to be reset at least on SessionFactory shutdown
+	 * to prevent leaking the deployment classloader.
+	 * Since the BytecodeProvider is static these caches are potentially shared across multiple
+	 * deployments; in this case we'll clear all caches which might show as a small, temporary
+	 * performance degradation on the SessionFactory instances which haven't been closed.
+	 * This limitation will be removed in the future, when these providers will no longer be static.
+	 */
+	default void resetCaches() {}
+
 }

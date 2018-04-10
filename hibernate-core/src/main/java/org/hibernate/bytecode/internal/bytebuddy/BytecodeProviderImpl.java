@@ -19,11 +19,9 @@ import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 
-import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.NamingStrategy;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.dynamic.scaffold.TypeValidation;
 import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.implementation.MethodCall;
 import net.bytebuddy.implementation.bytecode.ByteCodeAppender;
@@ -34,15 +32,22 @@ import net.bytebuddy.implementation.bytecode.assign.reference.ReferenceTypeAware
 import net.bytebuddy.jar.asm.MethodVisitor;
 import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
+import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
 
 public class BytecodeProviderImpl implements BytecodeProvider {
 
-	private final ByteBuddy buddy = new ByteBuddy().with( TypeValidation.DISABLED );
+	private static final ByteBuddyState bytebuddy = new ByteBuddyState();
+	private static final NamingStrategy.SuffixingRandom instantiatorName = new NamingStrategy.SuffixingRandom( "HibernateInstantiator" );
+	private static final NamingStrategy.SuffixingRandom optimizerName = new NamingStrategy.SuffixingRandom( "HibernateAccessOptimizer" );
+	private static final ElementMatcher.Junction newInstanceMethodName = ElementMatchers.named( "newInstance" );
+	private static final ElementMatcher.Junction getPropertyValuesMethodName = ElementMatchers.named( "getPropertyValues" );
+	private static final ElementMatcher.Junction setPropertyValuesMethodName = ElementMatchers.named( "setPropertyValues" );
+	private static final ElementMatcher.Junction getPropertyNamesMethodName = ElementMatchers.named( "getPropertyNames" );
 
 	@Override
 	public ProxyFactoryFactory getProxyFactoryFactory() {
-		return new ProxyFactoryFactoryImpl();
+		return new ProxyFactoryFactoryImpl( bytebuddy );
 	}
 
 	@Override
@@ -56,23 +61,23 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		findAccessors( clazz, getterNames, setterNames, types, getters, setters );
 		final Constructor<?> constructor = findConstructor( clazz );
 
-		final Class fastClass = buddy
-				.with( new NamingStrategy.SuffixingRandom( "HibernateInstantiator" ) )
+		final Class fastClass = bytebuddy.getCurrentyByteBuddy()
+				.with( instantiatorName )
 				.subclass( ReflectionOptimizer.InstantiationOptimizer.class )
-				.method( ElementMatchers.named( "newInstance" ) )
+				.method( newInstanceMethodName )
 				.intercept( MethodCall.construct( constructor ) )
 				.make()
 				.load( clazz.getClassLoader() )
 				.getLoaded();
 
-		final Class bulkAccessor = buddy
-				.with( new NamingStrategy.SuffixingRandom( "HibernateAccessOptimizer" ) )
+		final Class bulkAccessor = bytebuddy.getCurrentyByteBuddy()
+				.with( optimizerName )
 				.subclass( ReflectionOptimizer.AccessOptimizer.class )
-				.method( ElementMatchers.named( "getPropertyValues" ) )
+				.method( getPropertyValuesMethodName )
 				.intercept( new Implementation.Simple( new GetPropertyValues( clazz, getters ) ) )
-				.method( ElementMatchers.named( "setPropertyValues" ) )
+				.method( setPropertyValuesMethodName )
 				.intercept( new Implementation.Simple( new SetPropertyValues( clazz, setters ) ) )
-				.method( ElementMatchers.named( "getPropertyNames" ) )
+				.method( getPropertyNamesMethodName )
 				.intercept( MethodCall.call( new CloningPropertyCall( getterNames ) ) )
 				.make()
 				.load( clazz.getClassLoader() )
@@ -258,4 +263,9 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 	public Enhancer getEnhancer(EnhancementContext enhancementContext) {
 		return new EnhancerImpl( enhancementContext );
 	}
+
+	public void resetCaches() {
+		bytebuddy.clearState();
+	}
+
 }

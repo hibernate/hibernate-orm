@@ -14,6 +14,12 @@ import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyFactory;
 
 public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 
+	private final ByteBuddyState bytebuddy;
+
+	public ProxyFactoryFactoryImpl(ByteBuddyState bytebuddy) {
+		this.bytebuddy = bytebuddy;
+	}
+
 	@Override
 	public ProxyFactory buildProxyFactory(SessionFactoryImplementor sessionFactory) {
 		return new ByteBuddyProxyFactory();
@@ -21,6 +27,6 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 
 	@Override
 	public BasicProxyFactory buildBasicProxyFactory(Class superClass, Class[] interfaces) {
-		return new BasicProxyFactoryImpl( superClass, interfaces );
+		return new BasicProxyFactoryImpl( superClass, interfaces, bytebuddy );
 	}
 }

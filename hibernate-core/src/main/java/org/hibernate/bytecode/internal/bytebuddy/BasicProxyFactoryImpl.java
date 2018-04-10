@@ -15,9 +15,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.bytecode.spi.BasicProxyFactory;
 import org.hibernate.proxy.ProxyConfiguration;
 
-import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.modifier.Visibility;
-import net.bytebuddy.dynamic.scaffold.TypeValidation;
 import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.implementation.auxiliary.AuxiliaryType;
@@ -30,7 +28,7 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 
 	private final Class proxyClass;
 
-	public BasicProxyFactoryImpl(Class superClass, Class[] interfaces) {
+	public BasicProxyFactoryImpl(Class superClass, Class[] interfaces, ByteBuddyState bytebuddy) {
 		if ( superClass == null && ( interfaces == null || interfaces.length < 1 ) ) {
 			throw new AssertionFailure( "attempting to build proxy without any superclass or interfaces" );
 		}
@@ -43,8 +41,7 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 			key.addAll( Arrays.asList( interfaces ) );
 		}
 
-		this.proxyClass = new ByteBuddy()
-			.with( TypeValidation.DISABLED )
+		this.proxyClass = bytebuddy.getCurrentyByteBuddy()
 			.with( new AuxiliaryType.NamingStrategy.SuffixingRandom( "HibernateBasicProxy" ) )
 			.subclass( superClass == null ? Object.class : superClass )
 			.implement( interfaces == null ? NO_INTERFACES : interfaces )

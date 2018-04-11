@@ -59,7 +59,7 @@ jar {
 		instruction 'Implementation-Url', 'http://hibernate.org/orm'
 
 		instruction 'Hibernate-VersionFamily', project.hibernateMajorMinorVersion
-		instruction 'Hibernate-JpaVersion', project.jpaVersion
+		instruction 'Hibernate-JpaVersion', project.jpaVersion.name
 	}
 }
 

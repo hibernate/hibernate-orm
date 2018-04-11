@@ -43,10 +43,10 @@ jar {
         instructionFirst 'Import-Package',
             // TODO: Shouldn't have to explicitly list the JPA packages, but
             // the plugin generates them with [1.0,2) versions.
-            'javax.persistence;version="2.1.0"',
-            'javax.persistence.criteria;version="2.1.0"',
-            'javax.persistence.metamodel;version="2.1.0"',
-            'javax.persistence.spi;version="2.1.0"',
+            "javax.persistence;version=\"${project.jpaVersion.osgiName}\"",
+            "javax.persistence.criteria;version=\"${project.jpaVersion.osgiName}\"",
+            "javax.persistence.metamodel;version=\"${project.jpaVersion.osgiName}\"",
+            "javax.persistence.spi;version=\"${project.jpaVersion.osgiName}\"",
             // optionals
             'javax.naming;resolution:=optional',
             'org.apache.tools.ant;resolution:=optional'

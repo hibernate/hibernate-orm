@@ -403,7 +403,21 @@ public final class SessionImpl
 
 
 	@Override
+	@SuppressWarnings("StatementWithEmptyBody")
 	public void close() throws HibernateException {
+		if ( isClosed() ) {
+			if ( getFactory().getSessionFactoryOptions().getJpaCompliance().isJpaClosedComplianceEnabled() ) {
+				throw new IllegalStateException( "Illegal call to #close() on already closed Session/EntityManager" );
+			}
+
+			log.trace( "Already closed" );
+			return;
+		}
+
+		closeWithoutOpenChecks();
+	}
+
+	public void closeWithoutOpenChecks() throws HibernateException {
 		log.tracef( "Closing session [%s]", getSessionIdentifier() );
 
 		// todo : we want this check if usage is JPA, but not native Hibernate usage
@@ -515,7 +529,7 @@ public final class SessionImpl
 
 	private void managedClose() {
 		log.trace( "Automatically closing session" );
-		close();
+		closeWithoutOpenChecks();
 	}
 
 	@Override

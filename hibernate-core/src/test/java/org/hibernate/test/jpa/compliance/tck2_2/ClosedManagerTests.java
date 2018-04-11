@@ -6,9 +6,9 @@
  */
 package org.hibernate.test.jpa.compliance.tck2_2;
 
-import javax.persistence.Parameter;
-
 import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.query.Query;
 
 import org.hibernate.test.jpa.AbstractJPATest;
@@ -23,6 +23,12 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 public class ClosedManagerTests extends AbstractJPATest {
+	@Override
+	public void configure(Configuration cfg) {
+		super.configure( cfg );
+		cfg.setProperty( AvailableSettings.JPA_CLOSED_COMPLIANCE, "true" );
+	}
+
 	@Test
 	public void testQuerySetMaxResults() {
 		final Session session = sessionFactory().openSession();
@@ -137,6 +143,24 @@ public class ClosedManagerTests extends AbstractJPATest {
 			fail( "Expecting call to fail" );
 		}
 		catch (IllegalStateException expected) {
+		}
+	}
+
+	@Test
+	public void testClose() {
+		final Session session = sessionFactory().openSession();
+
+		// 1st call - should be ok
+		session.close();
+
+		try {
+			// 2nd should fail (JPA compliance enabled)
+			session.close();
+
+			fail();
+		}
+		catch (IllegalStateException expected) {
+			// expected outcome
 		}
 	}
 }

@@ -13,7 +13,6 @@ description = 'Hibernate\'s entity version (audit/history) support'
 dependencies {
     compile( project( ':hibernate-core' ) )
 
-    provided( [group: 'org.hibernate', name: 'hibernate-tools', version: '3.2.0.ga'] )
     provided( libraries.ant )
     provided( project( ':hibernate-jpamodelgen' ) )
 

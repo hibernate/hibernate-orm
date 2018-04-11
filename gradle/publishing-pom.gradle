@@ -28,7 +28,7 @@ afterEvaluate {
 			lgplLicenseNode.appendNode( 'url', 'http://www.gnu.org/licenses/lgpl-2.1.html' )
 			lgplLicenseNode.appendNode(
 					'comments',
-					'See discussion at http://hibernate.org/license for more details.'
+					'See discussion at http://hibernate.org/community/license/ for more details.'
 			)
 			lgplLicenseNode.appendNode( 'distribution', 'repo' )
 

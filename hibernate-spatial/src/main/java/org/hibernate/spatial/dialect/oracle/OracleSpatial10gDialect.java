@@ -10,7 +10,7 @@ package org.hibernate.spatial.dialect.oracle;
 import java.io.Serializable;
 import java.sql.Types;
 import java.util.Map;
-
+import org.geolatte.geom.GeometryType;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.dialect.function.SQLFunction;
@@ -89,6 +89,36 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements Spatial
 	@Override
 	public String getIsEmptySQL(String columnName, boolean isEmpty) {
 		return sdoSupport.getIsEmptySQL( columnName, isEmpty );
+	}
+
+	@Override
+	public String getGeometryTypeSQL(String columnName) {
+		return sdoSupport.getGeometryTypeSQL(columnName);
+	}
+
+	@Override
+	public String getNameFor(GeometryType geometryType) {
+		switch(geometryType) {
+			case POINT:
+				return "1";
+			case CURVE:
+			case LINEARRING:
+			case LINESTRING:
+				return "2";
+			case POLYGON:
+				return "3";
+			case GEOMETRYCOLLECTION:
+				return "4";
+			case MULTIPOINT:
+				return "5";
+			case MULTILINESTRING:
+				return "6";
+			case MULTIPOLYGON:
+				return "7";
+			default:
+				// UNKNOWN_GEOMETRY
+				return "0";
+		}
 	}
 
 	@Override

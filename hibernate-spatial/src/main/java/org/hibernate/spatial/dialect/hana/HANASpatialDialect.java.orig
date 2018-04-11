@@ -6,9 +6,12 @@
  */
 package org.hibernate.spatial.dialect.hana;
 
+<<<<<<< HEAD
 import java.sql.Types;
 
+=======
 import org.geolatte.geom.GeometryType;
+>>>>>>> feature/spatial-restriction-geometrytype
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.HANAColumnStoreDialect;
 import org.hibernate.engine.config.spi.ConfigurationService;

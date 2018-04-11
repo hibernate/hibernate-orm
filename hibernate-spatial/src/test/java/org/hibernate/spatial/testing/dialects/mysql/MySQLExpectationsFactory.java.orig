@@ -18,6 +18,12 @@ import org.geolatte.geom.ByteBuffer;
 import org.geolatte.geom.codec.Wkb;
 import org.geolatte.geom.codec.WkbDecoder;
 import org.geolatte.geom.jts.JTS;
+<<<<<<< HEAD
+=======
+import org.hibernate.spatial.testing.AbstractExpectationsFactory;
+import org.hibernate.spatial.testing.DataSourceUtils;
+import org.hibernate.spatial.testing.NativeSQLStatement;
+>>>>>>> feature/spatial-restriction-geometrytype
 
 
 /**

@@ -6,10 +6,15 @@
  */
 package org.hibernate.spatial.dialect.oracle;
 
+
 import java.io.Serializable;
 import java.sql.Types;
 import java.util.Map;
+<<<<<<< HEAD
 
+=======
+import org.geolatte.geom.GeometryType;
+>>>>>>> feature/spatial-restriction-geometrytype
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.dialect.function.SQLFunction;
@@ -17,15 +22,16 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.HSMessageLogger;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
+import org.jboss.logging.Logger;
 
 import org.jboss.logging.Logger;
 
 /**
- * A Spatial Dialect for Oracle 10g/11g that uses the "native" SDO spatial operators.
- * <p>
- * Created by Karel Maesen, Geovise BVBA on 11/02/17.
+ * Spatial Dialect for Oracle10g databases.
+ *
+ * @author Karel Maesen
  */
-public class OracleSpatialSDO10gDialect extends Oracle10gDialect implements SpatialDialect, Serializable {
+public class OracleSpatial10gDialect extends Oracle10gDialect implements SpatialDialect, Serializable {
 
 	private static final HSMessageLogger log = Logger.getMessageLogger(
 			HSMessageLogger.class,
@@ -33,12 +39,12 @@ public class OracleSpatialSDO10gDialect extends Oracle10gDialect implements Spat
 	);
 
 
-	transient private OracleSDOSupport sdoSupport = new OracleSDOSupport( false );
+	transient private OracleSDOSupport sdoSupport = new OracleSDOSupport( true );
 
 	/**
-	 * Constructs the dialect
+	 * Constructs the dialect with
 	 */
-	public OracleSpatialSDO10gDialect() {
+	public OracleSpatial10gDialect() {
 		super();
 
 		// register geometry type
@@ -67,7 +73,7 @@ public class OracleSpatialSDO10gDialect extends Oracle10gDialect implements Spat
 
 	@Override
 	public String getSpatialRelateSQL(String columnName, int spatialRelation) {
-		return sdoSupport.getSDOSpatialRelateSQL( columnName, spatialRelation );
+		return sdoSupport.getSpatialRelateSQL( columnName, spatialRelation );
 	}
 
 	@Override
@@ -92,12 +98,32 @@ public class OracleSpatialSDO10gDialect extends Oracle10gDialect implements Spat
 
 	@Override
 	public String getGeometryTypeSQL(String columnName) {
-		return sdoSupport.getGeometryTypeSQL( columnName );
+		return sdoSupport.getGeometryTypeSQL(columnName);
 	}
 
 	@Override
 	public String getNameFor(GeometryType geometryType) {
-		return sdoSupport.getNameFor(geometryType);
+		switch(geometryType) {
+			case POINT:
+				return "1";
+			case CURVE:
+			case LINEARRING:
+			case LINESTRING:
+				return "2";
+			case POLYGON:
+				return "3";
+			case GEOMETRYCOLLECTION:
+				return "4";
+			case MULTIPOINT:
+				return "5";
+			case MULTILINESTRING:
+				return "6";
+			case MULTIPOLYGON:
+				return "7";
+			default:
+				// UNKNOWN_GEOMETRY
+				return "0";
+		}
 	}
 
 	@Override
@@ -107,7 +133,7 @@ public class OracleSpatialSDO10gDialect extends Oracle10gDialect implements Spat
 
 	@Override
 	public boolean supports(SpatialFunction function) {
-		return !function.equals( SpatialFunction.crosses ) && ( getFunctions().get( function.toString() ) != null );
+		return ( getFunctions().get( function.toString() ) != null );
 	}
 
 

@@ -12,7 +12,10 @@ import static java.lang.String.format;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+<<<<<<< HEAD
 
+=======
+>>>>>>> feature/spatial-restriction-geometrytype
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -23,6 +26,7 @@ import org.hibernate.spatial.dialect.hana.HANASpatialDialect;
 import org.hibernate.spatial.dialect.oracle.OracleSpatial10gDialect;
 import org.hibernate.spatial.testing.SpatialDialectMatcher;
 import org.hibernate.spatial.testing.SpatialFunctionalTestCase;
+<<<<<<< HEAD
 
 import org.hibernate.testing.Skip;
 import org.hibernate.testing.SkipForDialect;
@@ -33,6 +37,12 @@ import org.jboss.logging.Logger;
 import com.vividsolutions.jts.geom.Geometry;
 
 import static java.lang.String.format;
+=======
+import org.hibernate.testing.Skip;
+import org.hibernate.testing.SkipForDialect;
+import org.jboss.logging.Logger;
+import org.junit.Test;
+>>>>>>> feature/spatial-restriction-geometrytype
 
 /**
  * @author Karel Maesen, Geovise BVBA

@@ -6,11 +6,17 @@
  */
 package org.hibernate.spatial.criterion;
 
+<<<<<<< HEAD
+=======
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import org.geolatte.geom.GeometryType;
+>>>>>>> feature/spatial-restriction-geometrytype
 import org.hibernate.criterion.Criterion;
 import org.hibernate.spatial.SpatialRelation;
+
+import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
 
 /**
  * A factory for spatial criteria.

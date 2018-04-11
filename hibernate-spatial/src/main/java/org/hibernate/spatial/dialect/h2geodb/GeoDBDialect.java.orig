@@ -12,7 +12,10 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.service.ServiceRegistry;
+<<<<<<< HEAD
 import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
+=======
+>>>>>>> feature/spatial-restriction-geometrytype
 import org.hibernate.spatial.GeolatteGeometryType;
 import org.hibernate.spatial.JTSGeometryJavaTypeDescriptor;
 import org.hibernate.spatial.JTSGeometryType;
@@ -165,7 +168,11 @@ public class GeoDBDialect extends H2Dialect implements SpatialDialect {
 
 	@Override
 	public boolean supports(SpatialFunction function) {
+<<<<<<< HEAD
 		return function != SpatialFunction.difference && ( getFunctions().get( function.toString() ) != null );
+=======
+		return function != SpatialFunction.difference && (getFunctions().get(function.toString()) != null);
+>>>>>>> feature/spatial-restriction-geometrytype
 	}
 
 }

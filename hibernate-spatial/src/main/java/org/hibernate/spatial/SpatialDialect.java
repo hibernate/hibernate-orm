@@ -7,6 +7,7 @@
 package org.hibernate.spatial;
 
 import java.io.Serializable;
+import org.geolatte.geom.GeometryType;
 
 /**
  * Describes the features of a spatially enabled dialect.
@@ -70,7 +71,6 @@ public interface SpatialDialect extends Serializable {
 	 */
 	String getHavingSridSQL(String columnName);
 
-
 	/**
 	 * Returns the SQL fragment when parsing a <code>IsEmptyExpression</code> or
 	 * <code>IsNotEmpty</code> expression.
@@ -81,6 +81,24 @@ public interface SpatialDialect extends Serializable {
 	 * @return The SQL fragment for the isempty function
 	 */
 	String getIsEmptySQL(String columnName, boolean isEmpty);
+
+	/**
+	 * Returns the SQL fragment when parsing an <code>GeometryTypeExpression</code>.
+	 *
+	 * @param columnName the geometry column
+	 *
+	 * @return The SQL fragment for the geometrytype function
+	 */
+	public String getGeometryTypeSQL(String columnName);
+
+	/**
+	 * Returns the geometry type name specific to the actual dialect.
+	 *
+	 * @param geometryType the geometry type
+	 * 
+	 * @return the geometry type name
+	 */
+	public String getNameFor(GeometryType geometryType);
 
 	/**
 	 * Returns true if this <code>SpatialDialect</code> supports a specific filtering function.

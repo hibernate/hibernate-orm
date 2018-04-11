@@ -53,7 +53,7 @@ bintray {
 				sign = true
 			}
 			attributes = [
-					'jpa': '2.2',
+					'jpa': project.jpaVersion,
 					'family': project.hibernateMajorMinorVersion
 			]
 			mavenCentralSync {

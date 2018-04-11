@@ -11,7 +11,10 @@ apply plugin: 'hibernate-matrix-testing'
 description = 'Hibernate\'s entity version (audit/history) support'
 
 dependencies {
-    compile( project( ':hibernate-core' ) )
+    compile( project( ':hibernate-core' ) ) {
+        // Exclude access to this to avoid future use.
+        exclude group: "org.javassist", module: "javassist"
+    }
 
     provided( libraries.ant )
     provided( project( ':hibernate-jpamodelgen' ) )
@@ -38,9 +41,6 @@ sourceSets {
 jar {
     manifest {
         instructionFirst 'Import-Package',
-            // TODO: Remove after Javassist is blown away in ORM 6
-            "javassist;version=\"${javassistVersion}\"",
-            "javassist.util.proxy;version=\"${javassistVersion}\"",
             // TODO: Shouldn't have to explicitly list the JPA packages, but
             // the plugin generates them with [1.0,2) versions.
             'javax.persistence;version="2.1.0"',

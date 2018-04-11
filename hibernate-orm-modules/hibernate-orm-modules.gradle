@@ -93,7 +93,7 @@ provision {
 	override( 'org.hibernate.javax.persistence:hibernate-jpa-2.1-api' ) {
 		groupId = 'javax.persistence'
 		artifactId = 'javax.persistence-api'
-		version = '2.2'
+		version = project.jpaVersion
 	}
 	/**TODO: explore overriding any other library we might need?
 	   Example: (not currently necessary)

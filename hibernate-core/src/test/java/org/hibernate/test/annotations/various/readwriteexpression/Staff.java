@@ -55,4 +55,12 @@ public class Staff {
 	public double getDiameter() { return diameter; }
 	public void setDiameter(double diameter) {  this.diameter = diameter; }
 	private double diameter;
+
+	@Column(name="kooky")
+	@ColumnTransformer(
+			read = "cast( kooky as VARCHAR )"
+	)
+	public String getKooky() { return kooky; }
+	public void setKooky(String kooky) { this.kooky = kooky; }
+	private String kooky;
 }

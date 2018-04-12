@@ -649,10 +649,17 @@ public class Ejb3Column {
 	}
 
 	private void processExpression(ColumnTransformer annotation) {
-		String nonNullLogicalColumnName = logicalColumnName != null ? logicalColumnName : ""; //use the default for annotations
-		if ( annotation != null &&
-				( StringHelper.isEmpty( annotation.forColumn() )
-						|| annotation.forColumn().equals( nonNullLogicalColumnName ) ) ) {
+		if ( annotation == null ) {
+			return;
+		}
+
+		final String nonNullLogicalColumnName = logicalColumnName != null
+				? logicalColumnName
+				//use the default for annotations
+				: "";
+
+		if ( StringHelper.isEmpty( annotation.forColumn() )
+				|| annotation.forColumn().equals( nonNullLogicalColumnName ) ) {
 			readExpression = annotation.read();
 			if ( StringHelper.isEmpty( readExpression ) ) {
 				readExpression = null;

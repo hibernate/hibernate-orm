@@ -269,12 +269,13 @@ public class Column implements Selectable, Serializable, Cloneable {
 	@Override
 	public String getTemplate(Dialect dialect, SQLFunctionRegistry functionRegistry) {
 		return hasCustomRead()
-				? Template.renderWhereStringTemplate( customRead, dialect, functionRegistry )
+				// see note in renderTransformerReadFragment wrt access to SessionFactory
+				? Template.renderTransformerReadFragment( customRead, getQuotedName( dialect ) )
 				: Template.TEMPLATE + '.' + getQuotedName( dialect );
 	}
 
 	public boolean hasCustomRead() {
-		return ( customRead != null && customRead.length() > 0 );
+		return customRead != null;
 	}
 
 	public String getReadExpr(Dialect dialect) {
@@ -345,7 +346,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	}
 
 	public void setCustomRead(String customRead) {
-		this.customRead = customRead;
+		this.customRead = StringHelper.nullIfEmpty( customRead );
 	}
 
 	public String getCanonicalName() {

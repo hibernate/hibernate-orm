@@ -17,12 +17,12 @@ import org.hibernate.property.access.spi.Getter;
  *
  * @author Vlad Mihalcea
  */
-public class EmbeddableCallback extends AbstractCallback {
+final class EmbeddableCallback extends AbstractCallback {
+
 	private final Getter embeddableGetter;
 	private final Method callbackMethod;
 
-	@SuppressWarnings("WeakerAccess")
-	public EmbeddableCallback(Getter embeddableGetter, Method callbackMethod, CallbackType callbackType) {
+	EmbeddableCallback(Getter embeddableGetter, Method callbackMethod, CallbackType callbackType) {
 		super( callbackType );
 		this.embeddableGetter = embeddableGetter;
 		this.callbackMethod = callbackMethod;

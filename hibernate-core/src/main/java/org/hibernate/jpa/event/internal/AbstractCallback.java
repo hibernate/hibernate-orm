@@ -14,11 +14,11 @@ import org.hibernate.jpa.event.spi.CallbackType;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractCallback implements Callback {
+abstract class AbstractCallback implements Callback {
+
 	private final CallbackType callbackType;
 
-	@SuppressWarnings("WeakerAccess")
-	public AbstractCallback(CallbackType callbackType) {
+	AbstractCallback(CallbackType callbackType) {
 		this.callbackType = callbackType;
 	}
 

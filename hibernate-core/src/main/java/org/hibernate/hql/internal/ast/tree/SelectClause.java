@@ -16,6 +16,7 @@ import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ASTAppender;
 import org.hibernate.hql.internal.ast.util.ASTIterator;
 import org.hibernate.hql.internal.ast.util.ASTPrinter;
+import org.hibernate.hql.internal.ast.util.TokenPrinters;
 import org.hibernate.type.Type;
 
 import antlr.SemanticException;
@@ -157,7 +158,7 @@ public class SelectClause extends SelectExpressionList {
 				if ( type == null ) {
 					throw new QueryException(
 							"No data type for node: " + selectExpression.getClass().getName() + " "
-									+ new ASTPrinter( SqlTokenTypes.class ).showAsString( (AST) selectExpression, "" )
+									+ TokenPrinters.SQL_TOKEN_PRINTER.showAsString( (AST) selectExpression, "" )
 					);
 				}
 				//sqlResultTypeList.add( type );

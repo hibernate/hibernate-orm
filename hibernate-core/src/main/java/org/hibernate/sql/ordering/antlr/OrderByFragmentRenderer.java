@@ -9,6 +9,7 @@ package org.hibernate.sql.ordering.antlr;
 import org.hibernate.NullPrecedence;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.ast.util.ASTPrinter;
+import org.hibernate.hql.internal.ast.util.TokenPrinters;
 import org.hibernate.internal.util.StringHelper;
 
 import org.jboss.logging.Logger;
@@ -25,7 +26,6 @@ import antlr.collections.AST;
 public class OrderByFragmentRenderer extends GeneratedOrderByFragmentRenderer {
 
 	private static final Logger LOG = Logger.getLogger( OrderByFragmentRenderer.class.getName() );
-	private static final ASTPrinter printer = new ASTPrinter( GeneratedOrderByFragmentRendererTokenTypes.class );
 
 	private final SessionFactoryImplementor sessionFactory;
 
@@ -56,7 +56,7 @@ public class OrderByFragmentRenderer extends GeneratedOrderByFragmentRenderer {
 	private String buildTraceNodeName(AST tree) {
 		return tree == null
 				? "???"
-				: tree.getText() + " [" + printer.getTokenTypeName( tree.getType() ) + "]";
+				: tree.getText() + " [" + TokenPrinters.ORDERBY_FRAGMENT_PRINTER.getTokenTypeName( tree.getType() ) + "]";
 	}
 
 	@Override

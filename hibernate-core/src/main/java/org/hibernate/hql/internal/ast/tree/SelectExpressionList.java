@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ASTPrinter;
+import org.hibernate.hql.internal.ast.util.TokenPrinters;
 
 import antlr.collections.AST;
 
@@ -44,7 +45,7 @@ public abstract class SelectExpressionList extends HqlSqlWalkerNode {
 			else {
 				throw new IllegalStateException(
 						"Unexpected AST: " + n.getClass().getName() + " "
-								+ new ASTPrinter( SqlTokenTypes.class ).showAsString( n, "" )
+								+ TokenPrinters.SQL_TOKEN_PRINTER.showAsString( n, "" )
 				);
 			}
 			p++;

@@ -35,7 +35,6 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -44,7 +43,7 @@ import static org.junit.Assert.assertTrue;
  */
 @TestForIssue(jiraKey = "HHH-11867")
 public class UpdateTimeStampInheritanceTest extends BaseEntityManagerFunctionalTestCase {
-	private static final long SLEEP_MILLIS = 250;
+	private static final long SLEEP_MILLIS = 25;
 
 	private static final String customerId = "1";
 
@@ -102,8 +101,6 @@ public class UpdateTimeStampInheritanceTest extends BaseEntityManagerFunctionalT
 
 	@Test
 	public void updateParentClassOneToOneAssociation() throws Exception {
-		Thread.sleep( 100L );
-
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Customer customer = entityManager.find( Customer.class, customerId );
 			assertThat( customer.getCreatedAt(), is( not( nullValue() ) ) );
@@ -200,11 +197,11 @@ public class UpdateTimeStampInheritanceTest extends BaseEntityManagerFunctionalT
 	}
 
 	private void assertModifiedAtWasNotUpdated(Customer customer) {
-		assertThat( customer.getCreatedAt(), is( customer.getModifiedAt() ) );
+		assertTrue( (customer.getModifiedAt().getTime() - customer.getCreatedAt().getTime()) < 10 );
 	}
 
 	private void assertModifiedAtWasUpdated(Customer customer) {
-		assertThat( customer.getCreatedAt(), is( is( not( customer.getModifiedAt() ) ) ) );
+		assertTrue( (customer.getModifiedAt().getTime() - customer.getCreatedAt().getTime()) > 10 );
 	}
 
 	@Entity(name = "person")

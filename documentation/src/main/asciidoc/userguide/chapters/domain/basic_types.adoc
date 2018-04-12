@@ -2,6 +2,7 @@
 === Basic Types
 :modeldir: ../../../../../main/java/org/hibernate/userguide/model
 :sourcedir: ../../../../../test/java/org/hibernate/userguide/mapping
+:resourcedir: ../../../../../test/resources/org/hibernate/userguide/
 :extrasdir: extras
 
 Basic value types usually map a single database column, to a single, non-aggregated Java type.
@@ -533,6 +534,59 @@ For additional details on using AttributeConverters, see <<basic-jpa-convert>> s
 ====
 JPA explicitly disallows the use of an AttributeConverter with an attribute marked as `@Enumerated`.
 So if using the AttributeConverter approach, be sure not to mark the attribute as `@Enumerated`.
+====
+
+[[basic-hbm-attribute-converter]]
+====== Mapping an AttributeConverter using HBM mappings
+
+When using HBM mappings, you can still make use of the JPA `AttributeConverter` because Hibernate supports
+such mapping via the `type` attribute as demonstrated by the following example.
+
+Let's consider we have an application-specific `Money` type:
+
+[[basic-hbm-attribute-converter-mapping-money-example]]
+.Application-specific `Money` type
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/converter/hbm/Money.java[tags=basic-hbm-attribute-converter-mapping-money-example]
+----
+====
+
+Now, we want to use the `Money` type when mapping the `Account` entity:
+
+[[basic-hbm-attribute-converter-mapping-account-example]]
+.`Account` entity using the `Money` type
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/converter/hbm/Account.java[tags=basic-hbm-attribute-converter-mapping-account-example]
+----
+====
+
+Since Hibernate has no knowledge how to persist the `Money` type, we could use a JPA `AttributeConverter`
+to transform the `Money` type as a `Long`. For this purpose, we are going to use the following
+`MoneyConverter` utility:
+
+[[basic-hbm-attribute-converter-mapping-moneyconverter-example]]
+.`MoneyConverter` implementing the JPA `AttributeConverter` interface
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/converter/hbm/MoneyConverter.java[tags=basic-hbm-attribute-converter-mapping-moneyconverter-example]
+----
+====
+
+To map the `MoneyConverter` using HBM configuration files you need to use the `converted::` prefix in the `type`
+attribute of the `property` element.
+
+[[basic-hbm-attribute-converter-mapping-xml-config-example]]
+.HBM mapping for `AttributeConverter`
+====
+[source, JAVA, indent=0]
+----
+include::{resourcedir}/mapping/converter/hbm/MoneyConverterHbmTest.hbm.xml[]
+----
 ====
 
 [[basic-enums-custom-type]]

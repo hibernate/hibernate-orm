@@ -8,10 +8,12 @@ package org.hibernate.id;
 
 import org.hibernate.FlushMode;
 import org.hibernate.action.internal.EntityAction;
+import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.internal.CoreMessageLogger;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.logger.LoggerInspectionRule;
@@ -44,6 +46,7 @@ public class CreateDeleteTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void createAndDeleteAnEntityInTheSameTransactionTest() {
 		doInHibernate( this::sessionFactory, session -> {
 			session.setHibernateFlushMode( FlushMode.COMMIT );

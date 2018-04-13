@@ -89,6 +89,7 @@ import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
 import static org.hibernate.cfg.AvailableSettings.HQL_BULK_ID_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE;
 import static org.hibernate.cfg.AvailableSettings.INTERCEPTOR;
+import static org.hibernate.cfg.AvailableSettings.IN_CLAUSE_PARAMETER_PADDING;
 import static org.hibernate.cfg.AvailableSettings.JDBC_TIME_ZONE;
 import static org.hibernate.cfg.AvailableSettings.JDBC_TYLE_PARAMS_ZERO_BASE;
 import static org.hibernate.cfg.AvailableSettings.JTA_TRACK_BY_THREAD;
@@ -234,6 +235,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private JpaCompliance jpaCompliance;
 
 	private boolean failOnPaginationOverCollectionFetchEnabled;
+	private boolean inClauseParameterPaddingEnabled;
 
 	@SuppressWarnings({"WeakerAccess", "deprecation"})
 	public SessionFactoryOptionsBuilder(StandardServiceRegistry serviceRegistry, BootstrapContext context) {
@@ -486,6 +488,12 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		this.immutableEntityUpdateQueryHandlingMode = ImmutableEntityUpdateQueryHandlingMode.interpret(
 			configurationSettings.get( IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE )
+		);
+
+		this.inClauseParameterPaddingEnabled =  ConfigurationHelper.getBoolean(
+				IN_CLAUSE_PARAMETER_PADDING,
+				configurationSettings,
+				false
 		);
 	}
 
@@ -983,6 +991,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean isFailOnPaginationOverCollectionFetchEnabled() {
 		return this.failOnPaginationOverCollectionFetchEnabled;
+	}
+
+	@Override
+	public boolean inClauseParameterPaddingEnabled() {
+		return this.inClauseParameterPaddingEnabled;
 	}
 
 	@Override

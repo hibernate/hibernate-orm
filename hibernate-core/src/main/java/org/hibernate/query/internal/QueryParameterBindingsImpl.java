@@ -10,12 +10,11 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import javax.persistence.Parameter;
 
 import org.hibernate.HibernateException;
@@ -31,6 +30,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.MathHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -528,8 +528,23 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			final QueryParameter sourceParam = entry.getKey();
 			final Collection bindValues = entry.getValue().getBindValues();
 
-			if ( inExprLimit > 0 && bindValues.size() > inExprLimit ) {
-				log.tooManyInExpressions( dialect.getClass().getName(), inExprLimit, sourceParam.getName(), bindValues.size() );
+			int bindValueCount = bindValues.size();
+			int bindValueMaxCount = bindValueCount;
+
+			boolean inClauseParameterPaddingEnabled =
+					session.getFactory().getSessionFactoryOptions().inClauseParameterPaddingEnabled() &&
+					bindValueCount > 2;
+
+			if ( inClauseParameterPaddingEnabled ) {
+				int bindValuePaddingCount = MathHelper.ceilingPowerOfTwo( bindValueCount );
+
+				if ( bindValueCount < bindValuePaddingCount && (inExprLimit == 0 || bindValuePaddingCount < inExprLimit) ) {
+					bindValueMaxCount = bindValuePaddingCount;
+				}
+			}
+
+			if ( inExprLimit > 0 && bindValueCount > inExprLimit ) {
+				log.tooManyInExpressions( dialect.getClass().getName(), inExprLimit, sourceParam.getName(), bindValueCount );
 			}
 
 			final String sourceToken;
@@ -566,8 +581,15 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 			StringBuilder expansionList = new StringBuilder();
 
-			int i = 0;
-			for ( Object bindValue : entry.getValue().getBindValues() ) {
+			Iterator bindValueIterator = entry.getValue().getBindValues().iterator();
+			Object bindValue = null;
+
+			for ( int i = 0; i < bindValueMaxCount; i++ ) {
+
+				if ( i < bindValueCount ) {
+					bindValue = bindValueIterator.next();
+				}
+
 				if ( i > 0 ) {
 					expansionList.append( ", " );
 				}
@@ -613,8 +635,6 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 				final QueryParameterBinding syntheticBinding = makeBinding( entry.getValue().getBindType() );
 				syntheticBinding.setBindValue( bindValue );
 				parameterBindingMap.put( syntheticParam, syntheticBinding );
-
-				i++;
 			}
 
 			queryString = StringHelper.replace(

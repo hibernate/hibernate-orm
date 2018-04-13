@@ -417,4 +417,9 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	public ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
 		return delegate.getImmutableEntityUpdateQueryHandlingMode();
 	}
+
+	@Override
+	public boolean inClauseParameterPaddingEnabled() {
+		return delegate.inClauseParameterPaddingEnabled();
+	}
 }

@@ -1904,4 +1904,22 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * @see org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode
 	 */
 	String IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE = "hibernate.query.immutable_entity_update_query_handling_mode";
+
+	/**
+	 * By default, the IN clause expands to include all bind parameter values.
+	 * </p>
+	 * However, for database systems supporting execution plan caching,
+	 * there's a better chance of hitting the cache if the number of possible IN clause parameters lowers.
+	 * </p>
+	 * For this reason, we can expand the bind parameters to power-of-two: 4, 8, 16, 32, 64.
+	 * This way, an IN clause with 5, 6, or 7 bind parameters will use the 8 IN clause,
+	 * therefore reusing its execution plan.
+	 * </p>
+	 * If you want to activate this feature, you need to set this property to {@code true}.
+	 * </p>
+	 * The default value is {@code false}.
+	 *
+	 * @since 5.2.17
+	 */
+	String IN_CLAUSE_PARAMETER_PADDING = "hibernate.query.in_clause_parameter_padding";
 }

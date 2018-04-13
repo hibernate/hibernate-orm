@@ -70,6 +70,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	// todo : Integrate EntityManagerLogger into CoreMessageLogger
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( MetamodelImpl.class );
 	private static final Object ENTITY_NAME_RESOLVER_MAP_VALUE = new Object();
+	private static final String INVALID_IMPORT = "";
 
 	private final SessionFactoryImplementor sessionFactory;
 
@@ -522,8 +523,12 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 				return className;
 			}
 			catch ( ClassLoadingException cnfe ) {
+				imports.put( className, INVALID_IMPORT );
 				return null;
 			}
+		}
+		else if ( result == INVALID_IMPORT ) {
+			return null;
 		}
 		else {
 			return result;

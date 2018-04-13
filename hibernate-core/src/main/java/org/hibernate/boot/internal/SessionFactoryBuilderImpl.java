@@ -583,6 +583,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private boolean jpaProxyComplianceEnabled;
 		private ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
 
+		private boolean inClauseParameterPaddingEnabled;
+
 		public SessionFactoryOptionsStateStandardImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
 
@@ -828,6 +830,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 
 			this.immutableEntityUpdateQueryHandlingMode = ImmutableEntityUpdateQueryHandlingMode.interpret(
 				configurationSettings.get( IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE )
+			);
+
+			this.inClauseParameterPaddingEnabled =  ConfigurationHelper.getBoolean(
+				IN_CLAUSE_PARAMETER_PADDING,
+				configurationSettings,
+				false
 			);
 		}
 
@@ -1297,6 +1305,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		public ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
 			return immutableEntityUpdateQueryHandlingMode;
 		}
+
+		@Override
+		public boolean inClauseParameterPaddingEnabled() {
+			return this.inClauseParameterPaddingEnabled;
+		}
 	}
 
 	private static Supplier<? extends Interceptor> interceptorSupplier(Class<? extends Interceptor> clazz) {
@@ -1660,5 +1673,10 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
 		return options.getImmutableEntityUpdateQueryHandlingMode();
+	}
+
+	@Override
+	public boolean inClauseParameterPaddingEnabled() {
+		return options.inClauseParameterPaddingEnabled();
 	}
 }

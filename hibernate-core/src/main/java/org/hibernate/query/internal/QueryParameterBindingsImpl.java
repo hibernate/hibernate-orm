@@ -28,6 +28,7 @@ import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.hql.internal.classic.ParserHelper;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.MathHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
@@ -548,8 +549,23 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			final NamedParameterDescriptor sourceParam = (NamedParameterDescriptor) entry.getKey();
 			final Collection bindValues = entry.getValue().getBindValues();
 
-			if ( inExprLimit > 0 && bindValues.size() > inExprLimit ) {
-				log.tooManyInExpressions( dialect.getClass().getName(), inExprLimit, sourceParam.getName(), bindValues.size() );
+			int bindValueCount = bindValues.size();
+			int bindValueMaxCount = bindValueCount;
+
+			boolean inClauseParameterPaddingEnabled =
+					session.getFactory().getSessionFactoryOptions().inClauseParameterPaddingEnabled() &&
+					bindValueCount > 2;
+
+			if ( inClauseParameterPaddingEnabled ) {
+				int bindValuePaddingCount = MathHelper.ceilingPowerOfTwo( bindValueCount );
+
+				if ( bindValueCount < bindValuePaddingCount && (inExprLimit == 0 || bindValuePaddingCount < inExprLimit) ) {
+					bindValueMaxCount = bindValuePaddingCount;
+				}
+			}
+
+			if ( inExprLimit > 0 && bindValueCount > inExprLimit ) {
+				log.tooManyInExpressions( dialect.getClass().getName(), inExprLimit, sourceParam.getName(), bindValueCount );
 			}
 
 			final boolean isJpaPositionalParam = sourceParam.isJpaPositionalParameter();
@@ -581,8 +597,15 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 			StringBuilder expansionList = new StringBuilder();
 
-			int i = 0;
-			for ( Object bindValue : entry.getValue().getBindValues() ) {
+			Iterator bindValueIterator = entry.getValue().getBindValues().iterator();
+			Object bindValue = null;
+
+			for ( int i = 0; i < bindValueMaxCount; i++ ) {
+
+				if ( i < bindValueCount ) {
+					bindValue = bindValueIterator.next();
+				}
+
 				// for each value in the bound list-of-values we:
 				//		1) create a synthetic named parameter
 				//		2) expand the queryString to include each synthetic named param in place of the original
@@ -601,7 +624,6 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 				final QueryParameterBinding syntheticBinding = makeBinding( entry.getValue().getBindType() );
 				syntheticBinding.setBindValue( bindValue );
 				parameterBindingMap.put( syntheticParam, syntheticBinding );
-				i++;
 			}
 
 			queryString = StringHelper.replace(

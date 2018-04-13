@@ -137,6 +137,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final boolean failOnPaginationOverCollectionFetchEnabled;
 	private final boolean jpaProxyComplianceEnabled;
 	private ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
+	private boolean inClauseParameterPaddingEnabled;
 
 	public SessionFactoryOptionsImpl(SessionFactoryOptionsState state) {
 		this.serviceRegistry = state.getServiceRegistry();
@@ -225,6 +226,8 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.jpaProxyComplianceEnabled = state.isJpaProxyComplianceEnabled();
 
 		this.immutableEntityUpdateQueryHandlingMode = state.getImmutableEntityUpdateQueryHandlingMode();
+
+		this.inClauseParameterPaddingEnabled = state.inClauseParameterPaddingEnabled();
 	}
 
 	@Override
@@ -584,5 +587,10 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
 		return immutableEntityUpdateQueryHandlingMode;
+	}
+
+	@Override
+	public boolean inClauseParameterPaddingEnabled() {
+		return inClauseParameterPaddingEnabled;
 	}
 }

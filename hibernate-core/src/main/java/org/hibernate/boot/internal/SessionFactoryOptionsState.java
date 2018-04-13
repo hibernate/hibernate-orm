@@ -216,4 +216,8 @@ public interface SessionFactoryOptionsState {
 	default ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
 		return ImmutableEntityUpdateQueryHandlingMode.WARNING;
 	}
+
+	default boolean inClauseParameterPaddingEnabled() {
+		return false;
+	}
 }

@@ -138,11 +138,9 @@ public class SessionFactoryHelper {
 	 */
 	public EntityPersister findEntityPersisterByName(String name) throws MappingException {
 		// First, try to get the persister using the given name directly.
-		try {
-			return sfi.getMetamodel().entityPersister( name );
-		}
-		catch ( MappingException ignore ) {
-			// unable to locate it using this name
+		EntityPersister persister = sfi.getMetamodel().entityPersisters().get( name );
+		if ( persister != null ) {
+			return persister;
 		}
 
 		// If that didn't work, try using the 'import' name.

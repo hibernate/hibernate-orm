@@ -12,6 +12,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
+import org.hibernate.internal.AbstractSharedSessionContract;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
@@ -31,29 +32,38 @@ public class TransactionImpl implements TransactionImplementor {
 	private final TransactionCoordinator transactionCoordinator;
 	private final ExceptionConverter exceptionConverter;
 	private final JpaCompliance jpaCompliance;
+	private final AbstractSharedSessionContract session;
 
 	private TransactionDriver transactionDriverControl;
 
 	public TransactionImpl(
 			TransactionCoordinator transactionCoordinator,
 			ExceptionConverter exceptionConverter,
-			JpaCompliance jpaCompliance) {
+			AbstractSharedSessionContract session) {
 		this.transactionCoordinator = transactionCoordinator;
 		this.exceptionConverter = exceptionConverter;
-		this.jpaCompliance = jpaCompliance;
+		this.jpaCompliance = session.getFactory().getSessionFactoryOptions().getJpaCompliance();
+		this.session = session;
 
-		this.transactionDriverControl = transactionCoordinator.getTransactionDriverControl();
+		if ( session.isOpen() && transactionCoordinator.isActive() ) {
+			this.transactionDriverControl = transactionCoordinator.getTransactionDriverControl();
+		}
+		else {
+			LOG.debug( "TransactionImpl created on closed Session/EntityManager" );
+		}
 
-		LOG.debugf(
-				"On TransactionImpl creation, JpaCompliance#isJpaTransactionComplianceEnabled == %s",
-				jpaCompliance.isJpaTransactionComplianceEnabled()
-		);
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf(
+					"On TransactionImpl creation, JpaCompliance#isJpaTransactionComplianceEnabled == %s",
+					jpaCompliance.isJpaTransactionComplianceEnabled()
+			);
+		}
 	}
 
 	@Override
 	public void begin() {
-		if ( !transactionCoordinator.isActive() ) {
-			throw new TransactionException( "Cannot begin Transaction on closed Session/EntityManager" );
+		if ( !session.isOpen() ) {
+			throw new IllegalStateException( "Cannot begin Transaction on closed Session/EntityManager" );
 		}
 
 		if ( transactionDriverControl == null ) {
@@ -66,6 +76,7 @@ public class TransactionImpl implements TransactionImplementor {
 		}
 
 		LOG.debug( "begin" );
+
 		this.transactionDriverControl.begin();
 	}
 
@@ -82,6 +93,7 @@ public class TransactionImpl implements TransactionImplementor {
 		}
 
 		LOG.debug( "committing" );
+
 		try {
 			internalGetTransactionDriverControl().commit();
 		}
@@ -100,8 +112,9 @@ public class TransactionImpl implements TransactionImplementor {
 
 	@Override
 	public void rollback() {
-		if ( jpaCompliance.isJpaTransactionComplianceEnabled() ) {
-			if ( !isActive() ) {
+		if ( !isActive() ) {
+			if ( jpaCompliance.isJpaTransactionComplianceEnabled() ) {
+
 				throw new IllegalStateException(
 						"JPA compliance dictates throwing IllegalStateException when #rollback " +
 								"is called on non-active transaction"
@@ -121,6 +134,7 @@ public class TransactionImpl implements TransactionImplementor {
 		}
 
 		LOG.debug( "rolling back" );
+
 		if ( status != TransactionStatus.FAILED_COMMIT || allowFailedCommitToPhysicallyRollback() ) {
 			internalGetTransactionDriverControl().rollback();
 		}
@@ -136,7 +150,12 @@ public class TransactionImpl implements TransactionImplementor {
 	@Override
 	public boolean isActive(boolean isMarkedForRollbackConsideredActive) {
 		if ( transactionDriverControl == null ) {
-			transactionDriverControl = transactionCoordinator.getTransactionDriverControl();
+			if ( session.isOpen() ) {
+				transactionDriverControl = transactionCoordinator.getTransactionDriverControl();
+			}
+			else {
+				return false;
+			}
 		}
 		return transactionDriverControl.isActive( isMarkedForRollbackConsideredActive );
 	}
@@ -144,7 +163,12 @@ public class TransactionImpl implements TransactionImplementor {
 	@Override
 	public TransactionStatus getStatus() {
 		if ( transactionDriverControl == null ) {
-			transactionDriverControl = transactionCoordinator.getTransactionDriverControl();
+			if ( session.isOpen() ) {
+				transactionDriverControl = transactionCoordinator.getTransactionDriverControl();
+			}
+			else {
+				return TransactionStatus.NOT_ACTIVE;
+			}
 		}
 		return transactionDriverControl.getStatus();
 	}
@@ -175,25 +199,29 @@ public class TransactionImpl implements TransactionImplementor {
 
 	@Override
 	public void setRollbackOnly() {
-		// Since this is the JPA-defined one, we make sure the txn is active first
-		// so long as compliance (JpaCompliance) has not been defined to disable
-		// that check - making this active more like Hibernate's #markRollbackOnly
-		if ( jpaCompliance.isJpaTransactionComplianceEnabled() ) {
-			if ( !isActive() ) {
+		if ( !isActive() ) {
+			// Since this is the JPA-defined one, we make sure the txn is active first
+			// so long as compliance (JpaCompliance) has not been defined to disable
+			// that check - making this active more like Hibernate's #markRollbackOnly
+			if ( jpaCompliance.isJpaTransactionComplianceEnabled() ) {
 				throw new IllegalStateException(
 						"JPA compliance dictates throwing IllegalStateException when #setRollbackOnly " +
 								"is called on non-active transaction"
 				);
 			}
+			else {
+				LOG.debug( "#setRollbackOnly called on a not-active transaction" );
+			}
 		}
-
-		markRollbackOnly();
+		else {
+			markRollbackOnly();
+		}
 	}
 
 	@Override
 	public boolean getRollbackOnly() {
-		if ( jpaCompliance.isJpaTransactionComplianceEnabled() ) {
-			if ( !isActive() ) {
+		if ( !isActive() ) {
+			if ( jpaCompliance.isJpaTransactionComplianceEnabled() ) {
 				throw new IllegalStateException(
 						"JPA compliance dictates throwing IllegalStateException when #getRollbackOnly " +
 								"is called on non-active transaction"

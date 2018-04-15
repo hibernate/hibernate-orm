@@ -50,6 +50,7 @@ public class CloseEntityManagerWithActiveTransactionTest extends BaseEntityManag
 		super.addConfigOptions( options );
 		TestingJtaBootstrap.prepare( options );
 		options.put( AvailableSettings.TRANSACTION_TYPE, "JTA" );
+		options.put( org.hibernate.cfg.AvailableSettings.JPA_TRANSACTION_COMPLIANCE, "true" );
 	}
 
 	@Override

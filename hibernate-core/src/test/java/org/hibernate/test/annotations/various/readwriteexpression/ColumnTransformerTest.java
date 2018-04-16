@@ -11,6 +11,9 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.dialect.MariaDBDialect;
+
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -20,6 +23,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class ColumnTransformerTest extends BaseCoreFunctionalTestCase {
 	@Test
+	@SkipForDialect( MariaDBDialect.class )
 	public void testCustomColumnReadAndWrite() throws Exception{
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

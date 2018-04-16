@@ -45,8 +45,6 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
-import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.uuid.LocalObjectUuidHelper;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -138,9 +136,7 @@ import static org.hibernate.jpa.AvailableSettings.DISCARD_PC_ON_CLOSE;
 public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private static final Logger log = Logger.getLogger( SessionFactoryOptionsBuilder.class );
 
-	private static final IdentifierGenerator UUID_GENERATOR = UUIDGenerator.buildSessionFactoryUniqueIdentifierGenerator();
-
-	private final String uuid;
+	private final String uuid = LocalObjectUuidHelper.generateLocalObjectUuid();
 	private final StandardServiceRegistry serviceRegistry;
 
 	// integration
@@ -234,7 +230,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	private Map<String, SQLFunction> sqlFunctions;
 
-	private MutableJpaCompliance jpaCompliance;
+	private JpaCompliance jpaCompliance;
 
 	private boolean failOnPaginationOverCollectionFetchEnabled;
 
@@ -242,8 +238,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	public SessionFactoryOptionsBuilder(StandardServiceRegistry serviceRegistry, BootstrapContext context) {
 		this.serviceRegistry = serviceRegistry;
 		this.jpaBootstrap = context.isJpaBootstrap();
-
-		this.uuid = LocalObjectUuidHelper.generateLocalObjectUuid();
 
 		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
 		ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
@@ -975,7 +969,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@Override
 	public JpaCompliance getJpaCompliance() {
-		return jpaCompliance.immutableCopy();
+		return jpaCompliance;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1225,27 +1219,35 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	public void enableJpaQueryCompliance(boolean enabled) {
-		this.jpaCompliance.setQueryCompliance( enabled );
+		mutableJpaCompliance().setQueryCompliance( enabled );
+	}
+
+	private MutableJpaCompliance mutableJpaCompliance() {
+		if ( ! MutableJpaCompliance.class.isInstance( this.jpaCompliance ) ) {
+			throw new IllegalStateException( "JpaCompliance is no longer mutable" );
+		}
+
+		return (MutableJpaCompliance) this.jpaCompliance;
 	}
 
 	public void enableJpaTransactionCompliance(boolean enabled) {
-		this.jpaCompliance.setTransactionCompliance( enabled );
+		mutableJpaCompliance().setTransactionCompliance( enabled );
 	}
 
 	public void enableJpaListCompliance(boolean enabled) {
-		this.jpaCompliance.setListCompliance( enabled );
+		mutableJpaCompliance().setListCompliance( enabled );
 	}
 
 	public void enableJpaClosedCompliance(boolean enabled) {
-		this.jpaCompliance.setClosedCompliance( enabled );
+		mutableJpaCompliance().setClosedCompliance( enabled );
 	}
 
 	public void enableJpaProxyCompliance(boolean enabled) {
-		this.jpaCompliance.setProxyCompliance( enabled );
+		mutableJpaCompliance().setProxyCompliance( enabled );
 	}
 
 	public void enableJpaCachingCompliance(boolean enabled) {
-		this.jpaCompliance.setCachingCompliance( enabled );
+		mutableJpaCompliance().setCachingCompliance( enabled );
 	}
 
 	public void disableRefreshDetachedEntity() {
@@ -1261,6 +1263,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	public SessionFactoryOptions buildOptions() {
+		if ( MutableJpaCompliance.class.isInstance( this.jpaCompliance ) ) {
+			this.jpaCompliance = mutableJpaCompliance().immutableCopy();
+		}
+
 		return this;
 	}
 

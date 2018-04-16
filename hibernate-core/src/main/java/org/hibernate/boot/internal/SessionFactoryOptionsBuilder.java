@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.function.Supplier;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
@@ -51,8 +50,8 @@ import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.uuid.LocalObjectUuidHelper;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.jpa.JpaCompliance;
-import org.hibernate.jpa.spi.JpaComplianceImpl;
+import org.hibernate.jpa.spi.JpaCompliance;
+import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
@@ -235,7 +234,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	private Map<String, SQLFunction> sqlFunctions;
 
-	private JpaComplianceImpl jpaCompliance;
+	private MutableJpaCompliance jpaCompliance;
 
 	private boolean failOnPaginationOverCollectionFetchEnabled;
 
@@ -465,7 +464,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		);
 
 		// added the boolean parameter in case we want to define some form of "all" as discussed
-		this.jpaCompliance = new JpaComplianceImpl( configurationSettings, false );
+		this.jpaCompliance = context.getJpaCompliance();
 
 		this.failOnPaginationOverCollectionFetchEnabled = ConfigurationHelper.getBoolean(
 				FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH,
@@ -976,10 +975,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@Override
 	public JpaCompliance getJpaCompliance() {
-		return jpaCompliance;
+		return jpaCompliance.immutableCopy();
 	}
-
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// In-flight mutation access

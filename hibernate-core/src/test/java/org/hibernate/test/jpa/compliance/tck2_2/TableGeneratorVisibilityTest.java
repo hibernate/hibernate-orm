@@ -12,6 +12,9 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.TableGenerator;
 
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.transaction.TransactionUtil;
@@ -22,6 +25,11 @@ import org.junit.Test;
  */
 @TestForIssue(jiraKey = "HHH-12157")
 public class TableGeneratorVisibilityTest extends BaseCoreFunctionalTestCase {
+
+	@Override
+	protected void configure(Configuration configuration) {
+		configuration.setProperty( AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, "true" );
+	}
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

@@ -152,13 +152,13 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 				permissiveInitialization();
 			}
 			else if ( session == null ) {
-				throw new LazyInitializationException( "could not initialize proxy - no Session" );
+				throw new LazyInitializationException( "could not initialize proxy [" + entityName + "#" + id + "] - no Session" );
 			}
 			else if ( !session.isOpen() ) {
-				throw new LazyInitializationException( "could not initialize proxy - the owning Session was closed" );
+				throw new LazyInitializationException( "could not initialize proxy [" + entityName + "#" + id + "] - the owning Session was closed" );
 			}
 			else if ( !session.isConnected() ) {
-				throw new LazyInitializationException( "could not initialize proxy - the owning Session is disconnected" );
+				throw new LazyInitializationException( "could not initialize proxy [" + entityName + "#" + id + "] - the owning Session is disconnected" );
 			}
 			else {
 				target = session.immediateLoad( entityName, id );
@@ -175,7 +175,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		if ( session == null ) {
 			//we have a detached collection thats set to null, reattach
 			if ( sessionFactoryUuid == null ) {
-				throw new LazyInitializationException( "could not initialize proxy - no Session" );
+				throw new LazyInitializationException( "could not initialize proxy [" + entityName + "#" + id + "] - no Session" );
 			}
 			try {
 				SessionFactoryImplementor sf = (SessionFactoryImplementor)
@@ -214,7 +214,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 				}
 			}
 			catch (Exception e) {
-				log.error( "Initialization failure", e );
+				log.error( "Initialization failure [" + entityName + "#" + id + "]", e );
 				throw new LazyInitializationException( e.getMessage() );
 			}
 		}
@@ -224,7 +224,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			checkTargetState(session);
 		}
 		else {
-			throw new LazyInitializationException( "could not initialize proxy - Session was closed or disced" );
+			throw new LazyInitializationException( "could not initialize proxy [" + entityName + "#" + id + "] - Session was closed or disced" );
 		}
 	}
 
@@ -300,12 +300,12 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	private void errorIfReadOnlySettingNotAvailable() {
 		if ( session == null ) {
 			throw new TransientObjectException(
-					"Proxy is detached (i.e, session is null). The read-only/modifiable setting is only accessible when the proxy is associated with an open session."
+					"Proxy [" + entityName + "#" + id + "] is detached (i.e, session is null). The read-only/modifiable setting is only accessible when the proxy is associated with an open session."
 			);
 		}
 		if ( session.isClosed() ) {
 			throw new SessionException(
-					"Session is closed. The read-only/modifiable setting is only accessible when the proxy is associated with an open session."
+					"Session is closed. The read-only/modifiable setting is only accessible when the proxy [" + entityName + "#" + id + "] is associated with an open session."
 			);
 		}
 	}
@@ -323,7 +323,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		if ( this.readOnly != readOnly ) {
 			final EntityPersister persister = session.getFactory().getEntityPersister( entityName );
 			if ( !persister.isMutable() && !readOnly ) {
-				throw new IllegalStateException( "cannot make proxies for immutable entities modifiable" );
+				throw new IllegalStateException( "cannot make proxies [" + entityName + "#" + id + "] for immutable entities modifiable" );
 			}
 			this.readOnly = readOnly;
 			if ( initialized ) {
@@ -351,7 +351,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	protected final Boolean isReadOnlyBeforeAttachedToSession() {
 		if ( isReadOnlySettingAvailable() ) {
 			throw new IllegalStateException(
-					"Cannot call isReadOnlyBeforeAttachedToSession when isReadOnlySettingAvailable == true"
+					"Cannot call isReadOnlyBeforeAttachedToSession when isReadOnlySettingAvailable == true [" + entityName + "#" + id + "]"
 			);
 		}
 		return readOnlyBeforeAttachedToSession;
@@ -373,7 +373,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	final void setReadOnlyBeforeAttachedToSession(Boolean readOnlyBeforeAttachedToSession) {
 		if ( isReadOnlySettingAvailable() ) {
 			throw new IllegalStateException(
-					"Cannot call setReadOnlyBeforeAttachedToSession when isReadOnlySettingAvailable == true"
+					"Cannot call setReadOnlyBeforeAttachedToSession when isReadOnlySettingAvailable == true [" + entityName + "#" + id + "]"
 			);
 		}
 		this.readOnlyBeforeAttachedToSession = readOnlyBeforeAttachedToSession;

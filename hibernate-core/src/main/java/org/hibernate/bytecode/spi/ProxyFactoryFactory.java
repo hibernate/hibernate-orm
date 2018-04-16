@@ -15,7 +15,7 @@ import org.hibernate.service.ServiceRegistry;
 /**
  * An interface for factories of {@link ProxyFactory proxy factory} instances.
  * <p/>
- * Currently used to abstract from the tupizer whether we are using CGLIB or
+ * Currently used to abstract from the tupizer whether we are using Byte Buddy or
  * Javassist for lazy proxy generation.
  *
  * @author Steve Ebersole

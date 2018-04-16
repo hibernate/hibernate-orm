@@ -10,8 +10,8 @@ import org.hibernate.internal.util.StringHelper;
 
 /**
  * A problem occurred accessing a property of an instance of a
- * persistent class by reflection, or via CGLIB. There are a
- * number of possible underlying causes, including
+ * persistent class by reflection, or via enhanced entities.
+ * There are a number of possible underlying causes, including
  * <ul>
  * <li>failure of a security check
  * <li>an exception occurring inside the getter or setter method

@@ -162,6 +162,11 @@ task renderTopicalGuides(type: AsciidoctorTask, group: 'Documentation') {
 	separateOutputDirs false
 	options logDocuments: true
 	attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', majorMinorVersion: rootProject.hibernateMajorMinorVersion, fullVersion: rootProject.hibernateVersion
+	resources {
+		from('src/main/asciidoc/topical/') {
+			include '**/images/**'
+		}
+	}
 }
 
 

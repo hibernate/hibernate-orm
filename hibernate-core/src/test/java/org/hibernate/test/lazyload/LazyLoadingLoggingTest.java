@@ -38,24 +38,27 @@ public class LazyLoadingLoggingTest
 		};
 	}
 
-	@Test
-	@TestForIssue(jiraKey = "HHH-12484")
-	public void testNoSession() {
-		Long addressId = doInHibernate( this::sessionFactory, session -> {
+	@Override
+	protected void afterSessionFactoryBuilt() {
+		doInHibernate( this::sessionFactory, session -> {
 			Address address = new Address();
+			address.setId( 1L );
 			address.setStreet( "Marea albastra" );
 			session.persist( address );
 
 			Client client = new Client();
+			client.setId( 1L );
 			client.setName( "Dorian" );
 			client.setAddress( address );
 			session.persist( client );
-
-			return address.getId();
 		} );
+	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-12484")
+	public void testNoSession() {
 		Address address = doInHibernate( this::sessionFactory, s -> {
-			return s.load( Address.class, addressId );
+			return s.load( Address.class, 1L );
 		} );
 
 		try {
@@ -75,21 +78,8 @@ public class LazyLoadingLoggingTest
 	@Test
 	@TestForIssue(jiraKey = "HHH-12484")
 	public void testDisconnect() {
-		Long addressId = doInHibernate( this::sessionFactory, s -> {
-			Address address = new Address();
-			address.setStreet( "Marea albastra" );
-			s.persist( address );
-
-			Client client = new Client();
-			client.setName( "Dorian" );
-			client.setAddress( address );
-			s.persist( client );
-
-			return address.getId();
-		} );
-
 		doInHibernate( this::sessionFactory, session -> {
-			Address address = session.load( Address.class, addressId );
+			Address address = session.load( Address.class, 1L );
 			AbstractSharedSessionContract sessionContract = (AbstractSharedSessionContract) session;
 			sessionContract.getJdbcCoordinator().close();
 
@@ -116,7 +106,6 @@ public class LazyLoadingLoggingTest
 	@Entity(name = "Address")
 	public static class Address {
 		@Id
-		@GeneratedValue
 		private Long id;
 
 		@Column
@@ -154,7 +143,6 @@ public class LazyLoadingLoggingTest
 	@Entity(name = "Client")
 	public static class Client {
 		@Id
-		@GeneratedValue
 		private Long id;
 
 		@Column

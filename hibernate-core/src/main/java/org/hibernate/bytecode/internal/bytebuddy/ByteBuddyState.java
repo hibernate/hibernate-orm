@@ -17,7 +17,11 @@ import net.bytebuddy.dynamic.scaffold.TypeValidation;
  */
 public final class ByteBuddyState {
 
-	private final ByteBuddy buddy = new ByteBuddy().with( TypeValidation.DISABLED );
+	/**
+	 * Ideally shouldn't be static but it has to until we can remove the
+	 * deprecated static methods.
+	 */
+	private static final ByteBuddy buddy = new ByteBuddy().with( TypeValidation.DISABLED );
 
 	/**
 	 * This currently needs to be static: the BytecodeProvider is a static field of Environment and
@@ -59,6 +63,16 @@ public final class ByteBuddyState {
 	 */
 	void clearState() {
 		CACHE.clear();
+	}
+
+	/**
+	 * @deprecated as we should not need static access to this state.
+	 * This will be removed with no replacement.
+	 * It's actually likely that this whole class becomes unnecessary in the near future.
+	 */
+	@Deprecated
+	public static ByteBuddy getStaticByteBuddyInstance() {
+		return buddy;
 	}
 
 }

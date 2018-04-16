@@ -261,7 +261,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 
 	@Override
 	public Enhancer getEnhancer(EnhancementContext enhancementContext) {
-		return new EnhancerImpl( enhancementContext );
+		return new EnhancerImpl( enhancementContext, bytebuddy );
 	}
 
 	public void resetCaches() {

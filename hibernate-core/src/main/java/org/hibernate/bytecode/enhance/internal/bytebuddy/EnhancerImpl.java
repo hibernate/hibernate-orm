@@ -25,6 +25,7 @@ import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
+import org.hibernate.bytecode.internal.bytebuddy.ByteBuddyState;
 import org.hibernate.engine.spi.ExtendedSelfDirtinessTracker;
 import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.engine.spi.CompositeTracker;
@@ -67,6 +68,7 @@ public class EnhancerImpl implements Enhancer {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( Enhancer.class );
 
 	protected final ByteBuddyEnhancementContext enhancementContext;
+	private ByteBuddyState bytebuddy;
 
 	private final TypePool classPool;
 
@@ -75,10 +77,12 @@ public class EnhancerImpl implements Enhancer {
 	 *
 	 * @param enhancementContext Describes the context in which enhancement will occur so as to give access
 	 * to contextual/environmental information.
+	 * @param bytebuddy refers to the ByteBuddy instance to use
 	 */
-	public EnhancerImpl(EnhancementContext enhancementContext) {
+	public EnhancerImpl(final EnhancementContext enhancementContext, final ByteBuddyState bytebuddy) {
 		this.enhancementContext = new ByteBuddyEnhancementContext( enhancementContext );
-		classPool = buildClassPool( this.enhancementContext );
+		this.bytebuddy = bytebuddy;
+		this.classPool = buildClassPool( this.enhancementContext );
 	}
 
 	/**
@@ -97,7 +101,7 @@ public class EnhancerImpl implements Enhancer {
 		try {
 			final TypeDescription managedCtClass = classPool.describe( className ).resolve();
 			DynamicType.Builder<?> builder = doEnhance(
-					new ByteBuddy().ignore( isDefaultFinalizer() ).with( TypeValidation.DISABLED ).redefine( managedCtClass, ClassFileLocator.Simple.of( className, originalBytes ) ),
+					bytebuddy.getCurrentyByteBuddy().ignore( isDefaultFinalizer() ).redefine( managedCtClass, ClassFileLocator.Simple.of( className, originalBytes ) ),
 					managedCtClass
 			);
 			if ( builder == null ) {

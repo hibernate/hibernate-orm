@@ -39,7 +39,7 @@ Internally Hibernate uses a registry of basic types when it needs to resolve a s
 |CalendarType |TIMESTAMP |java.util.Calendar |calendar, java.util.Calendar
 |CalendarDateType |DATE |java.util.Calendar |calendar_date
 |CalendarTimeType |TIME |java.util.Calendar |calendar_time
-|CurrencyType |java.util.Currency |VARCHAR |currency, java.util.Currency
+|CurrencyType |VARCHAR |java.util.Currency |currency, java.util.Currency
 |LocaleType |VARCHAR |java.util.Locale |locale, java.utility.locale
 |TimeZoneType |VARCHAR, using the TimeZone ID |java.util.TimeZone |timezone, java.util.TimeZone
 |UrlType |VARCHAR |java.net.URL |url, java.net.URL

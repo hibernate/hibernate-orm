@@ -30,9 +30,9 @@ public interface BasicQueryContract {
 	 * @deprecated (since 5.2) use {@link #setHibernateFlushMode} instead
 	 */
 	@Deprecated
-	default CommonQueryContract setFlushMode(FlushMode flushMode) {
+	default BasicQueryContract setFlushMode(FlushMode flushMode) {
 		setHibernateFlushMode( flushMode );
-		return (CommonQueryContract) this;
+		return this;
 	}
 
 	/**

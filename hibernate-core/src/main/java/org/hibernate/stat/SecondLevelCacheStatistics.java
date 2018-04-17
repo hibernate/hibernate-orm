@@ -6,6 +6,9 @@
  */
 package org.hibernate.stat;
 
+import java.util.Collections;
+import java.util.Map;
+
 /**
  * Cache statistics pertaining to a specific data region
  *
@@ -16,4 +19,7 @@ package org.hibernate.stat;
  */
 @Deprecated
 public interface SecondLevelCacheStatistics extends CacheRegionStatistics {
+	default Map getEntries() {
+		return Collections.emptyMap();
+	}
 }

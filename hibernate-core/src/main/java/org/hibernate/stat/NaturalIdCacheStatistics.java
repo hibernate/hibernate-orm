@@ -6,6 +6,10 @@
  */
 package org.hibernate.stat;
 
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.Map;
+
 /**
  * @deprecated (since 5.3) Use {@link NaturalIdStatistics} - unfortunately the
  * old statistics contracts exposed these by region name, rather than the name of
@@ -14,7 +18,7 @@ package org.hibernate.stat;
  * @author Steve Ebersole
  */
 @Deprecated
-public interface NaturalIdCacheStatistics {
+public interface NaturalIdCacheStatistics extends Serializable {
 	/**
 	 * Number of times (since last Statistics clearing) the "natural id
 	 * resolution" query has been executed
@@ -50,4 +54,8 @@ public interface NaturalIdCacheStatistics {
 	long getElementCountOnDisk();
 
 	long getSizeInMemory();
+
+	default Map getEntries() {
+		return Collections.emptyMap();
+	}
 }

@@ -852,6 +852,15 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String USE_REFLECTION_OPTIMIZER = "hibernate.bytecode.use_reflection_optimizer";
 
 	/**
+	 * Configure the global BytecodeProvider implementation to generate class names matching the
+	 * existing naming patterns.
+	 * It is not a good idea to rely on a classname to check if a class is an Hibernate proxy,
+	 * yet some frameworks are currently relying on this.
+	 * This option is disabled by default and will log a deprecation warning when enabled.
+	 */
+	String ENFORCE_LEGACY_PROXY_CLASSNAMES = "hibernate.bytecode.enforce_legacy_proxy_classnames";
+
+	/**
 	 * The classname of the HQL query parser factory
 	 */
 	String QUERY_TRANSLATOR = "hibernate.query.factory_class";

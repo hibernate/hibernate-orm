@@ -401,6 +401,9 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 `*hibernate.bytecode.use_reflection_optimizer*` (e.g. `true` or `false` (default value))::
 Should we use reflection optimization? The reflection optimizer implements the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/bytecode/spi/ReflectionOptimizer.html[`ReflectionOptimizer`] interface and improves entity instantiation and property getter/setter calls.
 
+`*hibernate.bytecode.enforce_legacy_proxy_classnames*` (e.g. `true` or `false` (default value))::
+Some other libraries, such as Spring, used to depend on a specific naming pattern used for proxy classes generated at runtime. Set this to `true` to have proxy class names conform to the old pattern.
+
 [[configurations-query]]
 === Query settings
 

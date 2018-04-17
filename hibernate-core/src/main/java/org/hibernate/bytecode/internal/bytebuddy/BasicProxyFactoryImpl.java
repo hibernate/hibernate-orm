@@ -13,18 +13,22 @@ import java.util.Set;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.spi.BasicProxyFactory;
+import org.hibernate.cfg.Environment;
 import org.hibernate.proxy.ProxyConfiguration;
 
+import net.bytebuddy.NamingStrategy;
 import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.implementation.MethodDelegation;
-import net.bytebuddy.implementation.auxiliary.AuxiliaryType;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatchers;
 
 public class BasicProxyFactoryImpl implements BasicProxyFactory {
 
 	private static final Class[] NO_INTERFACES = new Class[0];
+	private static final NamingStrategy PROXY_NAMING = Environment.useLegacyProxyClassnames() ?
+			new NamingStrategy.SuffixingRandom( "HibernateBasicProxy$" ) :
+			new NamingStrategy.SuffixingRandom( "HibernateBasicProxy" );
 
 	private final Class proxyClass;
 
@@ -42,7 +46,7 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 		}
 
 		this.proxyClass = bytebuddy.getCurrentyByteBuddy()
-			.with( new AuxiliaryType.NamingStrategy.SuffixingRandom( "HibernateBasicProxy" ) )
+			.with( PROXY_NAMING )
 			.subclass( superClass == null ? Object.class : superClass )
 			.implement( interfaces == null ? NO_INTERFACES : interfaces )
 			.defineField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE )

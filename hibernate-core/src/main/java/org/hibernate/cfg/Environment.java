@@ -17,6 +17,7 @@ import org.hibernate.Version;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.log.UnsupportedLogger;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
@@ -155,6 +156,7 @@ public final class Environment implements AvailableSettings {
 	private static final BytecodeProvider BYTECODE_PROVIDER_INSTANCE;
 	private static final boolean ENABLE_BINARY_STREAMS;
 	private static final boolean ENABLE_REFLECTION_OPTIMIZER;
+	private static final boolean ENABLE_LEGACY_PROXY_CLASSNAMES;
 
 	private static final Properties GLOBAL_PROPERTIES;
 
@@ -235,6 +237,12 @@ public final class Environment implements AvailableSettings {
 			LOG.usingReflectionOptimizer();
 		}
 
+		ENABLE_LEGACY_PROXY_CLASSNAMES = ConfigurationHelper.getBoolean( ENFORCE_LEGACY_PROXY_CLASSNAMES, GLOBAL_PROPERTIES );
+		if ( ENABLE_LEGACY_PROXY_CLASSNAMES ) {
+			final UnsupportedLogger unsupportedLogger = Logger.getMessageLogger( UnsupportedLogger.class, Environment.class.getName() );
+			unsupportedLogger.usingLegacyClassnamesForProxies();
+		}
+
 		BYTECODE_PROVIDER_INSTANCE = buildBytecodeProvider( GLOBAL_PROPERTIES );
 	}
 
@@ -297,6 +305,15 @@ public final class Environment implements AvailableSettings {
 	@Deprecated
 	public static BytecodeProvider getBytecodeProvider() {
 		return BYTECODE_PROVIDER_INSTANCE;
+	}
+
+	/**
+	 * @return True if global option org.hibernate.cfg.AvailableSettings#ENFORCE_LEGACY_PROXY_CLASSNAMES was enabled
+	 * @deprecated This option will be removed soon and should not be relied on.
+	 */
+	@Deprecated
+	public static boolean useLegacyProxyClassnames() {
+		return ENABLE_LEGACY_PROXY_CLASSNAMES;
 	}
 
 	/**

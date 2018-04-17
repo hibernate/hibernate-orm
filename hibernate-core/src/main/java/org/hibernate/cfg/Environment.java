@@ -350,6 +350,6 @@ public final class Environment implements AvailableSettings {
 		//		currently we assume it is only ever the Strings "javassist" or "bytebuddy"...
 
 		LOG.unknownBytecodeProvider( providerName, BYTECODE_PROVIDER_NAME_DEFAULT );
-		return new org.hibernate.bytecode.internal.javassist.BytecodeProviderImpl();
+		return new org.hibernate.bytecode.internal.bytebuddy.BytecodeProviderImpl();
 	}
 }

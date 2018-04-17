@@ -293,6 +293,18 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return;
 		}
 
+		try {
+			delayedAfterCompletion();
+		}
+		catch ( HibernateException e ) {
+			if ( getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
+				throw this.exceptionConverter.convert( e );
+			}
+			else {
+				throw e;
+			}
+		}
+
 		if ( sessionEventsManager != null ) {
 			sessionEventsManager.end();
 		}

@@ -68,7 +68,7 @@ public class EnhancerImpl implements Enhancer {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( Enhancer.class );
 
 	protected final ByteBuddyEnhancementContext enhancementContext;
-	private ByteBuddyState bytebuddy;
+	private final ByteBuddyState bytebuddy;
 
 	private final TypePool classPool;
 

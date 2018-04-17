@@ -8,6 +8,8 @@ package org.hibernate.procedure;
 
 import java.util.Map;
 
+import org.hibernate.Session;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -16,6 +18,28 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @author Steve Ebersole
  */
 public interface ProcedureCallMemento {
+	/**
+	 * Convert the memento back into an executable (connected) form.
+	 *
+	 * @param session The session to connect the procedure call to
+	 *
+	 * @return The executable call
+	 */
+	default ProcedureCall makeProcedureCall(Session session) {
+		return makeProcedureCall( (SharedSessionContractImplementor) session );
+	}
+
+	/**
+	 * Convert the memento back into an executable (connected) form.
+	 *
+	 * @param session The session to connect the procedure call to
+	 *
+	 * @return The executable call
+	 */
+	default ProcedureCall makeProcedureCall(SessionImplementor session) {
+		return makeProcedureCall( (SharedSessionContractImplementor) session );
+	}
+
 	/**
 	 * Convert the memento back into an executable (connected) form.
 	 *

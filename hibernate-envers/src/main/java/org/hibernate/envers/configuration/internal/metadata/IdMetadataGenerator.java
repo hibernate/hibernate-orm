@@ -112,7 +112,18 @@ public final class IdMetadataGenerator {
 				final String referencedEntityName = ( (ToOne) property.getValue() ).getReferencedEntityName();
 
 				final String prefix = mainGenerator.getVerEntCfg().getOriginalIdPropName() + "." + propertyData.getName();
-				final IdMapper relMapper = mainGenerator.getEntitiesConfigurations().get( referencedEntityName ).getIdMapper();
+
+				final IdMapper relMapper;
+				if ( mainGenerator.getEntitiesConfigurations().containsKey( referencedEntityName ) ) {
+					relMapper = mainGenerator.getEntitiesConfigurations().get( referencedEntityName ).getIdMapper();
+				}
+				else if ( mainGenerator.getNotAuditedEntitiesConfigurations().containsKey( referencedEntityName ) ) {
+					relMapper = mainGenerator.getNotAuditedEntitiesConfigurations().get( referencedEntityName ).getIdMapper();
+				}
+				else {
+					throw new MappingException( "Unable to locate entity configuration for [" + referencedEntityName + "]" );
+				}
+
 				final IdMapper prefixedMapper = relMapper.prefixMappedProperties( prefix + "." );
 
 				mainGenerator.getEntitiesConfigurations().get( entityName ).addToOneRelation(

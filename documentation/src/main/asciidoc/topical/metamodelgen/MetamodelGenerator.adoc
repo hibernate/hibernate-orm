@@ -318,6 +318,30 @@ for annotation processing can be used:
 ----
 ====
 
+Another possibility is to supply the dependency as an annotation processor path to the maven-compiler-plugin:
+
+[[maven-compiler-plugin]]
+.Configuration with maven-compiler-plugin
+====
+[source, XML]
+----
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <version>3.7.0</version>
+    <configuration>
+        <annotationProcessorPaths>
+            <path>
+                <groupId>org.hibernate</groupId>
+                <artifactId>hibernate-jpamodelgen</artifactId>
+                <version>WORKING</version>
+            </path>
+        </annotationProcessorPaths>
+    </configuration>
+</plugin>
+----
+====
+
 === Usage within the IDE
 
 Of course you also want to have annotation processing available in your favorite IDE. The

@@ -1075,10 +1075,13 @@ public abstract class AbstractEntityPersister
 			if ( ce != null ) {
 				final CacheEntry cacheEntry = (CacheEntry) getCacheEntryStructure().destructure( ce, factory );
 				final Object initializedValue = initializeLazyPropertiesFromCache( fieldName, entity, session, entry, cacheEntry );
-				interceptor.attributeInitialized( fieldName );
+				if (initializedValue != LazyPropertyInitializer.UNFETCHED_PROPERTY) {
+					// The following should be redundant, since the setter should have set this already.
+					// interceptor.attributeInitialized(fieldName);
 
-				// NOTE EARLY EXIT!!!
-				return initializedValue;
+					// NOTE EARLY EXIT!!!
+					return initializedValue;
+				}
 			}
 		}
 
@@ -1233,13 +1236,24 @@ public abstract class AbstractEntityPersister
 		Serializable[] disassembledValues = cacheEntry.getDisassembledState();
 		final Object[] snapshot = entry.getLoadedState();
 		for ( int j = 0; j < lazyPropertyNames.length; j++ ) {
-			final Object propValue = lazyPropertyTypes[j].assemble(
-					disassembledValues[lazyPropertyNumbers[j]],
-					session,
-					entity
-			);
-			if ( initializeLazyProperty( fieldName, entity, session, snapshot, j, propValue ) ) {
-				result = propValue;
+			final Serializable cachedValue = disassembledValues[lazyPropertyNumbers[j]];
+			final Type lazyPropertyType = lazyPropertyTypes[j];
+			final String propertyName = lazyPropertyNames[j];
+			if (cachedValue == LazyPropertyInitializer.UNFETCHED_PROPERTY) {
+				if (fieldName.equals(propertyName)) {
+					result = LazyPropertyInitializer.UNFETCHED_PROPERTY;
+				}
+				// don't try to initialize the unfetched property
+			}
+			else {
+				final Object propValue = lazyPropertyType.assemble(
+						cachedValue,
+						session,
+						entity
+				);
+				if ( initializeLazyProperty( fieldName, entity, session, snapshot, j, propValue ) ) {
+					result = propValue;
+				}
 			}
 		}
 

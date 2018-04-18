@@ -2476,6 +2476,7 @@ public final class SessionImpl
 		catch (Throwable t) {
 			log.exceptionInBeforeTransactionCompletionInterceptor( t );
 		}
+		super.beforeTransactionCompletion();
 	}
 
 	@Override

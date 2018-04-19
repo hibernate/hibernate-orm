@@ -47,7 +47,7 @@ public abstract class AbstractCriteriaLiteralHandlingModeTest extends BaseEntity
 
 	@Override
 	public void buildEntityManagerFactory() {
-		connectionProvider = new PreparedStatementSpyConnectionProvider();
+		connectionProvider = new PreparedStatementSpyConnectionProvider( false, false );
 		super.buildEntityManagerFactory();
 	}
 

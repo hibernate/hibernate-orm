@@ -30,7 +30,7 @@ import static org.mockito.Mockito.verify;
 public class SessionJdbcBatchTest
 		extends BaseNonConfigCoreFunctionalTestCase {
 
-	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
+	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider( true, false );
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

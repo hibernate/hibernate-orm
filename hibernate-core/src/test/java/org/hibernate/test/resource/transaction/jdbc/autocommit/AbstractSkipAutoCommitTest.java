@@ -33,7 +33,7 @@ import static org.mockito.Mockito.verify;
 public abstract class AbstractSkipAutoCommitTest extends BaseEntityManagerFunctionalTestCase {
 
 	private PreparedStatementSpyConnectionProvider connectionProvider =
-		new PreparedStatementSpyConnectionProvider() {
+		new PreparedStatementSpyConnectionProvider( false, true ) {
 			@Override
 			protected Connection actualConnection() throws SQLException {
 				Connection connection = super.actualConnection();

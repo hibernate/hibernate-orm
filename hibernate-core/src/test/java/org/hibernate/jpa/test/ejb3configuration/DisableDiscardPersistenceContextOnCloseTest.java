@@ -26,7 +26,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class DisableDiscardPersistenceContextOnCloseTest extends BaseEntityManagerFunctionalTestCase {
 
-	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
+	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider( false, false );
 
 	@Override
 	protected Map getConfig() {

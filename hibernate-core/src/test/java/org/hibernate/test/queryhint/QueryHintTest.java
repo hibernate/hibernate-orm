@@ -50,7 +50,7 @@ public class QueryHintTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
 	protected void buildResources() {
-		connectionProvider = new PreparedStatementSpyConnectionProvider();
+		connectionProvider = new PreparedStatementSpyConnectionProvider( false, false );
 		super.buildResources();
 	}
 

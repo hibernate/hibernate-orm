@@ -59,7 +59,7 @@ public class CriteriaLiteralsTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	public void buildEntityManagerFactory() {
-		connectionProvider = new PreparedStatementSpyConnectionProvider();
+		connectionProvider = new PreparedStatementSpyConnectionProvider( false, false );
 		super.buildEntityManagerFactory();
 	}
 

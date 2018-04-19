@@ -44,7 +44,7 @@ import static org.junit.Assert.assertEquals;
 public class InsertOrderingWithJoinedTableMultiLevelInheritance
 		extends BaseNonConfigCoreFunctionalTestCase {
 
-	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
+	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider( false, false );
 
 	@Override
 	protected Class[] getAnnotatedClasses() {

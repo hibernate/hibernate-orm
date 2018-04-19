@@ -35,7 +35,7 @@ import static org.mockito.Mockito.verify;
  */
 public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 
-	private static final PreparedStatementSpyConnectionProvider CONNECTION_PROVIDER = new PreparedStatementSpyConnectionProvider();
+	private static final PreparedStatementSpyConnectionProvider CONNECTION_PROVIDER = new PreparedStatementSpyConnectionProvider( true, false );
 	private static final String QUERY = "update AnEntity set name='abc'";
 
 	@Override

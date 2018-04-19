@@ -50,7 +50,7 @@ public class EntityGraphWithFetchAnnotationTest
 
 	@Override
 	public void buildEntityManagerFactory() {
-		connectionProvider = new PreparedStatementSpyConnectionProvider();
+		connectionProvider = new PreparedStatementSpyConnectionProvider( false, false );
 		super.buildEntityManagerFactory();
 	}
 

@@ -41,7 +41,7 @@ public class ElementCollectionTest extends BaseNonConfigCoreFunctionalTestCase {
 		return new Class[] {Task.class};
 	}
 
-	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
+	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider( false, false );
 
 	@Override
 	protected void addSettings(Map settings) {

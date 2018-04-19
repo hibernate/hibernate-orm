@@ -91,7 +91,7 @@ public class MySQLDropConstraintThrowsExceptionTest extends BaseUnitTestCase {
 
 	@Test
 	public void testEnumTypeInterpretation() {
-		final PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
+		final PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider( false, false );
 
 		final StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				.enableAutoClose()

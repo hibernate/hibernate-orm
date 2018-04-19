@@ -83,6 +83,18 @@ The change for HHH-11356 required changes in its consumers.  One such consumer i
 Statistics system....
 
 
+=== EnhancementTask changes
+
+The API of the `org.hibernate.tool.enhance.EnhancementTask` Ant task was changed, specifically
+the `#addFileset` method was dropped in favor of `#setBase` and `#setDir`
+
+See details on the https://hibernate.atlassian.net/browse/HHH-11795[HHH-11795] Jira issue.
+
+The main gist is that EnhancementTask was fixed (through a contribution) to actually work with
+`Enhancer` from `BytecodeProvider`.  Previously it had not.  And part of fixing that required this
+change.
+
+
 
 === 5.3 -> 6.0 compatibility changes
 

@@ -71,7 +71,7 @@ import static org.mockito.Mockito.verify;
 @RequiresDialectFeature(DialectChecks.SupportsSequences.class)
 public class CriteriaQueryTest extends BaseNonConfigCoreFunctionalTestCase {
 
-	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
+	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider( true, false );
 
 	@Override
 	public String[] getMappings() {

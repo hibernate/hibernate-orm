@@ -40,7 +40,7 @@ import static org.mockito.Mockito.verify;
 public class InsertOrderingWithMultipleManyToOne
 		extends BaseNonConfigCoreFunctionalTestCase {
 
-	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
+	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider( false, false );
 
 	@Override
 	protected Class[] getAnnotatedClasses() {

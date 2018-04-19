@@ -37,7 +37,7 @@ public class SchemaUpdateProceedOnErrorTest extends BaseEntityManagerFunctionalT
 	}
 
 	@Override
-	public void buildEntityManagerFactory() throws Exception {
+	public void buildEntityManagerFactory() {
 		try {
 			super.buildEntityManagerFactory();
 		}

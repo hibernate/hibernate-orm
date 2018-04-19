@@ -40,7 +40,7 @@ public class SchemaMigratorHaltOnErrorTest extends BaseEntityManagerFunctionalTe
 	}
 
 	@Override
-	public void buildEntityManagerFactory() throws Exception {
+	public void buildEntityManagerFactory() {
 		try {
 			super.buildEntityManagerFactory();
 			fail("Should halt on error!");

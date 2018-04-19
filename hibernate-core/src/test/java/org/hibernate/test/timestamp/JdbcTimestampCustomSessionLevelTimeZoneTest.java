@@ -42,7 +42,7 @@ import static org.mockito.Mockito.verify;
 public class JdbcTimestampCustomSessionLevelTimeZoneTest
 		extends BaseNonConfigCoreFunctionalTestCase {
 
-	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
+	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider( true, false );
 
 	private static final TimeZone TIME_ZONE = TimeZone.getTimeZone(
 			"America/Los_Angeles" );

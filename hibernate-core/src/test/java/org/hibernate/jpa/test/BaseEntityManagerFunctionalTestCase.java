@@ -69,10 +69,10 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 
 	@Before
 	@SuppressWarnings( {"UnusedDeclaration"})
-	public void buildEntityManagerFactory() throws Exception {
+	public void buildEntityManagerFactory() {
 		log.trace( "Building EntityManagerFactory" );
 
-		entityManagerFactory =  Bootstrap.getEntityManagerFactoryBuilder(
+		entityManagerFactory = Bootstrap.getEntityManagerFactoryBuilder(
 				buildPersistenceUnitDescriptor(),
 				buildSettings()
 		).build().unwrap( SessionFactoryImplementor.class );

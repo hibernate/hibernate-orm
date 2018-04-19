@@ -26,7 +26,7 @@ import static org.junit.Assert.fail;
 public class EmbeddableWithOneToMany_HHH_11302_xml_Test extends
 		BaseEntityManagerFunctionalTestCase {
 
-	PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
+	PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider( false, false );
 
 	@Override
 	public String[] getEjb3DD() {
@@ -35,7 +35,7 @@ public class EmbeddableWithOneToMany_HHH_11302_xml_Test extends
 		};
 	}
 
-	public void buildEntityManagerFactory() throws Exception {
+	public void buildEntityManagerFactory() {
 		try {
 			super.buildEntityManagerFactory();
 			fail( "Should throw AnnotationException!" );

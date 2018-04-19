@@ -19,6 +19,7 @@ import javax.persistence.ForeignKey;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
@@ -61,10 +62,11 @@ public class InsertOrderingWithCompositeTypeAssociation extends BaseCoreFunction
 	}
 
 	@Entity(name = "Comment")
+	@Table(name = "COMMENT_TABLE")
 	public static class Comment {
 		@Id
 		private String id;
-		@Column(length = 256)
+		@Column(name = "`comment`", length = 256)
 		private String comment;
 
 		Comment() {

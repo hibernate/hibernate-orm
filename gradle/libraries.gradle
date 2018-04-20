@@ -102,7 +102,7 @@ ext {
             h2:              "com.h2database:h2:${h2Version}",
             hsqldb:          "org.hsqldb:hsqldb:2.3.2",
             derby:           "org.apache.derby:derby:10.11.1.1",
-            postgresql:      'org.postgresql:postgresql:42.1.1',
+            postgresql:      'org.postgresql:postgresql:42.2.2',
             mysql:           'mysql:mysql-connector-java:6.0.5',
             mariadb:         'org.mariadb.jdbc:mariadb-java-client:2.2.3',
 

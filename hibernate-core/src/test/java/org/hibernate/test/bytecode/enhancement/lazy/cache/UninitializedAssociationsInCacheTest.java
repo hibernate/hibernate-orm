@@ -11,7 +11,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.validation.constraints.AssertTrue;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -23,7 +22,7 @@ import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.stat.CacheRegionStatistics;
+import org.hibernate.stat.SecondLevelCacheStatistics;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
@@ -80,7 +79,9 @@ public class UninitializedAssociationsInCacheTest extends BaseCoreFunctionalTest
 
 		sessionFactory().getCache().evictAll();
 		sessionFactory().getStatistics().clear();
-		CacheRegionStatistics regionStatistics = sessionFactory().getStatistics().getCacheRegionStatistics( "Employee" );
+		SecondLevelCacheStatistics regionStatistics = sessionFactory().getStatistics().getSecondLevelCacheStatistics(
+				"Employee"
+		);
 
 		TransactionUtil.doInHibernate(
 				this::sessionFactory, (s) -> {

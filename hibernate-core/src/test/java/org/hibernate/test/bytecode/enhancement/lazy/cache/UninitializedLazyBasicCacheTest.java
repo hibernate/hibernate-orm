@@ -19,7 +19,7 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.stat.CacheRegionStatistics;
+import org.hibernate.stat.SecondLevelCacheStatistics;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
@@ -79,7 +79,9 @@ public class UninitializedLazyBasicCacheTest extends BaseCoreFunctionalTestCase 
 				}
 		);
 
-		CacheRegionStatistics regionStatistics = sessionFactory().getStatistics().getCacheRegionStatistics( "Person" );
+		SecondLevelCacheStatistics regionStatistics = sessionFactory().getStatistics().getSecondLevelCacheStatistics(
+				"Person"
+		);
 		assertEquals( 0, regionStatistics.getHitCount() );
 		assertEquals( 1, regionStatistics.getMissCount() );
 		assertEquals( 1, regionStatistics.getPutCount() );

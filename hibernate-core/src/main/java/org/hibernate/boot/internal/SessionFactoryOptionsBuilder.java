@@ -33,6 +33,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.internal.StandardTimestampsCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
@@ -339,25 +340,42 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.procedureParameterNullPassingEnabled = cfgService.getSetting( PROCEDURE_NULL_PARAM_PASSING, BOOLEAN, false );
 		this.collectionJoinSubqueryRewriteEnabled = cfgService.getSetting( COLLECTION_JOIN_SUBQUERY, BOOLEAN, true );
 
-		this.secondLevelCacheEnabled = cfgService.getSetting( USE_SECOND_LEVEL_CACHE, BOOLEAN, true );
-		this.queryCacheEnabled = cfgService.getSetting( USE_QUERY_CACHE, BOOLEAN, false );
-		this.timestampsCacheFactory = strategySelector.resolveDefaultableStrategy(
-				TimestampsCacheFactory.class,
-				configurationSettings.get( QUERY_CACHE_FACTORY ),
-				StandardTimestampsCacheFactory.INSTANCE
-		);
-		this.cacheRegionPrefix = ConfigurationHelper.extractPropertyValue(
-				CACHE_REGION_PREFIX,
-				configurationSettings
-		);
-		this.minimalPutsEnabled = cfgService.getSetting(
-				USE_MINIMAL_PUTS,
-				BOOLEAN,
-				serviceRegistry.getService( RegionFactory.class ).isMinimalPutsEnabledByDefault()
-		);
-		this.structuredCacheEntriesEnabled = cfgService.getSetting( USE_STRUCTURED_CACHE, BOOLEAN, false );
-		this.directReferenceCacheEntriesEnabled = cfgService.getSetting( USE_DIRECT_REFERENCE_CACHE_ENTRIES,BOOLEAN, false );
-		this.autoEvictCollectionCache = cfgService.getSetting( AUTO_EVICT_COLLECTION_CACHE, BOOLEAN, false );
+		final RegionFactory regionFactory = serviceRegistry.getService( RegionFactory.class );
+		if ( !NoCachingRegionFactory.class.isInstance( regionFactory ) ) {
+			this.secondLevelCacheEnabled = cfgService.getSetting( USE_SECOND_LEVEL_CACHE, BOOLEAN, true );
+			this.queryCacheEnabled = cfgService.getSetting( USE_QUERY_CACHE, BOOLEAN, false );
+			this.timestampsCacheFactory = strategySelector.resolveDefaultableStrategy(
+					TimestampsCacheFactory.class,
+					configurationSettings.get( QUERY_CACHE_FACTORY ),
+					StandardTimestampsCacheFactory.INSTANCE
+			);
+			this.cacheRegionPrefix = ConfigurationHelper.extractPropertyValue(
+					CACHE_REGION_PREFIX,
+					configurationSettings
+			);
+			this.minimalPutsEnabled = cfgService.getSetting(
+					USE_MINIMAL_PUTS,
+					BOOLEAN,
+					regionFactory.isMinimalPutsEnabledByDefault()
+			);
+			this.structuredCacheEntriesEnabled = cfgService.getSetting( USE_STRUCTURED_CACHE, BOOLEAN, false );
+			this.directReferenceCacheEntriesEnabled = cfgService.getSetting(
+					USE_DIRECT_REFERENCE_CACHE_ENTRIES,
+					BOOLEAN,
+					false
+			);
+			this.autoEvictCollectionCache = cfgService.getSetting( AUTO_EVICT_COLLECTION_CACHE, BOOLEAN, false );
+		}
+		else {
+			this.secondLevelCacheEnabled = false;
+			this.queryCacheEnabled = false;
+			this.timestampsCacheFactory = null;
+			this.cacheRegionPrefix = null;
+			this.minimalPutsEnabled = false;
+			this.structuredCacheEntriesEnabled = false;
+			this.directReferenceCacheEntriesEnabled = false;
+			this.autoEvictCollectionCache = false;
+		}
 
 		try {
 			this.schemaAutoTooling = SchemaAutoTooling.interpret( (String) configurationSettings.get( AvailableSettings.HBM2DDL_AUTO ) );

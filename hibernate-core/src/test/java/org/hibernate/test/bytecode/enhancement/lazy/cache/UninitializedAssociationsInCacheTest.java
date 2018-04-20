@@ -80,7 +80,7 @@ public class UninitializedAssociationsInCacheTest extends BaseCoreFunctionalTest
 		sessionFactory().getCache().evictAll();
 		sessionFactory().getStatistics().clear();
 		SecondLevelCacheStatistics regionStatistics = sessionFactory().getStatistics().getSecondLevelCacheStatistics(
-				"Employee"
+				"hibernate.test.Employee"
 		);
 
 		TransactionUtil.doInHibernate(

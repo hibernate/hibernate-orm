@@ -80,7 +80,7 @@ public class UninitializedLazyBasicCacheTest extends BaseCoreFunctionalTestCase 
 		);
 
 		SecondLevelCacheStatistics regionStatistics = sessionFactory().getStatistics().getSecondLevelCacheStatistics(
-				"Person"
+				"hibernate.test.Person"
 		);
 		assertEquals( 0, regionStatistics.getHitCount() );
 		assertEquals( 1, regionStatistics.getMissCount() );

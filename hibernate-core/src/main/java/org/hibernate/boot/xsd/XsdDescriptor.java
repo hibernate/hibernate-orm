@@ -13,13 +13,13 @@ import javax.xml.validation.Schema;
  *
  * @author Steve Ebersole
  */
-public class XsdDescriptor {
+public final class XsdDescriptor {
 	private final String localResourceName;
 	private final String namespaceUri;
 	private final String version;
 	private final Schema schema;
 
-	public XsdDescriptor(String localResourceName, Schema schema, String version, String namespaceUri) {
+	XsdDescriptor(String localResourceName, Schema schema, String version, String namespaceUri) {
 		this.localResourceName = localResourceName;
 		this.schema = schema;
 		this.version = version;

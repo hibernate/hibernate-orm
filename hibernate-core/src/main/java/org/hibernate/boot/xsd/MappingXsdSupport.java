@@ -50,6 +50,10 @@ public class MappingXsdSupport {
 			"http://www.hibernate.org/xsd/orm/hbm"
 	);
 
+	private MappingXsdSupport() {
+		//Do not construct new instances
+	}
+
 	public XsdDescriptor latestJpaDescriptor() {
 		return jpa22;
 	}

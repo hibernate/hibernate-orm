@@ -23,6 +23,10 @@ public class ConfigXsdSupport {
 	 */
 	public static final ConfigXsdSupport INSTANCE = new ConfigXsdSupport();
 
+	private ConfigXsdSupport() {
+		//Do not construct new instances
+	}
+
 	private final XsdDescriptor jpa10 = LocalXsdResolver.buildXsdDescriptor(
 			"org/hibernate/jpa/persistence_1_0.xsd",
 			"1.0",

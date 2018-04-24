@@ -261,10 +261,22 @@ public interface AuditReader {
 
 
 	/**
-	 * @param entity that was obtained previously from the same AuditReader.
+	 * Get the entity name of an instance of an entity returned by this AuditReader.
 	 *
-	 * @return the entityName for the given entity, null in case the entity is
-	 *         not associated with this AuditReader instance.
+	 * Each AuditReader maintains its own internal cache of objects which it has provided the caller, much like
+	 * the {@link org.hibernate.Session} maintains a first-level cache.  It is this specific cache which this
+	 * call uses to find and return the entity-name.  This means if the supplied three values do not correlate
+	 * to an existing entry in the AuditReader's first-level cache, this method will result in throwing a
+	 * {@link HibernateException} since that entity has not yet been loaded.
+	 *
+	 * @param primaryKey the primary key of the associated entity instance.
+	 * @param revision the revision of the associated entity of interest.
+	 * @param entity the entity instance that was obtained previously from the same AuditReader.
+	 *
+	 * @return the entityName for the given entity.
+	 * @throws HibernateException if one of the following conditions are satisfied:
+	 * <li>The supplied entity has yet to be returned by this AuditReader instance, e.g. it isn't in the reader's cache.</li>
+	 * <li>The supplied entity, primary key, and revision triplet is not a valid combination.</li>
 	 */
 	String getEntityName(Object primaryKey, Number revision, Object entity)
 			throws HibernateException;

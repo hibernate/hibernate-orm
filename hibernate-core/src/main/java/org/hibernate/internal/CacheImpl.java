@@ -370,19 +370,21 @@ public class CacheImpl implements CacheImplementor {
 		if ( region != null ) {
 			return region;
 		}
-		// keys in queryCaches may not be equal to the Region names
-		// obtained from queryCaches values; we need to be sure we are comparing
-		// the actual QueryCache region names with regionName.
-		for ( QueryCache queryCacheValue : queryCaches.values() ) {
-			if( queryCacheValue.getRegion().getName().equals( regionName ) ) {
-				return queryCacheValue.getRegion();
+		if ( settings.isQueryCacheEnabled() ) {
+			// keys in queryCaches may not be equal to the Region names
+			// obtained from queryCaches values; we need to be sure we are comparing
+			// the actual QueryCache region names with regionName.
+			for ( QueryCache queryCacheValue : queryCaches.values() ) {
+				if ( queryCacheValue.getRegion().getName().equals( regionName ) ) {
+					return queryCacheValue.getRegion();
+				}
 			}
-		}
-		if ( queryCache.getRegion().getName().equals( regionName ) ) {
-			return queryCache.getRegion();
-		}
-		if ( updateTimestampsCache.getRegion().getName().equals( regionName ) ) {
-			return updateTimestampsCache.getRegion();
+			if ( queryCache.getRegion().getName().equals( regionName ) ) {
+				return queryCache.getRegion();
+			}
+			if ( updateTimestampsCache.getRegion().getName().equals( regionName ) ) {
+				return updateTimestampsCache.getRegion();
+			}
 		}
 		// no Region with the specified name
 		return null;

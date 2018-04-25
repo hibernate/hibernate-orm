@@ -8,6 +8,7 @@ package org.hibernate.stat.internal;
 
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -21,10 +22,8 @@ import org.hibernate.stat.NaturalIdStatistics;
  * @author Eric Dalquist
  */
 public class NaturalIdStatisticsImpl extends AbstractCacheableDataStatistics implements NaturalIdStatistics, Serializable {
-	private static final long serialVersionUID = 1L;
 
 	private final String rootEntityName;
-
 	private final AtomicLong executionCount = new AtomicLong();
 	private final AtomicLong executionMaxTime = new AtomicLong();
 	private final AtomicLong executionMinTime = new AtomicLong( Long.MAX_VALUE );
@@ -33,12 +32,6 @@ public class NaturalIdStatisticsImpl extends AbstractCacheableDataStatistics imp
 	private final Lock readLock;
 	private final Lock writeLock;
 
-	{
-		final ReadWriteLock lock = new ReentrantReadWriteLock();
-		this.readLock = lock.readLock();
-		this.writeLock = lock.writeLock();
-	}
-
 	NaturalIdStatisticsImpl(EntityPersister rootEntityDescriptor) {
 		super(
 				() -> rootEntityDescriptor.getNaturalIdCacheAccessStrategy() != null
@@ -46,6 +39,9 @@ public class NaturalIdStatisticsImpl extends AbstractCacheableDataStatistics imp
 						: null
 		);
 		this.rootEntityName = rootEntityDescriptor.getRootEntityName();
+		final ReadWriteLock lock = new ReentrantReadWriteLock();
+		this.readLock = lock.readLock();
+		this.writeLock = lock.writeLock();
 	}
 
 	/**
@@ -86,7 +82,7 @@ public class NaturalIdStatisticsImpl extends AbstractCacheableDataStatistics imp
 	}
 
 	/**
-	 * min time in ms taken by the excution of this query onto the DB
+	 * min time in ms taken by the execution of this query onto the DB
 	 */
 	@Override
 	public long getExecutionMinTime() {

@@ -7,7 +7,7 @@
 package org.hibernate.stat.internal;
 
 import java.io.Serializable;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.stat.CollectionStatistics;
@@ -18,13 +18,13 @@ import org.hibernate.stat.CollectionStatistics;
  * @author Alex Snaps
  */
 public class CollectionStatisticsImpl extends AbstractCacheableDataStatistics implements CollectionStatistics, Serializable {
-	private final String collectionRole;
 
-	private AtomicLong loadCount = new AtomicLong();
-	private AtomicLong fetchCount = new AtomicLong();
-	private AtomicLong updateCount = new AtomicLong();
-	private AtomicLong removeCount = new AtomicLong();
-	private AtomicLong recreateCount = new AtomicLong();
+	private final String collectionRole;
+	private final LongAdder loadCount = new LongAdder();
+	private final LongAdder fetchCount = new LongAdder();
+	private final LongAdder updateCount = new LongAdder();
+	private final LongAdder removeCount = new LongAdder();
+	private final LongAdder recreateCount = new LongAdder();
 
 	CollectionStatisticsImpl(CollectionPersister persister) {
 		super(
@@ -37,43 +37,43 @@ public class CollectionStatisticsImpl extends AbstractCacheableDataStatistics im
 	}
 
 	public long getLoadCount() {
-		return loadCount.get();
+		return loadCount.sum();
 	}
 
 	public long getFetchCount() {
-		return fetchCount.get();
+		return fetchCount.sum();
 	}
 
 	public long getRecreateCount() {
-		return recreateCount.get();
+		return recreateCount.sum();
 	}
 
 	public long getRemoveCount() {
-		return removeCount.get();
+		return removeCount.sum();
 	}
 
 	public long getUpdateCount() {
-		return updateCount.get();
+		return updateCount.sum();
 	}
 
 	void incrementLoadCount() {
-		loadCount.getAndIncrement();
+		loadCount.increment();
 	}
 
 	void incrementFetchCount() {
-		fetchCount.getAndIncrement();
+		fetchCount.increment();
 	}
 
 	void incrementUpdateCount() {
-		updateCount.getAndIncrement();
+		updateCount.increment();
 	}
 
 	void incrementRecreateCount() {
-		recreateCount.getAndIncrement();
+		recreateCount.increment();
 	}
 
 	void incrementRemoveCount() {
-		removeCount.getAndIncrement();
+		removeCount.increment();
 	}
 
 	public String toString() {

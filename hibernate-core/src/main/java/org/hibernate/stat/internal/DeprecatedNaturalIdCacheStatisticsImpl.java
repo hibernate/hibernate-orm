@@ -46,15 +46,12 @@ public class DeprecatedNaturalIdCacheStatisticsImpl implements NaturalIdCacheSta
 	private final Lock readLock;
 	private final Lock writeLock;
 
-	{
-		final ReadWriteLock lock = new ReentrantReadWriteLock();
-		this.readLock = lock.readLock();
-		this.writeLock = lock.writeLock();
-	}
-
 	DeprecatedNaturalIdCacheStatisticsImpl(String regionName, Set<NaturalIdDataAccess> accessStrategies) {
 		this.regionName = regionName;
 		this.accessStrategies = accessStrategies;
+		final ReadWriteLock lock = new ReentrantReadWriteLock();
+		this.readLock = lock.readLock();
+		this.writeLock = lock.writeLock();
 	}
 
 	/**

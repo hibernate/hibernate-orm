@@ -65,9 +65,9 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 			Object configValue,
 			ServiceRegistryImplementor registry) {
 
-		StatisticsFactory statisticsFactory;
+		final StatisticsFactory statisticsFactory;
 		if ( configValue == null ) {
-			statisticsFactory = DEFAULT_STATS_BUILDER;
+			statisticsFactory = null; //We'll use the default
 		}
 		else if ( StatisticsFactory.class.isInstance( configValue ) ) {
 			statisticsFactory = (StatisticsFactory) configValue;
@@ -88,18 +88,18 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 				);
 			}
 		}
-
-		StatisticsImplementor statistics = statisticsFactory.buildStatistics( sessionFactory );
+		final StatisticsImplementor statistics;
+		if ( statisticsFactory == null ) {
+			// Default:
+			statistics = new StatisticsImpl( sessionFactory );
+		}
+		else {
+			statistics = statisticsFactory.buildStatistics( sessionFactory );
+		}
 		final boolean enabled = sessionFactory.getSettings().isStatisticsEnabled();
 		statistics.setStatisticsEnabled( enabled );
 		LOG.debugf( "Statistics initialized [enabled=%s]", enabled );
 		return statistics;
 	}
 
-	private static StatisticsFactory DEFAULT_STATS_BUILDER = new StatisticsFactory() {
-		@Override
-		public StatisticsImplementor buildStatistics(SessionFactoryImplementor sessionFactory) {
-			return new StatisticsImpl( sessionFactory );
-		}
-	};
 }

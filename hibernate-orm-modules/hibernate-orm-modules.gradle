@@ -72,6 +72,7 @@ featurepack {
 	// Just the minor ORM version, e.g. "5.3"; Is used as an alias for the exact version
 	variables['minorSlot'] = rootProject.hibernateMajorMinorVersion
 	variables['bytebuddySlot'] = bytebuddyVersion
+	variables['infinispan2lcSlot'] = 'for-orm-' + rootProject.hibernateMajorMinorVersion
 	//Dependency on another Feature Pack:
 	dependency "org.wildfly:wildfly-feature-pack:${project.wildflyVersion}" // It will assume it is "zip" by default
 	//Ensure we declare all source repositories explicitly

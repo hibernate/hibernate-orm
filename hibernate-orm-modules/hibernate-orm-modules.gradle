@@ -79,7 +79,7 @@ featurepack {
 }
 
 task createCoreFeaturePackZip( type: Zip, dependsOn: [featurepack] ) {
-	baseName 'hibernate-core-jbossmodules'
+	baseName 'hibernate-orm-jbossmodules'
 	from project.fpackStagingDir
 }
 
@@ -126,8 +126,8 @@ publishing {
 	publications {
 		publishedArtifacts {
 			artifact( createCoreFeaturePackZip ) {
-				artifactId 'hibernate-core-jbossmodules'
-				description 'Main feature pack of Hibernate ORM: hibernate-core and hibernate-envers'
+				artifactId 'hibernate-orm-jbossmodules'
+				description 'Main feature pack of Hibernate ORM: hibernate-core and hibernate-envers, including essential dependencies such as Byte Buddy'
 			}
 		}
 	}

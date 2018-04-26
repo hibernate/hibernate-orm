@@ -3,6 +3,51 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.2.17.Final (April 26, 2018)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/31651
+
+** Bug
+    * [HHH-3930] - one-to-one causes redundant select query
+    * [HHH-10667] - Envers cannot support @IdClass referencing foreign entity identifier
+    * [HHH-11766] - Accessing lazy basic property on entity loaded from 2nd level cache throws exception
+    * [HHH-12166] - AbstractCompositionAttribute#getAttributes throws NPE for nested CompositeCustomType
+    * [HHH-12226] - ObjectNotFoundException thrown when @NotFound(action = NotFoundAction.IGNORE) used with enhancement
+    * [HHH-12326] - PreUpdate/PrePersist not working for @Embeddable entities
+    * [HHH-12338] - Incorrect metamodel for basic collections
+    * [HHH-12387] - Immutable entities can be updated via bulk update queries
+    * [HHH-12389] - Remove usage of javax.script.ScriptEngine from org.hibernate.test.bytecode.enhancement.access.MixedAccessTest
+    * [HHH-12391] - calls to EntityTransaction.rollback() should be ignored if the LogicalConnection.physicalConnection is null or the LogicalConnection.physicalConnection.getAutoCommit() returns true
+    * [HHH-12439] - Merging of new entities can fail depending on cascade order
+    * [HHH-12451] - Hibernate CurrencyType info is not correct in the table
+    * [HHH-12479] - Document the converted:: prefix for HBM type mappings
+    * [HHH-12498] - Audit entity with composite-key association to non-audit entity leads to NullPointerException
+    * [HHH-12507] - InsertOrderingWithCompositeTypeAssociation test fails on Oracle due to reserved word
+
+** New Feature
+    * [HHH-11769] - New MariaDB Dialect for MariaDB >= v10.1
+
+** Task
+    * [HHH-12509] - Reduce memory usage of PreparedStatementSpyConnectionProvider
+    * [HHH-12510] - Upgrade PostgreSQL driver
+
+** Sub-task
+    * [HHH-12494] - BasicQueryContract
+    * [HHH-12496] - ProcedureCallMemento
+    * [HHH-12499] - SQLQuery
+
+** Improvement
+    * [HHH-12365] - User Guide: call_key should change to call_timestamp_epoch
+    * [HHH-12373] - Better document AuditReader#getEntityName() as throwing an exception rather than it returning null.
+    * [HHH-12419] - Incorrect batch inserts example
+    * [HHH-12426] - SAP HANA spatial dialect should support all SAP HANA spatial functions
+    * [HHH-12454] - Offer flag to consider id generator with local scope (legacy non JPA behavior)
+    * [HHH-12462] - Use SAP HANA JDBC driver from Maven Central
+    * [HHH-12484] - Improved error output for LazyInitializationException to include entity-related info
+    * [HHH-12485] - MetamodelImpl throws exceptions unnecessarily since it could cache failed imports
+    * [HHH-12486] - SessionFactoryHelper#findEntityPersisterByName unnecessarily tries to find entity persisters via a method that causes MappingExceptions
+    * [HHH-12491] - Document the usage of the maven-compiler-plugin for hibernate-jpamodelgen
+
 
 Changes in 5.2.16.Final (March 22, 2018)
 ------------------------------------------------------------------------------------------------------------------------

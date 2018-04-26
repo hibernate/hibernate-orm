@@ -10,14 +10,11 @@ import java.io.Serializable;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
-import javax.persistence.LockModeType;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.UnresolvableObjectException;
-import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -26,7 +23,6 @@ import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.RefreshEvent;
 import org.hibernate.event.spi.RefreshEventListener;
@@ -173,17 +169,51 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		String previousFetchProfile = source.getLoadQueryInfluencers().getInternalFetchProfile();
 		source.getLoadQueryInfluencers().setInternalFetchProfile( "refresh" );
 
-		// Use the entity's current LockMode if it is greater than event.getLockMode()
-		final LockMode currentLockMode = e == null ? null : e.getLockMode();
+
+		// Handle the requested lock-mode (if one) in relation to the entry's (if one) current lock-mode
+
 		LockOptions lockOptionsToUse = event.getLockOptions();
-		if ( currentLockMode != null && currentLockMode.greaterThan( event.getLockMode() ) ) {
-			lockOptionsToUse = LockOptions.copy( event.getLockOptions(), new LockOptions() );
-			lockOptionsToUse.setLockMode( currentLockMode );
+
+		final LockMode requestedLockMode = lockOptionsToUse.getLockMode();
+		LockMode postRefreshLockMode = null;
+
+		if ( e != null ) {
+			final LockMode currentLockMode = e.getLockMode();
+			if ( currentLockMode.greaterThan( requestedLockMode ) ) {
+				// the requested lock-mode is less restrictive than the current one
+				//		- pass along the current lock-mode (after accounting for WRITE)
+				lockOptionsToUse = LockOptions.copy( event.getLockOptions(), new LockOptions() );
+				if ( currentLockMode == LockMode.WRITE ) {
+					// our transaction should already hold the exclusive lock on
+					// the underlying row - so READ should be sufficient.
+					//
+					// in fact, this really holds true for any current lock-mode that indicates we
+					// hold an exclusive lock on the underlying row - but we *need* to handle
+					// WRITE specially because the Loader/Locker mechanism does not allow for WRITE
+					// locks
+					lockOptionsToUse.setLockMode( LockMode.READ );
+
+					// and prepare to reset the entry lock-mode to WRITE after the refresh completes
+					postRefreshLockMode = LockMode.WRITE;
+				}
+				else {
+					lockOptionsToUse.setLockMode( currentLockMode );
+				}
+			}
 		}
-		Object result = persister.load( id, object, lockOptionsToUse, source );
-		// Keep the same read-only/modifiable setting for the entity that it had before refreshing;
-		// If it was transient, then set it to the default for the source.
+
+		final Object result = persister.load( id, object, lockOptionsToUse, source );
+
 		if ( result != null ) {
+			// apply `postRefreshLockMode`, if needed
+			if ( postRefreshLockMode != null ) {
+				// if we get here, there was a previous entry and we need to re-set its lock-mode
+				//		- however, the refresh operation actually creates a new entry, so get it
+				source.getPersistenceContext().getEntry( result ).setLockMode( postRefreshLockMode );
+			}
+
+			// Keep the same read-only/modifiable setting for the entity that it had before refreshing;
+			// If it was transient, then set it to the default for the source.
 			if ( !persister.isMutable() ) {
 				// this is probably redundant; it should already be read-only
 				source.setReadOnly( result, true );

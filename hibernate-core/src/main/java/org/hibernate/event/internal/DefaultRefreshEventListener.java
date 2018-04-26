@@ -173,16 +173,29 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		String previousFetchProfile = source.getLoadQueryInfluencers().getInternalFetchProfile();
 		source.getLoadQueryInfluencers().setInternalFetchProfile( "refresh" );
 
-		// Use the entity's current LockMode if it is greater than event.getLockMode()
+		// Use the entity's current LockMode if it is greater than event.getLockMode(),
+		// unless the current LockMode is WRITE (special case described below).
 		final LockMode currentLockMode = e == null ? null : e.getLockMode();
 		LockOptions lockOptionsToUse = event.getLockOptions();
+		boolean resetLockModeToWrite = false;
 		if ( currentLockMode != null && currentLockMode.greaterThan( event.getLockMode() ) ) {
 			lockOptionsToUse = LockOptions.copy( event.getLockOptions(), new LockOptions() );
 			lockOptionsToUse.setLockMode( currentLockMode );
+			if ( currentLockMode == LockMode.WRITE ) {
+				// LockMode.WRITE is not a valid lock mode for loading, so
+				// set the LockMode to READ to load the entity. After loading,
+				// the LockMode must be set back to WRITE (below).
+				lockOptionsToUse.setLockMode( LockMode.READ );
+				resetLockModeToWrite = true;
+			}
+			else {
+				lockOptionsToUse.setLockMode( currentLockMode );
+			}
 		}
 		Object result = persister.load( id, object, lockOptionsToUse, source );
 		// Keep the same read-only/modifiable setting for the entity that it had before refreshing;
 		// If it was transient, then set it to the default for the source.
+		// Also, set the LockMode to WRITE if resetLockModeToWrite == true.
 		if ( result != null ) {
 			if ( !persister.isMutable() ) {
 				// this is probably redundant; it should already be read-only
@@ -190,6 +203,11 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			}
 			else {
 				source.setReadOnly( result, ( e == null ? source.isDefaultReadOnly() : e.isReadOnly() ) );
+			}
+			if ( resetLockModeToWrite ) {
+				// Get the new EntityEntry and set the LockMode to WRITE.
+				final EntityEntry eLoaded = source.getPersistenceContext().getEntry( result );
+				eLoaded.setLockMode( LockMode.WRITE );
 			}
 		}
 		source.getLoadQueryInfluencers().setInternalFetchProfile( previousFetchProfile );

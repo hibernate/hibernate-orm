@@ -13,11 +13,11 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.test.util.jdbc.BasicPreparedStatementObserver;
 import org.hibernate.test.util.jdbc.PreparedStatementObserver;
@@ -72,9 +72,12 @@ public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerF
 		CONNECTION_PROVIDER.stop();
 	}
 
-	@Test(timeout = 1000 * 10) //10 seconds
+	// Setting AvailableSettings.LOCK_TIMEOUT to 0 does not work consistently for "no wait" locking
+	// and there is no consistent way to set this. For now, just test on H2 because it may
+	// hang on other dialects.
+	@Test
 	@TestForIssue(jiraKey = "HHH-11617")
-	@RequiresDialectFeature(value = DialectChecks.SupportsLockTimeouts.class,
+	@RequiresDialect(value = H2Dialect.class,
 			comment = "Test verifies statement is closed after a lock excpetion.",
 			jiraKey = "HHH-11617")
 	public void testStatementIsClosed() {
@@ -84,14 +87,19 @@ public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerF
 		{
 									 Map<String, Object> properties = new HashMap<String, Object>();
 									 properties.put( AvailableSettings.LOCK_TIMEOUT, 0L );
-									 Lock lock2 = entityManager.find( Lock.class, lockId, LockModeType.PESSIMISTIC_WRITE, properties );
+									 Lock lock2 = entityManager.find(
+											 Lock.class,
+											 lockId,
+											 LockModeType.PESSIMISTIC_WRITE,
+											 properties
+									 );
 									 assertEquals(
 											 "lock mode should be PESSIMISTIC_WRITE ",
 											 LockModeType.PESSIMISTIC_WRITE,
 											 entityManager.getLockMode( lock2 )
 									 );
 
-									EntityManager entityManager2 = createEntityManager();
+									EntityManager entityManager2 = createIsolatedEntityManager();
 									entityManager2.getTransaction().begin();
 									{
 																  try {
@@ -117,7 +125,7 @@ public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerF
 																	  }
 																  }
 									}
-									entityManager2.getTransaction().commit();
+									entityManager2.getTransaction().setRollbackOnly();
 									entityManager2.close();
 		}
 		entityManager.getTransaction().commit();

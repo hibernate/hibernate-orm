@@ -7,6 +7,7 @@
 package org.hibernate.test.util.jdbc;
 
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.Connection;
@@ -119,14 +120,19 @@ public class PreparedStatementProxyConnectionProvider extends ConnectionProvider
 
 		@Override
 		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-			final Object returnValue = method.invoke( actualPreparedStatement, args );
-			preparedStatementObserver.preparedStatementMethodInvoked(
-					(PreparedStatement) proxy,
-					method,
-					args,
-					returnValue
-			);
-			return returnValue;
+			try {
+				final Object returnValue = method.invoke( actualPreparedStatement, args );
+				preparedStatementObserver.preparedStatementMethodInvoked(
+						(PreparedStatement) proxy,
+						method,
+						args,
+						returnValue
+				);
+				return returnValue;
+			}
+			catch (InvocationTargetException ex) {
+				throw ex.getTargetException();
+			}
 		}
 	}
 }

@@ -6,34 +6,24 @@
  */
 package org.hibernate.test.insertordering;
 
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
-import javax.persistence.SequenceGenerator;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.util.jdbc.BasicPreparedStatementObserver;
-import org.hibernate.test.util.jdbc.PreparedStatementObserver;
-import org.hibernate.test.util.jdbc.PreparedStatementProxyConnectionProvider;
-import org.junit.Before;
+import org.hibernate.testing.jdbc.BasicPreparedStatementObserver;
+import org.hibernate.testing.jdbc.PreparedStatementObserver;
+import org.hibernate.testing.jdbc.PreparedStatementProxyConnectionProvider;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 /**

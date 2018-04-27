@@ -17,7 +17,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Map;
 
-import org.hibernate.test.util.jdbc.PreparedStatementProxyConnectionProvider;
+import org.hibernate.testing.jdbc.PreparedStatementProxyConnectionProvider;
 
 import static org.junit.Assert.assertEquals;
 

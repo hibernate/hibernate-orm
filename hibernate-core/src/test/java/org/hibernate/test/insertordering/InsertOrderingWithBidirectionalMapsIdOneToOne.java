@@ -24,7 +24,7 @@ import org.hibernate.cfg.Environment;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.util.jdbc.PreparedStatementProxyConnectionProvider;
+import org.hibernate.testing.jdbc.PreparedStatementProxyConnectionProvider;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

@@ -1,4 +1,4 @@
-package org.hibernate.test.util.jdbc;
+package org.hibernate.testing.jdbc;
 
 import java.lang.reflect.Method;
 import java.sql.PreparedStatement;

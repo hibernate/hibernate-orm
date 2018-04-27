@@ -11,7 +11,7 @@ import java.sql.PreparedStatement;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.hibernate.test.util.jdbc.BasicPreparedStatementObserver;
+import org.hibernate.testing.jdbc.BasicPreparedStatementObserver;
 
 /**
  * @author Gail Badner

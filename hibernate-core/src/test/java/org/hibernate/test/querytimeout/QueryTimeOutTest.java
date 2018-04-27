@@ -22,8 +22,8 @@ import org.hibernate.Query;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.util.jdbc.BasicPreparedStatementObserver;
-import org.hibernate.test.util.jdbc.PreparedStatementProxyConnectionProvider;
+import org.hibernate.testing.jdbc.BasicPreparedStatementObserver;
+import org.hibernate.testing.jdbc.PreparedStatementProxyConnectionProvider;
 import org.junit.Before;
 import org.junit.Test;
 

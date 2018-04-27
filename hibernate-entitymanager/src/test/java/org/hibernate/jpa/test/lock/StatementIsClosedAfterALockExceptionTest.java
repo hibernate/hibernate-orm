@@ -19,9 +19,9 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.test.util.jdbc.BasicPreparedStatementObserver;
-import org.hibernate.test.util.jdbc.PreparedStatementObserver;
-import org.hibernate.test.util.jdbc.PreparedStatementProxyConnectionProvider;
+import org.hibernate.testing.jdbc.BasicPreparedStatementObserver;
+import org.hibernate.testing.jdbc.PreparedStatementObserver;
+import org.hibernate.testing.jdbc.PreparedStatementProxyConnectionProvider;
 import org.junit.Before;
 import org.junit.Test;
 

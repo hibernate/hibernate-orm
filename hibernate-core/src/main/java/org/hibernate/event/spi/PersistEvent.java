@@ -25,7 +25,7 @@ public class PersistEvent extends AbstractEvent {
 		super(source);
 		if ( object == null ) {
 			throw new IllegalArgumentException(
-					"attempt to create create event with null entity"
+					"attempt to create event with null entity"
 			);
 		}
 		this.object = object;

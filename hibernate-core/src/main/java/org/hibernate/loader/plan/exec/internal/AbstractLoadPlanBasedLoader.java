@@ -448,6 +448,11 @@ public abstract class AbstractLoadPlanBasedLoader {
 			session.getJdbcCoordinator().afterStatementExecution();
 			throw sqle;
 		}
+		catch ( HibernateException ex ) {
+			session.getJdbcCoordinator().getResourceRegistry().release( st );
+			session.getJdbcCoordinator().afterStatementExecution();
+			throw ex;
+		}
 	}
 
 	/**

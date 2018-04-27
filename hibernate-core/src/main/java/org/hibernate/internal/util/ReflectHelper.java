@@ -396,11 +396,19 @@ public final class ReflectHelper {
 		}
 
 		try {
-			return clazz.getDeclaredField( propertyName );
+			Field field = clazz.getDeclaredField( propertyName );
+			if ( !isStaticField( field ) ) {
+				return field;
+			}
+			return locateField( clazz.getSuperclass(), propertyName );
 		}
 		catch ( NoSuchFieldException nsfe ) {
 			return locateField( clazz.getSuperclass(), propertyName );
 		}
+	}
+
+	private static boolean isStaticField(Field field) {
+		return field != null && ( field.getModifiers() & Modifier.STATIC ) == Modifier.STATIC;
 	}
 
 	public static Method findGetterMethod(Class containerClass, String propertyName) {

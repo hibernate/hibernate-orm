@@ -42,19 +42,6 @@ For backward compatibility, a new setting called `hibernate.id.generator.stored_
 Existing applications migrating to 5.3 and using the `@TableGenerator` have to set the `hibernate.id.generator.stored_last_used` configuration property to `false`.
 ====
 
-=== Drop hibernate-infinispan module
-
-Support for using Infinispan as a Hibernate 2nd-level cache provider has been moved to the Infinispan project so
-the `hibernate-infinispan` module has been dropped.
-
-A relocation pom which is pointing to `org.infinispan:infinispan-hibernate-cache` dependency is still generated,
-therefore, avoiding the need of updating any library dependency.
-
-[WARN]
-====
-The relocation pom may be dropped in a future release.
-====
-
 
 === Second-level cache provider SPI changes
 
@@ -76,11 +63,31 @@ However, the contract also bound it to the old second level cache contracts so t
 updated.  Its responsibilities also changed so we also decided to "rename it" to
 `org.hibernate.cache.spi.TimestampsCacheFactory`
 
+Another specific change to be aware of is accessing cache entries via `SecondLevelCacheStatistics#getEntries`
+and `NaturalIdCacheStatistics#getEntries`.  These methods have been deprecated, however the new
+caching SPI does not really require caching providers to support this.  As of 5.3 these methods
+inherently return an empty Map (`Collections#emptyMap`).  This has always been something that providers
+did not implement "correctly" anyway
+
 
 === Statistics changes
 
 The change for HHH-11356 required changes in its consumers.  One such consumer is the Hibernate
 Statistics system....
+
+
+=== Drop hibernate-infinispan module
+
+Support for using Infinispan as a Hibernate 2nd-level cache provider has been moved to the Infinispan project so
+the `hibernate-infinispan` module has been dropped.
+
+A relocation pom which is pointing to `org.infinispan:infinispan-hibernate-cache` dependency is still generated,
+therefore, avoiding the need of updating any library dependency.
+
+[WARN]
+====
+The relocation pom may be dropped in a future release.
+====
 
 
 === EnhancementTask changes

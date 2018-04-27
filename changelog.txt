@@ -5,6 +5,165 @@ Note: Please refer to JIRA to learn more about each issue.
 
 
 
+Changes in 5.3.0.CR2 (April 27, 2018)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31640/tab/release-report-done
+
+** Bug
+    * [HHH-3813] - Automatic flush to the join table before a criteria query
+    * [HHH-3930] - one-to-one causes redundant select query
+    * [HHH-7119] - Hibernate filter's parameters are not populated when an entity's Collection is populated using a fetch mode of subselect.
+    * [HHH-7809] - ehcache region factory should set a name for the CacheManager
+    * [HHH-8382] - Oracle ORA-24816 - Issue HH4635 solved for annotation, not for hbm version
+    * [HHH-8944] - ColumnTransformer handling is too aggressive in qualifying "column names"
+    * [HHH-9186] - ORM wrongly assumes that an element of a set has a primary key
+    * [HHH-9460] - Removing non-optional bidirectional @OneToOne association with cascade
+    * [HHH-10333] - Schema validation: incorrect use of schema and catalog filters
+    * [HHH-10667] - Envers cannot support @IdClass referencing foreign entity identifier
+    * [HHH-11286] - Schema-validation fails with Oracle
+    * [HHH-11440] - In hibernate 5.2.4 hbm2ddl.auto=validate does not work with oracle
+    * [HHH-11544] - Joins over type variable defined relations is non-deterministic
+    * [HHH-11766] - Accessing lazy basic property on entity loaded from 2nd level cache throws exception
+    * [HHH-11867] - @UpdateTimestamp not working with @Inheritance( strategy = JOINED )
+    * [HHH-11901] - Map with null values cannot be audited
+    * [HHH-11924] - ElementCollection ignore converter for XML mapping
+    * [HHH-11981] - Association query causes QueryException: Named parameter [revision] not set.
+    * [HHH-12059] - hibernate.hbm2ddl.auto=update stopped working in Oracle since 5.1.4
+    * [HHH-12092] - Bad PrimitiveCharacterArrayNClobType INSTANCE typo
+    * [HHH-12166] - AbstractCompositionAttribute#getAttributes throws NPE for nested CompositeCustomType
+    * [HHH-12221] - Incorrect formatting of SQL statement on logging when entities/tables or fields/columns named like keywords (e.g. "group" or "order").
+    * [HHH-12225] - NullPointerException When Using type(<Class>) in HQL
+    * [HHH-12226] - ObjectNotFoundException thrown when @NotFound(action = NotFoundAction.IGNORE) used with enhancement
+    * [HHH-12230] - SelectCase does not work when simultaneously exists in select and group by sections
+    * [HHH-12257] - Refreshing an entity clears the lock mode returned from EntityManager.getLockMode
+    * [HHH-12260] - Detach of entity with lazy-loaded collection and orphan removal leads to exception during flush of session
+    * [HHH-12273] - Load Proxy by its identifier should consider the Session UUID
+    * [HHH-12285] - DB connection exception on rollback causes connection leak
+    * [HHH-12290] - Failure with JPQL positional queries with collection parameter (IN statement for example)
+    * [HHH-12292] - QueryParameterBindingValidator does not allow null values in Object arrays
+    * [HHH-12297] - Relations are not loaded when using Fetch Profiles
+    * [HHH-12304] - MappingException occurs when a custom enum type is applied to an audited property.
+    * [HHH-12306] - Fix org.hibernate.envers.test.integration.manytomany.MappedByEmbeddableAttributeTest on HANA
+    * [HHH-12313] - org.hibernate.jpa.test.transaction.TransactionCommitFailureTest fails on HANA
+    * [HHH-12314] - CriteriaAPI - Cannot use a not clause on a join, with explicit "on"  argument
+    * [HHH-12332] - 5.2.14 regression: NullPointerException in AbstractPropertyMapping.getSuperCollection
+    * [HHH-12352] - The new ByteBuddy module for WildFly 12 is not working on JDK9
+    * [HHH-12355] - Insert fails on one-to-one mapping when an intermediate embeddable type is between mappings when using ordered inserts.
+    * [HHH-12357] - NamingHelper uses system default encoding
+    * [HHH-12369] - Integer overflow in limit handlers when firstResult used with maxResults=Integer.MAX_VALUE on DB2
+    * [HHH-12370] - Lazily-initialized byte[] LOB gets turned into a String, resulting in poor performance
+    * [HHH-12374] - Order inserts sorting code gives up too soon
+    * [HHH-12375] - 5.2.15 regression: 'could not resolve property: attributes of: org.hibernate.test.inheritance.discriminator.JoinedInheritanceTest$BaseEntity' with FetchType.EAGER
+    * [HHH-12379] - Add support for persistence_2_2.xsd and orm_2_2.xsd
+    * [HHH-12380] - Stackoverflow when order_inserts=true
+    * [HHH-12383] - JoinedSubclassEntityPersister throws ClassCastException for AnyType
+    * [HHH-12387] - Immutable entities can be updated via bulk update queries
+    * [HHH-12388] - User Guide and Javadoc typo fixes
+    * [HHH-12389] - Remove usage of javax.script.ScriptEngine from org.hibernate.test.bytecode.enhancement.access.MixedAccessTest
+    * [HHH-12391] - calls to EntityTransaction.rollback() should be ignored if the LogicalConnection.physicalConnection is null or the LogicalConnection.physicalConnection.getAutoCommit() returns true
+    * [HHH-12392] - Caching SchemaResolver delegate with multiple data sources
+    * [HHH-12397] - org.hibernate.jpa.test.query.QueryTest fails with TImeoutException
+    * [HHH-12410] - Cannot use AttributeConverter with spatial types
+    * [HHH-12412] - QueryException Thrown on Abstract Property of Abstract Class
+    * [HHH-12423] - SecondaryTable is not taking into account the schema while mapping the entity
+    * [HHH-12427] - Prevent classloader leak in ByteBuddy based BasicProxyFactoryImpl
+    * [HHH-12439] - Merging of new entities can fail depending on cascade order
+    * [HHH-12448] - Possible memory leak in Envers due to Narayana Transaction Reaper
+    * [HHH-12451] - Hibernate CurrencyType info is not correct in the table
+    * [HHH-12464] - NPE upon insert & delete with identity generated id
+    * [HHH-12473] - EntityManager.close() should throw an ISE if called on already closed EntityManager
+    * [HHH-12479] - Document the converted:: prefix for HBM type mappings
+    * [HHH-12487] - Calling getTransaction() on a closed Session should not throw ISE
+    * [HHH-12498] - Audit entity with composite-key association to non-audit entity leads to NullPointerException
+    * [HHH-12507] - InsertOrderingWithCompositeTypeAssociation test fails on Oracle due to reserved word
+    * [HHH-12508] - SessionFactoryOptions#isSecondLevelCacheEnabled returns true by default with NoCachingRegionFactory
+
+** New Feature
+    * [HHH-8058] - Querying property-level revisions
+    * [HHH-11769] - New MariaDB Dialect for MariaDB >= v10.1
+    * [HHH-11790] - Support for DB2 spatial extender
+    * [HHH-12315] - Publish WildFly Feature Packs rather than a zip file of modules
+    * [HHH-12417] - default strategy based on registrations with StrategySelector
+    * [HHH-12424] - Fix unintended binary compatibility breaks between 5.1 and 5.3
+
+** Task
+    * [HHH-12317] - Move module path of the new Feature packs to org.hibernate.orm
+    * [HHH-12321] - Separate the Wildfly module for ByteByddy to make it private API
+    * [HHH-12327] - Fix MapProxyTool not to depend directly on Javassist, allowing for BytecodeProvider agonostic support
+    * [HHH-12328] - ByteBuddyInterceptor#intercept should not wrap Exception types
+    * [HHH-12334] - ASTUtil improvements in Map usage
+    * [HHH-12335] - StrategySelectorImpl can avoid some unnecessary String formatting during bootstrap
+    * [HHH-12336] - Avoid unnecessary invocations of fillInStackTrace() in the tests
+    * [HHH-12339] - Optimise TypeNames for memory consumption: avoid autoboxing
+    * [HHH-12340] - BasicTypeRegistry would benefit from string interning
+    * [HHH-12342] - Upgrade to Byteman 4.0.1
+    * [HHH-12343] - Upgrade to WildFly 12.0.0.Final for integration tests
+    * [HHH-12344] - Upgrade to JBoss Logging 3.3.2.Final
+    * [HHH-12358] - Upgrade Agroal dependency to 0.4
+    * [HHH-12366] - Enable EE8 preview mode on WildFly 12 for integration tests
+    * [HHH-12367] - Create a separate JBoss Module for Hibernate Envers
+    * [HHH-12382] - TypeTest is creating a Proxy which is not necessary
+    * [HHH-12406] - Add a test for HHH-11440
+    * [HHH-12455] - WildFly provisioning build helpers should not implicitly change repository configurations
+    * [HHH-12474] - Make sure the JPA version is defined by a single property across build files
+    * [HHH-12475] - Remove unnecessary dependencies from gradle build.
+    * [HHH-12477] - Javassist no longer needed in the JBoss Module for Hibernate Envers
+    * [HHH-12478] - Upgrade to Mockito 2.18.0 to improve memory utilization of tests
+    * [HHH-12501] - Fallback implementation for BytecodeProvider should match the default
+    * [HHH-12509] - Reduce memory usage of PreparedStatementSpyConnectionProvider
+    * [HHH-12510] - Upgrade PostgreSQL driver
+
+** Improvement
+    * [HHH-7555] - Ability to query only for @Revision object without instantion of entities.
+    * [HHH-11253] - Make Byte Buddy BytecodeProvider impl the default
+    * [HHH-11356] - Adjust the 2nd-Cache SPIs to better reflect supported uses
+    * [HHH-11528] - Rename hibernate-modules to better represent their nature of feature pack
+    * [HHH-11953] - Disallow dynamic creation JCache Cache instances
+    * [HHH-12296] - Upgrade to Byte Buddy 1.7.10 to support JDK10
+    * [HHH-12302] - Schema creation uses non-unicode string types on SAP HANA
+    * [HHH-12323] - Update Statistics API and SPI based on changes to 2nd level caching changes
+    * [HHH-12331] - Avoid swallowed instances of PropertyNotFoundException
+    * [HHH-12346] - Replace StringHelper#join by Java's String#join
+    * [HHH-12364] - ElementCollectionMapTest contains unnecessary MapKeyJoinColumn
+    * [HHH-12365] - User Guide: call_key should change to call_timestamp_epoch
+    * [HHH-12373] - Better document AuditReader#getEntityName() as throwing an exception rather than it returning null.
+    * [HHH-12376] - Apply some ThreadLocal optimisations made possible by new Java 8 API
+    * [HHH-12378] - JDK 9 support: Remove javax.annotation.Generated import
+    * [HHH-12384] - Have proxies generated by ByteBuddy to conform to legacy naming strategies
+    * [HHH-12398] - Upgrade to Byte Buddy 1.8.0 to support JDK10 and preliminary support for JDK11
+    * [HHH-12399] - Re-introduce Environment#jvmHasTimestampBug as deprecated method
+    * [HHH-12415] - Update Gradle wrapper to Gradle 4.6
+    * [HHH-12419] - Incorrect batch inserts example
+    * [HHH-12426] - SAP HANA spatial dialect should support all SAP HANA spatial functions
+    * [HHH-12432] - Upgrade to Hibernate Commons Annotations 5.0.3.Final
+    * [HHH-12440] - Manage the SessionFactory's UUID on SessionFactoryOptions - wider availability
+    * [HHH-12443] - Introduce TypeConfiguration
+    * [HHH-12444] - Introduce BootstrapContext
+    * [HHH-12454] - Offer flag to consider id generator with local scope (legacy non JPA behavior)
+    * [HHH-12467] - ByteBuddy TypeCache stale entries should be cleared to avoid (weak) references to application classloader
+    * [HHH-12471] - Avoid using a TypeCache in the ByteBuddy BytecodeProvider
+    * [HHH-12481] - Reduce the visibility of internal implementations of Callback
+    * [HHH-12482] - Avoid logging overhead within CallbackBuilderLegacyImpl loops
+    * [HHH-12484] - Improved error output for LazyInitializationException to include entity-related info
+    * [HHH-12485] - MetamodelImpl throws exceptions unnecessarily since it could cache failed imports
+    * [HHH-12486] - SessionFactoryHelper#findEntityPersisterByName unnecessarily tries to find entity persisters via a method that causes MappingExceptions
+    * [HHH-12491] - Document the usage of the maven-compiler-plugin for hibernate-jpamodelgen
+    * [HHH-12493] - Further reduce allocations of ByteBuddy engines
+    * [HHH-12511] - Make ASTPrinter threadsafe and have code reuse their instances
+    * [HHH-12514] - Avoid repeated creations of costly Xsd definitions and definition lookups
+    * [HHH-12515] - LocalXsdResolver should attempt local resource loading before attempting it via URL
+    * [HHH-12521] - Take advantage of Java 8 improvements to optimise Statistics
+    * [HHH-12523] - Invoke CacheTransactionSynchronization.transactionCompleting
+    * [HHH-12524] - Rename JBoss modules from hibernate-core-jbossmodules to hibernate-orm-jbossmodules
+    * [HHH-12525] - Allow JBoss module definition to eventually import an Infinispan 2LC module
+    * [HHH-12526] - WildFly integration tests no longer need to override the Javassist module
+
+** Deprecation
+    * [HHH-12441] - Port hibernate-ehcache to the new caching SPI, but deprecate
+
+
+
 Changes in 5.3.0.CR1 (February 15, 2018)
 ------------------------------------------------------------------------------------------------------------------------
 

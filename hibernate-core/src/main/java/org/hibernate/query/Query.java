@@ -688,7 +688,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
 	 * instead
 	 */
 	@Deprecated
@@ -706,7 +706,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
 	 * instead
 	 */
 	@Deprecated
@@ -724,7 +724,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
 	 * instead
 	 */
 	@Deprecated
@@ -742,7 +742,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
 	 * instead
 	 */
 	@Deprecated
@@ -760,7 +760,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
 	 * instead
 	 */
 	@Deprecated
@@ -778,7 +778,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
 	 * instead
 	 */
 	@Deprecated
@@ -796,7 +796,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
 	 * instead
 	 */
 	@Deprecated
@@ -814,7 +814,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
 	 * instead
 	 */
 	@Deprecated
@@ -832,7 +832,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
 	 * instead
 	 */
 	@Deprecated
@@ -850,7 +850,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
 	 * instead
 	 */
 	@Deprecated
@@ -868,7 +868,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
 	 * instead
 	 */
 	@Deprecated
@@ -886,7 +886,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
 	 * instead
 	 */
 	@Deprecated
@@ -903,7 +903,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 * @param val The bind value
 	 *
 	 * @return {@code this}, for method chaining
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
 	 * instead
 	 */
 	@Deprecated
@@ -920,7 +920,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 * @param val The bind value
 	 *
 	 * @return {@code this}, for method chaining
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
 	 * instead
 	 */
 	@Deprecated
@@ -937,7 +937,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 * @param val The bind value
 	 *
 	 * @return {@code this}, for method chaining
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
 	 * instead
 	 */
 	@Deprecated
@@ -955,7 +955,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
 	 * instead
 	 */
 	@Deprecated
@@ -973,7 +973,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
 	 * instead
 	 */
 	@Deprecated
@@ -991,7 +991,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
 	 * instead
 	 */
 	@Deprecated
@@ -1009,7 +1009,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
 	 * instead
 	 */
 	@Deprecated
@@ -1027,7 +1027,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
 	 * instead
 	 */
 	@Deprecated
@@ -1047,7 +1047,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
 	 * instead
 	 */
 	@Deprecated
@@ -1063,7 +1063,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
 	 * instead
 	 */
 	@Deprecated

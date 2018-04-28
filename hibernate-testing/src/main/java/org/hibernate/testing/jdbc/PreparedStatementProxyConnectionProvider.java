@@ -97,7 +97,7 @@ public class PreparedStatementProxyConnectionProvider extends ConnectionProvider
 								ClassLoader.getSystemClassLoader(),
 								new Class[] { PreparedStatement.class },
 								new PreparedStatementHandler( actualConnection.prepareStatement( sql ),
-															  preparedStatementObserver
+															preparedStatementObserver
 								)
 						);
 				preparedStatementObserver.preparedStatementCreated( preparedStatement, sql );

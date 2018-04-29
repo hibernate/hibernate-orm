@@ -1103,10 +1103,14 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		}
 
 		if ( !applied ) {
-			MSG_LOGGER.debugf( "Skipping unsupported query hint [%s]", hintName );
+			handleUnrecognizedHint(hintName, value);
 		}
 
 		return this;
+	}
+
+	protected void handleUnrecognizedHint(String hintName,Object value) {
+		MSG_LOGGER.debugf( "Skipping unsupported query hint [%s]", hintName );
 	}
 
 	protected boolean applyJpaCacheRetrieveMode(CacheRetrieveMode mode) {

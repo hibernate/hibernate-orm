@@ -1219,12 +1219,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsCircularCascadeDeleteConstraints() {
-		// HANA does not support circular constraints
-		return false;
-	}
-
-	@Override
 	public ScrollMode defaultScrollMode() {
 		return ScrollMode.FORWARD_ONLY;
 	}

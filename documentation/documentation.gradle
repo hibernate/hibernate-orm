@@ -68,7 +68,7 @@ dependencies {
 }
 
 
-if ( project.isSnapshot ) {
+if ( project.ormVersion.isSnapshot ) {
 	// only run the ci build tasks for SNAPSHOT versions
 	task ciBuild( dependsOn: [clean, test] )
 }
@@ -161,7 +161,11 @@ task renderTopicalGuides(type: AsciidoctorTask, group: 'Documentation') {
 	backends "html5"
 	separateOutputDirs false
 	options logDocuments: true
-	attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', majorMinorVersion: rootProject.hibernateMajorMinorVersion, fullVersion: rootProject.hibernateVersion
+	attributes  icons: 'font',
+				experimental: true,
+				'source-highlighter': 'prettify',
+				majorMinorVersion: rootProject.ormVersion.family,
+				fullVersion: rootProject.ormVersion.fullName
 	resources {
 		from('src/main/asciidoc/topical/') {
 			include '**/images/**'
@@ -231,8 +235,8 @@ task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {
 			   'source-highlighter': 'prettify',
 			   linkcss: true,
 			   stylesheet: "css/hibernate.css",
-			   majorMinorVersion: rootProject.hibernateMajorMinorVersion,
-			   fullVersion: rootProject.hibernateVersion,
+			   majorMinorVersion: rootProject.ormVersion.family,
+			   fullVersion: rootProject.ormVersion.fullName,
 			   docinfo: true
 
 	resources {
@@ -260,7 +264,12 @@ task renderIntegrationGuide(type: AsciidoctorTask, group: 'Documentation') {
 	backends "html5"
 	separateOutputDirs false
 	options logDocuments: true
-	attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true, stylesheet: "css/hibernate.css", majorMinorVersion: rootProject.hibernateMajorMinorVersion
+	attributes  icons: 'font',
+				experimental: true,
+				'source-highlighter': 'prettify',
+				linkcss: true,
+				stylesheet: "css/hibernate.css",
+				majorMinorVersion: rootProject.ormVersion.family
 	resources {
 		from('src/main/asciidoc/integrationguide/') {
 			include 'images/**'

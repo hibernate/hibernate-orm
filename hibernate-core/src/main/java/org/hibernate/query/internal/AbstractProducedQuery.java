@@ -1109,7 +1109,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		return this;
 	}
 
-	protected void handleUnrecognizedHint(String hintName,Object value) {
+	protected void handleUnrecognizedHint(String hintName, Object value) {
 		MSG_LOGGER.debugf( "Skipping unsupported query hint [%s]", hintName );
 	}
 

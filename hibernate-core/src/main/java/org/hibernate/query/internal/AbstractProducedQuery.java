@@ -1103,7 +1103,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		}
 
 		if ( !applied ) {
-			handleUnrecognizedHint(hintName, value);
+			handleUnrecognizedHint( hintName, value );
 		}
 
 		return this;

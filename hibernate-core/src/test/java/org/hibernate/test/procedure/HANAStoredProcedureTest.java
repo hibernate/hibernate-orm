@@ -144,7 +144,7 @@ public class HANAStoredProcedureTest extends BaseEntityManagerFunctionalTestCase
 									"  BEGIN " +
 									"    p_recordset = " +
 									"    SELECT 1 as id " +
-									"    FROM DUMMY; " +
+									"    FROM SYS.DUMMY; " +
 									"  END; " );
 					statement.executeUpdate(
 							"CREATE OR REPLACE " +
@@ -152,8 +152,8 @@ public class HANAStoredProcedureTest extends BaseEntityManagerFunctionalTestCase
 									"  BEGIN " +
 									"    p_recordset = " +
 									"    SELECT 1 as id " +
-									"    FROM DUMMY; " +
-									"	 SELECT 1 INTO p_value FROM DUMMY; " +
+									"    FROM SYS.DUMMY; " +
+									"	 SELECT 1 INTO p_value FROM SYS.DUMMY; " +
 									"  END; " );
 				}
 				finally {
@@ -365,7 +365,7 @@ public class HANAStoredProcedureTest extends BaseEntityManagerFunctionalTestCase
 
 		try {
 			Integer phoneCount = (Integer) entityManager
-					.createNativeQuery( "SELECT fn_count_phones(:personId) FROM DUMMY" )
+					.createNativeQuery( "SELECT fn_count_phones(:personId) FROM SYS.DUMMY" )
 					.setParameter( "personId", 1 )
 					.getSingleResult();
 			assertEquals( Integer.valueOf( 2 ), phoneCount );

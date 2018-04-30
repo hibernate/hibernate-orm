@@ -1025,7 +1025,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	@Override
 	public String getCurrentTimestampSelectString() {
-		return "select current_timestamp from dummy";
+		return "select current_timestamp from sys.dummy";
 	}
 
 	@Override
@@ -1099,7 +1099,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	@Override
 	public String getSequenceNextValString(final String sequenceName) {
-		return "select " + getSelectSequenceNextValString( sequenceName ) + " from dummy";
+		return "select " + getSelectSequenceNextValString( sequenceName ) + " from sys.dummy";
 	}
 
 	@Override
@@ -1314,7 +1314,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	@Override
 	public String getSelectGUIDString() {
-		return "select sysuuid from dummy";
+		return "select sysuuid from sys.dummy";
 	}
 
 	@Override
@@ -1404,7 +1404,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	@Override
 	public String getCurrentSchemaCommand() {
-		return "select current_schema from dummy";
+		return "select current_schema from sys.dummy";
 	}
 
 	@Override

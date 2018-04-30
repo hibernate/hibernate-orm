@@ -52,7 +52,7 @@ public class SequenceValueExtractor {
 		}
 		else if ( dialect instanceof AbstractHANADialect ) {
 
-			queryString = "select " + sequenceName + ".currval from dummy";
+			queryString = "select " + sequenceName + ".currval from sys.dummy";
 		}
 		else {
 			queryString = "select currval('" + sequenceName + "');";

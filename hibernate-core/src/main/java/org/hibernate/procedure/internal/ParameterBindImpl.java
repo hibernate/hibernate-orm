@@ -78,10 +78,12 @@ public class ParameterBindImpl<T> implements ParameterBind<T> {
 			throw new IllegalStateException( "Can only bind values for IN/INOUT parameters : " + procedureParameter );
 		}
 
-		if ( procedureParameter.getParameterType() != null ) {
-			if ( !procedureParameter.getParameterType().isInstance( value ) ) {
-				throw new IllegalArgumentException( "Bind value [" + value + "] was not of specified type [" + procedureParameter.getParameterType() );
-			}
+		if ( value == null && !procedureParameter.isPassNullsEnabled() ) {
+			throw new IllegalArgumentException( "Parameter '" + procedureParameter.getName() +  "' doesn't allow NULL value" );
+		}
+		
+		if ( value != null && !procedureParameter.getParameterType().isInstance( value ) ) {
+			throw new IllegalArgumentException( "Bind value [" + value + "] was not of specified type [" + procedureParameter.getParameterType() );
 		}
 
 		this.value = value;

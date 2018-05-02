@@ -29,7 +29,7 @@ import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Brett Meyer
@@ -100,7 +100,7 @@ public class QueryHintTest extends BaseNonConfigCoreFunctionalTestCase {
 			1,
 			connectionProvider.getPreparedStatements().size()
 		);
-		assertNotNull( connectionProvider.getPreparedSQLStatements().get( 0 ).contains( "select /*+ ALL_ROWS */" ) );
+		assertTrue( connectionProvider.getPreparedSQLStatements().get( 0 ).contains( "select /*+ ALL_ROWS */" ) );
 		connectionProvider.clear();
 
 		// test multiple hints
@@ -118,7 +118,7 @@ public class QueryHintTest extends BaseNonConfigCoreFunctionalTestCase {
 				1,
 				connectionProvider.getPreparedStatements().size()
 		);
-		assertNotNull( connectionProvider.getPreparedSQLStatements().get( 0 ).contains( "select /*+ ALL_ROWS, USE_CONCAT */" ) );
+		assertTrue( connectionProvider.getPreparedSQLStatements().get( 0 ).contains( "select /*+ ALL_ROWS, USE_CONCAT */" ) );
 		connectionProvider.clear();
 		
 		// ensure the insertion logic can handle a comment appended to the front
@@ -136,7 +136,7 @@ public class QueryHintTest extends BaseNonConfigCoreFunctionalTestCase {
 				1,
 				connectionProvider.getPreparedStatements().size()
 		);
-		assertNotNull( connectionProvider.getPreparedSQLStatements().get( 0 ).contains( "select /*+ ALL_ROWS */" ) );
+		assertTrue( connectionProvider.getPreparedSQLStatements().get( 0 ).contains( "select /*+ ALL_ROWS */" ) );
 		connectionProvider.clear();
 
 		// test Criteria
@@ -153,7 +153,7 @@ public class QueryHintTest extends BaseNonConfigCoreFunctionalTestCase {
 				1,
 				connectionProvider.getPreparedStatements().size()
 		);
-		assertNotNull( connectionProvider.getPreparedSQLStatements().get( 0 ).contains( "select /*+ ALL_ROWS */" ) );
+		assertTrue( connectionProvider.getPreparedSQLStatements().get( 0 ).contains( "select /*+ ALL_ROWS */" ) );
 		connectionProvider.clear();
 	}
 
@@ -176,7 +176,7 @@ public class QueryHintTest extends BaseNonConfigCoreFunctionalTestCase {
 				1,
 				connectionProvider.getPreparedStatements().size()
 		);
-		assertNotNull( connectionProvider.getPreparedSQLStatements().get( 0 ).contains( "/* My_Query */ select /*+ ALL_ROWS */" ) );
+		assertTrue( connectionProvider.getPreparedSQLStatements().get( 0 ).contains( "/* My_Query */ select /*+ ALL_ROWS */" ) );
 		connectionProvider.clear();
 	}
 	

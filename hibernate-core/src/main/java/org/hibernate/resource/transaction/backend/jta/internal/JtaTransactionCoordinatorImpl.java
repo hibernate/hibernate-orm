@@ -118,7 +118,6 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		synchronizationRegistered = false;
 
 		pulse();
-
 	}
 
 	/**
@@ -337,6 +336,14 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		return this.timeOut;
 	}
 
+	@Override
+	public void invalidate() {
+		if ( physicalTransactionDelegate != null ) {
+			physicalTransactionDelegate.invalidate();
+		}
+		physicalTransactionDelegate = null;
+	}
+
 	// SynchronizationCallbackTarget ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
@@ -377,11 +384,6 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 			observer.afterCompletion( successful, delayed );
 		}
 
-		if ( physicalTransactionDelegate != null ) {
-			physicalTransactionDelegate.invalidate();
-		}
-
-		physicalTransactionDelegate = null;
 		synchronizationRegistered = false;
 	}
 
@@ -393,7 +395,6 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	public void removeObserver(TransactionObserver observer) {
 		observers.remove( observer );
 	}
-
 
 	/**
 	 * Implementation of the LocalInflow for this TransactionCoordinator.  Allows the

@@ -212,6 +212,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	protected void removeSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {
+		transactionCoordinator.invalidate();
 	}
 
 	@Override

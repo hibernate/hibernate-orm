@@ -2740,6 +2740,7 @@ public final class SessionImpl
 
 	@Override
 	protected void removeSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {
+		super.removeSharedSessionTransactionObserver( transactionCoordinator );
 		transactionCoordinator.removeObserver( transactionObserver );
 	}
 

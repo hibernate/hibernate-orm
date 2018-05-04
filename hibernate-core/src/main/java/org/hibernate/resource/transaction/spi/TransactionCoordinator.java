@@ -106,6 +106,8 @@ public interface TransactionCoordinator {
 		return isJoined() && getTransactionDriverControl().isActive( isMarkedRollbackConsideredActive );
 	}
 
+	default void invalidate(){}
+
 	/**
 	 * Provides the means for "local transactions" (as transaction drivers) to control the
 	 * underlying "physical transaction" currently associated with the TransactionCoordinator.

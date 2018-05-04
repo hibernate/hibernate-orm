@@ -118,7 +118,6 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		synchronizationRegistered = false;
 
 		pulse();
-
 	}
 
 	/**
@@ -377,11 +376,6 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 			observer.afterCompletion( successful, delayed );
 		}
 
-		if ( physicalTransactionDelegate != null ) {
-			physicalTransactionDelegate.invalidate();
-		}
-
-		physicalTransactionDelegate = null;
 		synchronizationRegistered = false;
 	}
 
@@ -402,33 +396,19 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	 */
 	public class TransactionDriverControlImpl implements TransactionDriver {
 		private final JtaTransactionAdapter jtaTransactionAdapter;
-		private boolean invalid;
 
 		public TransactionDriverControlImpl(JtaTransactionAdapter jtaTransactionAdapter) {
 			this.jtaTransactionAdapter = jtaTransactionAdapter;
 		}
 
-		protected void invalidate() {
-			invalid = true;
-		}
-
 		@Override
 		public void begin() {
-			errorIfInvalid();
-
 			jtaTransactionAdapter.begin();
 			JtaTransactionCoordinatorImpl.this.joinJtaTransaction();
 		}
 
-		protected void errorIfInvalid() {
-			if ( invalid ) {
-				throw new IllegalStateException( "Physical-transaction delegate is no longer valid" );
-			}
-		}
-
 		@Override
 		public void commit() {
-			errorIfInvalid();
 			getTransactionCoordinatorOwner().flushBeforeTransactionCompletion();
 
 			// we don't have to perform any before/after completion processing here.  We leave that for
@@ -438,8 +418,6 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 
 		@Override
 		public void rollback() {
-			errorIfInvalid();
-
 			// we don't have to perform any after completion processing here.  We leave that for
 			// the Synchronization callbacks
 			jtaTransactionAdapter.rollback();

@@ -20,6 +20,7 @@ import org.junit.Test;
 
 import org.mockito.Mockito;
 
+import static java.lang.Integer.valueOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -47,6 +48,10 @@ public class ReflectHelperTest {
 
 		default Status getStatus(){
 			return Status.ON;
+		}
+
+		default void setId(String id){
+			this.setId(valueOf(id));
 		}
 	}
 
@@ -202,5 +207,11 @@ public class ReflectHelperTest {
 	@Test
 	public void test_getMethod_nestedInterfaces_on_superclasses() {
 		assertNotNull( ReflectHelper.findGetterMethod( E.class, "status") );
+	}
+
+	@TestForIssue(jiraKey = "HHH-12090")
+	@Test
+	public void test_setMethod_nestedInterfaces_on_superclasses() {
+		assertNotNull( ReflectHelper.findSetterMethod( E.class, "id", String.class ) );
 	}
 }

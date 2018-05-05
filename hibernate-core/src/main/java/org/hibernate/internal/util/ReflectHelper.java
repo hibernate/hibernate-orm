@@ -422,13 +422,15 @@ public final class ReflectHelper {
 			}
 
 			getter = getGetterOrNull( checkClass, propertyName );
+
+			// if no getter found yet, check all implemented interfaces
+			if ( getter == null ) {
+				getter = getGetterOrNull( checkClass.getInterfaces(), propertyName );
+			}
+
 			checkClass = checkClass.getSuperclass();
 		}
 
-		// if no getter found yet, check all implemented interfaces
-		if ( getter == null ) {
-			getter = getGetterOrNull( containerClass.getInterfaces(), propertyName );
-		}
 
 		if ( getter == null ) {
 			throw new PropertyNotFoundException(

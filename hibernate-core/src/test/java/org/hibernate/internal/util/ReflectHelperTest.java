@@ -14,11 +14,13 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.hib3rnat3.C0nst4nts३;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
+import org.hibernate.testing.TestForIssue;
 import org.junit.Before;
 import org.junit.Test;
 
 import org.mockito.Mockito;
 
+import static java.lang.Integer.valueOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -40,8 +42,17 @@ public class ReflectHelperTest {
 	}
 
 	interface A {
+
 		Integer getId();
 		void setId(Integer id);
+
+		default Status getStatus(){
+			return Status.ON;
+		}
+
+		default void setId(String id){
+			this.setId(valueOf(id));
+		}
 	}
 
 	interface B extends A {
@@ -190,5 +201,17 @@ public class ReflectHelperTest {
 	@Test
 	public void test_setMethod_nestedInterfaces() {
 		assertNotNull( ReflectHelper.findSetterMethod( C.class, "id", Integer.class ) );
+	}
+
+	@TestForIssue(jiraKey = "HHH-12090")
+	@Test
+	public void test_getMethod_nestedInterfaces_on_superclasses() {
+		assertNotNull( ReflectHelper.findGetterMethod( E.class, "status") );
+	}
+
+	@TestForIssue(jiraKey = "HHH-12090")
+	@Test
+	public void test_setMethod_nestedInterfaces_on_superclasses() {
+		assertNotNull( ReflectHelper.findSetterMethod( E.class, "id", String.class ) );
 	}
 }

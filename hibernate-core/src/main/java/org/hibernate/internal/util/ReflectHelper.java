@@ -422,13 +422,15 @@ public final class ReflectHelper {
 			}
 
 			getter = getGetterOrNull( checkClass, propertyName );
+
+			// if no getter found yet, check all implemented interfaces
+			if ( getter == null ) {
+				getter = getGetterOrNull( checkClass.getInterfaces(), propertyName );
+			}
+
 			checkClass = checkClass.getSuperclass();
 		}
 
-		// if no getter found yet, check all implemented interfaces
-		if ( getter == null ) {
-			getter = getGetterOrNull( containerClass.getInterfaces(), propertyName );
-		}
 
 		if ( getter == null ) {
 			throw new PropertyNotFoundException(
@@ -584,22 +586,18 @@ public final class ReflectHelper {
 			}
 
 			setter = setterOrNull( checkClass, propertyName, propertyType );
+
+			// if no setter found yet, check all implemented interfaces
+			if ( setter == null ) {
+				setter = setterOrNull( checkClass.getInterfaces(), propertyName, propertyType );
+			}
+			else {
+				ensureAccessibility( setter );
+			}
+
 			checkClass = checkClass.getSuperclass();
 		}
 
-		// if no setter found yet, check all implemented interfaces
-		if ( setter == null ) {
-			setter = setterOrNull( containerClass.getInterfaces(), propertyName, propertyType );
-//			for ( Class theInterface : containerClass.getInterfaces() ) {
-//				setter = setterOrNull( theInterface, propertyName, propertyType );
-//				if ( setter != null ) {
-//					break;
-//				}
-//			}
-		}
-		else {
-			ensureAccessibility( setter );
-		}
 		return setter; // might be null
 	}
 

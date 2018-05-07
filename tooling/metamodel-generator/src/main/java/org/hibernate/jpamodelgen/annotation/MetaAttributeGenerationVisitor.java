@@ -77,7 +77,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 //				}
 //			}
 //			return attribute;
-		return new AnnotationMetaSingleAttribute( entity, element, TypeUtils.toTypeString( t ) );
+		return new AnnotationMetaSingleAttribute( entity, element, TypeUtils.toArrayTypeString( t, context ) );
 	}
 
 	@Override

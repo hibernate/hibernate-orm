@@ -61,44 +61,30 @@ public final class TypeUtils {
 	}
 
 	public static String toTypeString(TypeMirror type) {
-		// Fix for HHH-12011
-		if ( type.getKind() == TypeKind.ARRAY ) {
-			// IMPL NOTE:
-			//
-			// With the introduction of TYPE_USE, this method would return any annotated array where
-			// the annotation was TYPE_USE as "(@package.to.TheAnnotation :: datatype)".  We expected
-			// that we would return "datatype[]" instead.
-			//
-			// We check if we detect the "(... :: datatype)" pattern and if so, we extract the datatype
-			// manually and construct the expected outcome but only if annotations are present.
-			//
-			// This fix makes sure that for annotated primitive arrays that we return the datatype
-			// exactly as it appears in the java class, just like non-annotated primitive arrays.
-			//
-			// I do question this behavior as it illustrates we handle primitive array types differently
-			// that primitive non-array types.  For example, primitive non-arrays are returned as their
-			// autoboxed object types where primitive arrays are returned as-is.
-			//
-			// In short this means that a field of type "byte" is generated as "Byte" in the metamodel
-			// generated class but a "byte[]" is generated as "byte[]" rather than "Byte[]".
-			//
-			final TypeMirror typeMirror = ( (ArrayType) type ).getComponentType();
-			final List<? extends AnnotationMirror> annotationMirrors = typeMirror.getAnnotationMirrors();
-			if ( !annotationMirrors.isEmpty() ) {
-				String typeName = typeMirror.toString();
-				if ( typeName.startsWith( "(" ) && typeName.endsWith( ")" ) ) {
-					int seperator = typeName.indexOf( ":: " );
-					if ( seperator != -1 ) {
-						return typeName.substring( seperator + 3, typeName.length() - 1 ) + "[]";
-					}
-				}
-			}
-		}
-
 		if ( type.getKind().isPrimitive() ) {
 			return PRIMITIVES.get( type.toString() );
 		}
 		return type.toString();
+	}
+
+	public static String toArrayTypeString(ArrayType type, Context context) {
+		// When an ArrayType is annotated with an annotation which uses TYPE_USE targets,
+		// we cannot simply take the TypeMirror returned by #getComponentType because it
+		// itself is an AnnotatedType.
+		//
+		// The simplest approach here to get the TypeMirror for both ArrayType use cases
+		// is to use the visitor to retrieve the underlying TypeMirror.
+		TypeMirror component = type.getComponentType().accept(
+				new SimpleTypeVisitor6<TypeMirror, Void>() {
+					@Override
+					protected TypeMirror defaultAction(TypeMirror e, Void aVoid) {
+						return e;
+					}
+				},
+				null
+		);
+
+		return extractClosestRealTypeAsString( component, context ) + "[]";
 	}
 
 	public static TypeElement getSuperclassTypeElement(TypeElement element) {

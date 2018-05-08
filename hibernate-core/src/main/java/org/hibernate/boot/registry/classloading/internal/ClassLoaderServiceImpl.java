@@ -11,6 +11,8 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.net.URL;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -81,7 +83,11 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		orderedClassLoaderSet.add( ClassLoaderServiceImpl.class.getClassLoader() );
 
 		// now build the aggregated class loader...
-		this.aggregatedClassLoader = new AggregatedClassLoader( orderedClassLoaderSet,lookupPrecedence );
+		this.aggregatedClassLoader = AccessController.doPrivileged(new PrivilegedAction<AggregatedClassLoader>() {
+			public AggregatedClassLoader run() {
+				return new AggregatedClassLoader(orderedClassLoaderSet, lookupPrecedence);
+			}
+		});
 	}
 
 	/**

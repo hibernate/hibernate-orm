@@ -55,7 +55,7 @@ public class BatchingInheritanceDeleteTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-12470" )
+	//@FailureExpected( jiraKey = "HHH-12470" )
 	public void testDelete() {
 		doInHibernate( this::sessionFactory, s -> {
 			Bar bar = new Bar("bar");

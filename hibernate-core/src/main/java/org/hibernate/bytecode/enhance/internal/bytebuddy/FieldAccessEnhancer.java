@@ -109,11 +109,13 @@ class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.Method
 	}
 
 	private FieldDescription findField(String owner, String name, String desc) {
-		TypePool.Resolution resolution = classPool.describe( owner.replace( '/', '.' ) );
+		//Classpool#describe does not accept '/' in the description name as it expects a class name
+		final String cleanedOwner = owner.replace( '/', '.' );
+		final TypePool.Resolution resolution = classPool.describe( cleanedOwner );
 		if ( !resolution.isResolved() ) {
 			final String msg = String.format(
 					"Unable to perform extended enhancement - Unable to locate [%s]",
-					owner.replace( '/', '.' )
+					cleanedOwner
 			);
 			throw new EnhancementException( msg );
 		}
@@ -122,7 +124,7 @@ class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.Method
 			final String msg = String.format(
 					"Unable to perform extended enhancement - No unique field [%s] defined by [%s]",
 					name,
-					owner.replace( '/', '.' )
+					cleanedOwner
 			);
 			throw new EnhancementException( msg );
 		}

@@ -103,16 +103,14 @@ public class EnhancerImpl implements Enhancer {
 					managedCtClass
 			);
 			if ( builder == null ) {
-				return null;
+				return originalBytes;
 			}
 			else {
 				return builder.make().getBytes();
 			}
 		}
 		catch (RuntimeException e) {
-			e.printStackTrace();
-			log.unableToBuildEnhancementMetamodel( safeClassName );
-			return null;
+			throw new EnhancementException( "Failed to enhance class " + className, e );
 		}
 	}
 

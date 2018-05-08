@@ -73,7 +73,7 @@ ext {
             // Animal Sniffer Ant Task and Java 1.6 API signature file
             // not using 1.9 for the time being due to MANIMALSNIFFER-34
             animal_sniffer: 'org.codehaus.mojo:animal-sniffer-ant-tasks:1.8',
-            java16_signature: 'org.codehaus.mojo.signature:java16:1.0@signature',
+            java17_signature: 'org.codehaus.mojo.signature:java17:1.0@signature',
 
             //Maven plugin framework
             maven_plugin: 'org.apache.maven:maven-plugin-api:3.0.5',

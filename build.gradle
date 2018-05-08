@@ -155,7 +155,7 @@ subprojects { subProject ->
 		jaxb( libraries.jaxb2_ant )
 
 		animalSniffer ( libraries.animal_sniffer )
-		javaApiSignature ( libraries.java16_signature )
+		javaApiSignature ( libraries.java17_signature )
 	}
 
 	// mac-specific stuff ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

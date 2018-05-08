@@ -25,6 +25,7 @@ package org.hibernate.osgi;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -32,6 +33,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.hibernate.service.spi.Stoppable;
 import org.osgi.framework.Bundle;
@@ -46,12 +49,18 @@ import org.osgi.framework.Bundle;
 public class OsgiClassLoader extends ClassLoader implements Stoppable {
 	// Leave these as Sets -- addClassLoader or addBundle may be called more
 	// than once if a SF or EMF is closed and re-created.
-	private Set<ClassLoader> classLoaders = new LinkedHashSet<ClassLoader>();
-	private Set<Bundle> bundles = new LinkedHashSet<Bundle>();
+	// HHH-12553: must be thread-safe. Concurrent impl. would be best, but we have to retain insertion-order.
+	private Set<ClassLoader> classLoaders = Collections.synchronizedSet(new LinkedHashSet<ClassLoader>());
+	private Set<Bundle> bundles = Collections.synchronizedSet(new LinkedHashSet<Bundle>());
 
-	private Map<String, Class<?>> classCache = new HashMap<String, Class<?>>();
-	private Map<String, URL> resourceCache = new HashMap<String, URL>();
-	
+	private ConcurrentMap<String, Class<?>> classCache = new ConcurrentHashMap<String, Class<?>>();
+	private ConcurrentMap<String, URL> resourceCache = new ConcurrentHashMap<String, URL>();
+
+	static
+	{
+		ClassLoader.registerAsParallelCapable();
+	}
+
 	public OsgiClassLoader() {
 		// DO NOT use ClassLoader#parent, which is typically the SystemClassLoader for most containers.  Instead,
 		// allow the ClassNotFoundException to be thrown.  ClassLoaderServiceImpl will check the SystemClassLoader
@@ -68,32 +77,37 @@ public class OsgiClassLoader extends ClassLoader implements Stoppable {
 	@Override
 	@SuppressWarnings("rawtypes")
 	protected Class<?> findClass(String name) throws ClassNotFoundException {
-		if ( classCache.containsKey( name ) ) {
-			return classCache.get( name );
+	    Class< ? > cachedClass = classCache.get( name );
+	    if ( cachedClass != null ) {
+			return cachedClass;
 		}
-		
-		for ( Bundle bundle : bundles ) {
-			try {
-				final Class clazz = bundle.loadClass( name );
-				if ( clazz != null ) {
-					classCache.put( name, clazz );
-					return clazz;
-				}
-			}
-			catch ( Exception ignore ) {
-			}
-		}
-		
-		for ( ClassLoader classLoader : classLoaders ) {
-			try {
-				final Class clazz = classLoader.loadClass( name );
-				if ( clazz != null ) {
-					classCache.put( name, clazz );
-					return clazz;
-				}
-			}
-			catch ( Exception ignore ) {
-			}
+
+	    synchronized (bundles) {
+    		for ( Bundle bundle : bundles ) {
+    			try {
+    				final Class clazz = bundle.loadClass( name );
+    				if ( clazz != null ) {
+    					classCache.put( name, clazz );
+    					return clazz;
+    				}
+    			}
+    			catch ( Exception ignore ) {
+    			}
+    		}
+	    }
+
+		synchronized (classLoaders) {
+    		for ( ClassLoader classLoader : classLoaders ) {
+    			try {
+    				final Class clazz = classLoader.loadClass( name );
+    				if ( clazz != null ) {
+    					classCache.put( name, clazz );
+    					return clazz;
+    				}
+    			}
+    			catch ( Exception ignore ) {
+    			}
+    		}
 		}
 
 		throw new ClassNotFoundException( "Could not load requested class : " + name );
@@ -107,32 +121,37 @@ public class OsgiClassLoader extends ClassLoader implements Stoppable {
 	 */
 	@Override
 	protected URL findResource(String name) {
-		if ( resourceCache.containsKey( name ) ) {
-			return resourceCache.get( name );
+	    URL cachedResource = resourceCache.get( name );
+	    if ( cachedResource != null ) {
+			return cachedResource;
 		}
-		
-		for ( Bundle bundle : bundles ) {
-			try {
-				final URL resource = bundle.getResource( name );
-				if ( resource != null ) {
-					resourceCache.put( name, resource );
-					return resource;
-				}
-			}
-			catch ( Exception ignore ) {
-			}
-		}
-		
-		for ( ClassLoader classLoader : classLoaders ) {
-			try {
-				final URL resource = classLoader.getResource( name );
-				if ( resource != null ) {
-					resourceCache.put( name, resource );
-					return resource;
-				}
-			}
-			catch ( Exception ignore ) {
-			}
+
+	    synchronized (bundles) {
+    		for ( Bundle bundle : bundles ) {
+    			try {
+    				final URL resource = bundle.getResource( name );
+    				if ( resource != null ) {
+    					resourceCache.put( name, resource );
+    					return resource;
+    				}
+    			}
+    			catch ( Exception ignore ) {
+    			}
+    		}
+	    }
+
+		synchronized (classLoaders) {
+    		for ( ClassLoader classLoader : classLoaders ) {
+    			try {
+    				final URL resource = classLoader.getResource( name );
+    				if ( resource != null ) {
+    					resourceCache.put( name, resource );
+    					return resource;
+    				}
+    			}
+    			catch ( Exception ignore ) {
+    			}
+    		}
 		}
 		
 		// TODO: Error?
@@ -151,29 +170,33 @@ public class OsgiClassLoader extends ClassLoader implements Stoppable {
 	@SuppressWarnings("unchecked")
 	protected Enumeration<URL> findResources(String name) {
 		final List<Enumeration<URL>> enumerations = new ArrayList<Enumeration<URL>>();
-		
-		for ( Bundle bundle : bundles ) {
-			try {
-				final Enumeration<URL> resources = bundle.getResources( name );
-				if ( resources != null ) {
-					enumerations.add( resources );
-				}
-			}
-			catch ( Exception ignore ) {
-			}
+
+		synchronized (bundles) {
+    		for ( Bundle bundle : bundles ) {
+    			try {
+    				final Enumeration<URL> resources = bundle.getResources( name );
+    				if ( resources != null ) {
+    					enumerations.add( resources );
+    				}
+    			}
+    			catch ( Exception ignore ) {
+    			}
+    		}
 		}
-		
-		for ( ClassLoader classLoader : classLoaders ) {
-			try {
-				final Enumeration<URL> resources = classLoader.getResources( name );
-				if ( resources != null ) {
-					enumerations.add( resources );
-				}
-			}
-			catch ( Exception ignore ) {
-			}
+
+		synchronized (classLoaders) {
+    		for ( ClassLoader classLoader : classLoaders ) {
+    			try {
+    				final Enumeration<URL> resources = classLoader.getResources( name );
+    				if ( resources != null ) {
+    					enumerations.add( resources );
+    				}
+    			}
+    			catch ( Exception ignore ) {
+    			}
+    		}
 		}
-		
+
 		final Enumeration<URL> aggEnumeration = new Enumeration<URL>() {
 			@Override
 			public boolean hasMoreElements() {

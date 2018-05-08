@@ -33,17 +33,23 @@ import static org.jboss.as.jpa.hibernate5.JpaLogger.JPA_LOGGER;
  * Implements the PersistenceProviderAdaptor for Hibernate
  *
  * @author Scott Marlow
+ * @author Steve Ebersole
  */
 public class HibernatePersistenceProviderAdaptor implements PersistenceProviderAdaptor, TwoPhaseBootstrapCapable {
 
+	@SuppressWarnings("WeakerAccess")
 	public static final String NAMING_STRATEGY_JPA_COMPLIANT_IMPL = "org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl";
-	private static final String HIBERNATE_EXTENDED_BEANMANAGER = "org.hibernate.resource.beans.container.spi.ExtendedBeanManager";
+
+	@SuppressWarnings("WeakerAccess")
+	public static final String HIBERNATE_EXTENDED_BEANMANAGER = "org.hibernate.resource.beans.container.spi.ExtendedBeanManager";
+
 	private volatile JtaManager jtaManager;
 	private volatile Platform platform;
 	private static final String NONE = SharedCacheMode.NONE.name();
 
 	@Override
 	public void injectJtaManager(JtaManager jtaManager) {
+		// todo : why?  `this.jtaManager` is never used aside from setting here in this method
 		if ( this.jtaManager != jtaManager ) {
 			this.jtaManager = jtaManager;
 		}
@@ -59,12 +65,6 @@ public class HibernatePersistenceProviderAdaptor implements PersistenceProviderA
 	@Override
 	@SuppressWarnings({"deprecation", "unchecked"})
 	public void addProviderProperties(Map properties, PersistenceUnitMetadata pu) {
-		putPropertyIfAbsent(
-				pu,
-				properties,
-				AvailableSettings.JPAQL_STRICT_COMPLIANCE,
-				"true"
-		); // JIPI-24 ignore jpql aliases case
 		putPropertyIfAbsent( pu, properties, AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
 		putPropertyIfAbsent( pu, properties, AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, "false" );
 		putPropertyIfAbsent(
@@ -75,12 +75,6 @@ public class HibernatePersistenceProviderAdaptor implements PersistenceProviderA
 		);
 		putPropertyIfAbsent( pu, properties, AvailableSettings.SCANNER, HibernateArchiveScanner.class );
 		properties.put( AvailableSettings.APP_CLASSLOADER, pu.getClassLoader() );
-		putPropertyIfAbsent(
-				pu,
-				properties,
-				AvailableSettings.JTA_PLATFORM,
-				new JBossAppServerJtaPlatform( jtaManager )
-		);
 		putPropertyIfAbsent(
 				pu,
 				properties,

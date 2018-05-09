@@ -42,7 +42,7 @@ import org.osgi.framework.Bundle;
 /**
  * Custom OSGI ClassLoader helper which knows all the "interesting"
  * class loaders and bundles.  Encapsulates the OSGi related CL capabilities.
- * 
+ *
  * @author Brett Meyer
  * @author Tim Ward
  */
@@ -56,8 +56,7 @@ public class OsgiClassLoader extends ClassLoader implements Stoppable {
 	private ConcurrentMap<String, Class<?>> classCache = new ConcurrentHashMap<String, Class<?>>();
 	private ConcurrentMap<String, URL> resourceCache = new ConcurrentHashMap<String, URL>();
 
-	static
-	{
+	static {
 		ClassLoader.registerAsParallelCapable();
 	}
 
@@ -69,8 +68,8 @@ public class OsgiClassLoader extends ClassLoader implements Stoppable {
 	}
 
 	/**
-	 * Load the class and break on first found match.  
-	 * 
+	 * Load the class and break on first found match.
+	 *
 	 * TODO: Should this throw a different exception or warn if multiple
 	 * classes were found? Naming collisions can and do happen in OSGi...
 	 */
@@ -115,7 +114,7 @@ public class OsgiClassLoader extends ClassLoader implements Stoppable {
 
 	/**
 	 * Load the class and break on first found match.
-	 * 
+	 *
 	 * TODO: Should this throw a different exception or warn if multiple
 	 * classes were found? Naming collisions can and do happen in OSGi...
 	 */
@@ -153,16 +152,16 @@ public class OsgiClassLoader extends ClassLoader implements Stoppable {
     			}
     		}
 		}
-		
+
 		// TODO: Error?
 		return null;
 	}
 
 	/**
 	 * Load the class and break on first found match.
-	 * 
-	 * Note: Since they're Enumerations, do not cache these results!  
-	 * 
+	 *
+	 * Note: Since they're Enumerations, do not cache these results!
+	 *
 	 * TODO: Should this throw a different exception or warn if multiple
 	 * classes were found? Naming collisions can and do happen in OSGi...
 	 */
@@ -218,7 +217,7 @@ public class OsgiClassLoader extends ClassLoader implements Stoppable {
 				throw new NoSuchElementException();
 			}
 		};
-		
+
 		return aggEnumeration;
 	}
 

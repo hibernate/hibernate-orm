@@ -1,18 +1,3 @@
-<#--
-~ Copyright 2010 - 2025 Red Hat, Inc.
-~
-~ Licensed under the Apache License, Version 2.0 (the "License");
-~ you may not use this file except in compliance with the License.
-~ You may obtain a copy of the License at
-~
-~     http://www.apache.org/licenses/LICENSE-2.0
-~
-~ Unless required by applicable law or agreed to in writing, software
-~ distributed under the License is distributed on an "AS IS" basis,
-~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-~ See the License for the specific language governing permissions and
-~ limitations under the License.
--->
 <#import "/doc/common.ftl" as common>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -65,7 +50,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				<#list table.columns as column>
+				<#foreach column in table.columnIterator>
 					<tr>
 						<td>
 							<a href="#column_detail_${column.name}">
@@ -76,13 +61,13 @@
 							${dochelper.getSQLTypeName(column)}
 						</td>
 						<td>
-							${dochelper.getLength(column)}
+							${column.length}
 						</td>
 						<td>
-							${dochelper.getPrecision(column)}
+							${column.precision}
 						</td>
 						<td>
-							${dochelper.getScale(column)}
+							${column.scale}
 						</td>
 						<td>
 							${column.nullable?string}
@@ -91,7 +76,7 @@
 							${column.unique?string}
 						</td>
 					</tr>
-				</#list>
+				</#foreach>
 			</tbody>
 		</table>
 
@@ -123,7 +108,7 @@
 							</#if>
 						</td>
 						<td>
-							<#list dochelper.getPrimaryKeyColumnIterator(table) as column>
+							<#list table.primaryKey.columnIterator() as column>
 								<a href="#column_detail_${column.name}">
 									${column.name}
 								</a>
@@ -141,7 +126,7 @@
 		</table>
 
 		<#-- SHOW THE FOREIGN KEYS -->
-		<#if !table.foreignKeys.isEmpty()>
+		<#if table.foreignKeyIterator.hasNext()>
 			<table id="foreign_keys">
 				<thead>
 					<tr>
@@ -162,7 +147,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					<#list table.foreignKeys.values() as foreignKey>
+					<#foreach foreignKey in table.foreignKeyIterator>
 						<tr>
 							<td>
 								${foreignKey.name?default("Name not specified")}
@@ -173,20 +158,20 @@
 								</a>
 							</td>
 							<td>
-								<#list foreignKey.columns as column>
+								<#foreach column in foreignKey.getColumnIterator()>
 									<a href="#column_detail_${column.name}">
 										${column.name}
 									</a>
-								</#list>
+								</#foreach>
 							</td>
 						</tr>
-					</#list>
+					</#foreach>
 				</tbody>
 			</table>
 		</#if>
 			
 		<#-- SHOW THE UNIQUE KEYS -->
-		<#if !table.uniqueKeys.isEmpty()>
+		<#if table.uniqueKeyIterator.hasNext()>
 			<table id="unique_keys">
 				<thead>
 					<tr>
@@ -204,26 +189,26 @@
 					</tr>
 				</thead>
 				<tbody>
-					<#list table.uniqueKeys.values() as uniqueKey>
+					<#foreach uniqueKey in table.getUniqueKeyIterator()>
 						<tr>
 							<td>
 								${uniqueKey.name?default("Name not specified")}
 							</td>
 							<td>
-								<#list uniqueKey.columns as column>
+								<#foreach column in uniqueKey.getColumnIterator()>
 									<a href="#column_detail_${column.name}">
 										${column.name}
 									</a>
-								</#list>
+								</#foreach>
 							</td>
 						</tr>
-					</#list>
+					</#foreach>
 				</tbody>
 			</table>
 		</#if>
 		
 		<#-- SHOW THE TABLE INDEXES -->
-		<#if !table.indexes.isEmpty()>
+		<#if table.indexIterator.hasNext()>
 			<table id="indexes">
 				<thead>
 					<tr>
@@ -241,30 +226,30 @@
 					</tr>
 				</thead>
 				<tbody>
-					<#list table.indexes.values() as index>
+					<#foreach index in table.indexIterator>
 						<tr>
 							<td>
 								${index.name?default("Name not specificed")}
 							</td>
 							<td>
-								<#list index.columns as column>
+								<#foreach column in index.columnIterator>
 									<a href="#column_detail_${column.name}">
 										${column.name}
 									</a>
-								</#list>
+								</#foreach>
 							</td>
 						</tr>
-					</#list>
+					</#foreach>
 				</tbody>
 			</table>
 		</#if>
 		
-		<#if !table.columns.isEmpty()>
+		<#if table.columnIterator.hasNext()>
 			<p id="column_detail" class="MainTableHeading">
 				Column Detail
 			</p>
 				
-			<#list table.columns as column>
+			<#foreach column in table.columnIterator>
 				<h3 id="column_detail_${column.name}">${column.name}</h3>
 				
 				<ul>
@@ -272,13 +257,13 @@
 						<strong>Type:</strong> ${dochelper.getSQLTypeName(column)}
 					</li>
 					<li>
-						<strong>Length:</strong> ${dochelper.getLength(column)}
+						<strong>Length:</strong> ${column.length}
 					</li>
 					<li>
-						<strong>Precision:</strong> ${dochelper.getPrecision(column)}
+						<strong>Precision:</strong> ${column.precision}
 					</li>
 					<li>
-						<strong>Scale:</strong> ${dochelper.getScale(column)}
+						<strong>Scale:</strong> ${column.scale}
 					</li>
 					<li>
 						<strong>Nullable:</strong> ${column.nullable?string}
@@ -294,13 +279,13 @@
 				<#--
 					<H4>Mappings:</H4>
 
-					<#list dochelper.getProperties(table, column) as property>
-						property.persistentClass.className - property.name
-					</#list>
+					#foreach($property in $dochelper.getProperties($table, $column))
+						$property.persistentClass.className - $property.name
+					#end
 				-->
 
 				<hr/>
-			</#list>
+			</#foreach>
 				
 		</#if>
 

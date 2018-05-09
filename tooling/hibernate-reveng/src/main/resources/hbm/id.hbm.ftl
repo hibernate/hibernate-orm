@@ -1,35 +1,20 @@
-<#--
-~ Copyright 2010 - 2025 Red Hat, Inc.
-~
-~ Licensed under the Apache License, Version 2.0 (the "License");
-~ you may not use this file except in compliance with the License.
-~ You may obtain a copy of the License at
-~
-~     http://www.apache.org/licenses/LICENSE-2.0
-~
-~ Unless required by applicable law or agreed to in writing, software
-~ distributed under the License is distributed on an "AS IS" basis,
-~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-~ See the License for the specific language governing permissions and
-~ limitations under the License.
--->
-<#if embeddedid?exists>
+<#if embeddedid?exists>   
    <composite-id>
- <#list embeddedid.properties as keyproperty>
+ <#foreach keyproperty in embeddedid.propertyIterator>
 	<#if !c2h.isManyToOne(keyproperty)>
 	   <key-property name="${keyproperty.name}" type="${keyproperty.value.typeName}">
-	   <#list keyproperty.columns as column>
+       <#foreach column in keyproperty.columnIterator>
          <#include "pkcolumn.hbm.ftl">
-       </#list>
+       </#foreach>
        </key-property>
 	<#else>
 	   <key-many-to-one name="${keyproperty.name}" class="${c2j.getJavaTypeName(keyproperty, false)}">
-	   <#list keyproperty.columns as column>
+       <#foreach column in keyproperty.columnIterator>
           <#include "pkcolumn.hbm.ftl">
-       </#list>
+       </#foreach>
        </key-many-to-one>
 	</#if>
- </#list>   
+ </#foreach>   
   </composite-id>   
 <#elseif !c2j.isComponent(property)>
 	<id 
@@ -45,17 +30,17 @@
     <#assign metaattributable=property>
 	<#include "meta.hbm.ftl">
     
- <#list property.columns as column>
- 	    <#include "pkcolumn.hbm.ftl">
- </#list>
+ <#foreach column in property.columnIterator>
+	    <#include "pkcolumn.hbm.ftl">
+ </#foreach>
  <#if !c2h.isIdentifierGeneratorProperties(property)>
 	    <generator class="${property.value.identifierGeneratorStrategy}" />
  <#else>
 	    <generator class="${property.value.identifierGeneratorStrategy}">
         <#assign parameters = c2h.getIdentifierGeneratorProperties(property)>
-        <#list c2h.getFilteredIdentifierGeneratorKeySet(property, props) as paramkey>
-             <param name="${paramkey}">${parameters.get(paramkey)}</param>
-        </#list>
+        <#foreach paramkey in c2h.getFilteredIdentifierGeneratorKeySet(property, props)>
+            <param name="${paramkey}">${parameters.get(paramkey)}</param>
+        </#foreach>
 		</generator>
  </#if>
     </id>
@@ -70,20 +55,20 @@
         access="${property.propertyAccessorName}"
 </#if>
     >		
-    <#list property.value.properties as keyproperty>
+    <#foreach keyproperty in property.value.propertyIterator>
 	  <#if !c2h.isManyToOne(keyproperty)>
 	        <key-property name="${keyproperty.name}" type="${keyproperty.value.typeName}">
-	        <#list keyproperty.columns as column>
+	        <#foreach column in keyproperty.columnIterator>
 	           <#include "pkcolumn.hbm.ftl">
-	        </#list>	
+	        </#foreach>	
 	        </key-property>
 	  <#else>
 			<key-many-to-one name="${keyproperty.name}" class="${c2j.getJavaTypeName(keyproperty, false)}">
-			<#list keyproperty.columns as column>
+            <#foreach column in keyproperty.columnIterator>
                 <#include "pkcolumn.hbm.ftl">
-            </#list>
+            </#foreach>
         	</key-many-to-one>
 	  </#if>
-    </#list>
+    </#foreach>
     </composite-id>	
 </#if>

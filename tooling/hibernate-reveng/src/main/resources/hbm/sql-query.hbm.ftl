@@ -1,19 +1,4 @@
-<#--
-~ Copyright 2010 - 2025 Red Hat, Inc.
-~
-~ Licensed under the Apache License, Version 2.0 (the "License");
-~ you may not use this file except in compliance with the License.
-~ You may obtain a copy of the License at
-~
-~     http://www.apache.org/licenses/LICENSE-2.0
-~
-~ Unless required by applicable law or agreed to in writing, software
-~ distributed under the License is distributed on an "AS IS" basis,
-~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-~ See the License for the specific language governing permissions and
-~ limitations under the License.
--->
-<#list md.namedNativeQueryDefinitions as queryDef>
+<#foreach queryDef in md.namedNativeQueryDefinitions>
     <sql-query 
         name="${queryDef.name}"
 <#if queryDef.flushMode?exists>
@@ -33,12 +18,12 @@
 </#if>    
 >
 <#if queryDef.querySpaces?exists>
-<#list queryDef.querySpaces as tableName>
+<#foreach tableName in queryDef.querySpaces>
 	    <synchronize table="${tableName}" />
-</#list>
+</#foreach>
 </#if>
 <#if queryDef.queryReturns?exists>
-<#list queryDef.queryReturns as returnDef>
+<#foreach returnDef in queryDef.queryReturns>
 <#assign returnTag = c2h.getNamedSQLReturnTag(returnDef)>
 	    <${returnTag}
              alias="${returnDef.alias}"
@@ -52,9 +37,9 @@
 <#if returnDef.lockMode?exists>
              lock-mode="${returnDef.lockMode.toString().toLowerCase()}"
 </#if>	    />
-</#list>     
+</#foreach>     
 </#if>   
       <![CDATA[${queryDef.queryString.trim()}]]>
     </sql-query>
     
-</#list>
+</#foreach>

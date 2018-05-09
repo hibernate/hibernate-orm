@@ -1,18 +1,3 @@
-<#--
-~ Copyright 2010 - 2025 Red Hat, Inc.
-~
-~ Licensed under the Apache License, Version 2.0 (the "License");
-~ you may not use this file except in compliance with the License.
-~ You may obtain a copy of the License at
-~
-~     http://www.apache.org/licenses/LICENSE-2.0
-~
-~ Unless required by applicable law or agreed to in writing, software
-~ distributed under the License is distributed on an "AS IS" basis,
-~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-~ See the License for the specific language governing permissions and
-~ limitations under the License.
--->
 <#import "/doc/common.ftl" as common>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -91,8 +76,8 @@
 				<tbody>
 					<#if dochelper.getComponentPOJO(propertyIdentifier)?exists>
 						<#assign compoclass = dochelper.getComponentPOJO(propertyIdentifier)>
-						<#list compoclass.allPropertiesIterator as property>
-							<#assign columnIterator = property.getValue().selectables.iterator()>
+						<#foreach property in compoclass.allPropertiesIterator>
+							<#assign columnIterator = property.getValue().columnIterator>
 							<#assign rowspan = property.getValue().getColumnSpan()>
 							<tr>
 								<td <#if (rowspan>0)>rowspan="${rowspan}"</#if>>
@@ -140,7 +125,7 @@
 							</tr>
 							
 							<#if (rowspan > 1)>
-								<#list columnIterator as column>
+								<#foreach column in columnIterator>
 									<tr>
 										<td>
 											<a href="#property_summary">
@@ -148,9 +133,9 @@
 											</a>
 										</td>
 									</tr>
-								</#list>
+								</#foreach>
 							</#if>
-						</#list>	
+						</#foreach>	
 					<#else>
 						<tr>
 							<td>
@@ -301,8 +286,8 @@
 				</thead>
 				<tbody>
 	
-					<#list properties as property>
-						<#assign columnIterator = property.getValue().selectables.iterator()>
+					<#foreach property in properties>
+						<#assign columnIterator = property.getValue().columnIterator>
 						<#assign rowspan = property.getValue().getColumnSpan()>
 						<tr>
 							<td <#if (rowspan > 0)>rowspan="${rowspan}"</#if>>
@@ -353,7 +338,7 @@
 							</td>
 						</tr>
 						<#if (rowspan > 1)>
-							<#list columnIterator as column>
+							<#foreach column in columnIterator>
 								<tr>
 									<td>
 										<a href="#property_summary">
@@ -361,9 +346,9 @@
 										</a>
 									</td>
 								</tr>
-							</#list>
+							</#foreach>
 						</#if>
-					</#list>
+					</#foreach>
 	
 				</tbody>
 			</table>
@@ -404,9 +389,9 @@
 			</p>
 			<#if dochelper.getComponentPOJO(identifier)?exists>
 				<#assign identifierClass = dochelper.getComponentPOJO(identifier)>
-				<#list identifierClass.allPropertiesIterator as property>
+				<#foreach property in identifierClass.allPropertiesIterator>
 					<h3 id="identifier_detail_${property.name}">${property.name}</h3>
-				</#list>
+				</#foreach>
 			<#else>
 				<h3 id="identifier_detail_${identifier.name}">${identifier.name}</h3>
 			</#if>

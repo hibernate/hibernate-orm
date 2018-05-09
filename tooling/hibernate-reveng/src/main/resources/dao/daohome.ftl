@@ -1,18 +1,3 @@
-<#--
-  ~ Copyright 2004 - 2025 Red Hat, Inc.
-  ~
-  ~ Licensed under the Apache License, Version 2.0 (the "License");
-  ~ you may not use this file except in compliance with the License.
-  ~ You may obtain a copy of the License at
-  ~
-  ~     http://www.apache.org/licenses/LICENSE-2.0
-  ~
-  ~ Unless required by applicable law or agreed to in writing, software
-  ~ distributed under the License is distributed on an "AS IS" basis,
-  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  ~ See the License for the specific language governing permissions and
-  ~ limitations under the License.
-  -->
 ${pojo.getPackageDeclaration()}
 // Generated ${date} by Hibernate Tools ${version}
 
@@ -23,62 +8,62 @@ ${pojo.getPackageDeclaration()}
  * @author Hibernate Tools
  */
 <#if ejb3>
-@${pojo.importType("jakarta.ejb.Stateless")}
+@${pojo.importType("javax.ejb.Stateless")}
 </#if>
 public class ${declarationName}Home {
 
-    private static final ${pojo.importType("java.util.logging.Logger")} logger = ${pojo.importType("Logger")}.getLogger(${pojo.getDeclarationName()}Home.class.getName());
+    private static final ${pojo.importType("org.apache.commons.logging.Log")} log = ${pojo.importType("org.apache.commons.logging.LogFactory")}.getLog(${pojo.getDeclarationName()}Home.class);
 
 <#if ejb3>
-    @${pojo.importType("jakarta.persistence.PersistenceContext")} private ${pojo.importType("jakarta.persistence.EntityManager")} entityManager;
+    @${pojo.importType("javax.persistence.PersistenceContext")} private ${pojo.importType("javax.persistence.EntityManager")} entityManager;
     
     public void persist(${declarationName} transientInstance) {
-        logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "persisting ${declarationName} instance");
+        log.debug("persisting ${declarationName} instance");
         try {
             entityManager.persist(transientInstance);
-            logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "persist successful");
+            log.debug("persist successful");
         }
         catch (RuntimeException re) {
-            logger.log(${pojo.importType("java.util.logging.Level")}.SEVERE, "persist failed", re);
+            log.error("persist failed", re);
             throw re;
         }
     }
     
     public void remove(${declarationName} persistentInstance) {
-        logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "removing ${declarationName} instance");
+        log.debug("removing ${declarationName} instance");
         try {
             entityManager.remove(persistentInstance);
-            logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "remove successful");
+            log.debug("remove successful");
         }
         catch (RuntimeException re) {
-            logger.log(${pojo.importType("java.util.logging.Level")}.SEVERE, "remove failed", re);
+            log.error("remove failed", re);
             throw re;
         }
     }
     
     public ${declarationName} merge(${declarationName} detachedInstance) {
-        logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "merging ${declarationName} instance");
+        log.debug("merging ${declarationName} instance");
         try {
             ${declarationName} result = entityManager.merge(detachedInstance);
-            logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "merge successful");
+            log.debug("merge successful");
             return result;
         }
         catch (RuntimeException re) {
-            logger.log(${pojo.importType("java.util.logging.Level")}.SEVERE, "merge failed", re);
+            log.error("merge failed", re);
             throw re;
         }
     }
     
 <#if clazz.identifierProperty?has_content>    
     public ${declarationName} findById( ${pojo.getJavaTypeName(clazz.identifierProperty, jdk5)} id) {
-        logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "getting ${declarationName} instance with id: " + id);
+        log.debug("getting ${declarationName} instance with id: " + id);
         try {
             ${declarationName} instance = entityManager.find(${pojo.getDeclarationName()}.class, id);
-            logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "get successful");
+            log.debug("get successful");
             return instance;
         }
         catch (RuntimeException re) {
-            logger.log(${pojo.importType("java.util.logging.Level")}.SEVERE, "get failed", re);
+            log.error("get failed", re);
             throw re;
         }
     }
@@ -91,89 +76,89 @@ public class ${declarationName}Home {
             return (${pojo.importType("org.hibernate.SessionFactory")}) new ${pojo.importType("javax.naming.InitialContext")}().lookup("${sessionFactoryName}");
         }
         catch (Exception e) {
-            logger.log(${pojo.importType("java.util.logging.Level")}.SEVERE, "Could not locate SessionFactory in JNDI", e);
+            log.error("Could not locate SessionFactory in JNDI", e);
             throw new IllegalStateException("Could not locate SessionFactory in JNDI");
         }
     }
     
     public void persist(${declarationName} transientInstance) {
-        logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "persisting ${declarationName} instance");
+        log.debug("persisting ${declarationName} instance");
         try {
             sessionFactory.getCurrentSession().persist(transientInstance);
-            logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "persist successful");
+            log.debug("persist successful");
         }
         catch (RuntimeException re) {
-            logger.log(${pojo.importType("java.util.logging.Level")}.SEVERE, "persist failed", re);
+            log.error("persist failed", re);
             throw re;
         }
     }
     
     public void attachDirty(${declarationName} instance) {
-        logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "attaching dirty ${declarationName} instance");
+        log.debug("attaching dirty ${declarationName} instance");
         try {
-            sessionFactory.getCurrentSession().merge(instance);
-            logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "attach successful");
+            sessionFactory.getCurrentSession().saveOrUpdate(instance);
+            log.debug("attach successful");
         }
         catch (RuntimeException re) {
-            logger.log(${pojo.importType("java.util.logging.Level")}.SEVERE, "attach failed", re);
+            log.error("attach failed", re);
             throw re;
         }
     }
     
     public void attachClean(${declarationName} instance) {
-        logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "attaching clean ${declarationName} instance");
+        log.debug("attaching clean ${declarationName} instance");
         try {
             sessionFactory.getCurrentSession().lock(instance, ${pojo.importType("org.hibernate.LockMode")}.NONE);
-            logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "attach successful");
+            log.debug("attach successful");
         }
         catch (RuntimeException re) {
-            logger.log(${pojo.importType("java.util.logging.Level")}.SEVERE, "attach failed", re);
+            log.error("attach failed", re);
             throw re;
         }
     }
     
-    public void remove(${declarationName} persistentInstance) {
-        logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "removing ${declarationName} instance");
+    public void delete(${declarationName} persistentInstance) {
+        log.debug("deleting ${declarationName} instance");
         try {
-            sessionFactory.getCurrentSession().remove(persistentInstance);
-            logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "remove successful");
+            sessionFactory.getCurrentSession().delete(persistentInstance);
+            log.debug("delete successful");
         }
         catch (RuntimeException re) {
-            logger.log(${pojo.importType("java.util.logging.Level")}.SEVERE, "remove failed", re);
+            log.error("delete failed", re);
             throw re;
         }
     }
     
     public ${declarationName} merge(${declarationName} detachedInstance) {
-        logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "merging ${declarationName} instance");
+        log.debug("merging ${declarationName} instance");
         try {
             ${declarationName} result = (${declarationName}) sessionFactory.getCurrentSession()
                     .merge(detachedInstance);
-            logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "merge successful");
+            log.debug("merge successful");
             return result;
         }
         catch (RuntimeException re) {
-            logger.log(${pojo.importType("java.util.logging.Level")}.SEVERE, "merge failed", re);
+            log.error("merge failed", re);
             throw re;
         }
     }
     
 <#if clazz.identifierProperty?has_content>
     public ${declarationName} findById( ${c2j.getJavaTypeName(clazz.identifierProperty, jdk5)} id) {
-        logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "getting ${declarationName} instance with id: " + id);
+        log.debug("getting ${declarationName} instance with id: " + id);
         try {
             ${declarationName} instance = (${declarationName}) sessionFactory.getCurrentSession()
                     .get("${clazz.entityName}", id);
             if (instance==null) {
-                logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "get successful, no instance found");
+                log.debug("get successful, no instance found");
             }
             else {
-                logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "get successful, instance found");
+                log.debug("get successful, instance found");
             }
             return instance;
         }
         catch (RuntimeException re) {
-            logger.log(${pojo.importType("java.util.logging.Level")}.SEVERE, "get failed", re);
+            log.error("get failed", re);
             throw re;
         }
     }
@@ -181,48 +166,42 @@ public class ${declarationName}Home {
     
 <#if clazz.hasNaturalId()>
     public ${declarationName} findByNaturalId(${c2j.asNaturalIdParameterList(clazz)}) {
-        logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "getting ${declarationName} instance by natural id");
+        log.debug("getting ${declarationName} instance by natural id");
         try {
-            ${pojo.importType("jakarta.persistence.criteria.CriteriaBuilder")} criteriaBuilder = sessionFactory.getCriteriaBuilder();
-            ${pojo.importType("jakarta.persistence.criteria.CriteriaQuery")}<${declarationName}> criteriaQuery = criteriaBuilder.createQuery(${declarationName}.class);
-            ${pojo.importType("jakarta.persistence.criteria.Root")}<${declarationName}> root = criteriaQuery.from(${declarationName}.class);
-            criteriaQuery.where(
-<#assign notFirst = false/>
-<#list pojo.getAllPropertiesIterator() as property>
+            ${declarationName} instance = (${declarationName}) sessionFactory.getCurrentSession()
+                    .createCriteria("${clazz.entityName}")
+<#if jdk5>
+                    .add( ${pojo.staticImport("org.hibernate.criterion.Restrictions", "naturalId")}()
+<#else>
+                   .add( ${pojo.importType("org.hibernate.criterion.Restrictions")}.naturalId()
+</#if>                    
+<#foreach property in pojo.getAllPropertiesIterator()>
 <#if property.isNaturalIdentifier()>
-                    <#if notFirst>,</#if>criteriaBuilder.equal(root.get("${property.name}"), ${property.name})
-<#assign notFirst = true/>
+                            .set("${property.name}", ${property.name})
 </#if>
-</#list>
-            );
-            ${declarationName} instance = sessionFactory
-                    .getCurrentSession()
-                    .createQuery(criteriaQuery)
-                    .getSingleResult();                    
+</#foreach>
+                        )
+                    .uniqueResult();
             if (instance==null) {
-                logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "get successful, no instance found");
+                log.debug("get successful, no instance found");
             }
             else {
-                logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "get successful, instance found");
+                log.debug("get successful, instance found");
             }
             return instance;
         }
         catch (RuntimeException re) {
-            logger.log(${pojo.importType("java.util.logging.Level")}.SEVERE, "query failed", re);
+            log.error("query failed", re);
             throw re;
         }
     }
-</#if>  
-
-<#if false>
-/**  
-TODO: 
+</#if>    
 <#if jdk5>
     public ${pojo.importType("java.util.List")}<${declarationName}> findByExample(${declarationName} instance) {
 <#else>
     public ${pojo.importType("java.util.List")} findByExample(${declarationName} instance) {
 </#if>
-        logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "finding ${declarationName} instance by example");
+        log.debug("finding ${declarationName} instance by example");
         try {
 <#if jdk5>
             ${pojo.importType("java.util.List")}<${declarationName}> results = (List<${declarationName}>) sessionFactory.getCurrentSession()
@@ -236,19 +215,16 @@ TODO:
                     .add(${pojo.importType("org.hibernate.criterion.Example")}.create(instance))
 </#if>
             .list();
-            logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "find by example successful, result size: " + results.size());
+            log.debug("find by example successful, result size: " + results.size());
             return results;
         }
         catch (RuntimeException re) {
-            logger.log(${pojo.importType("java.util.logging.Level")}.SEVERE, "find by example failed", re);
+            log.error("find by example failed", re);
             throw re;
         }
     } 
-**/ 
-</#if>   
-    
-<#list daoHelper.getNamedHqlQueryDefinitions(md) as query>
-<#assign queryName = query.registrationName>
+<#foreach query in md.namedQueryDefinitions>
+<#assign queryName = query.name>
 <#if queryName.startsWith(clazz.entityName + ".")>
 <#assign methname = c2j.unqualify(queryName)>
 <#assign params = c2j.getParameterTypes(query)>
@@ -260,8 +236,17 @@ TODO:
 <#else>
     public ${pojo.importType("java.util.List")} ${methname}(${argList}) {
 </#if>
-        ${pojo.importType("org.hibernate.query.Query")} query = sessionFactory.getCurrentSession()
-                .createNamedQuery("${queryName}");
+        ${pojo.importType("org.hibernate.Query")} query = sessionFactory.getCurrentSession()
+                .getNamedQuery("${queryName}");
+<#foreach param in params.keySet()>
+<#if param.equals("maxResults")>
+		query.setMaxResults(maxResults);
+<#elseif param.equals("firstResult")>
+        query.setFirstResult(firstResult);
+<#else>
+        query.setParameter("${param}", ${param});
+</#if>
+</#foreach>
 <#if jdk5 && methname.startsWith("find")>
         return (List<${declarationName}>) query.list();
 <#elseif methname.startsWith("count")>
@@ -271,7 +256,7 @@ TODO:
 </#if>
     }
 </#if>
-</#list></#if>
+</#foreach></#if>
 }
 </#assign>
 

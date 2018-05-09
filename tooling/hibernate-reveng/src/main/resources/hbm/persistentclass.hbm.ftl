@@ -1,18 +1,3 @@
-<#--
-~ Copyright 2010 - 2025 Red Hat, Inc.
-~
-~ Licensed under the Apache License, Version 2.0 (the "License");
-~ you may not use this file except in compliance with the License.
-~ You may obtain a copy of the License at
-~
-~     http://www.apache.org/licenses/LICENSE-2.0
-~
-~ Unless required by applicable law or agreed to in writing, software
-~ distributed under the License is distributed on an "AS IS" basis,
-~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-~ See the License for the specific language governing permissions and
-~ limitations under the License.
--->
 <${c2h.getTag(clazz)}
     name="${c2h.getClassName(clazz)}"
 <#if !c2h.getClassName(clazz).equals(clazz.entityName)>
@@ -91,38 +76,37 @@
  <#elseif clazz.identifier?exists>
  	<#if c2j.isComponent(clazz.identifier)>
  	 	<composite-id
- 	 	    name="${clazz.entityName}Id"
         	class="${clazz.identifier.getComponentClassName()}"
         	<#if clazz.identifierMapper?exists>mapped="true"</#if>>
-        	<#list clazz.identifier.properties as property>
+        	<#foreach property in clazz.identifier.propertyIterator>
         		<key-property name="${property.name}">
-        		<#list property.value.selectables as column>
-         		<#include "column.hbm.ftl">
- 			</#list>
+        		<#foreach column in property.value.columnIterator>
+        		<#include "column.hbm.ftl">
+ 			</#foreach>
  			</key-property>
- 		</#list>
+ 		</#foreach>
         	</composite-id>
  	<#else>
  		 <id type="${clazz.identifier.typeName}">
-		 <#list clazz.identifier.selectables as column>
+		 <#foreach column in clazz.identifier.columnIterator>
         	<#include "column.hbm.ftl">
- 		</#list>
+ 		</#foreach>
  		</id>
  	</#if>
  </#if>
 <#elseif c2h.isJoinedSubclass(clazz)>
  <key>
-       <#list clazz.key.columns as column>
+       <#foreach column in clazz.key.columnIterator>
                 <#include "column.hbm.ftl">
-       </#list>
+       </#foreach>
  </key>
 </#if>
 
 <#if c2h.needsDiscriminatorElement(clazz)>
     <discriminator type="${clazz.discriminator.typeName}">
-    	<#list clazz.discriminator.selectables as column>
+    	<#foreach column in clazz.discriminator.columnIterator>
         	<#include "column.hbm.ftl">
-  	</#list>
+  	</#foreach>
     </discriminator>
 </#if>
 
@@ -133,13 +117,13 @@
 <#include "${c2h.getTag(property)}.hbm.ftl"/>
 </#if>
 
-<#list c2h.getProperties(clazz) as property>
+<#foreach property in c2h.getProperties(clazz)>
 <#if c2h.getTag(property)!="version" && c2h.getTag(property)!="timestamp">
 <#include "${c2h.getTag(property)}.hbm.ftl"/>
 </#if>
-</#list>
+</#foreach>
 
-<#list clazz.joins as join>
+<#foreach join in clazz.joinIterator>
  <join
  <#if join.table.name?exists>
      table="${join.table.name}"
@@ -148,14 +132,14 @@
    <comment>${comment}</comment>
  </#if>
    <key>
- <#list join.key.selectables as column>
+ <#foreach column in join.key.columnIterator>
   <#include "column.hbm.ftl">
- </#list>
+ </#foreach>
    </key>
- <#list join.properties as property>
+ <#foreach property in join.propertyIterator>
   <#include "${c2h.getTag(property)}.hbm.ftl"/>
- </#list>
+ </#foreach>
   </join>
-</#list>
+</#foreach>
 
 </${c2h.getTag(clazz)}>

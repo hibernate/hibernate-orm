@@ -20,7 +20,7 @@ import org.hibernate.loader.entity.UniqueEntityLoader;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 
 /**
- * LoadPlan-based implementation of the the legacy batch loading strategy
+ * LoadPlan-based implementation of the legacy batch loading strategy
  *
  * @author Steve Ebersole
  */
@@ -57,15 +57,7 @@ public class LegacyBatchingEntityLoaderBuilder extends AbstractBatchingEntityLoa
 				LockMode lockMode,
 				SessionFactoryImplementor factory,
 				LoadQueryInfluencers loadQueryInfluencers) {
-			super( persister );
-			this.batchSizes = ArrayHelper.getBatchSizes( maxBatchSize );
-			this.loaders = new EntityLoader[ batchSizes.length ];
-			final EntityLoader.Builder entityLoaderBuilder = EntityLoader.forEntity( persister )
-					.withInfluencers( loadQueryInfluencers )
-					.withLockMode( lockMode );
-			for ( int i = 0; i < batchSizes.length; i++ ) {
-				this.loaders[i] = entityLoaderBuilder.withBatchSize( batchSizes[i] ).byPrimaryKey();
-			}
+			this( persister, maxBatchSize, lockMode, null, factory, loadQueryInfluencers );
 		}
 
 		public LegacyBatchingEntityLoader(
@@ -74,14 +66,29 @@ public class LegacyBatchingEntityLoaderBuilder extends AbstractBatchingEntityLoa
 				LockOptions lockOptions,
 				SessionFactoryImplementor factory,
 				LoadQueryInfluencers loadQueryInfluencers) {
+			this( persister, maxBatchSize, null, lockOptions, factory, loadQueryInfluencers );
+		}
+
+		protected LegacyBatchingEntityLoader(
+				OuterJoinLoadable persister,
+				int maxBatchSize,
+				LockMode lockMode,
+				LockOptions lockOptions,
+				SessionFactoryImplementor factory,
+				LoadQueryInfluencers loadQueryInfluencers) {
 			super( persister );
 			this.batchSizes = ArrayHelper.getBatchSizes( maxBatchSize );
 			this.loaders = new EntityLoader[ batchSizes.length ];
 			final EntityLoader.Builder entityLoaderBuilder = EntityLoader.forEntity( persister )
 					.withInfluencers( loadQueryInfluencers )
+					.withLockMode( lockMode )
 					.withLockOptions( lockOptions );
-			for ( int i = 0; i < batchSizes.length; i++ ) {
-				this.loaders[i] = entityLoaderBuilder.withBatchSize( batchSizes[i] ).byPrimaryKey();
+
+			// we create a first entity loader to use it as a template for the others
+			this.loaders[0] = entityLoaderBuilder.withBatchSize( batchSizes[0] ).byPrimaryKey();
+
+			for ( int i = 1; i < batchSizes.length; i++ ) {
+				this.loaders[i] = entityLoaderBuilder.withEntityLoaderTemplate( this.loaders[0] ).withBatchSize( batchSizes[i] ).byPrimaryKey();
 			}
 		}
 

@@ -90,6 +90,15 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 	protected final SessionFactoryImplementor getSessionFactory() {
 		return queryProcessor.getSessionFactory();
 	}
+
+	protected LoadPlan getLoadPlan() {
+		return loadPlan;
+	}
+
+	protected String[] getKeyColumnNames() {
+		return keyColumnNames;
+	}
+
 	/**
 	 * Main entry point for properly handling the FROM clause and and joins and restrictions
 	 *

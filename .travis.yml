@@ -2,7 +2,10 @@ language: java
 
 jdk:
   - oraclejdk8
-
+install:
+  - ./gradlew assemble
+script:
+  - travis_wait 30 ./gradlew check
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
   - rm -fr $HOME/.gradle/caches/*/plugin-resolution/

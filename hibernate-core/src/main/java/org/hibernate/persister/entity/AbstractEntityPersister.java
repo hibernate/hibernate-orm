@@ -21,6 +21,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
@@ -236,7 +237,9 @@ public abstract class AbstractEntityPersister
 
 	private final Map uniqueKeyLoaders = new HashMap();
 	private final Map lockers = new HashMap();
-	private final Map loaders = new HashMap();
+	private UniqueEntityLoader noneLockLoader;
+	private UniqueEntityLoader readLockLoader;
+	private final Map<Object, UniqueEntityLoader> loaders = new ConcurrentHashMap<>();
 
 	// SQL strings
 	private String sqlVersionSelectString;
@@ -4112,61 +4115,14 @@ public abstract class AbstractEntityPersister
 
 	//Relational based Persisters should be content with this implementation
 	protected void createLoaders() {
+		// We load the entity loaders for the most common lock modes.
+
+		noneLockLoader = createEntityLoader( LockMode.NONE );
+		readLockLoader = createEntityLoader( LockMode.READ );
+
 		final Map loaders = getLoaders();
-		loaders.put( LockMode.NONE, createEntityLoader( LockMode.NONE ) );
 
-		UniqueEntityLoader readLoader = createEntityLoader( LockMode.READ );
-		loaders.put( LockMode.READ, readLoader );
-
-		//TODO: inexact, what we really need to know is: are any outer joins used?
-		boolean disableForUpdate = getSubclassTableSpan() > 1 &&
-				hasSubclasses() &&
-				!getFactory().getDialect().supportsOuterJoinForUpdate();
-
-		loaders.put(
-				LockMode.UPGRADE,
-				disableForUpdate ?
-						readLoader :
-						createEntityLoader( LockMode.UPGRADE )
-		);
-		loaders.put(
-				LockMode.UPGRADE_NOWAIT,
-				disableForUpdate ?
-						readLoader :
-						createEntityLoader( LockMode.UPGRADE_NOWAIT )
-		);
-		loaders.put(
-				LockMode.UPGRADE_SKIPLOCKED,
-				disableForUpdate ?
-						readLoader :
-						createEntityLoader( LockMode.UPGRADE_SKIPLOCKED )
-		);
-		loaders.put(
-				LockMode.FORCE,
-				disableForUpdate ?
-						readLoader :
-						createEntityLoader( LockMode.FORCE )
-		);
-		loaders.put(
-				LockMode.PESSIMISTIC_READ,
-				disableForUpdate ?
-						readLoader :
-						createEntityLoader( LockMode.PESSIMISTIC_READ )
-		);
-		loaders.put(
-				LockMode.PESSIMISTIC_WRITE,
-				disableForUpdate ?
-						readLoader :
-						createEntityLoader( LockMode.PESSIMISTIC_WRITE )
-		);
-		loaders.put(
-				LockMode.PESSIMISTIC_FORCE_INCREMENT,
-				disableForUpdate ?
-						readLoader :
-						createEntityLoader( LockMode.PESSIMISTIC_FORCE_INCREMENT )
-		);
-		loaders.put( LockMode.OPTIMISTIC, createEntityLoader( LockMode.OPTIMISTIC ) );
-		loaders.put( LockMode.OPTIMISTIC_FORCE_INCREMENT, createEntityLoader( LockMode.OPTIMISTIC_FORCE_INCREMENT ) );
+		// The loaders for the other lock modes are lazily loaded and will later be stored in this map.
 
 		loaders.put(
 				"merge",
@@ -4176,6 +4132,46 @@ public abstract class AbstractEntityPersister
 				"refresh",
 				new CascadeEntityLoader( this, CascadingActions.REFRESH, getFactory() )
 		);
+	}
+
+	private UniqueEntityLoader getLoaderByLockMode(LockMode lockMode) {
+		if ( LockMode.NONE == lockMode ) {
+			return noneLockLoader;
+		}
+		else if ( LockMode.READ == lockMode ) {
+			return readLockLoader;
+		}
+
+		return loaders.computeIfAbsent( lockMode, this::createLazyLoadedEntityLoader );
+	}
+
+	private UniqueEntityLoader createLazyLoadedEntityLoader(Object lockModeObject) {
+		// Unfortunately, the loaders map mixes LockModes and Strings as keys so we need to accept an Object.
+		// The cast is safe as we will always call this method with a LockMode.
+		LockMode lockMode = (LockMode) lockModeObject;
+
+		switch ( lockMode ) {
+			case NONE:
+			case READ:
+			case OPTIMISTIC:
+			case OPTIMISTIC_FORCE_INCREMENT:
+				return createEntityLoader( lockMode );
+			case UPGRADE:
+			case UPGRADE_NOWAIT:
+			case UPGRADE_SKIPLOCKED:
+			case FORCE:
+			case PESSIMISTIC_READ:
+			case PESSIMISTIC_WRITE:
+			case PESSIMISTIC_FORCE_INCREMENT:
+				//TODO: inexact, what we really need to know is: are any outer joins used?
+				boolean disableForUpdate = getSubclassTableSpan() > 1 &&
+						hasSubclasses() &&
+						!getFactory().getDialect().supportsOuterJoinForUpdate();
+
+				return disableForUpdate ? readLockLoader : createEntityLoader( lockMode );
+			default:
+				throw new IllegalStateException( String.format( "Lock mode %1$s not supported by entity loaders.", lockMode ) );
+		}
 	}
 
 	protected void createQueryLoader() {
@@ -4271,7 +4267,7 @@ public abstract class AbstractEntityPersister
 			return createEntityLoader( lockOptions, session.getLoadQueryInfluencers() );
 		}
 		else {
-			return (UniqueEntityLoader) getLoaders().get( lockOptions.getLockMode() );
+			return (UniqueEntityLoader) getLoaderByLockMode( lockOptions.getLockMode() );
 		}
 	}
 

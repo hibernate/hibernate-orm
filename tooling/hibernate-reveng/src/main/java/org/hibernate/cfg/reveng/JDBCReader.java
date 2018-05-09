@@ -23,6 +23,7 @@ import org.hibernate.tool.api.reveng.ProgressListener;
 import org.hibernate.tool.api.reveng.ReverseEngineeringRuntimeInfo;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
+import org.hibernate.tool.internal.reveng.ForeignKeysInfo;
 
 public class JDBCReader {
 

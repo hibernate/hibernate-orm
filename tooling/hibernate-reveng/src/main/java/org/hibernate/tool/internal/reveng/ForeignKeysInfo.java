@@ -1,4 +1,4 @@
-package org.hibernate.cfg.reveng;
+package org.hibernate.tool.internal.reveng;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,7 +31,7 @@ public class ForeignKeysInfo {
 		this.referencedColumns = refColumns;
 	}
 	
-	Map<String, List<ForeignKey>> process(ReverseEngineeringStrategy revengStrategy) {
+	public Map<String, List<ForeignKey>> process(ReverseEngineeringStrategy revengStrategy) {
 		Map<String, List<ForeignKey>> oneToManyCandidates = new HashMap<String, List<ForeignKey>>();
         Iterator<Entry<String, Table>> iterator = dependentTables.entrySet().iterator();
 		while (iterator.hasNext() ) {

@@ -28,6 +28,7 @@ import org.hibernate.loader.plan.build.spi.LoadPlanBuildingAssociationVisitation
 import org.hibernate.loader.plan.build.spi.MetamodelDrivenLoadPlanBuilder;
 import org.hibernate.loader.plan.exec.internal.AbstractLoadPlanBasedLoader;
 import org.hibernate.loader.plan.exec.internal.BatchingLoadQueryDetailsFactory;
+import org.hibernate.loader.plan.exec.internal.EntityLoadQueryDetails;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.spi.LoadPlan;
@@ -84,6 +85,23 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 				uniqueKeyColumnNames,
 				buildingParameters,
 				factory
+		);
+	}
+
+	protected AbstractLoadPlanBasedEntityLoader(
+			OuterJoinLoadable entityPersister,
+			SessionFactoryImplementor factory,
+			EntityLoadQueryDetails entityLoaderQueryDetailsTemplate,
+			Type uniqueKeyType,
+			QueryBuildingParameters buildingParameters) {
+		super( factory );
+		this.entityPersister = entityPersister;
+		this.uniqueKeyType = uniqueKeyType;
+		this.entityName = entityPersister.getEntityName();
+
+		this.staticLoadQuery = BatchingLoadQueryDetailsFactory.INSTANCE.makeEntityLoadQueryDetails(
+				entityLoaderQueryDetailsTemplate,
+				buildingParameters
 		);
 	}
 

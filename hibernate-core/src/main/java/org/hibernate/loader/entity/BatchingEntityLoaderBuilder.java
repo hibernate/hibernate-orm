@@ -54,11 +54,21 @@ public abstract class BatchingEntityLoaderBuilder {
 			LockMode lockMode,
 			SessionFactoryImplementor factory,
 			LoadQueryInfluencers influencers) {
+		return buildLoader( persister, null, batchSize, lockMode, factory, influencers );
+	}
+
+	public UniqueEntityLoader buildLoader(
+			OuterJoinLoadable persister,
+			UniqueEntityLoader entityLoaderTemplate,
+			int batchSize,
+			LockMode lockMode,
+			SessionFactoryImplementor factory,
+			LoadQueryInfluencers influencers) {
 		if ( batchSize <= 1 ) {
 			// no batching
 			return buildNonBatchingLoader( persister, lockMode, factory, influencers );
 		}
-		return buildBatchingLoader( persister, batchSize, lockMode, factory, influencers );
+		return buildBatchingLoader( persister, entityLoaderTemplate, batchSize, lockMode, factory, influencers );
 	}
 
 	protected UniqueEntityLoader buildNonBatchingLoader(
@@ -75,6 +85,16 @@ public abstract class BatchingEntityLoaderBuilder {
 			LockMode lockMode,
 			SessionFactoryImplementor factory,
 			LoadQueryInfluencers influencers);
+
+	protected UniqueEntityLoader buildBatchingLoader(
+			OuterJoinLoadable persister,
+			UniqueEntityLoader entityLoaderTemplate,
+			int batchSize,
+			LockMode lockMode,
+			SessionFactoryImplementor factory,
+			LoadQueryInfluencers influencers) {
+		return buildBatchingLoader( persister, batchSize, lockMode, factory, influencers );
+	}
 
 	/**
 	 * Builds a batch-fetch capable loader based on the given persister, lock-options, etc.
@@ -93,11 +113,21 @@ public abstract class BatchingEntityLoaderBuilder {
 			LockOptions lockOptions,
 			SessionFactoryImplementor factory,
 			LoadQueryInfluencers influencers) {
+		return buildLoader( persister, null, batchSize, lockOptions, factory, influencers );
+	}
+
+	public UniqueEntityLoader buildLoader(
+			OuterJoinLoadable persister,
+			UniqueEntityLoader entityLoaderTemplate,
+			int batchSize,
+			LockOptions lockOptions,
+			SessionFactoryImplementor factory,
+			LoadQueryInfluencers influencers) {
 		if ( batchSize <= 1 ) {
 			// no batching
 			return buildNonBatchingLoader( persister, lockOptions, factory, influencers );
 		}
-		return buildBatchingLoader( persister, batchSize, lockOptions, factory, influencers );
+		return buildBatchingLoader( persister, entityLoaderTemplate, batchSize, lockOptions, factory, influencers );
 	}
 
 	protected UniqueEntityLoader buildNonBatchingLoader(
@@ -114,4 +144,14 @@ public abstract class BatchingEntityLoaderBuilder {
 			LockOptions lockOptions,
 			SessionFactoryImplementor factory,
 			LoadQueryInfluencers influencers);
+
+	protected UniqueEntityLoader buildBatchingLoader(
+			OuterJoinLoadable persister,
+			UniqueEntityLoader initialEntityLoader,
+			int batchSize,
+			LockOptions lockOptions,
+			SessionFactoryImplementor factory,
+			LoadQueryInfluencers influencers) {
+		return buildBatchingLoader( persister, batchSize, lockOptions, factory, influencers );
+	}
 }

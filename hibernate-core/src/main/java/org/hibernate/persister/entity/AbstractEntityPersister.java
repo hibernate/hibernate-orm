@@ -2469,6 +2469,24 @@ public abstract class AbstractEntityPersister
 				.buildLoader( this, batchSize, lockOptions, getFactory(), loadQueryInfluencers );
 	}
 
+	protected UniqueEntityLoader createEntityLoader(
+			UniqueEntityLoader entityLoaderTemplate,
+			LockMode lockMode,
+			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
+		//TODO: disable batch loading if lockMode > READ?
+		return BatchingEntityLoaderBuilder.getBuilder( getFactory() )
+				.buildLoader( this, entityLoaderTemplate, batchSize, lockMode, getFactory(), loadQueryInfluencers );
+	}
+
+	protected UniqueEntityLoader createEntityLoader(
+			UniqueEntityLoader entityLoaderTemplate,
+			LockOptions lockOptions,
+			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
+		//TODO: disable batch loading if lockMode > READ?
+		return BatchingEntityLoaderBuilder.getBuilder( getFactory() )
+				.buildLoader( this, entityLoaderTemplate, batchSize, lockOptions, getFactory(), loadQueryInfluencers );
+	}
+
 	/**
 	 * Used internally to create static loaders.  These are the default set of loaders used to handle get()/load()
 	 * processing.  lock() handling is done by the LockingStrategy instances (see {@link #getLocker})
@@ -2481,6 +2499,10 @@ public abstract class AbstractEntityPersister
 	 */
 	protected UniqueEntityLoader createEntityLoader(LockMode lockMode) throws MappingException {
 		return createEntityLoader( lockMode, LoadQueryInfluencers.NONE );
+	}
+
+	protected UniqueEntityLoader createEntityLoader(UniqueEntityLoader entityLoaderTemplate, LockMode lockMode) throws MappingException {
+		return createEntityLoader( entityLoaderTemplate, lockMode, LoadQueryInfluencers.NONE );
 	}
 
 	protected boolean check(
@@ -4113,10 +4135,11 @@ public abstract class AbstractEntityPersister
 	//Relational based Persisters should be content with this implementation
 	protected void createLoaders() {
 		final Map loaders = getLoaders();
-		loaders.put( LockMode.NONE, createEntityLoader( LockMode.NONE ) );
 
 		UniqueEntityLoader readLoader = createEntityLoader( LockMode.READ );
 		loaders.put( LockMode.READ, readLoader );
+
+		loaders.put( LockMode.NONE, createEntityLoader( readLoader, LockMode.NONE ) );
 
 		//TODO: inexact, what we really need to know is: are any outer joins used?
 		boolean disableForUpdate = getSubclassTableSpan() > 1 &&
@@ -4127,46 +4150,46 @@ public abstract class AbstractEntityPersister
 				LockMode.UPGRADE,
 				disableForUpdate ?
 						readLoader :
-						createEntityLoader( LockMode.UPGRADE )
+						createEntityLoader( readLoader, LockMode.UPGRADE )
 		);
 		loaders.put(
 				LockMode.UPGRADE_NOWAIT,
 				disableForUpdate ?
 						readLoader :
-						createEntityLoader( LockMode.UPGRADE_NOWAIT )
+						createEntityLoader( readLoader, LockMode.UPGRADE_NOWAIT )
 		);
 		loaders.put(
 				LockMode.UPGRADE_SKIPLOCKED,
 				disableForUpdate ?
 						readLoader :
-						createEntityLoader( LockMode.UPGRADE_SKIPLOCKED )
+						createEntityLoader( readLoader, LockMode.UPGRADE_SKIPLOCKED )
 		);
 		loaders.put(
 				LockMode.FORCE,
 				disableForUpdate ?
 						readLoader :
-						createEntityLoader( LockMode.FORCE )
+						createEntityLoader( readLoader, LockMode.FORCE )
 		);
 		loaders.put(
 				LockMode.PESSIMISTIC_READ,
 				disableForUpdate ?
 						readLoader :
-						createEntityLoader( LockMode.PESSIMISTIC_READ )
+						createEntityLoader( readLoader, LockMode.PESSIMISTIC_READ )
 		);
 		loaders.put(
 				LockMode.PESSIMISTIC_WRITE,
 				disableForUpdate ?
 						readLoader :
-						createEntityLoader( LockMode.PESSIMISTIC_WRITE )
+						createEntityLoader( readLoader, LockMode.PESSIMISTIC_WRITE )
 		);
 		loaders.put(
 				LockMode.PESSIMISTIC_FORCE_INCREMENT,
 				disableForUpdate ?
 						readLoader :
-						createEntityLoader( LockMode.PESSIMISTIC_FORCE_INCREMENT )
+						createEntityLoader( readLoader, LockMode.PESSIMISTIC_FORCE_INCREMENT )
 		);
-		loaders.put( LockMode.OPTIMISTIC, createEntityLoader( LockMode.OPTIMISTIC ) );
-		loaders.put( LockMode.OPTIMISTIC_FORCE_INCREMENT, createEntityLoader( LockMode.OPTIMISTIC_FORCE_INCREMENT ) );
+		loaders.put( LockMode.OPTIMISTIC, createEntityLoader( readLoader, LockMode.OPTIMISTIC ) );
+		loaders.put( LockMode.OPTIMISTIC_FORCE_INCREMENT, createEntityLoader( readLoader, LockMode.OPTIMISTIC_FORCE_INCREMENT ) );
 
 		loaders.put(
 				"merge",

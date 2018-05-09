@@ -47,6 +47,40 @@ public class LegacyBatchingEntityLoaderBuilder extends AbstractBatchingEntityLoa
 		return new LegacyBatchingEntityLoader( persister, batchSize, lockOptions, factory, influencers );
 	}
 
+	@Override
+	protected UniqueEntityLoader buildBatchingLoader(
+			OuterJoinLoadable persister,
+			UniqueEntityLoader entityLoaderTemplate,
+			int batchSize,
+			LockMode lockMode,
+			SessionFactoryImplementor factory,
+			LoadQueryInfluencers influencers) {
+		if (entityLoaderTemplate instanceof LegacyBatchingEntityLoader) {
+			return new LegacyBatchingEntityLoader( persister, (LegacyBatchingEntityLoader) entityLoaderTemplate, batchSize, lockMode, null, factory,
+					influencers );
+		}
+		else {
+			return new LegacyBatchingEntityLoader( persister, batchSize, lockMode, factory, influencers );
+		}
+	}
+
+	@Override
+	protected UniqueEntityLoader buildBatchingLoader(
+			OuterJoinLoadable persister,
+			UniqueEntityLoader entityLoaderTemplate,
+			int batchSize,
+			LockOptions lockOptions,
+			SessionFactoryImplementor factory,
+			LoadQueryInfluencers influencers) {
+		if (entityLoaderTemplate instanceof LegacyBatchingEntityLoader) {
+			return new LegacyBatchingEntityLoader( persister, (LegacyBatchingEntityLoader) entityLoaderTemplate, batchSize, null, lockOptions, factory,
+					influencers );
+		}
+		else {
+			return new LegacyBatchingEntityLoader( persister, batchSize, lockOptions, factory, influencers );
+		}
+	}
+
 	public static class LegacyBatchingEntityLoader extends BatchingEntityLoader  {
 		private final int[] batchSizes;
 		private final EntityLoader[] loaders;
@@ -57,7 +91,7 @@ public class LegacyBatchingEntityLoaderBuilder extends AbstractBatchingEntityLoa
 				LockMode lockMode,
 				SessionFactoryImplementor factory,
 				LoadQueryInfluencers loadQueryInfluencers) {
-			this( persister, maxBatchSize, lockMode, null, factory, loadQueryInfluencers );
+			this( persister, null, maxBatchSize, lockMode, null, factory, loadQueryInfluencers );
 		}
 
 		public LegacyBatchingEntityLoader(
@@ -66,11 +100,12 @@ public class LegacyBatchingEntityLoaderBuilder extends AbstractBatchingEntityLoa
 				LockOptions lockOptions,
 				SessionFactoryImplementor factory,
 				LoadQueryInfluencers loadQueryInfluencers) {
-			this( persister, maxBatchSize, null, lockOptions, factory, loadQueryInfluencers );
+			this( persister, null, maxBatchSize, null, lockOptions, factory, loadQueryInfluencers );
 		}
 
-		protected LegacyBatchingEntityLoader(
+		private LegacyBatchingEntityLoader(
 				OuterJoinLoadable persister,
+				LegacyBatchingEntityLoader batchingEntityLoaderTemplate,
 				int maxBatchSize,
 				LockMode lockMode,
 				LockOptions lockOptions,
@@ -84,9 +119,17 @@ public class LegacyBatchingEntityLoaderBuilder extends AbstractBatchingEntityLoa
 					.withLockMode( lockMode )
 					.withLockOptions( lockOptions );
 
-			// we create a first entity loader to use it as a template for the others
-			this.loaders[0] = entityLoaderBuilder.withBatchSize( batchSizes[0] ).byPrimaryKey();
+			if ( batchingEntityLoaderTemplate == null ) {
+				// if we don't have a template, we load the first EntityLoader from scratch and then we use it as a template
+				this.loaders[0] = entityLoaderBuilder.withBatchSize( batchSizes[0] ).byPrimaryKey();
+			}
+			else {
+				// if we have a template, we use it immediately
+				this.loaders[0] = entityLoaderBuilder.withEntityLoaderTemplate( batchingEntityLoaderTemplate.loaders[0] ).withBatchSize( batchSizes[0] )
+						.byPrimaryKey();
+			}
 
+			// then we generate the other loaders
 			for ( int i = 1; i < batchSizes.length; i++ ) {
 				this.loaders[i] = entityLoaderBuilder.withEntityLoaderTemplate( this.loaders[0] ).withBatchSize( batchSizes[i] ).byPrimaryKey();
 			}

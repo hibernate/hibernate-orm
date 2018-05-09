@@ -69,6 +69,23 @@ public class BatchingLoadQueryDetailsFactory {
 	}
 
 	/**
+	 * Returns a EntityLoadQueryDetails object based on an existing one and additional elements specific to this one.
+	 *
+	 * @param entityLoadQueryDetailsTemplate the template
+	 * @param buildingParameters And influencers that would affect the generated SQL (mostly we are concerned with those
+	 * that add additional joins here)
+	 * @return The EntityLoadQueryDetails
+	 */
+	public LoadQueryDetails makeEntityLoadQueryDetails(
+			EntityLoadQueryDetails entityLoadQueryDetailsTemplate,
+			QueryBuildingParameters buildingParameters) {
+		return new EntityLoadQueryDetails(
+				entityLoadQueryDetailsTemplate,
+				buildingParameters
+		);
+	}
+
+	/**
 	 * Constructs a BasicCollectionLoadQueryDetails object from the given inputs.
 	 *
 	 * @param collectionPersister The collection persister.

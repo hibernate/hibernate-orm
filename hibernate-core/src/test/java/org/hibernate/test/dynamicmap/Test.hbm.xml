@@ -15,8 +15,8 @@
 		<id name="id" type="uuid-binary" column="id" length="16">
 			<generator class="uuid2" />
 		</id>
-		<property name="name" type="nstring" column="name" length="50" not-null="true" />
-		<property name="description" type="nstring" column="description" length="200" />
+		<property name="name" type="string" column="name" length="50" not-null="true" />
+		<property name="description" type="string" column="description" length="200" />
 	</class>
 
 	<union-subclass entity-name="Item1" table="item_1" extends="ItemBase">
@@ -27,7 +27,7 @@
 
 	<union-subclass entity-name="Item2" table="item_2" extends="ItemBase">
 		<tuplizer entity-mode="dynamic-map" class="org.hibernate.tuple.entity.DynamicMapEntityTuplizer"/>
-		<property name="prop2" type="nstring" column="prop2" length="100" />
+		<property name="prop2" type="string" column="prop2" length="100" />
 		<many-to-one name="entity" entity-name="Entity2" column="entity_id" fetch="select" not-null="true" />
 	</union-subclass>
 
@@ -36,7 +36,7 @@
 		<id name="id" type="uuid-binary" column="id" length="16">
 			<generator class="uuid2" />
 		</id>
-		<property name="name" type="nstring" column="name" length="50" not-null="true" />
+		<property name="name" type="string" column="name" length="50" not-null="true" />
 		<set name="items" fetch="select" lazy="true" inverse="true">
 			<key column="entity_id" not-null="true" />
 			<one-to-many entity-name="Item1"/>

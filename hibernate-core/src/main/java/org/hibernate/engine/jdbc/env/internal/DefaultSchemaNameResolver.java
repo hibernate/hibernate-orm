@@ -28,12 +28,14 @@ public class DefaultSchemaNameResolver implements SchemaNameResolver {
 
 	public static final DefaultSchemaNameResolver INSTANCE = new DefaultSchemaNameResolver();
 
-	private SchemaNameResolver delegate;
+	// NOTE: The actual delegate should not be cached in DefaultSchemaNameResolver because,
+	//       in the case of multiple data sources, there may be a data source that
+	//       requires a different delegate. See HHH-12392.
 
 	private DefaultSchemaNameResolver() {
 	}
 
-	private void determineAppropriateResolverDelegate(Connection connection) {
+	private SchemaNameResolver determineAppropriateResolverDelegate(Connection connection) {
 		// unfortunately Connection#getSchema is only available in Java 1.7 and above
 		// and Hibernate still baselines on 1.6.  So for now, use reflection and
 		// leverage the Connection#getSchema method if it is available.
@@ -45,29 +47,32 @@ public class DefaultSchemaNameResolver implements SchemaNameResolver {
 					// If the JDBC driver does not implement the Java 7 spec, but the JRE is Java 7
 					// then the getSchemaMethod is not null but the call to getSchema() throws an java.lang.AbstractMethodError
 					connection.getSchema();
-					delegate = new SchemaNameResolverJava17Delegate();
+					return new SchemaNameResolverJava17Delegate();
 				}
 				catch (java.lang.AbstractMethodError e) {
 					log.debugf( "Unable to use Java 1.7 Connection#getSchema" );
-					delegate = SchemaNameResolverFallbackDelegate.INSTANCE;
+					return SchemaNameResolverFallbackDelegate.INSTANCE;
 				}
 			}
 			else {
 				log.debugf( "Unable to use Java 1.7 Connection#getSchema" );
-				delegate = SchemaNameResolverFallbackDelegate.INSTANCE;
+				return SchemaNameResolverFallbackDelegate.INSTANCE;
 			}
 		}
 		catch (Exception ignore) {
 			log.debugf(
 					"Unable to use Java 1.7 Connection#getSchema : An error occurred trying to resolve the connection default schema resolver: "
 							+ ignore.getMessage() );
-			delegate = SchemaNameResolverFallbackDelegate.INSTANCE;
+			return SchemaNameResolverFallbackDelegate.INSTANCE;
 		}
 	}
 
 	@Override
 	public String resolveSchemaName(Connection connection, Dialect dialect) throws SQLException {
-		determineAppropriateResolverDelegate( connection );
+		// NOTE: delegate should not be cached in DefaultSchemaNameResolver because,
+		//       in the case of multiple data sources, there may be a data source that
+		//       requires a different delegate. See HHH-12392.
+		final SchemaNameResolver delegate = determineAppropriateResolverDelegate( connection );
 		return delegate.resolveSchemaName( connection, dialect );
 	}
 

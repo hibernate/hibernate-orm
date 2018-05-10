@@ -7,36 +7,26 @@
 package org.hibernate.test.annotations.secondarytable;
 
 import java.io.Serializable;
-import java.net.URL;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.ForeignKey;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.SecondaryTable;
 import javax.persistence.Table;
 
-import org.hibernate.Criteria;
+import org.hibernate.Session;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.Dialect;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.transaction.TransactionUtil;
-import org.hibernate.test.schemaupdate.foreignkeys.definition.AbstractForeignKeyDefinitionTest;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -44,7 +34,7 @@ import static org.junit.Assert.assertTrue;
  */
 @RequiresDialect(value = H2Dialect.class)
 public class SecondaryTableSchemaTest
-		extends BaseEntityManagerFunctionalTestCase {
+		extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -53,20 +43,20 @@ public class SecondaryTableSchemaTest
 		};
 	}
 
-	protected void addConfigOptions(Map options) {
-		options.put(
+	@Override
+	protected void configure(Configuration configuration) {
+		configuration.setProperty(
 			AvailableSettings.URL,
-			options.get( AvailableSettings.URL ) + ";INIT=CREATE SCHEMA IF NOT EXISTS schema1\\;CREATE SCHEMA IF NOT EXISTS schema2;"
+			configuration.getProperty( AvailableSettings.URL ) + ";INIT=CREATE SCHEMA IF NOT EXISTS schema1\\;CREATE SCHEMA IF NOT EXISTS schema2;"
 		);
 	}
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			List<Cluster> clusters = entityManager.createQuery( "select c from Cluster c" ).getResultList();
-
-			assertTrue(clusters.isEmpty());
-		} );
+		Session session = openSession();
+		session.getTransaction().begin();
+		List clusters = session.createQuery( "select c from Cluster c" ).list();
+		assertTrue(clusters.isEmpty());
 	}
 
 	@Entity(name = "Cluster")

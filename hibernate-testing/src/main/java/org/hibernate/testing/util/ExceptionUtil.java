@@ -78,10 +78,13 @@ public class ExceptionUtil {
 		}
 		else {
 			Throwable rootCause = ExceptionUtil.rootCause( e );
-			if ( rootCause != null && (
+			if (
+				rootCause != null && (
 					rootCause.getMessage().contains( "timeout" ) ||
-							rootCause.getMessage().contains( "timed out" ) )
-					) {
+					rootCause.getMessage().contains( "timed out" ) ||
+					rootCause.getMessage().contains( "lock(s) could not be acquired" )
+				)
+			) {
 				return true;
 			}
 		}

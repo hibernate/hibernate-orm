@@ -56,7 +56,7 @@ ext {
                         'jdbc.driver': 'com.mysql.jdbc.Driver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
-                        'jdbc.url'   : 'jdbc:mysql://127.0.0.1/hibernate_orm_test'
+                        'jdbc.url'   : 'jdbc:mysql://127.0.0.1/hibernate_orm_test?useSSL=false'
                 ],
                 mariadb : [
                         'db.dialect' : '',

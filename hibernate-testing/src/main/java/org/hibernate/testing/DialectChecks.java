@@ -230,6 +230,12 @@ abstract public class DialectChecks {
 		}
 	}
 
+	public static class SupportNoWait implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.supportsNoWait();
+		}
+	}
+
 	public static class SupportDropConstraints implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return dialect.dropConstraints();

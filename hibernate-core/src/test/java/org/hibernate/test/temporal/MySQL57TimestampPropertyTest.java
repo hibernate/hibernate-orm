@@ -60,7 +60,7 @@ public class MySQL57TimestampPropertyTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.getTransaction().begin();
-		final Query queryWithParameter = s.createQuery( "from MySQL57TimestampPropertyTest$Entity where ts=?" ).setParameter( 0, eOrig.ts );
+		final Query queryWithParameter = s.createQuery( "from Entity where ts= ?1" ).setParameter( 1, eOrig.ts );
 		final Entity eQueriedWithParameter = (Entity) queryWithParameter.uniqueResult();
 		assertNotNull( eQueriedWithParameter );
 		s.getTransaction().commit();
@@ -68,7 +68,7 @@ public class MySQL57TimestampPropertyTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.getTransaction().begin();
-		final Query queryWithTimestamp = s.createQuery( "from MySQL57TimestampPropertyTest$Entity where ts=?" ).setTimestamp( 0, eOrig.ts );
+		final Query queryWithTimestamp = s.createQuery( "from Entity where ts= ?1" ).setTimestamp( 1, eOrig.ts );
 		final Entity eQueriedWithTimestamp = (Entity) queryWithTimestamp.uniqueResult();
 		assertNotNull( eQueriedWithTimestamp );
 		s.getTransaction().commit();
@@ -105,8 +105,8 @@ public class MySQL57TimestampPropertyTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.getTransaction().begin();
 		final Query queryWithParameter =
-				s.createQuery( "from MySQL57TimestampPropertyTest$Entity where tsColumnDefault=?" )
-						.setParameter( 0, eOrig.tsColumnDefault );
+				s.createQuery( "from Entity where tsColumnDefault= ?1" )
+						.setParameter( 1, eOrig.tsColumnDefault );
 		final Entity eQueriedWithParameter = (Entity) queryWithParameter.uniqueResult();
 		assertNotNull( eQueriedWithParameter );
 		s.getTransaction().commit();
@@ -115,8 +115,8 @@ public class MySQL57TimestampPropertyTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.getTransaction().begin();
 		final Query queryWithTimestamp =
-				s.createQuery( "from MySQL57TimestampPropertyTest$Entity where tsColumnDefault=?" )
-						.setTimestamp( 0, eOrig.tsColumnDefault );
+				s.createQuery( "from Entity where tsColumnDefault= ?1" )
+						.setTimestamp( 1, eOrig.tsColumnDefault );
 		final Entity eQueriedWithTimestamp = (Entity) queryWithTimestamp.uniqueResult();
 		assertNotNull( eQueriedWithTimestamp );
 		s.getTransaction().commit();
@@ -153,8 +153,8 @@ public class MySQL57TimestampPropertyTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.getTransaction().begin();
 		final Query queryWithParameter =
-				s.createQuery( "from MySQL57TimestampPropertyTest$Entity where tsColumnDefinition=?" )
-						.setParameter( 0, eOrig.tsColumnDefinition );
+				s.createQuery( "from Entity where tsColumnDefinition= ?1" )
+						.setParameter( 1, eOrig.tsColumnDefinition );
 		final Entity eQueriedWithParameter = (Entity) queryWithParameter.uniqueResult();
 		assertNotNull( eQueriedWithParameter );
 		s.getTransaction().commit();
@@ -163,8 +163,8 @@ public class MySQL57TimestampPropertyTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.getTransaction().begin();
 		final Query queryWithTimestamp =
-				s.createQuery( "from MySQL57TimestampPropertyTest$Entity where tsColumnDefinition=?" )
-						.setTimestamp( 0, eOrig.tsColumnDefinition );
+				s.createQuery( "from Entity where tsColumnDefinition= ?1" )
+						.setTimestamp( 1, eOrig.tsColumnDefinition );
 		final Entity eQueriedWithTimestamp = (Entity) queryWithTimestamp.uniqueResult();
 		assertNotNull( eQueriedWithTimestamp );
 		s.getTransaction().commit();
@@ -182,7 +182,7 @@ public class MySQL57TimestampPropertyTest extends BaseCoreFunctionalTestCase {
 		return new Class[] { Entity.class };
 	}
 
-	@javax.persistence.Entity
+	@javax.persistence.Entity(name = "Entity")
 	public static class Entity {
 		@GeneratedValue
 		@Id

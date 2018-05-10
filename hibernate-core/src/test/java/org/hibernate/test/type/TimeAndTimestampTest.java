@@ -14,6 +14,7 @@ import javax.persistence.Id;
 
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.MySQL8Dialect;
 import org.hibernate.dialect.Oracle9iDialect;
 
 import org.hibernate.testing.SkipForDialect;
@@ -29,6 +30,7 @@ import static org.junit.Assert.assertEquals;
  */
 @TestForIssue(jiraKey = "HHH-10465")
 @SkipForDialect(MariaDBDialect.class)
+@SkipForDialect(MySQL8Dialect.class)
 @SkipForDialect(value = Oracle9iDialect.class, comment = "Oracle date does not support milliseconds  ")
 @SkipForDialect(value = AbstractHANADialect.class, comment = "HANA date does not support milliseconds  ")
 public class TimeAndTimestampTest extends BaseNonConfigCoreFunctionalTestCase {
@@ -45,15 +47,15 @@ public class TimeAndTimestampTest extends BaseNonConfigCoreFunctionalTestCase {
 		doInHibernate( this::sessionFactory, session -> {
 			Event event = new Event();
 			event.id = 1L;
-			event.timeValue = new Time( 123 );
-			event.timestampValue = new Timestamp( 456 );
+			event.timeValue = new Time( 12356 );
+			event.timestampValue = new Timestamp( 45678 );
 
 			session.persist( event );
 		} );
 		doInHibernate( this::sessionFactory, session -> {
 			Event event = session.find( Event.class, 1L );
-			assertEquals(123, event.timeValue.getTime() % TimeUnit.DAYS.toMillis( 1 ));
-			assertEquals(456, event.timestampValue.getTime() % TimeUnit.DAYS.toMillis( 1 ));
+			assertEquals(12356, event.timeValue.getTime() % TimeUnit.DAYS.toMillis( 1 ));
+			assertEquals(45678, event.timestampValue.getTime() % TimeUnit.DAYS.toMillis( 1 ));
 		} );
 	}
 

@@ -14,20 +14,28 @@ import javax.persistence.PessimisticLockException;
 import org.hibernate.LockOptions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.SQLServerDialect;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
 import org.hibernate.testing.transaction.TransactionUtil2;
+import org.hibernate.testing.util.ExceptionUtil;
 import org.hibernate.test.jpa.AbstractJPATest;
 import org.hibernate.test.jpa.Item;
 import org.junit.Test;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
  * @author Steve Ebersole
  */
+@RequiresDialectFeature(DialectChecks.SupportNoWait.class)
 public class LockExceptionTests extends AbstractJPATest {
 	@Override
 	public void configure(Configuration cfg) {
@@ -72,7 +80,7 @@ public class LockExceptionTests extends AbstractJPATest {
 			);
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			log.error( "Exception thrown", e );
 		}
 		finally {
 			inTransaction(

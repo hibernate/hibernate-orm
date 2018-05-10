@@ -18,7 +18,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.MySQL5Dialect;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -38,7 +38,7 @@ import static org.mockito.Mockito.verify;
 /**
  * @author Vlad Mihalcea
  */
-@SkipForDialect(MariaDBDialect.class)
+@SkipForDialect(MySQL5Dialect.class)
 public class JdbcTimestampCustomTimeZoneTest
 		extends BaseNonConfigCoreFunctionalTestCase {
 

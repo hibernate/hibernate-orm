@@ -15,7 +15,7 @@
 
 <hibernate-mapping package="org.hibernate.test.map">
 	
-	<class name="Group" table="groups">
+	<class name="Group" table="groups_">
 		<id name="name"/>
 		<map name="users" cascade="persist" table="group_user">
 			<key column="groupName"/>

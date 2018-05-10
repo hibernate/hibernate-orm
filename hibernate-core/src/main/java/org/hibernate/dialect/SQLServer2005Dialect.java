@@ -122,4 +122,9 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	public boolean supportsSkipLocked() {
 		return true;
 	}
+
+	@Override
+	public boolean supportsNoWait() {
+		return true;
+	}
 }

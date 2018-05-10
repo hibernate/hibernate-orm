@@ -1604,4 +1604,9 @@ public abstract class AbstractHANADialect extends Dialect {
 		return 0;
 	}
 
+	@Override
+	public boolean supportsNoWait() {
+		return true;
+	}
+
 }

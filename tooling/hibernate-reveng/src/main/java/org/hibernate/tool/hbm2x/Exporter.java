@@ -8,6 +8,7 @@ import java.util.Properties;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.internal.exporter.DefaultArtifactCollector;
 
 /**
  * @author max and david
@@ -43,13 +44,13 @@ public interface Exporter {
 	 * 
 	 * @param collector Instance to be consulted when adding a new file.
 	 */
-	public void setArtifactCollector(ArtifactCollector collector);
+	public void setArtifactCollector(DefaultArtifactCollector collector);
 	
 	/**
 	 * 
 	 * @return artifact collector
 	 */
-	public ArtifactCollector getArtifactCollector();
+	public DefaultArtifactCollector getArtifactCollector();
 	
 	/**
 	 * Called when exporter should start generating its output

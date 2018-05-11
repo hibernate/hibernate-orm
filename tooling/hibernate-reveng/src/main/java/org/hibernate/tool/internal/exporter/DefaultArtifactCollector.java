@@ -1,4 +1,4 @@
-package org.hibernate.tool.hbm2x;
+package org.hibernate.tool.internal.exporter;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.tool.hbm2x.ExporterException;
+import org.hibernate.tool.hbm2x.XMLPrettyPrinter;
+
 /**
  * Callback class that all exporters are given to allow better feedback and
  * processing of the output afterwards.
@@ -16,7 +19,7 @@ import java.util.Set;
  * @author Max Rydahl Andersen
  *
  */
-public class ArtifactCollector {
+public class DefaultArtifactCollector {
 
 	final protected Map<String, List<File>> files = new HashMap<String, List<File>>();
 

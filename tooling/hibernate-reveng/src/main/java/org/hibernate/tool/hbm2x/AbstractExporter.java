@@ -12,6 +12,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.internal.exporter.DefaultArtifactCollector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +31,7 @@ public abstract class AbstractExporter implements Exporter {
 	private String[] templatePaths = new String[0];
 	private TemplateHelper vh;
 	private Properties properties = new Properties();
-	private ArtifactCollector collector = new ArtifactCollector();
+	private DefaultArtifactCollector collector = new DefaultArtifactCollector();
 	private Metadata metadata = null;
 	private MetadataDescriptor metadataDescriptor = null;
 
@@ -79,11 +80,11 @@ public abstract class AbstractExporter implements Exporter {
 		return templatePaths;
 	}
 	
-	public void setArtifactCollector(ArtifactCollector collector) {
+	public void setArtifactCollector(DefaultArtifactCollector collector) {
 		this.collector = collector;
 	}
 	
-	public ArtifactCollector getArtifactCollector() {
+	public DefaultArtifactCollector getArtifactCollector() {
 		return collector;
 	}
 	

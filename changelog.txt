@@ -3,6 +3,28 @@ Hibernate 5.1 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changed in 5.1.14.Final (May 11, 2018)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/31650
+https://hibernate.atlassian.net/issues/?jql=project%20%3D%2010031%20AND%20fixVersion%20%3D%2031650%20ORDER%20BY%20priority%20DESC%2C%20key%20ASC
+
+** Bug
+    * [HHH-11615] - Envers integration tests fail when WildFly security manager is enabled
+    * [HHH-11617] - Statement leak in case of "SQLGrammarException: could not extract ResultSet"
+    * [HHH-11766] - Accessing lazy basic property on entity loaded from 2nd level cache throws exception
+    * [HHH-12226] - ObjectNotFoundException thrown when @NotFound(action = NotFoundAction.IGNORE) used with enhancement
+    * [HHH-12392] - Caching SchemaResolver delegate with multiple data sources
+    * [HHH-12418] - Cannot build integration guide
+    * [HHH-12423] - SecondaryTable is not taking into account the schema while mapping the entity
+    * [HHH-12439] - Merging of new entities can fail depending on cascade order
+    * [HHH-12507] - InsertOrderingWithCompositeTypeAssociation test fails on Oracle due to reserved word
+    * [HHH-12508] - SessionFactoryOptions#isSecondLevelCacheEnabled returns true by default with NoCachingRegionFactory
+    * [HHH-12512] - LazyGroupMappedByTestTask fails on Oracle (5.1)
+    * [HHH-12520] - NPE is thrown by CacheImpl#getSecondLevelCacheRegion
+
+** Task
+    * [HHH-12562] - Remove DefaultSchemaNameResolver#delegate since the value should not be cached
+
 Changed in 5.1.13.Final (March 19, 2018)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/31639

@@ -338,7 +338,11 @@ public abstract class AbstractEntityPersister
 	}
 
 	public String getDiscriminatorColumnReaderTemplate() {
-		return Template.TEMPLATE + "." + DISCRIMINATOR_ALIAS;
+		if ( getEntityMetamodel().getSubclassEntityNames().size() == 1 ) {
+			return getDiscriminatorSQLValue();
+		} else {
+			return Template.TEMPLATE + "." + DISCRIMINATOR_ALIAS;
+		}
 	}
 
 	protected String getDiscriminatorAlias() {

@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.cfg.Environment;
@@ -124,6 +125,10 @@ public abstract class AbstractServiceRegistryImpl
 			serviceBindingMap.put( providedService.getServiceRole(), binding );
 		}
 		registerService( binding, providedService.getService() );
+	}
+
+	protected void visitServiceBindings(Consumer<ServiceBinding> action) {
+		serviceBindingList.forEach( action );
 	}
 
 	@Override

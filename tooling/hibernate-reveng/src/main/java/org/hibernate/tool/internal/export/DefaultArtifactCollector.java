@@ -1,4 +1,4 @@
-package org.hibernate.tool.internal.exporter;
+package org.hibernate.tool.internal.export;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.tool.api.export.ArtifactCollector;
 import org.hibernate.tool.hbm2x.ExporterException;
 import org.hibernate.tool.hbm2x.XMLPrettyPrinter;
 
@@ -19,13 +20,14 @@ import org.hibernate.tool.hbm2x.XMLPrettyPrinter;
  * @author Max Rydahl Andersen
  *
  */
-public class DefaultArtifactCollector {
+public class DefaultArtifactCollector implements ArtifactCollector {
 
 	final protected Map<String, List<File>> files = new HashMap<String, List<File>>();
 
-	/**
-	 * Called to inform that a file has been created by the exporter.
+	/* (non-Javadoc)
+	 * @see org.hibernate.tool.internal.export.ArtifactCollector#addFile(java.io.File, java.lang.String)
 	 */
+	@Override
 	public void addFile(File file, String type) {
 		List<File> existing = files.get(type);
 		if (existing == null) {
@@ -35,12 +37,20 @@ public class DefaultArtifactCollector {
 		existing.add(file);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.hibernate.tool.internal.export.ArtifactCollector#getFileCount(java.lang.String)
+	 */
+	@Override
 	public int getFileCount(String type) {
 		List<File> existing = files.get(type);
 
 		return (existing == null) ? 0 : existing.size();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.hibernate.tool.internal.export.ArtifactCollector#getFiles(java.lang.String)
+	 */
+	@Override
 	public File[] getFiles(String type) {
 		List<File> existing = files.get(type);
 
@@ -51,10 +61,18 @@ public class DefaultArtifactCollector {
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see org.hibernate.tool.internal.export.ArtifactCollector#getFileTypes()
+	 */
+	@Override
 	public Set<String> getFileTypes() {
 		return files.keySet();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.hibernate.tool.internal.export.ArtifactCollector#formatFiles()
+	 */
+	@Override
 	public void formatFiles() {
 
 		formatXml("xml");

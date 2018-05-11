@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.hibernate.tool.internal.exporter.DefaultArtifactCollector;
+import org.hibernate.tool.api.export.ArtifactCollector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,9 +18,9 @@ public class TemplateProducer {
 
 	private static final Logger log = LoggerFactory.getLogger(TemplateProducer.class);
 	private final TemplateHelper th;
-	private DefaultArtifactCollector ac;
+	private ArtifactCollector ac;
 	
-	public TemplateProducer(TemplateHelper th, DefaultArtifactCollector ac) {
+	public TemplateProducer(TemplateHelper th, ArtifactCollector ac) {
 		this.th = th;
 		this.ac = ac;
 	}

@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.tools.ant.BuildException;
-import org.hibernate.tool.hbm2x.Exporter;
+import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.hbm2x.QueryExporter;
 import org.hibernate.internal.util.StringHelper;
 

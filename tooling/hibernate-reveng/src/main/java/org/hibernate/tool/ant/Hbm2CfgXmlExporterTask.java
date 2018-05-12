@@ -4,7 +4,7 @@
  */
 package org.hibernate.tool.ant;
 
-import org.hibernate.tool.hbm2x.Exporter;
+import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.hbm2x.HibernateConfigurationExporter;
 
 public class Hbm2CfgXmlExporterTask extends ExporterTask {

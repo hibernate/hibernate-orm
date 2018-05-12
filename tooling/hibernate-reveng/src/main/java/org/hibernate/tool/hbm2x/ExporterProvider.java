@@ -7,6 +7,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.tool.api.export.Exporter;
 
 public class ExporterProvider {
 	

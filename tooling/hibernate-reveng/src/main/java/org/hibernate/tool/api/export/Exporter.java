@@ -1,13 +1,12 @@
 /*
  * Created on 2004-12-01
  */
-package org.hibernate.tool.hbm2x;
+package org.hibernate.tool.api.export;
 
 import java.io.File;
 import java.util.Properties;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.tool.api.export.ArtifactCollector;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 
 /**

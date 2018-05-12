@@ -11,7 +11,7 @@ import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.types.Environment;
 import org.apache.tools.ant.types.Path;
 import org.apache.tools.ant.types.PropertySet;
-import org.hibernate.tool.hbm2x.Exporter;
+import org.hibernate.tool.api.export.Exporter;
 
 /**
  * @author max

@@ -1,7 +1,7 @@
 package org.hibernate.tool.ant;
 
+import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.hbm2x.DAOExporter;
-import org.hibernate.tool.hbm2x.Exporter;
 
 /**
  * @author Dennis Byrne

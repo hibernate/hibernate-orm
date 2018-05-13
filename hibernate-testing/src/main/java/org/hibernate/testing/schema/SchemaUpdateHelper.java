@@ -6,7 +6,6 @@
  */
 package org.hibernate.testing.schema;
 
-import java.io.FileWriter;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.Map;
@@ -15,6 +14,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.internal.build.AllowSysOut;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.spi.DelayedDropRegistryNotAvailableImpl;
@@ -39,6 +39,7 @@ public class SchemaUpdateHelper {
 		);
 	}
 
+	@AllowSysOut
 	public static void toStdout(Metadata metadata) {
 		toWriter( metadata, new OutputStreamWriter( System.out ) );
 	}

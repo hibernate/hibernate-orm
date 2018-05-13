@@ -328,7 +328,7 @@ task forbiddenApisSystemOut(type: CheckForbiddenApis, dependsOn: compileJava) {
 task forbiddenApisUnsafe(type: CheckForbiddenApis, dependsOn: compileJava) {
 	classesDirs = project.files( project.sourceSets.main.java.outputDir )
 	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
-	bundledSignatures += "jdk-unsafe-${project.targetCompatibility}".toString()
+	bundledSignatures += "jdk-unsafe-${baselineJavaVersion}".toString()
 
 	// unfortunately we currently have many uses of default Locale implicitly (~370) which need to be fixed
 	// before we can fully enabled this check

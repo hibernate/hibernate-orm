@@ -27,9 +27,7 @@ apply from: rootProject.file( 'gradle/databases.gradle' )
 
 apply plugin: 'java'
 apply plugin: 'osgi'
-//apply plugin: 'de.thetaphi.forbiddenapis'
 
-apply plugin: 'findbugs'
 apply plugin: 'checkstyle'
 apply plugin: 'build-dashboard'
 apply plugin: 'project-report'
@@ -347,53 +345,3 @@ task forbiddenApisNonPortable(type: CheckForbiddenApis, dependsOn: compileJava) 
 
 task forbiddenApis
 project.tasks.withType( CheckForbiddenApis ).each { task -> forbiddenApis.finalizedBy task }
-
-
-//if ( JavaVersion.current().isJava9Compatible() ) {
-//	logger.warn( '[WARN] Disabling findbugs, it does not support JDK 9' )
-//	findbugs {
-//		sourceSets = []
-//	}
-//}
-//else {
-//	findbugs {
-//		sourceSets = [project.sourceSets.main, project.sourceSets.test]
-//		ignoreFailures = true
-//		toolVersion = '3.0.1'
-//		// for now we need to set this to low so that FindBugs will actually report the DM_CONVERT_CASE warning we care about
-//		reportLevel = 'low'
-//		// remove all low level bug warnings except DM_CONVERT_CASE
-//		excludeFilterConfig = resources.text.fromString( excludeAllLowLevelBugsExcept( 'DM_CONVERT_CASE' ) )
-//	}
-//
-//	// exclude generated java sources and cfg package is a mess mainly from annotation stuff
-//	findbugsMain.doFirst {
-//		classes = classes.filter {
-//			!it.path.contains( 'org/hibernate/hql/internal/antlr' ) &&
-//					!it.path.contains( 'org/hibernate/boot/jaxb/cfg/spi' ) &&
-//					!it.path.contains( 'org/hibernate/sql/ordering/antlr/Generated' ) &&
-//					!it.path.contains( 'org/hibernate/sql/ordering/antlr/OrderByTemplateTokenTypes' ) &&
-//					!it.path.contains( 'org/hibernate/boot/jaxb/hbm/spi/Jaxb' ) &&
-//					!it.path.contains( 'org/hibernate/boot/jaxb/hbm/spi/Adapter' ) &&
-//					!it.path.contains( 'org/hibernate/boot/jaxb/hbm/spi/ObjectFactory' ) &&
-//					!it.path.contains( 'org/hibernate/cfg' ) &&
-//					!it.path.contains( '_\$logger' )
-//		}
-//	}
-//}
-//
-//def excludeAllLowLevelBugsExcept(String[] bugTypes){
-//	def writer = new StringWriter()
-//	def xml = new groovy.xml.MarkupBuilder(writer);
-//	xml.FindBugsFilter {
-//		Match {
-//			Confidence( value: '3' )
-//			bugTypes.each { bug ->
-//				Not {
-//					Bug( pattern: "${bug}" )
-//				}
-//			}
-//		}
-//	}
-//	return writer.toString(  )
-//}

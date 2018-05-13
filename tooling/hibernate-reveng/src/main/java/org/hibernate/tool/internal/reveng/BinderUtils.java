@@ -1,4 +1,4 @@
-package org.hibernate.cfg.binder;
+package org.hibernate.tool.internal.reveng;
 
 import java.util.ArrayList;
 import java.util.Collections;

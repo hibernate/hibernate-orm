@@ -345,3 +345,5 @@ task forbiddenApisNonPortable(type: CheckForbiddenApis, dependsOn: compileJava) 
 
 task forbiddenApis
 project.tasks.withType( CheckForbiddenApis ).each { task -> forbiddenApis.finalizedBy task }
+
+project.tasks.check.finalizedBy forbiddenApis

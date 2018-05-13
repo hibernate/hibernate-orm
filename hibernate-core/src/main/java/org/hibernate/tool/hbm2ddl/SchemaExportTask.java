@@ -23,6 +23,7 @@ import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.internal.build.AllowSysOut;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.tool.schema.Action;
@@ -193,6 +194,7 @@ public class SchemaExportTask extends MatchingTask {
 		}
 	}
 
+	@AllowSysOut
 	private void doExecution() throws Exception {
 		final BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
 		final StandardServiceRegistryBuilder ssrBuilder = new StandardServiceRegistryBuilder( bsr );

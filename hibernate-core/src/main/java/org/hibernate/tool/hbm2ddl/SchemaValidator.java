@@ -80,7 +80,6 @@ public class SchemaValidator {
 		}
 		catch (Exception e) {
 			LOG.unableToRunSchemaUpdate( e );
-			e.printStackTrace();
 		}
 	}
 

@@ -9,6 +9,7 @@ package org.hibernate.engine.jdbc.spi;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.build.AllowSysOut;
 
 import org.jboss.logging.Logger;
 
@@ -83,6 +84,7 @@ public class SqlStatementLogger {
 	 * @param statement The SQL statement.
 	 * @param formatter The formatter to use.
 	 */
+	@AllowSysOut
 	public void logStatement(String statement, Formatter formatter) {
 		if ( format ) {
 			if ( logToStdout || LOG.isDebugEnabled() ) {

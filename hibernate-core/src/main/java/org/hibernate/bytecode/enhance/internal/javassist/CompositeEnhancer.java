@@ -10,7 +10,6 @@ import javassist.CannotCompileException;
 import javassist.CtClass;
 
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.engine.spi.CompositeTracker;
@@ -71,7 +70,7 @@ public class CompositeEnhancer extends PersistentAttributesEnhancer {
 					EnhancerConstants.TRACKER_COMPOSITE_FIELD_NAME );
 		}
 		catch (CannotCompileException cce) {
-			cce.printStackTrace();
+			throw new RuntimeException( "createCompositeTrackerMethod failed", cce );
 		}
 	}
 

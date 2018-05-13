@@ -8,6 +8,8 @@ package org.hibernate.hql.internal.ast;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 
+import org.hibernate.internal.build.AllowPrintStacktrace;
+
 import antlr.SemanticException;
 
 /**
@@ -45,6 +47,7 @@ public class DetailedSemanticException extends SemanticException {
 	/**
 	 * Prints a stack trace.
 	 */
+	@AllowPrintStacktrace
 	public void printStackTrace() {
 		super.printStackTrace();
 		if ( cause != null ) {
@@ -57,6 +60,7 @@ public class DetailedSemanticException extends SemanticException {
 	 *
 	 * @param s the print stream.
 	 */
+	@AllowPrintStacktrace
 	public void printStackTrace(PrintStream s) {
 		super.printStackTrace( s );
 		if ( cause != null ) {

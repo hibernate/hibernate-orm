@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 
+import org.hibernate.internal.build.AllowSysOut;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 
 /**
@@ -27,6 +28,7 @@ public class ScriptTargetOutputToStdout extends AbstractScriptTargetOutput {
 	}
 
 	@Override
+	@AllowSysOut
 	public void prepare() {
 		super.prepare();
 		this.writer = new OutputStreamWriter( System.out );

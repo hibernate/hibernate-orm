@@ -6,6 +6,8 @@
  */
 package org.hibernate.tool.schema.internal.exec;
 
+import org.hibernate.internal.build.AllowSysOut;
+
 /**
  * GenerationTarget implementation for handling generation to System.out
  *
@@ -28,6 +30,7 @@ public class GenerationTargetToStdout implements GenerationTarget {
 	}
 
 	@Override
+	@AllowSysOut
 	public void accept(String command) {
 		if ( delimiter != null ) {
 			command += delimiter;

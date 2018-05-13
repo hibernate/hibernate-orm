@@ -4,6 +4,17 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
+
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath 'de.thetaphi:forbiddenapis:2.5'
+	}
+}
+
+import de.thetaphi.forbiddenapis.gradle.CheckForbiddenApis
 import org.apache.tools.ant.filters.ReplaceTokens
 
 /**
@@ -16,6 +27,7 @@ apply from: rootProject.file( 'gradle/databases.gradle' )
 
 apply plugin: 'java'
 apply plugin: 'osgi'
+//apply plugin: 'de.thetaphi.forbiddenapis'
 
 apply plugin: 'findbugs'
 apply plugin: 'checkstyle'
@@ -303,54 +315,85 @@ task nonFatalCheckstyle(type:Checkstyle) {
 	configFile = rootProject.file( 'shared/config/checkstyle/checkstyle-non-fatal.xml' )
 }
 
-if ( JavaVersion.current().isJava9Compatible() ) {
-	logger.warn( '[WARN] Disabling findbugs, it does not support JDK 9' )
-	findbugs {
-		sourceSets = []
-	}
-}
-else {
-	findbugs {
-		sourceSets = [project.sourceSets.main, project.sourceSets.test]
-		ignoreFailures = true
-		toolVersion = '3.0.1'
-		// for now we need to set this to low so that FindBugs will actually report the DM_CONVERT_CASE warning we care about
-		reportLevel = 'low'
-		// remove all low level bug warnings except DM_CONVERT_CASE
-		excludeFilterConfig = resources.text.fromString( excludeAllLowLevelBugsExcept( 'DM_CONVERT_CASE' ) )
-	}
-
-	// exclude generated java sources and cfg package is a mess mainly from annotation stuff
-	findbugsMain.doFirst {
-		classes = classes.filter {
-			!it.path.contains( 'org/hibernate/hql/internal/antlr' ) &&
-					!it.path.contains( 'org/hibernate/boot/jaxb/cfg/spi' ) &&
-					!it.path.contains( 'org/hibernate/sql/ordering/antlr/Generated' ) &&
-					!it.path.contains( 'org/hibernate/sql/ordering/antlr/OrderByTemplateTokenTypes' ) &&
-					!it.path.contains( 'org/hibernate/boot/jaxb/hbm/spi/Jaxb' ) &&
-					!it.path.contains( 'org/hibernate/boot/jaxb/hbm/spi/Adapter' ) &&
-					!it.path.contains( 'org/hibernate/boot/jaxb/hbm/spi/ObjectFactory' ) &&
-					!it.path.contains( 'org/hibernate/cfg' ) &&
-					!it.path.contains( '_\$logger' )
-		}
-	}
-}
 // because cfg package is a mess mainly from annotation stuff
 checkstyleMain.exclude '**/org/hibernate/cfg/**'
 checkstyleMain.exclude '**/org/hibernate/cfg/*'
 
-def excludeAllLowLevelBugsExcept(String[] bugTypes){
-	def writer = new StringWriter()
-	def xml = new groovy.xml.MarkupBuilder(writer);
-	xml.FindBugsFilter {
-		Match {
-			Confidence( value: '3' )
-			bugTypes.each { bug ->
-				Not {
-					Bug( pattern: "${bug}" )
-				}
-			}
-		}
-	}
-	return writer.toString(  )
+
+task forbiddenApisSystemOut(type: CheckForbiddenApis, dependsOn: compileJava) {
+	classesDirs = project.files( project.sourceSets.main.java.outputDir )
+	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
+	bundledSignatures += 'jdk-system-out'
+	suppressAnnotations += ['org.hibernate.internal.build.AllowSysOut', 'org.hibernate.internal.build.AllowPrintStacktrace']
 }
+
+task forbiddenApisUnsafe(type: CheckForbiddenApis, dependsOn: compileJava) {
+	classesDirs = project.files( project.sourceSets.main.java.outputDir )
+	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
+	bundledSignatures += "jdk-unsafe-${project.targetCompatibility}".toString()
+
+	// unfortunately we currently have many uses of default Locale implicitly (~370) which need to be fixed
+	// before we can fully enabled this check
+	//
+	// No idea how findbugs was missing these b4
+	ignoreFailures = true
+}
+
+task forbiddenApisNonPortable(type: CheckForbiddenApis, dependsOn: compileJava) {
+	classesDirs = project.files( project.sourceSets.main.java.outputDir )
+	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
+	bundledSignatures += 'jdk-non-portable'
+}
+
+task forbiddenApis
+project.tasks.withType( CheckForbiddenApis ).each { task -> forbiddenApis.finalizedBy task }
+
+
+//if ( JavaVersion.current().isJava9Compatible() ) {
+//	logger.warn( '[WARN] Disabling findbugs, it does not support JDK 9' )
+//	findbugs {
+//		sourceSets = []
+//	}
+//}
+//else {
+//	findbugs {
+//		sourceSets = [project.sourceSets.main, project.sourceSets.test]
+//		ignoreFailures = true
+//		toolVersion = '3.0.1'
+//		// for now we need to set this to low so that FindBugs will actually report the DM_CONVERT_CASE warning we care about
+//		reportLevel = 'low'
+//		// remove all low level bug warnings except DM_CONVERT_CASE
+//		excludeFilterConfig = resources.text.fromString( excludeAllLowLevelBugsExcept( 'DM_CONVERT_CASE' ) )
+//	}
+//
+//	// exclude generated java sources and cfg package is a mess mainly from annotation stuff
+//	findbugsMain.doFirst {
+//		classes = classes.filter {
+//			!it.path.contains( 'org/hibernate/hql/internal/antlr' ) &&
+//					!it.path.contains( 'org/hibernate/boot/jaxb/cfg/spi' ) &&
+//					!it.path.contains( 'org/hibernate/sql/ordering/antlr/Generated' ) &&
+//					!it.path.contains( 'org/hibernate/sql/ordering/antlr/OrderByTemplateTokenTypes' ) &&
+//					!it.path.contains( 'org/hibernate/boot/jaxb/hbm/spi/Jaxb' ) &&
+//					!it.path.contains( 'org/hibernate/boot/jaxb/hbm/spi/Adapter' ) &&
+//					!it.path.contains( 'org/hibernate/boot/jaxb/hbm/spi/ObjectFactory' ) &&
+//					!it.path.contains( 'org/hibernate/cfg' ) &&
+//					!it.path.contains( '_\$logger' )
+//		}
+//	}
+//}
+//
+//def excludeAllLowLevelBugsExcept(String[] bugTypes){
+//	def writer = new StringWriter()
+//	def xml = new groovy.xml.MarkupBuilder(writer);
+//	xml.FindBugsFilter {
+//		Match {
+//			Confidence( value: '3' )
+//			bugTypes.each { bug ->
+//				Not {
+//					Bug( pattern: "${bug}" )
+//				}
+//			}
+//		}
+//	}
+//	return writer.toString(  )
+//}

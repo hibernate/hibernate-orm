@@ -254,7 +254,6 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		}
 		catch (Exception e) {
 			LOG.debug( "Unexpected query compilation problem", e );
-			e.printStackTrace();
 			throw new QueryException( "Incorrect query syntax", queryString, e );
 		}
 

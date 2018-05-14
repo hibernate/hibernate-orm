@@ -4136,7 +4136,7 @@ public abstract class AbstractEntityPersister
 		// The loaders for the other lock modes are lazily loaded and will later be stored in this map,
 		//		unless this setting is disabled
 		if ( ! factory.getSessionFactoryOptions().isDelayBatchFetchLoaderCreationsEnabled() ) {
-			for ( LockMode lockMode : EnumSet.complementOf( EnumSet.of( LockMode.NONE, LockMode.READ ) ) ) {
+			for ( LockMode lockMode : EnumSet.complementOf( EnumSet.of( LockMode.NONE, LockMode.READ, LockMode.WRITE ) ) ) {
 				loaders.put( lockMode, createEntityLoader( lockMode ) );
 			}
 		}

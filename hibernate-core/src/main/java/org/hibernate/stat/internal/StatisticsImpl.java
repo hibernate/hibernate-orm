@@ -625,10 +625,12 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		return l2CacheStatsMap.computeIfAbsent(
 				regionName,
 				s -> {
-					final Region region = sessionFactory.getCache().getRegion( regionName );
+					Region region = sessionFactory.getCache().getRegion( regionName );
 
 					if ( region == null ) {
-						throw new IllegalArgumentException( "Unknown cache region : " + regionName );
+						// this is the pre-5.3 behavior.  and since this is a pre-5.3 method it should behave consistently
+						// NOTE that this method is deprecated
+						region = sessionFactory.getCache().getQueryResultsCache( regionName ).getRegion();
 					}
 
 					return new CacheRegionStatisticsImpl( region );
@@ -638,6 +640,9 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public CacheRegionStatisticsImpl getSecondLevelCacheStatistics(String regionName) {
+		if ( sessionFactory == null ) {
+			return null;
+		}
 		return getCacheRegionStatistics( sessionFactory.getCache().unqualifyRegionName( regionName ) );
 	}
 

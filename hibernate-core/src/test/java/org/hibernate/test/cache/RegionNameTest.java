@@ -82,6 +82,9 @@ public class RegionNameTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		final NaturalIdCacheStatistics naturalIdCacheStatistics = stats.getNaturalIdCacheStatistics( regionName );
 		assert naturalIdCacheStatistics != null;
+
+		final SecondLevelCacheStatistics dne = stats.getSecondLevelCacheStatistics( cachePrefix + ".does.not.exist" );
+		assert dne != null;
 	}
 
 	// todo (5.3) : any other API I can think of that deals with region-name?

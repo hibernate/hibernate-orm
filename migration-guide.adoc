@@ -6,7 +6,7 @@ earlier versions, see any other pertinent migration guides as well.
 
 == Background
 
-5.3 represents a JPA 2.2 compatible version on top of 5.2
+Hibernate 5.3 adds support for the JPA 2.2 specification
 
 
 == Known changes
@@ -107,6 +107,7 @@ change.
 
 The original driving force behind these series of changes is an effort to be as proactive as possible
 about designing compatibility between 5.3 and 6.0.
+
 
 ==== Type system changes
 

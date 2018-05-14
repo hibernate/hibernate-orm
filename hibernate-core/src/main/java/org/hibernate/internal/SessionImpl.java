@@ -52,6 +52,7 @@ import org.hibernate.Filter;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.IdentifierLoadAccess;
+import org.hibernate.JDBCException;
 import org.hibernate.LobHelper;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -3493,6 +3494,15 @@ public final class SessionImpl
 		}
 		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
 			throw exceptionConverter.convert( new IllegalArgumentException( e.getMessage(), e ) );
+		}
+		catch ( JDBCException e ) {
+			if ( accessTransaction().getRollbackOnly() ) {
+				// assume this is the similar to the WildFly / IronJacamar "feature" described under HHH-12472
+				return null;
+			}
+			else {
+				throw exceptionConverter.convert( e, lockOptions );
+			}
 		}
 		catch ( RuntimeException e ) {
 			throw exceptionConverter.convert( e, lockOptions );

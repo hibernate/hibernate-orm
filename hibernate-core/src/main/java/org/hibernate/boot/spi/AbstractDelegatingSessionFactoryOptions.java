@@ -6,6 +6,10 @@
  */
 package org.hibernate.boot.spi;
 
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.function.Supplier;
+
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityMode;
@@ -30,10 +34,6 @@ import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
-
-import java.util.Map;
-import java.util.TimeZone;
-import java.util.function.Supplier;
 
 /**
  * Convenience base class for custom implementors of SessionFactoryOptions, using delegation
@@ -170,6 +170,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public BatchFetchStyle getBatchFetchStyle() {
 		return delegate.getBatchFetchStyle();
+	}
+
+	@Override
+	public boolean isDelayBatchFetchLoaderCreationsEnabled() {
+		return delegate.isDelayBatchFetchLoaderCreationsEnabled();
 	}
 
 	@Override

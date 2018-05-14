@@ -82,6 +82,7 @@ import static org.hibernate.cfg.AvailableSettings.CRITERIA_LITERAL_HANDLING_MODE
 import static org.hibernate.cfg.AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_BATCH_FETCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_ENTITY_MODE;
+import static org.hibernate.cfg.AvailableSettings.DELAY_ENTITY_LOADER_CREATIONS;
 import static org.hibernate.cfg.AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS;
 import static org.hibernate.cfg.AvailableSettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH;
 import static org.hibernate.cfg.AvailableSettings.FLUSH_BEFORE_COMPLETION;
@@ -183,6 +184,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private MultiTableBulkIdStrategy multiTableBulkIdStrategy;
 	private TempTableDdlTransactionHandling tempTableDdlTransactionHandling;
 	private BatchFetchStyle batchFetchStyle;
+	private boolean delayBatchFetchLoaderCreations;
 	private int defaultBatchFetchSize;
 	private Integer maximumFetchDepth;
 	private NullPrecedence defaultNullPrecedence;
@@ -324,6 +326,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		);
 
 		this.batchFetchStyle = BatchFetchStyle.interpret( configurationSettings.get( BATCH_FETCH_STYLE ) );
+		this.delayBatchFetchLoaderCreations = cfgService.getSetting( DELAY_ENTITY_LOADER_CREATIONS, BOOLEAN, true );
 		this.defaultBatchFetchSize = ConfigurationHelper.getInt( DEFAULT_BATCH_FETCH_SIZE, configurationSettings, -1 );
 		this.maximumFetchDepth = ConfigurationHelper.getInteger( MAX_FETCH_DEPTH, configurationSettings );
 		final String defaultNullPrecedence = ConfigurationHelper.getString(
@@ -774,6 +777,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	public boolean isDelayBatchFetchLoaderCreationsEnabled() {
+		return delayBatchFetchLoaderCreations;
+	}
+
+	@Override
 	public int getDefaultBatchFetchSize() {
 		return defaultBatchFetchSize;
 	}
@@ -1110,6 +1118,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.batchFetchStyle = style;
 	}
 
+	public void applyDelayedEntityLoaderCreations(boolean delay) {
+		this.delayBatchFetchLoaderCreations = delay;
+	}
+
 	public void applyDefaultBatchFetchSize(int size) {
 		this.defaultBatchFetchSize = size;
 	}
@@ -1300,5 +1312,4 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		return this;
 	}
-
 }

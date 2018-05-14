@@ -6,6 +6,9 @@
  */
 package org.hibernate.boot.spi;
 
+import java.util.Map;
+import java.util.function.Supplier;
+
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityMode;
@@ -27,9 +30,6 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
-
-import java.util.Map;
-import java.util.function.Supplier;
 
 /**
  * Convenience base class for custom implementors of SessionFactoryBuilder, using delegation
@@ -190,6 +190,12 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	@Override
 	public T applyBatchFetchStyle(BatchFetchStyle style) {
 		delegate.applyBatchFetchStyle( style );
+		return getThis();
+	}
+
+	@Override
+	public SessionFactoryBuilder applyDelayedEntityLoaderCreations(boolean delay) {
+		delegate.applyDelayedEntityLoaderCreations( delay );
 		return getThis();
 	}
 

@@ -7,7 +7,6 @@
 package org.hibernate.cfg;
 
 import java.util.function.Supplier;
-
 import javax.persistence.GeneratedValue;
 
 import org.hibernate.HibernateException;
@@ -1561,6 +1560,20 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String BATCH_FETCH_STYLE = "hibernate.batch_fetch_style";
 
 	/**
+	 * Controls how the individual Loaders for an entity are created.
+	 *
+	 * When `true` (the default), only the minimal set of Loaders are
+	 * created.  These include the handling for {@link org.hibernate.LockMode#READ}
+	 * and {@link org.hibernate.LockMode#NONE} as well as specialized Loaders for
+	 * merge and refresh handling.
+	 *
+	 * `false` indicates that all loaders should be created up front
+	 *
+	 * @since 5.3
+	 */
+	String DELAY_ENTITY_LOADER_CREATIONS = "hibernate.loader.delay_entity_loader_creations";
+
+	/**
 	 * A transaction can be rolled back by another thread ("tracking by thread")
 	 * -- not the original application. Examples of this include a JTA
 	 * transaction timeout handled by a background reaper thread.  The ability
@@ -1922,4 +1935,5 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * @since 5.2.17
 	 */
 	String IN_CLAUSE_PARAMETER_PADDING = "hibernate.query.in_clause_parameter_padding";
+
 }

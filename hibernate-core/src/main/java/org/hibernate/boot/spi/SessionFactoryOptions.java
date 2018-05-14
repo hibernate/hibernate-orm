@@ -161,6 +161,8 @@ public interface SessionFactoryOptions {
 
 	BatchFetchStyle getBatchFetchStyle();
 
+	boolean isDelayBatchFetchLoaderCreationsEnabled();
+
 	int getDefaultBatchFetchSize();
 
 	Integer getMaximumFetchDepth();

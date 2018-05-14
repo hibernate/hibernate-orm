@@ -14,11 +14,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -4113,7 +4115,12 @@ public abstract class AbstractEntityPersister
 	protected void doPostInstantiate() {
 	}
 
-	//needed by subclasses to override the createLoader strategy
+	/**
+	 * "Needed" by subclasses to override the createLoader strategy
+	 *
+	 * @deprecated Because there are better patterns for this
+	 */
+	@Deprecated
 	protected Map getLoaders() {
 		return loaders;
 	}
@@ -4125,9 +4132,17 @@ public abstract class AbstractEntityPersister
 		noneLockLoader = createEntityLoader( LockMode.NONE );
 		readLockLoader = createEntityLoader( LockMode.READ );
 
-		final Map loaders = getLoaders();
 
-		// The loaders for the other lock modes are lazily loaded and will later be stored in this map.
+		// The loaders for the other lock modes are lazily loaded and will later be stored in this map,
+		//		unless this setting is disabled
+		if ( ! factory.getSessionFactoryOptions().isDelayBatchFetchLoaderCreationsEnabled() ) {
+			for ( LockMode lockMode : EnumSet.complementOf( EnumSet.of( LockMode.NONE, LockMode.READ ) ) ) {
+				loaders.put( lockMode, createEntityLoader( lockMode ) );
+			}
+		}
+
+
+		// And finally, create the internal merge and refresh load plans
 
 		loaders.put(
 				"merge",
@@ -4147,10 +4162,10 @@ public abstract class AbstractEntityPersister
 			return readLockLoader;
 		}
 
-		return loaders.computeIfAbsent( lockMode, this::createLazyLoadedEntityLoader );
+		return loaders.computeIfAbsent( lockMode, this::generateDelayedEntityLoader );
 	}
 
-	private UniqueEntityLoader createLazyLoadedEntityLoader(Object lockModeObject) {
+	private UniqueEntityLoader generateDelayedEntityLoader(Object lockModeObject) {
 		// Unfortunately, the loaders map mixes LockModes and Strings as keys so we need to accept an Object.
 		// The cast is safe as we will always call this method with a LockMode.
 		LockMode lockMode = (LockMode) lockModeObject;
@@ -4159,23 +4174,26 @@ public abstract class AbstractEntityPersister
 			case NONE:
 			case READ:
 			case OPTIMISTIC:
-			case OPTIMISTIC_FORCE_INCREMENT:
+			case OPTIMISTIC_FORCE_INCREMENT: {
 				return createEntityLoader( lockMode );
+			}
 			case UPGRADE:
 			case UPGRADE_NOWAIT:
 			case UPGRADE_SKIPLOCKED:
 			case FORCE:
 			case PESSIMISTIC_READ:
 			case PESSIMISTIC_WRITE:
-			case PESSIMISTIC_FORCE_INCREMENT:
+			case PESSIMISTIC_FORCE_INCREMENT: {
 				//TODO: inexact, what we really need to know is: are any outer joins used?
-				boolean disableForUpdate = getSubclassTableSpan() > 1 &&
-						hasSubclasses() &&
-						!getFactory().getDialect().supportsOuterJoinForUpdate();
+				boolean disableForUpdate = getSubclassTableSpan() > 1
+						&& hasSubclasses()
+						&& !getFactory().getDialect().supportsOuterJoinForUpdate();
 
 				return disableForUpdate ? readLockLoader : createEntityLoader( lockMode );
-			default:
-				throw new IllegalStateException( String.format( "Lock mode %1$s not supported by entity loaders.", lockMode ) );
+			}
+			default: {
+				throw new IllegalStateException( String.format( Locale.ROOT, "Lock mode %1$s not supported by entity loaders.", lockMode ) );
+			}
 		}
 	}
 
@@ -4258,7 +4276,7 @@ public abstract class AbstractEntityPersister
 			// Next, we consider whether an 'internal' fetch profile has been set.
 			// This indicates a special fetch profile Hibernate needs applied
 			// (for its merge loading process e.g.).
-			return (UniqueEntityLoader) getLoaders().get( session.getLoadQueryInfluencers().getInternalFetchProfile() );
+			return loaders.get( session.getLoadQueryInfluencers().getInternalFetchProfile() );
 		}
 		else if ( isAffectedByEnabledFetchProfiles( session ) ) {
 			// If the session has associated influencers we need to adjust the
@@ -4272,7 +4290,7 @@ public abstract class AbstractEntityPersister
 			return createEntityLoader( lockOptions, session.getLoadQueryInfluencers() );
 		}
 		else {
-			return (UniqueEntityLoader) getLoaderByLockMode( lockOptions.getLockMode() );
+			return getLoaderByLockMode( lockOptions.getLockMode() );
 		}
 	}
 

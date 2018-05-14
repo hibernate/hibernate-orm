@@ -6,6 +6,9 @@
  */
 package org.hibernate.boot;
 
+import java.util.Map;
+import java.util.function.Supplier;
+
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityMode;
@@ -26,9 +29,6 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
-
-import java.util.Map;
-import java.util.function.Supplier;
 
 /**
  * The contract for building a {@link org.hibernate.SessionFactory} given a number of options.
@@ -302,6 +302,14 @@ public interface SessionFactoryBuilder {
 	 * @see org.hibernate.cfg.AvailableSettings#BATCH_FETCH_STYLE
 	 */
 	SessionFactoryBuilder applyBatchFetchStyle(BatchFetchStyle style);
+
+	/**
+	 * Should entity Loaders be generated immediately?  Or should the creation
+	 * be delayed until first need?
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#DELAY_ENTITY_LOADER_CREATIONS
+	 */
+	SessionFactoryBuilder applyDelayedEntityLoaderCreations(boolean delay);
 
 	/**
 	 * Allows specifying a default batch-fetch size for all entities and collections

@@ -340,7 +340,8 @@ public abstract class AbstractEntityPersister
 	public String getDiscriminatorColumnReaderTemplate() {
 		if ( getEntityMetamodel().getSubclassEntityNames().size() == 1 ) {
 			return getDiscriminatorSQLValue();
-		} else {
+		}
+		else {
 			return Template.TEMPLATE + "." + DISCRIMINATOR_ALIAS;
 		}
 	}

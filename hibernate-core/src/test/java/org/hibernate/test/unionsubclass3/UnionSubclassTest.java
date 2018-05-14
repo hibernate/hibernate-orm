@@ -6,10 +6,6 @@
  */
 package org.hibernate.test.unionsubclass3;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.query.Query;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -22,8 +18,6 @@ import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.ManyToOne;
-
-import org.hibernate.test.locking.A;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
@@ -81,8 +75,7 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 			session.persist(child2);
 			session.persist(child3);
 			session.persist(child4);
-		} );
-
+		});
 		doInHibernate( this::sessionFactory, session -> {
 			List results = session.createQuery(
 				"select c " +
@@ -95,6 +88,19 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 				+ "  	(TYPE(p2) = Mother and p2.mothersDay = 'MD1')")
 			.getResultList();
 			assertEquals(2, results.size());
+		} );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12565" )
+	public void typeOfLeafTPC() {
+		doInHibernate( this::sessionFactory, session -> {
+			List results = session.createQuery(
+					"select TYPE(f) " +
+							"from Father f" +
+							" where f.id = -1")
+					.getResultList();
+			assertEquals(0, results.size());
 		} );
 	}
 

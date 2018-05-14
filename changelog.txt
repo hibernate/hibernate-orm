@@ -5,6 +5,55 @@ Note: Please refer to JIRA to learn more about each issue.
 
 
 
+Changes in 5.3.0.Final (May 14, 2018)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31661/tab/release-report-done
+
+** Bug
+    * [HHH-8786] - find, refresh, lock should throw LockTimeoutException or PessimisticLockException when lock problems occur
+    * [HHH-10435] - ClassLoaderServiceImpl is getting a Permission check failed "createClassLoader" when run under Java security manager
+    * [HHH-11859] -  Class annotated with @Audited (withModifiedFlag = true) is giving error when executing update.
+    * [HHH-12011] - Field annotated with target TYPE_USE break metamodel generation
+    * [HHH-12090] - PropertyAccessBuildingException: Could not locate setter for property named XXX for Java 8 default methods
+    * [HHH-12199] - Static fields should be ignored when resolving property type via reflection
+    * [HHH-12362] - Allow both SQL query hints and comments
+    * [HHH-12470] - Batching statements fails for delete
+    * [HHH-12517] - Incorrect method references in @deprecated elements of the Query javadoc
+    * [HHH-12529] - Some StatisticsImpl methods throw an exception instead of returning null
+    * [HHH-12534] - SAP HANA dialects use unqualified dummy table in queries
+    * [HHH-12535] - SAP HANA dialect doesn't support circular cascade delete constraints
+    * [HHH-12539] - NPE in AbstractPropertyMapping.getCommonPersistentClass when creating UnionSubclassEntityPersister for dynamic-map
+    * [HHH-12540] - Reusing same EntityTransaction with JTA enabled
+    * [HHH-12546] - locate function doesn't work on SAP HANA
+    * [HHH-12565] - Can't use TYPE function on leaf subtype of a table per class inheritance hierarchy
+
+** New Feature
+    * [HHH-12505] - Option to disable scanning of entity mapping metadata
+
+** Task
+    * [HHH-12316] - Document usage of the new Feature Packs
+    * [HHH-12503] - Finalize 5.3 Migration Guide
+    * [HHH-12519] - Use Forbidden APIs library (Gradle plugin) to check our use of APIs
+    * [HHH-12527] - Verify that all binary compatibility breaks between 5.1 and 5.3 are accounted for
+    * [HHH-12530] - Add processing of unknown hints
+    * [HHH-12545] - ByteBuddy based enhancer not accepting special character in description names
+    * [HHH-12554] - Make ByteBuddy EnhancerImpl more closely match the semantics described in Enhancer javadoc
+    * [HHH-12562] - Remove DefaultSchemaNameResolver#delegate since the value should not be cached
+
+** Improvement
+    * [HHH-12463] - Delegate CustomType#equals/hashCode to wrapped UserType
+    * [HHH-12472] - WildFly (IronJacamar) - EntityManager#find with roll-back-only leads to exception rather than return null
+    * [HHH-12537] - Query hint test for SAP HANA
+    * [HHH-12541] - Test for SAP HANA calculation views
+    * [HHH-12544] - Add jipijapa hook to plug in specialized caching and transaction services
+    * [HHH-12556] - Share data structures between similar LoadPlan based EntityLoaders
+    * [HHH-12558] - Lazy load EntityLoaders to improve memory usage
+    * [HHH-12560] - Make sure only one Service registration (initiator/provided) exists per role
+    * [HHH-12570] - MariaDB 10.3 adds support for lock timeouts via WAIT plus NOWAIT
+
+
+
 Changes in 5.3.0.CR2 (April 27, 2018)
 ------------------------------------------------------------------------------------------------------------------------
 

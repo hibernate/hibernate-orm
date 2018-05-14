@@ -8,7 +8,6 @@ package org.hibernate.internal;
 
 import java.io.Serializable;
 import java.sql.SQLException;
-
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.LockTimeoutException;
@@ -34,6 +33,7 @@ import org.hibernate.dialect.lock.OptimisticEntityLockException;
 import org.hibernate.dialect.lock.PessimisticEntityLockException;
 import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.loader.MultipleBagFetchException;
 
 /**
@@ -89,12 +89,12 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( cause instanceof LockingStrategyException ) {
+		else if ( cause instanceof LockAcquisitionException ) {
 			final PersistenceException converted = wrapLockException( (HibernateException) cause, lockOptions );
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( cause instanceof org.hibernate.exception.LockTimeoutException ) {
+		else if ( cause instanceof LockingStrategyException ) {
 			final PersistenceException converted = wrapLockException( (HibernateException) cause, lockOptions );
 			handlePersistenceException( converted );
 			return converted;

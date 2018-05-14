@@ -14,11 +14,8 @@ import javax.persistence.PessimisticLockException;
 import org.hibernate.LockOptions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.SQLServerDialect;
 
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
 import org.hibernate.testing.transaction.TransactionUtil2;
@@ -31,9 +28,6 @@ import static org.junit.Assert.fail;
 /**
  * @author Steve Ebersole
  */
-@SkipForDialects(
-		@SkipForDialect( value = MariaDBDialect.class, jiraKey = "HHH-8786", comment = "https://hibernate.atlassian.net/browse/HHH-8786")
-)
 public class LockExceptionTests extends AbstractJPATest {
 	@Override
 	public void configure(Configuration cfg) {
@@ -76,6 +70,9 @@ public class LockExceptionTests extends AbstractJPATest {
 						);
 					}
 			);
+		}
+		catch (Exception e) {
+			e.printStackTrace();
 		}
 		finally {
 			inTransaction(

@@ -207,6 +207,7 @@ tasks.withType( Test.class ).all { task ->
 }
 
 processTestResources {
+	inputs.property( "db", db )
 	doLast {
 		copy {
 			from( sourceSets.test.java.srcDirs ) {

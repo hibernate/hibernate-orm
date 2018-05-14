@@ -104,6 +104,7 @@ public class EntityTypeQueryTest extends BaseEnversJPAFunctionalTestCase {
 		List<?> list = getAuditReader().createQuery().forEntitiesAtRevision( EntityA.class, 1 )
 				.add( AuditEntity.entityType( EntityB.class ) )
 				.addProjection( AuditEntity.property( "name" ) )
+				.addOrder( AuditEntity.property( "name" ).asc() )
 				.getResultList();
 		assertEquals( "Expected only entities of type EntityB to be selected", list( "b1", "b2" ), list );
 	}
@@ -113,6 +114,7 @@ public class EntityTypeQueryTest extends BaseEnversJPAFunctionalTestCase {
 		List<?> list = getAuditReader().createQuery().forEntitiesAtRevision( EntityA.class, 1 )
 				.add( AuditEntity.entityType( EntityA.class ) )
 				.addProjection( AuditEntity.property( "name" ) )
+				.addOrder( AuditEntity.property( "name" ).asc() )
 				.getResultList();
 		assertEquals( "Expected only entities of type EntityA to be selected", list( "a1", "a2" ), list );
 	}

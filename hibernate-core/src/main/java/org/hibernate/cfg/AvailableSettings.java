@@ -1650,7 +1650,10 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * {@link org.hibernate.procedure.ParameterRegistration#enablePassingNulls(boolean)}
 	 * <p/>
 	 * Values are {@code true} (pass the NULLs) or {@code false} (do not pass the NULLs).
+	 *
+	 * @deprecated (5.3) Hibernate determines it implicitly
 	 */
+	@Deprecated
 	String PROCEDURE_NULL_PARAM_PASSING = "hibernate.proc.param_null_passing";
 
 	/**

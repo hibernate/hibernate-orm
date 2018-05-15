@@ -1,10 +1,9 @@
-package org.hibernate.cfg.binder;
+package org.hibernate.tool.internal.reveng;
 
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
-import org.hibernate.tool.internal.reveng.MetaAttributesBinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

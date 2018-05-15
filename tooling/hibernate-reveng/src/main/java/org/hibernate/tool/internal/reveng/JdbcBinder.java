@@ -24,7 +24,6 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.binder.PropertyBinder;
 import org.hibernate.cfg.reveng.JDBCReader;
 import org.hibernate.cfg.reveng.MappingsDatabaseCollector;
 import org.hibernate.cfg.reveng.RevEngUtils;

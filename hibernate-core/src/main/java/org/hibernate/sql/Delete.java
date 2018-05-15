@@ -9,11 +9,17 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.hibernate.annotations.Remove;
+
 /**
  * An SQL <tt>DELETE</tt> statement
  *
  * @author Gavin King
+ *
+ * @deprecated Converting to use SQL AST
  */
+@Deprecated
+@Remove
 public class Delete {
 
 	private String tableName;

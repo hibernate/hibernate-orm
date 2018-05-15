@@ -7,12 +7,13 @@
 package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.JavaTypeMapping;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.PrimitiveType;
+import org.hibernate.collection.internal.StandardArraySemantics;
+import org.hibernate.collection.spi.CollectionSemantics;
+import org.hibernate.type.descriptor.java.spi.Primitive;
 
 /**
  * An array mapping has a primary key consisting of the key columns + index column.
@@ -21,29 +22,28 @@ import org.hibernate.type.PrimitiveType;
  */
 public class Array extends List {
 	private String elementClassName;
-
-	/**
-	 * @deprecated Use {@link Array#Array(MetadataBuildingContext, PersistentClass)} instead.
-	 */
-	@Deprecated
-	public Array(MetadataImplementor metadata, PersistentClass owner) {
-		super( metadata, owner );
-	}
+	private final CollectionJavaTypeMapping javaTypeMapping;
 
 	public Array(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
+
+		javaTypeMapping = new CollectionJavaTypeMapping(
+				buildingContext.getBootstrapContext().getTypeConfiguration(),
+				Object[].class
+		);
+
 	}
 
 	public Class getElementClass() throws MappingException {
 		if ( elementClassName == null ) {
-			org.hibernate.type.Type elementType = getElement().getType();
 			return isPrimitiveArray()
-					? ( (PrimitiveType) elementType ).getPrimitiveClass()
-					: elementType.getReturnedClass();
+					? ( (Primitive) getElement().getJavaTypeMapping().getJavaTypeDescriptor() ).getPrimitiveClass()
+					: getElement().getJavaTypeMapping().getJavaTypeDescriptor().getJavaType();
 		}
 		else {
 			try {
-				return getMetadata().getMetadataBuildingOptions()
+				return getMetadataBuildingContext()
+						.getBuildingOptions()
 						.getServiceRegistry()
 						.getService( ClassLoaderService.class )
 						.classForName( elementClassName );
@@ -52,13 +52,6 @@ public class Array extends List {
 				throw new MappingException( e );
 			}
 		}
-	}
-
-	@Override
-	public CollectionType getDefaultCollectionType() throws MappingException {
-		return getMetadata().getTypeResolver()
-				.getTypeFactory()
-				.array( getRole(), getReferencedPropertyName(), getElementClass() );
 	}
 
 	@Override
@@ -83,5 +76,16 @@ public class Array extends List {
 	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept( this );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public CollectionSemantics getCollectionSemantics() {
+		return StandardArraySemantics.INSTANCE;
+	}
+
+	@Override
+	public JavaTypeMapping getJavaTypeMapping() {
+		return javaTypeMapping;
 	}
 }

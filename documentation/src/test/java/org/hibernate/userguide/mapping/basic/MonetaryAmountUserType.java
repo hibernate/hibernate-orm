@@ -17,7 +17,7 @@ import java.util.Currency;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.usertype.CompositeUserType;
 
@@ -31,7 +31,7 @@ public class MonetaryAmountUserType implements CompositeUserType {
 	}
 
 	public Type[] getPropertyTypes() {
-		return new Type[]{ StandardBasicTypes.BIG_DECIMAL, StandardBasicTypes.CURRENCY };
+		return new Type[]{ StandardSpiBasicTypes.BIG_DECIMAL, StandardSpiBasicTypes.CURRENCY };
 	}
 
 	public Object getPropertyValue(Object component, int property) throws HibernateException {
@@ -69,8 +69,8 @@ public class MonetaryAmountUserType implements CompositeUserType {
 
 	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException, SQLException {
-		BigDecimal amt = StandardBasicTypes.BIG_DECIMAL.nullSafeGet( rs, names[0], session);
-		Currency cur = StandardBasicTypes.CURRENCY.nullSafeGet( rs, names[1], session );
+		BigDecimal amt = StandardSpiBasicTypes.BIG_DECIMAL.nullSafeGet( rs, names[0], session);
+		Currency cur = StandardSpiBasicTypes.CURRENCY.nullSafeGet( rs, names[1], session );
 		if ( amt == null ) return null;
 		return new MonetaryAmount( amt, cur );
 	}
@@ -82,8 +82,8 @@ public class MonetaryAmountUserType implements CompositeUserType {
 		MonetaryAmount ma = (MonetaryAmount) value;
 		BigDecimal amt = ma == null ? null : ma.getAmount();
 		Currency cur = ma == null ? null : ma.getCurrency();
-		StandardBasicTypes.BIG_DECIMAL.nullSafeSet( st, amt, index, session );
-		StandardBasicTypes.CURRENCY.nullSafeSet( st, cur, index + 1, session );
+		StandardSpiBasicTypes.BIG_DECIMAL.nullSafeSet( st, amt, index, session );
+		StandardSpiBasicTypes.CURRENCY.nullSafeSet( st, cur, index + 1, session );
 	}
 
 	public Object deepCopy(Object value) throws HibernateException {

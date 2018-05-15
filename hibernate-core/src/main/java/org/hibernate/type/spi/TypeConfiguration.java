@@ -8,12 +8,9 @@ package org.hibernate.type.spi;
 
 import java.io.InvalidObjectException;
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.HibernateException;
@@ -21,21 +18,24 @@ import org.hibernate.Incubating;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
-import org.hibernate.boot.spi.BasicTypeRegistration;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.uuid.LocalObjectUuidHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
-import org.hibernate.metamodel.internal.MetamodelImpl;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationProcess;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.BasicTypeRegistry;
-import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
-import org.hibernate.type.TypeResolver;
+import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
+import org.hibernate.query.sqm.tree.expression.SqmLiteral;
+import org.hibernate.sql.SqlExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 import org.hibernate.type.internal.TypeConfigurationRegistry;
 
@@ -66,28 +66,25 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	private final String uuid = LocalObjectUuidHelper.generateLocalObjectUuid();
 
 	private final Scope scope;
-	private final transient TypeFactory typeFactory;
+	private boolean initialized;
 
 	// things available during both boot and runtime ("active") lifecycle phases
 	private final transient JavaTypeDescriptorRegistry javaTypeDescriptorRegistry;
 	private final transient SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry;
 	private final transient BasicTypeRegistry basicTypeRegistry;
 
-	private final transient Map<String,String> importMap = new ConcurrentHashMap<>();
-
-	private final transient Map<Integer, Set<String>> jdbcToHibernateTypeContributionMap = new HashMap<>();
-
-	// temporarily needed to support deprecations
-	private final transient TypeResolver typeResolver;
+	private final transient Map<SqlTypeDescriptor,Map<BasicJavaDescriptor, SqlExpressableType>> jdbcValueMapperCache = new ConcurrentHashMap<>();
 
 	public TypeConfiguration() {
 		this.scope = new Scope();
+
 		this.javaTypeDescriptorRegistry = new JavaTypeDescriptorRegistry( this );
 		this.sqlTypeDescriptorRegistry = new SqlTypeDescriptorRegistry( this );
 
-		this.basicTypeRegistry = new BasicTypeRegistry();
-		this.typeFactory = new TypeFactory( this );
-		this.typeResolver = new TypeResolver( this, typeFactory );
+		this.basicTypeRegistry = new BasicTypeRegistry( this );
+		StandardBasicTypes.prime( this );
+
+		this.initialized = true;
 
 		TypeConfigurationRegistry.INSTANCE.registerTypeConfiguration( this );
 	}
@@ -96,40 +93,36 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return uuid;
 	}
 
-	/**
-	 * Temporarily needed to support deprecations
-	 *
-	 * Retrieve the {@link Type} resolver associated with this factory.
-	 *
-	 * @return The type resolver
-	 *
-	 * @deprecated (since 5.3) No replacement, access to and handling of Types will be much different in 6.0
-	 */
-	@Deprecated
-	public TypeResolver getTypeResolver(){
-		return typeResolver;
+	public JavaTypeDescriptorRegistry getJavaTypeDescriptorRegistry() {
+		if ( !initialized ) {
+			throw new IllegalStateException( "TypeConfiguration initialization incomplete; not yet ready for access" );
+		}
+		return javaTypeDescriptorRegistry;
+	}
+
+	public SqlTypeDescriptorRegistry getSqlTypeDescriptorRegistry() {
+		if ( !initialized ) {
+			throw new IllegalStateException( "TypeConfiguration initialization incomplete; not yet ready for access" );
+		}
+		return sqlTypeDescriptorRegistry;
 	}
 
 	public BasicTypeRegistry getBasicTypeRegistry() {
 		return basicTypeRegistry;
 	}
 
+	public SqlExpressableType resolveJdbcValueMapper(
+			SqlTypeDescriptor sqlTypeDescriptor,
+			BasicJavaDescriptor javaDescriptor,
+			java.util.function.Function<BasicJavaDescriptor, SqlExpressableType> creator) {
+		final Map<BasicJavaDescriptor, SqlExpressableType> cacheForSqlType = jdbcValueMapperCache.computeIfAbsent(
+				sqlTypeDescriptor,
+				x -> new ConcurrentHashMap<>()
+		);
 
-	public JavaTypeDescriptorRegistry getJavaTypeDescriptorRegistry() {
-		return javaTypeDescriptorRegistry;
+		return cacheForSqlType.computeIfAbsent( javaDescriptor, x -> creator.apply( javaDescriptor ) );
 	}
 
-	public SqlTypeDescriptorRegistry getSqlTypeDescriptorRegistry() {
-		return sqlTypeDescriptorRegistry;
-	}
-
-	public Map<String, String> getImportMap() {
-		return Collections.unmodifiableMap( importMap );
-	}
-
-	public Map<Integer, Set<String>> getJdbcToHibernateTypeContributionMap() {
-		return jdbcToHibernateTypeContributionMap;
-	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Scoping
@@ -141,8 +134,6 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 * @apiNote This will throw an exception if the SessionFactory is not yet
 	 * bound here.  See {@link Scope} for more details regarding the stages
 	 * a TypeConfiguration goes through
-	 *
-	 * @return
 	 */
 	public MetadataBuildingContext getMetadataBuildingContext() {
 		return scope.getMetadataBuildingContext();
@@ -153,20 +144,18 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		scope.setMetadataBuildingContext( metadataBuildingContext );
 	}
 
-	public MetamodelImplementor scope(SessionFactoryImplementor sessionFactory) {
+	public MetamodelImplementor scope(SessionFactoryImplementor sessionFactory, BootstrapContext bootstrapContext) {
+		assert scope.metadataBuildingContext != null;
 		log.debugf( "Scoping TypeConfiguration [%s] to SessionFactoryImpl [%s]", this, sessionFactory );
-
-		for ( Map.Entry<String, String> importEntry : scope.metadataBuildingContext.getMetadataCollector().getImports().entrySet() ) {
-			if ( importMap.containsKey( importEntry.getKey() ) ) {
-				continue;
-			}
-
-			importMap.put( importEntry.getKey(), importEntry.getValue() );
-		}
-
 		scope.setSessionFactory( sessionFactory );
 		sessionFactory.addObserver( this );
-		return new MetamodelImpl( sessionFactory, this );
+		log.debugf( "Scoping TypeConfiguration [%s] to SessionFactory [%s]", this, sessionFactory );
+
+		return RuntimeModelCreationProcess.execute(
+				sessionFactory,
+				bootstrapContext,
+				scope.getMetadataBuildingContext()
+		);
 	}
 
 	/**
@@ -219,33 +208,163 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		// 		valid while the TypeConfiguration is scoped to SessionFactory
 	}
 
-	public void addBasicTypeRegistrationContributions(List<BasicTypeRegistration> contributions) {
-		for ( BasicTypeRegistration basicTypeRegistration : contributions ) {
-			BasicType basicType = basicTypeRegistration.getBasicType();
+	// todo (6.0) - have this algorithm be extendable by users.
+	// 		I have received at least one user request for this, and I can completely see the
+	// 		benefit of this as they described it.  Basically consider a query containing
+	// 		`p.x + p.y`.  If `y` is a standard integer type, but `x` is a custom (user) integral
+	// 		type, then what is the type of the arithmetic expression?  From the HipChat discussion:
+	//
+	//		[8:18 AM] Steve Ebersole: btw... what got me started thinking about this is thinking of ways to allow custom hooks into the types of literals recognized (and how) and the types of validation checks we do
+	//		[8:18 AM] Steve Ebersole: allowing custom literal types becomes easy(er) if we follow the escape-like syntax
+	//		[8:19 AM] Steve Ebersole: {[something] ...}
+	//		[8:20 AM] Steve Ebersole: where `{[something]` triggers recognition of a literal
+	//		[8:20 AM] Steve Ebersole: and `[something]` is a key to some registered resolver
+	//		[8:21 AM] Steve Ebersole: e.g. for `{ts '2017-04-26 ...'}` we'd grab the timestamp literal handler
+	//		[8:21 AM] Steve Ebersole: because of the `ts`
+	//
+	interface CustomExpressionTypeResolver {
+		BasicValuedExpressableType resolveArithmeticType(
+				BasicValuedExpressableType firstType,
+				BasicValuedExpressableType secondType,
+				boolean isDivision);
 
-			basicTypeRegistry.register(
-					basicType,
-					basicTypeRegistration.getRegistrationKeys()
-			);
+		BasicValuedExpressableType resolveSumFunctionType(BasicValuedExpressableType argumentType);
 
-			try {
-				int[] jdbcTypes = basicType.sqlTypes( null );
+		BasicType resolveCastTargetType(String name);
+	}
+	//
+	// A related discussion is recognition of a literal in the HQL, specifically for custom types.  From the same HipChat discussion:
+	//		- allowing custom literal types becomes	easy(er) if we follow the escape-like syntax:
+	//		- `{[something] ...}`
+	//		- where `{` triggers recognition of a literal (by convention)
+	//		- and `[something]` is a key to a registered (custom) resolver
+	//
+	interface HqlLiteralResolver {
+		String getKey();
 
-				if ( jdbcTypes.length == 1 ) {
-					int jdbcType = jdbcTypes[0];
-					Set<String> hibernateTypes = jdbcToHibernateTypeContributionMap.computeIfAbsent(
-						jdbcType,
-						k -> new HashSet<>()
-					);
-					hibernateTypes.add( basicType.getName() );
-				}
-			}
-			catch (Exception e) {
-				log.errorf( e, "Cannot register [%s] Hibernate Type contribution", basicType.getName() );
-			}
+		<T> SqmLiteral<T> resolveLiteral(String literal);
+	}
+	//
+	//		I say related because both deal with custom user types as used in a SQM.
 
+	public BasicValuedExpressableType resolveArithmeticType(
+			BasicValuedExpressableType firstType,
+			BasicValuedExpressableType secondType,
+			SqmBinaryArithmetic.Operation operation) {
+		return resolveArithmeticType( firstType, secondType, operation == SqmBinaryArithmetic.Operation.DIVIDE );
+	}
+
+	/**
+	 * Determine the result type of an arithmetic operation as defined by the
+	 * rules in section 6.5.7.1.
+	 * <p/>
+	 *
+	 *
+	 * @return The operation result type
+	 */
+	public BasicValuedExpressableType resolveArithmeticType(
+			BasicValuedExpressableType firstType,
+			BasicValuedExpressableType secondType,
+			boolean isDivision) {
+
+		if ( isDivision ) {
+			// covered under the note in 6.5.7.1 discussing the unportable
+			// "semantics of the SQL division operation"..
+			return getBasicTypeRegistry().getBasicType( Number.class );
+		}
+
+
+		// non-division
+
+		if ( matchesJavaType( firstType, Double.class ) ) {
+			return firstType;
+		}
+		else if ( matchesJavaType( secondType, Double.class ) ) {
+			return secondType;
+		}
+		else if ( matchesJavaType( firstType, Float.class ) ) {
+			return firstType;
+		}
+		else if ( matchesJavaType( secondType, Float.class ) ) {
+			return secondType;
+		}
+		else if ( matchesJavaType( firstType, BigDecimal.class ) ) {
+			return firstType;
+		}
+		else if ( matchesJavaType( secondType, BigDecimal.class ) ) {
+			return secondType;
+		}
+		else if ( matchesJavaType( firstType, BigInteger.class ) ) {
+			return firstType;
+		}
+		else if ( matchesJavaType( secondType, BigInteger.class ) ) {
+			return secondType;
+		}
+		else if ( matchesJavaType( firstType, Long.class ) ) {
+			return firstType;
+		}
+		else if ( matchesJavaType( secondType, Long.class ) ) {
+			return secondType;
+		}
+		else if ( matchesJavaType( firstType, Integer.class ) ) {
+			return firstType;
+		}
+		else if ( matchesJavaType( secondType, Integer.class ) ) {
+			return secondType;
+		}
+		else if ( matchesJavaType( firstType, Short.class ) ) {
+			return getBasicTypeRegistry().getBasicType( Integer.class );
+		}
+		else if ( matchesJavaType( secondType, Short.class ) ) {
+			return getBasicTypeRegistry().getBasicType( Integer.class );
+		}
+		else {
+			return getBasicTypeRegistry().getBasicType( Number.class );
 		}
 	}
+
+	@SuppressWarnings("unchecked")
+	private static boolean matchesJavaType(BasicValuedExpressableType type, Class javaType) {
+		assert javaType != null;
+		return type != null && javaType.isAssignableFrom( type.getJavaType() );
+	}
+
+	public BasicValuedExpressableType resolveSumFunctionType(BasicValuedExpressableType argumentType) {
+			if ( matchesJavaType( argumentType, Double.class ) ) {
+				return argumentType;
+			}
+			else if ( matchesJavaType( argumentType, Float.class ) ) {
+				return argumentType;
+			}
+			else if ( matchesJavaType( argumentType, BigDecimal.class ) ) {
+				return argumentType;
+			}
+			else if ( matchesJavaType( argumentType, BigInteger.class ) ) {
+				return argumentType;
+			}
+			else if ( matchesJavaType( argumentType, Long.class ) ) {
+				return argumentType;
+			}
+			else if ( matchesJavaType( argumentType, Integer.class ) ) {
+				return argumentType;
+			}
+			else if ( matchesJavaType( argumentType, Short.class ) ) {
+				return getBasicTypeRegistry().getBasicType( Integer.class );
+			}
+			else {
+				return getBasicTypeRegistry().getBasicType( Number.class );
+			}
+
+	}
+
+	public BasicType resolveCastTargetType(String name) {
+		throw new NotYetImplementedException(  );
+	}
+
+
+
+
+
 
 	/**
 	 * Encapsulation of lifecycle concerns for a TypeConfiguration, mainly in
@@ -271,10 +390,6 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 * Each stage or phase is consider a "scope" for the TypeConfiguration.
 	 */
 	private static class Scope implements Serializable {
-
-		// todo (6.0) : consider a proper contract implemented by both SessionFactory (or its metamodel) and boot's MetadataImplementor
-		//		1) type-related info from MetadataBuildingOptions
-		//		2) ServiceRegistry
 		private transient MetadataBuildingContext metadataBuildingContext;
 		private transient SessionFactoryImplementor sessionFactory;
 

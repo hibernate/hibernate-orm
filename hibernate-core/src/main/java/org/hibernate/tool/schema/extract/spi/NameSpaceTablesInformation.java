@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
-import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 
 /**
  * @author Andrea Boriero
@@ -27,8 +27,8 @@ public class NameSpaceTablesInformation {
 		tables.put( tableInformation.getName().getTableName().getText(), tableInformation );
 	}
 
-	public TableInformation getTableInformation(Table table) {
-		return tables.get( identifierHelper.toMetaDataObjectName( table.getQualifiedTableName().getTableName() ) );
+	public TableInformation getTableInformation(ExportableTable table) {
+		return tables.get( identifierHelper.toMetaDataObjectName( table.getTableName() ) );
 	}
 
 	public TableInformation getTableInformation(String tableName) {

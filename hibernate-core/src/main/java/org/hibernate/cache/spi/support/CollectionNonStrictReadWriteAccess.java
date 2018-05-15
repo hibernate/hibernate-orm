@@ -19,6 +19,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @author Steve Ebersole
  */
+@SuppressWarnings("WeakerAccess")
 public class CollectionNonStrictReadWriteAccess extends AbstractCollectionDataAccess {
 	public CollectionNonStrictReadWriteAccess(
 			DomainDataRegion region,

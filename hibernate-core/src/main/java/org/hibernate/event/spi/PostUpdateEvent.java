@@ -6,9 +6,7 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 
 /**
  * Occurs after the datastore is updated
@@ -17,20 +15,20 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public class PostUpdateEvent extends AbstractEvent {
 	private Object entity;
-	private EntityPersister persister;
+	private EntityTypeDescriptor entityDescriptor;
 	private Object[] state;
 	private Object[] oldState;
-	private Serializable id;
+	private Object id;
 	//list of dirty properties as computed by Hibernate during a FlushEntityEvent
 	private final int[] dirtyProperties;
 	
 	public PostUpdateEvent(
-			Object entity, 
-			Serializable id,
+			Object entity,
+			Object id,
 			Object[] state,
 			Object[] oldState,
 			int[] dirtyProperties,
-			EntityPersister persister,
+			EntityTypeDescriptor descriptor,
 			EventSource source
 	) {
 		super(source);
@@ -39,21 +37,25 @@ public class PostUpdateEvent extends AbstractEvent {
 		this.state = state;
 		this.oldState = oldState;
 		this.dirtyProperties = dirtyProperties;
-		this.persister = persister;
+		this.entityDescriptor = descriptor;
 	}
 	
 	public Object getEntity() {
 		return entity;
 	}
-	public Serializable getId() {
+
+	public Object getId() {
 		return id;
 	}
+
 	public Object[] getOldState() {
 		return oldState;
 	}
-	public EntityPersister getPersister() {
-		return persister;
+
+	public EntityTypeDescriptor getDescriptor() {
+		return entityDescriptor;
 	}
+
 	public Object[] getState() {
 		return state;
 	}

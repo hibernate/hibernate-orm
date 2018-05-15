@@ -11,8 +11,16 @@ description = 'Support for testing Hibernate ORM functionality'
 
 dependencies {
     compile project( ':hibernate-core' )
-    compile( libraries.jta )
+
     compile( libraries.junit )
+    compile( libraries.junit5_api )
+    compile( libraries.junit5_jupiter )
+    compile( libraries.junit5_params)
+    compile( 'org.hamcrest:hamcrest-all:1.3' )
+
+    runtime( libraries.junit5_vintage )
+    runtime( libraries.junit5_jupiter )
+
     compile( libraries.byteman )
     compile( libraries.byteman_install )
     compile( libraries.byteman_bmunit )

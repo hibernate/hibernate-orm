@@ -44,4 +44,5 @@ public class TimestampsCacheDisabledImpl implements TimestampsCache {
 		log.trace( "TimestampsRegionAccess#isUpToDate - disabled" );
 		return false;
 	}
+
 }

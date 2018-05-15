@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+    <!-- shortened table name for Oracle -->
+    <class name="org.hibernate.envers.test.integration.components.dynamic.PlainEntity" table="PEntity">
+        <id name="id" type="long" column="id"/>
+        <property name="note" type="string"/>
+        <component name="component" class="org.hibernate.envers.test.integration.components.dynamic.PlainComponent">
+            <property name="componentNote" type="string"/>
+            <one-to-one name="oneToOneEntity"
+                        class="org.hibernate.envers.test.integration.components.dynamic.OneToOneEntity"/>
+            <many-to-one name="manyToOneEntity"
+                         class="org.hibernate.envers.test.integration.components.dynamic.ManyToOneEntity"
+                         column="MANY_TO_ONE_ID"/>
+            <list name="manyToManyList" table="MANY_TO_MANY_LIST">
+                <key column="PLAIN_ENTITY_ID"/>
+                <index column="POSITION"/>
+                <many-to-many class="org.hibernate.envers.test.integration.components.dynamic.ManyToManyEntity"
+                              column="MANY_TO_MANY_ID"/>
+            </list>
+            <component name="internalComponent"
+                       class="org.hibernate.envers.test.integration.components.dynamic.InternalComponent">
+                <property name="property" type="string"/>
+            </component>
+            <list name="internalComponents">
+                <key column="PLAIN_ID"/>
+                <index column="POSITION"/>
+                <composite-element class="org.hibernate.envers.test.integration.components.dynamic.InternalComponent">
+                    <property name="property" type="string"/>
+                </composite-element>
+            </list>
+        </component>
+
+    </class>
+    <class name="org.hibernate.envers.test.integration.components.dynamic.OneToOneEntity" table="one_to_one_entity">
+        <id name="id" type="long" column="id"/>
+        <property name="note" type="string"/>
+    </class>
+    <class name="org.hibernate.envers.test.integration.components.dynamic.ManyToOneEntity" table="many_to_one_entity">
+        <id name="id" type="long" column="id"/>
+        <property name="note" type="string"/>
+    </class>
+    <class name="org.hibernate.envers.test.integration.components.dynamic.ManyToManyEntity" table="many_to_many_entity">
+        <id name="id" type="long" column="id"/>
+        <property name="note" type="string"/>
+    </class>
+</hibernate-mapping>

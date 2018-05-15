@@ -54,13 +54,12 @@ public interface ValueVisitor {
 	/**
 	 * @param value
 	 */
-	Object accept(SimpleValue value);
+	Object accept(BasicValue value);
+
 	Object accept(DependantValue value);
 	
 	Object accept(Component component);
 	
 	Object accept(ManyToOne mto);
 	Object accept(OneToOne oto);
-	
-
 }

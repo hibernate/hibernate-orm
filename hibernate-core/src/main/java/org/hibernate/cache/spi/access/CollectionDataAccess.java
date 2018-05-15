@@ -7,7 +7,7 @@
 package org.hibernate.cache.spi.access;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
 /**
  * Contract for managing transactional and concurrent access to cached collection
@@ -35,7 +35,7 @@ public interface CollectionDataAccess extends CachedDomainDataAccess {
 	 */
 	Object generateCacheKey(
 			Object id,
-			CollectionPersister collectionDescriptor,
+			PersistentCollectionDescriptor collectionDescriptor,
 			SessionFactoryImplementor factory,
 			String tenantIdentifier);
 
@@ -47,6 +47,5 @@ public interface CollectionDataAccess extends CachedDomainDataAccess {
 	 * @return original key passed to {@link #generateCacheKey}
 	 */
 	Object getCacheKeyId(Object cacheKey);
-
 
 }

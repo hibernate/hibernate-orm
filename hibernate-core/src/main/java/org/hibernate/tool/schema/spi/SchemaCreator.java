@@ -7,7 +7,6 @@
 package org.hibernate.tool.schema.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.boot.Metadata;
 
 /**
  * Service delegate for handling schema creation.
@@ -23,10 +22,9 @@ public interface SchemaCreator {
 	/**
 	 * Perform a schema creation from the indicated source(s) to the indicated target(s).
 	 *
-	 * @param metadata Represents the schema to be created.
 	 * @param options Options for executing the creation
 	 * @param sourceDescriptor description of the source(s) of creation commands
 	 * @param targetDescriptor description of the target(s) for the creation commands
 	 */
-	void doCreation(Metadata metadata, ExecutionOptions options, SourceDescriptor sourceDescriptor, TargetDescriptor targetDescriptor);
+	void doCreation(ExecutionOptions options, SourceDescriptor sourceDescriptor, TargetDescriptor targetDescriptor);
 }

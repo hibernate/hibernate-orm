@@ -22,7 +22,7 @@ import static org.jboss.logging.Logger.Level.WARN;
  * @author Steve Ebersole
  */
 @MessageLogger( projectCode = "HHH" )
-@ValidIdRange( min = 10005001, max = 10010000 )
+@ValidIdRange( min = 10005001, max = 10006000 )
 public interface BeansMessageLogger {
 	/**
 	 * *The* BeansMessageLogger instance

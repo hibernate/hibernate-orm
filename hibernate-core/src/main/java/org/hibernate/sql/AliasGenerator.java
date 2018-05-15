@@ -7,11 +7,17 @@
 package org.hibernate.sql;
 
 
+import org.hibernate.annotations.Remove;
+
 /**
  * TODO : javadoc
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Converting to use SQL AST - Integrated into {@link org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator}
  */
+@Deprecated
+@Remove
 public interface AliasGenerator {
 	public String generateAlias(String sqlExpression);
 }

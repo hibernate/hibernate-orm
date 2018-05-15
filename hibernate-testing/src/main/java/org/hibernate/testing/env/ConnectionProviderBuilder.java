@@ -6,25 +6,16 @@
  */
 package org.hibernate.testing.env;
 
-import java.io.PrintWriter;
 import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
-import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
-import javassist.scopedpool.SoftValueHashMap;
-
-import org.hibernate.annotations.common.reflection.ReflectionUtil;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl;

@@ -13,13 +13,13 @@ import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
-import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.SQLServer2005LimitHandler;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * A dialect for Microsoft SQL 2005. (HHH-3936 fix)
@@ -53,8 +53,16 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 		
 		// HHH-8435 fix
 		registerColumnType( Types.NCLOB, "nvarchar(MAX)" );
+	}
 
-		registerFunction( "row_number", new NoArgSQLFunction( "row_number", StandardBasicTypes.INTEGER, true ) );
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
+
+		registry.noArgsBuilder( "row_number" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setUseParenthesesWhenNoArgs( true )
+				.register();
 	}
 
 	@Override

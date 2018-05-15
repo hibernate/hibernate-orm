@@ -13,14 +13,12 @@ import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementContextWrapper;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.spi.ClassTransformer;
-import org.hibernate.cfg.Environment;
 
 /**
  * @author Steve Ebersole
  * @author Luis Barreiro
  */
 public class EnhancingClassTransformerImpl implements ClassTransformer {
-
 	private final EnhancementContext enhancementContext;
 
 	public EnhancingClassTransformerImpl(EnhancementContext enhancementContext) {
@@ -40,7 +38,7 @@ public class EnhancingClassTransformerImpl implements ClassTransformer {
 		// It also assumed that all calls come from the same class loader, which is fair, but this makes it more robust.
 
 		try {
-			Enhancer enhancer = Environment.getBytecodeProvider().getEnhancer( new EnhancementContextWrapper( enhancementContext, loader ) );
+			Enhancer enhancer = enhancementContext.getBytecodeProvider().getEnhancer( new EnhancementContextWrapper( enhancementContext, loader ) );
 			return enhancer.enhance( className, classfileBuffer );
 		}
 		catch (final Exception e) {

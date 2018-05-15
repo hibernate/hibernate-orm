@@ -6,26 +6,27 @@
  */
 package org.hibernate.cfg;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.relational.MappedIndex;
+import org.hibernate.boot.model.relational.MappedTable;
+import org.hibernate.boot.model.relational.MappedUniqueKey;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
-import org.hibernate.mapping.Index;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UniqueKey;
 
 /**
  * @author Emmanuel Bernard
  */
 public class IndexOrUniqueKeySecondPass implements SecondPass {
-	private Table table;
+	private MappedTable table;
 	private final String indexName;
 	private final String[] columns;
 	private final MetadataBuildingContext buildingContext;
@@ -35,7 +36,7 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 	/**
 	 * Build an index
 	 */
-	public IndexOrUniqueKeySecondPass(Table table, String indexName, String[] columns, MetadataBuildingContext buildingContext) {
+	public IndexOrUniqueKeySecondPass(MappedTable table, String indexName, String[] columns, MetadataBuildingContext buildingContext) {
 		this.table = table;
 		this.indexName = indexName;
 		this.columns = columns;
@@ -85,51 +86,44 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 			if ( property.getValue() instanceof Component ) {
 				final Component component = (Component) property.getValue();
 
-				List<Column> columns = new ArrayList<>();
-				component.getColumnIterator().forEachRemaining( selectable -> {
-					if ( selectable instanceof Column ) {
-						columns.add( (Column) selectable );
-					}
-				} );
+				final List<Column> columns = component.getMappedColumns().stream()
+						.filter( Column.class::isInstance )
+						.map(Column.class::cast )
+						.collect( Collectors.toList() );
 				addConstraintToColumns( columns );
 			}
 			else {
 				addConstraintToColumn(
-						buildingContext.getMetadataCollector()
-								.getLogicalColumnName( table, column.getMappingColumn().getQuotedName() )
-				);
+						 column.getMappingColumn().getQuotedName() )
+				;
 			}
 		}
 	}
 
 	private void addConstraintToColumn(final String columnName ) {
-		Column column = table.getColumn(
-				new Column(
-						buildingContext.getMetadataCollector().getPhysicalColumnName( table, columnName )
-				)
-		);
+		MappedColumn column = table.getColumn( new Column( table.getNameIdentifier(), columnName, false ) );
 		if ( column == null ) {
 			throw new AnnotationException(
 					"@Index references a unknown column: " + columnName
 			);
 		}
 		if ( unique ) {
-			table.getOrCreateUniqueKey( indexName ).addColumn( column );
+			table.getOrCreateUniqueKey( indexName ).addColumn( (Column) column );
 		}
 		else {
-			table.getOrCreateIndex( indexName ).addColumn( column );
+			table.getOrCreateIndex( indexName ).addColumn( (Column) column );
 		}
 	}
 
 	private void addConstraintToColumns(List<Column> columns) {
 		if ( unique ) {
-			UniqueKey uniqueKey = table.getOrCreateUniqueKey( indexName );
+			MappedUniqueKey uniqueKey = table.getOrCreateUniqueKey( indexName );
 			for ( Column column : columns ) {
 				uniqueKey.addColumn( column );
 			}
 		}
 		else {
-			Index index = table.getOrCreateIndex( indexName );
+			MappedIndex index = table.getOrCreateIndex( indexName );
 			for ( Column column : columns ) {
 				index.addColumn( column );
 			}

@@ -89,14 +89,10 @@ import org.hibernate.engine.transaction.jta.platform.internal.WebSphereJtaPlatfo
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WeblogicJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.event.internal.EntityCopyAllowedLoggedObserver;
-import org.hibernate.event.internal.EntityCopyAllowedObserver;
-import org.hibernate.event.internal.EntityCopyNotAllowedObserver;
-import org.hibernate.event.spi.EntityCopyObserver;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.persistent.PersistentTableBulkIdStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.LocalTemporaryTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.PersistentTableStrategy;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -412,19 +408,19 @@ public class StrategySelectorBuilder {
 
 	private void addMultiTableBulkIdStrategies(StrategySelectorImpl strategySelector) {
 		strategySelector.registerStrategyImplementor(
-				MultiTableBulkIdStrategy.class,
-				PersistentTableBulkIdStrategy.SHORT_NAME,
-				PersistentTableBulkIdStrategy.class
+				IdTableStrategy.class,
+				PersistentTableStrategy.SHORT_NAME,
+				PersistentTableStrategy.class
 		);
 		strategySelector.registerStrategyImplementor(
-				MultiTableBulkIdStrategy.class,
-				GlobalTemporaryTableBulkIdStrategy.SHORT_NAME,
-				GlobalTemporaryTableBulkIdStrategy.class
+				IdTableStrategy.class,
+				GlobalTemporaryTableStrategy.SHORT_NAME,
+				GlobalTemporaryTableStrategy.class
 		);
 		strategySelector.registerStrategyImplementor(
-				MultiTableBulkIdStrategy.class,
-				LocalTemporaryTableBulkIdStrategy.SHORT_NAME,
-				LocalTemporaryTableBulkIdStrategy.class
+				IdTableStrategy.class,
+				LocalTemporaryTableStrategy.SHORT_NAME,
+				LocalTemporaryTableStrategy.class
 		);
 	}
 

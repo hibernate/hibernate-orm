@@ -12,6 +12,7 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.Internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -19,12 +20,13 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @author Gail Badner
  */
+@Internal
 public final class NonNullableTransientDependencies {
 	// Multiple property paths can refer to the same transient entity, so use Set<String>
 	// for the map value.
 	private Map<Object,Set<String>> propertyPathsByTransientEntity; // lazily initialized
 
-	void add(String propertyName, Object transientEntity) {
+	public void add(String propertyName, Object transientEntity) {
 		if ( propertyPathsByTransientEntity == null ) {
 			propertyPathsByTransientEntity = new IdentityHashMap<>();
 		}

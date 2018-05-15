@@ -85,7 +85,7 @@ public final class TypeNames {
 	 *
 	 * @throws MappingException Indicates that no registrations were made for that typeCode
 	 */
-	public String get(int typeCode, long size, int precision, int scale) throws MappingException {
+	public String get(int typeCode, Long size, Integer precision, Integer scale) throws MappingException {
 		final Integer integer = Integer.valueOf( typeCode );
 		final Map<Long, String> map = weighted.get( integer );
 		if ( map != null && map.size() > 0 ) {
@@ -103,10 +103,17 @@ public final class TypeNames {
 		return replace( get( typeCode ), size, precision, scale );
 	}
 
-	private static String replace(String type, long size, int precision, int scale) {
-		type = StringHelper.replaceOnce( type, "$s", Integer.toString( scale ) );
-		type = StringHelper.replaceOnce( type, "$l", Long.toString( size ) );
-		return StringHelper.replaceOnce( type, "$p", Integer.toString( precision ) );
+	private static String replace(String type, Long size, Integer precision, Integer scale) {
+		if ( scale != null ) {
+			type = StringHelper.replaceOnce( type, "$s", Integer.toString( scale ) );
+		}
+		if ( size != null ) {
+			type = StringHelper.replaceOnce( type, "$l", Long.toString( size ) );
+		}
+		if ( precision != null ) {
+			type = StringHelper.replaceOnce( type, "$p", Integer.toString( precision ) );
+		}
+		return type;
 	}
 
 	/**

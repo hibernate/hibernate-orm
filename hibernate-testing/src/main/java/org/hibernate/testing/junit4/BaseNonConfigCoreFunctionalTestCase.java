@@ -9,7 +9,6 @@ package org.hibernate.testing.junit4;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Connection;
-import java.sql.NClob;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -46,9 +45,6 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
-import org.hibernate.type.BlobType;
-import org.hibernate.type.ClobType;
-import org.hibernate.type.NClobType;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
@@ -58,6 +54,8 @@ import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.transaction.TransactionUtil2;
 import org.junit.After;
 import org.junit.Before;
+
+import org.jboss.logging.Logger;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.fail;
@@ -70,8 +68,10 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
-public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
+public class BaseNonConfigCoreFunctionalTestCase {
 	public static final String VALIDATE_DATA_CLEANUP = "hibernate.test.validateDataCleanup";
+
+	private static final Logger log = Logger.getLogger( BaseNonConfigCoreFunctionalTestCase.class );
 
 	private StandardServiceRegistry serviceRegistry;
 	private MetadataImplementor metadata;
@@ -368,10 +368,11 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 				|| "nclob".equals( typeName )
 				|| Blob.class.getName().equals( typeName )
 				|| Clob.class.getName().equals( typeName )
-				|| NClob.class.getName().equals( typeName )
-				|| BlobType.class.getName().equals( typeName )
-				|| ClobType.class.getName().equals( typeName )
-				|| NClobType.class.getName().equals( typeName );
+//				|| NClob.class.getName().equals( typeName )
+//				|| BlobType.class.getName().equals( typeName )
+//				|| ClobType.class.getName().equals( typeName )
+//				|| NClobType.class.getName().equals( typeName );
+		;
 	}
 
 	protected void afterMetadataBuilt(Metadata metadata) {

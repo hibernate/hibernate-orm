@@ -13,7 +13,6 @@ import java.sql.Statement;
 
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 
 import org.jboss.logging.Logger;
 

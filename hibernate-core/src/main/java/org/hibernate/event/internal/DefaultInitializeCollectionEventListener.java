@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
@@ -21,7 +19,7 @@ import org.hibernate.event.spi.InitializeCollectionEvent;
 import org.hibernate.event.spi.InitializeCollectionEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.pretty.MessageHelper;
 
 /**
@@ -47,7 +45,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 				LOG.tracev(
 						"Initializing collection {0}",
 						MessageHelper.collectionInfoString(
-								ce.getLoadedPersister(),
+								ce.getLoadedCollectionDescriptor(),
 								collection,
 								ce.getLoadedKey(),
 								source
@@ -58,7 +56,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 
 			final boolean foundInCache = initializeCollectionFromCache(
 					ce.getLoadedKey(),
-					ce.getLoadedPersister(),
+					ce.getLoadedCollectionDescriptor(),
 					collection,
 					source
 			);
@@ -72,14 +70,14 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 				if ( traceEnabled ) {
 					LOG.trace( "Collection not cached" );
 				}
-				ce.getLoadedPersister().initialize( ce.getLoadedKey(), source );
+				ce.getLoadedCollectionDescriptor().initialize( ce.getLoadedKey(), source );
 				if ( traceEnabled ) {
 					LOG.trace( "Collection initialized" );
 				}
 
 				if ( source.getFactory().getStatistics().isStatisticsEnabled() ) {
 					source.getFactory().getStatistics().fetchCollection(
-							ce.getLoadedPersister().getRole()
+							ce.getLoadedCollectionDescriptor().getNavigableRole().getFullPath()
 					);
 				}
 			}
@@ -89,8 +87,8 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 	/**
 	 * Try to initialize a collection from the cache
 	 *
-	 * @param id The id of the collection of initialize
-	 * @param persister The collection persister
+	 * @param collectionKey The id of the collection of initialize
+	 * @param collectionDescriptor The collection persistent Descriptor
 	 * @param collection The collection to initialize
 	 * @param source The originating session
 	 *
@@ -98,39 +96,48 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 	 *         false otherwise.
 	 */
 	private boolean initializeCollectionFromCache(
-			Serializable id,
-			CollectionPersister persister,
+			Object collectionKey,
+			PersistentCollectionDescriptor collectionDescriptor,
 			PersistentCollection collection,
 			SessionImplementor source) {
 
 		if ( !source.getLoadQueryInfluencers().getEnabledFilters().isEmpty()
-				&& persister.isAffectedByEnabledFilters( source ) ) {
+				&& collectionDescriptor.isAffectedByEnabledFilters( source ) ) {
 			LOG.trace( "Disregarding cached version (if any) of collection due to enabled filters" );
 			return false;
 		}
 
-		final boolean useCache = persister.hasCache() && source.getCacheMode().isGetEnabled();
+		if ( ! source.getCacheMode().isGetEnabled() ) {
+			return false;
+		}
+
+		final boolean useCache = collectionDescriptor.hasCache() && source.getCacheMode().isGetEnabled();
 
 		if ( !useCache ) {
 			return false;
 		}
 
+		final CollectionDataAccess cacheAccess = collectionDescriptor.getCacheAccess();
+		if ( cacheAccess == null ) {
+			// not cached
+			return false;
+		}
+
 		final SessionFactoryImplementor factory = source.getFactory();
-		final CollectionDataAccess cacheAccessStrategy = persister.getCacheAccessStrategy();
-		final Object ck = cacheAccessStrategy.generateCacheKey( id, persister, factory, source.getTenantIdentifier() );
-		final Object ce = CacheHelper.fromSharedCache( source, ck, persister.getCacheAccessStrategy() );
+		final Object ck = cacheAccess.generateCacheKey( collectionKey, collectionDescriptor, factory, source.getTenantIdentifier() );
+		final Object ce = CacheHelper.fromSharedCache( source, ck, cacheAccess );
 
 		if ( factory.getStatistics().isStatisticsEnabled() ) {
 			if ( ce == null ) {
 				factory.getStatistics().collectionCacheMiss(
-						persister.getNavigableRole(),
-						cacheAccessStrategy.getRegion().getName()
+						collectionDescriptor.getNavigableRole(),
+						cacheAccess.getRegion().getName()
 				);
 			}
 			else {
 				factory.getStatistics().collectionCacheHit(
-						persister.getNavigableRole(),
-						cacheAccessStrategy.getRegion().getName()
+						collectionDescriptor.getNavigableRole(),
+						cacheAccess.getRegion().getName()
 				);
 			}
 		}
@@ -139,15 +146,15 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 			return false;
 		}
 
-		CollectionCacheEntry cacheEntry = (CollectionCacheEntry) persister.getCacheEntryStructure().destructure(
+		CollectionCacheEntry cacheEntry = (CollectionCacheEntry) collectionDescriptor.getCacheEntryStructure().destructure(
 				ce,
 				factory
 		);
 
 		final PersistenceContext persistenceContext = source.getPersistenceContext();
-		cacheEntry.assemble( collection, persister, persistenceContext.getCollectionOwner( id, persister ) );
+		cacheEntry.assemble( collection, collectionDescriptor, persistenceContext.getCollectionOwner( collectionKey, collectionDescriptor ) );
 		persistenceContext.getCollectionEntry( collection ).postInitialize( collection );
-		// addInitializedCollection(collection, persister, id);
+		// addInitializedCollection(collection, collectionDescriptor, id);
 		return true;
 	}
 }

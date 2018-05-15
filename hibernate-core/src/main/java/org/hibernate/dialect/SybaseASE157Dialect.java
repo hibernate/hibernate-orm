@@ -11,15 +11,15 @@ import java.util.Map;
 
 import org.hibernate.JDBCException;
 import org.hibernate.LockOptions;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.SybaseASE157LimitHandler;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.sql.ForUpdateFragment;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * An SQL dialect targeting Sybase Adaptive Server Enterprise (ASE) 15.7 and higher.
@@ -36,13 +36,18 @@ public class SybaseASE157Dialect extends SybaseASE15Dialect {
 	 */
 	public SybaseASE157Dialect() {
 		super();
+	}
 
-		registerFunction( "create_locator", new SQLFunctionTemplate( StandardBasicTypes.BINARY, "create_locator(?1, ?2)" ) );
-		registerFunction( "locator_literal", new SQLFunctionTemplate( StandardBasicTypes.BINARY, "locator_literal(?1, ?2)" ) );
-		registerFunction( "locator_valid", new SQLFunctionTemplate( StandardBasicTypes.BOOLEAN, "locator_valid(?1)" ) );
-		registerFunction( "return_lob", new SQLFunctionTemplate( StandardBasicTypes.BINARY, "return_lob(?1, ?2)" ) );
-		registerFunction( "setdata", new SQLFunctionTemplate( StandardBasicTypes.BOOLEAN, "setdata(?1, ?2, ?3)" ) );
-		registerFunction( "charindex", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "charindex(?1, ?2, ?3)" ) );
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
+
+		registry.registerPattern( "create_locator", "create_locator(?1, ?2)", StandardSpiBasicTypes.BINARY );
+		registry.registerPattern( "locator_literal", "locator_literal(?1, ?2)", StandardSpiBasicTypes.BINARY );
+		registry.registerPattern( "locator_valid", "locator_valid(?1)", StandardSpiBasicTypes.BOOLEAN );
+		registry.registerPattern( "return_lob", "return_lob(?1, ?2)", StandardSpiBasicTypes.BINARY );
+		registry.registerPattern( "setdata", "setdata(?1, ?2, ?3)", StandardSpiBasicTypes.BOOLEAN );
+		registry.registerPattern( "charindex", "charindex(?1, ?2, ?3)", StandardSpiBasicTypes.INTEGER );
 	}
 
 	@Override

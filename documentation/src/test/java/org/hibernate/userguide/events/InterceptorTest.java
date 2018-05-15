@@ -19,7 +19,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -134,15 +134,20 @@ public class InterceptorTest extends BaseEntityManagerFunctionalTestCase {
 			Object[] currentState,
 			Object[] previousState,
 			String[] propertyNames,
-			Type[] types) {
+			JavaTypeDescriptor[] javaTypeDescriptors) {
 				LOGGER.debugv( "Entity {0}#{1} changed from {2} to {3}",
 					entity.getClass().getSimpleName(),
 					id,
 					Arrays.toString( previousState ),
 					Arrays.toString( currentState )
 				);
-				return super.onFlushDirty( entity, id, currentState,
-					previousState, propertyNames, types
+			return super.onFlushDirty(
+					entity,
+					id,
+					currentState,
+					previousState,
+					propertyNames,
+					javaTypeDescriptors
 			);
 		}
 	}

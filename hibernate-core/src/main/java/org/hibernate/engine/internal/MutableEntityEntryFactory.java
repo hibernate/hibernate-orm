@@ -7,15 +7,12 @@
 
 package org.hibernate.engine.internal;
 
-import java.io.Serializable;
-import java.util.Set;
-
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 
 /**
  * Factory for the safe approach implementation of {@link org.hibernate.engine.spi.EntityEntry}.
@@ -38,11 +35,11 @@ public class MutableEntityEntryFactory implements EntityEntryFactory {
 			Status status,
 			Object[] loadedState,
 			Object rowId,
-			Serializable id,
+			Object id,
 			Object version,
 			LockMode lockMode,
 			boolean existsInDatabase,
-			EntityPersister persister,
+			EntityTypeDescriptor descriptor,
 			boolean disableVersionIncrement,
 			PersistenceContext persistenceContext) {
 		return new MutableEntityEntry(
@@ -53,7 +50,7 @@ public class MutableEntityEntryFactory implements EntityEntryFactory {
 				version,
 				lockMode,
 				existsInDatabase,
-				persister,
+				descriptor,
 				disableVersionIncrement,
 				persistenceContext
 		);

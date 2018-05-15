@@ -8,7 +8,7 @@ package org.hibernate.spatial.dialect.sqlserver;
 
 import java.util.List;
 
-import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.Type;
 
@@ -16,7 +16,7 @@ import org.hibernate.type.Type;
  * @author Karel Maesen, Geovise BVBA
  * creation-date: 4/8/13
  */
-class SqlServerMethod extends StandardSQLFunction {
+class SqlServerMethod extends NamedSqmFunctionTemplate {
 
 	public SqlServerMethod(String name) {
 		super( name );

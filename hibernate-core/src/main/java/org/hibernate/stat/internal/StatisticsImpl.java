@@ -6,6 +6,8 @@
  */
 package org.hibernate.stat.internal;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -19,7 +21,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.service.Service;
 import org.hibernate.stat.Statistics;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -104,9 +106,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	 */
 	private final ConcurrentMap<String,CacheRegionStatisticsImpl> l2CacheStatsMap = new ConcurrentHashMap<>();
 
-	private final ConcurrentMap<String,DeprecatedNaturalIdCacheStatisticsImpl> deprecatedNaturalIdStatsMap = new ConcurrentHashMap();
-
-
 	@SuppressWarnings({ "UnusedDeclaration" })
 	public StatisticsImpl() {
 		this( null );
@@ -181,7 +180,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		naturalIdQueryStatsMap.clear();
 		l2CacheStatsMap.clear();
 		queryStatsMap.clear();
-		deprecatedNaturalIdStatsMap.clear();
 
 		queryPlanCacheHitCount.reset();
 		queryPlanCacheMissCount.reset();
@@ -215,7 +213,11 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 			return ArrayHelper.toStringArray( entityStatsMap.keySet() );
 		}
 		else {
-			return sessionFactory.getMetamodel().getAllEntityNames();
+			List<String> names = new ArrayList<>();
+			sessionFactory.getMetamodel().visitEntityDescriptors(
+					entityDescriptor -> names.add( entityDescriptor.getEntityName() )
+			);
+			return names.toArray( new String[0] );
 		}
 	}
 
@@ -227,7 +229,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 		return entityStatsMap.computeIfAbsent(
 				entityName,
-				s -> new EntityStatisticsImpl( sessionFactory.getMetamodel().entityPersister( entityName ) )
+				s -> new EntityStatisticsImpl( sessionFactory.getMetamodel().findEntityDescriptor( entityName ) )
 		);
 	}
 
@@ -328,7 +330,11 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 			return ArrayHelper.toStringArray( collectionStatsMap.keySet() );
 		}
 		else {
-			return sessionFactory.getMetamodel().getAllCollectionRoles();
+			final List<String> names = new ArrayList<>();
+			sessionFactory.getMetamodel().visitCollectionDescriptors(
+					collectionDescriptor -> names.add( collectionDescriptor.getNavigableRole().getFullPath() )
+			);
+			return names.toArray( new String[0] );
 		}
 	}
 
@@ -340,7 +346,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 		return collectionStatsMap.computeIfAbsent(
 				role,
-				s -> new CollectionStatisticsImpl( sessionFactory.getMetamodel().collectionPersister( role ) )
+				s -> new CollectionStatisticsImpl( sessionFactory.getMetamodel().findCollectionDescriptor( role ) )
 		);
 	}
 
@@ -433,23 +439,12 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		return naturalIdQueryStatsMap.computeIfAbsent(
 				rootEntityName,
 				s -> {
-					final EntityPersister entityDescriptor = sessionFactory.getMetamodel().entityPersister( rootEntityName );
+					final EntityTypeDescriptor entityDescriptor = sessionFactory.getMetamodel().findEntityDescriptor( rootEntityName );
 					if ( !entityDescriptor.hasNaturalIdentifier() ) {
 						throw new IllegalArgumentException( "Given entity [" + rootEntityName + "] does not define natural-id" );
 					}
 					return new NaturalIdStatisticsImpl( entityDescriptor );
 				}
-		);
-	}
-
-	@Override
-	public DeprecatedNaturalIdCacheStatisticsImpl getNaturalIdCacheStatistics(String regionName) {
-		return deprecatedNaturalIdStatsMap.computeIfAbsent(
-				sessionFactory.getCache().unqualifyRegionName( regionName ),
-				unqualifiedRegionName -> new DeprecatedNaturalIdCacheStatisticsImpl(
-						unqualifiedRegionName,
-						sessionFactory.getCache().getNaturalIdAccessesInRegion( unqualifiedRegionName )
-				)
 		);
 	}
 
@@ -497,8 +492,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		getDomainDataRegionStatistics( regionName ).incrementPutCount();
 
 		getNaturalIdStatistics( rootEntityName.getFullPath() ).incrementCachePutCount();
-
-		getNaturalIdCacheStatistics( qualify( regionName ) ).incrementPutCount();
 	}
 
 	@Override
@@ -510,8 +503,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		getDomainDataRegionStatistics( regionName ).incrementHitCount();
 
 		getNaturalIdStatistics( rootEntityName.getFullPath() ).incrementCacheHitCount();
-
-		getNaturalIdCacheStatistics( qualify( regionName ) ).incrementHitCount();
 	}
 
 	@Override
@@ -523,8 +514,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		getDomainDataRegionStatistics( regionName ).incrementMissCount();
 
 		getNaturalIdStatistics( rootEntityName.getFullPath() ).incrementCacheMissCount();
-
-		getNaturalIdCacheStatistics( qualify( regionName ) ).incrementMissCount();
 	}
 
 	protected String qualify(String regionName) {
@@ -549,19 +538,16 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 			naturalIdQueryExecutionMaxTimeEntity = rootEntityName;
 		}
 
-		final EntityPersister rootEntityPersister = sessionFactory.getMetamodel().entityPersister( rootEntityName );
+		final EntityTypeDescriptor rootEntityDescriptor = sessionFactory.getMetamodel().findEntityDescriptor( rootEntityName );
 
 		getNaturalIdStatistics( rootEntityName ).queryExecuted( time );
 
-		if ( rootEntityPersister.hasNaturalIdCache() ) {
-			final String naturalIdRegionName = rootEntityPersister.getNaturalIdCacheAccessStrategy()
-					.getRegion()
-					.getName();
-			getNaturalIdCacheStatistics( qualify( naturalIdRegionName ) ).queryExecuted( time );
+		final String naturalIdRegionName = rootEntityDescriptor.getHierarchy().getNaturalIdDescriptor().getCacheAccess()
+				.getRegion()
+				.getName();
 
-			if ( isLongestQuery ) {
-				naturalIdQueryExecutionMaxTimeRegion = naturalIdRegionName;
-			}
+		if ( isLongestQuery ) {
+			naturalIdQueryExecutionMaxTimeRegion = naturalIdRegionName;
 		}
 	}
 

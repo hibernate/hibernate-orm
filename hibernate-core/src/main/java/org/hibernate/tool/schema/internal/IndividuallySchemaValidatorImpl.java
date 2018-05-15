@@ -6,10 +6,11 @@
  */
 package org.hibernate.tool.schema.internal;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
+import org.hibernate.metamodel.model.relational.spi.ExportableTable;
+import org.hibernate.metamodel.model.relational.spi.Namespace;
+import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
@@ -25,23 +26,26 @@ public class IndividuallySchemaValidatorImpl extends AbstractSchemaValidator {
 
 	public IndividuallySchemaValidatorImpl(
 			HibernateSchemaManagementTool tool,
+			DatabaseModel databaseModel,
 			SchemaFilter validateFilter) {
-		super( tool, validateFilter );
+		super( tool, databaseModel, validateFilter );
 	}
 
 	@Override
 	protected void validateTables(
-			Metadata metadata,
 			DatabaseInformation databaseInformation,
 			ExecutionOptions options,
 			Dialect dialect,
 			Namespace namespace) {
 		for ( Table table : namespace.getTables() ) {
-			if ( schemaFilter.includeTable( table ) && table.isPhysicalTable() ) {
-				final TableInformation tableInformation = databaseInformation.getTableInformation(
-						table.getQualifiedTableName()
-				);
-				validateTable( table, tableInformation, metadata, options, dialect );
+			if ( table.isExportable() ) {
+				final ExportableTable exportableTable = (ExportableTable) table;
+				if ( schemaFilter.includeTable( exportableTable ) ) {
+					final TableInformation tableInformation = databaseInformation.getTableInformation(
+							exportableTable.getQualifiedTableName()
+					);
+					validateTable( exportableTable, tableInformation, options, dialect );
+				}
 			}
 		}
 	}

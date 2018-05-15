@@ -8,8 +8,10 @@ package org.hibernate.id;
 import java.io.Serializable;
 import java.sql.ResultSet;
 
+import org.hibernate.type.Type;
+
 /**
- * An optional contract for {@link org.hibernate.type.Type} or
+ * An optional contract for {@link Type} or
  * {@link org.hibernate.usertype.UserType} implementations to handle generated
  * id values any way they see fit as opposed to being limited to the discrete set of
  * numeric types handled by {@link IdentifierGeneratorHelper}

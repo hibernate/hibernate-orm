@@ -8,13 +8,11 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
-import org.hibernate.dialect.function.AnsiTrimEmulationFunction;
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
-import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.TinyIntTypeDescriptor;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.spi.AnsiTrimEmulationFunctionTemplate;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.TinyIntSqlDescriptor;
 
 /**
  * An SQL dialect targeting Sybase Adaptive Server Enterprise (ASE) 15 and higher.
@@ -39,120 +37,106 @@ public class SybaseASE15Dialect extends SybaseDialect {
 		registerColumnType( Types.REAL, "real" );
 		registerColumnType( Types.BOOLEAN, "tinyint" );
 
-		registerFunction( "second", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datepart(second, ?1)" ) );
-		registerFunction( "minute", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datepart(minute, ?1)" ) );
-		registerFunction( "hour", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datepart(hour, ?1)" ) );
-		registerFunction( "extract", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datepart(?1, ?3)" ) );
-		registerFunction( "mod", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "?1 % ?2" ) );
-		registerFunction( "bit_length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datalength(?1) * 8" ) );
-		registerFunction(
-				"trim", new AnsiTrimEmulationFunction(
-						AnsiTrimEmulationFunction.LTRIM, AnsiTrimEmulationFunction.RTRIM, "str_replace"
+		registerSybaseKeywords();
+	}
+
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
+
+		registry.registerPattern( "second", "datepart(second, ?1)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "minute", "datepart(minute, ?1)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "hour", "datepart(hour, ?1)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "extract", "datepart(?1, ?3)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "mod", "?1 % ?2", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "bit_length", "datalength(?1) * 8", StandardSpiBasicTypes.INTEGER );
+		registry.register(
+				"trim", new AnsiTrimEmulationFunctionTemplate(
+						AnsiTrimEmulationFunctionTemplate.LTRIM, AnsiTrimEmulationFunctionTemplate.RTRIM, "str_replace"
 				)
 		);
 
-		registerFunction( "atan2", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "atn2(?1, ?2)" ) );
-		registerFunction( "atn2", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "atn2(?1, ?2)" ) );
+		registry.registerPattern( "atan2", "atn2(?1, ?2)", StandardSpiBasicTypes.DOUBLE );
+		registry.registerPattern( "atn2", "atn2(?1, ?2)", StandardSpiBasicTypes.DOUBLE );
 
-		registerFunction( "biginttohex", new SQLFunctionTemplate( StandardBasicTypes.STRING, "biginttohext(?1)" ) );
-		registerFunction( "char_length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "char_length(?1)" ) );
-		registerFunction( "charindex", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "charindex(?1, ?2)" ) );
-		registerFunction( "coalesce", new VarArgsSQLFunction( "coalesce(", ",", ")" ) );
-		registerFunction( "col_length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "col_length(?1, ?2)" ) );
-		registerFunction( "col_name", new SQLFunctionTemplate( StandardBasicTypes.STRING, "col_name(?1, ?2)" ) );
+		registry.registerPattern( "biginttohex", "biginttohext(?1)", StandardSpiBasicTypes.STRING );
+		registry.registerPattern( "char_length", "char_length(?1)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "charindex", "charindex(?1, ?2)", StandardSpiBasicTypes.INTEGER );
+		registry.varArgsBuilder( "coalesce", "coalesce(", ",", ")" ).register();
+		registry.registerPattern( "col_length", "col_length(?1, ?2)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "col_name", "col_name(?1, ?2)", StandardSpiBasicTypes.STRING );
 		// Sybase has created current_date and current_time inplace of getdate()
-		registerFunction( "current_time", new NoArgSQLFunction( "current_time", StandardBasicTypes.TIME ) );
-		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardBasicTypes.DATE ) );
+		registry.registerNoArgs( "current_time", StandardSpiBasicTypes.TIME );
+		registry.registerNoArgs( "current_date", StandardSpiBasicTypes.DATE );
 
 
-		registerFunction( "data_pages", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "data_pages(?1, ?2)" ) );
-		registerFunction(
-				"data_pages", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "data_pages(?1, ?2, ?3)" )
-		);
-		registerFunction(
-				"data_pages", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "data_pages(?1, ?2, ?3, ?4)" )
-		);
-		registerFunction( "datalength", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datalength(?1)" ) );
-		registerFunction( "dateadd", new SQLFunctionTemplate( StandardBasicTypes.TIMESTAMP, "dateadd(?1, ?2, ?3)" ) );
-		registerFunction( "datediff", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datediff(?1, ?2, ?3)" ) );
-		registerFunction( "datepart", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datepart(?1, ?2)" ) );
-		registerFunction( "datetime", new SQLFunctionTemplate( StandardBasicTypes.TIMESTAMP, "datetime" ) );
-		registerFunction( "db_id", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "db_id(?1)" ) );
-		registerFunction( "difference", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "difference(?1,?2)" ) );
-		registerFunction( "db_name", new SQLFunctionTemplate( StandardBasicTypes.STRING, "db_name(?1)" ) );
-		registerFunction( "has_role", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "has_role(?1, ?2)" ) );
-		registerFunction( "hextobigint", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "hextobigint(?1)" ) );
-		registerFunction( "hextoint", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "hextoint(?1)" ) );
-		registerFunction( "host_id", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "host_id" ) );
-		registerFunction( "host_name", new SQLFunctionTemplate( StandardBasicTypes.STRING, "host_name" ) );
-		registerFunction( "inttohex", new SQLFunctionTemplate( StandardBasicTypes.STRING, "inttohex(?1)" ) );
-		registerFunction( "is_quiesced", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "is_quiesced(?1)" ) );
-		registerFunction(
-				"is_sec_service_on", new SQLFunctionTemplate( StandardBasicTypes.BOOLEAN, "is_sec_service_on(?1)" )
-		);
-		registerFunction( "object_id", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "object_id(?1)" ) );
-		registerFunction( "object_name", new SQLFunctionTemplate( StandardBasicTypes.STRING, "object_name(?1)" ) );
-		registerFunction( "pagesize", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "pagesize(?1)" ) );
-		registerFunction( "pagesize", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "pagesize(?1, ?2)" ) );
-		registerFunction( "pagesize", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "pagesize(?1, ?2, ?3)" ) );
-		registerFunction(
-				"partition_id", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "partition_id(?1, ?2)" )
-		);
-		registerFunction(
-				"partition_id", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "partition_id(?1, ?2, ?3)" )
-		);
-		registerFunction(
-				"partition_name", new SQLFunctionTemplate( StandardBasicTypes.STRING, "partition_name(?1, ?2)" )
-		);
-		registerFunction(
-				"partition_name", new SQLFunctionTemplate( StandardBasicTypes.STRING, "partition_name(?1, ?2, ?3)" )
-		);
-		registerFunction( "patindex", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "patindex" ) );
-		registerFunction( "proc_role", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "proc_role" ) );
-		registerFunction( "role_name", new SQLFunctionTemplate( StandardBasicTypes.STRING, "role_name" ) );
+		registry.registerPattern( "data_pages", "data_pages(?1, ?2)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "data_pages", "data_pages(?1, ?2, ?3)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "data_pages", "data_pages(?1, ?2, ?3, ?4)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "datalength", "datalength(?1)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "dateadd", "dateadd(?1, ?2, ?3)", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerPattern( "datediff", "datediff(?1, ?2, ?3)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "datepart", "datepart(?1, ?2)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "datetime", "datetime", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerPattern( "db_id", "db_id(?1)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "difference", "difference(?1,?2)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "db_name", "db_name(?1)", StandardSpiBasicTypes.STRING );
+		registry.registerPattern( "has_role", "has_role(?1, ?2)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "hextobigint", "hextobigint(?1)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "hextoint", "hextoint(?1)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "host_id", "host_id", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "host_name", "host_name", StandardSpiBasicTypes.STRING );
+		registry.registerPattern( "inttohex", "inttohex(?1)", StandardSpiBasicTypes.STRING );
+		registry.registerPattern( "is_quiesced", "is_quiesced(?1)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "is_sec_service_on", "is_sec_service_on(?1)", StandardSpiBasicTypes.BOOLEAN );
+		registry.registerPattern( "object_id", "object_id(?1)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "object_name", "object_name(?1)", StandardSpiBasicTypes.STRING );
+		registry.registerPattern( "pagesize", "pagesize(?1)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "pagesize", "pagesize(?1, ?2)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "pagesize", "pagesize(?1, ?2, ?3)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "partition_id", "partition_id(?1, ?2)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "partition_id", "partition_id(?1, ?2, ?3)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "partition_name", "partition_name(?1, ?2)", StandardSpiBasicTypes.STRING );
+		registry.registerPattern( "partition_name", "partition_name(?1, ?2, ?3)", StandardSpiBasicTypes.STRING );
+		registry.registerPattern( "patindex", "patindex", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "proc_role", "proc_role", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "role_name", "role_name", StandardSpiBasicTypes.STRING );
 		// check return type
-		registerFunction( "row_count", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "row_count" ) );
-		registerFunction( "rand2", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "rand2(?1)" ) );
-		registerFunction( "rand2", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "rand2" ) );
-		registerFunction( "replicate", new SQLFunctionTemplate( StandardBasicTypes.STRING, "replicate(?1,?2)" ) );
-		registerFunction( "role_contain", new SQLFunctionTemplate( StandardBasicTypes.BOOLEAN, "role_contain" ) );
-		registerFunction( "role_id", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "role_id" ) );
-		registerFunction( "reserved_pages", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "reserved_pages" ) );
-		registerFunction( "right", new SQLFunctionTemplate( StandardBasicTypes.STRING, "right" ) );
-		registerFunction( "show_role", new SQLFunctionTemplate( StandardBasicTypes.STRING, "show_role" ) );
-		registerFunction(
-				"show_sec_services", new SQLFunctionTemplate( StandardBasicTypes.STRING, "show_sec_services" )
-		);
-		registerFunction( "sortkey", new VarArgsSQLFunction( StandardBasicTypes.BINARY, "sortkey(", ",", ")" ) );
-		registerFunction( "soundex", new SQLFunctionTemplate( StandardBasicTypes.STRING, "sounded" ) );
-		registerFunction( "stddev", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "stddev" ) );
-		registerFunction( "stddev_pop", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "stddev_pop" ) );
-		registerFunction( "stddev_samp", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "stddev_samp" ) );
-		registerFunction( "stuff", new SQLFunctionTemplate( StandardBasicTypes.STRING, "stuff" ) );
-		registerFunction( "substring", new VarArgsSQLFunction( StandardBasicTypes.STRING, "substring(", ",", ")" ) );
-		registerFunction( "suser_id", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "suser_id" ) );
-		registerFunction( "suser_name", new SQLFunctionTemplate( StandardBasicTypes.STRING, "suser_name" ) );
-		registerFunction( "tempdb_id", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "tempdb_id" ) );
-		registerFunction( "textvalid", new SQLFunctionTemplate( StandardBasicTypes.BOOLEAN, "textvalid" ) );
-		registerFunction( "to_unichar", new SQLFunctionTemplate( StandardBasicTypes.STRING, "to_unichar(?1)" ) );
-		registerFunction(
-				"tran_dumptable_status",
-				new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "ran_dumptable_status(?1)" )
-		);
-		registerFunction( "uhighsurr", new SQLFunctionTemplate( StandardBasicTypes.BOOLEAN, "uhighsurr" ) );
-		registerFunction( "ulowsurr", new SQLFunctionTemplate( StandardBasicTypes.BOOLEAN, "ulowsurr" ) );
-		registerFunction( "uscalar", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "uscalar" ) );
-		registerFunction( "used_pages", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "used_pages" ) );
-		registerFunction( "user_id", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "user_id" ) );
-		registerFunction( "user_name", new SQLFunctionTemplate( StandardBasicTypes.STRING, "user_name" ) );
-		registerFunction( "valid_name", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "valid_name" ) );
-		registerFunction( "valid_user", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "valid_user" ) );
-		registerFunction( "variance", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "variance" ) );
-		registerFunction( "var_pop", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "var_pop" ) );
-		registerFunction( "var_samp", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "var_samp" ) );
-		registerFunction( "sysdate", new NoArgSQLFunction("getdate", StandardBasicTypes.TIMESTAMP) );
-
-		registerSybaseKeywords();
+		registry.registerPattern( "row_count", "row_count", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "rand2", "rand2(?1)", StandardSpiBasicTypes.DOUBLE );
+		registry.registerPattern( "rand2", "rand2", StandardSpiBasicTypes.DOUBLE );
+		registry.registerPattern( "replicate", "replicate(?1,?2)", StandardSpiBasicTypes.STRING );
+		registry.registerPattern( "role_contain", "role_contain", StandardSpiBasicTypes.BOOLEAN );
+		registry.registerPattern( "role_id", "role_id", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "reserved_pages", "reserved_pages", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "right", "right", StandardSpiBasicTypes.STRING );
+		registry.registerPattern( "show_role", "show_role", StandardSpiBasicTypes.STRING );
+		registry.registerPattern( "show_sec_services", "show_sec_services", StandardSpiBasicTypes.STRING );
+		registry.registerVarArgs( "sortkey", StandardSpiBasicTypes.BINARY, "sortkey(", ",", ")" );
+		registry.registerPattern( "soundex", "sounded", StandardSpiBasicTypes.STRING );
+		registry.registerPattern( "stddev", "stddev", StandardSpiBasicTypes.DOUBLE );
+		registry.registerPattern( "stddev_pop", "stddev_pop", StandardSpiBasicTypes.DOUBLE );
+		registry.registerPattern( "stddev_samp", "stddev_samp", StandardSpiBasicTypes.DOUBLE );
+		registry.registerPattern( "stuff", "stuff", StandardSpiBasicTypes.STRING );
+		registry.registerVarArgs( "substring", StandardSpiBasicTypes.STRING, "substring(", ",", ")" );
+		registry.registerPattern( "suser_id", "suser_id", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "suser_name", "suser_name", StandardSpiBasicTypes.STRING );
+		registry.registerPattern( "tempdb_id", "tempdb_id", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "textvalid", "textvalid", StandardSpiBasicTypes.BOOLEAN );
+		registry.registerPattern( "to_unichar", "to_unichar(?1)", StandardSpiBasicTypes.STRING );
+		registry.registerPattern( "tran_dumptable_status", "ran_dumptable_status(?1)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "uhighsurr", "uhighsurr", StandardSpiBasicTypes.BOOLEAN );
+		registry.registerPattern( "ulowsurr", "ulowsurr", StandardSpiBasicTypes.BOOLEAN );
+		registry.registerPattern( "uscalar", "uscalar", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "used_pages", "used_pages", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "user_id", "user_id", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "user_name", "user_name", StandardSpiBasicTypes.STRING );
+		registry.registerPattern( "valid_name", "valid_name", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "valid_user", "valid_user", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "variance", "variance", StandardSpiBasicTypes.DOUBLE );
+		registry.registerPattern( "var_pop", "var_pop", StandardSpiBasicTypes.DOUBLE );
+		registry.registerPattern( "var_samp", "var_samp", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNoArgs( "sysdate", StandardSpiBasicTypes.TIMESTAMP );
 	}
 
 	private void registerSybaseKeywords() {
@@ -424,7 +408,7 @@ public class SybaseASE15Dialect extends SybaseDialect {
 
 	@Override
 	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		return sqlCode == Types.BOOLEAN ? TinyIntTypeDescriptor.INSTANCE : super.getSqlTypeDescriptorOverride( sqlCode );
+		return sqlCode == Types.BOOLEAN ? TinyIntSqlDescriptor.INSTANCE : super.getSqlTypeDescriptorOverride( sqlCode );
 	}
 
 	@Override

@@ -6,16 +6,15 @@
  */
 package org.hibernate.proxy.pojo.bytebuddy;
 
-import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.proxy.ProxyConfiguration;
 import org.hibernate.proxy.pojo.BasicLazyInitializer;
-import org.hibernate.type.CompositeType;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
@@ -28,10 +27,10 @@ public class ByteBuddyInterceptor extends BasicLazyInitializer implements ProxyC
 			String entityName,
 			Class persistentClass,
 			Class[] interfaces,
-			Serializable id,
+			Object id,
 			Method getIdentifierMethod,
 			Method setIdentifierMethod,
-			CompositeType componentIdType,
+			EmbeddedTypeDescriptor componentIdType,
 			SharedSessionContractImplementor session,
 			boolean overridesEquals) {
 		super( entityName, persistentClass, id, getIdentifierMethod, setIdentifierMethod, componentIdType, session, overridesEquals );

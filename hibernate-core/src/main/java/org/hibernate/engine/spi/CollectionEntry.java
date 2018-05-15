@@ -19,8 +19,10 @@ import org.hibernate.collection.internal.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 /**
  * We need an entry to tell us all about the current state
@@ -36,12 +38,12 @@ public final class CollectionEntry implements Serializable {
 	// session-start/post-flush persistent state
 	private Serializable snapshot;
 	// allow the CollectionSnapshot to be serialized
-	private String role;
+	private NavigableRole role;
 
 	// "loaded" means the reference that is consistent
 	// with the current database state
-	private transient CollectionPersister loadedPersister;
-	private Serializable loadedKey;
+	private transient PersistentCollectionDescriptor loadedCollectionDescriptor;
+	private Object loadedKey;
 
 	// ATTRIBUTES USED ONLY DURING FLUSH CYCLE
 
@@ -57,23 +59,24 @@ public final class CollectionEntry implements Serializable {
 	private transient boolean ignore;
 
 	// "current" means the reference that was found during flush()
-	private transient CollectionPersister currentPersister;
-	private transient Serializable currentKey;
+	private transient PersistentCollectionDescriptor currentDescriptor;
+	private transient Object currentKey;
 
 	/**
 	 * For newly wrapped collections, or dereferenced collection wrappers
 	 */
-	public CollectionEntry(CollectionPersister persister, PersistentCollection collection) {
+	public CollectionEntry(PersistentCollectionDescriptor collectionDescriptor, PersistentCollection collection) {
 		// new collections that get found + wrapped
 		// during flush shouldn't be ignored
 		ignore = false;
 
 		collection.clearDirty(); //a newly wrapped collection is NOT dirty (or we get unnecessary version updates)
 
-		snapshot = persister.isMutable() ?
-				collection.getSnapshot(persister) :
-				null;
-		collection.setSnapshot(loadedKey, role, snapshot);
+		snapshot = collectionDescriptor.getMutabilityPlan().isMutable()
+				? collection.getSnapshot(collectionDescriptor)
+				: null;
+
+		collection.setSnapshot( null, collectionDescriptor.getNavigableRole(), snapshot );
 	}
 
 	/**
@@ -81,18 +84,17 @@ public final class CollectionEntry implements Serializable {
 	 */
 	public CollectionEntry(
 			final PersistentCollection collection,
-			final CollectionPersister loadedPersister,
-			final Serializable loadedKey,
-			final boolean ignore
-	) {
+			final PersistentCollectionDescriptor loadedDescriptor,
+			final Object loadedKey,
+			final boolean ignore) {
 		this.ignore=ignore;
 
 		//collection.clearDirty()
 
 		this.loadedKey = loadedKey;
-		setLoadedPersister(loadedPersister);
+		setLoadedDescriptor( loadedDescriptor);
 
-		collection.setSnapshot(loadedKey, role, null);
+		collection.setSnapshot( loadedKey, loadedDescriptor.getNavigableRole(), null );
 
 		//postInitialize() will be called after initialization
 	}
@@ -100,7 +102,7 @@ public final class CollectionEntry implements Serializable {
 	/**
 	 * For uninitialized detached collections
 	 */
-	public CollectionEntry(CollectionPersister loadedPersister, Serializable loadedKey) {
+	public CollectionEntry(PersistentCollectionDescriptor loadedDescriptor, Object loadedKey) {
 		// detached collection wrappers that get found + reattached
 		// during flush shouldn't be ignored
 		ignore = false;
@@ -108,7 +110,7 @@ public final class CollectionEntry implements Serializable {
 		//collection.clearDirty()
 
 		this.loadedKey = loadedKey;
-		setLoadedPersister(loadedPersister);
+		setLoadedDescriptor( loadedDescriptor);
 	}
 
 	/**
@@ -120,7 +122,7 @@ public final class CollectionEntry implements Serializable {
 		ignore = false;
 
 		loadedKey = collection.getKey();
-		setLoadedPersister( factory.getMetamodel().collectionPersister( collection.getRole() ) );
+		setLoadedDescriptor( factory.getMetamodel().findCollectionDescriptor( collection.getRole() ) );
 
 		snapshot = collection.getStoredSnapshot();
 	}
@@ -132,7 +134,7 @@ public final class CollectionEntry implements Serializable {
 	 * @see #deserialize
 	 */
 	private CollectionEntry(
-			String role,
+			NavigableRole role,
 			Serializable snapshot,
 			Serializable loadedKey,
 			SessionFactoryImplementor factory) {
@@ -149,18 +151,35 @@ public final class CollectionEntry implements Serializable {
 	 * of the collection elements, if necessary
 	 */
 	private void dirty(PersistentCollection collection) throws HibernateException {
-
-		boolean forceDirty = collection.wasInitialized() &&
-				!collection.isDirty() && //optimization
-				getLoadedPersister() != null &&
-				getLoadedPersister().isMutable() && //optimization
-				( collection.isDirectlyAccessible() || getLoadedPersister().getElementType().isMutable() ) && //optimization
-				!collection.equalsSnapshot( getLoadedPersister() );
-
-		if ( forceDirty ) {
-			collection.dirty();
+		if ( ! collection.wasInitialized() ) {
+			return;
 		}
 
+		if ( collection.isDirty() ) {
+			return;
+		}
+
+		final PersistentCollectionDescriptor loadedDescriptor = getLoadedCollectionDescriptor();
+
+		if ( loadedDescriptor == null ) {
+			return;
+		}
+
+		final MutabilityPlan mutabilityPlan = loadedDescriptor.getDescribedAttribute().getMutabilityPlan();
+
+		if ( ! mutabilityPlan.isMutable() ) {
+			return;
+		}
+
+		if ( ! collection.isDirectlyAccessible() ) {
+			return;
+		}
+
+		if ( collection.equalsSnapshot( loadedDescriptor ) ) {
+			return;
+		}
+
+		collection.dirty();
 	}
 
 	public void preFlush(PersistentCollection collection) throws HibernateException {
@@ -169,21 +188,21 @@ public final class CollectionEntry implements Serializable {
 		}
 
 		boolean nonMutableChange = collection.isDirty()
-				&& getLoadedPersister() != null
-				&& !getLoadedPersister().isMutable();
+				&& getLoadedCollectionDescriptor() != null
+				&& !getLoadedCollectionDescriptor().getMutabilityPlan().isMutable();
 		if ( nonMutableChange ) {
 			throw new HibernateException(
 					"changed an immutable collection instance: " +
-					MessageHelper.collectionInfoString( getLoadedPersister().getRole(), getLoadedKey() )
+					MessageHelper.collectionInfoString( getLoadedCollectionDescriptor().getNavigableRole().getFullPath(), getLoadedKey() )
 			);
 		}
 
 		dirty( collection );
 
-		if ( LOG.isDebugEnabled() && collection.isDirty() && getLoadedPersister() != null ) {
+		if ( LOG.isDebugEnabled() && collection.isDirty() && getLoadedCollectionDescriptor() != null ) {
 			LOG.debugf(
 					"Collection dirty: %s",
-					MessageHelper.collectionInfoString( getLoadedPersister().getRole(), getLoadedKey() )
+					MessageHelper.collectionInfoString( getLoadedCollectionDescriptor().getNavigableRole().getFullPath(), getLoadedKey() )
 			);
 		}
 
@@ -196,11 +215,11 @@ public final class CollectionEntry implements Serializable {
 	}
 
 	public void postInitialize(PersistentCollection collection) throws HibernateException {
-		snapshot = getLoadedPersister().isMutable()
-				? collection.getSnapshot( getLoadedPersister() )
+		snapshot = getLoadedCollectionDescriptor().getMutabilityPlan().isMutable()
+				? collection.getSnapshot( getLoadedCollectionDescriptor() )
 				: null;
 		collection.setSnapshot(loadedKey, role, snapshot);
-		if ( getLoadedPersister().getBatchSize() > 1 ) {
+		if ( getLoadedCollectionDescriptor().getBatchSize() > 1 ) {
 			( (AbstractPersistentCollection) collection ).getSession()
 					.getPersistenceContext()
 					.getBatchFetchQueue()
@@ -226,24 +245,33 @@ public final class CollectionEntry implements Serializable {
 	 */
 	public void afterAction(PersistentCollection collection) {
 		loadedKey = getCurrentKey();
-		setLoadedPersister( getCurrentPersister() );
+		setLoadedDescriptor( getCurrentDescriptor() );
 
 		boolean resnapshot = collection.wasInitialized() &&
 				( isDoremove() || isDorecreate() || isDoupdate() );
 		if ( resnapshot ) {
-			snapshot = loadedPersister==null || !loadedPersister.isMutable() ?
-					null :
-					collection.getSnapshot(loadedPersister); //re-snapshot
+			snapshot = loadedCollectionDescriptor == null || !loadedCollectionDescriptor.getMutabilityPlan().isMutable()
+					? null
+					//re-snapshot
+					: collection.getSnapshot( loadedCollectionDescriptor );
 		}
 
 		collection.postAction();
 	}
 
-	public Serializable getKey() {
+	public Object getKey() {
 		return getLoadedKey();
 	}
 
+	/**
+	 * @deprecated (since 6.0) use {@link #getNavigableRole}
+	 */
+	@Deprecated
 	public String getRole() {
+		return role.getFullPath();
+	}
+
+	public NavigableRole getNavigableRole(){
 		return role;
 	}
 
@@ -272,13 +300,15 @@ public final class CollectionEntry implements Serializable {
 		fromMerge = true;
 	}
 
-	private void setLoadedPersister(CollectionPersister persister) {
-		loadedPersister = persister;
-		setRole( persister == null ? null : persister.getRole() );
+	private void setLoadedDescriptor(PersistentCollectionDescriptor collectionDescriptor) {
+		loadedCollectionDescriptor = collectionDescriptor;
+		setRole( collectionDescriptor == null ? null : collectionDescriptor.getNavigableRole() );
 	}
 
 	void afterDeserialize(SessionFactoryImplementor factory) {
-		loadedPersister = ( factory == null ? null : factory.getMetamodel().collectionPersister( role ) );
+		loadedCollectionDescriptor = ( factory == null ?
+				null :
+				factory.getMetamodel().findCollectionDescriptor( role.getFullPath() ) );
 	}
 
 	public boolean wasDereferenced() {
@@ -329,48 +359,48 @@ public final class CollectionEntry implements Serializable {
 		return ignore;
 	}
 
-	public CollectionPersister getCurrentPersister() {
-		return currentPersister;
+	public PersistentCollectionDescriptor getCurrentDescriptor() {
+		return currentDescriptor;
 	}
 
-	public void setCurrentPersister(CollectionPersister currentPersister) {
-		this.currentPersister = currentPersister;
+	public void setCurrentDescriptor(PersistentCollectionDescriptor descriptor) {
+		this.currentDescriptor = descriptor;
 	}
 
 	/**
 	 * This is only available late during the flush
 	 * cycle
 	 */
-	public Serializable getCurrentKey() {
+	public Object getCurrentKey() {
 		return currentKey;
 	}
 
-	public void setCurrentKey(Serializable currentKey) {
+	public void setCurrentKey(Object currentKey) {
 		this.currentKey = currentKey;
 	}
 
 	/**
 	 * This is only available late during the flush cycle
 	 */
-	public CollectionPersister getLoadedPersister() {
-		return loadedPersister;
+	public PersistentCollectionDescriptor getLoadedCollectionDescriptor() {
+		return loadedCollectionDescriptor;
 	}
 
-	public Serializable getLoadedKey() {
+	public Object getLoadedKey() {
 		return loadedKey;
 	}
 
-	public void setRole(String role) {
+	private void setRole(NavigableRole role) {
 		this.role = role;
 	}
 
 	@Override
 	public String toString() {
 		String result = "CollectionEntry" +
-				MessageHelper.collectionInfoString( loadedPersister.getRole(), loadedKey );
-		if ( currentPersister != null ) {
+				MessageHelper.collectionInfoString( loadedCollectionDescriptor.getNavigableRole().getFullPath(), loadedKey );
+		if ( currentDescriptor != null ) {
 			result += "->" +
-					MessageHelper.collectionInfoString( currentPersister.getRole(), currentKey );
+					MessageHelper.collectionInfoString( currentDescriptor.getNavigableRole().getFullPath(), currentKey );
 		}
 		return result;
 	}
@@ -391,8 +421,8 @@ public final class CollectionEntry implements Serializable {
 		//      does the collection already have
 		//      it's own up-to-date snapshot?
 		return collection.wasInitialized() &&
-			( getLoadedPersister()==null || getLoadedPersister().isMutable() ) &&
-			collection.isSnapshotEmpty( getSnapshot() );
+			( getLoadedCollectionDescriptor() == null || getLoadedCollectionDescriptor().getMutabilityPlan().isMutable() )
+				&& collection.isSnapshotEmpty( getSnapshot() );
 	}
 
 
@@ -426,7 +456,7 @@ public final class CollectionEntry implements Serializable {
 			ObjectInputStream ois,
 			SessionImplementor session) throws IOException, ClassNotFoundException {
 		return new CollectionEntry(
-				(String) ois.readObject(),
+				(NavigableRole) ois.readObject(),
 				(Serializable) ois.readObject(),
 				(Serializable) ois.readObject(),
 				(session == null ? null : session.getFactory())

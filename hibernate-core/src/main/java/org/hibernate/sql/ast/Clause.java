@@ -6,44 +6,39 @@
  */
 package org.hibernate.sql.ast;
 
-import org.hibernate.Incubating;
+import java.util.function.Predicate;
+
+import org.hibernate.metamodel.model.domain.spi.StateArrayContributor;
+
+import static org.hibernate.metamodel.model.domain.spi.Writeable.STANDARD_INSERT_INCLUSION_CHECK;
+import static org.hibernate.metamodel.model.domain.spi.Writeable.STANDARD_UPDATE_INCLUSION_CHECK;
 
 /**
  * Used to indicate which query clause we are currently processing
  *
  * @author Steve Ebersole
  */
-@Incubating
 public enum Clause {
-	/**
-	 * The insert values clause
-	 */
-	INSERT,
+	INSERT( STANDARD_INSERT_INCLUSION_CHECK ),
+	UPDATE( STANDARD_UPDATE_INCLUSION_CHECK),
+	DELETE( STANDARD_UPDATE_INCLUSION_CHECK),
+	SELECT( stateArrayContributor -> true ),
+	FROM( stateArrayContributor -> true ),
+	WHERE( stateArrayContributor -> true ),
+	GROUP( stateArrayContributor -> true ),
+	HAVING( stateArrayContributor -> true ),
+	ORDER( stateArrayContributor -> true ),
+	LIMIT( stateArrayContributor -> true ),
+	CALL( stateArrayContributor -> true ),
+	IRRELEVANT( stateArrayContributor -> true );
 
-	/**
-	 * The update set clause
-	 */
-	UPDATE,
+	private final Predicate<StateArrayContributor> inclusionChecker;
 
-	/**
-	 * Not used in 5.x.  Intended for use in 6+ as indicator
-	 * of processing predicates (where clause) that occur in a
-	 * delete
-	 */
-	DELETE,
+	Clause(Predicate<StateArrayContributor> inclusionChecker) {
+		this.inclusionChecker = inclusionChecker;
+	}
 
-	SELECT,
-	FROM,
-	WHERE,
-	GROUP,
-	HAVING,
-	ORDER,
-	LIMIT,
-	CALL,
-
-	/**
-	 * Again, not used in 5.x.  Used in 6+
-	 */
-	IRRELEVANT
-
+	public Predicate<StateArrayContributor> getInclusionChecker() {
+		return inclusionChecker;
+	}
 }

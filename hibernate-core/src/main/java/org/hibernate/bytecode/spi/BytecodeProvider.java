@@ -8,6 +8,7 @@ package org.hibernate.bytecode.spi;
 
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Contract for providers of bytecode services to Hibernate.
@@ -38,7 +39,8 @@ public interface BytecodeProvider {
 	 * @param types The types of all properties to be accessed.
 	 * @return The reflection optimization delegate.
 	 */
-	ReflectionOptimizer getReflectionOptimizer(Class clazz, String[] getterNames, String[] setterNames, Class[] types);
+	ReflectionOptimizer getReflectionOptimizer(Class clazz, String[] getterNames, String[] setterNames, JavaTypeDescriptor[] types);
+//	ReflectionOptimizer getReflectionOptimizer(ManagedTypeDescriptor managedType);
 
 	/**
 	 * Returns a byte code enhancer that implements the enhancements described in the supplied enhancement context.

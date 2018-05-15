@@ -10,6 +10,9 @@
 ext {
 
     junitVersion = '4.12'
+    junitVintageVersion = '5.3.1'
+    junit5Version = '5.3.1'
+
     h2Version = '1.4.196'
     bytemanVersion = '4.0.3' //Compatible with JDK10
     jnpVersion = '5.0.6.CR1'
@@ -46,7 +49,7 @@ ext {
             ant:            'org.apache.ant:ant:1.8.2',
 
             // Antlr
-            antlr:          'antlr:antlr:2.7.7',
+            antlr:          'org.antlr:antlr4:4.7.1',
 
             // Annotations
             commons_annotations: "org.hibernate.common:hibernate-commons-annotations:${hibernateCommonsVersion}",
@@ -103,8 +106,15 @@ ext {
 
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~ testing
 
+
+            junit5_api:     "org.junit.jupiter:junit-jupiter-api:${junit5Version}",
+            junit5_jupiter: "org.junit.jupiter:junit-jupiter-engine:${junit5Version}",
+            junit5_params : "org.junit.jupiter:junit-jupiter-params:${junit5Version}",
+            junit:          "junit:junit:${junitVersion}",
+            junit5_vintage: "org.junit.vintage:junit-vintage-engine:${junitVintageVersion}",
+
             log4j:          "log4j:log4j:1.2.17",
-            junit:           "junit:junit:${junitVersion}",
+
             byteman:         "org.jboss.byteman:byteman:${bytemanVersion}",
             byteman_install: "org.jboss.byteman:byteman-install:${bytemanVersion}",
             byteman_bmunit:  "org.jboss.byteman:byteman-bmunit:${bytemanVersion}",

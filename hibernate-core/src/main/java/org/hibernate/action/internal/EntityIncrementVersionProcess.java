@@ -9,7 +9,7 @@ package org.hibernate.action.internal;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 
 /**
  * A BeforeTransactionCompletionProcess impl to verify and increment an entity version as party
@@ -39,8 +39,8 @@ public class EntityIncrementVersionProcess implements BeforeTransactionCompletio
 	 */
 	@Override
 	public void doBeforeTransactionCompletion(SessionImplementor session) {
-		final EntityPersister persister = entry.getPersister();
-		final Object nextVersion = persister.forceVersionIncrement( entry.getId(), entry.getVersion(), session );
+		final EntityTypeDescriptor entityDescriptor = entry.getDescriptor();
+		final Object nextVersion = entityDescriptor.forceVersionIncrement( entry.getId(), entry.getVersion(), session );
 		entry.forceLocked( object, nextVersion );
 	}
 }

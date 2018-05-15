@@ -9,7 +9,7 @@ package org.hibernate.stat.internal;
 import java.io.Serializable;
 import java.util.concurrent.atomic.LongAdder;
 
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.stat.CollectionStatistics;
 
 /**
@@ -26,14 +26,14 @@ public class CollectionStatisticsImpl extends AbstractCacheableDataStatistics im
 	private final LongAdder removeCount = new LongAdder();
 	private final LongAdder recreateCount = new LongAdder();
 
-	CollectionStatisticsImpl(CollectionPersister persister) {
+	CollectionStatisticsImpl(PersistentCollectionDescriptor descriptor) {
 		super(
-				() -> persister.getCacheAccessStrategy() != null
-						? persister.getCacheAccessStrategy().getRegion()
+				() -> descriptor.getCacheAccess() != null
+						? descriptor.getCacheAccess().getRegion()
 						: null
 		);
 
-		this.collectionRole = persister.getRole();
+		this.collectionRole = descriptor.getNavigableRole().getFullPath();
 	}
 
 	public long getLoadCount() {

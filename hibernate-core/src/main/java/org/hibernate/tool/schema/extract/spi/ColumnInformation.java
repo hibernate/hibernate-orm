@@ -7,7 +7,7 @@
 package org.hibernate.tool.schema.extract.spi;
 
 import org.hibernate.boot.model.TruthValue;
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.naming.Identifier;
 
 /**
  * Provides access to information about existing table columns

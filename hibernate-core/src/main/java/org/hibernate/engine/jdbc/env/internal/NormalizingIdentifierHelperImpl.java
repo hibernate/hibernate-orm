@@ -10,8 +10,8 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.hibernate.boot.model.naming.DatabaseIdentifier;
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.naming.spi.DatabaseIdentifier;
+import org.hibernate.naming.Identifier;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;

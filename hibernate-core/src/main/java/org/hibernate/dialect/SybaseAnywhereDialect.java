@@ -11,8 +11,8 @@ import java.sql.Types;
 
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SybaseAnywhereIdentityColumnSupport;
-import org.hibernate.type.descriptor.sql.BitTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.BitSqlDescriptor;
 
 /**
  * SQL Dialect for Sybase Anywhere
@@ -58,6 +58,6 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 
 	@Override
 	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		return sqlCode == Types.BOOLEAN ? BitTypeDescriptor.INSTANCE : super.getSqlTypeDescriptorOverride( sqlCode );
+		return sqlCode == Types.BOOLEAN ? BitSqlDescriptor.INSTANCE : super.getSqlTypeDescriptorOverride( sqlCode );
 	}
 }

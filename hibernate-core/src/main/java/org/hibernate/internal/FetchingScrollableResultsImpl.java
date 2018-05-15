@@ -6,190 +6,195 @@
  */
 package org.hibernate.internal;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.QueryParameters;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.hql.internal.HolderInstantiator;
-import org.hibernate.loader.Loader;
-import org.hibernate.type.Type;
+import org.hibernate.sql.results.internal.JdbcValuesSourceProcessingStateStandardImpl;
+import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
+import org.hibernate.sql.results.internal.values.JdbcValues;
+import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.results.spi.RowReader;
 
 /**
  * Implementation of ScrollableResults which can handle collection fetches.
  *
  * @author Steve Ebersole
  */
-public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
-	private Object[] currentRow;
+public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<R> {
+	private R currentRow;
+
 	private int currentPosition;
 	private Integer maxPosition;
 
-	/**
-	 * Constructs a FetchingScrollableResultsImpl.
-	 *
-	 * @param rs The scrollable result set
-	 * @param ps The prepared statement used to obtain the result set
-	 * @param sess The originating session
-	 * @param loader The loader
-	 * @param queryParameters query parameters
-	 * @param types The result types
-	 * @param holderInstantiator Ugh
-	 */
 	public FetchingScrollableResultsImpl(
-			ResultSet rs,
-			PreparedStatement ps,
-			SharedSessionContractImplementor sess,
-			Loader loader,
-			QueryParameters queryParameters,
-			Type[] types,
-			HolderInstantiator holderInstantiator) {
-		super( rs, ps, sess, loader, queryParameters, types, holderInstantiator );
+			JdbcValues jdbcValues,
+			JdbcValuesSourceProcessingOptions processingOptions,
+			JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState,
+			RowProcessingStateStandardImpl rowProcessingState,
+			RowReader<R> rowReader,
+			SharedSessionContractImplementor persistenceContext) {
+		super(
+				jdbcValues,
+				processingOptions,
+				jdbcValuesSourceProcessingState,
+				rowProcessingState,
+				rowReader,
+				persistenceContext
+		);
+		this.maxPosition = jdbcValuesSourceProcessingState.getQueryOptions().getEffectiveLimit().getMaxRows();
 	}
 
 	@Override
-	protected Object[] getCurrentRow() {
+	protected R getCurrentRow() {
 		return currentRow;
 	}
 
 	@Override
+	public boolean scroll(int i) {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
 	public boolean next() {
-		if ( maxPosition != null && maxPosition <= currentPosition ) {
-			currentRow = null;
-			currentPosition = maxPosition + 1;
-			return false;
-		}
+		throw new NotYetImplementedFor6Exception();
 
-		if ( isResultSetEmpty() ) {
-			currentRow = null;
-			currentPosition = 0;
-			return false;
-		}
-
-		final Object row = getLoader().loadSequentialRowsForward(
-				getResultSet(),
-				getSession(),
-				getQueryParameters(),
-				true
-		);
-
-
-		final boolean afterLast;
-		try {
-			afterLast = getResultSet().isAfterLast();
-		}
-		catch (SQLException e) {
-			throw getSession().getFactory().getSQLExceptionHelper().convert(
-					e,
-					"exception calling isAfterLast()"
-			);
-		}
-
-		currentPosition++;
-		currentRow = new Object[] {row};
-
-		if ( afterLast ) {
-			if ( maxPosition == null ) {
-				// we just hit the last position
-				maxPosition = currentPosition;
-			}
-		}
-
-		afterScrollOperation();
-
-		return true;
+//		if ( maxPosition != null && maxPosition <= currentPosition ) {
+//			currentRow = null;
+//			currentPosition = maxPosition + 1;
+//			return false;
+//		}
+//
+//		if ( isResultSetEmpty() ) {
+//			currentRow = null;
+//			currentPosition = 0;
+//			return false;
+//		}
+//
+//		final Object row = getLoader().loadSequentialRowsForward(
+//				getResultSet(),
+//				getSession(),
+//				getQueryParameters(),
+//				true
+//		);
+//
+//
+//		final boolean afterLast;
+//		try {
+//			afterLast = getResultSet().isAfterLast();
+//		}
+//		catch (SQLException e) {
+//			throw getSession().getFactory().getSQLExceptionHelper().convert(
+//					e,
+//					"exception calling isAfterLast()"
+//			);
+//		}
+//
+//		currentPosition++;
+//		currentRow = new Object[] {row};
+//
+//		if ( afterLast ) {
+//			if ( maxPosition == null ) {
+//				// we just hit the last position
+//				maxPosition = currentPosition;
+//			}
+//		}
+//
+//		afterScrollOperation();
+//
+//		return true;
 	}
 
 	@Override
 	public boolean previous() {
-		if ( currentPosition <= 1 ) {
-			currentPosition = 0;
-			currentRow = null;
-			return false;
-		}
+		throw new NotYetImplementedFor6Exception();
 
-		final Object loadResult = getLoader().loadSequentialRowsReverse(
-				getResultSet(),
-				getSession(),
-				getQueryParameters(),
-				false,
-				( maxPosition != null && currentPosition > maxPosition )
-		);
-
-		currentRow = new Object[] {loadResult};
-		currentPosition--;
-
-		afterScrollOperation();
-
-		return true;
-	}
-
-	@Override
-	public boolean scroll(int positions) {
-		boolean more = false;
-		if ( positions > 0 ) {
-			// scroll ahead
-			for ( int i = 0; i < positions; i++ ) {
-				more = next();
-				if ( !more ) {
-					break;
-				}
-			}
-		}
-		else if ( positions < 0 ) {
-			// scroll backward
-			for ( int i = 0; i < ( 0 - positions ); i++ ) {
-				more = previous();
-				if ( !more ) {
-					break;
-				}
-			}
-		}
-		else {
-			throw new HibernateException( "scroll(0) not valid" );
-		}
-
-		afterScrollOperation();
-
-		return more;
+//		if ( currentPosition <= 1 ) {
+//			currentPosition = 0;
+//			currentRow = null;
+//			return false;
+//		}
+//
+//		final Object loadResult = getLoader().loadSequentialRowsReverse(
+//				getResultSet(),
+//				getSession(),
+//				getQueryParameters(),
+//				false,
+//				( maxPosition != null && currentPosition > maxPosition )
+//		);
+//
+//		currentRow = new Object[] {loadResult};
+//		currentPosition--;
+//
+//		afterScrollOperation();
+//
+//		return true;
+//	}
+//
+//	@Override
+//	public boolean scroll(int positions) {
+//		boolean more = false;
+//		if ( positions > 0 ) {
+//			// scroll ahead
+//			for ( int i = 0; i < positions; i++ ) {
+//				more = next();
+//				if ( !more ) {
+//					break;
+//				}
+//			}
+//		}
+//		else if ( positions < 0 ) {
+//			// scroll backward
+//			for ( int i = 0; i < ( 0 - positions ); i++ ) {
+//				more = previous();
+//				if ( !more ) {
+//					break;
+//				}
+//			}
+//		}
+//		else {
+//			throw new HibernateException( "scroll(0) not valid" );
+//		}
+//
+//		afterScrollOperation();
+//
+//		return more;
 	}
 
 	@Override
 	public boolean last() {
-		boolean more = false;
-		if ( maxPosition != null ) {
-			if ( currentPosition > maxPosition ) {
-				more = previous();
-			}
-			for ( int i = currentPosition; i < maxPosition; i++ ) {
-				more = next();
-			}
-		}
-		else {
-			try {
-				if ( isResultSetEmpty() || getResultSet().isAfterLast() ) {
-					// should not be able to reach last without maxPosition being set
-					// unless there are no results
-					return false;
-				}
+		throw new NotYetImplementedFor6Exception();
 
-				while ( !getResultSet().isAfterLast() ) {
-					more = next();
-				}
-			}
-			catch (SQLException e) {
-				throw getSession().getFactory().getSQLExceptionHelper().convert(
-						e,
-						"exception calling isAfterLast()"
-				);
-			}
-		}
-
-		afterScrollOperation();
-
-		return more;
+//		boolean more = false;
+//		if ( maxPosition != null ) {
+//			if ( currentPosition > maxPosition ) {
+//				more = previous();
+//			}
+//			for ( int i = currentPosition; i < maxPosition; i++ ) {
+//				more = next();
+//			}
+//		}
+//		else {
+//			try {
+//				if ( isResultSetEmpty() || getResultSet().isAfterLast() ) {
+//					// should not be able to reach last without maxPosition being set
+//					// unless there are no results
+//					return false;
+//				}
+//
+//				while ( !getResultSet().isAfterLast() ) {
+//					more = next();
+//				}
+//			}
+//			catch (SQLException e) {
+//				throw getSession().getFactory().getSQLExceptionHelper().convert(
+//						e,
+//						"exception calling isAfterLast()"
+//				);
+//			}
+//		}
+//
+//		afterScrollOperation();
+//
+//		return more;
 	}
 
 	@Override
@@ -204,17 +209,19 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 
 	@Override
 	public void beforeFirst() {
-		try {
-			getResultSet().beforeFirst();
-		}
-		catch (SQLException e) {
-			throw getSession().getFactory().getSQLExceptionHelper().convert(
-					e,
-					"exception calling beforeFirst()"
-			);
-		}
-		currentRow = null;
-		currentPosition = 0;
+		throw new NotYetImplementedFor6Exception();
+
+//		try {
+//			getResultSet().beforeFirst();
+//		}
+//		catch (SQLException e) {
+//			throw getSession().getFactory().getSQLExceptionHelper().convert(
+//					e,
+//					"exception calling beforeFirst()"
+//			);
+//		}
+//		currentRow = null;
+//		currentPosition = 0;
 	}
 
 	@Override
@@ -254,17 +261,17 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 		}
 		return scroll( rowNumber - currentPosition );
 	}
-
-	private boolean isResultSetEmpty() {
-		try {
-			return currentPosition == 0 && !getResultSet().isBeforeFirst() && !getResultSet().isAfterLast();
-		}
-		catch (SQLException e) {
-			throw getSession().getFactory().getSQLExceptionHelper().convert(
-					e,
-					"Could not determine if resultset is empty due to exception calling isBeforeFirst or isAfterLast()"
-			);
-		}
-	}
+//
+//	private boolean isResultSetEmpty() {
+//		try {
+//			return currentPosition == 0 && !getResultSet().isBeforeFirst() && !getResultSet().isAfterLast();
+//		}
+//		catch (SQLException e) {
+//			throw getSession().getFactory().getSQLExceptionHelper().convert(
+//					e,
+//					"Could not determine if resultset is empty due to exception calling isBeforeFirst or isAfterLast()"
+//			);
+//		}
+//	}
 
 }

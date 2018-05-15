@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <joined-subclass
+            name="org.hibernate.query.hhh12076.EwtAssessmentExtension"
+            extends="org.hibernate.query.hhh12076.SettlementExtension"
+            table="claim_settlement_ext_i3_ewt"
+            lazy="false">
+
+        <key>
+            <column name="extension_id" not-null="true"/>
+        </key>
+
+        <property name="details" type="java.lang.String">
+            <column name="details" length="255"/>
+        </property>
+        <property name="damageType" type="java.lang.String">
+            <column name="damage_type" length="255"/>
+        </property>
+        <property name="exclusion" type="java.lang.String">
+            <column name="exclusion" length="255"/>
+        </property>
+    </joined-subclass>
+</hibernate-mapping>

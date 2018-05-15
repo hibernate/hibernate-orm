@@ -1,5 +1,3 @@
-import org.apache.tools.ant.filters.ReplaceTokens
-
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -25,6 +23,7 @@ buildscript {
 		classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.7'
 		classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.3'
 		classpath 'de.thetaphi:forbiddenapis:2.5'
+		classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.1'
 	}
 }
 
@@ -54,6 +53,10 @@ allprojects {
 	buildDir = "target"
 
 	apply from: rootProject.file( 'gradle/base-information.gradle' )
+
+	apply plugin: 'idea'
+	apply plugin: 'eclipse'
+
 }
 
 

@@ -78,7 +78,7 @@ public interface TimestampsCache extends UpdateTimestampsCache {
 
 	@Override
 	default boolean isUpToDate(
-			Set<Serializable> spaces,
+			Set<String> spaces,
 			Long timestamp,
 			SharedSessionContractImplementor session) {
 		final String[] spaceArray = new String[ spaces.size() ];

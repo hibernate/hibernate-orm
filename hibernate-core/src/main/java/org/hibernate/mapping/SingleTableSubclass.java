@@ -7,10 +7,12 @@
 package org.hibernate.mapping;
 
 import java.util.Iterator;
+import java.util.List;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.EntityMapping;
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.collections.JoinedIterator;
 
 /**
@@ -18,10 +20,13 @@ import org.hibernate.internal.util.collections.JoinedIterator;
  */
 public class SingleTableSubclass extends Subclass {
 
-	public SingleTableSubclass(PersistentClass superclass, MetadataBuildingContext metadataBuildingContext) {
+	public SingleTableSubclass(
+			EntityMapping superclass,
+			MetadataBuildingContext metadataBuildingContext) {
 		super( superclass, metadataBuildingContext );
 	}
 
+	@Override
 	@SuppressWarnings("unchecked")
 	protected Iterator getNonDuplicatedPropertyIterator() {
 		return new JoinedIterator(
@@ -30,20 +35,23 @@ public class SingleTableSubclass extends Subclass {
 		);
 	}
 
-	protected Iterator getDiscriminatorColumnIterator() {
+	@Override
+	protected List<MappedColumn> getDiscriminatorColumns() {
 		if ( isDiscriminatorInsertable() && !getDiscriminator().hasFormula() ) {
-			return getDiscriminator().getColumnIterator();
+			return getDiscriminator().getMappedColumns();
 		}
 		else {
-			return super.getDiscriminatorColumnIterator();
+			return super.getDiscriminatorColumns();
 		}
 	}
 
+	@Override
 	public Object accept(PersistentClassVisitor mv) {
 		return mv.accept( this );
 	}
 
-	public void validate(Mapping mapping) throws MappingException {
+	@Override
+	public void validate() throws MappingException {
 		if ( getDiscriminator() == null ) {
 			throw new MappingException(
 					"No discriminator found for " + getEntityName()
@@ -51,6 +59,6 @@ public class SingleTableSubclass extends Subclass {
 							+ "is used and a class has subclasses"
 			);
 		}
-		super.validate( mapping );
+		super.validate();
 	}
 }

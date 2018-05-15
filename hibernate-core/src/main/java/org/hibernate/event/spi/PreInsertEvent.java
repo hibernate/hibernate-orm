@@ -6,9 +6,7 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 
 /**
  * Represents a <tt>pre-insert</tt> event, which occurs just prior to
@@ -22,20 +20,19 @@ public class PreInsertEvent extends AbstractPreDatabaseOperationEvent {
 
 	/**
 	 * Constructs an event containing the pertinent information.
-	 *
-	 * @param entity The entity to be inserted.
+	 *  @param entity The entity to be inserted.
 	 * @param id The id to use in the insertion.
 	 * @param state The state to be inserted.
-	 * @param persister The entity's persister.
+	 * @param descriptor The entity's descriptor.
 	 * @param source The session from which the event originated.
 	 */
 	public PreInsertEvent(
 			Object entity,
-			Serializable id,
+			Object id,
 			Object[] state,
-			EntityPersister persister,
+			EntityTypeDescriptor descriptor,
 			EventSource source) {
-		super( source, entity, id, persister );
+		super( source, entity, id, descriptor );
 		this.state = state;
 	}
 

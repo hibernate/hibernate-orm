@@ -8,14 +8,17 @@ package org.hibernate.type.descriptor.spi;
 
 import java.sql.Types;
 import javax.persistence.EnumType;
+import javax.persistence.TemporalType;
 
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * More-or-less a parameter-object intended for use in determining the SQL/JDBC type recommended
  * by the JDBC spec (explicitly or implicitly) for a given Java type.
  *
- * @see org.hibernate.type.descriptor.java.BasicJavaDescriptor#getJdbcRecommendedSqlType
+ * @see BasicJavaDescriptor#getJdbcRecommendedSqlType
  *
  * @author Steve Ebersole
  */
@@ -45,6 +48,14 @@ public interface JdbcRecommendedSqlTypeMappingContext {
 	 */
 	default EnumType getEnumeratedType() {
 		return EnumType.ORDINAL;
+	}
+
+	default TemporalType getTemporalType() {
+		return null;
+	}
+
+	default SqlTypeDescriptor getExplicitSqlTypeDescriptor() {
+		return null;
 	}
 
 	/**

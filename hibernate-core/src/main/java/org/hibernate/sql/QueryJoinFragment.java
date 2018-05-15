@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.sql;
+import org.hibernate.annotations.Remove;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 
@@ -12,7 +13,11 @@ import org.hibernate.internal.util.StringHelper;
  * A join that appears in a translated HQL query
  *
  * @author Gavin King
+ *
+ * @deprecated Converting to use SQL AST
  */
+@Deprecated
+@Remove
 public class QueryJoinFragment extends JoinFragment {
 
 	private StringBuilder afterFrom = new StringBuilder();

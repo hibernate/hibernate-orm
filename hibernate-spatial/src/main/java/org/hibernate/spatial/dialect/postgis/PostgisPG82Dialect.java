@@ -10,7 +10,7 @@ import java.util.Map;
 
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.PostgreSQL82Dialect;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
@@ -31,10 +31,10 @@ public class PostgisPG82Dialect extends PostgreSQL82Dialect implements SpatialDi
 	public PostgisPG82Dialect() {
 		super();
 		registerColumnType(
-				PGGeometryTypeDescriptor.INSTANCE.getSqlType(),
+				PGGeometryTypeDescriptor.INSTANCE.getJdbcTypeCode(),
 				"GEOMETRY"
 		);
-		for ( Map.Entry<String, SQLFunction> entry : support.functionsToRegister() ) {
+		for ( Map.Entry<String, SqmFunctionTemplate> entry : support.functionsToRegister() ) {
 			registerFunction( entry.getKey(), entry.getValue() );
 		}
 	}

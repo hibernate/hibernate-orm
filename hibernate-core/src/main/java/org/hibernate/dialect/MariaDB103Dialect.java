@@ -8,10 +8,10 @@ package org.hibernate.dialect;
 
 
 import org.hibernate.LockOptions;
-import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.tool.schema.extract.internal.SequenceNameExtractorImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * An SQL dialect for MariaDB 10.3 and later, provides sequence support, lock-timeouts, etc.
@@ -22,8 +22,13 @@ public class MariaDB103Dialect extends MariaDB102Dialect {
 
 	public MariaDB103Dialect() {
 		super();
+	}
 
-		this.registerFunction( "chr", new StandardSQLFunction( "chr", StandardBasicTypes.CHARACTER) );
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
+
+		registry.registerNamed( "chr", StandardSpiBasicTypes.CHARACTER );
 	}
 
 	@Override

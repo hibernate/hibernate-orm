@@ -15,7 +15,7 @@ import java.io.Serializable;
  */
 public abstract class AbstractSerializableProxy implements Serializable {
 	private String entityName;
-	private Serializable id;
+	private Object id;
 	private Boolean readOnly;
 	private String sessionFactoryUuid;
 	private boolean allowLoadOutsideTransaction;
@@ -29,14 +29,14 @@ public abstract class AbstractSerializableProxy implements Serializable {
 	}
 
 	/**
-	 * @deprecated use {@link #AbstractSerializableProxy(String, Serializable, Boolean, String, boolean)} instead.
+	 * @deprecated use {@link #AbstractSerializableProxy(String, Object, Boolean, String, boolean)} instead.
 	 */
 	@Deprecated
-	protected AbstractSerializableProxy(String entityName, Serializable id, Boolean readOnly) {
+	protected AbstractSerializableProxy(String entityName, Object id, Boolean readOnly) {
 		this( entityName, id, readOnly, null, false );
 	}
 
-	protected AbstractSerializableProxy(String entityName, Serializable id, Boolean readOnly,
+	protected AbstractSerializableProxy(String entityName, Object id, Boolean readOnly,
 			String sessionFactoryUuid, boolean allowLoadOutsideTransaction) {
 		this.entityName = entityName;
 		this.id = id;
@@ -49,7 +49,7 @@ public abstract class AbstractSerializableProxy implements Serializable {
 		return entityName;
 	}
 
-	protected Serializable getId() {
+	protected Object getId() {
 		return id;
 	}
 

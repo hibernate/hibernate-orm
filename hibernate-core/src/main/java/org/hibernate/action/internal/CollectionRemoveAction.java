@@ -6,8 +6,6 @@
  */
 package org.hibernate.action.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -18,7 +16,7 @@ import org.hibernate.event.spi.PostCollectionRemoveEvent;
 import org.hibernate.event.spi.PostCollectionRemoveEventListener;
 import org.hibernate.event.spi.PreCollectionRemoveEvent;
 import org.hibernate.event.spi.PreCollectionRemoveEventListener;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
 /**
  * The action for removing a collection
@@ -33,8 +31,8 @@ public final class CollectionRemoveAction extends CollectionAction {
 	 * Use this constructor when the collection is non-null.
 	 *
 	 * @param collection The collection to to remove; must be non-null
-	 * @param persister  The collection's persister
-	 * @param id The collection key
+	 * @param collectionDescriptor  The collection's persister
+	 * @param collectionKey The collection key
 	 * @param emptySnapshot Indicates if the snapshot is empty
 	 * @param session The session
 	 *
@@ -42,11 +40,11 @@ public final class CollectionRemoveAction extends CollectionAction {
 	 */
 	public CollectionRemoveAction(
 				final PersistentCollection collection,
-				final CollectionPersister persister,
-				final Serializable id,
+				final PersistentCollectionDescriptor collectionDescriptor,
+				final Object collectionKey,
 				final boolean emptySnapshot,
 				final SharedSessionContractImplementor session) {
-		super( persister, collection, id, session );
+		super( collectionDescriptor, collection, collectionKey, session );
 		if ( collection == null ) {
 			throw new AssertionFailure("collection == null");
 		}
@@ -63,8 +61,8 @@ public final class CollectionRemoveAction extends CollectionAction {
 	 * Use this constructor when the collection to be removed has not been loaded.
 	 *
 	 * @param affectedOwner The collection's owner; must be non-null
-	 * @param persister  The collection's persister
-	 * @param id The collection key
+	 * @param collectionDescriptor  The collection's persister
+	 * @param collectionKey The collection key
 	 * @param emptySnapshot Indicates if the snapshot is empty
 	 * @param session The session
 	 *
@@ -72,11 +70,11 @@ public final class CollectionRemoveAction extends CollectionAction {
 	 */
 	public CollectionRemoveAction(
 				final Object affectedOwner,
-				final CollectionPersister persister,
-				final Serializable id,
+				final PersistentCollectionDescriptor collectionDescriptor,
+				final Object collectionKey,
 				final boolean emptySnapshot,
 				final SharedSessionContractImplementor session) {
-		super( persister, null, id, session );
+		super( collectionDescriptor, null, collectionKey, session );
 		if ( affectedOwner == null ) {
 			throw new AssertionFailure("affectedOwner == null");
 		}
@@ -93,7 +91,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 			// is replaced by null or a different collection
 			// (if the collection is uninitialized, hibernate has no way of
 			// knowing if the collection is actually empty without querying the db)
-			getPersister().remove( getKey(), getSession() );
+			getPersistentCollectionDescriptor().remove( getKey(), getSession() );
 		}
 		
 		final PersistentCollection collection = getCollection();
@@ -105,7 +103,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 		postRemove();
 
 		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-			getSession().getFactory().getStatistics().removeCollection( getPersister().getRole() );
+			getSession().getFactory().getStatistics().removeCollection( getPersistentCollectionDescriptor().getNavigableRole().getFullPath() );
 		}
 	}
 
@@ -115,7 +113,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 			return;
 		}
 		final PreCollectionRemoveEvent event = new PreCollectionRemoveEvent(
-				getPersister(),
+				getPersistentCollectionDescriptor(),
 				getCollection(),
 				eventSource(),
 				affectedOwner
@@ -131,7 +129,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 			return;
 		}
 		final PostCollectionRemoveEvent event = new PostCollectionRemoveEvent(
-				getPersister(),
+				getPersistentCollectionDescriptor(),
 				getCollection(),
 				eventSource(),
 				affectedOwner

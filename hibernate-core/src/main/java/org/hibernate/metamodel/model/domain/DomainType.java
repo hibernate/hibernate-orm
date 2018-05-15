@@ -6,32 +6,34 @@
  */
 package org.hibernate.metamodel.model.domain;
 
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+
 /**
- * Base contract for Hibernate's extension of the JPA type system.
+ * Describes any type that occurs in the application's (mapped) domain model.  Also
+ * acts as the base for Hibernate's extension of the JPA type system.
  *
- * @apiNote The "real" JPA type system is more akin to
- * {@link SimpleDomainType}.  We begin our JPA type system extension
- * a "level above" that.  This is to allow for:
- * 		1) JPA does not define a Type for collections.  It's
- * 			understandable why, but leads to limitations in
- * 			regards to being able to understand the type of an
- * 			attribute - in JPA, when the attribute is plural the
- * 			only descriptor info available is for the the collection
- * 			is its Java type (Class).
- * 		2) specialized types like ANY
+ * One aspect of a DomainType is to describe this model type in regards producing
+ * and consuming SQM and SQL AST queries via ExpressableType
  *
+ * @apiNote The "real" JPA type system is more akin to Hibernate's {@link SimpleDomainType}.  This contract
+ * represents a "higher level" construct including descriptors for collections (which JPA does not define)
+ * as well as Hibernate-specific features (like dynamic models or ANY mappings).
+ * <p/>
+ * The `*DomainType` naming pattern is used to more easily (visually)
+ * differentiate these extensions from the JPA ones in application use.
  *
  * @param <J> The Java type for this JPA Type
  *
- * @apiNote The `*DomainType` naming pattern is used to more easily (visually)
- * differentiate these extensions from the JPA ones in application use.
  *
  * @author Steve Ebersole
+ * @author Andrea Boriero
  */
-public interface DomainType<J> extends javax.persistence.metamodel.Type<J> {
-	/**
-	 * The name of the type - this is Hibernate notion of the type name including
-	 * non-pojo mappings, etc.
-	 */
-	String getTypeName();
+public interface DomainType<J> extends ExpressableType<J> {
+	JavaTypeDescriptor<J> getJavaTypeDescriptor();
+
+	@Override
+	default Class<J> getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
+	}
 }

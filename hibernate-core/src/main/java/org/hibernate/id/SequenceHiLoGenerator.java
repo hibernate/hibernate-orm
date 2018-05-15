@@ -6,7 +6,6 @@
  */
 package org.hibernate.id;
 
-import java.io.Serializable;
 import java.util.Properties;
 
 import org.hibernate.MappingException;
@@ -15,7 +14,7 @@ import org.hibernate.id.enhanced.AccessCallback;
 import org.hibernate.id.enhanced.LegacyHiLoAlgorithmOptimizer;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * <b>seqhilo</b><br>
@@ -39,21 +38,18 @@ public class SequenceHiLoGenerator extends SequenceGenerator {
 	private LegacyHiLoAlgorithmOptimizer hiloOptimizer;
 
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
-		super.configure( type, params, serviceRegistry );
+	public void configure(JavaTypeDescriptor javaTypeDescriptor, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+		super.configure( javaTypeDescriptor, params, serviceRegistry );
 
 		maxLo = ConfigurationHelper.getInt( MAX_LO, params, 9 );
 
 		if ( maxLo >= 1 ) {
-			hiloOptimizer = new LegacyHiLoAlgorithmOptimizer(
-					getIdentifierType().getReturnedClass(),
-					maxLo
-			);
+			hiloOptimizer = new LegacyHiLoAlgorithmOptimizer( getIdentifierType().getJavaType(), maxLo );
 		}
 	}
 
 	@Override
-	public synchronized Serializable generate(final SharedSessionContractImplementor session, Object obj) {
+	public synchronized Object generate(final SharedSessionContractImplementor session, Object obj) {
 		// maxLo < 1 indicates a hilo generator with no hilo :?
 		if ( maxLo < 1 ) {
 			//keep the behavior consistent even for boundary usages

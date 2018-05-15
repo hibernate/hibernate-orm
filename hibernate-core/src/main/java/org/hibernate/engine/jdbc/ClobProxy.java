@@ -16,7 +16,7 @@ import java.sql.Clob;
 import java.sql.SQLException;
 
 import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
-import org.hibernate.type.descriptor.java.DataHelper;
+import org.hibernate.type.descriptor.java.internal.LobStreamDataHelper;
 
 /**
  * Manages aspects of proxying {@link Clob Clobs} for non-contextual creation, including proxy creation and
@@ -117,7 +117,7 @@ public class ClobProxy implements InvocationHandler {
 					// total length, however that is at odds with the getSubString(long,int) behavior.
 					throw new SQLException( "Length must be great-than-or-equal to zero." );
 				}
-				return DataHelper.subStream( getCharacterStream(), start-1, length );
+				return LobStreamDataHelper.subStream( getCharacterStream(), start-1, length );
 			}
 		}
 		if ( "getSubString".equals( methodName ) && argCount == 2 ) {

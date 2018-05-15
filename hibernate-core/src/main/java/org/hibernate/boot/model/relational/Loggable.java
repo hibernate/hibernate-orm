@@ -10,12 +10,25 @@ package org.hibernate.boot.model.relational;
  * Marker for things which can be logged.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated (since 6.0) Use {@link org.hibernate.internal.util.Loggable}
+ * instead
  */
-public interface Loggable {
+@Deprecated
+public interface Loggable extends org.hibernate.internal.util.Loggable {
 	/**
-	 * Obtain the string representation of this value usable in log statements.
+	 * Delegates to {@link #toLoggableFragment()}
 	 *
 	 * @return The loggable representation
+	 *
+	 * @apiNote Use {@link #toLoggableFragment()} instead
+	 * @deprecated (since 6.0) Use/implement {@link #toLoggableFragment()} instead
 	 */
-	public String toLoggableString();
+	@Deprecated
+	String toLoggableString();
+
+	@Override
+	default String toLoggableFragment() {
+		return toLoggableString();
+	}
 }

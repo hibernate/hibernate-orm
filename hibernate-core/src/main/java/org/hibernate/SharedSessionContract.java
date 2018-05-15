@@ -8,6 +8,8 @@ package org.hibernate;
 
 import java.io.Serializable;
 
+import org.hibernate.jdbc.ReturningWork;
+import org.hibernate.jdbc.Work;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.QueryProducer;
 
@@ -20,6 +22,8 @@ import org.hibernate.query.QueryProducer;
  * @author Steve Ebersole
  */
 public interface SharedSessionContract extends QueryProducer, Serializable {
+	SessionFactory getSessionFactory();
+
 	/**
 	 * Obtain the tenant identifier associated with this session.
 	 *
@@ -109,57 +113,6 @@ public interface SharedSessionContract extends QueryProducer, Serializable {
 	ProcedureCall createStoredProcedureCall(String procedureName, String... resultSetMappings);
 
 	/**
-	 * Create {@link Criteria} instance for the given class (entity or subclasses/implementors).
-	 *
-	 * @param persistentClass The class, which is an entity, or has entity subclasses/implementors
-	 *
-	 * @return The criteria instance for manipulation and execution
-	 *
-	 * @deprecated (since 5.2) for Session, use the JPA Criteria
-	 */
-	@Deprecated
-	Criteria createCriteria(Class persistentClass);
-
-	/**
-	 * Create {@link Criteria} instance for the given class (entity or subclasses/implementors), using a specific
-	 * alias.
-	 *
-	 * @param persistentClass The class, which is an entity, or has entity subclasses/implementors
-	 * @param alias The alias to use
-	 *
-	 * @return The criteria instance for manipulation and execution
-	 *
-	 * @deprecated (since 5.2) for Session, use the JPA Criteria
-	 */
-	@Deprecated
-	Criteria createCriteria(Class persistentClass, String alias);
-
-	/**
-	 * Create {@link Criteria} instance for the given entity name.
-	 *
-	 * @param entityName The entity name
-
-	 * @return The criteria instance for manipulation and execution
-	 *
-	 * @deprecated (since 5.2) for Session, use the JPA Criteria
-	 */
-	@Deprecated
-	Criteria createCriteria(String entityName);
-
-	/**
-	 * Create {@link Criteria} instance for the given entity name, using a specific alias.
-	 *
-	 * @param entityName The entity name
-	 * @param alias The alias to use
-	 *
-	 * @return The criteria instance for manipulation and execution
-	 *
-	 * @deprecated (since 5.2) for Session, use the JPA Criteria
-	 */
-	@Deprecated
-	Criteria createCriteria(String entityName, String alias);
-
-	/**
 	 * Get the Session-level JDBC batch size for the current Session.
 	 * Overrides the SessionFactory JDBC batch size defined by the {@code hibernate.default_batch_fetch_size} configuration property for the scope of the current {@code Session}.
 	 *
@@ -184,4 +137,30 @@ public interface SharedSessionContract extends QueryProducer, Serializable {
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJdbcBatchSize
 	 */
 	void setJdbcBatchSize(Integer jdbcBatchSize);
+
+	/**
+	 * Controller for allowing users to perform JDBC related work using the Connection managed by this Session.
+	 *
+	 * @param work The work to be performed.
+	 *
+	 * @throws HibernateException Generally indicates wrapped {@link java.sql.SQLException}
+	 */
+	default void doWork(Work work) throws HibernateException {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	/**
+	 * Controller for allowing users to perform JDBC related work using the Connection managed by this Session.  After
+	 * execution returns the result of the {@link ReturningWork#execute} call.
+	 *
+	 * @param work The work to be performed.
+	 * @param <T> The type of the result returned from the work
+	 *
+	 * @return the result from calling {@link ReturningWork#execute}.
+	 *
+	 * @throws HibernateException Generally indicates wrapped {@link java.sql.SQLException}
+	 */
+	default <T> T doReturningWork(ReturningWork<T> work) throws HibernateException {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
 }

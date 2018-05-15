@@ -60,14 +60,14 @@ public class FetchCharacteristicsSingularAssociationImpl implements FetchCharact
 		private boolean unwrapProxies;
 
 		@SuppressWarnings("UnusedParameters")
-		public Builder(MappingDefaults mappingDefaults) {
+		public Builder(FetchTiming fallbackFetchTiming) {
 			//
 			// todo : may need to add back a concept of DEFAULT fetch style / timing.
 			// 		one option I like is adding a fetchTiming / fetchStyle and
 			//		effectiveFetchTiming / effectiveFetchStyle.  The reasoning here
 			//		is for Loaders and LoadPLan building
 
-			fetchTiming = FetchTiming.DELAYED;
+			fetchTiming = fallbackFetchTiming;
 			fetchStyle = FetchStyle.SELECT;
 		}
 
@@ -100,7 +100,7 @@ public class FetchCharacteristicsSingularAssociationImpl implements FetchCharact
 			JaxbHbmFetchStyleEnum fetchMapping,
 			JaxbHbmOuterJoinEnum outerJoinMapping,
 			JaxbHbmLazyWithNoProxyEnum lazyMapping) {
-		final Builder builder = new Builder( mappingDefaults );
+		final Builder builder = new Builder( mappingDefaults.areEntitiesImplicitlyLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE );
 
 		// this is taken verbatim from the old HbmBinder (except that
 		// defaults are handled in the Builder ctor)
@@ -159,7 +159,7 @@ public class FetchCharacteristicsSingularAssociationImpl implements FetchCharact
 			JaxbHbmFetchStyleEnum fetchMapping,
 			JaxbHbmOuterJoinEnum outerJoinMapping,
 			JaxbHbmLazyEnum lazyMapping) {
-		final Builder builder = new Builder( mappingDefaults );
+		final Builder builder = new Builder( mappingDefaults.areEntitiesImplicitlyLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE );
 
 		// #initOuterJoinFetchSetting
 		if ( fetchMapping == null ) {
@@ -201,7 +201,7 @@ public class FetchCharacteristicsSingularAssociationImpl implements FetchCharact
 			JaxbHbmOuterJoinEnum outerJoinMapping,
 			JaxbHbmLazyWithNoProxyEnum lazyMapping,
 			boolean constrained) {
-		final Builder builder = new Builder( mappingDefaults );
+		final Builder builder = new Builder( mappingDefaults.areEntitiesImplicitlyLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE );
 
 		// #initOuterJoinFetchSetting
 		if ( fetchMapping == null ) {

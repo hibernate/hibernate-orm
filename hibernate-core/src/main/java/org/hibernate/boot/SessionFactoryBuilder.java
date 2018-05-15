@@ -11,7 +11,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
-import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.MultiTenancyStrategy;
@@ -20,15 +19,15 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.QueryLiteralRendering;
+import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.tuple.entity.EntityTuplizer;
-import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 /**
  * The contract for building a {@link org.hibernate.SessionFactory} given a number of options.
@@ -221,20 +220,6 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyIdentifierRollbackSupport(boolean enabled);
 
 	/**
-	 * Applies the given entity mode as the default for the SessionFactory.
-	 *
-	 * @param entityMode The default entity mode to use.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_ENTITY_MODE
-	 *
-	 * @deprecated Different entity modes per entity is soon to be removed as a feature.
-	 */
-	@Deprecated
-	SessionFactoryBuilder applyDefaultEntityMode(EntityMode entityMode);
-
-	/**
 	 * Should attributes using columns marked as not-null be checked (by Hibernate) for nullness?
 	 *
 	 * @param enabled {@code true} indicates that Hibernate should perform nullness checking; {@code false} indicates
@@ -259,36 +244,15 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyLazyInitializationOutsideTransaction(boolean enabled);
 
 	/**
-	 * Specify the EntityTuplizerFactory to use.
-	 *
-	 * @param entityTuplizerFactory The EntityTuplizerFactory to use.
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	SessionFactoryBuilder applyEntityTuplizerFactory(EntityTuplizerFactory entityTuplizerFactory);
-
-	/**
-	 * Register the default {@link org.hibernate.tuple.entity.EntityTuplizer} to be applied to the SessionFactory.
-	 *
-	 * @param entityMode The entity mode that which this tuplizer will be applied.
-	 * @param tuplizerClass The custom tuplizer class.
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	SessionFactoryBuilder applyEntityTuplizer(
-			EntityMode entityMode,
-			Class<? extends EntityTuplizer> tuplizerClass);
-
-	/**
 	 * How should updates and deletes that span multiple tables be handled?
 	 *
 	 * @param strategy The strategy for handling multi-table updates and deletes.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @see org.hibernate.cfg.AvailableSettings#HQL_BULK_ID_STRATEGY
+	 * @see org.hibernate.cfg.AvailableSettings#ID_TABLE_STRATEGY
 	 */
-	SessionFactoryBuilder applyMultiTableBulkIdStrategy(MultiTableBulkIdStrategy strategy);
+	SessionFactoryBuilder applyIdTableStrategy(IdTableStrategy strategy);
 
 	SessionFactoryBuilder applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling);
 
@@ -708,8 +672,11 @@ public interface SessionFactoryBuilder {
 	 */
 	SessionFactoryBuilder applySqlComments(boolean enabled);
 
+	// todo (6.0) : revisit discussion with Christian regarding the timing of when registering function templates should happen...
+	SqmFunctionRegistry getSqmFunctionRegistry();
+
 	/**
-	 * Apply a SQLFunction to the underlying {@link org.hibernate.dialect.function.SQLFunctionRegistry}.
+	 * Apply a SQLFunction to the underlying {@link SqmFunctionRegistry}.
 	 * <p/>
 	 * TODO : Ultimately I would like this to move to {@link org.hibernate.boot.MetadataBuilder} in conjunction with allowing mappings to reference SQLFunctions.
 	 * today mappings can only name SQL functions directly, not through the SQLFunctionRegistry indirection
@@ -719,7 +686,10 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	SessionFactoryBuilder applySqlFunction(String registrationName, SQLFunction sqlFunction);
+	default SessionFactoryBuilder applySqlFunction(String registrationName, SqmFunctionTemplate sqlFunction) {
+		getSqmFunctionRegistry().register( registrationName, sqlFunction );
+		return this;
+	}
 
 	SessionFactoryBuilder allowOutOfTransactionUpdateOperations(boolean allow);
 
@@ -730,7 +700,6 @@ public interface SessionFactoryBuilder {
 	 *
 	 */
 	SessionFactoryBuilder enableReleaseResourcesOnCloseEnabled(boolean enable);
-
 
 	/**
 	 * @see JpaCompliance#isJpaQueryComplianceEnabled()
@@ -752,6 +721,22 @@ public interface SessionFactoryBuilder {
 	 */
 	SessionFactoryBuilder enableJpaClosedCompliance(boolean enabled);
 
+	/**
+	 * See the discussion on {@link org.hibernate.cfg.AvailableSettings#NATIVE_QUERY_ORDINAL_PARAMETER_BASE}
+	 * <p/>
+	 * The passed value will be validated to be either:<ul>
+	 *     <li>0</li>
+	 *     <li>1</li>
+	 *     <li>{@code null}</li>
+	 * </ul>
+	 *
+	 * @param base The base to use.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	SessionFactoryBuilder applyNonJpaNativeQueryOrdinalParameterBase(Integer base);
+
+	SessionFactoryBuilder applyQueryLiteralRendering(QueryLiteralRendering queryLiteralRendering);
 
 	/**
 	 * Allows unwrapping this builder as another, more specific type.

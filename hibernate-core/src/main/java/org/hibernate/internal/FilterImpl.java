@@ -72,6 +72,7 @@ public class FilterImpl implements Filter, Serializable {
 	 * @throws IllegalArgumentException Indicates that either the parameter was undefined or that the type
 	 * of the passed value did not match the configured type.
 	 */
+	@SuppressWarnings("unchecked")
 	public Filter setParameter(String name, Object value) throws IllegalArgumentException {
 		// Make sure this is a defined parameter and check the incoming value type
 		// TODO: what should be the actual exception type here?
@@ -79,7 +80,7 @@ public class FilterImpl implements Filter, Serializable {
 		if ( type == null ) {
 			throw new IllegalArgumentException( "Undefined filter parameter [" + name + "]" );
 		}
-		if ( value != null && !type.getReturnedClass().isAssignableFrom( value.getClass() ) ) {
+		if ( value != null && !type.getJavaTypeDescriptor().getJavaType().isAssignableFrom( value.getClass() ) ) {
 			throw new IllegalArgumentException( "Incorrect type for parameter [" + name + "]" );
 		}
 		parameters.put( name, value );
@@ -94,6 +95,7 @@ public class FilterImpl implements Filter, Serializable {
 	 * @param values The values to be expanded into an SQL IN list.
 	 * @return This FilterImpl instance (for method chaining).
 	 */
+	@SuppressWarnings("unchecked")
 	public Filter setParameterList(String name, Collection values) throws HibernateException  {
 		// Make sure this is a defined parameter and check the incoming value type
 		if ( values == null ) {
@@ -105,7 +107,7 @@ public class FilterImpl implements Filter, Serializable {
 		}
 		if ( !values.isEmpty() ) {
 			Class elementClass = values.iterator().next().getClass();
-			if ( !type.getReturnedClass().isAssignableFrom( elementClass ) ) {
+			if ( !type.getJavaTypeDescriptor().getJavaType().isAssignableFrom( elementClass ) ) {
 				throw new HibernateException( "Incorrect type for parameter [" + name + "]" );
 			}
 		}

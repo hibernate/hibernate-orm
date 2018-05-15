@@ -11,12 +11,15 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.List;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ValueHolder;
-import org.hibernate.type.EntityType;
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
+import org.hibernate.metamodel.model.domain.spi.NaturalIdDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
  * Defines a key for caching natural identifier resolutions into the second level cache.
@@ -38,42 +41,59 @@ public class NaturalIdCacheKey implements Serializable {
 	/**
 	 * Construct a new key for a caching natural identifier resolutions into the second level cache.
 	 * @param naturalIdValues The naturalIdValues associated with the cached data
-	 * @param propertyTypes
-	 * @param naturalIdPropertyIndexes
+	 * @param entityHierarchy
 	 * @param session The originating session
 	 */
 	public NaturalIdCacheKey(
 			final Object[] naturalIdValues,
-			Type[] propertyTypes, int[] naturalIdPropertyIndexes, final String entityName,
+			EntityHierarchy entityHierarchy,
 			final SharedSessionContractImplementor session) {
+		if ( naturalIdValues.length != entityHierarchy.getNaturalIdDescriptor().getAttributeInfos().size() ) {
+			throw new HibernateException(
+					String.format(
+							"Number of natural-id values [%s] did not match the number of mapped natural-id attributes [%s]",
+							naturalIdValues.length,
+							entityHierarchy.getNaturalIdDescriptor().getAttributeInfos().size()
+					)
+			);
+		}
 
-		this.entityName = entityName;
+		this.entityName = entityHierarchy.getRootEntityType().getEntityName();
 		this.tenantId = session.getTenantIdentifier();
 
 		this.naturalIdValues = new Serializable[naturalIdValues.length];
-
-		final SessionFactoryImplementor factory = session.getFactory();
 
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ( ( this.entityName == null ) ? 0 : this.entityName.hashCode() );
 		result = prime * result + ( ( this.tenantId == null ) ? 0 : this.tenantId.hashCode() );
+		final List<NaturalIdDescriptor.NaturalIdAttributeInfo> persistentAttributes = entityHierarchy.getNaturalIdDescriptor().getAttributeInfos();
 		for ( int i = 0; i < naturalIdValues.length; i++ ) {
-			final int naturalIdPropertyIndex = naturalIdPropertyIndexes[i];
-			final Type type = propertyTypes[naturalIdPropertyIndex];
 			final Object value = naturalIdValues[i];
+			JavaTypeDescriptor javaTypeDescriptor = persistentAttributes.get( i ).getUnderlyingAttributeDescriptor().getJavaTypeDescriptor();
 
-			result = prime * result + (value != null ? type.getHashCode( value, factory ) : 0);
-
+			result = prime * result + (value != null ? javaTypeDescriptor.extractHashCode( value ) : 0);
+			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			// todo (6.0) : not sure how to best deal with this "semi-resolved" aspect in 6.0...
+			//
 			// The natural id may not be fully resolved in some situations.  See HHH-7513 for one of them
 			// (re-attaching a mutable natural id uses a database snapshot and hydration does not resolve associations).
 			// TODO: The snapshot should probably be revisited at some point.  Consider semi-resolving, hydrating, etc.
-			if (type instanceof EntityType && type.getSemiResolvedType( factory ).getReturnedClass().isInstance( value )) {
+
+//			if (type instanceof EntityType && type.getSemiResolvedType( factory ).getReturnedClass().isInstance( value )) {
+//				this.naturalIdValues[i] = (Serializable) value;
+//			}
+//			else {
+//				this.naturalIdValues[i] = type.disassemble( value, session, null );
+//			}
+			// for now...
+			if ( EntityJavaDescriptor.class.isInstance( javaTypeDescriptor ) && !javaTypeDescriptor.getJavaType().isInstance( value ) ) {
 				this.naturalIdValues[i] = (Serializable) value;
 			}
 			else {
-				this.naturalIdValues[i] = type.disassemble( value, session, null );
+				this.naturalIdValues[i] = javaTypeDescriptor.getMutabilityPlan().disassemble( value );
 			}
+
 		}
 
 		this.hashCode = result;

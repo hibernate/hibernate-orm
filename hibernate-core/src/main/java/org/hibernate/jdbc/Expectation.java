@@ -26,7 +26,7 @@ public interface Expectation {
 	 * @throws SQLException Exception from the JDBC driver
 	 * @throws HibernateException Problem processing the outcome.
 	 */
-	public void verifyOutcome(int rowCount, PreparedStatement statement, int batchPosition) throws SQLException, HibernateException;
+	void verifyOutcome(int rowCount, PreparedStatement statement, int batchPosition) throws SQLException, HibernateException;
 
 	/**
 	 * Perform any special statement preparation.
@@ -36,12 +36,12 @@ public interface Expectation {
 	 * @throws SQLException Exception from the JDBC driver
 	 * @throws HibernateException Problem performing preparation.
 	 */
-	public int prepare(PreparedStatement statement) throws SQLException, HibernateException;
+	int prepare(PreparedStatement statement) throws SQLException, HibernateException;
 
 	/**
 	 * Is it acceptable to combiner this expectation with statement batching?
 	 *
 	 * @return True if batching can be combined with this expectation; false otherwise.
 	 */
-	public boolean canBeBatched();
+	boolean canBeBatched();
 }

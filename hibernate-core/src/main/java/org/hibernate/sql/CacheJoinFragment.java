@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql;
 import org.hibernate.AssertionFailure;
+import org.hibernate.annotations.Remove;
 
 /**
  * A Cach&eacute; dialect join.  Differs from ANSI only in that full outer join
@@ -13,7 +14,11 @@ import org.hibernate.AssertionFailure;
  *
  * @author Jeff Miller
  * @author Jonathan Levinson
+ *
+ * @deprecated Converting to use SQL AST
  */
+@Deprecated
+@Remove
 public class CacheJoinFragment extends ANSIJoinFragment {
 
 	public void addJoin(String rhsTableName, String rhsAlias, String[] lhsColumns, String[] rhsColumns, JoinType joinType, String on) {

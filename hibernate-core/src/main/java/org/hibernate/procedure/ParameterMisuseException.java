@@ -7,9 +7,10 @@
 package org.hibernate.procedure;
 
 import org.hibernate.HibernateException;
+import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 
 /**
- * Thrown to indicate a misuse of a {@link ParameterRegistration}
+ * Thrown to indicate a misuse of a {@link ProcedureParameterImplementor}
  *
  * @author Steve Ebersole
  */

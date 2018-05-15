@@ -8,14 +8,25 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.List;
 
+import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.spi.AbstractPluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.ListPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.property.access.spi.PropertyAccess;
 
 /**
  * @author Steve Ebersole
  */
-class ListAttributeImpl<X, E> extends AbstractPluralAttribute<X, List<E>, E> implements ListPersistentAttribute<X, E> {
-	ListAttributeImpl(PluralAttributeBuilder<X, List<E>, E, ?> xceBuilder) {
-		super( xceBuilder );
+public class ListAttributeImpl<X, E> extends AbstractPluralPersistentAttribute<X, List<E>, E>
+		implements ListPersistentAttribute<X, E> {
+
+	public ListAttributeImpl(
+			PersistentCollectionDescriptor collectionDescriptor,
+			Property bootProperty,
+			PropertyAccess propertyAccess,
+			RuntimeModelCreationContext creationContext) {
+		super( collectionDescriptor, bootProperty, propertyAccess, creationContext );
 	}
 
 	@Override

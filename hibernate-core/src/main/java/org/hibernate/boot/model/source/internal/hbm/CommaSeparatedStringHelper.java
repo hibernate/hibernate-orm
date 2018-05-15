@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;

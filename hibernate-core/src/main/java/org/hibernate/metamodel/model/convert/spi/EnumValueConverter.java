@@ -11,7 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.EnumJavaDescriptor;
 
 /**
  * BasicValueConverter extension for enum-specific support
@@ -19,7 +19,9 @@ import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public interface EnumValueConverter<O extends Enum, R> extends BasicValueConverter<O,R> {
-	EnumJavaTypeDescriptor<O> getJavaDescriptor();
+	@Override
+	EnumJavaDescriptor<O> getDomainJavaDescriptor();
+
 	int getJdbcTypeCode();
 
 	O readValue(ResultSet resultSet, String name, SharedSessionContractImplementor session) throws SQLException;

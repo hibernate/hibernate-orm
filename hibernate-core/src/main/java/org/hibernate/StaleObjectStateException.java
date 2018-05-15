@@ -6,8 +6,6 @@
  */
 package org.hibernate;
 
-import java.io.Serializable;
-
 import org.hibernate.pretty.MessageHelper;
 
 /**
@@ -18,15 +16,14 @@ import org.hibernate.pretty.MessageHelper;
  */
 public class StaleObjectStateException extends StaleStateException {
 	private final String entityName;
-	private final Serializable identifier;
+	private final Object identifier;
 
 	/**
 	 * Constructs a StaleObjectStateException using the supplied information.
-	 *
-	 * @param entityName The name of the entity
+	 *  @param entityName The name of the entity
 	 * @param identifier The identifier of the entity
 	 */
-	public StaleObjectStateException(String entityName, Serializable identifier) {
+	public StaleObjectStateException(String entityName, Object identifier) {
 		super( "Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect)" );
 		this.entityName = entityName;
 		this.identifier = identifier;
@@ -36,7 +33,7 @@ public class StaleObjectStateException extends StaleStateException {
 		return entityName;
 	}
 
-	public Serializable getIdentifier() {
+	public Object getIdentifier() {
 		return identifier;
 	}
 

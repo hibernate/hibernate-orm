@@ -6,8 +6,9 @@
  */
 package org.hibernate.bytecode.enhance.spi.interceptor;
 
-import org.hibernate.mapping.Property;
-import org.hibernate.type.Type;
+import org.hibernate.boot.model.domain.JavaTypeMapping;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.type.descriptor.java.internal.CollectionJavaDescriptor;
 
 /**
  * Descriptor for an attribute which is enabled for bytecode lazy fetching
@@ -16,21 +17,21 @@ import org.hibernate.type.Type;
  */
 public class LazyAttributeDescriptor {
 	public static LazyAttributeDescriptor from(
-			Property property,
+			PersistentAttributeMapping attributeMapping,
 			int attributeIndex,
 			int lazyIndex) {
-		String fetchGroupName = property.getLazyGroup();
+		String fetchGroupName = attributeMapping.getLazyGroup();
 		if ( fetchGroupName == null ) {
-			fetchGroupName = property.getType().isCollectionType()
-					? property.getName()
+			final JavaTypeMapping javaTypeMapping = attributeMapping.getValueMapping().getJavaTypeMapping();
+			fetchGroupName = javaTypeMapping.getJavaTypeDescriptor() instanceof CollectionJavaDescriptor
+					? attributeMapping.getName()
 					: "DEFAULT";
 		}
 
 		return new LazyAttributeDescriptor(
 				attributeIndex,
 				lazyIndex,
-				property.getName(),
-				property.getType(),
+				attributeMapping.getName(),
 				fetchGroupName
 		);
 	}
@@ -38,20 +39,17 @@ public class LazyAttributeDescriptor {
 	private final int attributeIndex;
 	private final int lazyIndex;
 	private final String name;
-	private final Type type;
 	private final String fetchGroupName;
 
 	private LazyAttributeDescriptor(
 			int attributeIndex,
 			int lazyIndex,
 			String name,
-			Type type,
 			String fetchGroupName) {
 		assert attributeIndex >= lazyIndex;
 		this.attributeIndex = attributeIndex;
 		this.lazyIndex  = lazyIndex;
 		this.name = name;
-		this.type = type;
 		this.fetchGroupName = fetchGroupName;
 	}
 
@@ -80,15 +78,6 @@ public class LazyAttributeDescriptor {
 	 */
 	public String getName() {
 		return name;
-	}
-
-	/**
-	 * Access to the attribute's type
-	 *
-	 * @return The attribute type
-	 */
-	public Type getType() {
-		return type;
 	}
 
 	/**

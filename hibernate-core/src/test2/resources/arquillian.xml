@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<arquillian
+        xmlns="http://jboss.org/schema/arquillian"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://jboss.org/schema/arquillian http://jboss.org/schema/arquillian/arquillian_1_0.xsd">
+
+    <defaultProtocol type="Servlet 3.0" />
+
+    <!-- Uncomment in order to inspect deployments -->
+    <!--
+    <engine>
+        <property name="deploymentExportPath">${arquillianDeploymentExportDir}</property>
+    </engine>
+    -->
+
+    <group qualifier="Grid" default="true">
+        <container qualifier="container.active-1" mode="suite" default="true">
+            <configuration>
+                <property name="jbossHome">${wildFlyInstallDir}</property>
+                <!-- For Remote debugging of Wildfly add the following line to the 'javaVmArguments' section below: -->
+                <!-- -Xrunjdwp:transport=dt_socket,address=5005,server=y,suspend=y-->
+                <!-- DO NOT add comments within the property section below as the Arquillian parser can't deal with it -->
+                <property name="javaVmArguments">
+                    -Dee8.preview.mode=true
+                    -Djava.net.preferIPv4Stack=true
+                    -Djgroups.bind_addr=127.0.0.1
+                </property>
+            </configuration>
+        </container>
+    </group>
+</arquillian>

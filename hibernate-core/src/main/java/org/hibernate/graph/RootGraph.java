@@ -27,6 +27,9 @@ public interface RootGraph<J> extends Graph<J>, EntityGraph<J> {
 	boolean appliesTo(Class entityType);
 
 	@Override
+	RootGraph<J> makeCopy(boolean mutable);
+
+	@Override
 	RootGraph<J> makeRootGraph(String name, boolean mutable);
 
 	SubGraph<J> makeSubGraph(boolean mutable);

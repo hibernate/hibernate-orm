@@ -10,40 +10,45 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Properties;
+import java.util.List;
 import java.util.Objects;
+import java.util.Properties;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.JavaTypeMapping;
+import org.hibernate.boot.model.domain.NotYetResolvedException;
+import org.hibernate.boot.model.relational.ForeignKeyExporter;
+import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.relational.MappedForeignKey;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.internal.CollectionJavaDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Mapping for a collection. Subclasses specialize to particular collection styles.
  *
  * @author Gavin King
  */
-public abstract class Collection implements Fetchable, Value, Filterable {
+public abstract class Collection implements Fetchable, Value, ForeignKeyExporter, Filterable {
 
 	public static final String DEFAULT_ELEMENT_COLUMN_NAME = "elt";
 	public static final String DEFAULT_KEY_COLUMN_NAME = "id";
 
-	private final MetadataImplementor metadata;
+	private final MetadataBuildingContext buildingContext;
 	private PersistentClass owner;
 
 	private KeyValue key;
 	private Value element;
-	private Table collectionTable;
+	private MappedTable collectionTable;
 	private String role;
 	private boolean lazy;
 	private boolean extraLazy;
@@ -71,7 +76,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	private Properties typeParameters;
 	private final java.util.List filters = new ArrayList();
 	private final java.util.List manyToManyFilters = new ArrayList();
-	private final java.util.Set<String> synchronizedTables = new HashSet<String>();
+	private final java.util.Set<String> synchronizedTables = new HashSet<>();
 
 	private String customSQLInsert;
 	private boolean customInsertCallable;
@@ -87,27 +92,18 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	private ExecuteUpdateResultCheckStyle deleteAllCheckStyle;
 
 	private String loaderName;
+	private MappedForeignKey foreignKey;
 
 	protected Collection(MetadataBuildingContext buildingContext, PersistentClass owner) {
-		this(buildingContext.getMetadataCollector(), owner);
-	}
-
-	/**
-	 * @deprecated Use {@link Collection#Collection(MetadataBuildingContext, PersistentClass)} instead.
-	 */
-	@Deprecated
-	protected Collection(MetadataImplementor metadata, PersistentClass owner) {
-		this.metadata = metadata;
+		this.buildingContext = buildingContext;
 		this.owner = owner;
-	}
-
-	public MetadataImplementor getMetadata() {
-		return metadata;
 	}
 
 	@Override
 	public ServiceRegistry getServiceRegistry() {
-		return getMetadata().getMetadataBuildingOptions().getServiceRegistry();
+		return getMetadataBuildingContext()
+				.getBuildingOptions()
+				.getServiceRegistry();
 	}
 
 	public boolean isSet() {
@@ -118,7 +114,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return key;
 	}
 
-	public Value getElement() {
+	public Value<?> getElement() {
 		return element;
 	}
 
@@ -126,12 +122,35 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return false;
 	}
 
+	@Override
+	public MappedForeignKey getForeignKey() {
+		return foreignKey;
+	}
+
+	public void setForeignKey(MappedForeignKey foreignKey) {
+		this.foreignKey = foreignKey;
+	}
+
+	/**
+	 * @deprecated since 6.0, use {@link #getMappedTable()}.
+	 */
+	@Deprecated
 	public Table getCollectionTable() {
+		return (Table) collectionTable;
+	}
+
+	public void setCollectionTable(MappedTable table) {
+		this.collectionTable = table;
+	}
+
+	@Override
+	public MappedTable getMappedTable() {
 		return collectionTable;
 	}
 
-	public void setCollectionTable(Table table) {
-		this.collectionTable = table;
+	@Override
+	public List<MappedColumn> getMappedColumns() {
+		return Collections.emptyList();
 	}
 
 	public boolean isSorted() {
@@ -141,7 +160,8 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	public Comparator getComparator() {
 		if ( comparator == null && comparatorClassName != null ) {
 			try {
-				final ClassLoaderService classLoaderService = getMetadata().getMetadataBuildingOptions()
+				final ClassLoaderService classLoaderService = getMetadataBuildingContext()
+						.getBuildingOptions()
 						.getServiceRegistry()
 						.getService( ClassLoaderService.class );
 				setComparator( (Comparator) classLoaderService.classForName( comparatorClassName ).newInstance() );
@@ -167,8 +187,6 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	public String getRole() {
 		return role;
 	}
-
-	public abstract CollectionType getDefaultCollectionType() throws MappingException;
 
 	public boolean isPrimitiveArray() {
 		return false;
@@ -288,6 +306,11 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return fetchMode;
 	}
 
+	@Override
+	public MetadataBuildingContext getMetadataBuildingContext() {
+		return buildingContext;
+	}
+
 	public void setFetchMode(FetchMode fetchMode) {
 		this.fetchMode = fetchMode;
 	}
@@ -300,24 +323,24 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return collectionPersisterClass;
 	}
 
-	public void validate(Mapping mapping) throws MappingException {
+	public void validate() throws MappingException {
 		assert getKey() != null : "Collection key not bound : " + getRole();
 		assert getElement() != null : "Collection element not bound : " + getRole();
 
-		if ( !getKey().isValid( mapping ) ) {
+		if ( !getKey().isValid() ) {
 			throw new MappingException(
 					"collection foreign key mapping has wrong number of columns: "
 							+ getRole()
 							+ " type: "
-							+ getKey().getType().getName()
+							+ getKey().getJavaTypeMapping().getTypeName()
 			);
 		}
-		if ( !getElement().isValid( mapping ) ) {
+		if ( !getElement().isValid() ) {
 			throw new MappingException(
 					"collection element mapping has wrong number of columns: "
 							+ getRole()
 							+ " type: "
-							+ getElement().getType().getName()
+							+ getElement().getJavaTypeMapping().getTypeName()
 			);
 		}
 
@@ -328,10 +351,9 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 			throws MappingException {
 		final boolean[] insertability = value.getColumnInsertability();
 		final boolean[] updatability = value.getColumnUpdateability();
-		final Iterator<Selectable> iterator = value.getColumnIterator();
-		int i = 0;
-		while ( iterator.hasNext() ) {
-			Selectable s = iterator.next();
+		List<MappedColumn> mappedColumns = value.getMappedColumns();
+		for ( int i = 0; i < mappedColumns.size(); i++ ) {
+			MappedColumn s = mappedColumns.get( i );
 			// exclude formulas and coluns that are not insertable or updatable
 			// since these values can be be repeated (HHH-5393)
 			if ( !s.isFormula() && ( insertability[i] || updatability[i] ) ) {
@@ -345,7 +367,6 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 					);
 				}
 			}
-			i++;
 		}
 	}
 
@@ -369,28 +390,24 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		}
 	}
 
-	public Iterator<Selectable> getColumnIterator() {
-		return Collections.<Selectable>emptyList().iterator();
-	}
-
 	public int getColumnSpan() {
 		return 0;
 	}
 
-	public Type getType() throws MappingException {
-		return getCollectionType();
-	}
-
-	public CollectionType getCollectionType() {
-		if ( typeName == null ) {
-			return getDefaultCollectionType();
-		}
-		else {
-			return getMetadata().getTypeConfiguration().getTypeResolver()
-					.getTypeFactory()
-					.customCollection( typeName, typeParameters, role, referencedPropertyName );
-		}
-	}
+//	public Type getType() throws MappingException {
+//		return getCollectionType();
+//	}
+//
+//	public CollectionType getCollectionType() {
+//		if ( typeName == null ) {
+//			return getDefaultCollectionType();
+//		}
+//		else {
+//			return metadata.getTypeResolver()
+//					.getTypeFactory()
+//					.customCollection( typeName, typeParameters, role, referencedPropertyName );
+//		}
+//	}
 
 	public boolean isNullable() {
 		return true;
@@ -404,14 +421,12 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return owner.getTable();
 	}
 
-	public void createForeignKey() {
-	}
-
 	public boolean isSimpleValue() {
 		return false;
 	}
 
-	public boolean isValid(Mapping mapping) throws MappingException {
+	@Override
+	public boolean isValid() throws MappingException {
 		return true;
 	}
 
@@ -440,7 +455,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		// if ( !isInverse() ) { // for inverse collections, let the "other end" handle it
 		if ( referencedPropertyName == null ) {
 			getElement().createForeignKey();
-			key.createForeignKeyOfEntity( getOwner().getEntityName() );
+			foreignKey = key.createForeignKeyOfEntity( getOwner().getEntityName() );
 		}
 		// }
 	}
@@ -706,5 +721,33 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 	public void setMappedByProperty(String mappedByProperty) {
 		this.mappedByProperty = mappedByProperty;
+	}
+
+	public abstract <C> CollectionSemantics<C> getCollectionSemantics();
+
+	protected static class CollectionJavaTypeMapping implements JavaTypeMapping {
+		private final TypeConfiguration typeConfiguration;
+		private final Class javaClass;
+
+		private CollectionJavaDescriptor resolvedDescriptor;
+
+		public CollectionJavaTypeMapping(TypeConfiguration typeConfiguration, Class javaClass) {
+			this.typeConfiguration = typeConfiguration;
+			this.javaClass = javaClass;
+		}
+
+		@Override
+		public String getTypeName() {
+			return javaClass.getTypeName();
+		}
+
+		@Override
+		public CollectionJavaDescriptor getJavaTypeDescriptor() throws NotYetResolvedException {
+			if ( resolvedDescriptor == null ) {
+				resolvedDescriptor = (CollectionJavaDescriptor) typeConfiguration.getJavaTypeDescriptorRegistry()
+						.getDescriptor( javaClass );
+			}
+			return resolvedDescriptor;
+		}
 	}
 }

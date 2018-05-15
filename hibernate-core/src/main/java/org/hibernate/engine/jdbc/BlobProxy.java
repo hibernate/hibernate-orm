@@ -13,7 +13,7 @@ import java.sql.Blob;
 import java.sql.SQLException;
 
 import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
-import org.hibernate.type.descriptor.java.DataHelper;
+import org.hibernate.type.descriptor.java.internal.LobStreamDataHelper;
 
 /**
  * Manages aspects of representing {@link Blob} objects.
@@ -112,7 +112,7 @@ public final class BlobProxy implements Blob, BlobImplementer {
 		if ( length < 0 ) {
 			throw new SQLException( "Length must be great-than-or-equal to zero." );
 		}
-		return DataHelper.extractBytes( getStream(), start-1, length );
+		return LobStreamDataHelper.extractBytes( getStream(), start-1, length );
 	}
 
 	@Override
@@ -172,7 +172,7 @@ public final class BlobProxy implements Blob, BlobImplementer {
 			// total length, however that is at odds with the getBytes(long,int) behavior.
 			throw new SQLException( "Length must be great-than-or-equal to zero." );
 		}
-		return DataHelper.subStream( getStream(), start-1, intLength );
+		return LobStreamDataHelper.subStream( getStream(), start-1, intLength );
 	}
 
 	private static class StreamBackedBinaryStream implements BinaryStream {
@@ -194,7 +194,7 @@ public final class BlobProxy implements Blob, BlobImplementer {
 		@Override
 		public byte[] getBytes() {
 			if ( bytes == null ) {
-				bytes = DataHelper.extractBytes( stream );
+				bytes = LobStreamDataHelper.extractBytes( stream );
 			}
 			return bytes;
 		}

@@ -8,16 +8,16 @@ package org.hibernate.cfg;
 import java.util.Map;
 
 import org.hibernate.MappingException;
-import org.hibernate.cfg.annotations.SimpleValueBinder;
+import org.hibernate.cfg.annotations.BasicValueBinder;
 
 /**
  * @author Sharath Reddy
  */
 public class SetSimpleValueTypeSecondPass implements SecondPass {
 
-	SimpleValueBinder binder;
+	BasicValueBinder binder;
 
-	public SetSimpleValueTypeSecondPass(SimpleValueBinder val) {
+	public SetSimpleValueTypeSecondPass(BasicValueBinder val) {
 		binder = val;
 	}
 

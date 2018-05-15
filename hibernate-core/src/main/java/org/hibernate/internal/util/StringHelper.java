@@ -39,6 +39,23 @@ public final class StringHelper {
 		return string.length() - 1;
 	}
 
+	public static String join(String seperator, String[] strings) {
+		int length = strings.length;
+		if ( length == 0 ) {
+			return "";
+		}
+		// Allocate space for length * firstStringLength;
+		// If strings[0] is null, then its length is defined as 4, since that's the
+		// length of "null".
+		final int firstStringLength = strings[0] != null ? strings[0].length() : 4;
+		StringBuilder buf = new StringBuilder( length * firstStringLength )
+				.append( strings[0] );
+		for ( int i = 1; i < length; i++ ) {
+			buf.append( seperator ).append( strings[i] );
+		}
+		return buf.toString();
+	}
+
 	public static String joinWithQualifierAndSuffix(
 			String[] values,
 			String qualifier,
@@ -65,6 +82,10 @@ public final class StringHelper {
 			buf.append( seperator ).append( objects.next() );
 		}
 		return buf.toString();
+	}
+
+	public static String join(String separator, Iterable objects) {
+		return join( separator, objects.iterator() );
 	}
 
 	public static String[] add(String[] x, String sep, String[] y) {
@@ -847,6 +868,14 @@ public final class StringHelper {
 
 	public static <T> String join(T[] values, Renderer<T> renderer) {
 		return join( Arrays.asList( values ), renderer );
+	}
+
+	public static String stripBookends(String string, int characterCount) {
+		if ( string == null ) {
+			throw new IllegalArgumentException( "String cannot be null" );
+		}
+
+		return string.substring( characterCount, string.length() - characterCount );
 	}
 
 	public interface Renderer<T> {

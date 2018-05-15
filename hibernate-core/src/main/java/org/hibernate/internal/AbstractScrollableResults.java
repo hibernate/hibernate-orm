@@ -6,90 +6,81 @@
  */
 package org.hibernate.internal;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
-
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.hql.internal.HolderInstantiator;
-import org.hibernate.loader.Loader;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.Type;
+import org.hibernate.sql.results.internal.JdbcValuesSourceProcessingStateStandardImpl;
+import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
+import org.hibernate.sql.results.internal.values.JdbcValues;
+import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.results.spi.ResultSetMapping;
+import org.hibernate.sql.results.spi.RowReader;
 
 /**
  * Base implementation of the ScrollableResults interface.
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractScrollableResults implements ScrollableResultsImplementor {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractScrollableResults.class );
+public abstract class AbstractScrollableResults<R> implements ScrollableResultsImplementor<R> {
+	private final JdbcValues jdbcValues;
+	private final JdbcValuesSourceProcessingOptions processingOptions;
+	private final JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState;
+	private final RowProcessingStateStandardImpl rowProcessingState;
+	private final RowReader<R> rowReader;
+	private final SharedSessionContractImplementor persistenceContext;
 
-	private final ResultSet resultSet;
-	private final PreparedStatement ps;
-	private final SharedSessionContractImplementor session;
-	private final Loader loader;
-	private final QueryParameters queryParameters;
-	private final Type[] types;
-	private HolderInstantiator holderInstantiator;
 	private boolean closed;
 
-	protected AbstractScrollableResults(
-			ResultSet rs,
-			PreparedStatement ps,
-			SharedSessionContractImplementor sess,
-			Loader loader,
-			QueryParameters queryParameters,
-			Type[] types,
-			HolderInstantiator holderInstantiator) {
-		this.resultSet = rs;
-		this.ps = ps;
-		this.session = sess;
-		this.loader = loader;
-		this.queryParameters = queryParameters;
-		this.types = types;
-		this.holderInstantiator = holderInstantiator != null && holderInstantiator.isRequired()
-				? holderInstantiator
-				: null;
+	public AbstractScrollableResults(
+			JdbcValues jdbcValues,
+			JdbcValuesSourceProcessingOptions processingOptions,
+			JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState,
+			RowProcessingStateStandardImpl rowProcessingState,
+			RowReader<R> rowReader,
+			SharedSessionContractImplementor persistenceContext) {
+		this.jdbcValues = jdbcValues;
+		this.processingOptions = processingOptions;
+		this.jdbcValuesSourceProcessingState = jdbcValuesSourceProcessingState;
+		this.rowProcessingState = rowProcessingState;
+		this.rowReader = rowReader;
+		this.persistenceContext = persistenceContext;
 	}
 
-	protected abstract Object[] getCurrentRow();
+	// todo (6.0) : re-look at the arguments passed here.  What is really needed?
+	//		and relatedly, what is exposed
 
-	protected ResultSet getResultSet() {
-		return resultSet;
+	protected ResultSetMapping getResultSetMapping() {
+		return jdbcValues.getResultSetMapping();
 	}
 
-	protected PreparedStatement getPs() {
-		return ps;
+	protected abstract R getCurrentRow();
+
+	protected JdbcValues getJdbcValues() {
+		return jdbcValues;
 	}
 
-	protected SharedSessionContractImplementor getSession() {
-		return session;
+	protected JdbcValuesSourceProcessingOptions getProcessingOptions() {
+		return processingOptions;
 	}
 
-	protected Loader getLoader() {
-		return loader;
+	protected JdbcValuesSourceProcessingStateStandardImpl getJdbcValuesSourceProcessingState() {
+		return jdbcValuesSourceProcessingState;
 	}
 
-	protected QueryParameters getQueryParameters() {
-		return queryParameters;
+	protected RowProcessingStateStandardImpl getRowProcessingState() {
+		return rowProcessingState;
 	}
 
-	protected Type[] getTypes() {
-		return types;
+	protected RowReader<R> getRowReader() {
+		return rowReader;
 	}
 
-	protected HolderInstantiator getHolderInstantiator() {
-		return holderInstantiator;
+	protected SharedSessionContractImplementor getPersistenceContext() {
+		return persistenceContext;
+	}
+
+	protected void afterScrollOperation() {
+		getPersistenceContext().afterScrollOperation();
 	}
 
 	@Override
@@ -99,19 +90,8 @@ public abstract class AbstractScrollableResults implements ScrollableResultsImpl
 			return;
 		}
 
-		// not absolutely necessary, but does help with aggressive release
-		//session.getJDBCContext().getConnectionManager().closeQueryStatement( ps, resultSet );
-		session.getJdbcCoordinator().getResourceRegistry().release( ps );
-		session.getJdbcCoordinator().afterStatementExecution();
-		try {
-			session.getPersistenceContext().getLoadContexts().cleanup( resultSet );
-		}
-		catch (Throwable ignore) {
-			// ignore this error for now
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Exception trying to cleanup load context : {0}", ignore.getMessage() );
-			}
-		}
+		getJdbcValues().finishUp();
+		getPersistenceContext().getJdbcCoordinator().afterStatementExecution();
 
 		this.closed = true;
 	}
@@ -122,189 +102,10 @@ public abstract class AbstractScrollableResults implements ScrollableResultsImpl
 	}
 
 	@Override
-	public int getNumberOfTypes() {
-		return this.types.length;
-	}
-
-	@Override
-	public final Object[] get() throws HibernateException {
+	public final R get() throws HibernateException {
 		if ( closed ) {
 			throw new IllegalStateException( "ScrollableResults is closed" );
 		}
 		return getCurrentRow();
-	}
-
-	@Override
-	public final Object get(int col) throws HibernateException {
-		if ( closed ) {
-			throw new IllegalStateException( "ScrollableResults is closed" );
-		}
-		return getCurrentRow()[col];
-	}
-
-	/**
-	 * Check that the requested type is compatible with the result type, and
-	 * return the column value.  This version makes sure the the classes
-	 * are identical.
-	 *
-	 * @param col the column
-	 * @param returnType a "final" type
-	 */
-	protected final Object getFinal(int col, Type returnType) throws HibernateException {
-		if ( closed ) {
-			throw new IllegalStateException( "ScrollableResults is closed" );
-		}
-
-		if ( holderInstantiator != null ) {
-			throw new HibernateException( "query specifies a holder class" );
-		}
-
-		if ( returnType.getReturnedClass() == types[col].getReturnedClass() ) {
-			return get( col );
-		}
-		else {
-			return throwInvalidColumnTypeException( col, types[col], returnType );
-		}
-	}
-
-	/**
-	 * Check that the requested type is compatible with the result type, and
-	 * return the column value.  This version makes sure the the classes
-	 * are "assignable".
-	 *
-	 * @param col the column
-	 * @param returnType any type
-	 */
-	protected final Object getNonFinal(int col, Type returnType) throws HibernateException {
-		if ( closed ) {
-			throw new IllegalStateException( "ScrollableResults is closed" );
-		}
-
-		if ( holderInstantiator != null ) {
-			throw new HibernateException( "query specifies a holder class" );
-		}
-
-		if ( returnType.getReturnedClass().isAssignableFrom( types[col].getReturnedClass() ) ) {
-			return get( col );
-		}
-		else {
-			return throwInvalidColumnTypeException( col, types[col], returnType );
-		}
-	}
-
-	@Override
-	public final BigDecimal getBigDecimal(int col) throws HibernateException {
-		return (BigDecimal) getFinal( col, StandardBasicTypes.BIG_DECIMAL );
-	}
-
-	@Override
-	public final BigInteger getBigInteger(int col) throws HibernateException {
-		return (BigInteger) getFinal( col, StandardBasicTypes.BIG_INTEGER );
-	}
-
-	@Override
-	public final byte[] getBinary(int col) throws HibernateException {
-		return (byte[]) getFinal( col, StandardBasicTypes.BINARY );
-	}
-
-	@Override
-	public final String getText(int col) throws HibernateException {
-		return (String) getFinal( col, StandardBasicTypes.TEXT );
-	}
-
-	@Override
-	public final Blob getBlob(int col) throws HibernateException {
-		return (Blob) getNonFinal( col, StandardBasicTypes.BLOB );
-	}
-
-	@Override
-	public final Clob getClob(int col) throws HibernateException {
-		return (Clob) getNonFinal( col, StandardBasicTypes.CLOB );
-	}
-
-	@Override
-	public final Boolean getBoolean(int col) throws HibernateException {
-		return (Boolean) getFinal( col, StandardBasicTypes.BOOLEAN );
-	}
-
-	@Override
-	public final Byte getByte(int col) throws HibernateException {
-		return (Byte) getFinal( col, StandardBasicTypes.BYTE );
-	}
-
-	@Override
-	public final Character getCharacter(int col) throws HibernateException {
-		return (Character) getFinal( col, StandardBasicTypes.CHARACTER );
-	}
-
-	@Override
-	public final Date getDate(int col) throws HibernateException {
-		return (Date) getNonFinal( col, StandardBasicTypes.TIMESTAMP );
-	}
-
-	@Override
-	public final Calendar getCalendar(int col) throws HibernateException {
-		return (Calendar) getNonFinal( col, StandardBasicTypes.CALENDAR );
-	}
-
-	@Override
-	public final Double getDouble(int col) throws HibernateException {
-		return (Double) getFinal( col, StandardBasicTypes.DOUBLE );
-	}
-
-	@Override
-	public final Float getFloat(int col) throws HibernateException {
-		return (Float) getFinal( col, StandardBasicTypes.FLOAT );
-	}
-
-	@Override
-	public final Integer getInteger(int col) throws HibernateException {
-		return (Integer) getFinal( col, StandardBasicTypes.INTEGER );
-	}
-
-	@Override
-	public final Long getLong(int col) throws HibernateException {
-		return (Long) getFinal( col, StandardBasicTypes.LONG );
-	}
-
-	@Override
-	public final Short getShort(int col) throws HibernateException {
-		return (Short) getFinal( col, StandardBasicTypes.SHORT );
-	}
-
-	@Override
-	public final String getString(int col) throws HibernateException {
-		return (String) getFinal( col, StandardBasicTypes.STRING );
-	}
-
-	@Override
-	public final Locale getLocale(int col) throws HibernateException {
-		return (Locale) getFinal( col, StandardBasicTypes.LOCALE );
-	}
-
-	@Override
-	public final TimeZone getTimeZone(int col) throws HibernateException {
-		return (TimeZone) getNonFinal( col, StandardBasicTypes.TIMEZONE );
-	}
-
-	@Override
-	public final Type getType(int i) {
-		return types[i];
-	}
-
-	private Object throwInvalidColumnTypeException(
-			int i,
-			Type type,
-			Type returnType) throws HibernateException {
-		throw new HibernateException(
-				"incompatible column types: " +
-						type.getName() +
-						", " +
-						returnType.getName()
-		);
-	}
-
-	protected void afterScrollOperation() {
-		session.afterScrollOperation();
 	}
 }

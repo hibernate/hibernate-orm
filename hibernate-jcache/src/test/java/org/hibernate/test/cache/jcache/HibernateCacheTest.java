@@ -27,7 +27,8 @@ import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.junit4.ExtraAssertions;
-import org.junit.Test;
+
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertNotNull;
@@ -39,9 +40,10 @@ import static org.junit.Assert.fail;
  * @author Chris Dennis
  * @author Brett Meyer
  */
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class HibernateCacheTest extends BaseFunctionalTest {
 	@Test
-	public void testQueryCacheInvalidation() throws Exception {
+	public void testQueryCacheInvalidation() {
 		Session s = sessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 		Item i = new Item();
@@ -60,7 +62,7 @@ public class HibernateCacheTest extends BaseFunctionalTest {
 
 		s = sessionFactory().openSession();
 		t = s.beginTransaction();
-		i = (Item) s.get( Item.class, i.getId() );
+		i = s.get( Item.class, i.getId() );
 
 		assertThat( slcs.getHitCount(), equalTo( 1L ) );
 		assertThat( slcs.getMissCount(), equalTo( 0L ) );
@@ -74,13 +76,14 @@ public class HibernateCacheTest extends BaseFunctionalTest {
 		assertTrue( sessionFactory().getCache().containsEntity( Item.class, i.getId() ) );
 
 		final DomainDataRegionTemplate region = (DomainDataRegionTemplate) sessionFactory().getMetamodel()
-				.entityPersister( Item.class )
-				.getCacheAccessStrategy()
+				.getEntityDescriptor( Item.class )
+				.getHierarchy()
+				.getEntityCacheAccess()
 				.getRegion();
 		final Object fromCache = region.getCacheStorageAccess().getFromCache(
 				region.getEffectiveKeysFactory().createEntityKey(
 						i.getId(),
-						sessionFactory().getMetamodel().entityPersister( Item.class ),
+						sessionFactory().getMetamodel().getEntityDescriptor( Item.class ).getHierarchy(),
 						sessionFactory(),
 						null
 				),
@@ -170,13 +173,14 @@ public class HibernateCacheTest extends BaseFunctionalTest {
 //		}
 
 		final DomainDataRegionTemplate region = (DomainDataRegionTemplate) sessionFactory().getMetamodel()
-				.entityPersister( Item.class )
-				.getCacheAccessStrategy()
+				.getEntityDescriptor( Item.class )
+				.getHierarchy()
+				.getEntityCacheAccess()
 				.getRegion();
 		final Object fromCache = region.getCacheStorageAccess().getFromCache(
 				region.getEffectiveKeysFactory().createEntityKey(
 						item.getId(),
-						sessionFactory().getMetamodel().entityPersister( Item.class ),
+						sessionFactory().getMetamodel().getEntityDescriptor( Item.class ).getHierarchy(),
 						sessionFactory(),
 						null
 				),

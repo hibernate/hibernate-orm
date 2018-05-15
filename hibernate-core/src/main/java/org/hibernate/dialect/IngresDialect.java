@@ -9,20 +9,25 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.IngresSubstringFunction;
+import org.hibernate.dialect.function.LocateEmulationUsingPositionAndSubstring;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
 import org.hibernate.dialect.pagination.LegacyFirstLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.local.AfterUseAction;
+import org.hibernate.query.sqm.consume.multitable.internal.StandardIdTableSupport;
+import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTempTableExporter;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTable;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTableSupport;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.spi.FunctionAsExpressionTemplate;
 import org.hibernate.tool.schema.extract.internal.SequenceNameExtractorImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * An SQL dialect for Ingres 9.2.
@@ -80,76 +85,6 @@ public class IngresDialect extends Dialect {
 		registerColumnType( Types.TIMESTAMP, "timestamp with time zone" );
 		registerColumnType( Types.BLOB, "blob" );
 		registerColumnType( Types.CLOB, "clob" );
-
-		registerFunction( "abs", new StandardSQLFunction( "abs" ) );
-		registerFunction( "atan", new StandardSQLFunction( "atan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "bit_add", new StandardSQLFunction( "bit_add" ) );
-		registerFunction( "bit_and", new StandardSQLFunction( "bit_and" ) );
-		registerFunction( "bit_length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "octet_length(hex(?1))*4" ) );
-		registerFunction( "bit_not", new StandardSQLFunction( "bit_not" ) );
-		registerFunction( "bit_or", new StandardSQLFunction( "bit_or" ) );
-		registerFunction( "bit_xor", new StandardSQLFunction( "bit_xor" ) );
-		registerFunction( "character_length", new StandardSQLFunction( "character_length", StandardBasicTypes.LONG ) );
-		registerFunction( "charextract", new StandardSQLFunction( "charextract", StandardBasicTypes.STRING ) );
-		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "+", ")" ) );
-		registerFunction( "cos", new StandardSQLFunction( "cos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "current_user", new NoArgSQLFunction( "current_user", StandardBasicTypes.STRING, false ) );
-		registerFunction( "current_time", new NoArgSQLFunction( "date('now')", StandardBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "current_timestamp", new NoArgSQLFunction( "date('now')", StandardBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "current_date", new NoArgSQLFunction( "date('now')", StandardBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "date_trunc", new StandardSQLFunction( "date_trunc", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "day", new StandardSQLFunction( "day", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dba", new NoArgSQLFunction( "dba", StandardBasicTypes.STRING, true ) );
-		registerFunction( "dow", new StandardSQLFunction( "dow", StandardBasicTypes.STRING ) );
-		registerFunction( "extract", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "date_part('?1', ?3)" ) );
-		registerFunction( "exp", new StandardSQLFunction( "exp", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "gmt_timestamp", new StandardSQLFunction( "gmt_timestamp", StandardBasicTypes.STRING ) );
-		registerFunction( "hash", new StandardSQLFunction( "hash", StandardBasicTypes.INTEGER ) );
-		registerFunction( "hex", new StandardSQLFunction( "hex", StandardBasicTypes.STRING ) );
-		registerFunction( "hour", new StandardSQLFunction( "hour", StandardBasicTypes.INTEGER ) );
-		registerFunction( "initial_user", new NoArgSQLFunction( "initial_user", StandardBasicTypes.STRING, false ) );
-		registerFunction( "intextract", new StandardSQLFunction( "intextract", StandardBasicTypes.INTEGER ) );
-		registerFunction( "left", new StandardSQLFunction( "left", StandardBasicTypes.STRING ) );
-		registerFunction( "locate", new SQLFunctionTemplate( StandardBasicTypes.LONG, "locate(?1, ?2)" ) );
-		registerFunction( "length", new StandardSQLFunction( "length", StandardBasicTypes.LONG ) );
-		registerFunction( "ln", new StandardSQLFunction( "ln", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "log", new StandardSQLFunction( "log", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "lower", new StandardSQLFunction( "lower" ) );
-		registerFunction( "lowercase", new StandardSQLFunction( "lowercase" ) );
-		registerFunction( "minute", new StandardSQLFunction( "minute", StandardBasicTypes.INTEGER ) );
-		registerFunction( "month", new StandardSQLFunction( "month", StandardBasicTypes.INTEGER ) );
-		registerFunction( "octet_length", new StandardSQLFunction( "octet_length", StandardBasicTypes.LONG ) );
-		registerFunction( "pad", new StandardSQLFunction( "pad", StandardBasicTypes.STRING ) );
-		registerFunction( "position", new StandardSQLFunction( "position", StandardBasicTypes.LONG ) );
-		registerFunction( "power", new StandardSQLFunction( "power", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "random", new NoArgSQLFunction( "random", StandardBasicTypes.LONG, true ) );
-		registerFunction( "randomf", new NoArgSQLFunction( "randomf", StandardBasicTypes.DOUBLE, true ) );
-		registerFunction( "right", new StandardSQLFunction( "right", StandardBasicTypes.STRING ) );
-		registerFunction( "session_user", new NoArgSQLFunction( "session_user", StandardBasicTypes.STRING, false ) );
-		registerFunction( "second", new StandardSQLFunction( "second", StandardBasicTypes.INTEGER ) );
-		registerFunction( "size", new NoArgSQLFunction( "size", StandardBasicTypes.LONG, true ) );
-		registerFunction( "squeeze", new StandardSQLFunction( "squeeze" ) );
-		registerFunction( "sin", new StandardSQLFunction( "sin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "soundex", new StandardSQLFunction( "soundex", StandardBasicTypes.STRING ) );
-		registerFunction( "sqrt", new StandardSQLFunction( "sqrt", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "substring", new SQLFunctionTemplate( StandardBasicTypes.STRING, "substring(?1 FROM ?2 FOR ?3)" ) );
-		registerFunction( "system_user", new NoArgSQLFunction( "system_user", StandardBasicTypes.STRING, false ) );
-		//registerFunction( "trim", new StandardSQLFunction( "trim", StandardBasicTypes.STRING ) );
-		registerFunction( "unhex", new StandardSQLFunction( "unhex", StandardBasicTypes.STRING ) );
-		registerFunction( "upper", new StandardSQLFunction( "upper" ) );
-		registerFunction( "uppercase", new StandardSQLFunction( "uppercase" ) );
-		registerFunction( "user", new NoArgSQLFunction( "user", StandardBasicTypes.STRING, false ) );
-		registerFunction( "usercode", new NoArgSQLFunction( "usercode", StandardBasicTypes.STRING, true ) );
-		registerFunction( "username", new NoArgSQLFunction( "username", StandardBasicTypes.STRING, true ) );
-		registerFunction( "uuid_create", new StandardSQLFunction( "uuid_create", StandardBasicTypes.BYTE ) );
-		registerFunction( "uuid_compare", new StandardSQLFunction( "uuid_compare", StandardBasicTypes.INTEGER ) );
-		registerFunction( "uuid_from_char", new StandardSQLFunction( "uuid_from_char", StandardBasicTypes.BYTE ) );
-		registerFunction( "uuid_to_char", new StandardSQLFunction( "uuid_to_char", StandardBasicTypes.STRING ) );
-		registerFunction( "year", new StandardSQLFunction( "year", StandardBasicTypes.INTEGER ) );
-		// Casting to char of numeric values introduces space padding up to the
-		// maximum width of a value for that return type.  Casting to varchar
-		// does not introduce space padding.
-		registerFunction( "str", new SQLFunctionTemplate(StandardBasicTypes.STRING, "cast(?1 as varchar)") );
 		// Ingres driver supports getGeneratedKeys but only in the following
 		// form:
 		// The Ingres DBMS returns only a single table key or a single object
@@ -165,6 +100,235 @@ public class IngresDialect extends Dialect {
 		// of true, false or unknown. Using the tinyint type requires
 		// substitions of true and false.
 		getDefaultProperties().setProperty( Environment.QUERY_SUBSTITUTIONS, "true=1,false=0" );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Standard function overrides
+
+		registry.registerPattern( "bit_length", "octet_length(hex(?1))*4", StandardSpiBasicTypes.INTEGER );
+
+		registry.register(
+				"concat",
+				new FunctionAsExpressionTemplate(
+						"(",
+						"+",
+						")",
+						StandardFunctionReturnTypeResolvers.invariant( StandardSpiBasicTypes.STRING )
+				)
+		);
+
+		registry.namedTemplateBuilder( "day" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.namedTemplateBuilder( "hour" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.registerPattern( "extract", "date_part('?1', ?2)", StandardSpiBasicTypes.INTEGER );
+
+		registry.register(
+				"locate",
+				new LocateEmulationUsingPositionAndSubstring(
+						(reg, type, arguments) -> reg.findFunctionTemplate( "substring" ).makeSqmFunctionExpression(
+								arguments,
+								type
+						)
+				)
+		);
+
+		registry.namedTemplateBuilder( "minute" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.namedTemplateBuilder( "month" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.namedTemplateBuilder( "second" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.register( "substring", IngresSubstringFunction.INSTANCE );
+
+		registry.namedTemplateBuilder( "year" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		// Casting to char of numeric values introduces space padding up to the
+		// maximum width of a value for that return type.  Casting to varchar
+		// does not introduce space padding.
+		registry.registerPattern( "str", "cast(?1 as varchar)", StandardSpiBasicTypes.STRING );
+
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Common functions
+
+		CommonFunctionFactory.atan( registry );
+		CommonFunctionFactory.cos( registry );
+		CommonFunctionFactory.exp( registry );
+		CommonFunctionFactory.ln( registry );
+		CommonFunctionFactory.log( registry );
+		CommonFunctionFactory.position( registry );
+		CommonFunctionFactory.sin( registry );
+		CommonFunctionFactory.soundex( registry );
+
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Connection/database info functions
+
+		registry.noArgsBuilder( "current_user" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+		registry.noArgsBuilder( "dba" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setUseParenthesesWhenNoArgs( true )
+				.register();
+
+		registry.registerNoArgs( "gmt_timestamp", StandardSpiBasicTypes.STRING );
+
+		registry.registerNoArgs( "initial_user", StandardSpiBasicTypes.STRING );
+		registry.registerNoArgs( "session_user", StandardSpiBasicTypes.STRING );
+		registry.registerNoArgs( "system_user", StandardSpiBasicTypes.STRING );
+		registry.registerNoArgs( "user", StandardSpiBasicTypes.STRING );
+		registry.noArgsBuilder( "usercode" ).setInvariantType( StandardSpiBasicTypes.STRING ).setUseParenthesesWhenNoArgs( true ).register();
+		registry.noArgsBuilder( "username" ).setInvariantType( StandardSpiBasicTypes.STRING ).setUseParenthesesWhenNoArgs( true ).register();
+
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// UUID functions
+		registry.noArgsBuilder( "uuid_create" ).setUseParenthesesWhenNoArgs( true ).setInvariantType( StandardSpiBasicTypes.BYTE );
+
+		registry.namedTemplateBuilder( "uuid_compare" )
+				.setExactArgumentCount( 2 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.namedTemplateBuilder( "uuid_from_char" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.BYTE )
+				.register();
+
+		registry.namedTemplateBuilder( "uuid_to_char" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Bitwise functions
+
+		registry.namedTemplateBuilder( "bit_and" )
+				.setExactArgumentCount( 2 )
+				.register();
+
+		registry.namedTemplateBuilder( "bit_add" )
+				.setExactArgumentCount( 2 )
+				.register();
+
+		registry.namedTemplateBuilder( "bit_or" )
+				.setExactArgumentCount( 2 )
+				.register();
+
+		registry.namedTemplateBuilder( "bit_xor" )
+				.setExactArgumentCount( 2 )
+				.register();
+
+		registry.namedTemplateBuilder( "bit_not" )
+				.setExactArgumentCount( 1 )
+				.register();
+
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// String functions
+
+		registry.registerAlternateKey( "character_length", "length" );
+
+		registry.namedTemplateBuilder( "charextract" )
+				.setExactArgumentCount( 2 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+		registry.registerAlternateKey( "lowercase", "lower" );
+
+		registry.registerAlternateKey( "uppercase", "upper" );
+
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Date functions
+
+		registry.namedTemplateBuilder( "date_trunc" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.register();
+
+		registry.namedTemplateBuilder( "dow" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Numeric functions
+
+		registry.namedTemplateBuilder( "power" )
+				.setExactArgumentCount( 2 )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
+
+		registry.noArgsBuilder( "random" )
+				.setUseParenthesesWhenNoArgs( true )
+				.setInvariantType( StandardSpiBasicTypes.LONG )
+				.register();
+
+		registry.noArgsBuilder( "randomf" )
+				.setUseParenthesesWhenNoArgs( true )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
+
+
+
+
+		// uncategorized
+		registry.registerNamed( "hash", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "hex", StandardSpiBasicTypes.STRING );
+
+
+
+
+		registry.registerNamed( "intextract", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "left", StandardSpiBasicTypes.STRING );
+
+
+
+		registry.registerNamed( "octet_length", StandardSpiBasicTypes.LONG );
+		registry.registerNamed( "pad", StandardSpiBasicTypes.STRING );
+
+
+
+		registry.registerNamed( "right", StandardSpiBasicTypes.STRING );
+
+
+
+		registry.namedTemplateBuilder( "size" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.LONG )
+				.register();
+
+		registry.registerNamed( "squeeze" );
+
+		registry.registerNamed( "unhex", StandardSpiBasicTypes.STRING );
+
 	}
 
 	@Override
@@ -271,26 +435,31 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
-	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-		return new GlobalTemporaryTableBulkIdStrategy(
-				new IdTableSupportStandardImpl() {
-					@Override
-					public String generateIdTableName(String baseName) {
-						return "session." + super.generateIdTableName( baseName );
-					}
+	public IdTableStrategy getDefaultIdTableStrategy() {
+		return new GlobalTemporaryTableStrategy( generateIdTableSupport() );
+	}
 
-					@Override
-					public String getCreateIdTableCommand() {
-						return "declare global temporary table";
-					}
+	private IdTableSupport generateIdTableSupport() {
+		return new StandardIdTableSupport( generateIdTableExporter() ) {
+			@Override
+			protected String determineIdTableName(String baseName) {
+				return "session." + super.determineIdTableName( baseName );
+			}
+		};
+	}
 
-					@Override
-					public String getCreateIdTableStatementOptions() {
-						return "on commit preserve rows with norecovery";
-					}
-				},
-				AfterUseAction.CLEAN
-		);
+	private Exporter<IdTable> generateIdTableExporter() {
+		return new GlobalTempTableExporter() {
+			@Override
+			public String getCreateCommand() {
+				return "declare global temporary table";
+			}
+
+			@Override
+			public String getCreateOptions() {
+				return "on commit preserve rows with norecovery";
+			}
+		};
 	}
 
 

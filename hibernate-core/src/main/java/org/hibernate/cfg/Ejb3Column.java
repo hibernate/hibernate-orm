@@ -15,12 +15,11 @@ import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.ColumnTransformers;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
-import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.Nullability;
@@ -31,6 +30,7 @@ import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
+import org.hibernate.naming.Identifier;
 
 import org.jboss.logging.Logger;
 
@@ -53,28 +53,36 @@ public class Ejb3Column {
 	protected Map<String, Join> joins;
 	protected PropertyHolder propertyHolder;
 	private boolean isImplicit;
-	public static final int DEFAULT_COLUMN_LENGTH = 255;
 	public String sqlType;
-	private int length = DEFAULT_COLUMN_LENGTH;
-	private int precision;
-	private int scale;
-	private String logicalColumnName;
+	private Long length;
+	private Integer precision;
+	private Integer scale;
+	private Identifier logicalColumnName;
 	private String propertyName;
 	private boolean unique;
 	private boolean nullable = true;
 	private String formulaString;
 	private Formula formula;
-	private Table table;
+	private MappedTable table;
 	private String readExpression;
 	private String writeExpression;
 
 	private String defaultValue;
 
+
+	/**
+	 * @deprecated since 6.0, use {@link #setTable(MappedTable)} instead.
+	 */
+	@Deprecated
 	public void setTable(Table table) {
 		this.table = table;
 	}
 
-	public String getLogicalColumnName() {
+	public void setTable(MappedTable table) {
+		this.table = table;
+	}
+
+	public Identifier getLogicalColumnName() {
 		return logicalColumnName;
 	}
 
@@ -82,15 +90,15 @@ public class Ejb3Column {
 		return sqlType;
 	}
 
-	public int getLength() {
+	public Long getLength() {
 		return length;
 	}
 
-	public int getPrecision() {
+	public Integer getPrecision() {
 		return precision;
 	}
 
-	public int getScale() {
+	public Integer getScale() {
 		return scale;
 	}
 
@@ -141,10 +149,6 @@ public class Ejb3Column {
 		return context;
 	}
 
-	public void setBuildingContext(MetadataBuildingContext context) {
-		this.context = context;
-	}
-
 	public void setImplicit(boolean implicit) {
 		isImplicit = implicit;
 	}
@@ -153,20 +157,24 @@ public class Ejb3Column {
 		this.sqlType = sqlType;
 	}
 
-	public void setLength(int length) {
+	public void setLength(Long length) {
 		this.length = length;
 	}
 
-	public void setPrecision(int precision) {
+	public void setPrecision(Integer precision) {
 		this.precision = precision;
 	}
 
-	public void setScale(int scale) {
+	public void setScale(Integer scale) {
 		this.scale = scale;
 	}
 
-	public void setLogicalColumnName(String logicalColumnName) {
+	public void setLogicalColumnName(Identifier logicalColumnName) {
 		this.logicalColumnName = logicalColumnName;
+	}
+
+	public void setLogicalColumnName(String logicalColumnName) {
+		this.logicalColumnName = buildLogicalName( logicalColumnName );
 	}
 
 	public void setPropertyName(String propertyName) {
@@ -193,14 +201,14 @@ public class Ejb3Column {
 		this.defaultValue = defaultValue;
 	}
 
-	public Ejb3Column() {
+	public Ejb3Column(MetadataBuildingContext buildingContext) {
+		this.context = buildingContext;
 	}
 
 	public void bind() {
 		if ( StringHelper.isNotEmpty( formulaString ) ) {
 			LOG.debugf( "Binding formula %s", formulaString );
-			formula = new Formula();
-			formula.setFormula( formulaString );
+			formula = new Formula(formulaString);
 		}
 		else {
 			initMappingColumn(
@@ -216,30 +224,28 @@ public class Ejb3Column {
 	}
 
 	protected void initMappingColumn(
-			String columnName,
+			Identifier columnName,
 			String propertyName,
-			int length,
-			int precision,
-			int scale,
+			Long length,
+			Integer precision,
+			Integer scale,
 			boolean nullable,
 			String sqlType,
 			boolean unique,
 			boolean applyNamingStrategy) {
 		if ( StringHelper.isNotEmpty( formulaString ) ) {
-			this.formula = new Formula();
-			this.formula.setFormula( formulaString );
+			this.formula = new Formula(formulaString);
 		}
 		else {
-			this.mappingColumn = new Column();
-			redefineColumnName( columnName, propertyName, applyNamingStrategy );
+			this.mappingColumn = new Column(redefineColumnName( columnName, propertyName, applyNamingStrategy ), unique);
+			;
 			this.mappingColumn.setLength( length );
-			if ( precision > 0 ) {  //revelent precision
+			if ( precision != null && precision > 0 ) {  //revelent precision
 				this.mappingColumn.setPrecision( precision );
 				this.mappingColumn.setScale( scale );
 			}
 			this.mappingColumn.setNullable( nullable );
 			this.mappingColumn.setSqlType( sqlType );
-			this.mappingColumn.setUnique( unique );
 
 			if(writeExpression != null && !writeExpression.matches("[^?]*\\?[^?]*")) {
 				throw new AnnotationException(
@@ -257,17 +263,15 @@ public class Ejb3Column {
 	}
 
 	public boolean isNameDeferred() {
-		return mappingColumn == null || StringHelper.isEmpty( mappingColumn.getName() );
+		return mappingColumn == null || StringHelper.isEmpty( mappingColumn.getText() );
 	}
 
-	public void redefineColumnName(String columnName, String propertyName, boolean applyNamingStrategy) {
+	public Identifier redefineColumnName(Identifier columnName, String propertyName, boolean applyNamingStrategy) {
 		final ObjectNameNormalizer normalizer = context.getObjectNameNormalizer();
-		final Database database = context.getMetadataCollector().getDatabase();
 		final ImplicitNamingStrategy implicitNamingStrategy = context.getBuildingOptions().getImplicitNamingStrategy();
-		final PhysicalNamingStrategy physicalNamingStrategy = context.getBuildingOptions().getPhysicalNamingStrategy();
 
 		if ( applyNamingStrategy ) {
-			if ( StringHelper.isEmpty( columnName ) ) {
+			if ( columnName == null ) {
 				if ( propertyName != null ) {
 					final AttributePath attributePath = AttributePath.parse( propertyName );
 
@@ -301,26 +305,24 @@ public class Ejb3Column {
 								implicitName.isQuoted() );
 					}
 
-					final Identifier physicalName = physicalNamingStrategy.toPhysicalColumnName( implicitName, database.getJdbcEnvironment() );
-					mappingColumn.setName( physicalName.render( database.getDialect() ) );
+					return implicitName;
 				}
 				//Do nothing otherwise
 			}
 			else {
-				final Identifier explicitName = database.toIdentifier( columnName );
-				final Identifier physicalName =  physicalNamingStrategy.toPhysicalColumnName( explicitName, database.getJdbcEnvironment() );
-				mappingColumn.setName( physicalName.render( database.getDialect() ) );
+				return columnName;
 			}
 		}
 		else {
-			if ( StringHelper.isNotEmpty( columnName ) ) {
-				mappingColumn.setName( normalizer.toDatabaseIdentifierText( columnName ) );
+			if ( columnName != null) {
+				return normalizer.normalizeIdentifierQuoting( columnName );
 			}
 		}
+		return null;
 	}
 
 	public String getName() {
-		return mappingColumn.getName();
+		return mappingColumn.getText();
 	}
 
 	public Column getMappingColumn() {
@@ -365,48 +367,14 @@ public class Ejb3Column {
 			value.addFormula( formula );
 		}
 		else {
-			getMappingColumn().setValue( value );
-			value.addColumn( getMappingColumn(), insertable, updatable );
-			value.getTable().addColumn( getMappingColumn() );
-			addColumnBinding( value );
-			table = value.getTable();
+			table = value.getMappedTable();
+			final Column mappingColumn = getMappingColumn();
+			if ( table != null ) {
+				mappingColumn.setTableName( table.getNameIdentifier() );
+			}
+			table.addColumn( mappingColumn );
+			value.addColumn( mappingColumn );
 		}
-	}
-
-	protected void addColumnBinding(SimpleValue value) {
-		final String logicalColumnName;
-		if ( StringHelper.isNotEmpty( this.logicalColumnName ) ) {
-			logicalColumnName = this.logicalColumnName;
-		}
-		else {
-			final ObjectNameNormalizer normalizer = context.getObjectNameNormalizer();
-			final Database database = context.getMetadataCollector().getDatabase();
-			final ImplicitNamingStrategy implicitNamingStrategy = context.getBuildingOptions()
-					.getImplicitNamingStrategy();
-
-			final Identifier implicitName = normalizer.normalizeIdentifierQuoting(
-					implicitNamingStrategy.determineBasicColumnName(
-							new ImplicitBasicColumnNameSource() {
-								@Override
-								public AttributePath getAttributePath() {
-									return AttributePath.parse( propertyName );
-								}
-
-								@Override
-								public boolean isCollectionElement() {
-									return false;
-								}
-
-								@Override
-								public MetadataBuildingContext getBuildingContext() {
-									return context;
-								}
-							}
-					)
-			);
-			logicalColumnName = implicitName.render( database.getDialect() );
-		}
-		context.getMetadataCollector().addColumnNameBinding( value.getTable(), logicalColumnName, getMappingColumn() );
 	}
 
 	/**
@@ -415,14 +383,20 @@ public class Ejb3Column {
 	 *
 	 * @return appropriate table
 	 * @throws AnnotationException missing secondary table
+	 *
+	 * @deprecated since 6.0, use {@link #getMappedTable()} instead
 	 */
 	public Table getTable() {
+		return (Table) getMappedTable();
+	}
+
+	public MappedTable getMappedTable() {
 		if ( table != null ){
 			return table;
 		}
 
 		if ( isSecondary() ) {
-			return getJoin().getTable();
+			return getJoin().getMappedTable();
 		}
 		else {
 			return propertyHolder.getTable();
@@ -442,9 +416,8 @@ public class Ejb3Column {
 		Join join = joins.get( explicitTableName );
 		if ( join == null ) {
 			// annotation binding seems to use logical and physical naming somewhat inconsistently...
-			final String physicalTableName = getBuildingContext().getMetadataCollector().getPhysicalTableName( explicitTableName );
-			if ( physicalTableName != null ) {
-				join = joins.get( physicalTableName );
+			if ( explicitTableName != null ) {
+				join = joins.get( explicitTableName );
 			}
 		}
 
@@ -487,6 +460,7 @@ public class Ejb3Column {
 				context
 		);
 	}
+
 	public static Ejb3Column[] buildColumnFromAnnotation(
 			javax.persistence.Column[] anns,
 			org.hibernate.annotations.Formula formulaAnn,
@@ -498,10 +472,9 @@ public class Ejb3Column {
 			MetadataBuildingContext context) {
 		Ejb3Column[] columns;
 		if ( formulaAnn != null ) {
-			Ejb3Column formulaColumn = new Ejb3Column();
+			Ejb3Column formulaColumn = new Ejb3Column( context );
 			formulaColumn.setFormula( formulaAnn.value() );
 			formulaColumn.setImplicit( false );
-			formulaColumn.setBuildingContext( context );
 			formulaColumn.setPropertyHolder( propertyHolder );
 			formulaColumn.bind();
 			columns = new Ejb3Column[] { formulaColumn };
@@ -536,8 +509,6 @@ public class Ejb3Column {
 
 					final ObjectNameNormalizer normalizer = context.getObjectNameNormalizer();
 					final Database database = context.getMetadataCollector().getDatabase();
-					final ImplicitNamingStrategy implicitNamingStrategy = context.getBuildingOptions().getImplicitNamingStrategy();
-					final PhysicalNamingStrategy physicalNamingStrategy = context.getBuildingOptions().getPhysicalNamingStrategy();
 
 					javax.persistence.Column col = actualCols[index];
 
@@ -565,19 +536,16 @@ public class Ejb3Column {
 //						tableName = physicalName.render( database.getDialect() );
 					}
 
-					final String columnName;
+					final Identifier columnName;
 					if ( "".equals( col.name() ) ) {
 						columnName = null;
 					}
 					else {
 						// NOTE : this is the logical column name, not the physical!
-						columnName = database.getJdbcEnvironment()
-								.getIdentifierHelper()
-								.toIdentifier( col.name() )
-								.render();
+						columnName = buildLogicalName( database, col.name() );
 					}
 
-					Ejb3Column column = new Ejb3Column();
+					Ejb3Column column = new Ejb3Column( context );
 
 					if ( length == 1 ) {
 						applyColumnDefault( column, inferredData );
@@ -585,11 +553,11 @@ public class Ejb3Column {
 
 					column.setImplicit( false );
 					column.setSqlType( sqlType );
-					column.setLength( col.length() );
-					column.setPrecision( col.precision() );
+					column.setLength( interpretLength( col ) );
+					column.setPrecision( interpretPrecision( col ) );
 					column.setScale( col.scale() );
-					if ( StringHelper.isEmpty( columnName ) && ! StringHelper.isEmpty( suffixForDefaultColumnName ) ) {
-						column.setLogicalColumnName( inferredData.getPropertyName() + suffixForDefaultColumnName );
+					if ( columnName == null && !StringHelper.isEmpty( suffixForDefaultColumnName ) ) {
+						column.setLogicalColumnName( buildLogicalName( database, inferredData.getPropertyName() + suffixForDefaultColumnName ) );
 					}
 					else {
 						column.setLogicalColumnName( columnName );
@@ -607,7 +575,6 @@ public class Ejb3Column {
 					column.setExplicitTableName( tableName );
 					column.setPropertyHolder( propertyHolder );
 					column.setJoins( secondaryTables );
-					column.setBuildingContext( context );
 					column.extractDataFromPropertyData(inferredData);
 					column.bind();
 					columns[index] = column;
@@ -615,6 +582,70 @@ public class Ejb3Column {
 			}
 		}
 		return columns;
+	}
+
+	private static Long interpretLength(javax.persistence.Column col) {
+		if ( col == null ) {
+			return null;
+		}
+
+		if ( col.length() == 255 ) {
+			// JPA annotation defines 255 as the default value for this
+			//		Column#length attribute.  Until we us Jandex we
+			//		do not know whether the 255 here was explicitly set
+			//		or is just the JVM-applied default.  We assume the later
+			//		which creates a small possibility of an "error" for that
+			//		specific value if explicitly set
+			return null;
+		}
+
+		return (long) col.length();
+	}
+
+	private static Integer interpretPrecision(javax.persistence.Column col) {
+		if ( col == null ) {
+			return null;
+		}
+
+		if ( col.precision() == 0 ) {
+			// JPA annotation defines 0 as the default value for this
+			//		Column#precision attribute.  Until we us Jandex we
+			//		do not know whether the 0 here was explicitly set
+			//		or is just the JVM-applied default.  We assume the later
+			//		which creates a small possibility of an "error" for that
+			//		specific value if explicitly set
+			return null;
+		}
+
+		return col.precision();
+	}
+
+	private static Integer interpretScale(javax.persistence.Column col) {
+		if ( col == null ) {
+			return null;
+		}
+
+		if ( col.scale() == 0 ) {
+			// JPA annotation defines 0 as the default value for this
+			//		Column#scale attribute.  Until we us Jandex we
+			//		do not know whether the 0 here was explicitly set
+			//		or is just the JVM-applied default.  We assume the later
+			//		which creates a small possibility of an "error" for that
+			//		specific value if explicitly set
+			return null;
+		}
+
+		return col.scale();
+	}
+
+	public static Identifier buildLogicalName(Database database, String name) {
+		return database.getJdbcEnvironment()
+				.getIdentifierHelper()
+				.toIdentifier( name );
+	}
+
+	private Identifier buildLogicalName(String name) {
+		return buildLogicalName( context.getMetadataCollector().getDatabase(), name );
 	}
 
 	private static void applyColumnDefault(Ejb3Column column, PropertyData inferredData) {
@@ -653,10 +684,8 @@ public class Ejb3Column {
 			return;
 		}
 
-		final String nonNullLogicalColumnName = logicalColumnName != null
-				? logicalColumnName
-				//use the default for annotations
-				: "";
+		Identifier nonNullLogicalColumnName =
+				logicalColumnName != null ? logicalColumnName : Identifier.toIdentifier( "" );
 
 		if ( StringHelper.isEmpty( annotation.forColumn() )
 				|| annotation.forColumn().equals( nonNullLogicalColumnName ) ) {
@@ -678,7 +707,7 @@ public class Ejb3Column {
 			PropertyHolder propertyHolder,
 			Nullability nullability,
 			MetadataBuildingContext context) {
-		Ejb3Column column = new Ejb3Column();
+		Ejb3Column column = new Ejb3Column( context );
 		Ejb3Column[] columns = new Ejb3Column[1];
 		columns[0] = column;
 
@@ -688,23 +717,27 @@ public class Ejb3Column {
 				&& !inferredData.getProperty().isArray() ) {
 			column.setNullable( false );
 		}
-		column.setLength( DEFAULT_COLUMN_LENGTH );
 		final String propertyName = inferredData.getPropertyName();
 		column.setPropertyName(
 				BinderHelper.getRelativePath( propertyHolder, propertyName )
 		);
 		column.setPropertyHolder( propertyHolder );
 		column.setJoins( secondaryTables );
-		column.setBuildingContext( context );
 
 		// property name + suffix is an "explicit" column name
 		if ( !StringHelper.isEmpty( suffixForDefaultColumnName ) ) {
-			column.setLogicalColumnName( propertyName + suffixForDefaultColumnName );
+			column.setLogicalColumnName(
+					buildLogicalName(
+							context.getMetadataCollector().getDatabase(),
+							propertyName + suffixForDefaultColumnName
+					)
+			);
 			column.setImplicit( false );
 		}
 		else {
 			column.setImplicit( true );
 		}
+
 		applyColumnDefault( column, inferredData );
 		column.extractDataFromPropertyData( inferredData );
 		column.bind();

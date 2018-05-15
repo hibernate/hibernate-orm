@@ -8,15 +8,20 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
-import org.hibernate.dialect.function.DB2SubstringFunction;
-import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.local.AfterUseAction;
-import org.hibernate.type.descriptor.sql.CharTypeDescriptor;
-import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
+import org.hibernate.dialect.function.DB2SubstringFunctionTemplate;
+import org.hibernate.query.sqm.consume.multitable.internal.StandardIdTableSupport;
+import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTempTableExporter;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTable;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTableSupport;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.CharSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.VarcharSqlDescriptor;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * An SQL dialect for DB2 9.7.
@@ -27,7 +32,14 @@ public class DB297Dialect extends DB2Dialect {
 
 	public DB297Dialect() {
 		super();
-		registerFunction( "substring", new DB2SubstringFunction() );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
+
+		registry.registerNamed( "chr", StandardSpiBasicTypes.CHARACTER );
+		registry.register( "substring", new DB2SubstringFunctionTemplate() );
 	}
 
 	@Override
@@ -37,28 +49,37 @@ public class DB297Dialect extends DB2Dialect {
 	}
 
 	@Override
-	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
+	public IdTableStrategy getDefaultIdTableStrategy() {
 		// Starting in DB2 9.7, "real" global temporary tables that can be shared between sessions
 		// are supported; (obviously) data is not shared between sessions.
-		return new GlobalTemporaryTableBulkIdStrategy(
-				new IdTableSupportStandardImpl() {
-					@Override
-					public String generateIdTableName(String baseName) {
-						return super.generateIdTableName( baseName );
-					}
-
-					@Override
-					public String getCreateIdTableCommand() {
-						return "create global temporary table";
-					}
-
-					@Override
-					public String getCreateIdTableStatementOptions() {
-						return "not logged";
-					}
-				},
-				AfterUseAction.CLEAN
+		return new GlobalTemporaryTableStrategy(
+				generateIdTableSupport()
 		);
+	}
+
+	@Override
+	protected IdTableSupport generateIdTableSupport() {
+		return new StandardIdTableSupport( new GlobalTempTableExporter() ) {
+			@Override
+			public Exporter<IdTable> getIdTableExporter() {
+				return generateIdTableExporter();
+			}
+		};
+	}
+
+	@Override
+	protected Exporter<IdTable> generateIdTableExporter() {
+		return new GlobalTempTableExporter() {
+			@Override
+			protected String getCreateOptions() {
+				return "not logged";
+			}
+
+			@Override
+			protected String getCreateCommand() {
+				return "create global temporary table";
+			}
+		};
 	}
 
 	@Override
@@ -69,18 +90,18 @@ public class DB297Dialect extends DB2Dialect {
 		// which are supported.
 		switch ( sqlCode ) {
 			case Types.NCHAR:
-				return CharTypeDescriptor.INSTANCE;
+				return CharSqlDescriptor.INSTANCE;
 
 			case Types.NCLOB:
 				if ( useInputStreamToInsertBlob() ) {
-					return ClobTypeDescriptor.STREAM_BINDING;
+					return ClobSqlDescriptor.STREAM_BINDING;
 				}
 				else {
-					return ClobTypeDescriptor.CLOB_BINDING;
+					return ClobSqlDescriptor.CLOB_BINDING;
 				}
 
 			case Types.NVARCHAR:
-				return VarcharTypeDescriptor.INSTANCE;
+				return VarcharSqlDescriptor.INSTANCE;
 
 			default:
 				return super.getSqlTypeDescriptorOverride( sqlCode );

@@ -5,12 +5,17 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.sql;
+import org.hibernate.annotations.Remove;
 import org.hibernate.dialect.Dialect;
 
 /**
  * An alias generator for SQL identifiers
  * @author Gavin King
+ *
+ * @deprecated Converting to use SQL AST - Integrated into {@link org.hibernate.sql.ast.produce.spi.SqlAliasBase}
  */
+@Deprecated
+@Remove
 public final class Alias {
 
 	private final int length;

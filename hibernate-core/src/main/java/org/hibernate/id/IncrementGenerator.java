@@ -6,7 +6,6 @@
  */
 package org.hibernate.id;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -16,13 +15,15 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.Table;
+import org.hibernate.naming.Identifier;
+import org.hibernate.naming.QualifiedTableName;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * <b>increment</b><br>
@@ -47,7 +48,8 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 	private IntegralDataTypeHolder previousValueHolder;
 
 	@Override
-	public synchronized Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
+	public synchronized Object generate(SharedSessionContractImplementor session, Object object)
+			throws HibernateException {
 		if ( sql != null ) {
 			initializePreviousValueHolder( session );
 		}
@@ -55,10 +57,12 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 	}
 
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
-		returnClass = type.getReturnedClass();
+	public void configure(JavaTypeDescriptor javaTypeDescriptor, Properties params, ServiceRegistry serviceRegistry)
+			throws MappingException {
+		returnClass = javaTypeDescriptor.getJavaType();
 
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
+		QualifiedObjectNameFormatter qualifiedObjectNameFormatter = jdbcEnvironment.getQualifiedObjectNameFormatter();
 		final ObjectNameNormalizer normalizer =
 				(ObjectNameNormalizer) params.get( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER );
 
@@ -74,20 +78,24 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 		}
 		String[] tables = StringHelper.split( ", ", tableList );
 
-		final String schema = normalizer.toDatabaseIdentifierText(
+		final Identifier schemaName = normalizer.normalizeIdentifierQuoting(
 				params.getProperty( PersistentIdentifierGenerator.SCHEMA )
 		);
-		final String catalog = normalizer.toDatabaseIdentifierText(
+
+		final Identifier catalogName = normalizer.normalizeIdentifierQuoting(
 				params.getProperty( PersistentIdentifierGenerator.CATALOG )
 		);
 
 		StringBuilder buf = new StringBuilder();
 		for ( int i = 0; i < tables.length; i++ ) {
-			final String tableName = normalizer.toDatabaseIdentifierText( tables[i] );
+			final Identifier tableName = normalizer.normalizeIdentifierQuoting( tables[i] );
 			if ( tables.length > 1 ) {
 				buf.append( "select max(" ).append( column ).append( ") as mx from " );
 			}
-			buf.append( Table.qualify( catalog, schema, tableName ) );
+			buf.append( qualifiedObjectNameFormatter.format(
+					new QualifiedTableName( catalogName, schemaName, tableName ),
+					jdbcEnvironment.getDialect()
+			) );
 			if ( i < tables.length - 1 ) {
 				buf.append( " union " );
 			}

@@ -6,7 +6,7 @@
  */
 package org.hibernate.userguide.naming;
 
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.naming.Identifier;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;

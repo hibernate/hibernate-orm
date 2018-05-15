@@ -11,7 +11,7 @@ import java.util.Collection;
 import java.util.Date;
 import javax.persistence.TemporalType;
 
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 
 /**
  * @author Andrea Boriero
@@ -23,38 +23,39 @@ public class QueryParameterBindingValidator {
 	private QueryParameterBindingValidator() {
 	}
 
-	public <P> void validate(Type paramType, Object bind) {
+	public <P> void validate(AllowableParameterType paramType, Object bind) {
 		validate( paramType, bind, null );
 	}
 
-	public <P> void validate(Type paramType, Object bind, TemporalType temporalType) {
-		if ( bind == null || paramType == null ) {
-			// nothing we can check
-			return;
-		}
-		final Class parameterType = paramType.getReturnedClass();
-		if ( parameterType == null ) {
+	public <P> void validate(AllowableParameterType parameterType, Object bind, TemporalType temporalType) {
+		if ( bind == null || parameterType == null ) {
 			// nothing we can check
 			return;
 		}
 
-		if ( Collection.class.isInstance( bind ) && !Collection.class.isAssignableFrom( parameterType ) ) {
+		final Class parameterJavaType = parameterType.getJavaTypeDescriptor().getJavaType();
+		if ( parameterJavaType == null ) {
+			// nothing we can check
+			return;
+		}
+
+		if ( Collection.class.isInstance( bind ) && !Collection.class.isAssignableFrom( parameterJavaType ) ) {
 			// we have a collection passed in where we are expecting a non-collection.
 			// 		NOTE : this can happen in Hibernate's notion of "parameter list" binding
 			// 		NOTE2 : the case of a collection value and an expected collection (if that can even happen)
 			//			will fall through to the main check.
-			validateCollectionValuedParameterBinding( parameterType, (Collection) bind, temporalType );
+			validateCollectionValuedParameterBinding( parameterJavaType, (Collection) bind, temporalType );
 		}
 		else if ( bind.getClass().isArray() ) {
-			validateArrayValuedParameterBinding( parameterType, bind, temporalType );
+			validateArrayValuedParameterBinding( parameterJavaType, bind, temporalType );
 		}
 		else {
-			if ( !isValidBindValue( parameterType, bind, temporalType ) ) {
+			if ( !isValidBindValue( parameterJavaType, bind, temporalType ) ) {
 				throw new IllegalArgumentException(
 						String.format(
 								"Parameter value [%s] did not match expected type [%s (%s)]",
 								bind,
-								parameterType.getName(),
+								parameterJavaType.getName(),
 								extractName( temporalType )
 						)
 				);

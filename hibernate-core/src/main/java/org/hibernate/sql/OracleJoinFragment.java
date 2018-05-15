@@ -8,11 +8,17 @@ package org.hibernate.sql;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.annotations.Remove;
+
 /**
  * An Oracle-style (theta) join
  *
  * @author Jon Lipsky, Gavin King
+ *
+ * @deprecated Converting to use SQL AST
  */
+@Deprecated
+@Remove
 public class OracleJoinFragment extends JoinFragment {
 
 	private StringBuilder afterFrom = new StringBuilder();

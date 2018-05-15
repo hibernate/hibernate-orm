@@ -39,7 +39,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Basic <tt>templated</tt> support for {@link org.hibernate.id.factory.IdentifierGeneratorFactory} implementations.
@@ -110,7 +110,7 @@ public class DefaultIdentifierGeneratorFactory
 	}
 
 	@Override
-	public IdentifierGenerator createIdentifierGenerator(String strategy, Type type, Properties config) {
+	public IdentifierGenerator createIdentifierGenerator(String strategy, JavaTypeDescriptor type, Properties config) {
 		try {
 			Class clazz = getIdentifierGeneratorClass( strategy );
 			IdentifierGenerator identifierGenerator = ( IdentifierGenerator ) clazz.newInstance();

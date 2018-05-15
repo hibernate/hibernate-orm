@@ -22,7 +22,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Insert;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * A generator which combines sequence generation with immediate retrieval
@@ -46,7 +46,7 @@ public class SequenceIdentityGenerator
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SequenceIdentityGenerator.class );
 
 	@Override
-	public Serializable generate(SharedSessionContractImplementor s, Object obj) {
+	public Object generate(SharedSessionContractImplementor s, Object obj) {
 		return IdentifierGeneratorHelper.POST_INSERT_INDICATOR;
 	}
 
@@ -59,8 +59,8 @@ public class SequenceIdentityGenerator
 	}
 
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
-		super.configure( type, params, serviceRegistry );
+	public void configure(JavaTypeDescriptor javaTypeDescriptor, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+		super.configure( javaTypeDescriptor, params, serviceRegistry );
 	}
 
 	public static class Delegate extends AbstractReturningDelegate {

@@ -6,11 +6,16 @@
  */
 package org.hibernate.sql;
 
+import org.hibernate.annotations.Remove;
 import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
  * @author Gavin King
+ *
+ * @deprecated Converting to use SQL AST
  */
+@Deprecated
+@Remove
 public class ConditionFragment {
 	private String tableAlias;
 	private String[] lhs;

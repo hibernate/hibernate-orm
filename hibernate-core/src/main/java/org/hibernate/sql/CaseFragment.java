@@ -9,13 +9,18 @@ package org.hibernate.sql;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.hibernate.annotations.Remove;
 import org.hibernate.internal.util.StringHelper;
 
 /**
  * Abstract SQL case fragment renderer
  *
  * @author Gavin King, Simon Harris
+ *
+ * @deprecated Converting to use SQL AST
  */
+@Deprecated
+@Remove
 public abstract class CaseFragment {
 	public abstract String toFragmentString();
 

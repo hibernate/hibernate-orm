@@ -9,12 +9,10 @@ package org.hibernate.engine.spi;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.persister.entity.Loadable;
-import org.hibernate.persister.entity.PropertyMapping;
+import org.hibernate.NotYetImplementedFor6Exception;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Gavin King
@@ -30,8 +28,8 @@ public class SubselectFetch {
 	private final Set resultingEntityKeys;
 	private final String queryString;
 	private final String alias;
-	private final Loadable loadable;
-	private final QueryParameters queryParameters;
+//	private final Loadable loadable;
+//	private final QueryParameters queryParameters;
 	private final Map namedParameterLocMap;
 
 	/**
@@ -56,18 +54,19 @@ public class SubselectFetch {
 	 */
 	public SubselectFetch(
 			final String alias,
-			final Loadable loadable,
-			final QueryParameters queryParameters,
+//			final Loadable loadable,
+//			final QueryParameters queryParameters,
 			final Set resultingEntityKeys,
 			final Map namedParameterLocMap) {
-		this(
-				createSubselectFetchQueryFragment( queryParameters ),
-				alias,
-				loadable,
-				queryParameters,
-				resultingEntityKeys,
-				namedParameterLocMap
-		);
+		throw new NotYetImplementedFor6Exception(  );
+//		this(
+//				createSubselectFetchQueryFragment( queryParameters ),
+//				alias,
+//				loadable,
+//				queryParameters,
+//				resultingEntityKeys,
+//				namedParameterLocMap
+//		);
 	}
 
 	/**
@@ -88,17 +87,18 @@ public class SubselectFetch {
 	public SubselectFetch(
 			final String subselectFetchQueryFragment,
 			final String alias,
-			final Loadable loadable,
-			final QueryParameters queryParameters,
+//			final Loadable loadable,
+//			final QueryParameters queryParameters,
 			final Set resultingEntityKeys,
 			final Map namedParameterLocMap) {
-		this.resultingEntityKeys = resultingEntityKeys;
-		this.queryParameters = queryParameters;
-		this.namedParameterLocMap = namedParameterLocMap;
-		this.loadable = loadable;
-		this.alias = alias;
-
-		this.queryString = subselectFetchQueryFragment;
+		throw new NotYetImplementedFor6Exception(  );
+//		this.resultingEntityKeys = resultingEntityKeys;
+//		this.queryParameters = queryParameters;
+//		this.namedParameterLocMap = namedParameterLocMap;
+//		this.loadable = loadable;
+//		this.alias = alias;
+//
+//		this.queryString = subselectFetchQueryFragment;
 	}
 
 	/**
@@ -108,62 +108,62 @@ public class SubselectFetch {
 	 * @param queryParameters -the query parameters.
 	 * @return the subselect fetch query fragment.
 	 */
-	public static String createSubselectFetchQueryFragment(QueryParameters queryParameters) {
-		//TODO: ugly here:
-		final String queryString = queryParameters.getFilteredSQL();
-		final int fromIndex = getFromIndex( queryString );
-		final int orderByIndex = queryString.lastIndexOf( "order by" );
-		final String subselectQueryFragment =  orderByIndex > 0
-				? queryString.substring( fromIndex, orderByIndex )
-				: queryString.substring( fromIndex );
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef( "SubselectFetch query fragment: %s", subselectQueryFragment );
-		}
-		return subselectQueryFragment;
-	}
-
-	private static int getFromIndex(String queryString) {
-		int index = queryString.indexOf( FROM_STRING );
-
-		if ( index < 0 ) {
-			return index;
-		}
-
-		while ( !parenthesesMatch( queryString.substring( 0, index ) ) ) {
-			String subString = queryString.substring( index + FROM_STRING.length() );
-
-			int subIndex = subString.indexOf( FROM_STRING );
-
-			if ( subIndex < 0 ) {
-				return subIndex;
-			}
-
-			index += FROM_STRING.length() + subIndex;
-		}
-
-		return index;
-	}
-
-	private static boolean parenthesesMatch(String string) {
-		int parenCount = 0;
-
-		for ( int i = 0; i < string.length(); i++ ) {
-			char character = string.charAt( i );
-
-			if ( character == '(' ) {
-				parenCount++;
-			}
-			else if ( character == ')' ) {
-				parenCount--;
-			}
-		}
-
-		return parenCount == 0;
-	}
-
-	public QueryParameters getQueryParameters() {
-		return queryParameters;
-	}
+//	public static String createSubselectFetchQueryFragment(QueryParameters queryParameters) {
+//		//TODO: ugly here:
+//		final String queryString = queryParameters.getFilteredSQL();
+//		final int fromIndex = getFromIndex( queryString );
+//		final int orderByIndex = queryString.lastIndexOf( "order by" );
+//		final String subselectQueryFragment =  orderByIndex > 0
+//				? queryString.substring( fromIndex, orderByIndex )
+//				: queryString.substring( fromIndex );
+//		if ( LOG.isTraceEnabled() ) {
+//			LOG.tracef( "SubselectFetch query fragment: %s", subselectQueryFragment );
+//		}
+//		return subselectQueryFragment;
+//	}
+//
+//	private static int getFromIndex(String queryString) {
+//		int index = queryString.indexOf( FROM_STRING );
+//
+//		if ( index < 0 ) {
+//			return index;
+//		}
+//
+//		while ( !parenthesesMatch( queryString.substring( 0, index ) ) ) {
+//			String subString = queryString.substring( index + FROM_STRING.length() );
+//
+//			int subIndex = subString.indexOf( FROM_STRING );
+//
+//			if ( subIndex < 0 ) {
+//				return subIndex;
+//			}
+//
+//			index += FROM_STRING.length() + subIndex;
+//		}
+//
+//		return index;
+//	}
+//
+//	private static boolean parenthesesMatch(String string) {
+//		int parenCount = 0;
+//
+//		for ( int i = 0; i < string.length(); i++ ) {
+//			char character = string.charAt( i );
+//
+//			if ( character == '(' ) {
+//				parenCount++;
+//			}
+//			else if ( character == ')' ) {
+//				parenCount--;
+//			}
+//		}
+//
+//		return parenCount == 0;
+//	}
+//
+//	public QueryParameters getQueryParameters() {
+//		return queryParameters;
+//	}
 
 	/**
 	 * Get the Set of EntityKeys
@@ -172,13 +172,13 @@ public class SubselectFetch {
 		return resultingEntityKeys;
 	}
 
-	public String toSubselectString(String ukname) {
-		String[] joinColumns = ukname == null
-				? StringHelper.qualify( alias, loadable.getIdentifierColumnNames() )
-				: ( (PropertyMapping) loadable ).toColumns( alias, ukname );
-
-		return "select " + String.join( ", ", joinColumns ) + queryString;
-	}
+//	public String toSubselectString(String ukname) {
+//		String[] joinColumns = ukname == null
+//				? StringHelper.qualify( alias, loadable.getIdentifierColumnNames() )
+//				: ( (PropertyMapping) loadable ).toColumns( alias, ukname );
+//
+//		return "select " + String.join( ", ", joinColumns ) + queryString;
+//	}
 
 	@Override
 	public String toString() {

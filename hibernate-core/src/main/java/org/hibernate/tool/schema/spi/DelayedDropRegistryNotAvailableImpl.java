@@ -11,7 +11,10 @@ package org.hibernate.tool.schema.spi;
  * "create-drop" is not valid.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated As of Java 8, this is much more easily handled via an "empty" lambda
  */
+@Deprecated
 public class DelayedDropRegistryNotAvailableImpl implements DelayedDropRegistry {
 	/**
 	 * Singleton access

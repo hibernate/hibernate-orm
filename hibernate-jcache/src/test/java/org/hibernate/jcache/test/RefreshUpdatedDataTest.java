@@ -19,21 +19,17 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.jcache.test.TestHelper;
-import org.hibernate.mapping.Collection;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.Action;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
 import static org.junit.Assert.assertEquals;
@@ -41,14 +37,11 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Zhenlei Huang
  */
+@SuppressWarnings({"WeakerAccess","unused"})
 @TestForIssue(jiraKey = "HHH-10649")
-public class RefreshUpdatedDataTest extends BaseUnitTestCase {
-	private ServiceRegistry serviceRegistry;
-	private SessionFactoryImplementor sessionFactory;
-
-	@Before
-	@SuppressWarnings("unused")
-	public void acquireResources() {
+public class RefreshUpdatedDataTest extends BaseFunctionalTest {
+	@Override
+	public SessionFactoryImplementor produceSessionFactory() {
 		final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder()
 				.configure( "hibernate-config/hibernate.cfg.xml" );
 
@@ -57,42 +50,40 @@ public class RefreshUpdatedDataTest extends BaseUnitTestCase {
 		}
 		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
 
-
-		serviceRegistry = ssrb
+		final StandardServiceRegistry serviceRegistry = ssrb
 				.configure( "hibernate-config/hibernate.cfg.xml" )
 				.applySetting( AvailableSettings.HBM2DDL_DATABASE_ACTION, Action.CREATE )
 				.build();
 
-		final MetadataSources metadataSources = new MetadataSources( serviceRegistry );
-		metadataSources.addAnnotatedClass( ReadWriteCacheableItem.class );
-		metadataSources.addAnnotatedClass( ReadWriteVersionedCacheableItem.class );
-		metadataSources.addAnnotatedClass( NonStrictReadWriteCacheableItem.class );
-		metadataSources.addAnnotatedClass( NonStrictReadWriteVersionedCacheableItem.class );
+		try {
+			final MetadataSources metadataSources = new MetadataSources( serviceRegistry );
+			metadataSources.addAnnotatedClass( ReadWriteCacheableItem.class );
+			metadataSources.addAnnotatedClass( ReadWriteVersionedCacheableItem.class );
+			metadataSources.addAnnotatedClass( NonStrictReadWriteCacheableItem.class );
+			metadataSources.addAnnotatedClass( NonStrictReadWriteVersionedCacheableItem.class );
 
-		final Metadata metadata = metadataSources.buildMetadata();
-		TestHelper.createRegions( metadata, true );
+			final Metadata metadata = metadataSources.buildMetadata();
+			TestHelper.createRegions( metadata, true );
 
-		sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
-	}
-
-	@After
-	@SuppressWarnings("unused")
-	public void releaseResources() {
-		if ( sessionFactory != null ) {
-			sessionFactory.close();
+			return (SessionFactoryImplementor) metadata.buildSessionFactory();
 		}
-
-		if ( serviceRegistry != null ) {
-			StandardServiceRegistryBuilder.destroy( serviceRegistry );
+		catch (Exception e) {
+			try {
+				StandardServiceRegistryBuilder.destroy( serviceRegistry );
+			}
+			catch (Exception ignore) {
+			}
+			throw e;
 		}
 	}
+
 
 	@Test
 	public void testUpdateAndFlushThenRefresh() {
 		final String BEFORE = "before";
 
 		inTransaction(
-				sessionFactory,
+				sessionFactory(),
 				session -> {
 
 					ReadWriteCacheableItem readWriteCacheableItem = new ReadWriteCacheableItem( BEFORE );
@@ -118,7 +109,7 @@ public class RefreshUpdatedDataTest extends BaseUnitTestCase {
 		);
 
 		inTransaction(
-				sessionFactory,
+				sessionFactory(),
 				s1 -> {
 					final String AFTER = "after";
 
@@ -154,7 +145,7 @@ public class RefreshUpdatedDataTest extends BaseUnitTestCase {
 					assertEquals( 1, nonStrictReadWriteVersionedCacheableItem1.getTags().size() );
 
 					inTransaction(
-							sessionFactory,
+							sessionFactory(),
 							s2 -> {
 								ReadWriteCacheableItem readWriteCacheableItem2 = s2.get( ReadWriteCacheableItem.class, 1L );
 								ReadWriteVersionedCacheableItem readWriteVersionedCacheableItem2 = s2.get( ReadWriteVersionedCacheableItem.class, 1L );
@@ -178,7 +169,7 @@ public class RefreshUpdatedDataTest extends BaseUnitTestCase {
 		);
 
 		inTransaction(
-				sessionFactory,
+				sessionFactory(),
 				s -> {
 					s.delete( s.getReference( ReadWriteCacheableItem.class, 1L ) );
 					s.delete( s.getReference( ReadWriteVersionedCacheableItem.class, 1L ) );

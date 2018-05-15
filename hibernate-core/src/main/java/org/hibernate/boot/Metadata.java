@@ -6,28 +6,32 @@
  */
 package org.hibernate.boot;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
-import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.model.domain.EntityMapping;
+import org.hibernate.boot.model.domain.EntityMappingHierarchy;
+import org.hibernate.boot.model.query.spi.NamedHqlQueryDefinition;
+import org.hibernate.boot.model.query.spi.NamedNativeQueryDefinition;
+import org.hibernate.boot.model.query.spi.NamedQueryDefinition;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.MappedTable;
+import org.hibernate.boot.model.resultset.spi.ResultSetMappingDefinition;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
-import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.engine.spi.NamedQueryDefinition;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 
 /**
- * Represents the ORM model as determined from all provided mapping sources.
+ * Represents the ORM boot-time model as determined from all provided mapping sources.
  *
  * NOTE : for the time being this is essentially a copy of the legacy Mappings contract, split between
  * reading the mapping information exposed here and collecting it via InFlightMetadataCollector
@@ -36,7 +40,7 @@ import org.hibernate.mapping.Table;
  *
  * @since 5.0
  */
-public interface Metadata extends Mapping {
+public interface Metadata {
 	/**
 	 * Get the builder for {@link org.hibernate.SessionFactory} instances based on this metamodel,
 	 *
@@ -66,14 +70,32 @@ public interface Metadata extends Mapping {
 	 */
 	Database getDatabase();
 
+	java.util.Collection<EntityMappingHierarchy> getEntityHierarchies();
+
 	/**
 	 * Retrieves the PersistentClass entity metadata representation for known all entities.
-	 *
+	 * <p>
 	 * Returned collection is immutable
 	 *
 	 * @return All PersistentClass representations.
+	 *
+	 * @deprecated Use {@link #getEntityMappings} instead.  Or depending on usage,
+	 * {@link #getEntityHierarchies} is usually more appropriate
 	 */
+	@Deprecated
 	java.util.Collection<PersistentClass> getEntityBindings();
+
+	/**
+	 * Retrieves the EntityMapping metadata representation for known all
+	 * entities. The returned collection is immutable.
+	 * <p/>
+	 * Note that {@link #getEntityHierarchies} is usually more appropriate
+	 *
+	 * @return All PersistentClass representations.
+	 */
+	default java.util.Collection<EntityMapping> getEntityMappings() {
+		return getEntityBindings().stream().collect( Collectors.toList() );
+	}
 
 	/**
 	 * Retrieves the PersistentClass entity mapping metadata representation for
@@ -117,9 +139,31 @@ public interface Metadata extends Mapping {
 	 *
 	 * @return The named query metadata, or {@code null}.
 	 */
-	NamedQueryDefinition getNamedQueryDefinition(String name);
+	NamedHqlQueryDefinition getNamedHqlQueryDefinition(String name);
 
-	java.util.Collection<NamedQueryDefinition> getNamedQueryDefinitions();
+	java.util.Collection<NamedHqlQueryDefinition> getNamedHqlQueryDefinitions();
+
+	/**
+	 * Retrieve named query metadata by name.
+	 *
+	 * @param name The query name
+	 *
+	 * @return The named query metadata, or {@code null}.
+	 *
+	 * @deprecated Use {@link #getNamedHqlQueryDefinition(String)} instead
+	 */
+	@Deprecated
+	default NamedQueryDefinition getNamedQueryDefinition(String name) {
+		return getNamedHqlQueryDefinition( name );
+	}
+
+	/**
+	 * @deprecated Use {@link #getNamedHqlQueryDefinitions} instead
+	 */
+	@Deprecated
+	default java.util.Collection<NamedQueryDefinition> getNamedQueryDefinitions() {
+		return new ArrayList<>( getNamedHqlQueryDefinitions() );
+	}
 
 	/**
 	 * Retrieve named SQL query metadata.
@@ -128,9 +172,9 @@ public interface Metadata extends Mapping {
 	 *
 	 * @return The named query metadata, or {@code null}
 	 */
-	NamedSQLQueryDefinition getNamedNativeQueryDefinition(String name);
+	NamedNativeQueryDefinition getNamedNativeQueryDefinition(String name);
 
-	java.util.Collection<NamedSQLQueryDefinition> getNamedNativeQueryDefinitions();
+	java.util.Collection<NamedNativeQueryDefinition> getNamedNativeQueryDefinitions();
 
 	java.util.Collection<NamedProcedureCallDefinition> getNamedProcedureCallDefinitions();
 
@@ -144,15 +188,6 @@ public interface Metadata extends Mapping {
 	ResultSetMappingDefinition getResultSetMapping(String name);
 
 	Map<String, ResultSetMappingDefinition> getResultSetMappingDefinitions();
-
-	/**
-	 * Retrieve a type definition by name.
-	 *
-	 * @param typeName The name of the type definition to retrieve.
-	 *
-	 * @return The named type definition, or {@code null}
-	 */
-	TypeDefinition getTypeDefinition(String typeName);
 
 	/**
 	 * Retrieves the complete map of filter definitions.
@@ -183,6 +218,7 @@ public interface Metadata extends Mapping {
 	IdentifierGeneratorDefinition getIdentifierGenerator(String name);
 
 	java.util.Collection<Table> collectTableMappings();
+	java.util.Collection<MappedTable> collectMappedTableMappings();
 
-	Map<String,SQLFunction> getSqlFunctionMap();
+	Map<String,SqmFunctionTemplate> getSqlFunctionMap();
 }

@@ -5,18 +5,26 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.sql;
+
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.hibernate.annotations.Remove;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.LiteralType;
+import org.hibernate.internal.AbstractSharedSessionContract;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.BasicType;
 
 /**
  * An SQL <tt>UPDATE</tt> statement
  *
  * @author Gavin King
+ *
+ * @deprecated Converting to use SQL AST
  */
+@Deprecated
+@Remove
 public class Update {
 
 	private String tableName;
@@ -29,8 +37,8 @@ public class Update {
 	private Map columns = new LinkedHashMap();
 	private Map whereColumns = new LinkedHashMap();
 	
-	private Dialect dialect;
-	
+	final private Dialect dialect;
+
 	public Update(Dialect dialect) {
 		this.dialect = dialect;
 	}
@@ -131,8 +139,22 @@ public class Update {
 		return this;
 	}
 
-	public Update addColumn(String columnName, Object value, LiteralType type) throws Exception {
-		return addColumn( columnName, type.objectToSQLString(value, dialect) );
+	public Update addColumn(
+			String columnName,
+			Object value,
+			JavaTypeDescriptor javaTypeDescriptor,
+			AbstractSharedSessionContract session) throws Exception {
+		final BasicType basicType = session.getFactory()
+				.getMetamodel()
+				.getTypeConfiguration()
+				.getBasicTypeRegistry()
+				.getBasicType( javaTypeDescriptor.getJavaType() );
+		return addColumn(
+				columnName,
+				basicType.getSqlTypeDescriptor()
+						.getJdbcLiteralFormatter( basicType.getJavaTypeDescriptor() )
+						.toJdbcLiteral( value, dialect, session )
+		);
 	}
 
 	public Update addWhereColumns(String[] columnNames) {

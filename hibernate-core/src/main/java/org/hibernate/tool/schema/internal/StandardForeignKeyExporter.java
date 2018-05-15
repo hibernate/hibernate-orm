@@ -6,15 +6,19 @@
  */
 package org.hibernate.tool.schema.internal;
 
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.boot.Metadata;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.ForeignKey;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.relational.spi.ExportableTable;
+import org.hibernate.metamodel.model.relational.spi.ForeignKey;
+import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.tool.schema.spi.Exporter;
 
 /**
@@ -30,84 +34,99 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 		this.dialect = dialect;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public String[] getSqlCreateStrings(ForeignKey foreignKey, Metadata metadata) {
+	public String[] getSqlCreateStrings(ForeignKey foreignKey, JdbcServices jdbcServices) {
 		if ( !dialect.hasAlterTable() ) {
 			return NO_COMMANDS;
 		}
 
-		if ( !foreignKey.isCreationEnabled() ) {
+		if ( !foreignKey.isExportationEnabled() ) {
 			return NO_COMMANDS;
 		}
 
-		if ( !foreignKey.isPhysicalConstraint() ) {
-			return NO_COMMANDS;
-		}
-
-		final int numberOfColumns = foreignKey.getColumnSpan();
+		final int numberOfColumns = foreignKey.getColumnMappings().getColumnMappings().size();
 		final String[] columnNames = new String[numberOfColumns];
 		final String[] targetColumnNames = new String[numberOfColumns];
 
-		final Iterator targetItr;
+		List<PhysicalColumn> targetColumns;
 		if ( foreignKey.isReferenceToPrimaryKey() ) {
-			if ( numberOfColumns != foreignKey.getReferencedTable().getPrimaryKey().getColumnSpan() ) {
+
+			if ( foreignKey.getTargetTable().getPrimaryKey() == null
+					|| foreignKey.getTargetTable().getPrimaryKey().getColumns().isEmpty() ) {
+				throw new NotYetImplementedFor6Exception();
+			}
+
+			targetColumns = foreignKey.getTargetTable().getPrimaryKey().getColumns();
+			if ( numberOfColumns != targetColumns.size() ) {
 				throw new AssertionFailure(
 						String.format(
 								Locale.ENGLISH,
 								COLUMN_MISMATCH_MSG,
 								numberOfColumns,
-								foreignKey.getReferencedTable().getPrimaryKey().getColumnSpan(),
+								targetColumns.size(),
 								foreignKey.getName(),
-								foreignKey.getTable().getName(),
-								foreignKey.getReferencedTable().getName()
+								( (ExportableTable) foreignKey.getReferringTable() ).getTableName(),
+								( (ExportableTable) foreignKey.getTargetTable() ).getTableName()
 						)
 				);
 			}
-			targetItr = foreignKey.getReferencedTable().getPrimaryKey().getColumnIterator();
 		}
 		else {
-			if ( numberOfColumns != foreignKey.getReferencedColumns().size() ) {
+			targetColumns = new ArrayList<>();
+			for ( Column column : foreignKey.getColumnMappings().getTargetColumns() ) {
+				if ( !PhysicalColumn.class.isInstance( column ) ) {
+					// Fks with non-PhysicalColumn columns are not exportable
+					return NO_COMMANDS;
+				}
+
+				targetColumns.add( (PhysicalColumn) column );
+			}
+
+			if ( numberOfColumns != targetColumns.size() ) {
 				throw new AssertionFailure(
 						String.format(
 								Locale.ENGLISH,
 								COLUMN_MISMATCH_MSG,
 								numberOfColumns,
-								foreignKey.getReferencedColumns().size(),
+								targetColumns.size(),
 								foreignKey.getName(),
-								foreignKey.getTable().getName(),
-								foreignKey.getReferencedTable().getName()
+								( (ExportableTable) foreignKey.getReferringTable() ).getTableName(),
+								( (ExportableTable) foreignKey.getTargetTable() ).getTableName()
 						)
 				);
 			}
-			targetItr = foreignKey.getReferencedColumns().iterator();
 		}
 
 		int i = 0;
-		final Iterator itr = foreignKey.getColumnIterator();
-		while ( itr.hasNext() ) {
-			columnNames[i] = ( (Column) itr.next() ).getQuotedName( dialect );
-			targetColumnNames[i] = ( (Column) targetItr.next() ).getQuotedName( dialect );
+		for ( ForeignKey.ColumnMappings.ColumnMapping columnMapping : foreignKey.getColumnMappings().getColumnMappings() ) {
+			assert columnMapping.getReferringColumn() != null;
+			assert columnMapping.getTargetColumn() != null;
+
+			columnNames[i] = ( (PhysicalColumn) columnMapping.getReferringColumn() ).getName().render( dialect );
+			targetColumnNames[i] = ( (PhysicalColumn) columnMapping.getTargetColumn() ).getName().render( dialect );
+
 			i++;
 		}
 
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
+		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final String sourceTableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				foreignKey.getTable().getQualifiedTableName(),
+				( (ExportableTable) foreignKey.getReferringTable() ).getQualifiedTableName(),
 				dialect
 		);
 		final String targetTableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				foreignKey.getReferencedTable().getQualifiedTableName(),
+				( (ExportableTable) foreignKey.getTargetTable() ).getQualifiedTableName(),
 				dialect
 		);
 
 		final StringBuilder buffer = new StringBuilder( dialect.getAlterTableString( sourceTableName ) )
 				.append(
-						foreignKey.getKeyDefinition() != null ?
-								dialect.getAddForeignKeyConstraintString(
+						foreignKey.getKeyDefinition() != null
+								? dialect.getAddForeignKeyConstraintString(
 										foreignKey.getName(),
 										foreignKey.getKeyDefinition()
-								) :
-								dialect.getAddForeignKeyConstraintString(
+								)
+								: dialect.getAddForeignKeyConstraintString(
 										foreignKey.getName(),
 										columnNames,
 										targetTableName,
@@ -126,22 +145,18 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 	}
 
 	@Override
-	public String[] getSqlDropStrings(ForeignKey foreignKey, Metadata metadata) {
+	public String[] getSqlDropStrings(ForeignKey foreignKey, JdbcServices jdbcServices) {
 		if ( !dialect.hasAlterTable() ) {
 			return NO_COMMANDS;
 		}
 
-		if ( !foreignKey.isCreationEnabled() ) {
+		if ( !foreignKey.isExportationEnabled() ) {
 			return NO_COMMANDS;
 		}
 
-		if ( !foreignKey.isPhysicalConstraint() ) {
-			return NO_COMMANDS;
-		}
-
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
+		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final String sourceTableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				foreignKey.getTable().getQualifiedTableName(),
+				( (ExportableTable) foreignKey.getReferringTable()).getQualifiedTableName(),
 				dialect
 		);
 		return new String[] {

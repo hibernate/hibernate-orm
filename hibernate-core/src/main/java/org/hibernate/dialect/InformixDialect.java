@@ -10,10 +10,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Locale;
 
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.NvlFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.function.NvlFunctionTemplate;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.InformixIdentityColumnSupport;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
@@ -23,14 +20,15 @@ import org.hibernate.dialect.unique.InformixUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
-import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.local.AfterUseAction;
-import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.query.sqm.consume.multitable.internal.StandardIdTableSupport;
+import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.LocalTempTableExporter;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.LocalTemporaryTableStrategy;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorInformixDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.type.StandardBasicTypes;
 
 /**
  * Informix dialect.<br>
@@ -76,15 +74,20 @@ public class InformixDialect extends Dialect {
 		registerColumnType( Types.VARCHAR, 255, "varchar($l)" );
 		registerColumnType( Types.VARCHAR, 32739, "lvarchar($l)" );
 
-		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "||", ")" ) );
-		registerFunction( "substring", new SQLFunctionTemplate(StandardBasicTypes.STRING, "substring(?1 FROM ?2 FOR ?3)"));
-		registerFunction( "substr", new SQLFunctionTemplate( StandardBasicTypes.STRING, "substr(?1, ?2, ?3)"));
-		registerFunction( "coalesce", new NvlFunction());
-		registerFunction( "nvl", new NvlFunction());
-		registerFunction( "current_timestamp", new NoArgSQLFunction( "current", StandardBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "current_date", new NoArgSQLFunction( "today", StandardBasicTypes.DATE, false ) );
-
 		uniqueDelegate = new InformixUniqueDelegate( this );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
+
+		registry.registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
+		registry.registerPattern( "substring", "substring(?1 FROM ?2 FOR ?3)", StandardSpiBasicTypes.STRING );
+		registry.registerPattern( "substr", "substr(?1, ?2, ?3)", StandardSpiBasicTypes.STRING );
+		registry.register( "coalesce", new NvlFunctionTemplate() );
+		registry.register( "nvl", new NvlFunctionTemplate() );
+		registry.registerNoArgs( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerNoArgs( "current_date", StandardSpiBasicTypes.DATE );
 	}
 
 	@Override
@@ -280,21 +283,21 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
-	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-		return new LocalTemporaryTableBulkIdStrategy(
-				new IdTableSupportStandardImpl() {
-					@Override
-					public String getCreateIdTableCommand() {
-						return "create temp table";
-					}
+	public IdTableStrategy getDefaultIdTableStrategy() {
+		return new LocalTemporaryTableStrategy(
+				new StandardIdTableSupport(
+						new LocalTempTableExporter() {
+							@Override
+							protected String getCreateCommand() {
+								return "create temp table";
+							}
 
-					@Override
-					public String getCreateIdTableStatementOptions() {
-						return "with no log";
-					}
-				},
-				AfterUseAction.CLEAN,
-				null
+							@Override
+							protected String getCreateOptions() {
+								return "with no log";
+							}
+						}
+				)
 		);
 	}
 	

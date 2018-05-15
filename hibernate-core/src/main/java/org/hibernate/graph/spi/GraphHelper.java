@@ -23,7 +23,7 @@ public class GraphHelper {
 		// only valid for entity-valued attributes where the entity has a
 		// composite id
 		final SimpleTypeDescriptor attributeType = attribute.getType();
-		if ( attributeType instanceof IdentifiableTypeDescriptor ) {
+		if ( attributeType instanceof IdentifiableTypeDescriptor  ) {
 			return ( (IdentifiableTypeDescriptor) attributeType ).getIdType();
 		}
 
@@ -36,7 +36,7 @@ public class GraphHelper {
 			// only valid for entity-valued attributes where the entity has a
 			// composite id
 			final SimpleTypeDescriptor attributeType = ( (SingularPersistentAttribute) attribute ).getType();
-			if ( attributeType instanceof IdentifiableTypeDescriptor ) {
+			if ( attributeType instanceof IdentifiableTypeDescriptor  ) {
 				return ( (IdentifiableTypeDescriptor) attributeType ).getIdType();
 			}
 
@@ -52,7 +52,7 @@ public class GraphHelper {
 
 		throw new IllegalArgumentException(
 				"Unexpected Attribute Class [" + attribute.getClass().getName()
-						+ "] - expecting SingularAttributeImplementor or PluralAttributeImplementor"
+						+ "] - expecting SingularPersistentAttribute or PluralPersistentAttribute"
 		);
 	}
 }

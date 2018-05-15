@@ -8,35 +8,39 @@ package org.hibernate.jcache.test;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.After;
-import org.junit.Before;
+import org.hibernate.testing.junit5.FunctionalSessionFactoryTesting;
+import org.hibernate.testing.junit5.SessionFactoryProducer;
+import org.hibernate.testing.junit5.SessionFactoryScope;
+import org.hibernate.testing.junit5.SessionFactoryScopeContainer;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class BaseFunctionalTest extends BaseUnitTestCase {
-	private SessionFactoryImplementor sessionFactory;
-
-	@Before
-	public void createSessionFactory() {
-		assert sessionFactory == null || sessionFactory.isClosed();
-		TestHelper.preBuildAllCaches();
-		sessionFactory = TestHelper.buildStandardSessionFactory();
+@FunctionalSessionFactoryTesting
+public abstract class BaseFunctionalTest implements SessionFactoryProducer, SessionFactoryScopeContainer {
+	@Override
+	public void injectSessionFactoryScope(SessionFactoryScope scope) {
+		this.sessionFactoryScope = scope;
 	}
 
-	@After
-	public void releaseSessionFactory() {
-		if ( sessionFactory != null ) {
-			sessionFactory.close();
-		}
+	private SessionFactoryScope sessionFactoryScope;
+
+	protected SessionFactoryScope sessionFactoryScope() {
+		return sessionFactoryScope;
 	}
 
 	protected SessionFactoryImplementor sessionFactory() {
-		if ( sessionFactory == null ) {
-			throw new IllegalStateException( "SessionFactory is null" );
-		}
+		return sessionFactoryScope.getSessionFactory();
+	}
 
-		return sessionFactory;
+	@Override
+	public SessionFactoryProducer getSessionFactoryProducer() {
+		return this;
+	}
+
+	@Override
+	public SessionFactoryImplementor produceSessionFactory() {
+		TestHelper.preBuildAllCaches();
+		return TestHelper.buildStandardSessionFactory();
 	}
 }

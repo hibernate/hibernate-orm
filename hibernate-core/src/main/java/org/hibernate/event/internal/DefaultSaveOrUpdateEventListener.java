@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -28,7 +26,7 @@ import org.hibernate.event.spi.SaveOrUpdateEvent;
 import org.hibernate.event.spi.SaveOrUpdateEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 
@@ -50,7 +48,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	public void onSaveOrUpdate(SaveOrUpdateEvent event) {
 		final SessionImplementor source = event.getSession();
 		final Object object = event.getObject();
-		final Serializable requestedId = event.getRequestedId();
+		final Object requestedId = event.getRequestedId();
 
 		if ( requestedId != null ) {
 			//assign the requested id to the proxy, *before*
@@ -79,7 +77,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 		return source.getPersistenceContext().reassociateIfUninitializedProxy( object );
 	}
 
-	protected Serializable performSaveOrUpdate(SaveOrUpdateEvent event) {
+	protected Object performSaveOrUpdate(SaveOrUpdateEvent event) {
 		EntityState entityState = getEntityState(
 				event.getEntity(),
 				event.getEntityName(),
@@ -98,7 +96,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 		}
 	}
 
-	protected Serializable entityIsPersistent(SaveOrUpdateEvent event) throws HibernateException {
+	protected Object entityIsPersistent(SaveOrUpdateEvent event) throws HibernateException {
 		final boolean traceEnabled = LOG.isTraceEnabled();
 		if ( traceEnabled ) {
 			LOG.trace( "Ignoring persistent instance" );
@@ -115,21 +113,21 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 
 			final SessionFactoryImplementor factory = event.getSession().getFactory();
 
-			Serializable requestedId = event.getRequestedId();
+			Object requestedId = event.getRequestedId();
 
-			Serializable savedId;
+			Object savedId;
 			if ( requestedId == null ) {
 				savedId = entityEntry.getId();
 			}
 			else {
 
-				final boolean isEqual = !entityEntry.getPersister().getIdentifierType()
-						.isEqual( requestedId, entityEntry.getId(), factory );
+				final boolean isEqual = !entityEntry.getDescriptor().getIdentifierType()
+						.getJavaTypeDescriptor().areEqual( requestedId, entityEntry.getId() );
 
 				if ( isEqual ) {
 					throw new PersistentObjectException(
 							"object passed to save() was already persistent: " +
-									MessageHelper.infoString( entityEntry.getPersister(), requestedId, factory )
+									MessageHelper.infoString( entityEntry.getDescriptor(), requestedId, factory )
 					);
 				}
 
@@ -140,7 +138,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 			if ( traceEnabled ) {
 				LOG.tracev(
 						"Object already associated with session: {0}",
-						MessageHelper.infoString( entityEntry.getPersister(), savedId, factory )
+						MessageHelper.infoString( entityEntry.getDescriptor(), savedId, factory )
 				);
 			}
 
@@ -158,7 +156,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	 *
 	 * @return The entity's identifier after saving.
 	 */
-	protected Serializable entityIsTransient(SaveOrUpdateEvent event) {
+	protected Object entityIsTransient(SaveOrUpdateEvent event) {
 
 		LOG.trace( "Saving transient instance" );
 
@@ -174,7 +172,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 			}
 		}
 
-		Serializable id = saveWithGeneratedOrRequestedId( event );
+		Object id = saveWithGeneratedOrRequestedId( event );
 
 		source.getPersistenceContext().reassociateProxy( event.getObject(), id );
 
@@ -188,7 +186,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	 *
 	 * @return The entity's identifier value after saving.
 	 */
-	protected Serializable saveWithGeneratedOrRequestedId(SaveOrUpdateEvent event) {
+	protected Object saveWithGeneratedOrRequestedId(SaveOrUpdateEvent event) {
 		return saveWithGeneratedId(
 				event.getEntity(),
 				event.getEntityName(),
@@ -216,15 +214,13 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 
 		Object entity = event.getEntity();
 
-		EntityPersister persister = event.getSession().getEntityPersister( event.getEntityName(), entity );
+		EntityTypeDescriptor entityDescriptor = event.getSession().getEntityDescriptor( event.getEntityName(), entity );
 
 		event.setRequestedId(
-				getUpdateId(
-						entity, persister, event.getRequestedId(), event.getSession()
-				)
+				getUpdateId( entity, entityDescriptor, event.getRequestedId(), event.getSession() )
 		);
 
-		performUpdate( event, entity, persister );
+		performUpdate( event, entity, entityDescriptor );
 
 	}
 
@@ -232,7 +228,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	 * Determine the id to use for updating.
 	 *
 	 * @param entity The entity.
-	 * @param persister The entity persister
+	 * @param descriptor The entity descriptor
 	 * @param requestedId The requested identifier
 	 * @param session The session
 	 *
@@ -240,19 +236,19 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	 *
 	 * @throws TransientObjectException If the entity is considered transient.
 	 */
-	protected Serializable getUpdateId(
+	protected Object getUpdateId(
 			Object entity,
-			EntityPersister persister,
-			Serializable requestedId,
+			EntityTypeDescriptor descriptor,
+			Object requestedId,
 			SessionImplementor session) {
 		// use the id assigned to the instance
-		Serializable id = persister.getIdentifier( entity, session );
+		Object id = descriptor.getIdentifier( entity, session );
 		if ( id == null ) {
 			// assume this is a newly instantiated transient object
 			// which should be saved rather than updated
 			throw new TransientObjectException(
 					"The given object has a null identifier: " +
-							persister.getEntityName()
+							descriptor.getEntityName()
 			);
 		}
 		else {
@@ -264,40 +260,40 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	protected void performUpdate(
 			SaveOrUpdateEvent event,
 			Object entity,
-			EntityPersister persister) throws HibernateException {
+			EntityTypeDescriptor entityDescriptor) throws HibernateException {
 
 		final boolean traceEnabled = LOG.isTraceEnabled();
-		if ( traceEnabled && !persister.isMutable() ) {
+		if ( traceEnabled && !entityDescriptor.getJavaTypeDescriptor().getMutabilityPlan().isMutable() ) {
 			LOG.trace( "Immutable instance passed to performUpdate()" );
 		}
 
 		if ( traceEnabled ) {
 			LOG.tracev(
 					"Updating {0}",
-					MessageHelper.infoString( persister, event.getRequestedId(), event.getSession().getFactory() )
+					MessageHelper.infoString( entityDescriptor, event.getRequestedId(), event.getSession().getFactory() )
 			);
 		}
 
 		final EventSource source = event.getSession();
-		final EntityKey key = source.generateEntityKey( event.getRequestedId(), persister );
+		final EntityKey key = source.generateEntityKey( event.getRequestedId(), entityDescriptor );
 
 		source.getPersistenceContext().checkUniqueness( key, entity );
 
-		if ( invokeUpdateLifecycle( entity, persister, source ) ) {
-			reassociate( event, event.getObject(), event.getRequestedId(), persister );
+		if ( invokeUpdateLifecycle( entity, entityDescriptor, source ) ) {
+			reassociate( event, event.getObject(), event.getRequestedId(), entityDescriptor );
 			return;
 		}
 
 		// this is a transient object with existing persistent state not loaded by the session
 
-		new OnUpdateVisitor( source, event.getRequestedId(), entity ).process( entity, persister );
+		new OnUpdateVisitor( source, event.getRequestedId(), entity ).process( entity, entityDescriptor );
 
 		// TODO: put this stuff back in to read snapshot from
 		// the second-level cache (needs some extra work)
 		/*Object[] cachedState = null;
 
-        if ( persister.hasCache() ) {
-        	CacheEntry entry = (CacheEntry) persister.getCache()
+        if ( entityDescriptor.hasCache() ) {
+        	CacheEntry entry = (CacheEntry) entityDescriptor.getCache()
         			.get( event.getRequestedId(), source.getTimestamp() );
             cachedState = entry==null ?
             		null :
@@ -306,33 +302,33 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 
 		source.getPersistenceContext().addEntity(
 				entity,
-				( persister.isMutable() ? Status.MANAGED : Status.READ_ONLY ),
+				( entityDescriptor.getJavaTypeDescriptor().getMutabilityPlan().isMutable() ? Status.MANAGED : Status.READ_ONLY ),
 				null, // cachedState,
 				key,
-				persister.getVersion( entity ),
+				entityDescriptor.getVersion( entity ),
 				LockMode.NONE,
 				true,
-				persister,
+				entityDescriptor,
 				false
 		);
 
-		persister.afterReassociate( entity, source );
+		entityDescriptor.afterReassociate( entity, source );
 
 		if ( traceEnabled ) {
 			LOG.tracev(
 					"Updating {0}", MessageHelper.infoString(
-					persister,
+					entityDescriptor,
 					event.getRequestedId(),
 					source.getFactory()
 			)
 			);
 		}
 
-		cascadeOnUpdate( event, persister, entity );
+		cascadeOnUpdate( event, entityDescriptor, entity );
 	}
 
-	protected boolean invokeUpdateLifecycle(Object entity, EntityPersister persister, EventSource source) {
-		if ( persister.implementsLifecycle() ) {
+	protected boolean invokeUpdateLifecycle(Object entity, EntityTypeDescriptor entityDescriptor, EventSource source) {
+		if ( entityDescriptor.implementsLifecycle() ) {
 			LOG.debug( "Calling onUpdate()" );
 			if ( ( (Lifecycle) entity ).onUpdate( source ) ) {
 				LOG.debug( "Update vetoed by onUpdate()" );
@@ -347,14 +343,14 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	 * for the given entity.
 	 *
 	 * @param event The event currently being processed.
-	 * @param persister The defined persister for the entity being updated.
+	 * @param entityDescriptor The defined entityDescriptor for the entity being updated.
 	 * @param entity The entity being updated.
 	 */
-	private void cascadeOnUpdate(SaveOrUpdateEvent event, EntityPersister persister, Object entity) {
+	private void cascadeOnUpdate(SaveOrUpdateEvent event, EntityTypeDescriptor entityDescriptor, Object entity) {
 		final EventSource source = event.getSession();
 		source.getPersistenceContext().incrementCascadeLevel();
 		try {
-			Cascade.cascade( CascadingActions.SAVE_UPDATE, CascadePoint.AFTER_UPDATE, source, persister, entity );
+			Cascade.cascade( CascadingActions.SAVE_UPDATE, CascadePoint.AFTER_UPDATE, source, entityDescriptor, entity );
 		}
 		finally {
 			source.getPersistenceContext().decrementCascadeLevel();

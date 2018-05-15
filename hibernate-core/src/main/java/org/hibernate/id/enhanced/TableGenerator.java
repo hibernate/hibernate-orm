@@ -6,7 +6,6 @@
  */
 package org.hibernate.id.enhanced;
 
-import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -20,12 +19,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.InitCommand;
-import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.boot.model.relational.QualifiedName;
-import org.hibernate.boot.model.relational.QualifiedNameParser;
+import org.hibernate.boot.model.relational.MappedNamespace;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -48,11 +45,12 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PrimaryKey;
-import org.hibernate.mapping.Table;
+import org.hibernate.naming.Identifier;
+import org.hibernate.naming.spi.QualifiedName;
+import org.hibernate.naming.spi.QualifiedNameParser;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.LongType;
-import org.hibernate.type.StringType;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import org.jboss.logging.Logger;
 
@@ -230,7 +228,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	private boolean storeLastUsedValue;
 
 
-	private Type identifierType;
+	private JavaTypeDescriptor identifierType;
 
 	private QualifiedName qualifiedTableName;
 	private String renderedTableName;
@@ -260,7 +258,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	 *
 	 * @return The identifier type mapping.
 	 */
-	public final Type getIdentifierType() {
+	public final JavaTypeDescriptor getIdentifierType() {
 		return identifierType;
 	}
 
@@ -357,10 +355,10 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	}
 
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+	public void configure(JavaTypeDescriptor javaTypeDescriptor, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
 		storeLastUsedValue = serviceRegistry.getService( ConfigurationService.class )
 				.getSetting( AvailableSettings.TABLE_GENERATOR_STORE_LAST_USED, StandardConverters.BOOLEAN, true );
-		identifierType = type;
+		identifierType = javaTypeDescriptor;
 
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 
@@ -382,7 +380,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 		int optimizerInitialValue = ConfigurationHelper.getInt( INITIAL_PARAM, params, -1 );
 		optimizer = OptimizerFactory.buildOptimizer(
 				optimizationStrategy,
-				identifierType.getReturnedClass(),
+				identifierType.getJavaType(),
 				incrementSize,
 				optimizerInitialValue
 		);
@@ -557,11 +555,11 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	}
 
 	private IntegralDataTypeHolder makeValue() {
-		return IdentifierGeneratorHelper.getIntegralDataTypeHolder( identifierType.getReturnedClass() );
+		return IdentifierGeneratorHelper.getIntegralDataTypeHolder( identifierType.getJavaType() );
 	}
 
 	@Override
-	public Serializable generate(final SharedSessionContractImplementor session, final Object obj) {
+	public Object generate(final SharedSessionContractImplementor session, final Object obj) {
 		final SqlStatementLogger statementLogger = session.getFactory().getServiceRegistry()
 				.getService( JdbcServices.class )
 				.getSqlStatementLogger();
@@ -728,12 +726,12 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	public void registerExportables(Database database) {
 		final Dialect dialect = database.getJdbcEnvironment().getDialect();
 
-		final Namespace namespace = database.locateNamespace(
+		final MappedNamespace namespace = database.locateNamespace(
 				qualifiedTableName.getCatalogName(),
 				qualifiedTableName.getSchemaName()
 		);
 
-		Table table = namespace.locateTable( qualifiedTableName.getObjectName() );
+		MappedTable table = namespace.locateTable( qualifiedTableName.getObjectName() );
 		if ( table == null ) {
 			table = namespace.createTable( qualifiedTableName.getObjectName(), false );
 
@@ -742,7 +740,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 					database,
 					table,
 					segmentColumnName,
-					StringType.INSTANCE,
+					StandardSpiBasicTypes.STRING,
 					dialect.getTypeName( Types.VARCHAR, segmentValueLength, 0, 0 )
 			);
 			segmentColumn.setNullable( false );
@@ -756,7 +754,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 					database,
 					table,
 					valueColumnName,
-					LongType.INSTANCE
+					StandardSpiBasicTypes.LONG
 			);
 			table.addColumn( valueColumn );
 		}

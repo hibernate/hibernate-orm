@@ -8,6 +8,8 @@ package org.hibernate.boot.model.source.spi;
 
 import java.util.Map;
 
+import org.hibernate.type.Type;
+
 /**
  * @author Steve Ebersole
  */
@@ -20,7 +22,7 @@ public interface CollectionIdSource {
 	public ColumnSource getColumnSource();
 
 	/**
-	 * Obtain information about the Hibernate type ({@link org.hibernate.type.Type}) for the collection id
+	 * Obtain information about the Hibernate type ({@link Type}) for the collection id
 	 *
 	 * @return The Hibernate type information
 	 */

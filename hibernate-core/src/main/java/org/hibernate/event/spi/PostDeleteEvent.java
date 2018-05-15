@@ -6,9 +6,7 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 
 /**
  * Occurs after deleting an item from the datastore
@@ -17,33 +15,36 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public class PostDeleteEvent extends AbstractEvent {
 	private Object entity;
-	private EntityPersister persister;
-	private Serializable id;
+	private EntityTypeDescriptor entityDescriptor;
+	private Object id;
 	private Object[] deletedState;
 	
 	public PostDeleteEvent(
-			Object entity, 
-			Serializable id,
+			Object entity,
+			Object id,
 			Object[] deletedState,
-			EntityPersister persister,
+			EntityTypeDescriptor descriptor,
 			EventSource source
 	) {
 		super(source);
 		this.entity = entity;
 		this.id = id;
-		this.persister = persister;
+		this.entityDescriptor = descriptor;
 		this.deletedState = deletedState;
 	}
 	
-	public Serializable getId() {
+	public Object getId() {
 		return id;
 	}
-	public EntityPersister getPersister() {
-		return persister;
+
+	public EntityTypeDescriptor getDescriptor() {
+		return entityDescriptor;
 	}
+
 	public Object getEntity() {
 		return entity;
 	}
+
 	public Object[] getDeletedState() {
 		return deletedState;
 	}

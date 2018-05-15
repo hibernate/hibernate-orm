@@ -8,7 +8,6 @@ package org.hibernate.boot.model.source.internal.hbm;
 
 import org.hibernate.boot.model.source.spi.EntityNamingSource;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.PersistentClass;
 
 /**
  * Implementation of EntityNamingSource
@@ -28,10 +27,6 @@ class EntityNamingSourceImpl implements EntityNamingSource {
 		this.jpaEntityName = jpaEntityName;
 
 		this.typeName = StringHelper.isNotEmpty( className ) ? className : entityName;
-	}
-
-	public EntityNamingSourceImpl(PersistentClass entityBinding) {
-		this( entityBinding.getEntityName(), entityBinding.getClassName(), entityBinding.getJpaEntityName() );
 	}
 
 	@Override

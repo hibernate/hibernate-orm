@@ -16,13 +16,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.StaleObjectStateException;
-import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.identity.HSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -40,19 +34,22 @@ import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
-import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.local.AfterUseAction;
-import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.persister.entity.Lockable;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHANADatabaseImpl;
+import org.hibernate.metamodel.model.domain.spi.Lockable;
+import org.hibernate.query.sqm.consume.multitable.internal.StandardIdTableSupport;
+import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTable;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.LocalTempTableExporter;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.LocalTemporaryTableStrategy;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.spi.StandardAnsiSqlSqmAggregationFunctionTemplates.AvgFunctionTemplate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHSQLDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import org.jboss.logging.Logger;
 
@@ -167,99 +164,102 @@ public class HSQLDialect extends Dialect {
 			registerColumnType( Types.CLOB, "clob($l)" );
 		}
 
+		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
+
+		limitHandler = new HSQLLimitHandler();
+	}
+
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
+
 		// aggregate functions
-		registerFunction( "avg", new AvgWithArgumentCastFunction( "double" ) );
+		registry.register( "avg", new AvgFunctionTemplate( "double" ) );
 
 		// string functions
-		registerFunction( "ascii", new StandardSQLFunction( "ascii", StandardBasicTypes.INTEGER ) );
-		registerFunction( "char", new StandardSQLFunction( "char", StandardBasicTypes.CHARACTER ) );
-		registerFunction( "lower", new StandardSQLFunction( "lower" ) );
-		registerFunction( "upper", new StandardSQLFunction( "upper" ) );
-		registerFunction( "lcase", new StandardSQLFunction( "lcase" ) );
-		registerFunction( "ucase", new StandardSQLFunction( "ucase" ) );
-		registerFunction( "soundex", new StandardSQLFunction( "soundex", StandardBasicTypes.STRING ) );
-		registerFunction( "ltrim", new StandardSQLFunction( "ltrim" ) );
-		registerFunction( "rtrim", new StandardSQLFunction( "rtrim" ) );
-		registerFunction( "reverse", new StandardSQLFunction( "reverse" ) );
-		registerFunction( "space", new StandardSQLFunction( "space", StandardBasicTypes.STRING ) );
-		registerFunction( "str", new SQLFunctionTemplate( StandardBasicTypes.STRING, "cast(?1 as varchar(256))" ) );
-		registerFunction( "to_char", new StandardSQLFunction( "to_char", StandardBasicTypes.STRING ) );
-		registerFunction( "rawtohex", new StandardSQLFunction( "rawtohex" ) );
-		registerFunction( "hextoraw", new StandardSQLFunction( "hextoraw" ) );
+		registry.registerNamed( "ascii", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "char", StandardSpiBasicTypes.CHARACTER );
+		registry.registerNamed( "lower" );
+		registry.registerNamed( "upper" );
+		registry.registerNamed( "lcase" );
+		registry.registerNamed( "ucase" );
+		registry.registerNamed( "soundex", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "ltrim" );
+		registry.registerNamed( "rtrim" );
+		registry.registerNamed( "reverse" );
+		registry.registerNamed( "space", StandardSpiBasicTypes.STRING );
+		registry.registerPattern( "str", "cast(?1 as varchar(256))", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "to_char", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "rawtohex" );
+		registry.registerNamed( "hextoraw" );
 
 		// system functions
-		registerFunction( "user", new NoArgSQLFunction( "user", StandardBasicTypes.STRING ) );
-		registerFunction( "database", new NoArgSQLFunction( "database", StandardBasicTypes.STRING ) );
+		registry.registerNoArgs( "user", StandardSpiBasicTypes.STRING );
+		registry.registerNoArgs( "database", StandardSpiBasicTypes.STRING );
 
 		// datetime functions
 		if ( hsqldbVersion < 200 ) {
-			registerFunction( "sysdate", new NoArgSQLFunction( "sysdate", StandardBasicTypes.DATE, false ) );
+			registry.registerNoArgs( "sysdate", StandardSpiBasicTypes.DATE );
 		}
 		else {
-			registerFunction( "sysdate", new NoArgSQLFunction( "sysdate", StandardBasicTypes.TIMESTAMP, false ) );
+			registry.registerNoArgs( "sysdate", StandardSpiBasicTypes.TIMESTAMP );
 		}
-		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardBasicTypes.DATE, false ) );
-		registerFunction( "curdate", new NoArgSQLFunction( "curdate", StandardBasicTypes.DATE ) );
-		registerFunction(
-				"current_timestamp", new NoArgSQLFunction( "current_timestamp", StandardBasicTypes.TIMESTAMP, false )
-		);
-		registerFunction( "now", new NoArgSQLFunction( "now", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "current_time", new NoArgSQLFunction( "current_time", StandardBasicTypes.TIME, false ) );
-		registerFunction( "curtime", new NoArgSQLFunction( "curtime", StandardBasicTypes.TIME ) );
-		registerFunction( "day", new StandardSQLFunction( "day", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayofweek", new StandardSQLFunction( "dayofweek", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayofyear", new StandardSQLFunction( "dayofyear", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayofmonth", new StandardSQLFunction( "dayofmonth", StandardBasicTypes.INTEGER ) );
-		registerFunction( "month", new StandardSQLFunction( "month", StandardBasicTypes.INTEGER ) );
-		registerFunction( "year", new StandardSQLFunction( "year", StandardBasicTypes.INTEGER ) );
-		registerFunction( "week", new StandardSQLFunction( "week", StandardBasicTypes.INTEGER ) );
-		registerFunction( "quarter", new StandardSQLFunction( "quarter", StandardBasicTypes.INTEGER ) );
-		registerFunction( "hour", new StandardSQLFunction( "hour", StandardBasicTypes.INTEGER ) );
-		registerFunction( "minute", new StandardSQLFunction( "minute", StandardBasicTypes.INTEGER ) );
-		registerFunction( "second", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "cast(second(?1) as int)" ) );
-		registerFunction( "dayname", new StandardSQLFunction( "dayname", StandardBasicTypes.STRING ) );
-		registerFunction( "monthname", new StandardSQLFunction( "monthname", StandardBasicTypes.STRING ) );
+		registry.registerNoArgs( "current_date", StandardSpiBasicTypes.DATE );
+		registry.registerNoArgs( "curdate", StandardSpiBasicTypes.DATE );
+		registry.registerNoArgs( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerNoArgs( "now", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerNoArgs( "current_time", StandardSpiBasicTypes.TIME );
+		registry.registerNoArgs( "curtime", StandardSpiBasicTypes.TIME );
+		registry.registerNamed( "day", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "dayofweek", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "dayofyear", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "dayofmonth", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "month", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "year", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "week", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "quarter", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "hour", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "minute", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "second", "cast(second(?1) as int)", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "dayname", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "monthname", StandardSpiBasicTypes.STRING );
 
 		// numeric functions
-		registerFunction( "abs", new StandardSQLFunction( "abs" ) );
-		registerFunction( "sign", new StandardSQLFunction( "sign", StandardBasicTypes.INTEGER ) );
+		registry.registerNamed( "abs" );
+		registry.registerNamed( "sign", StandardSpiBasicTypes.INTEGER );
 
-		registerFunction( "acos", new StandardSQLFunction( "acos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "asin", new StandardSQLFunction( "asin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "atan", new StandardSQLFunction( "atan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cos", new StandardSQLFunction( "cos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cot", new StandardSQLFunction( "cot", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "exp", new StandardSQLFunction( "exp", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "log", new StandardSQLFunction( "log", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "log10", new StandardSQLFunction( "log10", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sin", new StandardSQLFunction( "sin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sqrt", new StandardSQLFunction( "sqrt", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "tan", new StandardSQLFunction( "tan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "pi", new NoArgSQLFunction( "pi", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "rand", new StandardSQLFunction( "rand", StandardBasicTypes.FLOAT ) );
+		registry.registerNamed( "acos", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "asin", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "atan", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "cos", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "cot", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "exp", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "log", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "log10", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "sin", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "sqrt", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "tan", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNoArgs( "pi", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "rand", StandardSpiBasicTypes.FLOAT );
 
-		registerFunction( "radians", new StandardSQLFunction( "radians", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "degrees", new StandardSQLFunction( "degrees", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "round", new StandardSQLFunction( "round" ) );
-		registerFunction( "roundmagic", new StandardSQLFunction( "roundmagic" ) );
-		registerFunction( "truncate", new StandardSQLFunction( "truncate" ) );
-		registerFunction( "trunc", new StandardSQLFunction( "trunc" ) );
+		registry.registerNamed( "radians", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "degrees", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "round" );
+		registry.registerNamed( "roundmagic" );
+		registry.registerNamed( "truncate" );
+		registry.registerNamed( "trunc" );
 
-		registerFunction( "ceiling", new StandardSQLFunction( "ceiling" ) );
-		registerFunction( "floor", new StandardSQLFunction( "floor" ) );
+		registry.registerNamed( "ceiling" );
+		registry.registerNamed( "floor" );
 
 		// special functions
 		// from v. 2.2.0 ROWNUM() is supported in all modes as the equivalent of Oracle ROWNUM
 		if ( hsqldbVersion > 219 ) {
-			registerFunction( "rownum", new NoArgSQLFunction( "rownum", StandardBasicTypes.INTEGER ) );
+			registry.registerNoArgs( "rownum", StandardSpiBasicTypes.INTEGER );
 		}
 
 		// function templates
-		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "||", ")" ) );
-
-		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
-
-		limitHandler = new HSQLLimitHandler();
+		registry.registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
 	}
 
 	@Override
@@ -314,7 +314,7 @@ public class HSQLDialect extends Dialect {
 	}
 
 	// Note : HSQLDB actually supports [IF EXISTS] before AND after the <tablename>
-	// But as CASCADE has to be AFTER IF EXISTS in case it's after the tablename, 
+	// But as CASCADE has to be AFTER IF EXISTS in case it's after the tablename,
 	// We put the IF EXISTS before the tablename to be able to add CASCADE after.
 	@Override
 	public boolean supportsIfExistsAfterTableName() {
@@ -508,7 +508,7 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
-	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
+	public IdTableStrategy getDefaultIdTableStrategy() {
 		// Hibernate uses this information for temporary tables that it uses for its own operations
 		// therefore the appropriate strategy is taken with different versions of HSQLDB
 
@@ -519,42 +519,29 @@ public class HSQLDialect extends Dialect {
 		// can happen in the middle of a transaction
 
 		if ( hsqldbVersion < 200 ) {
-			return new GlobalTemporaryTableBulkIdStrategy(
-					new IdTableSupportStandardImpl() {
-						@Override
-						public String generateIdTableName(String baseName) {
-							return "HT_" + baseName;
-						}
-
-						@Override
-						public String getCreateIdTableCommand() {
-							return "create global temporary table";
-						}
-					},
-					// Version 1.8 GLOBAL TEMPORARY table definitions persist beyond the end
-					// of the session (by default, data is cleared at commit).
-					AfterUseAction.CLEAN
-			);
+			return new GlobalTemporaryTableStrategy();
 		}
 		else {
-			return new LocalTemporaryTableBulkIdStrategy(
-					new IdTableSupportStandardImpl() {
+			return new LocalTemporaryTableStrategy(
+					new StandardIdTableSupport( generateLocalTempTableExporter() ) {
 						@Override
-						public String generateIdTableName(String baseName) {
+						protected String determineIdTableName(String baseName) {
 							// With HSQLDB 2.0, the table name is qualified with MODULE to assist the drop
 							// statement (in-case there is a global name beginning with HT_)
 							return "MODULE.HT_" + baseName;
 						}
-
-						@Override
-						public String getCreateIdTableCommand() {
-							return "declare local temporary table";
-						}
-					},
-					AfterUseAction.DROP,
-					TempTableDdlTransactionHandling.NONE
+					}
 			);
 		}
+	}
+
+	private Exporter<IdTable> generateLocalTempTableExporter() {
+		return new LocalTempTableExporter() {
+			@Override
+			protected String getCreateCommand() {
+				return "declare local temporary table";
+			}
+		};
 	}
 
 	// current timestamp support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

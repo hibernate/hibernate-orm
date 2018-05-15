@@ -15,15 +15,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
-import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.model.domain.EntityMapping;
+import org.hibernate.boot.model.domain.EntityMappingHierarchy;
+import org.hibernate.boot.model.domain.spi.EntityMappingImplementor;
+import org.hibernate.boot.model.query.spi.NamedHqlQueryDefinition;
+import org.hibernate.boot.model.query.spi.NamedNativeQueryDefinition;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.MappedNamespace;
+import org.hibernate.boot.model.relational.MappedTable;
+import org.hibernate.boot.model.resultset.spi.ResultSetMappingDefinition;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
@@ -31,24 +39,21 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderFactory;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
-import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.engine.spi.NamedQueryDefinition;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
-import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
-import org.hibernate.internal.SessionFactoryImpl;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.envers.boot.spi.AuditMetadataBuilderImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
-import org.hibernate.procedure.ProcedureCallMemento;
+import org.hibernate.query.internal.NamedQueryRepositoryImpl;
+import org.hibernate.query.named.spi.NamedCallableQueryMemento;
+import org.hibernate.query.named.spi.NamedHqlQueryMemento;
+import org.hibernate.query.named.spi.NamedNativeQueryMemento;
 import org.hibernate.query.spi.NamedQueryRepository;
-import org.hibernate.type.Type;
-import org.hibernate.type.TypeResolver;
+import org.hibernate.query.spi.ResultSetMappingDescriptor;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -63,62 +68,62 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final MetadataBuildingOptions metadataBuildingOptions;
 	private final BootstrapContext bootstrapContext;
 
-	private final IdentifierGeneratorFactory identifierGeneratorFactory;
 
+	private final Map<String, EntityMappingHierarchy> entityMappingHierarchies;
 	private final Map<String,PersistentClass> entityBindingMap;
 	private final Map<Class, MappedSuperclass> mappedSuperclassMap;
 	private final Map<String,Collection> collectionBindingMap;
-	private final Map<String, TypeDefinition> typeDefinitionMap;
 	private final Map<String, FilterDefinition> filterDefinitionMap;
 	private final Map<String, FetchProfile> fetchProfileMap;
 	private final Map<String, String> imports;
 	private final Map<String, IdentifierGeneratorDefinition> idGeneratorDefinitionMap;
-	private final Map<String, NamedQueryDefinition> namedQueryMap;
-	private final Map<String, NamedSQLQueryDefinition> namedNativeQueryMap;
+	private final Map<String, NamedHqlQueryDefinition> namedHqlQueryMap;
+	private final Map<String, NamedNativeQueryDefinition> namedNativeQueryMap;
 	private final Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
 	private final Map<String, ResultSetMappingDefinition> sqlResultSetMappingMap;
 	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
-	private final Map<String, SQLFunction> sqlFunctionMap;
+	private final Map<String, SqmFunctionTemplate> sqlFunctionMap;
 	private final Database database;
+	private final AuditMetadataBuilderImplementor auditMetadataBuilder;
 
 	MetadataImpl(
 			UUID uuid,
 			MetadataBuildingOptions metadataBuildingOptions,
-			MutableIdentifierGeneratorFactory identifierGeneratorFactory,
+			Map<String, EntityMappingHierarchy> entityMappingHierarchies,
 			Map<String, PersistentClass> entityBindingMap,
 			Map<Class, MappedSuperclass> mappedSuperclassMap,
 			Map<String, Collection> collectionBindingMap,
-			Map<String, TypeDefinition> typeDefinitionMap,
 			Map<String, FilterDefinition> filterDefinitionMap,
 			Map<String, FetchProfile> fetchProfileMap,
 			Map<String, String> imports,
 			Map<String, IdentifierGeneratorDefinition> idGeneratorDefinitionMap,
-			Map<String, NamedQueryDefinition> namedQueryMap,
-			Map<String, NamedSQLQueryDefinition> namedNativeQueryMap,
+			Map<String, NamedHqlQueryDefinition> namedHqlQueryMap,
+			Map<String, NamedNativeQueryDefinition> namedNativeQueryMap,
 			Map<String, NamedProcedureCallDefinition> namedProcedureCallMap,
 			Map<String, ResultSetMappingDefinition> sqlResultSetMappingMap,
 			Map<String, NamedEntityGraphDefinition> namedEntityGraphMap,
-			Map<String, SQLFunction> sqlFunctionMap,
+			Map<String, SqmFunctionTemplate> sqlFunctionMap,
+			AuditMetadataBuilderImplementor auditMetadataBuilder,
 			Database database,
 			BootstrapContext bootstrapContext) {
 		this.uuid = uuid;
 		this.metadataBuildingOptions = metadataBuildingOptions;
-		this.identifierGeneratorFactory = identifierGeneratorFactory;
+		this.entityMappingHierarchies = entityMappingHierarchies;
 		this.entityBindingMap = entityBindingMap;
 		this.mappedSuperclassMap = mappedSuperclassMap;
 		this.collectionBindingMap = collectionBindingMap;
-		this.typeDefinitionMap = typeDefinitionMap;
 		this.filterDefinitionMap = filterDefinitionMap;
 		this.fetchProfileMap = fetchProfileMap;
 		this.imports = imports;
 		this.idGeneratorDefinitionMap = idGeneratorDefinitionMap;
-		this.namedQueryMap = namedQueryMap;
+		this.namedHqlQueryMap = namedHqlQueryMap;
 		this.namedNativeQueryMap = namedNativeQueryMap;
 		this.namedProcedureCallMap = namedProcedureCallMap;
 		this.sqlResultSetMappingMap = sqlResultSetMappingMap;
 		this.namedEntityGraphMap = namedEntityGraphMap;
 		this.sqlFunctionMap = sqlFunctionMap;
 		this.database = database;
+		this.auditMetadataBuilder = auditMetadataBuilder;
 		this.bootstrapContext = bootstrapContext;
 	}
 
@@ -130,18 +135,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return bootstrapContext.getTypeConfiguration();
-	}
-
-	/**
-	 * Retrieve the {@link Type} resolver associated with this factory.
-	 *
-	 * @return The type resolver
-	 *
-	 * @deprecated (since 5.3) No replacement, access to and handling of Types will be much different in 6.0
-	 */
-	@Deprecated
-	public TypeResolver getTypeResolver() {
-		return bootstrapContext.getTypeConfiguration().getTypeResolver();
 	}
 
 	@Override
@@ -168,7 +161,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		if ( activeFactoryNames != null && activeFactoryNames.size() > 1 ) {
 			throw new HibernateException(
 					"Multiple active SessionFactoryBuilderFactory definitions were discovered : " +
-							String.join(", ", activeFactoryNames)
+							String.join( ", ", activeFactoryNames )
 			);
 		}
 
@@ -195,8 +188,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
-		return identifierGeneratorFactory;
+	public java.util.Collection<EntityMappingHierarchy> getEntityHierarchies() {
+		return entityMappingHierarchies.values();
 	}
 
 	@Override
@@ -225,22 +218,22 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public NamedQueryDefinition getNamedQueryDefinition(String name) {
-		return namedQueryMap.get( name );
+	public NamedHqlQueryDefinition getNamedHqlQueryDefinition(String name) {
+		return namedHqlQueryMap.get( name );
 	}
 
 	@Override
-	public java.util.Collection<NamedQueryDefinition> getNamedQueryDefinitions() {
-		return namedQueryMap.values();
+	public java.util.Collection<NamedHqlQueryDefinition> getNamedHqlQueryDefinitions() {
+		return namedHqlQueryMap.values();
 	}
 
 	@Override
-	public NamedSQLQueryDefinition getNamedNativeQueryDefinition(String name) {
+	public NamedNativeQueryDefinition getNamedNativeQueryDefinition(String name) {
 		return namedNativeQueryMap.get( name );
 	}
 
 	@Override
-	public java.util.Collection<NamedSQLQueryDefinition> getNamedNativeQueryDefinitions() {
+	public java.util.Collection<NamedNativeQueryDefinition> getNamedNativeQueryDefinitions() {
 		return namedNativeQueryMap.values();
 	}
 
@@ -257,11 +250,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public Map<String, ResultSetMappingDefinition> getResultSetMappingDefinitions() {
 		return sqlResultSetMappingMap;
-	}
-
-	@Override
-	public TypeDefinition getTypeDefinition(String typeName) {
-		return typeDefinitionMap.get( typeName );
 	}
 
 	@Override
@@ -300,37 +288,93 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public Map<String, SQLFunction> getSqlFunctionMap() {
+	public Map<String, SqmFunctionTemplate> getSqlFunctionMap() {
 		return sqlFunctionMap;
 	}
 
 	@Override
 	public java.util.Collection<Table> collectTableMappings() {
-		ArrayList<Table> tables = new ArrayList<>();
-		for ( Namespace namespace : database.getNamespaces() ) {
+		return collectMappedTableMappings().stream().map( t -> (Table) t ).collect( Collectors.toList() );
+	}
+
+	@Override
+	public java.util.Collection<MappedTable> collectMappedTableMappings() {
+		ArrayList<MappedTable> tables = new ArrayList<>();
+		for ( MappedNamespace namespace : database.getNamespaces() ) {
 			tables.addAll( namespace.getTables() );
 		}
 		return tables;
 	}
 
 	@Override
-	public NamedQueryRepository buildNamedQueryRepository(SessionFactoryImpl sessionFactory) {
-		return new NamedQueryRepository(
-				namedQueryMap,
-				namedNativeQueryMap,
-				sqlResultSetMappingMap,
-				buildProcedureCallMementos( sessionFactory )
+	public NamedQueryRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory) {
+		return new NamedQueryRepositoryImpl(
+				buildNamedHqlDescriptorMap( sessionFactory ),
+				buildNamedNativeDescriptorMap( sessionFactory ),
+				buildProcedureCallMementos( sessionFactory ),
+				buildSqlResultSetMappings( sessionFactory )
 		);
 
 	}
 
-	private Map<String, ProcedureCallMemento> buildProcedureCallMementos(SessionFactoryImpl sessionFactory) {
-		final Map<String, ProcedureCallMemento> rtn = new HashMap<>();
+	private Map<String, NamedHqlQueryMemento> buildNamedHqlDescriptorMap(SessionFactoryImplementor sessionFactory) {
+		if ( namedHqlQueryMap == null || namedHqlQueryMap.isEmpty() ) {
+			return Collections.emptyMap();
+		}
+
+		final ConcurrentHashMap<String,NamedHqlQueryMemento> descriptorMap = new ConcurrentHashMap<>();
+
+		for ( Map.Entry<String, NamedHqlQueryDefinition> entry : namedHqlQueryMap.entrySet() ) {
+			descriptorMap.put(
+					entry.getKey(),
+					entry.getValue().resolve( sessionFactory )
+			);
+		}
+
+		return descriptorMap;
+	}
+
+	private Map<String, NamedNativeQueryMemento> buildNamedNativeDescriptorMap(SessionFactoryImplementor sessionFactory) {
+		if ( namedNativeQueryMap == null || namedNativeQueryMap.isEmpty() ) {
+			return Collections.emptyMap();
+		}
+
+		final ConcurrentHashMap<String,NamedNativeQueryMemento> descriptorMap = new ConcurrentHashMap<>();
+
+		for ( Map.Entry<String, NamedNativeQueryDefinition> entry : namedNativeQueryMap.entrySet() ) {
+			descriptorMap.put(
+					entry.getKey(),
+					entry.getValue().resolve( sessionFactory )
+			);
+		}
+
+		return descriptorMap;
+	}
+
+	private Map<String, ResultSetMappingDescriptor> buildSqlResultSetMappings(SessionFactoryImplementor sessionFactory) {
+		if ( sqlResultSetMappingMap == null || sqlResultSetMappingMap.isEmpty() ) {
+			return Collections.emptyMap();
+		}
+
+		final ConcurrentHashMap<String,ResultSetMappingDescriptor> converted = new ConcurrentHashMap<>();
+
+		for ( Map.Entry<String, ResultSetMappingDefinition> bootEntry : sqlResultSetMappingMap.entrySet() ) {
+			converted.put(
+					bootEntry.getKey(),
+					bootEntry.getValue().resolve( sessionFactory )
+			);
+		}
+
+		return converted;
+	}
+
+	private Map<String, NamedCallableQueryMemento> buildProcedureCallMementos(SessionFactoryImplementor sessionFactory) {
+		final Map<String, NamedCallableQueryMemento> rtn = new HashMap<>();
 		if ( namedProcedureCallMap != null ) {
 			for ( NamedProcedureCallDefinition procedureCallDefinition : namedProcedureCallMap.values() ) {
 				rtn.put(
 						procedureCallDefinition.getRegisteredName(),
-						procedureCallDefinition.toMemento( sessionFactory,sqlResultSetMappingMap )
+						procedureCallDefinition.toMemento( sessionFactory )
 				);
 			}
 		}
@@ -339,12 +383,12 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public void validate() throws MappingException {
-		for ( PersistentClass entityBinding : this.getEntityBindings() ) {
-			entityBinding.validate( this );
+		for ( EntityMapping entityBinding : getEntityMappings() ) {
+			((EntityMappingImplementor)entityBinding).validate();
 		}
 
 		for ( Collection collectionBinding : this.getCollectionBindings() ) {
-			collectionBinding.validate( this );
+			collectionBinding.validate();
 		}
 	}
 
@@ -356,39 +400,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public org.hibernate.type.Type getIdentifierType(String entityName) throws MappingException {
-		final PersistentClass pc = entityBindingMap.get( entityName );
-		if ( pc == null ) {
-			throw new MappingException( "persistent class not known: " + entityName );
-		}
-		return pc.getIdentifier().getType();
-	}
-
-	@Override
-	public String getIdentifierPropertyName(String entityName) throws MappingException {
-		final PersistentClass pc = entityBindingMap.get( entityName );
-		if ( pc == null ) {
-			throw new MappingException( "persistent class not known: " + entityName );
-		}
-		if ( !pc.hasIdentifierProperty() ) {
-			return null;
-		}
-		return pc.getIdentifierProperty().getName();
-	}
-
-	@Override
-	public org.hibernate.type.Type getReferencedPropertyType(String entityName, String propertyName) throws MappingException {
-		final PersistentClass pc = entityBindingMap.get( entityName );
-		if ( pc == null ) {
-			throw new MappingException( "persistent class not known: " + entityName );
-		}
-		Property prop = pc.getReferencedProperty( propertyName );
-		if ( prop == null ) {
-			throw new MappingException(
-					"property not known: " +
-							entityName + '.' + propertyName
-			);
-		}
-		return prop.getType();
+	public AuditMetadataBuilderImplementor getAuditMetadataBuilder() {
+		return auditMetadataBuilder;
 	}
 }

@@ -8,11 +8,11 @@ package org.hibernate.cache.cfg.internal;
 
 import java.util.Comparator;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cache.cfg.spi.CollectionDataCachingConfig;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.type.VersionType;
 
 /**
  * @author Steve Ebersole
@@ -38,7 +38,7 @@ public class CollectionDataCachingConfigImpl
 
 	@Override
 	public boolean isVersioned() {
-		return collectionDescriptor.getOwner().isVersioned();
+		return collectionDescriptor.getOwner().hasVersionAttributeMapping();
 	}
 
 	@Override
@@ -46,7 +46,11 @@ public class CollectionDataCachingConfigImpl
 		if ( !isVersioned() ) {
 			return null;
 		}
-		return ( (VersionType) collectionDescriptor.getOwner().getVersion().getType() ).getComparator();
+
+		// todo (6.0) : need the owner's version comparator
+		throw new NotYetImplementedFor6Exception();
+//		collectionDescriptor.getOwner().getVersionAttributeMapping().
+//		return ( (VersionType) collectionDescriptor.getOwner().getVersion().getType() ).getComparator();
 	}
 
 	@Override

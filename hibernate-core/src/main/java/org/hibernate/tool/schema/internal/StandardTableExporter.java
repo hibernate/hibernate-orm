@@ -11,23 +11,20 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.InitCommand;
-import org.hibernate.boot.model.relational.QualifiedName;
-import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Constraint;
-import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UniqueKey;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.metamodel.model.relational.spi.ExportableTable;
+import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
+import org.hibernate.naming.spi.QualifiedName;
+import org.hibernate.naming.spi.QualifiedNameParser;
 import org.hibernate.tool.schema.spi.Exporter;
 
 /**
  * @author Steve Ebersole
  */
-public class StandardTableExporter implements Exporter<Table> {
+public class StandardTableExporter implements Exporter<ExportableTable> {
 	protected final Dialect dialect;
 
 	public StandardTableExporter(Dialect dialect) {
@@ -35,14 +32,14 @@ public class StandardTableExporter implements Exporter<Table> {
 	}
 
 	@Override
-	public String[] getSqlCreateStrings(Table table, Metadata metadata) {
+	public String[] getSqlCreateStrings(ExportableTable table, JdbcServices jdbcServices) {
 		final QualifiedName tableName = new QualifiedNameParser.NameParts(
-				Identifier.toIdentifier( table.getCatalog(), table.isCatalogQuoted() ),
-				Identifier.toIdentifier( table.getSchema(), table.isSchemaQuoted() ),
-				table.getNameIdentifier()
+				table.getCatalogName(),
+				table.getSchemaName(),
+				table.getTableName()
 		);
 
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
+		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		StringBuilder buf =
 				new StringBuilder( tableCreateString( table.hasPrimaryKey() ) )
 						.append( ' ' )
@@ -55,9 +52,6 @@ public class StandardTableExporter implements Exporter<Table> {
 						.append( " (" );
 
 
-		boolean isPrimaryKeyIdentity = table.hasPrimaryKey()
-				&& table.getIdentifierValue() != null
-				&& table.getIdentifierValue().isIdentityColumn( metadata.getIdentifierGeneratorFactory(), dialect );
 		// this is the much better form moving forward as we move to metamodel
 		//boolean isPrimaryKeyIdentity = hasPrimaryKey
 		//				&& table.getPrimaryKey().getColumnSpan() == 1
@@ -66,34 +60,34 @@ public class StandardTableExporter implements Exporter<Table> {
 		// Try to find out the name of the primary key in case the dialect needs it to create an identity
 		String pkColName = null;
 		if ( table.hasPrimaryKey() ) {
-			Column pkColumn = (Column) table.getPrimaryKey().getColumns().iterator().next();
-			pkColName = pkColumn.getQuotedName( dialect );
+			PhysicalColumn pkColumn = table.getPrimaryKey().getColumns().iterator().next();
+			pkColName = pkColumn.getName().render();
 		}
 
-		final Iterator columnItr = table.getColumnIterator();
 		boolean isFirst = true;
-		while ( columnItr.hasNext() ) {
-			final Column col = (Column) columnItr.next();
+		for ( PhysicalColumn col : table.getPhysicalColumns() ) {
 			if ( isFirst ) {
 				isFirst = false;
 			}
 			else {
 				buf.append( ", " );
 			}
-			String colName = col.getQuotedName( dialect );
+			String colName = col.getName().render( dialect );
 
 			buf.append( colName ).append( ' ' );
 
-			if ( isPrimaryKeyIdentity && colName.equals( pkColName ) ) {
+			if ( table.isPrimaryKeyIdentity() && colName.equals( pkColName ) ) {
 				// to support dialects that have their own identity data type
 				if ( dialect.getIdentityColumnSupport().hasDataTypeInIdentityColumn() ) {
-					buf.append( col.getSqlType( dialect, metadata ) );
+					buf.append( dialect.getTypeName( col.getSqlTypeDescriptor().getJdbcTypeCode() ) );
 				}
-				buf.append( ' ' )
-						.append( dialect.getIdentityColumnSupport().getIdentityColumnString( col.getSqlTypeCode( metadata ) ) );
+				buf.append( ' ' ).append(
+						dialect.getIdentityColumnSupport()
+								.getIdentityColumnString( col.getSqlTypeDescriptor().getJdbcTypeCode() )
+				);
 			}
 			else {
-				buf.append( col.getSqlType( dialect, metadata )  );
+				buf.append( col.getSqlTypeName() );
 
 				String defaultValue = col.getDefaultValue();
 				if ( defaultValue != null ) {
@@ -110,9 +104,6 @@ public class StandardTableExporter implements Exporter<Table> {
 			}
 
 			if ( col.isUnique() ) {
-				String keyName = Constraint.generateName( "UK_", table, col );
-				UniqueKey uk = table.getOrCreateUniqueKey( keyName );
-				uk.addColumn( col );
 				buf.append(
 						dialect.getUniqueDelegate()
 								.getColumnDefinitionUniquenessFragment( col )
@@ -131,8 +122,7 @@ public class StandardTableExporter implements Exporter<Table> {
 			}
 		}
 		if ( table.hasPrimaryKey() ) {
-			buf.append( ", " )
-					.append( table.getPrimaryKey().sqlConstraintString( dialect ) );
+			appendPrimaryKey( table, buf );
 		}
 
 		buf.append( dialect.getUniqueDelegate().getTableCreationUniqueConstraintsFragment( table ) );
@@ -157,23 +147,63 @@ public class StandardTableExporter implements Exporter<Table> {
 		return sqlStrings.toArray( new String[ sqlStrings.size() ] );
 	}
 
-	protected void applyComments(Table table, QualifiedName tableName, List<String> sqlStrings) {
+	@Override
+	public String[] getSqlDropStrings(ExportableTable table, JdbcServices jdbcServices) {
+		StringBuilder buf = new StringBuilder( "drop table " );
+		if ( dialect.supportsIfExistsBeforeTableName() ) {
+			buf.append( "if exists " );
+		}
+
+		final QualifiedName tableName = new QualifiedNameParser.NameParts(
+				table.getCatalogName(),
+				table.getSchemaName(),
+				table.getTableName()
+		);
+		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
+		buf.append( jdbcEnvironment.getQualifiedObjectNameFormatter().format( tableName, jdbcEnvironment.getDialect() ) )
+				.append( dialect.getCascadeConstraintsString() );
+
+		if ( dialect.supportsIfExistsAfterTableName() ) {
+			buf.append( " if exists" );
+		}
+
+		return new String[] { buf.toString() };
+	}
+
+	private void appendPrimaryKey(ExportableTable table, StringBuilder buf) {
+		buf.append( ", primary key (" );
+		boolean firstColumn = true;
+		for ( PhysicalColumn column : table.getPrimaryKey().getColumns() ) {
+			if ( firstColumn == true ) {
+				firstColumn = false;
+			}
+			else {
+				buf.append( ", " );
+			}
+			buf.append( column.getName().render( dialect ) );
+
+		}
+		buf.append( ')' );
+	}
+
+	protected void applyComments(ExportableTable table, QualifiedName tableName, List<String> sqlStrings) {
 		if ( dialect.supportsCommentOn() ) {
 			if ( table.getComment() != null ) {
 				sqlStrings.add( "comment on table " + tableName + " is '" + table.getComment() + "'" );
 			}
-			final Iterator iter = table.getColumnIterator();
-			while ( iter.hasNext() ) {
-				Column column = (Column) iter.next();
-				String columnComment = column.getComment();
-				if ( columnComment != null ) {
-					sqlStrings.add( "comment on column " + tableName + '.' + column.getQuotedName( dialect ) + " is '" + columnComment + "'" );
+			for(PhysicalColumn column : table.getPhysicalColumns()){
+				if( PhysicalColumn.class.isInstance( column )) {
+					String columnComment = column.getComment();
+					if ( columnComment != null ) {
+						sqlStrings.add( "comment on column " + tableName + '.'
+												+ column.getName().render( dialect ) + " is '" + columnComment + "'" );
+					}
 				}
 			}
 		}
 	}
 
-	protected void applyInitCommands(Table table, List<String> sqlStrings) {
+	protected void applyInitCommands(ExportableTable table, List<String> sqlStrings) {
 		for ( InitCommand initCommand : table.getInitCommands() ) {
 			Collections.addAll( sqlStrings, initCommand.getInitCommands() );
 		}
@@ -183,9 +213,9 @@ public class StandardTableExporter implements Exporter<Table> {
 		buf.append( dialect.getTableTypeString() );
 	}
 
-	protected void applyTableCheck(Table table, StringBuilder buf) {
+	protected void applyTableCheck(ExportableTable table, StringBuilder buf) {
 		if ( dialect.supportsTableCheck() ) {
-			final Iterator<String> checkConstraints = table.getCheckConstraintsIterator();
+			final Iterator<String> checkConstraints = table.getCheckConstraints().iterator();
 			while ( checkConstraints.hasNext() ) {
 				buf.append( ", check (" )
 						.append( checkConstraints.next() )
@@ -196,29 +226,5 @@ public class StandardTableExporter implements Exporter<Table> {
 
 	protected String tableCreateString(boolean hasPrimaryKey) {
 		return hasPrimaryKey ? dialect.getCreateTableString() : dialect.getCreateMultisetTableString();
-
-	}
-
-	@Override
-	public String[] getSqlDropStrings(Table table, Metadata metadata) {
-		StringBuilder buf = new StringBuilder( "drop table " );
-		if ( dialect.supportsIfExistsBeforeTableName() ) {
-			buf.append( "if exists " );
-		}
-
-		final QualifiedName tableName = new QualifiedNameParser.NameParts(
-				Identifier.toIdentifier( table.getCatalog(), table.isCatalogQuoted() ),
-				Identifier.toIdentifier( table.getSchema(), table.isSchemaQuoted() ),
-				table.getNameIdentifier()
-		);
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
-		buf.append( jdbcEnvironment.getQualifiedObjectNameFormatter().format( tableName, jdbcEnvironment.getDialect() ) )
-				.append( dialect.getCascadeConstraintsString() );
-
-		if ( dialect.supportsIfExistsAfterTableName() ) {
-			buf.append( " if exists" );
-		}
-
-		return new String[] { buf.toString() };
 	}
 }

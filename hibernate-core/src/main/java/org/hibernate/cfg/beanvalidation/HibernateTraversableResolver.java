@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.cfg.beanvalidation;
+
 import java.lang.annotation.ElementType;
 import java.util.HashSet;
 import java.util.Set;
@@ -14,11 +15,12 @@ import javax.validation.TraversableResolver;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.common.AssertionFailure;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.CompositeType;
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 
 /**
  * Use Hibernate metadata to ignore cascade on entities.
@@ -32,42 +34,29 @@ public class HibernateTraversableResolver implements TraversableResolver {
 	private Set<String> associations;
 
 	public HibernateTraversableResolver(
-			EntityPersister persister,
-			ConcurrentHashMap<EntityPersister, Set<String>> associationsPerEntityPersister, 
-			SessionFactoryImplementor factory) {
-		this.associations = associationsPerEntityPersister.get( persister );
+			EntityTypeDescriptor entityDescriptor,
+			ConcurrentHashMap<EntityTypeDescriptor, Set<String>> associationsPerEntityDescriptor) {
+		this.associations = associationsPerEntityDescriptor.get( entityDescriptor );
 		if (this.associations == null) {
-			this.associations = new HashSet<String>();
-			addAssociationsToTheSetForAllProperties( persister.getPropertyNames(), persister.getPropertyTypes(), "", factory );
-			associationsPerEntityPersister.put( persister, associations );
+			this.associations = new HashSet<>();
+			addAssociationsToTheSetForAllProperties( entityDescriptor );
+			associationsPerEntityDescriptor.put( entityDescriptor, associations );
 		}
 	}
 
-	private void addAssociationsToTheSetForAllProperties(String[] names, Type[] types, String prefix, SessionFactoryImplementor factory) {
-		final int length = names.length;
-		for( int index = 0 ; index < length; index++ ) {
-			addAssociationsToTheSetForOneProperty( names[index], types[index], prefix, factory );
+	private void addAssociationsToTheSetForAllProperties(ManagedTypeDescriptor<?> managedTypeDescriptor) {
+		for ( PersistentAttributeDescriptor<?, ?> attribute : managedTypeDescriptor.getPersistentAttributes() ) {
+			addAssociationsToTheSetForOneProperty( attribute );
 		}
 	}
 
-	private void addAssociationsToTheSetForOneProperty(String name, Type type, String prefix, SessionFactoryImplementor factory) {
-
-		if ( type.isCollectionType() ) {
-			CollectionType collType = (CollectionType) type;
-			Type assocType = collType.getElementType( factory );
-			addAssociationsToTheSetForOneProperty(name, assocType, prefix, factory);
+	private void addAssociationsToTheSetForOneProperty(PersistentAttributeDescriptor attribute) {
+		if ( attribute instanceof PluralPersistentAttribute
+				|| attribute instanceof SingularPersistentAttributeEntity ) {
+			associations.add( attribute.getNavigableRole().getFullPath() );
 		}
-		//ToOne association
-		else if ( type.isEntityType() || type.isAnyType() ) {
-			associations.add( prefix + name );
-		}
-		else if ( type.isComponentType() ) {
-			CompositeType componentType = (CompositeType) type;
-			addAssociationsToTheSetForAllProperties(
-					componentType.getPropertyNames(),
-					componentType.getSubtypes(),
-					(prefix.equals( "" ) ? name : prefix + name) + ".",
-					factory);
+		else if ( attribute instanceof SingularPersistentAttributeEmbedded ) {
+			addAssociationsToTheSetForAllProperties( ( (SingularPersistentAttributeEmbedded) attribute ).getEmbeddedDescriptor() );
 		}
 	}
 

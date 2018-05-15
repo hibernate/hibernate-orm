@@ -6,17 +6,15 @@
  */
 package org.hibernate.event.internal;
 
-import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
 
 import org.hibernate.HibernateException;
-import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.ResolveNaturalIdEvent;
 import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.pretty.MessageHelper;
 
 /**
@@ -37,7 +35,7 @@ public class DefaultResolveNaturalIdEventListener
 
 	@Override
 	public void onResolveNaturalId(ResolveNaturalIdEvent event) throws HibernateException {
-		final Serializable entityId = resolveNaturalId( event );
+		final Object entityId = resolveNaturalId( event );
 		event.setEntityId( entityId );
 	}
 
@@ -51,24 +49,24 @@ public class DefaultResolveNaturalIdEventListener
 	 *
 	 * @return The loaded entity, or null.
 	 */
-	protected Serializable resolveNaturalId(final ResolveNaturalIdEvent event) {
-		final EntityPersister persister = event.getEntityPersister();
+	protected Object resolveNaturalId(final ResolveNaturalIdEvent event) {
+		final EntityTypeDescriptor descriptor = event.getEntityDescriptor();
 
 		final boolean traceEnabled = LOG.isTraceEnabled();
 		if ( traceEnabled ) {
 			LOG.tracev(
 					"Attempting to resolve: {0}#{1}",
-					MessageHelper.infoString( persister ),
+					MessageHelper.infoString( descriptor ),
 					event.getNaturalIdValues()
 			);
 		}
 
-		Serializable entityId = resolveFromCache( event );
+		Object entityId = resolveFromCache( event );
 		if ( entityId != null ) {
 			if ( traceEnabled ) {
 				LOG.tracev(
 						"Resolved object in cache: {0}#{1}",
-						MessageHelper.infoString( persister ),
+						MessageHelper.infoString( descriptor ),
 						event.getNaturalIdValues()
 				);
 			}
@@ -78,7 +76,7 @@ public class DefaultResolveNaturalIdEventListener
 		if ( traceEnabled ) {
 			LOG.tracev(
 					"Object not resolved in any cache: {0}#{1}",
-					MessageHelper.infoString( persister ),
+					MessageHelper.infoString( descriptor ),
 					event.getNaturalIdValues()
 			);
 		}
@@ -93,9 +91,9 @@ public class DefaultResolveNaturalIdEventListener
 	 *
 	 * @return The entity from the cache, or null.
 	 */
-	protected Serializable resolveFromCache(final ResolveNaturalIdEvent event) {
+	protected Object resolveFromCache(final ResolveNaturalIdEvent event) {
 		return event.getSession().getPersistenceContext().getNaturalIdHelper().findCachedNaturalIdResolution(
-				event.getEntityPersister(),
+				event.getEntityDescriptor(),
 				event.getOrderedNaturalIdValues()
 		);
 	}
@@ -108,7 +106,7 @@ public class DefaultResolveNaturalIdEventListener
 	 *
 	 * @return The object loaded from the datasource, or null if not found.
 	 */
-	protected Serializable loadFromDatasource(final ResolveNaturalIdEvent event) {
+	protected Object loadFromDatasource(final ResolveNaturalIdEvent event) {
 		final SessionFactoryImplementor factory = event.getSession().getFactory();
 		final boolean stats = factory.getStatistics().isStatisticsEnabled();
 		long startTime = 0;
@@ -116,7 +114,7 @@ public class DefaultResolveNaturalIdEventListener
 			startTime = System.nanoTime();
 		}
 
-		final Serializable pk = event.getEntityPersister().loadEntityIdByNaturalId(
+		final Object pk = event.getEntityDescriptor().getNaturalIdLoader().resolveNaturalIdToEntity(
 				event.getOrderedNaturalIdValues(),
 				event.getLockOptions(),
 				event.getSession()
@@ -126,15 +124,14 @@ public class DefaultResolveNaturalIdEventListener
 			final long endTime = System.nanoTime();
 			final long milliseconds = TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
 			factory.getStatistics().naturalIdQueryExecuted(
-					event.getEntityPersister().getRootEntityName(),
-					milliseconds
-			);
+					event.getEntityDescriptor().getHierarchy().getRootEntityType().getEntityName(),
+					milliseconds );
 		}
 
 		//PK can be null if the entity doesn't exist
 		if (pk != null) {
 			event.getSession().getPersistenceContext().getNaturalIdHelper().cacheNaturalIdCrossReferenceFromLoad(
-					event.getEntityPersister(),
+					event.getEntityDescriptor(),
 					pk,
 					event.getOrderedNaturalIdValues()
 			);

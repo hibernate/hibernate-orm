@@ -6,8 +6,9 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.internal.BasicTypeImpl;
 
 /**
  * A BasicType adapter targeting partial portability to 6.0's type
@@ -17,28 +18,27 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * @author Steve Ebersole
  */
 @SuppressWarnings("unused")
-public class StandardBasicTypeTemplate<J> extends AbstractSingleColumnStandardBasicType<J> {
+public class StandardBasicTypeTemplate<J> extends BasicTypeImpl<J> {
 	private final String name;
 	private final String[] registrationKeys;
 
 	public StandardBasicTypeTemplate(
 			SqlTypeDescriptor sqlTypeDescriptor,
-			JavaTypeDescriptor<J> javaTypeDescriptor,
+			BasicJavaDescriptor<J> javaTypeDescriptor,
 			String... registrationKeys) {
-		super( sqlTypeDescriptor, javaTypeDescriptor );
+		super( javaTypeDescriptor, sqlTypeDescriptor );
 		this.registrationKeys = registrationKeys;
 
 		this.name = javaTypeDescriptor.getJavaType() == null ? "(map-mode)" : javaTypeDescriptor.getJavaType().getName()
 				+ " -> " + sqlTypeDescriptor.getSqlType();
 	}
 
-	@Override
 	public String getName() {
 		return name;
 	}
 
-	@Override
-	public String[] getRegistrationKeys() {
-		return registrationKeys;
-	}
+//	@Override
+//	public String[] getRegistrationKeys() {
+//		return registrationKeys;
+//	}
 }

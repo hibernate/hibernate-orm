@@ -6,49 +6,68 @@
  */
 package org.hibernate;
 
-import javax.persistence.metamodel.EntityType;
+import java.util.List;
+
+import org.hibernate.graph.RootGraph;
+import org.hibernate.metamodel.RuntimeModel;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
+ * Hibernate's extension to the JPA {@link javax.persistence.metamodel.Metamodel}
+ * contract.  Most calls simply get delegated in some form to {@link TypeConfiguration}
+ * via {@link #getTypeConfiguration()}
+ *
  * @author Steve Ebersole
  */
-public interface Metamodel extends javax.persistence.metamodel.Metamodel {
-	/**
-	 * Access to the SessionFactory that this Metamodel instance is bound to.
-	 *
-	 * @return The SessionFactory
-	 */
-	SessionFactory getSessionFactory();
+public interface Metamodel extends javax.persistence.metamodel.Metamodel, RuntimeModel {
 
+	// todo (6.0) - Should we refactor #getTypeConfiguration() to MetamodelImplementor
+	//		In master this method is on the SPI and not the API contract, perhaps refactor?
+	
 	/**
-	 * @deprecated since 5.2
+	 * Access to the TypeConfiguration in effect for this SessionFactory/Metamodel
+	 *
+	 * @return Access to the TypeConfiguration
 	 */
-	@Deprecated
-	default EntityType getEntityTypeByName(String entityName) {
-		return entity( entityName );
+	TypeConfiguration getTypeConfiguration();
+
+	@Override
+	@SuppressWarnings("unchecked")
+	default <X> EntityDomainType<X> entity(Class<X> cls) {
+		final EntityTypeDescriptor<X> descriptor = getEntityDescriptor( cls );
+		if ( descriptor == null ) {
+			// per JPA, this condition needs to be an (illegal argument) exception
+			throw new IllegalArgumentException( "Not an entity: " + cls );
+		}
+		return descriptor;
 	}
 
 	/**
-	 * Access to an entity supporting Hibernate's entity-name feature
+	 * Access to an entity descriptor supporting Hibernate's entity-name feature
 	 *
 	 * @param entityName The entity-name
 	 *
 	 * @return The entity descriptor
 	 */
-	<X> EntityType<X> entity(String entityName);
+	default <X> EntityDomainType<X> entity(String entityName) {
+		final EntityTypeDescriptor<X> descriptor = findEntityDescriptor( entityName );
+		if ( descriptor == null ) {
+			// consistent with the JPA requirement above
+			throw new IllegalArgumentException( "Not an entity: " + entityName );
+		}
+		return descriptor;
+	}
 
-	String getImportedClassName(String className);
+	@Override
+	<X> ManagedDomainType<X> managedType(Class<X> cls);
 
-	/**
-	 * Given the name of an entity class, determine all the class and interface names by which it can be
-	 * referenced in an HQL query.
-	 *
-	 * @param entityName The name of the entity class
-	 *
-	 * @return the names of all persistent (mapped) classes that extend or implement the
-	 *     given class or interface, accounting for implicit/explicit polymorphism settings
-	 *     and excluding mapped subclasses/joined-subclasses of other classes in the result.
-	 * @throws MappingException
-	 */
-	String[] getImplementors(String entityName);
+	<T> void addNamedRootGraph(String graphName, RootGraph<T> entityGraph);
 
+	@SuppressWarnings("unchecked")
+	default <T> List<RootGraph<T>> findRootGraphsByType(Class<T> entityClass) {
+		return (List) findRootGraphsForType( entityClass );
+	}
 }

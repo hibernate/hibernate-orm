@@ -6,31 +6,38 @@
  */
 package org.hibernate.engine.internal;
 
-import java.io.Serializable;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.TransientObjectException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.NonIdPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute.SingularAttributeClassification;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.type.CompositeType;
-import org.hibernate.type.EntityType;
-import org.hibernate.type.Type;
 
 /**
  * Algorithms related to foreign key constraint transparency
  *
  * @author Gavin King
  */
-public final class ForeignKeys {
+@Internal
+public final class ForeignKeys<T> {
 
 	/**
 	 * Delegate for handling nullifying ("null"ing-out) non-cascaded associations
 	 */
+	@Internal
 	public static class Nullifier {
 		private final boolean isDelete;
 		private final boolean isEarlyInsert;
@@ -55,13 +62,15 @@ public final class ForeignKeys {
 		/**
 		 * Nullify all references to entities that have not yet been inserted in the database, where the foreign key
 		 * points toward that entity.
-		 *
-		 * @param values The entity attribute values
-		 * @param types The entity attribute types
-		 */
-		public void nullifyTransientReferences(final Object[] values, final Type[] types) {
-			for ( int i = 0; i < types.length; i++ ) {
-				values[i] = nullifyTransientReferences( values[i], types[i] );
+		 *  @param values The entity attribute values
+		 * @param attributes The entity attributes */
+		public void nullifyTransientReferences(
+				final Object[] values,
+				final List<NonIdPersistentAttribute<?, ?>> attributes) {
+			int i = 0;
+			for(NonIdPersistentAttribute attribute : attributes){
+				values[i] = nullifyTransientReferences( values[i], attribute );
+				i ++;
 			}
 		}
 
@@ -70,48 +79,49 @@ public final class ForeignKeys {
 		 * input argument otherwise.  This is how Hibernate avoids foreign key constraint violations.
 		 *
 		 * @param value An entity attribute value
-		 * @param type An entity attribute type
+		 * @param attribute An entity attribute
 		 *
 		 * @return {@code null} if the argument is an unsaved entity; otherwise return the argument.
 		 */
-		private Object nullifyTransientReferences(final Object value, final Type type) {
+		private Object nullifyTransientReferences(final Object value, final NonIdPersistentAttribute attribute) {
 			if ( value == null ) {
 				return null;
 			}
-			else if ( type.isEntityType() ) {
-				final EntityType entityType = (EntityType) type;
-				if ( entityType.isOneToOne() ) {
+
+			if ( attribute instanceof SingularPersistentAttribute ) {
+				final SingularAttributeClassification attributeClassification =
+						( (SingularPersistentAttribute) attribute ).getAttributeTypeClassification();
+				if ( attributeClassification == SingularAttributeClassification.ONE_TO_ONE ) {
 					return value;
 				}
-				else {
-					final String entityName = entityType.getAssociatedEntityName();
+				else if ( attributeClassification == SingularAttributeClassification.MANY_TO_ONE ) {
+					final SingularPersistentAttributeEntity singularPersistentAttribute = (SingularPersistentAttributeEntity) attribute;
+					final String entityName = singularPersistentAttribute.getEntityName();
 					return isNullifiable( entityName, value ) ? null : value;
 				}
-			}
-			else if ( type.isAnyType() ) {
-				return isNullifiable( null, value ) ? null : value;
-			}
-			else if ( type.isComponentType() ) {
-				final CompositeType actype = (CompositeType) type;
-				final Object[] subvalues = actype.getPropertyValues( value, session );
-				final Type[] subtypes = actype.getSubtypes();
-				boolean substitute = false;
-				for ( int i = 0; i < subvalues.length; i++ ) {
-					final Object replacement = nullifyTransientReferences( subvalues[i], subtypes[i] );
-					if ( replacement != subvalues[i] ) {
-						substitute = true;
-						subvalues[i] = replacement;
+				else if ( attributeClassification == SingularAttributeClassification.ANY ) {
+					return isNullifiable( null, value ) ? null : value;
+				}
+				else if ( attributeClassification == SingularAttributeClassification.EMBEDDED ) {
+					final SingularPersistentAttributeEmbedded embedded = (SingularPersistentAttributeEmbedded) attribute;
+					final EmbeddedTypeDescriptor<?> embeddedDescriptor = embedded.getEmbeddedDescriptor();
+
+					final Map<String, Object> embeddedValues = new LinkedHashMap<>();
+					boolean substitute = false;
+
+					for ( NonIdPersistentAttribute<?, ?> subAttribute : embeddedDescriptor.getDeclaredPersistentAttributes() ) {
+						final Object subAttributeValue = subAttribute.getPropertyAccess().getGetter().get( value );
+						final Object replacement = nullifyTransientReferences( subAttributeValue, subAttribute );
+						if ( replacement != subAttributeValue ) {
+							// todo (6.0) : grrr.. this is another place we should not have to pass in SessionFactory
+							//		the attribute AND the property-access are both scoped to the SF
+							subAttribute.getPropertyAccess().getSetter().set( value, replacement, null );
+						}
 					}
+					return value;
 				}
-				if ( substitute ) {
-					// todo : need to account for entity mode on the CompositeType interface :(
-					actype.setPropertyValues( value, subvalues, EntityMode.POJO );
-				}
-				return value;
 			}
-			else {
-				return value;
-			}
+			return value;
 		}
 
 		/**
@@ -121,8 +131,7 @@ public final class ForeignKeys {
 		 * @param entityName The name of the entity
 		 * @param object The entity instance
 		 */
-		private boolean isNullifiable(final String entityName, Object object)
-				throws HibernateException {
+		public boolean isNullifiable(String entityName, Object object) throws HibernateException {
 			if ( object == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 				// this is the best we can do...
 				return false;
@@ -221,9 +230,9 @@ public final class ForeignKeys {
 			return isUnsaved;
 		}
 
-		// let the persister inspect the instance to decide
-		final EntityPersister persister = session.getEntityPersister( entityName, entity );
-		isUnsaved = persister.isTransient( entity, session );
+		// let the descriptor inspect the instance to decide
+		final EntityTypeDescriptor descriptor = session.getEntityDescriptor( entityName, entity );
+		isUnsaved = descriptor.isTransient( entity, session );
 		if ( isUnsaved != null ) {
 			return isUnsaved;
 		}
@@ -236,8 +245,8 @@ public final class ForeignKeys {
 
 		// hit the database, after checking the session cache for a snapshot
 		final Object[] snapshot = session.getPersistenceContext().getDatabaseSnapshot(
-				persister.getIdentifier( entity, session ),
-				persister
+				descriptor.getIdentifier( entity, session ),
+				descriptor
 		);
 		return snapshot == null;
 
@@ -260,7 +269,7 @@ public final class ForeignKeys {
 	 *
 	 * @throws TransientObjectException if the entity is transient (does not yet have an identifier)
 	 */
-	public static Serializable getEntityIdentifierIfNotUnsaved(
+	public static Object getEntityIdentifierIfNotUnsaved(
 			final String entityName,
 			final Object object,
 			final SharedSessionContractImplementor session) throws TransientObjectException {
@@ -268,7 +277,7 @@ public final class ForeignKeys {
 			return null;
 		}
 		else {
-			Serializable id = session.getContextEntityIdentifier( object );
+			Object id = session.getContextEntityIdentifier( object );
 			if ( id == null ) {
 				// context-entity-identifier returns null explicitly if the entity
 				// is not associated with the persistence context; so make some
@@ -279,7 +288,9 @@ public final class ForeignKeys {
 									(entityName == null ? session.guessEntityName( object ) : entityName)
 					);
 				}
-				id = session.getEntityPersister( entityName, object ).getIdentifier( object, session );
+				id = session.getEntityDescriptor( entityName, object ).getHierarchy()
+						.getIdentifierDescriptor()
+						.extractIdentifier( object, session );
 			}
 			return id;
 		}
@@ -301,77 +312,41 @@ public final class ForeignKeys {
 	 * @return the transient unsaved entity dependencies that are non-nullable,
 	 *         or null if there are none.
 	 */
+	@SuppressWarnings("unchecked")
 	public static NonNullableTransientDependencies findNonNullableTransientEntities(
 			String entityName,
 			Object entity,
 			Object[] values,
 			boolean isEarlyInsert,
 			SharedSessionContractImplementor session) {
-		final Nullifier nullifier = new Nullifier( entity, false, isEarlyInsert, session );
-		final EntityPersister persister = session.getEntityPersister( entityName, entity );
-		final String[] propertyNames = persister.getPropertyNames();
-		final Type[] types = persister.getPropertyTypes();
-		final boolean[] nullability = persister.getPropertyNullability();
+		if ( values == null ) {
+			return null;
+		}
+
 		final NonNullableTransientDependencies nonNullableTransientEntities = new NonNullableTransientDependencies();
-		for ( int i = 0; i < types.length; i++ ) {
-			collectNonNullableTransientEntities(
-					nullifier,
-					values[i],
-					propertyNames[i],
-					types[i],
-					nullability[i],
-					session,
-					nonNullableTransientEntities
-			);
-		}
-		return nonNullableTransientEntities.isEmpty() ? null : nonNullableTransientEntities;
-	}
+		final Nullifier nullifier = new Nullifier( entity, false, isEarlyInsert, session );
+		final EntityTypeDescriptor descriptor = session.getEntityDescriptor( entityName, entity );
 
-	private static void collectNonNullableTransientEntities(
-			Nullifier nullifier,
-			Object value,
-			String propertyName,
-			Type type,
-			boolean isNullable,
-			SharedSessionContractImplementor session,
-			NonNullableTransientDependencies nonNullableTransientEntities) {
-		if ( value == null ) {
-			return;
-		}
+		// todo (6.0) : this is a good example of potential performance trade off - evaluate
+//		specifically, because the method below *could be* (and partially is) a non-polymorphic call site
+//		but moving to StateArrayContributor would be polymorphic
+		descriptor.visitStateArrayContributors(
+				stateArrayContributor -> {
+					final Object value = values[ stateArrayContributor.getStateArrayPosition() ];
+					if ( value == null ) {
+						return;
+					}
 
-		if ( type.isEntityType() ) {
-			final EntityType entityType = (EntityType) type;
-			if ( !isNullable
-					&& !entityType.isOneToOne()
-					&& nullifier.isNullifiable( entityType.getAssociatedEntityName(), value ) ) {
-				nonNullableTransientEntities.add( propertyName, value );
-			}
-		}
-		else if ( type.isAnyType() ) {
-			if ( !isNullable && nullifier.isNullifiable( null, value ) ) {
-				nonNullableTransientEntities.add( propertyName, value );
-			}
-		}
-		else if ( type.isComponentType() ) {
-			final CompositeType actype = (CompositeType) type;
-			final boolean[] subValueNullability = actype.getPropertyNullability();
-			if ( subValueNullability != null ) {
-				final String[] subPropertyNames = actype.getPropertyNames();
-				final Object[] subvalues = actype.getPropertyValues( value, session );
-				final Type[] subtypes = actype.getSubtypes();
-				for ( int j = 0; j < subvalues.length; j++ ) {
-					collectNonNullableTransientEntities(
+					stateArrayContributor.collectNonNullableTransientEntities(
+							value,
 							nullifier,
-							subvalues[j],
-							subPropertyNames[j],
-							subtypes[j],
-							subValueNullability[j],
-							session,
-							nonNullableTransientEntities
+							nonNullableTransientEntities,
+							session
 					);
 				}
-			}
-		}
+		);
+
+		return nonNullableTransientEntities.isEmpty() ? null : nonNullableTransientEntities;
 	}
 
 	/**

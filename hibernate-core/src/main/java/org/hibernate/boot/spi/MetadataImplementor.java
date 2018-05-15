@@ -6,30 +6,24 @@
  */
 package org.hibernate.boot.spi;
 
-import java.util.Collection;
 import java.util.Set;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
-import org.hibernate.cache.cfg.internal.DomainDataRegionConfigImpl;
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.internal.SessionFactoryImpl;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.envers.boot.spi.AuditMetadataBuilderImplementor;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.query.spi.NamedQueryRepository;
-import org.hibernate.type.Type;
-import org.hibernate.type.TypeResolver;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * The SPI-level Metadata contract.
  *
- * @todo Should Mapping be implemented here, or on InFlightMetadataCollector instead?
- *
  * @author Steve Ebersole
  *
  * @since 5.0
  */
-public interface MetadataImplementor extends Metadata, Mapping {
+public interface MetadataImplementor extends Metadata {
 	/**
 	 * Access to the options used to build this Metadata
 	 *
@@ -44,19 +38,11 @@ public interface MetadataImplementor extends Metadata, Mapping {
 	 */
 	TypeConfiguration getTypeConfiguration();
 
-	/**
-	 * Retrieve the {@link Type} resolver associated with this factory.
-	 *
-	 * @return The type resolver
-	 *
-	 * @deprecated (since 5.3) No replacement, access to and handling of Types will be much different in 6.0
-	 */
-	@Deprecated
-	TypeResolver getTypeResolver();
-
-	NamedQueryRepository buildNamedQueryRepository(SessionFactoryImpl sessionFactory);
+	NamedQueryRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory);
 
 	void validate() throws MappingException;
 
 	Set<MappedSuperclass> getMappedSuperclassMappingsCopy();
+
+	AuditMetadataBuilderImplementor getAuditMetadataBuilder();
 }

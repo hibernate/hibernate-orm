@@ -15,7 +15,8 @@ import org.hibernate.action.internal.EntityVerifyVersionProcess;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.model.domain.spi.Lockable;
 
 /**
  * An optimistic locking strategy that verifies that the version hasn't changed (prior to transaction commit).
@@ -46,7 +47,7 @@ public class OptimisticLockingStrategy implements LockingStrategy {
 
 	@Override
 	public void lock(Serializable id, Object version, Object object, int timeout, SharedSessionContractImplementor session) {
-		if ( !lockable.isVersioned() ) {
+		if ( StringHelper.isEmpty( lockable.getVersionColumnName() ) ) {
 			throw new OptimisticLockException( object, "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}
 		final EntityEntry entry = session.getPersistenceContext().getEntry( object );

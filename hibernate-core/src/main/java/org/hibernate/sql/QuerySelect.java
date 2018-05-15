@@ -9,13 +9,18 @@ package org.hibernate.sql;
 import java.util.HashSet;
 import java.util.Iterator;
 
+import org.hibernate.annotations.Remove;
 import org.hibernate.dialect.Dialect;
 
 /**
  * A translated HQL query
  *
  * @author Gavin King
+ *
+ * @deprecated Converting to use SQL AST
  */
+@Deprecated
+@Remove
 public class QuerySelect {
 	private Dialect dialect;
 	private JoinFragment joins;

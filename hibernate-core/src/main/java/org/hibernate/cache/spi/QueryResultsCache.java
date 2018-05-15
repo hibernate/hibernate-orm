@@ -22,11 +22,10 @@ import org.hibernate.type.Type;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface QueryResultsCache extends QueryCache {
+public interface QueryResultsCache {
 	/**
 	 * The underlying cache region being used.
 	 */
-	@Override
 	QueryResultsRegion getRegion();
 
 	/**
@@ -34,7 +33,6 @@ public interface QueryResultsCache extends QueryCache {
 	 *
 	 * @throws CacheException Indicates a problem delegating to the underlying cache.
 	 */
-	@Override
 	default void clear() throws CacheException {
 		getRegion().clear();
 	}
@@ -53,7 +51,6 @@ public interface QueryResultsCache extends QueryCache {
 	boolean put(
 			QueryKey key,
 			List result,
-			Type[] returnTypes,
 			SharedSessionContractImplementor session) throws HibernateException;
 
 	/**
@@ -69,8 +66,7 @@ public interface QueryResultsCache extends QueryCache {
 	 */
 	List get(
 			QueryKey key,
-			Set<Serializable> spaces,
-			Type[] returnTypes,
+			Set<String> spaces,
 			SharedSessionContractImplementor session) throws HibernateException;
 
 	/**
@@ -87,34 +83,31 @@ public interface QueryResultsCache extends QueryCache {
 	List get(
 			QueryKey key,
 			String[] spaces,
-			Type[] returnTypes,
 			SharedSessionContractImplementor session) throws HibernateException;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Deprecations
 
-	@Override
 	default boolean put(
 			QueryKey key,
 			Type[] returnTypes,
 			List result,
 			boolean isNaturalKeyLookup,
 			SharedSessionContractImplementor session) {
-		return put( key, result, returnTypes, session );
+		return put( key, result, session );
 	}
 
-	@Override
+	@SuppressWarnings("unchecked")
 	default List get(
 			QueryKey key,
 			Type[] returnTypes,
 			boolean isNaturalKeyLookup,
 			Set<Serializable> spaces,
 			SharedSessionContractImplementor session) {
-		return get( key, spaces, returnTypes, session );
+		return get( key, (Set) spaces, session );
 	}
 
-	@Override
 	default void destroy() {
 		// nothing to do.. the region itself gets destroyed
 	}

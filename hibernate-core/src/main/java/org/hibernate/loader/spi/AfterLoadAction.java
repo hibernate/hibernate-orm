@@ -7,11 +7,10 @@
 package org.hibernate.loader.spi;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.entity.Loadable;
 
 /**
 * @author Steve Ebersole
 */
 public interface AfterLoadAction {
-	void afterLoad(SharedSessionContractImplementor session, Object entity, Loadable persister);
+	void afterLoad(SharedSessionContractImplementor session);
 }

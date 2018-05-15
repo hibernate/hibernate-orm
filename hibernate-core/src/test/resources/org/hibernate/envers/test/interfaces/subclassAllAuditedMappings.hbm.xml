@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="WINDOWS-1251"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+
+	<class
+		name="org.hibernate.envers.test.integration.interfaces.hbm.allAudited.SimpleInterface"
+		table="SIMPLES_interface" discriminator-value="SIMPLE_INTERFACE">
+
+		<id name="id" column="ID" type="long">
+			<generator class="native" />
+		</id>
+
+		<discriminator column="DISCRIMINATOR" />
+
+		<property name="data" column="DATA" />
+
+	</class>
+
+	<subclass
+		name="org.hibernate.envers.test.integration.interfaces.hbm.allAudited.AuditedImplementor"
+		extends="org.hibernate.envers.test.integration.interfaces.hbm.allAudited.SimpleInterface"
+		discriminator-value="AUDITED_IMPLEMENTOR" >
+
+		<property name="auditedImplementorData" column="IMPLEMENTOR_DATA" />
+
+	</subclass>
+	
+	<subclass
+		name="org.hibernate.envers.test.integration.interfaces.hbm.allAudited.NonAuditedImplementor"
+		extends="org.hibernate.envers.test.integration.interfaces.hbm.allAudited.SimpleInterface"
+		discriminator-value="NON_AUDITED_IMPLEMENTOR" >
+
+		<property name="nonAuditedImplementorData" column="NON_IMPLEMENTOR_DATA" />
+
+	</subclass>	
+	
+	
+
+</hibernate-mapping>

@@ -40,13 +40,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.function.AnsiTrimFunction;
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.identity.HANAIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
@@ -66,7 +60,9 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.RowSelection;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
@@ -75,35 +71,47 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.model.relational.spi.ExportableTable;
+import org.hibernate.naming.Identifier;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTempTableExporter;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTable;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.spi.AnsiTrimFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.ConcatFunctionTemplate;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.sql.AbstractJdbcValueBinder;
+import org.hibernate.sql.AbstractJdbcValueExtractor;
+import org.hibernate.sql.JdbcValueBinder;
+import org.hibernate.sql.JdbcValueExtractor;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHANADatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
-import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.ValueBinder;
-import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.DataHelper;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BasicBinder;
-import org.hibernate.type.descriptor.sql.BasicExtractor;
-import org.hibernate.type.descriptor.sql.BitTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BooleanTypeDescriptor;
-import org.hibernate.type.descriptor.sql.CharTypeDescriptor;
-import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.DecimalTypeDescriptor;
-import org.hibernate.type.descriptor.sql.DoubleTypeDescriptor;
-import org.hibernate.type.descriptor.sql.NCharTypeDescriptor;
-import org.hibernate.type.descriptor.sql.NClobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.NVarcharTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.LobStreamDataHelper;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.AbstractTemplateSqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.BitSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.BooleanSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.CharSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.JdbcLiteralFormatter;
+import org.hibernate.type.descriptor.sql.spi.NCharSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.NClobSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.DecimalSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.DoubleSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.NVarcharSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SmallIntSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.VarcharSqlDescriptor;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * An abstract base class for SAP HANA dialects.
@@ -124,7 +132,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractHANADialect.class );
 
 	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
-
 		@Override
 		public String processSql(String sql, RowSelection selection) {
 			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
@@ -144,7 +151,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	};
 
 	private static class CloseSuppressingReader extends FilterReader {
-
 		protected CloseSuppressingReader(final Reader in) {
 			super( in );
 		}
@@ -176,17 +182,17 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
-		public long length() throws SQLException {
+		public long length() {
 			return this.getBytes().length;
 		}
 
 		@Override
-		public byte[] getBytes(long pos, int length) throws SQLException {
+		public byte[] getBytes(long pos, int length) {
 			return Arrays.copyOfRange( this.bytes, (int) ( pos - 1 ), (int) ( pos - 1 + length ) );
 		}
 
 		@Override
-		public InputStream getBinaryStream() throws SQLException {
+		public InputStream getBinaryStream() {
 			return new ByteArrayInputStream( this.getBytes() );
 		}
 
@@ -201,7 +207,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
-		public int setBytes(long pos, byte[] bytes) throws SQLException {
+		public int setBytes(long pos, byte[] bytes) {
 			int bytesSet = 0;
 			if ( this.bytes.length < pos - 1 + bytes.length ) {
 				this.bytes = Arrays.copyOf( this.bytes, (int) ( pos - 1 + bytes.length ) );
@@ -213,7 +219,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
-		public int setBytes(long pos, byte[] bytes, int offset, int len) throws SQLException {
+		public int setBytes(long pos, byte[] bytes, int offset, int len) {
 			int bytesSet = 0;
 			if ( this.bytes.length < pos - 1 + len ) {
 				this.bytes = Arrays.copyOf( this.bytes, (int) ( pos - 1 + len ) );
@@ -225,7 +231,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
-		public OutputStream setBinaryStream(long pos) throws SQLException {
+		public OutputStream setBinaryStream(long pos) {
 			return new ByteArrayOutputStream() {
 
 				{
@@ -235,17 +241,17 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
-		public void truncate(long len) throws SQLException {
+		public void truncate(long len) {
 			this.setBytes( Arrays.copyOf( this.getBytes(), (int) len ) );
 		}
 
 		@Override
-		public void free() throws SQLException {
+		public void free() {
 			this.setBytes( null );
 		}
 
 		@Override
-		public InputStream getBinaryStream(long pos, long length) throws SQLException {
+		public InputStream getBinaryStream(long pos, long length) {
 			return new ByteArrayInputStream( this.getBytes(), (int) ( pos - 1 ), (int) length );
 		}
 
@@ -261,26 +267,26 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	private static class MaterializedNClob implements NClob {
 
-		private String data = null;
+		private String data;
 
 		public MaterializedNClob(String data) {
 			this.data = data;
 		}
 
 		@Override
-		public void truncate(long len) throws SQLException {
+		public void truncate(long len) {
 			this.data = new String();
 		}
 
 		@Override
-		public int setString(long pos, String str, int offset, int len) throws SQLException {
+		public int setString(long pos, String str, int offset, int len) {
 			this.data = this.data.substring( 0, (int) ( pos - 1 ) ) + str.substring( offset, offset + len )
 					+ this.data.substring( (int) ( pos - 1 + len ) );
 			return len;
 		}
 
 		@Override
-		public int setString(long pos, String str) throws SQLException {
+		public int setString(long pos, String str) {
 			this.data = this.data.substring( 0, (int) ( pos - 1 ) ) + str + this.data.substring( (int) ( pos - 1 + str.length() ) );
 			return str.length();
 		}
@@ -296,47 +302,47 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
-		public long position(Clob searchstr, long start) throws SQLException {
-			return this.data.indexOf( DataHelper.extractString( searchstr ), (int) ( start - 1 ) );
+		public long position(Clob searchstr, long start) {
+			return this.data.indexOf( LobStreamDataHelper.extractString( searchstr ), (int) ( start - 1 ) );
 		}
 
 		@Override
-		public long position(String searchstr, long start) throws SQLException {
+		public long position(String searchstr, long start) {
 			return this.data.indexOf( searchstr, (int) ( start - 1 ) );
 		}
 
 		@Override
-		public long length() throws SQLException {
+		public long length() {
 			return this.data.length();
 		}
 
 		@Override
-		public String getSubString(long pos, int length) throws SQLException {
+		public String getSubString(long pos, int length) {
 			return this.data.substring( (int) ( pos - 1 ), (int) ( pos - 1 + length ) );
 		}
 
 		@Override
-		public Reader getCharacterStream(long pos, long length) throws SQLException {
+		public Reader getCharacterStream(long pos, long length) {
 			return new StringReader( this.data.substring( (int) ( pos - 1 ), (int) ( pos - 1 + length ) ) );
 		}
 
 		@Override
-		public Reader getCharacterStream() throws SQLException {
+		public Reader getCharacterStream() {
 			return new StringReader( this.data );
 		}
 
 		@Override
-		public InputStream getAsciiStream() throws SQLException {
+		public InputStream getAsciiStream() {
 			return new ByteArrayInputStream( this.data.getBytes( StandardCharsets.ISO_8859_1 ) );
 		}
 
 		@Override
-		public void free() throws SQLException {
+		public void free() {
 			this.data = null;
 		}
 	}
 
-	private static class HANAStreamBlobTypeDescriptor implements SqlTypeDescriptor {
+	private static class HANAStreamBlobTypeDescriptor extends AbstractTemplateSqlTypeDescriptor {
 
 		private static final long serialVersionUID = -2476600722093442047L;
 
@@ -347,7 +353,12 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
-		public int getSqlType() {
+		public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+			return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getOrMakeJavaDescriptor( Clob.class );
+		}
+
+		@Override
+		public int getJdbcTypeCode() {
 			return Types.BLOB;
 		}
 
@@ -357,12 +368,14 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
-		public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
-			return new BasicBinder<X>( javaTypeDescriptor, this ) {
-
+		protected <X> JdbcValueBinder<X> createBinder(BasicJavaDescriptor<X> javaTypeDescriptor, TypeConfiguration typeConfiguration) {
+			return new AbstractJdbcValueBinder<X>( javaTypeDescriptor, this ) {
 				@Override
-				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-					final BinaryStream binaryStream = javaTypeDescriptor.unwrap( value, BinaryStream.class, options );
+				protected void doBind(
+						PreparedStatement st,
+						int index, X value,
+						ExecutionContext executionContext) throws SQLException {
+					final BinaryStream binaryStream = javaTypeDescriptor.unwrap( value, BinaryStream.class, executionContext.getSession() );
 					if ( value instanceof BlobImplementer ) {
 						try ( InputStream is = new CloseSuppressingInputStream( binaryStream.getInputStream() ) ) {
 							st.setBinaryStream( index, is, binaryStream.getLength() );
@@ -377,8 +390,11 @@ public abstract class AbstractHANADialect extends Dialect {
 				}
 
 				@Override
-				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options) throws SQLException {
-					final BinaryStream binaryStream = javaTypeDescriptor.unwrap( value, BinaryStream.class, options );
+				protected void doBind(
+						CallableStatement st,
+						String name, X value,
+						ExecutionContext executionContext) throws SQLException {
+					final BinaryStream binaryStream = javaTypeDescriptor.unwrap( value, BinaryStream.class, executionContext.getSession() );
 					if ( value instanceof BlobImplementer ) {
 						try ( InputStream is = new CloseSuppressingInputStream( binaryStream.getInputStream() ) ) {
 							st.setBinaryStream( name, is, binaryStream.getLength() );
@@ -395,34 +411,38 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
-		public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
-			return new BasicExtractor<X>( javaTypeDescriptor, this ) {
-
+		protected <X> JdbcValueExtractor<X> createExtractor(BasicJavaDescriptor<X> javaTypeDescriptor, TypeConfiguration typeConfiguration) {
+			return new AbstractJdbcValueExtractor<X>( javaTypeDescriptor, this ) {
 				@Override
-				protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-					Blob rsBlob = rs.getBlob( name );
+				protected X doExtract(ResultSet rs, int position, ExecutionContext executionContext) throws SQLException {
+					Blob rsBlob = rs.getBlob( position );
 					if ( rsBlob == null || rsBlob.length() < HANAStreamBlobTypeDescriptor.this.maxLobPrefetchSize ) {
-						return javaTypeDescriptor.wrap( rsBlob, options );
+						return javaTypeDescriptor.wrap( rsBlob, executionContext.getSession() );
 					}
-					Blob blob = new MaterializedBlob( DataHelper.extractBytes( rsBlob.getBinaryStream() ) );
-					return javaTypeDescriptor.wrap( blob, options );
+					Blob blob = new MaterializedBlob( LobStreamDataHelper.extractBytes( rsBlob.getBinaryStream() ) );
+					return javaTypeDescriptor.wrap( blob, executionContext.getSession() );
 				}
 
 				@Override
-				protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-					return javaTypeDescriptor.wrap( statement.getBlob( index ), options );
+				protected X doExtract(CallableStatement statement, int position, ExecutionContext executionContext) throws SQLException {
+					return javaTypeDescriptor.wrap( statement.getBlob( position ), executionContext.getSession() );
 				}
 
 				@Override
-				protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-					return javaTypeDescriptor.wrap( statement.getBlob( name ), options );
+				protected X doExtract(CallableStatement statement, String name, ExecutionContext executionContext) throws SQLException {
+					return javaTypeDescriptor.wrap( statement.getBlob( name ), executionContext.getSession() );
 				}
 			};
 		}
 
+		@Override
+		public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
+			// literal values for BLOB data is not supported.
+			return null;
+		}
 	}
 
-	// the ClobTypeDescriptor and NClobTypeDescriptor for HANA are slightly
+	// the ClobJavaDescriptor and NClobSqlDescriptor for HANA are slightly
 	// changed from the standard ones. The HANA JDBC driver currently closes any
 	// stream passed in via
 	// PreparedStatement.setCharacterStream(int,Reader,long)
@@ -430,7 +450,7 @@ public abstract class AbstractHANADialect extends Dialect {
 	// using non-contexual lob creation and HANA then closes our StringReader.
 	// see test case LobLocatorTest
 
-	private static class HANAClobTypeDescriptor extends ClobTypeDescriptor {
+	private static class HANAClobTypeDescriptor<T> extends ClobSqlDescriptor {
 
 		/** serial version uid. */
 		private static final long serialVersionUID = -379042275442752102L;
@@ -444,12 +464,20 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
-		public <X> BasicBinder<X> getClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-			return new BasicBinder<X>( javaTypeDescriptor, this ) {
+		public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+			return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getOrMakeJavaDescriptor( Clob.class );
+		}
 
+
+		@Override
+		public <X> JdbcValueBinder<X> getClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+			return new AbstractJdbcValueBinder<X>( javaTypeDescriptor, this ) {
 				@Override
-				protected void doBind(final PreparedStatement st, final X value, final int index, final WrapperOptions options) throws SQLException {
-					final CharacterStream characterStream = javaTypeDescriptor.unwrap( value, CharacterStream.class, options );
+				protected void doBind(
+						PreparedStatement st,
+						int index, X value,
+						ExecutionContext executionContext) throws SQLException {
+					final CharacterStream characterStream = javaTypeDescriptor.unwrap( value, CharacterStream.class, executionContext.getSession() );
 
 					if ( value instanceof ClobImplementer ) {
 						try ( Reader r = new CloseSuppressingReader( characterStream.asReader() ) ) {
@@ -466,8 +494,11 @@ public abstract class AbstractHANADialect extends Dialect {
 				}
 
 				@Override
-				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options) throws SQLException {
-					final CharacterStream characterStream = javaTypeDescriptor.unwrap( value, CharacterStream.class, options );
+				protected void doBind(
+						CallableStatement st,
+						String name, X value,
+						ExecutionContext executionContext) throws SQLException {
+					final CharacterStream characterStream = javaTypeDescriptor.unwrap( value, CharacterStream.class, executionContext.getSession() );
 
 					if ( value instanceof ClobImplementer ) {
 						try ( Reader r = new CloseSuppressingReader( characterStream.asReader() ) ) {
@@ -485,34 +516,45 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
-		public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
-			return new BasicExtractor<X>( javaTypeDescriptor, this ) {
-
+		protected <X> JdbcValueExtractor<X> createExtractor(
+				BasicJavaDescriptor<X> javaTypeDescriptor,
+				TypeConfiguration typeConfiguration) {
+			return new AbstractJdbcValueExtractor<X>( javaTypeDescriptor, this ) {
 				@Override
-				protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
+				protected X doExtract(
+						ResultSet rs,
+						int position,
+						ExecutionContext executionContext) throws SQLException {
 					Clob rsClob;
 					if ( HANAClobTypeDescriptor.this.useUnicodeStringTypes ) {
-						rsClob = rs.getNClob( name );
+						rsClob = rs.getNClob( position );
 					}
 					else {
-						rsClob = rs.getClob( name );
+						rsClob = rs.getClob( position );
 					}
 
 					if ( rsClob == null || rsClob.length() < HANAClobTypeDescriptor.this.maxLobPrefetchSize ) {
-						return javaTypeDescriptor.wrap( rsClob, options );
+						return javaTypeDescriptor.wrap( rsClob, executionContext.getSession() );
 					}
-					Clob clob = new MaterializedNClob( DataHelper.extractString( rsClob ) );
-					return javaTypeDescriptor.wrap( clob, options );
+
+					final Clob clob = new MaterializedNClob( LobStreamDataHelper.extractString( rsClob ) );
+					return javaTypeDescriptor.wrap( clob, executionContext.getSession() );
 				}
 
 				@Override
-				protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-					return javaTypeDescriptor.wrap( statement.getClob( index ), options );
+				protected X doExtract(
+						CallableStatement statement,
+						int position,
+						ExecutionContext executionContext) throws SQLException {
+					return javaTypeDescriptor.wrap( statement.getClob( position ), executionContext.getSession() );
 				}
 
 				@Override
-				protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-					return javaTypeDescriptor.wrap( statement.getClob( name ), options );
+				protected X doExtract(
+						CallableStatement statement,
+						String name,
+						ExecutionContext executionContext) throws SQLException {
+					return javaTypeDescriptor.wrap( statement.getClob( name ), executionContext.getSession() );
 				}
 			};
 		}
@@ -524,26 +566,37 @@ public abstract class AbstractHANADialect extends Dialect {
 		public boolean isUseUnicodeStringTypes() {
 			return this.useUnicodeStringTypes;
 		}
+
 	}
 
-	private static class HANANClobTypeDescriptor extends NClobTypeDescriptor {
+	private static class HANANClobSqlDescriptor extends NClobSqlDescriptor {
 
 		/** serial version uid. */
 		private static final long serialVersionUID = 5651116091681647859L;
 
 		final int maxLobPrefetchSize;
 
-		public HANANClobTypeDescriptor(int maxLobPrefetchSize) {
+		public HANANClobSqlDescriptor(int maxLobPrefetchSize) {
 			this.maxLobPrefetchSize = maxLobPrefetchSize;
 		}
 
 		@Override
-		public <X> BasicBinder<X> getNClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-			return new BasicBinder<X>( javaTypeDescriptor, this ) {
+		public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+			return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getOrMakeJavaDescriptor( Clob.class );
+		}
+
+		@Override
+		public <X> JdbcValueBinder<X> getNClobBinder(
+				final JavaTypeDescriptor<X> javaTypeDescriptor,
+				TypeConfiguration typeConfiguration) {
+			return new AbstractJdbcValueBinder<X>( javaTypeDescriptor, this ) {
 
 				@Override
-				protected void doBind(final PreparedStatement st, final X value, final int index, final WrapperOptions options) throws SQLException {
-					final CharacterStream characterStream = javaTypeDescriptor.unwrap( value, CharacterStream.class, options );
+				protected void doBind(
+						PreparedStatement st,
+						int index, X value,
+						ExecutionContext executionContext) throws SQLException {
+					final CharacterStream characterStream = javaTypeDescriptor.unwrap( value, CharacterStream.class, executionContext.getSession() );
 
 					if ( value instanceof NClobImplementer ) {
 						try ( Reader r = new CloseSuppressingReader( characterStream.asReader() ) ) {
@@ -556,12 +609,18 @@ public abstract class AbstractHANADialect extends Dialect {
 					else {
 						st.setCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
 					}
-
 				}
 
 				@Override
-				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options) throws SQLException {
-					final CharacterStream characterStream = javaTypeDescriptor.unwrap( value, CharacterStream.class, options );
+				protected void doBind(
+						CallableStatement st,
+						String name, X value,
+						ExecutionContext executionContext) throws SQLException {
+					final CharacterStream characterStream = javaTypeDescriptor.unwrap(
+							value,
+							CharacterStream.class,
+							executionContext.getSession()
+					);
 
 					if ( value instanceof NClobImplementer ) {
 						try ( Reader r = new CloseSuppressingReader( characterStream.asReader() ) ) {
@@ -579,27 +638,37 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
-		public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
-			return new BasicExtractor<X>( javaTypeDescriptor, this ) {
-
+		protected <X> JdbcValueExtractor<X> createExtractor(
+				BasicJavaDescriptor<X> javaTypeDescriptor,
+				TypeConfiguration typeConfiguration) {
+			return new AbstractJdbcValueExtractor<X>( javaTypeDescriptor, this ) {
 				@Override
-				protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-					NClob rsNClob = rs.getNClob( name );
-					if ( rsNClob == null || rsNClob.length() < HANANClobTypeDescriptor.this.maxLobPrefetchSize ) {
-						return javaTypeDescriptor.wrap( rsNClob, options );
+				protected X doExtract(
+						ResultSet rs,
+						int position,
+						ExecutionContext executionContext) throws SQLException {
+					NClob rsNClob = rs.getNClob( position );
+					if ( rsNClob == null || rsNClob.length() < HANANClobSqlDescriptor.this.maxLobPrefetchSize ) {
+						return javaTypeDescriptor.wrap( rsNClob, executionContext.getSession() );
 					}
-					NClob nClob = new MaterializedNClob( DataHelper.extractString( rsNClob ) );
-					return javaTypeDescriptor.wrap( nClob, options );
+					NClob nClob = new MaterializedNClob( LobStreamDataHelper.extractString( rsNClob ) );
+					return javaTypeDescriptor.wrap( nClob, executionContext.getSession() );
 				}
 
 				@Override
-				protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-					return javaTypeDescriptor.wrap( statement.getNClob( index ), options );
+				protected X doExtract(
+						CallableStatement statement,
+						int position,
+						ExecutionContext executionContext) throws SQLException {
+					return javaTypeDescriptor.wrap( statement.getNClob( position ), executionContext.getSession() );
 				}
 
 				@Override
-				protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-					return javaTypeDescriptor.wrap( statement.getNClob( name ), options );
+				protected X doExtract(
+						CallableStatement statement,
+						String name,
+						ExecutionContext executionContext) throws SQLException {
+					return javaTypeDescriptor.wrap( statement.getNClob( name ), executionContext.getSession() );
 				}
 			};
 		}
@@ -607,9 +676,15 @@ public abstract class AbstractHANADialect extends Dialect {
 		public int getMaxLobPrefetchSize() {
 			return this.maxLobPrefetchSize;
 		}
+
+		@Override
+		public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
+			// literal values for (N)CLOB data is not supported.
+			return null;
+		}
 	}
 
-	public static class HANABlobTypeDescriptor implements SqlTypeDescriptor {
+	public static class HANABlobTypeDescriptor extends AbstractTemplateSqlTypeDescriptor {
 
 		private static final long serialVersionUID = 5874441715643764323L;
 
@@ -623,7 +698,12 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
-		public int getSqlType() {
+		public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+			return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getOrMakeJavaDescriptor( Clob.class );
+		}
+
+		@Override
+		public int getJdbcTypeCode() {
 			return Types.BLOB;
 		}
 
@@ -633,65 +713,103 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
-		public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-			return new BasicExtractor<X>( javaTypeDescriptor, this ) {
-
+		protected <X> JdbcValueExtractor<X> createExtractor(
+				BasicJavaDescriptor<X> javaTypeDescriptor,
+				TypeConfiguration typeConfiguration) {
+			return new AbstractJdbcValueExtractor<X>( javaTypeDescriptor, this ) {
 				@Override
-				protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-					Blob rsBlob = rs.getBlob( name );
+				protected X doExtract(
+						ResultSet rs,
+						int position,
+						ExecutionContext executionContext) throws SQLException {
+					Blob rsBlob = rs.getBlob( position );
 					if ( rsBlob == null || rsBlob.length() < HANABlobTypeDescriptor.this.maxLobPrefetchSize ) {
-						return javaTypeDescriptor.wrap( rsBlob, options );
+						return javaTypeDescriptor.wrap( rsBlob, executionContext.getSession() );
 					}
-					Blob blob = new MaterializedBlob( DataHelper.extractBytes( rsBlob.getBinaryStream() ) );
-					return javaTypeDescriptor.wrap( blob, options );
+					Blob blob = new MaterializedBlob( LobStreamDataHelper.extractBytes( rsBlob.getBinaryStream() ) );
+					return javaTypeDescriptor.wrap( blob, executionContext.getSession() );
 				}
 
 				@Override
-				protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-					return javaTypeDescriptor.wrap( statement.getBlob( index ), options );
+				protected X doExtract(
+						CallableStatement statement,
+						int position,
+						ExecutionContext executionContext) throws SQLException {
+					return javaTypeDescriptor.wrap( statement.getBlob( position ), executionContext.getSession() );
 				}
 
 				@Override
-				protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-					return javaTypeDescriptor.wrap( statement.getBlob( name ), options );
+				protected X doExtract(
+						CallableStatement statement,
+						String name,
+						ExecutionContext executionContext) throws SQLException {
+					return javaTypeDescriptor.wrap( statement.getBlob( name ), executionContext.getSession() );
 				}
 			};
 		}
 
 		@Override
-		public <X> BasicBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-			return new BasicBinder<X>( javaTypeDescriptor, this ) {
+		protected <X> JdbcValueBinder<X> createBinder(
+				BasicJavaDescriptor<X> javaTypeDescriptor,
+				TypeConfiguration typeConfiguration) {
+			return new AbstractJdbcValueBinder<X>( javaTypeDescriptor, this ) {
 
 				@Override
-				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-					SqlTypeDescriptor descriptor = BlobTypeDescriptor.BLOB_BINDING;
+				@SuppressWarnings("unchecked")
+				protected void doBind(
+						PreparedStatement st,
+						int index, X value,
+						ExecutionContext executionContext) throws SQLException {
+					final SharedSessionContractImplementor session = executionContext.getSession();
+
+					SqlTypeDescriptor descriptor = BlobSqlDescriptor.BLOB_BINDING;
+
 					if ( byte[].class.isInstance( value ) ) {
 						// performance shortcut for binding BLOB data in byte[] format
-						descriptor = BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING;
+						descriptor = BlobSqlDescriptor.PRIMITIVE_ARRAY_BINDING;
 					}
-					else if ( options.useStreamForLobBinding() ) {
+					else if ( session.useStreamForLobBinding() ) {
 						descriptor = HANABlobTypeDescriptor.this.hanaStreamBlobTypeDescriptor;
 					}
-					descriptor.getBinder( javaTypeDescriptor ).bind( st, value, index, options );
+
+					final TypeConfiguration typeConfiguration = session.getFactory().getTypeConfiguration();
+					descriptor.getSqlExpressableType( javaTypeDescriptor, typeConfiguration)
+							.getJdbcValueBinder().bind( st, index, value, executionContext );
 				}
 
 				@Override
-				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options) throws SQLException {
-					SqlTypeDescriptor descriptor = BlobTypeDescriptor.BLOB_BINDING;
+				@SuppressWarnings("unchecked")
+				protected void doBind(
+						CallableStatement st,
+						String name, X value,
+						ExecutionContext executionContext) throws SQLException {
+					final SharedSessionContractImplementor session = executionContext.getSession();
+
+					SqlTypeDescriptor descriptor = BlobSqlDescriptor.BLOB_BINDING;
+
 					if ( byte[].class.isInstance( value ) ) {
 						// performance shortcut for binding BLOB data in byte[] format
-						descriptor = BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING;
+						descriptor = BlobSqlDescriptor.PRIMITIVE_ARRAY_BINDING;
 					}
-					else if ( options.useStreamForLobBinding() ) {
+					else if ( session.useStreamForLobBinding() ) {
 						descriptor = HANABlobTypeDescriptor.this.hanaStreamBlobTypeDescriptor;
 					}
-					descriptor.getBinder( javaTypeDescriptor ).bind( st, value, name, options );
+
+					final TypeConfiguration typeConfiguration = session.getFactory().getTypeConfiguration();
+					descriptor.getSqlExpressableType( javaTypeDescriptor, typeConfiguration )
+							.getJdbcValueBinder().bind( st, name, value, executionContext );
 				}
 			};
 		}
 
 		public int getMaxLobPrefetchSize() {
 			return this.maxLobPrefetchSize;
+		}
+
+		@Override
+		public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
+			// literal values for BLOB data is not supported.
+			return null;
 		}
 	}
 
@@ -712,7 +830,7 @@ public abstract class AbstractHANADialect extends Dialect {
 	private static final Boolean USE_UNICODE_STRING_TYPES_DEFAULT_VALUE = Boolean.FALSE;
 	private static final Boolean TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_DEFAULT_VALUE = Boolean.FALSE;
 
-	private HANANClobTypeDescriptor nClobTypeDescriptor = new HANANClobTypeDescriptor( MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE );
+	private HANANClobSqlDescriptor nClobTypeDescriptor = new HANANClobSqlDescriptor( MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE );
 
 	private HANABlobTypeDescriptor blobTypeDescriptor = new HANABlobTypeDescriptor( MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE );
 
@@ -729,25 +847,25 @@ public abstract class AbstractHANADialect extends Dialect {
 	private final StandardTableExporter hanaTableExporter = new StandardTableExporter( this ) {
 
 		@Override
-		public String[] getSqlCreateStrings(org.hibernate.mapping.Table table, org.hibernate.boot.Metadata metadata) {
-			String[] sqlCreateStrings = super.getSqlCreateStrings( table, metadata );
+		public String[] getSqlCreateStrings(ExportableTable table, JdbcServices jdbcServices) {
+			String[] sqlCreateStrings = super.getSqlCreateStrings( table, jdbcServices );
 			return quoteTypeIfNecessary( table, sqlCreateStrings, getCreateTableString() );
 		}
 
 		@Override
-		public String[] getSqlDropStrings(Table table, org.hibernate.boot.Metadata metadata) {
-			String[] sqlDropStrings = super.getSqlDropStrings( table, metadata );
+		public String[] getSqlDropStrings(ExportableTable table, JdbcServices jdbcServices) {
+			String[] sqlDropStrings = super.getSqlDropStrings( table, jdbcServices );
 			return quoteTypeIfNecessary( table, sqlDropStrings, "drop table" );
 		}
 
-		private String[] quoteTypeIfNecessary(org.hibernate.mapping.Table table, String[] strings, String prefix) {
-			if ( table.getNameIdentifier() == null || table.getNameIdentifier().isQuoted()
-					|| !"type".equals( table.getNameIdentifier().getText().toLowerCase() ) ) {
+		private String[] quoteTypeIfNecessary(ExportableTable table, String[] strings, String prefix) {
+			if ( table.getTableName() == null || table.getTableName().isQuoted()
+					|| !"type".equals( table.getTableName().getText().toLowerCase() ) ) {
 				return strings;
 			}
 
-			Pattern createTableTypePattern = Pattern.compile( "(" + prefix + "\\s+)(" + table.getNameIdentifier().getText() + ")(.+)" );
-			Pattern commentOnTableTypePattern = Pattern.compile( "(comment\\s+on\\s+table\\s+)(" + table.getNameIdentifier().getText() + ")(.+)" );
+			Pattern createTableTypePattern = Pattern.compile( "(" + prefix + "\\s+)(" + table.getTableName().getText() + ")(.+)" );
+			Pattern commentOnTableTypePattern = Pattern.compile( "(comment\\s+on\\s+table\\s+)(" + table.getTableName().getText() + ")(.+)" );
 			for ( int i = 0; i < strings.length; i++ ) {
 				Matcher createTableTypeMatcher = createTableTypePattern.matcher( strings[i] );
 				Matcher commentOnTableTypeMatcher = commentOnTableTypePattern.matcher( strings[i] );
@@ -801,131 +919,10 @@ public abstract class AbstractHANADialect extends Dialect {
 		registerColumnType( Types.BIT, "smallint" );
 		registerColumnType( Types.TINYINT, "smallint" );
 
-		registerHibernateType( Types.NCLOB, StandardBasicTypes.MATERIALIZED_NCLOB.getName() );
-		registerHibernateType( Types.CLOB, StandardBasicTypes.MATERIALIZED_CLOB.getName() );
-		registerHibernateType( Types.BLOB, StandardBasicTypes.MATERIALIZED_BLOB.getName() );
-		registerHibernateType( Types.NVARCHAR, StandardBasicTypes.STRING.getName() );
-
-		registerFunction( "to_date", new StandardSQLFunction( "to_date", StandardBasicTypes.DATE ) );
-		registerFunction( "to_seconddate", new StandardSQLFunction( "to_seconddate", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "to_time", new StandardSQLFunction( "to_time", StandardBasicTypes.TIME ) );
-		registerFunction( "to_timestamp", new StandardSQLFunction( "to_timestamp", StandardBasicTypes.TIMESTAMP ) );
-
-		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardBasicTypes.DATE, false ) );
-		registerFunction( "current_time", new NoArgSQLFunction( "current_time", StandardBasicTypes.TIME, false ) );
-		registerFunction( "current_timestamp",
-				new NoArgSQLFunction( "current_timestamp", StandardBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "current_utcdate", new NoArgSQLFunction( "current_utcdate", StandardBasicTypes.DATE, false ) );
-		registerFunction( "current_utctime", new NoArgSQLFunction( "current_utctime", StandardBasicTypes.TIME, false ) );
-		registerFunction( "current_utctimestamp",
-				new NoArgSQLFunction( "current_utctimestamp", StandardBasicTypes.TIMESTAMP, false ) );
-
-		registerFunction( "add_days", new StandardSQLFunction( "add_days" ) );
-		registerFunction( "add_months", new StandardSQLFunction( "add_months" ) );
-		registerFunction( "add_seconds", new StandardSQLFunction( "add_seconds" ) );
-		registerFunction( "add_years", new StandardSQLFunction( "add_years" ) );
-		registerFunction( "dayname", new StandardSQLFunction( "dayname", StandardBasicTypes.STRING ) );
-		registerFunction( "dayofmonth", new StandardSQLFunction( "dayofmonth", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayofyear", new StandardSQLFunction( "dayofyear", StandardBasicTypes.INTEGER ) );
-		registerFunction( "days_between", new StandardSQLFunction( "days_between", StandardBasicTypes.INTEGER ) );
-		registerFunction( "hour", new StandardSQLFunction( "hour", StandardBasicTypes.INTEGER ) );
-		registerFunction( "isoweek", new StandardSQLFunction( "isoweek", StandardBasicTypes.STRING ) );
-		registerFunction( "last_day", new StandardSQLFunction( "last_day", StandardBasicTypes.DATE ) );
-		registerFunction( "localtoutc", new StandardSQLFunction( "localtoutc", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "minute", new StandardSQLFunction( "minute", StandardBasicTypes.INTEGER ) );
-		registerFunction( "month", new StandardSQLFunction( "month", StandardBasicTypes.INTEGER ) );
-		registerFunction( "monthname", new StandardSQLFunction( "monthname", StandardBasicTypes.STRING ) );
-		registerFunction( "next_day", new StandardSQLFunction( "next_day", StandardBasicTypes.DATE ) );
-		registerFunction( "now", new NoArgSQLFunction( "now", StandardBasicTypes.TIMESTAMP, true ) );
-		registerFunction( "quarter", new StandardSQLFunction( "quarter", StandardBasicTypes.STRING ) );
-		registerFunction( "second", new StandardSQLFunction( "second", StandardBasicTypes.INTEGER ) );
-		registerFunction( "seconds_between", new StandardSQLFunction( "seconds_between", StandardBasicTypes.LONG ) );
-		registerFunction( "week", new StandardSQLFunction( "week", StandardBasicTypes.INTEGER ) );
-		registerFunction( "weekday", new StandardSQLFunction( "weekday", StandardBasicTypes.INTEGER ) );
-		registerFunction( "year", new StandardSQLFunction( "year", StandardBasicTypes.INTEGER ) );
-		registerFunction( "utctolocal", new StandardSQLFunction( "utctolocal", StandardBasicTypes.TIMESTAMP ) );
-
-		registerFunction( "to_bigint", new StandardSQLFunction( "to_bigint", StandardBasicTypes.LONG ) );
-		registerFunction( "to_binary", new StandardSQLFunction( "to_binary", StandardBasicTypes.BINARY ) );
-		registerFunction( "to_decimal", new StandardSQLFunction( "to_decimal", StandardBasicTypes.BIG_DECIMAL ) );
-		registerFunction( "to_double", new StandardSQLFunction( "to_double", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "to_int", new StandardSQLFunction( "to_int", StandardBasicTypes.INTEGER ) );
-		registerFunction( "to_integer", new StandardSQLFunction( "to_integer", StandardBasicTypes.INTEGER ) );
-		registerFunction( "to_real", new StandardSQLFunction( "to_real", StandardBasicTypes.FLOAT ) );
-		registerFunction( "to_smalldecimal", new StandardSQLFunction( "to_smalldecimal", StandardBasicTypes.BIG_DECIMAL ) );
-		registerFunction( "to_smallint", new StandardSQLFunction( "to_smallint", StandardBasicTypes.SHORT ) );
-		registerFunction( "to_tinyint", new StandardSQLFunction( "to_tinyint", StandardBasicTypes.BYTE ) );
-
-		registerFunction( "abs", new StandardSQLFunction( "abs" ) );
-		registerFunction( "acos", new StandardSQLFunction( "acos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "asin", new StandardSQLFunction( "asin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "atan2", new StandardSQLFunction( "atan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "bin2hex", new StandardSQLFunction( "bin2hex", StandardBasicTypes.STRING ) );
-		registerFunction( "bitand", new StandardSQLFunction( "bitand", StandardBasicTypes.LONG ) );
-		registerFunction( "ceil", new StandardSQLFunction( "ceil" ) );
-		registerFunction( "cos", new StandardSQLFunction( "cos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cosh", new StandardSQLFunction( "cosh", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cot", new StandardSQLFunction( "cos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "exp", new StandardSQLFunction( "exp", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "floor", new StandardSQLFunction( "floor" ) );
-		registerFunction( "greatest", new StandardSQLFunction( "greatest" ) );
-		registerFunction( "hex2bin", new StandardSQLFunction( "hex2bin", StandardBasicTypes.BINARY ) );
-		registerFunction( "least", new StandardSQLFunction( "least" ) );
-		registerFunction( "ln", new StandardSQLFunction( "ln", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "log", new StandardSQLFunction( "ln", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "power", new StandardSQLFunction( "power" ) );
-		registerFunction( "round", new StandardSQLFunction( "round" ) );
-		registerFunction( "mod", new StandardSQLFunction( "mod", StandardBasicTypes.INTEGER ) );
-		registerFunction( "sign", new StandardSQLFunction( "sign", StandardBasicTypes.INTEGER ) );
-		registerFunction( "sin", new StandardSQLFunction( "sin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sinh", new StandardSQLFunction( "sinh", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sqrt", new StandardSQLFunction( "sqrt", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "tan", new StandardSQLFunction( "tan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "tanh", new StandardSQLFunction( "tanh", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "uminus", new StandardSQLFunction( "uminus" ) );
-
-		registerFunction( "to_alphanum", new StandardSQLFunction( "to_alphanum", StandardBasicTypes.STRING ) );
-		registerFunction( "to_nvarchar", new StandardSQLFunction( "to_nvarchar", StandardBasicTypes.STRING ) );
-		registerFunction( "to_varchar", new StandardSQLFunction( "to_varchar", StandardBasicTypes.STRING ) );
-
-		registerFunction( "ascii", new StandardSQLFunction( "ascii", StandardBasicTypes.INTEGER ) );
-		registerFunction( "char", new StandardSQLFunction( "char", StandardBasicTypes.CHARACTER ) );
-		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "||", ")" ) );
-		registerFunction( "lcase", new StandardSQLFunction( "lcase", StandardBasicTypes.STRING ) );
-		registerFunction( "left", new StandardSQLFunction( "left", StandardBasicTypes.STRING ) );
-		registerFunction( "length", new StandardSQLFunction( "length", StandardBasicTypes.INTEGER ) );
-		registerFunction( "locate", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "locate(?2, ?1, ?3)" ) );
-		registerFunction( "lpad", new StandardSQLFunction( "lpad", StandardBasicTypes.STRING ) );
-		registerFunction( "ltrim", new StandardSQLFunction( "ltrim", StandardBasicTypes.STRING ) );
-		registerFunction( "nchar", new StandardSQLFunction( "nchar", StandardBasicTypes.STRING ) );
-		registerFunction( "replace", new StandardSQLFunction( "replace", StandardBasicTypes.STRING ) );
-		registerFunction( "right", new StandardSQLFunction( "right", StandardBasicTypes.STRING ) );
-		registerFunction( "rpad", new StandardSQLFunction( "rpad", StandardBasicTypes.STRING ) );
-		registerFunction( "rtrim", new StandardSQLFunction( "rtrim", StandardBasicTypes.STRING ) );
-		registerFunction( "substr_after", new StandardSQLFunction( "substr_after", StandardBasicTypes.STRING ) );
-		registerFunction( "substr_before", new StandardSQLFunction( "substr_before", StandardBasicTypes.STRING ) );
-		registerFunction( "substring", new StandardSQLFunction( "substring", StandardBasicTypes.STRING ) );
-		registerFunction( "trim", new AnsiTrimFunction() );
-		registerFunction( "ucase", new StandardSQLFunction( "ucase", StandardBasicTypes.STRING ) );
-		registerFunction( "unicode", new StandardSQLFunction( "unicode", StandardBasicTypes.INTEGER ) );
-		registerFunction( "bit_length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "length(to_binary(?1))*8" ) );
-
-		registerFunction( "to_blob", new StandardSQLFunction( "to_blob", StandardBasicTypes.BLOB ) );
-		registerFunction( "to_clob", new StandardSQLFunction( "to_clob", StandardBasicTypes.CLOB ) );
-		registerFunction( "to_nclob", new StandardSQLFunction( "to_nclob", StandardBasicTypes.NCLOB ) );
-
-		registerFunction( "coalesce", new StandardSQLFunction( "coalesce" ) );
-		registerFunction( "current_connection",
-				new NoArgSQLFunction( "current_connection", StandardBasicTypes.INTEGER, false ) );
-		registerFunction( "current_schema", new NoArgSQLFunction( "current_schema", StandardBasicTypes.STRING, false ) );
-		registerFunction( "current_user", new NoArgSQLFunction( "current_user", StandardBasicTypes.STRING, false ) );
-		registerFunction( "grouping_id", new VarArgsSQLFunction( StandardBasicTypes.INTEGER, "(", ",", ")" ) );
-		registerFunction( "ifnull", new StandardSQLFunction( "ifnull" ) );
-		registerFunction( "map", new StandardSQLFunction( "map" ) );
-		registerFunction( "nullif", new StandardSQLFunction( "nullif" ) );
-		registerFunction( "session_context", new StandardSQLFunction( "session_context" ) );
-		registerFunction( "session_user", new NoArgSQLFunction( "session_user", StandardBasicTypes.STRING, false ) );
-		registerFunction( "sysuuid", new NoArgSQLFunction( "sysuuid", StandardBasicTypes.STRING, false ) );
+		registerHibernateType( Types.NCLOB, StandardSpiBasicTypes.MATERIALIZED_NCLOB.getJavaTypeDescriptor().getTypeName() );
+		registerHibernateType( Types.CLOB, StandardSpiBasicTypes.MATERIALIZED_CLOB.getJavaTypeDescriptor().getTypeName() );
+		registerHibernateType( Types.BLOB, StandardSpiBasicTypes.MATERIALIZED_BLOB.getJavaTypeDescriptor().getTypeName() );
+		registerHibernateType( Types.NVARCHAR, StandardSpiBasicTypes.STRING.getJavaTypeDescriptor().getTypeName() );
 
 		registerHanaKeywords();
 
@@ -938,6 +935,136 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
+		registry.registerNamed( "to_date", StandardSpiBasicTypes.DATE );
+		registry.registerNamed( "to_seconddate", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerNamed( "to_time", StandardSpiBasicTypes.TIME );
+		registry.registerNamed( "to_timestamp", StandardSpiBasicTypes.TIMESTAMP );
+
+		registry.registerNoArgs( "current_date", StandardSpiBasicTypes.DATE );
+		registry.registerNoArgs( "current_time", StandardSpiBasicTypes.TIME );
+		registry.registerNoArgs( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerNoArgs( "current_utcdate", StandardSpiBasicTypes.DATE );
+		registry.registerNoArgs( "current_utctime", StandardSpiBasicTypes.TIME );
+		registry.registerNoArgs( "current_utctimestamp", StandardSpiBasicTypes.TIMESTAMP );
+
+		registry.registerNamed( "add_days" );
+		registry.registerNamed( "add_months" );
+		registry.registerNamed( "add_seconds" );
+		registry.registerNamed( "add_years" );
+		registry.registerNamed( "dayname", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "dayofmonth", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "dayofyear", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "days_between", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "hour", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "isoweek", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "last_day", StandardSpiBasicTypes.DATE );
+		registry.registerNamed( "localtoutc", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerNamed( "minute", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "month", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "monthname", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "next_day", StandardSpiBasicTypes.DATE );
+		registry.registerNoArgs( "now", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerNamed( "quarter", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "second", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "seconds_between", StandardSpiBasicTypes.LONG );
+		registry.registerNamed( "week", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "weekday", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "year", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "utctolocal", StandardSpiBasicTypes.TIMESTAMP );
+
+
+		registry.registerNamed( "to_bigint", StandardSpiBasicTypes.LONG );
+		registry.registerNamed( "to_binary", StandardSpiBasicTypes.BINARY );
+		registry.registerNamed( "to_decimal", StandardSpiBasicTypes.BIG_DECIMAL );
+		registry.registerNamed( "to_double", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "to_int", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "to_integer", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "to_real", StandardSpiBasicTypes.FLOAT );
+		registry.registerNamed( "to_smalldecimal", StandardSpiBasicTypes.BIG_DECIMAL );
+		registry.registerNamed( "to_smallint", StandardSpiBasicTypes.SHORT );
+		registry.registerNamed( "to_tinyint", StandardSpiBasicTypes.BYTE );
+
+		registry.registerNamed( "abs" );
+		registry.registerNamed( "acos", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "asin", StandardSpiBasicTypes.DOUBLE );
+		registry.namedTemplateBuilder( "atan2", "atan" )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
+		registry.registerNamed( "bin2hex", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "bitand", StandardSpiBasicTypes.LONG );
+		registry.registerNamed( "ceil" );
+		registry.registerNamed( "cos", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "cosh", StandardSpiBasicTypes.DOUBLE );
+		registry.namedTemplateBuilder( "cot", "cos" )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
+		registry.registerNamed( "exp", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "floor" );
+		registry.registerNamed( "greatest" );
+		registry.registerNamed( "hex2bin", StandardSpiBasicTypes.BINARY );
+		registry.registerNamed( "least" );
+		registry.registerNamed( "ln", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "log", StandardSpiBasicTypes.DOUBLE );
+		registry.namedTemplateBuilder( "log", "ln" )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
+		registry.registerNamed( "power" );
+		registry.registerNamed( "round" );
+		registry.registerNamed( "mod", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "sign", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "sin", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "sinh", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "sqrt", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "tan", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "tanh", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "uminus" );
+
+		registry.registerNamed( "to_alphanum", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "to_nvarchar", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "to_varchar", StandardSpiBasicTypes.STRING );
+
+		registry.registerNamed( "ascii", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "char", StandardSpiBasicTypes.CHARACTER );
+		registry.register( "concat", ConcatFunctionTemplate.INSTANCE );
+		registry.registerNamed( "lcase", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "left", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "length", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "locate", "locate(?2, ?1, ?3)",StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "lpad", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "ltrim", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "nchar", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "replace", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "right", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "rpad", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "rtrim", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "substr_after", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "substr_before", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "substring", StandardSpiBasicTypes.STRING );
+		registry.register( "trim", AnsiTrimFunctionTemplate.INSTANCE );
+		registry.registerNamed( "ucase", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "unicode", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "bit_length", "length(to_binary(?1))*8", StandardSpiBasicTypes.INTEGER );
+
+		registry.registerNamed( "to_blob", StandardSpiBasicTypes.BLOB );
+		registry.registerNamed( "to_clob", StandardSpiBasicTypes.CLOB );
+		registry.registerNamed( "to_nclob", StandardSpiBasicTypes.NCLOB );
+
+		registry.registerNamed( "coalesce" );
+		registry.registerNoArgs( "current_connection", StandardSpiBasicTypes.INTEGER );
+		registry.registerNoArgs( "current_schema", StandardSpiBasicTypes.STRING );
+		registry.registerNoArgs( "current_user", StandardSpiBasicTypes.STRING );
+		registry.registerVarArgs( "grouping_id", StandardSpiBasicTypes.INTEGER, "(", ",", ")" );
+		registry.registerNamed( "ifnull" );
+		registry.registerNamed( "map" );
+		registry.registerNamed( "nullif" );
+		registry.registerNamed( "session_context" );
+		registry.registerNoArgs( "session_user", StandardSpiBasicTypes.STRING );
+		registry.registerNoArgs( "sysuuid", StandardSpiBasicTypes.STRING );
+	}
+
+	@Override
 	public boolean bindLimitParametersInReverseOrder() {
 		return true;
 	}
@@ -945,7 +1072,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return new SQLExceptionConversionDelegate() {
-
 			@Override
 			public JDBCException convert(final SQLException sqlException, final String message, final String sql) {
 
@@ -983,8 +1109,7 @@ public abstract class AbstractHANADialect extends Dialect {
 				// 257 - Cannot insert NULL or update to NULL
 				// 301 - Unique constraint violated
 				// 461 - foreign key constraint violation
-				// 462 - failed on update or delete by foreign key constraint
-				// violation
+				// 462 - failed on update or delete by foreign key constraint violation
 				if ( errorCode == 287 || errorCode == 301 || errorCode == 461 || errorCode == 462 ) {
 					final String constraintName = getViolatedConstraintNameExtracter()
 							.extractConstraintName( sqlException );
@@ -1042,6 +1167,16 @@ public abstract class AbstractHANADialect extends Dialect {
 			}
 		}
 		return createSequenceString;
+	}
+
+	@Override
+	public IdTableStrategy getDefaultIdTableStrategy() {
+		return new GlobalTemporaryTableStrategy( getIdTableExporter() );
+	}
+
+	@Override
+	protected Exporter<IdTable> getIdTableExporter() {
+		return new GlobalTempTableExporter();
 	}
 
 	@Override
@@ -1131,25 +1266,33 @@ public abstract class AbstractHANADialect extends Dialect {
 	@Override
 	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(final int sqlCode) {
 		switch ( sqlCode ) {
-			case Types.CLOB:
-				return this.clobTypeDescriptor;
-			case Types.NCLOB:
-				return this.nClobTypeDescriptor;
-			case Types.BLOB:
-				return this.blobTypeDescriptor;
-			case Types.TINYINT:
+			case Types.BOOLEAN: {
+				return this.useLegacyBooleanType ? BitSqlDescriptor.INSTANCE : BooleanSqlDescriptor.INSTANCE;
+			}
+			case Types.CHAR: {
+				return this.useUnicodeStringTypes ? NCharSqlDescriptor.INSTANCE : CharSqlDescriptor.INSTANCE;
+			}
+			case Types.VARCHAR: {
+				return this.useUnicodeStringTypes ? NVarcharSqlDescriptor.INSTANCE : VarcharSqlDescriptor.INSTANCE;
+			}
+			case Types.TINYINT: {
 				// tinyint is unsigned on HANA
-				return SmallIntTypeDescriptor.INSTANCE;
-			case Types.BOOLEAN:
-				return this.useLegacyBooleanType ? BitTypeDescriptor.INSTANCE : BooleanTypeDescriptor.INSTANCE;
-			case Types.VARCHAR:
-				return this.useUnicodeStringTypes ? NVarcharTypeDescriptor.INSTANCE : VarcharTypeDescriptor.INSTANCE;
-			case Types.CHAR:
-				return this.useUnicodeStringTypes ? NCharTypeDescriptor.INSTANCE : CharTypeDescriptor.INSTANCE;
+				return SmallIntSqlDescriptor.INSTANCE;
+			}
+			case Types.BLOB: {
+				return this.blobTypeDescriptor;
+			}
+			case Types.CLOB: {
+				return this.clobTypeDescriptor;
+			}
+			case Types.NCLOB: {
+				return this.nClobTypeDescriptor;
+			}
 			case Types.DOUBLE:
-				return this.treatDoubleTypedFieldsAsDecimal ? DecimalTypeDescriptor.INSTANCE : DoubleTypeDescriptor.INSTANCE;
-			default:
+				return this.treatDoubleTypedFieldsAsDecimal ? DecimalSqlDescriptor.INSTANCE : DoubleSqlDescriptor.INSTANCE;
+			default: {
 				return super.getSqlTypeDescriptorOverride( sqlCode );
+			}
 		}
 	}
 
@@ -1554,7 +1697,7 @@ public abstract class AbstractHANADialect extends Dialect {
 				Integer.valueOf( maxLobPrefetchSizeDefault ) ).intValue();
 
 		if ( this.nClobTypeDescriptor.getMaxLobPrefetchSize() != maxLobPrefetchSize ) {
-			this.nClobTypeDescriptor = new HANANClobTypeDescriptor( maxLobPrefetchSize );
+			this.nClobTypeDescriptor = new HANANClobSqlDescriptor( maxLobPrefetchSize );
 		}
 
 		if ( this.blobTypeDescriptor.getMaxLobPrefetchSize() != maxLobPrefetchSize ) {
@@ -1591,7 +1734,7 @@ public abstract class AbstractHANADialect extends Dialect {
 				TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_DEFAULT_VALUE ).booleanValue();
 
 		if ( this.treatDoubleTypedFieldsAsDecimal ) {
-			registerHibernateType( Types.DOUBLE, StandardBasicTypes.BIG_DECIMAL.getName() );
+			registerHibernateType( Types.DOUBLE, StandardSpiBasicTypes.BIG_DECIMAL.getJavaTypeDescriptor().getTypeName() );
 		}
 	}
 
@@ -1613,7 +1756,7 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
-	public Exporter<Table> getTableExporter() {
+	public Exporter<ExportableTable> getTableExporter() {
 		return this.hanaTableExporter;
 	}
 

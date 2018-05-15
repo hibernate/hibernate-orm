@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 package org.hibernate.graph;
 
@@ -17,11 +17,11 @@ import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 
 /**
- * Parser for string representations of JPA {@link javax.persistence.EntityGraph}
- * ({@link RootGraph}) and {@link javax.persistence.Subgraph} ({@link SubGraph}),
+ * Parser for string representations of JPA {@link EntityGraph}
+ * ({@link RootGraph}) and {@link Subgraph} ({@link SubGraph}),
  * using a simple syntax defined by the `graph.g` Antlr grammar.
  * <p/>
- * The {@link #parse} methods all create a root {@link javax.persistence.EntityGraph}
+ * The {@link #parse} methods all create a root {@link EntityGraph}
  * based on the passed entity class and parse the graph string into that root graph.
  * <p/>
  * The {@link #parseInto} methods parse the graph string into a passed graph, which may be a sub-graph
@@ -215,7 +215,7 @@ public final class GraphParser {
 			final CharSequence graphText,
 			SessionFactoryImplementor sessionFactory) {
 		if ( graphText != null ) {
-			org.hibernate.graph.internal.parse.GraphParser.parseInto( graph, graphText, sessionFactory );
+			org.hibernate.graph.internal.parse.GraphParser.parseInto( graph, graphText.toString(), sessionFactory );
 		}
 	}
 

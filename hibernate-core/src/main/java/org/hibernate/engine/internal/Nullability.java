@@ -13,12 +13,15 @@ import org.hibernate.PropertyValueException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.InMemoryValueGenerationStrategy;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.CompositeType;
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.model.domain.spi.CollectionElement;
+import org.hibernate.metamodel.model.domain.spi.CollectionElementEmbedded;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.BagPersistentAttribute;
 
 /**
  * Implements the algorithm for validating property values for illegal null values
@@ -39,10 +42,10 @@ public final class Nullability {
 		this.checkNullability = session.getFactory().getSessionFactoryOptions().isCheckNullability();
 	}
 	/**
-	 * Check nullability of the class persister properties
+	 * Check nullability of the class entityDescriptor properties
 	 *
 	 * @param values entity properties
-	 * @param persister class persister
+	 * @param entityDescriptor class entity descriptor
 	 * @param isUpdate whether it is intended to be updated or saved
 	 *
 	 * @throws PropertyValueException Break the nullability of one property
@@ -50,9 +53,9 @@ public final class Nullability {
 	 */
 	public void checkNullability(
 			final Object[] values,
-			final EntityPersister persister,
+			final EntityTypeDescriptor entityDescriptor,
 			final boolean isUpdate) {
-		checkNullability( values, persister, isUpdate ? NullabilityCheckType.UPDATE : NullabilityCheckType.CREATE );
+		checkNullability( values, entityDescriptor, isUpdate ? NullabilityCheckType.UPDATE : NullabilityCheckType.CREATE );
 	}
 
 	public enum NullabilityCheckType {
@@ -63,164 +66,151 @@ public final class Nullability {
 
 	public void checkNullability(
 			final Object[] values,
-			final EntityPersister persister,
+			final EntityTypeDescriptor entityDescriptor,
 			final NullabilityCheckType checkType) {
-
 		/*
 		 * Typically when Bean Validation is on, we don't want to validate null values
 		 * at the Hibernate Core level. Hence the checkNullability setting.
 		 */
-		if ( checkNullability ) {
-			/*
-			  * Algorithm
-			  * Check for any level one nullability breaks
-			  * Look at non null components to
-			  *   recursively check next level of nullability breaks
-			  * Look at Collections containing components to
-			  *   recursively check next level of nullability breaks
-			  *
-			  *
-			  * In the previous implementation, not-null stuffs where checked
-			  * filtering by level one only updateable
-			  * or insertable columns. So setting a sub component as update="false"
-			  * has no effect on not-null check if the main component had good checkeability
-			  * In this implementation, we keep this feature.
-			  * However, I never see any documentation mentioning that, but it's for
-			  * sure a limitation.
-			  */
+		if ( !checkNullability ) {
+			return;
+		}
 
-			final boolean[] nullability = persister.getPropertyNullability();
-			final boolean[] checkability = checkType == NullabilityCheckType.CREATE
-					? persister.getPropertyInsertability()
-					: persister.getPropertyUpdateability();
-			final Type[] propertyTypes = persister.getPropertyTypes();
-			final InMemoryValueGenerationStrategy[] inMemoryValueGenerationStrategies =
-					persister.getEntityMetamodel().getInMemoryValueGenerationStrategies();
+		final PathCollector collector = new PathCollector();
+		checkNullabilityInternal( values, entityDescriptor, checkType, collector );
+		if ( collector.hasAny() ) {
+			throw new PropertyValueException(
+					"not-null property references a null or transient value",
+					entityDescriptor.getEntityName(),
+					collector.collectedString()
+			);
+		}
+	}
 
-			for ( int i = 0; i < values.length; i++ ) {
+	@SuppressWarnings("WeakerAccess")
+	private static class PathCollector {
+		final StringBuilder collector = new StringBuilder();
+		boolean any;
 
-				if ( checkability[i] &&
-						values[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY &&
-						GenerationTiming.NEVER == inMemoryValueGenerationStrategies[i].getGenerationTiming() ) {
-					final Object value = values[i];
-					if ( !nullability[i] && value == null ) {
-						//check basic level one nullablilty
-						throw new PropertyValueException(
-								"not-null property references a null or transient value",
-								persister.getEntityName(),
-								persister.getPropertyNames()[i]
-							);
+		public void add(NavigableRole role) {
+			if ( any ) {
+				collector.append( ", " );
+			}
+			collector.append( role.getFullPath() );
+			any = true;
+		}
 
-					}
-					else if ( value != null ) {
-						//values is not null and is checkable, we'll look deeper
-						final String breakProperties = checkSubElementsNullability( propertyTypes[i], value );
-						if ( breakProperties != null ) {
-							throw new PropertyValueException(
-								"not-null property references a null or transient value",
-								persister.getEntityName(),
-								buildPropertyPath( persister.getPropertyNames()[i], breakProperties )
-							);
+		public boolean hasAny() {
+			return any;
+		}
+
+		public String collectedString() {
+			return collector.toString();
+		}
+	}
+
+	private void checkNullabilityInternal(
+			final Object[] values,
+			final ManagedTypeDescriptor<?> managedTypeDescriptor,
+			final NullabilityCheckType checkType,
+			PathCollector collector) {
+
+		/*
+		  * Algorithm
+		  * Check for any level one nullability breaks
+		  * Look at non null components to
+		  *   recursively check next level of nullability breaks
+		  * Look at Collections containing components to
+		  *   recursively check next level of nullability breaks
+		  *
+		  *
+		  * In the previous implementation, not-null stuffs where checked
+		  * filtering by level one only updateable
+		  * or insertable columns. So setting a sub component as update="false"
+		  * has no effect on not-null check if the main component had good checkeability
+		  * In this implementation, we keep this feature.
+		  * However, I never see any documentation mentioning that, but it's for
+		  * sure a limitation.
+		  */
+
+		managedTypeDescriptor.visitStateArrayContributors(
+				contributor -> {
+					final boolean check;
+					switch ( checkType ) {
+						case CREATE: {
+							check = contributor.isInsertable();
+							break;
 						}
+						case UPDATE:
+						case DELETE: {
+							check = contributor.isUpdatable();
+							break;
+						}
+						default: {
+							throw new IllegalArgumentException( "Unknown NullabilityCheckType value : " + checkType );
+						}
+					}
 
+					if ( ! check ) {
+						return;
+					}
+
+					final Object value = values[contributor.getStateArrayPosition()];
+
+					if ( value == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+						return;
+					}
+
+					// todo (6.0) : Check InMemoryValueGenerationStrategy for value
+					//		if the strategy != GenerationTiming.NEVER, we should return null
+					//		See HHH-11096
+
+					if ( value == null ) {
+						if ( ! contributor.isNullable() ) {
+							collector.add( contributor.getNavigableRole() );
+						}
+					}
+					else {
+						checkSubElementsNullability( contributor, value, checkType, collector );
 					}
 				}
-
-			}
-		}
+		);
 	}
 
-	/**
-	 * check sub elements-nullability. Returns property path that break
-	 * nullability or null if none
-	 *
-	 * @param propertyType type to check
-	 * @param value value to check
-	 *
-	 * @return property path
-	 * @throws HibernateException error while getting subcomponent values
-	 */
-	private String checkSubElementsNullability(Type propertyType, Object value) throws HibernateException {
-		if ( propertyType.isComponentType() ) {
-			return checkComponentNullability( value, (CompositeType) propertyType );
+	private void checkSubElementsNullability(
+			Navigable navigable,
+			Object value,
+			NullabilityCheckType checkType,
+			PathCollector collector) {
+		if ( navigable instanceof EmbeddedValuedNavigable ) {
+			final EmbeddedTypeDescriptor embeddedDescriptor = ( (EmbeddedValuedNavigable) navigable ).getEmbeddedDescriptor();
+			checkNullabilityInternal(
+					embeddedDescriptor.getPropertyValues( value ),
+					embeddedDescriptor,
+					checkType,
+					collector
+			);
 		}
-
-		if ( propertyType.isCollectionType() ) {
-			// persistent collections may have components
-			final CollectionType collectionType = (CollectionType) propertyType;
-			final Type collectionElementType = collectionType.getElementType( session.getFactory() );
-
-			if ( collectionElementType.isComponentType() ) {
-				// check for all components values in the collection
-				final CompositeType componentType = (CompositeType) collectionElementType;
-				final Iterator itr = CascadingActions.getLoadedElementsIterator( session, collectionType, value );
+		else if ( navigable instanceof BagPersistentAttribute ) {
+			final BagPersistentAttribute collection = (BagPersistentAttribute) navigable;
+			final CollectionElement elementDescriptor = collection.getPersistentCollectionDescriptor()
+					.getElementDescriptor();
+			if ( elementDescriptor instanceof CollectionElementEmbedded ) {
+				final Iterator itr = CascadingActions.getLoadedElementsIterator( session, collection.getPersistentCollectionDescriptor(), value );
 				while ( itr.hasNext() ) {
-					final Object compositeElement = itr.next();
-					if ( compositeElement != null ) {
-						return checkComponentNullability( compositeElement, componentType );
+					final Object elementValue = itr.next();
+					if ( elementValue != null ) {
+						final EmbeddedTypeDescriptor embeddedDescriptor = ( (CollectionElementEmbedded) elementDescriptor )
+								.getEmbeddedDescriptor();
+						checkNullabilityInternal(
+								embeddedDescriptor.getPropertyValues( value ),
+								embeddedDescriptor,
+								checkType,
+								collector
+						);
 					}
 				}
 			}
 		}
-
-		return null;
 	}
-
-	/**
-	 * check component nullability. Returns property path that break
-	 * nullability or null if none
-	 *
-	 * @param value component properties
-	 * @param compositeType component not-nullable type
-	 *
-	 * @return property path
-	 * @throws HibernateException error while getting subcomponent values
-	 */
-	private String checkComponentNullability(Object value, CompositeType compositeType) throws HibernateException {
-		// IMPL NOTE : we currently skip checking "any" and "many to any" mappings.
-		//
-		// This is not the best solution.  But atm there is a mismatch between AnyType#getPropertyNullability
-		// and the fact that cascaded-saves for "many to any" mappings are not performed until after this nullability
-		// check.  So the nullability check fails for transient entity elements with generated identifiers because
-		// the identifier is not yet generated/assigned (is null)
-		//
-		// The more correct fix would be to cascade saves of the many-to-any elements before the Nullability checking
-
-		if ( compositeType.isAnyType() ) {
-			return null;
-		}
-
-		final boolean[] nullability = compositeType.getPropertyNullability();
-		if ( nullability != null ) {
-			//do the test
-			final Object[] subValues = compositeType.getPropertyValues( value, session );
-			final Type[] propertyTypes = compositeType.getSubtypes();
-			for ( int i = 0; i < subValues.length; i++ ) {
-				final Object subValue = subValues[i];
-				if ( !nullability[i] && subValue==null ) {
-					return compositeType.getPropertyNames()[i];
-				}
-				else if ( subValue != null ) {
-					final String breakProperties = checkSubElementsNullability( propertyTypes[i], subValue );
-					if ( breakProperties != null ) {
-						return buildPropertyPath( compositeType.getPropertyNames()[i], breakProperties );
-					}
-				}
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * Return a well formed property path. Basically, it will return parent.child
-	 *
-	 * @param parent parent in path
-	 * @param child child in path
-	 *
-	 * @return parent-child path
-	 */
-	private static String buildPropertyPath(String parent, String child) {
-		return parent + '.' + child;
-	}
-
 }

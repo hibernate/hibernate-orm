@@ -6,7 +6,6 @@
  */
 package org.hibernate.id;
 
-import java.io.Serializable;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -19,8 +18,8 @@ import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.UUIDTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.UUIDJavaDescriptor;
 
 /**
  * An {@link IdentifierGenerator} which generates {@link UUID} values using a pluggable
@@ -46,17 +45,10 @@ public class UUIDGenerator implements IdentifierGenerator, Configurable {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( UUIDGenerator.class );
 
 	private UUIDGenerationStrategy strategy;
-	private UUIDTypeDescriptor.ValueTransformer valueTransformer;
-
-	public static UUIDGenerator buildSessionFactoryUniqueIdentifierGenerator() {
-		final UUIDGenerator generator = new UUIDGenerator();
-		generator.strategy = StandardRandomStrategy.INSTANCE;
-		generator.valueTransformer = UUIDTypeDescriptor.ToStringTransformer.INSTANCE;
-		return generator;
-	}
+	private UUIDJavaDescriptor.ValueTransformer valueTransformer;
 
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+	public void configure(JavaTypeDescriptor javaTypeDescriptor, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
 		// check first for the strategy instance
 		strategy = (UUIDGenerationStrategy) params.get( UUID_GEN_STRATEGY );
 		if ( strategy == null ) {
@@ -83,21 +75,24 @@ public class UUIDGenerator implements IdentifierGenerator, Configurable {
 			strategy = StandardRandomStrategy.INSTANCE;
 		}
 
-		if ( UUID.class.isAssignableFrom( type.getReturnedClass() ) ) {
-			valueTransformer = UUIDTypeDescriptor.PassThroughTransformer.INSTANCE;
+		if ( UUID.class.isAssignableFrom( javaTypeDescriptor.getJavaType() ) ) {
+			valueTransformer = UUIDJavaDescriptor.PassThroughTransformer.INSTANCE;
 		}
-		else if ( String.class.isAssignableFrom( type.getReturnedClass() ) ) {
-			valueTransformer = UUIDTypeDescriptor.ToStringTransformer.INSTANCE;
+		else if ( String.class.isAssignableFrom( javaTypeDescriptor.getJavaType() ) ) {
+			valueTransformer = UUIDJavaDescriptor.ToStringTransformer.INSTANCE;
 		}
-		else if ( byte[].class.isAssignableFrom( type.getReturnedClass() ) ) {
-			valueTransformer = UUIDTypeDescriptor.ToBytesTransformer.INSTANCE;
+		else if ( byte[].class.isAssignableFrom( javaTypeDescriptor.getJavaType() ) ) {
+			valueTransformer = UUIDJavaDescriptor.ToBytesTransformer.INSTANCE;
 		}
 		else {
-			throw new HibernateException( "Unanticipated return type [" + type.getReturnedClass().getName() + "] for UUID conversion" );
+			throw new HibernateException(
+					"Unanticipated return type [" + javaTypeDescriptor.getJavaType().getName() +
+							"] for UUID conversion"
+			);
 		}
 	}
 
-	public Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
+	public Object generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
 		return valueTransformer.transform( strategy.generateUUID( session ) );
 	}
 }

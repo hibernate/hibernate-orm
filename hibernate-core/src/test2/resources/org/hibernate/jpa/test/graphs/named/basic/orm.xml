@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<entity-mappings xmlns="http://xmlns.jcp.org/xml/ns/persistence/orm"
+                 version="2.1"
+        >
+    <package>org.hibernate.jpa.test.graphs.named.basic</package>
+    <entity class="Person" metadata-complete="true" access="FIELD">
+        <named-entity-graph/>
+        <attributes>
+            <id name="id">
+                <column name="fld_id"/>
+            </id>
+        </attributes>
+    </entity>
+</entity-mappings>

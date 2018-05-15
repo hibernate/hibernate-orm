@@ -6,13 +6,18 @@
  */
 package org.hibernate.sql;
 
+import org.hibernate.annotations.Remove;
 import org.hibernate.internal.util.StringHelper;
 
 /**
  * An abstract SQL join fragment renderer
  *
  * @author Gavin King
+ *
+ * @deprecated Converting to use SQL AST
  */
+@Deprecated
+@Remove
 public abstract class JoinFragment {
 	/**
 	 * Specifies an inner join.

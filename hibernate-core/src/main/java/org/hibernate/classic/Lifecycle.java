@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.classic;
+
 import java.io.Serializable;
 
 import org.hibernate.CallbackException;
@@ -88,5 +89,14 @@ public interface Lifecycle {
 	 * @param s the session
 	 * @param id the identifier
 	 */
-	public void onLoad(Session s, Serializable id);
+	default void onLoad(Session s, Object id) {
+	}
+
+	/**
+	 * @deprecated Use {@link #onLoad(Session, Object)} instead
+	 */
+	@Deprecated
+	default void onLoad(Session s, Serializable id) {
+		onLoad( s, (Object) id );
+	}
 }

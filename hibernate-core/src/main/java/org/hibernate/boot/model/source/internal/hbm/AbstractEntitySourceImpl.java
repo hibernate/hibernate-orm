@@ -35,7 +35,6 @@ import org.hibernate.boot.model.source.spi.EntityHierarchySource;
 import org.hibernate.boot.model.source.spi.EntityNamingSource;
 import org.hibernate.boot.model.source.spi.EntitySource;
 import org.hibernate.boot.model.source.spi.FilterSource;
-import org.hibernate.boot.model.source.spi.IdentifiableTypeSource;
 import org.hibernate.boot.model.source.spi.JpaCallbackSource;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
 import org.hibernate.boot.model.source.spi.NaturalIdMutability;
@@ -62,7 +61,7 @@ public abstract class AbstractEntitySourceImpl
 	private final AttributeRole attributeRoleBase;
 	private final AttributePath attributePathBase;
 
-	private List<IdentifiableTypeSource> subclassEntitySources = new ArrayList<IdentifiableTypeSource>();
+	private List<SubclassEntitySource> subclassEntitySources = new ArrayList<>();
 
 	private int inLineViewCount = 0;
 
@@ -184,7 +183,7 @@ public abstract class AbstractEntitySourceImpl
 	}
 
 	@Override
-	public Collection<IdentifiableTypeSource> getSubTypes() {
+	public Collection<SubclassEntitySource> getSubTypes() {
 		return subclassEntitySources;
 	}
 
@@ -293,7 +292,7 @@ public abstract class AbstractEntitySourceImpl
 
 	@Override
 	public boolean isLazy() {
-		if ( jaxbEntityMapping.isLazy() == null ) {
+		if ( jaxbEntityMapping().isLazy() == null ) {
 			return metadataBuildingContext().getMappingDefaults().areEntitiesImplicitlyLazy();
 		}
 		return jaxbEntityMapping().isLazy();

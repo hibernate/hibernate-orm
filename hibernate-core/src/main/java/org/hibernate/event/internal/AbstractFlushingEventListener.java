@@ -39,7 +39,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.EntityPrinter;
 import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.internal.util.collections.LazyIterator;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -58,6 +58,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 	public void wasJpaBootstrap(boolean wasJpaBootstrap) {
 		this.jpaBootstrap = wasJpaBootstrap;
 	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Pre-flushing section
@@ -127,7 +128,8 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 				persistenceContext.getCollectionEntries().size()
 		);
 		new EntityPrinter( session.getFactory() ).toString(
-				persistenceContext.getEntitiesByKey().entrySet()
+				persistenceContext.getEntitiesByKey().entrySet(),
+				event.getSession()
 		);
 	}
 
@@ -147,16 +149,16 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 			EntityEntry entry = (EntityEntry) me.getValue();
 			Status status = entry.getStatus();
 			if ( status == Status.MANAGED || status == Status.SAVING || status == Status.READ_ONLY ) {
-				cascadeOnFlush( session, entry.getPersister(), me.getKey(), anything );
+				cascadeOnFlush( session, entry.getDescriptor(), me.getKey(), anything );
 			}
 		}
 	}
 
-	private void cascadeOnFlush(EventSource session, EntityPersister persister, Object object, Object anything)
+	private void cascadeOnFlush(EventSource session, EntityTypeDescriptor descriptor, Object object, Object anything)
 	throws HibernateException {
 		session.getPersistenceContext().incrementCascadeLevel();
 		try {
-			Cascade.cascade( getCascadingAction(), CascadePoint.BEFORE_FLUSH, session, persister, object, anything );
+			Cascade.cascade( getCascadingAction(), CascadePoint.BEFORE_FLUSH, session, descriptor, object, anything );
 		}
 		finally {
 			session.getPersistenceContext().decrementCascadeLevel();
@@ -278,7 +280,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 				actionQueue.addAction(
 						new CollectionRecreateAction(
 								coll,
-								ce.getCurrentPersister(),
+								ce.getCurrentDescriptor(),
 								ce.getCurrentKey(),
 								session
 							)
@@ -289,7 +291,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 				actionQueue.addAction(
 						new CollectionRemoveAction(
 								coll,
-								ce.getLoadedPersister(),
+								ce.getLoadedCollectionDescriptor(),
 								ce.getLoadedKey(),
 								ce.isSnapshotEmpty(coll),
 								session
@@ -301,7 +303,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 				actionQueue.addAction(
 						new CollectionUpdateAction(
 								coll,
-								ce.getLoadedPersister(),
+								ce.getLoadedCollectionDescriptor(),
 								ce.getLoadedKey(),
 								ce.isSnapshotEmpty(coll),
 								session
@@ -314,7 +316,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 				actionQueue.addAction(
 						new QueuedOperationCollectionAction(
 								coll,
-								ce.getLoadedPersister(),
+								ce.getLoadedCollectionDescriptor(),
 								ce.getLoadedKey(),
 								session
 							)
@@ -386,7 +388,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 			CollectionEntry collectionEntry = me.getValue();
 			PersistentCollection persistentCollection = me.getKey();
 			collectionEntry.postFlush(persistentCollection);
-			if ( collectionEntry.getLoadedPersister() == null ) {
+			if ( collectionEntry.getLoadedCollectionDescriptor() == null ) {
 				//if the collection is dereferenced, unset its session reference and remove from the session cache
 				//iter.remove(); //does not work, since the entrySet is not backed by the set
 				persistentCollection.unsetSession( session );
@@ -396,7 +398,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 			else {
 				//otherwise recreate the mapping between the collection and its key
 				CollectionKey collectionKey = new CollectionKey(
-						collectionEntry.getLoadedPersister(),
+						collectionEntry.getLoadedCollectionDescriptor(),
 						collectionEntry.getLoadedKey()
 				);
 				persistenceContext.getCollectionsByKey().put(collectionKey, persistentCollection);

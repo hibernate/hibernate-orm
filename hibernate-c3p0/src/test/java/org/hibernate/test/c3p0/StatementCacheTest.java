@@ -8,14 +8,12 @@ package org.hibernate.test.c3p0;
 
 import java.util.List;
 
-import org.hibernate.Criteria;
 import org.hibernate.Session;
-
-import org.junit.Assert;
-import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * Tests that when using cached prepared statement with batching enabled doesn't bleed over into new transactions. 
@@ -60,8 +58,8 @@ public class StatementCacheTest extends BaseCoreFunctionalTestCase {
 		//only one entity should have been inserted to the database (if the statement in the cache wasn't cleared then it would have inserted both entities)
 		session = openSession();
 		session.beginTransaction();
-		Criteria criteria = session.createCriteria( IrrelevantEntity.class );
-		List results = criteria.list();
+
+		List results = session.createQuery( "from IrrelevantEntity" ).list();
 		session.getTransaction().commit();
 		session.close();
 

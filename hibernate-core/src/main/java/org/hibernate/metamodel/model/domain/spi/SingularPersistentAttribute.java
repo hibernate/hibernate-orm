@@ -13,24 +13,56 @@ import javax.persistence.metamodel.SingularAttribute;
  *
  * @author Steve Ebersole
  */
-public interface SingularPersistentAttribute<D,J> extends SingularAttribute<D,J>, PersistentAttributeDescriptor<D,J> {
+public interface SingularPersistentAttribute<O, J> extends PersistentAttributeDescriptor<O, J>, SingularAttribute<O, J> {
+	@Override
+	default Class<J> getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
+	}
+
 	@Override
 	SimpleTypeDescriptor<J> getType();
 
 	@Override
-	ManagedTypeDescriptor<D> getDeclaringType();
-
-	/**
-	 * For a singular attribute, the value type is defined as the
-	 * attribute type
-	 */
-	@Override
-	default SimpleTypeDescriptor<?> getValueGraphType() {
+	default SimpleTypeDescriptor<J> getAttributeType() {
 		return getType();
 	}
 
-	@Override
-	default Class<J> getJavaType() {
-		return getType().getJavaType();
+	/**
+	 * Classifications of the singularity
+	 */
+	enum SingularAttributeClassification {
+		BASIC,
+		EMBEDDED,
+		ANY,
+		ONE_TO_ONE,
+		MANY_TO_ONE
 	}
+
+	/**
+	 * Obtain the classification enum for the attribute.
+	 *
+	 * @return The classification
+	 */
+	SingularAttributeClassification getAttributeTypeClassification();
+
+	/**
+	 * Describes the "disposition" of the singular attribute.  This is
+	 * basically identifying whether the attribute serves as a "normal"
+	 * singular attribute or as a special singular attribute such as an
+	 * identifier or a version
+	 */
+	enum Disposition {
+		ID,
+		VERSION,
+		NORMAL
+	}
+
+	/**
+	 * Returns whether this attribute is <ul>
+	 *     <li>part of an id?</li>
+	 *     <li>the version attribute?</li>
+	 *     <li>or a normal attribute?</li>
+	 * </ul>
+	 */
+	Disposition getDisposition();
 }

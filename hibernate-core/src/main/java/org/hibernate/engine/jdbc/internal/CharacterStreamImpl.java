@@ -11,7 +11,7 @@ import java.io.Reader;
 import java.io.StringReader;
 
 import org.hibernate.engine.jdbc.CharacterStream;
-import org.hibernate.type.descriptor.java.DataHelper;
+import org.hibernate.type.descriptor.java.internal.LobStreamDataHelper;
 
 /**
  * Implementation of {@link CharacterStream}
@@ -56,7 +56,7 @@ public class CharacterStreamImpl implements CharacterStream {
 	@Override
 	public String asString() {
 		if ( string == null ) {
-			string = DataHelper.extractString( reader );
+			string = LobStreamDataHelper.extractString( reader );
 		}
 		return string;
 	}

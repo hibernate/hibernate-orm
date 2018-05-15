@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.cfg;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,9 @@ import org.hibernate.AnnotationException;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.model.domain.EntityMappingHierarchy;
+import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
+import org.hibernate.boot.model.domain.internal.MappedSuperclassJavaTypeMappingImpl;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.mapping.PersistentClass;
@@ -45,7 +49,7 @@ public class InheritanceState {
 	private InheritanceType type;
 	private boolean isEmbeddableSuperclass = false;
 	private Map<XClass, InheritanceState> inheritanceStatePerClass;
-	private List<XClass> classesToProcessForMappedSuperclass = new ArrayList<XClass>();
+	private List<XClass> classesToProcessForMappedSuperclass = new ArrayList<>();
 	private MetadataBuildingContext buildingContext;
 	private AccessType accessType;
 	private ElementsToProcess elementsToProcess;
@@ -305,8 +309,30 @@ public class InheritanceState {
 			//add MAppedSuperclass if not already there
 			mappedSuperclass = buildingContext.getMetadataCollector().getMappedSuperclass( type );
 			if ( mappedSuperclass == null ) {
-				mappedSuperclass = new org.hibernate.mapping.MappedSuperclass( parentSuperclass, superEntity );
-				mappedSuperclass.setMappedClass( type );
+
+				// todo (6.0) : verify this is actually correct
+				EntityMappingHierarchy entityHierarchy = persistentClass.getEntityMappingHierarchy();
+				final IdentifiableTypeMapping superTypeMapping;
+				if ( parentSuperclass != null ) {
+					superTypeMapping = parentSuperclass;
+				}
+				else if ( superEntity != null ) {
+					superTypeMapping = superEntity;
+				}
+				else {
+					superTypeMapping = null;
+				}
+
+				mappedSuperclass = new org.hibernate.mapping.MappedSuperclass(
+						entityHierarchy,
+						superTypeMapping,
+						new MappedSuperclassJavaTypeMappingImpl(
+								buildingContext,
+								type.getTypeName(),
+								superTypeMapping != null ? superTypeMapping.getJavaTypeMapping() : null
+						)
+				);
+
 				buildingContext.getMetadataCollector().addMappedSuperclass( type, mappedSuperclass );
 			}
 		}

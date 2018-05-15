@@ -8,12 +8,11 @@ package org.hibernate.stat.internal;
 
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.stat.NaturalIdStatistics;
 
 /**
@@ -32,13 +31,13 @@ public class NaturalIdStatisticsImpl extends AbstractCacheableDataStatistics imp
 	private final Lock readLock;
 	private final Lock writeLock;
 
-	NaturalIdStatisticsImpl(EntityPersister rootEntityDescriptor) {
+	NaturalIdStatisticsImpl(EntityTypeDescriptor rootEntityDescriptor) {
 		super(
-				() -> rootEntityDescriptor.getNaturalIdCacheAccessStrategy() != null
-						? rootEntityDescriptor.getNaturalIdCacheAccessStrategy().getRegion()
+				() -> rootEntityDescriptor.getHierarchy().getNaturalIdDescriptor().getCacheAccess() != null
+						? rootEntityDescriptor.getHierarchy().getNaturalIdDescriptor().getCacheAccess().getRegion()
 						: null
 		);
-		this.rootEntityName = rootEntityDescriptor.getRootEntityName();
+		this.rootEntityName = rootEntityDescriptor.getEntityName();
 		final ReadWriteLock lock = new ReentrantReadWriteLock();
 		this.readLock = lock.readLock();
 		this.writeLock = lock.writeLock();

@@ -39,7 +39,7 @@ public interface StatelessSession extends SharedSessionContract, AutoCloseable, 
 	 *
 	 * @return The identifier of the inserted entity
 	 */
-	Serializable insert(Object entity);
+	Object insert(Object entity);
 
 	/**
 	 * Insert a row.
@@ -49,7 +49,7 @@ public interface StatelessSession extends SharedSessionContract, AutoCloseable, 
 	 *
 	 * @return the identifier of the instance
 	 */
-	Serializable insert(String entityName, Object entity);
+	Object insert(String entityName, Object entity);
 
 	/**
 	 * Update a row.
@@ -89,7 +89,16 @@ public interface StatelessSession extends SharedSessionContract, AutoCloseable, 
 	 *
 	 * @return a detached entity instance
 	 */
-	Object get(String entityName, Serializable id);
+	Object get(String entityName, Object id);
+
+	/**
+	 * @deprecated Use {@link #get(String, Object)} instead
+	 */
+	@Deprecated
+	default Object get(String entityName, Serializable id) {
+		return get( entityName, (Object) id );
+	}
+
 
 	/**
 	 * Retrieve a row.
@@ -99,7 +108,15 @@ public interface StatelessSession extends SharedSessionContract, AutoCloseable, 
 	 *
 	 * @return a detached entity instance
 	 */
-	Object get(Class entityClass, Serializable id);
+	Object get(Class entityClass, Object id);
+
+	/**
+	 * @deprecated Use {@link #get(Class, Object)} instead
+	 */
+	@Deprecated
+	default Object get(Class entityClass, Serializable id) {
+		return get( entityClass, (Object) id );
+	}
 
 	/**
 	 * Retrieve a row, obtaining the specified lock mode.
@@ -110,7 +127,15 @@ public interface StatelessSession extends SharedSessionContract, AutoCloseable, 
 	 *
 	 * @return a detached entity instance
 	 */
-	Object get(String entityName, Serializable id, LockMode lockMode);
+	Object get(String entityName, Object id, LockMode lockMode);
+
+	/**
+	 * @deprecated Use {@link #get(String, Object, LockMode)} instead
+	 */
+	@Deprecated
+	default Object get(String entityName, Serializable id, LockMode lockMode) {
+		return get( entityName, (Object) id, lockMode );
+	}
 
 	/**
 	 * Retrieve a row, obtaining the specified lock mode.
@@ -121,7 +146,15 @@ public interface StatelessSession extends SharedSessionContract, AutoCloseable, 
 	 *
 	 * @return a detached entity instance
 	 */
-	Object get(Class entityClass, Serializable id, LockMode lockMode);
+	Object get(Class entityClass, Object id, LockMode lockMode);
+
+	/**
+	 * @deprecated Use {@link #get(Class, Object, LockMode)} instead
+	 */
+	@Deprecated
+	default Object get(Class entityClass, Serializable id, LockMode lockMode) {
+		return get( entityClass, (Object) id, lockMode );
+	}
 
 	/**
 	 * Refresh the entity instance state from the database.

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="1.0"
+        >
+    <sequence-generator name="SEQ_GEN" sequence-name="my_sequence"/>
+    <table-generator name="EMP_GEN" table="GENERATOR_TABLE"
+                     pk-column-name="pkey" pk-column-value="EMP"
+                     value-column-name="hi" allocation-size="20"/>
+</entity-mappings>

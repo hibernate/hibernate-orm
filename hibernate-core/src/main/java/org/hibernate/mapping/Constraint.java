@@ -5,22 +5,22 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.mapping;
+
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
+import java.util.stream.Collectors;
 
 import org.hibernate.HibernateException;
-import org.hibernate.annotations.common.util.StringHelper;
-import org.hibernate.boot.model.relational.Exportable;
+import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.relational.MappedConstraint;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.Mapping;
 
 /**
  * A relational constraint.
@@ -28,20 +28,33 @@ import org.hibernate.engine.spi.Mapping;
  * @author Gavin King
  * @author Brett Meyer
  */
-public abstract class Constraint implements RelationalModel, Exportable, Serializable {
+public abstract class Constraint implements MappedConstraint, Serializable {
 
 	private String name;
-	private final ArrayList<Column> columns = new ArrayList<Column>();
-	private Table table;
+	private final List<MappedColumn> columns = new ArrayList<>();
+	private MappedTable table;
 
+	private boolean creationEnabled = true;
+
+	@Override
 	public String getName() {
 		return name;
 	}
 
+	@Override
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
+	public void disableCreation() {
+		creationEnabled = false;
+	}
+
+	@Override
+	public boolean isCreationEnabled() {
+		return creationEnabled;
+	}
+
 	/**
 	 * If a constraint is not explicitly named, this is called to generate
 	 * a unique hash using the table and column names.
@@ -50,7 +63,16 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	 *
 	 * @return String The generated name
 	 */
-	public static String generateName(String prefix, Table table, Column... columns) {
+	public static String generateName(String prefix, MappedTable table, List<MappedColumn> mappedColumns) {
+		final List<Column> columns = mappedColumns.stream()
+				.filter( column -> !column.isFormula() )
+				.map( Column.class::cast )
+				.collect( Collectors.toList() );
+
+		return generateNameFromColumns( prefix, table, columns );
+	}
+
+	private static String generateNameFromColumns(String prefix, MappedTable table, List<Column> columns) {
 		// Use a concatenation that guarantees uniqueness, even if identical names
 		// exist between all table and column identifiers.
 
@@ -60,22 +82,13 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 		// they were bound.
 		// Clone the list, as sometimes a set of order-dependent Column
 		// bindings are given.
-		Column[] alphabeticalColumns = columns.clone();
-		Arrays.sort( alphabeticalColumns, ColumnComparator.INSTANCE );
+		List<Column> alphabeticalColumns = new ArrayList<>( columns );
+		alphabeticalColumns.sort( ColumnComparator.INSTANCE );
 		for ( Column column : alphabeticalColumns ) {
-			String columnName = column == null ? "" : column.getName();
+			String columnName = column == null ? "" : column.getName().getText();
 			sb.append( "column`" ).append( columnName ).append( "`" );
 		}
 		return prefix + hashedName( sb.toString() );
-	}
-
-	/**
-	 * Helper method for {@link #generateName(String, Table, Column...)}.
-	 *
-	 * @return String The generated name
-	 */
-	public static String generateName(String prefix, Table table, List<Column> columns) {
-		return generateName( prefix, table, columns.toArray( new Column[columns.size()] ) );
 	}
 
 	/**
@@ -83,9 +96,9 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	 * (full alphanumeric), guaranteeing
 	 * that the length of the name will always be smaller than the 30
 	 * character identifier restriction enforced by a few dialects.
-	 * 
-	 * @param s
-	 *            The name to be hashed.
+	 *
+	 * @param s The name to be hashed.
+	 *
 	 * @return String The hased name.
 	 */
 	public static String hashedName(String s) {
@@ -100,12 +113,12 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 			// character identifier restriction enforced by a few dialects.
 			return bigInt.toString( 35 );
 		}
-		catch ( NoSuchAlgorithmException e ) {
+		catch (NoSuchAlgorithmException e) {
 			throw new HibernateException( "Unable to generate a hashed Constraint name!", e );
 		}
 	}
 
-	private static class ColumnComparator implements Comparator<Column> {
+	public static class ColumnComparator implements Comparator<Column> {
 		public static ColumnComparator INSTANCE = new ColumnComparator();
 
 		public int compare(Column col1, Column col2) {
@@ -113,19 +126,41 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 		}
 	}
 
+	/**
+	 * @deprecated Use {@link Constraint#addColumn(MappedColumn)}
+	 * instead.  We want to create "logical constraints", regardless of whether they
+	 * are "exportable" (a real, physical constraint).  So we open up the type of
+	 * "columns" we accept here.
+	 */
+	@Deprecated
 	public void addColumn(Column column) {
+		addColumn( (MappedColumn) column );
+	}
+
+	@Override
+	public void addColumn(MappedColumn column) {
 		if ( !columns.contains( column ) ) {
 			columns.add( column );
+
+			if ( column.isFormula() ) {
+				disableCreation();
+			}
 		}
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #addColumns(List)} )}.
+	 */
+	@Deprecated
 	public void addColumns(Iterator columnIterator) {
 		while ( columnIterator.hasNext() ) {
-			Selectable col = (Selectable) columnIterator.next();
-			if ( !col.isFormula() ) {
-				addColumn( (Column) col );
-			}
+			addColumn( (MappedColumn) columnIterator.next() );
 		}
+	}
+
+	@Override
+	public void addColumns(List<? extends MappedColumn> columns) {
+		columns.stream().forEach( column -> addColumn( (Selectable) column ) );
 	}
 
 	/**
@@ -135,27 +170,39 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 		return columns.contains( column );
 	}
 
-	public int getColumnSpan() {
-		return columns.size();
-	}
-
+	@Override
 	public Column getColumn(int i) {
-		return  columns.get( i );
-	}
-	//todo duplicated method, remove one
-	public Iterator<Column> getColumnIterator() {
-		return columns.iterator();
+		return (Column) columns.get( i );
 	}
 
-	public Iterator<Column> columnIterator() {
-		return columns.iterator();
+	@SuppressWarnings("unchecked")
+	<T> Iterator<T> cast(Iterator itr) {
+		return itr;
 	}
 
+	/**
+	 * @deprecated since 6.0 use {@link #getMappedTable()}.
+	 */
+	@Deprecated
 	public Table getTable() {
+		return (Table) getMappedTable();
+	}
+
+	/**
+	 * @deprecated since 6.0, use {@link #setMappedTable(MappedTable)}.
+	 */
+	@Deprecated
+	public void setTable(MappedTable table) {
+		setMappedTable( table );
+	}
+
+	@Override
+	public MappedTable getMappedTable() {
 		return table;
 	}
 
-	public void setTable(Table table) {
+	@Override
+	public void setMappedTable(MappedTable table) {
 		this.table = table;
 	}
 
@@ -163,52 +210,18 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 		return true;
 	}
 
-	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
-		if ( isGenerated( dialect ) ) {
-			final String tableName = getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema );
-			return String.format(
-					Locale.ROOT,
-					"%s evictData constraint %s",
-					dialect.getAlterTableString( tableName ),
-					dialect.quote( getName() )
-			);
-		}
-		else {
-			return null;
-		}
+	@Override
+	public List<MappedColumn> getColumns() {
+		return cast( columns );
 	}
 
-	public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) {
-		if ( isGenerated( dialect ) ) {
-			// Certain dialects (ex: HANA) don't support FKs as expected, but other constraints can still be created.
-			// If that's the case, hasAlterTable() will be true, but getAddForeignKeyConstraintString will return
-			// empty string.  Prevent blank "alter table" statements.
-			String constraintString = sqlConstraintString( dialect, getName(), defaultCatalog, defaultSchema );
-			if ( !StringHelper.isEmpty( constraintString ) ) {
-				final String tableName = getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema );
-				return dialect.getAlterTableString( tableName ) + " " + constraintString;
-			}
-		}
-		return null;
+	@SuppressWarnings("unchecked")
+	private <T> List<T> cast(List values) {
+		return values;
 	}
 
-	public List<Column> getColumns() {
-		return columns;
-	}
-
-	public abstract String sqlConstraintString(
-			Dialect d,
-			String constraintName,
-			String defaultCatalog,
-			String defaultSchema);
 
 	public String toString() {
-		return getClass().getName() + '(' + getTable().getName() + getColumns() + ") as " + name;
+		return getClass().getName() + '(' + getMappedTable().getName() + getColumns() + ") as " + name;
 	}
-	
-	/**
-	 * @return String The prefix to use in generated constraint names.  Examples:
-	 * "UK_", "FK_", and "PK_".
-	 */
-	public abstract String generatedConstraintNamePrefix();
 }

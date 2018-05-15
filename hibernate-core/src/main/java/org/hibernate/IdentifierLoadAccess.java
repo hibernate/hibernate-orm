@@ -44,6 +44,14 @@ public interface IdentifierLoadAccess<T> {
 	IdentifierLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic);
 
 	/**
+	 * @deprecated Use the form accepting Object instead - {@link #getReference(Object)}
+	 */
+	@Deprecated
+	default T getReference(Serializable id) {
+		return getReference( (Object) id );
+	}
+
+	/**
 	 * Return the persistent instance with the given identifier, assuming that the instance exists. This method
 	 * might return a proxied instance that is initialized on-demand, when a non-identifier method is accessed.
 	 *
@@ -55,7 +63,15 @@ public interface IdentifierLoadAccess<T> {
 	 *
 	 * @return the persistent instance or proxy
 	 */
-	T getReference(Serializable id);
+	T getReference(Object id);
+
+	/**
+	 * @deprecated Use the form accepting Object instead - {@link #load(Object)}
+	 */
+	@Deprecated
+	default T load(Serializable id) {
+		return load( (Object) id  );
+	}
 
 	/**
 	 * Return the persistent instance with the given identifier, or null if there is no such persistent instance.
@@ -66,7 +82,7 @@ public interface IdentifierLoadAccess<T> {
 	 *
 	 * @return The persistent instance or {@code null}
 	 */
-	T load(Serializable id);
+	T load(Object id);
 
 	/**
 	 * Same semantic as {@link #load} except that here {@link Optional} is returned to

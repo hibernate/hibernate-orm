@@ -13,8 +13,9 @@ import java.io.Serializable;
 import java.util.Objects;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Uniquely identifies of an entity instance in a particular Session by identifier.
@@ -29,11 +30,11 @@ import org.hibernate.pretty.MessageHelper;
  * @author Gavin King
  * @author Sanne Grinovero
  */
-public final class EntityKey implements Serializable {
+public final class EntityKey implements EntityKeyCommon, Serializable {
 
-	private final Serializable identifier;
+	private final Object identifier;
 	private final int hashCode;
-	private final EntityPersister persister;
+	private final EntityTypeDescriptor entityDescriptor;
 
 	/**
 	 * Construct a unique identifier for an entity class instance.
@@ -43,10 +44,10 @@ public final class EntityKey implements Serializable {
 	 * {@link SessionImplementor#generateEntityKey} method was added to hide the session-specific changes.
 	 *
 	 * @param id The entity id
-	 * @param persister The entity persister
+	 * @param entityDescriptor The entity entityDescriptor
 	 */
-	public EntityKey(Serializable id, EntityPersister persister) {
-		this.persister = persister;
+	public EntityKey(Object id, EntityTypeDescriptor entityDescriptor) {
+		this.entityDescriptor = entityDescriptor;
 		if ( id == null ) {
 			throw new AssertionFailure( "null identifier" );
 		}
@@ -56,22 +57,34 @@ public final class EntityKey implements Serializable {
 
 	private int generateHashCode() {
 		int result = 17;
-		final String rootEntityName = persister.getRootEntityName();
+		final String rootEntityName = entityDescriptor.getHierarchy().getRootEntityType().getEntityName();
 		result = 37 * result + ( rootEntityName != null ? rootEntityName.hashCode() : 0 );
-		result = 37 * result + persister.getIdentifierType().getHashCode( identifier, persister.getFactory() );
+		result = 37 * result + entityDescriptor.getHierarchy().getIdentifierDescriptor()
+				.getJavaTypeDescriptor()
+				.extractHashCode( identifier );
 		return result;
 	}
 
 	public boolean isBatchLoadable() {
-		return persister.isBatchLoadable();
+		return entityDescriptor.isBatchLoadable();
 	}
 
-	public Serializable getIdentifier() {
+	public Object getIdentifier() {
 		return identifier;
 	}
 
 	public String getEntityName() {
-		return persister.getEntityName();
+		return entityDescriptor.getEntityName();
+	}
+
+	@Override
+	public Object getKeyValue() {
+		return getIdentifier();
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return entityDescriptor.getJavaTypeDescriptor();
 	}
 
 	@Override
@@ -90,15 +103,21 @@ public final class EntityKey implements Serializable {
 	}
 
 	private boolean sameIdentifier(final EntityKey otherKey) {
-		return persister.getIdentifierType().isEqual( otherKey.identifier, this.identifier, persister.getFactory() );
+		return entityDescriptor.getHierarchy().getIdentifierDescriptor().getJavaTypeDescriptor().areEqual(
+				otherKey.identifier,
+				this.identifier
+		);
 	}
 
 	private boolean samePersistentType(final EntityKey otherKey) {
-		if ( otherKey.persister == persister ) {
+		if ( otherKey.entityDescriptor == entityDescriptor ) {
 			return true;
 		}
 		else {
-			return Objects.equals( otherKey.persister.getRootEntityName(), persister.getRootEntityName() );
+			return Objects.equals(
+					otherKey.entityDescriptor.getHierarchy().getRootEntityType().getEntityName(),
+					entityDescriptor.getHierarchy().getRootEntityType().getEntityName()
+			);
 		}
 	}
 
@@ -110,7 +129,7 @@ public final class EntityKey implements Serializable {
 	@Override
 	public String toString() {
 		return "EntityKey" +
-				MessageHelper.infoString( this.persister, identifier, persister.getFactory() );
+				MessageHelper.infoString( this.entityDescriptor, identifier, entityDescriptor.getFactory() );
 	}
 
 	/**
@@ -123,7 +142,7 @@ public final class EntityKey implements Serializable {
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		oos.writeObject( identifier );
-		oos.writeObject( persister.getEntityName() );
+		oos.writeObject( entityDescriptor.getEntityName() );
 	}
 
 	/**
@@ -138,10 +157,11 @@ public final class EntityKey implements Serializable {
 	 * @throws IOException Thrown by Java I/O
 	 * @throws ClassNotFoundException Thrown by Java I/O
 	 */
-	public static EntityKey deserialize(ObjectInputStream ois, SessionFactoryImplementor sessionFactory) throws IOException, ClassNotFoundException {
+	public static EntityKey deserialize(ObjectInputStream ois, SessionFactoryImplementor sessionFactory)
+			throws IOException, ClassNotFoundException {
 		final Serializable id = (Serializable) ois.readObject();
 		final String entityName = (String) ois.readObject();
-		final EntityPersister entityPersister = sessionFactory.getEntityPersister( entityName );
-		return new EntityKey(id, entityPersister);
+		final EntityTypeDescriptor entityDescriptor = sessionFactory.getEntityPersister( entityName );
+		return new EntityKey( id, entityDescriptor );
 	}
 }

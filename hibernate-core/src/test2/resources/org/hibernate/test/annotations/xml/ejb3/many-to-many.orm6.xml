@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm http://java.sun.com/xml/ns/persistence/orm_2_0.xsd"
+	version="2.0">
+	<persistence-unit-metadata>
+		<xml-mapping-metadata-complete/>
+	</persistence-unit-metadata>
+	<package>org.hibernate.test.annotations.xml.ejb3</package>
+	<entity class="Entity3">
+		<attributes>
+			<many-to-many name="field1">
+				<map-key name="field2"/>
+			</many-to-many>
+		</attributes>
+	</entity>
+</entity-mappings>

@@ -9,6 +9,7 @@ package org.hibernate.service.internal;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.Service;
@@ -61,12 +62,14 @@ public class SessionFactoryServiceRegistryBuilderImpl implements SessionFactoryS
 
 	public SessionFactoryServiceRegistry buildSessionFactoryServiceRegistry(
 			SessionFactoryImplementor sessionFactory,
+			BootstrapContext bootstrapContext,
 			SessionFactoryOptions options) {
 		return new SessionFactoryServiceRegistryImpl(
 				parent,
 				initiators,
 				providedServices,
 				sessionFactory,
+				bootstrapContext,
 				options
 		);
 	}

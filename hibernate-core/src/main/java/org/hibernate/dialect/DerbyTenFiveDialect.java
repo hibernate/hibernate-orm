@@ -6,10 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.dialect.function.AnsiTrimFunction;
-import org.hibernate.dialect.function.DerbyConcatFunction;
-
-
 /**
  * Hibernate Dialect for Cloudscape 10 - aka Derby. This implements both an
  * override for the identity column generator as well as for the case statement
@@ -26,8 +22,6 @@ public class DerbyTenFiveDialect extends DerbyDialect {
 	 */
 	public DerbyTenFiveDialect() {
 		super();
-		registerFunction( "concat", new DerbyConcatFunction() );
-		registerFunction( "trim", new AnsiTrimFunction() );
 	}
 
 	@Override

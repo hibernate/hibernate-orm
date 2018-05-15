@@ -7,7 +7,7 @@
 package org.hibernate.event.spi;
 
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
 /**
  * An event that occurs after a collection is recreated
@@ -16,10 +16,11 @@ import org.hibernate.persister.collection.CollectionPersister;
  */
 public class PostCollectionRecreateEvent extends AbstractCollectionEvent {
 
-	public PostCollectionRecreateEvent( CollectionPersister collectionPersister,
-										PersistentCollection collection,
-										EventSource source ) {
-		super( collectionPersister, collection, source,
+	public PostCollectionRecreateEvent(
+			PersistentCollectionDescriptor collectionDescriptor,
+			PersistentCollection collection,
+			EventSource source ) {
+		super( collectionDescriptor, collection, source,
 				collection.getOwner(),
 				getOwnerIdOrNull( collection.getOwner(), source ) );
 	}

@@ -10,44 +10,42 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Function;
 import javax.persistence.AttributeConverter;
 
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
 import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
-import org.hibernate.boot.model.TypeDefinition;
-import org.hibernate.boot.model.convert.internal.InstanceBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.domain.EntityMappingHierarchy;
+import org.hibernate.boot.model.domain.ResolutionContext;
+import org.hibernate.boot.model.query.spi.NamedHqlQueryDefinition;
+import org.hibernate.boot.model.query.spi.NamedNativeQueryDefinition;
+import org.hibernate.boot.model.query.spi.NamedQueryDefinition;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.MappedTable;
+import org.hibernate.boot.model.resultset.spi.ResultSetMappingDefinition;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
 import org.hibernate.cfg.AnnotatedClassType;
-import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.JPAIndexHolder;
 import org.hibernate.cfg.PropertyData;
 import org.hibernate.cfg.SecondPass;
 import org.hibernate.cfg.UniqueConstraintHolder;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
-import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.engine.spi.NamedQueryDefinition;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Table;
+import org.hibernate.naming.Identifier;
+import org.hibernate.type.spi.BasicType;
 
 /**
  * An in-flight representation of Metadata while Metadata is being built.
@@ -56,8 +54,20 @@ import org.hibernate.mapping.Table;
  *
  * @since 5.0
  */
-public interface InFlightMetadataCollector extends Mapping, MetadataImplementor {
+public interface InFlightMetadataCollector extends MetadataImplementor {
 	BootstrapContext getBootstrapContext();
+
+	Database getDatabase();
+
+	/**
+	 * Add the EntityMappingHierarchy for an entity mapping hierarchy.
+	 *
+	 * @param entityMappingHierarchy The entity hierarchy metadata
+	 *
+	 * @throws DuplicateMappingException Indicates there was already an entry
+	 * corresponding to the given entity name.
+	 */
+	void addEntityMappingHierarchy(EntityMappingHierarchy entityMappingHierarchy);
 
 	/**
 	 * Add the PersistentClass for an entity mapping.
@@ -108,7 +118,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 *
 	 * @return The created table metadata, or the existing reference.
 	 */
-	Table addTable(String schema, String catalog, String name, String subselect, boolean isAbstract);
+	MappedTable addTable(String schema, String catalog, String name, String subselect, boolean isAbstract);
 
 	/**
 	 * Adds a 'denormalized table' to this repository.
@@ -125,22 +135,35 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 *
 	 * @throws DuplicateMappingException If such a table mapping already exists.
 	 */
-	Table addDenormalizedTable(
+	MappedTable addDenormalizedTable(
 			String schema,
 			String catalog,
 			String name,
 			boolean isAbstract,
 			String subselect,
-			Table includedTable) throws DuplicateMappingException;
+			MappedTable includedTable) throws DuplicateMappingException;
 
 	/**
-	 * Adds metadata for a named query to this repository.
+	 * Adds metadata for a named query definition to this repository.
 	 *
-	 * @param query The metadata
+	 * @param queryDefinition The metadata
+	 *
+	 * @throws DuplicateMappingException If a queryDefinition already exists with that name.
+	 * @deprecated Use {@link #addNamedHqlQuery} instead
+	 */
+	@Deprecated
+	default void addNamedQuery(NamedQueryDefinition queryDefinition) throws DuplicateMappingException {
+		addNamedHqlQuery( (NamedHqlQueryDefinition) queryDefinition );
+	}
+
+	/**
+	 * Adds metadata for a named HQL query to this repository.
+	 *
+	 * @param queryDefinition The metadata
 	 *
 	 * @throws DuplicateMappingException If a query already exists with that name.
 	 */
-	void addNamedQuery(NamedQueryDefinition query) throws DuplicateMappingException;
+	void addNamedHqlQuery(NamedHqlQueryDefinition queryDefinition) throws DuplicateMappingException;
 
 	/**
 	 * Adds metadata for a named SQL query to this repository.
@@ -149,7 +172,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 *
 	 * @throws DuplicateMappingException If a query already exists with that name.
 	 */
-	void addNamedNativeQuery(NamedSQLQueryDefinition query) throws DuplicateMappingException;
+	void addNamedNativeQuery(NamedNativeQueryDefinition query) throws DuplicateMappingException;
 
 	/**
 	 * Adds the metadata for a named SQL result set mapping to this repository.
@@ -180,15 +203,6 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	void addNamedEntityGraph(NamedEntityGraphDefinition namedEntityGraphDefinition);
 
 	/**
-	 * Adds a type definition to this metadata repository.
-	 *
-	 * @param typeDefinition The named type definition to add.
-	 *
-	 * @throws DuplicateMappingException If a TypeDefinition already exists with that name.
-	 */
-	void addTypeDefinition(TypeDefinition typeDefinition);
-
-	/**
 	 * Adds a filter definition to this repository.
 	 *
 	 * @param definition The filter definition to add.
@@ -202,7 +216,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 *
 	 * @param auxiliaryDatabaseObject The metadata.
 	 */
-	void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject);
+	void addAuxiliaryDatabaseObject(MappedAuxiliaryDatabaseObject auxiliaryDatabaseObject);
 
 	void addFetchProfile(FetchProfile profile);
 
@@ -211,29 +225,11 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 
 	void addIdentifierGenerator(IdentifierGeneratorDefinition generatorDefinition);
 
-
-	/**
-	 * @deprecated AttributeConverterDefinition forces early resolution of the
-	 * AttributeConverter instance, which precludes resolution of the converter
-	 * from {@link org.hibernate.resource.beans.spi.ManagedBeanRegistry} (CDI, etc).
-	 * Instead one of:
-	 * * {@link #addAttributeConverter(ConverterDescriptor)}
-	 * * {@link #addAttributeConverter(Class)}
-	 * * {@link #addAttributeConverter(Class)}
-	 */
-	@Deprecated
-	default void addAttributeConverter(AttributeConverterDefinition converter) {
-		addAttributeConverter(
-				new InstanceBasedConverterDescriptor(
-						converter.getAttributeConverter(),
-						getBootstrapContext().getClassmateContext()
-				)
-		);
-	}
-
 	void addAttributeConverter(ConverterDescriptor descriptor);
 
-	void addAttributeConverter(Class<? extends AttributeConverter> converterClass);
+	default <O, R> void addAttributeConverter(Class<? extends AttributeConverter<O, R>> converterClass) {
+		addAttributeConverter( new ClassBasedConverterDescriptor( converterClass, getBootstrapContext().getClassmateContext() ) );
+	}
 
 	ConverterAutoApplyHandler getAttributeConverterAutoApplyHandler();
 
@@ -249,31 +245,21 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// stuff needed for annotation binding :(
 
-	void addTableNameBinding(Identifier logicalName, Table table);
-	void addTableNameBinding(
-			String schema,
-			String catalog,
-			String logicalName,
-			String realTableName,
-			Table denormalizedSuperTable);
-	String getLogicalTableName(Table ownerTable);
-	String getPhysicalTableName(Identifier logicalName);
-	String getPhysicalTableName(String logicalName);
-
-	void addColumnNameBinding(Table table, Identifier logicalColumnName, Column column);
-	void addColumnNameBinding(Table table, String logicalColumnName, Column column);
-	String getPhysicalColumnName(Table table, Identifier logicalName) throws MappingException;
-	String getPhysicalColumnName(Table table, String logicalName) throws MappingException;
-	String getLogicalColumnName(Table table, Identifier physicalName);
-	String getLogicalColumnName(Table table, String physicalName);
-
 	void addDefaultIdentifierGenerator(IdentifierGeneratorDefinition generatorDefinition);
 
-	void addDefaultQuery(NamedQueryDefinition queryDefinition);
+	/**
+	 * @deprecated Use {@link #addDefaultNamedHqlQuery} instead
+	 */
+	@Deprecated
+	default void addDefaultQuery(NamedQueryDefinition queryDefinition) {
+		addDefaultNamedHqlQuery( (NamedHqlQueryDefinition) queryDefinition );
+	}
 
-	void addDefaultNamedNativeQuery(NamedSQLQueryDefinition query);
+	void addDefaultNamedHqlQuery(NamedHqlQueryDefinition queryDefinition);
 
-	void addDefaultResultSetMapping(ResultSetMappingDefinition definition);
+	void addDefaultNamedNativeQuery(NamedNativeQueryDefinition query);
+
+	void addDefaultResultSetMapping(ResultSetMappingDefinition resultSetMapping);
 
 	void addDefaultNamedProcedureCallDefinition(NamedProcedureCallDefinition procedureCallDefinition);
 
@@ -299,15 +285,14 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	void registerNaturalIdUniqueKeyBinder(String entityName, NaturalIdUniqueKeyBinder ukBinder);
 
 	/**
-	 * Access to the shared Classmate objects used throughout Hibernate's
-	 * bootstrap process.
-	 *
-	 * @return Access to the shared Classmate delegates.
-	 *
-	 * @deprecated Use {@link BootstrapContext#getClassmateContext()} instead.
+	 * Performs the same function as the legacy TypeResolver#basic, essentially performing
+	 * a resolution for BasicType using "registry keys".
 	 */
-	@Deprecated
-	ClassmateContext getClassmateContext();
+	<T> BasicType<T> basicType(String registrationKey);
+
+
+	void registerValueMappingResolver(Function<ResolutionContext,Boolean> resolver);
+	List<Function<ResolutionContext,Boolean>> getValueMappingResolvers();
 
 	interface DelayedPropertyReferenceHandler extends Serializable {
 		void process(InFlightMetadataCollector metadataCollector);
@@ -322,16 +307,16 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	void addMappedBy(String name, String mappedBy, String propertyName);
 	String getFromMappedBy(String ownerEntityName, String propertyName);
 
-	void addUniqueConstraints(Table table, List uniqueConstraints);
-	void addUniqueConstraintHolders(Table table, List<UniqueConstraintHolder> uniqueConstraints);
-	void addJpaIndexHolders(Table table, List<JPAIndexHolder> jpaIndexHolders);
+	void addUniqueConstraints(MappedTable table, List uniqueConstraints);
+	void addUniqueConstraintHolders(MappedTable table, List<UniqueConstraintHolder> uniqueConstraints);
+	void addJpaIndexHolders(MappedTable table, List<JPAIndexHolder> jpaIndexHolders);
 
 
 	interface EntityTableXref {
 		void addSecondaryTable(LocalMetadataBuildingContext buildingContext, Identifier logicalName, Join secondaryTableJoin);
-		void addSecondaryTable(QualifiedTableName logicalName, Join secondaryTableJoin);
-		Table resolveTable(Identifier tableName);
-		Table getPrimaryTable();
+		void addSecondaryTable(Identifier logicalName, Join secondaryTableJoin);
+		MappedTable resolveTable(Identifier tableName);
+		MappedTable getPrimaryTable();
 		Join locateJoin(Identifier tableName);
 	}
 
@@ -354,7 +339,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	EntityTableXref addEntityTableXref(
 			String entityName,
 			Identifier primaryTableLogicalName,
-			Table primaryTable,
+			MappedTable primaryTable,
 			EntityTableXref superEntityTableXref);
 	Map<String,Join> getJoins(String entityName);
 }

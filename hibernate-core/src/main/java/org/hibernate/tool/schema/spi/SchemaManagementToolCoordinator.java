@@ -9,10 +9,11 @@ package org.hibernate.tool.schema.spi;
 import java.util.EnumSet;
 import java.util.Map;
 
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.SourceType;
@@ -45,11 +46,13 @@ public class SchemaManagementToolCoordinator {
 	private static final Logger log = Logger.getLogger( SchemaManagementToolCoordinator.class );
 
 	public static void process(
-			final Metadata metadata,
+			final DatabaseModel runtimeDatabaseModel,
 			final ServiceRegistry serviceRegistry,
-			final Map configurationValues,
 			DelayedDropRegistry delayedDropRegistry) {
-		final ActionGrouping actions = ActionGrouping.interpret( configurationValues );
+		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
+		final Map configValues = configService.getSettings();
+
+		final ActionGrouping actions = ActionGrouping.interpret( configValues );
 
 		if ( actions.getDatabaseAction() == Action.NONE && actions.getScriptAction() == Action.NONE ) {
 			// no actions specified
@@ -58,27 +61,18 @@ public class SchemaManagementToolCoordinator {
 		}
 
 		final SchemaManagementTool tool = serviceRegistry.getService( SchemaManagementTool.class );
-		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
+		final ExecutionOptions executionOptions = buildExecutionOptions( configValues );
 
-		boolean haltOnError = configService.getSetting( AvailableSettings.HBM2DDL_HALT_ON_ERROR, Boolean.class, false);
-
-		final ExecutionOptions executionOptions = buildExecutionOptions(
-				configurationValues,
-				haltOnError ? ExceptionHandlerHaltImpl.INSTANCE :
-						ExceptionHandlerLoggedImpl.INSTANCE
-		);
-
-		performScriptAction( actions.getScriptAction(), metadata, tool, serviceRegistry, executionOptions );
-		performDatabaseAction( actions.getDatabaseAction(), metadata, tool, serviceRegistry, executionOptions );
+		performScriptAction( actions.getScriptAction(), runtimeDatabaseModel, tool, serviceRegistry, executionOptions );
+		performDatabaseAction( actions.getDatabaseAction(), runtimeDatabaseModel, tool, serviceRegistry, executionOptions );
 
 		if ( actions.getDatabaseAction() == Action.CREATE_DROP ) {
 			//noinspection unchecked
 			delayedDropRegistry.registerOnCloseAction(
-					tool.getSchemaDropper( configurationValues ).buildDelayedAction(
-							metadata,
+					tool.getSchemaDropper( runtimeDatabaseModel, configValues ).buildDelayedAction(
 							executionOptions,
 							buildDatabaseTargetDescriptor(
-									configurationValues,
+									configValues,
 									DropSettingSelector.INSTANCE,
 									serviceRegistry
 							)
@@ -87,18 +81,23 @@ public class SchemaManagementToolCoordinator {
 		}
 	}
 
-	public static ExecutionOptions buildExecutionOptions(
-			final Map configurationValues,
-			final ExceptionHandler exceptionHandler) {
+	public static ExecutionOptions buildExecutionOptions(Map configValues) {
+		final boolean haltOnError = ConfigurationHelper.getBoolean( AvailableSettings.HBM2DDL_HALT_ON_ERROR, configValues, false);
+		final ExceptionHandler exceptionHandler = haltOnError ? ExceptionHandlerHaltImpl.INSTANCE : ExceptionHandlerLoggedImpl.INSTANCE;
+		return buildExecutionOptions( configValues, exceptionHandler );
+	}
+
+	public static ExecutionOptions buildExecutionOptions(Map configValues, ExceptionHandler exceptionHandler) {
+
 		return new ExecutionOptions() {
 			@Override
 			public boolean shouldManageNamespaces() {
-				return Helper.interpretNamespaceHandling( configurationValues );
+				return Helper.interpretNamespaceHandling( getConfigurationValues() );
 			}
 
 			@Override
 			public Map getConfigurationValues() {
-				return configurationValues;
+				return configValues;
 			}
 
 			@Override
@@ -111,7 +110,7 @@ public class SchemaManagementToolCoordinator {
 	@SuppressWarnings("unchecked")
 	private static void performDatabaseAction(
 			final Action action,
-			Metadata metadata,
+			DatabaseModel runtimeDatabaseModel,
 			SchemaManagementTool tool,
 			ServiceRegistry serviceRegistry,
 			final ExecutionOptions executionOptions) {
@@ -126,12 +125,8 @@ public class SchemaManagementToolCoordinator {
 						CreateSettingSelector.INSTANCE,
 						serviceRegistry
 				);
-				tool.getSchemaCreator( executionOptions.getConfigurationValues() ).doCreation(
-						metadata,
-						executionOptions,
-						createDescriptor,
-						createDescriptor
-				);
+				tool.getSchemaCreator( runtimeDatabaseModel, executionOptions.getConfigurationValues() )
+						.doCreation( executionOptions, createDescriptor, createDescriptor );
 				break;
 			}
 			case CREATE:
@@ -141,23 +136,16 @@ public class SchemaManagementToolCoordinator {
 						DropSettingSelector.INSTANCE,
 						serviceRegistry
 				);
-				tool.getSchemaDropper( executionOptions.getConfigurationValues() ).doDrop(
-						metadata,
-						executionOptions,
-						dropDescriptor,
-						dropDescriptor
-				);
+				tool.getSchemaDropper( runtimeDatabaseModel, executionOptions.getConfigurationValues() )
+						.doDrop( executionOptions, dropDescriptor, dropDescriptor );
+
 				final JpaTargetAndSourceDescriptor createDescriptor = buildDatabaseTargetDescriptor(
 						executionOptions.getConfigurationValues(),
 						CreateSettingSelector.INSTANCE,
 						serviceRegistry
 				);
-				tool.getSchemaCreator( executionOptions.getConfigurationValues() ).doCreation(
-						metadata,
-						executionOptions,
-						createDescriptor,
-						createDescriptor
-				);
+				tool.getSchemaCreator( runtimeDatabaseModel, executionOptions.getConfigurationValues() )
+						.doCreation( executionOptions, createDescriptor, createDescriptor );
 				break;
 			}
 			case DROP: {
@@ -166,12 +154,8 @@ public class SchemaManagementToolCoordinator {
 						DropSettingSelector.INSTANCE,
 						serviceRegistry
 				);
-				tool.getSchemaDropper( executionOptions.getConfigurationValues() ).doDrop(
-						metadata,
-						executionOptions,
-						dropDescriptor,
-						dropDescriptor
-				);
+				tool.getSchemaDropper( runtimeDatabaseModel, executionOptions.getConfigurationValues() )
+						.doDrop( executionOptions, dropDescriptor, dropDescriptor );
 				break;
 			}
 			case UPDATE: {
@@ -180,18 +164,13 @@ public class SchemaManagementToolCoordinator {
 						MigrateSettingSelector.INSTANCE,
 						serviceRegistry
 				);
-				tool.getSchemaMigrator( executionOptions.getConfigurationValues() ).doMigration(
-						metadata,
-						executionOptions,
-						migrateDescriptor
-				);
+				tool.getSchemaMigrator( runtimeDatabaseModel, executionOptions.getConfigurationValues() )
+						.doMigration( executionOptions, migrateDescriptor );
 				break;
 			}
 			case VALIDATE: {
-				tool.getSchemaValidator( executionOptions.getConfigurationValues() ).doValidation(
-						metadata,
-						executionOptions
-				);
+				tool.getSchemaValidator( runtimeDatabaseModel, executionOptions.getConfigurationValues() )
+						.doValidation( executionOptions );
 				break;
 			}
 		}
@@ -248,7 +227,7 @@ public class SchemaManagementToolCoordinator {
 	@SuppressWarnings("unchecked")
 	private static void performScriptAction(
 			Action scriptAction,
-			Metadata metadata,
+			DatabaseModel runtimeDatabaseModel,
 			SchemaManagementTool tool,
 			ServiceRegistry serviceRegistry,
 			ExecutionOptions executionOptions) {
@@ -259,12 +238,8 @@ public class SchemaManagementToolCoordinator {
 						CreateSettingSelector.INSTANCE,
 						serviceRegistry
 				);
-				tool.getSchemaCreator( executionOptions.getConfigurationValues() ).doCreation(
-						metadata,
-						executionOptions,
-						createDescriptor,
-						createDescriptor
-				);
+				tool.getSchemaCreator( runtimeDatabaseModel, executionOptions.getConfigurationValues() )
+						.doCreation( executionOptions, createDescriptor, createDescriptor );
 				break;
 			}
 			case CREATE:
@@ -274,23 +249,16 @@ public class SchemaManagementToolCoordinator {
 						DropSettingSelector.INSTANCE,
 						serviceRegistry
 				);
-				tool.getSchemaDropper( executionOptions.getConfigurationValues() ).doDrop(
-						metadata,
-						executionOptions,
-						dropDescriptor,
-						dropDescriptor
-				);
+				tool.getSchemaDropper( runtimeDatabaseModel, executionOptions.getConfigurationValues() )
+						.doDrop( executionOptions, dropDescriptor, dropDescriptor );
+
 				final JpaTargetAndSourceDescriptor createDescriptor = buildScriptTargetDescriptor(
 						executionOptions.getConfigurationValues(),
 						CreateSettingSelector.INSTANCE,
 						serviceRegistry
 				);
-				tool.getSchemaCreator( executionOptions.getConfigurationValues() ).doCreation(
-						metadata,
-						executionOptions,
-						createDescriptor,
-						createDescriptor
-				);
+				tool.getSchemaCreator( runtimeDatabaseModel, executionOptions.getConfigurationValues() )
+						.doCreation( executionOptions, createDescriptor, createDescriptor );
 				break;
 			}
 			case DROP: {
@@ -299,12 +267,8 @@ public class SchemaManagementToolCoordinator {
 						DropSettingSelector.INSTANCE,
 						serviceRegistry
 				);
-				tool.getSchemaDropper( executionOptions.getConfigurationValues() ).doDrop(
-						metadata,
-						executionOptions,
-						dropDescriptor,
-						dropDescriptor
-				);
+				tool.getSchemaDropper( runtimeDatabaseModel, executionOptions.getConfigurationValues() )
+						.doDrop( executionOptions, dropDescriptor, dropDescriptor );
 				break;
 			}
 			case UPDATE: {
@@ -313,11 +277,8 @@ public class SchemaManagementToolCoordinator {
 						MigrateSettingSelector.INSTANCE,
 						serviceRegistry
 				);
-				tool.getSchemaMigrator( executionOptions.getConfigurationValues() ).doMigration(
-						metadata,
-						executionOptions,
-						migrateDescriptor
-				);
+				tool.getSchemaMigrator( runtimeDatabaseModel, executionOptions.getConfigurationValues() )
+						.doMigration( executionOptions, migrateDescriptor );
 				break;
 			}
 			case VALIDATE: {

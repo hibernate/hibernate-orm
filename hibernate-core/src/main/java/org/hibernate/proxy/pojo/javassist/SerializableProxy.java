@@ -6,12 +6,11 @@
  */
 package org.hibernate.proxy.pojo.javassist;
 
-import java.io.Serializable;
 import java.lang.reflect.Method;
 
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.proxy.AbstractSerializableProxy;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.type.CompositeType;
 
 /**
  * Serializable placeholder for Javassist proxies
@@ -27,21 +26,21 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 	private final Class identifierSetterMethodClass;
 	private final Class[] identifierSetterMethodParams;
 
-	private final CompositeType componentIdType;
+	private final EmbeddedTypeDescriptor componentIdType;
 
 	/**
-	 * @deprecated use {@link #SerializableProxy(String, Class, Class[], Serializable, Boolean, String, boolean, Method, Method, CompositeType)} instead.
+	 * @deprecated use {@link #SerializableProxy(String, Class, Class[], Object, Boolean, String, boolean, Method, Method, CompositeType)} instead.
 	 */
 	@Deprecated
 	public SerializableProxy(
 			String entityName,
 			Class persistentClass,
 			Class[] interfaces,
-			Serializable id,
+			Object id,
 			Boolean readOnly,
 			Method getIdentifierMethod,
 			Method setIdentifierMethod,
-			CompositeType componentIdType) {
+			EmbeddedTypeDescriptor componentIdType) {
 		this(
 				entityName, persistentClass, interfaces, id, readOnly, null, false,
 				getIdentifierMethod, setIdentifierMethod, componentIdType
@@ -52,13 +51,13 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 			String entityName,
 			Class persistentClass,
 			Class[] interfaces,
-			Serializable id,
+			Object id,
 			Boolean readOnly,
 			String sessionFactoryUuid,
 			boolean allowLoadOutsideTransaction,
 			Method getIdentifierMethod,
 			Method setIdentifierMethod,
-			CompositeType componentIdType) {
+			EmbeddedTypeDescriptor componentIdType) {
 		super( entityName, id, readOnly, sessionFactoryUuid, allowLoadOutsideTransaction );
 		this.persistentClass = persistentClass;
 		this.interfaces = interfaces;
@@ -91,7 +90,7 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 	}
 
 	@Override
-	protected Serializable getId() {
+	protected Object getId() {
 		return super.getId();
 	}
 
@@ -123,7 +122,7 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 		return identifierSetterMethodParams;
 	}
 
-	protected CompositeType getComponentIdType() {
+	protected EmbeddedTypeDescriptor getComponentIdType() {
 		return componentIdType;
 	}
 

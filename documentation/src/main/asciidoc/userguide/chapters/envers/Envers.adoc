@@ -257,6 +257,10 @@ This property is only evaluated if the `ValidityAuditStrategy` is used.
 Column name of the timestamp of the end revision until which the data was valid.
 Only used if the `ValidityAuditStrategy` is used, and `org.hibernate.envers.audit_strategy_validity_store_revend_timestamp` evaluates to true
 
+
+`org.hibernate.envers.use_numeric_revend_timestamp_type` (default `false`)::
+When enabled, uses `Long` data type to represent the revision end timestamp value rather than `Timestamp`.
+
 `*org.hibernate.envers.use_revision_entity_with_native_id*` (default: `true` )::
 Boolean flag that determines the strategy of revision number generation.
 Default implementation of revision entity uses native identifier generator.
@@ -298,6 +302,10 @@ Guarantees proper validity audit strategy behavior when application reuses ident
 `*org.hibernate.envers.original_id_prop_name*` (default: `originalId` )::
 Specifies the composite-id key property name used by the audit table mappings.
 
+`org.hibernate.envers.audit_strategy_validity_legacy_revend_timestamp` (dfault: `true`)::
+Should use legacy validity-based audit strategy's joined inheritance-based revision end timestamp behavior.
+
+
 [IMPORTANT]
 ====
 The following configuration options have been added recently and should
@@ -307,6 +315,8 @@ be regarded as experimental:
 .  `org.hibernate.envers.using_modified_flag`
 .  `org.hibernate.envers.modified_flag_suffix`
 .  `org.hibernate.envers.original_id_prop_name`
+.  `org.hibernate.envers.use_numeric_revend_timestamp_type`
+.  `org.hibernate.envers.audit_strategy_validity_legacy_revend_timestamp` (See HHH-9062)
 ====
 
 [[envers-additional-mappings]]
@@ -432,7 +442,7 @@ By default, that includes just:
 revision number::
 An integral value (`int/Integer` or `long/Long`). Essentially, the primary key of the revision
 revision timestamp::
-Either a `long/Long` or `java.util.Date` value representing the instant at which the revision was made.
+Either a `long/Long`, `java.util.Date`, or `java.time.LocalDateTime` value representing the instant at which the revision was made.
 When using a `java.util.Date`, instead of a `long/Long` for the revision timestamp, take care not to store it to a column data type which will lose precision.
 
 Envers handles this information as an entity.
@@ -736,7 +746,7 @@ which stores both start and end revisions for entities. See <<envers-audit-Valid
 ====
 
 [[entities-at-revision]]
-=== Querying for entities of a class at a given revision
+==== Querying for entities of a class at a given revision
 
 The entry point for this type of queries is:
 
@@ -830,7 +840,7 @@ include::{extrasdir}/entities-filtering-and-pagination.sql[]
 ====
 
 [[revisions-of-entity]]
-=== Querying for revisions, at which entities of a given class changed
+==== Querying for revisions, at which entities of a given class changed
 
 The entry point for this type of queries is:
 
@@ -907,7 +917,7 @@ In other words, the result set would contain a list of `Customer` instances, one
 hold the audited property data at the _maximum_ revision number for each `Customer` primary key.
 
 [[envers-tracking-properties-changes-queries]]
-=== Querying for entity revisions that modified a given property
+==== Querying for entity revisions that modified a given property
 
 For the two types of queries described above it's possible to use special `Audit` criteria called `hasChanged()` and `hasNotChanged()`
 that makes use of the functionality described in <<envers-tracking-properties-changes>>.
@@ -1014,7 +1024,7 @@ for ( Object entry : results ) {
 ====
 
 [[envers-tracking-modified-entities-queries]]
-=== Querying for entity types modified in a given revision
+==== Querying for entity types modified in a given revision
 
 [NOTE]
 ====
@@ -1052,7 +1062,7 @@ Other queries (also accessible from `org.hibernate.envers.CrossTypeRevisionChang
   Executes `3N+1` SQL queries, where `N` is a number of different entity classes modified within specified revision.
 
 [[envers-querying-entity-relation-joins]]
-=== Querying for entities using entity relation joins
+==== Querying for entities using entity relation joins
 
 [WARNING]
 ====
@@ -1219,6 +1229,31 @@ This query will return all revision information entities for revisions between 1
 related to deletions.  If deletions are not of interest, you would pass `false` as the second argument.
 
 Note that this query uses the `DefaultRevisionEntity` class type.  The class provided will vary depending on the
+configuration properties used to configure Envers or if you supply your own revision entity.  Typically users who
+will use this API will likely be providing a custom revision entity implementation to obtain custom information
+being maintained per revision.
+
+[[envers-querying-revision-entities]]
+=== Querying for revision information without loading entities
+
+It may sometimes be useful to load information about revisions to find out who performed specific revisions or
+to know what entity names were modified but the change log about the related audited entities isn't needed.
+This API allows an efficient way to get the revision information entity log without instantiating the actual
+entities themselves.
+
+Here is a simple example:
+
+[source,java]
+----
+AuditQuery query = getAuditReader().createQuery()
+    .forRevisionsOfEntity( DefaultRevisionEntity.class, true )
+    .add( AuditEntity.revisionNumber().between( 1, 25 ) );
+----
+
+This query will return all revision information entities for revisions between 1 and 25 including those which are
+related to deletions.  If deletions are not of interest, you would pass `false` as the second argument.
+
+Note this this query uses the `DefaultRevisionEntity` class type.  The class provided will vary depending on the
 configuration properties used to configure Envers or if you supply your own revision entity.  Typically users who
 will use this API will likely be providing a custom revision entity implementation to obtain custom information
 being maintained per revision.
@@ -1392,6 +1427,10 @@ Optionally, you can also override the default values using following properties:
 `org.hibernate.envers.audit_strategy_validity_end_rev_field_name`
 
 `org.hibernate.envers.audit_strategy_validity_revend_timestamp_field_name`
+
+`org.hibernate.envers.use_numeric_revend_timestamp_field_type`
+
+`org.hibernate.envers.audit_strategy_validity_legacy_revend_timestamp`
 
 For more information, see <<envers-configuration>>.
 ====

@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -29,6 +29,9 @@ import javax.validation.metadata.PropertyDescriptor;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.boot.model.domain.spi.EntityMappingImplementor;
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.ClassLoaderAccess;
@@ -41,12 +44,10 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.JavaTypeHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SingleTableSubclass;
 
 import org.jboss.logging.Logger;
@@ -149,7 +150,7 @@ class TypeSafeActivator {
 
 		applyRelationalConstraints(
 				factory,
-				activationContext.getMetadata().getEntityBindings(),
+				JavaTypeHelper.cast( activationContext.getMetadata().getEntityMappings() ),
 				cfgService.getSettings(),
 				activationContext.getServiceRegistry().getService( JdbcServices.class ).getDialect(),
 				new ClassLoaderAccessImpl(
@@ -159,22 +160,21 @@ class TypeSafeActivator {
 		);
 	}
 
-	@SuppressWarnings( {"UnusedDeclaration"})
 	public static void applyRelationalConstraints(
 			ValidatorFactory factory,
-			Collection<PersistentClass> persistentClasses,
+			Collection<EntityMappingImplementor> entityMappings,
 			Map settings,
 			Dialect dialect,
 			ClassLoaderAccess classLoaderAccess) {
-		Class<?>[] groupsArray = GroupsPerOperation.buildGroupsForOperation(
+		final Class<?>[] groupsArray = GroupsPerOperation.buildGroupsForOperation(
 				GroupsPerOperation.Operation.DDL,
 				settings,
 				classLoaderAccess
 		);
-		Set<Class<?>> groups = new HashSet<Class<?>>( Arrays.asList( groupsArray ) );
+		final Set<Class<?>> groups = new HashSet<>( Arrays.asList( groupsArray ) );
 
-		for ( PersistentClass persistentClass : persistentClasses ) {
-			final String className = persistentClass.getClassName();
+		for ( EntityMappingImplementor entityMapping : entityMappings ) {
+			final String className = entityMapping.getEntityName();
 
 			if ( className == null || className.length() == 0 ) {
 				continue;
@@ -183,12 +183,12 @@ class TypeSafeActivator {
 			try {
 				clazz = classLoaderAccess.classForName( className );
 			}
-			catch ( ClassLoadingException e ) {
+			catch (ClassLoadingException e) {
 				throw new AssertionFailure( "Entity class not found", e );
 			}
 
 			try {
-				applyDDL( "", persistentClass, clazz, factory, groups, true, dialect );
+				applyDDL( "", entityMapping, clazz, factory, groups, true, dialect );
 			}
 			catch (Exception e) {
 				LOG.unableToApplyConstraints( className, e );
@@ -198,7 +198,7 @@ class TypeSafeActivator {
 
 	private static void applyDDL(
 			String prefix,
-			PersistentClass persistentClass,
+			EntityMappingImplementor persistentClass,
 			Class<?> clazz,
 			ValidatorFactory factory,
 			Set<Class<?>> groups,
@@ -208,14 +208,14 @@ class TypeSafeActivator {
 		//no bean level constraints can be applied, go to the properties
 
 		for ( PropertyDescriptor propertyDesc : descriptor.getConstrainedProperties() ) {
-			Property property = findPropertyByName( persistentClass, prefix + propertyDesc.getPropertyName() );
+			final PersistentAttributeMapping property = findPropertyByName( persistentClass, prefix + propertyDesc.getPropertyName() );
 			boolean hasNotNull;
 			if ( property != null ) {
 				hasNotNull = applyConstraints(
 						propertyDesc.getConstraintDescriptors(), property, propertyDesc, groups, activateNotNull, dialect
 				);
-				if ( property.isComposite() && propertyDesc.isCascaded() ) {
-					Class<?> componentClass = ( (Component) property.getValue() ).getComponentClass();
+				if ( isComposite( property ) && propertyDesc.isCascaded() ) {
+					Class<?> componentClass = ( (Component) property.getValueMapping() ).getComponentClass();
 
 					/*
 					 * we can apply not null if the upper component let's us activate not null
@@ -237,7 +237,7 @@ class TypeSafeActivator {
 
 	private static boolean applyConstraints(
 			Set<ConstraintDescriptor<?>> constraintDescriptors,
-			Property property,
+			PersistentAttributeMapping property,
 			PropertyDescriptor propertyDesc,
 			Set<Class<?>> groups,
 			boolean canApplyNotNull,
@@ -276,46 +276,32 @@ class TypeSafeActivator {
 		return hasNotNull;
 	}
 
-	private static void applyMin(Property property, ConstraintDescriptor<?> descriptor, Dialect dialect) {
+	private static void applyMin(PersistentAttributeMapping property, ConstraintDescriptor<?> descriptor, Dialect dialect) {
 		if ( Min.class.equals( descriptor.getAnnotation().annotationType() ) ) {
 			@SuppressWarnings("unchecked")
-			ConstraintDescriptor<Min> minConstraint = (ConstraintDescriptor<Min>) descriptor;
-			long min = minConstraint.getAnnotation().value();
+			final ConstraintDescriptor<Min> minConstraint = (ConstraintDescriptor<Min>) descriptor;
+			final long min = minConstraint.getAnnotation().value();
 
-			@SuppressWarnings("unchecked")
-			final Iterator<Selectable> itor = property.getColumnIterator();
-			if ( itor.hasNext() ) {
-				final Selectable selectable = itor.next();
-				if ( Column.class.isInstance( selectable ) ) {
-					Column col = (Column) selectable;
-					String checkConstraint = col.getQuotedName(dialect) + ">=" + min;
-					applySQLCheck( col, checkConstraint );
-				}
-			}
+			final Column col = getColumn( property );
+			final String checkConstraint = col.getQuotedName(dialect) + ">=" + min;
+			applySQLCheck( col, checkConstraint );
 		}
 	}
 
-	private static void applyMax(Property property, ConstraintDescriptor<?> descriptor, Dialect dialect) {
+	private static void applyMax(PersistentAttributeMapping property, ConstraintDescriptor<?> descriptor, Dialect dialect) {
 		if ( Max.class.equals( descriptor.getAnnotation().annotationType() ) ) {
 			@SuppressWarnings("unchecked")
-			ConstraintDescriptor<Max> maxConstraint = (ConstraintDescriptor<Max>) descriptor;
-			long max = maxConstraint.getAnnotation().value();
+			final ConstraintDescriptor<Max> maxConstraint = (ConstraintDescriptor<Max>) descriptor;
+			final long max = maxConstraint.getAnnotation().value();
 
-			@SuppressWarnings("unchecked")
-			final Iterator<Selectable> itor = property.getColumnIterator();
-			if ( itor.hasNext() ) {
-				final Selectable selectable = itor.next();
-				if ( Column.class.isInstance( selectable ) ) {
-					Column col = (Column) selectable;
-					String checkConstraint = col.getQuotedName( dialect ) + "<=" + max;
-					applySQLCheck( col, checkConstraint );
-				}
-			}
+			final Column col = getColumn( property );
+			final String checkConstraint = col.getQuotedName(dialect) + "<=" + max;
+			applySQLCheck( col, checkConstraint );
 		}
 	}
 
 	private static void applySQLCheck(Column col, String checkConstraint) {
-		String existingCheck = col.getCheckConstraint();
+		final String existingCheck = col.getCheckConstraint();
 		// need to check whether the new check is already part of the existing check, because applyDDL can be called
 		// multiple times
 		if ( StringHelper.isNotEmpty( existingCheck ) && !existingCheck.contains( checkConstraint ) ) {
@@ -325,18 +311,17 @@ class TypeSafeActivator {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static boolean applyNotNull(Property property, ConstraintDescriptor<?> descriptor) {
+	private static boolean applyNotNull(PersistentAttributeMapping property, ConstraintDescriptor<?> descriptor) {
 		boolean hasNotNull = false;
 		if ( NotNull.class.equals( descriptor.getAnnotation().annotationType() ) ) {
 			// single table inheritance should not be forced to null due to shared state
-			if ( !( property.getPersistentClass() instanceof SingleTableSubclass ) ) {
+			if ( !( property.getEntity() instanceof SingleTableSubclass ) ) {
 				//composite should not add not-null on all columns
-				if ( !property.isComposite() ) {
-					final Iterator<Selectable> itr = property.getColumnIterator();
-					while ( itr.hasNext() ) {
-						final Selectable selectable = itr.next();
-						if ( Column.class.isInstance( selectable ) ) {
-							Column.class.cast( selectable ).setNullable( false );
+				if ( !isComposite( property ) ) {
+					List<MappedColumn> mappedColumns = property.getValueMapping().getMappedColumns();
+					mappedColumns.forEach( mappedColumn -> {
+						if ( Column.class.isInstance( mappedColumn ) ) {
+							Column.class.cast( mappedColumn ).setNullable( false );
 						}
 						else {
 							LOG.debugf(
@@ -345,7 +330,7 @@ class TypeSafeActivator {
 									property.getName()
 							);
 						}
-					}
+					} );
 				}
 			}
 			hasNotNull = true;
@@ -353,64 +338,47 @@ class TypeSafeActivator {
 		return hasNotNull;
 	}
 
-	private static void applyDigits(Property property, ConstraintDescriptor<?> descriptor) {
+	private static void applyDigits(PersistentAttributeMapping property, ConstraintDescriptor<?> descriptor) {
 		if ( Digits.class.equals( descriptor.getAnnotation().annotationType() ) ) {
 			@SuppressWarnings("unchecked")
-			ConstraintDescriptor<Digits> digitsConstraint = (ConstraintDescriptor<Digits>) descriptor;
-			int integerDigits = digitsConstraint.getAnnotation().integer();
-			int fractionalDigits = digitsConstraint.getAnnotation().fraction();
+			final ConstraintDescriptor<Digits> digitsConstraint = (ConstraintDescriptor<Digits>) descriptor;
+			final int integerDigits = digitsConstraint.getAnnotation().integer();
+			final int fractionalDigits = digitsConstraint.getAnnotation().fraction();
 
-			@SuppressWarnings("unchecked")
-			final Iterator<Selectable> itor = property.getColumnIterator();
-			if ( itor.hasNext() ) {
-				final Selectable selectable = itor.next();
-				if ( Column.class.isInstance( selectable ) ) {
-					Column col = (Column) selectable;
-					col.setPrecision( integerDigits + fractionalDigits );
-					col.setScale( fractionalDigits );
-				}
-			}
-
+			final Column col = getColumn( property );
+			col.setPrecision( integerDigits + fractionalDigits );
+			col.setScale( fractionalDigits );
 		}
 	}
 
-	private static void applySize(Property property, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor) {
+	private static void applySize(PersistentAttributeMapping property, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor) {
 		if ( Size.class.equals( descriptor.getAnnotation().annotationType() )
 				&& String.class.equals( propertyDescriptor.getElementClass() ) ) {
 			@SuppressWarnings("unchecked")
-			ConstraintDescriptor<Size> sizeConstraint = (ConstraintDescriptor<Size>) descriptor;
-			int max = sizeConstraint.getAnnotation().max();
+			final ConstraintDescriptor<Size> sizeConstraint = (ConstraintDescriptor<Size>) descriptor;
+			final int max = sizeConstraint.getAnnotation().max();
 
-			@SuppressWarnings("unchecked")
-			final Iterator<Selectable> itor = property.getColumnIterator();
-			if ( itor.hasNext() ) {
-				final Selectable selectable = itor.next();
-				Column col = (Column) selectable;
-				if ( max < Integer.MAX_VALUE ) {
-					col.setLength( max );
-				}
+			final Column col = getColumn( property );
+			if ( max < Integer.MAX_VALUE ) {
+				col.setLength( (long) max );
 			}
 		}
 	}
 
-	private static void applyLength(Property property, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor) {
-		if ( "org.hibernate.validator.constraints.Length".equals(
-				descriptor.getAnnotation().annotationType().getName()
-		)
-				&& String.class.equals( propertyDescriptor.getElementClass() ) ) {
+	private static void applyLength(
+			PersistentAttributeMapping property,
+			ConstraintDescriptor<?> descriptor,
+			PropertyDescriptor propertyDescriptor) {
+		if (
+				"org.hibernate.validator.constraints.Length".equals(
+						descriptor.getAnnotation().annotationType().getName()
+				) && String.class.equals( propertyDescriptor.getElementClass() ) ) {
 			@SuppressWarnings("unchecked")
-			int max = (Integer) descriptor.getAttributes().get( "max" );
+			final int max = (Integer) descriptor.getAttributes().get( "max" );
 
-			@SuppressWarnings("unchecked")
-			final Iterator<Selectable> itor = property.getColumnIterator();
-			if ( itor.hasNext() ) {
-				final Selectable selectable = itor.next();
-				if ( Column.class.isInstance( selectable ) ) {
-					Column col = (Column) selectable;
-					if ( max < Integer.MAX_VALUE ) {
-						col.setLength( max );
-					}
-				}
+			final Column col = getColumn( property );
+			if ( max < Integer.MAX_VALUE ) {
+				col.setLength( (long) max );
 			}
 		}
 	}
@@ -419,9 +387,9 @@ class TypeSafeActivator {
 	 * Locate the property by path in a recursive way, including IdentifierProperty in the loop if propertyName is
 	 * {@code null}.  If propertyName is {@code null} or empty, the IdentifierProperty is returned
 	 */
-	private static Property findPropertyByName(PersistentClass associatedClass, String propertyName) {
-		Property property = null;
-		Property idProperty = associatedClass.getIdentifierProperty();
+	private static PersistentAttributeMapping findPropertyByName(EntityMappingImplementor associatedClass, String propertyName) {
+		PersistentAttributeMapping property = null;
+		PersistentAttributeMapping idProperty = associatedClass.getIdentifierAttributeMapping();
 		String idName = idProperty != null ? idProperty.getName() : null;
 		try {
 			if ( propertyName == null
@@ -439,13 +407,13 @@ class TypeSafeActivator {
 				while ( st.hasMoreElements() ) {
 					String element = (String) st.nextElement();
 					if ( property == null ) {
-						property = associatedClass.getProperty( element );
+						property = associatedClass.getDeclaredPersistentAttribute( element );
 					}
 					else {
-						if ( !property.isComposite() ) {
+						if ( !isComposite( property) ) {
 							return null;
 						}
-						property = ( (Component) property.getValue() ).getProperty( element );
+						property = ( (Component) property.getValueMapping() ).getProperty( element );
 					}
 				}
 			}
@@ -453,20 +421,22 @@ class TypeSafeActivator {
 		catch ( MappingException e ) {
 			try {
 				//if we do not find it try to check the identifier mapper
-				if ( associatedClass.getIdentifierMapper() == null ) {
+				if ( associatedClass.getEntityMappingHierarchy().getIdentifierEmbeddedValueMapping() == null ) {
 					return null;
 				}
 				StringTokenizer st = new StringTokenizer( propertyName, ".", false );
 				while ( st.hasMoreElements() ) {
 					String element = (String) st.nextElement();
 					if ( property == null ) {
-						property = associatedClass.getIdentifierMapper().getProperty( element );
+						property = associatedClass.getEntityMappingHierarchy()
+								.getIdentifierEmbeddedValueMapping()
+								.getDeclaredPersistentAttribute( element );
 					}
 					else {
-						if ( !property.isComposite() ) {
+						if ( !isComposite(property) ) {
 							return null;
 						}
-						property = ( (Component) property.getValue() ).getProperty( element );
+						property = ( (Component) property.getValueMapping() ).getProperty( element );
 					}
 				}
 			}
@@ -553,5 +523,13 @@ class TypeSafeActivator {
 				},
 				null
 		);
+	}
+
+	private static boolean isComposite(PersistentAttributeMapping property) {
+		return Component.class.isInstance( property);
+	}
+
+	private static Column getColumn(PersistentAttributeMapping property) {
+		return (Column) ((List<MappedColumn>) property.getValueMapping().getMappedColumns()).get( 0 );
 	}
 }

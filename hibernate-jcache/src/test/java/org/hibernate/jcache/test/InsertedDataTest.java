@@ -14,17 +14,16 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.support.DomainDataRegionTemplate;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.ServiceRegistry;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.junit4.ExtraAssertions;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.junit5.FunctionalSessionFactoryTesting;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
 import static org.junit.Assert.assertFalse;
@@ -39,44 +38,40 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Steve Ebersole
  */
-public class InsertedDataTest extends BaseUnitTestCase {
-
-	private ServiceRegistry serviceRegistry;
-	private SessionFactoryImplementor sessionFactory;
-
-	@Before
-	public void acquireResources() {
-		serviceRegistry = TestHelper.getStandardServiceRegistryBuilder()
+@SuppressWarnings({"WeakerAccess", "unused"})
+@FunctionalSessionFactoryTesting
+public class InsertedDataTest extends BaseFunctionalTest {
+	@Override
+	public SessionFactoryImplementor produceSessionFactory() {
+		final ServiceRegistry serviceRegistry = TestHelper.getStandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.CACHE_REGION_PREFIX, "" )
 				.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" )
 				.build();
 
-		final Metadata metadata = new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( CacheableItem.class )
-				.buildMetadata();
-		TestHelper.createRegions( metadata, true, false );
-
-		sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
-	}
-
-	@After
-	public void releaseResources() {
-		if ( sessionFactory != null ) {
-			sessionFactory.close();
+		try {
+			final Metadata metadata = new MetadataSources( serviceRegistry )
+					.addAnnotatedClass( CacheableItem.class )
+					.buildMetadata();
+			TestHelper.createRegions( metadata, true, false );
+			return (SessionFactoryImplementor) metadata.buildSessionFactory();
 		}
-	}
-
-	public SessionFactoryImplementor sessionFactory() {
-		return sessionFactory;
+		catch (Exception e) {
+			try {
+				StandardServiceRegistryBuilder.destroy( serviceRegistry );
+			}
+			catch (Exception ignore) {
+			}
+			throw e;
+		}
 	}
 
 	@Test
 	public void testInsert() {
-		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getCache().evictEntityData();
 		sessionFactory().getStatistics().clear();
 
 		inTransaction(
-				sessionFactory,
+				sessionFactory(),
 				s -> {
 					CacheableItem item = new CacheableItem( "data" );
 					s.save( item );
@@ -86,20 +81,18 @@ public class InsertedDataTest extends BaseUnitTestCase {
 		assertTrue( sessionFactory().getCache().containsEntity( CacheableItem.class, 1L ) );
 
 		inTransaction(
-				sessionFactory,
-				s -> {
-					s.createQuery( "delete CacheableItem" ).executeUpdate();
-				}
+				sessionFactory(),
+				s -> s.createQuery( "delete CacheableItem" ).executeUpdate()
 		);
 	}
 
 	@Test
 	public void testInsertWithRollback() {
-		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getCache().evictEntityData();
 		sessionFactory().getStatistics().clear();
 
 		inTransaction(
-				sessionFactory,
+				sessionFactory(),
 				s -> {
 					CacheableItem item = new CacheableItem( "data" );
 					s.save( item );
@@ -113,11 +106,11 @@ public class InsertedDataTest extends BaseUnitTestCase {
 
 	@Test
 	public void testInsertThenUpdate() {
-		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getCache().evictEntityData();
 		sessionFactory().getStatistics().clear();
 
 		inTransaction(
-				sessionFactory,
+				sessionFactory(),
 				s -> {
 					CacheableItem item = new CacheableItem( "data" );
 					s.save( item );
@@ -129,18 +122,18 @@ public class InsertedDataTest extends BaseUnitTestCase {
 		assertTrue( sessionFactory().getCache().containsEntity( CacheableItem.class, 1L ) );
 
 		inTransaction(
-				sessionFactory,
+				sessionFactory(),
 				s -> s.createQuery( "delete CacheableItem" ).executeUpdate()
 		);
 	}
 
 	@Test
 	public void testInsertThenUpdateThenRollback() {
-		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getCache().evictEntityData();
 		sessionFactory().getStatistics().clear();
 
 		inTransaction(
-				sessionFactory,
+				sessionFactory(),
 				s -> {
 					CacheableItem item = new CacheableItem( "data" );
 					s.save( item );
@@ -155,11 +148,11 @@ public class InsertedDataTest extends BaseUnitTestCase {
 
 	@Test
 	public void testInsertWithRefresh() {
-		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getCache().evictEntityData();
 		sessionFactory().getStatistics().clear();
 
 		inTransaction(
-				sessionFactory,
+				sessionFactory(),
 				s -> {
 					CacheableItem item = new CacheableItem( "data" );
 					s.save( item );
@@ -171,18 +164,18 @@ public class InsertedDataTest extends BaseUnitTestCase {
 		assertTrue( sessionFactory().getCache().containsEntity( CacheableItem.class, 1L ) );
 
 		inTransaction(
-				sessionFactory,
+				sessionFactory(),
 				s -> s.createQuery( "delete CacheableItem" ).executeUpdate()
 		);
 	}
 
 	@Test
 	public void testInsertWithRefreshThenRollback() {
-		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getCache().evictEntityData();
 		sessionFactory().getStatistics().clear();
 
 		inTransaction(
-				sessionFactory,
+				sessionFactory(),
 				s -> {
 					CacheableItem item = new CacheableItem( "data" );
 					s.save( item );
@@ -194,13 +187,13 @@ public class InsertedDataTest extends BaseUnitTestCase {
 
 
 		inTransaction(
-				sessionFactory,
+				sessionFactory(),
 				s -> {
 					final DomainDataRegionTemplate region = (DomainDataRegionTemplate) sessionFactory().getCache().getRegion( "item" );
 					final Object fromCache = region.getCacheStorageAccess().getFromCache(
 							region.getEffectiveKeysFactory().createEntityKey(
 									1L,
-									sessionFactory().getMetamodel().entityPersister( CacheableItem.class ),
+									sessionFactory().getMetamodel().getEntityDescriptor( CacheableItem.class ).getHierarchy(),
 									sessionFactory(),
 									null
 							),
@@ -212,7 +205,7 @@ public class InsertedDataTest extends BaseUnitTestCase {
 		);
 
 		inTransaction(
-				sessionFactory,
+				sessionFactory(),
 				s -> {
 					CacheableItem item = s.get( CacheableItem.class, 1L );
 					assertNull( "it should be null", item );
@@ -222,11 +215,11 @@ public class InsertedDataTest extends BaseUnitTestCase {
 
 	@Test
 	public void testInsertWithClear() {
-		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getCache().evictEntityData();
 		sessionFactory().getStatistics().clear();
 
 		inTransaction(
-				sessionFactory,
+				sessionFactory(),
 				s -> {
 					CacheableItem item = new CacheableItem( "data" );
 					s.save( item );
@@ -238,24 +231,24 @@ public class InsertedDataTest extends BaseUnitTestCase {
 		assertTrue( sessionFactory().getCache().containsEntity( CacheableItem.class, 1L ) );
 
 		inTransaction(
-				sessionFactory,
+				sessionFactory(),
 				s -> s.createQuery( "delete CacheableItem" ).executeUpdate()
 		);
 	}
 
 	@Test
 	public void testInsertWithClearThenRollback() {
-		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getCache().evictEntityData();
 		sessionFactory().getStatistics().clear();
 
 		inTransaction(
-				sessionFactory,
+				sessionFactory(),
 				s -> {
 					CacheableItem item = new CacheableItem( "data" );
 					s.save( item );
 					s.flush();
 					s.clear();
-					item = s.get( CacheableItem.class, item.getId() );
+					s.get( CacheableItem.class, item.getId() );
 					s.getTransaction().markRollbackOnly();
 				}
 		);
@@ -263,7 +256,7 @@ public class InsertedDataTest extends BaseUnitTestCase {
 		assertFalse( sessionFactory().getCache().containsEntity( CacheableItem.class, 1L ) );
 
 		inTransaction(
-				sessionFactory,
+				sessionFactory(),
 				s -> {
 					final CacheableItem item = s.get( CacheableItem.class, 1L );
 					assertNull( "it should be null", item );

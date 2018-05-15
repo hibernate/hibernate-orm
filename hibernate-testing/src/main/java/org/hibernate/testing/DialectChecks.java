@@ -193,7 +193,7 @@ abstract public class DialectChecks {
 
 	public static class DoesNotSupportFollowOnLocking implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return !dialect.useFollowOnLocking( null );
+			return !dialect.useFollowOnLocking( null, null );
 		}
 	}
 

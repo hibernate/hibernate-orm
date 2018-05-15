@@ -6,8 +6,8 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import java.sql.Types;
 
@@ -17,11 +17,16 @@ public class MariaDB102Dialect extends MariaDB10Dialect {
 		super();
 
 		this.registerColumnType( Types.JAVA_OBJECT, "json" );
-		this.registerFunction( "json_valid", new StandardSQLFunction( "json_valid", StandardBasicTypes.NUMERIC_BOOLEAN ) );
-
 	}
 
 	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
+
+		registry.registerNamed( "json_valid", StandardSpiBasicTypes.NUMERIC_BOOLEAN );
+	}
+
+		@Override
 	public boolean supportsColumnCheck() {
 		return true;
 	}

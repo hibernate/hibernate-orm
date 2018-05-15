@@ -11,7 +11,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
-import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.MultiTenancyStrategy;
@@ -26,15 +25,15 @@ import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.QueryLiteralRendering;
+import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.tuple.entity.EntityTuplizer;
-import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 /**
  * @author Gail Badner
@@ -42,20 +41,20 @@ import org.hibernate.tuple.entity.EntityTuplizerFactory;
  */
 public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplementor {
 	private final MetadataImplementor metadata;
+	private final BootstrapContext bootstrapContext;
 	private final SessionFactoryOptionsBuilder optionsBuilder;
 
 	public SessionFactoryBuilderImpl(MetadataImplementor metadata, BootstrapContext bootstrapContext) {
-		this( metadata, new SessionFactoryOptionsBuilder(
+		this.metadata = metadata;
+		this.bootstrapContext = bootstrapContext;
+
+		this.optionsBuilder = new SessionFactoryOptionsBuilder(
 				metadata.getMetadataBuildingOptions().getServiceRegistry(),
 				bootstrapContext
-		) );
-	}
+		);
 
-	public SessionFactoryBuilderImpl(MetadataImplementor metadata, SessionFactoryOptionsBuilder optionsBuilder) {
-		this.metadata = metadata;
-		this.optionsBuilder = optionsBuilder;
 		if ( metadata.getSqlFunctionMap() != null ) {
-			for ( Map.Entry<String, SQLFunction> sqlFunctionEntry : metadata.getSqlFunctionMap().entrySet() ) {
+			for ( Map.Entry<String, SqmFunctionTemplate> sqlFunctionEntry : metadata.getSqlFunctionMap().entrySet() ) {
 				applySqlFunction( sqlFunctionEntry.getKey(), sqlFunctionEntry.getValue() );
 			}
 		}
@@ -170,12 +169,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyDefaultEntityMode(EntityMode entityMode) {
-		this.optionsBuilder.applyDefaultEntityMode( entityMode );
-		return this;
-	}
-
-	@Override
 	public SessionFactoryBuilder applyNullabilityChecking(boolean enabled) {
 		this.optionsBuilder.enableNullabilityChecking( enabled );
 		return this;
@@ -188,22 +181,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyEntityTuplizerFactory(EntityTuplizerFactory entityTuplizerFactory) {
-		this.optionsBuilder.applyEntityTuplizerFactory( entityTuplizerFactory );
-		return this;
-	}
-
-	@Override
-	public SessionFactoryBuilder applyEntityTuplizer(
-			EntityMode entityMode,
-			Class<? extends EntityTuplizer> tuplizerClass) {
-		this.optionsBuilder.applyEntityTuplizer( entityMode, tuplizerClass );
-		return this;
-	}
-
-	@Override
-	public SessionFactoryBuilder applyMultiTableBulkIdStrategy(MultiTableBulkIdStrategy strategy) {
-		this.optionsBuilder.applyMultiTableBulkIdStrategy( strategy );
+	public SessionFactoryBuilder applyIdTableStrategy(IdTableStrategy strategy) {
+		this.optionsBuilder.applyIdTableStrategy(strategy);
 		return this;
 	}
 
@@ -276,6 +255,21 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactoryBuilder applyNamedQueryCheckingOnStartup(boolean enabled) {
 		this.optionsBuilder.enableNamedQueryCheckingOnStartup( enabled );
+		return this;
+	}
+
+	@Override
+	public SessionFactoryBuilder applyNonJpaNativeQueryOrdinalParameterBase(Integer base) {
+		if ( base != null && base != 0 && base != 1 ) {
+			throw new IllegalArgumentException( "Illegal value for ordinal parameter base [" + base + "]; should be null, 0 or 1" );
+		}
+		this.optionsBuilder.applyNonJpaNativeQueryOrdinalParameterBase( base );
+		return this;
+	}
+
+	@Override
+	public SessionFactoryBuilder applyQueryLiteralRendering(QueryLiteralRendering queryLiteralRendering) {
+		this.optionsBuilder.applyLiteralRendering(queryLiteralRendering);
 		return this;
 	}
 
@@ -388,9 +382,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applySqlFunction(String registrationName, SQLFunction sqlFunction) {
-		this.optionsBuilder.applySqlFunction( registrationName, sqlFunction );
-		return this;
+	public SqmFunctionRegistry getSqmFunctionRegistry() {
+		return this.optionsBuilder.getSqmFunctionRegistry();
 	}
 
 	@Override
@@ -404,7 +397,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		this.optionsBuilder.enableReleaseResourcesOnClose( enable );
 		return this;
 	}
-
 
 	@Override
 	public SessionFactoryBuilder applyStrictJpaQueryLanguageCompliance(boolean enabled) {
@@ -459,7 +451,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactory build() {
 		metadata.validate();
-		return new SessionFactoryImpl( metadata, buildSessionFactoryOptions() );
+		return new SessionFactoryImpl( bootstrapContext, metadata, buildSessionFactoryOptions() );
 	}
 
 	@Override

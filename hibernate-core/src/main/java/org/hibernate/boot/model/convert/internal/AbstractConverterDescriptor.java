@@ -103,9 +103,10 @@ public abstract class AbstractConverterDescriptor implements ConverterDescriptor
 	@Override
 	@SuppressWarnings("unchecked")
 	public JpaAttributeConverter createJpaAttributeConverter(JpaAttributeConverterCreationContext context) {
+		final ManagedBean<? extends AttributeConverter> managedBean = createManagedBean( context );
 		return new JpaAttributeConverterImpl(
-				createManagedBean( context ),
-				context.getJavaTypeDescriptorRegistry().getDescriptor( getAttributeConverterClass() ),
+				managedBean,
+				context.getJavaTypeDescriptorRegistry().getDescriptor( managedBean.getBeanClass() ),
 				context.getJavaTypeDescriptorRegistry().getDescriptor( getDomainValueResolvedType().getErasedType() ),
 				context.getJavaTypeDescriptorRegistry().getDescriptor( getRelationalValueResolvedType().getErasedType() )
 		);

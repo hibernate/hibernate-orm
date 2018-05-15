@@ -6,10 +6,7 @@
  */
 package org.hibernate.event.service.internal;
 
-import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
 import org.hibernate.service.spi.SessionFactoryServiceInitiatorContext;
 
@@ -27,15 +24,7 @@ public class EventListenerServiceInitiator implements SessionFactoryServiceIniti
 	}
 
 	@Override
-	public EventListenerRegistry initiateService(
-			SessionFactoryImplementor sessionFactory,
-			SessionFactoryOptions sessionFactoryOptions,
-			ServiceRegistryImplementor registry) {
-		return new EventListenerRegistryImpl( sessionFactory, sessionFactoryOptions, registry );
-	}
-
-	@Override
 	public EventListenerRegistry initiateService(SessionFactoryServiceInitiatorContext context) {
-		return new EventListenerRegistryImpl( context.getSessionFactory(), context.getSessionFactoryOptions(), context.getServiceRegistry());
+		return new EventListenerRegistryImpl( context.getBootstrapContext(), context.getSessionFactory() );
 	}
 }

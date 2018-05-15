@@ -27,7 +27,7 @@ class PostCommitEventListenerGroupImpl<T> extends EventListenerGroupImpl<T> {
 
 	private final Class extendedListenerContract;
 
-	public PostCommitEventListenerGroupImpl(EventType<T> eventType, EventListenerRegistryImpl listenerRegistry) {
+	PostCommitEventListenerGroupImpl(EventType<T> eventType, EventListenerRegistryImpl listenerRegistry) {
 		super( eventType, listenerRegistry );
 
 		if ( eventType == EventType.POST_COMMIT_DELETE ) {

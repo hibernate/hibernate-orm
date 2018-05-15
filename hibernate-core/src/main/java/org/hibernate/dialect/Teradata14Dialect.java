@@ -10,27 +10,25 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.relational.QualifiedNameImpl;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Teradata14IdentityColumnSupport;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.spi.QueryParameters;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Index;
+import org.hibernate.metamodel.model.relational.spi.Index;
+import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
+import org.hibernate.naming.QualifiedNameImpl;
+import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.tool.schema.internal.StandardIndexExporter;
 import org.hibernate.tool.schema.spi.Exporter;
-import org.hibernate.type.StandardBasicTypes;
 
 /**
  * A dialect for the Teradata database
@@ -52,10 +50,14 @@ public class Teradata14Dialect extends TeradataDialect {
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 
-		registerFunction( "current_time", new SQLFunctionTemplate( StandardBasicTypes.TIME, "current_time" ) );
-		registerFunction( "current_date", new SQLFunctionTemplate( StandardBasicTypes.DATE, "current_date" ) );
-
 		TeraIndexExporter =  new TeradataIndexExporter( this );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		registry.registerNamed( "current_time" );
+		registry.registerNamed( "current_date" );
+
 	}
 
 	@Override
@@ -192,7 +194,7 @@ public class Teradata14Dialect extends TeradataDialect {
 	}
 
 	@Override
-	public boolean useFollowOnLocking(QueryParameters parameters) {
+	public boolean useFollowOnLocking(String sql, QueryOptions queryOptions) {
 		return true;
 	}
 
@@ -214,8 +216,8 @@ public class Teradata14Dialect extends TeradataDialect {
 		}
 
 		@Override
-		public String[] getSqlCreateStrings(Index index, Metadata metadata) {
-			final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
+		public String[] getSqlCreateStrings(Index index, JdbcServices jdbcServices) {
+			final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 			final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
 					index.getTable().getQualifiedTableName(),
 					jdbcEnvironment.getDialect()
@@ -227,27 +229,25 @@ public class Teradata14Dialect extends TeradataDialect {
 						new QualifiedNameImpl(
 								index.getTable().getQualifiedTableName().getCatalogName(),
 								index.getTable().getQualifiedTableName().getSchemaName(),
-								jdbcEnvironment.getIdentifierHelper().toIdentifier( index.getName() )
+								index.getName()
 						),
 						jdbcEnvironment.getDialect()
 				);
 			}
 			else {
-				indexNameForCreation = index.getName();
+				indexNameForCreation = index.getName().render( jdbcEnvironment.getDialect() );
 			}
 
 			StringBuilder colBuf = new StringBuilder("");
 			boolean first = true;
-			Iterator<Column> columnItr = index.getColumnIterator();
-			while ( columnItr.hasNext() ) {
-				final Column column = columnItr.next();
+			for ( PhysicalColumn column : index.getColumns() ) {
 				if ( first ) {
 					first = false;
 				}
 				else {
 					colBuf.append( ", " );
 				}
-				colBuf.append( ( column.getQuotedName( jdbcEnvironment.getDialect() )) );
+				colBuf.append( ( column.getName().render( jdbcEnvironment.getDialect() ) ) );
 			}
 			colBuf.append( ")" );
 

@@ -63,7 +63,7 @@ public interface UpdateTimestampsCache {
 	 *
 	 * @throws CacheException Indicated problem delegating to underlying region.
 	 */
-	boolean isUpToDate(Set<Serializable> spaces, Long timestamp, SharedSessionContractImplementor session) throws CacheException;
+	boolean isUpToDate(Set<String> spaces, Long timestamp, SharedSessionContractImplementor session) throws CacheException;
 
 	/**
 	 * Clear the update-timestamps data.

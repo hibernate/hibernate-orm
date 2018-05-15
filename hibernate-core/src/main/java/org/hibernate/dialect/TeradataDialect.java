@@ -5,18 +5,18 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.dialect;
+
 import java.sql.Types;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
-import org.hibernate.hql.spi.id.IdTableSupport;
-import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.local.AfterUseAction;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTempTableExporter;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTable;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * A dialect for the Teradata database created by MCR as part of the
@@ -24,7 +24,7 @@ import org.hibernate.type.StandardBasicTypes;
  *
  * @author Jay Nance
  */
-public class TeradataDialect extends Dialect implements IdTableSupport {
+public class TeradataDialect extends Dialect {
 	
 	private static final int PARAM_LIST_SIZE_LIMIT = 1024;
 
@@ -54,31 +54,6 @@ public class TeradataDialect extends Dialect implements IdTableSupport {
 		registerColumnType( Types.BOOLEAN, "BYTEINT" );  // hibernate seems to ignore this type...
 		registerColumnType( Types.BLOB, "BLOB" );
 		registerColumnType( Types.CLOB, "CLOB" );
-
-		registerFunction( "year", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "extract(year from ?1)" ) );
-		registerFunction( "length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "character_length(?1)" ) );
-		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "||", ")" ) );
-		registerFunction( "substring", new SQLFunctionTemplate( StandardBasicTypes.STRING, "substring(?1 from ?2 for ?3)" ) );
-		registerFunction( "locate", new SQLFunctionTemplate( StandardBasicTypes.STRING, "position(?1 in ?2)" ) );
-		registerFunction( "mod", new SQLFunctionTemplate( StandardBasicTypes.STRING, "?1 mod ?2" ) );
-		registerFunction( "str", new SQLFunctionTemplate( StandardBasicTypes.STRING, "cast(?1 as varchar(255))" ) );
-
-		// bit_length feels a bit broken to me. We have to cast to char in order to
-		// pass when a numeric value is supplied. But of course the answers given will
-		// be wildly different for these two datatypes. 1234.5678 will be 9 bytes as
-		// a char string but will be 8 or 16 bytes as a true numeric.
-		// Jay Nance 2006-09-22
-		registerFunction(
-				"bit_length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "octet_length(cast(?1 as char))*4" )
-		);
-
-		// The preference here would be
-		//   SQLFunctionTemplate( StandardBasicTypes.TIMESTAMP, "current_timestamp(?1)", false)
-		// but this appears not to work.
-		// Jay Nance 2006-09-22
-		registerFunction( "current_timestamp", new SQLFunctionTemplate( StandardBasicTypes.TIMESTAMP, "current_timestamp" ) );
-		registerFunction( "current_time", new SQLFunctionTemplate( StandardBasicTypes.TIMESTAMP, "current_time" ) );
-		registerFunction( "current_date", new SQLFunctionTemplate( StandardBasicTypes.TIMESTAMP, "current_date" ) );
 		// IBID for current_time and current_date
 
 		registerKeyword( "password" );
@@ -98,6 +73,34 @@ public class TeradataDialect extends Dialect implements IdTableSupport {
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "false" );
 		// No batch statements
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
+
+		registry.registerPattern( "year", "extract(year from ?1)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "length", "character_length(?1)", StandardSpiBasicTypes.INTEGER );
+		registry.registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
+		registry.registerPattern( "substring", "substring(?1 from ?2 for ?3)", StandardSpiBasicTypes.STRING );
+		registry.registerPattern( "locate", "position(?1 in ?2)", StandardSpiBasicTypes.STRING );
+		registry.registerPattern( "mod", "?1 mod ?2", StandardSpiBasicTypes.STRING );
+		registry.registerPattern( "str", "cast(?1 as varchar(255))", StandardSpiBasicTypes.STRING );
+
+		// bit_length feels a bit broken to me. We have to cast to char in order to
+		// pass when a numeric value is supplied. But of course the answers given will
+		// be wildly different for these two datatypes. 1234.5678 will be 9 bytes as
+		// a char string but will be 8 or 16 bytes as a true numeric.
+		// Jay Nance 2006-09-22
+		registry.registerPattern( "bit_length", "octet_length(cast(?1 as char))*4", StandardSpiBasicTypes.INTEGER );
+
+		// The preference here would be
+		//   SQLFunctionTemplate( StandardBasicTypes.TIMESTAMP, "current_timestamp(?1)", false)
+		// but this appears not to work.
+		// Jay Nance 2006-09-22
+		registry.registerPattern( "current_timestamp", "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerPattern( "current_time", "current_time", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerPattern( "current_date", "current_date", StandardSpiBasicTypes.TIMESTAMP );
 	}
 
 	/**
@@ -121,35 +124,29 @@ public class TeradataDialect extends Dialect implements IdTableSupport {
 	}
 
 	@Override
-	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-		return new GlobalTemporaryTableBulkIdStrategy( this, AfterUseAction.CLEAN );
+	public IdTableStrategy getDefaultIdTableStrategy() {
+		return new GlobalTemporaryTableStrategy( generateIdTableExporter() );
 	}
 
-	@Override
-	public String generateIdTableName(String baseName) {
-		return IdTableSupportStandardImpl.INSTANCE.generateIdTableName( baseName );
-	}
+	private Exporter<IdTable> generateIdTableExporter() {
+		return new GlobalTempTableExporter() {
+			@Override
+			public String getCreateCommand() {
+				return "create global temporary table";
+			}
 
-	@Override
-	public String getCreateIdTableCommand() {
-		return "create global temporary table";
-	}
+			@Override
+			public String getCreateOptions() {
+				return " on commit preserve rows";
+			}
 
-	@Override
-	public String getCreateIdTableStatementOptions() {
-		return " on commit preserve rows";
-	}
-
-	@Override
-	public String getDropIdTableCommand() {
-		return "drop table";
+			@Override
+			protected String getTruncateIdTableCommand() {
+				return "delete from";
+			}
+		};
 	}
 	
-	@Override
-	public String getTruncateIdTableCommand() {
-		return "delete from";
-	}
-
 	/**
 	 * Get the name of the database type associated with the given
 	 * <tt>java.sql.Types</tt> typecode.

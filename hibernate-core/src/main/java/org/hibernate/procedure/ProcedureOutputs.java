@@ -6,11 +6,11 @@
  */
 package org.hibernate.procedure;
 
+import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.result.Outputs;
 
 /**
- * Specialization of the {@link org.hibernate.result.Outputs} contract providing access to the stored procedure's registered
- * output parameters.
+ * Provides access to the various outputs of a procedure/function execution via JDBC.
  *
  * @author Steve Ebersole
  */
@@ -19,7 +19,7 @@ public interface ProcedureOutputs extends Outputs {
 	 * Retrieve the value of an OUTPUT parameter by the parameter's registration memento.
 	 * <p/>
 	 * Should NOT be called for parameters registered as REF_CURSOR.  REF_CURSOR parameters should be
-	 * accessed via the returns (see {@link #getNextOutput}
+	 * accessed via the Output objects.
 	 *
 	 * @param parameterRegistration The parameter's registration memento.
 	 *
@@ -27,7 +27,7 @@ public interface ProcedureOutputs extends Outputs {
 	 *
 	 * @see ProcedureCall#registerParameter(String, Class, javax.persistence.ParameterMode)
 	 */
-	public <T> T getOutputParameterValue(ParameterRegistration<T> parameterRegistration);
+	<T> T getOutputParameterValue(ProcedureParameterImplementor<T> parameterRegistration);
 
 	/**
 	 * Retrieve the value of an OUTPUT parameter by the name under which the parameter was registered.
@@ -41,7 +41,7 @@ public interface ProcedureOutputs extends Outputs {
 	 *
 	 * @see ProcedureCall#registerParameter(String, Class, javax.persistence.ParameterMode)
 	 */
-	public Object getOutputParameterValue(String name);
+	Object getOutputParameterValue(String name);
 
 	/**
 	 * Retrieve the value of an OUTPUT parameter by the name position under which the parameter was registered.
@@ -55,5 +55,5 @@ public interface ProcedureOutputs extends Outputs {
 	 *
 	 * @see ProcedureCall#registerParameter(int, Class, javax.persistence.ParameterMode)
 	 */
-	public Object getOutputParameterValue(int position);
+	Object getOutputParameterValue(int position);
 }

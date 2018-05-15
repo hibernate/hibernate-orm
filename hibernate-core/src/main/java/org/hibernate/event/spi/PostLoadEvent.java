@@ -6,9 +6,7 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 
 /**
  * Occurs after an entity instance is fully loaded.
@@ -17,22 +15,37 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public class PostLoadEvent extends AbstractEvent {
 	private Object entity;
-	private Serializable id;
-	private EntityPersister persister;
+	private Object id;
+	private EntityTypeDescriptor descriptor;
 
 	public PostLoadEvent(EventSource session) {
 		super(session);
 	}
 
+	public void reset() {
+		entity = null;
+		id = null;
+		descriptor = null;
+	}
+
 	public Object getEntity() {
 		return entity;
 	}
-	
-	public EntityPersister getPersister() {
-		return persister;
+
+	/**
+	 *
+	 * @deprecated use {@link #getDescriptor()}
+	 */
+	@Deprecated
+	public EntityTypeDescriptor getPersister() {
+		return descriptor;
+	}
+
+	public EntityTypeDescriptor getDescriptor() {
+		return descriptor;
 	}
 	
-	public Serializable getId() {
+	public Object getId() {
 		return id;
 	}
 
@@ -41,14 +54,23 @@ public class PostLoadEvent extends AbstractEvent {
 		return this;
 	}
 	
-	public PostLoadEvent setId(Serializable id) {
+	public PostLoadEvent setId(Object id) {
 		this.id = id;
 		return this;
 	}
 
-	public PostLoadEvent setPersister(EntityPersister persister) {
-		this.persister = persister;
+	/**
+	 *
+	 * @deprecated use {@link #setDescriptor(EntityTypeDescriptor)}
+	 */
+	@Deprecated
+	public PostLoadEvent setPersister(EntityTypeDescriptor persister) {
+		this.descriptor = persister;
 		return this;
 	}
-	
+
+	public PostLoadEvent setDescriptor(EntityTypeDescriptor descriptor){
+		this.descriptor = descriptor;
+		return this;
+	}
 }

@@ -17,7 +17,7 @@ import org.hibernate.type.Type;
 /**
  * An ordered pair of a value and its Hibernate type.
  * 
- * @see org.hibernate.type.Type
+ * @see Type
  * @author Gavin King
  */
 public final class TypedValue implements Serializable {
@@ -55,7 +55,9 @@ public final class TypedValue implements Serializable {
 	public int hashCode() {
 		return hashcode.getValue();
 	}
+
 	@Override
+	@SuppressWarnings("unchecked")
 	public boolean equals(Object other) {
 		if ( this == other ) {
 			return true;
@@ -64,8 +66,8 @@ public final class TypedValue implements Serializable {
 			return false;
 		}
 		final TypedValue that = (TypedValue) other;
-		return type.getReturnedClass() == that.type.getReturnedClass()
-				&& type.isEqual( that.value, value );
+		return type.getJavaTypeDescriptor().getJavaType() == that.type.getJavaTypeDescriptor().getJavaType()
+				&& type.getJavaTypeDescriptor().areEqual( that.value, value );
 	}
 
 	private void readObject(ObjectInputStream ois)
@@ -78,7 +80,7 @@ public final class TypedValue implements Serializable {
 		this.hashcode = new ValueHolder<Integer>( new ValueHolder.DeferredInitializer<Integer>() {
 			@Override
 			public Integer initialize() {
-				return value == null ? 0 : type.getHashCode( value );
+				return value == null ? 0 : type.getJavaTypeDescriptor().extractHashCode( value );
 			}
 		} );
 	}

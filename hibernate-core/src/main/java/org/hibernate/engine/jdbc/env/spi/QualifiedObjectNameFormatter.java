@@ -6,9 +6,9 @@
  */
 package org.hibernate.engine.jdbc.env.spi;
 
-import org.hibernate.boot.model.relational.QualifiedName;
-import org.hibernate.boot.model.relational.QualifiedSequenceName;
-import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.naming.spi.QualifiedName;
+import org.hibernate.naming.QualifiedSequenceName;
+import org.hibernate.naming.QualifiedTableName;
 import org.hibernate.dialect.Dialect;
 
 /**

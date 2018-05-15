@@ -6,12 +6,11 @@
  */
 package org.hibernate.mapping;
 
-import java.util.Iterator;
+import java.util.List;
 
-import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.engine.spi.Mapping;
+import org.hibernate.boot.model.relational.MappedPrimaryKey;
 
 /**
  * Indexed collections include Lists, Maps, arrays and
@@ -23,14 +22,6 @@ public abstract class IndexedCollection extends Collection {
 	public static final String DEFAULT_INDEX_COLUMN_NAME = "idx";
 
 	private Value index;
-
-	/**
-	 * @deprecated Use {@link IndexedCollection#IndexedCollection(MetadataBuildingContext, PersistentClass)} insetad.
-	 */
-	@Deprecated
-	public IndexedCollection(MetadataImplementor metadata, PersistentClass owner) {
-		super( metadata, owner );
-	}
 
 	public IndexedCollection(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
@@ -59,25 +50,23 @@ public abstract class IndexedCollection extends Collection {
 
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
-			PrimaryKey pk = new PrimaryKey( getCollectionTable() );
-			pk.addColumns( getKey().getColumnIterator() );
-
+			final MappedPrimaryKey pk = new PrimaryKey( getMappedTable() );
+			pk.addColumns( getKey().getMappedColumns() );
 			// index should be last column listed
 			boolean isFormula = false;
-			Iterator iter = getIndex().getColumnIterator();
-			while ( iter.hasNext() ) {
-				if ( ( (Selectable) iter.next() ).isFormula() ) {
-					isFormula=true;
+			for( MappedColumn selectable : (List<MappedColumn>) getIndex().getMappedColumns() ){
+				if(selectable.isFormula()){
+					isFormula = true;
 				}
 			}
 			if (isFormula) {
 				//if it is a formula index, use the element columns in the PK
-				pk.addColumns( getElement().getColumnIterator() );
+				pk.addColumns( getElement().getMappedColumns() );
 			}
 			else {
-				pk.addColumns( getIndex().getColumnIterator() );
+				pk.addColumns( getIndex().getMappedColumns() );
 			}
-			getCollectionTable().setPrimaryKey(pk);
+			getMappedTable().setPrimaryKey(pk);
 		}
 		else {
 			// don't create a unique key, 'cos some
@@ -87,21 +76,6 @@ public abstract class IndexedCollection extends Collection {
 			list.addAll( getKey().getConstraintColumns() );
 			list.addAll( getIndex().getConstraintColumns() );
 			getCollectionTable().createUniqueKey(list);*/
-		}
-	}
-
-	public void validate(Mapping mapping) throws MappingException {
-		super.validate( mapping );
-
-		assert getElement() != null : "IndexedCollection index not bound : " + getRole();
-
-		if ( !getIndex().isValid(mapping) ) {
-			throw new MappingException(
-				"collection index mapping has wrong number of columns: " +
-				getRole() +
-				" type: " +
-				getIndex().getType().getName()
-			);
 		}
 	}
 

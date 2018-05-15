@@ -19,15 +19,16 @@ import javax.persistence.JoinTable;
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
+import org.hibernate.query.NavigablePath;
 
 /**
  * PropertyHolder for composites (Embeddable/Embedded).
@@ -119,7 +120,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	 * @param embeddedXProperty The property that is the composite being described by this ComponentPropertyHolder
 	 */
 	private Map<String,AttributeConversionInfo> processAttributeConversions(XProperty embeddedXProperty) {
-		final Map<String,AttributeConversionInfo> infoMap = new HashMap<String, AttributeConversionInfo>();
+		final Map<String,AttributeConversionInfo> infoMap = new HashMap<>();
 
 		final XClass embeddableXClass = embeddedXProperty.getType();
 
@@ -186,7 +187,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	private Map<String,AttributeConversionInfo> processAttributeConversions(XClass embeddableXClass) {
-		final Map<String,AttributeConversionInfo> infoMap = new HashMap<String, AttributeConversionInfo>();
+		final Map<String,AttributeConversionInfo> infoMap = new HashMap<>();
 		processAttributeConversions( embeddableXClass, infoMap );
 		return infoMap;
 	}
@@ -272,7 +273,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	public String getEntityName() {
-		return component.getComponentClassName();
+		return component.getEmbeddableClassName();
 	}
 
 	public void addProperty(Property prop, Ejb3Column[] columns, XClass declaringClass) {
@@ -283,9 +284,9 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		 * if a property is set already the core cannot support that
 		 */
 		if (columns != null) {
-			Table table = columns[0].getTable();
-			if ( !table.equals( component.getTable() ) ) {
-				if ( component.getPropertySpan() == 0 ) {
+			MappedTable table = columns[0].getMappedTable();
+			if ( !table.equals( component.getMappedTable() ) ) {
+				if ( component.getDeclaredPersistentAttributes().size() == 0 ) {
 					component.setTable( table );
 				}
 				else {
@@ -305,15 +306,23 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	public String getClassName() {
-		return component.getComponentClassName();
+		return component.getEmbeddableClassName();
 	}
 
 	public String getEntityOwnerClassName() {
 		return component.getOwner().getClassName();
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getMappedTable()} instead.
+	 */
+	@Deprecated
 	public Table getTable() {
 		return component.getTable();
+	}
+
+	public MappedTable getMappedTable() {
+		return component.getMappedTable();
 	}
 
 	public void addProperty(Property prop, XClass declaringClass) {
@@ -357,7 +366,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			if ( userPropertyName != null ) result = super.getOverriddenColumn( userPropertyName );
 		}
 		if ( result == null ) {
-			String userPropertyName = extractUserPropertyName( PropertyPath.IDENTIFIER_MAPPER_PROPERTY, propertyName );
+			String userPropertyName = extractUserPropertyName( NavigablePath.IDENTIFIER_MAPPER_PROPERTY, propertyName );
 			if ( userPropertyName != null ) result = super.getOverriddenColumn( userPropertyName );
 		}
 		return result;

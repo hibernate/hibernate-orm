@@ -8,15 +8,25 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.Collection;
 
+import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.spi.AbstractPluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.BagPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.property.access.spi.PropertyAccess;
 
 /**
  * @author Steve Ebersole
  */
-class BagAttributeImpl<X, E> extends AbstractPluralAttribute<X, Collection<E>, E>
+public class BagAttributeImpl<X, E> extends AbstractPluralPersistentAttribute<X, Collection<E>, E>
 		implements BagPersistentAttribute<X, E> {
-	BagAttributeImpl(PluralAttributeBuilder<X, Collection<E>, E, ?> xceBuilder) {
-		super( xceBuilder );
+
+	public BagAttributeImpl(
+			PersistentCollectionDescriptor collectionDescriptor,
+			Property bootProperty,
+			PropertyAccess propertyAccess,
+			RuntimeModelCreationContext creationContext) {
+		super( collectionDescriptor, bootProperty, propertyAccess, creationContext );
 	}
 
 	@Override

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<jboss-deployment-structure xmlns="urn:jboss:deployment-structure:1.1">
+    <deployment>
+        <exclusions>
+            <!--
+            The org.javassist:main module is automatically injected by the current WildFly JPADependencyProcessor;
+            this module is necessary for users of the standard Hibernate ORM version included in WildFly,
+            but when testing the very latest Hibernate ORM it could be the wrong version.
+            We therefore exclude it here from the deployment, and have the custom ORM modules bring their own version.
+            See also: http://lists.jboss.org/pipermail/wildfly-dev/2017-January/005681.html
+            -->
+            <module name="org.javassist" />
+        </exclusions>
+    </deployment>
+</jboss-deployment-structure>

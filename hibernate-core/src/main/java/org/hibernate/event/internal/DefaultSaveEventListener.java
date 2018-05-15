@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.Hibernate;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.engine.spi.EntityEntry;
@@ -21,7 +19,7 @@ import org.hibernate.event.spi.SaveOrUpdateEvent;
  */
 public class DefaultSaveEventListener extends DefaultSaveOrUpdateEventListener {
 
-	protected Serializable performSaveOrUpdate(SaveOrUpdateEvent event) {
+	protected Object performSaveOrUpdate(SaveOrUpdateEvent event) {
 		// this implementation is supposed to tolerate incorrect unsaved-value
 		// mappings, for the purpose of backward-compatibility
 		EntityEntry entry = event.getSession().getPersistenceContext().getEntry( event.getEntity() );
@@ -33,7 +31,7 @@ public class DefaultSaveEventListener extends DefaultSaveOrUpdateEventListener {
 		}
 	}
 	
-	protected Serializable saveWithGeneratedOrRequestedId(SaveOrUpdateEvent event) {
+	protected Object saveWithGeneratedOrRequestedId(SaveOrUpdateEvent event) {
 		if ( event.getRequestedId() == null ) {
 			return super.saveWithGeneratedOrRequestedId(event);
 		}

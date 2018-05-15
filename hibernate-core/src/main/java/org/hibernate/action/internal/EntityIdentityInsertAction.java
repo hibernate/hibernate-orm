@@ -6,8 +6,6 @@
  */
 package org.hibernate.action.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.EntityKey;
@@ -19,7 +17,7 @@ import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.event.spi.PreInsertEvent;
 import org.hibernate.event.spi.PreInsertEventListener;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 
 /**
  * The action for performing entity insertions when entity is using IDENTITY column identifier generation
@@ -31,14 +29,14 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 	private final boolean isDelayed;
 	private final EntityKey delayedEntityKey;
 	private EntityKey entityKey;
-	private Serializable generatedId;
+	private Object generatedId;
 
 	/**
 	 * Constructs an EntityIdentityInsertAction
 	 *
 	 * @param state The current (extracted) entity state
 	 * @param instance The entity instance
-	 * @param persister The entity persister
+	 * @param descriptor The entity descriptor
 	 * @param isVersionIncrementDisabled Whether version incrementing is disabled
 	 * @param session The session
 	 * @param isDelayed Are we in a situation which allows the insertion to be delayed?
@@ -48,7 +46,7 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 	public EntityIdentityInsertAction(
 			Object[] state,
 			Object instance,
-			EntityPersister persister,
+			EntityTypeDescriptor descriptor,
 			boolean isVersionIncrementDisabled,
 			SharedSessionContractImplementor session,
 			boolean isDelayed) {
@@ -57,7 +55,7 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 				state,
 				instance,
 				isVersionIncrementDisabled,
-				persister,
+				descriptor,
 				session
 		);
 		this.isDelayed = isDelayed;
@@ -68,7 +66,7 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 	public void execute() throws HibernateException {
 		nullifyTransientReferencesIfNotAlready();
 
-		final EntityPersister persister = getPersister();
+		final EntityTypeDescriptor descriptor = getEntityDescriptor();
 		final SharedSessionContractImplementor session = getSession();
 		final Object instance = getInstance();
 
@@ -78,15 +76,15 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 		// else inserted the same pk first, the insert would fail
 
 		if ( !isVeto() ) {
-			generatedId = persister.insert( getState(), instance, session );
-			if ( persister.hasInsertGeneratedProperties() ) {
-				persister.processInsertGeneratedProperties( generatedId, instance, getState(), session );
+			generatedId = descriptor.insert( getState(), instance, session );
+			if ( descriptor.hasInsertGeneratedProperties() ) {
+				descriptor.processInsertGeneratedProperties( generatedId, instance, getState(), session );
 			}
 			//need to do that here rather than in the save event listener to let
 			//the post insert events to have a id-filled entity when IDENTITY is used (EJB3)
-			persister.setIdentifier( instance, generatedId, session );
-			session.getPersistenceContext().registerInsertedKey( getPersister(), generatedId );
-			entityKey = session.generateEntityKey( generatedId, persister );
+			descriptor.setIdentifier( instance, generatedId, session );
+			session.getPersistenceContext().registerInsertedKey( getEntityDescriptor(), generatedId );
+			entityKey = session.generateEntityKey( generatedId, descriptor );
 			session.getPersistenceContext().checkUniqueness( entityKey, getInstance() );
 		}
 
@@ -94,15 +92,15 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 		//TODO: this bit actually has to be called after all cascades!
 		//      but since identity insert is called *synchronously*,
 		//      instead of asynchronously as other actions, it isn't
-		/*if ( persister.hasCache() && !persister.isCacheInvalidationRequired() ) {
-			cacheEntry = new CacheEntry(object, persister, session);
-			persister.getCache().insert(generatedId, cacheEntry);
+		/*if ( descriptor.hasCache() && !descriptor.isCacheInvalidationRequired() ) {
+			cacheEntry = new CacheEntry(object, descriptor, session);
+			descriptor.getCache().insert(generatedId, cacheEntry);
 		}*/
 
 		postInsert();
 
 		if ( session.getFactory().getStatistics().isStatisticsEnabled() && !isVeto() ) {
-			session.getFactory().getStatistics().insertEntity( getPersister().getEntityName() );
+			session.getFactory().getStatistics().insertEntity( getEntityDescriptor().getEntityName() );
 		}
 
 		markExecuted();
@@ -118,7 +116,7 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 	protected boolean hasPostCommitEventListeners() {
 		final EventListenerGroup<PostInsertEventListener> group = listenerGroup( EventType.POST_COMMIT_INSERT );
 		for ( PostInsertEventListener listener : group.listeners() ) {
-			if ( listener.requiresPostCommitHandling( getPersister() ) ) {
+			if ( listener.requiresPostCommitHandling( getEntityDescriptor() ) ) {
 				return true;
 			}
 		}
@@ -129,7 +127,7 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 	@Override
 	public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
 		//TODO: reenable if we also fix the above todo
-		/*EntityPersister persister = getEntityPersister();
+		/*EntityPersister persister = getEntityDescriptor();
 		if ( success && persister.hasCache() && !persister.isCacheInvalidationRequired() ) {
 			persister.getCache().afterInsert( getGeneratedId(), cacheEntry );
 		}*/
@@ -149,7 +147,7 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 				getInstance(),
 				generatedId,
 				getState(),
-				getPersister(),
+				getEntityDescriptor(),
 				eventSource()
 		);
 		for ( PostInsertEventListener listener : listenerGroup.listeners() ) {
@@ -166,7 +164,7 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 				getInstance(),
 				generatedId,
 				getState(),
-				getPersister(),
+				getEntityDescriptor(),
 				eventSource()
 		);
 		for ( PostInsertEventListener listener : listenerGroup.listeners() ) {
@@ -192,7 +190,7 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 			return false;
 		}
 		boolean veto = false;
-		final PreInsertEvent event = new PreInsertEvent( getInstance(), null, getState(), getPersister(), eventSource() );
+		final PreInsertEvent event = new PreInsertEvent( getInstance(), null, getState(), getEntityDescriptor(), eventSource() );
 		for ( PreInsertEventListener listener : listenerGroup.listeners() ) {
 			veto |= listener.onPreInsert( event );
 		}
@@ -204,7 +202,7 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 	 *
 	 * @return The generated identifier
 	 */
-	public final Serializable getGeneratedId() {
+	public final Object getGeneratedId() {
 		return generatedId;
 	}
 
@@ -239,6 +237,6 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 		if ( !isDelayed ) {
 			throw new AssertionFailure( "cannot request delayed entity-key for early-insert post-insert-id generation" );
 		}
-		return getSession().generateEntityKey( getDelayedId(), getPersister() );
+		return getSession().generateEntityKey( getDelayedId(), getEntityDescriptor() );
 	}
 }

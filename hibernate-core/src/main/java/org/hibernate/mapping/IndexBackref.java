@@ -7,6 +7,7 @@
 package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.property.access.internal.PropertyAccessStrategyIndexBackRefImpl;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 
@@ -16,6 +17,10 @@ import org.hibernate.property.access.spi.PropertyAccessStrategy;
 public class IndexBackref extends Property {
 	private String collectionRole;
 	private String entityName;
+
+	public IndexBackref(MetadataBuildingContext context) {
+		super( context );
+	}
 
 	@Override
 	public boolean isBackRef() {

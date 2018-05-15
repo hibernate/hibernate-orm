@@ -15,7 +15,7 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 
 /**
  * Standard support for {@link org.hibernate.cache.spi.access.NaturalIdDataAccess}
@@ -23,9 +23,11 @@ import org.hibernate.persister.entity.EntityPersister;
  *
  * @author Steve Ebersole
  */
+@SuppressWarnings("WeakerAccess")
 public class NaturalIdReadWriteAccess extends AbstractReadWriteAccess implements NaturalIdDataAccess {
 	private final CacheKeysFactory keysFactory;
 
+	@SuppressWarnings("unused")
 	public NaturalIdReadWriteAccess(
 			DomainDataRegion region,
 			CacheKeysFactory keysFactory,
@@ -54,9 +56,9 @@ public class NaturalIdReadWriteAccess extends AbstractReadWriteAccess implements
 	@Override
 	public Object generateCacheKey(
 			Object[] naturalIdValues,
-			EntityPersister rootEntityDescriptor,
+			EntityHierarchy entityHierarchy,
 			SharedSessionContractImplementor session) {
-		return keysFactory.createNaturalIdKey( naturalIdValues, rootEntityDescriptor, session );
+		return keysFactory.createNaturalIdKey( naturalIdValues, entityHierarchy, session );
 	}
 
 	@Override

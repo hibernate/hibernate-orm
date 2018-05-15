@@ -78,7 +78,7 @@ public class HibernatePersistenceProviderAdaptor implements PersistenceProviderA
 		putPropertyIfAbsent(
 				pu,
 				properties,
-				org.hibernate.ejb.AvailableSettings.ENTITY_MANAGER_FACTORY_NAME,
+				org.hibernate.cfg.AvailableSettings.ENTITY_MANAGER_FACTORY_NAME,
 				pu.getScopedPersistenceUnitName()
 		);
 		putPropertyIfAbsent(

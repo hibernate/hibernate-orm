@@ -6,6 +6,7 @@
  */
 package org.hibernate.jpa;
 
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.type.Type;
 
 /**
@@ -13,31 +14,12 @@ import org.hibernate.type.Type;
  * parameter value/binding.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated (since 6.0) use {@link org.hibernate.query.TypedParameterValue} instead.
  */
-public class TypedParameterValue {
-	private final Type type;
-	private final Object value;
-
+@Deprecated
+public class TypedParameterValue extends org.hibernate.query.TypedParameterValue {
 	public TypedParameterValue(Type type, Object value) {
-		this.type = type;
-		this.value = value;
-	}
-
-	/**
-	 * The value to bind
-	 *
-	 * @return The value to be bound
-	 */
-	public Object getValue() {
-		return value;
-	}
-
-	/**
-	 * The specific Hibernate type to use to bind the value.
-	 *
-	 * @return The Hibernate type to use.
-	 */
-	public Type getType() {
-		return type;
+		super( (AllowableParameterType) type, value );
 	}
 }

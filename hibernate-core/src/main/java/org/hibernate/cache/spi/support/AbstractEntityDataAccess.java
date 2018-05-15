@@ -12,7 +12,7 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 
 /**
  * @author Steve Ebersole
@@ -34,12 +34,12 @@ public abstract class AbstractEntityDataAccess
 	@Override
 	public Object generateCacheKey(
 			Object id,
-			EntityPersister rootEntityDescriptor,
+			EntityHierarchy entityHierarchy,
 			SessionFactoryImplementor factory,
 			String tenantIdentifier) {
 		return cacheKeysFactory.createEntityKey(
 				id,
-				rootEntityDescriptor,
+				entityHierarchy,
 				factory,
 				tenantIdentifier
 		);

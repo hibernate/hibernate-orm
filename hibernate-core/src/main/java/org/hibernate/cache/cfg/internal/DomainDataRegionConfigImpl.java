@@ -24,7 +24,6 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.type.VersionType;
 
 /**
  * DomainDataRegionConfig implementation
@@ -98,9 +97,14 @@ public class DomainDataRegionConfigImpl implements DomainDataRegionConfig {
 					rootEntityName,
 					x -> new EntityDataCachingConfigImpl(
 							rootEntityName,
-							bootEntityDescriptor.isVersioned()
-									? (Supplier<Comparator>) () -> ( (VersionType) bootEntityDescriptor.getVersion().getType() ).getComparator()
-									: null,
+							bootEntityDescriptor.hasVersionAttributeMapping()
+									?
+									(Supplier<Comparator>) () -> ( bootEntityDescriptor.getVersionAttributeMapping()
+											.getValueMapping()
+											.getJavaTypeMapping()
+											.getJavaTypeDescriptor() ).getComparator()
+									:
+									null,
 							bootEntityDescriptor.isMutable(),
 							accessType
 					)

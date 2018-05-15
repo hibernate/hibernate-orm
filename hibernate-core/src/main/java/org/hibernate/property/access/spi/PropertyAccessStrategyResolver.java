@@ -7,15 +7,20 @@
 package org.hibernate.property.access.spi;
 
 import org.hibernate.EntityMode;
+import org.hibernate.annotations.Remove;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeRepresentationStrategy;
 import org.hibernate.service.Service;
 
 /**
  * Contract for resolving the PropertyAccessStrategy to use.
- * <p/>
- * todo : moving forward I'd prefer this not be a service, but instead a strategy on the MetadataBuildingContext or MetadataBuildingOptions
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Use {@link ManagedTypeRepresentationStrategy#generatePropertyAccess}
+ * instead
  */
+@Deprecated
+@Remove
 public interface PropertyAccessStrategyResolver extends Service {
 	/**
 	 * Resolve the PropertyAccessStrategy to use

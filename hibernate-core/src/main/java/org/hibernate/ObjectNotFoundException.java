@@ -23,12 +23,20 @@ import java.io.Serializable;
  */
 public class ObjectNotFoundException extends UnresolvableObjectException {
 	/**
+	 * @deprecated Use {@link #ObjectNotFoundException(Object, String)} instead
+	 */
+	@Deprecated
+	public ObjectNotFoundException(Serializable identifier, String entityName) {
+		super( identifier, entityName );
+	}
+
+	/**
 	 * Constructs a ObjectNotFoundException using the given information.
 	 *
 	 * @param identifier The identifier of the entity
 	 * @param entityName The name of the entity
 	 */
-	public ObjectNotFoundException(Serializable identifier, String entityName) {
+	public ObjectNotFoundException(Object identifier, String entityName) {
 		super( identifier, entityName );
 	}
 }

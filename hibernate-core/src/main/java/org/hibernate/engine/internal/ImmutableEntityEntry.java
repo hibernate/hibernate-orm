@@ -18,7 +18,7 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 
 /**
  * An EntityEntry implementation for immutable entities.  Note that this implementation is not completely
@@ -46,7 +46,7 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
-			final EntityPersister persister,
+			final EntityTypeDescriptor descriptor,
 			final EntityMode entityMode,
 			final String tenantId,
 			final boolean disableVersionIncrement,
@@ -59,7 +59,7 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 				version,
 				lockMode,
 				existsInDatabase,
-				persister,
+				descriptor,
 				disableVersionIncrement,
 				// purposefully do not pass along the session/persistence-context : HHH-10251
 				null
@@ -70,11 +70,11 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 			final Status status,
 			final Object[] loadedState,
 			final Object rowId,
-			final Serializable id,
+			final Object id,
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
-			final EntityPersister persister,
+			final EntityTypeDescriptor descriptor,
 			final boolean disableVersionIncrement,
 			final PersistenceContext persistenceContext) {
 
@@ -86,7 +86,7 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 				version,
 				lockMode,
 				existsInDatabase,
-				persister,
+				descriptor,
 				disableVersionIncrement,
 				// purposefully do not pass along the session/persistence-context : HHH-10251
 				null

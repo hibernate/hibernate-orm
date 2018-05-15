@@ -9,10 +9,11 @@ package org.hibernate.engine.profile;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.type.BagType;
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 
 /**
  * A 'fetch profile' allows a user to dynamically modify the fetching strategy used for particular associations at
@@ -66,19 +67,21 @@ public class FetchProfile {
 	 * Add a fetch to the profile.
 	 *
 	 * @param fetch The fetch to add.
+	 *
 	 */
 	public void addFetch(final Fetch fetch) {
 		final String fetchAssociactionRole = fetch.getAssociation().getRole();
-		final Type associationType = fetch.getAssociation().getOwner().getPropertyType( fetch.getAssociation().getAssociationPath() );
-		if ( associationType.isCollectionType() ) {
+		final PersistentAttributeDescriptor attribute = fetch.getAssociation().getOwner().findPersistentAttribute( fetchAssociactionRole );
+		if ( PluralPersistentAttribute.class.isInstance( attribute ) ) {
 			LOG.tracev( "Handling request to add collection fetch [{0}]", fetchAssociactionRole );
-
+			final CollectionClassification collectionClassification = ( (PluralPersistentAttribute) attribute ).getPersistentCollectionDescriptor()
+					.getCollectionClassification();
 			// couple of things for which to account in the case of collection
 			// join fetches
 			if ( Fetch.Style.JOIN == fetch.getStyle() ) {
 				// first, if this is a bag we need to ignore it if we previously
 				// processed collection join fetches
-				if ( BagType.class.isInstance( associationType ) ) {
+				if ( collectionClassification == CollectionClassification.BAG ) {
 					if ( containsJoinFetchedCollection ) {
 						LOG.containsJoinFetchedCollection( fetchAssociactionRole );
 						// EARLY EXIT!!!

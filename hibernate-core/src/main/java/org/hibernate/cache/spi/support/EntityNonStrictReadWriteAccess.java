@@ -20,7 +20,9 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @author Steve Ebersole
  */
+@SuppressWarnings("WeakerAccess")
 public class EntityNonStrictReadWriteAccess extends AbstractEntityDataAccess {
+	@SuppressWarnings("unused")
 	public EntityNonStrictReadWriteAccess(
 			DomainDataRegion domainDataRegion,
 			CacheKeysFactory keysFactory,

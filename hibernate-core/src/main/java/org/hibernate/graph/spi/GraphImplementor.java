@@ -16,8 +16,8 @@ import org.hibernate.graph.CannotBecomeEntityGraphException;
 import org.hibernate.graph.CannotContainSubGraphException;
 import org.hibernate.graph.Graph;
 import org.hibernate.graph.SubGraph;
-import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
 
 /**
  * Integration version of the Graph contract

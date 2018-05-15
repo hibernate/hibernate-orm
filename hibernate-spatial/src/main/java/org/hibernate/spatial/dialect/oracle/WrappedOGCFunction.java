@@ -9,7 +9,7 @@ package org.hibernate.spatial.dialect.oracle;
 
 import java.util.List;
 
-import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.spatial.Spatial;
 import org.hibernate.type.Type;
@@ -18,7 +18,7 @@ import org.hibernate.type.Type;
  * An HQL function that is implemented using Oracle's OGC compliance
  * package.
  */
-class WrappedOGCFunction extends StandardSQLFunction {
+class WrappedOGCFunction extends NamedSqmFunctionTemplate {
 	private final boolean[] geomArrays;
 	private final boolean isGeometryTyped;
 

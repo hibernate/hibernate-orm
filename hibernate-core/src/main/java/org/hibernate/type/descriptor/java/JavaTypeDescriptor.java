@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 package org.hibernate.type.descriptor.java;
 
@@ -11,7 +11,7 @@ import java.util.Comparator;
 import java.util.Objects;
 
 import org.hibernate.internal.util.compare.ComparableComparator;
-import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.spi.ImmutableMutabilityPlan;
 
 /**
  * Descriptor for the Java side of a value mapping.
@@ -19,23 +19,25 @@ import org.hibernate.type.descriptor.WrapperOptions;
  * @author Steve Ebersole
  */
 public interface JavaTypeDescriptor<T> extends Serializable {
-	/**
-	 * Retrieve the Java type handled here.
-	 *
-	 * @return The Java type.
-	 *
-	 * @deprecated Use {@link #getJavaType()} instead
-	 */
-	@Deprecated
-	Class<T> getJavaTypeClass();
 
 	/**
-	 * Get the Java type described
+	 * Get the type name.  This is useful for dynamic models which either will not have
+	 * a Java type ({@link #getJavaType()} returns null) or {@link #getJavaType()}
+	 * returns a non-indicative value ({@code java.util.Map.class} for a composite value in
+	 * {@link org.hibernate.EntityMode#MAP} EntityMode, e.g.).
+	 * <p/>
+	 * For typed models, this generally returns {@link #getJavaType()}.{@linkplain Class#getName() getName}
+	 *
+	 * @return The Java type name.
 	 */
-	default Class<T> getJavaType() {
-		// default on this side since #getJavaTypeClass is the currently implemented method
-		return getJavaTypeClass();
-	}
+	String getTypeName();
+
+	/**
+	 * The Java type (Class) represented by this descriptor.
+	 * <p/>
+	 * May be {@code null} in the case of dynamic models ({@link org.hibernate.EntityMode#MAP} e.g.).
+	 */
+	Class<T> getJavaType();
 
 	/**
 	 * Retrieve the mutability plan for this Java type.
@@ -85,44 +87,5 @@ public interface JavaTypeDescriptor<T> extends Serializable {
 	 *
 	 * @return The loggable representation
 	 */
-	default String extractLoggableRepresentation(T value) {
-		return toString( value );
-	}
-
-	default String toString(T value) {
-		return value == null ? "null" : value.toString();
-	}
-
-	T fromString(String string);
-
-	/**
-	 * Unwrap an instance of our handled Java type into the requested type.
-	 * <p/>
-	 * As an example, if this is a {@code JavaTypeDescriptor<Integer>} and we are asked to unwrap
-	 * the {@code Integer value} as a {@code Long} we would return something like
-	 * <code>Long.valueOf( value.longValue() )</code>.
-	 * <p/>
-	 * Intended use is during {@link java.sql.PreparedStatement} binding.
-	 *
-	 * @param value The value to unwrap
-	 * @param type The type as which to unwrap
-	 * @param options The options
-	 * @param <X> The conversion type.
-	 *
-	 * @return The unwrapped value.
-	 */
-	<X> X unwrap(T value, Class<X> type, WrapperOptions options);
-
-	/**
-	 * Wrap a value as our handled Java type.
-	 * <p/>
-	 * Intended use is during {@link java.sql.ResultSet} extraction.
-	 *
-	 * @param value The value to wrap.
-	 * @param options The options
-	 * @param <X> The conversion type.
-	 *
-	 * @return The wrapped value.
-	 */
-	<X> T wrap(X value, WrapperOptions options);
+	String extractLoggableRepresentation(T value);
 }

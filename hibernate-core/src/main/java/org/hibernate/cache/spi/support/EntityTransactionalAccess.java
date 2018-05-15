@@ -18,7 +18,9 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("WeakerAccess")
 public class EntityTransactionalAccess extends AbstractEntityDataAccess {
+	@SuppressWarnings("unused")
 	public EntityTransactionalAccess(
 			DomainDataRegion region,
 			CacheKeysFactory keysFactory,

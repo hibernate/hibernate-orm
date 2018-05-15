@@ -10,11 +10,12 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.boot.model.relational.QualifiedSequenceName;
-import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.metamodel.model.relational.spi.Namespace;
+import org.hibernate.naming.Identifier;
+import org.hibernate.naming.NamespaceName;
+import org.hibernate.naming.QualifiedSequenceName;
+import org.hibernate.naming.QualifiedTableName;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
@@ -40,15 +41,15 @@ public class DatabaseInformationImpl
 			ServiceRegistry serviceRegistry,
 			JdbcEnvironment jdbcEnvironment,
 			DdlTransactionIsolator ddlTransactionIsolator,
-			Namespace.Name defaultNamespace) throws SQLException {
+			Namespace defaultNamespace) throws SQLException {
 		this.jdbcEnvironment = jdbcEnvironment;
 
 		this.extractionContext = new ImprovedExtractionContextImpl(
 				serviceRegistry,
 				jdbcEnvironment,
 				ddlTransactionIsolator,
-				defaultNamespace.getCatalog(),
-				defaultNamespace.getSchema(),
+				defaultNamespace.getCatalogName(),
+				defaultNamespace.getSchemaName(),
 				this
 		);
 
@@ -83,8 +84,8 @@ public class DatabaseInformationImpl
 	}
 
 	@Override
-	public boolean schemaExists(Namespace.Name namespace) {
-		return extractor.schemaExists( namespace.getCatalog(), namespace.getSchema() );
+	public boolean schemaExists(Namespace namespace) {
+		return extractor.schemaExists( namespace.getCatalogName(), namespace.getSchemaName() );
 	}
 
 	@Override
@@ -97,9 +98,14 @@ public class DatabaseInformationImpl
 
 	@Override
 	public TableInformation getTableInformation(
-			Namespace.Name namespace,
+			Namespace namespace,
 			Identifier tableName) {
-		return getTableInformation( new QualifiedTableName( namespace, tableName ) );
+		return getTableInformation( new QualifiedTableName(
+				new NamespaceName(
+						namespace.getCatalogName(),
+						namespace.getSchemaName()
+				)
+				, tableName ) );
 	}
 
 	@Override
@@ -117,7 +123,7 @@ public class DatabaseInformationImpl
 
 	@Override
 	public NameSpaceTablesInformation getTablesInformation(Namespace namespace) {
-		return extractor.getTables( namespace.getPhysicalName().getCatalog(), namespace.getPhysicalName().getSchema() );
+		return extractor.getTables( namespace.getCatalogName(), namespace.getSchemaName() );
 	}
 
 	@Override
@@ -129,8 +135,13 @@ public class DatabaseInformationImpl
 	}
 
 	@Override
-	public SequenceInformation getSequenceInformation(Namespace.Name schemaName, Identifier sequenceName) {
-		return getSequenceInformation( new QualifiedSequenceName( schemaName, sequenceName ) );
+	public SequenceInformation getSequenceInformation(Namespace namespace, Identifier sequenceName) {
+		return getSequenceInformation( new QualifiedSequenceName(
+				new NamespaceName(
+						namespace.getCatalogName(),
+						namespace.getSchemaName()
+				)
+				, sequenceName ) );
 	}
 
 	@Override

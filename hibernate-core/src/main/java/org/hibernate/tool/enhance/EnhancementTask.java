@@ -6,16 +6,6 @@
  */
 package org.hibernate.tool.enhance;
 
-import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.Project;
-import org.apache.tools.ant.Task;
-import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
-import org.hibernate.bytecode.enhance.spi.Enhancer;
-import org.hibernate.bytecode.enhance.spi.UnloadedClass;
-import org.hibernate.bytecode.enhance.spi.UnloadedField;
-import org.hibernate.cfg.Environment;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileFilter;
@@ -29,6 +19,16 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
+import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.enhance.spi.Enhancer;
+import org.hibernate.bytecode.enhance.spi.UnloadedClass;
+import org.hibernate.bytecode.enhance.spi.UnloadedField;
+
+import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.Project;
+import org.apache.tools.ant.Task;
 
 /**
  * Ant task for performing build-time enhancement of entity objects.
@@ -155,7 +155,7 @@ public class EnhancementTask extends Task {
 			log( "Extended enhancement is enabled. Classes other than entities may be modified. You should consider access the entities using getter/setter methods and disable this property. Use at your own risk.", Project.MSG_WARN );
 		}
 
-		Enhancer enhancer = Environment.getBytecodeProvider().getEnhancer( enhancementContext );
+		final Enhancer enhancer = enhancementContext.getBytecodeProvider().getEnhancer( enhancementContext );
 
 		for ( File file : sourceSet ) {
 			byte[] enhancedBytecode = doEnhancement( file, enhancer );

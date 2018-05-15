@@ -7,6 +7,7 @@
 package org.hibernate.sql;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.annotations.Remove;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 
@@ -14,7 +15,11 @@ import org.hibernate.internal.util.StringHelper;
 /**
  * A simple SQL <tt>SELECT</tt> statement
  * @author Gavin King
+ *
+ * @deprecated Converting to use SQL AST
  */
+@Deprecated
+@Remove
 public class Select {
 
 	private String selectClause;

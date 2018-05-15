@@ -25,7 +25,6 @@ import org.hibernate.TransactionException;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
-import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.InvalidatableWrapper;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -138,6 +137,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		return this.owner.getJdbcSessionContext().getSessionFactory();
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	protected BatchBuilder batchBuilder() {
 		return sessionFactory().getServiceRegistry().getService( BatchBuilder.class );
 	}
@@ -266,8 +266,9 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	@Override
 	public void afterStatementExecution() {
-		LOG.tracev( "Starting after statement execution processing [{0}]", getConnectionReleaseMode() );
-		if ( getConnectionReleaseMode() == ConnectionReleaseMode.AFTER_STATEMENT ) {
+		final ConnectionReleaseMode releaseMode = getLogicalConnection().getConnectionHandlingMode().getReleaseMode();
+		LOG.tracev( "Starting after statement execution processing [{0}]", releaseMode );
+		if ( releaseMode == ConnectionReleaseMode.AFTER_STATEMENT ) {
 			if ( ! releasesEnabled ) {
 				LOG.debug( "Skipping aggressive release due to manual disabling" );
 				return;
@@ -283,41 +284,22 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void afterTransaction() {
 		transactionTimeOutInstant = -1;
-		if ( getConnectionReleaseMode() == ConnectionReleaseMode.AFTER_STATEMENT ||
-				getConnectionReleaseMode() == ConnectionReleaseMode.AFTER_TRANSACTION ) {
+		final ConnectionReleaseMode releaseMode = getLogicalConnection().getConnectionHandlingMode().getReleaseMode();
+		if ( releaseMode == ConnectionReleaseMode.AFTER_STATEMENT ||
+				releaseMode == ConnectionReleaseMode.AFTER_TRANSACTION ) {
 			this.logicalConnection.afterTransaction();
 		}
 	}
 
-	private void releaseResources() {
-		getResourceRegistry().releaseResources();
-	}
-
 	private boolean hasRegisteredResources() {
-		return getResourceRegistry().hasRegisteredResources();
+		return getLogicalConnection().getResourceRegistry().hasRegisteredResources();
 	}
 
-	private ConnectionReleaseMode determineConnectionReleaseMode(
-			JdbcConnectionAccess jdbcConnectionAccess,
-			boolean isUserSuppliedConnection,
-			ConnectionReleaseMode connectionReleaseMode) {
-		if ( isUserSuppliedConnection ) {
-			return ConnectionReleaseMode.ON_CLOSE;
-		}
-		else if ( connectionReleaseMode == ConnectionReleaseMode.AFTER_STATEMENT &&
-				! jdbcConnectionAccess.supportsAggressiveRelease() ) {
-			LOG.debug( "Connection provider reports to not support aggressive release; overriding" );
-			return ConnectionReleaseMode.AFTER_TRANSACTION;
-		}
-		else {
-			return connectionReleaseMode;
-		}
-	}
 	@Override
 	public <T> T coordinateWork(WorkExecutorVisitable<T> work) {
 		final Connection connection = getLogicalConnection().getPhysicalConnection();
 		try {
-			final T result = work.accept( new WorkExecutor<T>(), connection );
+			final T result = work.accept( new WorkExecutor<>(), connection );
 			afterStatementExecution();
 			return result;
 		}
@@ -380,6 +362,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		closeAll( unassociatedResultSets );
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	protected void closeAll(Set<ResultSet> resultSets) {
 		for ( ResultSet resultSet : resultSets ) {
 			close( resultSet );
@@ -426,9 +409,6 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 				lastQuery = null;
 			}
 		}
-		catch( SQLException e ) {
-			LOG.debugf( "Unable to release JDBC statement [%s]", e.getMessage() );
-		}
 		catch ( Exception e ) {
 			// try to handle general errors more elegantly
 			LOG.debugf( "Unable to release JDBC statement [%s]", e.getMessage() );
@@ -448,9 +428,6 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 		try {
 			resultSet.close();
-		}
-		catch( SQLException e ) {
-			LOG.debugf( "Unable to release JDBC result set [%s]", e.getMessage() );
 		}
 		catch ( Exception e ) {
 			// try to handle general errors more elegantly

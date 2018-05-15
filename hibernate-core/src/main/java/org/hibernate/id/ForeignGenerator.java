@@ -6,7 +6,6 @@
  */
 package org.hibernate.id;
 
-import java.io.Serializable;
 import java.util.Properties;
 
 import org.hibernate.MappingException;
@@ -15,13 +14,12 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.loader.PropertyPath;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.EntityType;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
-import static org.hibernate.internal.CoreLogging.logger;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
@@ -39,6 +37,7 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 
 	private String entityName;
 	private String propertyName;
+	private JavaTypeDescriptor javaTypeDescriptor;
 
 	/**
 	 * Getter for property 'entityName'.
@@ -68,44 +67,37 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 		return getEntityName() + '.' + getPropertyName();
 	}
 
-
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+	public void configure(JavaTypeDescriptor javaTypeDescriptor, Properties params, ServiceRegistry serviceRegistry)
+			throws MappingException {
+		this.javaTypeDescriptor = javaTypeDescriptor;
 		propertyName = params.getProperty( "property" );
 		entityName = params.getProperty( ENTITY_NAME );
 		if ( propertyName==null ) {
 			throw new MappingException( "param named \"property\" is required for foreign id generation strategy" );
 		}
+
 	}
 
 	@Override
-	public Serializable generate(SharedSessionContractImplementor sessionImplementor, Object object) {
+	public Object generate(SharedSessionContractImplementor sessionImplementor, Object object) {
 		// needs to be a Session for the #save and #contains calls below...
 		final Session session = ( Session ) sessionImplementor;
 
-		final EntityPersister persister = sessionImplementor.getFactory().getMetamodel().entityPersister( entityName );
-		Object associatedObject = persister.getPropertyValue( object, propertyName );
+		final EntityTypeDescriptor descriptor = sessionImplementor.getFactory().getMetamodel().findEntityDescriptor( entityName );
+		Object associatedObject = descriptor.getPropertyValue( object, propertyName );
 		if ( associatedObject == null ) {
 			throw new IdentifierGenerationException(
 					"attempted to assign id from null one-to-one property [" + getRole() + "]"
 			);
 		}
 
-		final EntityType foreignValueSourceType;
-		final Type propertyType = persister.getPropertyType( propertyName );
-		if ( propertyType.isEntityType() ) {
-			// the normal case
-			foreignValueSourceType = (EntityType) propertyType;
-		}
-		else {
-			// try identifier mapper
-			foreignValueSourceType = (EntityType) persister.getPropertyType( PropertyPath.IDENTIFIER_MAPPER_PROPERTY + "." + propertyName );
-		}
+		final String entityName = retrieveEntityName( descriptor );
 
-		Serializable id;
+		Object id;
 		try {
 			id = ForeignKeys.getEntityIdentifierIfNotUnsaved(
-					foreignValueSourceType.getAssociatedEntityName(),
+					entityName,
 					associatedObject,
 					sessionImplementor
 			);
@@ -114,10 +106,10 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf(
 						"ForeignGenerator detected a transient entity [%s]",
-						foreignValueSourceType.getAssociatedEntityName()
+						entityName
 				);
 			}
-			id = session.save( foreignValueSourceType.getAssociatedEntityName(), associatedObject );
+			id = session.save( entityName, associatedObject );
 		}
 
 		if ( session.contains( entityName, object ) ) {
@@ -126,5 +118,19 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 			//throw new IdentifierGenerationException("save associated object first, or disable cascade for inverse association");
 		}
 		return id;
+	}
+
+	private String retrieveEntityName(EntityTypeDescriptor descriptor) {
+		String entityName;
+		final PersistentAttributeDescriptor attribute = descriptor.findPersistentAttribute( propertyName );
+		if ( attribute.getPersistenceType() == javax.persistence.metamodel.Type.PersistenceType.ENTITY ) {
+			// the normal case
+			entityName = attribute.getContainer().getNavigableName();
+		}
+		else {
+			// try identifier mapper
+			entityName = descriptor.findPersistentAttribute( NavigablePath.IDENTIFIER_MAPPER_PROPERTY + "." + propertyName ).getContainer().getNavigableName();
+		}
+		return entityName;
 	}
 }

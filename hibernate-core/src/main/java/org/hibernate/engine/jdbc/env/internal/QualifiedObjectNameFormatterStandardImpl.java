@@ -9,10 +9,10 @@ package org.hibernate.engine.jdbc.env.internal;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.QualifiedName;
-import org.hibernate.boot.model.relational.QualifiedSequenceName;
-import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.naming.Identifier;
+import org.hibernate.naming.spi.QualifiedName;
+import org.hibernate.naming.QualifiedSequenceName;
+import org.hibernate.naming.QualifiedTableName;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
@@ -110,8 +110,8 @@ public class QualifiedObjectNameFormatterStandardImpl implements QualifiedObject
 		);
 	}
 
-	private static interface Format {
-		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect);
+	private interface Format {
+		String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect);
 	}
 
 	private static class NoQualifierSupportFormat implements Format {

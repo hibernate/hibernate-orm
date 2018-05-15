@@ -6,31 +6,47 @@
  */
 package org.hibernate.mapping;
 
-import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Iterator;
-import java.util.Objects;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
+import javax.persistence.metamodel.Type.PersistenceType;
 
-import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.EmbeddableJavaTypeMapping;
+import org.hibernate.boot.model.domain.JavaTypeMapping;
+import org.hibernate.boot.model.domain.ManagedTypeMapping;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.boot.model.domain.internal.EmbeddableJavaTypeMappingImpl;
+import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
+import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
-import org.hibernate.internal.util.collections.JoinedIterator;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedContainer;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.property.access.spi.Setter;
-import org.hibernate.tuple.component.ComponentMetamodel;
-import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
+import org.hibernate.type.descriptor.java.internal.EmbeddableJavaDescriptorImpl;
+import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
 
 /**
  * The mapping for a component, composite element,
@@ -39,142 +55,137 @@ import org.hibernate.type.TypeFactory;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class Component extends SimpleValue implements MetaAttributable {
-	private ArrayList<Property> properties = new ArrayList<>();
+public class Component extends SimpleValue
+		implements EmbeddedValueMappingImplementor, PropertyContainer, MetaAttributable {
+	TreeMap<String, PersistentAttributeMapping> declaredAttributeMappings;
 	private String componentClassName;
 	private boolean embedded;
 	private String parentProperty;
 	private PersistentClass owner;
 	private boolean dynamic;
-	private Map metaAttributes;
+	private Map<String, MetaAttribute> metaAttributes;
 	private boolean isKey;
 	private String roleName;
-
-	private java.util.Map<EntityMode,String> tuplizerImpls;
-
-	// cache the status of the type
-	private volatile Type type;
-
-	/**
-	 * @deprecated User {@link Component#Component(MetadataBuildingContext, PersistentClass)} instead.
-	 */
-	@Deprecated
-	public Component(MetadataImplementor metadata, PersistentClass owner) throws MappingException {
-		this( metadata, owner.getTable(), owner );
-	}
-
-	/**
-	 * @deprecated User {@link Component#Component(MetadataBuildingContext, Component)} instead.
-	 */
-	@Deprecated
-	public Component(MetadataImplementor metadata, Component component) throws MappingException {
-		this( metadata, component.getTable(), component.getOwner() );
-	}
-
-	/**
-	 * @deprecated User {@link Component#Component(MetadataBuildingContext, Join)} instead.
-	 */
-	@Deprecated
-	public Component(MetadataImplementor metadata, Join join) throws MappingException {
-		this( metadata, join.getTable(), join.getPersistentClass() );
-	}
-
-	/**
-	 * @deprecated User {@link Component#Component(MetadataBuildingContext, Collection)} instead.
-	 */
-	@Deprecated
-	public Component(MetadataImplementor metadata, Collection collection) throws MappingException {
-		this( metadata, collection.getCollectionTable(), collection.getOwner() );
-	}
-
-	/**
-	 * @deprecated User {@link Component#Component(MetadataBuildingContext, Table, PersistentClass)} instead.
-	 */
-	@Deprecated
-	public Component(MetadataImplementor metadata, Table table, PersistentClass owner) throws MappingException {
-		super( metadata, table );
-		this.owner = owner;
-	}
+	private EmbeddableJavaTypeMapping javaTypeMapping;
+	private Integer columnSpan;
 
 	public Component(MetadataBuildingContext metadata, PersistentClass owner) throws MappingException {
-		this( metadata, owner.getTable(), owner );
+		this( metadata, owner.getMappedTable(), owner );
 	}
 
 	public Component(MetadataBuildingContext metadata, Component component) throws MappingException {
-		this( metadata, component.getTable(), component.getOwner() );
+		this( metadata, component.getMappedTable(), component.getOwner() );
 	}
 
 	public Component(MetadataBuildingContext metadata, Join join) throws MappingException {
-		this( metadata, join.getTable(), join.getPersistentClass() );
+		this( metadata, join.getMappedTable(), join.getPersistentClass() );
 	}
 
 	public Component(MetadataBuildingContext metadata, Collection collection) throws MappingException {
-		this( metadata, collection.getCollectionTable(), collection.getOwner() );
+		this( metadata, collection.getMappedTable(), collection.getOwner() );
 	}
 
-	public Component(MetadataBuildingContext metadata, Table table, PersistentClass owner) throws MappingException {
+	public Component(MetadataBuildingContext metadata, MappedTable table, PersistentClass owner) throws MappingException {
 		super( metadata, table );
 		this.owner = owner;
 	}
 
+	@Override
+	public JavaTypeMapping getJavaTypeMapping() {
+		if ( javaTypeMapping == null ) {
+			javaTypeMapping = new EmbeddableJavaTypeMappingImpl<>( getMetadataBuildingContext(), getName(), componentClassName, null );
+		}
+		return javaTypeMapping;
+	}
+
+	@Override
+	public String getName() {
+		if ( roleName != null ) {
+			return roleName;
+		}
+		return componentClassName;
+	}
+
+	@Override
+	public RepresentationMode getExplicitRepresentationMode() {
+		return null;
+	}
+
+	@Override
+	public void setExplicitRepresentationMode(RepresentationMode mode) {
+		throw new UnsupportedOperationException(
+				"Support for ManagedType-specific explicit RepresentationMode not yet implemented" );
+	}
+
+	/**
+	 * @deprecated since 6.0 , use {@link #getDeclaredPersistentAttributes().size()} instead.
+	 */
+	@Deprecated
 	public int getPropertySpan() {
-		return properties.size();
+		return getDeclaredPersistentAttributes().size();
 	}
 
+	/**
+	 * @deprecated since 6.0 , use {@link #getDeclaredPersistentAttributes()} instead.
+	 */
+	@Deprecated
 	public Iterator getPropertyIterator() {
-		return properties.iterator();
+		return getDeclaredPersistentAttributes().iterator();
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #addDeclaredPersistentAttribute(PersistentAttributeMapping)} instead.
+	 */
+	@Deprecated
 	public void addProperty(Property p) {
-		properties.add( p );
+		addDeclaredPersistentAttribute( p );
 	}
 
 	@Override
 	public void addColumn(Column column) {
-		throw new UnsupportedOperationException("Cant add a column to a component");
+		throw new UnsupportedOperationException( "Cant add a column to a component" );
 	}
+
 
 	@Override
 	public int getColumnSpan() {
-		int n=0;
-		Iterator iter = getPropertyIterator();
-		while ( iter.hasNext() ) {
-			Property p = (Property) iter.next();
-			n+= p.getColumnSpan();
+		if ( columnSpan == null ) {
+			int i = 0;
+			for ( PersistentAttributeMapping persistentAttributeMapping : getDeclaredPersistentAttributes() ) {
+				i += persistentAttributeMapping.getValueMapping().getMappedColumns().size();
+			}
+			columnSpan = i;
 		}
-		return n;
-	}
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public Iterator<Selectable> getColumnIterator() {
-		Iterator[] iters = new Iterator[ getPropertySpan() ];
-		Iterator iter = getPropertyIterator();
-		int i=0;
-		while ( iter.hasNext() ) {
-			iters[i++] = ( (Property) iter.next() ).getColumnIterator();
-		}
-		return new JoinedIterator( iters );
+		return columnSpan;
 	}
 
 	public boolean isEmbedded() {
 		return embedded;
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getEmbeddableClassName()}.
+	 */
+	@Deprecated
 	public String getComponentClassName() {
+		return getEmbeddableClassName();
+	}
+
+	@Override
+	public String getEmbeddableClassName() {
 		return componentClassName;
 	}
 
 	public Class getComponentClass() throws MappingException {
-		final ClassLoaderService classLoaderService = getMetadata()
-				.getMetadataBuildingOptions()
+		final ClassLoaderService classLoaderService = getMetadataBuildingContext().getBuildingOptions()
 				.getServiceRegistry()
 				.getService( ClassLoaderService.class );
 		try {
 			return classLoaderService.classForName( componentClassName );
 		}
 		catch (ClassLoadingException e) {
-			throw new MappingException("component class not found: " + componentClassName, e);
+			throw new MappingException( "component class not found: " + componentClassName, e );
 		}
 	}
 
@@ -211,54 +222,43 @@ public class Component extends SimpleValue implements MetaAttributable {
 	}
 
 	@Override
-	public Type getType() throws MappingException {
-		// Resolve the type of the value once and for all as this operation generates a proxy class
-		// for each invocation.
-		// Unfortunately, there's no better way of doing that as none of the classes are immutable and
-		// we can't know for sure the current state of the property or the value.
-		Type localType = type;
-
-		if ( localType == null ) {
-			synchronized ( this ) {
-				if ( type == null ) {
-					// TODO : temporary initial step towards HHH-1907
-					final ComponentMetamodel metamodel = new ComponentMetamodel(
-							this,
-							getMetadata().getMetadataBuildingOptions()
-					);
-					final TypeFactory factory = getMetadata().getTypeConfiguration().getTypeResolver().getTypeFactory();
-					localType = isEmbedded() ? factory.embeddedComponent( metamodel ) : factory.component( metamodel );
-					type = localType;
-				}
-			}
-		}
-
-		return localType;
+	public <X> EmbeddedTypeDescriptor<X> makeRuntimeDescriptor(
+			EmbeddedContainer embeddedContainer,
+			String localName,
+			SingularPersistentAttribute.Disposition disposition,
+			RuntimeModelCreationContext context) {
+		return context.getRuntimeModelDescriptorFactory().createEmbeddedTypeDescriptor(
+				this,
+				embeddedContainer,
+				null,
+				localName,
+				disposition,
+				context
+		);
 	}
 
 	@Override
-	public void setTypeUsingReflection(String className, String propertyName)
-		throws MappingException {
+	public void setTypeUsingReflection(String className, String propertyName) throws MappingException {
 	}
 
 	@Override
-	public java.util.Map getMetaAttributes() {
+	public java.util.Map<String, MetaAttribute> getMetaAttributes() {
 		return metaAttributes;
 	}
 
 	@Override
 	public MetaAttribute getMetaAttribute(String attributeName) {
-		return metaAttributes==null?null:(MetaAttribute) metaAttributes.get(attributeName);
+		return metaAttributes == null ? null : metaAttributes.get( attributeName );
 	}
 
 	@Override
-	public void setMetaAttributes(java.util.Map metas) {
+	public void setMetaAttributes(java.util.Map<String, MetaAttribute> metas) {
 		this.metaAttributes = metas;
 	}
 
 	@Override
 	public Object accept(ValueVisitor visitor) {
-		return visitor.accept(this);
+		return visitor.accept( this );
 	}
 
 	@Override
@@ -268,7 +268,6 @@ public class Component extends SimpleValue implements MetaAttributable {
 
 	public boolean isSame(Component other) {
 		return super.isSame( other )
-				&& Objects.equals( properties, other.properties )
 				&& Objects.equals( componentClassName, other.componentClassName )
 				&& embedded == other.embedded
 				&& Objects.equals( parentProperty, other.parentProperty )
@@ -277,36 +276,45 @@ public class Component extends SimpleValue implements MetaAttributable {
 
 	@Override
 	public boolean[] getColumnInsertability() {
-		boolean[] result = new boolean[ getColumnSpan() ];
-		Iterator iter = getPropertyIterator();
-		int i=0;
-		while ( iter.hasNext() ) {
-			Property prop = (Property) iter.next();
-			boolean[] chunk = prop.getValue().getColumnInsertability();
+		boolean[] result = new boolean[getColumnSpan()];
+		final List<PersistentAttributeMapping> declaredPersistentAttributes = getDeclaredPersistentAttributes();
+		for ( int i = 0; i < declaredPersistentAttributes.size(); i++ ) {
+			final PersistentAttributeMapping prop = declaredPersistentAttributes.get( i );
+			boolean[] chunk = ( (Property) prop ).getValue().getColumnInsertability();
 			if ( prop.isInsertable() ) {
-				System.arraycopy(chunk, 0, result, i, chunk.length);
+				System.arraycopy( chunk, 0, result, i, chunk.length );
 			}
-			i+=chunk.length;
+			i += chunk.length;
 		}
 		return result;
 	}
 
 	@Override
 	public boolean[] getColumnUpdateability() {
-		boolean[] result = new boolean[ getColumnSpan() ];
-		Iterator iter = getPropertyIterator();
-		int i=0;
-		while ( iter.hasNext() ) {
-			Property prop = (Property) iter.next();
-			boolean[] chunk = prop.getValue().getColumnUpdateability();
+		boolean[] result = new boolean[getColumnSpan()];
+		final List<PersistentAttributeMapping> attributes = getDeclaredPersistentAttributes();
+
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			PersistentAttributeMapping prop = attributes.get( i );
+			boolean[] chunk = ( (Property) prop ).getValue().getColumnUpdateability();
 			if ( prop.isUpdateable() ) {
-				System.arraycopy(chunk, 0, result, i, chunk.length);
+				System.arraycopy( chunk, 0, result, i, chunk.length );
 			}
-			i+=chunk.length;
+			i += chunk.length;
 		}
 		return result;
 	}
 
+	@Override
+	public java.util.List<MappedColumn> getMappedColumns() {
+		final java.util.List<MappedColumn> columns = new ArrayList<>();
+		if ( declaredAttributeMappings != null ) {
+			for ( PersistentAttributeMapping p: declaredAttributeMappings.values() ) {
+				columns.addAll( p.getValueMapping().getMappedColumns() );
+			}
+		}
+		return columns;
+	}
 	public boolean isKey() {
 		return isKey;
 	}
@@ -316,41 +324,22 @@ public class Component extends SimpleValue implements MetaAttributable {
 	}
 
 	public boolean hasPojoRepresentation() {
-		return componentClassName!=null;
+		return componentClassName != null;
 	}
 
-	public void addTuplizer(EntityMode entityMode, String implClassName) {
-		if ( tuplizerImpls == null ) {
-			tuplizerImpls = new HashMap<>();
-		}
-		tuplizerImpls.put( entityMode, implClassName );
-	}
-
-	public String getTuplizerImplClassName(EntityMode mode) {
-		// todo : remove this once ComponentMetamodel is complete and merged
-		if ( tuplizerImpls == null ) {
-			return null;
-		}
-		return tuplizerImpls.get( mode );
-	}
-
-	@SuppressWarnings("UnusedDeclaration")
-	public Map getTuplizerMap() {
-		if ( tuplizerImpls == null ) {
-			return null;
-		}
-		return java.util.Collections.unmodifiableMap( tuplizerImpls );
-	}
-
+	/**
+	 * @deprecated since 6.0, use {@link #getDeclaredPersistentAttribute(String)} instead.
+	 */
+	@Deprecated
 	public Property getProperty(String propertyName) throws MappingException {
 		Iterator iter = getPropertyIterator();
 		while ( iter.hasNext() ) {
 			Property prop = (Property) iter.next();
-			if ( prop.getName().equals(propertyName) ) {
+			if ( prop.getName().equals( propertyName ) ) {
 				return prop;
 			}
 		}
-		throw new MappingException("component property not found: " + propertyName);
+		throw new MappingException( "component property not found: " + propertyName );
 	}
 
 	public String getRoleName() {
@@ -363,7 +352,13 @@ public class Component extends SimpleValue implements MetaAttributable {
 
 	@Override
 	public String toString() {
-		return getClass().getName() + '(' + properties.toString() + ')';
+		return String.format(
+				Locale.ROOT,
+				"%s( %s : %s )",
+				getClass().getSimpleName(),
+				getRoleName(),
+				getTypeName()
+		);
 	}
 
 	private IdentifierGenerator builtIdentifierGenerator;
@@ -393,7 +388,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 			String defaultCatalog,
 			String defaultSchema,
 			RootClass rootClass) throws MappingException {
-		final boolean hasCustomGenerator = ! DEFAULT_ID_GEN_STRATEGY.equals( getIdentifierGeneratorStrategy() );
+		final boolean hasCustomGenerator = !DEFAULT_ID_GEN_STRATEGY.equals( getIdentifierGeneratorStrategy() );
 		if ( hasCustomGenerator ) {
 			return super.createIdentifierGenerator(
 					identifierGeneratorFactory, dialect, defaultCatalog, defaultSchema, rootClass
@@ -406,11 +401,11 @@ public class Component extends SimpleValue implements MetaAttributable {
 
 		// IMPL NOTE : See the javadoc discussion on CompositeNestedGeneratedValueGenerator wrt the
 		//		various scenarios for which we need to account here
-		if ( rootClass.getIdentifierMapper() != null ) {
+		if ( rootClass.getEntityMappingHierarchy().getIdentifierEmbeddedValueMapping() != null ) {
 			// we have the @IdClass / <composite-id mapped="true"/> case
 			attributeDeclarer = resolveComponentClass();
 		}
-		else if ( rootClass.getIdentifierProperty() != null ) {
+		else if ( rootClass.getIdentifierAttributeMapping() != null ) {
 			// we have the "@EmbeddedId" / <composite-id name="idName"/> case
 			attributeDeclarer = resolveComponentClass();
 		}
@@ -421,34 +416,30 @@ public class Component extends SimpleValue implements MetaAttributable {
 
 		locator = new StandardGenerationContextLocator( rootClass.getEntityName() );
 		final CompositeNestedGeneratedValueGenerator generator = new CompositeNestedGeneratedValueGenerator( locator );
+		List<PersistentAttributeMapping> declaredPersistentAttributes = getDeclaredPersistentAttributes();
+		declaredPersistentAttributes.stream()
+				.filter( attribute -> SimpleValue.class.isInstance( attribute.getValueMapping()) )
+				.forEach( attribute -> {
+				final SimpleValue value = (SimpleValue) attribute.getValueMapping();
 
-		Iterator itr = getPropertyIterator();
-		while ( itr.hasNext() ) {
-			final Property property = (Property) itr.next();
-			if ( property.getValue().isSimpleValue() ) {
-				final SimpleValue value = (SimpleValue) property.getValue();
-
-				if ( DEFAULT_ID_GEN_STRATEGY.equals( value.getIdentifierGeneratorStrategy() ) ) {
-					// skip any 'assigned' generators, they would have been handled by
-					// the StandardGenerationContextLocator
-					continue;
+				// skip any 'assigned' generators, they would have been handled by
+				// the StandardGenerationContextLocator
+				if ( !DEFAULT_ID_GEN_STRATEGY.equals( value.getIdentifierGeneratorStrategy() ) ) {
+					final IdentifierGenerator valueGenerator = value.createIdentifierGenerator(
+							identifierGeneratorFactory,
+							dialect,
+							defaultCatalog,
+							defaultSchema,
+							rootClass
+					);
+					generator.addGeneratedValuePlan(
+							new ValueGenerationPlan(
+									valueGenerator,
+									injector( (Property) attribute, attributeDeclarer )
+							)
+					);
 				}
-
-				final IdentifierGenerator valueGenerator = value.createIdentifierGenerator(
-						identifierGeneratorFactory,
-						dialect,
-						defaultCatalog,
-						defaultSchema,
-						rootClass
-				);
-				generator.addGeneratedValuePlan(
-						new ValueGenerationPlan(
-								valueGenerator,
-								injector( property, attributeDeclarer )
-						)
-				);
-			}
-		}
+		} );
 		return generator;
 	}
 
@@ -462,9 +453,26 @@ public class Component extends SimpleValue implements MetaAttributable {
 		try {
 			return getComponentClass();
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			return null;
 		}
+	}
+
+	@Override
+	public void addDeclaredPersistentAttribute(PersistentAttributeMapping attribute) {
+		if ( declaredAttributeMappings == null ) {
+			declaredAttributeMappings = new TreeMap<>();
+		}
+		else {
+			assert !declaredAttributeMappings.containsKey( attribute.getName() );
+		}
+
+		declaredAttributeMappings.put( attribute.getName(), attribute );
+	}
+
+	@Override
+	public void setSuperManagedType(ManagedTypeMapping superTypeMapping) {
+		throw new UnsupportedOperationException( "Inheritance not yet supported for composite/embeddable values" );
 	}
 
 	public static class StandardGenerationContextLocator
@@ -476,8 +484,11 @@ public class Component extends SimpleValue implements MetaAttributable {
 		}
 
 		@Override
-		public Serializable locateGenerationContext(SharedSessionContractImplementor session, Object incomingObject) {
-			return session.getEntityPersister( entityName, incomingObject ).getIdentifier( incomingObject, session );
+		public Object locateGenerationContext(SharedSessionContractImplementor session, Object incomingObject) {
+			return session.getEntityDescriptor( entityName, incomingObject )
+					.getHierarchy()
+					.getIdentifierDescriptor()
+					.extractIdentifier( incomingObject, session );
 		}
 	}
 
@@ -506,4 +517,117 @@ public class Component extends SimpleValue implements MetaAttributable {
 		}
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getDeclaredPersistentAttributes()} instead.
+	 */
+	@Deprecated
+	@Override
+	public List<Property> getDeclaredProperties() {
+		return declaredAttributeMappings == null
+				? Collections.emptyList()
+				: declaredAttributeMappings.values().stream().map( p -> (Property) p ).collect( Collectors.toList() );
+	}
+
+	@Override
+	public List<PersistentAttributeMapping> getDeclaredPersistentAttributes() {
+		return declaredAttributeMappings == null
+				? Collections.emptyList()
+				: new ArrayList<>( declaredAttributeMappings.values() );	}
+
+	@Override
+	public List<PersistentAttributeMapping> getPersistentAttributes() {
+		List<PersistentAttributeMapping> attributes = new ArrayList<>();
+		attributes.addAll( getDeclaredPersistentAttributes() );
+		ManagedTypeMapping superTypeMapping = getSuperManagedTypeMapping();
+		while ( superTypeMapping != null ) {
+			attributes.addAll( superTypeMapping.getPersistentAttributes() );
+			superTypeMapping = superTypeMapping.getSuperManagedTypeMapping();
+		}
+		return attributes;
+	}
+
+	@Override
+	public PersistentAttributeMapping getDeclaredPersistentAttribute(String attributeName) {
+		return declaredAttributeMappings.get( attributeName );
+	}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// atm components/embeddables are not (yet) hierarchical
+
+	/**
+	 * @deprecated since 6.0, use, use {@link #getSuperManagedTypeMapping()} instead.
+	 */
+	@Deprecated
+	@Override
+	public PropertyContainer getSuperPropertyContainer() {
+		return null;
+	}
+
+	@Override
+	public ManagedTypeMapping getSuperManagedTypeMapping() {
+		return null;
+	}
+
+	@Override
+	public List<ManagedTypeMapping> getSuperManagedTypeMappings() {
+		return null;
+	}
+
+	@Override
+	public boolean hasPersistentAttribute(String name) {
+		// since we don't support inheritance of embedded components, this delegates to declared
+		return hasDeclaredPersistentAttribute( name );
+	}
+
+	@Override
+	public boolean hasDeclaredPersistentAttribute(String name) {
+		for ( PersistentAttributeMapping attribute : getDeclaredPersistentAttributes() ) {
+			if ( attribute.getName().equals( name ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.EMBEDDABLE;
+	}
+
+	private static EmbeddableJavaDescriptor resolveJavaTypeDescriptor(
+			MetadataBuildingContext metadata,
+			String componentClassName) {
+		final JavaTypeDescriptorRegistry javaTypeDescriptorRegistry = metadata.getMetadataCollector()
+				.getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry();
+		ManagedJavaDescriptor typeDescriptor = (ManagedJavaDescriptor) javaTypeDescriptorRegistry
+				.getDescriptor( componentClassName );
+
+		if ( typeDescriptor == null ) {
+			final Class javaType;
+			if ( StringHelper.isEmpty( componentClassName ) ) {
+				javaType = null;
+			}
+			else {
+				javaType = metadata.getBootstrapContext().getServiceRegistry().getService( ClassLoaderService.class )
+						.classForName( componentClassName );
+			}
+
+			typeDescriptor = new EmbeddableJavaDescriptorImpl( componentClassName, javaType, null );
+			javaTypeDescriptorRegistry.addDescriptor( typeDescriptor );
+		}
+		else if ( !typeDescriptor.isInstance( EmbeddableJavaDescriptor.class ) ) {
+			/*
+				This may happen with hbm mapping:
+				<class name="Entity"...>
+					<composite-id>
+					 </composite-id>
+				</class>
+				in such a case the componentClassName is the "Entity" so javaTypeDescriptorRegistry
+				.getDescriptor( componentClassName ); is not returning an EmbeddableJavaDescriptor
+			 */
+			typeDescriptor = new EmbeddableJavaDescriptorImpl( componentClassName, typeDescriptor.getJavaType(), null );
+		}
+		return (EmbeddableJavaDescriptor) typeDescriptor;
+	}
 }

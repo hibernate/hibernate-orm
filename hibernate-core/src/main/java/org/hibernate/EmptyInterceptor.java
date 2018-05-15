@@ -9,8 +9,6 @@ package org.hibernate;
 import java.io.Serializable;
 import java.util.Iterator;
 
-import org.hibernate.type.Type;
-
 /**
  * An interceptor that does nothing.  May be used as a base class for application-defined custom interceptors.
  * 
@@ -23,45 +21,6 @@ public class EmptyInterceptor implements Interceptor, Serializable {
 	public static final Interceptor INSTANCE = new EmptyInterceptor();
 
 	protected EmptyInterceptor() {
-	}
-
-	@Override
-	public void onDelete(
-			Object entity, 
-			Serializable id, 
-			Object[] state, 
-			String[] propertyNames, 
-			Type[] types) {}
-
-	@Override
-	public boolean onFlushDirty(
-			Object entity, 
-			Serializable id, 
-			Object[] currentState, 
-			Object[] previousState, 
-			String[] propertyNames, 
-			Type[] types) {
-		return false;
-	}
-
-	@Override
-	public boolean onLoad(
-			Object entity, 
-			Serializable id, 
-			Object[] state, 
-			String[] propertyNames, 
-			Type[] types) {
-		return false;
-	}
-
-	@Override
-	public boolean onSave(
-			Object entity, 
-			Serializable id, 
-			Object[] state, 
-			String[] propertyNames, 
-			Type[] types) {
-		return false;
 	}
 
 	@Override
@@ -78,28 +37,7 @@ public class EmptyInterceptor implements Interceptor, Serializable {
 	}
 
 	@Override
-	public Object instantiate(String entityName, EntityMode entityMode, Serializable id) {
-		return null;
-	}
-
-	@Override
-	public int[] findDirty(
-			Object entity,
-			Serializable id,
-			Object[] currentState,
-			Object[] previousState,
-			String[] propertyNames,
-			Type[] types) {
-		return null;
-	}
-
-	@Override
 	public String getEntityName(Object object) {
-		return null;
-	}
-
-	@Override
-	public Object getEntity(String entityName, Serializable id) {
 		return null;
 	}
 
@@ -116,19 +54,6 @@ public class EmptyInterceptor implements Interceptor, Serializable {
 	}
 
 	@Override
-	public String onPrepareStatement(String sql) {
-		return sql;
-	}
-
-	@Override
-	public void onCollectionRemove(Object collection, Serializable key) throws CallbackException {
-	}
-
-	@Override
-	public void onCollectionRecreate(Object collection, Serializable key) throws CallbackException {
-	}
-
-	@Override
-	public void onCollectionUpdate(Object collection, Serializable key) throws CallbackException {
+	public void onCollectionUpdate(Object collection, Object key) throws CallbackException {
 	}
 }

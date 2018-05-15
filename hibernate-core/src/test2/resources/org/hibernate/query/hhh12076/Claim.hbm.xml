@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class
+            name="org.hibernate.query.hhh12076.Claim"
+            table="claim"
+            lazy="false">
+
+        <id name="id" type="java.lang.Long">
+            <column name="id"/>
+            <generator class="native"/>
+        </id>
+        <version name="version" unsaved-value="null" type="java.lang.Integer"/>
+        <property name="creationDate" type="timestamp" insert="false" update="false" generated="always">
+            <column name="creation_date"/>
+        </property>
+        <property name="modifiedDate" type="timestamp" insert="false" update="false" generated="always">
+            <column name="modified_date"/>
+        </property>
+
+        <property name="externalId" type="java.lang.String">
+            <column name="external_id" length="255"/>
+        </property>
+        <property name="location" type="java.lang.String">
+            <column name="location" length="255"/>
+        </property>
+        <property name="importRef" type="java.lang.String">
+            <column name="import_ref" length="255"/>
+        </property>
+
+        <property name="effectiveDate" type="java.util.Date">
+            <column name="effective_date"/>
+        </property>
+        <property name="expiryDate" type="java.util.Date">
+            <column name="expiry_date"/>
+        </property>
+
+        <property name="notificationDate" type="java.util.Date">
+            <column name="notification_date"/>
+        </property>
+        <property name="pendingDate" type="java.util.Date">
+            <column name="pending_date"/>
+        </property>
+        <property name="openDate" type="java.util.Date">
+            <column name="open_date"/>
+        </property>
+        <property name="suspendDate" type="java.util.Date">
+            <column name="suspend_date"/>
+        </property>
+        <property name="closeDate" type="java.util.Date">
+            <column name="close_date"/>
+        </property>
+
+        <set
+                name="extensions"
+                table="claim_extension"
+                inverse="true"
+                lazy="extra"
+                batch-size="10"
+                cascade="all, delete-orphan">
+            <key>
+                <column name="claim_id" not-null="true"/>
+            </key>
+            <one-to-many class="org.hibernate.query.hhh12076.Extension"/>
+        </set>
+        <set
+                name="settlements"
+                table="claim_settlement"
+                inverse="true"
+                lazy="extra"
+                batch-size="10"
+                cascade="all, delete-orphan">
+            <key>
+                <column name="claim_id" not-null="true"/>
+            </key>
+            <one-to-many class="org.hibernate.query.hhh12076.Settlement"/>
+        </set>
+    </class>
+</hibernate-mapping>

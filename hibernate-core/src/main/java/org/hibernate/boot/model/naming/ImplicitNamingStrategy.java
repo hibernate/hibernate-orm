@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.model.naming;
 
+import org.hibernate.naming.Identifier;
+
 /**
  * Pluggable strategy for applying implicit naming rules when an
  * explicit name is not given.

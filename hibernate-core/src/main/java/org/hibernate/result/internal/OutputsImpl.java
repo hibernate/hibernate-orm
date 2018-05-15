@@ -1,90 +1,92 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 package org.hibernate.result.internal;
 
+import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Supplier;
 
-import org.hibernate.JDBCException;
-import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
-import org.hibernate.loader.EntityAliases;
-import org.hibernate.loader.custom.CustomLoader;
-import org.hibernate.loader.custom.CustomQuery;
-import org.hibernate.loader.custom.Return;
-import org.hibernate.loader.custom.RootReturn;
-import org.hibernate.loader.custom.sql.SQLQueryReturnProcessor;
-import org.hibernate.param.ParameterBinder;
-import org.hibernate.result.NoMoreReturnsException;
+import org.hibernate.query.sql.internal.ResultSetMappingDescriptorUndefined;
+import org.hibernate.result.NoMoreOutputsException;
 import org.hibernate.result.Output;
 import org.hibernate.result.Outputs;
-import org.hibernate.result.spi.ResultContext;
+import org.hibernate.sql.ast.produce.sqm.spi.Callback;
+import org.hibernate.sql.exec.internal.Helper;
+import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.ParameterBindingContext;
+import org.hibernate.sql.results.internal.JdbcValuesSourceProcessingStateStandardImpl;
+import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
+import org.hibernate.sql.results.internal.values.DirectResultSetAccess;
+import org.hibernate.sql.results.internal.values.JdbcValuesResultSetImpl;
+import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.results.spi.AssemblerCreationContext;
+import org.hibernate.sql.results.spi.ResultSetMapping;
+import org.hibernate.sql.results.spi.ResultSetMappingDescriptor;
+import org.hibernate.sql.results.spi.RowReader;
 
 import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
  */
-public class OutputsImpl implements Outputs {
+public abstract class OutputsImpl
+		implements Outputs, ExecutionContext, AssemblerCreationContext, ParameterBindingContext, Callback {
 	private static final Logger log = CoreLogging.logger( OutputsImpl.class );
 
 	private final ResultContext context;
-	private final PreparedStatement jdbcStatement;
-	private final CustomLoaderExtension loader;
 
 	private CurrentReturnState currentReturnState;
 
-	public OutputsImpl(ResultContext context, PreparedStatement jdbcStatement) {
+	private ResultSetMappingDescriptor currentResultSetMapping;
+	private int currentResultSetMappingIndex = -1;
+
+
+	public OutputsImpl(ResultContext context) {
 		this.context = context;
-		this.jdbcStatement = jdbcStatement;
+	}
 
-		// For now...  but see the LoadPlan work; eventually this should just be a ResultSetProcessor.
-		this.loader = buildSpecializedCustomLoader( context );
+	@Override
+	public SessionFactoryImplementor getSessionFactory() {
+		return context.getSession().getSessionFactory();
+	}
 
+	protected void prime(PreparedStatement jdbcStatement) {
 		try {
 			final boolean isResultSet = jdbcStatement.execute();
-			currentReturnState = buildCurrentReturnState( isResultSet );
+			currentReturnState = buildCurrentReturnState( isResultSet, jdbcStatement );
 		}
 		catch (SQLException e) {
-			throw convert( e, "Error calling CallableStatement.getMoreResults" );
+			throw context.convertException( e, "Error calling CallableStatement.getMoreResults" );
 		}
 	}
 
-	private CurrentReturnState buildCurrentReturnState(boolean isResultSet) {
+	protected CurrentReturnState buildCurrentReturnState(boolean isResultSet, PreparedStatement jdbcStatement) {
 		int updateCount = -1;
 		if ( ! isResultSet ) {
 			try {
 				updateCount = jdbcStatement.getUpdateCount();
 			}
 			catch (SQLException e) {
-				throw convert( e, "Error calling CallableStatement.getUpdateCount" );
+				throw context.convertException( e, "Error calling CallableStatement.getUpdateCount" );
 			}
 		}
 
-		return buildCurrentReturnState( isResultSet, updateCount );
+		return buildCurrentReturnState( isResultSet, updateCount, jdbcStatement );
 	}
 
-	protected CurrentReturnState buildCurrentReturnState(boolean isResultSet, int updateCount) {
-		return new CurrentReturnState( isResultSet, updateCount );
-	}
-
-	protected JDBCException convert(SQLException e, String message) {
-		return context.getSession().getJdbcServices().getSqlExceptionHelper().convert(
-				e,
-				message,
-				context.getSql()
-		);
+	protected CurrentReturnState buildCurrentReturnState(boolean isResultSet, int updateCount, PreparedStatement jdbcStatement) {
+		return new CurrentReturnState( isResultSet, updateCount, jdbcStatement );
 	}
 
 	@Override
@@ -104,11 +106,11 @@ public class OutputsImpl implements Outputs {
 		if ( currentReturnState.indicatesMoreOutputs() ) {
 			// prepare the next return state
 			try {
-				final boolean isResultSet = jdbcStatement.getMoreResults();
+				final boolean isResultSet = nextResult();
 				currentReturnState = buildCurrentReturnState( isResultSet );
 			}
 			catch (SQLException e) {
-				throw convert( e, "Error calling CallableStatement.getMoreResults" );
+				throw context.convertException( e, "Error calling CallableStatement.getMoreResults" );
 			}
 		}
 
@@ -116,32 +118,107 @@ public class OutputsImpl implements Outputs {
 		return currentReturnState != null && currentReturnState.indicatesMoreOutputs();
 	}
 
-	@Override
-	public void release() {
+	protected abstract CurrentReturnState buildCurrentReturnState(boolean isResultSet) throws SQLException;
+
+	protected abstract boolean nextResult() throws SQLException;
+
+
+	private List extractCurrentResults(PreparedStatement jdbcStatement) {
 		try {
-			jdbcStatement.close();
+			return extractResults( jdbcStatement.getResultSet(), jdbcStatement );
 		}
 		catch (SQLException e) {
-			log.debug( "Unable to close PreparedStatement", e );
+			throw context.convertException( e, "Error calling CallableStatement.getResultSet" );
 		}
 	}
 
-	private List extractCurrentResults() {
+	protected List extractResults(ResultSet resultSet, PreparedStatement jdbcStatement) {
+		final DirectResultSetAccess resultSetAccess = new DirectResultSetAccess( context.getSession(), jdbcStatement, resultSet );
+		final ResultSetMapping resultSetMapping = resolveResultSetMapping( resultSetAccess );
+		final JdbcValuesResultSetImpl jdbcValuesSource = new JdbcValuesResultSetImpl(
+				resultSetAccess,
+				null,
+				context.getQueryOptions(),
+				resultSetMapping,
+				context
+		);
+
+		final RowReader<Object[]> rowReader = Helper.createRowReader(
+				getSessionFactory(),
+				this,
+				row -> row,
+				jdbcValuesSource
+		);
+
+		/*
+		 * Processing options effectively are only used for entity loading.  Here we don't need these values.
+		 */
+		final JdbcValuesSourceProcessingOptions processingOptions = new JdbcValuesSourceProcessingOptions() {
+			@Override
+			public Object getEffectiveOptionalObject() {
+				return null;
+			}
+
+			@Override
+			public String getEffectiveOptionalEntityName() {
+				return null;
+			}
+
+			@Override
+			public Serializable getEffectiveOptionalId() {
+				return null;
+			}
+
+			@Override
+			public boolean shouldReturnProxies() {
+				return true;
+			}
+		};
+
+		final JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState =
+				new JdbcValuesSourceProcessingStateStandardImpl( context, processingOptions );
+
+		final RowProcessingStateStandardImpl rowProcessingState = new RowProcessingStateStandardImpl(
+				jdbcValuesSourceProcessingState,
+				context.getQueryOptions(),
+				rowReader, jdbcValuesSource
+		);
+
 		try {
-			return extractResults( jdbcStatement.getResultSet() );
+			final List results = new ArrayList<>();
+			while ( rowProcessingState.next() ) {
+				results.add( rowReader.readRow( rowProcessingState, processingOptions ) );
+				rowProcessingState.finishRowProcessing();
+			}
+			return results;
 		}
 		catch (SQLException e) {
-			throw convert( e, "Error calling CallableStatement.getResultSet" );
+			throw context.convertException( e, "Error processing return rows" );
+		}
+		finally {
+			rowReader.finishUp( jdbcValuesSourceProcessingState );
+			jdbcValuesSourceProcessingState.finishUp();
+			jdbcValuesSource.finishUp();
 		}
 	}
 
-	protected List extractResults(ResultSet resultSet) {
-		try {
-			return loader.processResultSet( resultSet );
+
+	private ResultSetMapping resolveResultSetMapping(DirectResultSetAccess resultSetAccess) {
+		currentResultSetMappingIndex++;
+		if ( context.getResultSetMappings() == null || context.getResultSetMappings().isEmpty() ) {
+			if ( currentResultSetMapping == null ) {
+				currentResultSetMapping = new ResultSetMappingDescriptorUndefined();
+			}
 		}
-		catch (SQLException e) {
-			throw convert( e, "Error extracting results from CallableStatement" );
+		else {
+			if ( currentResultSetMappingIndex >= context.getResultSetMappings().size() ) {
+				throw new HibernateException(
+						"Needed ResultSetMapping for ResultSet #%s, but query defined only %s ResultSetMapping(s)" );
+			}
+			currentResultSetMapping = context.getResultSetMappings().get( currentResultSetMappingIndex );
 		}
+
+		return currentResultSetMapping.resolve( resultSetAccess, getSessionFactory() );
 	}
 
 	/**
@@ -150,12 +227,14 @@ public class OutputsImpl implements Outputs {
 	protected class CurrentReturnState {
 		private final boolean isResultSet;
 		private final int updateCount;
+		private final PreparedStatement jdbcStatement;
 
 		private Output rtn;
 
-		protected CurrentReturnState(boolean isResultSet, int updateCount) {
+		public CurrentReturnState(boolean isResultSet, int updateCount, PreparedStatement jdbcStatement) {
 			this.isResultSet = isResultSet;
 			this.updateCount = updateCount;
+			this.jdbcStatement = jdbcStatement;
 		}
 
 		public boolean indicatesMoreOutputs() {
@@ -188,7 +267,7 @@ public class OutputsImpl implements Outputs {
 			}
 
 			if ( isResultSet() ) {
-				return buildResultSetOutput( extractCurrentResults() );
+				return buildResultSetOutput( extractCurrentResults( jdbcStatement ) );
 			}
 			else if ( getUpdateCount() >= 0 ) {
 				return buildUpdateCountOutput( updateCount );
@@ -197,7 +276,7 @@ public class OutputsImpl implements Outputs {
 				return buildExtendedReturn();
 			}
 
-			throw new NoMoreReturnsException();
+			throw new NoMoreOutputsException();
 		}
 
 		// hooks for stored procedure (out param) processing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -220,113 +299,6 @@ public class OutputsImpl implements Outputs {
 
 		protected Output buildExtendedReturn() {
 			throw new IllegalStateException( "State does not define extended returns" );
-		}
-	}
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Hooks into Hibernate's Loader hierarchy for ResultSet -> Object mapping
-
-	private static CustomLoaderExtension buildSpecializedCustomLoader(final ResultContext context) {
-		// might be better to just manually construct the Return(s).. SQLQueryReturnProcessor does a lot of
-		// work that is really unnecessary here.
-		final SQLQueryReturnProcessor processor = new SQLQueryReturnProcessor(
-				context.getQueryReturns(),
-				context.getSession().getFactory()
-		);
-		processor.process();
-		final List<org.hibernate.loader.custom.Return> customReturns = processor.generateCallableReturns();
-
-		CustomQuery customQuery = new CustomQuery() {
-			@Override
-			public String getSQL() {
-				return context.getSql();
-			}
-
-			@Override
-			public Set<String> getQuerySpaces() {
-				return context.getSynchronizedQuerySpaces();
-			}
-
-			@Override
-			public List<ParameterBinder> getParameterValueBinders() {
-				// no parameters in terms of embedded in the SQL string
-				return Collections.emptyList();
-			}
-
-			@Override
-			public List<org.hibernate.loader.custom.Return> getCustomQueryReturns() {
-				return customReturns;
-			}
-		};
-
-		return new CustomLoaderExtension(
-				customQuery,
-				context.getQueryParameters(),
-				context.getSession()
-		);
-	}
-
-	private static class CustomLoaderExtension extends CustomLoader {
-		private static final EntityAliases[] NO_ALIASES = new EntityAliases[0];
-
-		private final QueryParameters queryParameters;
-		private final SharedSessionContractImplementor session;
-		private final EntityAliases[] entityAliases;
-
-		private boolean needsDiscovery = true;
-
-		public CustomLoaderExtension(
-				CustomQuery customQuery,
-				QueryParameters queryParameters,
-				SharedSessionContractImplementor session) {
-			super( customQuery, session.getFactory() );
-			this.queryParameters = queryParameters;
-			this.session = session;
-
-			entityAliases = interpretEntityAliases( customQuery.getCustomQueryReturns() );
-		}
-
-		private EntityAliases[] interpretEntityAliases(List<Return> customQueryReturns) {
-			final List<EntityAliases> entityAliases = new ArrayList<>();
-			for ( Return queryReturn : customQueryReturns ) {
-				if ( !RootReturn.class.isInstance( queryReturn ) ) {
-					continue;
-				}
-
-				entityAliases.add( ( (RootReturn) queryReturn ).getEntityAliases() );
-			}
-
-			if ( entityAliases.isEmpty() ) {
-				return NO_ALIASES;
-			}
-
-			return entityAliases.toArray( new EntityAliases[ entityAliases.size() ] );
-		}
-
-		@Override
-		protected EntityAliases[] getEntityAliases() {
-			return entityAliases;
-		}
-
-
-		// todo : this would be a great way to add locking to stored procedure support (at least where returning entities).
-
-		public List processResultSet(ResultSet resultSet) throws SQLException {
-			if ( needsDiscovery ) {
-				super.autoDiscoverTypes( resultSet );
-				// todo : EntityAliases discovery
-				needsDiscovery = false;
-			}
-			return super.processResultSet(
-					resultSet,
-					queryParameters,
-					session,
-					true,
-					null,
-					Integer.MAX_VALUE,
-					Collections.emptyList()
-			);
 		}
 	}
 }

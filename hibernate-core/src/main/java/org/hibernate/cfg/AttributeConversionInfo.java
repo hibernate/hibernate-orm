@@ -16,8 +16,8 @@ import org.hibernate.annotations.common.reflection.XAnnotatedElement;
  *
  * @author Steve Ebersole
  */
-public class AttributeConversionInfo {
-	private final Class<? extends AttributeConverter> converterClass;
+public class AttributeConversionInfo<O,R> {
+	private final Class<? extends AttributeConverter<O,R>> converterClass;
 	private final boolean conversionDisabled;
 
 	private final String attributeName;
@@ -25,7 +25,7 @@ public class AttributeConversionInfo {
 	private final XAnnotatedElement source;
 
 	public AttributeConversionInfo(
-			Class<? extends AttributeConverter> converterClass,
+			Class<? extends AttributeConverter<O, R>> converterClass,
 			boolean conversionDisabled,
 			String attributeName,
 			XAnnotatedElement source) {
@@ -45,7 +45,7 @@ public class AttributeConversionInfo {
 		);
 	}
 
-	public Class<? extends AttributeConverter> getConverterClass() {
+	public Class<? extends AttributeConverter<O,R>> getConverterClass() {
 		return converterClass;
 	}
 

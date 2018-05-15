@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+    <class name="org.hibernate.envers.test.integration.components.dynamic.AdvancedEntity" table="advanced_entity">
+        <id name="id" type="long" column="id"/>
+        <property name="note" type="string"/>
+        <dynamic-component name="dynamicConfiguration">
+            <property name="propInt" type="integer"/>
+            <property name="propFloat" type="float"/>
+            <property name="propBoolean" type="boolean"/>
+            <many-to-one name="propManyToOne"
+                         class="org.hibernate.envers.test.integration.components.dynamic.ManyToOneEntity"
+                         column="MANY_TO_ONE_ID"/>
+            <one-to-one name="propOneToOne"
+                        class="org.hibernate.envers.test.integration.components.dynamic.OneToOneEntity"/>
+            <component name="internalComponent"
+                       class="org.hibernate.envers.test.integration.components.dynamic.InternalComponent">
+                <property name="property" column="internal_comp_prop"/>
+            </component>
+            <list name="internalList" table="INTERNAL_LIST">
+                <key column="ADVANCED_ID"/>
+                <index column="POSITION"/>
+                <element type="string" column="LIST_ENTRY"/>
+            </list>
+            <map name="internalMap" table="INTERNAL_MAP">
+                <key column="ADVANCED_ID"/>
+                <map-key type="string" column="MAP_KEY"/>
+                <element type="string" column="MAP_VALUE"/>
+            </map>
+            <set name="internalSet" table="INTERNAL_SET">
+                <key column="ADVANCED_ID"/>
+                <element type="string" column="SET_VALUE"/>
+            </set>
+            <set name="internalSetOfComponents" table="INTERNAL_SET_OF_COMPS">
+                <key column="ADVANCED_ID"/>
+                <composite-element class="org.hibernate.envers.test.integration.components.dynamic.InternalComponent">
+                    <property name="property" type="string" column="PROP_VALUE"/>
+                </composite-element>
+            </set>
+            <map name="internalMapWithEntities" table="INTERNAL_MAP_WITH_ENTITIES">
+                <key column="ADVANCED_ID"/>
+                <map-key type="string" column="MAP_KEY"/>
+                <many-to-many class="org.hibernate.envers.test.integration.components.dynamic.ManyToManyEntity"
+                              column="MAP_VAL_MANY_TO_MANY"/>
+            </map>
+            <property name="ageUserType" type="org.hibernate.envers.test.integration.components.dynamic.AgeType" column="CUSTOM_TYPE_AGE"/>
+            <list name="internalListOfUserTypes" table="AGES">
+                <key column="ADVANCED_ID"/>
+                <index column="POSITION"/>
+                <element type="org.hibernate.envers.test.integration.components.dynamic.AgeType" column="AGE_USER_TYPE"/>
+            </list>
+        </dynamic-component>
+        <!--<one-to-one name="oneToOneEntity" class="org.hibernate.envers.test.integration.components.dynamic.OneToOneEntity"/>-->
+    </class>
+    <class name="org.hibernate.envers.test.integration.components.dynamic.OneToOneEntity" table="one_to_one_entity">
+        <id name="id" type="long" column="id"/>
+        <property name="note" type="string"/>
+    </class>
+    <class name="org.hibernate.envers.test.integration.components.dynamic.ManyToOneEntity" table="many_to_one_entity">
+        <id name="id" type="long" column="id"/>
+        <property name="note" type="string"/>
+    </class>
+    <class name="org.hibernate.envers.test.integration.components.dynamic.ManyToManyEntity" table="many_to_many_entity">
+        <id name="id" type="long" column="id"/>
+        <property name="note" type="string"/>
+    </class>
+
+</hibernate-mapping>
+

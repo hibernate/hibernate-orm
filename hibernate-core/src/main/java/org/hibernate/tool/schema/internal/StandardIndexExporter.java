@@ -6,16 +6,13 @@
  */
 package org.hibernate.tool.schema.internal;
 
-import java.util.Iterator;
-import java.util.Map;
-
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.relational.QualifiedNameImpl;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Index;
+import org.hibernate.metamodel.model.relational.spi.Index;
+import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
+import org.hibernate.naming.QualifiedNameImpl;
 import org.hibernate.tool.schema.spi.Exporter;
 
 /**
@@ -29,8 +26,8 @@ public class StandardIndexExporter implements Exporter<Index> {
 	}
 
 	@Override
-	public String[] getSqlCreateStrings(Index index, Metadata metadata) {
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
+	public String[] getSqlCreateStrings(Index index, JdbcServices jdbcServices) {
+		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
 				index.getTable().getQualifiedTableName(),
 				dialect
@@ -42,13 +39,13 @@ public class StandardIndexExporter implements Exporter<Index> {
 					new QualifiedNameImpl(
 							index.getTable().getQualifiedTableName().getCatalogName(),
 							index.getTable().getQualifiedTableName().getSchemaName(),
-							jdbcEnvironment.getIdentifierHelper().toIdentifier( index.getQuotedName( dialect ) )
+							index.getName()
 					),
 					jdbcEnvironment.getDialect()
 			);
 		}
 		else {
-			indexNameForCreation = index.getName();
+			indexNameForCreation = index.getName().render( jdbcEnvironment.getDialect() );
 		}
 		final StringBuilder buf = new StringBuilder()
 				.append( "create index " )
@@ -58,19 +55,17 @@ public class StandardIndexExporter implements Exporter<Index> {
 				.append( " (" );
 
 		boolean first = true;
-		final Iterator<Column> columnItr = index.getColumnIterator();
-		final Map<Column, String> columnOrderMap = index.getColumnOrderMap();
-		while ( columnItr.hasNext() ) {
-			final Column column = columnItr.next();
+		for ( PhysicalColumn column : index.getColumns() ) {
 			if ( first ) {
 				first = false;
 			}
 			else {
 				buf.append( ", " );
 			}
-			buf.append( ( column.getQuotedName( dialect ) ) );
-			if ( columnOrderMap.containsKey( column ) ) {
-				buf.append( " " ).append( columnOrderMap.get( column ) );
+			buf.append( ( column.getName().render( jdbcEnvironment.getDialect() ) ) );
+			String orderMap = index.getColumnOrderMap( column );
+			if ( StringHelper.isNotEmpty( orderMap ) ) {
+				buf.append( " " ).append( orderMap );
 			}
 		}
 		buf.append( ")" );
@@ -78,12 +73,12 @@ public class StandardIndexExporter implements Exporter<Index> {
 	}
 
 	@Override
-	public String[] getSqlDropStrings(Index index, Metadata metadata) {
+	public String[] getSqlDropStrings(Index index, JdbcServices jdbcServices) {
 		if ( !dialect.dropConstraints() ) {
 			return NO_COMMANDS;
 		}
 
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
+		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
 				index.getTable().getQualifiedTableName(),
 				dialect
@@ -91,10 +86,10 @@ public class StandardIndexExporter implements Exporter<Index> {
 
 		final String indexNameForCreation;
 		if ( dialect.qualifyIndexName() ) {
-			indexNameForCreation = StringHelper.qualify( tableName, index.getName() );
+			indexNameForCreation = StringHelper.qualify( tableName, index.getName().render( dialect ) );
 		}
 		else {
-			indexNameForCreation = index.getName();
+			indexNameForCreation = index.getName().render( dialect );
 		}
 
 		return new String[] { "drop index " + indexNameForCreation };

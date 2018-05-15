@@ -6,14 +6,16 @@
  */
 package org.hibernate.event.internal;
 
+import java.util.Collection;
+import java.util.List;
+
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.CompositeType;
-import org.hibernate.type.EntityType;
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 
 /**
  * Abstract superclass of algorithms that walk
@@ -35,34 +37,36 @@ public abstract class AbstractVisitor {
 	 * Dispatch each property value to processValue().
 	 *
 	 * @param values
-	 * @param types
+	 * @param attributes
 	 * @throws HibernateException
 	 */
-	void processValues(Object[] values, Type[] types) throws HibernateException {
-		for ( int i=0; i<types.length; i++ ) {
-			if ( includeProperty(values, i) ) {
-				processValue( i, values, types );
+	final void processValues(Object[] values, Collection<PersistentAttributeDescriptor> attributes) throws HibernateException {
+		int i = 0;
+		for ( PersistentAttributeDescriptor attribute : attributes ) {
+			if ( includeProperty( values, i ) ) {
+				processValue( i, values, attribute );
 			}
+			i++;
 		}
 	}
-	
+
+	void processValue(int i, Object[] values, PersistentAttributeDescriptor attribute) throws HibernateException {
+		processValue( values[i], attribute );
+	}
+
 	/**
 	 * Dispatch each property value to processValue().
 	 *
 	 * @param values
-	 * @param types
+	 * @param attributes
 	 * @throws HibernateException
 	 */
-	public void processEntityPropertyValues(Object[] values, Type[] types) throws HibernateException {
-		for ( int i=0; i<types.length; i++ ) {
-			if ( includeEntityProperty(values, i) ) {
-				processValue( i, values, types );
+	public void processEntityPropertyValues(Object[] values, List<PersistentAttributeDescriptor> attributes) throws HibernateException {
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			if ( includeEntityProperty( values, i ) ) {
+				processValue(i, values, attributes.get( i ) );
 			}
 		}
-	}
-	
-	void processValue(int i, Object[] values, Type[] types) {
-		processValue( values[i], types[i] );
 	}
 	
 	boolean includeEntityProperty(Object[] values, int i) {
@@ -77,14 +81,14 @@ public abstract class AbstractVisitor {
 	 * Visit a component. Dispatch each property
 	 * to processValue().
 	 * @param component
-	 * @param componentType
+	 * @param descriptor
 	 * @throws HibernateException
 	 */
-	Object processComponent(Object component, CompositeType componentType) throws HibernateException {
-		if (component!=null) {
+	Object processComponent(Object component, EmbeddedTypeDescriptor descriptor) throws HibernateException {
+		if ( component != null ) {
 			processValues(
-				componentType.getPropertyValues(component, session),
-				componentType.getSubtypes()
+					descriptor.getPropertyValues( component ),
+					descriptor.getPersistentAttributes()
 			);
 		}
 		return null;
@@ -94,20 +98,19 @@ public abstract class AbstractVisitor {
 	 * Visit a property value. Dispatch to the
 	 * correct handler for the property type.
 	 * @param value
-	 * @param type
+	 * @param attribute
 	 * @throws HibernateException
 	 */
-	final Object processValue(Object value, Type type) throws HibernateException {
+	final Object processValue(Object value, PersistentAttributeDescriptor attribute) throws HibernateException {
 
-		if ( type.isCollectionType() ) {
-			//even process null collections
-			return processCollection( value, (CollectionType) type );
+		if ( attribute instanceof PluralPersistentAttribute ) {
+			return processCollection( value, (PluralPersistentAttribute) attribute );
 		}
-		else if ( type.isEntityType() ) {
-			return processEntity( value, (EntityType) type );
+		if ( attribute instanceof EntityTypeDescriptor ) {
+			return processEntity( value, (EntityTypeDescriptor) attribute );
 		}
-		else if ( type.isComponentType() ) {
-			return processComponent( value, (CompositeType) type );
+		else if ( attribute instanceof EmbeddedTypeDescriptor ) {
+			return processComponent( value, (EmbeddedTypeDescriptor) attribute );
 		}
 		else {
 			return null;
@@ -118,14 +121,13 @@ public abstract class AbstractVisitor {
 	 * Walk the tree starting from the given entity.
 	 *
 	 * @param object
-	 * @param persister
+	 * @param entityDescriptor
 	 * @throws HibernateException
 	 */
-	void process(Object object, EntityPersister persister)
-	throws HibernateException {
+	void process(Object object, EntityTypeDescriptor entityDescriptor) throws HibernateException {
 		processEntityPropertyValues(
-			persister.getPropertyValues( object ),
-			persister.getPropertyTypes()
+				entityDescriptor.getPropertyValues( object ),
+				entityDescriptor.getPersistentAttributes()
 		);
 	}
 
@@ -133,11 +135,10 @@ public abstract class AbstractVisitor {
 	 * Visit a collection. Default superclass
 	 * implementation is a no-op.
 	 * @param collection
-	 * @param type
+	 * @param collectionAttribute
 	 * @throws HibernateException
 	 */
-	Object processCollection(Object collection, CollectionType type)
-	throws HibernateException {
+	Object processCollection(Object collection, PluralPersistentAttribute collectionAttribute) throws HibernateException {
 		return null;
 	}
 
@@ -146,11 +147,10 @@ public abstract class AbstractVisitor {
 	 * entity. Default superclass implementation is
 	 * a no-op.
 	 * @param value
-	 * @param entityType
+	 * @param descriptor
 	 * @throws HibernateException
 	 */
-	Object processEntity(Object value, EntityType entityType)
-	throws HibernateException {
+	Object processEntity(Object value, EntityTypeDescriptor descriptor) throws HibernateException {
 		return null;
 	}
 

@@ -7,10 +7,16 @@
 package org.hibernate.sql;
 
 
+import org.hibernate.annotations.Remove;
+
 /**
  * A disjunctive string of conditions
  * @author Gavin King
+ *
+ * @deprecated Converting to use SQL AST
  */
+@Deprecated
+@Remove
 public class DisjunctionFragment {
 	private StringBuilder buffer = new StringBuilder();
 

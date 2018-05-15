@@ -23,7 +23,7 @@ public class IndexColumn extends Ejb3Column {
 	public IndexColumn(
 			boolean isImplicit,
 			String sqlType,
-			int length,
+			long length,
 			int precision,
 			int scale,
 			String name,
@@ -35,7 +35,7 @@ public class IndexColumn extends Ejb3Column {
 			Map<String, Join> joins,
 			PropertyHolder propertyHolder,
 			MetadataBuildingContext buildingContext) {
-		super();
+		super( buildingContext );
 		setImplicit( isImplicit );
 		setSqlType( sqlType );
 		setLength( length );
@@ -49,7 +49,6 @@ public class IndexColumn extends Ejb3Column {
 		setExplicitTableName( secondaryTableName );
 		setPropertyHolder( propertyHolder );
 		setJoins( joins );
-		setBuildingContext( buildingContext );
 		bind();
 	}
 

@@ -6,7 +6,7 @@
  */
 package org.hibernate;
 
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.type.Type;
 
 /**
@@ -26,34 +26,34 @@ public interface CustomEntityDirtinessStrategy {
 	 * {@link #isDirty} will be called next as the definitive means to determine whether the entity is dirty.
 	 *
 	 * @param entity The entity to be check.
-	 * @param persister The persister corresponding to the given entity
+	 * @param descriptor The descriptor corresponding to the given entity
 	 * @param session The session from which this check originates.
 	 *
 	 * @return {@code true} indicates the dirty check can be done; {@code false} indicates it cannot.
 	 */
-	public boolean canDirtyCheck(Object entity, EntityPersister persister, Session session);
+	boolean canDirtyCheck(Object entity, EntityTypeDescriptor descriptor, Session session);
 
 	/**
 	 * The callback used by Hibernate to determine if the given entity is dirty.  Only called if the previous
 	 * {@link #canDirtyCheck} returned {@code true}
 	 *
 	 * @param entity The entity to check.
-	 * @param persister The persister corresponding to the given entity
+	 * @param descriptor The descriptor corresponding to the given entity
 	 * @param session The session from which this check originates.
 	 *
 	 * @return {@code true} indicates the entity is dirty; {@link false} indicates the entity is not dirty.
 	 */
-	public boolean isDirty(Object entity, EntityPersister persister, Session session);
+	boolean isDirty(Object entity, EntityTypeDescriptor descriptor, Session session);
 
 	/**
 	 * Callback used by Hibernate to signal that the entity dirty flag should be cleared.  Generally this
 	 * happens after previous dirty changes were written to the database.
 	 *
 	 * @param entity The entity to reset
-	 * @param persister The persister corresponding to the given entity
+	 * @param descriptor The descriptor corresponding to the given entity
 	 * @param session The session from which this call originates.
 	 */
-	public void resetDirty(Object entity, EntityPersister persister, Session session);
+	void resetDirty(Object entity, EntityTypeDescriptor descriptor, Session session);
 
 	/**
 	 * Callback used to hook into Hibernate algorithm for determination of which attributes have changed.  Applications
@@ -61,11 +61,11 @@ public interface CustomEntityDirtinessStrategy {
 	 * method passing along an appropriate {@link AttributeChecker} implementation.
 	 *
 	 * @param entity The entity being checked
-	 * @param persister The persister corresponding to the given entity
+	 * @param descriptor The descriptor corresponding to the given entity
 	 * @param session The session from which this call originates.
 	 * @param dirtyCheckContext The callback context
 	 */
-	public void findDirty(Object entity, EntityPersister persister, Session session, DirtyCheckContext dirtyCheckContext);
+	void findDirty(Object entity, EntityTypeDescriptor descriptor, Session session, DirtyCheckContext dirtyCheckContext);
 
 	/**
 	 * A callback to drive dirty checking.  Handed to the {@link CustomEntityDirtinessStrategy#findDirty} method
@@ -74,20 +74,20 @@ public interface CustomEntityDirtinessStrategy {
 	 *
 	 * @see CustomEntityDirtinessStrategy#findDirty
 	 */
-	public static interface DirtyCheckContext {
+	interface DirtyCheckContext {
 		/**
 		 * The callback to indicate that dirty checking (the dirty attribute determination phase) should be handled
 		 * by the calling {@link CustomEntityDirtinessStrategy} using the given {@link AttributeChecker}.
 		 *
 		 * @param attributeChecker The delegate usable by the context for determining which attributes are dirty.
 		 */
-		public void doDirtyChecking(AttributeChecker attributeChecker);
+		void doDirtyChecking(AttributeChecker attributeChecker);
 	}
 
 	/**
 	 * Responsible for identifying when attributes are dirty.
 	 */
-	public static interface AttributeChecker {
+	interface AttributeChecker {
 		/**
 		 * Do the attribute dirty check.
 		 *
@@ -96,20 +96,20 @@ public interface CustomEntityDirtinessStrategy {
 		 *
 		 * @return {@code true} indicates the attribute value has changed; {@code false} indicates it has not.
 		 */
-		public boolean isDirty(AttributeInformation attributeInformation);
+		boolean isDirty(AttributeInformation attributeInformation);
 	}
 
 	/**
 	 * Provides {@link AttributeChecker} with meta information about the attributes being checked.
 	 */
 	@SuppressWarnings( {"UnusedDeclaration"})
-	public static interface AttributeInformation {
+	interface AttributeInformation {
 		/**
 		 * Get a reference to the persister for the entity containing this attribute.
 		 *
 		 * @return The entity persister.
 		 */
-		public EntityPersister getContainingPersister();
+		EntityTypeDescriptor getContainingDescriptor();
 
 		/**
 		 * Many of Hibernate internals use arrays to define information about attributes.  This value
@@ -119,28 +119,28 @@ public interface CustomEntityDirtinessStrategy {
 		 *
 		 * @return The attribute index.
 		 */
-		public int getAttributeIndex();
+		int getAttributeIndex();
 
 		/**
 		 * Get the name of this attribute.
 		 *
 		 * @return The attribute name
 		 */
-		public String getName();
+		String getName();
 
 		/**
 		 * Get the mapping type of this attribute.
 		 *
 		 * @return The mapping type.
 		 */
-		public Type getType();
+		Type getType();
 
 		/**
 		 * Get the current value of this attribute.
 		 *
 		 * @return The attributes current value
 		 */
-		public Object getCurrentValue();
+		Object getCurrentValue();
 
 		/**
 		 * Get the loaded value of this attribute.
@@ -150,8 +150,7 @@ public interface CustomEntityDirtinessStrategy {
 		 *
 		 * @return The attributes loaded value
 		 */
-		public Object getLoadedValue();
+		Object getLoadedValue();
 	}
-
 
 }

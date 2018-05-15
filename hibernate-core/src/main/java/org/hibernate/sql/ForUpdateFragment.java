@@ -12,12 +12,17 @@ import java.util.Map;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
+import org.hibernate.annotations.Remove;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 
 /**
  * @author Gavin King
+ *
+ * @deprecated Converting to use SQL AST
  */
+@Deprecated
+@Remove
 public class ForUpdateFragment {
 	private final StringBuilder aliases = new StringBuilder();
 	private boolean isNowaitEnabled;

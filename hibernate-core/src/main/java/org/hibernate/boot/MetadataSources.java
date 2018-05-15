@@ -24,6 +24,7 @@ import javax.xml.transform.dom.DOMSource;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
+import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
@@ -37,10 +38,10 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuilderFactory;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
+import org.hibernate.exception.SerializationException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.SerializationException;
 import org.w3c.dom.Document;
 
 /**
@@ -132,9 +133,18 @@ public class MetadataSources implements Serializable {
 	 * @deprecated Use {@link #getMetadataBuilder()} instead
 	 */
 	@Deprecated
-	public MetadataBuilder getMetadataBuilder(StandardServiceRegistry serviceRegistry) {
-		MetadataBuilderImpl defaultBuilder = new MetadataBuilderImpl( this, serviceRegistry );
+	public MetadataBuilder getMetadataBuilder(StandardServiceRegistry serviceRegistry, ClassmateContext classmateContext) {
+		MetadataBuilderImpl defaultBuilder = new MetadataBuilderImpl( this, serviceRegistry, classmateContext );
 		return getCustomBuilderOrDefault( defaultBuilder );
+	}
+
+	/**
+	 * Get a builder for metadata where non-default options can be specified.
+	 *
+	 * @return The built metadata.
+	 */
+	public MetadataBuilder getMetadataBuilder(StandardServiceRegistry serviceRegistry) {
+		return getMetadataBuilder( serviceRegistry, new ClassmateContext() );
 	}
 
 	/**
@@ -180,8 +190,8 @@ public class MetadataSources implements Serializable {
 		return getMetadataBuilder().build();
 	}
 
-	public Metadata buildMetadata(StandardServiceRegistry serviceRegistry) {
-		return getMetadataBuilder( serviceRegistry ).build();
+	public Metadata buildMetadata(StandardServiceRegistry serviceRegistry, ClassmateContext classmateContext) {
+		return getMetadataBuilder( serviceRegistry, classmateContext ).build();
 	}
 
 	/**
@@ -350,7 +360,7 @@ public class MetadataSources implements Serializable {
 	 *
 	 * @return The dom "deserialized" from the cached file.
 	 *
-	 * @throws org.hibernate.type.SerializationException Indicates a problem deserializing the cached dom tree
+	 * @throws org.hibernate.exception.SerializationException Indicates a problem deserializing the cached dom tree
 	 * @throws java.io.FileNotFoundException Indicates that the cached file was not found or was not usable.
 	 */
 	public MetadataSources addCacheableFileStrictly(File file) throws SerializationException, FileNotFoundException {

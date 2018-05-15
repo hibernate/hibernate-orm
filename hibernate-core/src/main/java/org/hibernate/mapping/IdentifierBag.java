@@ -6,34 +6,39 @@
  */
 package org.hibernate.mapping;
 
+import org.hibernate.boot.model.domain.JavaTypeMapping;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.type.CollectionType;
+import org.hibernate.collection.internal.StandardArraySemantics;
+import org.hibernate.collection.spi.CollectionSemantics;
 
 /**
  * An <tt>IdentifierBag</tt> has a primary key consisting of
  * just the identifier column
  */
 public class IdentifierBag extends IdentifierCollection {
-	/**
-	 * @deprecated User {@link IdentifierBag#IdentifierBag(MetadataBuildingContext, PersistentClass)} instead.
-	 */
-	@Deprecated
-	public IdentifierBag(MetadataImplementor metadata, PersistentClass owner) {
-		super( metadata, owner );
-	}
+	private final CollectionJavaTypeMapping javaTypeMapping;
 
 	public IdentifierBag(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
+
+		javaTypeMapping = new CollectionJavaTypeMapping(
+				buildingContext.getBootstrapContext().getTypeConfiguration(),
+				java.util.Collection.class
+		);
 	}
 
-	public CollectionType getDefaultCollectionType() {
-		return getMetadata().getTypeResolver()
-				.getTypeFactory()
-				.idbag( getRole(), getReferencedPropertyName() );
+	@Override
+	@SuppressWarnings("unchecked")
+	public CollectionSemantics getCollectionSemantics() {
+		return StandardArraySemantics.INSTANCE;
 	}
 
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
-	}	
+	}
+
+	@Override
+	public JavaTypeMapping getJavaTypeMapping() {
+		return javaTypeMapping;
+	}
 }

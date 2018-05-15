@@ -6,8 +6,8 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * An SQL dialect for Postgres 9.4 and later. Adds support for various date and time functions
@@ -19,10 +19,31 @@ public class PostgreSQL94Dialect extends PostgreSQL93Dialect {
 	 */
 	public PostgreSQL94Dialect() {
 		super();
-		registerFunction( "make_interval", new StandardSQLFunction("make_interval", StandardBasicTypes.TIMESTAMP) );
-		registerFunction( "make_timestamp", new StandardSQLFunction("make_timestamp", StandardBasicTypes.TIMESTAMP) );
-		registerFunction( "make_timestamptz", new StandardSQLFunction("make_timestamptz", StandardBasicTypes.TIMESTAMP) );
-		registerFunction( "make_date", new StandardSQLFunction("make_date", StandardBasicTypes.DATE) );
-		registerFunction( "make_time", new StandardSQLFunction("make_time", StandardBasicTypes.TIME) );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
+
+		registry.namedTemplateBuilder( "make_interval" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setArgumentCountBetween( 1, 7 )
+				.register();
+		registry.namedTemplateBuilder( "make_timestamp" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setExactArgumentCount( 6 )
+				.register();
+		registry.namedTemplateBuilder( "make_timestamptz" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setArgumentCountBetween( 6, 7 )
+				.register();
+		registry.namedTemplateBuilder( "make_date" )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setExactArgumentCount( 3 )
+				.register();
+		registry.namedTemplateBuilder( "make_time" )
+				.setInvariantType( StandardSpiBasicTypes.TIME )
+				.setExactArgumentCount( 3 )
+				.register();
 	}
 }

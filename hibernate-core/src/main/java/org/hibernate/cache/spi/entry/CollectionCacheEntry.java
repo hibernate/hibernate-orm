@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
 /**
  * Cacheable representation of persistent collections
@@ -22,12 +22,10 @@ public class CollectionCacheEntry implements Serializable {
 
 	/**
 	 * Constructs a CollectionCacheEntry
-	 *
-	 * @param collection The persistent collection instance
-	 * @param persister The collection persister
 	 */
-	public CollectionCacheEntry(PersistentCollection collection, CollectionPersister persister) {
-		this.state = collection.disassemble( persister );
+	@SuppressWarnings("unchecked")
+	public CollectionCacheEntry(PersistentCollection collection, PersistentCollectionDescriptor collectionDescriptor) {
+		this.state = collection.disassemble( collectionDescriptor );
 	}
 
 	CollectionCacheEntry(Serializable state) {
@@ -46,16 +44,13 @@ public class CollectionCacheEntry implements Serializable {
 
 	/**
 	 * Assembles the collection from the cached state.
-	 *
-	 * @param collection The persistent collection instance being assembled
-	 * @param persister The collection persister
-	 * @param owner The collection owner instance
 	 */
+	@SuppressWarnings("unchecked")
 	public void assemble(
 			final PersistentCollection collection,
-			final CollectionPersister persister,
+			final PersistentCollectionDescriptor collectionDescriptor,
 			final Object owner) {
-		collection.initializeFromCache( persister, state, owner );
+		collection.initializeFromCache( state, owner, collectionDescriptor );
 		collection.afterInitialize();
 	}
 

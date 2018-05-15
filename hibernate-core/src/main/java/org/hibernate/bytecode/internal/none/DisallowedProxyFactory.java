@@ -11,11 +11,10 @@ import java.lang.reflect.Method;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
-import org.hibernate.type.CompositeType;
 
 final class DisallowedProxyFactory implements ProxyFactory {
 
@@ -28,7 +27,7 @@ final class DisallowedProxyFactory implements ProxyFactory {
 			Set<Class> interfaces,
 			Method getIdentifierMethod,
 			Method setIdentifierMethod,
-			CompositeType componentIdType) throws HibernateException {
+			EmbeddedTypeDescriptor componentIdType) throws HibernateException {
 
 	}
 

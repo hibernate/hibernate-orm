@@ -12,8 +12,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.model.domain.spi.Lockable;
 
 /**
  * A pessimistic locking strategy that increments the version immediately (obtaining an exclusive write lock).
@@ -44,12 +44,11 @@ public class PessimisticForceIncrementLockingStrategy implements LockingStrategy
 
 	@Override
 	public void lock(Serializable id, Object version, Object object, int timeout, SharedSessionContractImplementor session) {
-		if ( !lockable.isVersioned() ) {
+		if ( StringHelper.isEmpty( lockable.getVersionColumnName() ) ) {
 			throw new HibernateException( "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}
 		final EntityEntry entry = session.getPersistenceContext().getEntry( object );
-		final EntityPersister persister = entry.getPersister();
-		final Object nextVersion = persister.forceVersionIncrement( entry.getId(), entry.getVersion(), session );
+		final Object nextVersion = entry.getDescriptor().forceVersionIncrement( entry.getId(), entry.getVersion(), session );
 		entry.forceLocked( object, nextVersion );
 	}
 

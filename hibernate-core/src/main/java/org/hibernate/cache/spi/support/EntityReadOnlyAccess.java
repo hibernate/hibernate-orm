@@ -22,6 +22,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
+@SuppressWarnings("WeakerAccess")
 public class EntityReadOnlyAccess extends AbstractEntityDataAccess {
 	private static final Logger log = Logger.getLogger( EntityReadOnlyAccess.class );
 

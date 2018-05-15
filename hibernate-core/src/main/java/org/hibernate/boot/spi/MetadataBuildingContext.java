@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.spi;
 
+import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.model.domain.ResolutionContext;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 
 /**
@@ -18,8 +20,18 @@ import org.hibernate.boot.model.naming.ObjectNameNormalizer;
  *
  * @since 5.0
  */
-public interface MetadataBuildingContext {
+public interface MetadataBuildingContext extends ResolutionContext {
+	@Override
+	default MetadataBuildingContext getMetadataBuildingContext() {
+		return this;
+	}
+
+	@Override
 	BootstrapContext getBootstrapContext();
+
+	TypeDefinition resolveTypeDefinition(String typeName);
+	void addTypeDefinition(TypeDefinition typeDefinition);
+
 	/**
 	 * Access to the options specified by the {@link org.hibernate.boot.MetadataBuilder}
 	 *
@@ -42,19 +54,17 @@ public interface MetadataBuildingContext {
 	InFlightMetadataCollector getMetadataCollector();
 
 	/**
-	 * Provides access to ClassLoader services when needed during binding
-	 *
-	 * @return The ClassLoaderAccess
-	 *
-	 * @deprecated Use {@link BootstrapContext#getClassLoaderAccess()}} instead.
-	 */
-	@Deprecated
-	ClassLoaderAccess getClassLoaderAccess();
-
-	/**
 	 * Not sure how I feel about this exposed here
 	 *
 	 * @return
 	 */
 	ObjectNameNormalizer getObjectNameNormalizer();
+
+	/**
+	 * Handles the more "global" resolution of this question.  Added mainly
+	 * to cache this part of the resolution.  From the perspective of
+	 * using this value JdbcRecommendedSqlTypeMappingContext#getPreferredSqlTypeCodeForBoolean
+	 * is the one used for the resolution; this method simply acts as a fallback.
+	 */
+	int getPreferredSqlTypeCodeForBoolean();
 }

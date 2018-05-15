@@ -20,8 +20,7 @@ import javax.persistence.criteria.CriteriaUpdate;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
-import org.hibernate.jpa.HibernateEntityManager;
-import org.hibernate.query.NativeQuery;
+import org.hibernate.query.Query;
 import org.hibernate.stat.SessionStatistics;
 
 /**
@@ -85,7 +84,7 @@ import org.hibernate.stat.SessionStatistics;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface Session extends SharedSessionContract, EntityManager, HibernateEntityManager, AutoCloseable, Closeable {
+public interface Session extends SharedSessionContract, EntityManager, AutoCloseable, Closeable {
 	/**
 	 * Obtain a {@link Session} builder with the ability to grab certain information from this session.
 	 *
@@ -236,6 +235,7 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 *
 	 * To override this session's read-only/modifiable setting for entities
 	 * and proxies loaded by a Query:
+	 *
 	 * @see Query#setReadOnly(boolean)
 	 *
 	 * @param readOnly true, the default for loaded entities/proxies is read-only;
@@ -253,7 +253,7 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 * @throws TransientObjectException if the instance is transient or associated with
 	 * a different session
 	 */
-	Serializable getIdentifier(Object object);
+	Object getIdentifier(Object object);
 
 	/**
 	 * Check if this entity is associated with this Session.  This form caters to
@@ -282,7 +282,7 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 * Return the persistent instance of the given entity class with the given identifier,
 	 * obtaining the specified lock mode, assuming the instance exists.
 	 * <p/>
-	 * Convenient form of {@link #load(Class, Serializable, LockOptions)}
+	 * Convenient form of {@link #load(Class, Object, LockOptions)}
 	 *
 	 * @param theClass a persistent class
 	 * @param id a valid identifier of an existing persistent instance of the class
@@ -290,9 +290,17 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 *
 	 * @return the persistent instance or proxy
 	 *
-	 * @see #load(Class, Serializable, LockOptions)
+	 * @see #load(Class, Object, LockOptions)
 	 */
-	<T> T load(Class<T> theClass, Serializable id, LockMode lockMode);
+	<T> T load(Class<T> theClass, Object id, LockMode lockMode);
+
+	/**
+	 * @deprecated (since 6.0) Use {@link #load(Class,Object,LockMode)} instead
+	 */
+	@Deprecated
+	default <T> T load(Class<T> theClass, Serializable id, LockMode lockMode) {
+		return load( theClass, (Object) id, lockMode );
+	}
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
@@ -303,13 +311,21 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 * @param lockOptions contains the lock level
 	 * @return the persistent instance or proxy
 	 */
-	<T> T load(Class<T> theClass, Serializable id, LockOptions lockOptions);
+	<T> T load(Class<T> theClass, Object id, LockOptions lockOptions);
+
+	/**
+	 * @deprecated (since 6.0) Use {@link #load(Class, Object, LockOptions)} instead
+	 */
+	@Deprecated
+	default <T> T load(Class<T> theClass, Serializable id, LockOptions lockOptions) {
+		return load( theClass, (Object) id, lockOptions );
+	}
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
 	 * obtaining the specified lock mode, assuming the instance exists.
 	 * <p/>
-	 * Convenient form of {@link #load(String, Serializable, LockOptions)}
+	 * Convenient form of {@link #load(String, Object, LockOptions)}
 	 *
 	 * @param entityName a persistent class
 	 * @param id a valid identifier of an existing persistent instance of the class
@@ -317,9 +333,17 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 *
 	 * @return the persistent instance or proxy
 	 *
-	 * @see #load(String, Serializable, LockOptions)
+	 * @see #load(String, Object, LockOptions)
 	 */
-	Object load(String entityName, Serializable id, LockMode lockMode);
+	Object load(String entityName, Object id, LockMode lockMode);
+
+	/**
+	 * @deprecated (since 6.0) Use {@link #load(String, Object, LockMode)} instead
+	 */
+	@Deprecated
+	default Object load(String entityName, Serializable id, LockMode lockMode) {
+		return load( entityName, (Object) id, lockMode );
+	}
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
@@ -331,7 +355,15 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 *
 	 * @return the persistent instance or proxy
 	 */
-	Object load(String entityName, Serializable id, LockOptions lockOptions);
+	Object load(String entityName, Object id, LockOptions lockOptions);
+
+	/**
+	 * @deprecated (since 6.0) Use {@link #load(String, Object, LockOptions)} instead
+	 */
+	@Deprecated
+	default Object load(String entityName, Serializable id, LockOptions lockOptions) {
+		return load( entityName, (Object) id, lockOptions );
+	}
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
@@ -347,7 +379,15 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 *
 	 * @return the persistent instance or proxy
 	 */
-	<T> T load(Class<T> theClass, Serializable id);
+	<T> T load(Class<T> theClass, Object id);
+
+	/**
+	 * @deprecated (since 6.0) Use {@link #load(Class, Object)}
+	 */
+	@Deprecated
+	default <T> T load(Class<T> theClass, Serializable id) {
+		return load( theClass, (Object) id );
+	}
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
@@ -363,16 +403,31 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 *
 	 * @return the persistent instance or proxy
 	 */
-	Object load(String entityName, Serializable id);
+	Object load(String entityName, Object id);
+
+	/**
+	 * @deprecated Use {@link #load(String, Object)} instead
+	 */
+	@Deprecated
+	default Object load(String entityName, Serializable id) {
+		return load( entityName, (Object) id );
+	}
 
 	/**
 	 * Read the persistent state associated with the given identifier into the given transient
 	 * instance.
-	 *
-	 * @param object an "empty" instance of the persistent class
+	 *  @param object an "empty" instance of the persistent class
 	 * @param id a valid identifier of an existing persistent instance of the class
 	 */
-	void load(Object object, Serializable id);
+	void load(Object object, Object id);
+
+	/**
+	 * @deprecated Use {@link #load(Object, Object)} instead
+	 */
+	@Deprecated
+	default void load(Object object, Serializable id) {
+		load( object, (Object) id );
+	}
 
 	/**
 	 * Persist the state of the given detached instance, reusing the current
@@ -405,7 +460,7 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 *
 	 * @return the generated identifier
 	 */
-	Serializable save(Object object);
+	Object save(Object object);
 
 	/**
 	 * Persist the given transient instance, first assigning a generated identifier. (Or
@@ -418,7 +473,7 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 *
 	 * @return the generated identifier
 	 */
-	Serializable save(String entityName, Object object);
+	Object save(String entityName, Object object);
 
 	/**
 	 * Either {@link #save(Object)} or {@link #update(Object)} the given
@@ -678,21 +733,6 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	LockMode getCurrentLockMode(Object object);
 
 	/**
-	 * Create a {@link Query} instance for the given collection and filter string.  Contains an implicit {@code FROM}
-	 * element named {@code this} which refers to the defined table for the collection elements, as well as an implicit
-	 * {@code WHERE} restriction for this particular collection instance's key value.
-	 *
-	 * @param collection a persistent collection
-	 * @param queryString a Hibernate query fragment.
-	 *
-	 * @return The query instance for manipulation and execution
-	 *
-	 * @deprecated (since 5.3) with no real replacement.
-	 */
-	@Deprecated
-	org.hibernate.Query createFilter(Object collection, String queryString);
-
-	/**
 	 * Completely clear the session. Evict all loaded instances and cancel all pending
 	 * saves, updates and deletions. Do not close open iterators or instances of
 	 * <tt>ScrollableResults</tt>.
@@ -709,7 +749,15 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 *
 	 * @return a persistent instance or null
 	 */
-	<T> T get(Class<T> entityType, Serializable id);
+	<T> T get(Class<T> entityType, Object id);
+
+	/**
+	 * @deprecated since 6.0 - use {@link #get(Class, Object)} instead
+	 */
+	@Deprecated
+	default <T> T get(Class<T> entityType, Serializable id) {
+		return get( entityType, (Object) id );
+	}
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
@@ -717,7 +765,7 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 * with the session, return that instance. This method never returns an uninitialized instance.)
 	 * Obtain the specified lock mode if the instance exists.
 	 * <p/>
-	 * Convenient form of {@link #get(Class, Serializable, LockOptions)}
+	 * Convenient form of {@link #get(Class, Object, LockOptions)}
 	 *
 	 * @param entityType The entity type
 	 * @param id an identifier
@@ -725,9 +773,17 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 *
 	 * @return a persistent instance or null
 	 *
-	 * @see #get(Class, Serializable, LockOptions)
+	 * @see #get(Class, Object, LockOptions)
 	 */
-	<T> T get(Class<T> entityType, Serializable id, LockMode lockMode);
+	<T> T get(Class<T> entityType, Object id, LockMode lockMode);
+
+	/**
+	 * @deprecated since 6.0 - use {@link #get(Class, Object, LockMode)} instead
+	 */
+	@Deprecated
+	default <T> T get(Class<T> entityType, Serializable id, LockMode lockMode) {
+		return get( entityType, (Object) id, lockMode );
+	}
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
@@ -741,7 +797,15 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 *
 	 * @return a persistent instance or null
 	 */
-	<T> T get(Class<T> entityType, Serializable id, LockOptions lockOptions);
+	<T> T get(Class<T> entityType, Object id, LockOptions lockOptions);
+
+	/**
+	 * @deprecated since 6.0 - use {@link #get(Class, Object, LockOptions)} instead
+	 */
+	@Deprecated
+	default <T> T get(Class<T> entityType, Serializable id, LockOptions lockOptions) {
+		return get( entityType, (Object) id, lockOptions );
+	}
 
 	/**
 	 * Return the persistent instance of the given named entity with the given identifier,
@@ -753,7 +817,15 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 *
 	 * @return a persistent instance or null
 	 */
-	Object get(String entityName, Serializable id);
+	Object get(String entityName, Object id);
+
+	/**
+	 * @deprecated since 6.0 - use {@link #get(String, Object)} instead
+	 */
+	@Deprecated
+	default Object get(String entityName, Serializable id) {
+		return get( entityName, (Object) id );
+	}
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
@@ -761,7 +833,7 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 * with the session, return that instance. This method never returns an uninitialized instance.)
 	 * Obtain the specified lock mode if the instance exists.
 	 * <p/>
-	 * Convenient form of {@link #get(String, Serializable, LockOptions)}
+	 * Convenient form of {@link #get(String, Object, LockOptions)}
 	 *
 	 * @param entityName the entity name
 	 * @param id an identifier
@@ -769,9 +841,17 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 *
 	 * @return a persistent instance or null
 	 *
-	 * @see #get(String, Serializable, LockOptions)
+	 * @see #get(String, Object, LockOptions)
 	 */
-	Object get(String entityName, Serializable id, LockMode lockMode);
+	Object get(String entityName, Object id, LockMode lockMode);
+
+	/**
+	 * @deprecated since 6.0 - use {@link #get(String, Object, LockMode)} instead
+	 */
+	@Deprecated
+	default Object get(String entityName, Serializable id, LockMode lockMode) {
+		return get( entityName, (Object) id, lockMode );
+	}
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
@@ -785,7 +865,15 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 *
 	 * @return a persistent instance or null
 	 */
-	Object get(String entityName, Serializable id, LockOptions lockOptions);
+	Object get(String entityName, Object id, LockOptions lockOptions);
+
+	/**
+	 * @deprecated since 6.0 - use {@link #get(String, Object, LockOptions)} instead
+	 */
+	@Deprecated
+	default Object get(String entityName, Serializable id, LockOptions lockOptions) {
+		return get( entityName, (Object) id, lockOptions );
+	}
 
 	/**
 	 * Return the entity name for a persistent entity.
@@ -1058,15 +1146,6 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	void disableFetchProfile(String name) throws UnknownProfileException;
 
 	/**
-	 * Convenience access to the {@link TypeHelper} associated with this session's {@link SessionFactory}.
-	 * <p/>
-	 * Equivalent to calling {@link #getSessionFactory()}.{@link SessionFactory#getTypeHelper getTypeHelper()}
-	 *
-	 * @return The {@link TypeHelper} associated with this session's {@link SessionFactory}
-	 */
-	TypeHelper getTypeHelper();
-
-	/**
 	 * Retrieve this session's helper/delegate for creating LOB instances.
 	 *
 	 * @return This session's LOB helper
@@ -1180,7 +1259,4 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	org.hibernate.query.Query getNamedQuery(String queryName);
 
 	<T> org.hibernate.query.Query<T> createNamedQuery(String name, Class<T> resultType);
-
-	@Override
-	NativeQuery createSQLQuery(String queryString);
 }

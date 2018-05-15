@@ -10,7 +10,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
@@ -28,7 +27,6 @@ import org.hibernate.boot.model.source.internal.hbm.ModelBinder;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.AdditionalJaxbMappingProducer;
-import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataContributor;
@@ -36,13 +34,10 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.BasicTypeRegistry;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.usertype.CompositeUserType;
-import org.hibernate.usertype.UserType;
 
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
@@ -131,11 +126,7 @@ public class MetadataBuildingProcess {
 				metadataCollector
 		);
 
-		for ( AttributeConverterInfo converterInfo : managedResources.getAttributeConverterDefinitions() ) {
-			metadataCollector.addAttributeConverter(
-					converterInfo.toConverterDescriptor( rootMetadataBuildingContext )
-			);
-		}
+		managedResources.getAttributeConverterDescriptors().forEach( metadataCollector::addAttributeConverter );
 
 		bootstrapContext.getTypeConfiguration().scope( rootMetadataBuildingContext );
 
@@ -328,29 +319,10 @@ public class MetadataBuildingProcess {
 //	}
 
 	private static void handleTypes(BootstrapContext bootstrapContext, MetadataBuildingOptions options) {
+
 		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
 
 		final TypeContributions typeContributions = new TypeContributions() {
-			@Override
-			public void contributeType(org.hibernate.type.BasicType type) {
-				getBasicTypeRegistry().register( type );
-			}
-
-			@Override
-			public void contributeType(BasicType type, String... keys) {
-				getBasicTypeRegistry().register( type, keys );
-			}
-
-			@Override
-			public void contributeType(UserType type, String[] keys) {
-				getBasicTypeRegistry().register( type, keys );
-			}
-
-			@Override
-			public void contributeType(CompositeUserType type, String[] keys) {
-				getBasicTypeRegistry().register( type, keys );
-			}
-
 			@Override
 			public void contributeJavaTypeDescriptor(JavaTypeDescriptor descriptor) {
 				bootstrapContext.getTypeConfiguration().getJavaTypeDescriptorRegistry().addDescriptor( descriptor );
@@ -362,27 +334,23 @@ public class MetadataBuildingProcess {
 			}
 
 			@Override
+			public void contributeType(BasicType type) {
+				// register the BasicType with the BasicTypeRegistry
+				bootstrapContext.getTypeConfiguration().getBasicTypeRegistry().register( type );
+			}
+
+			@Override
 			public TypeConfiguration getTypeConfiguration() {
 				return bootstrapContext.getTypeConfiguration();
 			}
-
-			final BasicTypeRegistry getBasicTypeRegistry() {
-				return bootstrapContext.getTypeConfiguration().getBasicTypeRegistry();
-			}
-
 		};
 
-		// add Dialect contributed types
 		final Dialect dialect = options.getServiceRegistry().getService( JdbcServices.class ).getDialect();
 		dialect.contributeTypes( typeContributions, options.getServiceRegistry() );
 
-		// add TypeContributor contributed types.
 		for ( TypeContributor contributor : classLoaderService.loadJavaServices( TypeContributor.class ) ) {
 			contributor.contribute( typeContributions, options.getServiceRegistry() );
 		}
 
-		// add explicit application registered types
-		bootstrapContext.getTypeConfiguration()
-				.addBasicTypeRegistrationContributions( options.getBasicTypeRegistrations() );
 	}
 }

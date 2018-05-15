@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.internal.util.beans;
+
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -16,12 +17,13 @@ import java.lang.reflect.InvocationTargetException;
  * @author Steve Ebersole
  */
 public class BeanInfoHelper {
-	public static interface BeanInfoDelegate {
-		public void processBeanInfo(BeanInfo beanInfo) throws Exception;
+	@FunctionalInterface
+	public interface BeanInfoDelegate {
+		void processBeanInfo(BeanInfo beanInfo) throws Exception;
 	}
 
-	public static interface ReturningBeanInfoDelegate<T> {
-		public T processBeanInfo(BeanInfo beanInfo) throws Exception;
+	public interface ReturningBeanInfoDelegate<T> {
+		T processBeanInfo(BeanInfo beanInfo) throws Exception;
 	}
 
 	private final Class beanClass;

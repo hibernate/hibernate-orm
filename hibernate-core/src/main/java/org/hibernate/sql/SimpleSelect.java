@@ -16,13 +16,18 @@ import java.util.Set;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.annotations.Remove;
 import org.hibernate.dialect.Dialect;
 
 /**
  * An SQL <tt>SELECT</tt> statement with no table joins
  *
  * @author Gavin King
+ *
+ * @deprecated Converting to use SQL AST
  */
+@Deprecated
+@Remove
 public class SimpleSelect {
 
 	public SimpleSelect(Dialect dialect) {

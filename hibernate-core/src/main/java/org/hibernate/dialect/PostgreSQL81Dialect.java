@@ -19,11 +19,13 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.PositionSubstringFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.LocateEmulationUsingPositionAndSubstring;
+import org.hibernate.query.sqm.consume.multitable.internal.StandardIdTableSupport;
+import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.LocalTempTableExporter;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.LocalTemporaryTableStrategy;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.PostgreSQL81IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
@@ -34,17 +36,15 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
-import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.local.AfterUseAction;
-import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.procedure.internal.PostgresCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
-import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.spi.ConcatFunctionTemplate;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
+import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * An SQL dialect for Postgres
@@ -102,78 +102,187 @@ public class PostgreSQL81Dialect extends Dialect {
 		registerColumnType( Types.NUMERIC, "numeric($p, $s)" );
 		registerColumnType( Types.OTHER, "uuid" );
 
-		registerFunction( "abs", new StandardSQLFunction("abs") );
-		registerFunction( "sign", new StandardSQLFunction("sign", StandardBasicTypes.INTEGER) );
-
-		registerFunction( "acos", new StandardSQLFunction("acos", StandardBasicTypes.DOUBLE) );
-		registerFunction( "asin", new StandardSQLFunction("asin", StandardBasicTypes.DOUBLE) );
-		registerFunction( "atan", new StandardSQLFunction("atan", StandardBasicTypes.DOUBLE) );
-		registerFunction( "cos", new StandardSQLFunction("cos", StandardBasicTypes.DOUBLE) );
-		registerFunction( "cot", new StandardSQLFunction("cot", StandardBasicTypes.DOUBLE) );
-		registerFunction( "exp", new StandardSQLFunction("exp", StandardBasicTypes.DOUBLE) );
-		registerFunction( "ln", new StandardSQLFunction("ln", StandardBasicTypes.DOUBLE) );
-		registerFunction( "log", new StandardSQLFunction("log", StandardBasicTypes.DOUBLE) );
-		registerFunction( "sin", new StandardSQLFunction("sin", StandardBasicTypes.DOUBLE) );
-		registerFunction( "sqrt", new StandardSQLFunction("sqrt", StandardBasicTypes.DOUBLE) );
-		registerFunction( "cbrt", new StandardSQLFunction("cbrt", StandardBasicTypes.DOUBLE) );
-		registerFunction( "tan", new StandardSQLFunction("tan", StandardBasicTypes.DOUBLE) );
-		registerFunction( "radians", new StandardSQLFunction("radians", StandardBasicTypes.DOUBLE) );
-		registerFunction( "degrees", new StandardSQLFunction("degrees", StandardBasicTypes.DOUBLE) );
-
-		registerFunction( "stddev", new StandardSQLFunction("stddev", StandardBasicTypes.DOUBLE) );
-		registerFunction( "variance", new StandardSQLFunction("variance", StandardBasicTypes.DOUBLE) );
-
-		registerFunction( "random", new NoArgSQLFunction("random", StandardBasicTypes.DOUBLE) );
-		registerFunction( "rand", new NoArgSQLFunction("random", StandardBasicTypes.DOUBLE) );
-
-		registerFunction( "round", new StandardSQLFunction("round") );
-		registerFunction( "trunc", new StandardSQLFunction("trunc") );
-		registerFunction( "ceil", new StandardSQLFunction("ceil") );
-		registerFunction( "floor", new StandardSQLFunction("floor") );
-
-		registerFunction( "chr", new StandardSQLFunction("chr", StandardBasicTypes.CHARACTER) );
-		registerFunction( "lower", new StandardSQLFunction("lower") );
-		registerFunction( "upper", new StandardSQLFunction("upper") );
-		registerFunction( "substr", new StandardSQLFunction("substr", StandardBasicTypes.STRING) );
-		registerFunction( "initcap", new StandardSQLFunction("initcap") );
-		registerFunction( "to_ascii", new StandardSQLFunction("to_ascii") );
-		registerFunction( "quote_ident", new StandardSQLFunction("quote_ident", StandardBasicTypes.STRING) );
-		registerFunction( "quote_literal", new StandardSQLFunction("quote_literal", StandardBasicTypes.STRING) );
-		registerFunction( "md5", new StandardSQLFunction("md5", StandardBasicTypes.STRING) );
-		registerFunction( "ascii", new StandardSQLFunction("ascii", StandardBasicTypes.INTEGER) );
-		registerFunction( "char_length", new StandardSQLFunction("char_length", StandardBasicTypes.LONG) );
-		registerFunction( "bit_length", new StandardSQLFunction("bit_length", StandardBasicTypes.LONG) );
-		registerFunction( "octet_length", new StandardSQLFunction("octet_length", StandardBasicTypes.LONG) );
-
-		registerFunction( "age", new StandardSQLFunction("age") );
-		registerFunction( "current_date", new NoArgSQLFunction("current_date", StandardBasicTypes.DATE, false) );
-		registerFunction( "current_time", new NoArgSQLFunction("current_time", StandardBasicTypes.TIME, false) );
-		registerFunction( "current_timestamp", new NoArgSQLFunction("current_timestamp", StandardBasicTypes.TIMESTAMP, false) );
-		registerFunction( "date_trunc", new StandardSQLFunction( "date_trunc", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "localtime", new NoArgSQLFunction("localtime", StandardBasicTypes.TIME, false) );
-		registerFunction( "localtimestamp", new NoArgSQLFunction("localtimestamp", StandardBasicTypes.TIMESTAMP, false) );
-		registerFunction( "now", new NoArgSQLFunction("now", StandardBasicTypes.TIMESTAMP) );
-		registerFunction( "timeofday", new NoArgSQLFunction("timeofday", StandardBasicTypes.STRING) );
-
-		registerFunction( "current_user", new NoArgSQLFunction("current_user", StandardBasicTypes.STRING, false) );
-		registerFunction( "session_user", new NoArgSQLFunction("session_user", StandardBasicTypes.STRING, false) );
-		registerFunction( "user", new NoArgSQLFunction("user", StandardBasicTypes.STRING, false) );
-		registerFunction( "current_database", new NoArgSQLFunction("current_database", StandardBasicTypes.STRING, true) );
-		registerFunction( "current_schema", new NoArgSQLFunction("current_schema", StandardBasicTypes.STRING, true) );
-		
-		registerFunction( "to_char", new StandardSQLFunction("to_char", StandardBasicTypes.STRING) );
-		registerFunction( "to_date", new StandardSQLFunction("to_date", StandardBasicTypes.DATE) );
-		registerFunction( "to_timestamp", new StandardSQLFunction("to_timestamp", StandardBasicTypes.TIMESTAMP) );
-		registerFunction( "to_number", new StandardSQLFunction("to_number", StandardBasicTypes.BIG_DECIMAL) );
-
-		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(","||",")" ) );
-
-		registerFunction( "locate", new PositionSubstringFunction() );
-
-		registerFunction( "str", new SQLFunctionTemplate(StandardBasicTypes.STRING, "cast(?1 as varchar)") );
-
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		getDefaultProperties().setProperty( Environment.NON_CONTEXTUAL_LOB_CREATION, "true" );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
+
+		CommonFunctionFactory.abs( registry );
+		CommonFunctionFactory.sign( registry );
+
+		CommonFunctionFactory.acos( registry );
+		CommonFunctionFactory.asin( registry );
+		CommonFunctionFactory.atan( registry );
+		CommonFunctionFactory.cos( registry );
+		CommonFunctionFactory.cot( registry );
+		CommonFunctionFactory.exp( registry );
+		CommonFunctionFactory.ln( registry );
+		CommonFunctionFactory.sin( registry );
+		CommonFunctionFactory.sqrt( registry );
+		registry.namedTemplateBuilder( "cbrt" )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount( 1 )
+				.register();
+		CommonFunctionFactory.tan( registry );
+		CommonFunctionFactory.radians( registry );
+		CommonFunctionFactory.degrees( registry );
+
+		CommonFunctionFactory.stddev( registry );
+		CommonFunctionFactory.variance( registry );
+
+		registry.registerNoArgs( "random", StandardSpiBasicTypes.DOUBLE );
+		registry.registerAlternateKey( "rand", "random" );
+
+		CommonFunctionFactory.round( registry );
+		CommonFunctionFactory.trunc( registry );
+		CommonFunctionFactory.ceil( registry );
+		CommonFunctionFactory.floor( registry );
+
+		registry.namedTemplateBuilder( "ltrim" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setArgumentCountBetween( 1, 2 )
+				.register();
+		registry.namedTemplateBuilder( "rtrim" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setArgumentCountBetween( 1, 2 )
+				.register();
+		registry.namedTemplateBuilder( "chr" )
+				.setInvariantType( StandardSpiBasicTypes.CHARACTER )
+				.setExactArgumentCount( 1 )
+				.register();
+		CommonFunctionFactory.lower( registry );
+		CommonFunctionFactory.upper( registry );
+		registry.namedTemplateBuilder( "substr" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setArgumentCountBetween( 2, 3 )
+				.register();
+		registry.namedTemplateBuilder( "initcap" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 1 )
+				.register();
+		registry.namedTemplateBuilder( "to_ascii" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setArgumentCountBetween( 1, 2 )
+				.register();
+		registry.namedTemplateBuilder( "quote_ident" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 1 )
+				.register();
+		registry.namedTemplateBuilder( "quote_literal" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 1 )
+				.register();
+		registry.namedTemplateBuilder( "md5" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 1 )
+				.register();
+		registry.namedTemplateBuilder( "ascii" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 1 )
+				.register();
+		registry.namedTemplateBuilder( "char_length" )
+				.setInvariantType( StandardSpiBasicTypes.LONG )
+				.setExactArgumentCount( 1 )
+				.register();
+		registry.namedTemplateBuilder( "bit_length" )
+				.setInvariantType( StandardSpiBasicTypes.LONG )
+				.setExactArgumentCount( 1 )
+				.register();
+		registry.namedTemplateBuilder( "octet_length" )
+				.setInvariantType( StandardSpiBasicTypes.LONG )
+				.setExactArgumentCount( 1 )
+				.register();
+
+		registry.namedTemplateBuilder( "age" )
+				.setArgumentCountBetween( 1, 2 )
+				.register();
+		registry.registerNoArgs( "current_date", StandardSpiBasicTypes.DATE );
+		registry.registerNoArgs( "current_time", StandardSpiBasicTypes.TIME );
+		registry.registerNoArgs( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
+		registry.namedTemplateBuilder( "date_trunc" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setExactArgumentCount( 2 )
+				.register();
+		registry.registerNoArgs( "localtime", StandardSpiBasicTypes.TIME );
+		registry.registerNoArgs( "localtimestamp", StandardSpiBasicTypes.TIMESTAMP );
+		registry.noArgsBuilder( "now" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setUseParenthesesWhenNoArgs( true )
+				.register();
+		registry.noArgsBuilder( "timeofday" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setUseParenthesesWhenNoArgs( true )
+				.register();
+
+		registry.registerNoArgs( "current_user", StandardSpiBasicTypes.STRING );
+		registry.registerNoArgs( "session_user", StandardSpiBasicTypes.STRING );
+		registry.registerNoArgs( "user", StandardSpiBasicTypes.STRING );
+		registry.noArgsBuilder( "current_database" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setUseParenthesesWhenNoArgs( true )
+				.register();
+		registry.noArgsBuilder( "current_schema" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setUseParenthesesWhenNoArgs( true )
+				.register();
+
+		registry.namedTemplateBuilder( "to_char" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 2 )
+				.register();
+		registry.namedTemplateBuilder( "to_date" )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setExactArgumentCount( 2 )
+				.register();
+		registry.namedTemplateBuilder( "to_timestamp" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setExactArgumentCount( 2 )
+				.register();
+		registry.namedTemplateBuilder( "to_number" )
+				.setInvariantType( StandardSpiBasicTypes.BIG_DECIMAL )
+				.setExactArgumentCount( 2 )
+				.register();
+
+		registry.register( "concat", ConcatFunctionTemplate.INSTANCE );
+		registry.namedTemplateBuilder( "lpad" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setArgumentCountBetween( 2, 3 )
+				.register();
+		registry.namedTemplateBuilder( "replace" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setArgumentCountBetween( 2, 3 )
+				.register();
+		registry.namedTemplateBuilder( "rpad" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setArgumentCountBetween( 2, 3 )
+				.register();
+		registry.namedTemplateBuilder( "translate" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 3 )
+				.register();
+
+		registry.registerAlternateKey( "substring", "substr" );
+		registry.register( "locate", new LocateEmulationUsingPositionAndSubstring() );
+		registry.namedTemplateBuilder( "coalesce" )
+				.setArgumentsValidator( StandardArgumentsValidators.min( 2 ) )
+				.register();
+
+		registry.registerPattern( "str", "cast(?1 as varchar)", StandardSpiBasicTypes.STRING );
+
+		// Multi-param numeric dialect functions...
+		registry.namedTemplateBuilder( "atan2" )
+				.setInvariantType( StandardSpiBasicTypes.FLOAT )
+				.setExactArgumentCount( 2 )
+				.register();
+		CommonFunctionFactory.log( registry );
+		CommonFunctionFactory.mod( registry );
+		registry.namedTemplateBuilder( "power" )
+				.setInvariantType( StandardSpiBasicTypes.FLOAT )
+				.setExactArgumentCount( 2 )
+				.register();
 	}
 
 	@Override
@@ -185,11 +294,11 @@ public class PostgreSQL81Dialect extends Dialect {
 				// with @Lob will attempt to use
 				// BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING.  Since the
 				// dialect uses oid for Blobs, byte arrays cannot be used.
-				descriptor = BlobTypeDescriptor.BLOB_BINDING;
+				descriptor = BlobSqlDescriptor.BLOB_BINDING;
 				break;
 			}
 			case Types.CLOB: {
-				descriptor = ClobTypeDescriptor.CLOB_BINDING;
+				descriptor = ClobSqlDescriptor.CLOB_BINDING;
 				break;
 			}
 			default: {
@@ -367,21 +476,16 @@ public class PostgreSQL81Dialect extends Dialect {
 	}
 
 	@Override
-	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-		return new LocalTemporaryTableBulkIdStrategy(
-				new IdTableSupportStandardImpl() {
-					@Override
-					public String getCreateIdTableCommand() {
-						return "create temporary table";
-					}
-
-					@Override
-					public String getCreateIdTableStatementOptions() {
-						return "on commit drop";
-					}
-				},
-				AfterUseAction.CLEAN,
-				null
+	public IdTableStrategy getDefaultIdTableStrategy() {
+		return new LocalTemporaryTableStrategy(
+				new StandardIdTableSupport(
+						new LocalTempTableExporter() {
+							@Override
+							protected String getCreateOptions() {
+								return "on commit drop";
+							}
+						}
+				)
 		);
 	}
 

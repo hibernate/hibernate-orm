@@ -10,19 +10,13 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
-import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.InitCommand;
-import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
@@ -31,14 +25,22 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.mapping.ForeignKey;
-import org.hibernate.mapping.Index;
-import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UniqueKey;
+import org.hibernate.metamodel.model.relational.spi.AuxiliaryDatabaseObject;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
+import org.hibernate.metamodel.model.relational.spi.Exportable;
+import org.hibernate.metamodel.model.relational.spi.ExportableTable;
+import org.hibernate.metamodel.model.relational.spi.ForeignKey;
+import org.hibernate.metamodel.model.relational.spi.Index;
+import org.hibernate.metamodel.model.relational.spi.Namespace;
+import org.hibernate.metamodel.model.relational.spi.Sequence;
+import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.metamodel.model.relational.spi.UniqueKey;
+import org.hibernate.naming.Identifier;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
@@ -74,22 +76,24 @@ public class SchemaCreatorImpl implements SchemaCreator {
 	public static final String DEFAULT_IMPORT_FILE = "/import.sql";
 
 	private final HibernateSchemaManagementTool tool;
+	private final DatabaseModel databaseModel;
 	private final SchemaFilter schemaFilter;
 
-	public SchemaCreatorImpl(HibernateSchemaManagementTool tool) {
-		this( tool, DefaultSchemaFilter.INSTANCE );
+	public SchemaCreatorImpl(HibernateSchemaManagementTool tool, DatabaseModel databaseModel) {
+		this( tool, databaseModel, DefaultSchemaFilter.INSTANCE );
 	}
 
-	public SchemaCreatorImpl(HibernateSchemaManagementTool tool, SchemaFilter schemaFilter) {
+	public SchemaCreatorImpl(HibernateSchemaManagementTool tool, DatabaseModel databaseModel, SchemaFilter schemaFilter) {
 		this.tool = tool;
+		this.databaseModel = databaseModel;
 		this.schemaFilter = schemaFilter;
 	}
 
-	public SchemaCreatorImpl(ServiceRegistry serviceRegistry) {
-		this( serviceRegistry, DefaultSchemaFilter.INSTANCE );
+	public SchemaCreatorImpl(DatabaseModel databaseModel, ServiceRegistry serviceRegistry) {
+		this( databaseModel, serviceRegistry, DefaultSchemaFilter.INSTANCE );
 	}
 
-	public SchemaCreatorImpl(ServiceRegistry serviceRegistry, SchemaFilter schemaFilter) {
+	public SchemaCreatorImpl(DatabaseModel databaseModel, ServiceRegistry serviceRegistry, SchemaFilter schemaFilter) {
 		SchemaManagementTool smt = serviceRegistry.getService( SchemaManagementTool.class );
 		if ( smt == null || !HibernateSchemaManagementTool.class.isInstance( smt ) ) {
 			smt = new HibernateSchemaManagementTool();
@@ -97,12 +101,12 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		}
 
 		this.tool = (HibernateSchemaManagementTool) smt;
+		this.databaseModel = databaseModel;
 		this.schemaFilter = schemaFilter;
 	}
 
 	@Override
 	public void doCreation(
-			Metadata metadata,
 			ExecutionOptions options,
 			SourceDescriptor sourceDescriptor,
 			TargetDescriptor targetDescriptor) {
@@ -118,11 +122,10 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				true
 		);
 
-		doCreation( metadata, jdbcContext.getDialect(), options, sourceDescriptor, targets );
+		doCreation( jdbcContext.getDialect(), options, sourceDescriptor, targets );
 	}
 
 	public void doCreation(
-			Metadata metadata,
 			Dialect dialect,
 			ExecutionOptions options,
 			SourceDescriptor sourceDescriptor,
@@ -132,7 +135,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		}
 
 		try {
-			performCreation( metadata, dialect, options, sourceDescriptor, targets );
+			performCreation( dialect, options, sourceDescriptor, targets );
 		}
 		finally {
 			for ( GenerationTarget target : targets ) {
@@ -147,7 +150,6 @@ public class SchemaCreatorImpl implements SchemaCreator {
 	}
 
 	private void performCreation(
-			Metadata metadata,
 			Dialect dialect,
 			ExecutionOptions options,
 			SourceDescriptor sourceDescriptor,
@@ -163,17 +165,17 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				break;
 			}
 			case METADATA: {
-				createFromMetadata( metadata, options, dialect, formatter, targets );
+				create( options, dialect, formatter, targets );
 				break;
 			}
 			case METADATA_THEN_SCRIPT: {
-				createFromMetadata( metadata, options, dialect, formatter, targets );
+				create( options, dialect, formatter, targets );
 				createFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, options, targets );
 				break;
 			}
 			case SCRIPT_THEN_METADATA: {
 				createFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, options, targets );
-				createFromMetadata( metadata, options, dialect, formatter, targets );
+				create( options, dialect, formatter, targets );
 			}
 		}
 
@@ -197,8 +199,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		}
 	}
 
-	public void createFromMetadata(
-			Metadata metadata,
+	public void create(
 			ExecutionOptions options,
 			Dialect dialect,
 			Formatter formatter,
@@ -213,39 +214,36 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				tryToCreateCatalogs = true;
 			}
 		}
+		JdbcServices jdbcServices = tool.getServiceRegistry().getService( JdbcServices.class );
 
-		final Database database = metadata.getDatabase();
-		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
-
-		final Set<String> exportIdentifiers = new HashSet<String>( 50 );
+		final Set<String> exportIdentifiers = new HashSet<>( 50 );
 
 		// first, create each catalog/schema
 		if ( tryToCreateCatalogs || tryToCreateSchemas ) {
-			Set<Identifier> exportedCatalogs = new HashSet<Identifier>();
-			for ( Namespace namespace : database.getNamespaces() ) {
+			Set<Identifier> exportedCatalogs = new HashSet<>();
+			for ( Namespace namespace : databaseModel.getNamespaces() ) {
 
 				if ( !schemaFilter.includeNamespace( namespace ) ) {
 					continue;
 				}
 
 				if ( tryToCreateCatalogs ) {
-					final Identifier catalogLogicalName = namespace.getName().getCatalog();
-					final Identifier catalogPhysicalName = namespace.getPhysicalName().getCatalog();
+					final Identifier catalogPhysicalName = namespace.getCatalogName();
 
-					if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) ) {
+					if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogPhysicalName ) ) {
 						applySqlStrings(
 								dialect.getCreateCatalogCommand( catalogPhysicalName.render( dialect ) ),
 								formatter,
 								options,
 								targets
 						);
-						exportedCatalogs.add( catalogLogicalName );
+						exportedCatalogs.add( catalogPhysicalName );
 					}
 				}
 
-				if ( tryToCreateSchemas && namespace.getPhysicalName().getSchema() != null ) {
+				if ( tryToCreateSchemas && namespace.getSchemaName() != null ) {
 					applySqlStrings(
-							dialect.getCreateSchemaCommand( namespace.getPhysicalName().getSchema().render( dialect ) ),
+							dialect.getCreateSchemaCommand( namespace.getSchemaName().render( dialect ) ),
 							formatter,
 							options,
 							targets
@@ -255,27 +253,25 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		}
 
 		// next, create all "before table" auxiliary objects
-		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
-			if ( !auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
+		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : databaseModel.getAuxiliaryDatabaseObjects() ) {
+			if ( !auxiliaryDatabaseObject.isBeforeTablesOnCreation() ) {
 				continue;
 			}
 
-			if ( auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
-				checkExportIdentifier( auxiliaryDatabaseObject, exportIdentifiers );
-				applySqlStrings(
-						dialect.getAuxiliaryDatabaseObjectExporter().getSqlCreateStrings(
-								auxiliaryDatabaseObject,
-								metadata
-						),
-						formatter,
-						options,
-						targets
-				);
-			}
+			checkExportIdentifier( auxiliaryDatabaseObject, exportIdentifiers );
+			applySqlStrings(
+					dialect.getAuxiliaryDatabaseObjectExporter().getSqlCreateStrings(
+							auxiliaryDatabaseObject,
+							jdbcServices
+					),
+					formatter,
+					options,
+					targets
+			);
 		}
 
 		// then, create all schema objects (tables, sequences, constraints, etc) in each schema
-		for ( Namespace namespace : database.getNamespaces() ) {
+		for ( Namespace namespace : databaseModel.getNamespaces() ) {
 
 			if ( !schemaFilter.includeNamespace( namespace ) ) {
 				continue;
@@ -288,10 +284,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				}
 				checkExportIdentifier( sequence, exportIdentifiers );
 				applySqlStrings(
-						dialect.getSequenceExporter().getSqlCreateStrings(
-								sequence,
-								metadata
-						),
+						dialect.getSequenceExporter().getSqlCreateStrings( sequence, jdbcServices ),
 //						dialect.getCreateSequenceStrings(
 //								jdbcEnvironment.getQualifiedObjectNameFormatter().format( sequence.getName(), dialect ),
 //								sequence.getInitialValue(),
@@ -303,17 +296,17 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				);
 			}
 
+			final List<ExportableTable> exportableTables = namespace.getTables()
+					.stream()
+					.filter( table -> table.isExportable() && schemaFilter.includeTable( (ExportableTable) table ) )
+					.map( table -> (ExportableTable)table )
+					.collect(
+							Collectors.toList() );
 			// tables
-			for ( Table table : namespace.getTables() ) {
-				if ( !table.isPhysicalTable() ){
-					continue;
-				}
-				if ( !schemaFilter.includeTable( table ) ) {
-					continue;
-				}
-				checkExportIdentifier( table, exportIdentifiers );
+			for ( ExportableTable exportableTable : exportableTables ) {
+				checkExportIdentifier( exportableTable, exportIdentifiers );
 				applySqlStrings(
-						dialect.getTableExporter().getSqlCreateStrings( table, metadata ),
+						dialect.getTableExporter().getSqlCreateStrings( exportableTable, jdbcServices ),
 						formatter,
 						options,
 						targets
@@ -321,20 +314,12 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 			}
 
-			for ( Table table : namespace.getTables() ) {
-				if ( !table.isPhysicalTable() ){
-					continue;
-				}
-				if ( !schemaFilter.includeTable( table ) ) {
-					continue;
-				}
+			for ( ExportableTable exportableTable : exportableTables ) {
 				// indexes
-				final Iterator indexItr = table.getIndexIterator();
-				while ( indexItr.hasNext() ) {
-					final Index index = (Index) indexItr.next();
+				for ( Index index : exportableTable.getIndexes() ) {
 					checkExportIdentifier( index, exportIdentifiers );
 					applySqlStrings(
-							dialect.getIndexExporter().getSqlCreateStrings( index, metadata ),
+							dialect.getIndexExporter().getSqlCreateStrings( index, jdbcServices ),
 							formatter,
 							options,
 							targets
@@ -342,12 +327,10 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				}
 
 				// unique keys
-				final Iterator ukItr = table.getUniqueKeyIterator();
-				while ( ukItr.hasNext() ) {
-					final UniqueKey uniqueKey = (UniqueKey) ukItr.next();
-					checkExportIdentifier( uniqueKey, exportIdentifiers );
+				for ( UniqueKey ignored : exportableTable.getUniqueKeys() ) {
+					checkExportIdentifier( ignored, exportIdentifiers );
 					applySqlStrings(
-							dialect.getUniqueKeyExporter().getSqlCreateStrings( uniqueKey, metadata ),
+							dialect.getUniqueKeyExporter().getSqlCreateStrings( ignored, jdbcServices ),
 							formatter,
 							options,
 							targets
@@ -357,7 +340,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		}
 
 		//NOTE : Foreign keys must be created *after* all tables of all namespaces for cross namespace fks. see HHH-10420
-		for ( Namespace namespace : database.getNamespaces() ) {
+		for ( Namespace namespace : databaseModel.getNamespaces() ) {
 			// NOTE : Foreign keys must be created *after* unique keys for numerous DBs.  See HHH-8390
 
 			if ( !schemaFilter.includeNamespace( namespace ) ) {
@@ -365,15 +348,17 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			}
 
 			for ( Table table : namespace.getTables() ) {
-				if ( !schemaFilter.includeTable( table ) ) {
+				if ( !table.isExportable() ) {
+					continue;
+				}
+				if ( !schemaFilter.includeTable( (ExportableTable) table ) ) {
 					continue;
 				}
 				// foreign keys
-				final Iterator fkItr = table.getForeignKeyIterator();
-				while ( fkItr.hasNext() ) {
-					final ForeignKey foreignKey = (ForeignKey) fkItr.next();
+				final ExportableTable exportableTable = (ExportableTable) table;
+				for ( ForeignKey foreignKey : exportableTable.getForeignKeys() ) {
 					applySqlStrings(
-							dialect.getForeignKeyExporter().getSqlCreateStrings( foreignKey, metadata ),
+							dialect.getForeignKeyExporter().getSqlCreateStrings( foreignKey, jdbcServices ),
 							formatter,
 							options,
 							targets
@@ -383,12 +368,12 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		}
 
 		// next, create all "after table" auxiliary objects
-		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
-			if ( auxiliaryDatabaseObject.appliesToDialect( dialect )
-					&& !auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
+		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : databaseModel.getAuxiliaryDatabaseObjects() ) {
+			if ( !auxiliaryDatabaseObject.isBeforeTablesOnCreation() ) {
 				checkExportIdentifier( auxiliaryDatabaseObject, exportIdentifiers );
 				applySqlStrings(
-						dialect.getAuxiliaryDatabaseObjectExporter().getSqlCreateStrings( auxiliaryDatabaseObject, metadata ),
+						dialect.getAuxiliaryDatabaseObjectExporter()
+								.getSqlCreateStrings( auxiliaryDatabaseObject, jdbcServices ),
 						formatter,
 						options,
 						targets
@@ -397,7 +382,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		}
 
 		// and finally add all init commands
-		for ( InitCommand initCommand : database.getInitCommands() ) {
+		for ( InitCommand initCommand : databaseModel.getInitCommands() ) {
 			// todo: this should alo probably use the DML formatter...
 			applySqlStrings( initCommand.getInitCommands(), formatter, options, targets );
 		}
@@ -550,19 +535,17 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			}
 		};
 
-		createFromMetadata( metadata, options, dialect, FormatStyle.NONE.getFormatter(), target );
+		create( options, dialect, FormatStyle.NONE.getFormatter(), target );
 
 		return target.commands;
 	}
 
 
 	public void doCreation(
-			Metadata metadata,
 			final boolean manageNamespaces,
 			GenerationTarget... targets) {
-		final ServiceRegistry serviceRegistry = ( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry();
+		final ServiceRegistry serviceRegistry = tool.getServiceRegistry();
 		doCreation(
-				metadata,
 				serviceRegistry,
 				serviceRegistry.getService( ConfigurationService.class ).getSettings(),
 				manageNamespaces,
@@ -571,13 +554,11 @@ public class SchemaCreatorImpl implements SchemaCreator {
 	}
 
 	public void doCreation(
-			Metadata metadata,
 			final ServiceRegistry serviceRegistry,
 			final Map settings,
 			final boolean manageNamespaces,
 			GenerationTarget... targets) {
 		doCreation(
-				metadata,
 				serviceRegistry.getService( JdbcEnvironment.class ).getDialect(),
 				new ExecutionOptions() {
 					@Override
@@ -611,7 +592,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 	}
 
 	private static class JournalingGenerationTarget implements GenerationTarget {
-		private final ArrayList<String> commands = new ArrayList<String>();
+		private final ArrayList<String> commands = new ArrayList<>();
 
 		@Override
 		public void prepare() {

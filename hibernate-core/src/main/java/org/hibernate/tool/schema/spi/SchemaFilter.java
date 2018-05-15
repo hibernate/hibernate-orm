@@ -7,9 +7,9 @@
 package org.hibernate.tool.schema.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.boot.model.relational.Sequence;
-import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.model.relational.spi.ExportableTable;
+import org.hibernate.metamodel.model.relational.spi.Namespace;
+import org.hibernate.metamodel.model.relational.spi.Sequence;
 
 /**
  * Defines a filter for Hibernate's schema tooling.
@@ -38,7 +38,7 @@ public interface SchemaFilter {
 	 *
 	 * @return {@code true} to include the table; {@code false} otherwise
 	 */
-	boolean includeTable(Table table);
+	boolean includeTable(ExportableTable table);
 
 	/**
 	 * Should the given sequence be included?  If {@code true}, the

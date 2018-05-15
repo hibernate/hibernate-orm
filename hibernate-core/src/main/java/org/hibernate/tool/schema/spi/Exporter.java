@@ -7,8 +7,8 @@
 package org.hibernate.tool.schema.spi;
 
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.relational.Exportable;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.metamodel.model.relational.spi.Exportable;
 
 /**
  * Defines a contract for exporting of database objects (tables, sequences, etc) for use in SQL {@code CREATE} and
@@ -26,12 +26,12 @@ public interface Exporter<T extends Exportable> {
 	 *
 	 * @return The commands needed for creation scripting.
 	 */
-	String[] getSqlCreateStrings(T exportable, Metadata metadata);
+	String[] getSqlCreateStrings(T exportable, JdbcServices jdbcServices);
 
 	/**
 	 * Get the commands needed for dropping.
 	 *
 	 * @return The commands needed for drop scripting.
 	 */
-	String[] getSqlDropStrings(T exportable, Metadata metadata);
+	String[] getSqlDropStrings(T exportable, JdbcServices jdbcServices);
 }

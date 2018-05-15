@@ -12,12 +12,17 @@ import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.persister.entity.Joinable;
 
 /**
  * @author Rob Worsnop
  */
 public class FilterConfiguration {
+
+	// todo (6.0) : this needs re-write to be based on runtime model rather than the boot mode
+	//		the only real issue here is the `#getAliasTableMap` code.  That code
+	// 		just needs to not be here.  It should be part of creating the runtime model
+	//
+
 	private final String name;
 	private final String condition;
 	private final boolean autoAliasInjection;
@@ -58,11 +63,7 @@ public class FilterConfiguration {
 			return mergedAliasTableMap;
 		}
 		else if ( persistentClass != null ) {
-			String table = persistentClass.getTable().getQualifiedName(
-					factory.getDialect(),
-					factory.getSettings().getDefaultCatalogName(),
-					factory.getSettings().getDefaultSchemaName()
-			);
+			String table = persistentClass.getMappedTable().getQualifiedTableName().render();
 			return Collections.singletonMap( null, table );
 		}
 		else {
@@ -71,7 +72,7 @@ public class FilterConfiguration {
 	}
 
 	private Map<String, String> mergeAliasMaps(SessionFactoryImplementor factory) {
-		Map<String, String> ret = new HashMap<String, String>();
+		Map<String, String> ret = new HashMap<>();
 		if ( aliasTableMap != null ) {
 			ret.putAll( aliasTableMap );
 		}
@@ -79,7 +80,10 @@ public class FilterConfiguration {
 			for ( Map.Entry<String, String> entry : aliasEntityMap.entrySet() ) {
 				ret.put(
 						entry.getKey(),
-						Joinable.class.cast( factory.getEntityPersister( entry.getValue() ) ).getTableName()
+						factory.getMetamodel()
+								.findEntityDescriptor( entry.getValue() )
+								.getPrimaryTable()
+								.getTableExpression()
 				);
 			}
 		}

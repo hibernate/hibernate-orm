@@ -8,13 +8,19 @@ package org.hibernate.sql;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.hibernate.annotations.Remove;
+
 /**
  * The HSQL CASEWHEN function.
  * <br>
  * <code>casewhen(..., ..., ...) as ...</code>
  * <br>
  * @author Wolfgang Jung
+ *
+ * @deprecated Converting to use SQL AST
  */
+@Deprecated
+@Remove
 public class HSQLCaseFragment extends CaseFragment {
 
 	public String toFragmentString() {

@@ -8,12 +8,18 @@ package org.hibernate.sql;
 
 import java.util.Map;
 
+import org.hibernate.annotations.Remove;
+
 /**
  * An ANSI SQL CASE expression : {@code case when ... then ... end as ..}
  *
  * @author Gavin King
  * @author Simon Harris
+ *
+ * @deprecated Converting to use SQL AST
  */
+@Deprecated
+@Remove
 public class ANSICaseFragment extends CaseFragment {
 
 	@Override

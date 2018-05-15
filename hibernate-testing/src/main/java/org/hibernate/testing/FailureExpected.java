@@ -16,9 +16,12 @@ import java.lang.annotation.Target;
  *
  * @author Hardy Ferentschik
  * @author Steve Ebersole
+ *
+ * @deprecated Use {@link org.hibernate.testing.junit5.FailureExpected} instead
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD, ElementType.TYPE })
+@Deprecated
 public @interface FailureExpected {
 	String VALIDATE_FAILURE_EXPECTED = "hibernate.test.validatefailureexpected";
 

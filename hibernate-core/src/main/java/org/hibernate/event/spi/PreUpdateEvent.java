@@ -6,9 +6,7 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 
 /**
  * Represents a <tt>pre-update</tt> event, which occurs just prior to
@@ -23,23 +21,22 @@ public class PreUpdateEvent extends AbstractPreDatabaseOperationEvent {
 
 	/**
 	 * Constructs an event containing the pertinent information.
-	 *
-	 * @param entity The entity to be updated.
+	 *  @param entity The entity to be updated.
 	 * @param id The id of the entity to use for updating.
 	 * @param state The state to be updated.
 	 * @param oldState The state of the entity at the time it was loaded from
-	 * the database.
-	 * @param persister The entity's persister.
+* the database.
+	 * @param descriptor The entity's descriptor.
 	 * @param source The session from which the event originated.
 	 */
 	public PreUpdateEvent(
 			Object entity,
-			Serializable id,
+			Object id,
 			Object[] state,
 			Object[] oldState,
-			EntityPersister persister,
+			EntityTypeDescriptor descriptor,
 			EventSource source) {
-		super( source, entity, id, persister );
+		super( source, entity, id, descriptor );
 		this.state = state;
 		this.oldState = oldState;
 	}

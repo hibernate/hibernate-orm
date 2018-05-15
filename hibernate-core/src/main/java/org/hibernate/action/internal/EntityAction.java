@@ -7,6 +7,7 @@
 package org.hibernate.action.internal;
 
 import java.io.Serializable;
+import java.util.Set;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
@@ -19,7 +20,7 @@ import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.pretty.MessageHelper;
 
 import org.jboss.logging.Logger;
@@ -35,28 +36,27 @@ public abstract class EntityAction
 	private static final Logger LOG = Logger.getLogger(EntityAction.class);
 
 	private final String entityName;
-	private final Serializable id;
+	private final Object id;
 
 	private transient Object instance;
 	private transient SharedSessionContractImplementor session;
-	private transient EntityPersister persister;
+	private transient EntityTypeDescriptor entityDescriptor;
 
 	private transient boolean veto;
 
 	/**
 	 * Instantiate an action.
-	 *
-	 * @param session The session from which this action is coming.
+	 *  @param session The session from which this action is coming.
 	 * @param id The id of the entity
 	 * @param instance The entity instance
-	 * @param persister The entity persister
+	 * @param entityDescriptor The entity entityDescriptor
 	 */
-	protected EntityAction(SharedSessionContractImplementor session, Serializable id, Object instance, EntityPersister persister) {
-		this.entityName = persister.getEntityName();
+	protected EntityAction(SharedSessionContractImplementor session, Object id, Object instance, EntityTypeDescriptor entityDescriptor) {
+		this.entityName = entityDescriptor.getEntityName();
 		this.id = id;
 		this.instance = instance;
 		this.session = session;
-		this.persister = persister;
+		this.entityDescriptor = entityDescriptor;
 	}
 
 	public boolean isVeto() {
@@ -82,7 +82,7 @@ public abstract class EntityAction
 	protected abstract boolean hasPostCommitEventListeners();
 
 	protected boolean needsAfterTransactionCompletion() {
-		return persister.canWriteToCache() || hasPostCommitEventListeners();
+		return entityDescriptor.canWriteToCache() || hasPostCommitEventListeners();
 	}
 
 	/**
@@ -99,10 +99,10 @@ public abstract class EntityAction
 	 *
 	 * @return The entity id
 	 */
-	public final Serializable getId() {
+	public final Object getId() {
 		if ( id instanceof DelayedPostInsertIdentifier ) {
 			final EntityEntry entry = session.getPersistenceContext().getEntry( instance );
-			final Serializable eeId = entry == null ? null : entry.getId();
+			final Object eeId = entry == null ? null : entry.getId();
 			return eeId instanceof DelayedPostInsertIdentifier ? null : eeId;
 		}
 		return id;
@@ -135,15 +135,15 @@ public abstract class EntityAction
 	/**
 	 * entity persister accessor
 	 *
-	 * @return The entity persister
+	 * @return The entity EntityDescriptor
 	 */
-	public final EntityPersister getPersister() {
-		return persister;
+	public final EntityTypeDescriptor<?> getEntityDescriptor() {
+		return entityDescriptor;
 	}
 
 	@Override
-	public final Serializable[] getPropertySpaces() {
-		return persister.getPropertySpaces();
+	public final Set<String> getPropertySpaces() {
+		return entityDescriptor.getAffectedTableNames();
 	}
 
 	@Override
@@ -157,6 +157,7 @@ public abstract class EntityAction
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public int compareTo(Object other) {
 		final EntityAction action = (EntityAction) other;
 		//sort first by entity name
@@ -166,7 +167,7 @@ public abstract class EntityAction
 		}
 		else {
 			//then by id
-			return persister.getIdentifierType().compare( id, action.id );
+			return entityDescriptor.getIdentifierType().getJavaTypeDescriptor().getComparator().compare( id, action.id );
 		}
 	}
 
@@ -177,15 +178,15 @@ public abstract class EntityAction
 	 */
 	@Override
 	public void afterDeserialize(SharedSessionContractImplementor session) {
-		if ( this.session != null || this.persister != null ) {
+		if ( this.session != null || this.entityDescriptor != null ) {
 			throw new IllegalStateException( "already attached to a session." );
 		}
 		// IMPL NOTE: non-flushed changes code calls this method with session == null...
 		// guard against NullPointerException
 		if ( session != null ) {
 			this.session = session;
-			this.persister = session.getFactory().getMetamodel().entityPersister( entityName );
-			this.instance = session.getPersistenceContext().getEntity( session.generateEntityKey( id, persister ) );
+			this.entityDescriptor = session.getFactory().getMetamodel().findEntityDescriptor( entityName );
+			this.instance = session.getPersistenceContext().getEntity( session.generateEntityKey( id, entityDescriptor ) );
 		}
 	}
 

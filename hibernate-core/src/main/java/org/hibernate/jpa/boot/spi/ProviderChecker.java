@@ -9,7 +9,6 @@ package org.hibernate.jpa.boot.spi;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 

@@ -22,7 +22,6 @@ import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.MetadataProviderInjector;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -318,18 +317,11 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		}
 
 		@Override
-		public void addAttributeConverter(AttributeConverterInfo info) {
-			rootMetadataBuildingContext.getMetadataCollector().addAttributeConverter(
-					info.toConverterDescriptor( rootMetadataBuildingContext )
-			);
-		}
-
-		@Override
 		public void addAttributeConverter(ConverterDescriptor descriptor) {
 			rootMetadataBuildingContext.getMetadataCollector().addAttributeConverter( descriptor );
 		}
 
-		public void addAttributeConverter(Class<? extends AttributeConverter> converterClass) {
+		public <O,R> void addAttributeConverter(Class<? extends AttributeConverter<O, R>> converterClass) {
 			rootMetadataBuildingContext.getMetadataCollector().addAttributeConverter( converterClass );
 		}
 	}

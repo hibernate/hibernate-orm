@@ -6,8 +6,6 @@
  */
 package org.hibernate.proxy;
 
-import java.io.Serializable;
-
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
@@ -20,7 +18,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 /**
  * Convenience base class for lazy initialization handlers.  Centralizes the basic plumbing of doing lazy
@@ -33,7 +32,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractLazyInitializer.class );
 
 	private String entityName;
-	private Serializable id;
+	private Object id;
 	private Object target;
 	private boolean initialized;
 	private boolean readOnly;
@@ -61,12 +60,11 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 
 	/**
 	 * Main constructor.
-	 *
 	 * @param entityName The name of the entity being proxied.
 	 * @param id The identifier of the entity being proxied.
 	 * @param session The session owning the proxy.
 	 */
-	protected AbstractLazyInitializer(String entityName, Serializable id, SharedSessionContractImplementor session) {
+	protected AbstractLazyInitializer(String entityName, Object id, SharedSessionContractImplementor session) {
 		this.entityName = entityName;
 		this.id = id;
 		// initialize other fields depending on session state
@@ -84,7 +82,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	}
 
 	@Override
-	public final Serializable getIdentifier() {
+	public final Object getIdentifier() {
 		if ( isUninitialized() && isInitializeProxyWhenAccessingIdentifier() ) {
 			initialize();
 		}
@@ -98,7 +96,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	}
 
 	@Override
-	public final void setIdentifier(Serializable id) {
+	public final void setIdentifier(Object id) {
 		this.id = id;
 	}
 
@@ -132,8 +130,12 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 				session = s;
 				if ( readOnlyBeforeAttachedToSession == null ) {
 					// use the default read-only/modifiable setting
-					final EntityPersister persister = s.getFactory().getEntityPersister( entityName );
-					setReadOnly( s.getPersistenceContext().isDefaultReadOnly() || !persister.isMutable() );
+					final EntityTypeDescriptor entityDescriptor = s.getFactory().getEntityPersister( entityName );
+					MutabilityPlan mutabilityPlan = entityDescriptor.getJavaTypeDescriptor().getMutabilityPlan();
+					if ( mutabilityPlan == null ) {
+						mutabilityPlan = entityDescriptor.getHierarchy().getMutabilityPlan();
+					}
+					setReadOnly( s.getPersistenceContext().isDefaultReadOnly() || !mutabilityPlan.isMutable() );
 				}
 				else {
 					// use the read-only/modifiable setting indicated during deserialization
@@ -144,7 +146,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		}
 	}
 
-	private static EntityKey generateEntityKeyOrNull(Serializable id, SharedSessionContractImplementor s, String entityName) {
+	private static EntityKey generateEntityKeyOrNull(Object id, SharedSessionContractImplementor s, String entityName) {
 		if ( id == null || s == null || entityName == null ) {
 			return null;
 		}
@@ -253,7 +255,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		if ( !initialized && session != null && session.isOpen() ) {
 			final EntityKey key = session.generateEntityKey(
 					getIdentifier(),
-					session.getFactory().getMetamodel().entityPersister( getEntityName() )
+					session.getFactory().getMetamodel().entity( getEntityName() )
 			);
 			final Object entity = session.getPersistenceContext().getEntity( key );
 			if ( entity != null ) {
@@ -362,8 +364,8 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		errorIfReadOnlySettingNotAvailable();
 		// only update if readOnly is different from current setting
 		if ( this.readOnly != readOnly ) {
-			final EntityPersister persister = session.getFactory().getEntityPersister( entityName );
-			if ( !persister.isMutable() && !readOnly ) {
+			final EntityTypeDescriptor entityDescriptor = session.getFactory().getEntityPersister( entityName );
+			if ( !entityDescriptor.getJavaTypeDescriptor().getMutabilityPlan().isMutable() && !readOnly ) {
 				throw new IllegalStateException( "cannot make proxies [" + entityName + "#" + id + "] for immutable entities modifiable" );
 			}
 			this.readOnly = readOnly;

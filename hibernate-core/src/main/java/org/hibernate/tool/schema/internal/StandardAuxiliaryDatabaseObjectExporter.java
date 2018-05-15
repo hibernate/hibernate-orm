@@ -6,28 +6,22 @@
  */
 package org.hibernate.tool.schema.internal;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
-import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.metamodel.model.relational.spi.AuxiliaryDatabaseObject;
 import org.hibernate.tool.schema.spi.Exporter;
 
 /**
  * @author Steve Ebersole
  */
 public class StandardAuxiliaryDatabaseObjectExporter implements Exporter<AuxiliaryDatabaseObject> {
-	private final Dialect dialect;
 
-	public StandardAuxiliaryDatabaseObjectExporter(Dialect dialect) {
-		this.dialect = dialect;
+	@Override
+	public String[] getSqlCreateStrings(AuxiliaryDatabaseObject object, JdbcServices jdbcServices) {
+		return object.getSqlCreateStrings();
 	}
 
 	@Override
-	public String[] getSqlCreateStrings(AuxiliaryDatabaseObject object, Metadata metadata) {
-		return object.sqlCreateStrings( dialect );
-	}
-
-	@Override
-	public String[] getSqlDropStrings(AuxiliaryDatabaseObject object, Metadata metadata) {
-		return object.sqlDropStrings( dialect );
+	public String[] getSqlDropStrings(AuxiliaryDatabaseObject object, JdbcServices jdbcServices) {
+		return object.getSqlDropStrings();
 	}
 }

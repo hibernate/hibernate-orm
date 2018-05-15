@@ -9,26 +9,28 @@ package org.hibernate.engine.spi;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
+import javax.persistence.LockModeType;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
-import javax.persistence.criteria.Selection;
 
 import org.hibernate.HibernateException;
+import org.hibernate.LockOptions;
 import org.hibernate.Session;
-import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
+import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.spi.WrapperOptions;
 
 /**
  * Defines the "internal contract" for {@link Session} and other parts of Hibernate such as
- * {@link org.hibernate.type.Type}, {@link org.hibernate.persister.entity.EntityPersister}
- * and {@link org.hibernate.persister.collection.CollectionPersister} implementations.
+ * {@link Type}, {@link EntityTypeDescriptor}
+ * and {@link PersistentCollectionDescriptor} implementations.
  *
  * A Session, through this interface and SharedSessionContractImplementor, implements:<ul>
  *     <li>
@@ -43,7 +45,7 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
  *         {@link org.hibernate.engine.jdbc.LobCreationContext} to act as the context for JDBC LOB instance creation
  *     </li>
  *     <li>
- *         {@link org.hibernate.type.descriptor.WrapperOptions} to fulfill the behavior needed while
+ *         {@link WrapperOptions} to fulfill the behavior needed while
  *         binding/extracting values to/from JDBC as part of the Type contracts
  *     </li>
  * </ul>
@@ -54,8 +56,7 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface SessionImplementor
-		extends Session, SharedSessionContractImplementor, HibernateEntityManagerImplementor {
+public interface SessionImplementor extends Session, SharedSessionContractImplementor {
 
 	@Override
 	SessionFactoryImplementor getSessionFactory();
@@ -69,18 +70,44 @@ public interface SessionImplementor
 	@Override
 	RootGraphImplementor<?> getEntityGraph(String graphName);
 
-
-	/**
-	 * @deprecated (since 5.2) use {@link #getHibernateFlushMode()} instead.
-	 */
-	@Deprecated
-	boolean isFlushBeforeCompletionEnabled();
-
 	ActionQueue getActionQueue();
 
-	Object instantiate(EntityPersister persister, Serializable id) throws HibernateException;
+	Object instantiate(EntityTypeDescriptor entityDescriptor, Object id) throws HibernateException;
+
+	/**
+	 * @deprecated (since 6.0) Use {@link #instantiate(EntityTypeDescriptor, Object)}
+	 */
+	@Deprecated
+	default Object instantiate(EntityTypeDescriptor entityDescriptor, Serializable id) throws HibernateException {
+		return instantiate( entityDescriptor, (Object) id );
+	}
 
 	void forceFlush(EntityEntry e) throws HibernateException;
+
+	/**
+	 * Used to ensure the EntityManager is open, throwing IllegalStateException if it is closed.
+	 *
+	 * Depending on the value of {@code markForRollbackIfClosed}, may also rollback any enlisted-in transaction.  This
+	 * distinction is made across various sections of the spec.  Most failed checks should rollback.  Section
+	 * 3.10.7 (per 2.1 spec) lists cases related to calls on related query objects that should not rollback.
+	 *
+	 * @param markForRollbackIfClosed If the EM is closed, should the transaction (if one) be marked for rollback?
+	 *
+	 * @throws IllegalStateException Thrown if the EM is closed
+	 */
+	void checkOpen(boolean markForRollbackIfClosed) throws IllegalStateException;
+
+	/**
+	 * Provides access to whether a transaction is currently in progress.
+	 *
+	 * @return True if a transaction is considered currently in progress; false otherwise.
+	 */
+	boolean isTransactionInProgress();
+
+	/**
+	 * Used to mark a transaction for rollback only (when that is the JPA spec defined behavior).
+	 */
+	void markForRollbackOnly();
 
 	@Override
 	QueryImplementor createQuery(String queryString);
@@ -104,16 +131,10 @@ public interface SessionImplementor
 	NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMapping);
 
 	@Override
-	NativeQueryImplementor createSQLQuery(String sqlString);
-
-	@Override
 	NativeQueryImplementor getNamedNativeQuery(String name);
 
 	@Override
 	QueryImplementor getNamedQuery(String queryName);
-
-	@Override
-	NativeQueryImplementor getNamedSQLQuery(String name);
 
 	@Override
 	<T> QueryImplementor<T> createQuery(CriteriaQuery<T> criteriaQuery);
@@ -123,21 +144,6 @@ public interface SessionImplementor
 
 	@Override
 	QueryImplementor createQuery(CriteriaDelete deleteQuery);
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @deprecated (since 5.2) - see deprecation note on super
-	 *
-	 * @return The typed query
-	 */
-	@Deprecated
-	@Override
-	<T> QueryImplementor<T> createQuery(
-			String jpaqlString,
-			Class<T> resultClass,
-			Selection selection,
-			QueryOptions queryOptions);
 
 	/**
 	 * @deprecated  OperationalContext should cover this overload I believe; Gail?
@@ -174,4 +180,34 @@ public interface SessionImplementor
 	 */
 	@Deprecated
 	void removeOrphanBeforeUpdates(String entityName, Object child);
+
+	SessionImplementor getSession();
+
+	/**
+	 * Given a JPA {@link javax.persistence.LockModeType} and properties, build a Hibernate
+	 * {@link org.hibernate.LockOptions}
+	 *
+	 * @param lockModeType the requested LockModeType
+	 * @param properties the lock properties
+	 *
+	 * @return the LockOptions
+	 */
+	LockOptions buildLockOptions(LockModeType lockModeType, Map<String, Object> properties);
+
+	interface QueryOptions {
+		interface ResultMetadataValidator {
+			void validate(Type[] returnTypes);
+		}
+
+		ResultMetadataValidator getResultMetadataValidator();
+
+		/**
+		 * Get the explicit parameter types.  Generally speaking these would apply to implicit named
+		 * parameters.
+		 *
+		 * @return The
+		 */
+		Map<String, Class> getNamedParameterExplicitTypes();
+	}
+
 }

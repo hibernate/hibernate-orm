@@ -1,0 +1,206 @@
+== From SQM to SQL AST to SQL
+
+[plantuml,sqm-to-ast,png]
+.Producing AST SQL Statement
+....
+@startuml
+skinparam handwritten true
+
+actor App
+boundary SqmQueryImpl
+
+App -> SqmQueryImpl : doList()
+
+SqmQueryImpl -> SqmQueryImpl :resolveSelectQueryPlan()
+activate SqmQueryImpl
+
+SqmQueryImpl -> QuerySplitter : split(SqmStatement)
+SqmQueryImpl <- QuerySplitter : SqmSelectStatement[]
+
+create ConcreteSqmSelectQueryPlan
+SqmQueryImpl -> ConcreteSqmSelectQueryPlan : (SqmSelectStatement, Class resultType, QueryOptions)
+
+deactivate SqmQueryImpl
+
+SqmQueryImpl -> ConcreteSqmSelectQueryPlan : performList(ExecutionContext)
+
+activate ConcreteSqmSelectQueryPlan
+
+
+ConcreteSqmSelectQueryPlan -> ConcreteSqmSelectQueryPlan : buildJdbcSelect(ExecutionContext)
+
+activate ConcreteSqmSelectQueryPlan
+
+create SqmSelectToSqlAstConverter
+
+ConcreteSqmSelectQueryPlan -> SqmSelectToSqlAstConverter : new
+
+ConcreteSqmSelectQueryPlan -> SqmSelectToSqlAstConverter : interpret(SqmStatement)
+
+ConcreteSqmSelectQueryPlan <- SqmSelectToSqlAstConverter : SqlAstSelectDescriptor
+
+ConcreteSqmSelectQueryPlan -> SqlAstSelectToJdbcSelectConverter : interpret(SqlAstSelectDescriptor, ParameterBindingContext)
+
+ConcreteSqmSelectQueryPlan <- SqlAstSelectToJdbcSelectConverter : JdbcSelect
+
+deactivate ConcreteSqmSelectQueryPlan
+
+create JdbcSelectExecutorStandardImpl
+
+ConcreteSqmSelectQueryPlan -> JdbcSelectExecutorStandardImpl : new
+
+ConcreteSqmSelectQueryPlan -> JdbcSelectExecutorStandardImpl : list(JdbcSelect, ExecutionContext, RowTransformer)
+
+ConcreteSqmSelectQueryPlan <- JdbcSelectExecutorStandardImpl
+
+SqmQueryImpl <- ConcreteSqmSelectQueryPlan
+App <- SqmQueryImpl
+
+@enduml
+....
+
+== Model
+
+[plantuml,SqlAstDescriptor,png]
+.SqlAstDescriptor
+....
+@startuml
+skinparam handwritten true
+
+
+
+
+package org.hibernate.sql.ast.produce.spi {
+	interface SqlAstDescriptor{
+    	Statement getStatement()
+    	Set<String> getAffectedTableNames()
+    }
+
+    interface SqlAstSelectDescriptor
+
+    interface SqlAstDeleteDescriptor
+
+    interface SqlAstUpdateDescriptor
+}
+
+package org.hibernate.sql.ast.tree.spi {
+	interface Statement
+
+	interface MutationStatement
+
+	class SelectStatement
+
+	class UpdateStatement
+
+	class InsertSelectStatement
+
+	class DeleteStatement
+
+	class InsertStatement
+}
+
+SqlAstDescriptor <|-- SqlAstSelectDescriptor
+SqlAstDescriptor <|-- SqlAstDeleteDescriptor
+SqlAstDescriptor <|-- SqlAstUpdateDescriptor
+
+SqlAstDescriptor --> Statement
+
+Statement <|-- SelectStatement
+Statement <|-- MutationStatement
+
+MutationStatement <|-- UpdateStatement
+MutationStatement <|-- InsertSelectStatement
+MutationStatement <|-- DeleteStatement
+MutationStatement <|-- InsertStatement
+
+@enduml
+....
+
+[plantuml,SelectStatement,png]
+.SelectStatement
+....
+@startuml
+skinparam handwritten true
+
+package org.hibernate.sql.ast.tree.spi.expression.domain {
+	interface NavigableReference
+}
+
+package org.hibernate.sql.ast.produce.spi {
+	interface ColumnReferenceQualifier
+}
+
+package org.hibernate.sql.ast.tree.spi {
+	interface Statement
+
+	class SelectStatement
+
+	class QuerySpec
+
+}
+
+package org.hibernate.sql.ast.tree.spi.from {
+
+	class FromClause
+
+	class TableSpace
+
+	class TableGroup
+
+	class TableGroupJoin
+
+}
+
+Statement <|-- SelectStatement
+
+SelectStatement --> QuerySpec
+
+FromClause -- "*" TableSpace
+
+ColumnReferenceQualifier <|-- TableGroup
+
+TableSpace -- TableGroup
+
+TableSpace -- "*" TableGroupJoin
+
+@enduml
+....
+
+
+
+[plantuml,NavigableReference,png]
+.NavigableReference
+....
+@startuml
+skinparam handwritten true
+
+package org.hibernate.sql.results.spi{
+	interface QueryResultProducer {
+		QueryResult createQueryResult(String resultVariable,QueryResultCreationContext creationContext)
+	}
+
+	interface QueryResult
+
+	interface ScalarQueryResult
+
+	interface QueryResultAssembler {
+			Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options);
+
+	}
+
+}
+
+package org.hibernate.sql.ast.tree.spi.expression.domain {
+	interface NavigableReference
+}
+
+QueryResultProducer <|-- NavigableReference
+
+@enduml
+....
+
+
+
+
+
+

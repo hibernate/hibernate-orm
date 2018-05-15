@@ -13,8 +13,7 @@ import org.hibernate.dialect.identity.Oracle12cIdentityColumnSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.MaterializedBlobType;
-import org.hibernate.type.WrappedMaterializedBlobType;
+import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
 
 /**
  * An SQL dialect for Oracle 12c.
@@ -41,9 +40,11 @@ public class Oracle12cDialect extends Oracle10gDialect {
 				false
 		);
 
-		if ( !preferLong ) {
-			typeContributions.contributeType( MaterializedBlobType.INSTANCE, "byte[]", byte[].class.getName() );
-			typeContributions.contributeType( WrappedMaterializedBlobType.INSTANCE, "Byte[]", Byte[].class.getName() );
+		if ( preferLong ) {
+			typeContributions.contributeSqlTypeDescriptor( BlobSqlDescriptor.PRIMITIVE_ARRAY_BINDING );
+		}
+		else {
+			typeContributions.contributeSqlTypeDescriptor( BlobSqlDescriptor.DEFAULT );
 		}
 	}
 

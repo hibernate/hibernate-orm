@@ -8,19 +8,26 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.Map;
 
+import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.spi.AbstractPluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.MapPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
+import org.hibernate.property.access.spi.PropertyAccess;
 
 /**
  * @author Steve Ebersole
  */
-class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K, V>, V>
+public class MapAttributeImpl<X, K, V> extends AbstractPluralPersistentAttribute<X, Map<K, V>, V>
 		implements MapPersistentAttribute<X, K, V> {
-	private final SimpleTypeDescriptor<K> keyType;
 
-	MapAttributeImpl(PluralAttributeBuilder<X, Map<K, V>, V, K> xceBuilder) {
-		super( xceBuilder );
-		this.keyType = xceBuilder.getKeyType();
+	public MapAttributeImpl(
+			PersistentCollectionDescriptor collectionDescriptor,
+			Property bootProperty,
+			PropertyAccess propertyAccess,
+			RuntimeModelCreationContext creationContext) {
+		super( collectionDescriptor, bootProperty, propertyAccess, creationContext );
 	}
 
 	@Override
@@ -30,16 +37,12 @@ class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K, V>, V>
 
 	@Override
 	public Class<K> getKeyJavaType() {
-		return keyType.getJavaType();
+		return getKeyType().getJavaType();
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public SimpleTypeDescriptor<K> getKeyType() {
-		return keyType;
-	}
-
-	@Override
-	public SimpleTypeDescriptor<K> getKeyGraphType() {
-		return getKeyType();
+		return (SimpleTypeDescriptor<K>) getPersistentCollectionDescriptor().getKeyDomainTypeDescriptor();
 	}
 }

@@ -6,7 +6,7 @@
  */
 package org.hibernate.engine.jdbc.env.spi;
 
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.naming.Identifier;
 import org.hibernate.cfg.AvailableSettings;
 
 /**

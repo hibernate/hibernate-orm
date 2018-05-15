@@ -13,13 +13,9 @@ import java.sql.Types;
 
 import org.hibernate.LockMode;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.ConditionalParenthesisFunction;
-import org.hibernate.dialect.function.ConvertFunction;
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.NvlFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.StandardJDBCEscapeFunction;
-import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.ConvertFunctionTemplate;
+import org.hibernate.dialect.function.NvlFunctionTemplate;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.identity.Chache71IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -37,14 +33,16 @@ import org.hibernate.exception.internal.CacheSQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
-import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.local.AfterUseAction;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.metamodel.model.domain.spi.Lockable;
+import org.hibernate.query.sqm.consume.multitable.internal.StandardIdTableSupport;
+import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTempTableExporter;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTableSupport;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.sql.CacheJoinFragment;
 import org.hibernate.sql.JoinFragment;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * Cach&eacute; 2007.1 dialect.
@@ -206,7 +204,6 @@ public class Cache71Dialect extends Dialect {
 	public Cache71Dialect() {
 		super();
 		commonRegistration();
-		register71Functions();
 		this.limitHandler = new TopLimitHandler( true, true );
 	}
 
@@ -242,133 +239,176 @@ public class Cache71Dialect extends Dialect {
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 
 		getDefaultProperties().setProperty( Environment.USE_SQL_COMMENTS, "false" );
+	}
 
-		registerFunction( "abs", new StandardSQLFunction( "abs" ) );
-		registerFunction( "acos", new StandardJDBCEscapeFunction( "acos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "%alphaup", new StandardSQLFunction( "%alphaup", StandardBasicTypes.STRING ) );
-		registerFunction( "ascii", new StandardSQLFunction( "ascii", StandardBasicTypes.STRING ) );
-		registerFunction( "asin", new StandardJDBCEscapeFunction( "asin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "atan", new StandardJDBCEscapeFunction( "atan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "bit_length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "($length(?1)*8)" ) );
-		registerFunction( "ceiling", new StandardSQLFunction( "ceiling", StandardBasicTypes.INTEGER ) );
-		registerFunction( "char", new StandardJDBCEscapeFunction( "char", StandardBasicTypes.CHARACTER ) );
-		registerFunction( "character_length", new StandardSQLFunction( "character_length", StandardBasicTypes.INTEGER ) );
-		registerFunction( "char_length", new StandardSQLFunction( "char_length", StandardBasicTypes.INTEGER ) );
-		registerFunction( "cos", new StandardJDBCEscapeFunction( "cos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cot", new StandardJDBCEscapeFunction( "cot", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "coalesce", new VarArgsSQLFunction( "coalesce(", ",", ")" ) );
-		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "", "||", "" ) );
-		registerFunction( "convert", new ConvertFunction() );
-		registerFunction( "curdate", new StandardJDBCEscapeFunction( "curdate", StandardBasicTypes.DATE ) );
-		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardBasicTypes.DATE, false ) );
-		registerFunction( "current_time", new NoArgSQLFunction( "current_time", StandardBasicTypes.TIME, false ) );
-		registerFunction(
-				"current_timestamp", new ConditionalParenthesisFunction( "current_timestamp", StandardBasicTypes.TIMESTAMP )
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
+
+		commonFunctionRegistrations( registry );
+		register71Functions( registry );
+	}
+
+	protected void commonFunctionRegistrations(SqmFunctionRegistry registry) {
+		CommonFunctionFactory.acos( registry );
+
+		registry.namedTemplateBuilder( "%alphaup" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+		registry.namedTemplateBuilder( "ascii" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+		CommonFunctionFactory.asin( registry );
+		CommonFunctionFactory.atan( registry );
+
+		registry.registerPattern( "bit_length", "($length(?1)*8)", StandardSpiBasicTypes.INTEGER );
+
+		CommonFunctionFactory.ceiling( registry );
+
+		registry.wrapInJdbcEscape(
+				"char",
+				registry.namedTemplateBuilder( "char" )
+						.setExactArgumentCount( 1 )
+						.setInvariantType( StandardSpiBasicTypes.INTEGER )
+						.register()
 		);
-		registerFunction( "curtime", new StandardJDBCEscapeFunction( "curtime", StandardBasicTypes.TIME ) );
-		registerFunction( "database", new StandardJDBCEscapeFunction( "database", StandardBasicTypes.STRING ) );
-		registerFunction( "dateadd", new VarArgsSQLFunction( StandardBasicTypes.TIMESTAMP, "dateadd(", ",", ")" ) );
-		registerFunction( "datediff", new VarArgsSQLFunction( StandardBasicTypes.INTEGER, "datediff(", ",", ")" ) );
-		registerFunction( "datename", new VarArgsSQLFunction( StandardBasicTypes.STRING, "datename(", ",", ")" ) );
-		registerFunction( "datepart", new VarArgsSQLFunction( StandardBasicTypes.INTEGER, "datepart(", ",", ")" ) );
-		registerFunction( "day", new StandardSQLFunction( "day", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayname", new StandardJDBCEscapeFunction( "dayname", StandardBasicTypes.STRING ) );
-		registerFunction( "dayofmonth", new StandardJDBCEscapeFunction( "dayofmonth", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayofweek", new StandardJDBCEscapeFunction( "dayofweek", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayofyear", new StandardJDBCEscapeFunction( "dayofyear", StandardBasicTypes.INTEGER ) );
+
+		registry.namedTemplateBuilder( "bit_length" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.namedTemplateBuilder( "character_length" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.namedTemplateBuilder( "char_length" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+
+		CommonFunctionFactory.cos( registry );
+		CommonFunctionFactory.cot( registry );
+
+		registry.register( "concat", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "", "||", "" ) );
+
+		registry.register( "convert", new ConvertFunctionTemplate() );
+
+		registry.wrapInJdbcEscape( "curdate", registry.registerNamed( "curdate", StandardSpiBasicTypes.DATE ) );
+		registry.wrapInJdbcEscape( "curtime", registry.registerNamed( "curtime", StandardSpiBasicTypes.TIME ) );
+		registry.wrapInJdbcEscape( "database", registry.registerNamed( "database", StandardSpiBasicTypes.STRING ) );
+		registry.registerVarArgs( "dateadd", StandardSpiBasicTypes.TIMESTAMP, "dateadd(", ",", ")" );
+		registry.registerVarArgs( "datediff", StandardSpiBasicTypes.INTEGER, "datediff(", ",", ")" );
+		registry.registerVarArgs( "datename", StandardSpiBasicTypes.STRING, "datename(", ",", ")" );
+		registry.registerVarArgs( "datepart", StandardSpiBasicTypes.INTEGER, "datepart(", ",", ")" );
+		registry.registerNamed( "day", StandardSpiBasicTypes.INTEGER );
+		registry.wrapInJdbcEscape( "dayname", registry.registerNamed( "dayname", StandardSpiBasicTypes.STRING ) );
+		registry.wrapInJdbcEscape( "dayofmonth", registry.registerNamed( "dayofmonth", StandardSpiBasicTypes.INTEGER ) );
+		registry.wrapInJdbcEscape( "dayofweek", registry.registerNamed( "dayofweek", StandardSpiBasicTypes.INTEGER ) );
+		registry.wrapInJdbcEscape( "dayofyear", registry.registerNamed( "dayofyear", StandardSpiBasicTypes.INTEGER ) );
 		// is it necessary to register %exact since it can only appear in a where clause?
-		registerFunction( "%exact", new StandardSQLFunction( "%exact", StandardBasicTypes.STRING ) );
-		registerFunction( "exp", new StandardJDBCEscapeFunction( "exp", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "%external", new StandardSQLFunction( "%external", StandardBasicTypes.STRING ) );
-		registerFunction( "$extract", new VarArgsSQLFunction( StandardBasicTypes.INTEGER, "$extract(", ",", ")" ) );
-		registerFunction( "$find", new VarArgsSQLFunction( StandardBasicTypes.INTEGER, "$find(", ",", ")" ) );
-		registerFunction( "floor", new StandardSQLFunction( "floor", StandardBasicTypes.INTEGER ) );
-		registerFunction( "getdate", new StandardSQLFunction( "getdate", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "hour", new StandardJDBCEscapeFunction( "hour", StandardBasicTypes.INTEGER ) );
-		registerFunction( "ifnull", new VarArgsSQLFunction( "ifnull(", ",", ")" ) );
-		registerFunction( "%internal", new StandardSQLFunction( "%internal" ) );
-		registerFunction( "isnull", new VarArgsSQLFunction( "isnull(", ",", ")" ) );
-		registerFunction( "isnumeric", new StandardSQLFunction( "isnumeric", StandardBasicTypes.INTEGER ) );
-		registerFunction( "lcase", new StandardJDBCEscapeFunction( "lcase", StandardBasicTypes.STRING ) );
-		registerFunction( "left", new StandardJDBCEscapeFunction( "left", StandardBasicTypes.STRING ) );
-		registerFunction( "len", new StandardSQLFunction( "len", StandardBasicTypes.INTEGER ) );
-		registerFunction( "$length", new VarArgsSQLFunction( "$length(", ",", ")" ) );
-		registerFunction( "$list", new VarArgsSQLFunction( "$list(", ",", ")" ) );
-		registerFunction( "$listdata", new VarArgsSQLFunction( "$listdata(", ",", ")" ) );
-		registerFunction( "$listfind", new VarArgsSQLFunction( "$listfind(", ",", ")" ) );
-		registerFunction( "$listget", new VarArgsSQLFunction( "$listget(", ",", ")" ) );
-		registerFunction( "$listlength", new StandardSQLFunction( "$listlength", StandardBasicTypes.INTEGER ) );
-		registerFunction( "locate", new StandardSQLFunction( "$FIND", StandardBasicTypes.INTEGER ) );
-		registerFunction( "log", new StandardJDBCEscapeFunction( "log", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "log10", new StandardJDBCEscapeFunction( "log", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "lower", new StandardSQLFunction( "lower" ) );
-		registerFunction( "ltrim", new StandardSQLFunction( "ltrim" ) );
-		registerFunction( "minute", new StandardJDBCEscapeFunction( "minute", StandardBasicTypes.INTEGER ) );
-		registerFunction( "mod", new StandardJDBCEscapeFunction( "mod", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "month", new StandardJDBCEscapeFunction( "month", StandardBasicTypes.INTEGER ) );
-		registerFunction( "monthname", new StandardJDBCEscapeFunction( "monthname", StandardBasicTypes.STRING ) );
-		registerFunction( "now", new StandardJDBCEscapeFunction( "monthname", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "nullif", new VarArgsSQLFunction( "nullif(", ",", ")" ) );
-		registerFunction( "nvl", new NvlFunction() );
-		registerFunction( "%odbcin", new StandardSQLFunction( "%odbcin" ) );
-		registerFunction( "%odbcout", new StandardSQLFunction( "%odbcin" ) );
-		registerFunction( "%pattern", new VarArgsSQLFunction( StandardBasicTypes.STRING, "", "%pattern", "" ) );
-		registerFunction( "pi", new StandardJDBCEscapeFunction( "pi", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "$piece", new VarArgsSQLFunction( StandardBasicTypes.STRING, "$piece(", ",", ")" ) );
-		registerFunction( "position", new VarArgsSQLFunction( StandardBasicTypes.INTEGER, "position(", " in ", ")" ) );
-		registerFunction( "power", new VarArgsSQLFunction( StandardBasicTypes.STRING, "power(", ",", ")" ) );
-		registerFunction( "quarter", new StandardJDBCEscapeFunction( "quarter", StandardBasicTypes.INTEGER ) );
-		registerFunction( "repeat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "repeat(", ",", ")" ) );
-		registerFunction( "replicate", new VarArgsSQLFunction( StandardBasicTypes.STRING, "replicate(", ",", ")" ) );
-		registerFunction( "right", new StandardJDBCEscapeFunction( "right", StandardBasicTypes.STRING ) );
-		registerFunction( "round", new VarArgsSQLFunction( StandardBasicTypes.FLOAT, "round(", ",", ")" ) );
-		registerFunction( "rtrim", new StandardSQLFunction( "rtrim", StandardBasicTypes.STRING ) );
-		registerFunction( "second", new StandardJDBCEscapeFunction( "second", StandardBasicTypes.INTEGER ) );
-		registerFunction( "sign", new StandardSQLFunction( "sign", StandardBasicTypes.INTEGER ) );
-		registerFunction( "sin", new StandardJDBCEscapeFunction( "sin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "space", new StandardSQLFunction( "space", StandardBasicTypes.STRING ) );
-		registerFunction( "%sqlstring", new VarArgsSQLFunction( StandardBasicTypes.STRING, "%sqlstring(", ",", ")" ) );
-		registerFunction( "%sqlupper", new VarArgsSQLFunction( StandardBasicTypes.STRING, "%sqlupper(", ",", ")" ) );
-		registerFunction( "sqrt", new StandardJDBCEscapeFunction( "SQRT", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "%startswith", new VarArgsSQLFunction( StandardBasicTypes.STRING, "", "%startswith", "" ) );
+		registry.registerNamed( "%exact", StandardSpiBasicTypes.STRING );
+		registry.wrapInJdbcEscape( "exp", registry.registerNamed( "exp", StandardSpiBasicTypes.DOUBLE ) );
+		registry.registerNamed( "%external", StandardSpiBasicTypes.STRING );
+		registry.registerVarArgs( "$extract", StandardSpiBasicTypes.INTEGER, "$extract(", ",", ")" );
+		registry.registerVarArgs( "$find", StandardSpiBasicTypes.INTEGER, "$find(", ",", ")" );
+		registry.registerNamed( "floor", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "getdate", StandardSpiBasicTypes.TIMESTAMP );
+		registry.wrapInJdbcEscape( "hour", registry.registerNamed( "hour", StandardSpiBasicTypes.INTEGER ) );
+		registry.varArgsBuilder( "ifnull", "ifnull(", ",", ")" ).register();
+		registry.registerNamed( "%internal" );
+		registry.varArgsBuilder( "isnull", "isnull(", ",", ")" ).register();
+		registry.registerNamed( "isnumeric", StandardSpiBasicTypes.INTEGER );
+		registry.wrapInJdbcEscape( "lcase", registry.registerNamed( "lcase", StandardSpiBasicTypes.STRING ) );
+		registry.wrapInJdbcEscape( "left", registry.registerNamed( "left", StandardSpiBasicTypes.STRING ) );
+		registry.registerNamed( "len", StandardSpiBasicTypes.INTEGER );
+		registry.varArgsBuilder( "$length", "$length(", ",", ")" ).register();
+		registry.varArgsBuilder( "$list", "$list(", ",", ")" ).register();
+		registry.varArgsBuilder( "$listdata", "$listdata(", ",", ")" ).register();
+		registry.varArgsBuilder( "$listfind", "$listfind(", ",", ")" ).register();
+		registry.varArgsBuilder( "$listget", "$listget(", ",", ")" ).register();
+		registry.registerNamed( "$listlength", StandardSpiBasicTypes.INTEGER );
+		registry.namedTemplateBuilder( "locate", "$FIND" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+		registry.wrapInJdbcEscape( "log", registry.registerNamed( "log", StandardSpiBasicTypes.DOUBLE ) );
+		registry.wrapInJdbcEscape( "log10", registry.registerNamed( "log", StandardSpiBasicTypes.DOUBLE ) );
+		registry.registerNamed( "lower" );
+		registry.registerNamed( "ltrim" );
+		registry.wrapInJdbcEscape( "minute", registry.registerNamed( "minute", StandardSpiBasicTypes.INTEGER ) );
+		registry.wrapInJdbcEscape( "mod", registry.registerNamed( "mod", StandardSpiBasicTypes.DOUBLE ) );
+		registry.wrapInJdbcEscape( "month", registry.registerNamed( "month", StandardSpiBasicTypes.INTEGER ) );
+		registry.wrapInJdbcEscape( "monthname", registry.registerNamed( "monthname", StandardSpiBasicTypes.STRING ) );
+		registry.wrapInJdbcEscape( "now", registry.registerNamed( "monthname", StandardSpiBasicTypes.TIMESTAMP ) );
+		registry.varArgsBuilder( "nullif", "nullif(", ",", ")" ).register();
+		registry.register( "nvl", new NvlFunctionTemplate() );
+		registry.registerNamed( "%odbcin" );
+		registry.registerNamed( "%odbcout" );
+		registry.registerVarArgs( "%pattern", StandardSpiBasicTypes.STRING, "", "%pattern", "" );
+		registry.wrapInJdbcEscape( "pi", registry.registerNamed( "pi", StandardSpiBasicTypes.DOUBLE ) );
+		registry.registerVarArgs( "$piece", StandardSpiBasicTypes.STRING, "$piece(", ",", ")" );
+		registry.registerVarArgs( "position", StandardSpiBasicTypes.INTEGER, "position(", " in ", ")" );
+		registry.registerVarArgs( "power", StandardSpiBasicTypes.STRING, "power(", ",", ")" );
+		registry.wrapInJdbcEscape( "quarter", registry.registerNamed( "quarter", StandardSpiBasicTypes.INTEGER ) );
+		registry.registerVarArgs( "repeat", StandardSpiBasicTypes.STRING, "repeat(", ",", ")" );
+		registry.registerVarArgs( "replicate", StandardSpiBasicTypes.STRING, "replicate(", ",", ")" );
+		registry.wrapInJdbcEscape( "right", registry.registerNamed( "right", StandardSpiBasicTypes.STRING ) );
+		registry.registerVarArgs( "round", StandardSpiBasicTypes.FLOAT, "round(", ",", ")" );
+		registry.registerNamed( "rtrim", StandardSpiBasicTypes.STRING );
+		registry.wrapInJdbcEscape( "second", registry.registerNamed( "second", StandardSpiBasicTypes.INTEGER ) );
+		registry.registerNamed( "sign", StandardSpiBasicTypes.INTEGER );
+		registry.wrapInJdbcEscape( "sin", registry.registerNamed( "sin", StandardSpiBasicTypes.DOUBLE ) );
+		registry.registerNamed( "space", StandardSpiBasicTypes.STRING );
+		registry.registerVarArgs( "%sqlstring", StandardSpiBasicTypes.STRING, "%sqlstring(", ",", ")" );
+		registry.registerVarArgs( "%sqlupper", StandardSpiBasicTypes.STRING, "%sqlupper(", ",", ")" );
+		registry.wrapInJdbcEscape( "sqrt", registry.registerNamed( "SQRT", StandardSpiBasicTypes.DOUBLE ) );
+		registry.registerVarArgs( "%startswith", StandardSpiBasicTypes.STRING, "", "%startswith", "" );
 		// below is for Cache' that don't have str in 2007.1 there is str and we register str directly
-		registerFunction( "str", new SQLFunctionTemplate( StandardBasicTypes.STRING, "cast(?1 as char varying)" ) );
-		registerFunction( "string", new VarArgsSQLFunction( StandardBasicTypes.STRING, "string(", ",", ")" ) );
+		registry.registerPattern( "str", "cast(?1 as char varying)", StandardSpiBasicTypes.STRING );
+		registry.registerVarArgs( "string", StandardSpiBasicTypes.STRING, "string(", ",", ")" );
 		// note that %string is deprecated
-		registerFunction( "%string", new VarArgsSQLFunction( StandardBasicTypes.STRING, "%string(", ",", ")" ) );
-		registerFunction( "substr", new VarArgsSQLFunction( StandardBasicTypes.STRING, "substr(", ",", ")" ) );
-		registerFunction( "substring", new VarArgsSQLFunction( StandardBasicTypes.STRING, "substring(", ",", ")" ) );
-		registerFunction( "sysdate", new NoArgSQLFunction( "sysdate", StandardBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "tan", new StandardJDBCEscapeFunction( "tan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "timestampadd", new StandardJDBCEscapeFunction( "timestampadd", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "timestampdiff", new StandardJDBCEscapeFunction( "timestampdiff", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "tochar", new VarArgsSQLFunction( StandardBasicTypes.STRING, "tochar(", ",", ")" ) );
-		registerFunction( "to_char", new VarArgsSQLFunction( StandardBasicTypes.STRING, "to_char(", ",", ")" ) );
-		registerFunction( "todate", new VarArgsSQLFunction( StandardBasicTypes.STRING, "todate(", ",", ")" ) );
-		registerFunction( "to_date", new VarArgsSQLFunction( StandardBasicTypes.STRING, "todate(", ",", ")" ) );
-		registerFunction( "tonumber", new StandardSQLFunction( "tonumber" ) );
-		registerFunction( "to_number", new StandardSQLFunction( "tonumber" ) );
+		registry.registerVarArgs( "%string", StandardSpiBasicTypes.STRING, "%string(", ",", ")" );
+		registry.registerVarArgs( "substr", StandardSpiBasicTypes.STRING, "substr(", ",", ")" );
+		registry.registerVarArgs( "substring", StandardSpiBasicTypes.STRING, "substring(", ",", ")" );
+		registry.registerNoArgs( "sysdate", StandardSpiBasicTypes.TIMESTAMP );
+		registry.wrapInJdbcEscape( "tan", registry.registerNamed( "tan", StandardSpiBasicTypes.DOUBLE ) );
+		registry.wrapInJdbcEscape( "timestampadd", registry.registerNamed( "timestampadd", StandardSpiBasicTypes.DOUBLE ) );
+		registry.wrapInJdbcEscape( "timestampdiff", registry.registerNamed( "timestampdiff", StandardSpiBasicTypes.DOUBLE ) );
+		registry.registerVarArgs( "tochar", StandardSpiBasicTypes.STRING, "tochar(", ",", ")" );
+		registry.registerVarArgs( "to_char", StandardSpiBasicTypes.STRING, "to_char(", ",", ")" );
+		registry.registerVarArgs( "todate", StandardSpiBasicTypes.STRING, "todate(", ",", ")" );
+		registry.registerVarArgs( "to_date", StandardSpiBasicTypes.STRING, "todate(", ",", ")" );
+		registry.registerNamed( "tonumber" );
+		registry.registerAlternateKey( "to_number", "tonumber" );
 		// TRIM(end_keyword string-expression-1 FROM string-expression-2)
 		// use Hibernate implementation "From" is one of the parameters they pass in position ?3
 		//registerFunction( "trim", new SQLFunctionTemplate(StandardBasicTypes.STRING, "trim(?1 ?2 from ?3)") );
-		registerFunction( "truncate", new StandardJDBCEscapeFunction( "truncate", StandardBasicTypes.STRING ) );
-		registerFunction( "ucase", new StandardJDBCEscapeFunction( "ucase", StandardBasicTypes.STRING ) );
-		registerFunction( "upper", new StandardSQLFunction( "upper" ) );
+		registry.wrapInJdbcEscape( "truncate", registry.registerNamed( "truncate", StandardSpiBasicTypes.STRING ) );
+		registry.wrapInJdbcEscape( "ucase", registry.registerNamed( "ucase", StandardSpiBasicTypes.STRING ) );
+		registry.registerNamed( "upper" );
 		// %upper is deprecated
-		registerFunction( "%upper", new StandardSQLFunction( "%upper" ) );
-		registerFunction( "user", new StandardJDBCEscapeFunction( "user", StandardBasicTypes.STRING ) );
-		registerFunction( "week", new StandardJDBCEscapeFunction( "user", StandardBasicTypes.INTEGER ) );
-		registerFunction( "xmlconcat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "xmlconcat(", ",", ")" ) );
-		registerFunction( "xmlelement", new VarArgsSQLFunction( StandardBasicTypes.STRING, "xmlelement(", ",", ")" ) );
+		registry.registerNamed( "%upper" );
+		registry.wrapInJdbcEscape( "user", registry.registerNamed( "user", StandardSpiBasicTypes.STRING ) );
+		registry.wrapInJdbcEscape( "week", registry.registerNamed( "week", StandardSpiBasicTypes.INTEGER ) );
+		registry.registerVarArgs( "xmlconcat", StandardSpiBasicTypes.STRING, "xmlconcat(", ",", ")" );
+		registry.registerVarArgs( "xmlelement", StandardSpiBasicTypes.STRING, "xmlelement(", ",", ")" );
 		// xmlforest requires a new kind of function constructor
-		registerFunction( "year", new StandardJDBCEscapeFunction( "year", StandardBasicTypes.INTEGER ) );
+		registry.wrapInJdbcEscape( "year", registry.registerNamed( "year", StandardSpiBasicTypes.INTEGER ) );
 	}
 
-	protected final void register71Functions() {
-		this.registerFunction( "str", new VarArgsSQLFunction( StandardBasicTypes.STRING, "str(", ",", ")" ) );
+	protected void register71Functions(SqmFunctionRegistry registry) {
+		registry.register( "str", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "str(", ",", ")" ) );
 	}
+
 
 	// DDL support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 	@Override
 	public boolean hasAlterTable() {
@@ -445,22 +485,18 @@ public class Cache71Dialect extends Dialect {
 	}
 
 	@Override
-	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-		return new GlobalTemporaryTableBulkIdStrategy(
-				new IdTableSupportStandardImpl() {
-					@Override
-					public String generateIdTableName(String baseName) {
-						final String name = super.generateIdTableName( baseName );
-						return name.length() > 25 ? name.substring( 1, 25 ) : name;
-					}
+	public IdTableStrategy getDefaultIdTableStrategy() {
+		return new GlobalTemporaryTableStrategy( generateIdTableSupport() );
+	}
 
-					@Override
-					public String getCreateIdTableCommand() {
-						return "create global temporary table";
-					}
-				},
-				AfterUseAction.DROP
-		);
+	private IdTableSupport generateIdTableSupport() {
+		return new StandardIdTableSupport( new GlobalTempTableExporter() ) {
+			@Override
+			protected String determineIdTableName(String baseName) {
+				final String name = super.determineIdTableName( baseName );
+				return name.length() > 25 ? name.substring( 1, 25 ) : name;
+			}
+		};
 	}
 
 	@Override

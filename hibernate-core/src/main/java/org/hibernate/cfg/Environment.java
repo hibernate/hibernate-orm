@@ -326,6 +326,7 @@ public final class Environment implements AvailableSettings {
 		return ConnectionProviderInitiator.toIsolationNiceName( isolation );
 	}
 
+	// todo (6.0) : make
 
 	public static final String BYTECODE_PROVIDER_NAME_JAVASSIST = "javassist";
 	public static final String BYTECODE_PROVIDER_NAME_BYTEBUDDY = "bytebuddy";

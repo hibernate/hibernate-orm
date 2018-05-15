@@ -27,7 +27,8 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
-public class StorageAccessTest extends BaseUnitTestCase {
+@SuppressWarnings({"WeakerAccess","unused"})
+public class StorageAccessTest {
 
 	/**
 	 * Sort of the inverse test of {@link MissingCacheStrategyTest#testMissingCacheStrategyFail()}.
@@ -41,6 +42,7 @@ public class StorageAccessTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@SuppressWarnings({"unchecked"})
 	public void testBasicStorageAccessUse() {
 		TestHelper.preBuildAllCaches();
 		try (final SessionFactoryImplementor sessionFactory = TestHelper.buildStandardSessionFactory() ) {
@@ -65,7 +67,7 @@ public class StorageAccessTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@SuppressWarnings({"EmptyTryBlock", "unused"})
+	@SuppressWarnings({"EmptyTryBlock"})
 	public void testCachesReleasedOnSessionFactoryClose() {
 		TestHelper.preBuildAllCaches();
 		try (SessionFactoryImplementor sessionFactory = TestHelper.buildStandardSessionFactory() ) {

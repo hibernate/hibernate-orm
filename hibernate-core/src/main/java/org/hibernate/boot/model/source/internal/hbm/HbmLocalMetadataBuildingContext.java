@@ -17,13 +17,13 @@ import org.hibernate.mapping.PersistentClass;
  * @author Steve Ebersole
  */
 public interface HbmLocalMetadataBuildingContext extends LocalMetadataBuildingContext {
-	public ToolingHintContext getToolingHintContext();
+	ToolingHintContext getToolingHintContext();
 
-	public String determineEntityName(EntityInfo entityElement);
+	String determineEntityName(EntityInfo entityElement);
 
-	public String determineEntityName(String entityName, String clazz);
+	String determineEntityName(String entityName, String clazz);
 
-	public String qualifyClassName(String name);
+	String qualifyClassName(String name);
 
-	public PersistentClass findEntityBinding(String entityName, String clazz);
+	PersistentClass findEntityBinding(String entityName, String clazz);
 }

@@ -7,11 +7,14 @@
 package org.hibernate.event.internal;
 
 import org.hibernate.HibernateException;
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.Collections;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.type.CollectionType;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 
 /**
  * Process collections reachable from an entity. This
@@ -24,26 +27,26 @@ public class FlushVisitor extends AbstractVisitor {
 	
 	private Object owner;
 
-	Object processCollection(Object collection, CollectionType type)
-	throws HibernateException {
-		
-		if (collection==CollectionType.UNFETCHED_COLLECTION) {
+	@Override
+	Object processCollection(Object collection, PluralPersistentAttribute collectionAttribute) throws HibernateException {
+
+		if ( collection == PersistentCollectionDescriptor.UNFETCHED_COLLECTION ) {
 			return null;
 		}
 
 		if (collection!=null) {
 			final PersistentCollection coll;
-			if ( type.hasHolder() ) {
+			if ( collectionAttribute.getPersistentCollectionDescriptor().getCollectionClassification() == CollectionClassification.ARRAY ) {
 				coll = getSession().getPersistenceContext().getCollectionHolder(collection);
 			}
 			else if ( collection == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
-				coll = (PersistentCollection) type.resolve( collection, getSession(), owner );
+				throw new NotYetImplementedFor6Exception( "processCollection + LazyPropertyInitializer.UNFETCHED_PROPERTY" );
 			}
 			else {
 				coll = (PersistentCollection) collection;
 			}
 
-			Collections.processReachableCollection( coll, type, owner, getSession() );
+			Collections.processReachableCollection( coll, collectionAttribute, owner, getSession() );
 		}
 
 		return null;

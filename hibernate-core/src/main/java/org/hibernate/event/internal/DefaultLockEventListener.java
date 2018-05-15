@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.TransientObjectException;
@@ -21,7 +19,7 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LockEvent;
 import org.hibernate.event.spi.LockEventListener;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -66,23 +64,23 @@ public class DefaultLockEventListener extends AbstractLockUpgradeEventListener i
 		
 		EntityEntry entry = source.getPersistenceContext().getEntry(entity);
 		if (entry==null) {
-			final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
-			final Serializable id = persister.getIdentifier( entity, source );
+			final EntityTypeDescriptor descriptor = source.getEntityDescriptor( event.getEntityName(), entity );
+			final Object id = descriptor.getIdentifier( entity, source );
 			if ( !ForeignKeys.isNotTransient( event.getEntityName(), entity, Boolean.FALSE, source ) ) {
 				throw new TransientObjectException(
 						"cannot lock an unsaved transient instance: " +
-						persister.getEntityName()
+						descriptor.getEntityName()
 				);
 			}
 
-			entry = reassociate(event, entity, id, persister);
-			cascadeOnLock(event, persister, entity);
+			entry = reassociate(event, entity, id, descriptor);
+			cascadeOnLock(event, descriptor, entity);
 		}
 
 		upgradeLock( entity, entry, event.getLockOptions(), event.getSession() );
 	}
 	
-	private void cascadeOnLock(LockEvent event, EntityPersister persister, Object entity) {
+	private void cascadeOnLock(LockEvent event, EntityTypeDescriptor descriptor, Object entity) {
 		EventSource source = event.getSession();
 		source.getPersistenceContext().incrementCascadeLevel();
 		try {
@@ -90,7 +88,7 @@ public class DefaultLockEventListener extends AbstractLockUpgradeEventListener i
 					CascadingActions.LOCK,
 					CascadePoint.AFTER_LOCK,
 					source,
-					persister,
+					descriptor,
 					entity,
 					event.getLockOptions()
 			);

@@ -13,7 +13,7 @@ import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -24,6 +24,7 @@ public abstract class AbstractCollectionDataAccess
 
 	private final CacheKeysFactory keysFactory;
 
+	@SuppressWarnings("unused")
 	public AbstractCollectionDataAccess(
 			DomainDataRegion region,
 			CacheKeysFactory keysFactory,
@@ -34,8 +35,8 @@ public abstract class AbstractCollectionDataAccess
 	}
 
 	@Override
-	public Object generateCacheKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-		return keysFactory.createCollectionKey( id, persister, factory, tenantIdentifier );
+	public Object generateCacheKey(Object id, PersistentCollectionDescriptor descriptor, SessionFactoryImplementor factory, String tenantIdentifier) {
+		return keysFactory.createCollectionKey( id, descriptor, factory, tenantIdentifier );
 	}
 
 	@Override

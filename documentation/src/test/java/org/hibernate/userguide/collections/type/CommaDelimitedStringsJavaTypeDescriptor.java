@@ -11,15 +11,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
-import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.MutableMutabilityPlan;
+import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
+import org.hibernate.type.descriptor.spi.WrapperOptions;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * @author Vlad Mihalcea
  */
 //tag::collections-comma-delimited-collection-example[]
-public class CommaDelimitedStringsJavaTypeDescriptor extends AbstractTypeDescriptor<List> {
+public class CommaDelimitedStringsJavaTypeDescriptor extends AbstractBasicJavaDescriptor<List> {
 
     public static final String DELIMITER = ",";
 
@@ -55,6 +57,12 @@ public class CommaDelimitedStringsJavaTypeDescriptor extends AbstractTypeDescrip
     @Override
     public <X> List wrap(X value, WrapperOptions options) {
         return fromString( (String) value );
+    }
+
+    @Override
+    public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
+        // none
+        return null;
     }
 }
 //end::collections-comma-delimited-collection-example[]

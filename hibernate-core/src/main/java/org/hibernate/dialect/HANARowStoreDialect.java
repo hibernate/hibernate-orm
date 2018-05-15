@@ -6,10 +6,13 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.local.AfterUseAction;
+import org.hibernate.query.sqm.consume.multitable.internal.StandardIdTableSupport;
+import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTempTableExporter;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTable;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTableSupport;
+import org.hibernate.tool.schema.spi.Exporter;
 
 /**
  * An SQL dialect for the SAP HANA row store.
@@ -37,13 +40,28 @@ public class HANARowStoreDialect extends AbstractHANADialect {
 	}
 
 	@Override
-	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-		return new GlobalTemporaryTableBulkIdStrategy( new IdTableSupportStandardImpl() {
+	public IdTableStrategy getDefaultIdTableStrategy() {
+		return new GlobalTemporaryTableStrategy(
+				generateIdTableSupport()
+		);
+	}
+
+	protected IdTableSupport generateIdTableSupport() {
+		return new StandardIdTableSupport( new GlobalTempTableExporter() ) {
+			@Override
+			public Exporter<IdTable> getIdTableExporter() {
+				return generateIdTableExporter();
+			}
+		};
+	}
+
+	protected Exporter<IdTable> generateIdTableExporter() {
+		return new GlobalTempTableExporter() {
 
 			@Override
-			public String getCreateIdTableCommand() {
+			protected String getCreateCommand() {
 				return "create global temporary row table";
 			}
-		}, AfterUseAction.CLEAN );
+		};
 	}
 }

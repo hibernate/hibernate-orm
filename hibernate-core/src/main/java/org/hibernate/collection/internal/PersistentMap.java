@@ -8,7 +8,6 @@ package org.hibernate.collection.internal;
 
 import java.io.Serializable;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -18,11 +17,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.loader.CollectionAliases;
-import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
 
 /**
@@ -32,9 +29,8 @@ import org.hibernate.type.Type;
  * @see java.util.HashMap
  * @author Gavin King
  */
-public class PersistentMap extends AbstractPersistentCollection implements Map {
-
-	protected Map map;
+public class PersistentMap<K,V> extends AbstractPersistentCollection<V> implements Map<K,V> {
+	protected Map<K,V> map;
 
 	/**
 	 * Empty constructor.
@@ -42,28 +38,14 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	 * Note: this form is not ever ever ever used by Hibernate; it is, however,
 	 * needed for SOAP libraries and other such marshalling code.
 	 */
-	public PersistentMap() {
+	protected PersistentMap() {
 		// intentionally empty
 	}
 
-	/**
-	 * Instantiates a lazy map (the underlying map is un-initialized).
-	 *
-	 * @param session The session to which this map will belong.
-	 */
-	public PersistentMap(SharedSessionContractImplementor session) {
-		super( session );
-	}
-
-	/**
-	 * Instantiates a lazy map (the underlying map is un-initialized).
-	 *
-	 * @param session The session to which this map will belong.
-	 * @deprecated {@link #PersistentMap(SharedSessionContractImplementor)} should be used instead.
-	 */
-	@Deprecated
-	public PersistentMap(SessionImplementor session) {
-		this( (SharedSessionContractImplementor) session );
+	public PersistentMap(
+			SharedSessionContractImplementor session,
+			PersistentCollectionDescriptor<?,?,V> collectionDescriptor) {
+		super( session, collectionDescriptor );
 	}
 
 	/**
@@ -73,33 +55,34 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	 * @param session The session to which this map will belong.
 	 * @param map The underlying map data.
 	 */
-	public PersistentMap(SharedSessionContractImplementor session, Map map) {
-		super( session );
-		this.map = map;
-		setInitialized();
+	public PersistentMap(
+			SharedSessionContractImplementor session,
+			PersistentCollectionDescriptor<?,?,V> descriptor,
+			Map<K,V> map) {
+		this( session, descriptor );
+		setMap( map );
 		setDirectlyAccessible( true );
 	}
 
-	/**
-	 * Instantiates a non-lazy map (the underlying map is constructed
-	 * from the incoming map reference).
-	 *
-	 * @param session The session to which this map will belong.
-	 * @param map The underlying map data.
-	 * @deprecated {@link #PersistentMap(SharedSessionContractImplementor, Map)} should be used instead.
-	 */
-	@Deprecated
-	public PersistentMap(SessionImplementor session, Map map) {
-		this( (SharedSessionContractImplementor) session, map );
+	private void setMap(Map<K,V> map) {
+		this.map = map;
+		setInitialized();
+	}
+
+	public PersistentMap(
+			SharedSessionContractImplementor session,
+			PersistentCollectionDescriptor<?,?,V> descriptor,
+			Object key) {
+		super( session, descriptor, key );
 	}
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
-	public Serializable getSnapshot(CollectionPersister persister) throws HibernateException {
+	public Serializable getSnapshot(PersistentCollectionDescriptor descriptor) throws HibernateException {
 		final HashMap clonedMap = new HashMap( map.size() );
 		for ( Object o : map.entrySet() ) {
 			final Entry e = (Entry) o;
-			final Object copy = persister.getElementType().deepCopy( e.getValue(), persister.getFactory() );
+			final Object copy = descriptor.getElementDescriptor().getJavaTypeDescriptor().getMutabilityPlan().deepCopy( e.getValue() );
 			clonedMap.put( e.getKey(), copy );
 		}
 		return clonedMap;
@@ -112,8 +95,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	}
 
 	@Override
-	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
-		final Type elementType = persister.getElementType();
+	public boolean equalsSnapshot(PersistentCollectionDescriptor collectionDescriptor) throws HibernateException {
 		final Map snapshotMap = (Map) getSnapshot();
 		if ( snapshotMap.size() != this.map.size() ) {
 			return false;
@@ -121,7 +103,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 
 		for ( Object o : map.entrySet() ) {
 			final Entry entry = (Entry) o;
-			if ( elementType.isDirty( entry.getValue(), snapshotMap.get( entry.getKey() ), getSession() ) ) {
+			if ( collectionDescriptor.isDirty( entry.getValue(), snapshotMap.get( entry.getKey() ), getSession() ) ) {
 				return false;
 			}
 		}
@@ -139,8 +121,11 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	}
 
 	@Override
-	public void beforeInitialize(CollectionPersister persister, int anticipatedSize) {
-		this.map = (Map) persister.getCollectionType().instantiate( anticipatedSize );
+	@SuppressWarnings("unchecked")
+	public void beforeInitialize(
+			int anticipatedSize,
+			PersistentCollectionDescriptor collectionDescriptor) {
+		this.map = (Map) getCollectionDescriptor().instantiateRaw( anticipatedSize );
 	}
 
 	@Override
@@ -168,8 +153,8 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	}
 
 	@Override
-	public Object get(Object key) {
-		final Object result = readElementByIndex( key );
+	public V get(Object key) {
+		final V result = readElementByIndex( key );
 		return result == UNKNOWN
 				? map.get( key )
 				: result;
@@ -177,16 +162,16 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Object put(Object key, Object value) {
+	public V put(K key, V value) {
 		if ( isPutQueueEnabled() ) {
-			final Object old = readElementByIndex( key );
+			final V old = readElementByIndex( key );
 			if ( old != UNKNOWN ) {
 				queueOperation( new Put( key, value, old ) );
 				return old;
 			}
 		}
 		initialize( true );
-		final Object old = map.put( key, value );
+		final V old = map.put( key, value );
 		// would be better to use the element-type to determine
 		// whether the old and the new are equal here; the problem being
 		// we do not necessarily have access to the element type in all
@@ -199,12 +184,12 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Object remove(Object key) {
+	public V remove(Object key) {
 		if ( isPutQueueEnabled() ) {
-			final Object old = readElementByIndex( key );
+			final V old = readElementByIndex( key );
 			if ( old != UNKNOWN ) {
 				elementRemoved = true;
-				queueOperation( new Remove( key, old ) );
+				queueOperation( new Remove( (K) key, old ) );
 				return old;
 			}
 		}
@@ -219,11 +204,10 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void putAll(Map puts) {
+	public void putAll(Map<? extends K, ? extends V> puts) {
 		if ( puts.size() > 0 ) {
 			initialize( true );
-			for ( Object o : puts.entrySet() ) {
-				final Entry entry = (Entry) o;
+			for ( Entry<? extends K, ? extends V> entry : puts.entrySet() ) {
 				put( entry.getKey(), entry.getValue() );
 			}
 		}
@@ -284,18 +268,17 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	@SuppressWarnings("unchecked")
 	public Object readFrom(
 			ResultSet rs,
-			CollectionPersister persister,
-			CollectionAliases descriptor,
-			Object owner) throws HibernateException, SQLException {
-		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
-		if ( element != null ) {
-			final Object index = persister.readIndex( rs, descriptor.getSuffixedIndexAliases(), getSession() );
-			if ( loadingEntries == null ) {
-				loadingEntries = new ArrayList<>();
-			}
-			loadingEntries.add( new Object[] { index, element } );
-		}
-		return element;
+			Object owner, PersistentCollectionDescriptor collectionDescriptor) {
+		throw new NotYetImplementedFor6Exception(  );
+//		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
+//		if ( element != null ) {
+//			final Object index = persister.readIndex( rs, descriptor.getSuffixedIndexAliases(), getSession() );
+//			if ( loadingEntries == null ) {
+//				loadingEntries = new ArrayList<>();
+//			}
+//			loadingEntries.add( new Object[] { index, element } );
+//		}
+//		return element;
 	}
 
 	@Override
@@ -303,7 +286,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	public boolean endRead() {
 		if ( loadingEntries != null ) {
 			for ( Object[] entry : loadingEntries ) {
-				map.put( entry[0], entry[1] );
+				map.put( (K) entry[0], (V) entry[1] );
 			}
 			loadingEntries = null;
 		}
@@ -312,8 +295,13 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Iterator entries(CollectionPersister persister) {
+	public Iterator entries(PersistentCollectionDescriptor descriptor) {
 		return map.entrySet().iterator();
+	}
+
+	public void load(K key, V value) {
+		assert isInitializing();
+		map.put( key, value );
 	}
 
 	/**
@@ -480,29 +468,44 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void initializeFromCache(CollectionPersister persister, Serializable disassembled, Object owner)
+	public void initializeFromCache(
+			Serializable disassembled,
+			Object owner,
+			PersistentCollectionDescriptor collectionDescriptor)
 			throws HibernateException {
 		final Serializable[] array = (Serializable[]) disassembled;
 		final int size = array.length;
-		beforeInitialize( persister, size );
+		beforeInitialize( size, collectionDescriptor );
 		for ( int i = 0; i < size; i+=2 ) {
 			map.put(
-					persister.getIndexType().assemble( array[i], getSession(), owner ),
-					persister.getElementType().assemble( array[i+1], getSession(), owner )
+					(K) getCollectionDescriptor().getIndexDescriptor()
+							.getJavaTypeDescriptor()
+							.getMutabilityPlan()
+							.assemble( array[i] ),
+					getCollectionDescriptor().getElementDescriptor()
+							.getJavaTypeDescriptor()
+							.getMutabilityPlan()
+							.assemble( array[i+1] )
 			);
 		}
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Serializable disassemble(CollectionPersister persister) throws HibernateException {
+	public Serializable disassemble(PersistentCollectionDescriptor collectionDescriptor) throws HibernateException {
 		final Serializable[] result = new Serializable[ map.size() * 2 ];
 		final Iterator itr = map.entrySet().iterator();
 		int i=0;
 		while ( itr.hasNext() ) {
 			final Map.Entry e = (Map.Entry) itr.next();
-			result[i++] = persister.getIndexType().disassemble( e.getKey(), getSession(), null );
-			result[i++] = persister.getElementType().disassemble( e.getValue(), getSession(), null );
+			result[i++] = collectionDescriptor.getIndexDescriptor()
+					.getJavaTypeDescriptor()
+					.getMutabilityPlan()
+					.disassemble( e.getKey() );
+			result[i++] = collectionDescriptor.getElementDescriptor()
+					.getJavaTypeDescriptor()
+					.getMutabilityPlan()
+					.disassemble( e.getValue() );
 		}
 		return result;
 
@@ -510,7 +513,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Iterator getDeletes(CollectionPersister persister, boolean indexIsFormula) throws HibernateException {
+	public Iterator getDeletes(PersistentCollectionDescriptor descriptor, boolean indexIsFormula) throws HibernateException {
 		final List deletes = new ArrayList();
 		for ( Object o : ((Map) getSnapshot()).entrySet() ) {
 			final Entry e = (Entry) o;
@@ -524,7 +527,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public boolean needsInserting(Object entry, int i, Type elemType) throws HibernateException {
+	public boolean needsInserting(Object entry, int i) throws HibernateException {
 		final Map sn = (Map) getSnapshot();
 		final Map.Entry e = (Map.Entry) entry;
 		return e.getValue() != null && sn.get( e.getKey() ) == null;
@@ -532,32 +535,37 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public boolean needsUpdating(Object entry, int i, Type elemType) throws HibernateException {
+	public boolean needsUpdating(Object entry, int i) throws HibernateException {
 		final Map sn = (Map) getSnapshot();
 		final Map.Entry e = (Map.Entry) entry;
 		final Object snValue = sn.get( e.getKey() );
 		return e.getValue() != null
 				&& snValue != null
-				&& elemType.isDirty( snValue, e.getValue(), getSession() );
+				&& getCollectionDescriptor().isDirty( snValue, e.getValue(), getSession() );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Object getIndex(Object entry, int i, CollectionPersister persister) {
+	public Object getIndex(
+			Object entry,
+			int assumedIndex,
+			PersistentCollectionDescriptor collectionDescriptor) {
 		return ( (Map.Entry) entry ).getKey();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Object getElement(Object entry) {
+	public Object getElement(
+			Object entry,
+			PersistentCollectionDescriptor collectionDescriptor) {
 		return ( (Map.Entry) entry ).getValue();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Object getSnapshotElement(Object entry, int i) {
-		final Map sn = (Map) getSnapshot();
-		return sn.get( ( (Map.Entry) entry ).getKey() );
+	public V getSnapshotElement(Object entry, int index) {
+		final Map<K,V> sn = (Map) getSnapshot();
+		return sn.get( ( (Map.Entry<K,V>) entry ).getKey() );
 	}
 
 	@Override
@@ -598,21 +606,21 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	}
 
 	abstract class AbstractMapValueDelayedOperation extends AbstractValueDelayedOperation {
-		private Object index;
+		private K index;
 
-		protected AbstractMapValueDelayedOperation(Object index, Object addedValue, Object orphan) {
+		protected AbstractMapValueDelayedOperation(K index, V addedValue, Object orphan) {
 			super( addedValue, orphan );
 			this.index = index;
 		}
 
-		protected final Object getIndex() {
+		protected final K getIndex() {
 			return index;
 		}
 	}
 
 	final class Put extends AbstractMapValueDelayedOperation {
 
-		public Put(Object index, Object addedValue, Object orphan) {
+		public Put(K index, V addedValue, Object orphan) {
 			super( index, addedValue, orphan );
 		}
 
@@ -625,7 +633,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 
 	final class Remove extends AbstractMapValueDelayedOperation {
 
-		public Remove(Object index, Object orphan) {
+		public Remove(K index, Object orphan) {
 			super( index, null, orphan );
 		}
 

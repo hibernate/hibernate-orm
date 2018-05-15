@@ -8,6 +8,7 @@ package org.hibernate.property.access.internal;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.annotations.Remove;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.engine.spi.Managed;
 import org.hibernate.internal.util.StringHelper;
@@ -20,7 +21,11 @@ import org.hibernate.service.ServiceRegistry;
  * Standard implementation of PropertyAccessStrategyResolver
  *
  * @author Steve Ebersole
+ *
+ * @deprecated See deprecation on {@link PropertyAccessStrategyResolver}
  */
+@Deprecated
+@Remove
 public class PropertyAccessStrategyResolverStandardImpl implements PropertyAccessStrategyResolver {
 	private final ServiceRegistry serviceRegistry;
 

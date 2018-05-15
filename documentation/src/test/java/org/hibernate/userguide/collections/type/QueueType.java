@@ -15,7 +15,7 @@ import java.util.Queue;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.usertype.UserCollectionType;
 
 //tag::collections-custom-collection-mapping-example[]
@@ -24,7 +24,7 @@ public class QueueType implements UserCollectionType {
     @Override
     public PersistentCollection instantiate(
             SharedSessionContractImplementor session,
-            CollectionPersister persister) throws HibernateException {
+            PersistentCollectionDescriptor persister) throws HibernateException {
         return new PersistentQueue( session );
     }
 
@@ -55,7 +55,7 @@ public class QueueType implements UserCollectionType {
     public Object replaceElements(
             Object original,
             Object target,
-            CollectionPersister persister,
+            PersistentCollectionDescriptor persister,
             Object owner,
             Map copyCache,
             SharedSessionContractImplementor session)

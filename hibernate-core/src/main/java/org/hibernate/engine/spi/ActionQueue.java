@@ -21,9 +21,11 @@ import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import javax.persistence.metamodel.Attribute;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.PropertyValueException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.BulkOperationCleanupAction;
@@ -45,14 +47,8 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.CompositeType;
-import org.hibernate.type.EntityType;
-import org.hibernate.type.ForeignKeyDirection;
-import org.hibernate.type.OneToOneType;
 import org.hibernate.type.Type;
 
 /**
@@ -105,7 +101,7 @@ public class ActionQueue {
 	 */
 	private static final LinkedHashMap<Class<? extends Executable>,ListProvider> EXECUTABLE_LISTS_MAP;
 	static {
-		EXECUTABLE_LISTS_MAP = new LinkedHashMap<Class<? extends Executable>,ListProvider>( 8 );
+		EXECUTABLE_LISTS_MAP = new LinkedHashMap<>( 8 );
 
 		EXECUTABLE_LISTS_MAP.put(
 				OrphanRemovalAction.class,
@@ -115,7 +111,7 @@ public class ActionQueue {
 					}
 					ExecutableList<OrphanRemovalAction> init(ActionQueue instance) {
 						// OrphanRemovalAction executables never require sorting.
-						return instance.orphanRemovals = new ExecutableList<OrphanRemovalAction>( false );
+						return instance.orphanRemovals = new ExecutableList<>( false );
 					}
 				}
 		);
@@ -127,12 +123,12 @@ public class ActionQueue {
 					}
 					ExecutableList<AbstractEntityInsertAction> init(ActionQueue instance) {
 						if ( instance.isOrderInsertsEnabled() ) {
-							return instance.insertions = new ExecutableList<AbstractEntityInsertAction>(
+							return instance.insertions = new ExecutableList<>(
 									new InsertActionSorter()
 							);
 						}
 						else {
-							return instance.insertions = new ExecutableList<AbstractEntityInsertAction>(
+							return instance.insertions = new ExecutableList<>(
 									false
 							);
 						}
@@ -146,7 +142,7 @@ public class ActionQueue {
 						return instance.updates;
 					}
 					ExecutableList<EntityUpdateAction> init(ActionQueue instance) {
-						return instance.updates = new ExecutableList<EntityUpdateAction>(
+						return instance.updates = new ExecutableList<>(
 								instance.isOrderUpdatesEnabled()
 						);
 					}
@@ -159,7 +155,7 @@ public class ActionQueue {
 						return instance.collectionQueuedOps;
 					}
 					ExecutableList<QueuedOperationCollectionAction> init(ActionQueue instance) {
-						return instance.collectionQueuedOps = new ExecutableList<QueuedOperationCollectionAction>(
+						return instance.collectionQueuedOps = new ExecutableList<>(
 								instance.isOrderUpdatesEnabled()
 						);
 					}
@@ -172,7 +168,7 @@ public class ActionQueue {
 						return instance.collectionRemovals;
 					}
 					ExecutableList<CollectionRemoveAction> init(ActionQueue instance) {
-						return instance.collectionRemovals = new ExecutableList<CollectionRemoveAction>(
+						return instance.collectionRemovals = new ExecutableList<>(
 								instance.isOrderUpdatesEnabled()
 						);
 					}
@@ -185,7 +181,7 @@ public class ActionQueue {
 						return instance.collectionUpdates;
 					}
 					ExecutableList<CollectionUpdateAction> init(ActionQueue instance) {
-						return instance.collectionUpdates = new ExecutableList<CollectionUpdateAction>(
+						return instance.collectionUpdates = new ExecutableList<>(
 								instance.isOrderUpdatesEnabled()
 						);
 					}
@@ -198,7 +194,7 @@ public class ActionQueue {
 						return instance.collectionCreations;
 					}
 					ExecutableList<CollectionRecreateAction> init(ActionQueue instance) {
-						return instance.collectionCreations = new ExecutableList<CollectionRecreateAction>(
+						return instance.collectionCreations = new ExecutableList<>(
 								instance.isOrderUpdatesEnabled()
 						);
 					}
@@ -212,7 +208,7 @@ public class ActionQueue {
 					}
 					ExecutableList<EntityDeleteAction> init(ActionQueue instance) {
 						// EntityDeleteAction executables never require sorting.
-						return instance.deletions = new ExecutableList<EntityDeleteAction>( false );
+						return instance.deletions = new ExecutableList<>( false );
 					}
 				}
 		);
@@ -533,7 +529,10 @@ public class ActionQueue {
 	 * @return {@code true} if insertions or deletions are currently queued; {@code false} otherwise.
 	 */
 	public boolean areInsertionsOrDeletionsQueued() {
-		return ( insertions != null && !insertions.isEmpty() ) || hasUnresolvedEntityInsertActions() || (deletions != null && !deletions.isEmpty()) || (orphanRemovals != null && !orphanRemovals.isEmpty());
+		return ( insertions != null && !insertions.isEmpty() )
+				|| hasUnresolvedEntityInsertActions()
+				|| (deletions != null && !deletions.isEmpty())
+				|| (orphanRemovals != null && !orphanRemovals.isEmpty());
 	}
 
 	/**
@@ -576,8 +575,7 @@ public class ActionQueue {
 
 	private static boolean areTablesToBeUpdated(UnresolvedEntityInsertActions actions, @SuppressWarnings("rawtypes") Set tableSpaces) {
 		for ( Executable action : actions.getDependentEntityInsertActions() ) {
-			final Serializable[] spaces = action.getPropertySpaces();
-			for ( Serializable space : spaces ) {
+			for ( Serializable space : action.getPropertySpaces() ) {
 				if ( tableSpaces.contains( space ) ) {
 					LOG.debugf( "Changes must be flushed to space: %s", space );
 					return true;
@@ -624,7 +622,7 @@ public class ActionQueue {
 				// Strictly speaking, only a subset of the list may have been processed if a RuntimeException occurs.
 				// We still invalidate all spaces. I don't see this as a big deal - after all, RuntimeExceptions are
 				// unexpected.
-				Set propertySpaces = list.getQuerySpaces();
+				Set<String> propertySpaces = list.getQuerySpaces();
 				invalidateSpaces( convertTimestampSpaces( propertySpaces ) );
 			}
 		}
@@ -967,7 +965,7 @@ public class ActionQueue {
 	 * Encapsulates behavior needed for after transaction processing
 	 */
 	private static class AfterTransactionCompletionProcessQueue extends AbstractTransactionCompletionProcessQueue<AfterTransactionCompletionProcess> {
-		private Set<String> querySpacesToInvalidate = new HashSet<String>();
+		private Set<String> querySpacesToInvalidate = new HashSet<>();
 
 		private AfterTransactionCompletionProcessQueue(SessionImplementor session) {
 			super( session );
@@ -1151,8 +1149,8 @@ public class ActionQueue {
 						action.getSession()
 								.getFactory()
 								.getMetamodel()
-								.entityPersister( action.getEntityName() )
-								.getRootEntityName()
+								.findEntityDescriptor( action.getEntityName() )
+								.getHierarchy().getRootEntityType().getEntityName()
 				);
 
 				// the entity associated with the current action.
@@ -1248,64 +1246,74 @@ public class ActionQueue {
 		 * @param batchIdentifier The batch identifier of the entity affected by the action
 		 */
 		private void addParentChildEntityNames(AbstractEntityInsertAction action, BatchIdentifier batchIdentifier) {
-			Object[] propertyValues = action.getState();
-			ClassMetadata classMetadata = action.getPersister().getClassMetadata();
-			if ( classMetadata != null ) {
-				Type[] propertyTypes = classMetadata.getPropertyTypes();
+//			Object[] propertyValues = action.getState();
+//			ClassMetadata classMetadata = action.getDescriptor().getClassMetadata();
+//			if ( classMetadata != null ) {
+//				Type[] propertyTypes = classMetadata.getPropertyTypes();
+//
+//				for ( int i = 0; i < propertyValues.length; i++ ) {
+//					Object value = propertyValues[i];
+//					Type type = propertyTypes[i];
+//					addParentChildEntityNameByPropertyAndValue( action, batchIdentifier, type, value );
+//				}
+//			}
 
-				for ( int i = 0; i < propertyValues.length; i++ ) {
-					Object value = propertyValues[i];
-					Type type = propertyTypes[i];
-					addParentChildEntityNameByPropertyAndValue( action, batchIdentifier, type, value );
-				}
+			// todo (6.0) : relate PersistentAttribute with array indices used in state arrays and elsewhere
+
+			Object[] propertyValues = action.getState();
+
+			for ( Attribute<?, ?> attribute : action.getEntityDescriptor().getAttributes() ) {
+
 			}
+
+			throw new NotYetImplementedFor6Exception(  );
 		}
 
 		private void addParentChildEntityNameByPropertyAndValue(AbstractEntityInsertAction action, BatchIdentifier batchIdentifier, Type type, Object value) {
-			if ( type.isEntityType() && value != null ) {
-				final EntityType entityType = (EntityType) type;
-				final String entityName = entityType.getName();
-				final String rootEntityName = action.getSession().getFactory().getMetamodel().entityPersister( entityName ).getRootEntityName();
-
-				if ( entityType.isOneToOne() && OneToOneType.class.cast( entityType ).getForeignKeyDirection() == ForeignKeyDirection.TO_PARENT ) {
-					if ( !entityType.isReferenceToPrimaryKey() ) {
-						batchIdentifier.getChildEntityNames().add( entityName );
-					}
-					if ( !rootEntityName.equals( entityName ) ) {
-						batchIdentifier.getChildEntityNames().add( rootEntityName );
-					}
-				}
-				else {
-					batchIdentifier.getParentEntityNames().add( entityName );
-					if ( !rootEntityName.equals( entityName ) ) {
-						batchIdentifier.getParentEntityNames().add( rootEntityName );
-					}
-				}
-			}
-			else if ( type.isCollectionType() && value != null ) {
-				CollectionType collectionType = (CollectionType) type;
-				final SessionFactoryImplementor sessionFactory = ( (SessionImplementor) action.getSession() )
-						.getSessionFactory();
-				if ( collectionType.getElementType( sessionFactory ).isEntityType() ) {
-					String entityName = collectionType.getAssociatedEntityName( sessionFactory );
-					String rootEntityName = action.getSession().getFactory().getMetamodel().entityPersister( entityName ).getRootEntityName();
-					batchIdentifier.getChildEntityNames().add( entityName );
-					if ( !rootEntityName.equals( entityName ) ) {
-						batchIdentifier.getChildEntityNames().add( rootEntityName );
-					}
-				}
-			}
-			else if ( type.isComponentType() && value != null ) {
-				// Support recursive checks of composite type properties for associations and collections.
-				CompositeType compositeType = (CompositeType) type;
-				final SharedSessionContractImplementor session = action.getSession();
-				Object[] componentValues = compositeType.getPropertyValues( value, session );
-				for ( int j = 0; j < componentValues.length; ++j ) {
-					Type componentValueType = compositeType.getSubtypes()[j];
-					Object componentValue = componentValues[j];
-					addParentChildEntityNameByPropertyAndValue( action, batchIdentifier, componentValueType, componentValue );
-				}
-			}
+//			if ( type.isEntityType() && value != null ) {
+//				final EntityType entityType = (EntityType) type;
+//				final String entityName = entityType.getName();
+//				final String rootEntityName = action.getSession().getFactory().getMetamodel().entityPersister( entityName ).getRootEntityName();
+//
+//				if ( entityType.isOneToOne() && OneToOneType.class.cast( entityType ).getForeignKeyDirection() == ForeignKeyDirection.TO_PARENT ) {
+//					if ( !entityType.isReferenceToPrimaryKey() ) {
+//						batchIdentifier.getChildEntityNames().add( entityName );
+//					}
+//					if ( !rootEntityName.equals( entityName ) ) {
+//						batchIdentifier.getChildEntityNames().add( rootEntityName );
+//					}
+//				}
+//				else {
+//					batchIdentifier.getParentEntityNames().add( entityName );
+//					if ( !rootEntityName.equals( entityName ) ) {
+//						batchIdentifier.getParentEntityNames().add( rootEntityName );
+//					}
+//				}
+//			}
+//			else if ( type.isCollectionType() && value != null ) {
+//				CollectionType collectionType = (CollectionType) type;
+//				final SessionFactoryImplementor sessionFactory = ( (SessionImplementor) action.getSession() )
+//						.getSessionFactory();
+//				if ( collectionType.getElementType( sessionFactory ).isEntityType() ) {
+//					String entityName = collectionType.getAssociatedEntityName( sessionFactory );
+//					String rootEntityName = action.getSession().getFactory().getMetamodel().entityPersister( entityName ).getRootEntityName();
+//					batchIdentifier.getChildEntityNames().add( entityName );
+//					if ( !rootEntityName.equals( entityName ) ) {
+//						batchIdentifier.getChildEntityNames().add( rootEntityName );
+//					}
+//				}
+//			}
+//			else if ( type.isComponentType() && value != null ) {
+//				// Support recursive checks of composite type properties for associations and collections.
+//				CompositeType compositeType = (CompositeType) type;
+//				final SharedSessionContractImplementor session = action.getSession();
+//				Object[] componentValues = compositeType.getPropertyValues( value, session );
+//				for ( int j = 0; j < componentValues.length; ++j ) {
+//					Type componentValueType = compositeType.getSubtypes()[j];
+//					Object componentValue = componentValues[j];
+//					addParentChildEntityNameByPropertyAndValue( action, batchIdentifier, componentValueType, componentValue );
+//				}
+//			}
 		}
 
 		private void addToBatch(BatchIdentifier batchIdentifier, AbstractEntityInsertAction action) {

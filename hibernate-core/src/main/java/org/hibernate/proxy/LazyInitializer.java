@@ -6,8 +6,6 @@
  */
 package org.hibernate.proxy;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -30,14 +28,14 @@ public interface LazyInitializer {
 	 *
 	 * @return The identifier value.
 	 */
-	Serializable getIdentifier();
+	Object getIdentifier();
 
 	/**
 	 * Set the identifier value for the entity our owning proxy represents.
 	 *
 	 * @param id The identifier value.
 	 */
-	void setIdentifier(Serializable id);
+	void setIdentifier(Object id);
 
 	/**
 	 * The entity-name of the entity our owning proxy represents.

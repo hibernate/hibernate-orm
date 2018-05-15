@@ -62,7 +62,6 @@ public interface JdbcSessionOwner {
 
 	/**
 	 * Get the Session-level JDBC batch size.
-	 * @return Session-level JDBC batch size
 	 *
 	 * @since 5.2
 	 */

@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping" package="org.hibernate.test.entitymode.dom4j">
+    <class name="Car" table="Car">
+        <cache usage="nonstrict-read-write" region="org.hibernate.test.entitymode.dom4j.Car"/>
+        <id name="id" column="id" type="java.lang.Long">
+            <generator class="native">
+                <param name="sequence">cat_id_sequence</param>
+            </generator>
+        </id>
+        <property name="quantity" type="java.lang.Long">
+            <column name="quantity" />
+        </property>
+        <component name="component" class="Component">
+            <property name="something"/>
+            <property name="somethingElse"/>
+        </component>
+    </class>
+</hibernate-mapping>

@@ -1,0 +1,400 @@
+= Active questions and todo list for 6.0
+
+A list of work to do (and questions to be answered) with regard to ORM 6.0 and 6.x.
+
+This categorization follows the https://en.wikipedia.org/wiki/MoSCoW_method[MoSCoW] paradigm.
+
+
+== Related major Jira issues
+
+* HHH-10954 - Integrate SQM into upstream ORM
+* HHH-10873 - Type systems consolidation + org.hibernate.type refactoring
+* HHH-11263 - Improvements in boot-time model and its creation as well as processing into runtime-model
+* HHH-11356 - Adjust the 2nd-Cache SPIs to better reflect supported uses
+* HHH-11391	- Improved metadata about a basic-typed value
+* HHH-11358 - Changes to persister contracts
+* HHH-11478 - General package restructuring
+* HHH-11697 - Remove QueryTranslator and friends in preference of new SQM-based "translation"
+* HHH-10755 - Fold hiberate-envers into hibernate-core
+* HHH-11444 - Rename groupId and artifactIds
+* HHH-11782 - Update MultiTableBulkIdStrategy to work with SQM AST
+
+== General
+
+* In migration guide be sure we add a section for any "compatibility settings"
+	added as part of this release with the intention of
+* Idea for JPA boot-strapping - allow containers to pass along 2 distinct Maps
+	of integration settings.  Currently it allows passing along one Map whose
+	entries are expected to override the properties in
+	`javax.persistence.spi.PersistenceUnitInfo`.  Consider allowing  a 2nd Map
+	whose contents are to be considered default values.
+
+
+
+
+== Must
+
+Things listed as `must` are things that have to be implemented for 6.0.  We break these
+down into various unstable release categories for scheduling purposes.  Some items may be
+promoted (from Alpha2 to Alpha1 e.g.) or demoted (from Alpha1 to Alpha2 e.g.) as resources
+dictate.
+
+Once Alpha1 is released, the plan is to enter a timebox schedule for the others - most
+likely a 6-week timebox schedule.
+
+As always the "trigger" for Beta1 is (relatively) stable API.
+
+
+
+
+=== Alpha1 (actual)
+
+
+==== "Done"
+
+* Mappings
+** ManyToOne
+	*** Bidirectional
+** OneToOne _one known case broken, being fixed_
+** OneToOne
+** OneToMany
+** ManyToMany
+
+* CRUD
+** Delete
+** Update
+** Insert
+
+* Drop `Query#iterate` support
+
+* Added org.hibernate.collection.spi.CollectionSemantics (easier plugging of custom "collection types")
+
+* Parameterized ScrollableResults signature - change signature of row access methods or add new row access methods?
+
+* Pluggable, scoped registration of JavaTypeDescriptor and SqlTypeDescriptor instances
+
+* Drop old QueryTranslator and both impls
+
+* Removed legacy criteria package.
+
+
+
+==== In progress
+
+* Mappings
+** OneToMany
+** ManyToMany
+
+
+==== Notes
+
+* Bootstrapping via JPA may not work properly in  all cases.  List of cases?
+
+
+
+=== Alpha 2
+
+==== May be done already
+
+* General "literal as JDBC parameter" feature based on SQM?  I currently have
+		added this via the `org.hibernate.query.QueryLiteralRendering` enum and
+		`SessionFactoryOptions.getQueryLiteralRendering`
+* When not rendering literals as parameters:
+	** if they occur in SELECT, wrap in cast function based on Java type (?Dialect-specific?)
+	** define a better scheme for rendering these as SQL literals.  This could possibly be something
+		like the legacy `org.hibernate.query.criteria.internal.ValueHandlerFactory`.  Another option
+		(my preference), considering literals must be basic types (?allow composites?) is to define a
+		`BasicType#getLiteralRenderer` (as well as an inverse `BasicType#getLiteralConsumer`).
+
+
+
+==== Still to do
+
+* Fetching
+* Cascading
+* Batching
+
+* be sure to test bi-directional "key-many-to-one" references.  That is something LoadPlan code does a lot of
+	work to handle properly.  Need to find the test that Gail wrote for this.
+
+* Mappings
+	** Inheritance
+
+* RepresentationMode
+
+* Be sure to implement Callback handling for "subsequent actions" such as...
+	** follow-on locking
+	** join fetch conversions to subselect fetches - immediately improves our subselect fetch handling simply
+		by having a SQL AST so we can know what to build the "subselect" based on - no more bug-prone String manip.
+
+* dynamic-instantiations selecting an entity reference as a ctor argument - we will change to interpret this
+	as (1) fully select (no implicit fetching) that entity and (2) look for constructors with arguments
+	of the same castable type as the entity; for the short term we will have a backwards compatability flag for the
+	old behavior, but using it should log a "deprecation warning".
+
+* Finish removing `#fromString` and `#toString` impls from various `BasicJavaDescriptor` impls and
+	(use the default impl) move handling of String-based conversions into `#wrap` and `#unwrap`.
+	Tedious task, so adding a todo note here - bu partially done.
+
+* Change how we handle boolean/Boolean types in terms of JavaTypeDescriptor, specifically how we convert them
+	to/from their representation in the database (most databases do not support a boolean data type) such as
+	1/0, 'T'/'F', 'Y'/'N', etc.  The initial design plan is to leverage AttributeConverter (see
+	`org.hibernate.metamodel.model.convert.spi.BasicValueConverter`) on the Navigable for this purpose:
+		** If the user has attached an AttributeConverter to the attribute we'd simply use that
+		** Otherwise, we'd look to a config setting that tells us the true/false storage values
+		** Finally we'd ask the Dialect
+
+* Evaluate adding any "proprietary" Criteria Restrictions, etc (`org.hibernate.query.criteria.HibernateCriteriaBuilder`)
+
+* Re-enable other project modules (`hibernate-osgi`, `hibernate-spatial`, etc)
+
+
+
+=== Beta1
+
+* Find deprecations and evaluate for removal.  This should not be done in an Alpha in order to make it easier for early
+ 	adopters to try out the release using as much of their 5-based code as possible.  Should be done in the first
+ 	Beta however.  See both `@Deprecated` and `@Remove`
+
+* Find incubations and evaluate for promotion
+
+* Remove the Javassist bytecode provider (Byte Buddy was already made the default in Alpha1)
+
+* Add back tests (src/main/test2)
+
+
+
+=== CR/Final
+
+* Make sure we have added `@since 6.0` to all major API/SPI contracts we have added in 6.0 dev.  Also,
+ 	add `@Incubating` to those where appropriate.  ? - Is it valid to apply the `@Incubating` annotation
+ 	at the package level?
+* Address all `todo (6.0)` comments
+
+
+
+
+
+
+
+
+
+== Should
+
+`Should` indicates items that should get done for 6.0.  Again, some may get pushed to a future
+6.x release as resources dictate.  As we move along development for 6.0, these items will get
+scheduled appropriately.
+
+* Support for using anonymous call blocks as `org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy`
+
+* Move `org.hibernate.secure` to `org.hibernate.resource.jacc`? - https://hibernate.atlassian.net/browse/HHH-11478
+
+* Move `org.hibernate.jmx` to `org.hibernate.resource.jmx`? - https://hibernate.atlassian.net/browse/HHH-11478
+
+* Remove HQLQueryPlan and current QueryPlanCache - see `org.hibernate.query.spi.SelectQueryPlan`
+	and `org.hibernate.query.spi.QueryInterpretations`.  Determine what to do with
+	`org.hibernate.engine.query.spi.NativeSQLQueryPlan`.
+
+* Another literal related idea is to simply not render them into the SQL but instead transfer them directly to
+	the currentJdbcValues array.  That obviously only matters when literals are used in the SELECT.  Could do
+	similar for parameters in SELECT
+
+* Remove `org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport`.  Since we already baseline on Java 8, there is
+	no need for the reflection anymore
+
+* Redesign `org.hibernate.cache.spi.entry.CacheEntryStructure` and friends (with better names) and make more
+ 	efficient.  At the moment, to cache, we:
+.. Create a "cache entry" (object creation)
+.. "structure" the "cache entry" (object creation)
+.. add "structured data" to the cache.
++
+--
+Would be more efficient to combine (a) and (b).  Both are controlled by the persister anyway
+--
+* Handle `org.hibernate.query.QueryParameter#allowsMultiValuedBinding` for criteria queries
+* While building Metadata during bootstrap, it is important to minimize Class loading - at least on the
+	application ClassLoader (we can always safely load things on the "JPA temp ClassLoader").  To that end,
+	the general process for determining the type of an attribute should be something like:
+	** (Create HCANN such that it prefers the JPA temp ClassLoader if available.  See
+		`BootstrapContextImpl#generateHcannClassLoaderDelegate`)
+	** When we get an XProperty from HCANN check it for any of the annotations that indicate that this is a
+		non-basic and non-embedded attribute.  The reason we check is that JPA says that any attribute
+		not otherwise annotated is considered a basic attribute; however Hibernate does allow this for embedded
+		as well - the Embeddable Class should not be loaded either.
+	** If the attribute is deemed to be Basic then build the SimpleValue and pass in the "SiteContext"
+		encompassing the XProperty.
+			*** At this point it is safe to load the Class of the `XClass` from `XProperty#getType` at any
+				time we need.
+			*** Specifically, we would need this eventually to resolve the `JavaTypeDescriptor`, but again,
+				we should delay this because later-known additional info could adjust the `JavaTypeDescriptor`
+				we want to use.  Or is this all relative to the "SiteContext" and any information already
+				known (config values, e.g.)?
+			*** See if the SiteContext indicates a particular `SqlTypeDescriptor`.  If so, use it.  If not,
+				ask the `JavaTypeDescriptor` for its `#getJdbcRecommendedSqlType` and use that.
+			*** and so on..
+
+== Could
+
+These are things that could be done, and that might happen in 6.0 or it maye happen in 6.x.  We just are
+not sure yet.
+
+* Do we want to expose some form of Returns from Query objects as a sort of "result metadata"?  This would play
+	the same role that Query returning Type does now (but Type is too limiting hence its removal)
+* Allow "Java ServiceLoader" lookups to find contributors
+* Drop support for loading an entity by passing the instance to populate ("optional entity instance" et al)
+
+
+== Won't have ()
+
+These are things we fully expect to not be in 6.0, alpha or otherwise, but that we want to implement.  They
+might be done in 6.0 (again if resources allow), in 6.x or some `> 6` release.
+
+* Session#stream API - accepts entity to stream, operations on the stream get translated to SQL up until a forEach etc call
+* Consider splitting AST visitors/listeners into smaller pieces.  Good article on the subject -> http://jakubdziworski.github.io/java/2016/04/01/antlr_visitor_vs_listener.html
+* Consider a common "model walker" useable for `org.hibernate.mapping` model as well as `org.hibernate.persister` via
+	visitation contracts implemented in the tree + an external visitor.  This would also fit with users being able to
+	do walk model using a custom visitor.  Not sure this is feasible or even desirable.
+* `org.hibernate.tuple.ValueGenerator` currently only works with temporal values.  We need to extend that
+	to also work with numeric values (for full "version" coverage).  Add a `#seed` method with a default
+	impl (Java 8 ftw!) that simply call `#next`.  *This affects legacy uses of things like `DbTimestampValue`*
+
+
+== Open questions
+
+Unresolved/undecided design questions.
+
+* See notes in `org.hibernate.metamodel.model.domain.spi.Navigable` and
+	`org.hibernate.sql.results.spi.QueryResultProducer` regarding the current improper mixing of
+	SQM and SQL AST concepts.
+
+* Are we continuing to support mapping entities which do not maintain their id as an entity attribute?
+* Move some methods from `EntityDescriptor` to more appropriate place:
+	** methods relating to identifier (`#getIdentifier`, etc) ought to move to `EntityIdentifier`
+	** methods relating to version (`#getVersion`, `#getCurrentVersion`, etc) ought to move to `VersionDescriptor`
+	** methods relating to natural-id ought to move to `NaturalIdDescriptor`
+* Move methods relating to the entity identifier from EntityDescriptor
+* Should a natural-id be considered mutable/immutable based on mutability of its included attributes?
+		ATM we rely on a specific configuration (`@org.hibernate.annotations.NaturalId#mutable`),
+		but couldn't this be simplified to just look at the mutability of the attributes making up the
+		natural-id?
+* Should `org.hibernate.mapping.SimpleValue` just implement `org.hibernate.type.spi.BasicTypeParameters`?
+		ATM I create an anonymous inner class, but `SimpleValue` implementing `BasicTypeParameters` would
+		save an object creation every time we need to resolve a BasicType.  This part of the design is still
+		fluid, so this may not be pertinent as we further implement this.  @andrea @chris
+* `JTD#toString(Object)`, `JTD#fromString(String)`, `BasicType#toString(Object)` and
+	`BasicType#fromString(String)` all seem worthless.  Can these just be handled via
+	 `JTD#unwrap` and `JTD#wrap`?  May be a performance impact , but really... where are these used/useful?
+	 Although WrapperOptions does come into play.
+* Should we drop `JTD#areEquals`?  That is really the same thing as `JTD#getComparator().compare() == 0`.
+ 	*Assuming JTD comparator is never used for identity-based comparison*.
+* Allow controlling "JPA strict compliance" per-query (hint)?
+* New boot-time mapping contracts based on "managed type" classifications... keep in `org.hibernate.mapping`,
+	or move to `org.hibernate.boot.model.domain`?
+* Replacement for CollectionType -> initial thought is to have a "tuplizer" for collections, e.g.
++
+--
+	/**
+	 * Encapsulates collection type specific behavior/information
+	 * <p/>
+	 * NOTE : the name "tuplizer" was chosen as this really serves
+	 * same logical purpose as the entity and component tuplizers
+	 * do entities and components respectively.
+	 */
+	interface CollectionTuplizer<C> {
+		/**
+		 * Access to the type of the collection.  This
+		 * is expected to be an interface.  Used to create
+		 * a registry against which we can resolve the
+		 * reflected attribute type.  E.g. an attribute
+		 * defined as `List` would be resolved to the
+		 * CollectionTuplizer that deals with lists
+		 */
+		Class<C> getCollectionJavaType();
+
+		/**
+		 * Create an empty instance of the collection wrapper
+		 */
+		PersistentCollection<C> create(int anticipatedSize);
+
+		/**
+		 * Wrap an existing "raw" view of the collection
+		 */
+		PersistentCollection<C> wrap(Object rawCollection);
+
+		/**
+		 * Creates the representation of this plural attribute
+		 * according to the runtime domain model view.
+		 */
+		<O> PluralPersistentAttribute<O,C,?> generatePluralAttribute();
+
+		// anything else?  element comparator, etc?
+	}
+--
+* support for Dialect "self initialization" - giving it access to information about the underlying database
+		based on which it can configure itself differently.  The idea is to help cut down on the explosion of
+		dialect classes just to handle some minor change in version X to version Y for database Z - e.g.
+		have just one OracleDialect that configures itself based on the passed DatabaseMetadata.  Something like:
++
+----
+package org.hibernate.engine.jdbc.dialect.spi;
+
+public interface DialectResolutionContext {
+	DialectResolutionInfo getDialectResolutionInfo();
+
+	ExtractedDatabaseMetaData getExtractedDatabaseMetaData();
+}
+----
++
+Dialect impls could optionally choose to define a constructor accepting this `DialectResolutionContext`
+to configure themselves.  However, we will not always have the "real" ExtractedDatabaseMetaData, e.g.
+if configured to not acquire JDBC `DatabaseMetaData` (`hibernate.temp.use_jdbc_metadata_defaults`).
+
+
+
+== Misc
+
+=== Entity-type expressions
+
+Test (and possibly implement) the combination stuff discussed on a hibernate-semantic-query repo PR
+submitted by Gunnar, as outlined in thise following comment : https://github.com/hibernate/hibernate-semantic-query/pull/3#issuecomment-145553684
+
+I've copied the gist of that PR discussion here in case we drop that no-longer-used repo...
+____
+So my idea is based on a few premises.
+
+First, the JPA spec only allows this in the WHERE clause. So these "entity type expressions" (the JPA term, section 4.6.17.5) are only allowed as a predicate. And specifically in conjunction with a limited set of predicate operators (=, <>, IN, NOT IN).
+
+The above premises come directly from the JPA spec. Another premise I have is that one of the expressions in the predicate has to be a TYPE function; all other forms really would not make sense. Bearing in mind that an "entity type expression" can be either (a) a TYPE function expression, (b) a parameter or (c) a entity-type-literal and leaving operator out of the equation for now, we'd have the following combinations:
+
+* `typeFunction` & `typeFunction`
+* `typeFunction` & `parameter`
+* `typeFunction` & `entityTypeLiteral`
+* `parameter` & `entityTypeLiteral`
+
+I argue that the last one makes no sense to allow. We can debate this one. But it is an important premise to the idea to recognize these expressions syntactically. Why? Because notice how, if we strip away the last combination, all the remaining combinations have at least one typeFunction expression. That would allow us to set up a special branch in the predicate rule to recognize this.
+
+Why is this such an important distinction (syntactic versus semantic)? In a word, performance. Specifically here: time, speed. The approach you took (validating each token text as an entity name) is valid, and it works. But you have to realize that every token/context we ask Antlr to evaluate as an expression will now involve a call to check whether the thing is an entity (so a series of method calls and eventually at least 2 Map lookups); for every possible thing that could evaluate as an expression.
+
+What is better, generally speaking, is to recognize that an expression should be an entity-type-expression based on syntax. The should be is important. Because now we move into syntactic analysis and semantic validation. So if during parsing we are able to recognize that this expression should be an entityTypeExpression, we can later validate that it is as we walk the parse tree. That will be a much more efficient check, because its limited.
+____
+
+A related discussion Andrea and I had regards possibly allowing a query to select the entity-type.  E.g.
+
+----
+select type(p) from Person p
+----
+
+Again, this is beyond what the JPA spec defines as supported so we don't have to support this.  But its doable,
+but I am not sure it is "usable".  If we do end up supporting this, the best "result type" is the Class although
+I am not sure how that would work with non-POJO models.
+
+
+== People to thank
+
+* Andrea
+* Chris
+* Gail
+* Vlad
+* Christian
+* Perf team
+* community

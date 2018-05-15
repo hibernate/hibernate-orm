@@ -6,9 +6,10 @@
  */
 package org.hibernate.mapping;
 
+import org.hibernate.boot.model.domain.JavaTypeMapping;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.type.CollectionType;
+import org.hibernate.collection.internal.StandardBagSemantics;
+import org.hibernate.collection.spi.CollectionSemantics;
 
 /**
  * A bag permits duplicates, so it has no primary key
@@ -16,23 +17,15 @@ import org.hibernate.type.CollectionType;
  * @author Gavin King
  */
 public class Bag extends Collection {
-
-	/**
-	 * @deprecated Use {@link Bag#Bag(MetadataBuildingContext, PersistentClass)} instead.
-	 */
-	@Deprecated
-	public Bag(MetadataImplementor metadata, PersistentClass owner) {
-		super( metadata, owner );
-	}
+	private final CollectionJavaTypeMapping javaTypeMapping;
 
 	public Bag(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
-	}
 
-	public CollectionType getDefaultCollectionType() {
-		return getMetadata().getTypeResolver()
-				.getTypeFactory()
-				.bag( getRole(), getReferencedPropertyName() );
+		javaTypeMapping = new CollectionJavaTypeMapping(
+				buildingContext.getBootstrapContext().getTypeConfiguration(),
+				java.util.Collection.class
+		);
 	}
 
 	void createPrimaryKey() {
@@ -41,5 +34,16 @@ public class Bag extends Collection {
 
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public CollectionSemantics getCollectionSemantics() {
+		return StandardBagSemantics.INSTANCE;
+	}
+
+	@Override
+	public JavaTypeMapping getJavaTypeMapping() {
+		return javaTypeMapping;
 	}
 }

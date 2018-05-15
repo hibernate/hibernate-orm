@@ -1,0 +1,993 @@
+= Design Guide
+:toc:
+
+== General Design
+
+The primary goal for 6.0 is to make performance improvements at the JDBC interaction level in the form of optimizing:
+
+* the SQL that gets generated - queries that are smaller which makes them quicker across wire, easier for db to
+ 	parse and execute.
+* optimizing the processing of ResultSets.  This comes down to:
+	** positional access to JDBC results - much quicker for most drivers since they tend to hold these values
+		in arrays and the positional access is generally direct array access whereas name access generally
+		goes through an intermediate Map-style lookup (typically name->position, plus the positional array access)
+	** JDBC "columns" (physical or formula):
+		*** condense multiple references to a single reference in the generated SQL - (specific references of
+			a particular bound column in the persister Navigable model).  An example would be an entity that maps
+			more than one attribute to a given column; for each of those attributes we wil generate just a single reference
+			to that column in the SQL SELECT.  E.g. the PERSON table might have a FIRST_NAME column that the Person
+			entity map multiple attributes for some reason.  When we generate the SQL SELECT we understand that fact
+			and generate just the one "column" reference (P.FIRST_NAME) in the SELECT clause.  Each attribute
+			understands where to get that underlying JDBC value positionally.
+		*** accessed only once per row - all of the JDBC ResultSet values are read just a single time and then
+			held in a "current JDBC values array" as part of processing state via position - much more efficient.
+
+A "hopeful" goal was to centralize the generation of SQL into a single, consistent "engine" and a single, consistent handling
+of results.
+
+Ultimately the idea here is to redefine how Hibernate generates and executes SQL, in general related to
+
+	* HQL
+	* Criteria
+	* ProcedureCall / StoredProcedureQuery
+	* load-by-single-id
+	* load-by-natural-id
+	* load-by-uk
+	* load-by-multi-id
+	* locker
+	* batch load/fetch
+	* subselect (load/) fetch (only fetch prior to 6.0)
+
+(plus updates/deletes/inserts corresponding to normal PC state)
+
+In versions of Hibernate prior to 6.0 there were multiple sources for generating the SQL and multiple
+sources for executing the SQL and processing any results largely based on inheritance from `Loader`.  But each
+Loader impl ends up being significantly different.
+
+The design idea here is to use delegation rather than inheritance.
+
+
+[#jdbc-operation]
+== JdbcOperation
+
+`org.hibernate.sql.exec.spi.JdbcOperation` and its sub-types represent, naturally, an operation to be
+performed against the database via JDBC.  The main source of these JdbcOperations is from processing (walking)
+a SQL AST (see below).  Each operation sub-type also defines a corresponding executor that understands how
+to coordinate the execution of the particular type of operation being performed.  The specific operation
+types and their corresponding executors are as follows:
+
+_Those in italics are not yet defined_
+
+=== `JdbcSelect`
+	-> `JdbcSelectExecutor`
+
+=== `JdbcMutation`
+	-> `JdbcMutationExecutor`
+
+==== `JdbcUpdate`
+
+==== _JdbcDelete_
+
+==== _JdbcInsert_
+
+==== `JdbcInsertSelect`
+
+=== `JdbcAnonCall`
+
+=== `JdbcCall`
+ 	-> _JdbcCallExecutor_
+
+
+Generally speaking, a `JdbcOperation` is created from a SQL AST, except for NativeQuery and ProcedureCall handling.
+
+
+[#jdbc-operation-sources]
+== JdbcOperation sources
+
+We mentioned up front the different sources for which Hibernate generating SELECT queries
+and processing ResultSets.  Roughly these boil down to SQM and queries Hibernate itself generates.
+
+=== SQL AST
+
+See <<sql-ast-sources>>
+
+=== ProcedureCall/StoredProcedureQuery
+
+Discuss `ProcedureCall` interpretation to `JdbcCall`
+
+
+
+
+== SQL AST
+
+The general approach for centralizing the SQL generation, execution and (for SELECTS) processing results was
+to use an Abstract Syntax Tree (AST) representing the SQL and walking/visiting the AST to produce the SQL and
+all delegates needed to execute the JDBC operation.  The term AST is just a fancy phrase for a visitable object
+representation of a SQL query.  The overall solution here includes:
+
+ 	* The SQL AST - `org.hibernate.sql.ast.tree`
+ 	* contracts to produce this AST - `org.hibernate.sql.ast.produce`
+ 	* contracts to consume this AST - `org.hibernate.sql.ast.consume`
+
+
+Producing the SQL AST tree comes from 2 main sources:
+
+	* Queries - HQL and Criteria, as well as custom "SQM producers"
+	* Metadata-based load, remove, etc calls.
+
+
+In either case, metadata objects are responsible for generating the various "sub-trees" of the SQL AST.  It was decided
+to have descriptors (EntityDescriptor, etc) directly produce entire SQL AST trees in handling metadata-based load,
+remove, etc calls_ because:
+
+ 	* It already knows how to generate the sub-trees.
+ 	* Is more performant than generating the SQM view and then walking that SQM to produce the SQL AST.
+
+
+Producing the SQL AST is beyond the scope of this doc, but is not hard to conceptually understand...
+
+Consumption of an SQL AST is the process of ultimately executing JDBC calls as indicated by the AST.  Consumption
+of the tree is covered in detail in <<consumption>>.
+
+The following sub-sections describe the sub-parts of the SQL AST.
+
+[NOTE]
+----
+There is a 3rd source for JDBC
+----
+
+=== FromClause - Tables and Groups and Spaces (oh my)
+
+Modeling the from-clause is central to SQL (and to SQM as we will see later).  The FromClause (`org.hibernate.sql.ast.tree.spi.from.FromClause`)
+is logically contained on a QuerySpec (`org.hibernate.sql.ast.tree.spi.QuerySpec`) meant to capture the commonality between
+a top-level select and a sub-query select.  The FromClause is made up of the following parts, bottom-up:
+
+TableReference:: `org.hibernate.sql.ast.tree.spi.from.TableReference` - Models a single Table
+(`org.hibernate.metamodel.model.relational.spi.Table`) reference.
+
+TableGroup:: `org.hibernate.sql.ast.tree.spi.from.TableGroup` - Represents a related group of TableReference instances,
+generally grouped by a common Navigable reference.  E.g. The EntityTableGroup includes TableReferences for all of the
+Tables that the entity is mapped to.
+
+TableGroupJoin:: Represents a joined TableGroup along with the target of join and any predicate.
+used to represent joins between joinable Navigables.
+
+TableSpace:: Models what ANSI SQL calls a "table reference".  Easiest way to think of this is the comma separated groups
+of "from elements".  It is a grouping of a root TableGroup, and zero-or-more TableGroupJoin instances
+
+FromClause:: grouping of one or more TableSpaces.
+
+Let's look at some examples to make this more clear.  Along the way we will also look at the various contracts used
+to build these TableGroups and TableGroupJoins...
+
+[source]
+.select e from Entity e (single table)
+----
+FromClause
+    TableSpace
+        rootTableGroup=EntityTableGroup(com.acme.Entity, "e")
+            rootTableReference=TableBinding(PhysicalTable("t_entity"), "e0")
+            tableReferenceJoins={}
+        tableGroupJoins={}
+----
+
+The generation of all `TableSpace#rootTableGroup` references are handled through the
+`org.hibernate.sql.ast.produce.spi.RootTableGroupProducer` contract.  Here, e.g.,
+we'd get that root `EntityTableGroup(com.acme.Entity, "e")` reference by calling
+`EntityPersister(com.acme.Entity)#applyRootTableGroup`.
+
+
+[source]
+.select e from Entity e (root table + secondary table)
+----
+FromClause
+    TableSpace
+        rootTableGroup=EntityTableGroup(com.acme.Entity, "e")
+            rootTableReference=TableReference(PhysicalTable("t_entity"), "e0")
+            tableReferenceJoins={
+                TableReferenceJoin
+                    TableReference(PhysicalTable("t_entity_secondary"), "e1")
+                    INNER
+                    <join predicate>
+            }
+        tableGroupJoins={}
+----
+
+All the table references here are part of the root TableGroup, so they are built
+via the same `EntityPersister(com.acme.Entity)#applyRootTableGroup` we saw above.
+
+
+[source]
+.select e from Entity e (joined inheritance)
+----
+FromClause
+    TableSpace
+        rootTableGroup=EntityTableGroup(com.acme.Entity, "e")
+            rootTableReference=TableReference(PhysicalTable("t_entity"), "e0")
+            tableReferenceJoins={
+                TableReferenceJoin
+                    TableReference(PhysicalTable("t_entity_secondary"), "e1")
+                    INNER
+                    <join predicate>
+            }
+        tableGroupJoins={}
+----
+
+Built from the same `EntityPersister(com.acme.Entity)#applyRootTableGroup`
+
+
+[source]
+.select e from Entity e, SecondEntity se
+----
+FromClause
+    TableSpace
+        rootTableGroup=EntityTableGroup(com.acme.Entity, "e")
+            rootTableReference=TableReference(PhysicalTable("t_entity"), "e0")
+            tableReferenceJoins={}
+        tableGroupJoins={}
+    TableSpace
+        rootTableGroup=EntityTableGroup(com.acme.SecondEntity, "se")
+            rootTableReference=TableReference(PhysicalTable("t_second_entity"), "se0")
+            tableReferenceJoins={}
+        tableGroupJoins={}
+----
+
+[source]
+.select e from Entity e inner join SecondEntity se on ...
+----
+FromClause
+    TableSpace
+        rootTableGroup=EntityTableGroup(com.acme.Entity, "e")
+            rootTableReference=TableReference(PhysicalTable("t_entity"), "e0")
+            tableReferenceJoins={}
+        tableGroupJoins={
+            TableGroupJoin
+                EntityTableGroup(com.acme.SecondEntity, "se")
+		            rootTableReference=TableReference(PhysicalTable("t_second_entity"), "se0")
+                    INNER
+                    <join predicate>
+        }
+----
+
+
+=== Expressions
+
+Expressions are fundamental to building the other parts of the SQL AST.  Examples of `Expression` include:
+
+	* reference to part of the domain model (entity, attribute, collection-element, etc)
+	* aggregation (count, sum, min, max, etc)
+	* arithmetic operation
+	* function
+	* literal
+	* parameter
+	* case statement
+	* dynamic instantiation (although this one is special in that it can only be used in the SELECT clause)
+	* etc
+
+[NOTE]
+====
+`TableGroup` can also be used as an `Expression` via it's `TableGroup#asExpression` method.  For example,
+when we see an HQL like `select p from Person p`, the `p` in the SELECT clause actually refers to the
+`Person p` TableGroup.  While we can certain use "identification variables" in the SELECT clause at the
+conceptual level, at the implementation level Hibernate use's the `TableGroup("Person", "p")#asExpression`
+as the basis for the selection
+====
+
+
+=== SelectClause
+
+`org.hibernate.sql.ast.tree.spi.select.SelectClause` contains one or more
+`org.hibernate.sql.results.spi.SqlSelection` references.  These `SqlSelection`
+references describe a single result in the domain query.  Here is a visualization
+of the process used to produce `Selection` references:
+
+[plantuml,sql-selection-sequence,png]
+.Producing SQL AST Selections
+....
+@startuml
+skinparam handwritten true
+
+boundary "SQL AST Producer" as Producer
+
+
+participant Expression
+participant Selectable
+
+Producer -> Expression : getSelectable
+Producer <-- Expression : Selectable
+
+Producer -> Selectable : createSelection
+create Selection
+Selectable -> Selection : <<init>>
+Producer <-- Selectable: Selection
+@enduml
+....
+
+As we see above, a `Expression` acts as a factory for an appropriate `SqlSelection`.  Generally speaking an
+`Expression` is its own `Selectable` (most `Expression` impls also implement `Selectable`).  The exception
+is `NavigableReference` which is an `Expression` whose `Selectable` is its referenced `Navigable`.
+
+
+
+[#sql-ast-sources]
+== SQL AST sources
+
+=== SQM
+
+See <<sqm>>
+
+
+=== EntityDescriptor (load, update, etc)
+
+=== CollectionDescriptor (load, update, etc)
+
+
+
+
+[#sql-ast-consumption]
+== SQL AST consumption
+
+Ultimately, the consumption of the SQL AST is execution of some JDBC call.  Here we will focus on processing
+SELECT queries as they are the most complicated due to the select-clause.  The other statement types are logically
+similar.
+
+The main actor in consuming SQL AST for a SELECT query (`org.hibernate.sql.ast.tree.spi.SelectStatement`) is
+`org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter` which consumes the `SelectStatement` and
+transforms it into a `org.hibernate.sql.exec.spi.JdbcSelect` which encapsulates:
+
+	* The SQL String
+	* List of `JdbcParameterBinder`
+	* A `
+	* List of `QueryResult` references (see <<reading-results>>)
+	* List of `SqlSelection` references (see <<reading-results>> and <<rendering>>)
+
+
+[plantuml,queryresult-sequence,png]
+.Creation of QueryResult, etal
+....
+@startuml
+note left: This is the Selection created in the earlier diagram
+Producer -> Selection : createQueryResult
+create QueryResult
+Selection -> QueryResult : <<init>>
+Producer <-- Selection : QueryResult
+@enduml
+....
+
+
+
+
+[#sql-ast-rendering]
+=== Rendering SQL String
+
+As it walks the AST it renders the SELECT portion
+
+
+This is also where the collection of `SqlSelection` references occurs.
+
+Ultimately this `SelectClause` need to be converted into a SQL SELECT statement as well as
+"readers" to read back values from the JDBC `ResultSet`.  This is the role of `SqlSelectAstToJdbcSelectConverter`:
+
+	* Rendering SQL String - `SqlSelectAstToJdbcSelectConverter` overall works on the principle of visitation,
+		specifically visiting the "nodes" of the SQL AST tree.  As the individual nodes dispatch themselves
+		to the visitor we used the specific visitor methods to render the various expressions as SQL fragments
+		into the in-flight `SqlSelectAstToJdbcSelectConverter#sqlBuffer`.
+
+
+
+[#reading-results]
+=== Reading Results
+
+=== Building "readers"
+
+There are numerous actors involved in reading back results.  They are all built by this process based
+on the `List<Return>` from `JdbcSelect` as well as the `SqlSelection` references
+associated with the selected Expression.  These `SqlSelection`s are used to later read back the JDBC
+values via the `SqlSelectionReader SqlSelection#getSqlSelectionReader` method.  The process for reading
+results is covered later.
+
+[IMPORTANT]
+====
+The process used to resolve the `SqlSelection` references given the `SqlSelectable` counterpart is
+handled through the `org.hibernate.sql.ast.produce.spi.SqlAstCreationContext` contract
+which `SqlSelectAstToJdbcSelectConverter` implements[1].  `SqlSelection` is the way we implement
+positional access to the JDBC `ReultSet`.  `SqlSelection` maintains the position at which the SQL
+selection was rendered and is the way we implement positional access to the JDBC `ResultSet` values.
+
+
+This process is also used to "unique" the `SqlSelection` references per `SqlSelectable`.  The purpose of
+this isto make sure we use the same `SqlSelection` for the same `SqlSelectable`
+no matter how many times we see it.  E.g., multiple references to the `ColumnReference` `p.name`
+will all resolve the the same `SqlSelection`.  In other words, given an HQL query like
+`select p.name, p.name from Person p` we will actually render the following SQL:
+`select p.name from person p`.  Notice the single column reference.  The HQL query will still
+return the 2 values; we will see how that works when we talk about Return objects.
+
+Combined with the positional access into the `ResultSet` this not only makes the JDBC value
+reading more performant, it also makes the SQL shorter which is better for wire transfer as well
+as DB query parsing.
+
+
+[1] See `QueryResultCreationContext#resolveSqlSelection`
+====
+
+
+
+[NOTE]
+====
+todo (6.0) : ^^ cover "intermediary" raw JDBC values array and how things move into it and are then accessed.
+
+todo (6.0) : ? - rename `Return` as `QueryResult` along with all related names?
+
+todo (6.0) : I'd like to come back and investigate leveraging the SqlSelection position when rendering order-by (and group-by?) clauses.
+ANSI SQL defines (and most DBs support) referring to a selection by position in the order-by.  For example, given a SQL
+query like `select p.id, p.name from Person p order by 1`, the interpretation would be to order the
+results by the first selection item (p.id).
+====
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+== Processing results
+
+There are quite a few actors involved in processing results and assembling the query returns.
+
+[IMPORTANT]
+====
+It is important to understand a major paradigm change in how JDBC results are processed
+in current Hibernate versions versus this 6.0 work.
+
+Prior to 6.0, all Types worked on the ResultSet directly.  To read a value from a ResultSet we'd ask the
+Type to assemble and then resolve its (or nullSafeGet for simple types) value.  This has a major drawback in
+that we cannot hydrate results from query-cache or ResultSet using the same code.
+====
+
+=== Overview
+
+
+[IMPORTANT]
+.JDBC results versus domain results
+====
+When a Query is executed or an entity is loaded, the user gets back a "domain result" - a List (typically) or Object
+of domain-level values (entities, composites, scalars, etc).  The structure of each "row" in these domain results
+is described by a `org.hibernate.sql.results.spi.QueryResult` / `org.hibernate.sql.results.spi.Fetch`
+graph
+
+To create this Query result, Hibernate executes a query via JDBC and processes the ResultSet
+to transform the JDBC results into the domain results.
+====
+
+Basically speaking, we receive "JDBC values" and transform them into domain values.
+
+
+The design here is to abstract access to the JDBC results as
+`org.hibernate.sql.results.internal.values.JdbcValues`.  We
+then have 2 implementations of this interface:
+
+`org.hibernate.sql.results.internal.values.JdbcValuesResultSetImpl`::
+	JdbcValues wrapping ResultSet access
+`org.hibernate.sql.results.internal.values.JdbcValuesCacheHit`::
+	JdbcValues wrapping cached query results
+
+This allows the same code to be used to process results from either seamlessly.  We will discuss
+`JdbcValues` in more detail later.
+
+
+
+
+=== JdbcValues, SqlSelection
+
+When processing a ResultSet, Hibernate will create (or use from cache) a number of delegates, including:
+
+`org.hibernate.sql.results.internal.values.JdbcValues`::
+	Wraps access to the ResultSet, exposing it as a collection of `Object[]` (see `JdbcValues#getCurrentRowValuesArray`).
+	Is an interface and can also represent results from the `QueryResultCache` in the same format.  Conceptually
+	either source is easily
+
+`org.hibernate.sql.results.spi.SqlSelection`::
+	Represents a single selection in the JDBC ResultSet.  Used to access values from the JdbcValues current row
+
+
+The main premise of `JdbcValuesSource` is to expose access to the values as a simple `Object[]` row.
+This is where `SqlSelection` comes back into the picture.  We already discussed how `SqlSelection` knows
+its position in the "JDBC result".  It also gives access to a `SqlSelectionReader` (via its `SqlSelectable`)
+that we can use to read values from the JDBC ResultSet (as part of JdbcValuesSourceResultSetImpl).  At
+this level of reading we are always dealing with simple basic types (single-column BasicType).  Conceptually
+think of the row in the JDBC ResultSet as a Object[] of its extracted values.  This `Object[]` is exposed
+from the `JdbcValuesSource` and ultimately exposed as `RowProcessingStateStandard#getJdbcValues` for higher-
+level readers to access.
+
+
+
+=== RowReader, QueryResultAssembler, Initializer, FetchInitializer
+
+When processing a ResultSet, Hibernate will create (or use from cache) a number of delegates.  The main ones include:
+
+`org.hibernate.sql.results.spi.RowReader`::
+	Coordinates all of the processing of each row
+
+`org.hibernate.sql.results.spi.QueryResultAssembler`::
+	responsible for assembling the actual Object to be put in the Query result
+    for a given Return
+
+`org.hibernate.sql.results.spi.Initializer`::
+	Responsible for performing all of the work that needs to happen in order for `QueryResultAssembler` to do its thing.
+	See `org.hibernate.sql.results.spi.EntityInitializer`, `org.hibernate.sql.results.spi.PluralAttributeInitializer`
+	and `org.hibernate.sql.results.spi.CompositeInitializer`
+
+FetchInitializer::
+	Specifically `org.hibernate.sql.results.internal.domain.entity.EntityFetchInitializer` and
+	`org.hibernate.sql.results.internal.domain.collection.PluralAttributeFetchInitializer`.  Same responsibilities
+	as a normal `Initializer`, plus the added responsibility of managing fetch-related activities.
+	Certain Returns (and all Fetches) require some additional work to get the value ready to be a proper
+	object query return.  This is the role of `Initializer` impls.  I wont get too in depth in these as they
+	are still under active dev/design.  But they hearken back to load-plan work as well, so the initial
+	work here follows the lead of the load-plan initializers.
+
+
+=== ResultSet handling walk-through
+
+For JdbcOperations that return ResultSet(s), the following is the general synopsis of how those
+ResultSet values are processed into domain values.
+
+At the "lowest" level we have `JdbcValues`, `RowProcessingState`, `RowReader` and `SqlSelection`.  We've
+already discussed these in the general sense, but let's look deeper at how these interact to process the
+results using an example:
+
+
+[source]
+----
+@Entity
+class Company {
+    @Id Integer id;
+    String name;
+    @ManyToOne Person ceo;
+}
+
+@Entity
+class Person {
+    @Id Integer id;
+    @Embedded Name name;
+    LocalDate dob;
+}
+
+@Embeddable
+class Name {
+    String firstName;
+    String lastName;
+}
+
+Query<Company> query = session.createQuery( "select c from Company c join fetch c.ceo" );
+----
+
+
+Here we need to execute a SQL statement that selects the joined result of Company and its CEO's Person data.  Let's say
+that this produces the following ResultSet:
+
+|===
+|COMPANY.ID|COMPANY.NAME|COMPANY.CEO|PERSON.ID|PERSON.FIRST_NAME|PERSON.LAST_NAME|PERSON.DOB
+
+|1|"Acme"|900|900|"John"|"Smith"|1900-01-01
+|2|"Spacely Sprockets"|901|901|"Cosmo"|"Spacely"|1950-01-01
+|===
+
+The first part of processing the ResultSet is to iterate each row and extract that row's "JDBC values array"
+which is an extracted `Object[]` of the current row values from the ResultSet.  Each selected column in the
+ResultSet has a corresponding `SqlSelection` that is used to extract the value and put it into the values array.
+
+[NOTE]
+====
+As discussed above, access to the ResultSet is abstracted behind `JdbcValues` which unifies reading values from
+a ResultSet or cached values...
+====
+
+
+Here, for the first row we'd end up with:
+
+|===
+|1|"Acme"|900|900|"John"|"Smith"|1900-01-01
+|===
+
+These values are read from the `JdbcValues` and pushed to the "current JDBC values array" available
+from `RowProcessingState`.  Further steps access the values from there by `SqlSelection` via
+`RowProcessingState#getJdbcValue(SqlSelection)`.
+
+
+From here, the next steps vary based on the type of thing being selected in the domain query, which
+is represented by a collection of `QueryResult` (which is a tree to represent fetches).  `QueryResult`
+produces 2 things used in this result processing: `QueryResultAssembler` and zero-or-more `Initiallizer`
+references.  `QueryResultAssembler` is simply the final step in assembling the value that is the return
+"column" in the domain query for each selection.
+
+Initializers are specific to non-scalar/non-basic state.  They coordinate all the "initialization" woork
+needed for those `QueryResultAssembler` types.
+
+Unfortunately the initializer work is not generic enough to define through `Initializer`[1].  Instead
+the specifics are handled through specific sub-types: `EntityInitializer`, `PluralAttributeInitializer`
+and `CompositeInitializer`.  In general though each Initializer performs an orchestrated series of steps:
+
+	* "hydrate" basic state
+	* resolve state
+
+EntityInitializers add an additional sequence:
+
+	* "hydrate" identifier basic state
+	* resolve identifier
+
+The term "hydrate" generally means getting a slice of the underlying values for the thing
+being initialized from the JDBC values array.
+
+In our example, we have 3 initializers in play:
+
+	* EntityInitializer for the root Company entity
+	* EntityInitializer for the fetched Company.ceo reference
+	* CompositeInitializer for the fetched Company.ceo.name reference
+
+The tree structure of the QueryResult ensures that we process these in the correct order.
+
+The very first step always is to allow the EntityInitializers to hydrate and then resolve their identifiers.  The
+Company EntityInitializer hydrates its identifier as:
+
+|=
+|1
+|=
+
+and the Company#ceo EntityInitializer hydrates its identifier as:
+
+|=
+|900
+|=
+
+This hydration always results in an `Object[]` that is effectively a "slice" or the full
+JDBC current values array.
+
+After all entity identifiers have been hydrated, each EntityInitializer is asked to resolve
+its identifier.  This incorporates instantiating the identifier representation (Integers in our example)
+and then the `EntityKey`.  Later, this EntityKey can be used to locate already processed entity instances.
+
+For entity's whose EntityKey has been found to already be loaded into the Session or
+part of the current "loading context", the additional EntityInitializer steps are by-passed
+(except for refresh, etc).
+
+The "additional steps" for the Company.ceo EntityInitializer would be to first hydrate its non-identifier
+state.  Logically, that array looks like:
+
+[source]
+----
+{
+	{
+		firstName="John",
+		lastName="Smith"
+	},
+	1900-01-01
+}
+----
+
+[IMPORTANT]
+====
+Note especially the nested array!
+====
+
+
+The "additional steps" for the Company EntityInitializer would be to first hydrate its non-identifier
+state.  Logically, that looks like:
+
+[source]
+----
+{
+    "Acme",
+    900
+}
+----
+
+
+For the Company.ceo.name CompositeInitializer, hydration logically produces:
+
+[source]
+----
+{
+	firstName="John",
+	lastName="Smith"
+}
+----
+
+
+Next, each initializer is asked to resolve its state.  This is the process of converting
+the raw hydrated state into the domain-model representation (if needed).
+
+For Company.ceo.name's CompositeInitializer that means taking the raw first and last name
+values and creating a Name instance.  For fetch initializers (such as this) it also means
+writing the Name instance into the owner's (Company.ceo's initializer) value array.
+
+[NOTE]
+====
+This last part is still TBD.  Is it the fetch initializer's responsibility to adjust
+the owner's value array or does the owner's initializer know how to get the resolved value
+from the fetch initializer (or somewhere else)?  StateArrayContributor maybe?
+====
+
+And so on...
+
+
+
+[#sqm]
+== SQM
+
+SQM is an AST (tree) representation of a query defined via HQL or Criteria
+
+[#sqm-tree]
+=== Tree
+
+==== FromClause
+
+==== Expressions
+
+===== Literals
+
+===== Functions
+
+===== NavigableReference
+
+A `Navigable` represents some part of the user's domain model - e.g., an attribute, an id, an entity, etc.
+
+A `NavigableReference` is (strangely) a reference to a `Navigable`.  Easiest to explain by way of some examples...
+
+[source]
+.Simple Example
+----
+select count(*) from Person p
+----
+
+Here we have just one `NavigableReference`, the reference to the Person entity.
+
+[source]
+.Multiple Example
+----
+select count(*) from Person p, Person p2
+----
+
+Now we have 2 `NavigableReference`s.. the `p` reference to Person and the `p2` reference.
+
+
+[source]
+.Attribute Example
+----
+select p.name from Person p
+----
+
+Here we have 2 `NavigableReference`s.. the Person reference and then the reference to it's name attribute
+
+
+==== SelectClause
+
+===== Selection
+
+
+[#sqm-sources]
+=== Sources
+
+==== HQL
+
+Discuss Antlr-based HQL-to-SQM process
+
+
+==== Criteria
+
+Discuss alternatives : pros, cons
+
+
+
+
+-- end of work ---
+rest needs to be re-worked
+
+
+
+
+
+
+
+
+== Needs re-work
+
+=== JdbcParameterBinder, ParameterBindingContext
+
+
+==== Parameters
+
+There are multiple "parts" to parameter handling...
+
+===== ParameterSpec
+
+A ParameterSpec is the specification of a query parameter (name/position, target, etc).  It represents the
+expectation(s) after parsing a query string.
+
+Consider:
+
+[source]
+----
+Query q = session.createQuery( "select p from Person p where p.name = :name" );
+----
+
+At this point the (Named)ParameterSpec for `":name"` has been parsed.   ParameterSpec allows for scenarios where the
+SQM parser was able to ascertain an "anticipatedType" for the parameters.  Here, because `Person#name` is a `StringType`
+we would anticipate `":name"` to also be a `StringType`; we will see later that ParameterBinding can adjust that.
+
+It may also be a good idea to allow for a ParameterSpec to specify a requiredType.  This would accomodate
+cases where the placement of the parameter in the query requires a certain Type to used.  *_Example of such a case?_*
+
+Proposed ParameterSpec contract:
+
+[source]
+----
+interface ParameterSpec {
+    String getName();
+    Integer getPosition();
+    Type getAnticipatedType();
+    Type getRequiredType();
+}
+----
+
+
+===== ParameterBinding
+
+ParameterBinding is the binding for a parameter.  Defined another way, it represents the value
+specified by the user for the parameter for this execution of the query.
+
+It can be thought of as the combination of a ParameterSpec, the specified value as well as some
+additional specifics like Type, TemporalType handling, etc.
+
+This part comes from the user.  Consider:
+
+[source]
+----
+Query q = session.createQuery( "from Person p where p.name = :name" );
+query.setParameter( "name", "Billy" );
+----
+
+Here, the `#setParameter` call creates the ParameterBinding.  This form would
+"pick up" the anticipated-Type from the ParameterSpec.  We'd also allow
+specifying the Type to use.
+
+I think we should limit the overloaded form of this.  I can see the following options (using
+named parameters for illustration):
+
+[source]
+----
+interface Query {
+    ...
+
+    ParameterSpec getParameterSpec(String name);
+
+    // returning this to keep API as before...
+
+    Query setParameter(String name, Object value);
+    Query setParameter(String name, Object value, Type target);
+    Query setParameter(String name, Date value, TemporalType temporalType);
+    Query setParameter(String name, Calendar value, TemporalType temporalType);
+}
+----
+
+
+Proposed ParameterBinding contract:
+
+[source]
+----
+interface ParameterBinding {
+    ParameterSpec getParameterSpec();
+
+    Object getValue();
+
+    Type getType();
+    TemporalType getTemporalType();
+}
+----
+
+
+===== ParameterBinder
+
+This is more of an esoteric concept at this point, but ultimately the idea is the binding of the
+parameter value to JDBC.  It would be best to drive the binding of parameter values from "nodes
+embedded in the query AST".  This could be a case where the implementation of ParameterSpec
+additionally implements this "binding contract" as well.
+
+
+
+
+=== Return (and Fetch)
+
+The List of Return objects on SqmSelectInterpretation represent the Object-level returns for
+the query.  Each Return in that List represents a single element in the naked Query's `Object[]` result "rows".
+
+Some `Return` implementations also implement `FetchParent` meaning that they can contain `Fetch` references.
+
+We will see these Return structures when we discuss reading results.
+
+There are a number of concrete Return implementations representing the types of things
+that can be a return in the query result:
+
+`ReturnScalar`:: a Return tha is a scalar value (anything representable as a BasicType)
+`ReturnComposite`:: a Return that is a composite/embeddable
+`ReturnEntity`:: a Return that is an entity
+`ReturnDynamicInstantiation`:: a Return that is a dyamic-instantiation
+`ReturnCollection`:: a Return that is a collection.  *This is only valid for collection-loaders.*
+
+Additionally, the following contracts are important:
+
+`CollectionReference`:: defines a reference to a collection as either a `ReturnCollection` or `FetchCollectionAttribute`.
+`EntityReference`:: defines a reference to an entity as either a `ReturnEntity` or `FetchEntityAttribute`.
+`CompositeReference`:: todo : add this..
+
+
+
+== 2nd phase - `org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter` ->
+
+`SqlAstInterpreter` takes as its input the SqmSelectInterpretation (and some other things)
+and does a number of things and is responsible for mainly 2 tasks:
+
+* Rendering the SQL String
+* Building "readers"
+
+
+=== Rendering SQL String
+
+One of the functions performed by SqlAstInterpreter is to render the SQL AST into a SQL query String.  It
+does this by walking the nodes of the SelectQuery using the visitation pattern.  Nothing to see here, move
+along... :)
+
+
+=== Building "readers"
+
+There are numerous actors involved in reading back results.  They are all built by this process based
+on the `List<Return>` from `SqmSelectInterpretation` as well as the `SqlSelection` references
+associated with the selected Expression.
+
+This will be discussed more in the section describing processing results.
+
+
+
+
+
+
+
+
+
+== 1st Phase - SqmSelectToSqlAstConverter
+
+SqmSelectToSqlAstConverter takes in a SQM query (and a few other things) and produces a `SqmSelectInterpretation`.
+The `SqmSelectInterpretation` encapsulates:
+
+* The SQL AST (syntax tree) - SelectQuery
+* a List of Return objects
+
+The SQL AST as produced by SqmSelectToSqlAstConverter is a logic SQL representation.  It has
+no Dialect specific handling.  It is still to-be-determined how to best allow Dialect specific hooks.
+
+The sections below describe these 2 pieces of SqmSelectInterpretation information.
+
+It is also important to note that SqmSelectToSqlAstConverter is responsible for applying
+an EntityGraph hint (if supplied).  It is part of
+
+
+
+See the section below
+question - does SQM incorporate entity-graphs?  seems better to have the thing that interprets SQM to apply
+entity-graphs.
+
+question - better for persister to incorporate the model descriptor?  Or for persister to simply hold
+reference to model descriptor?  The latter seems best (certainly least disruptive), however that makes querying
+MappedSuperclasses more difficult.  This really comes down to a decision of whether to model MappedSuperclass
+in the EntityPersister hierarchy.  As a follow-on to this... we should incorporate a representation of
+MappedSuperclass into the SQM domain model.  Seems that the spec does not allow querying MappedSuperclasses; verify!
+
+

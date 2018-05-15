@@ -10,9 +10,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.boot.model.TruthValue;
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.source.spi.ColumnSource;
 import org.hibernate.boot.model.source.spi.DerivedValueSource;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
@@ -23,7 +22,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.mapping.Table;
+import org.hibernate.naming.Identifier;
 
 /**
  * Centralized binding of columns and formulas.
@@ -32,7 +31,6 @@ import org.hibernate.mapping.Table;
  */
 public class RelationalObjectBinder {
 	private final Database database;
-	private final PhysicalNamingStrategy physicalNamingStrategy;
 
 	public interface ColumnNamingDelegate {
 		Identifier determineImplicitName(LocalMetadataBuildingContext context);
@@ -40,7 +38,6 @@ public class RelationalObjectBinder {
 
 	public RelationalObjectBinder(MetadataBuildingContext buildingContext) {
 		this.database = buildingContext.getMetadataCollector().getDatabase();
-		this.physicalNamingStrategy = buildingContext.getBuildingOptions().getPhysicalNamingStrategy();
 	}
 
 	public void bindColumnOrFormula(
@@ -94,7 +91,8 @@ public class RelationalObjectBinder {
 			}
 			else {
 				final DerivedValueSource formulaSource = (DerivedValueSource) relationalValueSource;
-				simpleValue.addFormula( new Formula( formulaSource.getExpression() ) );
+				final Formula formula = new Formula( formulaSource.getExpression() );
+				simpleValue.addFormula( formula );
 			}
 		}
 	}
@@ -105,10 +103,7 @@ public class RelationalObjectBinder {
 			SimpleValue simpleValue,
 			boolean areColumnsNullableByDefault,
 			ColumnNamingDelegate columnNamingDelegate) {
-		Table table = simpleValue.getTable();
-
-		final Column column = new Column();
-		column.setValue( simpleValue );
+		MappedTable table = simpleValue.getMappedTable();
 
 		// resolve column name
 		final Identifier logicalName;
@@ -119,20 +114,7 @@ public class RelationalObjectBinder {
 			logicalName = columnNamingDelegate.determineImplicitName( sourceDocument );
 		}
 
-		final Identifier physicalName = physicalNamingStrategy.toPhysicalColumnName(
-				logicalName,
-				database.getJdbcEnvironment()
-		);
-		column.setName( physicalName.render( database.getDialect() ) );
-
-		if ( table != null ) {
-			table.addColumn( column );
-			sourceDocument.getMetadataCollector().addColumnNameBinding(
-					table,
-					logicalName,
-					column
-			);
-		}
+		final Column column = new Column( logicalName, columnSource.isUnique() );
 
 		if ( columnSource.getSizeSource() != null ) {
 			// UGH!
@@ -143,28 +125,17 @@ public class RelationalObjectBinder {
 			if ( columnSource.getSizeSource().getLength() != null ) {
 				column.setLength( columnSource.getSizeSource().getLength() );
 			}
-			else {
-				column.setLength( Column.DEFAULT_LENGTH );
-			}
 
 			if ( columnSource.getSizeSource().getScale() != null ) {
 				column.setScale( columnSource.getSizeSource().getScale() );
-			}
-			else {
-				column.setScale( Column.DEFAULT_SCALE );
 			}
 
 			if ( columnSource.getSizeSource().getPrecision() != null ) {
 				column.setPrecision( columnSource.getSizeSource().getPrecision() );
 			}
-			else {
-				column.setPrecision( Column.DEFAULT_PRECISION );
-			}
 		}
 
 		column.setNullable( interpretNullability( columnSource.isNullable(), areColumnsNullableByDefault ) );
-
-		column.setUnique( columnSource.isUnique() );
 
 		column.setCheckConstraint( columnSource.getCheckCondition() );
 		column.setDefaultValue( columnSource.getDefaultValue() );
@@ -175,7 +146,14 @@ public class RelationalObjectBinder {
 		column.setCustomRead( columnSource.getReadFragment() );
 		column.setCustomWrite( columnSource.getWriteFragment() );
 
+
+		if ( table != null ) {
+			column.setTableName( table.getNameIdentifier() );
+			table.addColumn( column );
+		}
+
 		simpleValue.addColumn( column );
+
 
 		if ( table != null ) {
 			for ( String name : columnSource.getIndexConstraintNames() ) {

@@ -8,6 +8,7 @@ package org.hibernate.cfg;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -18,16 +19,16 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.JoinColumnOrFormula;
-import org.hibernate.annotations.JoinColumnsOrFormulas;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.model.naming.EntityNaming;
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.relational.MappedTable;
+import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitPrimaryKeyJoinColumnNameSource;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
-import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -38,7 +39,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 
 /**
@@ -50,7 +50,7 @@ import org.hibernate.mapping.Value;
 @SuppressWarnings("unchecked")
 public class Ejb3JoinColumn extends Ejb3Column {
 	/**
-	 * property name repated to this column
+	 * property name related to this column
 	 */
 	private String referencedColumn;
 	private String mappedBy;
@@ -90,7 +90,8 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	}
 
 	//Due to @AnnotationOverride overriding rules, I don't want the constructor to be public
-	private Ejb3JoinColumn() {
+	private Ejb3JoinColumn(MetadataBuildingContext buildingContext) {
+		super( buildingContext );
 		setMappedBy( BinderHelper.ANNOTATION_STRING_DEFAULT );
 	}
 
@@ -111,7 +112,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			String mappedBy,
 			boolean isImplicit,
 			MetadataBuildingContext buildingContext) {
-		super();
+		super( buildingContext );
 		setImplicit( isImplicit );
 		setSqlType( sqlType );
 		setLogicalColumnName( name );
@@ -122,7 +123,6 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		setExplicitTableName( secondaryTable );
 		setPropertyHolder( propertyHolder );
 		setJoins( joins );
-		setBuildingContext( buildingContext );
 		setPropertyName( BinderHelper.getRelativePath( propertyHolder, propertyName ) );
 		bind();
 		this.referencedColumn = referencedColumn;
@@ -169,10 +169,9 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			PropertyHolder propertyHolder,
 			String propertyName,
 			MetadataBuildingContext buildingContext) {
-		Ejb3JoinColumn formulaColumn = new Ejb3JoinColumn();
+		Ejb3JoinColumn formulaColumn = new Ejb3JoinColumn( buildingContext );
 		formulaColumn.setFormula( ann.value() );
 		formulaColumn.setReferencedColumn(ann.referencedColumnName());
-		formulaColumn.setBuildingContext( buildingContext );
 		formulaColumn.setPropertyHolder( propertyHolder );
 		formulaColumn.setJoins( joins );
 		formulaColumn.setPropertyName( BinderHelper.getRelativePath( propertyHolder, propertyName ) );
@@ -252,13 +251,29 @@ public class Ejb3JoinColumn extends Ejb3Column {
 								+ BinderHelper.getRelativePath( propertyHolder, propertyName )
 				);
 			}
-			Ejb3JoinColumn joinColumn = new Ejb3JoinColumn();
-			joinColumn.setBuildingContext( buildingContext );
-			joinColumn.setJoinAnnotation( ann, null );
-			if ( StringHelper.isEmpty( joinColumn.getLogicalColumnName() )
-				&& ! StringHelper.isEmpty( suffixForDefaultColumnName ) ) {
-				joinColumn.setLogicalColumnName( propertyName + suffixForDefaultColumnName );
+			Ejb3JoinColumn joinColumn = new Ejb3JoinColumn( buildingContext );
+			if ( BinderHelper.isEmptyAnnotationValue( ann.name() ) ) {
+				final String baseName;
+				if ( StringHelper.isEmpty( suffixForDefaultColumnName ) ) {
+					baseName = propertyName;
+				}
+				else {
+					baseName = propertyName + suffixForDefaultColumnName;
+				}
+
+				joinColumn.setLogicalColumnName(
+						Ejb3Column.buildLogicalName(
+								buildingContext.getMetadataCollector().getDatabase(),
+								baseName
+						)
+				);
 			}
+			else {
+				joinColumn.setLogicalColumnName(
+						buildingContext.getMetadataCollector().getDatabase().toIdentifier( ann.name() )
+				);
+			}
+			joinColumn.setJoinAnnotation( ann, null );
 			joinColumn.setJoins( joins );
 			joinColumn.setPropertyHolder( propertyHolder );
 			joinColumn.setPropertyName( BinderHelper.getRelativePath( propertyHolder, propertyName ) );
@@ -267,7 +282,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			return joinColumn;
 		}
 		else {
-			Ejb3JoinColumn joinColumn = new Ejb3JoinColumn();
+			Ejb3JoinColumn joinColumn = new Ejb3JoinColumn( buildingContext );
 			joinColumn.setMappedBy( mappedBy );
 			joinColumn.setJoins( joins );
 			joinColumn.setPropertyHolder( propertyHolder );
@@ -282,7 +297,6 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			else {
 				joinColumn.setImplicit( true );
 			}
-			joinColumn.setBuildingContext( buildingContext );
 			joinColumn.bind();
 			return joinColumn;
 		}
@@ -331,18 +345,15 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	public static Ejb3JoinColumn buildJoinColumn(
 			PrimaryKeyJoinColumn pkJoinAnn,
 			JoinColumn joinAnn,
-			Value identifier,
+			Value<?> identifier,
 			Map<String, Join> joins,
 			PropertyHolder propertyHolder,
 			MetadataBuildingContext context) {
 
 		final ObjectNameNormalizer normalizer = context.getObjectNameNormalizer();
 
-		Column col = (Column) identifier.getColumnIterator().next();
-		String defaultName = context.getMetadataCollector().getLogicalColumnName(
-				identifier.getTable(),
-				col.getQuotedName()
-		);
+		Column col = (Column) identifier.getMappedColumns().get( 0 );
+		String defaultName = col.getQuotedName();
 
 		if ( pkJoinAnn != null || joinAnn != null ) {
 			String colName;
@@ -441,7 +452,10 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	}
 
 
-
+	/**
+	 * @deprecated since 6.0, use {@link #copyReferencedStructureAndCreateDefaultJoinColumns(PersistentClass, List, SimpleValue)} instead.
+	 */
+	@Deprecated
 	public void copyReferencedStructureAndCreateDefaultJoinColumns(
 			PersistentClass referencedEntity,
 			Iterator columnIterator,
@@ -457,22 +471,35 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		setMappingColumn( null );
 	}
 
+	public void copyReferencedStructureAndCreateDefaultJoinColumns(
+			PersistentClass referencedEntity,
+			List<MappedColumn> columnIterator,
+			SimpleValue value) {
+		if ( !isNameDeferred() ) {
+			throw new AssertionFailure( "Building implicit column but the column is not implicit" );
+		}
+		columnIterator.stream().filter( Column.class::isInstance ).map( Column.class::cast ).forEach( column -> {
+			this.linkValueUsingDefaultColumnNaming( column, referencedEntity, value );
+
+		} );
+		//reset for the future
+		setMappingColumn( null );
+	}
+
 	public void linkValueUsingDefaultColumnNaming(
 			Column referencedColumn,
 			PersistentClass referencedEntity,
 			SimpleValue value) {
-		String logicalReferencedColumn = getBuildingContext().getMetadataCollector().getLogicalColumnName(
-				referencedEntity.getTable(),
-				referencedColumn.getQuotedName()
-		);
-		String columnName = buildDefaultColumnName( referencedEntity, logicalReferencedColumn );
+		final String logicalReferencedColumn = referencedColumn.getQuotedName();
+		final Identifier columnName = buildDefaultColumnName( referencedEntity, logicalReferencedColumn );
 
 		//yuk side effect on an implicit column
 		setLogicalColumnName( columnName );
 		setReferencedColumn( logicalReferencedColumn );
 		initMappingColumn(
 				columnName,
-				null, referencedColumn.getLength(),
+				null,
+				referencedColumn.getLength(),
 				referencedColumn.getPrecision(),
 				referencedColumn.getScale(),
 				getMappingColumn() != null ? getMappingColumn().isNullable() : false,
@@ -484,15 +511,14 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	}
 
 	public void addDefaultJoinColumnName(PersistentClass referencedEntity, String logicalReferencedColumn) {
-		final String columnName = buildDefaultColumnName( referencedEntity, logicalReferencedColumn );
+		final Identifier columnName = buildDefaultColumnName( referencedEntity, logicalReferencedColumn );
 		getMappingColumn().setName( columnName );
 		setLogicalColumnName( columnName );
 	}
 
-	private String buildDefaultColumnName(final PersistentClass referencedEntity, final String logicalReferencedColumn) {
+	private Identifier buildDefaultColumnName(final PersistentClass referencedEntity, final String logicalReferencedColumn) {
 		final Database database = getBuildingContext().getMetadataCollector().getDatabase();
 		final ImplicitNamingStrategy implicitNamingStrategy = getBuildingContext().getBuildingOptions().getImplicitNamingStrategy();
-		final PhysicalNamingStrategy physicalNamingStrategy = getBuildingContext().getBuildingOptions().getPhysicalNamingStrategy();
 
 		Identifier columnIdentifier;
 		boolean mappedBySide = mappedByTableName != null || mappedByPropertyName != null;
@@ -576,12 +602,12 @@ public class Ejb3JoinColumn extends Ejb3Column {
 								return null;
 							}
 
-							final PersistentClass mappedByEntityBinding = getBuildingContext().getMetadataCollector()
+							final PersistentClass mappedByEntityBinding = getBuildingContext()
+									.getMetadataCollector()
 									.getEntityBinding( mappedByEntityName );
 							final Property mappedByProperty = mappedByEntityBinding.getProperty( mappedByPropertyName );
-							final SimpleValue value = (SimpleValue) mappedByProperty.getValue();
-							final Iterator<Selectable> selectableValues = value.getColumnIterator();
-							if ( !selectableValues.hasNext() ) {
+							final List<Selectable> mappedColumns = mappedByProperty.getValue().getMappedColumns();
+							if ( mappedColumns.size() == 0 ) {
 								throw new AnnotationException(
 										String.format(
 												Locale.ENGLISH,
@@ -591,7 +617,17 @@ public class Ejb3JoinColumn extends Ejb3Column {
 										)
 								);
 							}
-							final Selectable selectable = selectableValues.next();
+							else if ( mappedColumns.size() > 1 ) {
+								throw new AnnotationException(
+										String.format(
+												Locale.ENGLISH,
+												"mapped-by [%s] defined for attribute [%s] referenced an invalid property (multiple columns)",
+												mappedByPropertyName,
+												propertyHolder.getPath()
+										)
+								);
+							}
+							final MappedColumn selectable = mappedColumns.get( 0 );
 							if ( !Column.class.isInstance( selectable ) ) {
 								throw new AnnotationException(
 										String.format(
@@ -602,16 +638,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 										)
 								);
 							}
-							if ( selectableValues.hasNext() ) {
-								throw new AnnotationException(
-										String.format(
-												Locale.ENGLISH,
-												"mapped-by [%s] defined for attribute [%s] referenced an invalid property (multiple columns)",
-												mappedByPropertyName,
-												propertyHolder.getPath()
-										)
-								);
-							}
+
 							return getBuildingContext().getMetadataCollector()
 									.getDatabase()
 									.toIdentifier( ( (Column) selectable ).getQuotedName() );
@@ -630,9 +657,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			}
 		}
 		else if ( ownerSide ) {
-			final String logicalTableName = getBuildingContext().getMetadataCollector().getLogicalTableName(
-					referencedEntity.getTable()
-			);
+			final String logicalTableName = referencedEntity.getMappedTable().getName();
 
 			final ImplicitJoinColumnNameSource.Nature implicitNamingNature;
 			if ( JPA2ElementCollection ) {
@@ -716,9 +741,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			}
 		}
 		else {
-			final Identifier logicalTableName = database.toIdentifier(
-					getBuildingContext().getMetadataCollector().getLogicalTableName( referencedEntity.getTable() )
-			);
+			final Identifier logicalTableName = referencedEntity.getMappedTable().getNameIdentifier();
 
 			// is an intra-entity hierarchy table join so copy the name by default
 			columnIdentifier = implicitNamingStrategy.determinePrimaryKeyJoinColumnName(
@@ -745,8 +768,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			}
 		}
 
-		return physicalNamingStrategy.toPhysicalColumnName( columnIdentifier, database.getJdbcEnvironment() )
-				.render( database.getJdbcEnvironment().getDialect() );
+		return columnIdentifier;
 	}
 
 	/**
@@ -755,7 +777,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	public void linkValueUsingAColumnCopy(Column column, SimpleValue value) {
 		initMappingColumn(
 				//column.getName(),
-				column.getQuotedName(),
+				column.getName(),
 				null, column.getLength(),
 				column.getPrecision(),
 				column.getScale(),
@@ -765,36 +787,6 @@ public class Ejb3JoinColumn extends Ejb3Column {
 				false //We do copy no strategy here
 		);
 		linkWithValue( value );
-	}
-
-	@Override
-	protected void addColumnBinding(SimpleValue value) {
-		if ( StringHelper.isEmpty( mappedBy ) ) {
-			// was the column explicitly quoted in the mapping/annotation
-			// TODO: in metamodel, we need to better split global quoting and explicit quoting w/ respect to logical names
-			boolean isLogicalColumnQuoted = StringHelper.isQuoted( getLogicalColumnName() );
-			
-			final ObjectNameNormalizer nameNormalizer = getBuildingContext().getObjectNameNormalizer();
-			final String logicalColumnName = nameNormalizer.normalizeIdentifierQuotingAsString( getLogicalColumnName() );
-			final String referencedColumn = nameNormalizer.normalizeIdentifierQuotingAsString( getReferencedColumn() );
-			final String unquotedLogColName = StringHelper.unquote( logicalColumnName );
-			final String unquotedRefColumn = StringHelper.unquote( referencedColumn );
-
-			String logicalCollectionColumnName = StringHelper.isNotEmpty( unquotedLogColName )
-					? unquotedLogColName
-					: getPropertyName() + '_' + unquotedRefColumn;
-			logicalCollectionColumnName = getBuildingContext().getMetadataCollector()
-					.getDatabase()
-					.getJdbcEnvironment()
-					.getIdentifierHelper()
-					.toIdentifier( logicalCollectionColumnName, isLogicalColumnQuoted )
-					.render();
-			getBuildingContext().getMetadataCollector().addColumnNameBinding(
-					value.getTable(),
-					logicalCollectionColumnName,
-					getMappingColumn()
-			);
-		}
 	}
 
 	//keep it JDK 1.4 compliant
@@ -810,11 +802,9 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			PersistentClass referencedEntity,
 			MetadataBuildingContext context) {
 		//convenient container to find whether a column is an id one or not
-		Set<Column> idColumns = new HashSet<Column>();
-		Iterator idColumnsIt = referencedEntity.getKey().getColumnIterator();
-		while ( idColumnsIt.hasNext() ) {
-			idColumns.add( (Column) idColumnsIt.next() );
-		}
+		final Set<MappedColumn> idColumns = new HashSet<>();
+		List<MappedColumn> mappedColumns = referencedEntity.getKey().getMappedColumns();
+		mappedColumns.forEach( column -> idColumns.add( column ));
 
 		boolean isFkReferencedColumnName = false;
 		boolean noReferencedColumn = true;
@@ -829,7 +819,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			try {
 				throw new MappingException(
 						"Unable to find column with logical name: "
-								+ columns[0].getReferencedColumn() + " in " + referencedEntity.getTable() + " and its related "
+								+ columns[0].getReferencedColumn() + " in " + referencedEntity.getMappedTable() + " and its related "
 								+ "supertables and secondary tables"
 				);
 			}
@@ -837,21 +827,16 @@ public class Ejb3JoinColumn extends Ejb3Column {
 				throw new RecoverableException( e.getMessage(), e );
 			}
 		}
-		Table matchingTable = columnOwner instanceof PersistentClass ?
-				( (PersistentClass) columnOwner ).getTable() :
-				( (Join) columnOwner ).getTable();
+		MappedTable matchingTable = columnOwner instanceof PersistentClass ?
+				( (PersistentClass) columnOwner ).getMappedTable() :
+				( (Join) columnOwner ).getMappedTable();
 		//check each referenced column
 		for (Ejb3JoinColumn ejb3Column : columns) {
 			String logicalReferencedColumnName = ejb3Column.getReferencedColumn();
 			if ( StringHelper.isNotEmpty( logicalReferencedColumnName ) ) {
-				String referencedColumnName;
-				try {
-					referencedColumnName = context.getMetadataCollector().getPhysicalColumnName(
-							matchingTable,
-							logicalReferencedColumnName
-					);
-				}
-				catch (MappingException me) {
+				Column referencedColumnName = (Column) matchingTable.getColumn( Identifier.toIdentifier(logicalReferencedColumnName  ) );
+				if(referencedColumnName == null){
+
 					//rewrite the exception
 					throw new MappingException(
 							"Unable to find column with logical name: "
@@ -859,7 +844,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 					);
 				}
 				noReferencedColumn = false;
-				Column refCol = new Column( referencedColumnName );
+				Column refCol = new Column( matchingTable.getNameIdentifier(),referencedColumnName.getName(), false );
 				boolean contains = idColumns.contains( refCol );
 				if ( !contains ) {
 					isFkReferencedColumnName = true;
@@ -903,23 +888,6 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		}
 	}
 
-	@Override
-	public void redefineColumnName(String columnName, String propertyName, boolean applyNamingStrategy) {
-		if ( StringHelper.isNotEmpty( columnName ) ) {
-			if ( applyNamingStrategy ) {
-				getMappingColumn().setName(
-						getBuildingContext().getBuildingOptions().getPhysicalNamingStrategy().toPhysicalColumnName(
-								getBuildingContext().getMetadataCollector().getDatabase().toIdentifier( columnName ),
-								getBuildingContext().getMetadataCollector().getDatabase().getJdbcEnvironment()
-						).render()
-				);
-			}
-			else {
-				getMappingColumn().setName( columnName );
-			}
-		}
-	}
-
 	public static Ejb3JoinColumn[] buildJoinTableJoinColumns(
 			JoinColumn[] annJoins,
 			Map<String, Join> secondaryTables,
@@ -929,12 +897,11 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			MetadataBuildingContext buildingContext) {
 		Ejb3JoinColumn[] joinColumns;
 		if ( annJoins == null ) {
-			Ejb3JoinColumn currentJoinColumn = new Ejb3JoinColumn();
+			Ejb3JoinColumn currentJoinColumn = new Ejb3JoinColumn( buildingContext );
 			currentJoinColumn.setImplicit( true );
 			currentJoinColumn.setNullable( false ); //I break the spec, but it's for good
 			currentJoinColumn.setPropertyHolder( propertyHolder );
 			currentJoinColumn.setJoins( secondaryTables );
-			currentJoinColumn.setBuildingContext( buildingContext );
 			currentJoinColumn.setPropertyName(
 					BinderHelper.getRelativePath( propertyHolder, propertyName )
 			);
@@ -952,11 +919,10 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			int length = annJoins.length;
 			for (int index = 0; index < length; index++) {
 				annJoin = annJoins[index];
-				Ejb3JoinColumn currentJoinColumn = new Ejb3JoinColumn();
+				Ejb3JoinColumn currentJoinColumn = new Ejb3JoinColumn( buildingContext );
 				currentJoinColumn.setImplicit( true );
 				currentJoinColumn.setPropertyHolder( propertyHolder );
 				currentJoinColumn.setJoins( secondaryTables );
-				currentJoinColumn.setBuildingContext( buildingContext );
 				currentJoinColumn.setPropertyName( BinderHelper.getRelativePath( propertyHolder, propertyName ) );
 				currentJoinColumn.setMappedBy( mappedBy );
 				currentJoinColumn.setJoinAnnotation( annJoin, propertyName );

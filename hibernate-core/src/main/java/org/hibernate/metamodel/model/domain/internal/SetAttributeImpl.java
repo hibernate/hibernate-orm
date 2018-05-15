@@ -8,14 +8,25 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.Set;
 
+import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.spi.AbstractPluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SetPersistentAttribute;
+import org.hibernate.property.access.spi.PropertyAccess;
 
 /**
  * @author Steve Ebersole
  */
-public class SetAttributeImpl<X, E> extends AbstractPluralAttribute<X, Set<E>, E> implements SetPersistentAttribute<X, E> {
-	public SetAttributeImpl(PluralAttributeBuilder<X, Set<E>, E, ?> xceBuilder) {
-		super( xceBuilder );
+public class SetAttributeImpl<X, E> extends AbstractPluralPersistentAttribute<X, Set<E>, E>
+		implements SetPersistentAttribute<X, E> {
+
+	public SetAttributeImpl(
+			PersistentCollectionDescriptor collectionDescriptor,
+			Property bootProperty,
+			PropertyAccess propertyAccess,
+			RuntimeModelCreationContext creationContext) {
+		super( collectionDescriptor, bootProperty, propertyAccess, creationContext );
 	}
 
 	@Override

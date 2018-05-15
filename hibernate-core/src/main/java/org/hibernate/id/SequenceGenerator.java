@@ -6,7 +6,6 @@
  */
 package org.hibernate.id;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -16,17 +15,17 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.boot.model.relational.QualifiedName;
-import org.hibernate.boot.model.relational.QualifiedNameParser;
-import org.hibernate.boot.model.relational.Sequence;
+import org.hibernate.boot.model.relational.MappedNamespace;
+import org.hibernate.boot.model.relational.MappedSequence;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.naming.spi.QualifiedName;
+import org.hibernate.naming.spi.QualifiedNameParser;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -66,10 +65,10 @@ public class SequenceGenerator
 
 	private QualifiedName logicalQualifiedSequenceName;
 	private String sequenceName;
-	private Type identifierType;
+	private JavaTypeDescriptor identifierType;
 	private String sql;
 
-	protected Type getIdentifierType() {
+	protected JavaTypeDescriptor getIdentifierType() {
 		return identifierType;
 	}
 
@@ -83,10 +82,10 @@ public class SequenceGenerator
 
 	@Override
 	@SuppressWarnings("StatementWithEmptyBody")
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+	public void configure(JavaTypeDescriptor javaTypeDescriptor, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
 		DeprecationLogger.DEPRECATION_LOGGER.deprecatedSequenceGenerator( getClass().getName() );
 
-		identifierType = type;
+		identifierType = javaTypeDescriptor;
 
 		final ObjectNameNormalizer normalizer = (ObjectNameNormalizer) params.get( IDENTIFIER_NORMALIZER );
 		logicalQualifiedSequenceName = QualifiedNameParser.INSTANCE.parse(
@@ -105,7 +104,7 @@ public class SequenceGenerator
 	}
 
 	@Override
-	public Serializable generate(SharedSessionContractImplementor session, Object obj) {
+	public Object generate(SharedSessionContractImplementor session, Object obj) {
 		return generateHolder( session ).makeValue();
 	}
 
@@ -141,7 +140,9 @@ public class SequenceGenerator
 	}
 
 	protected IntegralDataTypeHolder buildHolder() {
-		return IdentifierGeneratorHelper.getIntegralDataTypeHolder( identifierType.getReturnedClass() );
+		return IdentifierGeneratorHelper.getIntegralDataTypeHolder(
+				identifierType.getJavaType()
+		);
 	}
 
 	@Override
@@ -167,11 +168,11 @@ public class SequenceGenerator
 
 	@Override
 	public void registerExportables(Database database) {
-		final Namespace namespace = database.locateNamespace(
+		final MappedNamespace namespace = database.locateNamespace(
 				logicalQualifiedSequenceName.getCatalogName(),
 				logicalQualifiedSequenceName.getSchemaName()
 		);
-		Sequence sequence = namespace.locateSequence( logicalQualifiedSequenceName.getObjectName() );
+		MappedSequence sequence = namespace.locateSequence( logicalQualifiedSequenceName.getObjectName() );
 		if ( sequence != null ) {
 			sequence.validate( 1, 1 );
 		}
@@ -187,7 +188,7 @@ public class SequenceGenerator
 		final Dialect dialect = jdbcEnvironment.getDialect();
 
 		this.sequenceName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				sequence.getName(),
+				sequence.getLogicalName(),
 				dialect
 		);
 		this.sql = jdbcEnvironment.getDialect().getSequenceNextValString( sequenceName );

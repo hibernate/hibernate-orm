@@ -13,12 +13,16 @@ import org.hibernate.HibernateException;
 import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jpa.spi.JpaCompliance;
+import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
+import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
@@ -207,6 +211,27 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 */
 	String CDI_BEAN_MANAGER = "javax.persistence.bean.manager";
 
+	/**
+	 * Used to pass along a {@link ManagedBeanRegistry} implementation.  Can refer to:<ul>
+	 *     <li>A {@link ManagedBeanRegistry} instance</li>
+	 *     <li>A {@link ManagedBeanRegistry} implementation Class reference</li>
+	 *     <li>A {@link ManagedBeanRegistry} implementation FQN</li>
+	 *     <li>
+	 *         A recognized short name:<ul>
+	 *             <li>{@code "no-cdi"}</li>
+	 *             <li>{@code "cdi"}</li>
+	 *         </ul>
+	 *     </li>
+	 * </ul>
+	 * <p/>
+	 * For the first cases it is expected that the named Class define a ctor
+	 * accepting the {@link #CDI_BEAN_MANAGER} reference *as an
+	 * {@link Object}*.
+	 *
+	 * @see #CDI_BEAN_MANAGER
+	 */
+	String CDI_BEAN_REGISTRY = "hibernate.cdi.bean_registry";
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// BootstrapServiceRegistry level settings
@@ -264,34 +289,21 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String ENVIRONMENT_CLASSLOADER = "hibernate.classLoader.environment";
 
 	/**
-	 * @deprecated use {@link #JPA_METAMODEL_POPULATION} instead.
+	 * @deprecated use {@link #STATIC_METAMODEL_POPULATION} instead.
 	 */
 	@Deprecated
 	String JPA_METAMODEL_GENERATION = "hibernate.ejb.metamodel.generation";
 
 	/**
-	 * Setting that indicates whether to build the JPA types. Accepts
-	 * 3 values:<ul>
-	 *     <li>
-	 *         <b>enabled</b> - Do the build
-	 *     </li>
-	 *     <li>
-	 *         <b>disabled</b> - Do not so the build
-	 *     </li>
-	 *     <li>
-	 *         <b>ignoreUnsupported</b> - Do the build, but ignore any non-JPA features that would otherwise
-	 *         result in a failure.
-	 *     </li>
-	 * </ul>
-	 *
-	 *
+	 * @deprecated use {@link #STATIC_METAMODEL_POPULATION} instead.
 	 */
 	@Deprecated
 	String JPA_METAMODEL_POPULATION = "hibernate.ejb.metamodel.population";
 
 	/**
-	 * Setting that controls whether we seek out JPA "static metamodel" classes and populate them.  Accepts
-	 * 3 values:<ul>
+	 * Setting that controls whether we seek out JPA "static metamodel" classes
+	 * and populate them.  Ultimately resolves to a {@link JpaStaticMetaModelPopulationSetting}.
+	 * Recognized values include:<ul>
 	 *     <li>
 	 *         <b>enabled</b> -Do the population
 	 *     </li>
@@ -299,7 +311,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 *         <b>disabled</b> - Do not do the population
 	 *     </li>
 	 *     <li>
-	 *         <b>skipUnsupported</b> - Do the population, but ignore any non-JPA features that would otherwise
+	 *         <b>skipUnsupported</b> (the default) - Do the population, but ignore any non-JPA features that would otherwise
 	 *         result in the population failing.
 	 *     </li>
 	 * </ul>
@@ -860,17 +872,6 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String ENFORCE_LEGACY_PROXY_CLASSNAMES = "hibernate.bytecode.enforce_legacy_proxy_classnames";
 
 	/**
-	 * The classname of the HQL query parser factory
-	 */
-	String QUERY_TRANSLATOR = "hibernate.query.factory_class";
-
-	/**
-	 * A comma-separated list of token substitutions to use when translating a Hibernate
-	 * query to SQL
-	 */
-	String QUERY_SUBSTITUTIONS = "hibernate.query.substitutions";
-
-	/**
 	 * Should named queries be checked during startup (the default is enabled).
 	 * <p/>
 	 * Mainly intended for test environments.
@@ -1109,16 +1110,29 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String USE_DIRECT_REFERENCE_CACHE_ENTRIES = "hibernate.cache.use_reference_entries";
 
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Query settings
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	/**
+	 * Names the {@link QueryLiteralRendering} to use.  Can be either:<ul>
+	 *     <li>
+	 *         A QueryLiteralRendering instance
+	 *     </li>
+	 *     <li>
+	 *         An Object whose toString case-insensitively resolves to one of the QueryLiteralRendering#toExternalForm names:<ul>
+	 *             <li>literal</li>
+	 *             <li>param</li>
+	 *             <li>param-outside-select</li>
+	 *         </ul>
+	 *     </li>
+	 * </ul>
+	 */
+	String QUERY_LITERAL_RENDERING = "hibernate.query.literal_rendering";
 
 
 
 	// Still to categorize
-
-	/**
-	 * The EntityMode in which set the Session opened from the SessionFactory.
-	 */
-	String DEFAULT_ENTITY_MODE = "hibernate.default_entity_mode";
 
 	/**
 	 * Should all database identifiers be quoted.  A {@code true}/{@code false} option.
@@ -1169,19 +1183,9 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 */
 	String PREFERRED_POOLED_OPTIMIZER = "hibernate.id.optimizer.pooled.preferred";
 
-	/**
-	 * The maximum number of strong references maintained by {@link org.hibernate.engine.query.spi.QueryPlanCache}. Default is 128.
-	 * @deprecated in favor of {@link #QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE}
-	 */
-	@Deprecated
-	String QUERY_PLAN_CACHE_MAX_STRONG_REFERENCES = "hibernate.query.plan_cache_max_strong_references";
 
-	/**
-	 * The maximum number of soft references maintained by {@link org.hibernate.engine.query.spi.QueryPlanCache}. Default is 2048.
-	 * @deprecated in favor of {@link #QUERY_PLAN_CACHE_MAX_SIZE}
-	 */
-	@Deprecated
-	String QUERY_PLAN_CACHE_MAX_SOFT_REFERENCES = "hibernate.query.plan_cache_max_soft_references";
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// todo (6.0) : decide if/how to allow query plan caching
 
 	/**
 	 * The maximum number of entries including:
@@ -1200,6 +1204,9 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * by {@link org.hibernate.engine.query.spi.QueryPlanCache}. Default is 128.
 	 */
 	String QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE = "hibernate.query.plan_parameter_metadata_max_size";
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 	/**
 	 * Should we not use contextual LOB creation (aka based on {@link java.sql.Connection#createBlob()} et al).
@@ -1576,7 +1583,13 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 
 	String ENABLE_LAZY_LOAD_NO_TRANS = "hibernate.enable_lazy_load_no_trans";
 
+	/**
+	 * @deprecated Use {@link #ID_TABLE_STRATEGY} instead
+	 */
+	@Deprecated
 	String HQL_BULK_ID_STRATEGY = "hibernate.hql.bulk_id_strategy";
+
+	String ID_TABLE_STRATEGY = "hibernate.id_table_strategy";
 
 	/**
 	 * Names the {@link org.hibernate.loader.BatchFetchStyle} to use.  Can specify either the
@@ -1667,22 +1680,6 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * Defines a default {@link org.hibernate.SessionEventListener} to be applied to opened Sessions.
 	 */
 	String AUTO_SESSION_EVENTS_LISTENER = "hibernate.session.events.auto";
-
-	/**
-	 * Global setting for whether NULL parameter bindings should be passed to database
-	 * procedure/function calls as part of {@link org.hibernate.procedure.ProcedureCall}
-	 * handling.  Implicitly Hibernate will not pass the NULL, the intention being to allow
-	 * any default argument values to be applied.
-	 * <p/>
-	 * This defines a global setting, which can them be controlled per parameter via
-	 * {@link org.hibernate.procedure.ParameterRegistration#enablePassingNulls(boolean)}
-	 * <p/>
-	 * Values are {@code true} (pass the NULLs) or {@code false} (do not pass the NULLs).
-	 *
-	 * @deprecated (5.3) Hibernate determines it implicitly
-	 */
-	@Deprecated
-	String PROCEDURE_NULL_PARAM_PASSING = "hibernate.proc.param_null_passing";
 
 	/**
 	 * [EXPERIMENTAL] Enable instantiation of composite/embedded objects when all of its attribute values are {@code null}.
@@ -1815,6 +1812,19 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * @see org.hibernate.query.criteria.LiteralHandlingMode
 	 */
 	String CRITERIA_LITERAL_HANDLING_MODE = "hibernate.criteria.literal_handling_mode";
+
+	/**
+	 * Global setting for whether NULL parameter bindings should be passed to database
+	 * procedure/function calls as part of {@link org.hibernate.procedure.ProcedureCall}
+	 * handling.  Implicitly Hibernate will not pass the NULL, the intention being to allow
+	 * any default argument values to be applied.
+	 * <p/>
+	 * This defines a global setting, which can them be controlled per parameter via
+	 * {@link org.hibernate.procedure.ParameterRegistration#enablePassingNulls(boolean)}
+	 * <p/>
+	 * Values are {@code true} (pass the NULLs) or {@code false} (do not pass the NULLs).
+	 */
+	String PROCEDURE_NULL_PARAM_PASSING = "hibernate.proc.param_null_passing";
 
 	/**
 	 * True/false setting indicating whether the value specified for {@link GeneratedValue#generator()}
@@ -1992,6 +2002,62 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * @since 5.4
 	 */
 	String SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY = "hibernate.id.sequence.increment_size_mismatch_strategy";
+
+	/**
+	 * Controls the base integer for binding JDBC-style ({@code ?}) ordinal
+	 * parameters when the Hibernate SessionFactory is bootstrapped via the native
+	 * bootstrapping API.  JPA says that all non-named parameter binding is explicitly
+	 * 1-based; so when bootstrapped via JPA, Hibernate always treats these as 1-based.
+	 * <p/>
+	 * Note that this affects only ordinal parameters.  Positional
+	 * parameters (e.g. {@code ?1}) explicitly define the binding position (1) in
+	 * their declaration, whereas the binding position is implicit with ordinal
+	 * parameters based on its ordinal position in the query.  As of 6.0, support
+	 * for this ordinal parameter declaration form has been removed from HQL and
+	 * is now only valid for {@link org.hibernate.query.NativeQuery}s.
+	 * <p/>
+	 * Historically Hibernate followed JDBC conventions for ordinal parameter binding
+	 * such that the implied positions were 0-based.  This presents a mismatch between
+	 * how to bind ordinal parameters based on how the SessionFactory was bootstrapped,
+	 * which is not ideal.  This setting then seeks to allow unifying how these are
+	 * handled regardless of the bootstrap method.  The expected value of this setting
+	 * is an integer value of either 0 (the default) or 1.  The default follows the legacy
+	 * expectations and allows legacy Hibernate apps to continue to work.  Setting this
+	 * to 1 (one) allows all non-named parameter binding to be unified as 1-based.
+	 *
+	 * @since 6.0
+	 */
+	String NATIVE_QUERY_ORDINAL_PARAMETER_BASE = "hibernate.query.native.ordinal_parameter_base";
+
+	/**
+	 * Global setting name for controlling whether Hibernate should try to map
+	 * named parameter names specified in a
+	 * {@link org.hibernate.procedure.ProcedureCall} or
+	 * {@link javax.persistence.StoredProcedureQuery} to named parameters in
+	 * the JDBC {@link java.sql.CallableStatement}.
+	 *
+	 * @see SessionFactoryOptions#isUseOfJdbcNamedParametersEnabled()
+	 *
+	 * @since 6.0
+	 */
+	String CALLABLE_NAMED_PARAMS_ENABLED = "hibernate.query.proc.callable_named_params_enabled";
+
+	/**
+	 * The classname of the HQL query parser factory
+	 */
+	String QUERY_TRANSLATOR = "hibernate.query.factory_class";
+
+	/**
+	 * A comma-separated list of token substitutions to use when translating a Hibernate
+	 * query to SQL
+	 */
+	String QUERY_SUBSTITUTIONS = "hibernate.query.substitutions";
+
+	/**
+	 * Global setting identifying the preferred JDBC type code for storing
+	 * boolean values.  The fallback is to ask the Dialect
+	 */
+	String PREFERRED_BOOLEAN_JDBC_TYPE_CODE = "hibernate.type.perferred_boolean_jdbc_type_code";
 
 	/**
 	 * This setting controls whether the default behavior for delayed identity inserts is disabled.

@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.event.spi;
 
-import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
 
 /**
  * Contract for walking an entity hierarchy and building a list of JPA callbacks
@@ -30,10 +30,12 @@ public interface CallbackBuilder {
 
 	void buildCallbacksForEntity(String entityClassName, CallbackRegistrar callbackRegistrar);
 
-	void buildCallbacksForEmbeddable(
-			Property embeddableProperty,
+	default void buildCallbacksForEmbeddable(
+			SingularPersistentAttributeEmbedded embeddableAttribute,
 			String entityClassName,
-			CallbackRegistrar callbackRegistrar);
+			CallbackRegistrar callbackRegistrar) {
+		buildCallbacksForEmbeddable( embeddableAttribute, entityClassName, callbackRegistrar );
+	}
 
 	void release();
 }

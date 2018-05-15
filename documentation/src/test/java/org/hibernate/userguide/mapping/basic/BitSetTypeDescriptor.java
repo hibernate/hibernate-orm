@@ -2,14 +2,16 @@ package org.hibernate.userguide.mapping.basic;
 
 import java.util.BitSet;
 
-import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
+import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
+import org.hibernate.type.descriptor.spi.WrapperOptions;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * @author Vlad Mihalcea
  */
 //tag::basic-custom-type-BitSetTypeDescriptor-example[]
-public class BitSetTypeDescriptor extends AbstractTypeDescriptor<BitSet> {
+public class BitSetTypeDescriptor extends AbstractBasicJavaDescriptor<BitSet> {
 
     private static final String DELIMITER = ",";
 
@@ -43,6 +45,12 @@ public class BitSetTypeDescriptor extends AbstractTypeDescriptor<BitSet> {
             values[i] = Long.valueOf( tokens[i], 2 );
         }
         return BitSet.valueOf( values );
+    }
+
+    @Override
+    public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
+        // none
+        return null;
     }
 
     @SuppressWarnings({"unchecked"})

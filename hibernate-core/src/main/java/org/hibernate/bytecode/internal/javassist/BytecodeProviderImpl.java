@@ -16,6 +16,7 @@ import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -40,7 +41,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			Class clazz,
 			String[] getterNames,
 			String[] setterNames,
-			Class[] types) {
+			JavaTypeDescriptor[] types) {
 		FastClass fastClass;
 		BulkAccessor bulkAccessor;
 		try {

@@ -20,6 +20,7 @@ import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.ServiceRegistry;
@@ -63,40 +64,56 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 	}
 
 	@Override
-	public SchemaCreator getSchemaCreator(Map options) {
-		return new SchemaCreatorImpl( this, getSchemaFilterProvider( options ).getCreateFilter() );
+	public SchemaCreator getSchemaCreator(DatabaseModel databaseModel, Map options) {
+		return new SchemaCreatorImpl( this, databaseModel, getSchemaFilterProvider( options ).getCreateFilter() );
 	}
 
 	@Override
-	public SchemaDropper getSchemaDropper(Map options) {
-		return new SchemaDropperImpl( this, getSchemaFilterProvider( options ).getDropFilter() );
+	public SchemaDropper getSchemaDropper(DatabaseModel databaseModel, Map options) {
+		return new SchemaDropperImpl( this, databaseModel, getSchemaFilterProvider( options ).getDropFilter() );
 	}
 
 	@Override
-	public SchemaMigrator getSchemaMigrator(Map options) {
+	public SchemaMigrator getSchemaMigrator(DatabaseModel databaseModel, Map options) {
 		if ( determineJdbcMetadaAccessStrategy( options ) == JdbcMetadaAccessStrategy.GROUPED ) {
-			return new GroupedSchemaMigratorImpl( this, getSchemaFilterProvider( options ).getMigrateFilter() );
+			return new GroupedSchemaMigratorImpl(
+					this,
+					databaseModel,
+					getSchemaFilterProvider( options ).getMigrateFilter()
+			);
 		}
 		else {
-			return new IndividuallySchemaMigratorImpl( this, getSchemaFilterProvider( options ).getMigrateFilter() );
+			return new IndividuallySchemaMigratorImpl(
+					this,
+					databaseModel,
+					getSchemaFilterProvider( options ).getMigrateFilter()
+			);
 		}
 	}
 
 	@Override
-	public SchemaValidator getSchemaValidator(Map options) {
+	public SchemaValidator getSchemaValidator(DatabaseModel databaseModel, Map options) {
 		if ( determineJdbcMetadaAccessStrategy( options ) == JdbcMetadaAccessStrategy.GROUPED ) {
-			return new GroupedSchemaValidatorImpl( this, getSchemaFilterProvider( options ).getValidateFilter() );
+			return new GroupedSchemaValidatorImpl(
+					this,
+					databaseModel,
+					getSchemaFilterProvider( options ).getValidateFilter()
+			);
 		}
 		else {
-			return new IndividuallySchemaValidatorImpl( this, getSchemaFilterProvider( options ).getValidateFilter() );
+			return new IndividuallySchemaValidatorImpl(
+					this,
+					databaseModel,
+					getSchemaFilterProvider( options ).getValidateFilter()
+			);
 		}
 	}
-	
+
 	private SchemaFilterProvider getSchemaFilterProvider(Map options) {
-		final Object configuredOption = (options == null)
+		final Object configuredOption = ( options == null )
 				? null
 				: options.get( AvailableSettings.HBM2DDL_FILTER_PROVIDER );
-		return serviceRegistry.getService( StrategySelector.class ).resolveDefaultableStrategy(
+		return serviceRegistry.getService( StrategySelector.class ).resolveStrategy(
 				SchemaFilterProvider.class,
 				configuredOption,
 				DefaultSchemaFilterProvider.INSTANCE
@@ -114,7 +131,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 			boolean needsAutoCommit) {
 		final String scriptDelimiter = ConfigurationHelper.getString( HBM2DDL_DELIMITER, options );
 
-		final GenerationTarget[] targets = new GenerationTarget[ targetDescriptor.getTargetTypes().size() ];
+		final GenerationTarget[] targets = new GenerationTarget[targetDescriptor.getTargetTypes().size()];
 
 		int index = 0;
 
@@ -144,7 +161,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 			Map options) {
 		final String scriptDelimiter = ConfigurationHelper.getString( HBM2DDL_DELIMITER, options );
 
-		final GenerationTarget[] targets = new GenerationTarget[ targetDescriptor.getTargetTypes().size() ];
+		final GenerationTarget[] targets = new GenerationTarget[targetDescriptor.getTargetTypes().size()];
 
 		int index = 0;
 
@@ -172,7 +189,8 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		if ( jdbcContext.getJdbcConnectionAccess() instanceof JdbcConnectionAccessProvidedConnectionImpl ) {
 			return new DdlTransactionIsolatorProvidedConnectionImpl( jdbcContext );
 		}
-		return serviceRegistry.getService( TransactionCoordinatorBuilder.class ).buildDdlTransactionIsolator( jdbcContext );
+		return serviceRegistry.getService( TransactionCoordinatorBuilder.class ).buildDdlTransactionIsolator(
+				jdbcContext );
 	}
 
 	public JdbcContext resolveJdbcContext(Map configurationValues) {
@@ -267,7 +285,13 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		}
 
 		public JdbcContext buildJdbcContext() {
-			return new JdbcContextImpl( jdbcConnectionAccess, dialect, sqlStatementLogger, sqlExceptionHelper, serviceRegistry );
+			return new JdbcContextImpl(
+					jdbcConnectionAccess,
+					dialect,
+					sqlStatementLogger,
+					sqlExceptionHelper,
+					serviceRegistry
+			);
 		}
 	}
 

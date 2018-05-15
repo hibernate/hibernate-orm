@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="WINDOWS-1251"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+
+	<class
+		name="org.hibernate.envers.test.integration.onetomany.inverseToSuperclass.Master"
+		table="HIB_MASTER_ENTITY">
+
+		<id name="id" column="ID" type="long">
+			<generator class="increment" />
+		</id>
+
+		<property name="str" column="STR" />
+
+		<bag name="items" lazy="true" cascade="all" access="property"
+			inverse="true">
+			<key column="ID_MASTER" />
+			<one-to-many
+				class="org.hibernate.envers.test.integration.onetomany.inverseToSuperclass.DetailSubclass2" />
+		</bag>
+	</class>
+
+
+	<class
+		name="org.hibernate.envers.test.integration.onetomany.inverseToSuperclass.DetailSuperclass"
+		table="HIB_DETAIL_ENTITY" abstract="true">
+		<id name="id" column="ID" type="long">
+			<generator class="increment" />
+		</id>
+		<discriminator column="DISCRIMINATOR" type="string" />
+
+		<many-to-one name="parent" column="ID_MASTER" 
+			class="org.hibernate.envers.test.integration.onetomany.inverseToSuperclass.Master" />
+
+		<subclass
+			name="org.hibernate.envers.test.integration.onetomany.inverseToSuperclass.DetailSubclass"
+			discriminator-value="SUB">
+			<property name="str2" column="STR2" />
+
+			<subclass
+				name="org.hibernate.envers.test.integration.onetomany.inverseToSuperclass.DetailSubclass2"
+				discriminator-value="SUB2" extends="org.hibernate.envers.test.integration.onetomany.inverseToSuperclass.DetailSubclass">
+				<property name="str3" column="STR3" />
+	
+			</subclass>
+
+		</subclass>
+	</class>
+
+
+</hibernate-mapping>

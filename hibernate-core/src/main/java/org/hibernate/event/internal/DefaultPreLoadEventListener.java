@@ -8,7 +8,7 @@ package org.hibernate.event.internal;
 
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 
 /**
  * Called before injecting property values into a newly
@@ -17,17 +17,17 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Gavin King
  */
 public class DefaultPreLoadEventListener implements PreLoadEventListener {
-	
+
 	public void onPreLoad(PreLoadEvent event) {
-		EntityPersister persister = event.getPersister();
+		EntityTypeDescriptor descriptor = event.getDescriptor();
 		event.getSession()
-			.getInterceptor()
-			.onLoad( 
-					event.getEntity(), 
-					event.getId(), 
-					event.getState(), 
-					persister.getPropertyNames(), 
-					persister.getPropertyTypes() 
+				.getInterceptor()
+				.onLoad(
+						event.getEntity(),
+						event.getId(),
+						event.getState(),
+						descriptor.getPropertyNames(),
+						descriptor.getPropertyJavaTypeDescriptors()
 				);
 	}
 	

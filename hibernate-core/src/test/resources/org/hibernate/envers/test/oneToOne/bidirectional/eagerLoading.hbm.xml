@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!-- Test class for issue HHH-3854. Restricting creation of proxy objects is essential. -->
+<hibernate-mapping package="org.hibernate.envers.test.entities.onetoone" default-lazy="false">
+    <class name="BidirectionalEagerHbmRefIngPK" table="REFERENCING">
+        <id name="id" type="long" column="REFERENCING_ID">
+            <generator class="native" />
+        </id>
+        <property name="data" />
+        <many-to-one name="reference" cascade="save-update"
+                     class="BidirectionalEagerHbmRefEdPK" column="BIDIRECTIONAL_REFERENCED_ID" />
+    </class>
+
+    <class name="BidirectionalEagerHbmRefEdPK" table="REFERENCED_ENTITY">
+        <id name="id" type="long" column="REFERENCED_ID">
+            <generator class="native" />
+        </id>
+        <property name="data" />
+    </class>
+</hibernate-mapping>

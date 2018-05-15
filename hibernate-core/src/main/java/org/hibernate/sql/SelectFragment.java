@@ -12,13 +12,18 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.annotations.Remove;
 import org.hibernate.internal.util.StringHelper;
 
 /**
  * A fragment of an SQL <tt>SELECT</tt> clause
  *
  * @author Gavin King
+ *
+ * @deprecated Converting to use SQL AST
  */
+@Deprecated
+@Remove
 public class SelectFragment {
 	private String suffix;
 	private List<String> columns = new ArrayList<String>();

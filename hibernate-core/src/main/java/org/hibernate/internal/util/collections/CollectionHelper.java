@@ -56,7 +56,7 @@ public final class CollectionHelper {
 	 * @return The sized map.
 	 */
 	public static <K, V> Map<K, V> mapOfSize(int size) {
-		return new HashMap<>( determineProperSizing( size ), LOAD_FACTOR );
+		return size < 1 ? new HashMap<>() : new HashMap<>( determineProperSizing( size ), LOAD_FACTOR );
 	}
 
 	/**
@@ -174,11 +174,11 @@ public final class CollectionHelper {
 	 */
 	public static <K, V> ConcurrentHashMap<K, V> concurrentMap(int expectedNumberOfElements, float loadFactor) {
 		final int size = expectedNumberOfElements + 1 + (int) ( expectedNumberOfElements * loadFactor );
-		return new ConcurrentHashMap<K, V>( size, loadFactor );
+		return new ConcurrentHashMap<>( size, loadFactor );
 	}
 
 	public static <T> ArrayList<T> arrayList(int anticipatedSize) {
-		return new ArrayList<T>( anticipatedSize );
+		return anticipatedSize < 1 ? new ArrayList<>() : new ArrayList<>( anticipatedSize );
 	}
 
 	public static <T> Set<T> makeCopy(Set<T> source) {
@@ -210,5 +210,15 @@ public final class CollectionHelper {
 
 	public static boolean isEmpty(Object[] objects) {
 		return objects == null || objects.length == 0;
+	}
+
+	public static <T> Set<T> asSet(Collection<T> values) {
+		if ( Set.class.isInstance( values ) ) {
+			return (Set<T>) values;
+		}
+
+		final HashSet<T> set = new HashSet<>();
+		set.addAll( values );
+		return set;
 	}
 }

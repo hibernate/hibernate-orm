@@ -12,7 +12,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.boot.model.relational.QualifiedSequenceName;
+import org.hibernate.naming.QualifiedSequenceName;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;

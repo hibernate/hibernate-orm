@@ -6,9 +6,17 @@
  */
 package org.hibernate.boot.registry.selector.spi;
 
+import java.util.function.Function;
+
 /**
- * @author Steve Ebersole
+ * @deprecated (since 6.0) Just use {@link Function}
  */
-public interface StrategyCreator<T> {
-	T create(Class<? extends T> strategyClass);
+@Deprecated
+public interface StrategyCreator<T> extends Function<Class<? extends T>,T> {
+	@Override
+	default T apply(Class<? extends T> strategyImplClass) {
+		return create( strategyImplClass );
+	}
+
+	<I extends T> I create(Class<I> strategyImplClass);
 }

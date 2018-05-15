@@ -6,7 +6,9 @@
  */
 package org.hibernate.cfg.annotations;
 
-import java.util.HashMap;
+import javax.persistence.ColumnResult;
+import javax.persistence.ConstructorResult;
+import javax.persistence.EntityResult;
 import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQueries;
@@ -23,15 +25,17 @@ import org.hibernate.LockMode;
 import org.hibernate.annotations.CacheModeType;
 import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.QueryHints;
+import org.hibernate.boot.model.query.internal.NamedHqlQueryDefinitionImpl;
+import org.hibernate.boot.model.query.internal.NamedNativeQueryDefinitionImpl;
+import org.hibernate.boot.model.query.spi.NamedHqlQueryDefinition;
+import org.hibernate.boot.model.resultset.internal.EntityResultDefinitionImpl;
+import org.hibernate.boot.model.resultset.internal.InstantiationResultDefinitionImpl;
+import org.hibernate.boot.model.resultset.internal.ResultSetMappingDefinitionImpl;
+import org.hibernate.boot.model.resultset.internal.ScalarResultDefinitionImpl;
+import org.hibernate.boot.model.resultset.spi.ResultSetMappingDefinition;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
-import org.hibernate.engine.spi.NamedQueryDefinition;
-import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
-import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
 import org.hibernate.internal.CoreMessageLogger;
 
 import org.jboss.logging.Logger;
@@ -48,16 +52,20 @@ public abstract class QueryBinder {
 			NamedQuery queryAnn,
 			MetadataBuildingContext context,
 			boolean isDefault) {
-		if ( queryAnn == null ) return;
-		if ( BinderHelper.isEmptyAnnotationValue( queryAnn.name() ) ) {
-			throw new AnnotationException( "A named query must have a name when used in class or package level" );
+		if ( queryAnn == null ) {
+			return;
 		}
-		//EJBQL Query
+
+		if ( BinderHelper.isEmptyAnnotationValue( queryAnn.name() ) ) {
+			throw new AnnotationException( "A named HQL/JPQL query must have a name when used in class or package level" );
+		}
+
 		QueryHintDefinition hints = new QueryHintDefinition( queryAnn.hints() );
-		String queryName = queryAnn.query();
-		NamedQueryDefinition queryDefinition = new NamedQueryDefinitionBuilder( queryAnn.name() )
+		final String queryName = queryAnn.name();
+		final String hqlString = queryAnn.query();
+
+		final NamedHqlQueryDefinition queryDefinition = new NamedHqlQueryDefinitionImpl.Builder( queryName, hqlString )
 				.setLockOptions( hints.determineLockOptions( queryAnn ) )
-				.setQuery( queryName )
 				.setCacheable( hints.getBoolean( queryName, QueryHints.CACHEABLE ) )
 				.setCacheRegion( hints.getString( queryName, QueryHints.CACHE_REGION ) )
 				.setTimeout( hints.getTimeout( queryName ) )
@@ -66,18 +74,17 @@ public abstract class QueryBinder {
 				.setCacheMode( hints.getCacheMode( queryName ) )
 				.setReadOnly( hints.getBoolean( queryName, QueryHints.READ_ONLY ) )
 				.setComment( hints.getString( queryName, QueryHints.COMMENT ) )
-				.setParameterTypes( null )
-				.createNamedQueryDefinition();
+				.build();
 
 		if ( isDefault ) {
-			context.getMetadataCollector().addDefaultQuery( queryDefinition );
+			context.getMetadataCollector().addDefaultNamedHqlQuery( queryDefinition );
 		}
 		else {
-			context.getMetadataCollector().addNamedQuery( queryDefinition );
+			context.getMetadataCollector().addNamedHqlQuery( queryDefinition );
 		}
 
 		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Binding named query: %s => %s", queryDefinition.getName(), queryDefinition.getQueryString() );
+			LOG.debugf( "Generated and registered NamedHqlQueryDefinition : `%s` => `%s`", queryDefinition.getName(), queryDefinition.getQueryString() );
 		}
 	}
 
@@ -87,57 +94,70 @@ public abstract class QueryBinder {
 			NamedNativeQuery queryAnn,
 			MetadataBuildingContext context,
 			boolean isDefault) {
-		if ( queryAnn == null ) return;
-		//ResultSetMappingDefinition mappingDefinition = mappings.getResultSetMapping( queryAnn.resultSetMapping() );
-		if ( BinderHelper.isEmptyAnnotationValue( queryAnn.name() ) ) {
-			throw new AnnotationException( "A named query must have a name when used in class or package level" );
+		if ( queryAnn == null ) {
+			return;
 		}
-		String resultSetMapping = queryAnn.resultSetMapping();
+
+		if ( BinderHelper.isEmptyAnnotationValue( queryAnn.name() ) ) {
+			throw new AnnotationException( "A named native query must have a name when used in class or package level" );
+		}
+
+		final String queryName = queryAnn.name();
+		final String sqlString = queryAnn.query();
+
 		QueryHintDefinition hints = new QueryHintDefinition( queryAnn.hints() );
-		String queryName = queryAnn.query();
-		
-		NamedSQLQueryDefinitionBuilder builder = new NamedSQLQueryDefinitionBuilder( queryAnn.name() )
-				.setQuery( queryName )
-				.setQuerySpaces( null )
-				.setCacheable( hints.getBoolean( queryName, QueryHints.CACHEABLE ) )
-				.setCacheRegion( hints.getString( queryName, QueryHints.CACHE_REGION ) )
-				.setTimeout( hints.getTimeout( queryName ) )
-				.setFetchSize( hints.getInteger( queryName, QueryHints.FETCH_SIZE ) )
-				.setFlushMode( hints.getFlushMode( queryName ) )
-				.setCacheMode( hints.getCacheMode( queryName ) )
-				.setReadOnly( hints.getBoolean( queryName, QueryHints.READ_ONLY ) )
-				.setComment( hints.getString( queryName, QueryHints.COMMENT ) )
-				.setParameterTypes( null )
-				.setCallable( hints.getBoolean( queryName, QueryHints.CALLABLE ) );
-		
-		if ( !BinderHelper.isEmptyAnnotationValue( resultSetMapping ) ) {
-			//sql result set usage
-			builder.setResultSetRef( resultSetMapping )
-					.createNamedQueryDefinition();
+		if ( hints.getBoolean( sqlString, QueryHints.CALLABLE ) ) {
+			LOG.warnNativeQueryAsCallable();
+		}
+
+		NamedNativeQueryDefinitionImpl.Builder builder = new NamedNativeQueryDefinitionImpl.Builder( queryName )
+				.setSqlString( sqlString )
+				.setCacheable( hints.getBoolean( sqlString, QueryHints.CACHEABLE ) )
+				.setCacheRegion( hints.getString( sqlString, QueryHints.CACHE_REGION ) )
+				.setTimeout( hints.getTimeout( sqlString ) )
+				.setFetchSize( hints.getInteger( sqlString, QueryHints.FETCH_SIZE ) )
+				.setFlushMode( hints.getFlushMode( sqlString ) )
+				.setCacheMode( hints.getCacheMode( sqlString ) )
+				.setReadOnly( hints.getBoolean( sqlString, QueryHints.READ_ONLY ) )
+				.setComment( hints.getString( sqlString, QueryHints.COMMENT ) );
+
+		final String resultSetMappingName = queryAnn.resultSetMapping();
+		if ( !BinderHelper.isEmptyAnnotationValue( resultSetMappingName ) ) {
+			builder.setResultSetMapping( resultSetMappingName );
 		}
 		else if ( !void.class.equals( queryAnn.resultClass() ) ) {
-			//class mapping usage
-			//FIXME should be done in a second pass due to entity name?
-			final NativeSQLQueryRootReturn entityQueryReturn =
-					new NativeSQLQueryRootReturn( "alias1", queryAnn.resultClass().getName(), new HashMap(), LockMode.READ );
-			builder.setQueryReturns( new NativeSQLQueryReturn[] {entityQueryReturn} );
+			final ResultSetMappingDefinitionImpl inLineResultMapping = new ResultSetMappingDefinitionImpl(
+					"inline-result-mapping:" + ++inlineResultMappingCount
+			);
+
+			final EntityResultDefinitionImpl entityResultDefinition = new EntityResultDefinitionImpl (
+					null,
+					queryAnn.resultClass().getName(),
+					"alias1"
+			);
+			entityResultDefinition.setLockMode( LockMode.READ );
+
+			inLineResultMapping.addResult( entityResultDefinition );
+
+			context.getMetadataCollector().addResultSetMapping( inLineResultMapping );
+			builder.setResultSetMapping( inLineResultMapping.getName() );
 		}
-		else {
-			builder.setQueryReturns( new NativeSQLQueryReturn[0] );
-		}
-		
-		NamedSQLQueryDefinition query = builder.createNamedQueryDefinition();
-		
+
+		final NamedNativeQueryDefinitionImpl queryDefinition = builder.build();
+
 		if ( isDefault ) {
-			context.getMetadataCollector().addDefaultNamedNativeQuery( query );
+			context.getMetadataCollector().addDefaultNamedNativeQuery( queryDefinition );
 		}
 		else {
-			context.getMetadataCollector().addNamedNativeQuery( query );
+			context.getMetadataCollector().addNamedNativeQuery( queryDefinition );
 		}
+
 		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Binding named native query: %s => %s", queryAnn.name(), queryAnn.query() );
+			LOG.debugf( "Generated and registered NamedHqlQueryDefinition : `%s` => `%s`", queryDefinition.getName(), queryDefinition.getQueryString() );
 		}
 	}
+
+	private static int inlineResultMappingCount = 0;
 
 	public static void bindNativeQuery(
 			org.hibernate.annotations.NamedNativeQuery queryAnn,
@@ -146,66 +166,52 @@ public abstract class QueryBinder {
 			return;
 		}
 
-		//ResultSetMappingDefinition mappingDefinition = mappings.getResultSetMapping( queryAnn.resultSetMapping() );
 		if ( BinderHelper.isEmptyAnnotationValue( queryAnn.name() ) ) {
-			throw new AnnotationException( "A named query must have a name when used in class or package level" );
+			throw new AnnotationException( "A named native query must have a name when used in class or package level" );
 		}
 
-		NamedSQLQueryDefinition query;
-		String resultSetMapping = queryAnn.resultSetMapping();
-		if ( !BinderHelper.isEmptyAnnotationValue( resultSetMapping ) ) {
-			//sql result set usage
-			query = new NamedSQLQueryDefinitionBuilder().setName( queryAnn.name() )
-					.setQuery( queryAnn.query() )
-					.setResultSetRef( resultSetMapping )
-					.setQuerySpaces( null )
-					.setCacheable( queryAnn.cacheable() )
-					.setCacheRegion(
-							BinderHelper.isEmptyAnnotationValue( queryAnn.cacheRegion() ) ?
-									null :
-									queryAnn.cacheRegion()
-					)
-					.setTimeout( queryAnn.timeout() < 0 ? null : queryAnn.timeout() )
-					.setFetchSize( queryAnn.fetchSize() < 0 ? null : queryAnn.fetchSize() )
-					.setFlushMode( getFlushMode( queryAnn.flushMode() ) )
-					.setCacheMode( getCacheMode( queryAnn.cacheMode() ) )
-					.setReadOnly( queryAnn.readOnly() )
-					.setComment( BinderHelper.isEmptyAnnotationValue( queryAnn.comment() ) ? null : queryAnn.comment() )
-					.setParameterTypes( null )
-					.setCallable( queryAnn.callable() )
-					.createNamedQueryDefinition();
+		final String queryName = queryAnn.name();
+		final String sqlString = queryAnn.query();
+
+		final NamedNativeQueryDefinitionImpl.Builder builder = new NamedNativeQueryDefinitionImpl.Builder( queryName )
+				.setSqlString( sqlString )
+				.setCacheable( queryAnn.cacheable() )
+				.setCacheRegion(
+						BinderHelper.isEmptyAnnotationValue( queryAnn.cacheRegion() )
+								? null
+								: queryAnn.cacheRegion()
+				)
+				.setTimeout( queryAnn.timeout() < 0 ? null : queryAnn.timeout() )
+				.setFetchSize( queryAnn.fetchSize() < 0 ? null : queryAnn.fetchSize() )
+				.setFlushMode( getFlushMode( queryAnn.flushMode() ) )
+				.setCacheMode( getCacheMode( queryAnn.cacheMode() ) )
+				.setReadOnly( queryAnn.readOnly() )
+				.setComment( BinderHelper.isEmptyAnnotationValue( queryAnn.comment() ) ? null : queryAnn.comment() );
+
+		final String resultSetMappingName = queryAnn.resultSetMapping();
+
+		if ( !BinderHelper.isEmptyAnnotationValue( resultSetMappingName ) ) {
+			builder.setResultSetMapping( resultSetMappingName );
 		}
 		else if ( !void.class.equals( queryAnn.resultClass() ) ) {
-			//class mapping usage
-			//FIXME should be done in a second pass due to entity name?
-			final NativeSQLQueryRootReturn entityQueryReturn =
-					new NativeSQLQueryRootReturn( "alias1", queryAnn.resultClass().getName(), new HashMap(), LockMode.READ );
-			query = new NamedSQLQueryDefinitionBuilder().setName( queryAnn.name() )
-					.setQuery( queryAnn.query() )
-					.setQueryReturns( new NativeSQLQueryReturn[] {entityQueryReturn} )
-					.setQuerySpaces( null )
-					.setCacheable( queryAnn.cacheable() )
-					.setCacheRegion(
-							BinderHelper.isEmptyAnnotationValue( queryAnn.cacheRegion() ) ?
-									null :
-									queryAnn.cacheRegion()
-					)
-					.setTimeout( queryAnn.timeout() < 0 ? null : queryAnn.timeout() )
-					.setFetchSize( queryAnn.fetchSize() < 0 ? null : queryAnn.fetchSize() )
-					.setFlushMode( getFlushMode( queryAnn.flushMode() ) )
-					.setCacheMode( getCacheMode( queryAnn.cacheMode() ) )
-					.setReadOnly( queryAnn.readOnly() )
-					.setComment( BinderHelper.isEmptyAnnotationValue( queryAnn.comment() ) ? null : queryAnn.comment() )
-					.setParameterTypes( null )
-					.setCallable( queryAnn.callable() )
-					.createNamedQueryDefinition();
+			final ResultSetMappingDefinitionImpl resultSetMappingDefinition = new ResultSetMappingDefinitionImpl(
+					"inline-result-mapping:" + ++inlineResultMappingCount
+			);
+
+			final String entityClassName = queryAnn.resultClass().getName();
+			resultSetMappingDefinition.addResult( new EntityResultDefinitionImpl( null, entityClassName, "alias1" ) );
+
+			context.getMetadataCollector().addResultSetMapping( resultSetMappingDefinition );
+			builder.setResultSetMapping( resultSetMappingDefinition.getName() );
 		}
 		else {
 			throw new NotYetImplementedException( "Pure native scalar queries are not yet supported" );
 		}
-		context.getMetadataCollector().addNamedNativeQuery( query );
+
+		context.getMetadataCollector().addNamedNativeQuery( builder.build() );
+
 		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Binding named native query: %s => %s", query.getName(), queryAnn.query() );
+			LOG.debugf( "Binding named native query: %s => %s", queryAnn.name(), queryAnn.query() );
 		}
 	}
 
@@ -255,11 +261,13 @@ public abstract class QueryBinder {
 			throw new AnnotationException( "A named query must have a name when used in class or package level" );
 		}
 
+		final String queryName = queryAnn.name();
+		final String hqlString = queryAnn.query();
+
 		FlushMode flushMode;
 		flushMode = getFlushMode( queryAnn.flushMode() );
 
-		NamedQueryDefinition query = new NamedQueryDefinitionBuilder().setName( queryAnn.name() )
-				.setQuery( queryAnn.query() )
+		final NamedHqlQueryDefinitionImpl.Builder builder = new NamedHqlQueryDefinitionImpl.Builder( queryName, hqlString )
 				.setCacheable( queryAnn.cacheable() )
 				.setCacheRegion(
 						BinderHelper.isEmptyAnnotationValue( queryAnn.cacheRegion() ) ?
@@ -271,13 +279,12 @@ public abstract class QueryBinder {
 				.setFlushMode( flushMode )
 				.setCacheMode( getCacheMode( queryAnn.cacheMode() ) )
 				.setReadOnly( queryAnn.readOnly() )
-				.setComment( BinderHelper.isEmptyAnnotationValue( queryAnn.comment() ) ? null : queryAnn.comment() )
-				.setParameterTypes( null )
-				.createNamedQueryDefinition();
+				.setComment( BinderHelper.isEmptyAnnotationValue( queryAnn.comment() ) ? null : queryAnn.comment() );
 
-		context.getMetadataCollector().addNamedQuery( query );
+		context.getMetadataCollector().addNamedHqlQuery( builder.build() );
+
 		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Binding named query: %s => %s", query.getName(), query.getQueryString() );
+			LOG.debugf( "Binding named HQL/JPQL query: %s => %s", queryName, hqlString );
 		}
 	}
 
@@ -363,15 +370,13 @@ public abstract class QueryBinder {
 
 	public static void bindSqlResultSetMappings(
 			SqlResultSetMappings ann,
-			MetadataBuildingContext context,
-			boolean isDefault) {
+			MetadataBuildingContext context) {
 		if ( ann == null ) {
 			return;
 		}
 
 		for (SqlResultSetMapping rs : ann.value()) {
-			//no need to handle inSecondPass
-			context.getMetadataCollector().addSecondPass( new ResultsetMappingSecondPass( rs, context, true ) );
+			bindSqlResultSetMapping( rs, context, true );
 		}
 	}
 
@@ -379,9 +384,179 @@ public abstract class QueryBinder {
 			SqlResultSetMapping ann,
 			MetadataBuildingContext context,
 			boolean isDefault) {
-		//no need to handle inSecondPass
-		context.getMetadataCollector().addSecondPass( new ResultsetMappingSecondPass( ann, context, isDefault ) );
+		final ResultSetMappingDefinition resultSetMapping = extractMapping( ann, context );
+		if ( isDefault ) {
+			context.getMetadataCollector().addDefaultResultSetMapping( resultSetMapping );
+		}
+		else {
+			context.getMetadataCollector().addResultSetMapping( resultSetMapping );
+		}
 	}
 
+	private static ResultSetMappingDefinition extractMapping(
+			SqlResultSetMapping ann,
+			MetadataBuildingContext context) {
+		final ResultSetMappingDefinitionImpl mapping = new ResultSetMappingDefinitionImpl( ann.name() );
+
+		LOG.debugf( "Binding @SqlResultSetMapping( name=\"" + ann.name() + "\")" );
+
+		int entityAliasIndex = 0;
+
+
+		for ( EntityResult entity : ann.entities() ) {
+			mapping.addResult( extractEntityResult( entity, entityAliasIndex, context )  );
+
+		}
+
+		for ( ColumnResult column : ann.columns() ) {
+			mapping.addResult( extractScalarResult( column, context ) );
+		}
+
+		for ( ConstructorResult constructorResult : ann.classes() ) {
+			mapping.addResult( extractInstantiationResult( constructorResult, context ) );
+		}
+
+		return mapping;
+	}
+
+	private static ResultSetMappingDefinition.InstantiationResult extractInstantiationResult(
+			ConstructorResult constructorResult,
+			MetadataBuildingContext context) {
+
+		final InstantiationResultDefinitionImpl instantiation = new InstantiationResultDefinitionImpl(
+				constructorResult.targetClass().getName()
+		);
+
+		for ( ColumnResult columnResult : constructorResult.columns() ) {
+			instantiation.addArgument(
+					new InstantiationResultDefinitionImpl.ArgumentImpl(
+							extractScalarResult( columnResult, context ),
+							columnResult.name()
+					)
+			);
+		}
+
+		return instantiation;
+	}
+
+	private static ResultSetMappingDefinition.Result extractEntityResult(
+			EntityResult entity,
+			int entityAliasIndex,
+			MetadataBuildingContext context) {
+		return new EntityResultDefinitionImpl(
+				entity.entityClass().getName(),
+				null,
+				null
+		);
+
+//		List<FieldResult> properties = new ArrayList<>();
+//		List<String> propertyNames = new ArrayList<>();
+//		for (FieldResult field : entity.fields()) {
+//			//use an ArrayList cause we might have several columns per root property
+//			String name = field.name();
+//			if ( name.indexOf( '.' ) == -1 ) {
+//				//regular property
+//				properties.add( field );
+//				propertyNames.add( name );
+//			}
+//			else {
+//				/**
+//				 * Reorder properties
+//				 * 1. get the parent property
+//				 * 2. list all the properties following the expected one in the parent property
+//				 * 3. calculate the lowest index and insert the property
+//				 */
+//				PersistentClass pc = context.getMetadataCollector().getEntityBinding(
+//						entity.entityClass().getName()
+//				);
+//				if ( pc == null ) {
+//					throw new MappingException(
+//							String.format(
+//									Locale.ENGLISH,
+//									"Could not resolve entity [%s] referenced in SqlResultSetMapping [%s]",
+//									entity.entityClass().getName(),
+//									ann.name()
+//							)
+//					);
+//				}
+//				int dotIndex = name.lastIndexOf( '.' );
+//				String reducedName = name.substring( 0, dotIndex );
+//				Iterator parentPropItr = getSubPropertyIterator( pc, reducedName );
+//				List<String> followers = getFollowers( parentPropItr, reducedName, name );
+//
+//				int index = propertyNames.size();
+//				for ( String follower : followers ) {
+//					int currentIndex = getIndexOfFirstMatchingProperty( propertyNames, follower );
+//					index = currentIndex != -1 && currentIndex < index ? currentIndex : index;
+//				}
+//				propertyNames.add( index, name );
+//				properties.add( index, field );
+//			}
+//		}
+//
+//		Set<String> uniqueReturnProperty = new HashSet<String>();
+//		Map<String, ArrayList<String>> propertyResultsTmp = new HashMap<String, ArrayList<String>>();
+//		for ( Object property : properties ) {
+//			final FieldResult propertyresult = ( FieldResult ) property;
+//			final String name = propertyresult.name();
+//			if ( "class".equals( name ) ) {
+//				throw new MappingException(
+//						"class is not a valid property name to use in a @FieldResult, use @Entity(discriminatorColumn) instead"
+//				);
+//			}
+//
+//			if ( uniqueReturnProperty.contains( name ) ) {
+//				throw new MappingException(
+//						"duplicate @FieldResult for property " + name +
+//								" on @Entity " + entity.entityClass().getName() + " in " + ann.name()
+//				);
+//			}
+//			uniqueReturnProperty.add( name );
+//
+//			final String quotingNormalizedColumnName = normalizeColumnQuoting( propertyresult.column() );
+//
+//			String key = StringHelper.root( name );
+//			ArrayList<String> intermediateResults = propertyResultsTmp.get( key );
+//			if ( intermediateResults == null ) {
+//				intermediateResults = new ArrayList<String>();
+//				propertyResultsTmp.put( key, intermediateResults );
+//			}
+//			intermediateResults.add( quotingNormalizedColumnName );
+//		}
+//
+//		Map<String, String[]> propertyResults = new HashMap<String,String[]>();
+//		for ( Map.Entry<String, ArrayList<String>> entry : propertyResultsTmp.entrySet() ) {
+//			propertyResults.put(
+//					entry.getKey(),
+//					entry.getValue().toArray( new String[ entry.getValue().size() ] )
+//			);
+//		}
+//
+//		if ( !BinderHelper.isEmptyAnnotationValue( entity.discriminatorColumn() ) ) {
+//			final String quotingNormalizedName = normalizeColumnQuoting( entity.discriminatorColumn() );
+//			propertyResults.put( "class", new String[] { quotingNormalizedName } );
+//		}
+//
+//		if ( propertyResults.isEmpty() ) {
+//			propertyResults = java.util.Collections.emptyMap();
+//		}
+//
+//		NativeSQLQueryRootReturn result = new NativeSQLQueryRootReturn(
+//				"alias" + entityAliasIndex++,
+//				entity.entityClass().getName(),
+//				propertyResults,
+//				LockMode.READ
+//		);
+//		definition.addResultBuilder( result );
+	}
+
+	private static ResultSetMappingDefinition.Result extractScalarResult(
+			ColumnResult column,
+			MetadataBuildingContext context) {
+		return new ScalarResultDefinitionImpl(
+				column.name(),
+				column.type().getName()
+		);
+	}
 
 }

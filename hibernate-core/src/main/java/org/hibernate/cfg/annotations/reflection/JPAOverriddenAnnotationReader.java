@@ -239,7 +239,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	private XMLContext xmlContext;
-	private final ClassLoaderAccess classLoaderAccess;
+	private final BootstrapContext bootstrapContext;
 	private final AnnotatedElement element;
 	private String className;
 	private String propertyName;
@@ -252,13 +252,10 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 	/**
 	 * @deprecated Use {@link JPAMetadataProvider(AnnotatedElement, XMLContext, BootstrapContext)} instead.
 	 */
-	public JPAOverriddenAnnotationReader(
-			AnnotatedElement el,
-			XMLContext xmlContext,
-			ClassLoaderAccess classLoaderAccess) {
+	public JPAOverriddenAnnotationReader(AnnotatedElement el, XMLContext xmlContext, BootstrapContext bootstrapContext) {
 		this.element = el;
 		this.xmlContext = xmlContext;
-		this.classLoaderAccess = classLoaderAccess;
+		this.bootstrapContext = bootstrapContext;
 
 		if ( el instanceof Class ) {
 			Class clazz = (Class) el;
@@ -312,14 +309,6 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			propertyName = null;
 		}
 	}
-
-	public JPAOverriddenAnnotationReader(
-			AnnotatedElement el,
-			XMLContext xmlContext,
-			BootstrapContext bootstrapContext) {
-		this( el, xmlContext, bootstrapContext.getClassLoaderAccess() );
-	}
-
 
 	public <T extends Annotation> T getAnnotation(Class<T> annotationType) {
 		initAnnotations();
@@ -524,7 +513,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 						defaults
 				);
 				try {
-					final Class converterClass = classLoaderAccess.classForName( converterClassName );
+					final Class converterClass = bootstrapContext.getClassLoaderAccess().classForName( converterClassName );
 					convertAnnotationDescriptor.setValue( "converter", converterClass );
 				}
 				catch (ClassLoadingException e) {
@@ -583,7 +572,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 	private void checkForOrphanProperties(Element tree) {
 		Class clazz;
 		try {
-			clazz = classLoaderAccess.classForName( className );
+			clazz = bootstrapContext.getClassLoaderAccess().classForName( className );
 		}
 		catch ( ClassLoadingException e ) {
 			return; //a primitive type most likely
@@ -727,7 +716,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 				String className = subelement.attributeValue( "class" );
 				try {
 					entityListenerClasses.add(
-							classLoaderAccess.classForName(
+							bootstrapContext.getClassLoaderAccess().classForName(
 									XMLContext.buildSafeClassName( className, defaults )
 							)
 					);
@@ -1142,7 +1131,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		if ( className != null ) {
 			Class clazz;
 			try {
-				clazz = classLoaderAccess.classForName( XMLContext.buildSafeClassName( className, defaults ) );
+				clazz = bootstrapContext.getClassLoaderAccess().classForName( XMLContext.buildSafeClassName( className, defaults ) );
 			}
 			catch ( ClassLoadingException e ) {
 				throw new AnnotationException(
@@ -1241,7 +1230,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			if ( StringHelper.isNotEmpty( mapKeyClassName ) ) {
 				Class clazz;
 				try {
-					clazz = classLoaderAccess.classForName(
+					clazz = bootstrapContext.getClassLoaderAccess().classForName(
 							XMLContext.buildSafeClassName( mapKeyClassName, defaults )
 					);
 				}
@@ -1924,7 +1913,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	private SqlResultSetMappings getSqlResultSetMappings(Element tree, XMLContext.Default defaults) {
-		List<SqlResultSetMapping> results = buildSqlResultsetMappings( tree, defaults, classLoaderAccess );
+		List<SqlResultSetMapping> results = buildSqlResultsetMappings( tree, defaults, bootstrapContext.getClassLoaderAccess() );
 		if ( defaults.canUseJavaAnnotations() ) {
 			SqlResultSetMapping annotation = getPhysicalAnnotation( SqlResultSetMapping.class );
 			addSqlResultsetMappingIfNeeded( annotation, results );
@@ -1977,7 +1966,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			AnnotationDescriptor ann,
 			List<Element> subgraphNodes,
 			ClassLoaderAccess classLoaderAccess) {
-		List<NamedSubgraph> annSubgraphNodes = new ArrayList<>(  );
+		List<NamedSubgraph> annSubgraphNodes = new ArrayList<>();
 		for(Element subgraphNode : subgraphNodes){
 			AnnotationDescriptor annSubgraphNode = new AnnotationDescriptor( NamedSubgraph.class );
 			copyStringAttribute( annSubgraphNode, subgraphNode, "name", true );
@@ -2001,7 +1990,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 
 	private static void bindNamedAttributeNodes(Element subElement, AnnotationDescriptor ann) {
 		List<Element> namedAttributeNodes = subElement.elements("named-attribute-node");
-		List<NamedAttributeNode> annNamedAttributeNodes = new ArrayList<>(  );
+		List<NamedAttributeNode> annNamedAttributeNodes = new ArrayList<>();
 		for(Element namedAttributeNode : namedAttributeNodes){
 			AnnotationDescriptor annNamedAttributeNode = new AnnotationDescriptor( NamedAttributeNode.class );
 			copyStringAttribute( annNamedAttributeNode, namedAttributeNode, "value", "name", true );
@@ -2287,7 +2276,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 
 	private NamedQueries getNamedQueries(Element tree, XMLContext.Default defaults) {
 		//TODO avoid the Proxy Creation (@NamedQueries) when possible
-		List<NamedQuery> queries = (List<NamedQuery>) buildNamedQueries( tree, false, defaults, classLoaderAccess );
+		List<NamedQuery> queries = (List<NamedQuery>) buildNamedQueries( tree, false, defaults, bootstrapContext.getClassLoaderAccess() );
 		if ( defaults.canUseJavaAnnotations() ) {
 			NamedQuery annotation = getPhysicalAnnotation( NamedQuery.class );
 			addNamedQueryIfNeeded( annotation, queries );
@@ -2325,7 +2314,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	private NamedEntityGraphs getNamedEntityGraphs(Element tree, XMLContext.Default defaults) {
-		List<NamedEntityGraph> queries = buildNamedEntityGraph( tree, defaults, classLoaderAccess );
+		List<NamedEntityGraph> queries = buildNamedEntityGraph( tree, defaults, bootstrapContext.getClassLoaderAccess() );
 		if ( defaults.canUseJavaAnnotations() ) {
 			NamedEntityGraph annotation = getPhysicalAnnotation( NamedEntityGraph.class );
 			addNamedEntityGraphIfNeeded( annotation, queries );
@@ -2364,7 +2353,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	private NamedStoredProcedureQueries getNamedStoredProcedureQueries(Element tree, XMLContext.Default defaults) {
-		List<NamedStoredProcedureQuery> queries = buildNamedStoreProcedureQueries( tree, defaults, classLoaderAccess );
+		List<NamedStoredProcedureQuery> queries = buildNamedStoreProcedureQueries( tree, defaults, bootstrapContext.getClassLoaderAccess() );
 		if ( defaults.canUseJavaAnnotations() ) {
 			NamedStoredProcedureQuery annotation = getPhysicalAnnotation( NamedStoredProcedureQuery.class );
 			addNamedStoredProcedureQueryIfNeeded( annotation, queries );
@@ -2405,7 +2394,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 	private NamedNativeQueries getNamedNativeQueries(
 			Element tree,
 			XMLContext.Default defaults) {
-		List<NamedNativeQuery> queries = (List<NamedNativeQuery>) buildNamedQueries( tree, true, defaults, classLoaderAccess );
+		List<NamedNativeQuery> queries = (List<NamedNativeQuery>) buildNamedQueries( tree, true, defaults, bootstrapContext.getClassLoaderAccess() );
 		if ( defaults.canUseJavaAnnotations() ) {
 			NamedNativeQuery annotation = getPhysicalAnnotation( NamedNativeQuery.class );
 			addNamedNativeQueryIfNeeded( annotation, queries );
@@ -2687,7 +2676,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 				AnnotationDescriptor ad = new AnnotationDescriptor( IdClass.class );
 				Class clazz;
 				try {
-					clazz = classLoaderAccess.classForName( XMLContext.buildSafeClassName( attr.getValue(), defaults )
+					clazz = bootstrapContext.getClassLoaderAccess().classForName( XMLContext.buildSafeClassName( attr.getValue(), defaults )
 					);
 				}
 				catch ( ClassLoadingException e ) {

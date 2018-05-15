@@ -6,8 +6,6 @@
  */
 package org.hibernate.boot.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 
@@ -24,7 +22,7 @@ public class StandardEntityNotFoundDelegate implements EntityNotFoundDelegate {
 	public static final StandardEntityNotFoundDelegate INSTANCE = new StandardEntityNotFoundDelegate();
 
 	@Override
-	public void handleEntityNotFound(String entityName, Serializable id) {
+	public void handleEntityNotFound(String entityName, Object id) {
 		throw new ObjectNotFoundException( id, entityName );
 	}
 }

@@ -33,7 +33,8 @@ public class TypeDefinitionBinder {
 				typeDefinitionBinding.getName(),
 				cls.classForName( typeDefinitionBinding.getClazz() ),
 				null,
-				ConfigParameterHelper.extractConfigParameters( typeDefinitionBinding )
+				ConfigParameterHelper.extractConfigParameters( typeDefinitionBinding ),
+				context.getBootstrapContext().getTypeConfiguration()
 		);
 
 		log.debugf(
@@ -42,7 +43,7 @@ public class TypeDefinitionBinder {
 				definition.getTypeImplementorClass().getName()
 		);
 
-		context.getMetadataCollector().addTypeDefinition( definition );
+		context.addTypeDefinition( definition );
 	}
 
 }

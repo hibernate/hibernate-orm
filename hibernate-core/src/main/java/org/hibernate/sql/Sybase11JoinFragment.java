@@ -7,12 +7,18 @@
 package org.hibernate.sql;
 
 
+import org.hibernate.annotations.Remove;
+
 /**
  * An old Sybase-style join (before Sybase supported the ANSI style "inner join" etc syntax)
  * This is needed for Sybase 11.9.2 and earlier, using the HQL 2.* syntax with Collections.
  *
  * @author Colm O' Flaherty
+ *
+ * @deprecated Converting to use SQL AST
  */
+@Deprecated
+@Remove
 public class Sybase11JoinFragment extends JoinFragment {
 
 	private StringBuilder afterFrom = new StringBuilder();

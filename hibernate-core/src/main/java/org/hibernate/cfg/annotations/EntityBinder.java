@@ -27,7 +27,6 @@ import javax.persistence.SharedCacheMode;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
@@ -54,17 +53,15 @@ import org.hibernate.annotations.SelectBeforeUpdate;
 import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.Tables;
-import org.hibernate.annotations.Tuplizer;
-import org.hibernate.annotations.Tuplizers;
 import org.hibernate.annotations.Where;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.boot.model.domain.ValueMapping;
 import org.hibernate.boot.model.naming.EntityNaming;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitEntityNameSource;
 import org.hibernate.boot.model.naming.NamingStrategyHelper;
-import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -90,7 +87,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TableOwner;
-import org.hibernate.mapping.Value;
+import org.hibernate.naming.Identifier;
 
 import org.jboss.logging.Logger;
 
@@ -397,20 +394,24 @@ public class EntityBinder {
 			this.subselect = subselect.value();
 		}
 
-		//tuplizers
-		if ( annotatedClass.isAnnotationPresent( Tuplizers.class ) ) {
-			for (Tuplizer tuplizer : annotatedClass.getAnnotation( Tuplizers.class ).value()) {
-				EntityMode mode = EntityMode.parse( tuplizer.entityMode() );
-				//todo tuplizer.entityModeType
-				persistentClass.addTuplizer( mode, tuplizer.impl().getName() );
-			}
-		}
-		if ( annotatedClass.isAnnotationPresent( Tuplizer.class ) ) {
-			Tuplizer tuplizer = annotatedClass.getAnnotation( Tuplizer.class );
-			EntityMode mode = EntityMode.parse( tuplizer.entityMode() );
-			//todo tuplizer.entityModeType
-			persistentClass.addTuplizer( mode, tuplizer.impl().getName() );
-		}
+		// todo (7.0) : make this available via unified orm.xml
+//		persistentClass.setExplicitRepresentationMode( RepresentationMode.POJO );
+//
+//		//tuplizers
+//		if ( annotatedClass.isAnnotationPresent( Tuplizers.class ) ) {
+//			for (Tuplizer tuplizer : annotatedClass.getAnnotation( Tuplizers.class ).value()) {
+//				EntityMode mode = EntityMode.parse( tuplizer.entityMode() );
+//				//todo tuplizer.entityModeType
+//				persistentClass.
+//						addTuplizer( mode, tuplizer.impl().getName() );
+//			}
+//		}
+//		if ( annotatedClass.isAnnotationPresent( Tuplizer.class ) ) {
+//			Tuplizer tuplizer = annotatedClass.getAnnotation( Tuplizer.class );
+//			EntityMode mode = EntityMode.parse( tuplizer.entityMode() );
+//			//todo tuplizer.entityModeType
+//			persistentClass.addTuplizer( mode, tuplizer.impl().getName() );
+//		}
 
 		for ( Filter filter : filters ) {
 			String filterName = filter.name();
@@ -427,6 +428,7 @@ public class EntityBinder {
 			persistentClass.addFilter(filterName, cond, filter.deduceAliasInjectionPoints(), 
 					toAliasTableMap(filter.aliases()), toAliasEntityMap(filter.aliases()));
 		}
+
 		LOG.debugf( "Import with entity name %s", name );
 		try {
 			context.getMetadataCollector().addImport( name, persistentClass.getEntityName() );
@@ -463,16 +465,16 @@ public class EntityBinder {
 	
 	public void bindDiscriminatorValue() {
 		if ( StringHelper.isEmpty( discriminatorValue ) ) {
-			Value discriminator = persistentClass.getDiscriminator();
+			ValueMapping discriminator = persistentClass.getEntityMappingHierarchy().getDiscriminatorMapping();
 			if ( discriminator == null ) {
 				persistentClass.setDiscriminatorValue( name );
 			}
-			else if ( "character".equals( discriminator.getType().getName() ) ) {
+			else if ( "character".equals( discriminator.getJavaTypeMapping().getTypeName() ) ) {
 				throw new AnnotationException(
 						"Using default @DiscriminatorValue for a discriminator of type CHAR is not safe"
 				);
 			}
-			else if ( "integer".equals( discriminator.getType().getName() ) ) {
+			else if ( "integer".equals( discriminator.getJavaTypeMapping().getTypeName() ) ) {
 				persistentClass.setDiscriminatorValue( String.valueOf( name.hashCode() ) );
 			}
 			else {
@@ -815,9 +817,7 @@ public class EntityBinder {
 		context.getMetadataCollector().addEntityTableXref(
 				persistentClass.getEntityName(),
 				context.getMetadataCollector().getDatabase().toIdentifier(
-						context.getMetadataCollector().getLogicalTableName(
-								superTableXref.getPrimaryTable()
-						)
+						superTableXref.getPrimaryTable().getName()
 				),
 				superTableXref.getPrimaryTable(),
 				superTableXref
@@ -845,7 +845,7 @@ public class EntityBinder {
 			logicalName = namingStrategyHelper.determineImplicitName( context );
 		}
 
-		final Table table = TableBinder.buildAndFillTable(
+		final MappedTable table = TableBinder.buildAndFillTable(
 				schema,
 				catalog,
 				logicalName,
@@ -871,7 +871,7 @@ public class EntityBinder {
 
 		if ( persistentClass instanceof TableOwner ) {
 			LOG.debugf( "Bind entity %s on table %s", persistentClass.getEntityName(), table.getName() );
-			( (TableOwner) persistentClass ).setTable( table );
+			( (TableOwner) persistentClass ).setMappedTable( table );
 		}
 		else {
 			throw new AssertionFailure( "binding a table for a subclass" );
@@ -965,7 +965,11 @@ public class EntityBinder {
 	}
 
 	private void bindJoinToPersistentClass(Join join, Ejb3JoinColumn[] ejb3JoinColumns, MetadataBuildingContext buildingContext) {
-		SimpleValue key = new DependantValue( buildingContext, join.getTable(), persistentClass.getIdentifier() );
+		SimpleValue key = new DependantValue(
+				buildingContext,
+				join.getTable(),
+				persistentClass.getIdentifier()
+		);
 		join.setKey( key );
 		setFKNameIfDefined( join );
 		key.setCascadeDeleteEnabled( false );
@@ -1097,34 +1101,26 @@ public class EntityBinder {
 		final Object joinColumns;
 		final List<UniqueConstraintHolder> uniqueConstraintHolders;
 
-		final QualifiedTableName logicalName;
+		final Identifier logicalName;
 		if ( secondaryTable != null ) {
 			schema = secondaryTable.schema();
 			catalog = secondaryTable.catalog();
-			logicalName = new QualifiedTableName(
-				Identifier.toIdentifier( catalog ),
-				Identifier.toIdentifier( schema ),
-					context.getMetadataCollector()
+			logicalName = context.getMetadataCollector()
 					.getDatabase()
 					.getJdbcEnvironment()
 					.getIdentifierHelper()
-					.toIdentifier( secondaryTable.name() )
-			);
+					.toIdentifier( secondaryTable.name() );
 			joinColumns = secondaryTable.pkJoinColumns();
 			uniqueConstraintHolders = TableBinder.buildUniqueConstraintHolders( secondaryTable.uniqueConstraints() );
 		}
 		else if ( joinTable != null ) {
 			schema = joinTable.schema();
 			catalog = joinTable.catalog();
-			logicalName = new QualifiedTableName(
-				Identifier.toIdentifier( catalog ),
-				Identifier.toIdentifier( schema ),
-				context.getMetadataCollector()
-						.getDatabase()
-						.getJdbcEnvironment()
-						.getIdentifierHelper()
-						.toIdentifier( joinTable.name() )
-			);
+			logicalName = context.getMetadataCollector()
+					.getDatabase()
+					.getJdbcEnvironment()
+					.getIdentifierHelper()
+					.toIdentifier( joinTable.name() );
 			joinColumns = joinTable.joinColumns();
 			uniqueConstraintHolders = TableBinder.buildUniqueConstraintHolders( joinTable.uniqueConstraints() );
 		}
@@ -1132,10 +1128,10 @@ public class EntityBinder {
 			throw new AssertionFailure( "Both JoinTable and SecondaryTable are null" );
 		}
 
-		final Table table = TableBinder.buildAndFillTable(
+		final MappedTable table = TableBinder.buildAndFillTable(
 				schema,
 				catalog,
-				logicalName.getTableName(),
+				logicalName,
 				false,
 				uniqueConstraintHolders,
 				null,

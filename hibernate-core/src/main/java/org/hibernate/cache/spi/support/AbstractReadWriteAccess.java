@@ -16,6 +16,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hibernate.cache.spi.DomainDataRegion;
 import org.hibernate.cache.spi.SecondLevelCacheLogger;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -24,6 +25,7 @@ import org.jboss.logging.Logger;
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings({"WeakerAccess", "unused"})
 public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAccess {
 	private static final Logger log = Logger.getLogger( AbstractReadWriteAccess.class );
 	private static final boolean DEBUG_ENABLED = log.isDebugEnabled();
@@ -41,6 +43,11 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 	}
 
 	protected abstract Comparator getVersionComparator();
+
+	@Override
+	public AccessType getAccessType() {
+		return AccessType.READ_WRITE;
+	}
 
 	protected UUID uuid() {
 		return uuid;

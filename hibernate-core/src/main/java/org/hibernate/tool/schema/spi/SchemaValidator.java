@@ -7,7 +7,6 @@
 package org.hibernate.tool.schema.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.boot.Metadata;
 
 /**
  * Service delegate for handling schema validations
@@ -19,8 +18,7 @@ public interface SchemaValidator {
 	/**
 	 * Perform the validation of the schema described by Metadata
 	 *
-	 * @param metadata Represents the schema to be validated
 	 * @param options Options for executing the validation
 	 */
-	void doValidation(Metadata metadata, ExecutionOptions options);
+	void doValidation(ExecutionOptions options);
 }

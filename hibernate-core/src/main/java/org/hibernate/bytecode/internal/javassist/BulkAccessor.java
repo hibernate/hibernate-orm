@@ -8,6 +8,8 @@ package org.hibernate.bytecode.internal.javassist;
 
 import java.io.Serializable;
 
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+
 /**
  * A JavaBean bulk accessor, which provides methods capable of getting/setting multiple properties
  * of a JavaBean at once.
@@ -103,7 +105,7 @@ public abstract class BulkAccessor implements Serializable {
 			Class beanClass,
 			String[] getters,
 			String[] setters,
-			Class[] types) {
+			JavaTypeDescriptor[] types) {
 		return new BulkAccessorFactory( beanClass, getters, setters, types ).create();
 	}
 }

@@ -9,6 +9,7 @@ package org.hibernate.metamodel.internal;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
 /**
@@ -16,10 +17,11 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
  * JPA static metamodel models of application's domain model.
  *
  * @author Andrea Boriero
+ * @author Steve Ebersole
  */
 public enum JpaStaticMetaModelPopulationSetting {
 	/**
-	 * ENABLED indicates that Hibernate will look for the JPA static metamodel description
+	 * Indicates that Hibernate will look for the JPA static metamodel description
 	 * of the application domain model and populate it.
 	 */
 	ENABLED,
@@ -32,7 +34,7 @@ public enum JpaStaticMetaModelPopulationSetting {
 	 * SKIP_UNSUPPORTED works as ENABLED but ignores any non-JPA features that would otherwise
 	 * result in the population failing.
 	 */
-	SKIP_UNSUPPORTED;
+	IGNORE_UNSUPPORTED;
 
 	public static JpaStaticMetaModelPopulationSetting parse(String setting) {
 		if ( "enabled".equalsIgnoreCase( setting ) ) {
@@ -42,16 +44,50 @@ public enum JpaStaticMetaModelPopulationSetting {
 			return DISABLED;
 		}
 		else {
-			return SKIP_UNSUPPORTED;
+			return IGNORE_UNSUPPORTED;
 		}
 	}
 
 	public static JpaStaticMetaModelPopulationSetting determineJpaMetaModelPopulationSetting(Map configurationValues) {
-		String setting = ConfigurationHelper.getString(
+		return JpaStaticMetaModelPopulationSetting.parse( determineSetting( configurationValues ) );
+	}
+
+	private static String determineSetting(Map configurationValues) {
+		final String setting = ConfigurationHelper.getString(
 				AvailableSettings.STATIC_METAMODEL_POPULATION,
 				configurationValues,
 				null
 		);
-		return JpaStaticMetaModelPopulationSetting.parse( setting );
+		if ( setting != null ) {
+			return setting;
+		}
+
+		final String legacySetting1 = ConfigurationHelper.getString(
+				AvailableSettings.JPA_METAMODEL_POPULATION,
+				configurationValues,
+				null
+		);
+		if ( legacySetting1 != null ) {
+			DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+					AvailableSettings.JPA_METAMODEL_POPULATION,
+					AvailableSettings.STATIC_METAMODEL_POPULATION
+			);
+			return legacySetting1;
+		}
+
+		final String legacySetting2 = ConfigurationHelper.getString(
+				AvailableSettings.JPA_METAMODEL_GENERATION,
+				configurationValues,
+				null
+		);
+		if ( legacySetting2 != null ) {
+			DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+					AvailableSettings.JPA_METAMODEL_GENERATION,
+					AvailableSettings.STATIC_METAMODEL_POPULATION
+			);
+			return legacySetting1;
+		}
+
+		return null;
 	}
 }

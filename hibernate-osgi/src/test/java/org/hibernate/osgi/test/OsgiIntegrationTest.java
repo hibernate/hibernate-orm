@@ -31,8 +31,8 @@ import org.hibernate.osgi.test.client.SomeService;
 import org.hibernate.osgi.test.client.TestIntegrator;
 import org.hibernate.osgi.test.client.TestStrategyRegistrationProvider;
 import org.hibernate.osgi.test.client.TestTypeContributor;
-import org.hibernate.type.BasicType;
 
+import org.hibernate.type.spi.BasicType;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -206,10 +206,8 @@ public class OsgiIntegrationTest {
 	@Test
 	public void testActivation() throws Exception {
 		assertTrue( featuresService.isInstalled( featuresService.getFeature( "hibernate-orm" ) ) );
-		assertTrue( featuresService.isInstalled( featuresService.getFeature( "hibernate-envers" ) ) );
 
 		assertActiveBundle( "org.hibernate.orm.core" );
-		assertActiveBundle( "org.hibernate.orm.envers" );
 	}
 
 	@Test
@@ -377,7 +375,7 @@ public class OsgiIntegrationTest {
 		Class impl = sfi.getServiceRegistry().getService( StrategySelector.class ).selectStrategyImplementor( Calendar.class, TestStrategyRegistrationProvider.GREGORIAN );
 		assertNotNull( impl );
 
-		BasicType basicType = sfi.getTypeResolver().basic( TestTypeContributor.NAME );
+		BasicType basicType = sfi.getTypeConfiguration().getBasicTypeRegistry().getBasicType( TestTypeContributor.TestType.class );
 		assertNotNull( basicType );
 	}
 

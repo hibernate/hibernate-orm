@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+          "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.query.hhh12225">
+
+  <class name="Vehicle">
+    <meta attribute="class-description">
+      Walkaway Vehicle Object
+    </meta>
+	
+    <id name="id" type="long" unsaved-value="null">
+      <generator class="native"/>
+    </id>
+	<version name="version" unsaved-value="null" type="java.lang.Integer">
+		 <meta attribute="scope-set">protected</meta>
+	</version>
+	<property name="creationDate" type="timestamp" column="creation_date" insert="false" update="false" generated="always" />
+	<property name="modifiedDate" type="timestamp" column="modified_date" insert="false" update="false" generated="always" />
+    <property name="dirty" type="boolean" />
+    <property name="decodeAttempts" type="java.lang.Integer" column="decode_attempts"/>
+	
+    <property name="year" type="java.lang.Integer" column="year" />
+    <property name="msrp" type="java.lang.Double" column="msrp_value" /> 
+    <property name="residualValue" type="java.lang.Double" column="residual_value" /> 
+    <property name="invoicePrice" type="java.lang.Double" column="invoice_price" /> 
+    <property name="odometer" type="java.lang.Integer" />
+
+    <property name="sequenceNumber" type="java.lang.Integer" column="seq_number" />
+  </class>
+</hibernate-mapping>

@@ -8,8 +8,8 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
-import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.dialect.function.StaticPrecisionFspTimestampFunction;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * @author Vlad Mihalcea
@@ -30,6 +30,11 @@ public class MariaDB53Dialect extends MariaDBDialect {
 		// the SQL 1992 default of 6 (which is inconsistent with the MariaDB
 		// default).
 		registerColumnType( Types.TIMESTAMP, "datetime(6)" );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
 
 		// MariaDB also supports fractional seconds precision for time values
 		// (time(fsp)). According to SQL 1992, the default for <time precision>
@@ -42,12 +47,10 @@ public class MariaDB53Dialect extends MariaDBDialect {
 		// The following are synonyms for now(fsp), where fsp defaults to 0 on MariaDB 5.3:
 		// current_timestamp([fsp]), localtime(fsp), localtimestamp(fsp).
 		// Register the same StaticPrecisionFspTimestampFunction for all 4 functions.
-		final SQLFunction currentTimestampFunction = new StaticPrecisionFspTimestampFunction( "now", 6 );
-
-		registerFunction( "now", currentTimestampFunction );
-		registerFunction( "current_timestamp", currentTimestampFunction );
-		registerFunction( "localtime", currentTimestampFunction );
-		registerFunction( "localtimestamp", currentTimestampFunction );
+		registry.registerNoArgs( "now", "now(6)", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerNoArgs( "current_timestamp", "now(6)", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerNoArgs( "localtime", "now(6)", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerNoArgs( "localtimestamp", "now(6)", StandardSpiBasicTypes.TIMESTAMP );
 
 		// sysdate is different from now():
 		// "SYSDATE() returns the time at which it executes. This differs
@@ -55,7 +58,7 @@ public class MariaDB53Dialect extends MariaDBDialect {
 		// indicates the time at which the statement began to execute.
 		// (Within a stored function or trigger, NOW() returns the time at
 		// which the function or triggering statement began to execute.)
-		registerFunction( "sysdate", new StaticPrecisionFspTimestampFunction( "sysdate", 6 ) );
+		registry.registerNoArgs( "sysdate", "sysdate(6)", StandardSpiBasicTypes.TIMESTAMP );
 
 		// from_unixtime(), timestamp() are functions that return TIMESTAMP that do not support a
 		// fractional seconds precision argument (so there's no need to override them here):

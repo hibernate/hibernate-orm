@@ -8,13 +8,19 @@ package org.hibernate.sql;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.hibernate.annotations.Remove;
+
 /**
  * A Mckoi IF function.
  * <br>
  * <code>if(..., ..., ...) as ...</code>
  * <br>
  * @author Gavin King
+ *
+ * @deprecated Converting to use SQL AST
  */
+@Deprecated
+@Remove
 public class MckoiCaseFragment extends CaseFragment {
 
 	public String toFragmentString() {

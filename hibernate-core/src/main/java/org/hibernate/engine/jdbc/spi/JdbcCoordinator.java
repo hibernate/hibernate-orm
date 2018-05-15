@@ -43,6 +43,17 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	 */
 	LogicalConnectionImplementor getLogicalConnection();
 
+
+	// todo (6.0) - see potential groupings below
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// todo (6.0) - Batching?
+	// 			#getBatching() ->
+	//					#getBatch(BatchKey)
+	//					#executeBatch
+	//					#abortBatch
+
 	/**
 	 * Get a batch instance.
 	 *
@@ -61,6 +72,12 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	 * Abort the currently managed batch (if any)
 	 */
 	void abortBatch();
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// todo (6.0) - expose "executor"s?
+	//		see `org.hibernate.sql.exec.spi.JdbcSelectExecutor`,
+	// 			`org.hibernate.sql.exec.spi.JdbcMutationExecutor`, etc
 
 	/**
 	 * Obtain the statement preparer associated with this JDBC coordinator.
@@ -136,6 +153,9 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	 * @throws org.hibernate.TransactionException Indicates the time out period has already been exceeded.
 	 */
 	int determineRemainingTransactionTimeOutPeriod();
+
+	// todo (6.0) : move these 2 methods to LogicalConnection?
+	//		They are currently not used (in 6.0 code as is) - are they still needed?
 
 	/**
 	 * Enable connection releases

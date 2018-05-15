@@ -21,6 +21,9 @@ import org.hibernate.type.Type;
  */
 public class CacheableResultTransformer implements ResultTransformer {
 
+	// todo (6.0) : needed anymore?
+	//		I think not, given how query result are cached and ultimately processed.
+
 	// would be nice to be able to have this class extend
 	// PassThroughResultTransformer, but the default constructor
 	// is private (as it should be for a singleton)

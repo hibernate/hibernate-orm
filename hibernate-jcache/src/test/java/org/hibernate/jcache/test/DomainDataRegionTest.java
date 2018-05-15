@@ -10,11 +10,12 @@ import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.support.DomainDataRegionTemplate;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jcache.test.domain.Event;
 import org.hibernate.jcache.test.domain.Item;
 import org.hibernate.jcache.test.domain.VersionedItem;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -23,11 +24,12 @@ import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("WeakerAccess")
 public class DomainDataRegionTest extends BaseFunctionalTest {
 	@Override
-	public void createSessionFactory() {
+	public SessionFactoryImplementor produceSessionFactory() {
 		TestHelper.createCache( "a.b.c" );
-		super.createSessionFactory();
+		return super.produceSessionFactory();
 	}
 
 	@Test
@@ -38,7 +40,7 @@ public class DomainDataRegionTest extends BaseFunctionalTest {
 		// see if we can get access to all of the access objects we think should be defined in this region
 
 		final EntityDataAccess itemAccess = domainDataRegion.getEntityDataAccess(
-				sessionFactory().getMetamodel().entityPersister( Item.class ).getNavigableRole()
+				sessionFactory().getMetamodel().getEntityDescriptor( Item.class ).getNavigableRole()
 		);
 		assertThat(
 				itemAccess.getAccessType(),
@@ -46,19 +48,19 @@ public class DomainDataRegionTest extends BaseFunctionalTest {
 		);
 
 		assertThat(
-				sessionFactory().getMetamodel().entityPersister( VersionedItem.class ).getCacheAccessStrategy().getAccessType(),
+				sessionFactory().getMetamodel().getEntityDescriptor( VersionedItem.class ).getHierarchy().getEntityCacheAccess().getAccessType(),
 				equalTo( AccessType.READ_WRITE )
 		);
 
 		assertThat(
-				sessionFactory().getMetamodel().entityPersister( Event.class ).getCacheAccessStrategy().getAccessType(),
+				sessionFactory().getMetamodel().getEntityDescriptor( Event.class ).getHierarchy().getEntityCacheAccess().getAccessType(),
 				equalTo( AccessType.READ_WRITE )
 		);
 
 		assertThat(
 				sessionFactory().getMetamodel()
-						.collectionPersister( Event.class.getName() + ".participants" )
-						.getCacheAccessStrategy()
+						.findCollectionDescriptor( Event.class.getName() + ".participants" )
+						.getCacheAccess()
 						.getAccessType(),
 				equalTo( AccessType.READ_WRITE )
 		);

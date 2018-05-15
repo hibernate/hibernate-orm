@@ -17,6 +17,7 @@ import org.hibernate.cache.spi.access.AccessType;
  *
  * @author Steve Ebersole
  */
+@SuppressWarnings("WeakerAccess")
 public class CollectionReadOnlyAccess extends AbstractCollectionDataAccess {
 	public CollectionReadOnlyAccess(
 			DomainDataRegion region,

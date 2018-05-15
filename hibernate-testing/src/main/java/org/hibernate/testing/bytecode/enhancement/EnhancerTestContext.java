@@ -6,9 +6,6 @@
  */
 package org.hibernate.testing.bytecode.enhancement;
 
-import javassist.CtClass;
-import javassist.CtField;
-
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;

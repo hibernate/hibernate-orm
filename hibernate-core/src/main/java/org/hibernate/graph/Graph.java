@@ -80,7 +80,7 @@ public interface Graph<J> extends GraphNode<J> {
 	 * Add an AttributeNode (with no associated SubGraphNode) to this container
 	 * by Attribute reference
 	 */
-	<AJ> AttributeNode<AJ> addAttributeNode(Attribute<? extends J,AJ> attribute);
+	<AJ> AttributeNode<AJ> addAttributeNode(Attribute<? extends J, AJ> attribute);
 
 
 
@@ -114,6 +114,7 @@ public interface Graph<J> extends GraphNode<J> {
 	<AJ> SubGraph<AJ> addKeySubGraph(String attributeName) throws CannotContainSubGraphException;
 	<AJ> SubGraph<AJ> addKeySubGraph(String attributeName, Class<AJ> type) throws CannotContainSubGraphException;
 
-	<AJ> SubGraph<AJ> addKeySubGraph(Attribute<? extends J,AJ> attribute) throws CannotContainSubGraphException;
-	<AJ> SubGraph<? extends AJ> addKeySubGraph(Attribute<? extends J,AJ> attribute, Class<? extends AJ> type) throws CannotContainSubGraphException;
+	<AJ> SubGraph<AJ> addKeySubGraph(Attribute<? extends J, AJ> attribute) throws CannotContainSubGraphException;
+
+	<AJ> SubGraph<? extends AJ> addKeySubGraph(Attribute<? extends J, AJ> attribute, Class<? extends AJ> type) throws CannotContainSubGraphException;
 }

@@ -10,8 +10,6 @@ import java.sql.Types;
 
 import org.hibernate.LockMode;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
 import org.hibernate.dialect.lock.OptimisticLockingStrategy;
@@ -23,16 +21,20 @@ import org.hibernate.dialect.lock.UpdateLockingStrategy;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
 import org.hibernate.dialect.pagination.LegacyFirstLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.local.AfterUseAction;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.metamodel.model.domain.spi.Lockable;
+import org.hibernate.query.sqm.consume.multitable.internal.StandardIdTableSupport;
+import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTempTableExporter;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTable;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTableSupport;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.OracleJoinFragment;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorTimesTenDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * A SQL dialect for TimesTen 5.1.
@@ -77,16 +79,22 @@ public class TimesTenDialect extends Dialect {
 
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
-		registerFunction( "lower", new StandardSQLFunction( "lower" ) );
-		registerFunction( "upper", new StandardSQLFunction( "upper" ) );
-		registerFunction( "rtrim", new StandardSQLFunction( "rtrim" ) );
-		registerFunction( "concat", new StandardSQLFunction( "concat", StandardBasicTypes.STRING ) );
-		registerFunction( "mod", new StandardSQLFunction( "mod" ) );
-		registerFunction( "to_char", new StandardSQLFunction( "to_char", StandardBasicTypes.STRING ) );
-		registerFunction( "to_date", new StandardSQLFunction( "to_date", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "sysdate", new NoArgSQLFunction( "sysdate", StandardBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "getdate", new NoArgSQLFunction( "getdate", StandardBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "nvl", new StandardSQLFunction( "nvl" ) );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
+
+		registry.registerNamed( "lower" );
+		registry.registerNamed( "upper" );
+		registry.registerNamed( "rtrim" );
+		registry.registerNamed( "concat", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "mod" );
+		registry.registerNamed( "to_char", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "to_date", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerNoArgs( "sysdate", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerNoArgs( "getdate", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerNamed( "nvl" );
 	}
 
 	@Override
@@ -219,27 +227,27 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
-	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-		return new GlobalTemporaryTableBulkIdStrategy(
-				new IdTableSupportStandardImpl() {
-					@Override
-					public String generateIdTableName(String baseName) {
-						final String name = super.generateIdTableName( baseName );
-						return name.length() > 30 ? name.substring( 1, 30 ) : name;
-					}
+	public IdTableStrategy getDefaultIdTableStrategy() {
+		return new GlobalTemporaryTableStrategy( generateIdTableSupport() );
+	}
 
-					@Override
-					public String getCreateIdTableCommand() {
-						return "create global temporary table";
-					}
+	private IdTableSupport generateIdTableSupport() {
+		return new StandardIdTableSupport( generateIdTableExporter() ) {
+			@Override
+			protected String determineIdTableName(String baseName) {
+				final String name = super.determineIdTableName( baseName );
+				return name.length() > 30 ? name.substring( 1, 30 ) : name;
+			}
+		};
+	}
 
-					@Override
-					public String getCreateIdTableStatementOptions() {
-						return "on commit delete rows";
-					}
-				},
-				AfterUseAction.CLEAN
-		);
+	private Exporter<IdTable> generateIdTableExporter() {
+		return new GlobalTempTableExporter() {
+			@Override
+			protected String getCreateOptions() {
+				return "on commit delete rows";
+			}
+		};
 	}
 
 	@Override

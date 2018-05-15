@@ -7,21 +7,12 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import java.util.Collection;
-import javax.persistence.metamodel.CollectionAttribute;
 
 /**
- * Hibernate extension to the JPA {@link CollectionAttribute} descriptor
+ * todo (6.0) : rename this PluralAttributeBag?
  *
  * @author Steve Ebersole
  */
-public interface BagPersistentAttribute<D,E> extends CollectionAttribute<D,E>,
-		PluralPersistentAttribute<D, Collection<E>,E> {
-	@Override
-	SimpleTypeDescriptor<E> getValueGraphType();
-
-	@Override
-	SimpleTypeDescriptor<E> getElementType();
-
-	@Override
-	ManagedTypeDescriptor<D> getDeclaringType();
+public interface BagPersistentAttribute<O,E> extends PluralPersistentAttribute<O,Collection<E>,E>,
+		javax.persistence.metamodel.CollectionAttribute<O,E> {
 }

@@ -8,21 +8,29 @@ package org.hibernate.mapping;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
+import java.util.TreeMap;
 
+import org.hibernate.boot.model.domain.MappedJoin;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.boot.model.relational.MappedPrimaryKey;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.sql.Alias;
 
 /**
  * @author Gavin King
  */
-public class Join implements AttributeContainer, Serializable {
+public class Join implements AttributeContainer, Serializable, MappedJoin {
 
 	private static final Alias PK_ALIAS = new Alias(15, "PK");
 
-	private ArrayList properties = new ArrayList();
-	private ArrayList declaredProperties = new ArrayList();
-	private Table table;
+	private TreeMap<String, PersistentAttributeMapping> declaredAttributeMappings;
+	private TreeMap<String, PersistentAttributeMapping> attributeMappings;
+
+	private MappedTable table;
 	private KeyValue key;
 	private PersistentClass persistentClass;
 	private boolean sequentialSelect;
@@ -42,37 +50,96 @@ public class Join implements AttributeContainer, Serializable {
 
 	@Override
 	public void addProperty(Property prop) {
-		properties.add(prop);
-		declaredProperties.add(prop);
+		if(attributeMappings == null){
+			attributeMappings = new TreeMap<>(  );
+		}
+		if ( declaredAttributeMappings == null ) {
+			declaredAttributeMappings = new TreeMap<>(  );
+		}
+		attributeMappings.putIfAbsent( prop.getName(), prop );
+		declaredAttributeMappings.putIfAbsent( prop.getName(), prop );
 		prop.setPersistentClass( getPersistentClass() );
 	}
 
 	public void addMappedsuperclassProperty(Property prop) {
-		properties.add(prop);
+		if ( declaredAttributeMappings == null ) {
+			declaredAttributeMappings = new TreeMap<>(  );
+		}
+		attributeMappings.put( prop.getName(), prop );
 		prop.setPersistentClass( getPersistentClass() );
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getDeclaredPersistentAttributes()}.
+	 */
+	@Deprecated
 	public Iterator getDeclaredPropertyIterator() {
-		return declaredProperties.iterator();
+		return getDeclaredPersistentAttributes().iterator();
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #containsPersistentAttributeMapping(PersistentAttributeMapping)}.
+	 */
+	@Deprecated
 	public boolean containsProperty(Property prop) {
-		return properties.contains(prop);
-	}
-	public Iterator getPropertyIterator() {
-		return properties.iterator();
+		return containsPersistentAttributeMapping( prop );
 	}
 
-	public Table getTable() {
-		return table;
+	public boolean containsPersistentAttributeMapping(PersistentAttributeMapping attributeMapping){
+		return attributeMappings.containsKey( attributeMapping.getName() );
 	}
-	public void setTable(Table table) {
+
+	/**
+	 * @deprecated since 6.0, use {@link #getPersistentAttributes()}.
+	 */
+	@Deprecated
+	public Iterator getPropertyIterator() {
+		return getPersistentAttributes().iterator();
+	}
+
+	@Override
+	public java.util.List<PersistentAttributeMapping> getPersistentAttributes(){
+		return attributeMappings == null
+				? Collections.emptyList()
+				: new ArrayList<>( attributeMappings.values() );
+	}
+
+	@Override
+	public java.util.List<PersistentAttributeMapping> getDeclaredPersistentAttributes(){
+		return declaredAttributeMappings == null
+				? Collections.emptyList()
+				: new ArrayList<>( declaredAttributeMappings.values() );
+	}
+
+	/**
+	 * @deprecated since 6.0, use {@link #getPersistentAttributes()}.{@link List#size() size()}.
+	 */
+	@Deprecated
+	public int getPropertySpan() {
+		return getPersistentAttributes().size();
+	}
+
+	/**
+	 * @deprecated since 6.0, use {@link #getMappedTable()}.
+	 */
+	@Deprecated
+	public Table getTable() {
+		return (Table) getMappedTable();
+	}
+
+	public void setTable(MappedTable table) {
 		this.table = table;
+	}
+
+	@Override
+	public MappedTable getMappedTable() {
+		return table;
 	}
 
 	public KeyValue getKey() {
 		return key;
 	}
+
 	public void setKey(KeyValue key) {
 		this.key = key;
 	}
@@ -85,21 +152,24 @@ public class Join implements AttributeContainer, Serializable {
 		this.persistentClass = persistentClass;
 	}
 
+	private ForeignKey joinMapping;
+
 	public void createForeignKey() {
-		getKey().createForeignKeyOfEntity( persistentClass.getEntityName() );
+		joinMapping = getKey().createForeignKeyOfEntity( persistentClass.getEntityName() );
+	}
+
+	@Override
+	public ForeignKey getJoinMapping() {
+		return joinMapping;
 	}
 
 	public void createPrimaryKey() {
 		//Primary key constraint
-		PrimaryKey pk = new PrimaryKey( table );
+		MappedPrimaryKey pk = new PrimaryKey( table );
 		pk.setName( PK_ALIAS.toAliasString( table.getName() ) );
 		table.setPrimaryKey(pk);
 
-		pk.addColumns( getKey().getColumnIterator() );
-	}
-
-	public int getPropertySpan() {
-		return properties.size();
+		pk.addColumns( getKey().getMappedColumns() );
 	}
 
 	public void setCustomSQLInsert(String customSQLInsert, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
@@ -159,10 +229,12 @@ public class Join implements AttributeContainer, Serializable {
 	public boolean isSequentialSelect() {
 		return sequentialSelect;
 	}
+
 	public void setSequentialSelect(boolean deferred) {
 		this.sequentialSelect = deferred;
 	}
 
+	@Override
 	public boolean isInverse() {
 		return inverse;
 	}
@@ -171,6 +243,7 @@ public class Join implements AttributeContainer, Serializable {
 		this.inverse = leftJoin;
 	}
 
+	@Override
 	public String toString() {
 		return getClass().getName() + '(' + table.toString() + ')';
 	}
@@ -186,10 +259,21 @@ public class Join implements AttributeContainer, Serializable {
 		return true;
 	}
 
+	@Override
 	public boolean isOptional() {
 		return optional;
 	}
+
 	public void setOptional(boolean nullable) {
 		this.optional = nullable;
+	}
+
+	public ExecuteUpdateResultCheckStyle getUpdateResultCheckStyle() {
+		String sql = getCustomSQLUpdate();
+		boolean callable = sql != null && isCustomUpdateCallable();
+		ExecuteUpdateResultCheckStyle checkStyle = getCustomSQLUpdateCheckStyle() == null
+				? ExecuteUpdateResultCheckStyle.determineDefault( sql, callable )
+				: getCustomSQLUpdateCheckStyle();
+		return checkStyle;
 	}
 }

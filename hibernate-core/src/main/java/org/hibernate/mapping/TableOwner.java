@@ -6,6 +6,8 @@
  */
 package org.hibernate.mapping;
 
+import org.hibernate.boot.model.relational.MappedTable;
+
 /**
  * Additional, optional contract as part pf the {@link org.hibernate.mapping.PersistentClass}
  * hierarchy used to differentiate entity bindings for entities that map to their own table
@@ -15,5 +17,13 @@ package org.hibernate.mapping;
  * @author Steve Ebersole
  */
 public interface TableOwner {
-	void setTable(Table table);
+	/**
+	 * @deprecated since 6.0, use {@link #setMappedTable(MappedTable)}.
+	 */
+	@Deprecated
+	default void setTable(Table table) {
+		setMappedTable( table );
+	}
+
+	void setMappedTable(MappedTable mappedTable);
 }

@@ -6,7 +6,7 @@
  */
 package org.hibernate.action.spi;
 
-import java.io.Serializable;
+import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -24,7 +24,7 @@ public interface Executable {
 	 *
 	 * @return The spaces affected by this action.
 	 */
-	Serializable[] getPropertySpaces();
+	Set<String> getPropertySpaces();
 
 	/**
 	 * Called before executing any actions.  Gives actions a chance to perform any preparation.

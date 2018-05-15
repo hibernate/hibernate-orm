@@ -11,10 +11,11 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import javax.persistence.criteria.CriteriaQuery;
 
-import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.query.Query;
 
 public class EventManager {
 
@@ -106,10 +107,10 @@ public class EventManager {
 
 		session.beginTransaction();
 
-		Query query = session.createQuery("from Event ev where ev.organizer = :organizer");
+		Query query = session.createQuery( "from Event ev where ev.organizer = :organizer");
 
 		query.setCacheable(true);
-		query.setEntity("organizer", organizer);
+		query.setParameter( "organizer", organizer );
 		List result = query.list();
 
 		session.getTransaction().commit();
@@ -125,9 +126,8 @@ public class EventManager {
 
 		session.beginTransaction();
 
-		List result = session.createCriteria(Event.class)
-			.setCacheable(true)
-			.list();
+		final CriteriaQuery<Event> criteria = session.getCriteriaBuilder().createQuery( Event.class );
+		final List<Event> result = session.createQuery( criteria ).setCacheable( true ).list();
 
 		session.getTransaction().commit();
 

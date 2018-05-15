@@ -6,23 +6,27 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 public class MariaDB10Dialect extends MariaDB53Dialect {
 
 	public MariaDB10Dialect() {
 		super();
-
-		registerFunction( "regexp_replace", new StandardSQLFunction( "regexp_replace", StandardBasicTypes.STRING ) );
-		registerFunction( "regexp_instr", new StandardSQLFunction( "regexp_instr", StandardBasicTypes.INTEGER ) );
-		registerFunction( "regexp_substr", new StandardSQLFunction( "regexp_substr", StandardBasicTypes.STRING ) );
-		registerFunction( "weight_string", new StandardSQLFunction( "weight_string", StandardBasicTypes.STRING ) );
-		registerFunction( "to_base64", new StandardSQLFunction( "to_base64", StandardBasicTypes.STRING ) );
-		registerFunction( "from_base64", new StandardSQLFunction( "from_base64", StandardBasicTypes.STRING ) );
 	}
 
 	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
+		registry.registerNamed( "regexp_replace", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "regexp_instr", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "regexp_substr", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "weight_string", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "to_base64", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "from_base64", StandardSpiBasicTypes.STRING );
+	}
+
+		@Override
 	public boolean supportsIfExistsBeforeConstraintName() {
 		return true;
 	}

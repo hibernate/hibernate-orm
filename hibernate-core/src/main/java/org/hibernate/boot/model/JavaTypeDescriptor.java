@@ -10,5 +10,5 @@ package org.hibernate.boot.model;
  * @author Steve Ebersole
  */
 public interface JavaTypeDescriptor {
-	public String getName();
+	String getName();
 }

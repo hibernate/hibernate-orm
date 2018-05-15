@@ -20,6 +20,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @author Steve Ebersole
  */
+@SuppressWarnings("WeakerAccess")
 public class NaturalIdReadOnlyAccess extends AbstractNaturalIdDataAccess {
 	public NaturalIdReadOnlyAccess(
 			DomainDataRegion region,

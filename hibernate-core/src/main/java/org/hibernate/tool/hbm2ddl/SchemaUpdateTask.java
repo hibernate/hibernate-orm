@@ -25,6 +25,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.tool.schema.internal.Helper;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
@@ -53,7 +54,7 @@ import org.apache.tools.ant.types.FileSet;
  * @see SchemaUpdate
  */
 public class SchemaUpdateTask extends MatchingTask {
-	private List<FileSet> fileSets = new LinkedList<FileSet>();
+	private List<FileSet> fileSets = new LinkedList<>();
 	private File propertiesFile;
 	private File configurationFile;
 	private File outputFile;
@@ -182,11 +183,11 @@ public class SchemaUpdateTask extends MatchingTask {
 
 			final MetadataImplementor metadata = (MetadataImplementor) metadataBuilder.build();
 
-			new SchemaUpdate()
+			new SchemaUpdate( Helper.buildDatabaseModel( metadata ), ssr )
 					.setOutputFile( outputFile.getPath() )
 					.setDelimiter( delimiter )
 					.setHaltOnError( haltOnError )
-					.execute( TargetTypeHelper.parseLegacyCommandLineOptions( !quiet, !text, outputFile.getPath() ), metadata );
+					.execute( TargetTypeHelper.parseLegacyCommandLineOptions( !quiet, !text, outputFile.getPath() ) );
 		}
 		catch (HibernateException e) {
 			throw new BuildException( "Schema text failed: " + e.getMessage(), e );
@@ -235,7 +236,7 @@ public class SchemaUpdateTask extends MatchingTask {
 	}
 
 	private String[] collectFiles() {
-		List<String> files = new LinkedList<String>();
+		List<String> files = new LinkedList<>();
 		for ( FileSet fileSet : fileSets ) {
 			final DirectoryScanner ds = fileSet.getDirectoryScanner( getProject() );
 			final String[] dsFiles = ds.getIncludedFiles();

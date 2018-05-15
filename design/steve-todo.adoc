@@ -1,0 +1,94 @@
+= TODO for Steve for 6.0 work
+
+== `FetchGraphContext`
+
+For cases where an "entity graph" can be used to influence how state is fetched
+`FetchGraphContext` would be how we keep track of where the process currently "is"
+in the overall graph processing (think `Stack`)
+
+
+== Navigable & (Sql)Expression (especially reading and writing)
+
+Things I believe are true here which influence the design:
+
+* The concept of "inclusions"[1] needs to be either incorporated into
+	or passed in to the ValueBinder.  Do "inclusions" apply to
+	reading as well[2]?
+* Consider combining/unifying `Writeable` and `AllowableParameterType`
+* Consider combining/unifying `Readable` and `AllowableOutputParameterType`
+* Re-define the `Readable` / `AllowableOutputParameterType` contract
+	in terms of Initializer, etc.  Have the registration of Initializers,
+	FetchInitializers, etc happen as part of
+	`QueryResultProducer#createQueryResult`.  Currently `#createQueryResult`
+	accepts the "result variable" and `QueryResultCreationContext` -
+	would just need to add `InitializerCollector` argument.
+
+[1] "inclusions" are the proposed solution for how a Navigable
+(or a parameter associated with a Navigable) are handled in terms
+of (1) the number of JDBC parameter placeholders (`?`) to render
+and then which "atomic" values get bound to the `PreparedStatement`
+
+[2] E.g. this might be true with snapshot selects, natural-id -> PK
+resolution queries, etc - cases where the thing being selected does
+not normally "own" that column, but the owner is not being selected.
+Possibly even bytecode-enhanced laziness.
+
+
+
+=== Initial idea
+
+Currently a NavigableReference (Expression) for a given Navigable is created
+"externally", usually as part of AST visitation.  Would like to re-think how
+this happens by adding `#createSqlExpression` (corollary to `#createSqmExpression`).
+This NavigableReference Expression would need to incorporate something like
+the work we did with the `Predicate<StateArrayContributor>` "inclusions" to handle
+filtering out columns based on where the NavigableReference occurs:
+
+* select-clause : all columns should ultimately be included, but should play well
+	with the "uniqueing" aspect (`SqlSelection`).
+* update-set / insert-values : only "written" columns (updateable/insertable = true).
+* predicate (where, having, join-predicate)
+* order
+* grouping
+
+Essentially this means re-thinking the relationships and "flow" between Navigable,
+Expression, ValueBinder, QueryResult, SqlSelection, etc
+
+The overall idea here is encapsulation - a Navigable knows how to generate a
+NavigableReference, possibly with `Predicate<StateArrayContributor>` encapsulated.
+Depends how ValueBinder comes in to play - ValueBinder would need that info.
+
+NavigableReference is already a `QueryResultProducer`.
+
+Remove
+* `Navigable#resolveColumnReferences`
+* `Navigable#resolveSqlSelections`
+
+These should be incorporated into the NavigableReference, QueryResult, etc
+
+Also has impact wrt `SqlSelectionGroup`
+
+
+== QueryResult
+
+Consider how to ensure that QueryResults can be re-used (performance) between different
+executions
+
+
+
+== EntityGraph
+
+Consider moving to entity graphs to internally represent fetch graphs?  Especially in conjunction
+with the planned `FetchGraphContext` (`FetchGraphProcessingState`, `FetchGraphState`, ...), which
+defines a Stack (more or less) tracking where we are in processing a fetch graph.  We need this
+for processing `EntityGraph`s anyway - would be nice to have a singular way to handle determining
+fetch shape/edges regardless of the "source" of that info.
+
+
+
+== Misc
+
+* Consolidate `org.hibernate.query.criteria.LiteralHandlingMode` and `org.hibernate.query.QueryLiteralRendering`
+* (?) `org.hibernate.sql.ast.consume.spi.ConversionContext` and others all simply expose a SessionFactory.  Maybe define a root type `SessionFactoryContext` (?)
+* (?) Move output parameter value access from `org.hibernate.procedure.ProcedureOutputs` up to `org.hibernate.result.Outputs` (?)
+* Currently, while processing mappings, unqualified entity names are qualified via HQL imports - that seems wrong, seems like it ought to be "mapping scope"-based

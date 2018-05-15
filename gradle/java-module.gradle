@@ -32,6 +32,11 @@ apply plugin: 'checkstyle'
 apply plugin: 'build-dashboard'
 apply plugin: 'project-report'
 
+apply plugin: 'org.junit.platform.gradle.plugin'
+
+// todo (6.0) - ?
+// apply plugin: org.hibernate.build.HibernateBuildPlugin
+
 ext {
 	java9ModuleNameBase = project.name.startsWith( 'hibernate-' ) ? name.drop( 'hibernate-'.length() ): name
 	java9ModuleName = "org.hibernate.orm.$project.java9ModuleNameBase"
@@ -73,7 +78,18 @@ dependencies {
 	annotationProcessor( libraries.logging )
 	annotationProcessor( libraries.logging_annotations )
 
+
+
+	// JUnit dependencies made up of:
+	// 		* JUnit 5
+	// 		* the Jupiter engine which runs JUnit 5 based tests
+	//		* the "vintage" engine - which runs JUnit 3 and 4 based tests
+	testCompile( libraries.junit5_api )
+	testRuntime( libraries.junit5_jupiter )
+	testCompile( libraries.junit5_params )
 	testCompile( libraries.junit )
+	testRuntime( libraries.junit5_vintage )
+
 	testCompile( libraries.byteman )
 	testCompile( libraries.byteman_install )
 	testCompile( libraries.byteman_bmunit )

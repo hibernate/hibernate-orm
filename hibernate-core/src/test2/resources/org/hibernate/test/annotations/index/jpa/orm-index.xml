@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<entity-mappings xmlns="http://xmlns.jcp.org/xml/ns/persistence/orm"
+                 version="2.1">
+    <package>org.hibernate.test.annotations.index.jpa</package>
+    <!--<access>FIELD</access>-->
+    <entity class="Car">
+        <table name="T_FATHER">
+            <index unique="true" column-list="brand, producer"/>
+            <index name="Car_idx" column-list="since DESC"/>
+        </table>
+        <secondary-table name="T_DEALER">
+            <index column-list="dealer_name ASC, rate DESC"/>
+        </secondary-table>
+        <attributes>
+            <id name="id">
+                <generated-value strategy="AUTO"/>
+            </id>
+            <basic name="brand"/>
+            <basic name="producer"/>
+            <basic name="since"/>
+            <many-to-many name="importers" mapped-by="cars">
+                <cascade><cascade-all/></cascade>
+            </many-to-many>
+            <element-collection name="otherDealers">
+                <collection-table name="CAR_DEALTERS">
+                    <index column-list="name"/>
+                </collection-table>
+            </element-collection>
+            <embedded name="dealer">
+                <attribute-override name="name">
+                    <column name="dealer_name" table="T_DEALER"/>
+                </attribute-override>
+                <attribute-override name="rate">
+                    <column table="T_DEALER"/>
+                </attribute-override>
+            </embedded>
+
+
+        </attributes>
+    </entity>
+
+    <entity class="Importer">
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+            <many-to-many name="cars">
+                <join-table name="CAR_IMPORTER">
+                    <index column-list="importers_id"/>
+                </join-table>
+                <cascade><cascade-all/></cascade>
+            </many-to-many>
+        </attributes>
+    </entity>
+
+    <embeddable class="Dealer">
+        <attributes>
+            <basic name="name"/>
+            <basic name="rate"/>
+        </attributes>
+    </embeddable>
+
+</entity-mappings>
+
+
+

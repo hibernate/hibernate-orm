@@ -16,9 +16,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Defines a Hibernate type mapping.
  *
- * @see org.hibernate.type.Type
  * @see org.hibernate.usertype.UserType
- * @see org.hibernate.usertype.CompositeUserType
  *
  * @see TypeDef
  *
@@ -30,8 +28,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface Type {
 	/**
 	 * The Hibernate type name.  Usually the fully qualified name of an implementation class for
-	 * {@link org.hibernate.type.Type}, {@link org.hibernate.usertype.UserType} or
-	 * {@link org.hibernate.usertype.CompositeUserType}.  May also refer to a type definition by name
 	 * {@link TypeDef#name()}
 	 */
 	String type();

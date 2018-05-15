@@ -12,6 +12,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.naming.Identifier;
 
 /**
  * Implementation of the ImplicitNamingStrategy contract, generally preferring to conform

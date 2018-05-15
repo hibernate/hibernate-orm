@@ -17,8 +17,8 @@ import org.hibernate.graph.SubGraph;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
 
 import org.jboss.logging.Logger;
@@ -109,7 +109,7 @@ public class AttributeNodeImpl<J>
 	private <S extends J> SubGraphImplementor<S> internalMakeSubgraph(ManagedTypeDescriptor<S> type) {
 		assert type != null;
 
-		log.debugf( "Making sub-graph : ( (%s) %s )", type.getName(), getAttributeName() );
+		log.debugf( "Making sub-graph : ( (%s) %s )", type.getDomainTypeName(), getAttributeName() );
 
 		final SubGraphImplementor<S> subGraph = type.makeSubGraph();
 		internalAddSubGraph( type.getJavaType(), subGraph );
@@ -152,7 +152,7 @@ public class AttributeNodeImpl<J>
 
 	@SuppressWarnings({"WeakerAccess", "unchecked"})
 	protected <S extends J> void internalAddSubGraph(Class<S> subType, SubGraphImplementor<S> subGraph) {
-		log.tracef( "Adding sub-graph : ( (%s) %s )", subGraph.getGraphedType().getName(), getAttributeName() );
+		log.tracef( "Adding sub-graph : ( (%s) %s )", subGraph.getGraphedType().getDomainTypeName(), getAttributeName() );
 
 		if ( subGraphMap == null ) {
 			subGraphMap = new HashMap<>();
@@ -189,7 +189,7 @@ public class AttributeNodeImpl<J>
 
 	private <S extends J> SubGraphImplementor<S> internalMakeKeySubgraph(ManagedTypeDescriptor<S> type) {
 
-		log.debugf( "Making key sub-graph : ( (%s) %s )", type.getName(), getAttributeName() );
+		log.debugf( "Making key sub-graph : ( (%s) %s )", type.getDomainTypeName(), getAttributeName() );
 
 		final SubGraphImplementor<S> subGraph = type.makeSubGraph();
 		internalAddKeySubGraph( type.getJavaType(), subGraph );
@@ -243,7 +243,7 @@ public class AttributeNodeImpl<J>
 				String.format(
 						Locale.ROOT,
 						"Attribute [%s#%s] (%s) cannot contain key sub-graphs - %s",
-						getAttributeDescriptor().getDeclaringType().getName(),
+						getAttributeDescriptor().getDeclaringType().getDomainTypeName(),
 						getAttributeName(),
 						getAttributeDescriptor().getPersistentAttributeType().name(),
 						keyGraphType

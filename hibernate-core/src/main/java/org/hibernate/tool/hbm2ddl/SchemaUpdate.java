@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
@@ -31,10 +30,12 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.ExceptionHandlerCollectingImpl;
 import org.hibernate.tool.schema.internal.ExceptionHandlerHaltImpl;
+import org.hibernate.tool.schema.internal.Helper;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
@@ -50,7 +51,10 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
 public class SchemaUpdate {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SchemaUpdate.class );
 
-	private final List<Exception> exceptions = new ArrayList<Exception>();
+	private final List<Exception> exceptions = new ArrayList<>();
+
+	private final DatabaseModel databaseModel;
+	private final ServiceRegistry serviceRegistry;
 
 	boolean haltOnError = false;
 
@@ -58,12 +62,13 @@ public class SchemaUpdate {
 	private String delimiter;
 	private boolean format;
 
-	public void execute(EnumSet<TargetType> targetTypes, Metadata metadata) {
-		execute( targetTypes, metadata, ( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry() );
+	public SchemaUpdate(DatabaseModel databaseModel, ServiceRegistry serviceRegistry) {
+		this.databaseModel = databaseModel;
+		this.serviceRegistry = serviceRegistry;
 	}
 
 	@SuppressWarnings("unchecked")
-	public void execute(EnumSet<TargetType> targetTypes, Metadata metadata, ServiceRegistry serviceRegistry) {
+	public void execute(EnumSet<TargetType> targetTypes) {
 		if ( targetTypes.isEmpty() ) {
 			LOG.debug( "Skipping SchemaExport as no targets were specified" );
 			return;
@@ -91,7 +96,7 @@ public class SchemaUpdate {
 		final TargetDescriptor targetDescriptor = SchemaExport.buildTargetDescriptor( targetTypes, outputFile, serviceRegistry );
 
 		try {
-			tool.getSchemaMigrator( config ).doMigration( metadata, executionOptions, targetDescriptor );
+			tool.getSchemaMigrator( databaseModel, config ).doMigration( executionOptions, targetDescriptor );
 		}
 		finally {
 			if ( exceptionHandler instanceof ExceptionHandlerCollectingImpl ) {
@@ -143,10 +148,10 @@ public class SchemaUpdate {
 			try {
 				final MetadataImplementor metadata = buildMetadata( parsedArgs, serviceRegistry );
 
-				new SchemaUpdate()
+				new SchemaUpdate( Helper.buildDatabaseModel( metadata ), serviceRegistry )
 						.setOutputFile( parsedArgs.outputFile )
 						.setDelimiter( parsedArgs.delimiter )
-						.execute( parsedArgs.targetTypes, metadata, serviceRegistry );
+						.execute( parsedArgs.targetTypes );
 			}
 			finally {
 				StandardServiceRegistryBuilder.destroy( serviceRegistry );
@@ -220,8 +225,8 @@ public class SchemaUpdate {
 		String implicitNamingStrategyImplName = null;
 		String physicalNamingStrategyImplName = null;
 
-		List<String> hbmXmlFiles = new ArrayList<String>();
-		List<String> jarFiles = new ArrayList<String>();
+		List<String> hbmXmlFiles = new ArrayList<>();
+		List<String> jarFiles = new ArrayList<>();
 
 		public static CommandLineArgs parseCommandLineArgs(String[] args) {
 			final CommandLineArgs parsedArgs = new CommandLineArgs();
@@ -284,27 +289,6 @@ public class SchemaUpdate {
 			}
 
 			return parsedArgs;
-		}
-	}
-
-	/**
-	 * Intended for test usage only.  Builds a Metadata using the same algorithm  as
-	 * {@link #main}
-	 *
-	 * @param args The "command line args"
-	 *
-	 * @return The built Metadata
-	 *
-	 * @throws Exception Problems building the Metadata
-	 */
-	public static MetadataImplementor buildMetadataFromMainArgs(String[] args) throws Exception {
-		final CommandLineArgs commandLineArgs = CommandLineArgs.parseCommandLineArgs( args );
-		StandardServiceRegistry serviceRegistry = buildStandardServiceRegistry( commandLineArgs );
-		try {
-			return buildMetadata( commandLineArgs, serviceRegistry );
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}
 }

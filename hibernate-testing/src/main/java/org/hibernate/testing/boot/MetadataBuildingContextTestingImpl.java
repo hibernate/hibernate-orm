@@ -9,16 +9,16 @@ package org.hibernate.testing.boot;
 import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
+import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
+import org.hibernate.boot.model.type.internal.TypeDefinitionRegistryImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
-import org.hibernate.type.TypeResolver;
 
 /**
 * @author Steve Ebersole
@@ -28,8 +28,8 @@ public class MetadataBuildingContextTestingImpl implements MetadataBuildingConte
 	private final MappingDefaults mappingDefaults;
 	private final InFlightMetadataCollector metadataCollector;
 	private final BootstrapContext bootstrapContext;
-
 	private final ObjectNameNormalizer objectNameNormalizer;
+	private final TypeDefinitionRegistryImpl typeDefinitionRegistry;
 
 	public MetadataBuildingContextTestingImpl() {
 		this( new StandardServiceRegistryBuilder().build() );
@@ -37,9 +37,13 @@ public class MetadataBuildingContextTestingImpl implements MetadataBuildingConte
 
 	public MetadataBuildingContextTestingImpl(StandardServiceRegistry serviceRegistry) {
 		buildingOptions = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
-		bootstrapContext = new BootstrapContextImpl( serviceRegistry, buildingOptions );
+		bootstrapContext = new BootstrapContextImpl(
+				serviceRegistry,
+				null,
+				buildingOptions
+		);
 		mappingDefaults = new MetadataBuilderImpl.MappingDefaultsImpl( serviceRegistry );
-		metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext, buildingOptions );
+		metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext,buildingOptions );
 
 		objectNameNormalizer = new ObjectNameNormalizer() {
 			@Override
@@ -47,12 +51,19 @@ public class MetadataBuildingContextTestingImpl implements MetadataBuildingConte
 				return MetadataBuildingContextTestingImpl.this;
 			}
 		};
+		this.typeDefinitionRegistry = new TypeDefinitionRegistryImpl( bootstrapContext.getTypeConfiguration() );
 	}
 
 	@Override
-	public BootstrapContext getBootstrapContext() {
-		return bootstrapContext;
+	public TypeDefinition resolveTypeDefinition(String typeName) {
+		return typeDefinitionRegistry.resolve( typeName );
 	}
+
+	@Override
+	public void addTypeDefinition(TypeDefinition typeDefinition) {
+		typeDefinitionRegistry.register( typeDefinition );
+	}
+
 
 	@Override
 	public MetadataBuildingOptions getBuildingOptions() {
@@ -70,8 +81,13 @@ public class MetadataBuildingContextTestingImpl implements MetadataBuildingConte
 	}
 
 	@Override
-	public ClassLoaderAccess getClassLoaderAccess() {
-		return bootstrapContext.getClassLoaderAccess();
+	public BootstrapContext getBootstrapContext() {
+		return null;
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return 0;
 	}
 
 	@Override

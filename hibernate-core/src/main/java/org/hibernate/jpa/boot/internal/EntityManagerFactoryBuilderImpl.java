@@ -35,6 +35,8 @@ import org.hibernate.boot.cfgxml.internal.ConfigLoader;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.cfgxml.spi.MappingReference;
+import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
@@ -53,7 +55,6 @@ import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
-import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -77,7 +78,7 @@ import org.hibernate.secure.spi.GrantedPermission;
 import org.hibernate.secure.spi.JaccPermissionDeclarations;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.tool.schema.spi.DelayedDropRegistryNotAvailableImpl;
+import org.hibernate.tool.schema.internal.Helper;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 
 import org.jboss.jandex.Index;
@@ -158,7 +159,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		 */
 		public static final JpaEntityNotFoundDelegate INSTANCE = new JpaEntityNotFoundDelegate();
 
-		public void handleEntityNotFound(String entityName, Serializable id) {
+		public void handleEntityNotFound(String entityName, Object id) {
 			throw new EntityNotFoundException( "Unable to find " + entityName  + " with id " + id );
 		}
 	}
@@ -210,13 +211,13 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		configure( standardServiceRegistry, mergedSettings );
 
 		final MetadataSources metadataSources = new MetadataSources( bsr );
-		List<AttributeConverterDefinition> attributeConverterDefinitions = populate(
+		List<ConverterDescriptor> attributeConverterDescriptors = populate(
 				metadataSources,
 				mergedSettings,
 				standardServiceRegistry
 		);
 		this.metamodelBuilder = (MetadataBuilderImplementor) metadataSources.getMetadataBuilder( standardServiceRegistry );
-		populate( metamodelBuilder, mergedSettings, standardServiceRegistry, attributeConverterDefinitions );
+		populate( metamodelBuilder, mergedSettings, standardServiceRegistry, attributeConverterDescriptors );
 
 		applyMetadataBuilderContributor();
 
@@ -440,7 +441,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 					bsrBuilder.applyClassLoader( (ClassLoader) classLoadersSetting );
 				}
 			}
-                        
+
 			//configurationValues not assigned yet, using directly the properties of the PU
 			Properties puProperties = persistenceUnit.getProperties();
 			if( puProperties != null ) {
@@ -746,7 +747,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	@SuppressWarnings("unchecked")
-	protected List<AttributeConverterDefinition> populate(
+	protected List<ConverterDescriptor> populate(
 			MetadataSources metadataSources,
 			MergedSettings mergedSettings,
 			StandardServiceRegistry ssr) {
@@ -791,7 +792,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 //			}
 //		}
 
-		List<AttributeConverterDefinition> attributeConverterDefinitions = null;
+		List<ConverterDescriptor> attributeConverterDefinitions = null;
 
 		// add any explicit Class references passed in
 		final List<Class> loadedAnnotatedClasses = (List<Class>) configurationValues.remove( AvailableSettings.LOADED_CLASSES );
@@ -801,7 +802,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 					if ( attributeConverterDefinitions == null ) {
 						attributeConverterDefinitions = new ArrayList<>();
 					}
-					attributeConverterDefinitions.add( AttributeConverterDefinition.from( (Class<? extends AttributeConverter>) cls ) );
+					attributeConverterDefinitions.add(
+							new ClassBasedConverterDescriptor( cls, metamodelBuilder.getBootstrapContext().getClassmateContext() )
+					);
 				}
 				else {
 					metadataSources.addAnnotatedClass( cls );
@@ -830,7 +833,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			MetadataBuilder metamodelBuilder,
 			MergedSettings mergedSettings,
 			StandardServiceRegistry ssr,
-			List<AttributeConverterDefinition> attributeConverterDefinitions) {
+			List<ConverterDescriptor> attributeConverterDescriptors) {
 		( (MetadataBuilderImplementor) metamodelBuilder ).getBootstrapContext().markAsJpaBootstrap();
 
 		if ( persistenceUnit.getTempClassLoader() != null ) {
@@ -856,8 +859,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			typeContributorList.getTypeContributors().forEach( metamodelBuilder::applyTypes );
 		}
 
-		if ( attributeConverterDefinitions != null ) {
-			attributeConverterDefinitions.forEach( metamodelBuilder::applyAttributeConverter );
+		if ( attributeConverterDescriptors != null ) {
+			attributeConverterDescriptors.forEach( metamodelBuilder::applyAttributeConverter );
 		}
 	}
 
@@ -918,7 +921,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			populate( sfBuilder, standardServiceRegistry );
 
 			SchemaManagementToolCoordinator.process(
-					metadata, standardServiceRegistry, configurationValues, DelayedDropRegistryNotAvailableImpl.INSTANCE
+					Helper.buildDatabaseModel( metadata ),
+					standardServiceRegistry,
+					action -> {}
 			);
 		}
 		catch (Exception e) {
@@ -943,7 +948,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	protected void populate(SessionFactoryBuilder sfBuilder, StandardServiceRegistry ssr) {
-
 		final StrategySelector strategySelector = ssr.getService( StrategySelector.class );
 
 //		// Locate and apply the requested SessionFactory-level interceptor (if one)

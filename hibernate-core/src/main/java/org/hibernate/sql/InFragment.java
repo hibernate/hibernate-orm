@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.annotations.Remove;
 import org.hibernate.internal.util.StringHelper;
 
 /**
@@ -19,7 +20,11 @@ import org.hibernate.internal.util.StringHelper;
  * <br>
  *
  * @author Gavin King
+ *
+ * @deprecated Converting to use SQL AST
  */
+@Deprecated
+@Remove
 public class InFragment {
 
 	public static final String NULL = "null";

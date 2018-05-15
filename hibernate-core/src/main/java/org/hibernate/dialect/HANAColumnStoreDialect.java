@@ -6,14 +6,15 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
-import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.local.AfterUseAction;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.query.sqm.consume.multitable.internal.StandardIdTableSupport;
+import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTempTableExporter;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTable;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTableSupport;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * An SQL dialect for the SAP HANA column store.
@@ -33,14 +34,19 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 
 	public HANAColumnStoreDialect() {
 		super();
+	}
+
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
 
 		// full-text search functions
-		registerFunction( "score", new StandardSQLFunction( "score", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "snippets", new StandardSQLFunction( "snippets" ) );
-		registerFunction( "highlighted", new StandardSQLFunction( "highlighted" ) );
-		registerFunction( "contains", new VarArgsSQLFunction( StandardBasicTypes.BOOLEAN, "contains(", ",", ") /*" ) );
-		registerFunction( "contains_rhs", new SQLFunctionTemplate( StandardBasicTypes.BOOLEAN, "*/" ) );
-		registerFunction( "not_contains", new VarArgsSQLFunction( StandardBasicTypes.BOOLEAN, "not contains(", ",", ") /*" ) );
+		registry.registerNamed( "score", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "snippets" );
+		registry.registerNamed( "highlighted" );
+		registry.registerVarArgs( "contains", StandardSpiBasicTypes.BOOLEAN, "contains(", ",", ") /*" );
+		registry.registerPattern( "contains_rhs", "*/", StandardSpiBasicTypes.BOOLEAN );
+		registry.registerVarArgs( "not_contains", StandardSpiBasicTypes.BOOLEAN, "not_contains(", ",", ") /*" );
 	}
 
 	@Override
@@ -49,19 +55,38 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 	}
 
 	@Override
-	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-		return new GlobalTemporaryTableBulkIdStrategy( new IdTableSupportStandardImpl() {
+	public IdTableStrategy getDefaultIdTableStrategy() {
+		return new GlobalTemporaryTableStrategy(
+				generateIdTableSupport()
+		);
+	}
 
+	protected IdTableSupport generateIdTableSupport() {
+		return new StandardIdTableSupport( new GlobalTempTableExporter() ) {
 			@Override
-			public String getCreateIdTableCommand() {
-				return "create global temporary column table";
+			public Exporter<IdTable> getIdTableExporter() {
+				return generateIdTableExporter();
+			}
+
+		};
+	}
+
+	protected Exporter<IdTable> generateIdTableExporter() {
+		return new GlobalTempTableExporter() {
+			@Override
+			protected String getCreateOptions() {
+				return "not logged";
 			}
 
 			@Override
-			public String getTruncateIdTableCommand() {
+			protected String getTruncateIdTableCommand() {
 				return "truncate table";
 			}
 
-		}, AfterUseAction.CLEAN );
+			@Override
+			protected String getCreateCommand() {
+				return "create global temporary column table";
+			}
+		};
 	}
 }

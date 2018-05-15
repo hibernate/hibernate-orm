@@ -20,7 +20,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * The plural form is {@link TypeDefs}.
  *
- * @see org.hibernate.type.Type
+ * @see org.hibernate.type.spi.Type
  * @see org.hibernate.usertype.UserType
  * @see org.hibernate.usertype.CompositeUserType
  *

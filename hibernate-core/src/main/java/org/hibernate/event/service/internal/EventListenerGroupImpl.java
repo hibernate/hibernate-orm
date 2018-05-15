@@ -30,7 +30,7 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	private final Set<DuplicationStrategy> duplicationStrategies = new LinkedHashSet<>();
 	private List<T> listeners;
 
-	public EventListenerGroupImpl(EventType<T> eventType, EventListenerRegistryImpl listenerRegistry) {
+	EventListenerGroupImpl(EventType<T> eventType, EventListenerRegistryImpl listenerRegistry) {
 		this.eventType = eventType;
 		this.listenerRegistry = listenerRegistry;
 

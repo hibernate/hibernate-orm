@@ -6,7 +6,7 @@
  */
 package org.hibernate.event.internal;
 
-import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.FlushMode;
@@ -34,10 +34,13 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.StateArrayContributor;
+import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.Type;
-import org.hibernate.type.TypeHelper;
+import org.hibernate.type.internal.TypeHelper;
 
 import static org.hibernate.FlushMode.COMMIT;
 import static org.hibernate.FlushMode.MANUAL;
@@ -73,9 +76,9 @@ public abstract class AbstractSaveEventListener
 	 *
 	 * @return The id used to save the entity.
 	 */
-	protected Serializable saveWithRequestedId(
+	protected Object saveWithRequestedId(
 			Object entity,
-			Serializable requestedId,
+			Object requestedId,
 			String entityName,
 			Object anything,
 			EventSource source) {
@@ -84,7 +87,7 @@ public abstract class AbstractSaveEventListener
 		return performSave(
 				entity,
 				requestedId,
-				source.getEntityPersister( entityName, entity ),
+				source.getEntityDescriptor( entityName, entity ),
 				false,
 				anything,
 				source,
@@ -107,7 +110,8 @@ public abstract class AbstractSaveEventListener
 	 * @return The id used to save the entity; may be null depending on the
 	 *         type of id generator used and the requiresImmediateIdAccess value
 	 */
-	protected Serializable saveWithGeneratedId(
+	@SuppressWarnings("unchecked")
+	protected Object saveWithGeneratedId(
 			Object entity,
 			String entityName,
 			Object anything,
@@ -119,8 +123,12 @@ public abstract class AbstractSaveEventListener
 			( (SelfDirtinessTracker) entity ).$$_hibernate_clearDirtyAttributes();
 		}
 
-		EntityPersister persister = source.getEntityPersister( entityName, entity );
-		Serializable generatedId = persister.getIdentifierGenerator().generate( source, entity );
+		final EntityTypeDescriptor entityDescriptor = source.getEntityDescriptor( entityName, entity );
+		final EntityIdentifier<Object, Object> identifierDescriptor = entityDescriptor.getHierarchy()
+				.getIdentifierDescriptor();
+		Object generatedId = identifierDescriptor
+				.getIdentifierValueGenerator()
+				.generate( source, entity );
 		if ( generatedId == null ) {
 			throw new IdentifierGenerationException( "null id generated for:" + entity.getClass() );
 		}
@@ -128,19 +136,19 @@ public abstract class AbstractSaveEventListener
 			return source.getIdentifier( entity );
 		}
 		else if ( generatedId == IdentifierGeneratorHelper.POST_INSERT_INDICATOR ) {
-			return performSave( entity, null, persister, true, anything, source, requiresImmediateIdAccess );
+			return performSave( entity, null, entityDescriptor, true, anything, source, requiresImmediateIdAccess );
 		}
 		else {
 			// TODO: define toString()s for generators
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf(
 						"Generated identifier: %s, using strategy: %s",
-						persister.getIdentifierType().toLoggableString( generatedId, source.getFactory() ),
-						persister.getIdentifierGenerator().getClass().getName()
+						entityDescriptor.getIdentifierDescriptor().getJavaTypeDescriptor().extractLoggableRepresentation( generatedId ),
+						identifierDescriptor.getClass().getName()
 				);
 			}
 
-			return performSave( entity, generatedId, persister, false, anything, source, true );
+			return performSave( entity, generatedId, entityDescriptor, false, anything, source, true );
 		}
 	}
 
@@ -150,7 +158,7 @@ public abstract class AbstractSaveEventListener
 	 *
 	 * @param entity The entity to be saved.
 	 * @param id The id by which to save the entity.
-	 * @param persister The entity's persister instance.
+	 * @param descriptor The entity's descriptor instance.
 	 * @param useIdentityColumn Is an identity column being used?
 	 * @param anything Generally cascade-specific information.
 	 * @param source The session from which the event originated.
@@ -162,45 +170,45 @@ public abstract class AbstractSaveEventListener
 	 * @return The id used to save the entity; may be null depending on the
 	 *         type of id generator used and the requiresImmediateIdAccess value
 	 */
-	protected Serializable performSave(
+	protected Object performSave(
 			Object entity,
-			Serializable id,
-			EntityPersister persister,
+			Object id,
+			EntityTypeDescriptor descriptor,
 			boolean useIdentityColumn,
 			Object anything,
 			EventSource source,
 			boolean requiresImmediateIdAccess) {
 
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Saving {0}", MessageHelper.infoString( persister, id, source.getFactory() ) );
+			LOG.tracev( "Saving {0}", MessageHelper.infoString( descriptor, id, source.getFactory() ) );
 		}
 
 		final EntityKey key;
 		if ( !useIdentityColumn ) {
-			key = source.generateEntityKey( id, persister );
+			key = source.generateEntityKey( id, descriptor );
 			Object old = source.getPersistenceContext().getEntity( key );
 			if ( old != null ) {
 				if ( source.getPersistenceContext().getEntry( old ).getStatus() == Status.DELETED ) {
 					source.forceFlush( source.getPersistenceContext().getEntry( old ) );
 				}
 				else {
-					throw new NonUniqueObjectException( id, persister.getEntityName() );
+					throw new NonUniqueObjectException( id, descriptor.getEntityName() );
 				}
 			}
-			persister.setIdentifier( entity, id, source );
+			descriptor.setIdentifier( entity, id, source );
 		}
 		else {
 			key = null;
 		}
 
-		if ( invokeSaveLifecycle( entity, persister, source ) ) {
+		if ( invokeSaveLifecycle( entity, descriptor, source ) ) {
 			return id; //EARLY EXIT
 		}
 
 		return performSaveOrReplicate(
 				entity,
 				key,
-				persister,
+				descriptor,
 				useIdentityColumn,
 				anything,
 				source,
@@ -208,10 +216,10 @@ public abstract class AbstractSaveEventListener
 		);
 	}
 
-	protected boolean invokeSaveLifecycle(Object entity, EntityPersister persister, EventSource source) {
+	protected boolean invokeSaveLifecycle(Object entity, EntityTypeDescriptor descriptor, EventSource source) {
 		// Sub-insertions should occur before containing insertion so
 		// Try to do the callback now
-		if ( persister.implementsLifecycle() ) {
+		if ( descriptor.implementsLifecycle() ) {
 			LOG.debug( "Calling onSave()" );
 			if ( ((Lifecycle) entity).onSave( source ) ) {
 				LOG.debug( "Insertion vetoed by onSave()" );
@@ -227,7 +235,7 @@ public abstract class AbstractSaveEventListener
 	 *
 	 * @param entity The entity to be saved
 	 * @param key The id to be used for saving the entity (or null, in the case of identity columns)
-	 * @param persister The entity's persister instance.
+	 * @param entityDescriptor The entity's entityDescriptor instance.
 	 * @param useIdentityColumn Should an identity column be used for id generation?
 	 * @param anything Generally cascade-specific information.
 	 * @param source The session which is the source of the current event.
@@ -237,22 +245,24 @@ public abstract class AbstractSaveEventListener
 	 * @return The id used to save the entity; may be null depending on the
 	 *         type of id generator used and the requiresImmediateIdAccess value
 	 */
-	protected Serializable performSaveOrReplicate(
+	protected Object performSaveOrReplicate(
 			Object entity,
 			EntityKey key,
-			EntityPersister persister,
+			EntityTypeDescriptor entityDescriptor,
 			boolean useIdentityColumn,
 			Object anything,
 			EventSource source,
 			boolean requiresImmediateIdAccess) {
 
-		Serializable id = key == null ? null : key.getIdentifier();
+		Object id = key == null ? null : key.getIdentifier();
 
-		boolean shouldDelayIdentityInserts = shouldDelayIdentityInserts( requiresImmediateIdAccess, source, persister );
+		boolean shouldDelayIdentityInserts = shouldDelayIdentityInserts( requiresImmediateIdAccess, source, entityDescriptor );
 
 		// Put a placeholder in entries, so we don't recurse back and try to save() the
 		// same object again. QUESTION: should this be done before onSave() is called?
 		// likewise, should it be done before onUpdate()?
+
+		// todo (6.0) : Should we do something here like `org.hibernate.sql.results.spi.JdbcValuesSourceProcessingState#registerLoadingEntity` ?
 		EntityEntry original = source.getPersistenceContext().addEntry(
 				entity,
 				Status.SAVING,
@@ -262,40 +272,39 @@ public abstract class AbstractSaveEventListener
 				null,
 				LockMode.WRITE,
 				useIdentityColumn,
-				persister,
+				entityDescriptor,
 				false
 		);
 
-		cascadeBeforeSave( source, persister, entity, anything );
+		cascadeBeforeSave( source, entityDescriptor, entity, anything );
 
-		Object[] values = persister.getPropertyValuesToInsert( entity, getMergeMap( anything ), source );
-		Type[] types = persister.getPropertyTypes();
+		Object[] values = entityDescriptor.getPropertyValuesToInsert( entity, getMergeMap( anything ), source );
+//		final List<Navigable> navigables = entityDescriptor.getNavigables();
 
-		boolean substitute = substituteValuesIfNecessary( entity, id, values, persister, source );
+		boolean substitute = substituteValuesIfNecessary( entity, id, values, entityDescriptor, source );
 
-		if ( persister.hasCollections() ) {
-			substitute = substitute || visitCollectionsBeforeSave( entity, id, values, types, source );
+		if ( entityDescriptor.hasCollections() ) {
+			substitute = substitute || visitCollectionsBeforeSave( entity, id, values, entityDescriptor.getPersistentAttributes(), source );
 		}
 
 		if ( substitute ) {
-			persister.setPropertyValues( entity, values );
+			entityDescriptor.setPropertyValues( entity, values );
 		}
 
 		TypeHelper.deepCopy(
+				entityDescriptor,
 				values,
-				types,
-				persister.getPropertyUpdateability(),
 				values,
-				source
+				StateArrayContributor::isUpdatable
 		);
 
 		AbstractEntityInsertAction insert = addInsertAction(
-				values, id, entity, persister, useIdentityColumn, source, shouldDelayIdentityInserts
+				values, id, entity, entityDescriptor, useIdentityColumn, source, shouldDelayIdentityInserts
 		);
 
 		// postpone initializing id in case the insert has non-nullable transient dependencies
 		// that are not resolved until cascadeAfterSave() is executed
-		cascadeAfterSave( source, persister, entity, anything );
+		cascadeAfterSave( source, entityDescriptor, entity, anything );
 		if ( useIdentityColumn && insert.isEarlyInsert() ) {
 			if ( !EntityIdentityInsertAction.class.isInstance( insert ) ) {
 				throw new IllegalStateException(
@@ -320,16 +329,24 @@ public abstract class AbstractSaveEventListener
 		return id;
 	}
 
-	private static boolean shouldDelayIdentityInserts(boolean requiresImmediateIdAccess, EventSource source, EntityPersister persister) {
-		return shouldDelayIdentityInserts( requiresImmediateIdAccess, isPartOfTransaction( source ), source.getHibernateFlushMode(), persister );
+	private static boolean shouldDelayIdentityInserts(
+			boolean requiresImmediateIdAccess,
+			EventSource source,
+			EntityTypeDescriptor descriptor) {
+		return shouldDelayIdentityInserts(
+				requiresImmediateIdAccess,
+				isPartOfTransaction( source ),
+				source.getHibernateFlushMode(),
+				descriptor
+		);
 	}
 
 	private static boolean shouldDelayIdentityInserts(
 			boolean requiresImmediateIdAccess,
 			boolean partOfTransaction,
 			FlushMode flushMode,
-			EntityPersister persister) {
-		if ( !persister.getFactory().getSessionFactoryOptions().isPostInsertIdentifierDelayableEnabled() ) {
+			EntityTypeDescriptor entityDescriptor) {
+		if ( !entityDescriptor.getFactory().getSessionFactoryOptions().isPostInsertIdentifierDelayableEnabled() ) {
 			return false;
 		}
 
@@ -342,12 +359,12 @@ public abstract class AbstractSaveEventListener
 		//		1) we are not part of a transaction
 		//		2) we are in FlushMode MANUAL or COMMIT (not AUTO nor ALWAYS)
 		if ( !partOfTransaction || flushMode == MANUAL || flushMode == COMMIT ) {
-			if ( persister.canIdentityInsertBeDelayed() ) {
+			if ( entityDescriptor.canIdentityInsertBeDelayed() ) {
 				return true;
 			}
 			LOG.debugf(
 					"Identity insert for entity [%s] should be delayed; however the persister requested early insert.",
-					persister.getEntityName()
+					entityDescriptor.getEntityName()
 			);
 			return false;
 		}
@@ -362,23 +379,23 @@ public abstract class AbstractSaveEventListener
 
 	private AbstractEntityInsertAction addInsertAction(
 			Object[] values,
-			Serializable id,
+			Object id,
 			Object entity,
-			EntityPersister persister,
+			EntityTypeDescriptor descriptor,
 			boolean useIdentityColumn,
 			EventSource source,
 			boolean shouldDelayIdentityInserts) {
 		if ( useIdentityColumn ) {
 			EntityIdentityInsertAction insert = new EntityIdentityInsertAction(
-					values, entity, persister, isVersionIncrementDisabled(), source, shouldDelayIdentityInserts
+					values, entity, descriptor, isVersionIncrementDisabled(), source, shouldDelayIdentityInserts
 			);
 			source.getActionQueue().addAction( insert );
 			return insert;
 		}
 		else {
-			Object version = Versioning.getVersion( values, persister );
+			Object version = Versioning.getVersion( values, descriptor );
 			EntityInsertAction insert = new EntityInsertAction(
-					id, values, entity, version, persister, isVersionIncrementDisabled(), source
+					id, values, entity, version, descriptor, isVersionIncrementDisabled(), source
 			);
 			source.getActionQueue().addAction( insert );
 			return insert;
@@ -402,13 +419,13 @@ public abstract class AbstractSaveEventListener
 
 	protected boolean visitCollectionsBeforeSave(
 			Object entity,
-			Serializable id,
+			Object id,
 			Object[] values,
-			Type[] types,
+			List<PersistentAttributeDescriptor> attributes,
 			EventSource source) {
 		WrapVisitor visitor = new WrapVisitor( source );
 		// substitutes into values by side-effect
-		visitor.processEntityPropertyValues( values, types );
+		visitor.processEntityPropertyValues( values, attributes );
 		return visitor.isSubstitutionRequired();
 	}
 
@@ -419,7 +436,7 @@ public abstract class AbstractSaveEventListener
 	 * @param entity The entity
 	 * @param id The entity identifier
 	 * @param values The snapshot entity state
-	 * @param persister The entity persister
+	 * @param entityDescriptor The entity descriptor
 	 * @param source The originating session
 	 *
 	 * @return True if the snapshot state changed such that
@@ -427,24 +444,24 @@ public abstract class AbstractSaveEventListener
 	 */
 	protected boolean substituteValuesIfNecessary(
 			Object entity,
-			Serializable id,
+			Object id,
 			Object[] values,
-			EntityPersister persister,
+			EntityTypeDescriptor entityDescriptor,
 			SessionImplementor source) {
 		boolean substitute = source.getInterceptor().onSave(
 				entity,
 				id,
 				values,
-				persister.getPropertyNames(),
-				persister.getPropertyTypes()
+				entityDescriptor.getPropertyNames(),
+				entityDescriptor.getPropertyJavaTypeDescriptors()
 		);
 
-		//keep the existing version number in the case of replicate!
-		if ( persister.isVersioned() ) {
+		// keep the existing version number in the case of replicate!
+		final VersionDescriptor versionDescriptor = entityDescriptor.getHierarchy().getVersionDescriptor();
+		if ( versionDescriptor != null ) {
 			substitute = Versioning.seedVersion(
 					values,
-					persister.getVersionProperty(),
-					persister.getVersionType(),
+					versionDescriptor,
 					source
 			) || substitute;
 		}
@@ -455,13 +472,13 @@ public abstract class AbstractSaveEventListener
 	 * Handles the calls needed to perform pre-save cascades for the given entity.
 	 *
 	 * @param source The session from whcih the save event originated.
-	 * @param persister The entity's persister instance.
+	 * @param descriptor The entity's descriptor instance.
 	 * @param entity The entity to be saved.
 	 * @param anything Generally cascade-specific data
 	 */
 	protected void cascadeBeforeSave(
 			EventSource source,
-			EntityPersister persister,
+			EntityTypeDescriptor descriptor,
 			Object entity,
 			Object anything) {
 
@@ -472,7 +489,7 @@ public abstract class AbstractSaveEventListener
 					getCascadeAction(),
 					CascadePoint.BEFORE_INSERT_AFTER_DELETE,
 					source,
-					persister,
+					descriptor,
 					entity,
 					anything
 			);
@@ -486,13 +503,13 @@ public abstract class AbstractSaveEventListener
 	 * Handles to calls needed to perform post-save cascades.
 	 *
 	 * @param source The session from which the event originated.
-	 * @param persister The entity's persister instance.
+	 * @param descriptor The entity's descriptor instance.
 	 * @param entity The entity beng saved.
 	 * @param anything Generally cascade-specific data
 	 */
 	protected void cascadeAfterSave(
 			EventSource source,
-			EntityPersister persister,
+			EntityTypeDescriptor descriptor,
 			Object entity,
 			Object anything) {
 
@@ -503,7 +520,7 @@ public abstract class AbstractSaveEventListener
 					getCascadeAction(),
 					CascadePoint.AFTER_INSERT_BEFORE_DELETE,
 					source,
-					persister,
+					descriptor,
 					entity,
 					anything
 			);

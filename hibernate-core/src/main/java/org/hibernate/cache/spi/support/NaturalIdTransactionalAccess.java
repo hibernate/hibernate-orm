@@ -16,6 +16,7 @@ import org.hibernate.cache.spi.support.DomainDataStorageAccess;
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("WeakerAccess")
 public class NaturalIdTransactionalAccess extends AbstractNaturalIdDataAccess {
 	public NaturalIdTransactionalAccess(
 			DomainDataRegion region,

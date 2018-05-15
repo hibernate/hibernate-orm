@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.naming;
 
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.naming.Identifier;
 
 /**
  * Implements the original legacy naming behavior.

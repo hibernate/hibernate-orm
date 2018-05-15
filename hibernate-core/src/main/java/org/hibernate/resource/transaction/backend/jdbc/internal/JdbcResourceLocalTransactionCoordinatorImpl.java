@@ -154,10 +154,11 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 	// PhysicalTransactionDelegate ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private void afterBeginCallback() {
-		if(this.timeOut > 0) {
+		log.trace( "ResourceLocalTransactionCoordinatorImpl#afterBeginCallback" );
+
+		if ( this.timeOut > 0 ) {
 			transactionCoordinatorOwner.setTransactionTimeOut( this.timeOut );
 		}
-
 
 		// report entering into a "transactional context"
 		transactionCoordinatorOwner.startTransactionBoundary();
@@ -169,7 +170,6 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		for ( TransactionObserver observer : observers() ) {
 			observer.afterBegin();
 		}
-		log.trace( "ResourceLocalTransactionCoordinatorImpl#afterBeginCallback" );
 	}
 
 	private void beforeCompletionCallback() {
@@ -220,7 +220,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		private boolean invalid;
 		private boolean rollbackOnly = false;
 
-		public TransactionDriverControlImpl(JdbcResourceTransaction jdbcResourceTransaction) {
+		TransactionDriverControlImpl(JdbcResourceTransaction jdbcResourceTransaction) {
 			super();
 			this.jdbcResourceTransaction = jdbcResourceTransaction;
 		}
@@ -237,6 +237,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 			JdbcResourceLocalTransactionCoordinatorImpl.this.afterBeginCallback();
 		}
 
+		@SuppressWarnings("WeakerAccess")
 		protected void errorIfInvalid() {
 			if ( invalid ) {
 				throw new IllegalStateException( "Physical-transaction delegate is no longer valid" );
@@ -280,7 +281,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 					rollback();
 				}
 				catch (RuntimeException e2) {
-					log.debug( "Encountered failure rolling back failed commit", e2 );;
+					log.debug( "Encountered failure rolling back failed commit", e2 );
 				}
 				throw e;
 			}

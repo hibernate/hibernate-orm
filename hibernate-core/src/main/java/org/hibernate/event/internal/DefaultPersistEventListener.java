@@ -6,7 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.io.Serializable;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
@@ -24,9 +23,8 @@ import org.hibernate.event.spi.PersistEventListener;
 import org.hibernate.id.ForeignGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
@@ -36,10 +34,9 @@ import org.hibernate.proxy.LazyInitializer;
  * transient entities in response to generated create events.
  *
  * @author Gavin King
+ * @author Steve Ebersole
  */
-public class DefaultPersistEventListener
-		extends AbstractSaveEventListener
-		implements PersistEventListener, CallbackRegistryConsumer {
+public class DefaultPersistEventListener extends AbstractSaveEventListener implements PersistEventListener , CallbackRegistryConsumer {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultPersistEventListener.class );
 
 	@Override
@@ -110,12 +107,12 @@ public class DefaultPersistEventListener
 			// entity state again.
 
 			// NOTE: entityEntry must be null to get here, so we cannot use any of its values
-			EntityPersister persister = source.getFactory().getEntityPersister( entityName );
-			if ( ForeignGenerator.class.isInstance( persister.getIdentifierGenerator() ) ) {
-				if ( LOG.isDebugEnabled() && persister.getIdentifier( entity, source ) != null ) {
+			EntityTypeDescriptor descriptor = source.getFactory().getEntityPersister( entityName );
+			if ( ForeignGenerator.class.isInstance( descriptor.getHierarchy().getIdentifierDescriptor().getIdentifierValueGenerator() ) ) {
+				if ( LOG.isDebugEnabled() && descriptor.getIdentifier( entity, source ) != null ) {
 					LOG.debug( "Resetting entity id attribute to null for foreign generator" );
 				}
-				persister.setIdentifier( entity, null, source );
+				descriptor.setIdentifier( entity, null, source );
 				entityState = getEntityState( entity, entityName, entityEntry, source );
 			}
 		}
@@ -161,18 +158,18 @@ public class DefaultPersistEventListener
 		//TODO: check that entry.getIdentifier().equals(requestedId)
 
 		final Object entity = source.getPersistenceContext().unproxy( event.getObject() );
-		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
+		final EntityTypeDescriptor descriptor = source.getEntityDescriptor( event.getEntityName(), entity );
 
 		if ( createCache.put( entity, entity ) == null ) {
-			justCascade( createCache, source, entity, persister );
+			justCascade( createCache, source, entity, descriptor );
 
 		}
 	}
 
-	private void justCascade(Map createCache, EventSource source, Object entity, EntityPersister persister) {
+	private void justCascade(Map createCache, EventSource source, Object entity, EntityTypeDescriptor descriptor) {
 		//TODO: merge into one method!
-		cascadeBeforeSave( source, persister, entity, createCache );
-		cascadeAfterSave( source, persister, entity, createCache );
+		cascadeBeforeSave( source, descriptor, entity, createCache );
+		cascadeAfterSave( source, descriptor, entity, createCache );
 	}
 
 	/**
@@ -198,19 +195,19 @@ public class DefaultPersistEventListener
 		final EventSource source = event.getSession();
 
 		final Object entity = source.getPersistenceContext().unproxy( event.getObject() );
-		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
+		final EntityTypeDescriptor descriptor = source.getEntityDescriptor( event.getEntityName(), entity );
 
 		LOG.tracef(
 				"un-scheduling entity deletion [%s]",
 				MessageHelper.infoString(
-						persister,
-						persister.getIdentifier( entity, source ),
+						descriptor,
+						descriptor.getIdentifier( entity, source ),
 						source.getFactory()
 				)
 		);
 
 		if ( createCache.put( entity, entity ) == null ) {
-			justCascade( createCache, source, entity, persister );
+			justCascade( createCache, source, entity, descriptor );
 		}
 	}
 }

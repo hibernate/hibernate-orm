@@ -15,7 +15,6 @@ import org.hibernate.boot.SessionFactoryBuilder;
  * @author Steve Ebersole
  */
 public interface SessionFactoryBuilderImplementor extends SessionFactoryBuilder {
-
 	void disableJtaTransactionAccess();
 
 	default void disableRefreshDetachedEntity() {

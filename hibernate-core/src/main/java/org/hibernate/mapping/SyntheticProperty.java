@@ -7,6 +7,8 @@
 package org.hibernate.mapping;
 
 
+import org.hibernate.boot.spi.MetadataBuildingContext;
+
 /**
  * Models a property which does not actually exist in the model.  It is created by Hibernate during
  * the metamodel binding process. 
@@ -14,6 +16,10 @@ package org.hibernate.mapping;
  * @author Steve Ebersole
  */
 public class SyntheticProperty extends Property {
+	public SyntheticProperty(MetadataBuildingContext context) {
+		super( context );
+	}
+
 	@Override
 	public boolean isSynthetic() {
 		return true;

@@ -8,13 +8,11 @@ package org.hibernate.event.service.internal;
 
 import java.lang.reflect.Array;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Metamodel;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.internal.DefaultAutoFlushEventListener;
 import org.hibernate.event.internal.DefaultDeleteEventListener;
@@ -46,10 +44,10 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.jpa.event.internal.CallbackBuilderLegacyImpl;
 import org.hibernate.jpa.event.internal.CallbackRegistryImpl;
 import org.hibernate.jpa.event.spi.CallbackBuilder;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
+import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
 
 import static org.hibernate.event.spi.EventType.AUTO_FLUSH;
@@ -100,21 +98,6 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 	private final EventListenerGroupImpl[] registeredEventListeners;
 	private CallbackBuilder callbackBuilder;
 
-	/**
-	 * @deprecated Use {@link EventListenerRegistryImpl#EventListenerRegistryImpl(BootstrapContext, SessionFactoryImplementor)} instead
-	 */
-	@Deprecated
-	EventListenerRegistryImpl(
-			SessionFactoryImplementor sessionFactory,
-			SessionFactoryOptions sessionFactoryOptions,
-			ServiceRegistryImplementor registry) {
-		this.sessionFactory = sessionFactory;
-
-		this.callbackRegistry = new CallbackRegistryImpl();
-
-		this.registeredEventListeners = buildListenerGroups();
-	}
-
 	EventListenerRegistryImpl(BootstrapContext bootstrapContext, SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
 
@@ -136,34 +119,24 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 	}
 
 	@Override
-	public void prepare(MetadataImplementor metadata) {
-		if ( callbackBuilder == null ) {
-			// TODO : not needed anymore when the deprecate constructor will be removed
-			this.callbackBuilder = new CallbackBuilderLegacyImpl(
-					sessionFactory.getServiceRegistry().getService( ManagedBeanRegistry.class ),
-					metadata.getMetadataBuildingOptions().getReflectionManager()
-			);
-		}
-		for ( PersistentClass persistentClass : metadata.getEntityBindings() ) {
-			if ( persistentClass.getClassName() == null ) {
-				// we can have non java class persisted by hibernate
-				continue;
-			}
-			callbackBuilder.buildCallbacksForEntity( persistentClass.getClassName(), callbackRegistry );
+	public void prepare(Metamodel metamodel) {
+		metamodel.visitEntityDescriptors( entityDescriptor -> {
+			String entityName = entityDescriptor.getJavaTypeDescriptor().getTypeName();
+			if ( entityName != null && entityDescriptor.getRepresentationStrategy().getMode() == RepresentationMode.POJO ) {
+				callbackBuilder.buildCallbacksForEntity( entityName, callbackRegistry );
 
-			for ( Iterator propertyIterator = persistentClass.getDeclaredPropertyIterator();
-					propertyIterator.hasNext(); ) {
-				Property property = (Property) propertyIterator.next();
-
-				if ( property.getType().isComponentType() ) {
-					callbackBuilder.buildCallbacksForEmbeddable(
-							property,
-							persistentClass.getClassName(),
-							callbackRegistry
-					);
-				}
+				entityDescriptor.visitDeclaredNavigables( new NavigableVisitationStrategy() {
+					@Override
+					public void visitSingularAttributeEmbedded(SingularPersistentAttributeEmbedded attribute) {
+						callbackBuilder.buildCallbacksForEmbeddable(
+								attribute,
+								entityName,
+								callbackRegistry
+						);
+					}
+				} );
 			}
-		}
+		});
 	}
 
 	@SuppressWarnings({ "unchecked" })
@@ -510,10 +483,10 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 		if ( type == EventType.POST_COMMIT_DELETE
 				|| type == EventType.POST_COMMIT_INSERT
 				|| type == EventType.POST_COMMIT_UPDATE ) {
-			listenerGroup = new PostCommitEventListenerGroupImpl<T>( type, this );
+			listenerGroup = new PostCommitEventListenerGroupImpl<>( type, this );
 		}
 		else {
-			listenerGroup = new EventListenerGroupImpl<T>( type, this );
+			listenerGroup = new EventListenerGroupImpl<>( type, this );
 		}
 
 		if ( defaultListener != null ) {

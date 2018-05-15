@@ -9,14 +9,14 @@ package org.hibernate.event.internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ObjectDeletedException;
-import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.pretty.MessageHelper;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -37,8 +37,7 @@ public abstract class AbstractLockUpgradeEventListener extends AbstractReassocia
 	 * @param source The session which is the source of the event being processed.
 	 */
 	protected void upgradeLock(Object object, EntityEntry entry, LockOptions lockOptions, EventSource source) {
-
-		LockMode requestedLockMode = lockOptions.getLockMode();
+		final LockMode requestedLockMode = lockOptions.getLockMode();
 		if ( requestedLockMode.greaterThan( entry.getLockMode() ) ) {
 			// The user requested a "greater" (i.e. more restrictive) form of
 			// pessimistic lock
@@ -47,50 +46,63 @@ public abstract class AbstractLockUpgradeEventListener extends AbstractReassocia
 				throw new ObjectDeletedException(
 						"attempted to lock a deleted instance",
 						entry.getId(),
-						entry.getPersister().getEntityName()
+						entry.getDescriptor().getEntityName()
 				);
 			}
 
-			final EntityPersister persister = entry.getPersister();
+			final EntityTypeDescriptor entityDescriptor = entry.getDescriptor();
 
 			if ( log.isTraceEnabled() ) {
 				log.tracev(
 						"Locking {0} in mode: {1}",
-						MessageHelper.infoString( persister, entry.getId(), source.getFactory() ),
+						MessageHelper.infoString( entityDescriptor, entry.getId(), source.getFactory() ),
 						requestedLockMode
 				);
 			}
 
-			final boolean cachingEnabled = persister.canWriteToCache();
+			final boolean cachingEnabled = entityDescriptor.canWriteToCache();
 			SoftLock lock = null;
 			Object ck = null;
 			try {
 				if ( cachingEnabled ) {
-					EntityDataAccess cache = persister.getCacheAccessStrategy();
-					ck = cache.generateCacheKey( entry.getId(), persister, source.getFactory(), source.getTenantIdentifier() );
-					lock = cache.lockItem( source, ck, entry.getVersion() );
+					ck = entityDescriptor.getHierarchy().getEntityCacheAccess().generateCacheKey(
+							entry.getId(),
+							entityDescriptor.getHierarchy(),
+							source.getFactory(),
+							source.getTenantIdentifier()
+					);
+					lock = entityDescriptor.getHierarchy().getEntityCacheAccess().lockItem( source, ck, entry.getVersion() );
 				}
 
-				if ( persister.isVersioned() && requestedLockMode == LockMode.FORCE  ) {
+				if ( entityDescriptor.getHierarchy().getVersionDescriptor() != null
+						&& shouldForceVersionIncrement( requestedLockMode ) ) {
 					// todo : should we check the current isolation mode explicitly?
-					Object nextVersion = persister.forceVersionIncrement(
-							entry.getId(), entry.getVersion(), source
+					final Object nextVersion = entityDescriptor.forceVersionIncrement(
+							entry.getId(),
+							entry.getVersion(),
+							source
 					);
 					entry.forceLocked( object, nextVersion );
 				}
 				else {
-					persister.lock( entry.getId(), entry.getVersion(), object, lockOptions, source );
+					entityDescriptor.lock( entry.getId(), entry.getVersion(), object, lockOptions, source );
 				}
-				entry.setLockMode(requestedLockMode);
+				entry.setLockMode( requestedLockMode );
 			}
 			finally {
 				// the database now holds a lock + the object is flushed from the cache,
 				// so release the soft lock
 				if ( cachingEnabled ) {
-					persister.getCacheAccessStrategy().unlockItem( source, ck, lock );
+					entityDescriptor.getHierarchy().getEntityCacheAccess().unlockItem( source, ck, lock );
 				}
 			}
 
 		}
+	}
+
+	protected boolean shouldForceVersionIncrement(LockMode requestedLockMode) {
+		return requestedLockMode == LockMode.FORCE
+				|| requestedLockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT
+				|| requestedLockMode == LockMode.OPTIMISTIC_FORCE_INCREMENT;
 	}
 }

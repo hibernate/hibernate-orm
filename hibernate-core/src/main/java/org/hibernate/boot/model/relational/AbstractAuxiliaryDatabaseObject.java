@@ -22,7 +22,7 @@ import org.hibernate.dialect.Dialect;
  * @author Steve Ebersole
  */
 public abstract class AbstractAuxiliaryDatabaseObject
-		implements AuxiliaryDatabaseObject, AuxiliaryDatabaseObject.Expandable {
+		implements MappedAuxiliaryDatabaseObject, MappedAuxiliaryDatabaseObject.Expandable {
 	private static final String EXPORT_IDENTIFIER_PREFIX = "auxiliary-object-";
 	private static final AtomicInteger counter = new AtomicInteger( 0 );
 
@@ -50,7 +50,7 @@ public abstract class AbstractAuxiliaryDatabaseObject
 	}
 
 	@Override
-	public String getExportIdentifier() {
+	public String getIdentifier() {
 		return exportIdentifier;
 	}
 
@@ -73,4 +73,5 @@ public abstract class AbstractAuxiliaryDatabaseObject
 	public boolean beforeTablesOnCreation() {
 		return beforeTables;
 	}
+
 }

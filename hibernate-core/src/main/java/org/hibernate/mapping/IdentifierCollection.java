@@ -8,8 +8,7 @@ package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.engine.spi.Mapping;
+import org.hibernate.boot.model.relational.MappedPrimaryKey;
 
 /**
  * A collection with a synthetic "identifier" column
@@ -19,14 +18,6 @@ public abstract class IdentifierCollection extends Collection {
 	public static final String DEFAULT_IDENTIFIER_COLUMN_NAME = "id";
 
 	private KeyValue identifier;
-
-	/**
-	 * @deprecated Use {@link IdentifierCollection#IdentifierCollection(MetadataBuildingContext, PersistentClass)} instead.
- 	 */
-	@Deprecated
-	public IdentifierCollection(MetadataImplementor metadata, PersistentClass owner) {
-		super( metadata, owner );
-	}
 
 	public IdentifierCollection(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
@@ -55,24 +46,24 @@ public abstract class IdentifierCollection extends Collection {
 
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
-			PrimaryKey pk = new PrimaryKey( getCollectionTable() );
-			pk.addColumns( getIdentifier().getColumnIterator() );
-			getCollectionTable().setPrimaryKey(pk);
+			MappedPrimaryKey pk = new PrimaryKey( getMappedTable() );
+			pk.addColumns( getIdentifier().getMappedColumns() );
+			getMappedTable().setPrimaryKey(pk);
 		}
 		// create an index on the key columns??
 	}
 
-	public void validate(Mapping mapping) throws MappingException {
-		super.validate( mapping );
+	public void validate() throws MappingException {
+		super.validate();
 
 		assert getElement() != null : "IdentifierCollection identifier not bound : " + getRole();
 
-		if ( !getIdentifier().isValid(mapping) ) {
+		if ( !getIdentifier().isValid() ) {
 			throw new MappingException(
 				"collection id mapping has wrong number of columns: " +
 				getRole() +
 				" type: " +
-				getIdentifier().getType().getName()
+				getIdentifier().getJavaTypeMapping().getTypeName()
 			);
 		}
 	}

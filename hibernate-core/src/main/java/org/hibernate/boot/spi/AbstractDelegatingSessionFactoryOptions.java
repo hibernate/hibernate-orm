@@ -12,7 +12,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
-import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.MultiTenancyStrategy;
@@ -24,16 +23,16 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.LiteralHandlingMode;
+import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 /**
  * Convenience base class for custom implementors of SessionFactoryOptions, using delegation
@@ -138,16 +137,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public EntityMode getDefaultEntityMode() {
-		return delegate.getDefaultEntityMode();
-	}
-
-	@Override
-	public EntityTuplizerFactory getEntityTuplizerFactory() {
-		return delegate.getEntityTuplizerFactory();
-	}
-
-	@Override
 	public boolean isCheckNullability() {
 		return delegate.isCheckNullability();
 	}
@@ -158,8 +147,8 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public MultiTableBulkIdStrategy getMultiTableBulkIdStrategy() {
-		return delegate.getMultiTableBulkIdStrategy();
+	public IdTableStrategy getIdTableStrategy() {
+		return delegate.getIdTableStrategy();
 	}
 
 	@Override
@@ -364,8 +353,8 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public Map<String, SQLFunction> getCustomSqlFunctionMap() {
-		return delegate.getCustomSqlFunctionMap();
+	public SqmFunctionRegistry getSqmFunctionRegistry() {
+		return delegate.getSqmFunctionRegistry();
 	}
 
 	@Override
@@ -426,6 +415,24 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public boolean inClauseParameterPaddingEnabled() {
 		return delegate.inClauseParameterPaddingEnabled();
+	}
+
+	/**
+	 * @todo (6.0) : this is really the same intent as {@link #jdbcStyleParamsZeroBased}
+	 */
+	@Override
+	public Integer getNonJpaNativeQueryOrdinalParameterBase() {
+		return delegate.getNonJpaNativeQueryOrdinalParameterBase();
+	}
+
+	@Override
+	public boolean isUseOfJdbcNamedParametersEnabled() {
+		return delegate.isUseOfJdbcNamedParametersEnabled();
+	}
+
+	@Override
+	public QueryLiteralRendering getQueryLiteralRendering() {
+		return delegate.getQueryLiteralRendering();
 	}
 
 	@Override

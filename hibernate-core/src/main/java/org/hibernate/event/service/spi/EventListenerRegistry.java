@@ -8,7 +8,7 @@ package org.hibernate.event.service.spi;
 
 import java.io.Serializable;
 
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.Metamodel;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.service.Service;
 
@@ -19,7 +19,7 @@ import org.hibernate.service.Service;
  * @author Steve Ebersole
  */
 public interface EventListenerRegistry extends Service, Serializable {
-	void prepare(MetadataImplementor metadata);
+	void prepare(Metamodel metamodel);
 
 	<T> EventListenerGroup<T> getEventListenerGroup(EventType<T> eventType);
 

@@ -9,7 +9,7 @@ package org.hibernate.cache.spi.access;
 import org.hibernate.cache.CacheException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 
 /**
  * Contract for managing transactional and concurrent access to cached entity
@@ -32,7 +32,7 @@ public interface EntityDataAccess extends CachedDomainDataAccess {
 	 * To create instances of keys for this region, Hibernate will invoke this method
 	 * exclusively so that generated implementations can generate optimised keys.
 	 * @param id the primary identifier of the entity
-	 * @param rootEntityDescriptor Hierarchy for which a key is being generated
+	 * @param hierarchy Hierarchy for which a key is being generated
 	 * @param factory a reference to the current SessionFactory
 	 * @param tenantIdentifier the tenant id, or null if multi-tenancy is not being used.
 	 * @return a key which can be used to identify this entity on this same region
@@ -41,7 +41,7 @@ public interface EntityDataAccess extends CachedDomainDataAccess {
 	 */
 	Object generateCacheKey(
 			Object id,
-			EntityPersister rootEntityDescriptor,
+			EntityHierarchy hierarchy,
 			SessionFactoryImplementor factory,
 			String tenantIdentifier);
 

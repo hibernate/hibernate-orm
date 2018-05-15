@@ -8,6 +8,7 @@ package org.hibernate.service.internal;
 
 import java.util.List;
 
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -27,10 +28,11 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 public class SessionFactoryServiceRegistryImpl
 		extends AbstractServiceRegistryImpl
 		implements SessionFactoryServiceRegistry, SessionFactoryServiceInitiatorContext {
-
-	private final SessionFactoryOptions sessionFactoryOptions;
 	private final SessionFactoryImplementor sessionFactory;
+	private final SessionFactoryOptions sessionFactoryOptions;
 	private EventListenerRegistry cachedEventListenerRegistry;
+
+	private final BootstrapContext bootstrapContext;
 
 	@SuppressWarnings( {"unchecked"})
 	public SessionFactoryServiceRegistryImpl(
@@ -38,16 +40,17 @@ public class SessionFactoryServiceRegistryImpl
 			List<SessionFactoryServiceInitiator> initiators,
 			List<ProvidedService> providedServices,
 			SessionFactoryImplementor sessionFactory,
+			BootstrapContext bootstrapContext,
 			SessionFactoryOptions sessionFactoryOptions) {
 		super( parent );
 
 		this.sessionFactory = sessionFactory;
 		this.sessionFactoryOptions = sessionFactoryOptions;
+		this.bootstrapContext = bootstrapContext;
 
-		// for now, just use the standard initiator list
 		for ( SessionFactoryServiceInitiator initiator : initiators ) {
-			// create the bindings up front to help identify to which registry services belong
 			createServiceBinding( initiator );
+			initiateService( initiator );
 		}
 
 		for ( ProvidedService providedService : providedServices ) {
@@ -66,6 +69,11 @@ public class SessionFactoryServiceRegistryImpl
 		if ( Configurable.class.isInstance( serviceBinding.getService() ) ) {
 			( (Configurable) serviceBinding.getService() ).configure( getService( ConfigurationService.class ).getSettings() );
 		}
+	}
+
+	@Override
+	public BootstrapContext getBootstrapContext() {
+		return bootstrapContext;
 	}
 
 	@Override
@@ -96,5 +104,4 @@ public class SessionFactoryServiceRegistryImpl
 
 		return super.getService( serviceRole );
 	}
-
 }

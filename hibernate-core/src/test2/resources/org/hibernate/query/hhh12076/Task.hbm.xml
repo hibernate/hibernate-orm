@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class
+            name="org.hibernate.query.hhh12076.Task"
+            abstract="true"
+            table="wf_task"
+            lazy="false">
+
+        <id name="id" type="java.lang.Long">
+            <column name="id"/>
+            <generator class="native"/>
+        </id>
+        <discriminator force="false" insert="true" not-null="true">
+            <column name="type"/>
+        </discriminator>
+        <version name="version" unsaved-value="null" type="java.lang.Integer">
+            <column name="version"/>
+        </version>
+        <property lazy="false" name="creationDate" type="timestamp" insert="false" update="false" generated="always">
+            <column name="creation_date"/>
+        </property>
+        <property lazy="false" name="modifiedDate" type="timestamp" insert="false" update="false" generated="always">
+            <column name="modified_date"/>
+        </property>
+
+        <property name="startDate" type="java.util.Date">
+            <column name="start_date"/>
+        </property>
+        <property name="closeDate" type="java.util.Date">
+            <column name="close_date"/>
+        </property>
+        <property name="dueDate" type="java.util.Date">
+            <column name="due_date"/>
+        </property>
+        <property name="stateDueDate" type="java.util.Date">
+            <column name="state_due_date"/>
+        </property>
+        <property name="statusDueDate" type="java.util.Date">
+            <column name="status_due_date"/>
+        </property>
+        <property name="statusTransitionDate" type="java.util.Date">
+            <column name="status_transition_date"/>
+        </property>
+        <property name="stateTransitionDate" type="java.util.Date">
+            <column name="state_transition_date"/>
+        </property>
+        <many-to-one
+                name="status"
+                class="org.hibernate.query.hhh12076.TaskStatus"
+                fetch="select">
+            <column name="task_status" not-null="true"/>
+        </many-to-one>
+        <many-to-one
+                name="parent"
+                class="org.hibernate.query.hhh12076.Task"
+                fetch="select">
+            <column name="parent_id" not-null="false"/>
+        </many-to-one>
+
+        <set
+                name="children"
+                inverse="false"
+                lazy="extra"
+                cascade="all,delete-orphan"
+                batch-size="10">
+            <key column="parent_id"/>
+            <one-to-many class="org.hibernate.query.hhh12076.Task"/>
+        </set>
+        <set
+                name="linkedTasks"
+                table="wf_task_links"
+                lazy="true"
+                inverse="false"
+                mutable="false"
+                cascade="none">
+            <key column="task_id"/>
+            <many-to-many
+                    class="org.hibernate.query.hhh12076.Task"
+                    column="link_to_task_id"
+            />
+        </set>
+    </class>
+</hibernate-mapping>

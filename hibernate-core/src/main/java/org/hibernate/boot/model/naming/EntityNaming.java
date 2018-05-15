@@ -18,7 +18,7 @@ public interface EntityNaming {
 	 *
 	 * @return The entity class name.
 	 */
-	public String getClassName();
+	String getClassName();
 
 	/**
 	 * The Hibernate entity name.  This might be either:<ul>
@@ -28,7 +28,7 @@ public interface EntityNaming {
 	 *
 	 * @return The Hibernate entity name
 	 */
-	public String getEntityName();
+	String getEntityName();
 
 	/**
 	 * The JPA-specific entity name.  See {@link javax.persistence.Entity#name()} for details.
@@ -36,5 +36,5 @@ public interface EntityNaming {
 	 * @return The JPA entity name, if one was specified.  May return {@code null} if one
 	 * was not explicitly specified.
 	 */
-	public String getJpaEntityName();
+	String getJpaEntityName();
 }

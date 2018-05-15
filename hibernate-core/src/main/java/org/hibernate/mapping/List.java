@@ -6,10 +6,10 @@
  */
 package org.hibernate.mapping;
 
-import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.JavaTypeMapping;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.type.CollectionType;
+import org.hibernate.collection.internal.StandardListSemantics;
+import org.hibernate.collection.spi.CollectionSemantics;
 
 /**
  * A list mapping has a primary key consisting of the key columns + index column.
@@ -17,31 +17,22 @@ import org.hibernate.type.CollectionType;
  * @author Gavin King
  */
 public class List extends IndexedCollection {
-	
+	private final JavaTypeMapping javaTypeMapping;
 	private int baseIndex;
 
 	public boolean isList() {
 		return true;
 	}
 
-	/**
-	 * @deprecated Use {@link List#List(MetadataBuildingContext, PersistentClass)} instead.
-	 */
-	@Deprecated
-	public List(MetadataImplementor metadata, PersistentClass owner) {
-		super( metadata, owner );
-	}
-
 	public List(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
+
+		javaTypeMapping = new CollectionJavaTypeMapping(
+				buildingContext.getBootstrapContext().getTypeConfiguration(),
+				java.util.List.class
+		);
 	}
 
-	public CollectionType getDefaultCollectionType() throws MappingException {
-		return getMetadata().getTypeResolver()
-				.getTypeFactory()
-				.list( getRole(), getReferencedPropertyName() );
-	}
-	
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}
@@ -53,4 +44,16 @@ public class List extends IndexedCollection {
 	public void setBaseIndex(int baseIndex) {
 		this.baseIndex = baseIndex;
 	}
+
+	@Override
+	public JavaTypeMapping getJavaTypeMapping() {
+		return javaTypeMapping;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public CollectionSemantics getCollectionSemantics() {
+		return StandardListSemantics.INSTANCE;
+	}
+
 }

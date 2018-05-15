@@ -10,13 +10,18 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.HibernateException;
+import org.hibernate.annotations.Remove;
 import org.hibernate.dialect.Dialect;
 
 /**
  * Implementation of InsertSelect.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Converting to use SQL AST
  */
+@Deprecated
+@Remove
 public class InsertSelect {
 	private Dialect dialect;
 	private String tableName;

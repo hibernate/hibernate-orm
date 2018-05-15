@@ -6,51 +6,35 @@
  */
 package org.hibernate.mapping;
 
+import java.util.Comparator;
+
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.JavaTypeMapping;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.type.CollectionType;
+import org.hibernate.collection.internal.StandardMapSemantics;
+import org.hibernate.collection.internal.StandardOrderedMapSemantics;
+import org.hibernate.collection.internal.StandardSortedMapSemantics;
+import org.hibernate.collection.spi.CollectionSemantics;
 
 /**
  * A map has a primary key consisting of
  * the key columns + index columns.
  */
 public class Map extends IndexedCollection {
-
-	/**
-	 * @deprecated Use {@link Map#Map(MetadataBuildingContext, PersistentClass)} instead.
-	 */
-	@Deprecated
-	public Map(MetadataImplementor metadata, PersistentClass owner) {
-		super( metadata, owner );
-	}
+	private final CollectionJavaTypeMapping javaTypeMapping;
 
 	public Map(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
+
+		javaTypeMapping = new CollectionJavaTypeMapping(
+				buildingContext.getBootstrapContext().getTypeConfiguration(),
+				java.util.Map.class
+		);
 	}
-	
+
 	public boolean isMap() {
 		return true;
 	}
-
-	public CollectionType getDefaultCollectionType() {
-		if ( isSorted() ) {
-			return getMetadata().getTypeResolver()
-					.getTypeFactory()
-					.sortedMap( getRole(), getReferencedPropertyName(), getComparator() );
-		}
-		else if ( hasOrder() ) {
-			return getMetadata().getTypeResolver()
-					.getTypeFactory()
-					.orderedMap( getRole(), getReferencedPropertyName() );
-		}
-		else {
-			return getMetadata().getTypeResolver()
-					.getTypeFactory()
-					.map( getRole(), getReferencedPropertyName() );
-		}
-	}
-
 
 	public void createAllKeys() throws MappingException {
 		super.createAllKeys();
@@ -61,5 +45,25 @@ public class Map extends IndexedCollection {
 
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
+	}
+
+	@Override
+	public JavaTypeMapping getJavaTypeMapping() {
+		return javaTypeMapping;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public CollectionSemantics getCollectionSemantics() {
+		final Comparator comparator = getComparator();
+		if ( comparator != null ) {
+			return StandardSortedMapSemantics.INSTANCE;
+		}
+
+		if ( hasOrder() ) {
+			return StandardOrderedMapSemantics.INSTANCE;
+		}
+
+		return StandardMapSemantics.INSTANCE;
 	}
 }

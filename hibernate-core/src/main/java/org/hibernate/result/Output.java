@@ -20,5 +20,5 @@ public interface Output {
 	 * @return {@code true} indicates that {@code this} can be safely cast to {@link ResultSetOutput}), other wise
 	 * it can be cast to {@link UpdateCountOutput}.
 	 */
-	public boolean isResultSet();
+	boolean isResultSet();
 }

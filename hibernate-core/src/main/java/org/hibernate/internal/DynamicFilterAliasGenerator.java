@@ -6,7 +6,8 @@
  */
 package org.hibernate.internal;
 
-import org.hibernate.persister.entity.AbstractEntityPersister;
+
+import org.hibernate.NotYetImplementedFor6Exception;
 
 /**
  * @author Rob Worsnop
@@ -22,15 +23,16 @@ public class DynamicFilterAliasGenerator implements FilterAliasGenerator {
 
 	@Override
 	public String getAlias(String table) {
-		if ( table == null ) {
-			return rootAlias;
-		}
-		else {
-			return AbstractEntityPersister.generateTableAlias(
-					rootAlias,
-					AbstractEntityPersister.getTableId( table, tables )
-			);
-		}
+		throw new NotYetImplementedFor6Exception();
+//		if ( table == null ) {
+//			return rootAlias;
+//		}
+//		else {
+//			return EntityDescriptor.generateTableAlias(
+//					rootAlias,
+//					AbstractEntityPersister.getTableId( table, tables )
+//			);
+//		}
 	}
 
 }

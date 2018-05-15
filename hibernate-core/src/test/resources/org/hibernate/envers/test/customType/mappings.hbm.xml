@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="WINDOWS-1251"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="org.hibernate.envers.test.entities.customtype.UnspecifiedEnumTypeEntity" table="ENUM_ENTITY">
+        <id name="id" column="ID" type="long">
+            <generator class="increment" />
+        </id>
+        <property name="enum1">
+            <type name="org.hibernate.type.EnumType">
+                <!-- We omit choice between named and ordinal. -->
+                <!--<param name="useNamed">true</param>-->
+                <param name="enumClass">org.hibernate.envers.test.entities.customtype.UnspecifiedEnumTypeEntity$E1</param>
+            </type>
+        </property>
+        <property name="enum2">
+            <type name="org.hibernate.type.EnumType">
+                <!-- We omit choice between named and ordinal. -->
+                <!--<param name="useNamed">false</param>-->
+                <param name="enumClass">org.hibernate.envers.test.entities.customtype.UnspecifiedEnumTypeEntity$E2</param>
+            </type>
+        </property>
+    </class>
+</hibernate-mapping>

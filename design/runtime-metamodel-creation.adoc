@@ -1,0 +1,56 @@
+= Runtime metamodel
+
+A meta-model is Hibernate's understanding of an application's domain model.  Hibernate has distinct
+representations of this understanding in its boot-time metamodel and then its run-time metamodel.  Besides
+pointing out that the runtime metamodel is created based on the boot-time metamodel, we will not discuss
+the boot-time model here.
+
+== Creation
+
+The process of creating the run-time metamodel (based on the boot-time metamodel) is controlled by
+`org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationProcess`.
+
+
+=== Phase 1 : Relational metamodel creation
+
+The very first step is to take the boot-time relational metamodel and using it to create the runtime
+relational metamodel.  This is done for 2 related reasons:
+
+	* Schema tooling (export, etc) is now based on this runtime relational metamodel (whereas it used to be
+		based on the boot-time one.  We do not need to build the full runtime metamodel to perform
+		schema tooling activities.
+	* It allows us to have a complete view of the database model/schema when we start processing the domain model
+		which allows us to not have to delay higher-level resolutions until the corresponding relational
+		constructs are known.
+
+This sub-process is controlled by `org.hibernate.metamodel.model.relational.spi.RuntimeDatabaseModelProducer`.
+
+If any auto schema tooling operations should be performed, that happens here.  That is controlled by
+`org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator`
+
+The end result of this phase is a fully resolved `org.hibernate.boot.model.relational.Database`
+
+
+=== Phase 2 : Build InFlightRuntimeModel
+
+Just like when  building the boot metamodel, we keep an "in-flight" view of the runtime metamodel
+as we are building it.  This allows resolving things (managed types, etc) as we go - with the understanding
+that certain parts of the runtime metamodel objects may not be initialized yet - they are mainly used to "link"
+references.
+
+
+==== Create identifiable types
+
+[NOTE]
+====
+Phases 2 - ? represent building a `org.hibernate.metamodel.model.creation.spi.InFlightRuntimeModel`.
+
+The final step in this process is to "complete" the in-flight collection and create the
+immutable view of the run-time metamodel; see `InFlightRuntimeModel#complete`
+====
+
+Basically, walk all entity hierarchies as known from the boot-time metamodel and start creating the
+run-time entity and mapped-superclass descriptors.
+
+
+`org.hibernate.metamodel.model.creation.spi.InFlightRuntimeModel`

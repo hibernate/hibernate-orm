@@ -22,12 +22,11 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.build.AllowSysOut;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.tool.schema.Action;
-import org.hibernate.tool.schema.spi.DelayedDropRegistryNotAvailableImpl;
+import org.hibernate.tool.schema.internal.Helper;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 
 import org.apache.tools.ant.BuildException;
@@ -268,10 +267,9 @@ public class SchemaExportTask extends MatchingTask {
 		metadata.validate();
 
 		SchemaManagementToolCoordinator.process(
-				metadata,
+				Helper.buildDatabaseModel( metadata ),
 				ssr,
-				ssr.getService( ConfigurationService.class ).getSettings(),
-				DelayedDropRegistryNotAvailableImpl.INSTANCE
+				action -> {}
 		);
 	}
 

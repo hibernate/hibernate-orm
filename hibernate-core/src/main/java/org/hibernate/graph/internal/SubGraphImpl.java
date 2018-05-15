@@ -11,6 +11,7 @@ import javax.persistence.metamodel.Attribute;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
+import org.hibernate.metamodel.model.domain.spi.InheritanceCapable;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 
 /**
@@ -58,12 +59,14 @@ public class SubGraphImpl<J> extends AbstractGraph<J> implements SubGraphImpleme
 			return true;
 		}
 
-		ManagedTypeDescriptor superType = managedType.getSuperType();
-		while ( superType != null ) {
-			if ( superType.equals( managedType ) ) {
-				return true;
+		if ( managedType instanceof InheritanceCapable ) {
+			InheritanceCapable superType = ( (InheritanceCapable) managedType ).getSuperclassType();
+			while ( superType != null ) {
+				if ( superType.equals( managedType ) ) {
+					return true;
+				}
+				superType = superType.getSuperclassType();
 			}
-			superType = superType.getSuperType();
 		}
 
 		return false;

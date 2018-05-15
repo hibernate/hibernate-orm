@@ -6,9 +6,7 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.secure.spi.PermissionCheckEntityInformation;
 
 
@@ -27,20 +25,19 @@ public class PreDeleteEvent
 
 	/**
 	 * Constructs an event containing the pertinent information.
-	 *
-	 * @param entity The entity to be deleted.
+	 *  @param entity The entity to be deleted.
 	 * @param id The id to use in the deletion.
 	 * @param deletedState The entity's state at deletion time.
-	 * @param persister The entity's persister.
+	 * @param descriptor The entity's descriptor.
 	 * @param source The session from which the event originated.
 	 */
 	public PreDeleteEvent(
 			Object entity,
-			Serializable id,
+			Object id,
 			Object[] deletedState,
-			EntityPersister persister,
+			EntityTypeDescriptor descriptor,
 			EventSource source) {
-		super( source, entity, id, persister );
+		super( source, entity, id, descriptor );
 		this.deletedState = deletedState;
 	}
 

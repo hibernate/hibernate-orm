@@ -9,6 +9,7 @@ package org.hibernate.sql;
 import java.util.ArrayList;
 import java.util.HashSet;
 
+import org.hibernate.annotations.Remove;
 import org.hibernate.dialect.Dialect;
 
 import org.jboss.logging.Logger;
@@ -18,7 +19,11 @@ import org.jboss.logging.Logger;
  * like {@link org.hibernate.sql.ordering.antlr.ColumnReference}/{@link org.hibernate.sql.ordering.antlr.FormulaReference}
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Converting to use SQL AST
  */
+@Deprecated
+@Remove
 public class SelectValues {
 	private static final Logger log = Logger.getLogger( SelectValues.class );
 

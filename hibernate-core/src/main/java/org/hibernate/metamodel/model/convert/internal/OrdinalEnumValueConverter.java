@@ -6,8 +6,6 @@
  */
 package org.hibernate.metamodel.model.convert.internal;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,10 +14,12 @@ import java.sql.Types;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
-import org.hibernate.type.descriptor.ValueBinder;
-import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.IntegerTypeDescriptor;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.type.descriptor.java.internal.EnumJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
+
+import org.jboss.logging.Logger;
 
 /**
  * BasicValueConverter handling the conversion of an enum based on
@@ -28,26 +28,46 @@ import org.hibernate.type.descriptor.sql.IntegerTypeDescriptor;
  * @author Steve Ebersole
  */
 public class OrdinalEnumValueConverter<E extends Enum> implements EnumValueConverter<E,Integer>, Serializable {
+	private static final Logger log = Logger.getLogger( OrdinalEnumValueConverter.class );
 
-	private final EnumJavaTypeDescriptor<E> enumJavaDescriptor;
+	private final EnumJavaDescriptor<E> enumJavaDescriptor;
+	private final BasicJavaDescriptor<Integer> relationalJavaDescriptor;
 
-	private transient ValueExtractor<E> valueExtractor;
+	public OrdinalEnumValueConverter(
+			EnumJavaDescriptor<E> enumJavaDescriptor,
+			RuntimeModelCreationContext creationContext) {
+		this(
+				enumJavaDescriptor,
+				creationContext.getTypeConfiguration()
+						.getSqlTypeDescriptorRegistry()
+						.getDescriptor( Types.INTEGER )
+						.getJdbcRecommendedJavaTypeMapping( creationContext.getTypeConfiguration() )
+		);
+	}
 
-	private transient ValueBinder<Integer> valueBinder;
+	public OrdinalEnumValueConverter(EnumJavaDescriptor<E> enumJavaDescriptor, TypeConfiguration typeConfiguration) {
+		this(
+				enumJavaDescriptor,
+				typeConfiguration.getSqlTypeDescriptorRegistry()
+						.getDescriptor( Types.INTEGER )
+						.getJdbcRecommendedJavaTypeMapping( typeConfiguration )
+		);
+	}
 
-	public OrdinalEnumValueConverter(EnumJavaTypeDescriptor<E> enumJavaDescriptor) {
+	public OrdinalEnumValueConverter(
+			EnumJavaDescriptor<E> enumJavaDescriptor,
+			BasicJavaDescriptor<Integer> relationalJavaDescriptor) {
 		this.enumJavaDescriptor = enumJavaDescriptor;
-		this.valueExtractor = createValueExtractor( enumJavaDescriptor );
-		this.valueBinder = createValueBinder();
+		this.relationalJavaDescriptor = relationalJavaDescriptor;
 	}
 
 	@Override
-	public E toDomainValue(Integer relationalForm) {
+	public E toDomainValue(Integer relationalForm, SharedSessionContractImplementor session) {
 		return enumJavaDescriptor.fromOrdinal( relationalForm );
 	}
 
 	@Override
-	public Integer toRelationalValue(E domainForm) {
+	public Integer toRelationalValue(E domainForm, SharedSessionContractImplementor session) {
 		return enumJavaDescriptor.toOrdinal( domainForm );
 	}
 
@@ -57,40 +77,64 @@ public class OrdinalEnumValueConverter<E extends Enum> implements EnumValueConve
 	}
 
 	@Override
-	public EnumJavaTypeDescriptor<E> getJavaDescriptor() {
+	public EnumJavaDescriptor<E> getDomainJavaDescriptor() {
 		return enumJavaDescriptor;
 	}
 
 	@Override
-	public E readValue(ResultSet resultSet, String name, SharedSessionContractImplementor session) throws SQLException {
-		return valueExtractor.extract( resultSet, name, session );
+	public BasicJavaDescriptor<Integer> getRelationalJavaDescriptor() {
+		return relationalJavaDescriptor;
 	}
 
 	@Override
-	public void writeValue(PreparedStatement statement, E value, int position, SharedSessionContractImplementor session) throws SQLException {
-		final Integer jdbcValue = value == null ? null : toRelationalValue( value );
+	public E readValue(
+			ResultSet resultSet,
+			String name,
+			SharedSessionContractImplementor session) throws SQLException {
+		final int ordinal = resultSet.getInt( name );
+		final boolean traceEnabled = log.isTraceEnabled();
+		if ( resultSet.wasNull() ) {
+			if ( traceEnabled ) {
+				log.trace(String.format("Returning null as column [%s]", name));
+			}
+			return null;
+		}
 
-		valueBinder.bind( statement, jdbcValue, position, session );
+		final E enumValue = toDomainValue( ordinal, session );
+		if ( traceEnabled ) {
+			log.trace(String.format("Returning [%s] as column [%s]", enumValue, name));
+		}
+
+		return enumValue;
+	}
+
+	@Override
+	public void writeValue(
+			PreparedStatement statement,
+			E value,
+			int position,
+			SharedSessionContractImplementor session) throws SQLException {
+		final Integer jdbcValue = value == null ? null : toRelationalValue( value, session );
+
+		final boolean traceEnabled = log.isTraceEnabled();
+		if ( jdbcValue == null ) {
+			if ( traceEnabled ) {
+				log.tracef( "Binding null to parameter: [%s]", position );
+			}
+			statement.setNull( position, getJdbcTypeCode() );
+			return;
+		}
+
+		if ( traceEnabled ) {
+			log.tracef( "Binding [%s] to parameter: [%s]", jdbcValue.intValue(), position );
+		}
+
+		statement.setInt( position, jdbcValue );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public String toSqlLiteral(Object value) {
 		return Integer.toString( ( (E) value ).ordinal() );
-	}
-
-	private static <T extends Enum> ValueExtractor<T> createValueExtractor(EnumJavaTypeDescriptor<T> enumJavaDescriptor) {
-		return IntegerTypeDescriptor.INSTANCE.getExtractor( enumJavaDescriptor );
-	}
-
-	private static ValueBinder<Integer> createValueBinder() {
-		return IntegerTypeDescriptor.INSTANCE.getBinder( org.hibernate.type.descriptor.java.IntegerTypeDescriptor.INSTANCE );
-	}
-
-	private void readObject(ObjectInputStream stream) throws ClassNotFoundException, IOException {
-		stream.defaultReadObject();
-
-		this.valueExtractor = createValueExtractor( enumJavaDescriptor );
-		this.valueBinder = createValueBinder();
 	}
 }

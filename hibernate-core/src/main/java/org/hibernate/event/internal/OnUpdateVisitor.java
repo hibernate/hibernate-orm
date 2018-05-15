@@ -11,8 +11,8 @@ import java.io.Serializable;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.type.CollectionType;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 
 /**
  * When an entity is passed to update(), we must inspect all its collections and
@@ -26,44 +26,46 @@ import org.hibernate.type.CollectionType;
  */
 public class OnUpdateVisitor extends ReattachVisitor {
 
-	OnUpdateVisitor(EventSource session, Serializable key, Object owner) {
+	OnUpdateVisitor(EventSource session, Object key, Object owner) {
 		super( session, key, owner );
 	}
 
 	@Override
-	Object processCollection(Object collection, CollectionType type) throws HibernateException {
+	Object processCollection(Object collection, PluralPersistentAttribute collectionAttribute) throws HibernateException {
 
-		if ( collection == CollectionType.UNFETCHED_COLLECTION ) {
+		if ( collection == PersistentCollectionDescriptor.UNFETCHED_COLLECTION ) {
 			return null;
 		}
 
-		EventSource session = getSession();
-		CollectionPersister persister = session.getFactory().getCollectionPersister( type.getRole() );
+		final EventSource session = getSession();
+		final PersistentCollectionDescriptor descriptor = session.getFactory()
+				.getMetamodel()
+				.findCollectionDescriptor( collectionAttribute.getNavigableName() );
 
-		final Serializable collectionKey = extractCollectionKeyFromOwner( persister );
-		if ( collection!=null && (collection instanceof PersistentCollection) ) {
+		final Serializable collectionKey = extractCollectionKeyFromOwner( descriptor );
+		if ( collection != null && ( collection instanceof PersistentCollection ) ) {
 			PersistentCollection wrapper = (PersistentCollection) collection;
 			if ( wrapper.setCurrentSession(session) ) {
 				//a "detached" collection!
-				if ( !isOwnerUnchanged( wrapper, persister, collectionKey ) ) {
+				if ( !isOwnerUnchanged( wrapper, descriptor, collectionKey ) ) {
 					// if the collection belonged to a different entity,
 					// clean up the existing state of the collection
-					removeCollection( persister, collectionKey, session );
+					removeCollection( descriptor, collectionKey, session );
 				}
-				reattachCollection(wrapper, type);
+				reattachCollection(wrapper, descriptor.getNavigableRole());
 			}
 			else {
 				// a collection loaded in the current session
 				// can not possibly be the collection belonging
 				// to the entity passed to update()
-				removeCollection(persister, collectionKey, session);
+				removeCollection(descriptor, collectionKey, session);
 			}
 		}
 		else {
 			// null or brand new collection
 			// this will also (inefficiently) handle arrays, which have
 			// no snapshot, so we can't do any better
-			removeCollection(persister, collectionKey, session);
+			removeCollection(descriptor, collectionKey, session);
 		}
 
 		return null;

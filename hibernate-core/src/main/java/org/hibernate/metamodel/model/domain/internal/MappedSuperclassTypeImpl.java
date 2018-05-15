@@ -6,32 +6,51 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import java.util.Set;
+import javax.persistence.metamodel.SingularAttribute;
+
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
+import org.hibernate.boot.model.domain.spi.ManagedTypeMappingImplementor;
+import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
-import org.hibernate.mapping.MappedSuperclass;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.model.domain.spi.AbstractIdentifiableType;
+import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.MappedSuperclassTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
+import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
+import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
 
 /**
- * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
-public class MappedSuperclassTypeImpl<X> extends AbstractIdentifiableType<X> implements MappedSuperclassTypeDescriptor<X> {
+public class MappedSuperclassTypeImpl<J>
+		extends AbstractIdentifiableType<J>
+		implements MappedSuperclassTypeDescriptor<J> {
+	private final EntityHierarchy hierarchy;
+
+	@SuppressWarnings("unchecked")
 	public MappedSuperclassTypeImpl(
-			Class<X> javaType,
-			MappedSuperclass mappedSuperclass,
-			IdentifiableTypeDescriptor<? super X> superType,
-			SessionFactoryImplementor sessionFactory) {
+			IdentifiableTypeMapping bootMapping,
+			EntityHierarchy hierarchy,
+			IdentifiableTypeDescriptor<? super J> superTypeDescriptor,
+			RuntimeModelCreationContext creationContext) {
 		super(
-				javaType,
-				javaType.getName(),
-				superType,
-				mappedSuperclass.getDeclaredIdentifierMapper() != null || ( superType != null && superType.hasIdClass() ),
-				mappedSuperclass.hasIdentifierProperty(),
-				mappedSuperclass.isVersioned(),
-				sessionFactory
+				bootMapping,
+				superTypeDescriptor,
+				(IdentifiableJavaDescriptor<J>) bootMapping.getJavaTypeMapping().getJavaTypeDescriptor(),
+				creationContext
 		);
+		this.hierarchy = hierarchy;
+	}
+
+	@Override
+	public EntityHierarchy getHierarchy() {
+		return hierarchy;
 	}
 
 	@Override
@@ -40,7 +59,89 @@ public class MappedSuperclassTypeImpl<X> extends AbstractIdentifiableType<X> imp
 	}
 
 	@Override
-	public <S extends X> SubGraphImplementor<S> makeSubGraph(Class<S> subType) {
-		throw new NotYetImplementedException(  );
+	public boolean finishInitialization(
+			ManagedTypeMappingImplementor bootDescriptor,
+			RuntimeModelCreationContext creationContext) {
+		throw new NotYetImplementedFor6Exception(  );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <S extends J> SubGraphImplementor<S> makeSubGraph(Class<S> subType) {
+		return new SubGraphImpl(
+				this,
+				true,
+				getTypeConfiguration().getSessionFactory()
+		);
+	}
+
+	@Override
+	public <Y> SingularAttribute<? super J, Y> getId(Class<Y> type) {
+		throw new NotYetImplementedFor6Exception(  );
+	}
+
+	@Override
+	public <Y> SingularAttribute<J, Y> getDeclaredId(Class<Y> type) {
+		throw new NotYetImplementedFor6Exception(  );
+	}
+
+	@Override
+	public <Y> SingularAttribute<? super J, Y> getVersion(Class<Y> type) {
+		throw new NotYetImplementedFor6Exception(  );
+	}
+
+	@Override
+	public <Y> SingularAttribute<J, Y> getDeclaredVersion(Class<Y> type) {
+		throw new NotYetImplementedFor6Exception(  );
+	}
+
+	@Override
+	public boolean hasSingleIdAttribute() {
+		throw new NotYetImplementedFor6Exception(  );
+	}
+
+	@Override
+	public boolean hasVersionAttribute() {
+		throw new NotYetImplementedFor6Exception(  );
+	}
+
+	@Override
+	public Set<SingularAttribute<? super J, ?>> getIdClassAttributes() {
+		throw new NotYetImplementedFor6Exception(  );
+	}
+
+	@Override
+	public SimpleTypeDescriptor<?> getIdType() {
+		throw new NotYetImplementedFor6Exception(  );
+	}
+
+	@Override
+	public NavigableContainer getContainer() {
+		throw new NotYetImplementedFor6Exception(  );
+	}
+
+	@Override
+	public String asLoggableText() {
+		throw new NotYetImplementedFor6Exception(  );
+	}
+
+	@Override
+	public NavigableRole getNavigableRole() {
+		throw new NotYetImplementedFor6Exception(  );
+	}
+
+	@Override
+	public void visitNavigable(NavigableVisitationStrategy visitor) {
+		throw new NotYetImplementedFor6Exception(  );
+	}
+
+	@Override
+	public Class<J> getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
+	}
+
+	@Override
+	public IdentifiableTypeDescriptor<? super J> getSupertype() {
+		throw new NotYetImplementedFor6Exception(  );
 	}
 }

@@ -6,30 +6,33 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.NvlFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
-import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
-import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
-import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.local.AfterUseAction;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOracleDatabaseImpl;
-import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.type.StandardBasicTypes;
-import org.jboss.logging.Logger;
-
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Locale;
+
+import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.NvlFunctionTemplate;
+import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.query.sqm.consume.multitable.internal.StandardIdTableSupport;
+import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTempTableExporter;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTable;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTableSupport;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.spi.ConcatFunctionTemplate;
+import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOracleDatabaseImpl;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
+
+import org.jboss.logging.Logger;
 
 /**
  * An SQL dialect for Oracle 9 (uses ANSI-style syntax where possible).
@@ -84,91 +87,161 @@ public class Oracle9Dialect extends Dialect {
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		getDefaultProperties().setProperty( Environment.BATCH_VERSIONED_DATA, "false" );
+	}
 
-		registerFunction( "abs", new StandardSQLFunction( "abs" ) );
-		registerFunction( "sign", new StandardSQLFunction( "sign", StandardBasicTypes.INTEGER ) );
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
 
-		registerFunction( "acos", new StandardSQLFunction( "acos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "asin", new StandardSQLFunction( "asin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "atan", new StandardSQLFunction( "atan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cos", new StandardSQLFunction( "cos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cosh", new StandardSQLFunction( "cosh", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "exp", new StandardSQLFunction( "exp", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "ln", new StandardSQLFunction( "ln", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sin", new StandardSQLFunction( "sin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sinh", new StandardSQLFunction( "sinh", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "stddev", new StandardSQLFunction( "stddev", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sqrt", new StandardSQLFunction( "sqrt", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "tan", new StandardSQLFunction( "tan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "tanh", new StandardSQLFunction( "tanh", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "variance", new StandardSQLFunction( "variance", StandardBasicTypes.DOUBLE ) );
+		CommonFunctionFactory.abs( registry );
+		CommonFunctionFactory.sign( registry );
 
-		registerFunction( "round", new StandardSQLFunction( "round" ) );
-		registerFunction( "trunc", new StandardSQLFunction( "trunc" ) );
-		registerFunction( "ceil", new StandardSQLFunction( "ceil" ) );
-		registerFunction( "floor", new StandardSQLFunction( "floor" ) );
+		CommonFunctionFactory.acos( registry );
+		CommonFunctionFactory.asin( registry );
+		CommonFunctionFactory.atan( registry );
 
-		registerFunction( "chr", new StandardSQLFunction( "chr", StandardBasicTypes.CHARACTER ) );
-		registerFunction( "initcap", new StandardSQLFunction( "initcap" ) );
-		registerFunction( "lower", new StandardSQLFunction( "lower" ) );
-		registerFunction( "ltrim", new StandardSQLFunction( "ltrim" ) );
-		registerFunction( "rtrim", new StandardSQLFunction( "rtrim" ) );
-		registerFunction( "soundex", new StandardSQLFunction( "soundex" ) );
-		registerFunction( "upper", new StandardSQLFunction( "upper" ) );
-		registerFunction( "ascii", new StandardSQLFunction( "ascii", StandardBasicTypes.INTEGER ) );
+		CommonFunctionFactory.cos( registry );
+		CommonFunctionFactory.cosh( registry );
+		CommonFunctionFactory.exp( registry );
+		CommonFunctionFactory.ln( registry );
+		CommonFunctionFactory.sin( registry );
+		CommonFunctionFactory.sinh( registry );
+		CommonFunctionFactory.stddev( registry );
+		CommonFunctionFactory.sqrt( registry );
+		CommonFunctionFactory.tan( registry );
+		CommonFunctionFactory.tanh( registry );
+		CommonFunctionFactory.variance( registry );
 
-		registerFunction( "to_char", new StandardSQLFunction( "to_char", StandardBasicTypes.STRING ) );
-		registerFunction( "to_date", new StandardSQLFunction( "to_date", StandardBasicTypes.TIMESTAMP ) );
+		CommonFunctionFactory.round( registry );
+		CommonFunctionFactory.trunc( registry );
+		CommonFunctionFactory.ceil( registry );
+		CommonFunctionFactory.floor( registry );
 
-		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardBasicTypes.DATE, false ) );
-		registerFunction( "current_time", new NoArgSQLFunction( "current_timestamp", StandardBasicTypes.TIME, false ) );
-		registerFunction(
-				"current_timestamp", new NoArgSQLFunction(
-				"current_timestamp",
-				StandardBasicTypes.TIMESTAMP,
-				false
-		)
-		);
+		registry.namedTemplateBuilder( "chr" )
+				.setInvariantType( StandardSpiBasicTypes.CHARACTER )
+				.setExactArgumentCount( 1 )
+				.register();
+		registry.namedTemplateBuilder( "initcap" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 1 )
+				.register();
+		CommonFunctionFactory.lower( registry );
+		registry.namedTemplateBuilder( "ltrim" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setArgumentCountBetween( 1, 2 )
+				.register();
+		registry.namedTemplateBuilder( "rtrim" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setArgumentCountBetween( 1, 2 )
+				.register();
+		CommonFunctionFactory.soundex( registry );
+		CommonFunctionFactory.upper( registry );
+		registry.namedTemplateBuilder( "ascii" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 1 )
+				.register();
 
-		registerFunction( "last_day", new StandardSQLFunction( "last_day", StandardBasicTypes.DATE ) );
-		registerFunction( "sysdate", new NoArgSQLFunction( "sysdate", StandardBasicTypes.DATE, false ) );
-		registerFunction( "systimestamp", new NoArgSQLFunction( "systimestamp", StandardBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "uid", new NoArgSQLFunction( "uid", StandardBasicTypes.INTEGER, false ) );
-		registerFunction( "user", new NoArgSQLFunction( "user", StandardBasicTypes.STRING, false ) );
+		registry.namedTemplateBuilder( "to_char" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setArgumentCountBetween( 1, 3 )
+				.register();
+		registry.namedTemplateBuilder( "to_date" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setArgumentCountBetween( 1, 3 )
+				.register();
 
-		registerFunction( "rowid", new NoArgSQLFunction( "rowid", StandardBasicTypes.LONG, false ) );
-		registerFunction( "rownum", new NoArgSQLFunction( "rownum", StandardBasicTypes.LONG, false ) );
+		registry.registerNoArgs( "current_date", StandardSpiBasicTypes.DATE );
+		registry.registerNoArgs( "current_time", StandardSpiBasicTypes.TIME );
+		registry.namedTemplateBuilder( "current_timestamp" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setArgumentCountBetween( 0, 1 )
+				.register();
+
+		registry.namedTemplateBuilder( "last_day" )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setExactArgumentCount( 1 )
+				.register();
+		registry.registerNoArgs( "sysdate", StandardSpiBasicTypes.DATE );
+		registry.registerNoArgs( "systimestamp", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerNoArgs( "uid", StandardSpiBasicTypes.INTEGER );
+		registry.registerNoArgs( "user", StandardSpiBasicTypes.STRING );
+
+		registry.registerNoArgs( "rowid", StandardSpiBasicTypes.LONG );
+		registry.registerNoArgs( "rownum", StandardSpiBasicTypes.LONG );
 
 		// Multi-param string dialect functions...
-		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "", "||", "" ) );
-		registerFunction( "instr", new StandardSQLFunction( "instr", StandardBasicTypes.INTEGER ) );
-		registerFunction( "instrb", new StandardSQLFunction( "instrb", StandardBasicTypes.INTEGER ) );
-		registerFunction( "lpad", new StandardSQLFunction( "lpad", StandardBasicTypes.STRING ) );
-		registerFunction( "replace", new StandardSQLFunction( "replace", StandardBasicTypes.STRING ) );
-		registerFunction( "rpad", new StandardSQLFunction( "rpad", StandardBasicTypes.STRING ) );
-		registerFunction( "substr", new StandardSQLFunction( "substr", StandardBasicTypes.STRING ) );
-		registerFunction( "substrb", new StandardSQLFunction( "substrb", StandardBasicTypes.STRING ) );
-		registerFunction( "translate", new StandardSQLFunction( "translate", StandardBasicTypes.STRING ) );
+		registry.register( "concat", new ConcatFunctionTemplate( "", "||", "" ) );
+		registry.namedTemplateBuilder( "instr" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setArgumentCountBetween( 2, 4 )
+				.register();
+		registry.namedTemplateBuilder( "instrb" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setArgumentCountBetween( 2, 4 )
+				.register();
+		registry.namedTemplateBuilder( "lpad" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setArgumentCountBetween( 2, 3 )
+				.register();
+		registry.namedTemplateBuilder( "replace" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setArgumentCountBetween( 2, 3 )
+				.register();
+		registry.namedTemplateBuilder( "rpad" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setArgumentCountBetween( 2, 3 )
+				.register();
+		registry.namedTemplateBuilder( "substr" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setArgumentCountBetween( 2, 3 )
+				.register();
+		registry.namedTemplateBuilder( "substrb" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setArgumentCountBetween( 2, 3 )
+				.register();
+		registry.namedTemplateBuilder( "translate" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 3 )
+				.register();
 
-		registerFunction( "substring", new StandardSQLFunction( "substr", StandardBasicTypes.STRING ) );
-		registerFunction( "locate", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "instr(?2,?1)" ) );
-		registerFunction( "bit_length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "vsize(?1)*8" ) );
-		registerFunction( "coalesce", new NvlFunction() );
+		registry.registerAlternateKey( "substring", "substr" );
+		registry.registerPattern( "locate",  "instr(?2,?1)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "bit_length", "vsize(?1)*8", StandardSpiBasicTypes.INTEGER );
+		registry.register( "coalesce", new NvlFunctionTemplate() );
 
 		// Multi-param numeric dialect functions...
-		registerFunction( "atan2", new StandardSQLFunction( "atan2", StandardBasicTypes.FLOAT ) );
-		registerFunction( "log", new StandardSQLFunction( "log", StandardBasicTypes.INTEGER ) );
-		registerFunction( "mod", new StandardSQLFunction( "mod", StandardBasicTypes.INTEGER ) );
-		registerFunction( "nvl", new StandardSQLFunction( "nvl" ) );
-		registerFunction( "nvl2", new StandardSQLFunction( "nvl2" ) );
-		registerFunction( "power", new StandardSQLFunction( "power", StandardBasicTypes.FLOAT ) );
+		registry.namedTemplateBuilder( "atan2" )
+				.setInvariantType( StandardSpiBasicTypes.FLOAT )
+				.setExactArgumentCount( 1 )
+				.register();
+		CommonFunctionFactory.log( registry );
+		CommonFunctionFactory.mod( registry );
+		registry.namedTemplateBuilder( "nvl" )
+				.setExactArgumentCount( 2 )
+				.register();
+		registry.namedTemplateBuilder( "nvl2" )
+				.setExactArgumentCount( 3 )
+				.register();
+		registry.namedTemplateBuilder( "power" )
+				.setInvariantType( StandardSpiBasicTypes.FLOAT )
+				.setExactArgumentCount( 2 )
+				.register();
 
 		// Multi-param date dialect functions...
-		registerFunction( "add_months", new StandardSQLFunction( "add_months", StandardBasicTypes.DATE ) );
-		registerFunction( "months_between", new StandardSQLFunction( "months_between", StandardBasicTypes.FLOAT ) );
-		registerFunction( "next_day", new StandardSQLFunction( "next_day", StandardBasicTypes.DATE ) );
+		registry.namedTemplateBuilder( "add_months" )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setExactArgumentCount( 2 )
+				.register();
+		registry.namedTemplateBuilder( "months_between" )
+				.setInvariantType( StandardSpiBasicTypes.FLOAT )
+				.setExactArgumentCount( 2 )
+				.register();
+		registry.namedTemplateBuilder( "next_day" )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setExactArgumentCount( 2 )
+				.register();
 
-		registerFunction( "str", new StandardSQLFunction( "to_char", StandardBasicTypes.STRING ) );
+		registry.registerAlternateKey( "str", "to_char" );
 	}
 
 	@Override
@@ -345,27 +418,32 @@ public class Oracle9Dialect extends Dialect {
 	}
 
 	@Override
-	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-		return new GlobalTemporaryTableBulkIdStrategy(
-				new IdTableSupportStandardImpl() {
-					@Override
-					public String generateIdTableName(String baseName) {
-						final String name = super.generateIdTableName( baseName );
-						return name.length() > 30 ? name.substring( 0, 30 ) : name;
-					}
+	public IdTableStrategy getDefaultIdTableStrategy() {
+		return new GlobalTemporaryTableStrategy( generateIdTableSupport() );
+	}
 
-					@Override
-					public String getCreateIdTableCommand() {
-						return "create global temporary table";
-					}
+	private IdTableSupport generateIdTableSupport() {
+		return new StandardIdTableSupport( generateIdTableExporter() ) {
+			@Override
+			protected String determineIdTableName(String baseName) {
+				final String name = super.determineIdTableName( baseName );
+				return name.length() > 30 ? name.substring( 0, 30 ) : name;
+			}
+		};
+	}
 
-					@Override
-					public String getCreateIdTableStatementOptions() {
-						return "on commit delete rows";
-					}
-				},
-				AfterUseAction.CLEAN
-		);
+	private Exporter<IdTable> generateIdTableExporter() {
+		return new GlobalTempTableExporter() {
+			@Override
+			public String getCreateCommand() {
+				return "create global temporary table";
+			}
+
+			@Override
+			public String getCreateOptions() {
+				return "on commit delete rows";
+			}
+		};
 	}
 
 	@Override

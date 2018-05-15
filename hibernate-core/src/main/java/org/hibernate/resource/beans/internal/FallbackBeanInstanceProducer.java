@@ -6,7 +6,11 @@
  */
 package org.hibernate.resource.beans.internal;
 
+import java.lang.reflect.Constructor;
+
+import org.hibernate.HibernateException;
 import org.hibernate.InstantiationException;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 
 import org.jboss.logging.Logger;
@@ -34,8 +38,19 @@ public class FallbackBeanInstanceProducer implements BeanInstanceProducer {
 	@Override
 	public <B> B produceBeanInstance(Class<B> beanType) {
 		log.tracef( "Creating ManagedBean(%s) using direct instantiation", beanType.getName() );
+
+		final Constructor<B> ctor;
 		try {
-			return beanType.newInstance();
+			ctor = beanType.getDeclaredConstructor();
+		}
+		catch (NoSuchMethodException e) {
+			throw new HibernateException( "Could not locate no-arg constructor for bean : " + beanType.getName() );
+		}
+
+		ReflectHelper.ensureAccessibility( ctor );
+
+		try {
+			return ctor.newInstance();
 		}
 		catch (Exception e) {
 			throw new InstantiationException( "Could not instantiate managed bean directly", beanType, e );

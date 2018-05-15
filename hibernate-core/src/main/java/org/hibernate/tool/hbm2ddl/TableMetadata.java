@@ -14,7 +14,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.mapping.ForeignKey;
+import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
@@ -34,9 +34,9 @@ public class TableMetadata {
 	private final String catalog;
 	private final String schema;
 	private final String name;
-	private final Map<String, ColumnMetadata> columns = new HashMap<String, ColumnMetadata>();
-	private final Map<String,ForeignKeyMetadata> foreignKeys = new HashMap<String,ForeignKeyMetadata>();
-	private final Map<String, IndexMetadata> indexes = new HashMap<String, IndexMetadata>();
+	private final Map<String, ColumnMetadata> columns = new HashMap<>();
+	private final Map<String,ForeignKeyMetadata> foreignKeys = new HashMap<>();
+	private final Map<String, IndexMetadata> indexes = new HashMap<>();
 
 	TableMetadata(ResultSet rs, DatabaseMetaData meta, boolean extras) throws SQLException {
 		catalog = rs.getString( "TABLE_CAT" );

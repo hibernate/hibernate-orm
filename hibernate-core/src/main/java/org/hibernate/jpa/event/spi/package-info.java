@@ -9,3 +9,4 @@
  * The SPI contracts for supporting JPA lifecycle callbacks.
  */
 package org.hibernate.jpa.event.spi;
+

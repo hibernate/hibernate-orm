@@ -8,9 +8,10 @@ package org.hibernate.dialect.function;
 
 import java.util.List;
 
-import org.hibernate.QueryException;
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.type.Type;
 
 /**
@@ -25,7 +26,7 @@ import org.hibernate.type.Type;
  *
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  */
-public class SQLFunctionTemplate implements SQLFunction {
+public class SQLFunctionTemplate implements SqmFunctionTemplate {
 	private final Type type;
 	private final TemplateRenderer renderer;
 	private final boolean hasParenthesesIfNoArgs;
@@ -53,28 +54,39 @@ public class SQLFunctionTemplate implements SQLFunction {
 		this.hasParenthesesIfNoArgs = hasParenthesesIfNoArgs;
 	}
 
-	@Override
-	public String render(Type argumentType, List args, SessionFactoryImplementor factory) {
-		return renderer.render( args, factory );
-	}
-
-	@Override
-	public Type getReturnType(Type argumentType, Mapping mapping) throws QueryException {
-		return type;
-	}
-
-	@Override
-	public boolean hasArguments() {
-		return renderer.getAnticipatedNumberOfArguments() > 0;
-	}
-
-	@Override
-	public boolean hasParenthesesIfNoArguments() {
-		return hasParenthesesIfNoArgs;
-	}
+//	@Override
+//	public String render(Type argumentType, List args, SessionFactoryImplementor factory) {
+//		return renderer.render( args, factory );
+//	}
+//
+//	@Override
+//	public Type getReturnType(Type argumentType) throws QueryException {
+//		return type;
+//	}
+//
+//	@Override
+//	public boolean hasArguments() {
+//		return renderer.getAnticipatedNumberOfArguments() > 0;
+//	}
+//
+//	@Override
+//	public boolean hasParenthesesIfNoArguments() {
+//		return hasParenthesesIfNoArgs;
+//	}
 	
 	@Override
 	public String toString() {
 		return renderer.getTemplate();
+	}
+
+	@Override
+	public SqmExpression makeSqmFunctionExpression(
+			List<SqmExpression> arguments,
+			AllowableFunctionReturnType impliedResultType) {
+		return new SelfRenderingSqmFunction(
+				renderer::render,
+				arguments,
+				impliedResultType
+		);
 	}
 }

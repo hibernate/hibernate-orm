@@ -6,8 +6,6 @@
  */
 package org.hibernate.action.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -17,7 +15,7 @@ import org.hibernate.event.spi.PostCollectionRecreateEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEventListener;
 import org.hibernate.event.spi.PreCollectionRecreateEvent;
 import org.hibernate.event.spi.PreCollectionRecreateEventListener;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
 /**
  * The action for recreating a collection
@@ -26,18 +24,17 @@ public final class CollectionRecreateAction extends CollectionAction {
 
 	/**
 	 * Constructs a CollectionRecreateAction
-	 *
-	 * @param collection The collection being recreated
-	 * @param persister The collection persister
-	 * @param id The collection key
+	 *  @param collection The collection being recreated
+	 * @param collectionDescriptor The collection persister
+	 * @param collectionKey The collection key
 	 * @param session The session
 	 */
 	public CollectionRecreateAction(
 			final PersistentCollection collection,
-			final CollectionPersister persister,
-			final Serializable id,
+			final PersistentCollectionDescriptor collectionDescriptor,
+			final Object collectionKey,
 			final SharedSessionContractImplementor session) {
-		super( persister, collection, id, session );
+		super( collectionDescriptor, collection, collectionKey, session );
 	}
 
 	@Override
@@ -47,13 +44,13 @@ public final class CollectionRecreateAction extends CollectionAction {
 		final PersistentCollection collection = getCollection();
 		
 		preRecreate();
-		getPersister().recreate( collection, getKey(), getSession() );
+		getPersistentCollectionDescriptor().recreate( collection, getKey(), getSession() );
 		getSession().getPersistenceContext().getCollectionEntry( collection ).afterAction( collection );
 		evict();
 		postRecreate();
 
 		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-			getSession().getFactory().getStatistics().recreateCollection( getPersister().getRole() );
+			getSession().getFactory().getStatistics().recreateCollection( getPersistentCollectionDescriptor().getNavigableRole().getNavigableName() );
 		}
 	}
 
@@ -62,7 +59,7 @@ public final class CollectionRecreateAction extends CollectionAction {
 		if ( listenerGroup.isEmpty() ) {
 			return;
 		}
-		final PreCollectionRecreateEvent event = new PreCollectionRecreateEvent( getPersister(), getCollection(), eventSource() );
+		final PreCollectionRecreateEvent event = new PreCollectionRecreateEvent( getPersistentCollectionDescriptor(), getCollection(), eventSource() );
 		for ( PreCollectionRecreateEventListener listener : listenerGroup.listeners() ) {
 			listener.onPreRecreateCollection( event );
 		}
@@ -73,7 +70,7 @@ public final class CollectionRecreateAction extends CollectionAction {
 		if ( listenerGroup.isEmpty() ) {
 			return;
 		}
-		final PostCollectionRecreateEvent event = new PostCollectionRecreateEvent( getPersister(), getCollection(), eventSource() );
+		final PostCollectionRecreateEvent event = new PostCollectionRecreateEvent( getPersistentCollectionDescriptor(), getCollection(), eventSource() );
 		for ( PostCollectionRecreateEventListener listener : listenerGroup.listeners() ) {
 			listener.onPostRecreateCollection( event );
 		}

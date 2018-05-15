@@ -249,4 +249,11 @@ public interface DeprecationLogger extends BasicLogger {
 					"5.3 in upgrading.  It will be removed in a later version."
 	)
 	void logUseOfDeprecatedZeroBasedJdbcStyleParams();
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000025,
+			value = "Encountered use of deprecated Query hint (JPA query hint system) [%s] use [%s] instead"
+	)
+	void logDeprecatedQueryHint(String deprecatedHint, String replacementHint);
 }

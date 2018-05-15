@@ -7,7 +7,7 @@
 package org.hibernate.cfg;
 
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -15,13 +15,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Selectable;
-import org.hibernate.mapping.SimpleValue;
 
 import org.jboss.logging.Logger;
 
@@ -48,8 +49,8 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	public void doSecondPass(Map persistentClasses) throws MappingException {
-		PersistentClass referencedPersistentClass = (PersistentClass) persistentClasses.get( referencedEntityName );
+	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
+		final PersistentClass referencedPersistentClass = persistentClasses.get( referencedEntityName );
 		// TODO better error names
 		if ( referencedPersistentClass == null ) {
 			throw new AnnotationException( "Unknown entity name: " + referencedEntityName );
@@ -60,9 +61,7 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 							+ referencedEntityName
 			);
 		}
-		Component referencedComponent = (Component) referencedPersistentClass.getIdentifier();
-		Iterator<Property> properties = referencedComponent.getPropertyIterator();
-
+		final Component referencedComponent = (Component) referencedPersistentClass.getIdentifier();
 
 		//prepare column name structure
 		boolean isExplicitReference = true;
@@ -76,7 +75,7 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 			columnByReferencedName.put( referencedColumnName.toLowerCase(Locale.ROOT), joinColumn );
 		}
 		//try default column orientation
-		AtomicInteger index = new AtomicInteger( 0 );
+		final AtomicInteger index = new AtomicInteger( 0 );
 		if ( columnByReferencedName.isEmpty() ) {
 			isExplicitReference = false;
 			for (Ejb3JoinColumn joinColumn : joinColumns) {
@@ -86,51 +85,69 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 			index.set( 0 );
 		}
 
-		while ( properties.hasNext() ) {
-			Property referencedProperty = properties.next();
-			if ( referencedProperty.isComposite() ) {
-				Property property = createComponentProperty( referencedPersistentClass, isExplicitReference, columnByReferencedName, index, referencedProperty );
-				component.addProperty( property );
+		final List<PersistentAttributeMapping> declaredPersistentAttributes = referencedComponent.getDeclaredPersistentAttributes();
+		for(PersistentAttributeMapping referencedMapping : declaredPersistentAttributes){
+			if ( referencedMapping instanceof Component ) {
+				Property property = createComponentProperty(
+						isExplicitReference,
+						columnByReferencedName,
+						index,
+						referencedMapping
+				);
+				component.addDeclaredPersistentAttribute( property );
 			}
 			else {
-				Property property = createSimpleProperty( referencedPersistentClass, isExplicitReference, columnByReferencedName, index, referencedProperty );
-				component.addProperty( property );
+				Property property = createSimpleProperty(
+						referencedPersistentClass,
+						isExplicitReference,
+						columnByReferencedName,
+						index,
+						referencedMapping
+				);
+				component.addDeclaredPersistentAttribute( property );
 			}
 		}
 	}
 
 	private Property createComponentProperty(
-			PersistentClass referencedPersistentClass,
 			boolean isExplicitReference,
 			Map<String, Ejb3JoinColumn> columnByReferencedName,
 			AtomicInteger index,
-			Property referencedProperty ) {
-		Property property = new Property();
+			PersistentAttributeMapping referencedProperty ) {
+		final Property property = new Property( buildingContext );
 		property.setName( referencedProperty.getName() );
 		//FIXME set optional?
 		//property.setOptional( property.isOptional() );
 		property.setPersistentClass( component.getOwner() );
 		property.setPropertyAccessorName( referencedProperty.getPropertyAccessorName() );
-		Component value = new Component( buildingContext, component.getOwner() );
+		final Component value = new Component( buildingContext, component.getOwner() );
 
 		property.setValue( value );
-		final Component referencedValue = (Component) referencedProperty.getValue();
-		value.setTypeName( referencedValue.getTypeName() );
+		final Component referencedValue = (Component) referencedProperty.getValueMapping();
+		value.setExplicitTypeName( referencedValue.getTypeName() );
 		value.setTypeParameters( referencedValue.getTypeParameters() );
-		value.setComponentClassName( referencedValue.getComponentClassName() );
+		value.setComponentClassName( referencedValue.getEmbeddableClassName() );
 
-
-		Iterator<Property> propertyIterator = referencedValue.getPropertyIterator();
-		while(propertyIterator.hasNext()) {
-			Property referencedComponentProperty = propertyIterator.next();
-
-			if ( referencedComponentProperty.isComposite() ) {
-				Property componentProperty = createComponentProperty( referencedValue.getOwner(), isExplicitReference, columnByReferencedName, index, referencedComponentProperty );
-				value.addProperty( componentProperty );
+		final List<PersistentAttributeMapping> declaredPersistentAttributes = referencedValue.getDeclaredPersistentAttributes();
+		for(PersistentAttributeMapping referencedComponentProperty : declaredPersistentAttributes){
+			if ( referencedComponentProperty instanceof Component ) {
+				Property componentProperty = createComponentProperty(
+						isExplicitReference,
+						columnByReferencedName,
+						index,
+						referencedComponentProperty
+				);
+				value.addDeclaredPersistentAttribute( componentProperty );
 			}
 			else {
-				Property componentProperty = createSimpleProperty( referencedValue.getOwner(), isExplicitReference, columnByReferencedName, index, referencedComponentProperty );
-				value.addProperty( componentProperty );
+				Property componentProperty = createSimpleProperty(
+						referencedValue.getOwner(),
+						isExplicitReference,
+						columnByReferencedName,
+						index,
+						referencedComponentProperty
+				);
+				value.addDeclaredPersistentAttribute( componentProperty );
 			}
 		}
 
@@ -143,45 +160,40 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 			boolean isExplicitReference,
 			Map<String, Ejb3JoinColumn> columnByReferencedName,
 			AtomicInteger index,
-			Property referencedProperty ) {
-		Property property = new Property();
+			PersistentAttributeMapping referencedProperty ) {
+		final Property property = new Property( buildingContext );
 		property.setName( referencedProperty.getName() );
 		//FIXME set optional?
 		//property.setOptional( property.isOptional() );
 		property.setPersistentClass( component.getOwner() );
 		property.setPropertyAccessorName( referencedProperty.getPropertyAccessorName() );
-		SimpleValue value = new SimpleValue( buildingContext, component.getTable() );
+		final BasicValue value = new BasicValue( buildingContext, component.getMappedTable()
+		);
 		property.setValue( value );
-		final SimpleValue referencedValue = (SimpleValue) referencedProperty.getValue();
-		value.setTypeName( referencedValue.getTypeName() );
+		final BasicValue referencedValue = (BasicValue) referencedProperty.getValueMapping();
+		value.setExplicitTypeName( referencedValue.getTypeName() );
 		value.setTypeParameters( referencedValue.getTypeParameters() );
-		final Iterator<Selectable> columns = referencedValue.getColumnIterator();
-
+		final List<MappedColumn> mappedColumns = referencedValue.getMappedColumns();
 		if ( joinColumns[0].isNameDeferred() ) {
 			joinColumns[0].copyReferencedStructureAndCreateDefaultJoinColumns(
 				referencedPersistentClass,
-				columns,
+				mappedColumns,
 				value);
 		}
 		else {
-			//FIXME take care of Formula
-			while ( columns.hasNext() ) {
-				final Selectable selectable = columns.next();
-				if ( ! Column.class.isInstance( selectable ) ) {
-					log.debug( "Encountered formula definition; skipping" );
-					continue;
-				}
+			mappedColumns.forEach(
+					selectable -> {//FIXME take care of Formula
+
+				if (  Column.class.isInstance( selectable ) ) {
+
 				final Column column = (Column) selectable;
 				final Ejb3JoinColumn joinColumn;
 				String logicalColumnName = null;
 				if ( isExplicitReference ) {
-					final String columnName = column.getName();
-					logicalColumnName = buildingContext.getMetadataCollector().getLogicalColumnName(
-							referencedPersistentClass.getTable(),
-							columnName
+					final String columnName = column.getText(
 					);
 					//JPA 2 requires referencedColumnNames to be case insensitive
-					joinColumn = columnByReferencedName.get( logicalColumnName.toLowerCase(Locale.ROOT ) );
+					joinColumn = columnByReferencedName.get( columnName.toLowerCase(Locale.ROOT ) );
 				}
 				else {
 					joinColumn = columnByReferencedName.get( "" + index.get() );
@@ -196,13 +208,18 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 				}
 				final String columnName = joinColumn == null || joinColumn.isNameDeferred() ? "tata_" + column.getName() : joinColumn
 						.getName();
-				value.addColumn( new Column( columnName ) );
+				value.addColumn( new Column( columnName, false ) );
 				if ( joinColumn != null ) {
-					applyComponentColumnSizeValueToJoinColumn( column, joinColumn );
-					joinColumn.linkWithValue( value );
+					applyComponentColumnSizeValueToJoinColumn( column, joinColumn );joinColumn.linkWithValue( value );
 				}
-				column.setValue( value );
-			}
+				if ( value.getMappedTable() != null ) {column.setTableName( value .getMappedTable().getNameIdentifier() );
+							}
+						}
+						else {
+							log.debug( "Encountered formula definition; skipping" );
+						}
+					}
+			);
 		}
 		return property;
 	}

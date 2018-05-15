@@ -10,16 +10,17 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.internal.ClassmateContext;
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
+import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.collection.spi.CollectionSemanticsResolver;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
@@ -32,21 +33,23 @@ import org.jboss.jandex.IndexView;
  * @author Steve Ebersole
  */
 public interface BootstrapContext {
-	StandardServiceRegistry getServiceRegistry();
-
-	MutableJpaCompliance getJpaCompliance();
-
 	TypeConfiguration getTypeConfiguration();
 
+	StandardServiceRegistry getServiceRegistry();
+
 	MetadataBuildingOptions getMetadataBuildingOptions();
+
+	MutableJpaCompliance getJpaCompliance();
 
 	boolean isJpaBootstrap();
 
 	/**
 	 * Indicates that bootstrap was initiated from JPA bootstrapping.  Internally {@code false} is
-	 * the assumed value.  We only need to call this to mark that as true.
+	 * the assumed value.  We only need to call this to mark as true.
 	 */
 	void markAsJpaBootstrap();
+
+	CollectionSemanticsResolver getCollectionRepresentationResolver();
 
 	/**
 	 * Access the temporary ClassLoader passed to us as defined by
@@ -121,6 +124,14 @@ public interface BootstrapContext {
 	 */
 	IndexView getJandexView();
 
+
+//	/**
+//	 * Obtain the selected strategy for resolving members identifying persistent attributes
+//	 *
+//	 * @return The select resolver strategy
+//	 */
+//	PersistentAttributeMemberResolver getPersistentAttributeMemberResolver();
+
 	/**
 	 * Access to any SQL functions explicitly registered with the MetadataBuilder.  This
 	 * does not include Dialect defined functions, etc.
@@ -129,7 +140,7 @@ public interface BootstrapContext {
 	 *
 	 * @return The SQLFunctions registered through MetadataBuilder
 	 */
-	Map<String,SQLFunction> getSqlFunctions();
+	Map<String,SqmFunctionTemplate> getSqlFunctions();
 
 	/**
 	 * Access to any AuxiliaryDatabaseObject explicitly registered with the MetadataBuilder.  This
@@ -139,7 +150,7 @@ public interface BootstrapContext {
 	 *
 	 * @return The AuxiliaryDatabaseObject registered through MetadataBuilder
 	 */
-	Collection<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectList();
+	Collection<MappedAuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectList();
 
 	/**
 	 * Access to collected AttributeConverter definitions.
@@ -148,7 +159,7 @@ public interface BootstrapContext {
 	 *
 	 * @return The AttributeConverterInfo registered through MetadataBuilder
 	 */
-	Collection<AttributeConverterInfo> getAttributeConverters();
+	Collection<ConverterDescriptor> getAttributeConverters();
 
 	/**
 	 * Access to all explicit cache region mappings.

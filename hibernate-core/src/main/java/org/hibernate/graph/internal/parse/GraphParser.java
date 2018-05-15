@@ -10,21 +10,20 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.InvalidGraphException;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
+import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
-import org.hibernate.internal.util.io.CharSequenceReader;
 
 import org.jboss.logging.Logger;
 
-import antlr.RecognitionException;
-import antlr.Token;
-import antlr.TokenStreamException;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
 
 /**
  * @author Steve Ebersole
  */
-public class GraphParser extends GeneratedGraphParser {
+public class GraphParser extends GraphLanguageParserBaseVisitor {
 	public static final Logger PARSING_LOGGER = Logger.getLogger( "org.hibernate.orm.graph.parsing" );
 
 	/**
@@ -32,15 +31,24 @@ public class GraphParser extends GeneratedGraphParser {
 	 */
 	public static void parseInto(
 			GraphImplementor<?> targetGraph,
-			CharSequence graphString,
+			String graphString,
 			SessionFactoryImplementor sessionFactory) {
-		final GraphParser instance = new GraphParser( graphString, sessionFactory );
-		instance.graphStack.push( targetGraph );
+		// Build the lexer
+		final GraphLanguageLexer lexer = new GraphLanguageLexer( CharStreams.fromString( graphString ) );
+
+		// Build the parser...
+		final GraphLanguageParser parser = new GraphLanguageParser( new CommonTokenStream( lexer ) );
+
+		// Build an instance of this class as a visitor
+		final GraphParser visitor = new GraphParser( sessionFactory );
+		visitor.graphStack.push( targetGraph );
 		try {
-			instance.graph();
+			visitor.visitGraph( parser.graph() );
 		}
-		catch (RecognitionException | TokenStreamException e) {
-			throw new InvalidGraphException( "Error parsing graph string" );
+		finally {
+			visitor.graphStack.pop();
+
+			assert visitor.graphStack.isEmpty();
 		}
 	}
 
@@ -50,29 +58,70 @@ public class GraphParser extends GeneratedGraphParser {
 	private final Stack<AttributeNodeImplementor<?>> attributeNodeStack = new StandardStack<>();
 	private final Stack<SubGraphGenerator> graphSourceStack = new StandardStack<>();
 
-	private GraphParser(CharSequence charSequence, SessionFactoryImplementor sessionFactory) {
-		super( new GraphLexer( new CharSequenceReader( charSequence ) ) );
+	public GraphParser(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
 	}
 
-
 	@Override
-	protected void startAttribute(Token attributeNameToken) {
-		final String attributeName = attributeNameToken.getText();
+	public AttributeNodeImplementor visitAttributeNode(GraphLanguageParser.AttributeNodeContext ctx) {
+		final String attributeName = ctx.attributePath().NAME().getText();
+
+		final SubGraphGenerator subGraphCreator;
+
+		if ( ctx.attributePath().attributeQualifier() == null ) {
+			if ( PARSING_LOGGER.isDebugEnabled() ) {
+				PARSING_LOGGER.debugf(
+						"%s Start attribute : %s",
+						StringHelper.repeat( ">>", attributeNodeStack.depth() + 1 ),
+						attributeName
+				);
+			}
+
+			subGraphCreator = PathQualifierType.VALUE.getSubGraphCreator();
+		}
+		else {
+			final String qualifierName = ctx.attributePath().attributeQualifier().NAME().getText();
+
+			if ( PARSING_LOGGER.isDebugEnabled() ) {
+				PARSING_LOGGER.debugf(
+						"%s Start qualified attribute : %s.%s",
+						StringHelper.repeat( ">>", attributeNodeStack.depth() + 1 ),
+						attributeName,
+						qualifierName
+				);
+			}
+
+			final PathQualifierType pathQualifierType = resolvePathQualifier( qualifierName );
+			subGraphCreator = pathQualifierType.getSubGraphCreator();
+		}
+
+		final AttributeNodeImplementor attributeNode = resolveAttributeNode( attributeName );
+
+		if ( ctx.subGraph() != null ) {
+			attributeNodeStack.push( attributeNode );
+			graphSourceStack.push( subGraphCreator );
+
+			try {
+				visitSubGraph( ctx.subGraph() );
+
+			}
+			finally {
+				graphSourceStack.pop();
+				attributeNodeStack.pop();
+			}
+		}
 
 		if ( PARSING_LOGGER.isDebugEnabled() ) {
 			PARSING_LOGGER.debugf(
-					"%s Start attribute : %s",
-					StringHelper.repeat( ">>", attributeNodeStack.depth() + 1 ),
+					"%s Finished attribute : %s",
+					StringHelper.repeat( "<<", attributeNodeStack.depth() + 1 ),
 					attributeName
 			);
 		}
 
-		final AttributeNodeImplementor attributeNode = resolveAttributeNode( attributeName );
-		attributeNodeStack.push( attributeNode );
-
-		graphSourceStack.push( PathQualifierType.VALUE.getSubGraphCreator() );
+		return attributeNode;
 	}
+
 
 	private AttributeNodeImplementor resolveAttributeNode(String attributeName) {
 		final GraphImplementor<?> currentGraph = graphStack.getCurrent();
@@ -82,28 +131,6 @@ public class GraphParser extends GeneratedGraphParser {
 		assert attributeNode != null;
 
 		return attributeNode;
-	}
-
-	@Override
-	protected void startQualifiedAttribute(Token attributeNameToken, Token qualifierToken) {
-		final String attributeName = attributeNameToken.getText();
-		final String qualifierName = qualifierToken.getText();
-
-		if ( PARSING_LOGGER.isDebugEnabled() ) {
-			PARSING_LOGGER.debugf(
-					"%s Start qualified attribute : %s.%s",
-					StringHelper.repeat( ">>", attributeNodeStack.depth() + 1 ),
-					attributeName,
-					qualifierName
-			);
-		}
-
-		final AttributeNodeImplementor<?> attributeNode = resolveAttributeNode( attributeName );
-		attributeNodeStack.push( attributeNode );
-
-		final PathQualifierType pathQualifierType = resolvePathQualifier( qualifierName );
-
-		graphSourceStack.push( pathQualifierType.getSubGraphCreator() );
 	}
 
 	private PathQualifierType resolvePathQualifier(String qualifier) {
@@ -119,23 +146,8 @@ public class GraphParser extends GeneratedGraphParser {
 	}
 
 	@Override
-	protected void finishAttribute() {
-		graphSourceStack.pop();
-
-		final AttributeNodeImplementor<?> popped = attributeNodeStack.pop();
-
-		if ( PARSING_LOGGER.isDebugEnabled() ) {
-			PARSING_LOGGER.debugf(
-					"%s Finished attribute : %s",
-					StringHelper.repeat( "<<", attributeNodeStack.depth() + 1 ),
-					popped.getAttributeDescriptor().getName()
-			);
-		}
-	}
-
-	@Override
-	protected void startSubGraph(Token subTypeToken) {
-		final String subTypeName = subTypeToken == null ? null : subTypeToken.getText();
+	public SubGraphImplementor visitSubGraph(GraphLanguageParser.SubGraphContext ctx) {
+		final String subTypeName = ctx.subType() == null ? null : ctx.subType().getText();
 
 		if ( PARSING_LOGGER.isDebugEnabled() ) {
 			PARSING_LOGGER.debugf(
@@ -146,22 +158,31 @@ public class GraphParser extends GeneratedGraphParser {
 		}
 
 		final AttributeNodeImplementor<?> attributeNode = attributeNodeStack.getCurrent();
-		graphStack.push(
-				graphSourceStack.getCurrent()
-						.createSubGraph( attributeNode, subTypeName, sessionFactory )
-		);
-	}
+		final SubGraphGenerator subGraphCreator = graphSourceStack.getCurrent();
 
-	@Override
-	protected void finishSubGraph() {
-		final GraphImplementor<?> popped = graphStack.pop();
+		final SubGraphImplementor<?> subGraph = subGraphCreator.createSubGraph(
+				attributeNode,
+				subTypeName,
+				sessionFactory
+		);
+
+		graphStack.push( subGraph );
+
+		try {
+			ctx.attributeList().accept( this );
+		}
+		finally {
+			graphStack.pop();
+		}
 
 		if ( PARSING_LOGGER.isDebugEnabled() ) {
 			PARSING_LOGGER.debugf(
 					"%s Finished graph : %s",
 					StringHelper.repeat( "<<", attributeNodeStack.depth() + 2 ),
-					popped.getGraphedType().getName()
+					subGraph.getGraphedType().getDomainTypeName()
 			);
 		}
+
+		return subGraph;
 	}
 }

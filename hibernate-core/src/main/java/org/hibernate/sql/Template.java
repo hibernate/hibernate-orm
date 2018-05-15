@@ -15,16 +15,9 @@ import java.util.StringTokenizer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.dialect.function.SQLFunctionRegistry;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.sql.ordering.antlr.ColumnMapper;
-import org.hibernate.sql.ordering.antlr.OrderByAliasResolver;
-import org.hibernate.sql.ordering.antlr.OrderByFragmentTranslator;
-import org.hibernate.sql.ordering.antlr.OrderByTranslation;
-import org.hibernate.sql.ordering.antlr.SqlValueReference;
-import org.hibernate.sql.ordering.antlr.TranslationContext;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 
 /**
  * Parses SQL fragments specified in mapping documents
@@ -98,17 +91,17 @@ public final class Template {
 		return fragment;
 	}
 
-	public static String renderWhereStringTemplate(String sqlWhereString, Dialect dialect, SQLFunctionRegistry functionRegistry) {
+	public static String renderWhereStringTemplate(String sqlWhereString, Dialect dialect, SqmFunctionRegistry functionRegistry) {
 		return renderWhereStringTemplate(sqlWhereString, TEMPLATE, dialect, functionRegistry);
 	}
 
 	/**
-	 * Same functionality as {@link #renderWhereStringTemplate(String, String, Dialect, SQLFunctionRegistry)},
+	 * Same functionality as {@link #renderWhereStringTemplate(String, String, Dialect, SqmFunctionRegistry)},
 	 * except that a SQLFunctionRegistry is not provided (i.e., only the dialect-defined functions are
 	 * considered).  This is only intended for use by the annotations project until the
 	 * many-to-many/map-key-from-target-table feature is pulled into core.
 	 *
-	 * @deprecated Only intended for annotations usage; use {@link #renderWhereStringTemplate(String, String, Dialect, SQLFunctionRegistry)} instead
+	 * @deprecated Only intended for annotations usage; use {@link #renderWhereStringTemplate(String, String, Dialect, SqmFunctionRegistry)} instead
 	 */
 	@Deprecated
 	@SuppressWarnings({ "JavaDoc" })
@@ -117,7 +110,7 @@ public final class Template {
 				sqlWhereString,
 				placeholder,
 				dialect,
-				new SQLFunctionRegistry( dialect, java.util.Collections.<String, SQLFunction>emptyMap() )
+				new SqmFunctionRegistry( )
 		);
 	}
 
@@ -132,7 +125,7 @@ public final class Template {
 	 * @param functionRegistry The registry of all sql functions
 	 * @return The rendered sql fragment
 	 */
-	public static String renderWhereStringTemplate(String sqlWhereString, String placeholder, Dialect dialect, SQLFunctionRegistry functionRegistry ) {
+	public static String renderWhereStringTemplate(String sqlWhereString, String placeholder, Dialect dialect, SqmFunctionRegistry functionRegistry ) {
 
 		// IMPL NOTE : The basic process here is to tokenize the incoming string and to iterate over each token
 		//		in turn.  As we process each token, we set a series of flags used to indicate the type of context in
@@ -627,102 +620,102 @@ public final class Template {
 		}
 		return valueBuilder.toString().trim();
 	}
-
-	public static class NoOpColumnMapper implements ColumnMapper {
-		public static final NoOpColumnMapper INSTANCE = new NoOpColumnMapper();
-		public SqlValueReference[] map(String reference) {
-//			return new String[] { reference };
-			return null;
-		}
-	}
-
-	/**
-	 * Performs order-by template rendering without {@link ColumnMapper column mapping}.  An <tt>ORDER BY</tt> template
-	 * has all column references "qualified" with a placeholder identified by {@link Template#TEMPLATE}
-	 *
-	 * @param orderByFragment The order-by fragment to render.
-	 * @param dialect The SQL dialect being used.
-	 * @param functionRegistry The SQL function registry
-	 *
-	 * @return The rendered <tt>ORDER BY</tt> template.
-	 *
-	 * @deprecated Use {@link #translateOrderBy} instead
-	 */
-	@Deprecated
-	public static String renderOrderByStringTemplate(
-			String orderByFragment,
-			Dialect dialect,
-			SQLFunctionRegistry functionRegistry) {
-		return renderOrderByStringTemplate(
-				orderByFragment,
-				NoOpColumnMapper.INSTANCE,
-				null,
-				dialect,
-				functionRegistry
-		);
-	}
-
-	public static String renderOrderByStringTemplate(
-			String orderByFragment,
-			final ColumnMapper columnMapper,
-			final SessionFactoryImplementor sessionFactory,
-			final Dialect dialect,
-			final SQLFunctionRegistry functionRegistry) {
-		return translateOrderBy(
-				orderByFragment,
-				columnMapper,
-				sessionFactory,
-				dialect,
-				functionRegistry
-		).injectAliases( LEGACY_ORDER_BY_ALIAS_RESOLVER );
-	}
-
-	public static OrderByAliasResolver LEGACY_ORDER_BY_ALIAS_RESOLVER = new OrderByAliasResolver() {
-		@Override
-		public String resolveTableAlias(String columnReference) {
-			return TEMPLATE;
-		}
-	};
-
-	/**
-	 * Performs order-by template rendering allowing {@link ColumnMapper column mapping}.  An <tt>ORDER BY</tt> template
-	 * has all column references "qualified" with a placeholder identified by {@link Template#TEMPLATE} which can later
-	 * be used to easily inject the SQL alias.
-	 *
-	 * @param orderByFragment The order-by fragment to render.
-	 * @param columnMapper The column mapping strategy to use.
-	 * @param sessionFactory The session factory.
-	 * @param dialect The SQL dialect being used.
-	 * @param functionRegistry The SQL function registry
-	 *
-	 * @return The rendered <tt>ORDER BY</tt> template.
-	 */
-	public static OrderByTranslation translateOrderBy(
-			String orderByFragment,
-			final ColumnMapper columnMapper,
-			final SessionFactoryImplementor sessionFactory,
-			final Dialect dialect,
-			final SQLFunctionRegistry functionRegistry) {
-		TranslationContext context = new TranslationContext() {
-			public SessionFactoryImplementor getSessionFactory() {
-				return sessionFactory;
-			}
-
-			public Dialect getDialect() {
-				return dialect;
-			}
-
-			public SQLFunctionRegistry getSqlFunctionRegistry() {
-				return functionRegistry;
-			}
-
-			public ColumnMapper getColumnMapper() {
-				return columnMapper;
-			}
-		};
-
-		return OrderByFragmentTranslator.translate( context, orderByFragment );
-	}
+//
+//	public static class NoOpColumnMapper implements ColumnMapper {
+//		public static final NoOpColumnMapper INSTANCE = new NoOpColumnMapper();
+//		public SqlValueReference[] map(String reference) {
+////			return new String[] { reference };
+//			return null;
+//		}
+//	}
+//
+//	/**
+//	 * Performs order-by template rendering without {@link ColumnMapper column mapping}.  An <tt>ORDER BY</tt> template
+//	 * has all column references "qualified" with a placeholder identified by {@link Template#TEMPLATE}
+//	 *
+//	 * @param orderByFragment The order-by fragment to render.
+//	 * @param dialect The SQL dialect being used.
+//	 * @param functionRegistry The SQL function registry
+//	 *
+//	 * @return The rendered <tt>ORDER BY</tt> template.
+//	 *
+//	 * @deprecated Use {@link #translateOrderBy} instead
+//	 */
+//	@Deprecated
+//	public static String renderOrderByStringTemplate(
+//			String orderByFragment,
+//			Dialect dialect,
+//			SqmFunctionRegistry functionRegistry) {
+//		return renderOrderByStringTemplate(
+//				orderByFragment,
+//				NoOpColumnMapper.INSTANCE,
+//				null,
+//				dialect,
+//				functionRegistry
+//		);
+//	}
+//
+//	public static String renderOrderByStringTemplate(
+//			String orderByFragment,
+//			final ColumnMapper columnMapper,
+//			final SessionFactoryImplementor sessionFactory,
+//			final Dialect dialect,
+//			final SqmFunctionRegistry functionRegistry) {
+//		return translateOrderBy(
+//				orderByFragment,
+//				columnMapper,
+//				sessionFactory,
+//				dialect,
+//				functionRegistry
+//		).injectAliases( LEGACY_ORDER_BY_ALIAS_RESOLVER );
+//	}
+//
+//	public static OrderByAliasResolver LEGACY_ORDER_BY_ALIAS_RESOLVER = new OrderByAliasResolver() {
+//		@Override
+//		public String resolveTableAlias(String columnReference) {
+//			return TEMPLATE;
+//		}
+//	};
+//
+//	/**
+//	 * Performs order-by template rendering allowing {@link ColumnMapper column mapping}.  An <tt>ORDER BY</tt> template
+//	 * has all column references "qualified" with a placeholder identified by {@link Template#TEMPLATE} which can later
+//	 * be used to easily inject the SQL alias.
+//	 *
+//	 * @param orderByFragment The order-by fragment to render.
+//	 * @param columnMapper The column mapping strategy to use.
+//	 * @param sessionFactory The session factory.
+//	 * @param dialect The SQL dialect being used.
+//	 * @param functionRegistry The SQL function registry
+//	 *
+//	 * @return The rendered <tt>ORDER BY</tt> template.
+//	 */
+//	public static OrderByTranslation translateOrderBy(
+//			String orderByFragment,
+//			final ColumnMapper columnMapper,
+//			final SessionFactoryImplementor sessionFactory,
+//			final Dialect dialect,
+//			final SqmFunctionRegistry functionRegistry) {
+//		TranslationContext context = new TranslationContext() {
+//			public SessionFactoryImplementor getSessionFactory() {
+//				return sessionFactory;
+//			}
+//
+//			public Dialect getDialect() {
+//				return dialect;
+//			}
+//
+//			public SqmFunctionRegistry getSqlFunctionRegistry() {
+//				return functionRegistry;
+//			}
+//
+//			public ColumnMapper getColumnMapper() {
+//				return columnMapper;
+//			}
+//		};
+//
+//		return OrderByFragmentTranslator.translate( context, orderByFragment );
+//	}
 
 	private static boolean isNamedParameter(String token) {
 		return token.startsWith( ":" );
@@ -732,7 +725,7 @@ public final class Template {
 			String lcToken,
 			String nextToken,
 			Dialect dialect,
-			SQLFunctionRegistry functionRegistry) {
+			SqmFunctionRegistry functionRegistry) {
 		return "(".equals( nextToken ) ||
 				KEYWORDS.contains( lcToken ) ||
 				isType( lcToken, dialect ) ||
@@ -745,27 +738,34 @@ public final class Template {
 		return dialect.isTypeNameRegistered( lcToken );
 	}
 
-	private static boolean isFunction(String lcToken, String nextToken, SQLFunctionRegistry functionRegistry) {
-		// checking for "(" is currently redundant because it is checked before getting here;
-		// doing the check anyhow, in case that earlier check goes away;
+	private static boolean isFunction(String lcToken, String nextToken, SqmFunctionRegistry functionRegistry) {
+		// If the token following the token we are checking is an open parenthesis
+		// 		we assume the token is a function
+		//
+		// NOTE checking for "(" is currently redundant because it is checked before getting here;
+		// 		doing the check anyhow, in case that earlier check goes away;
 		if ( "(".equals( nextToken ) ) {
 			return true;
 		}
-		SQLFunction function = functionRegistry.findSQLFunction(lcToken);
-		if ( function == null ) {
-			// lcToken does not refer to a function
+
+		// Otherwise, the token is considered a function if:
+		//		1) the token matches a registered function-template
+		final SqmFunctionTemplate functionTemplate = functionRegistry.findFunctionTemplate( lcToken);
+		if ( functionTemplate == null ) {
+			// no template registered under that name - token is not a function
 			return false;
 		}
-		// if function.hasParenthesesIfNoArguments() is true, then assume
-		// lcToken is not a function (since it is not followed by '(')
-		return ! function.hasParenthesesIfNoArguments();
+
+		// 		2) the registered template reports that the function can occur
+		// 			without parentheses
+		return !functionTemplate.alwaysIncludesParentheses();
 	}
 
 	private static boolean isIdentifier(String token) {
 		if ( isBoolean( token ) ) {
 			return false;
 		}
-		return token.charAt( 0 ) == '`' || ( //allow any identifier quoted with backtick
+		return token.charAt( 0 ) == '`' || ( //allow any identifier quoted with back-tick
 				Character.isLetter( token.charAt( 0 ) ) && //only recognizes identifiers beginning with a letter
 						token.indexOf( '.' ) < 0
 		);

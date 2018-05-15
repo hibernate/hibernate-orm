@@ -6,8 +6,6 @@
  */
 package org.hibernate.id;
 
-import java.io.Serializable;
-
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -19,7 +17,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 public abstract class AbstractPostInsertGenerator
 		implements PostInsertIdentifierGenerator, BulkInsertionCapableIdentifierGenerator {
 	@Override
-	public Serializable generate(SharedSessionContractImplementor s, Object obj) {
+	public Object generate(SharedSessionContractImplementor s, Object obj) {
 		return IdentifierGeneratorHelper.POST_INSERT_INDICATOR;
 	}
 

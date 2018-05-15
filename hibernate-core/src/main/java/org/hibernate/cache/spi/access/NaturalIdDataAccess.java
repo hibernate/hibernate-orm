@@ -8,7 +8,7 @@ package org.hibernate.cache.spi.access;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 
 /**
  * Contract for managing transactional and concurrent access to cached naturalId
@@ -37,18 +37,17 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public interface NaturalIdDataAccess extends CachedDomainDataAccess {
 
-
 	/**
 	 * To create instances of NaturalIdCacheKey for this region, Hibernate will invoke this method
 	 * exclusively so that generated implementations can generate optimised keys.
 	 * @param naturalIdValues the sequence of values which unequivocally identifies a cached element on this region
-	 * @param rootEntityDescriptor the persister of the element being cached
+	 * @param hierarchy The entity hierarchy defining the natural-id
 	 *
 	 * @return a key which can be used to identify this an element unequivocally on this same region
 	 */
 	Object generateCacheKey(
 			Object[] naturalIdValues,
-			EntityPersister rootEntityDescriptor,
+			EntityHierarchy hierarchy,
 			SharedSessionContractImplementor session);
 
 	/**

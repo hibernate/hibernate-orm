@@ -1,153 +1,73 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.metamodel.spi;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
+
 import javax.persistence.EntityGraph;
 
 import org.hibernate.EntityNameResolver;
-import org.hibernate.MappingException;
 import org.hibernate.Metamodel;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
-import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Hibernate extension to the JPA {@link Metamodel} contract
+ * An SPI extension to the JPA {@link javax.persistence.metamodel.Metamodel}
+ * via ({@link org.hibernate.Metamodel}
  *
- * @author Steve Ebersole
+ * @apiNote Most of that functionality has been moved to {@link TypeConfiguration} instead,
+ * accessible via {@link #getTypeConfiguration()}
  */
 public interface MetamodelImplementor extends Metamodel {
-	/**
-	 * Access to the TypeConfiguration in effect for this SessionFactory/Metamodel
-	 *
-	 * @return Access to the TypeConfiguration
-	 */
-	TypeConfiguration getTypeConfiguration();
+	// todo (6.0) : Should we move #getTypeConfiguration() from Metamodel to here?
+	//  		In 5.x we expose #getTypeConfiguration() here but in 6.0 its on the api.
 
-	@Override
-	SessionFactoryImplementor getSessionFactory();
+	// todo (6.0) : would be awesome to expose the runtime database model here
+	//		however that has some drawbacks that we need to discuss, namely
+	//		that DatabaseModel holds state that we do not need beyond
+	//		schema-management tooling - init-commands and aux-db-objects
 
-	Collection<EntityNameResolver> getEntityNameResolvers();
 
-	/**
-	 * Locate an EntityPersister by the entity class.  The passed Class might refer to either
-	 * the entity name directly, or it might name a proxy interface for the entity.  This
-	 * method accounts for both, preferring the direct named entity name.
-	 *
-	 * @param byClass The concrete Class or proxy interface for the entity to locate the persister for.
-	 *
-	 * @return The located EntityPersister, never {@code null}
-	 *
-	 * @throws org.hibernate.UnknownEntityTypeException If a matching EntityPersister cannot be located
-	 */
-	EntityPersister locateEntityPersister(Class byClass);
+	Set<PersistentCollectionDescriptor<?,?,?>> findCollectionsByEntityParticipant(EntityTypeDescriptor entityDescriptor);
+
+	Set<String> findCollectionRolesByEntityParticipant(EntityTypeDescriptor entityDescriptor);
+
+	void visitEntityNameResolvers(Consumer<EntityNameResolver> action);
 
 	/**
-	 * Locate the entity persister by name.
-	 *
-	 * @param byName The entity name
-	 *
-	 * @return The located EntityPersister, never {@code null}
-	 *
-	 * @throws org.hibernate.UnknownEntityTypeException If a matching EntityPersister cannot be located
+	 * When a Class is referenced in a query, this method is invoked to resolve
+	 * its set of valid "implementors" as a group.  The returned expressable type
+	 * encapsulates all known implementors
 	 */
-	EntityPersister locateEntityPersister(String byName);
+	<T> EntityValuedExpressableType<T> resolveEntityReference(Class<T> javaType);
 
-	/**
-	 * Locate the persister for an entity by the entity class.
-	 *
-	 * @param entityClass The entity class
-	 *
-	 * @return The entity persister
-	 *
-	 * @throws MappingException Indicates persister for that class could not be found.
-	 */
-	EntityPersister entityPersister(Class entityClass);
+	EntityValuedExpressableType resolveEntityReference(String entityName);
 
-	/**
-	 * Locate the persister for an entity by the entity-name
-	 *
-	 * @param entityName The name of the entity for which to retrieve the persister.
-	 *
-	 * @return The persister
-	 *
-	 * @throws MappingException Indicates persister could not be found with that name.
-	 */
-	EntityPersister entityPersister(String entityName);
-
-	/**
-	 * Get all entity persisters as a Map, which entity name its the key and the persister is the value.
-	 *
-	 * @return The Map contains all entity persisters.
-	 */
-	Map<String,EntityPersister> entityPersisters();
-
-	/**
-	 * Get the persister object for a collection role.
-	 *
-	 * @param role The role of the collection for which to retrieve the persister.
-	 *
-	 * @return The persister
-	 *
-	 * @throws MappingException Indicates persister could not be found with that role.
-	 */
-	CollectionPersister collectionPersister(String role);
-
-	/**
-	 * Get all collection persisters as a Map, which collection role as the key and the persister is the value.
-	 *
-	 * @return The Map contains all collection persisters.
-	 */
-	Map<String,CollectionPersister> collectionPersisters();
-
-	/**
-	 * Retrieves a set of all the collection roles in which the given entity is a participant, as either an
-	 * index or an element.
-	 *
-	 * @param entityName The entity name for which to get the collection roles.
-	 *
-	 * @return set of all the collection roles in which the given entityName participates.
-	 */
-	Set<String> getCollectionRolesByEntityParticipant(String entityName);
-
-	/**
-	 * Get the names of all entities known to this Metamodel
-	 *
-	 * @return All of the entity names
-	 */
-	String[] getAllEntityNames();
-
-	/**
-	 * Get the names of all collections known to this Metamodel
-	 *
-	 * @return All of the entity names
-	 */
-	String[] getAllCollectionRoles();
+	AllowableParameterType resolveAllowableParamterType(Class clazz);
 
 	<T> void addNamedEntityGraph(String graphName, RootGraphImplementor<T> entityGraph);
+
+	<T> RootGraphImplementor<T> findEntityGraphByName(String name);
+
+	<T> List<RootGraphImplementor<? super T>> findEntityGraphsByJavaType(Class<T> entityClass);
 
 	/**
 	 * @deprecated Use {@link #addNamedEntityGraph(String, RootGraphImplementor)} instead.
 	 */
 	@Deprecated
 	<T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph);
-
-	<T> RootGraphImplementor<T> findEntityGraphByName(String name);
-
-	<T> List<RootGraphImplementor<? super T>> findEntityGraphsByJavaType(Class<T> entityClass);
 
 	/**
 	 * @deprecated Use {@link #findEntityGraphsByJavaType(Class)} instead.
@@ -157,6 +77,14 @@ public interface MetamodelImplementor extends Metamodel {
 		return (List) findEntityGraphsByJavaType( entityClass );
 	}
 
+	@Override
+	default <T> RootGraphImplementor<T> findRootGraph(String name) {
+		return findEntityGraphByName( name );
+	}
+
+	/**
+	 * Close the Metamodel
+	 */
 	void close();
 
 
@@ -175,9 +103,4 @@ public interface MetamodelImplementor extends Metamodel {
 
 	@Override
 	<X> EmbeddedTypeDescriptor<X> embeddable(Class<X> cls);
-
-	@Override
-	default EntityTypeDescriptor getEntityTypeByName(String entityName) {
-		return entity( entityName );
-	}
 }

@@ -10,19 +10,10 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
-import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.Exportable;
-import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.boot.model.relational.Sequence;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -35,8 +26,15 @@ import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.ForeignKey;
-import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.model.relational.spi.AuxiliaryDatabaseObject;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
+import org.hibernate.metamodel.model.relational.spi.Exportable;
+import org.hibernate.metamodel.model.relational.spi.ExportableTable;
+import org.hibernate.metamodel.model.relational.spi.ForeignKey;
+import org.hibernate.metamodel.model.relational.spi.Namespace;
+import org.hibernate.metamodel.model.relational.spi.Sequence;
+import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.naming.Identifier;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -70,34 +68,43 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 	private final HibernateSchemaManagementTool tool;
 	private final SchemaFilter schemaFilter;
+	private final DatabaseModel databaseModel;
+	private final JdbcServices jdbcServices;
 
-	public SchemaDropperImpl(HibernateSchemaManagementTool tool) {
-		this( tool, DefaultSchemaFilter.INSTANCE );
+
+	public SchemaDropperImpl(HibernateSchemaManagementTool tool, DatabaseModel databaseModel) {
+		this( tool, databaseModel, DefaultSchemaFilter.INSTANCE );
 	}
 
-	public SchemaDropperImpl(HibernateSchemaManagementTool tool, SchemaFilter schemaFilter) {
+	public SchemaDropperImpl(
+			HibernateSchemaManagementTool tool,
+			DatabaseModel databaseModel,
+			SchemaFilter schemaFilter) {
 		this.tool = tool;
 		this.schemaFilter = schemaFilter;
+		this.databaseModel = databaseModel;
+		this.jdbcServices = tool.getServiceRegistry().getService( JdbcServices.class );
+
 	}
 
-	public SchemaDropperImpl(ServiceRegistry serviceRegistry) {
-		this( serviceRegistry, DefaultSchemaFilter.INSTANCE );
+	public SchemaDropperImpl(DatabaseModel databaseModel, ServiceRegistry serviceRegistry) {
+		this( databaseModel, serviceRegistry, DefaultSchemaFilter.INSTANCE );
 	}
 
-	public SchemaDropperImpl(ServiceRegistry serviceRegistry, SchemaFilter schemaFilter) {
+	public SchemaDropperImpl(DatabaseModel databaseModel, ServiceRegistry serviceRegistry, SchemaFilter schemaFilter) {
 		SchemaManagementTool smt = serviceRegistry.getService( SchemaManagementTool.class );
 		if ( smt == null || !HibernateSchemaManagementTool.class.isInstance( smt ) ) {
 			smt = new HibernateSchemaManagementTool();
 			( (HibernateSchemaManagementTool) smt ).injectServices( (ServiceRegistryImplementor) serviceRegistry );
 		}
-
 		this.tool = (HibernateSchemaManagementTool) smt;
 		this.schemaFilter = schemaFilter;
+		this.databaseModel = databaseModel;
+		this.jdbcServices = tool.getServiceRegistry().getService( JdbcServices.class );
 	}
 
 	@Override
 	public void doDrop(
-			Metadata metadata,
 			ExecutionOptions options,
 			SourceDescriptor sourceDescriptor,
 			TargetDescriptor targetDescriptor) {
@@ -109,11 +116,10 @@ public class SchemaDropperImpl implements SchemaDropper {
 		final JdbcContext jdbcContext = tool.resolveJdbcContext( options.getConfigurationValues() );
 		final GenerationTarget[] targets = tool.buildGenerationTargets( targetDescriptor, jdbcContext, options.getConfigurationValues(), true );
 
-		doDrop( metadata, options, jdbcContext.getDialect(), sourceDescriptor, targets );
+		doDrop( options, jdbcContext.getDialect(), sourceDescriptor, targets );
 	}
 
 	public void doDrop(
-			Metadata metadata,
 			ExecutionOptions options,
 			Dialect dialect,
 			SourceDescriptor sourceDescriptor,
@@ -123,7 +129,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 		}
 
 		try {
-			performDrop( metadata, options, dialect, sourceDescriptor, targets );
+			performDrop( options, dialect, sourceDescriptor, targets );
 		}
 		finally {
 			for ( GenerationTarget target : targets ) {
@@ -138,7 +144,6 @@ public class SchemaDropperImpl implements SchemaDropper {
 	}
 
 	private void performDrop(
-			Metadata metadata,
 			ExecutionOptions options,
 			Dialect dialect,
 			SourceDescriptor sourceDescriptor,
@@ -151,15 +156,15 @@ public class SchemaDropperImpl implements SchemaDropper {
 			dropFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, options, targets );
 		}
 		else if ( sourceDescriptor.getSourceType() == SourceType.METADATA ) {
-			dropFromMetadata( metadata, options, dialect, formatter, targets );
+			dropFromCreationContext( options, dialect, formatter, targets );
 		}
 		else if ( sourceDescriptor.getSourceType() == SourceType.METADATA_THEN_SCRIPT ) {
-			dropFromMetadata( metadata, options, dialect, formatter, targets );
+			dropFromCreationContext( options, dialect, formatter, targets );
 			dropFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, options, targets );
 		}
 		else {
 			dropFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, options, targets );
-			dropFromMetadata( metadata, options, dialect, formatter, targets );
+			dropFromCreationContext( options, dialect, formatter, targets );
 		}
 	}
 
@@ -180,15 +185,11 @@ public class SchemaDropperImpl implements SchemaDropper {
 		}
 	}
 
-	private void dropFromMetadata(
-			Metadata metadata,
+	private void dropFromCreationContext(
 			ExecutionOptions options,
 			Dialect dialect,
 			Formatter formatter,
 			GenerationTarget... targets) {
-		final Database database = metadata.getDatabase();
-		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
-
 		boolean tryToDropCatalogs = false;
 		boolean tryToDropSchemas = false;
 		if ( options.shouldManageNamespaces() ) {
@@ -200,66 +201,68 @@ public class SchemaDropperImpl implements SchemaDropper {
 			}
 		}
 
-		final Set<String> exportIdentifiers = new HashSet<String>( 50 );
+		final Set<String> exportIdentifiers = new HashSet<>( 50 );
 
 		// NOTE : init commands are irrelevant for dropping...
 
-		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
-			if ( !auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
+		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : databaseModel.getAuxiliaryDatabaseObjects() ) {
+			if ( !auxiliaryDatabaseObject.isBeforeTablesOnCreation() ) {
 				continue;
 			}
-			if ( !auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
-				continue;
-			}
-
 			applySqlStrings(
-					dialect.getAuxiliaryDatabaseObjectExporter().getSqlDropStrings( auxiliaryDatabaseObject, metadata ),
+					dialect.getAuxiliaryDatabaseObjectExporter()
+							.getSqlDropStrings( auxiliaryDatabaseObject, jdbcServices ),
 					formatter,
 					options,
 					targets
 			);
 		}
 
-		for ( Namespace namespace : database.getNamespaces() ) {
+		for ( Namespace namespace : databaseModel.getNamespaces() ) {
 
 			if ( !schemaFilter.includeNamespace( namespace ) ) {
 				continue;
 			}
 
 			// we need to drop all constraints/indexes prior to dropping the tables
-			applyConstraintDropping( namespace, metadata, formatter, options, targets );
+			applyConstraintDropping( namespace, formatter, options, targets );
 
 			// now it's safe to drop the tables
-			for ( Table table : namespace.getTables() ) {
-				if ( !table.isPhysicalTable() ) {
-					continue;
-				}
-				if ( !schemaFilter.includeTable( table ) ) {
-					continue;
-				}
-				checkExportIdentifier( table, exportIdentifiers );
-				applySqlStrings( dialect.getTableExporter().getSqlDropStrings( table, metadata ), formatter, options,targets );
-			}
+			namespace.getTables().stream()
+					.filter( table -> table.isExportable() )
+					.filter( table -> schemaFilter.includeTable( (ExportableTable) table ) )
+					.map( table -> (ExportableTable) table )
+					.forEach( table -> {
+						checkExportIdentifier( table, exportIdentifiers );
+						applySqlStrings(
+								dialect.getTableExporter()
+										.getSqlDropStrings( table, jdbcServices ),
+								formatter,
+								options,
+								targets
+						);
+					} );
 
 			for ( Sequence sequence : namespace.getSequences() ) {
 				if ( !schemaFilter.includeSequence( sequence ) ) {
 					continue;
 				}
 				checkExportIdentifier( sequence, exportIdentifiers );
-				applySqlStrings( dialect.getSequenceExporter().getSqlDropStrings( sequence, metadata ), formatter, options, targets );
+				applySqlStrings(
+						dialect.getSequenceExporter().getSqlDropStrings( sequence, jdbcServices ),
+						formatter,
+						options,
+						targets
+				);
 			}
 		}
 
-		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
-			if ( auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
+		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : databaseModel.getAuxiliaryDatabaseObjects() ) {
+			if ( auxiliaryDatabaseObject.isBeforeTablesOnCreation() ) {
 				continue;
 			}
-			if ( !auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
-				continue;
-			}
-
 			applySqlStrings(
-					auxiliaryDatabaseObject.sqlDropStrings( jdbcEnvironment.getDialect() ),
+					auxiliaryDatabaseObject.getSqlDropStrings(),
 					formatter,
 					options,
 					targets
@@ -267,18 +270,18 @@ public class SchemaDropperImpl implements SchemaDropper {
 		}
 
 		if ( tryToDropCatalogs || tryToDropSchemas ) {
-			Set<Identifier> exportedCatalogs = new HashSet<Identifier>();
+			Set<Identifier> exportedCatalogs = new HashSet<>();
 
-			for ( Namespace namespace : database.getNamespaces() ) {
+			for ( Namespace namespace : databaseModel.getNamespaces() ) {
 
 				if ( !schemaFilter.includeNamespace( namespace ) ) {
 					continue;
 				}
 
-				if ( tryToDropSchemas && namespace.getPhysicalName().getSchema() != null ) {
+				if ( tryToDropSchemas && namespace.getSchemaName() != null ) {
 					applySqlStrings(
 							dialect.getDropSchemaCommand(
-									namespace.getPhysicalName().getSchema().render( dialect )
+									namespace.getSchemaName().render( dialect )
 							),
 							formatter,
 							options,
@@ -286,19 +289,18 @@ public class SchemaDropperImpl implements SchemaDropper {
 					);
 				}
 				if ( tryToDropCatalogs ) {
-					final Identifier catalogLogicalName = namespace.getName().getCatalog();
-					final Identifier catalogPhysicalName = namespace.getPhysicalName().getCatalog();
+					final Identifier cataloglName = namespace.getCatalogName();
 
-					if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) ) {
+					if ( cataloglName != null && !exportedCatalogs.contains( cataloglName ) ) {
 						applySqlStrings(
 								dialect.getDropCatalogCommand(
-										catalogPhysicalName.render( dialect )
+										cataloglName.render( dialect )
 								),
 								formatter,
 								options,
 								targets
 						);
-						exportedCatalogs.add( catalogLogicalName );
+						exportedCatalogs.add( cataloglName );
 					}
 				}
 			}
@@ -307,29 +309,26 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 	private void applyConstraintDropping(
 			Namespace namespace,
-			Metadata metadata,
 			Formatter formatter,
 			ExecutionOptions options,
 			GenerationTarget... targets) {
-		final Dialect dialect = metadata.getDatabase().getJdbcEnvironment().getDialect();
+		final Dialect dialect = jdbcServices.getDialect();
 
 		if ( !dialect.dropConstraints() ) {
 			return;
 		}
 
 		for ( Table table : namespace.getTables() ) {
-			if ( !table.isPhysicalTable() ) {
+			if ( !table.isExportable() ) {
 				continue;
 			}
-			if ( !schemaFilter.includeTable( table ) ) {
+			if ( !schemaFilter.includeTable( (ExportableTable) table ) ) {
 				continue;
 			}
 
-			final Iterator fks = table.getForeignKeyIterator();
-			while ( fks.hasNext() ) {
-				final ForeignKey foreignKey = (ForeignKey) fks.next();
+			for ( ForeignKey foreignKey : table.getForeignKeys() ) {
 				applySqlStrings(
-						dialect.getForeignKeyExporter().getSqlDropStrings( foreignKey, metadata ),
+						dialect.getForeignKeyExporter().getSqlDropStrings( foreignKey, jdbcServices ),
 						formatter,
 						options,
 						targets
@@ -383,15 +382,13 @@ public class SchemaDropperImpl implements SchemaDropper {
 	/**
 	 * For testing...
 	 *
-	 * @param metadata The metadata for which to generate the creation commands.
 	 *
 	 * @return The generation commands
 	 */
-	public List<String> generateDropCommands(Metadata metadata, final boolean manageNamespaces) {
+	public List<String> generateDropCommands(final boolean manageNamespaces) {
 		final JournalingGenerationTarget target = new JournalingGenerationTarget();
 
-		final ServiceRegistry serviceRegistry = ( (MetadataImplementor) metadata ).getMetadataBuildingOptions()
-				.getServiceRegistry();
+		final ServiceRegistry serviceRegistry = tool.getServiceRegistry();
 		final Dialect dialect = serviceRegistry.getService( JdbcEnvironment.class ).getDialect();
 
 		final ExecutionOptions options = new ExecutionOptions() {
@@ -411,29 +408,31 @@ public class SchemaDropperImpl implements SchemaDropper {
 			}
 		};
 
-		dropFromMetadata( metadata, options, dialect, FormatStyle.NONE.getFormatter(), target );
+		dropFromCreationContext( options, dialect, FormatStyle.NONE.getFormatter(), target );
 
 		return target.commands;
 	}
 
 	@Override
 	public DelayedDropAction buildDelayedAction(
-			Metadata metadata,
 			ExecutionOptions options,
 			SourceDescriptor sourceDescriptor) {
 		final JournalingGenerationTarget target = new JournalingGenerationTarget();
-		doDrop( metadata, options, tool.getServiceRegistry().getService( JdbcEnvironment.class ).getDialect(), sourceDescriptor, target );
+		doDrop(
+				options,
+				tool.getServiceRegistry().getService( JdbcEnvironment.class ).getDialect(),
+				sourceDescriptor,
+				target
+		);
 		return new DelayedDropActionImpl( target.commands );
 	}
 
 	/**
 	 * For tests
 	 */
-	public void doDrop(Metadata metadata, boolean manageNamespaces, GenerationTarget... targets) {
-		final ServiceRegistry serviceRegistry = ( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry();
+	public void doDrop(boolean manageNamespaces, GenerationTarget... targets) {
+		final ServiceRegistry serviceRegistry = tool.getServiceRegistry();
 		doDrop(
-				metadata,
-				serviceRegistry,
 				serviceRegistry.getService( ConfigurationService.class ).getSettings(),
 				manageNamespaces,
 				targets
@@ -444,23 +443,22 @@ public class SchemaDropperImpl implements SchemaDropper {
 	 * For tests
 	 */
 	public void doDrop(
-			Metadata metadata,
-			final ServiceRegistry serviceRegistry,
 			final Map settings,
 			final boolean manageNamespaces,
 			GenerationTarget... targets) {
+		final ServiceRegistry serviceRegistry = tool.getServiceRegistry();
 		if ( targets == null || targets.length == 0 ) {
 			final JdbcContext jdbcContext = tool.resolveJdbcContext( settings );
 			targets = new GenerationTarget[] {
 				new GenerationTargetToDatabase(
-						serviceRegistry.getService( TransactionCoordinatorBuilder.class ).buildDdlTransactionIsolator( jdbcContext ),
+						serviceRegistry
+								.getService( TransactionCoordinatorBuilder.class ).buildDdlTransactionIsolator( jdbcContext ),
 						true
 				)
 			};
 		}
 
 		doDrop(
-				metadata,
 				new ExecutionOptions() {
 					@Override
 					public boolean shouldManageNamespaces() {
@@ -494,7 +492,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 	}
 
 	private static class JournalingGenerationTarget implements GenerationTarget {
-		private final ArrayList<String> commands = new ArrayList<String>();
+		private final ArrayList<String> commands = new ArrayList<>();
 
 		@Override
 		public void prepare() {

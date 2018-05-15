@@ -6,11 +6,8 @@
  */
 package org.hibernate.bytecode.spi;
 
-import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.proxy.ProxyFactory;
-import org.hibernate.service.ServiceRegistry;
 
 /**
  * An interface for factories of {@link ProxyFactory proxy factory} instances.

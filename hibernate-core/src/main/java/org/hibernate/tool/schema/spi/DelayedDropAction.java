@@ -6,6 +6,9 @@
  */
 package org.hibernate.tool.schema.spi;
 
+import org.hibernate.SessionFactory;
+import org.hibernate.SessionFactoryObserver;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -17,11 +20,16 @@ import org.hibernate.service.ServiceRegistry;
  *
  * @author Steve Ebersole
  */
-public interface DelayedDropAction {
+public interface DelayedDropAction extends SessionFactoryObserver {
 	/**
 	 * Perform the delayed schema drop.
 	 *
 	 * @param serviceRegistry Access to the ServiceRegistry
 	 */
 	void perform(ServiceRegistry serviceRegistry);
+
+	@Override
+	default void sessionFactoryClosing(SessionFactory factory) {
+		perform( ( (SessionFactoryImplementor) factory ).getServiceRegistry() );
+	}
 }

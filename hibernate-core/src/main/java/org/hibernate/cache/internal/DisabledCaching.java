@@ -223,6 +223,9 @@ public class DisabledCaching implements CacheImplementor {
 		return (T) this;
 	}
 
+	/**
+	 * @todo (6.0) : why?
+	 */
 	@Override
 	public Set<NaturalIdDataAccess> getNaturalIdAccessesInRegion(String regionName) {
 		return Collections.emptySet();

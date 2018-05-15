@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.type.Type;
+
 /**
  * Highly abstract concept of the index of an "indexed persistent collection".
  * More concretely (and generally more usefully) categorized as either:<ul>
@@ -18,7 +20,7 @@ public interface PluralAttributeIndexSource {
 	PluralAttributeIndexNature getNature();
 
 	/**
-	 * Obtain information about the Hibernate index type ({@link org.hibernate.type.Type})
+	 * Obtain information about the Hibernate index type ({@link Type})
 	 * for this plural attribute index.
 	 *
 	 * @return The Hibernate type information

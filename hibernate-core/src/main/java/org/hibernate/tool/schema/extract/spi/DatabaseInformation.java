@@ -7,10 +7,10 @@
 package org.hibernate.tool.schema.extract.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.boot.model.relational.QualifiedSequenceName;
-import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.metamodel.model.relational.spi.Namespace;
+import org.hibernate.naming.Identifier;
+import org.hibernate.naming.QualifiedSequenceName;
+import org.hibernate.naming.QualifiedTableName;
 
 /**
  * Provides access to information about existing schema objects (tables, sequences etc) of existing database.
@@ -24,11 +24,11 @@ public interface DatabaseInformation {
 	/**
 	 * Check to see if the given schema already exists.
 	 *
-	 * @param schema The schema name
+	 * @param namespace The namespace
 	 *
 	 * @return {@code true} indicates a schema with the given name already exists
 	 */
-	boolean schemaExists(Namespace.Name schema);
+	boolean schemaExists(Namespace namespace);
 
 	/**
 	 * Obtain reference to the named TableInformation
@@ -44,12 +44,12 @@ public interface DatabaseInformation {
 	/**
 	 * Obtain reference to the named TableInformation
 	 *
-	 * @param schemaName The name of the schema the table belongs to
+	 * @param namespace The namespace the table belongs to
 	 * @param tableName The table name
 	 *
 	 * @return The table information.  May return {@code null} if not found.
 	 */
-	TableInformation getTableInformation(Namespace.Name schemaName, Identifier tableName);
+	TableInformation getTableInformation(Namespace namespace, Identifier tableName);
 
 	/**
 	 * Obtain reference to the named TableInformation
@@ -61,9 +61,9 @@ public interface DatabaseInformation {
 	TableInformation getTableInformation(QualifiedTableName tableName);
 
 	/**
-	 * Obtain reference to all the {@link TableInformation) for a given {@link Namespace}
+	 * Obtain reference to all the {@link TableInformation) for a given {@link Namespace }
 	 *
-	 * @param namespace The {@link Namespace} which contains the {@link TableInformation)
+	 * @param namespace The {@link Namespace } which contains the {@link TableInformation)
 	 *
 	 * @return a {@link NameSpaceTablesInformation}
 	 */
@@ -86,12 +86,12 @@ public interface DatabaseInformation {
 	/**
 	 * Obtain reference to the named SequenceInformation
 	 *
-	 * @param schemaName The name of the schema the table belongs to
+	 * @param namespace The namespace the table belongs to
 	 * @param sequenceName The sequence name
 	 *
 	 * @return The sequence information.  May return {@code null} if not found.
 	 */
-	SequenceInformation getSequenceInformation(Namespace.Name schemaName, Identifier sequenceName);
+	SequenceInformation getSequenceInformation(Namespace namespace, Identifier sequenceName);
 
 	/**
 	 * Obtain reference to the named SequenceInformation

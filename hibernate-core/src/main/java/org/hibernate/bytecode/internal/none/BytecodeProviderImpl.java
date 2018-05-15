@@ -13,6 +13,7 @@ import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * This BytecodeProvider represents the "no-op" enhancer; mostly useful
@@ -36,7 +37,7 @@ public final class BytecodeProviderImpl implements BytecodeProvider {
 			Class clazz,
 			String[] getterNames,
 			String[] setterNames,
-			Class[] types) {
+			JavaTypeDescriptor[] types) {
 		throw new HibernateException( "Using the ReflectionOptimizer is not possible when the configured BytecodeProvider is 'none'. Disable " + AvailableSettings.USE_REFLECTION_OPTIMIZER + " or use a different BytecodeProvider");
 	}
 

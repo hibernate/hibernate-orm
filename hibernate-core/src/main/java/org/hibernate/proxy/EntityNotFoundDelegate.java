@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.proxy;
+
 import java.io.Serializable;
 
 /**
@@ -13,5 +14,13 @@ import java.io.Serializable;
  * @author Steve Ebersole
  */
 public interface EntityNotFoundDelegate {
-	public void handleEntityNotFound(String entityName, Serializable id);
+	/**
+	 * @deprecated Use {@link #handleEntityNotFound(String, Object)} instead
+	 */
+	@Deprecated
+	default void handleEntityNotFound(String entityName, Serializable id) {
+		handleEntityNotFound( entityName, (Object) id );
+	}
+
+	void handleEntityNotFound(String entityName, Object id);
 }

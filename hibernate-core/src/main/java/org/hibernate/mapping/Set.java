@@ -6,13 +6,16 @@
  */
 package org.hibernate.mapping;
 
-import java.util.Iterator;
+import java.util.Comparator;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.JavaTypeMapping;
+import org.hibernate.boot.model.relational.MappedPrimaryKey;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.type.CollectionType;
+import org.hibernate.collection.internal.StandardOrderedSetSemantics;
+import org.hibernate.collection.internal.StandardSetSemantics;
+import org.hibernate.collection.internal.StandardSortedSetSemantics;
+import org.hibernate.collection.spi.CollectionSemantics;
 
 /**
  * A set with no nullable element columns. It will have a primary key
@@ -20,60 +23,39 @@ import org.hibernate.type.CollectionType;
  * @author Gavin King
  */
 public class Set extends Collection {
-	/**
-	 * @deprecated Use {@link Set#Set(MetadataBuildingContext, PersistentClass)} instead.
-	 */
-	@Deprecated
-	public Set(MetadataImplementor metadata, PersistentClass owner) {
-		super( metadata, owner );
-	}
+	private final CollectionJavaTypeMapping javaTypeMapping;
 
 	public Set(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
+
+		javaTypeMapping = new CollectionJavaTypeMapping(
+				buildingContext.getBootstrapContext().getTypeConfiguration(),
+				java.util.Set.class
+		);
 	}
 
-	public void validate(Mapping mapping) throws MappingException {
-		super.validate( mapping );
-		//for backward compatibility, disable this:
-		/*Iterator iter = getElement().getColumnIterator();
-		while ( iter.hasNext() ) {
-			Column col = (Column) iter.next();
-			if ( !col.isNullable() ) {
-				return;
-			}
-		}
-		throw new MappingException("set element mappings must have at least one non-nullable column: " + getRole() );*/
+	public void validate() throws MappingException {
+		super.validate();
+
+//for backward compatibility, disable this:
+//		for ( MappedColumn mappedColumn : getElement().getMappedColumns() ) {
+//			// assume a formula is nullable
+//			if ( mappedColumn instanceof Column && ( (Column) mappedColumn ).isNullable() ) {
+//				return;
+//			}
+//		}
+//		throw new MappingException("set element mappings must have at least one non-nullable column: " + getRole() );*/
 	}
 
 	public boolean isSet() {
 		return true;
 	}
 
-	public CollectionType getDefaultCollectionType() {
-		if ( isSorted() ) {
-			return getMetadata().getTypeResolver()
-					.getTypeFactory()
-					.sortedSet( getRole(), getReferencedPropertyName(), getComparator() );
-		}
-		else if ( hasOrder() ) {
-			return getMetadata().getTypeResolver()
-					.getTypeFactory()
-					.orderedSet( getRole(), getReferencedPropertyName() );
-		}
-		else {
-			return getMetadata().getTypeResolver()
-					.getTypeFactory()
-					.set( getRole(), getReferencedPropertyName() );
-		}
-	}
-
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
-			PrimaryKey pk = new PrimaryKey( getCollectionTable() );
-			pk.addColumns( getKey().getColumnIterator() );
-			Iterator iter = getElement().getColumnIterator();
-			while ( iter.hasNext() ) {
-				Object selectable = iter.next();
+			final MappedPrimaryKey pk = new PrimaryKey( getMappedTable() );
+			pk.addColumns( getKey().getMappedColumns() );
+			for ( Object selectable : getElement().getMappedColumns() ) {
 				if ( selectable instanceof Column ) {
 					Column col = (Column) selectable;
 					if ( !col.isNullable() ) {
@@ -84,13 +66,14 @@ public class Set extends Collection {
 					}
 				}
 			}
+
 			if ( pk.getColumnSpan() == getKey().getColumnSpan() ) {
 				//for backward compatibility, allow a set with no not-null
 				//element columns, using all columns in the row locater SQL
 				//TODO: create an implicit not null constraint on all cols?
 			}
 			else {
-				getCollectionTable().setPrimaryKey( pk );
+				getMappedTable().setPrimaryKey( pk );
 			}
 		}
 		else {
@@ -100,5 +83,25 @@ public class Set extends Collection {
 
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
+	}
+
+	@Override
+	public JavaTypeMapping getJavaTypeMapping() {
+		return javaTypeMapping;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public CollectionSemantics getCollectionSemantics() {
+		final Comparator comparator = getComparator();
+		if ( comparator != null ) {
+			return StandardSortedSetSemantics.INSTANCE;
+		}
+
+		if ( hasOrder() ) {
+			return StandardOrderedSetSemantics.INSTANCE;
+		}
+
+		return StandardSetSemantics.INSTANCE;
 	}
 }

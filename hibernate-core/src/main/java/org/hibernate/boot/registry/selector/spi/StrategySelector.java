@@ -8,6 +8,8 @@ package org.hibernate.boot.registry.selector.spi;
 
 import java.util.Collection;
 import java.util.concurrent.Callable;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.hibernate.service.Service;
 
@@ -27,9 +29,9 @@ import org.hibernate.service.Service;
  * Strategy implementations can be managed by {@link #registerStrategyImplementor} and
  * {@link #unRegisterStrategyImplementor}.  Originally designed to help the OSGi use case, though no longer used there.
  * <p/>
- * The service also exposes a general typing API via {@link #resolveStrategy} and {@link #resolveDefaultableStrategy}
- * which accept implementation references rather than implementation names, allowing for a multitude of interpretations
- * of said "implementation reference".  See the docs for {@link #resolveDefaultableStrategy} for details.
+ * The service also exposes a general typing API via {@link #resolveStrategy} which accepts implementation references
+ * rather than implementation names, allowing for a multitude of interpretations of said "implementation reference".
+ * See the docs for {@link #resolveStrategy} for details.
  *
  * @author Steve Ebersole
  */
@@ -43,6 +45,7 @@ public interface StrategySelector extends Service {
 	 * @param <T> The type of the strategy.  Used to make sure that the strategy and implementation are type
 	 * compatible.
 	 */
+	@SuppressWarnings("unused")
 	<T> void registerStrategyImplementor(Class<T> strategy, String name, Class<? extends T> implementation);
 
 	/**
@@ -54,7 +57,17 @@ public interface StrategySelector extends Service {
 	 * @param <T> The type of the strategy.  Used to make sure that the strategy and implementation are type
 	 * compatible.
 	 */
+	@SuppressWarnings("unused")
 	<T> void unRegisterStrategyImplementor(Class<T> strategy, Class<? extends T> implementation);
+
+	/**
+	 * Retrieve all of the registered implementors of the given strategy.  Useful
+	 * to allow defaulting the choice to the single registered implementor when
+	 * only one is registered
+	 *
+	 * @return The implementors.  Should never return {@code null}
+	 */
+	<T> Collection<Class<? extends T>> getRegisteredStrategyImplementors(Class<T> strategy);
 
 	/**
 	 * Locate the named strategy implementation.
@@ -66,11 +79,10 @@ public interface StrategySelector extends Service {
 	 *
 	 * @return The named strategy implementation class.
 	 */
-	<T> Class<? extends T> selectStrategyImplementor(Class<T> strategy, String name);
+	<T, I extends T> Class<I> selectStrategyImplementor(Class<T> strategy, String name);
 
 	/**
-	 * Resolve strategy instances. See discussion on {@link #resolveDefaultableStrategy}.
-	 * Only difference is that here, the implied default value is {@code null}.
+	 * Resolve strategy instances. If no match is found, {@code null} is returned
 	 *
 	 * @param strategy The type (interface) of the strategy to be resolved.
 	 * @param strategyReference The reference to the strategy for which we need to resolve an instance.
@@ -79,24 +91,49 @@ public interface StrategySelector extends Service {
 	 *
 	 * @return The strategy instance
 	 */
-	<T> T resolveStrategy(Class<T> strategy, Object strategyReference);
+	<T, I extends T> I resolveStrategy(Class<T> strategy, Object strategyReference);
+
+	<T, I extends T> I resolveStrategy(Class<T> strategy, Object strategyReference, I defaultValue);
+
+	<T, I extends T> I resolveStrategy(Class<T> strategy, Object strategyReference, Supplier<I> defaultValueSupplier);
+
+	<T, I extends T> I resolveStrategy(Class<T> strategy, Object strategyReference, Function<Class<I>,I> creator);
+
+	<T, I extends T> I resolveStrategy(Class<T> strategy, Object strategyReference, I defaultValue, Function<Class<I>,I> creator);
+
+	<T, I extends T> I resolveStrategy(Class<T> strategy, Object strategyReference, Supplier<I> defaultValueSupplier, Function<Class<I>,I> creator);
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Deprecations
+
+	/**
+	 * @deprecated (since 6.0) - Use one of the {@link #resolveStrategy} forms accepting Supplier rather than Callable
+	 */
+	@Deprecated
+	<T, I extends T> I resolveStrategy(
+			Class<T> strategy,
+			Object strategyReference,
+			Callable<I> defaultValueSupplier,
+			Function<Class<I>, I> creator);
 
 	/**
 	 * Resolve strategy instances. The incoming reference might be:<ul>
-	 *     <li>
-	 *         {@code null} - in which case defaultValue is returned.
-	 *     </li>
-	 *     <li>
-	 *         An actual instance of the strategy type - it is returned, as is
-	 *     </li>
-	 *     <li>
-	 *         A reference to the implementation {@link Class} - an instance is created by calling
-	 *         {@link Class#newInstance()} (aka, the class's no-arg ctor).
-	 *     </li>
-	 *     <li>
-	 *         The name of the implementation class - First the implementation's {@link Class} reference
-	 *         is resolved, and then an instance is created by calling {@link Class#newInstance()}
-	 *     </li>
+	 * <li>
+	 * {@code null} - in which case defaultValue is returned.
+	 * </li>
+	 * <li>
+	 * An actual instance of the strategy type - it is returned, as is
+	 * </li>
+	 * <li>
+	 * A reference to the implementation {@link Class} - an instance is created by calling
+	 * {@link Class#newInstance()} (aka, the class's no-arg ctor).
+	 * </li>
+	 * <li>
+	 * The name of the implementation class - First the implementation's {@link Class} reference
+	 * is resolved, and then an instance is created by calling {@link Class#newInstance()}
+	 * </li>
 	 * </ul>
 	 *
 	 * @param strategy The type (interface) of the strategy to be resolved.
@@ -106,8 +143,19 @@ public interface StrategySelector extends Service {
 	 * compatible.
 	 *
 	 * @return The strategy instance
+	 *
+	 * @deprecated (since 6.0) - Use one of the {@link #resolveStrategy} forms
 	 */
-	<T> T resolveDefaultableStrategy(Class<T> strategy, Object strategyReference, T defaultValue);
+	@Deprecated
+	<T, I extends T> I resolveDefaultableStrategy(Class<T> strategy, Object strategyReference, I defaultValue);
+
+	/**
+	 * Same as the other overloaded forms, but here accepting a Supplier for default values.
+	 *
+	 * @deprecated (since 6.0) - Use one of the {@link #resolveStrategy} forms
+	 */
+	@Deprecated
+	<T> T resolveDefaultableStrategy(Class<T> strategy, Object strategyReference, Supplier<T> defaultValueSupplier);
 
 	/**
 	 * Resolve strategy instances. The incoming reference might be:<ul>
@@ -134,19 +182,9 @@ public interface StrategySelector extends Service {
 	 * compatible.
 	 *
 	 * @return The strategy instance
-	 */
-	<T> T resolveDefaultableStrategy(Class<T> strategy, Object strategyReference, Callable<T> defaultResolver);
-
-	<T> T resolveStrategy(Class<T> strategy, Object strategyReference, Callable<T> defaultResolver, StrategyCreator<T> creator);
-
-	<T> T resolveStrategy(Class<T> strategy, Object strategyReference, T defaultValue, StrategyCreator<T> creator);
-
-	/**
-	 * Retrieve all of the registered implementors of the given strategy.  Useful
-	 * to allow defaulting the choice to the single registered implementor when
-	 * only one is registered
 	 *
-	 * @return The implementors.  Should never return {@code null}
+	 * @deprecated (since 6.0) - Use one of the {@link #resolveStrategy} forms
 	 */
-	<T> Collection<Class<? extends T>> getRegisteredStrategyImplementors(Class<T> strategy);
+	@Deprecated
+	<T, I extends T> I resolveDefaultableStrategy(Class<T> strategy, Object strategyReference, Callable<I> defaultResolver);
 }

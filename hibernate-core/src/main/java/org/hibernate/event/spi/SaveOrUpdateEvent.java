@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
 import org.hibernate.engine.spi.EntityEntry;
 
 /** 
@@ -16,27 +14,17 @@ import org.hibernate.engine.spi.EntityEntry;
  * @author Steve Ebersole
  */
 public class SaveOrUpdateEvent extends AbstractEvent {
-
 	private Object object;
-	private Serializable requestedId;
+	private Object requestedId;
 	private String entityName;
 	private Object entity;
 	private EntityEntry entry;
-	private Serializable resultId;
+
+	private Object resultId;
 
 	public SaveOrUpdateEvent(String entityName, Object original, EventSource source) {
 		this(original, source);
 		this.entityName = entityName;
-	}
-
-	public SaveOrUpdateEvent(String entityName, Object original, Serializable id, EventSource source) {
-		this(entityName, original, source);
-		this.requestedId = id;
-		if ( requestedId == null ) {
-			throw new IllegalArgumentException(
-					"attempt to create saveOrUpdate event with null identifier"
-				);
-		}
 	}
 
 	public SaveOrUpdateEvent(Object object, EventSource source) {
@@ -57,11 +45,11 @@ public class SaveOrUpdateEvent extends AbstractEvent {
 		this.object = object;
 	}
 
-	public Serializable getRequestedId() {
+	public Object getRequestedId() {
 		return requestedId;
 	}
 
-	public void setRequestedId(Serializable requestedId) {
+	public void setRequestedId(Object requestedId) {
 		this.requestedId = requestedId;
 	}
 
@@ -89,11 +77,11 @@ public class SaveOrUpdateEvent extends AbstractEvent {
 		this.entry = entry;
 	}
 
-	public Serializable getResultId() {
+	public Object getResultId() {
 		return resultId;
 	}
 
-	public void setResultId(Serializable resultId) {
+	public void setResultId(Object resultId) {
 		this.resultId = resultId;
 	}
 }

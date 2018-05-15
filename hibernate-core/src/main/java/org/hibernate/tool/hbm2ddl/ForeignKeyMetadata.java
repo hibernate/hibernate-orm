@@ -5,8 +5,6 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.tool.hbm2ddl;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.ForeignKey;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -14,6 +12,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.relational.spi.ExportableTable;
+import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 
 /**
  * JDBC foreign key metadata
@@ -46,27 +48,23 @@ public class ForeignKeyMetadata {
 		references.put( rs.getString("FKCOLUMN_NAME").toLowerCase(Locale.ROOT), rs.getString("PKCOLUMN_NAME") );
 	}
 
-	private boolean hasReference(Column column, Column ref) {
-		String refName = (String) references.get(column.getName().toLowerCase(Locale.ROOT));
-		return ref.getName().equalsIgnoreCase(refName);
-	}
-
 	public boolean matches(ForeignKey fk) {
-		if ( refTable.equalsIgnoreCase( fk.getReferencedTable().getName() ) ) {
-			if ( fk.getColumnSpan() == references.size() ) {
+		if ( refTable.equalsIgnoreCase( ( (ExportableTable) fk.getReferringTable() ).getTableName().getText() ) ) {
+			if ( fk.getColumnMappings().getColumnMappings().size() == references.size() ) {
 				List fkRefs;
 				if ( fk.isReferenceToPrimaryKey() ) {
-					fkRefs = fk.getReferencedTable().getPrimaryKey().getColumns();
+					fkRefs = fk.getTargetTable().getPrimaryKey().getColumns();
 				}
 				else {
-					fkRefs = fk.getReferencedColumns();
+					fkRefs = fk.getColumnMappings().getTargetColumns();
 				}
-				for ( int i = 0; i < fk.getColumnSpan(); i++ ) {
-					Column column = fk.getColumn( i );
-					Column ref = ( Column ) fkRefs.get( i );
-					if ( !hasReference( column, ref ) ) {
+				int i = 0;
+				for ( Column column : fk.getColumnMappings().getReferringColumns() ) {
+					Column ref = (Column) fkRefs.get( i );
+					if ( ! column.equals( ref ) ) {
 						return false;
 					}
+					i++;
 				}
 				return true;
 			}

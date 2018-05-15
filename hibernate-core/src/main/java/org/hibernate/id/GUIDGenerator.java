@@ -6,7 +6,6 @@
  */
 package org.hibernate.id;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -33,7 +32,7 @@ public class GUIDGenerator implements IdentifierGenerator {
 		}
 	}
 
-	public Serializable generate(SharedSessionContractImplementor session, Object obj) throws HibernateException {
+	public Object generate(SharedSessionContractImplementor session, Object obj) throws HibernateException {
 		final String sql = session.getJdbcServices().getJdbcEnvironment().getDialect().getSelectGUIDString();
 		try {
 			PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );

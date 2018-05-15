@@ -81,7 +81,7 @@ public class EntityEntryContext {
 		// We only need to check a mutable EntityEntry is associated with the same PersistenceContext.
 		// Immutable EntityEntry can be associated with multiple PersistenceContexts, so no need to check.
 		// ImmutableEntityEntry#getPersistenceContext() throws an exception (HHH-10251).
-		if ( entityEntry.getPersister().isMutable() ) {
+		if ( entityEntry.getDescriptor().getHierarchy().getMutabilityPlan().isMutable() ) {
 			assert AbstractEntityEntry.class.cast( entityEntry ).getPersistenceContext() == persistenceContext;
 		}
 
@@ -92,7 +92,7 @@ public class EntityEntryContext {
 		final boolean alreadyAssociated = managedEntity != null;
 		if ( !alreadyAssociated ) {
 			if ( ManagedEntity.class.isInstance( entity ) ) {
-				if ( entityEntry.getPersister().isMutable() ) {
+				if ( entityEntry.getDescriptor().getJavaTypeDescriptor().getMutabilityPlan().isMutable() ) {
 					managedEntity = (ManagedEntity) entity;
 					// We know that managedEntity is not associated with the same PersistenceContext.
 					// Check if managedEntity is associated with a different PersistenceContext.
@@ -102,7 +102,7 @@ public class EntityEntryContext {
 					// Create a holder for PersistenceContext-related data.
 					managedEntity = new ImmutableManagedEntityHolder( (ManagedEntity) entity );
 					if ( immutableManagedEntityXref == null ) {
-						immutableManagedEntityXref = new IdentityHashMap<ManagedEntity, ImmutableManagedEntityHolder>();
+						immutableManagedEntityXref = new IdentityHashMap<>();
 					}
 					immutableManagedEntityXref.put(
 							(ManagedEntity) entity,
@@ -112,7 +112,7 @@ public class EntityEntryContext {
 			}
 			else {
 				if ( nonEnhancedEntityXref == null ) {
-					nonEnhancedEntityXref = new IdentityHashMap<Object, ManagedEntity>();
+					nonEnhancedEntityXref = new IdentityHashMap<>();
 				}
 				managedEntity = new ManagedEntityImpl( entity );
 				nonEnhancedEntityXref.put( entity, managedEntity );
@@ -158,7 +158,7 @@ public class EntityEntryContext {
 			}
 			final AbstractEntityEntry entityEntry = (AbstractEntityEntry) managedEntity.$$_hibernate_getEntityEntry();
 
-			if ( entityEntry.getPersister().isMutable() ) {
+			if ( entityEntry.getDescriptor().getJavaTypeDescriptor().getMutabilityPlan().isMutable() ) {
 				return entityEntry.getPersistenceContext() == persistenceContext
 						? managedEntity // it is associated
 						: null;
@@ -183,7 +183,7 @@ public class EntityEntryContext {
 		// we only have to check mutable managedEntity
 		final AbstractEntityEntry entityEntry = (AbstractEntityEntry) managedEntity.$$_hibernate_getEntityEntry();
 		if ( entityEntry == null ||
-				!entityEntry.getPersister().isMutable() ||
+				!entityEntry.getDescriptor().getJavaTypeDescriptor().getMutabilityPlan().isMutable() ||
 				entityEntry.getPersistenceContext() == null ||
 				entityEntry.getPersistenceContext() == persistenceContext ) {
 			return;
@@ -443,7 +443,7 @@ public class EntityEntryContext {
 
 			final ManagedEntity managedEntity;
 			if ( isEnhanced ) {
-				if ( entry.getPersister().isMutable() ) {
+				if ( entry.getDescriptor().getJavaTypeDescriptor().getMutabilityPlan().isMutable() ) {
 					managedEntity = (ManagedEntity) entity;
 				}
 				else {
@@ -642,7 +642,7 @@ public class EntityEntryContext {
 			if( !(managedEntity.$$_hibernate_getEntityEntry() instanceof ImmutableEntityEntry) ) {
 				return true;
 			}
-			else if( managedEntity.$$_hibernate_getEntityEntry().getPersister().canUseReferenceCacheEntries() ) {
+			else if( managedEntity.$$_hibernate_getEntityEntry().getDescriptor().canUseReferenceCacheEntries() ) {
 				return false;
 			}
 

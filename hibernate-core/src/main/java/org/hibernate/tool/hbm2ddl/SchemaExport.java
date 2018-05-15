@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
@@ -32,6 +31,7 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
@@ -60,7 +60,15 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
 public class SchemaExport {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SchemaExport.class );
 
-	public static enum Type {
+	private final DatabaseModel databaseModel;
+	private final ServiceRegistry serviceRegistry;
+
+	public SchemaExport(DatabaseModel databaseModel, ServiceRegistry serviceRegistry) {
+		this.databaseModel = databaseModel;
+		this.serviceRegistry = serviceRegistry;
+	}
+
+	public enum Type {
 		CREATE( Action.CREATE ),
 		DROP( Action.DROP ),
 		NONE( Action.NONE ),
@@ -81,7 +89,7 @@ public class SchemaExport {
 		}
 	}
 
-	public static enum Action {
+	public enum Action {
 		/**
 		 * None - duh :P
 		 */
@@ -212,24 +220,20 @@ public class SchemaExport {
 		return this;
 	}
 
-	public void drop(EnumSet<TargetType> targetTypes, Metadata metadata) {
-		execute( targetTypes, Action.DROP, metadata );
+	public void drop(EnumSet<TargetType> targetTypes) {
+		execute( targetTypes, Action.DROP );
 	}
 
-	public void create(EnumSet<TargetType> targetTypes, Metadata metadata) {
-		execute( targetTypes, Action.BOTH, metadata );
+	public void create(EnumSet<TargetType> targetTypes) {
+		execute( targetTypes, Action.BOTH );
 	}
 
-	public void createOnly(EnumSet<TargetType> targetTypes, Metadata metadata) {
-		execute( targetTypes, Action.CREATE, metadata );
-	}
-
-	public void execute(EnumSet<TargetType> targetTypes, Action action, Metadata metadata) {
-		execute( targetTypes, action, metadata, ( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry() );
+	public void createOnly(EnumSet<TargetType> targetTypes) {
+		execute( targetTypes, Action.CREATE );
 	}
 
 	@SuppressWarnings("unchecked")
-	public void execute(EnumSet<TargetType> targetTypes, Action action, Metadata metadata, ServiceRegistry serviceRegistry) {
+	public void execute(EnumSet<TargetType> targetTypes, Action action) {
 		if ( action == Action.NONE ) {
 			LOG.debug( "Skipping SchemaExport as Action.NONE was passed" );
 			return;
@@ -246,14 +250,12 @@ public class SchemaExport {
 
 		final TargetDescriptor targetDescriptor = buildTargetDescriptor( targetTypes, outputFile, serviceRegistry );
 
-		doExecution( action, needsJdbcConnection( targetTypes ), metadata, serviceRegistry, targetDescriptor );
+		doExecution( action, needsJdbcConnection( targetTypes ), targetDescriptor );
 	}
 
 	public void doExecution(
 			Action action,
 			boolean needsJdbc,
-			Metadata metadata,
-			ServiceRegistry serviceRegistry,
 			TargetDescriptor targetDescriptor) {
 		Map config = new HashMap();
 		config.putAll( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
@@ -286,8 +288,7 @@ public class SchemaExport {
 
 		try {
 			if ( action.doDrop() ) {
-				tool.getSchemaDropper( config ).doDrop(
-						metadata,
+				tool.getSchemaDropper( databaseModel, config ).doDrop(
 						executionOptions,
 						sourceDescriptor,
 						targetDescriptor
@@ -295,8 +296,7 @@ public class SchemaExport {
 			}
 
 			if ( action.doCreate() ) {
-				tool.getSchemaCreator( config ).doCreation(
-						metadata,
+				tool.getSchemaCreator( databaseModel, config ).doCreation(
 						executionOptions,
 						sourceDescriptor,
 						targetDescriptor
@@ -321,12 +321,15 @@ public class SchemaExport {
 		final ScriptTargetOutput scriptTarget;
 		if ( targetTypes.contains( TargetType.SCRIPT ) ) {
 			if ( outputFile == null ) {
-				throw new SchemaManagementException( "Writing to script was requested, but no script file was specified" );
+				throw new SchemaManagementException(
+						"Writing to script was requested, but no script file was specified, test class should override createSqlScriptTempOutputFile method" );
 			}
 			scriptTarget = Helper.interpretScriptTargetSetting(
 					outputFile,
 					serviceRegistry.getService( ClassLoaderService.class ),
-					(String) serviceRegistry.getService( ConfigurationService.class ).getSettings().get( AvailableSettings.HBM2DDL_CHARSET_NAME )
+					(String) serviceRegistry.getService( ConfigurationService.class )
+							.getSettings()
+							.get( AvailableSettings.HBM2DDL_CHARSET_NAME )
 			);
 		}
 		else {
@@ -339,12 +342,10 @@ public class SchemaExport {
 	/**
 	 * For testing use
 	 */
-	public void perform(Action action, Metadata metadata, ScriptTargetOutput target) {
+	public void perform(Action action, ScriptTargetOutput target) {
 		doExecution(
 				action,
 				false,
-				metadata,
-				( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry(),
 				new TargetDescriptorImpl( EnumSet.of( TargetType.SCRIPT ), target )
 		);
 	}
@@ -364,14 +365,14 @@ public class SchemaExport {
 		try {
 			final MetadataImplementor metadata = buildMetadata( commandLineArgs, serviceRegistry );
 
-			new SchemaExport()
+			new SchemaExport( Helper.buildDatabaseModel( metadata ), serviceRegistry )
 					.setHaltOnError( commandLineArgs.halt )
 					.setOutputFile( commandLineArgs.outputFile )
 					.setDelimiter( commandLineArgs.delimiter )
 					.setFormat( commandLineArgs.format )
 					.setManageNamespaces( commandLineArgs.manageNamespaces )
 					.setImportFiles( commandLineArgs.importFile )
-					.execute( commandLineArgs.targetTypes, commandLineArgs.action, metadata, serviceRegistry );
+					.execute( commandLineArgs.targetTypes, commandLineArgs.action );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( serviceRegistry );
@@ -446,7 +447,8 @@ public class SchemaExport {
 		final CommandLineArgs commandLineArgs = CommandLineArgs.parseCommandLineArgs( args );
 		StandardServiceRegistry serviceRegistry = buildStandardServiceRegistry( commandLineArgs );
 		try {
-			return buildMetadata( commandLineArgs, serviceRegistry );
+			final MetadataImplementor metadataImplementor = buildMetadata( commandLineArgs, serviceRegistry );
+			return metadataImplementor;
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( serviceRegistry );
@@ -481,8 +483,8 @@ public class SchemaExport {
 		String implicitNamingStrategyImplName = null;
 		String physicalNamingStrategyImplName = null;
 
-		List<String> hbmXmlFiles = new ArrayList<String>();
-		List<String> jarFiles = new ArrayList<String>();
+		List<String> hbmXmlFiles = new ArrayList<>();
+		List<String> jarFiles = new ArrayList<>();
 
 		public static CommandLineArgs parseCommandLineArgs(String[] args) {
 			String targetText = null;
@@ -570,7 +572,11 @@ public class SchemaExport {
 			}
 
 			if ( targetText == null ) {
-				parsedArgs.targetTypes = TargetTypeHelper.parseLegacyCommandLineOptions( script, export, parsedArgs.outputFile );
+				parsedArgs.targetTypes = TargetTypeHelper.parseLegacyCommandLineOptions(
+						script,
+						export,
+						parsedArgs.outputFile
+				);
 			}
 			else {
 				if ( !script || !export ) {

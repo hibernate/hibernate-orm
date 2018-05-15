@@ -6,7 +6,7 @@
  */
 package org.hibernate.event.internal;
 
-import java.io.Serializable;
+import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -22,11 +22,14 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.ReplicateEvent;
 import org.hibernate.event.spi.ReplicateEventListener;
+import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.Type;
 
 /**
  * Defines the default replicate event listener used by Hibernate to replicate
@@ -59,13 +62,17 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 			return;
 		}
 
-		EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
+		final EntityTypeDescriptor entityDescriptor = source.getEntityDescriptor( event.getEntityName(), entity );
+		final EntityIdentifier idDescriptor = entityDescriptor.getHierarchy().getIdentifierDescriptor();
+		final VersionDescriptor versionDescriptor = entityDescriptor.getHierarchy().getVersionDescriptor();
+
+		// todo (6.0) : move methods like `#getIdentifier`, `#getCurrentVersion`, etc from `EntityDescriptor` to `EntityIdentifier`, `VersionDescriptor`, etc
 
 		// get the id from the object
-		/*if ( persister.isUnsaved(entity, source) ) {
+		/*if ( entityDescriptor.isUnsaved(entity, source) ) {
 			throw new TransientObjectException("transient instance passed to replicate()");
 		}*/
-		Serializable id = persister.getIdentifier( entity, source );
+		Object id = entityDescriptor.getIdentifier( entity, source );
 		if ( id == null ) {
 			throw new TransientObjectException( "instance with null id passed to replicate()" );
 		}
@@ -79,7 +86,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 		}
 		else {
 			//what is the version on the database?
-			oldVersion = persister.getCurrentVersion( id, source );
+			oldVersion = entityDescriptor.getHierarchy().getVersionDescriptor().getPropertyAccess().getGetter().get( id );
 		}
 
 		final boolean traceEnabled = LOG.isTraceEnabled();
@@ -87,7 +94,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 			if ( traceEnabled ) {
 				LOG.tracev(
 						"Found existing row for {0}", MessageHelper.infoString(
-						persister,
+						entityDescriptor,
 						id,
 						source.getFactory()
 				)
@@ -95,19 +102,19 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 			}
 
 			/// HHH-2378
-			final Object realOldVersion = persister.isVersioned() ? oldVersion : null;
+			final Object realOldVersion = versionDescriptor != null ? oldVersion : null;
 
 			boolean canReplicate = replicationMode.shouldOverwriteCurrentVersion(
 					entity,
 					realOldVersion,
-					persister.getVersion( entity ),
-					persister.getVersionType()
+					entityDescriptor.getVersion( entity ),
+					versionDescriptor
 			);
 
 			// if can replicate, will result in a SQL UPDATE
 			// else do nothing (don't even reassociate object!)
 			if ( canReplicate ) {
-				performReplication( entity, id, realOldVersion, persister, replicationMode, source );
+				performReplication( entity, id, realOldVersion, entityDescriptor, replicationMode, source );
 			}
 			else if ( traceEnabled ) {
 				LOG.trace( "No need to replicate" );
@@ -120,17 +127,18 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 			if ( traceEnabled ) {
 				LOG.tracev(
 						"No existing row, replicating new instance {0}",
-						MessageHelper.infoString( persister, id, source.getFactory() )
+						MessageHelper.infoString( entityDescriptor, id, source.getFactory() )
 				);
 			}
 
-			final boolean regenerate = persister.isIdentifierAssignedByInsert(); // prefer re-generation of identity!
-			final EntityKey key = regenerate ? null : source.generateEntityKey( id, persister );
+			// prefer re-generation of insert-generated identifiers
+			final boolean regenerate = PostInsertIdentifierGenerator.class.isInstance( idDescriptor.getIdentifierValueGenerator() );
+			final EntityKey key = regenerate ? null : source.generateEntityKey( id, entityDescriptor );
 
 			performSaveOrReplicate(
 					entity,
 					key,
-					persister,
+					entityDescriptor,
 					regenerate,
 					replicationMode,
 					source,
@@ -143,22 +151,22 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 	@Override
 	protected boolean visitCollectionsBeforeSave(
 			Object entity,
-			Serializable id,
+			Object id,
 			Object[] values,
-			Type[] types,
+			List<PersistentAttributeDescriptor> navigables,
 			EventSource source) {
 		//TODO: we use two visitors here, inefficient!
 		OnReplicateVisitor visitor = new OnReplicateVisitor( source, id, entity, false );
-		visitor.processEntityPropertyValues( values, types );
-		return super.visitCollectionsBeforeSave( entity, id, values, types, source );
+		visitor.processEntityPropertyValues( values, navigables );
+		return super.visitCollectionsBeforeSave( entity, id, values, navigables, source );
 	}
 
 	@Override
 	protected boolean substituteValuesIfNecessary(
 			Object entity,
-			Serializable id,
+			Object id,
 			Object[] values,
-			EntityPersister persister,
+			EntityTypeDescriptor entityDescriptor,
 			SessionImplementor source) {
 		return false;
 	}
@@ -170,36 +178,36 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 
 	private void performReplication(
 			Object entity,
-			Serializable id,
+			Object id,
 			Object version,
-			EntityPersister persister,
+			EntityTypeDescriptor entityDescriptor,
 			ReplicationMode replicationMode,
 			EventSource source) throws HibernateException {
 
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Replicating changes to {0}", MessageHelper.infoString( persister, id, source.getFactory() ) );
+			LOG.tracev( "Replicating changes to {0}", MessageHelper.infoString( entityDescriptor, id, source.getFactory() ) );
 		}
 
-		new OnReplicateVisitor( source, id, entity, true ).process( entity, persister );
+		new OnReplicateVisitor( source, id, entity, true ).process( entity, entityDescriptor );
 
 		source.getPersistenceContext().addEntity(
 				entity,
-				( persister.isMutable() ? Status.MANAGED : Status.READ_ONLY ),
+				( entityDescriptor.getJavaTypeDescriptor().getMutabilityPlan().isMutable() ? Status.MANAGED : Status.READ_ONLY ),
 				null,
-				source.generateEntityKey( id, persister ),
+				source.generateEntityKey( id, entityDescriptor ),
 				version,
 				LockMode.NONE,
 				true,
-				persister,
+				entityDescriptor,
 				true
 		);
 
-		cascadeAfterReplicate( entity, persister, replicationMode, source );
+		cascadeAfterReplicate( entity, entityDescriptor, replicationMode, source );
 	}
 
 	private void cascadeAfterReplicate(
 			Object entity,
-			EntityPersister persister,
+			EntityTypeDescriptor entityDescriptor,
 			ReplicationMode replicationMode,
 			EventSource source) {
 		source.getPersistenceContext().incrementCascadeLevel();
@@ -208,7 +216,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 					CascadingActions.REPLICATE,
 					CascadePoint.AFTER_UPDATE,
 					source,
-					persister,
+					entityDescriptor,
 					entity,
 					replicationMode
 			);

@@ -18,10 +18,11 @@ import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.spi.Binder;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.jaxb.spi.XmlSource;
+import org.hibernate.exception.SerializationException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.SerializationHelper;
-import org.hibernate.type.SerializationException;
+
 
 /**
  * @author Steve Ebersole

@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.dialect;
+
 import java.sql.Types;
 
 import org.hibernate.LockMode;
@@ -16,7 +17,7 @@ import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.lock.UpdateLockingStrategy;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.metamodel.model.domain.spi.Lockable;
 
 /**
  * An SQL Dialect for Frontbase.  Assumes you're using the latest version

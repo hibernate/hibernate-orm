@@ -6,38 +6,46 @@
  */
 package org.hibernate;
 
-import java.util.Locale;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
 
 /**
  * Defines the representation modes available for entities.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Deprecated in favor of {@link RepresentationMode}.  Use
+ * {@link #asRepresentation()} for an appropriate conversion.
  */
+@Deprecated
 public enum EntityMode {
 	/**
 	 * The {@code pojo} entity mode describes an entity model made up of entity classes (loosely) following
 	 * the java bean convention.
 	 */
-	POJO( "pojo" ),
+	POJO( RepresentationMode.POJO ),
 
 	/**
 	 * The {@code dynamic-map} entity mode describes an entity model defined using {@link java.util.Map} references.
 	 */
-	MAP( "dynamic-map" );
+	MAP( RepresentationMode.MAP );
 
-	private final String externalName;
+	private final RepresentationMode representation;
 
-	private EntityMode(String externalName) {
-		this.externalName = externalName;
+	EntityMode(RepresentationMode representation) {
+		this.representation = representation;
+	}
+
+	public RepresentationMode asRepresentation() {
+		return representation;
 	}
 
 	public String getExternalName() {
-		return externalName;
+		return representation.getExternalName();
 	}
 
 	@Override
 	public String toString() {
-		return externalName;
+		return getExternalName();
 	}
 
 	/**
@@ -49,13 +57,14 @@ public enum EntityMode {
 	 * {@link #POJO}.
 	 */
 	public static EntityMode parse(String entityMode) {
-		if ( entityMode == null ) {
-			return POJO;
-		}
-		if ( MAP.externalName.equalsIgnoreCase( entityMode ) ) {
-			return MAP;
-		}
-		return valueOf( entityMode.toUpperCase( Locale.ENGLISH ) );
+		return fromRepresentation( RepresentationMode.fromExternalName( entityMode ) );
 	}
 
+	public static EntityMode fromRepresentation(RepresentationMode representation) {
+		if ( MAP.asRepresentation() == representation ) {
+			return MAP;
+		}
+
+		return POJO;
+	}
 }

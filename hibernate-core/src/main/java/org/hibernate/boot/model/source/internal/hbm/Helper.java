@@ -30,7 +30,7 @@ import org.hibernate.boot.model.source.spi.SizeSource;
 import org.hibernate.boot.model.source.spi.TableSpecificationSource;
 import org.hibernate.boot.model.source.spi.ToolingHint;
 import org.hibernate.boot.model.source.spi.ToolingHintContext;
-import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
@@ -123,33 +123,6 @@ public class Helper {
 		return params;
 	}
 
-	/**
-	 * Operates like SQL coalesce expression, except empty strings are treated as null.  Return the first non-empty value
-	 *
-	 * @param values The list of values.
-	 * @param <T> Generic type of values to coalesce
-	 *
-	 * @return The first non-empty value, or null if all values were empty
-	 */
-	public static <T> T coalesce(T... values) {
-		if ( values == null ) {
-			return null;
-		}
-		for ( T value : values ) {
-			if ( value != null ) {
-				if ( String.class.isInstance( value ) ) {
-					if ( StringHelper.isNotEmpty( (String) value ) ) {
-						return value;
-					}
-				}
-				else {
-					return value;
-				}
-			}
-		}
-		return null;
-	}
-
 	static ToolingHintContext collectToolingHints(
 			ToolingHintContext baseline,
 			ToolingHintContainer toolingHintContainer) {
@@ -239,14 +212,14 @@ public class Helper {
 		}
 	}
 
-	public static SizeSource interpretSizeSource(Integer length, Integer scale, Integer precision) {
+	public static SizeSource interpretSizeSource(Long length, Integer scale, Integer precision) {
 		if ( length != null || precision != null || scale != null ) {
 			return new SizeSourceImpl( length, scale, precision );
 		}
 		return null;
 	}
 
-	public static SizeSource interpretSizeSource(Integer length, String scale, String precision) {
+	public static SizeSource interpretSizeSource(Long length, String scale, String precision) {
 		return interpretSizeSource(
 				length,
 				scale == null ? null : Integer.parseInt( scale ),
@@ -255,19 +228,18 @@ public class Helper {
 	}
 
 	public static Class reflectedPropertyClass(
-			MetadataBuildingContext buildingContext,
+			BootstrapContext bootstrapContext,
 			String attributeOwnerClassName,
 			String attributeName) {
-		final Class attributeOwnerClass = buildingContext.getBootstrapContext().getClassLoaderAccess().classForName( attributeOwnerClassName );
+		final Class attributeOwnerClass = bootstrapContext.getClassLoaderAccess().classForName(
+				attributeOwnerClassName );
 		return reflectedPropertyClass(
-				buildingContext,
 				attributeOwnerClass,
 				attributeName
 		);
 	}
 
 	public static Class reflectedPropertyClass(
-			MetadataBuildingContext buildingContext,
 			Class attributeOwnerClass,
 			final String attributeName) {
 		return ReflectHelper.reflectedPropertyClass( attributeOwnerClass, attributeName );

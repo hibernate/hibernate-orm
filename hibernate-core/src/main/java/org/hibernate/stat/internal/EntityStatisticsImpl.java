@@ -9,7 +9,7 @@ package org.hibernate.stat.internal;
 import java.io.Serializable;
 import java.util.concurrent.atomic.LongAdder;
 
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.stat.EntityStatistics;
 
 /**
@@ -27,13 +27,13 @@ public class EntityStatisticsImpl extends AbstractCacheableDataStatistics implem
 	private final LongAdder fetchCount = new LongAdder();
 	private final LongAdder optimisticFailureCount = new LongAdder();
 
-	EntityStatisticsImpl(EntityPersister rootEntityDescriptor) {
+	EntityStatisticsImpl(EntityTypeDescriptor rootEntityDescriptor) {
 		super(
-				() -> rootEntityDescriptor.getCacheAccessStrategy() != null
-						? rootEntityDescriptor.getCacheAccessStrategy().getRegion()
+				() -> rootEntityDescriptor.getHierarchy().getEntityCacheAccess() != null
+						? rootEntityDescriptor.getHierarchy().getEntityCacheAccess().getRegion()
 						: null
 		);
-		this.rootEntityName = rootEntityDescriptor.getRootEntityName();
+		this.rootEntityName = rootEntityDescriptor.getEntityName();
 	}
 
 	public long getDeleteCount() {

@@ -15,7 +15,7 @@ import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.InheritanceCapable;
 
 /**
  * The Hibernate implementation of the JPA EntityGraph contract.
@@ -83,12 +83,12 @@ public class RootGraphImpl<J> extends AbstractGraph<J> implements EntityGraph<J>
 			return true;
 		}
 
-		IdentifiableTypeDescriptor superType = entityType.getSupertype();
+		InheritanceCapable superType = entityType.getSuperclassType();
 		while ( superType != null ) {
 			if ( superType.equals( entityType ) ) {
 				return true;
 			}
-			superType = superType.getSupertype();
+			superType = superType.getSuperclassType();
 		}
 
 		return false;

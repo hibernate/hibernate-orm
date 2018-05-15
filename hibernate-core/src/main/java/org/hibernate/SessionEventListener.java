@@ -14,37 +14,37 @@ import java.io.Serializable;
  * @author Steve Ebersole
  */
 public interface SessionEventListener extends Serializable {
-	public void transactionCompletion(boolean successful);
+	void transactionCompletion(boolean successful);
 
-	public void jdbcConnectionAcquisitionStart();
-	public void jdbcConnectionAcquisitionEnd();
+	void jdbcConnectionAcquisitionStart();
+	void jdbcConnectionAcquisitionEnd();
 
-	public void jdbcConnectionReleaseStart();
-	public void jdbcConnectionReleaseEnd();
+	void jdbcConnectionReleaseStart();
+	void jdbcConnectionReleaseEnd();
 
-	public void jdbcPrepareStatementStart();
-	public void jdbcPrepareStatementEnd();
+	void jdbcPrepareStatementStart();
+	void jdbcPrepareStatementEnd();
 
-	public void jdbcExecuteStatementStart();
-	public void jdbcExecuteStatementEnd();
+	void jdbcExecuteStatementStart();
+	void jdbcExecuteStatementEnd();
 
-	public void jdbcExecuteBatchStart();
-	public void jdbcExecuteBatchEnd();
+	void jdbcExecuteBatchStart();
+	void jdbcExecuteBatchEnd();
 
-	public void cachePutStart();
-	public void cachePutEnd();
+	void cachePutStart();
+	void cachePutEnd();
 
-	public void cacheGetStart();
-	public void cacheGetEnd(boolean hit);
+	void cacheGetStart();
+	void cacheGetEnd(boolean hit);
 
-	public void flushStart();
-	public void flushEnd(int numberOfEntities, int numberOfCollections);
+	void flushStart();
+	void flushEnd(int numberOfEntities, int numberOfCollections);
 
-	public void partialFlushStart();
-	public void partialFlushEnd(int numberOfEntities, int numberOfCollections);
+	void partialFlushStart();
+	void partialFlushEnd(int numberOfEntities, int numberOfCollections);
 
-	public void dirtyCalculationStart();
-	public void dirtyCalculationEnd(boolean dirty);
+	void dirtyCalculationStart();
+	void dirtyCalculationEnd(boolean dirty);
 
-	public void end();
+	void end();
 }

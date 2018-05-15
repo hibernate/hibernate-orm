@@ -16,15 +16,21 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.CLASS;
 
 /**
- * Marks (recursively) certain of Hibernate's packages, types and methods
- * as incubating.  Incubating indicates a type or method that is still being
- * actively developed and therefore may change at a later time.  Users of these
- * types and methods are considered early adopters who help shape the final
- * definition of these types/methods.
+ * Annotation used to identify a package, class, interface or method
+ * as "incubating", meaning it is more subject to change then normally
+ * allowed based on its API/SPI distinction.
+ * <p/>
+ * Generally this is a new feature that has not yet been fully vetted
+ * in multiple contexts (typically 3 at a minimum).
  *
  * @author Steve Ebersole
  */
-@Target({PACKAGE, TYPE, METHOD,CONSTRUCTOR})
+@Target({PACKAGE, TYPE, METHOD, CONSTRUCTOR})
 @Retention(CLASS)
 public @interface Incubating {
+	/**
+	 * Define the release (release family ideally) since the annotated
+	 * thing has been incubating.
+	 */
+	String since() default "";
 }

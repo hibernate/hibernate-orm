@@ -6,7 +6,6 @@
  */
 package org.hibernate.id;
 
-import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -17,11 +16,9 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.boot.model.relational.QualifiedName;
-import org.hibernate.boot.model.relational.QualifiedNameParser;
+import org.hibernate.boot.model.relational.MappedNamespace;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
@@ -39,11 +36,12 @@ import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PrimaryKey;
-import org.hibernate.mapping.Table;
+import org.hibernate.naming.Identifier;
+import org.hibernate.naming.spi.QualifiedName;
+import org.hibernate.naming.spi.QualifiedNameParser;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.LongType;
-import org.hibernate.type.StringType;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * A hilo <tt>IdentifierGenerator</tt> that returns a <tt>Long</tt>, constructed using
@@ -110,7 +108,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 	private Class returnClass;
 	private int keySize;
 
-	public synchronized Serializable generate(final SharedSessionContractImplementor session, Object obj) {
+	public synchronized Object generate(final SharedSessionContractImplementor session, Object obj) {
 		DeprecationLogger.DEPRECATION_LOGGER.deprecatedTableGenerator( getClass().getName() );
 
 		final SqlStatementLogger statementLogger = session.getFactory().getServiceRegistry()
@@ -254,8 +252,8 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 	}
 
 	@SuppressWarnings({"StatementWithEmptyBody", "deprecation"})
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
-		returnClass = type.getReturnedClass();
+	public void configure(JavaTypeDescriptor javaTypeDescriptor, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+		returnClass = javaTypeDescriptor.getJavaType();
 
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 
@@ -309,12 +307,12 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 
 	@Override
 	public void registerExportables(Database database) {
-		final Namespace namespace = database.locateNamespace(
+		final MappedNamespace namespace = database.locateNamespace(
 				qualifiedTableName.getCatalogName(),
 				qualifiedTableName.getSchemaName()
 		);
 
-		Table table = namespace.locateTable( qualifiedTableName.getObjectName() );
+		MappedTable table = namespace.locateTable( qualifiedTableName.getObjectName() );
 		if ( table == null ) {
 			table = namespace.createTable( qualifiedTableName.getObjectName(), false );
 
@@ -325,7 +323,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 					database,
 					table,
 					segmentColumnName,
-					StringType.INSTANCE,
+					StandardSpiBasicTypes.STRING,
 					database.getDialect().getTypeName( Types.VARCHAR, keySize, 0, 0 )
 			);
 			pkColumn.setNullable( false );
@@ -336,7 +334,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 					database,
 					table,
 					valueColumnName,
-					LongType.INSTANCE
+					StandardSpiBasicTypes.LONG
 			);
 			table.addColumn( valueColumn );
 		}

@@ -23,6 +23,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  * @author Steve Ebersole
  */
 public class TransactionCoordinatorBuilderInitiator implements StandardServiceInitiator<TransactionCoordinatorBuilder> {
+	@SuppressWarnings("WeakerAccess")
 	public static final String LEGACY_SETTING_NAME = "hibernate.transaction.factory_class";
 
 	/**
@@ -32,7 +33,7 @@ public class TransactionCoordinatorBuilderInitiator implements StandardServiceIn
 
 	@Override
 	public TransactionCoordinatorBuilder initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
-		return registry.getService( StrategySelector.class ).resolveDefaultableStrategy(
+		return registry.getService( StrategySelector.class ).resolveStrategy(
 				TransactionCoordinatorBuilder.class,
 				determineStrategySelection( configurationValues ),
 				JdbcResourceLocalTransactionCoordinatorBuilderImpl.INSTANCE

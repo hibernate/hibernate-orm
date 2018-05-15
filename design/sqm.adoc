@@ -1,0 +1,770 @@
+= SQM
+
+== Class Diagram
+
+[plantuml,select-statement,png]
+.SQM Select Statement
+....
+@startuml
+skinparam handwritten true
+
+interface SqmNode
+
+
+interface SqmStatement{
+	Set<SqmParameter> getQueryParameters()
+}
+
+interface SqmSelectStatement
+
+class SqmQuerySpec
+
+SqmNode <|-- SqmStatement
+
+SqmStatement <|-- SqmSelectStatement
+
+SqmSelectStatement - SqmQuerySpec
+
+@enduml
+....
+
+
+[plantuml,QuerySpec,png]
+.SqmQuerySpec
+....
+@startuml
+skinparam handwritten true
+
+interface SqmFromClauseContainer
+interface SqmWhereClauseContainer
+
+class SqmQuerySpec
+
+SqmFromClauseContainer <|-- SqmQuerySpec
+SqmWhereClauseContainer <|-- SqmQuerySpec
+
+SqmQuerySpec -- "0..1" SqmSelectClause
+
+SqmQuerySpec -- SqmFromClause
+
+SqmQuerySpec -- "0..1" SqmWhereClause
+
+SqmQuerySpec -- "0..1" SqmOrderByClause
+
+SqmQuerySpec -- "0..1" SqmLimitOffsetClause
+
+@enduml
+....
+
+
+[plantuml,SqmSelectClause,png]
+.SqmSelectClause
+....
+@startuml
+skinparam handwritten true
+
+interface SqmAliasedExpressionContainer<T extends SqmAliasedNode> {
+	T add(SqmExpression expression, String alias);
+	void add(T aliasExpression)
+}
+
+class SqmSelectClause{
+	boolean isDistinct()
+}
+
+class SqmSelectClause<SqmSelection>
+
+SqmAliasedExpressionContainer <|-- SqmSelectClause
+
+SqmSelectClause --> "*" SqmSelection
+@enduml
+....
+
+[plantuml,SqmSelection,png]
+.SqmSelection
+....
+@startuml
+skinparam handwritten true
+
+interface SqmNode
+
+interface SqmTypedNode {
+	JavaTypeDescriptor getJavaTypeDescriptor()
+}
+
+interface SqmAliasedNode {
+	String getAlias();
+}
+
+interface SqmVisitableNode{
+	<T> T accept(SemanticQueryWalker<T> walker);
+}
+
+class SqmSelection {
+	String alias
+}
+
+interface SqmSelectableNode
+
+SqmNode <|-- SqmTypedNode
+
+SqmTypedNode <|-- SqmAliasedNode
+
+SqmAliasedNode <|-- SqmSelection
+
+SqmNode <|-- SqmVisitableNode
+
+SqmVisitableNode <|-- SqmSelection
+
+SqmAliasedNode --> SqmSelectableNode
+
+SqmSelection --> SqmSelectableNode
+
+
+@enduml
+....
+
+`org.hibernate.query.sqm.tree.select.SqmSelection` represents an individual selection within a select clause.
+
+[plantuml,SqmSelectableNode,png]
+.SqmSelectableNode
+....
+@startuml
+skinparam handwritten true
+
+interface SqmSelectableNode
+interface SqmTypedNode
+interface SqmVisitableNode
+interface SqmExpression
+
+SqmTypedNode <|-- SqmSelectableNode
+
+SqmVisitableNode <|-- SqmSelectableNode
+
+SqmSelectableNode <|-- SqmDynamicInstantiation
+
+SqmSelectableNode <|-- SqmExpression
+
+
+@enduml
+....
+
+`org.hibernate.query.sqm.tree.select.SqmSelectableNode` defines a SQM AST node that can be used as a selection in the query, or as an argument to a dynamic-instantiation.
+
+[plantuml,SqmFromClause,png]
+.SqmFromClause
+....
+@startuml
+skinparam handwritten true
+
+interface SqmFrom
+interface SqmJoin
+interface SqmQualifiedJoin
+interface SqmPredicate
+
+enum SqmJoinType
+
+SqmFromClause -- "*" SqmFromElementSpace
+
+SqmFromElementSpace -- SqmRoot
+
+SqmFromElementSpace -- "*" SqmJoin
+
+SqmFrom <|-- SqmRoot
+
+SqmFrom <|-- SqmJoin
+
+SqmJoin --> SqmJoinType
+
+SqmJoin <|-- SqmQualifiedJoin
+SqmQualifiedJoin <|-- SqmNavigableJoin
+SqmQualifiedJoin <|-- SqmEntityJoin
+SqmJoin <|-- SqmCrossJoin
+
+
+SqmQualifiedJoin --> SqmPredicate
+
+
+@enduml
+....
+
+[plantuml,SqmFrom,png]
+.SqmFrom
+....
+@startuml
+skinparam handwritten true
+
+interface SqmVisitableNode
+interface SqmTypedNode
+interface SqmFrom
+interface UsageDetails
+interface SqmNavigableReference
+
+package org.hibernate.sql.ast.produce.metamodel.spi {
+interface TableGroupInfo{
+	String getUniqueIdentifier()
+	String getIdentificationVariable()
+	EntityDescriptor getIntrinsicSubclassEntityMetadata()
+}
+}
+
+TableGroupInfo <|-- SqmFrom
+SqmVisitableNode <|-- SqmFrom
+SqmTypedNode <|-- SqmFrom
+
+SqmFrom -- UsageDetails
+SqmFrom --> SqmNavigableReference
+
+
+@enduml
+....
+
+[plantuml,SqmNavigableReference,png]
+.SqmNavigableReference
+....
+@startuml
+skinparam handwritten true
+
+interface SqmNavigableReference
+interface SqmFromExporter
+interface SemanticPathPart
+interface SqmExpression {
+	ExpressableType getExpressableType();
+	ExpressableType getInferableType();
+}
+
+interface SqmSelectableNode
+
+package org.hibernate.sql.ast.produce.metamodel.spi {
+
+	interface ExpressableType<T> {
+		JavaTypeDescriptor<T> getJavaTypeDescriptor();
+	}
+
+	interface NavigableReferenceInfo {
+	}
+
+}
+
+SqmExpression <|-- SqmNavigableReference
+NavigableReferenceInfo <|-- SqmNavigableReference
+SqmFromExporter <|-- SqmNavigableReference
+SemanticPathPart <|-- SqmNavigableReference
+
+SqmSelectableNode <|-- SqmExpression
+
+SqmExpression --> ExpressableType
+
+
+@enduml
+....
+
+[plantuml,SqmWhereClause,png]
+.SqmWhereClause
+....
+@startuml
+skinparam handwritten true
+
+interface SqmPredicate
+
+SqmWhereClause --> SqmPredicate
+
+@enduml
+....
+
+== Generation
+
+[plantuml,query-sequence,png]
+.Producing AST SQL Statement
+....
+@startuml
+skinparam handwritten true
+
+actor App
+boundary Session
+
+App -> Session : createQuery(String queryString)
+
+Session -> QueryEngine : getSemanticQueryProducer()
+Session <-- QueryEngine : SemanticQueryProducer
+
+Session -> SemanticQueryProducer : interpret(queryString)
+
+SemanticQueryProducer --> HqlParseTreeBuilder : parseHql(querySytring)
+
+SemanticQueryProducer <--  HqlParseTreeBuilder : HqlParser
+
+SemanticQueryProducer --> HqlParser : statement()
+SemanticQueryProducer <-- HqlParser : StatementContext
+
+SemanticQueryProducer --> SemanticQueryBuilder : buildSemanticModel(StatementContext, SessionFactory )
+
+SemanticQueryBuilder --> SemanticQueryBuilder : visitStatement(StatementContext)
+
+SemanticQueryProducer <-- SemanticQueryBuilder : SqmStatement
+
+
+Session <-- SemanticQueryProducer : SqmStatement
+
+create SmqQueryImpl
+Session -> SmqQueryImpl : new(sourceQueryString,SqmStatement,Class resultType,SharedSessionContractImplementor)
+
+
+
+App <- Session : SqmQueryImpl
+
+@enduml
+....
+
+
+== Examples
+
+=== Single SqmFromElementSpace
+
+==== One Selection
+
+[source]
+.select p from Person p
+----
+SqmSelectStatementImpl{
+	namesQueryParameters = null,
+	positionalQueryParameters = null,
+	querySpec = SqmQuerySpec{
+		fromClause = SmqFormClause{
+			fromElementSpaces = [
+				SqmFromElementSpace{
+					root = SqmRoot@3864{
+						entityReference = SqmEntityReference@3860{
+							entityDescriptor = SingleTableEntityDescriptor{},
+							exportedFromElement = SqmRoot@3864{},
+							propertyPath = NavigablePath{
+								parent = null,
+								localName = "org.hibernate.test.Person(p)",
+								fullPath = "org.hibernate.orm.test.Person(p)"
+							}
+						},
+						uid = "<uid:1>",
+						alias = "p"
+					},
+					joins = null
+				}
+			]
+		},
+		selectClause = SqmSelectClause{
+			distinct = false,
+			selections = [
+				SqmSelection {
+					selectableNode = SqmEntityReference@3860{},
+					alias = "<gen:0>"
+				}
+			]
+		}
+	}
+----
+
+[source]
+.select p.id from Person p
+----
+SqmSelectStatementImpl{
+	namesQueryParameters = null,
+	positionalQueryParameters = null,
+	querySpec = SqmQuerySpec{
+		fromClause = SmqFormClause{
+			[
+				SqmFromElementSpace{
+					root = SqmRoot{
+						SqmEntityReference{
+							entityDescriptor = SingleTableEntityDescriptor{},
+							exportedFromElement = SqmRoot{},
+							propertyPath = NavigablePath{
+								parent = null,
+								localName = "org.hibernate.orm.test.query.sqm.basic.FirstSqmUnitTest$Person(p)",
+								fullPath = "org.hibernate.orm.test.query.sqm.basic.FirstSqmUnitTest$Person(p)"
+							}
+						},
+						uid = "<uid:1>",
+						alias = "p"
+					},
+					joins = null
+				}
+			]
+		},
+		SqmSelectClause{
+			distinct = false,
+			selections = [
+				SqmSelection {
+					selectableNode = SqmEntityIdentifierReferenceSimple{
+						source = SqmEntityReference{},
+						entityIdentifier = EntityIdentifierSimpleImpl{}
+					},
+					alias = "<gen:0>"
+				}
+			]
+		}
+	}
+}
+----
+
+==== Multiple Selection
+
+[source]
+.select p, p.id from Person p
+----
+SqmSelectStatementImpl{
+	namesQueryParameters = null,
+	positionalQueryParameters = null,
+	querySpec = SqmQuerySpec{
+		fromClause = SmqFormClause{
+			[
+				SqmFromElementSpace{
+					root = SqmRoot{
+						SqmEntityReference{
+							entityDescriptor = SingleTableEntityDescriptor{},
+							exportedFromElement = SqmRoot{},
+							propertyPath = NavigablePath{
+								parent = null,
+								localName = "org.hibernate.orm.test.query.sqm.basic.FirstSqmUnitTest$Person(p)",
+								fullPath = "org.hibernate.orm.test.query.sqm.basic.FirstSqmUnitTest$Person(p)"
+							}
+						},
+						uid = "<uid:1>",
+						alias = "p"
+					},
+					joins = null
+				}
+			]
+		},
+		SqmSelectClause{
+			distinct = false,
+			selections = [
+				SqmSelection {
+            		selectableNode = SqmEntityReference{
+            			source = SqmEntityReference{}
+            		},
+            		alias = "<gen:0>"
+            	},
+				SqmSelection {
+					selectableNode = SqmEntityIdentifierReferenceSimple{
+						source = SqmEntityReference{},
+						entityIdentifier = EntityIdentifierSimpleImpl{}
+					},
+					alias = "<gen:1>"
+				}
+			]
+		}
+	}
+}
+----
+
+=== Joins
+
+[source]
+.select p.address.city from Person p
+----
+SqmSelectStatementImpl{
+	namesQueryParameters = null,
+	positionalQueryParameters = null,
+	querySpec = SqmQuerySpec{
+		fromClause = SmqFormClause{
+			fromElementSpaces = [
+				SqmFromElementSpace{
+					root = SqmRoot@3972{
+						entityReference = SqmEntityReference@3885{
+							entityDescriptor = SingleTableEntityDescriptor{},
+							exportedFromElement = SqmRoot{},
+							propertyPath = NavigablePath{
+								parent = null,
+								localName = "org.hibernate.test.Person(p)",
+								fullPath = "org.hibernate.orm.test.Person(p)"
+							}
+						},
+						uid = "<uid:1>",
+						alias = "p"
+					},
+					joins = [
+						SqmNavigableJoin{
+							lhs = SqmRoot@3972{}
+							navigableReference = SqmSingleAttributeReferenceEntity{
+								sourceReference = SqmEntityReference@3885{},
+								attribute = SingularePersistentAttributeEntity@3899{},
+								navigabelPath = NavigabelPath{
+									parent = NavigabelPath {
+										parent = null,
+										localName = "org.hibernate.test.Person(p)",
+										fullpath = "org.hibernate.test.Person(p)"
+									},
+									localName = "address",
+									fullPath = "org.hibernate.test.Persop(p).address"
+								}
+							},
+							fetched = false;
+							onClausePredicate = null,
+							joinType = inner,
+							uid = "<uid:2>",
+							alias = "<gen:1>"
+						}
+					]
+				}
+			]
+		},
+		selectClause = SqmSelectClause{
+			distinct = false,
+			selections = [
+				SqmSelection {
+					selectableNode = SqmSingularAttributeReferenceBasic@3933{
+						sourceReference= SqmSingularAttributeReferenceEntity@3877{},
+						attribute = BasicSingularPersistentAttribute@3936{},
+						navigablePath = NavigablePath{
+							parent = NavigabelPath{
+								parent = NavigabelPath{
+									parent = null,
+									localName = "org.hibernate.test.Person(p)",
+									fullPath = "org.hibernate.test.Person(p)"
+								},
+								localName = "address",
+								fullPath = "org.hibernate.test.Persion(p).address"
+							},
+							localName = "city",
+							fullPath = "org.hibernate.test.Person(p).address.city"
+						}
+					},
+					alias = "<gen:0>"
+				}
+			]
+		}
+	}
+----
+
+[source]
+.select p from Person p join p.address
+----
+SqmSelectStatementImpl{
+	namesQueryParameters = null,
+	positionalQueryParameters = null,
+	querySpec = SqmQuerySpec{
+		fromClause = SmqFormClause{
+			fromElementSpaces = [
+				SqmFromElementSpace{
+					root = SqmRoot@3972{
+						entityReference = SqmEntityReference@3918{
+							entityDescriptor = SingleTableEntityDescriptor{},
+							exportedFromElement = SqmRoot{},
+							propertyPath = NavigablePath{
+								parent = null,
+								localName = "org.hibernate.test.Person(p)",
+								fullPath = "org.hibernate.orm.test.Person(p)"
+							}
+						},
+						uid = "<uid:1>",
+						alias = "p"
+					},
+					joins = [
+						SqmNavigableJoin{
+							lhs = SqmRoo@3972t{}
+							navigableReference = SqmSingleAttributeReferenceEntity{
+								sourceReference = SqmEntityReference@3918{},
+								attribute = SingularePersistentAttributeEntity@3409{},
+								navigabelPath = NavigabelPath{
+									parent = NavigabelPath {
+										parent = null,
+										localName = "org.hibernate.test.Person(p)",
+										fullpath = "org.hibernate.test.Person(p)"
+									},
+									localName = "address",
+									fullPath = "org.hibernate.test.Persop(p).address"
+								}
+							},
+							fetched = false;
+							onClausePredicate = null,
+							joinType = inner,
+							uid = "<uid:2>",
+							alias = "<gen:0>"
+						}
+					]
+				}
+			]
+		},
+		selectClause = SqmSelectClause{
+			distinct = false,
+			selections = [
+				SqmSelection {
+					selectableNode = SqmEntityReference@3918{},
+					alias = "<gen:1>"
+				}
+			]
+		}
+	}
+----
+
+=== Multiple SqmFromElementSpace
+
+[source]
+.select p from Person p, Address a
+----
+SqmSelectStatementImpl{
+	namesQueryParameters = null,
+	positionalQueryParameters = null,
+	querySpec = SqmQuerySpec{
+		fromClause = SmqFormClause{
+			fromElementSpaces = [
+				SqmFromElementSpace{
+					root = SqmRoot{
+						entityReference = SqmEntityReference{
+							entityDescriptor = SingleTableEntityDescriptor{},
+							exportedFromElement = SqmRoot{},
+							propertyPath = NavigablePath{
+								parent = null,
+								localName = "org.hibernate.test.Person(p)",
+								fullPath = "org.hibernate.orm.test.Person(p)"
+							}
+						},
+						uid = "<uid:1>",
+						alias = "p"
+					},
+					joins = null
+				},
+				SqmFromElementSpace{
+                	root = SqmRoot{
+                		entityReference = SqmEntityReference{
+                			entityDescriptor = SingleTableEntityDescriptor{},
+                			exportedFromElement = SqmRoot{},
+                			propertyPath = NavigablePath{
+                				parent = null,
+                				localName = "org.hibernate.test.Address(a)",
+                				fullPath = "org.hibernate.orm.test.Address(a)"
+                			}
+                		},
+                		uid = "<uid:2>",
+                		alias = "a"
+                	},
+                	joins = null
+                }
+			]
+		},
+		selectClause = SqmSelectClause{
+			distinct = false,
+			selections = [
+				SqmSelection {
+					selectableNode = SqmEntityReference{
+						source = SqmEntityReference{}
+					},
+					alias = "<gen:0>"
+				}
+			]
+		}
+	}
+----
+
+=== WhereClause
+
+[source]
+.select p from Person p where p.address.city = ?1
+----
+SqmSelectStatementImpl{
+	namesQueryParameters = null,
+	positionalQueryParameters = [
+		SqmPositionalParamter{
+			position = 1,
+			canBeMultiValued = false,
+			expressableType = BasicSingularPersistentAttribute{}
+		}
+	],
+	querySpec = SqmQuerySpec{
+		fromClause = SmqFormClause{
+			fromElementSpaces = [
+				SqmFromElementSpace{
+					root = SqmRoot@3941{
+						entityReference = SqmEntityReference@3935{
+							entityDescriptor = SingleTableEntityDescriptor{},
+							exportedFromElement = SqmRoot@3941{},
+							propertyPath = NavigablePath{
+								parent = null,
+								localName = "org.hibernate.test.Person(p)",
+								fullPath = "org.hibernate.orm.test.Person(p)"
+							}
+						},
+						uid = "<uid:1>",
+						alias = "p"
+					},
+					joins = [
+                    	SqmNavigableJoin{
+                    		lhs = SqmRoo@3941{}
+                    		navigableReference = SqmSingleAttributeReferenceEntity{
+                    			sourceReference = SqmEntityReference@3935{},
+                    			attribute = SingularePersistentAttributeEntity{},
+                    			navigabelPath = NavigabelPath{
+                    				parent = NavigabelPath {
+                    					parent = null,
+                    					localName = "org.hibernate.test.Person(p)",
+                    					fullpath = "org.hibernate.test.Person(p)"
+                    				},
+                    				localName = "address",
+                    				fullPath = "org.hibernate.test.Persop(p).address"
+                    			}
+                    		},
+                    		fetched = false;
+                    		onClausePredicate = null,
+                    		joinType = inner,
+                    		uid = "<uid:2>",
+                    		alias = "<gen:0>"
+                    	}
+                    ]
+				}
+			]
+		},
+		selectClause = SqmSelectClause{
+			distinct = false,
+			selections = [
+				SqmSelection {
+					selectableNode = SqmEntityReference@3935{},
+					alias = "<gen:0>"
+				}
+			]
+		}
+	}
+----
+
+[source]
+.select p from Person p where p.name = ?1
+----
+SqmSelectStatementImpl{
+	namesQueryParameters = null,
+	positionalQueryParameters = [
+		SqmPositionalParamter{
+			position = 1,
+			canBeMultiValued = false,
+			expressableType = BasicSingularPersistentAttribute{}
+		}
+	],
+	querySpec = SqmQuerySpec{
+		fromClause = SmqFormClause{
+			fromElementSpaces = [
+				SqmFromElementSpace{
+					root = SqmRoot@3941{
+						entityReference = SqmEntityReference@3935{
+							entityDescriptor = SingleTableEntityDescriptor{},
+							exportedFromElement = SqmRoot@3941{},
+							propertyPath = NavigablePath{
+								parent = null,
+								localName = "org.hibernate.test.Person(p)",
+								fullPath = "org.hibernate.orm.test.Person(p)"
+							}
+						},
+						uid = "<uid:1>",
+						alias = "p"
+					},
+					joins = null
+				}
+			]
+		},
+		selectClause = SqmSelectClause{
+			distinct = false,
+			selections = [
+				SqmSelection {
+					selectableNode = SqmEntityReference@3935{},
+					alias = "<gen:0>"
+				}
+			]
+		}
+	}
+----

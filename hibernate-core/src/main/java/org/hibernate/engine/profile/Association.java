@@ -5,7 +5,8 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.engine.profile;
-import org.hibernate.persister.entity.EntityPersister;
+
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 
 /**
  * Models the association of a given fetch.
@@ -13,7 +14,7 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Steve Ebersole
  */
 public class Association {
-	private final EntityPersister owner;
+	private final EntityTypeDescriptor owner;
 	private final String associationPath;
 	private final String role;
 
@@ -23,13 +24,13 @@ public class Association {
 	 * @param owner The entity owning the association
 	 * @param associationPath The path of the association, from the entity
 	 */
-	public Association(EntityPersister owner, String associationPath) {
+	public Association(EntityTypeDescriptor owner, String associationPath) {
 		this.owner = owner;
 		this.associationPath = associationPath;
 		this.role = owner.getEntityName() + '.' + associationPath;
 	}
 
-	public EntityPersister getOwner() {
+	public EntityTypeDescriptor getOwner() {
 		return owner;
 	}
 

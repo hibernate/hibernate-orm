@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -38,6 +39,10 @@ import org.hibernate.annotations.common.reflection.XPackage;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.domain.EmbeddedValueMapping;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.cfg.annotations.Nullability;
@@ -58,9 +63,10 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SyntheticProperty;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+import org.hibernate.naming.Identifier;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -96,20 +102,7 @@ public class BinderHelper {
 	 * create a property copy reusing the same value
 	 */
 	public static Property shallowCopy(Property property) {
-		Property clone = new Property();
-		clone.setCascade( property.getCascade() );
-		clone.setInsertable( property.isInsertable() );
-		clone.setLazy( property.isLazy() );
-		clone.setName( property.getName() );
-		clone.setNaturalIdentifier( property.isNaturalIdentifier() );
-		clone.setOptimisticLocked( property.isOptimisticLocked() );
-		clone.setOptional( property.isOptional() );
-		clone.setPersistentClass( property.getPersistentClass() );
-		clone.setPropertyAccessorName( property.getPropertyAccessorName() );
-		clone.setSelectable( property.isSelectable() );
-		clone.setUpdateable( property.isUpdateable() );
-		clone.setValue( property.getValue() );
-		return clone;
+		return property.shallowCopy();
 	}
 
 // This is sooooooooo close in terms of not generating a synthetic property if we do not have to (where property ref
@@ -287,9 +280,9 @@ public class BinderHelper {
 					clone.setUpdateable( false );
 					clone.setNaturalIdentifier( false );
 					clone.setValueGenerationStrategy( property.getValueGenerationStrategy() );
-					embeddedComp.addProperty( clone );
+					embeddedComp.addDeclaredPersistentAttribute( clone );
 				}
-				synthProp = new SyntheticProperty();
+				synthProp = new SyntheticProperty( context );
 				synthProp.setName( syntheticPropertyName );
 				synthProp.setPersistentClass( ownerEntity );
 				synthProp.setUpdateable( false );
@@ -371,30 +364,12 @@ public class BinderHelper {
 			Object columnOwner,
 			Ejb3JoinColumn[] columns,
 			MetadataBuildingContext context) {
-		Map<Column, Set<Property>> columnsToProperty = new HashMap<>();
+		Map<Column, Set<PersistentAttributeMapping>> columnsToProperty = new HashMap<>();
 		List<Column> orderedColumns = new ArrayList<>( columns.length );
-		Table referencedTable;
-		if ( columnOwner instanceof PersistentClass ) {
-			referencedTable = ( (PersistentClass) columnOwner ).getTable();
-		}
-		else if ( columnOwner instanceof Join ) {
-			referencedTable = ( (Join) columnOwner ).getTable();
-		}
-		else {
-			throw new AssertionFailure(
-					columnOwner == null ?
-							"columnOwner is null" :
-							"columnOwner neither PersistentClass nor Join: " + columnOwner.getClass()
-			);
-		}
+
 		//build the list of column names
 		for (Ejb3JoinColumn column1 : columns) {
-			Column column = new Column(
-					context.getMetadataCollector().getPhysicalColumnName(
-							referencedTable,
-							column1.getReferencedColumn()
-					)
-			);
+			Column column = new Column( column1.getReferencedColumn(), false );
 			orderedColumns.add( column );
 			columnsToProperty.put( column, new HashSet<>() );
 		}
@@ -406,7 +381,7 @@ public class BinderHelper {
 			matchColumnsByProperty( (Property) it.next(), columnsToProperty );
 		}
 		if ( isPersistentClass ) {
-			matchColumnsByProperty( ( (PersistentClass) columnOwner ).getIdentifierProperty(), columnsToProperty );
+			matchColumnsByProperty( (Property) ( (PersistentClass) columnOwner ).getIdentifierAttributeMapping(), columnsToProperty );
 		}
 
 		//first naive implementation
@@ -415,9 +390,9 @@ public class BinderHelper {
 		List<Property> orderedProperties = new ArrayList<>();
 		for (Column column : orderedColumns) {
 			boolean found = false;
-			for (Property property : columnsToProperty.get( column ) ) {
-				if ( property.getColumnSpan() == 1 ) {
-					orderedProperties.add( property );
+			for (PersistentAttributeMapping property : columnsToProperty.get( column ) ) {
+				if ( property.getValueMapping().getMappedColumns().size() == 1 ) {
+					orderedProperties.add( (Property) property );
 					found = true;
 					break;
 				}
@@ -430,7 +405,7 @@ public class BinderHelper {
 		return orderedProperties;
 	}
 
-	private static void matchColumnsByProperty(Property property, Map<Column, Set<Property>> columnsToProperty) {
+	private static void matchColumnsByProperty(PersistentAttributeMapping property, Map<Column, Set<PersistentAttributeMapping>> columnsToProperty) {
 		if ( property == null ) {
 			return;
 		}
@@ -446,15 +421,10 @@ public class BinderHelper {
 //			}
 //		}
 		else {
-			Iterator columnIt = property.getColumnIterator();
-			while ( columnIt.hasNext() ) {
-				//can be a Formula so we don't cast
-				Object column = columnIt.next();
-				//noinspection SuspiciousMethodCalls
-				if ( columnsToProperty.containsKey( column ) ) {
-					columnsToProperty.get( column ).add( property );
-				}
-			}
+			List<MappedColumn> mappedColumns = property.getValueMapping().getMappedColumns();
+			mappedColumns.stream()
+					.filter( column ->columnsToProperty.containsKey( column )  ).
+					forEach( column -> columnsToProperty.get( column ).add( property ) );
 		}
 	}
 
@@ -463,8 +433,8 @@ public class BinderHelper {
 	 * If propertyName is null or empty, the IdentifierProperty is returned
 	 */
 	public static Property findPropertyByName(PersistentClass associatedClass, String propertyName) {
-		Property property = null;
-		Property idProperty = associatedClass.getIdentifierProperty();
+		PersistentAttributeMapping property = null;
+		PersistentAttributeMapping idProperty = associatedClass.getIdentifierAttributeMapping();
 		String idName = idProperty != null ? idProperty.getName() : null;
 		try {
 			if ( propertyName == null
@@ -485,10 +455,10 @@ public class BinderHelper {
 						property = associatedClass.getProperty( element );
 					}
 					else {
-						if ( !property.isComposite() ) {
+						if ( !property.getClass().isInstance( EmbeddedValueMapping.class )) {
 							return null;
 						}
-						property = ( (Component) property.getValue() ).getProperty( element );
+						property = ( (EmbeddedValueMapping) property.getValueMapping() ).getDeclaredPersistentAttribute( element );
 					}
 				}
 			}
@@ -496,20 +466,20 @@ public class BinderHelper {
 		catch (MappingException e) {
 			try {
 				//if we do not find it try to check the identifier mapper
-				if ( associatedClass.getIdentifierMapper() == null ) {
+				if ( associatedClass.getEntityMappingHierarchy().getIdentifierEmbeddedValueMapping() == null ) {
 					return null;
 				}
 				StringTokenizer st = new StringTokenizer( propertyName, ".", false );
 				while ( st.hasMoreElements() ) {
 					String element = (String) st.nextElement();
 					if ( property == null ) {
-						property = associatedClass.getIdentifierMapper().getProperty( element );
+						property = associatedClass.getEntityMappingHierarchy().getIdentifierEmbeddedValueMapping().getDeclaredPersistentAttribute( element );
 					}
 					else {
-						if ( !property.isComposite() ) {
+						if ( !property.getClass().isInstance( EmbeddedValueMapping.class )) {
 							return null;
 						}
-						property = ( (Component) property.getValue() ).getProperty( element );
+						property = ( (EmbeddedValueMapping) property.getValueMapping() ).getDeclaredPersistentAttribute( element );
 					}
 				}
 			}
@@ -517,7 +487,7 @@ public class BinderHelper {
 				return null;
 			}
 		}
-		return property;
+		return (Property) property;
 	}
 
 	/**
@@ -605,25 +575,16 @@ public class BinderHelper {
 		boolean found = false;
 		do {
 			result = current;
-			Table currentTable = current.getTable();
-			try {
-				context.getMetadataCollector().getPhysicalColumnName( currentTable, columnName );
+			final MappedTable currentTable = current.getMappedTable();
+			final Identifier columnNameIdentifier = Identifier.toIdentifier( columnName );
+			if ( currentTable.getColumn( columnNameIdentifier ) != null ) {
 				found = true;
 			}
-			catch (MappingException me) {
-				//swallow it
-			}
-			Iterator joins = current.getJoinIterator();
-			while ( !found && joins.hasNext() ) {
-				result = joins.next();
-				currentTable = ( (Join) result ).getTable();
-				try {
-					context.getMetadataCollector().getPhysicalColumnName( currentTable, columnName );
-					found = true;
-				}
-				catch (MappingException me) {
-					//swallow it
-				}
+			if ( !found ) {
+				Optional<Join> foundJoin = current.getJoins().stream()
+						.filter( join -> join.getMappedTable().getColumn( columnNameIdentifier ) != null )
+						.findFirst();
+				found = foundJoin.isPresent();
 			}
 			current = current.getSuperclass();
 		}
@@ -643,7 +604,7 @@ public class BinderHelper {
 			Map<String, IdentifierGeneratorDefinition> localGenerators) {
 		log.debugf( "#makeIdGenerator(%s, %s, %s, %s, ...)", id, idXProperty, generatorType, generatorName );
 
-		Table table = id.getTable();
+		MappedTable table = id.getMappedTable();
 		table.setIdentifierValue( id );
 		//generator settings
 		id.setIdentifierGeneratorStrategy( generatorType );
@@ -664,10 +625,11 @@ public class BinderHelper {
 			params.put( PersistentIdentifierGenerator.SCHEMA, implicitSchemaName );
 		}
 
-		if ( id.getColumnSpan() == 1 ) {
+		final List<MappedColumn> idColumns = id.getMappedColumns();
+		if ( idColumns.size() == 1 ) {
 			params.setProperty(
 					PersistentIdentifierGenerator.PK,
-					( (org.hibernate.mapping.Column) id.getColumnIterator().next() ).getName()
+					idColumns.get( 0 ).getText()
 			);
 		}
 		// YUCK!  but cannot think of a clean way to do this given the string-config based scheme
@@ -947,7 +909,7 @@ public class BinderHelper {
 			boolean optional,
 			MetadataBuildingContext context) {
 		//All FK columns should be in the same table
-		Any value = new Any( context, columns[0].getTable() );
+		Any value = new Any( context, columns[0].getMappedTable() );
 		AnyMetaDef metaAnnDef = inferredData.getProperty().getAnnotation( AnyMetaDef.class );
 
 		if ( metaAnnDef != null ) {
@@ -962,17 +924,19 @@ public class BinderHelper {
 			value.setMetaType( metaAnnDef.metaType() );
 
 			HashMap values = new HashMap();
-			org.hibernate.type.Type metaType = context.getMetadataCollector().getTypeResolver().heuristicType( value.getMetaType() );
+			JavaTypeDescriptor javaTypeDescriptor = context.getMetadataCollector()
+					.getTypeConfiguration()
+					.getJavaTypeDescriptorRegistry()
+					.getDescriptor( value.getMetaType() );
 			for (MetaValue metaValue : metaAnnDef.metaValues()) {
 				try {
-					Object discrim = ( (org.hibernate.type.DiscriminatorType) metaType ).stringToObject( metaValue
-							.value() );
+					Object discrim = javaTypeDescriptor.fromString( metaValue.value() );
 					String entityName = metaValue.targetEntity().getName();
 					values.put( discrim, entityName );
 				}
 				catch (ClassCastException cce) {
 					throw new MappingException( "metaType was not a DiscriminatorType: "
-							+ metaType.getName() );
+							+ javaTypeDescriptor.getTypeName() );
 				}
 				catch (Exception e) {
 					throw new MappingException( "could not interpret metaValue", e );
@@ -1006,7 +970,7 @@ public class BinderHelper {
 
 		//set metaColumn to the right table
 		for (Ejb3Column column : metaColumns) {
-			column.setTable( value.getTable() );
+			column.setTable( value.getMappedTable() );
 		}
 		//meta column
 		for (Ejb3Column column : metaColumns) {

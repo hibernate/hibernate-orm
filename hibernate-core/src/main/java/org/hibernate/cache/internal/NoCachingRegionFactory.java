@@ -36,7 +36,7 @@ public class NoCachingRegionFactory implements RegionFactory {
 	/**
 	 * Constructs a NoCachingRegionFactory.  Although access should generally use {@link #INSTANCE}
 	 */
-	public NoCachingRegionFactory() {
+	private NoCachingRegionFactory() {
 	}
 
 	@Override
@@ -74,19 +74,22 @@ public class NoCachingRegionFactory implements RegionFactory {
 
 	@Override
 	public DomainDataRegion buildDomainDataRegion(
-			DomainDataRegionConfig regionConfig, DomainDataRegionBuildingContext buildingContext) {
+			DomainDataRegionConfig regionConfig,
+			DomainDataRegionBuildingContext buildingContext) {
 		throw new NoCacheRegionFactoryAvailableException();
 	}
 
 	@Override
 	public QueryResultsRegion buildQueryResultsRegion(
-			String regionName, SessionFactoryImplementor sessionFactory) {
+			String regionName,
+			SessionFactoryImplementor sessionFactory) {
 		throw new NoCacheRegionFactoryAvailableException();
 	}
 
 	@Override
 	public TimestampsRegion buildTimestampsRegion(
-			String regionName, SessionFactoryImplementor sessionFactory) {
+			String regionName,
+			SessionFactoryImplementor sessionFactory) {
 		throw new NoCacheRegionFactoryAvailableException();
 	}
 }

@@ -7,7 +7,6 @@
 package org.hibernate.boot.model.naming;
 
 import org.hibernate.boot.model.source.spi.AttributePath;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 
 /**
  * @author Steve Ebersole

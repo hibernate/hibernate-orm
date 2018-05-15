@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <subclass
+            name="org.hibernate.query.hhh12076.SettlementTask"
+            extends="org.hibernate.query.hhh12076.Task"
+            discriminator-value="org.hibernate.query.hhh12076.SettlementTask"
+            lazy="false">
+
+        <many-to-one
+                name="linked"
+                class="org.hibernate.query.hhh12076.Settlement"
+                fetch="join">
+            <column name="linked_id" not-null="true"/>
+        </many-to-one>
+
+    </subclass>
+</hibernate-mapping>

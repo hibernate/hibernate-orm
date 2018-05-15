@@ -38,6 +38,7 @@ sourceSets {
     }
 }
 
+/*
 jar {
     manifest {
         instructionFirst 'Import-Package',
@@ -51,6 +52,18 @@ jar {
             'javax.naming;resolution:=optional',
             'org.apache.tools.ant;resolution:=optional'
     }
+}
+*/
+jar {
+    // The OSGi JAR manifest support does not like a non-existent classes dir,
+    // so make sure we dont use the OSGi one :)
+    manifest = null
+}
+
+sourcesJar {
+    // The OSGi JAR manifest support does not like a non-existent classes dir,
+    // so make sure we dont use the OSGi one :)
+    manifest = null
 }
 
 tasks."matrix_mariadb" {

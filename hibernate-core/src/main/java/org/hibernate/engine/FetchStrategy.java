@@ -12,6 +12,8 @@ package org.hibernate.engine;
  * @author Steve Ebersole
  */
 public class FetchStrategy {
+	public static FetchStrategy IMMEDIATE_JOIN = new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.JOIN );
+
 	private final FetchTiming timing;
 	private final FetchStyle style;
 

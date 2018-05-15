@@ -59,7 +59,7 @@ public class CompositeNestedGeneratedValueGenerator implements IdentifierGenerat
 		 *
 		 * @return The injection context
 		 */
-		Serializable locateGenerationContext(SharedSessionContractImplementor session, Object incomingObject);
+		Object locateGenerationContext(SharedSessionContractImplementor session, Object incomingObject);
 	}
 
 	/**
@@ -89,8 +89,8 @@ public class CompositeNestedGeneratedValueGenerator implements IdentifierGenerat
 	}
 
 	@Override
-	public Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
-		final Serializable context = generationContextLocator.locateGenerationContext( session, object );
+	public Object generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
+		final Object context = generationContextLocator.locateGenerationContext( session, object );
 
 		for ( Object generationPlan : generationPlans ) {
 			final GenerationPlan plan = (GenerationPlan) generationPlan;

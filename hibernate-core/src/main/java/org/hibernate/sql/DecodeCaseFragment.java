@@ -8,13 +8,19 @@ package org.hibernate.sql;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.hibernate.annotations.Remove;
+
 /**
  * An Oracle-style DECODE function.
  * <br>
  * <code>decode(pkvalue, key1, 1, key2, 2, ..., 0)</code>
  *
  * @author Simon Harris
+ *
+ * @deprecated Converting to use SQL AST
  */
+@Deprecated
+@Remove
 public class DecodeCaseFragment extends CaseFragment {
 
 	public String toFragmentString() {

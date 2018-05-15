@@ -8,7 +8,7 @@ package org.hibernate.tool.schema.extract.spi;
 
 import java.util.List;
 
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.naming.Identifier;
 
 /**
  * Provides access to information about existing index in the database

@@ -6,7 +6,6 @@
  */
 package org.hibernate.id;
 
-import java.io.Serializable;
 import javax.persistence.GeneratedValue;
 
 import org.hibernate.HibernateException;
@@ -51,14 +50,25 @@ public interface IdentifierGenerator {
 	/**
 	 * Generate a new identifier.
 	 *
-	 * @param session The session from which the request originates
 	 * @param object the entity or collection (idbag) for which the id is being generated
+	 * @param session The session from which the request originates
 	 *
 	 * @return a new identifier
 	 *
 	 * @throws HibernateException Indicates trouble generating the identifier
 	 */
-	Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException;
+	default Object generate(Object object, SharedSessionContractImplementor session) throws HibernateException {
+		return generate( session, object );
+	}
+
+//	/**
+//	 * @deprecated Use {@link #generate(Object, SharedSessionContractImplementor)} instead
+//	 */
+//	@Deprecated
+//	default Object generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
+//		return null;
+//	}
+	Object generate(SharedSessionContractImplementor session, Object object) throws HibernateException;
 
 	/**
 	 * Check if JDBC batch inserts are supported.

@@ -6,12 +6,12 @@
  */
 package org.hibernate.dialect.unique;
 
-import java.util.Iterator;
-
-import org.hibernate.boot.Metadata;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.mapping.UniqueKey;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.relational.spi.ExportableTable;
+import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
+import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 
 /**
  * The default UniqueDelegate implementation for most dialects.  Uses
@@ -34,62 +34,43 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 	// legacy model ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public String getColumnDefinitionUniquenessFragment(org.hibernate.mapping.Column column) {
+	public String getColumnDefinitionUniquenessFragment(Column column) {
 		return "";
 	}
 
 	@Override
-	public String getTableCreationUniqueConstraintsFragment(org.hibernate.mapping.Table table) {
+	public String getTableCreationUniqueConstraintsFragment(ExportableTable table) {
 		return "";
 	}
 
 	@Override
-	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata) {
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
+	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, JdbcServices jdbcServices) {
 
-		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				uniqueKey.getTable().getQualifiedTableName(),
-				dialect
-		);
+		final String tableName = jdbcServices
+				.getJdbcEnvironment()
+				.getQualifiedObjectNameFormatter()
+				.format( ( ( ExportableTable) uniqueKey.getTable() ).getQualifiedTableName(), dialect );
 
-		final String constraintName = dialect.quote( uniqueKey.getName() );
+		final String constraintName = uniqueKey.getName().render( dialect );
 		return dialect.getAlterTableString( tableName )
 				+ " add constraint " + constraintName + " " + uniqueConstraintSql( uniqueKey );
-	}
 
-	protected String uniqueConstraintSql(UniqueKey uniqueKey) {
-		final StringBuilder sb = new StringBuilder();
-		sb.append( "unique (" );
-		final Iterator<org.hibernate.mapping.Column> columnIterator = uniqueKey.columnIterator();
-		while ( columnIterator.hasNext() ) {
-			final org.hibernate.mapping.Column column = columnIterator.next();
-			sb.append( column.getQuotedName( dialect ) );
-			if ( uniqueKey.getColumnOrderMap().containsKey( column ) ) {
-				sb.append( " " ).append( uniqueKey.getColumnOrderMap().get( column ) );
-			}
-			if ( columnIterator.hasNext() ) {
-				sb.append( ", " );
-			}
-		}
-
-		return sb.append( ')' ).toString();
 	}
 
 	@Override
-	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata) {
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
+	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, JdbcServices jdbcServices) {
 
-		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				uniqueKey.getTable().getQualifiedTableName(),
-				dialect
-		);
+		final String tableName = jdbcServices
+				.getJdbcEnvironment()
+				.getQualifiedObjectNameFormatter()
+				.format( ( ( ExportableTable) uniqueKey.getTable() ).getQualifiedTableName(), dialect );
 
-		final StringBuilder buf = new StringBuilder( dialect.getAlterTableString(tableName) );
-		buf.append( getDropUnique() );
+		final StringBuilder buf = new StringBuilder( dialect.getAlterTableString( tableName ));
+		buf.append(getDropUnique() );
 		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
 			buf.append( "if exists " );
 		}
-		buf.append( dialect.quote( uniqueKey.getName() ) );
+		buf.append( uniqueKey.getName().render( dialect ) );
 		if ( dialect.supportsIfExistsAfterConstraintName() ) {
 			buf.append( " if exists" );
 		}
@@ -98,6 +79,26 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 
 	protected String getDropUnique(){
 		return " drop constraint ";
+	}
+
+	protected String uniqueConstraintSql(UniqueKey uniqueKey) {
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "unique (" );
+		boolean isFirst = true;
+		for ( PhysicalColumn column : uniqueKey.getColumns() ) {
+			if ( isFirst ) {
+				isFirst = false;
+			}
+			else {
+				sb.append( ", " );
+			}
+			sb.append( column.getName().render( dialect ) );
+			if ( uniqueKey.getColumnOrderMap().containsKey( column ) ) {
+				sb.append( " " ).append( uniqueKey.getColumnOrderMap().get( column ) );
+			}
+		}
+
+		return sb.append( ')' ).toString();
 	}
 
 }

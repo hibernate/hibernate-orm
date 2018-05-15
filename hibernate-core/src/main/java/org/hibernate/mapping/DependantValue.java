@@ -6,10 +6,15 @@
  */
 package org.hibernate.mapping;
 
+import java.util.Iterator;
+import java.util.List;
+
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.JavaTypeMapping;
+import org.hibernate.boot.model.domain.ResolutionContext;
+import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.type.Type;
 
 /**
  * A value which is "typed" by reference to some other
@@ -22,23 +27,44 @@ public class DependantValue extends SimpleValue {
 	private KeyValue wrappedValue;
 	private boolean nullable;
 	private boolean updateable;
+	private boolean isNationalized;
 
 	/**
-	 * @deprecated Use {@link DependantValue#DependantValue(MetadataBuildingContext, Table, KeyValue)} instead.
+	 * @deprecated since 6.0, use {@link #DependantValue(MetadataBuildingContext, MappedTable, KeyValue)}
 	 */
 	@Deprecated
-	public DependantValue(MetadataImplementor metadata, Table table, KeyValue prototype) {
+	public DependantValue(MetadataBuildingContext metadata, Table table, KeyValue prototype) {
+		this( metadata, (MappedTable) table, prototype );
+	}
+
+	public DependantValue(MetadataBuildingContext metadata, MappedTable table, KeyValue prototype) {
 		super( metadata, table );
+		registerResolver( metadata );
 		this.wrappedValue = prototype;
 	}
 
-	public DependantValue(MetadataBuildingContext buildingContext, Table table, KeyValue prototype) {
-		super( buildingContext, table );
-		this.wrappedValue = prototype;
+	private void registerResolver(MetadataBuildingContext metadata) {
+		metadata.getMetadataCollector().registerValueMappingResolver( this::resolve );
 	}
 
-	public Type getType() throws MappingException {
-		return wrappedValue.getType();
+	@Override
+	public JavaTypeMapping getJavaTypeMapping() {
+		return wrappedValue.getJavaTypeMapping();
+	}
+
+	@Override
+	public Boolean resolve(ResolutionContext context) {
+		Iterator<MappedColumn> columnsIterator = columns.iterator();
+		List<Column> wrappedValueColumns = wrappedValue.getMappedColumns();
+		for ( Column wrappedValueColumn : wrappedValueColumns ) {
+			if ( wrappedValueColumn.getJavaTypeMapping() == null ) {
+				return false;
+			}
+			Column column = (Column) columnsIterator.next();
+			column.setJavaTypeMapping( wrappedValueColumn.getJavaTypeMapping() );
+			column.setSqlTypeDescriptorAccess( wrappedValueColumn::getSqlTypeDescriptor );
+		}
+		return true;
 	}
 
 	public void setTypeUsingReflection(String className, String propertyName) {}
@@ -49,7 +75,6 @@ public class DependantValue extends SimpleValue {
 
 	public boolean isNullable() {
 		return nullable;
-	
 	}
 	
 	public void setNullable(boolean nullable) {
@@ -64,6 +89,14 @@ public class DependantValue extends SimpleValue {
 		this.updateable = updateable;
 	}
 
+	public void makeNationalized() {
+		this.isNationalized = true;
+	}
+
+	public boolean isNationalized() {
+		return isNationalized;
+	}
+
 	@Override
 	public boolean isSame(SimpleValue other) {
 		return other instanceof DependantValue && isSame( (DependantValue) other );
@@ -74,4 +107,8 @@ public class DependantValue extends SimpleValue {
 				&& isSame( wrappedValue, other.wrappedValue );
 	}
 
+	@Override
+	public ForeignKey createForeignKey() throws MappingException {
+		return wrappedValue.createForeignKey();
+	}
 }

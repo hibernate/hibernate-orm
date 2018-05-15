@@ -6,15 +6,6 @@
  */
 package org.hibernate.testing.bytecode.enhancement;
 
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
-import org.hibernate.bytecode.enhance.spi.Enhancer;
-import org.hibernate.cfg.Environment;
-import org.hibernate.testing.junit4.CustomRunner;
-import org.junit.runner.Runner;
-import org.junit.runners.Suite;
-import org.junit.runners.model.InitializationError;
-import org.junit.runners.model.RunnerBuilder;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -22,6 +13,15 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.enhance.spi.Enhancer;
+
+import org.hibernate.testing.junit4.CustomRunner;
+import org.junit.runner.Runner;
+import org.junit.runners.Suite;
+import org.junit.runners.model.InitializationError;
+import org.junit.runners.model.RunnerBuilder;
 
 /**
  * @author Luis Barreiro
@@ -68,7 +68,7 @@ public class BytecodeEnhancerRunner extends Suite {
 
 			private final String debugOutputDir = System.getProperty( "java.io.tmpdir" );
 
-			private final Enhancer enhancer = Environment.getBytecodeProvider().getEnhancer( context );
+			private final Enhancer enhancer = context.getBytecodeProvider().getEnhancer( context );
 
 			@SuppressWarnings( "ResultOfMethodCallIgnored" )
 			@Override

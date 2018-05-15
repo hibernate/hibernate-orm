@@ -6,11 +6,12 @@
  */
 package org.hibernate.cfg;
 
-import java.util.Iterator;
+import java.util.List;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.TableBinder;
 import org.hibernate.internal.util.StringHelper;
@@ -19,7 +20,6 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 
 /**
@@ -58,7 +58,7 @@ public class ToOneFkSecondPass extends FkSecondPass {
 	public boolean isInPrimaryKey() {
 		if ( entityClassName == null ) return false;
 		final PersistentClass persistentClass = buildingContext.getMetadataCollector().getEntityBinding( entityClassName );
-		Property property = persistentClass.getIdentifierProperty();
+		PersistentAttributeMapping property = persistentClass.getIdentifierAttributeMapping();
 		if ( path == null ) {
 			return false;
 		}
@@ -70,15 +70,15 @@ public class ToOneFkSecondPass extends FkSecondPass {
 			//try the embedded property
 			//embedded property starts their path with 'id.' See PropertyPreloadedData( ) use when idClass != null in AnnotationSourceProcessor
 			if ( path.startsWith( "id." ) ) {
-				KeyValue valueIdentifier = persistentClass.getIdentifier();
-				String localPath = path.substring( 3 );
+				final KeyValue valueIdentifier = persistentClass.getIdentifier();
+				final String localPath = path.substring( 3 );
 				if ( valueIdentifier instanceof Component ) {
-					Iterator it = ( (Component) valueIdentifier ).getPropertyIterator();
-					while ( it.hasNext() ) {
-						Property idProperty = (Property) it.next();
-						if ( localPath.startsWith( idProperty.getName() ) ) return true;
-					}
-
+					final List<PersistentAttributeMapping> declaredPersistentAttributes
+							= ( (Component) valueIdentifier ).getDeclaredPersistentAttributes();
+					return declaredPersistentAttributes
+							.stream()
+							.filter( idProperty -> localPath.startsWith( idProperty.getName() ) )
+							.findFirst().isPresent();
 				}
 			}
 		}
@@ -87,8 +87,8 @@ public class ToOneFkSecondPass extends FkSecondPass {
 
 	public void doSecondPass(java.util.Map persistentClasses) throws MappingException {
 		if ( value instanceof ManyToOne ) {
-			ManyToOne manyToOne = (ManyToOne) value;
-			PersistentClass ref = (PersistentClass) persistentClasses.get( manyToOne.getReferencedEntityName() );
+			final ManyToOne manyToOne = (ManyToOne) value;
+			final PersistentClass ref = (PersistentClass) persistentClasses.get( manyToOne.getReferencedEntityName() );
 			if ( ref == null ) {
 				throw new AnnotationException(
 						"@OneToOne or @ManyToOne on "
@@ -103,7 +103,9 @@ public class ToOneFkSecondPass extends FkSecondPass {
 			/*
 			 * HbmMetadataSourceProcessorImpl does this only when property-ref != null, but IMO, it makes sense event if it is null
 			 */
-			if ( !manyToOne.isIgnoreNotFound() ) manyToOne.createPropertyRefConstraints( persistentClasses );
+			if ( !manyToOne.isIgnoreNotFound() ) {
+				manyToOne.createPropertyRefConstraints( buildingContext );
+			}
 		}
 		else if ( value instanceof OneToOne ) {
 			value.createForeignKey();

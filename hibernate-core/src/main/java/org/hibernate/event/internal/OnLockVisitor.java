@@ -6,14 +6,12 @@
  */
 package org.hibernate.event.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.type.CollectionType;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 
 /**
  * When a transient entity is passed to lock(), we must inspect all its collections and
@@ -26,28 +24,30 @@ import org.hibernate.type.CollectionType;
  */
 public class OnLockVisitor extends ReattachVisitor {
 
-	public OnLockVisitor(EventSource session, Serializable key, Object owner) {
+	public OnLockVisitor(EventSource session, Object key, Object owner) {
 		super( session, key, owner );
 	}
 
 	@Override
-	public Object processCollection(Object collection, CollectionType type) throws HibernateException {
+	public Object processCollection(Object collection, PluralPersistentAttribute collectionAttribute) throws HibernateException {
 		if ( collection == null ) {
 			return null;
 		}
 
 		final SessionImplementor session = getSession();
-		final CollectionPersister persister = session.getFactory().getCollectionPersister( type.getRole() );
 
 		if ( collection instanceof PersistentCollection ) {
 			final PersistentCollection persistentCollection = (PersistentCollection) collection;
 			if ( persistentCollection.setCurrentSession( session ) ) {
-				if ( isOwnerUnchanged( persistentCollection, persister, extractCollectionKeyFromOwner( persister ) ) ) {
+				final PersistentCollectionDescriptor descriptor = session.getFactory()
+						.getMetamodel()
+						.findCollectionDescriptor( collectionAttribute.getNavigableName() );
+				if ( isOwnerUnchanged( persistentCollection, descriptor, extractCollectionKeyFromOwner( descriptor ) ) ) {
 					// a "detached" collection that originally belonged to the same entity
 					if ( persistentCollection.isDirty() ) {
 						throw new HibernateException( "reassociated object has dirty collection" );
 					}
-					reattachCollection( persistentCollection, type );
+					reattachCollection( persistentCollection, collectionAttribute.getNavigableRole() );
 				}
 				else {
 					// a "detached" collection that belonged to a different entity

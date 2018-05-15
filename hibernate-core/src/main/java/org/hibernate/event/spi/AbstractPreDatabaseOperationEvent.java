@@ -6,9 +6,7 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.secure.spi.PermissionCheckEntityInformation;
 
 /**
@@ -21,26 +19,25 @@ public abstract class AbstractPreDatabaseOperationEvent
 		implements PermissionCheckEntityInformation {
 
 	private final Object entity;
-	private final Serializable id;
-	private final EntityPersister persister;
+	private final Object id;
+	private final EntityTypeDescriptor descriptor;
 
 	/**
 	 * Constructs an event containing the pertinent information.
-	 *
-	 * @param source The session from which the event originated.
+	 *  @param source The session from which the event originated.
 	 * @param entity The entity to be invloved in the database operation.
 	 * @param id The entity id to be invloved in the database operation.
-	 * @param persister The entity's persister.
+	 * @param descriptor The entity's descriptor.
 	 */
 	public AbstractPreDatabaseOperationEvent(
 			EventSource source,
 			Object entity,
-			Serializable id,
-			EntityPersister persister) {
+			Object id,
+			EntityTypeDescriptor descriptor) {
 		super( source );
 		this.entity = entity;
 		this.id = id;
-		this.persister = persister;
+		this.descriptor = descriptor;
 	}
 
 	/**
@@ -58,17 +55,17 @@ public abstract class AbstractPreDatabaseOperationEvent
 	 *
 	 * @return The id.
 	 */
-	public Serializable getId() {
+	public Object getId() {
 		return id;
 	}
 
 	/**
-	 * The persister for the {@link #getEntity entity}.
+	 * The descriptor for the {@link #getEntity entity}.
 	 *
-	 * @return The entity persister.
+	 * @return The entity descriptor.
 	 */
-	public EntityPersister getPersister() {
-		return persister;
+	public EntityTypeDescriptor getDescriptor() {
+		return descriptor;
 	}
 
 	/**
@@ -76,7 +73,7 @@ public abstract class AbstractPreDatabaseOperationEvent
 	 * originated.
 	 * <p/>
 	 * Some of the pre-* events had previous exposed the event source using
-	 * getSource() because they had not originally extended from
+	 * getContainer() because they had not originally extended from
 	 * {@link AbstractEvent}.
 	 *
 	 * @return Value for property 'source'.
@@ -90,11 +87,11 @@ public abstract class AbstractPreDatabaseOperationEvent
 
 	@Override
 	public String getEntityName() {
-		return persister.getEntityName();
+		return descriptor.getEntityName();
 	}
 
 	@Override
-	public Serializable getIdentifier() {
+	public Object getIdentifier() {
 		return id;
 	}
 }

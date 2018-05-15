@@ -15,18 +15,18 @@ import org.hibernate.boot.model.source.spi.SizeSource;
  * @author Gail Badner
  */
 public class SizeSourceImpl implements SizeSource {
-	private final Integer length;
+	private final Long length;
 	private final Integer scale;
 	private final Integer precision;
 
-	public SizeSourceImpl(Integer length, Integer scale, Integer precision) {
+	public SizeSourceImpl(Long length, Integer scale, Integer precision) {
 		this.length = length;
 		this.scale = scale;
 		this.precision = precision;
 	}
 
 	@Override
-	public Integer getLength() {
+	public Long getLength() {
 		return length;
 	}
 

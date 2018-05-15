@@ -13,15 +13,20 @@ import java.net.URL;
 import java.sql.SQLException;
 import java.util.Map;
 
-import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.metamodel.model.creation.spi.DatabaseObjectResolutionContextImpl;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
+import org.hibernate.metamodel.model.relational.spi.Namespace;
+import org.hibernate.metamodel.model.relational.spi.RuntimeDatabaseModelProducer;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.internal.DatabaseInformationImpl;
+import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputFromFile;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputFromReader;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputFromUrl;
@@ -126,7 +131,7 @@ public class Helper {
 	public static DatabaseInformation buildDatabaseInformation(
 			ServiceRegistry serviceRegistry,
 			DdlTransactionIsolator ddlTransactionIsolator,
-			Namespace.Name defaultNamespace) {
+			Namespace defaultNamespace) {
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 		try {
 			return new DatabaseInformationImpl(
@@ -139,5 +144,18 @@ public class Helper {
 		catch (SQLException e) {
 			throw jdbcEnvironment.getSqlExceptionHelper().convert( e, "Unable to build DatabaseInformation" );
 		}
+	}
+
+	public static DatabaseModel buildDatabaseModel(MetadataImplementor metadata) {
+		final DatabaseObjectResolutionContextImpl dbObjectResolver = new DatabaseObjectResolutionContextImpl();
+		final BootstrapContext bootstrapContext = metadata.getTypeConfiguration()
+				.getMetadataBuildingContext()
+				.getBootstrapContext();
+		return new RuntimeDatabaseModelProducer( bootstrapContext )
+				.produceDatabaseModel(
+						metadata.getDatabase(),
+						dbObjectResolver,
+						dbObjectResolver
+				);
 	}
 }

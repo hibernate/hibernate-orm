@@ -6,15 +6,13 @@
  */
 package org.hibernate.event.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.SaveOrUpdateEvent;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 
 /**
  * An event handler for update() events
@@ -22,7 +20,7 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public class DefaultUpdateEventListener extends DefaultSaveOrUpdateEventListener {
 
-	protected Serializable performSaveOrUpdate(SaveOrUpdateEvent event) {
+	protected Object performSaveOrUpdate(SaveOrUpdateEvent event) {
 		// this implementation is supposed to tolerate incorrect unsaved-value
 		// mappings, for the purpose of backward-compatibility
 		EntityEntry entry = event.getSession().getPersistenceContext().getEntry( event.getEntity() );
@@ -44,16 +42,16 @@ public class DefaultUpdateEventListener extends DefaultSaveOrUpdateEventListener
 	 * If the user specified an id, assign it to the instance and use that, 
 	 * otherwise use the id already assigned to the instance
 	 */
-	protected Serializable getUpdateId(
+	protected Object getUpdateId(
 			Object entity,
-			EntityPersister persister,
-			Serializable requestedId,
+			EntityTypeDescriptor descriptor,
+			Object requestedId,
 			SessionImplementor session) throws HibernateException {
 		if ( requestedId == null ) {
-			return super.getUpdateId( entity, persister, requestedId, session );
+			return super.getUpdateId( entity, descriptor, requestedId, session );
 		}
 		else {
-			persister.setIdentifier( entity, requestedId, session );
+			descriptor.setIdentifier( entity, requestedId, session );
 			return requestedId;
 		}
 	}

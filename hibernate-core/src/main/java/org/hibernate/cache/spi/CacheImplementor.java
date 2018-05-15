@@ -18,7 +18,9 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
+import org.hibernate.metamodel.model.domain.spi.NaturalIdDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.service.Service;
 
 /**
@@ -30,7 +32,7 @@ import org.hibernate.service.Service;
  * @author Steve Ebersole
  */
 @SuppressWarnings("unused")
-public interface CacheImplementor extends Service, Cache, org.hibernate.engine.spi.CacheImplementor, Serializable {
+public interface CacheImplementor extends Service, Cache, Serializable {
 	@Override
 	SessionFactoryImplementor getSessionFactory();
 
@@ -141,7 +143,7 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 * @apiNote It is only valid to call this method after {@link #prime} has
 	 * been performed
 	 *
-	 * @deprecated Use {@link EntityPersister#getCacheAccessStrategy()} instead
+	 * @deprecated Use {@link org.hibernate.metamodel.model.domain.spi.EntityHierarchy#getEntityCacheAccess()} instead
 	 */
 	@Deprecated
 	EntityDataAccess getEntityRegionAccess(NavigableRole rootEntityName);
@@ -156,7 +158,7 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 * @apiNote It is only valid to call this method after {@link #prime} has
 	 * been performed
 	 *
-	 * @deprecated Use {@link EntityPersister#getNaturalIdCacheAccessStrategy()} ()} instead
+	 * @deprecated Use {@link NaturalIdDescriptor#getCacheAccess()} } through {@link EntityHierarchy#getNaturalIdDescriptor() } instead
 	 */
 	@Deprecated
 	NaturalIdDataAccess getNaturalIdCacheRegionAccessStrategy(NavigableRole rootEntityName);
@@ -168,7 +170,7 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 * @apiNote It is only valid to call this method after {@link #prime} has
 	 * been performed
 	 *
-	 * @deprecated Use {@link EntityPersister#getNaturalIdCacheAccessStrategy()} ()} instead
+	 * @deprecated Use {@link PersistentCollectionDescriptor#getCacheAccess()} ()} instead
 	 */
 	@Deprecated
 	CollectionDataAccess getCollectionRegionAccess(NavigableRole collectionRole);
@@ -182,34 +184,6 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	@Deprecated
 	default UpdateTimestampsCache getUpdateTimestampsCache() {
 		return getTimestampsCache();
-	}
-
-	/**
-	 * Get the default {@code QueryCache}.
-	 *
-	 * @deprecated Use {@link #getDefaultQueryResultsCache} instead.
-	 */
-	@Deprecated
-	default QueryCache getQueryCache() {
-		return getDefaultQueryResultsCache();
-	}
-
-	/**
-	 * Get the default {@code QueryCache}.
-	 *
-	 * @deprecated Use {@link #getDefaultQueryResultsCache} instead.
-	 */
-	@Deprecated
-	default QueryCache getDefaultQueryCache() {
-		return getDefaultQueryResultsCache();
-	}
-
-	/**
-	 * @deprecated Use {@link #getQueryResultsCache(String)} instead, but using unqualified name
-	 */
-	@Deprecated
-	default QueryCache getQueryCache(String regionName) throws HibernateException {
-		return getQueryResultsCache( unqualifyRegionName( regionName ) );
 	}
 
 

@@ -19,6 +19,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.type.Type;
 
 /**
  * <ul>
@@ -31,7 +32,7 @@ import org.hibernate.proxy.LazyInitializer;
  * @author Gavin King
  * @see java.sql.Clob
  * @see java.sql.Blob
- * @see org.hibernate.type.Type
+ * @see Type
  */
 
 public final class Hibernate {

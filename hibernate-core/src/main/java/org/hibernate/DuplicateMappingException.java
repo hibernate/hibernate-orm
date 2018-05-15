@@ -18,6 +18,10 @@ public class DuplicateMappingException extends MappingException {
 	 */
 	public static enum Type {
 		/**
+		 * A duplicate entity hierarchy definition was encountered.
+		 */
+		ENTITY_HIERARCHY( "entity hierarchy" ),
+		/**
 		 * A duplicate entity definition was encountered.
 		 */
 		ENTITY( "entity" ),

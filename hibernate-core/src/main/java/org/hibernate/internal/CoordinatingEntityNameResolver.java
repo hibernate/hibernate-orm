@@ -17,6 +17,7 @@ public class CoordinatingEntityNameResolver implements EntityNameResolver {
 	private final SessionFactoryImplementor sessionFactory;
 	private final Interceptor interceptor;
 
+	@SuppressWarnings("WeakerAccess")
 	public CoordinatingEntityNameResolver(SessionFactoryImplementor sessionFactory, Interceptor interceptor) {
 		this.sessionFactory = sessionFactory;
 		this.interceptor = interceptor;

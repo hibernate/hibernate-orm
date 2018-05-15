@@ -6,19 +6,22 @@
  */
 package org.hibernate.jpamodelgen.test.collectionbasictype;
 
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
-import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.MutableMutabilityPlan;
+import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * @author Vlad Mihalcea
  */
-public class CommaDelimitedStringsJavaTypeDescriptor extends AbstractTypeDescriptor<List> {
+public class CommaDelimitedStringsJavaTypeDescriptor extends AbstractBasicJavaDescriptor<List> {
 
     public static final String DELIMITER = ",";
 
@@ -47,12 +50,17 @@ public class CommaDelimitedStringsJavaTypeDescriptor extends AbstractTypeDescrip
     }
 
     @Override
-    public <X> X unwrap(List value, Class<X> type, WrapperOptions options) {
+    public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
+        return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.VARCHAR );
+    }
+
+    @Override
+    public <X> X unwrap(List value, Class<X> type, SharedSessionContractImplementor session) {
         return (X) toString( value );
     }
 
     @Override
-    public <X> List wrap(X value, WrapperOptions options) {
+    public <X> List wrap(X value, SharedSessionContractImplementor session) {
         return fromString( (String) value );
     }
 }

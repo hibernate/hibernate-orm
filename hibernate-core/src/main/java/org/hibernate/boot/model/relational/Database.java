@@ -14,14 +14,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.naming.Identifier;
+import org.hibernate.naming.NamespaceName;
 
 /**
  * @author Steve Ebersole
@@ -30,12 +29,12 @@ public class Database {
 
 	private final Dialect dialect;
 	private final JdbcEnvironment jdbcEnvironment;
-	private final Map<Namespace.Name,Namespace> namespaceMap = new TreeMap<Namespace.Name, Namespace>();
-	private final Map<String,AuxiliaryDatabaseObject> auxiliaryDatabaseObjects = new HashMap<String,AuxiliaryDatabaseObject>();
-	private final ServiceRegistry serviceRegistry;
-	private final PhysicalNamingStrategy physicalNamingStrategy;
 
-	private Namespace implicitNamespace;
+	private MappedNamespace implicitNamespace;
+
+	private final Map<NamespaceName,MappedNamespace> namespaceMap = new TreeMap<>();
+
+	private Map<String,MappedAuxiliaryDatabaseObject> auxiliaryDatabaseObjects;
 	private List<InitCommand> initCommands;
 
 	public Database(MetadataBuildingOptions buildingOptions) {
@@ -43,13 +42,11 @@ public class Database {
 	}
 
 	public Database(MetadataBuildingOptions buildingOptions, JdbcEnvironment jdbcEnvironment) {
-		this.serviceRegistry = buildingOptions.getServiceRegistry();
 		this.jdbcEnvironment = jdbcEnvironment;
-		this.physicalNamingStrategy = buildingOptions.getPhysicalNamingStrategy();
 		this.dialect = determineDialect( buildingOptions );
 
 		this.implicitNamespace = makeNamespace(
-				new Namespace.Name(
+				new NamespaceName(
 						toIdentifier( buildingOptions.getMappingDefaults().getImplicitCatalogName() ),
 						toIdentifier( buildingOptions.getMappingDefaults().getImplicitSchemaName() )
 				)
@@ -66,11 +63,26 @@ public class Database {
 		return new H2Dialect();
 	}
 
-	private Namespace makeNamespace(Namespace.Name name) {
-		Namespace namespace;
-		namespace = new Namespace( this.getPhysicalNamingStrategy(), this.getJdbcEnvironment(), name );
+	private MappedNamespace makeNamespace(NamespaceName name) {
+		MappedNamespace namespace;
+		namespace = new MappedNamespace( name );
 		namespaceMap.put( name, namespace );
 		return namespace;
+	}
+
+	public MappedNamespace locateNamespace(Identifier catalog, Identifier schema) {
+		return locateNamespace( new NamespaceName( catalog, schema ) );
+	}
+
+	public MappedNamespace locateNamespace(NamespaceName name) {
+		if ( name.getCatalog() == null && name.getSchema() == null ) {
+			return getDefaultNamespace();
+		}
+
+		return namespaceMap.computeIfAbsent(
+				name,
+				n -> makeNamespace( name )
+		);
 	}
 
 	public Dialect getDialect() {
@@ -100,38 +112,21 @@ public class Database {
 				: jdbcEnvironment.getIdentifierHelper().toIdentifier( text );
 	}
 
-	public PhysicalNamingStrategy getPhysicalNamingStrategy() {
-		return physicalNamingStrategy;
-	}
-
-	public Iterable<Namespace> getNamespaces() {
+	public Collection<MappedNamespace> getNamespaces() {
 		return namespaceMap.values();
 	}
 
-	public Namespace getDefaultNamespace() {
+	public MappedNamespace getDefaultNamespace() {
 		return implicitNamespace;
 	}
 
-	public Namespace locateNamespace(Identifier catalogName, Identifier schemaName) {
-		if ( catalogName == null && schemaName == null ) {
-			return getDefaultNamespace();
-		}
-
-		final Namespace.Name name = new Namespace.Name( catalogName, schemaName );
-		Namespace namespace = namespaceMap.get( name );
-		if ( namespace == null ) {
-			namespace = makeNamespace( name );
-		}
-		return namespace;
-	}
-
-	public Namespace adjustDefaultNamespace(Identifier catalogName, Identifier schemaName) {
-		final Namespace.Name name = new Namespace.Name( catalogName, schemaName );
+	public MappedNamespace adjustDefaultNamespace(Identifier catalogName, Identifier schemaName) {
+		final NamespaceName name = new NamespaceName( catalogName, schemaName );
 		if ( implicitNamespace.getName().equals( name ) ) {
 			return implicitNamespace;
 		}
 
-		Namespace namespace = namespaceMap.get( name );
+		MappedNamespace namespace = namespaceMap.get( name );
 		if ( namespace == null ) {
 			namespace = makeNamespace( name );
 		}
@@ -139,34 +134,33 @@ public class Database {
 		return implicitNamespace;
 	}
 
-	public Namespace adjustDefaultNamespace(String implicitCatalogName, String implicitSchemaName) {
+	public MappedNamespace adjustDefaultNamespace(String implicitCatalogName, String implicitSchemaName) {
 		return adjustDefaultNamespace( toIdentifier( implicitCatalogName ), toIdentifier( implicitSchemaName ) );
 	}
 
-	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {
-		auxiliaryDatabaseObjects.put( auxiliaryDatabaseObject.getExportIdentifier(), auxiliaryDatabaseObject );
+	public void addAuxiliaryDatabaseObject(MappedAuxiliaryDatabaseObject auxiliaryDatabaseObject) {
+		if ( auxiliaryDatabaseObjects == null ) {
+			auxiliaryDatabaseObjects = new HashMap<>();
+		}
+		auxiliaryDatabaseObjects.put( auxiliaryDatabaseObject.getIdentifier(), auxiliaryDatabaseObject );
 	}
 
-	public Collection<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjects() {
+	public Collection<MappedAuxiliaryDatabaseObject> getAuxiliaryDatabaseObjects() {
 		return auxiliaryDatabaseObjects == null
-				? Collections.<AuxiliaryDatabaseObject>emptyList()
+				? Collections.emptyList()
 				: auxiliaryDatabaseObjects.values();
 	}
 
 	public Collection<InitCommand> getInitCommands() {
 		return initCommands == null
-				? Collections.<InitCommand>emptyList()
+				? Collections.emptyList()
 				: initCommands;
 	}
 
 	public void addInitCommand(InitCommand initCommand) {
 		if ( initCommands == null ) {
-			initCommands = new ArrayList<InitCommand>();
+			initCommands = new ArrayList<>();
 		}
 		initCommands.add( initCommand );
-	}
-
-	public ServiceRegistry getServiceRegistry() {
-		return serviceRegistry;
 	}
 }

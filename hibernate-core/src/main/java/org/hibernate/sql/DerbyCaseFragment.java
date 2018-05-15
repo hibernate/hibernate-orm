@@ -8,10 +8,16 @@ package org.hibernate.sql;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.hibernate.annotations.Remove;
+
 /**
  * @author Simon Johnston
  * @see org.hibernate.dialect.DerbyDialect
+ *
+ * @deprecated Converting to use SQL AST
  */
+@Deprecated
+@Remove
 public class DerbyCaseFragment extends CaseFragment {
 
 	/**

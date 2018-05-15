@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.property.access.MapMember;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
@@ -33,6 +34,10 @@ public class PropertyAccessMapImpl implements PropertyAccess {
 		this.strategy = strategy;
 		this.getter = new GetterImpl( propertyName );
 		this.setter = new SetterImpl( propertyName );
+
+		// todo (6.0) - this will need access to JavaTypeDescriptor for the property
+		//		to be able to answer:
+		//			1) GetterImpl#getMember()
 	}
 
 	@Override
@@ -52,9 +57,12 @@ public class PropertyAccessMapImpl implements PropertyAccess {
 
 	public static class GetterImpl implements Getter {
 		private final String propertyName;
+		private final MapMember virtualMember;
+
 
 		public GetterImpl(String propertyName) {
 			this.propertyName = propertyName;
+			this.virtualMember = new MapMember( propertyName, Object.class );
 		}
 
 		@Override
@@ -75,7 +83,8 @@ public class PropertyAccessMapImpl implements PropertyAccess {
 
 		@Override
 		public Member getMember() {
-			return null;
+			// todo (6.0) : either we should return the virtual member here, or not build it in the ctor
+			return virtualMember;
 		}
 
 		@Override

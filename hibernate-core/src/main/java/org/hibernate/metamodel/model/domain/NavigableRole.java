@@ -14,6 +14,8 @@ import org.hibernate.internal.util.StringHelper;
 /**
  * A representation of the static "Navigable" path relative to some "root entity".
  *
+ * @see org.hibernate.query.NavigablePath
+ *
  * @author Steve Ebersole
  */
 public class NavigableRole implements Serializable {
@@ -77,7 +79,8 @@ public class NavigableRole implements Serializable {
 	}
 
 	public boolean isRoot() {
-		return parent == null && StringHelper.isEmpty( navigableName );
+//		return parent == null && StringHelper.isEmpty( navigableName );
+		return parent == null;
 	}
 
 	@Override

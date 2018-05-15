@@ -197,6 +197,9 @@ public interface StatisticsImplementor extends Statistics, Service {
 
 	/**
 	 * Callback indicating execution of a natural id query
+	 *
+	 * @param rootEntityName The name of the entity defining the natural-id
+	 * @param executionTime execution time
 	 */
 	void naturalIdQueryExecuted(String rootEntityName, long executionTime);
 

@@ -6,7 +6,8 @@
  */
 package org.hibernate;
 
-import org.hibernate.type.VersionType;
+
+import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
 
 /**
  * Represents a replication strategy.
@@ -20,7 +21,7 @@ public enum ReplicationMode {
 	 */
 	EXCEPTION {
 		@Override
-		public boolean shouldOverwriteCurrentVersion(Object entity, Object currentVersion, Object newVersion, VersionType versionType) {
+		public boolean shouldOverwriteCurrentVersion(Object entity, Object currentVersion, Object newVersion, VersionDescriptor versionDescriptor) {
 			throw new AssertionFailure( "should not be called" );
 		}
 	},
@@ -29,7 +30,7 @@ public enum ReplicationMode {
 	 */
 	IGNORE {
 		@Override
-		public boolean shouldOverwriteCurrentVersion(Object entity, Object currentVersion, Object newVersion, VersionType versionType) {
+		public boolean shouldOverwriteCurrentVersion(Object entity, Object currentVersion, Object newVersion, VersionDescriptor versionDescriptor) {
 			return false;
 		}
 	},
@@ -38,7 +39,7 @@ public enum ReplicationMode {
 	 */
 	OVERWRITE {
 		@Override
-		public boolean shouldOverwriteCurrentVersion(Object entity, Object currentVersion, Object newVersion, VersionType versionType) {
+		public boolean shouldOverwriteCurrentVersion(Object entity, Object currentVersion, Object newVersion, VersionDescriptor versionDescriptor) {
 			return true;
 		}
 	},
@@ -48,22 +49,17 @@ public enum ReplicationMode {
 	LATEST_VERSION {
 		@Override
 		@SuppressWarnings("unchecked")
-		public boolean shouldOverwriteCurrentVersion(Object entity, Object currentVersion, Object newVersion, VersionType versionType) {
+		public boolean shouldOverwriteCurrentVersion(Object entity, Object currentVersion, Object newVersion, VersionDescriptor versionDescriptor) {
 			// always overwrite non-versioned data (because we don't know which is newer)
-			return versionType == null || versionType.getComparator().compare( currentVersion, newVersion ) <= 0;
+			return versionDescriptor == null || versionDescriptor.getJavaTypeDescriptor().getComparator().compare( currentVersion, newVersion ) <= 0;
 		}
 	};
 
 	/**
 	 * Determine whether the mode dictates that the data being replicated should overwrite the data found.
 	 *
-	 * @param entity The entity being replicated
-	 * @param currentVersion The version currently on the target database table.
-	 * @param newVersion The replicating version
-	 * @param versionType The version type
-	 *
 	 * @return {@code true} indicates the data should be overwritten; {@code false} indicates it should not.
 	 */
-	public abstract boolean shouldOverwriteCurrentVersion(Object entity, Object currentVersion, Object newVersion, VersionType versionType);
+	public abstract boolean shouldOverwriteCurrentVersion(Object entity, Object currentVersion, Object newVersion, VersionDescriptor versionDescriptor);
 
 }

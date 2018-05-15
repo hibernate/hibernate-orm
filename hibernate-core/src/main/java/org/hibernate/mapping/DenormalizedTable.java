@@ -7,44 +7,56 @@
 package org.hibernate.mapping;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.internal.util.collections.JoinedIterator;
+import org.hibernate.boot.model.relational.DenormalizedMappedTable;
+import org.hibernate.boot.model.relational.MappedForeignKey;
+import org.hibernate.boot.model.relational.MappedIndex;
+import org.hibernate.boot.model.relational.MappedNamespace;
+import org.hibernate.boot.model.relational.MappedPrimaryKey;
+import org.hibernate.boot.model.relational.MappedTable;
+import org.hibernate.boot.model.relational.MappedUniqueKey;
+import org.hibernate.internal.util.JavaTypeHelper;
+import org.hibernate.naming.Identifier;
 
 /**
  * @author Gavin King
  */
 @SuppressWarnings("unchecked")
-public class DenormalizedTable extends Table {
+public class DenormalizedTable extends Table implements DenormalizedMappedTable<Column> {
+	private final MappedTable<Column> includedTable;
 
-	private final Table includedTable;
-
-	public DenormalizedTable(Table includedTable) {
-		this.includedTable = includedTable;
-		includedTable.setHasDenormalizedTables();
-	}
-
-	public DenormalizedTable(Namespace namespace, Identifier physicalTableName, boolean isAbstract, Table includedTable) {
-		super( namespace, physicalTableName, isAbstract );
+	public DenormalizedTable(
+			MappedNamespace namespace,
+			Identifier tableName,
+			boolean isAbstract,
+			MappedTable includedTable) {
+		super( namespace, tableName, isAbstract );
 		this.includedTable = includedTable;
 		includedTable.setHasDenormalizedTables();
 	}
 
 	public DenormalizedTable(
-			Namespace namespace,
-			Identifier physicalTableName,
+			MappedNamespace namespace,
+			Identifier tableName,
 			String subselectFragment,
 			boolean isAbstract,
-			Table includedTable) {
-		super( namespace, physicalTableName, subselectFragment, isAbstract );
+			MappedTable includedTable) {
+		super( namespace, tableName, subselectFragment, isAbstract );
 		this.includedTable = includedTable;
 		includedTable.setHasDenormalizedTables();
 	}
 
-	public DenormalizedTable(Namespace namespace, String subselect, boolean isAbstract, Table includedTable) {
+	public DenormalizedTable(
+			MappedNamespace namespace,
+			String subselect,
+			boolean isAbstract,
+			MappedTable includedTable) {
 		super( namespace, subselect, isAbstract );
 		this.includedTable = includedTable;
 		includedTable.setHasDenormalizedTables();
@@ -53,9 +65,7 @@ public class DenormalizedTable extends Table {
 	@Override
 	public void createForeignKeys() {
 		includedTable.createForeignKeys();
-		Iterator iter = includedTable.getForeignKeyIterator();
-		while ( iter.hasNext() ) {
-			ForeignKey fk = (ForeignKey) iter.next();
+		for ( MappedForeignKey fk : includedTable.getForeignKeys() ) {
 			createForeignKey(
 					Constraint.generateName(
 							fk.generatedConstraintNamePrefix(),
@@ -81,6 +91,7 @@ public class DenormalizedTable extends Table {
 		}
 	}
 
+	@Override
 	public Column getColumn(Identifier name) {
 		Column superColumn = super.getColumn( name );
 		if ( superColumn != null ) {
@@ -93,10 +104,15 @@ public class DenormalizedTable extends Table {
 
 	@Override
 	public Iterator getColumnIterator() {
-		return new JoinedIterator(
-				includedTable.getColumnIterator(),
-				super.getColumnIterator()
-		);
+		return getMappedColumns().iterator();
+	}
+
+	@Override
+	public Set<Column> getMappedColumns() {
+		Set<Column> mappedColumns = new HashSet<>();
+		mappedColumns.addAll( includedTable.getMappedColumns() );
+		mappedColumns.addAll( super.getMappedColumns() );
+		return Collections.unmodifiableSet( mappedColumns );
 	}
 
 	@Override
@@ -105,39 +121,43 @@ public class DenormalizedTable extends Table {
 	}
 
 	@Override
-	public PrimaryKey getPrimaryKey() {
+	public MappedPrimaryKey getPrimaryKey() {
 		return includedTable.getPrimaryKey();
 	}
 
 	@Override
 	public Iterator getUniqueKeyIterator() {
-		Iterator iter = includedTable.getUniqueKeyIterator();
-		while ( iter.hasNext() ) {
-			UniqueKey uk = (UniqueKey) iter.next();
-			createUniqueKey( uk.getColumns() );
-		}
-		return getUniqueKeys().values().iterator();
+		return getUniqueKeys().iterator();
+	}
+
+	@Override
+	public Collection<MappedUniqueKey> getUniqueKeys() {
+		includedTable.getUniqueKeys().forEach( uniqueKey -> createUniqueKey( JavaTypeHelper.cast( uniqueKey.getColumns() ) ) );
+		return super.getUniqueKeys();
 	}
 
 	@Override
 	public Iterator getIndexIterator() {
-		List indexes = new ArrayList();
-		Iterator iter = includedTable.getIndexIterator();
-		while ( iter.hasNext() ) {
-			Index parentIndex = (Index) iter.next();
-			Index index = new Index();
-			index.setName( getName() + parentIndex.getName() );
-			index.setTable( this );
-			index.addColumns( parentIndex.getColumnIterator() );
-			indexes.add( index );
-		}
-		return new JoinedIterator(
-				indexes.iterator(),
-				super.getIndexIterator()
-		);
+		return getIndexes().iterator();
 	}
 
+	@Override
+	public Collection<MappedIndex> getIndexes() {
+		final List<MappedIndex> indexes = new ArrayList<>(  );
+		indexes.addAll(includedTable.getIndexes()  );
+		indexes.addAll( super.getIndexes() );
+		return indexes;
+	}
+
+	/**
+	 * @deprecated since 6.0, use {@link #getIncludedMappedTable()}.
+	 */
+	@Deprecated
 	public Table getIncludedTable() {
+		return (Table) getIncludedMappedTable();
+	}
+
+	public MappedTable getIncludedMappedTable() {
 		return includedTable;
 	}
 }

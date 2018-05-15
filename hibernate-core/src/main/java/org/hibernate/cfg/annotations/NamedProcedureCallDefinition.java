@@ -8,27 +8,29 @@ package org.hibernate.cfg.annotations;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import javax.persistence.FlushModeType;
 import javax.persistence.NamedStoredProcedureQuery;
 import javax.persistence.ParameterMode;
 import javax.persistence.StoredProcedureParameter;
 
+import org.hibernate.CacheMode;
+import org.hibernate.FlushMode;
+import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.ResultSetMappingDefinition;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.procedure.ProcedureCallMemento;
-import org.hibernate.procedure.internal.ProcedureCallMementoImpl;
+import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.jpa.QueryHints;
+import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
+import org.hibernate.procedure.internal.ProcedureParameterImpl;
 import org.hibernate.procedure.internal.Util;
 import org.hibernate.procedure.spi.ParameterStrategy;
-
-import static org.hibernate.procedure.internal.ProcedureCallMementoImpl.ParameterMemento;
+import org.hibernate.query.named.internal.NamedCallableQueryMementoImpl;
+import org.hibernate.query.named.spi.NamedCallableQueryMemento;
+import org.hibernate.query.named.spi.ParameterMemento;
 
 /**
  * Holds all the information needed from a named procedure call declaration in order to create a
@@ -76,72 +78,84 @@ public class NamedProcedureCallDefinition {
 		return procedureName;
 	}
 
-	public ProcedureCallMemento toMemento(
-			final SessionFactoryImpl sessionFactory,
-			final Map<String,ResultSetMappingDefinition> resultSetMappingDefinitions) {
-		final List<NativeSQLQueryReturn> collectedQueryReturns = new ArrayList<NativeSQLQueryReturn>();
-		final Set<String> collectedQuerySpaces = new HashSet<String>();
+	public NamedCallableQueryMemento toMemento(SessionFactoryImplementor sessionFactory) {
 
-		final boolean specifiesResultClasses = resultClasses != null && resultClasses.length > 0;
-		final boolean specifiesResultSetMappings = resultSetMappings != null && resultSetMappings.length > 0;
+		final boolean isCacheable = isCacheable( hints, sessionFactory );
 
-		if ( specifiesResultClasses ) {
-			Util.resolveResultClasses(
-					new Util.ResultClassesResolutionContext() {
-						@Override
-						public SessionFactoryImplementor getSessionFactory() {
-							return sessionFactory;
-						}
-
-						@Override
-						public void addQueryReturns(NativeSQLQueryReturn... queryReturns) {
-							Collections.addAll( collectedQueryReturns, queryReturns );
-						}
-
-						@Override
-						public void addQuerySpaces(String... spaces) {
-							Collections.addAll( collectedQuerySpaces, spaces );
-						}
-					},
-					resultClasses
-			);
-		}
-		else if ( specifiesResultSetMappings ) {
-			Util.resolveResultSetMappings(
-					new Util.ResultSetMappingResolutionContext() {
-						@Override
-						public SessionFactoryImplementor getSessionFactory() {
-							return sessionFactory;
-						}
-
-						@Override
-						public ResultSetMappingDefinition findResultSetMapping(String name) {
-							return resultSetMappingDefinitions.get( name );
-						}
-
-						@Override
-						public void addQueryReturns(NativeSQLQueryReturn... queryReturns) {
-							Collections.addAll( collectedQueryReturns, queryReturns );
-						}
-
-						@Override
-						public void addQuerySpaces(String... spaces) {
-							Collections.addAll( collectedQuerySpaces, spaces );
-						}
-					},
-					resultSetMappings
-			);
-		}
-
-		return new ProcedureCallMementoImpl(
+		return new NamedCallableQueryMementoImpl(
+				registeredName,
 				procedureName,
-				collectedQueryReturns.toArray( new NativeSQLQueryReturn[ collectedQueryReturns.size() ] ),
 				parameterDefinitions.getParameterStrategy(),
 				parameterDefinitions.toMementos( sessionFactory ),
-				collectedQuerySpaces,
-				hints
+				resultClasses,
+				resultSetMappings,
+				Collections.emptySet(),
+				isCacheable,
+				isCacheable ? determineCacheRegion( hints, sessionFactory ) : null,
+				isCacheable ? determineCacheMode( hints, sessionFactory ) : null,
+				determineFlushMode( hints, sessionFactory ),
+				ConfigurationHelper.getBoolean( QueryHints.HINT_READONLY, hints, false ),
+				LockOptions.NONE,
+				ConfigurationHelper.getInt(
+						QueryHints.SPEC_HINT_TIMEOUT,
+						hints,
+						ConfigurationHelper.getInt( QueryHints.HINT_TIMEOUT, hints, 0 ) * 1000
+				) / 1000,
+				0,
+				null,
+				Util.copy( hints )
 		);
 	}
+
+	private boolean isCacheable(Map<String, Object> hints, SessionFactoryImplementor sessionFactory) {
+		return sessionFactory.getSessionFactoryOptions().isQueryCacheEnabled()
+				&& ConfigurationHelper.getBoolean( QueryHints.HINT_CACHEABLE, hints, false );
+	}
+
+	private String determineCacheRegion(Map<String, Object> hints, SessionFactoryImplementor sessionFactory) {
+		assert sessionFactory.getSessionFactoryOptions().isQueryCacheEnabled();
+		return ConfigurationHelper.getString( QueryHints.HINT_CACHE_REGION, hints, null );
+	}
+
+	private CacheMode determineCacheMode(Map<String, Object> hints, SessionFactoryImplementor sessionFactory) {
+		assert sessionFactory.getSessionFactoryOptions().isQueryCacheEnabled();
+		final Object setting = hints.get( QueryHints.HINT_CACHE_MODE );
+
+		if ( setting != null ) {
+			if ( CacheMode.class.isInstance( setting ) ) {
+				return (CacheMode) setting;
+			}
+
+			final CacheMode cacheMode = CacheMode.interpretExternalSetting( setting.toString() );
+			if ( cacheMode != null ) {
+				return cacheMode;
+			}
+		}
+
+		return CacheMode.NORMAL;
+	}
+
+	private FlushMode determineFlushMode(Map<String, Object> hints, SessionFactoryImplementor sessionFactory) {
+		final Object setting = hints.get( QueryHints.HINT_FLUSH_MODE );
+
+		if ( setting != null ) {
+			if ( FlushMode.class.isInstance( setting ) ) {
+				return (FlushMode) setting;
+			}
+
+			if ( FlushModeType.class.isInstance( setting ) ) {
+				return FlushModeTypeHelper.getFlushMode( FlushModeType.class.cast( setting ) );
+			}
+
+			final FlushMode mode = FlushMode.interpretExternalSetting( setting.toString() );
+			if ( mode != null ) {
+				return mode;
+			}
+		}
+
+		return FlushMode.AUTO;
+	}
+
 
 	static class ParameterDefinitions {
 		private final ParameterStrategy parameterStrategy;
@@ -174,10 +188,10 @@ public class NamedProcedureCallDefinition {
 			return parameterStrategy;
 		}
 
-		public List<ParameterMemento> toMementos(SessionFactoryImpl sessionFactory) {
-			final List<ParameterMemento> mementos = new ArrayList<ParameterMemento>();
+		public List<ParameterMemento> toMementos(SessionFactoryImplementor sessionFactory) {
+			final List<ParameterMemento> mementos = new ArrayList<>();
 			for ( ParameterDefinition definition : parameterDefinitions ) {
-				mementos.add(definition.toMemento( sessionFactory ));
+				mementos.add( definition.toMemento( sessionFactory ) );
 			}
 			return mementos;
 		}
@@ -231,20 +245,20 @@ public class NamedProcedureCallDefinition {
 			this.explicitPassNullSetting = explicitPassNullSetting;
 		}
 
-		@SuppressWarnings("UnnecessaryUnboxing")
-		public ParameterMemento toMemento(SessionFactoryImpl sessionFactory) {
+		@SuppressWarnings({"UnnecessaryUnboxing", "unchecked"})
+		public ParameterMemento toMemento(SessionFactoryImplementor sessionFactory) {
 			final boolean initialPassNullSetting = explicitPassNullSetting != null
 					? explicitPassNullSetting.booleanValue()
 					: sessionFactory.getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
 
-			return new ParameterMemento(
-					position,
-					name,
-					parameterMode,
-					type,
-					sessionFactory.getTypeResolver().heuristicType( type.getName() ),
-					initialPassNullSetting
-			);
+			return session -> {
+				if ( name != null ) {
+					return new ProcedureParameterImpl( name, parameterMode, type, null, initialPassNullSetting );
+				}
+				else {
+					return new ProcedureParameterImpl( position, parameterMode, type, null, initialPassNullSetting );
+				}
+			};
 		}
 	}
 

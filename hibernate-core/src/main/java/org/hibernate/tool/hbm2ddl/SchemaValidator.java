@@ -9,12 +9,9 @@ package org.hibernate.tool.hbm2ddl;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
@@ -29,8 +26,9 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tool.schema.internal.ExceptionHandlerHaltImpl;
+import org.hibernate.tool.schema.internal.Helper;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
@@ -44,25 +42,24 @@ import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 public class SchemaValidator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SchemaValidator.class );
 
-	public void validate(Metadata metadata) {
-		validate( metadata, ( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry() );
+	protected final DatabaseModel databaseModel;
+	protected final ServiceRegistry serviceRegistry;
+
+	public SchemaValidator(DatabaseModel databaseModel, ServiceRegistry serviceRegistry) {
+		this.databaseModel = databaseModel;
+		this.serviceRegistry = serviceRegistry;
 	}
 
 	@SuppressWarnings("unchecked")
-	public void validate(Metadata metadata, ServiceRegistry serviceRegistry) {
+	public void validate() {
 		LOG.runningSchemaValidator();
 
-		Map config = new HashMap();
-		config.putAll( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
-
+		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
 		final SchemaManagementTool tool = serviceRegistry.getService( SchemaManagementTool.class );
 
-		final ExecutionOptions executionOptions = SchemaManagementToolCoordinator.buildExecutionOptions(
-				config,
-				ExceptionHandlerHaltImpl.INSTANCE
-		);
+		final ExecutionOptions executionOptions = SchemaManagementToolCoordinator.buildExecutionOptions( cfgService.getSettings() );
 
-		tool.getSchemaValidator( config ).doValidation( metadata, executionOptions );
+		tool.getSchemaValidator( databaseModel, cfgService.getSettings() ).doValidation( executionOptions );
 	}
 
 	public static void main(String[] args) {
@@ -72,7 +69,7 @@ public class SchemaValidator {
 
 			try {
 				final MetadataImplementor metadata = buildMetadata( parsedArgs, serviceRegistry );
-				new SchemaValidator().validate( metadata, serviceRegistry );
+				new SchemaValidator( Helper.buildDatabaseModel( metadata ), serviceRegistry ).validate();
 			}
 			finally {
 				StandardServiceRegistryBuilder.destroy( serviceRegistry );
@@ -173,26 +170,5 @@ public class SchemaValidator {
 
 		return (MetadataImplementor) metadataBuilder.build();
 
-	}
-
-	/**
-	 * Intended for test usage only.  Builds a Metadata using the same algorithm  as
-	 * {@link #main}
-	 *
-	 * @param args The "command line args"
-	 *
-	 * @return The built Metadata
-	 *
-	 * @throws Exception Problems building the Metadata
-	 */
-	public static MetadataImplementor buildMetadataFromMainArgs(String[] args) throws Exception {
-		final CommandLineArgs commandLineArgs = CommandLineArgs.parseCommandLineArgs( args );
-		StandardServiceRegistry serviceRegistry = buildStandardServiceRegistry( commandLineArgs );
-		try {
-			return buildMetadata( commandLineArgs, serviceRegistry );
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( serviceRegistry );
-		}
 	}
 }

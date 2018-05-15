@@ -40,10 +40,11 @@ public interface SubGraphImplementor<J> extends SubGraph<J>, GraphImplementor<J>
 	@Override
 	<AJ> AttributeNodeImplementor<AJ> addAttributeNode(Attribute<? extends J, AJ> attribute);
 
+	// todo (6.0) - Should this take Attribute as a parameter type to be consistent with Graph?
 	@Override
-	default <AJ> SubGraphImplementor<? extends AJ> addKeySubGraph(
-			PersistentAttributeDescriptor<? extends J, AJ> attribute, Class<? extends AJ> subType)
-			throws CannotContainSubGraphException {
+	default <AJ> SubGraphImplementor<AJ> addKeySubGraph(
+			PersistentAttributeDescriptor<? extends J, AJ> attribute,
+			Class<? extends AJ> subType) throws CannotContainSubGraphException {
 		return null;
 	}
 }

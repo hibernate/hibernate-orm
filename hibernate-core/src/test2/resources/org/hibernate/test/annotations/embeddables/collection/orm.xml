@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="2.0">
+    <package>org.hibernate.test.annotations.embeddables.collection.xml</package>
+    <entity class="Person">
+        <attributes>
+            <id name="id">
+                <generated-value strategy="AUTO"/>
+            </id>
+            <version name="version"/>
+            <element-collection name="contacts">
+                <collection-table name="CONTACT_INFO">
+                    <join-column name="person_id"/>
+                </collection-table>
+            </element-collection>
+        </attributes>
+    </entity>
+    <embeddable class="ContactInformation">
+        <attributes>
+            <basic name="name"/>
+            <one-to-many name="contactType">
+                <join-table name="CONTACT_TYPE">
+                    <join-column name="id"/>
+                    <inverse-join-column name="id"/>
+                </join-table>
+            </one-to-many>
+        </attributes>
+    </embeddable>
+    <entity class="ContactType">
+        <attributes>
+            <id name="id">
+                <generated-value strategy="AUTO"/>
+            </id>
+            <version name="version"/>
+            <basic name="type"/>
+        </attributes>
+    </entity>
+</entity-mappings>

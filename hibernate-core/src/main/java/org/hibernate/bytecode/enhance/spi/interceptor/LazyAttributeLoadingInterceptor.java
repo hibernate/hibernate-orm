@@ -7,7 +7,6 @@
 
 package org.hibernate.bytecode.enhance.spi.interceptor;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -23,7 +22,7 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -72,15 +71,16 @@ public class LazyAttributeLoadingInterceptor
 		return loadAttribute( target, attributeName );
 	}
 
+	@SuppressWarnings("unchecked")
 	protected Object loadAttribute(final Object target, final String attributeName) {
 		return new Helper( this ).performWork(
 				new LazyInitializationWork() {
 					@Override
 					public Object doWork(SharedSessionContractImplementor session, boolean isTemporarySession) {
-						final EntityPersister persister = session.getFactory().getMetamodel().entityPersister( getEntityName() );
+						final EntityTypeDescriptor entityDescriptor = session.getFactory().getMetamodel().findEntityDescriptor( getEntityName() );
 
 						if ( isTemporarySession ) {
-							final Serializable id = persister.getIdentifier( target, null );
+							final Object id = entityDescriptor.getIdentifier( target, null );
 
 							// Add an entry for this entity in the PC of the temp Session
 							// NOTE : a few arguments that would be nice to pass along here...
@@ -92,16 +92,16 @@ public class LazyAttributeLoadingInterceptor
 									target,
 									Status.READ_ONLY,
 									loadedState,
-									session.generateEntityKey( id, persister ),
-									persister.getVersion( target ),
+									session.generateEntityKey( id, entityDescriptor ),
+									entityDescriptor.getVersion( target ),
 									LockMode.NONE,
 									existsInDb,
-									persister,
+									entityDescriptor,
 									true
 							);
 						}
 
-						final LazyPropertyInitializer initializer = (LazyPropertyInitializer) persister;
+						final LazyPropertyInitializer initializer = (LazyPropertyInitializer) entityDescriptor;
 						final Object loadedValue = initializer.initializeLazyProperty(
 								attributeName,
 								target,
@@ -325,14 +325,14 @@ public class LazyAttributeLoadingInterceptor
 			return;
 		}
 		if ( initializedLazyFields == null ) {
-			initializedLazyFields = new HashSet<String>();
+			initializedLazyFields = new HashSet<>();
 		}
 		initializedLazyFields.add( name );
 	}
 
 	@Override
 	public Set<String> getInitializedLazyAttributeNames() {
-		return initializedLazyFields == null ? Collections.<String>emptySet() : initializedLazyFields;
+		return initializedLazyFields == null ? Collections.emptySet() : initializedLazyFields;
 	}
 
 }

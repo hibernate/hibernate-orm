@@ -7,12 +7,17 @@
 package org.hibernate.sql;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.annotations.Remove;
 
 /**
  * An ANSI-style join.
  *
  * @author Gavin King
+ *
+ * @deprecated Converting to use SQL AST
  */
+@Deprecated
+@Remove
 public class ANSIJoinFragment extends JoinFragment {
 	private StringBuilder buffer = new StringBuilder();
 	private StringBuilder conditions = new StringBuilder();

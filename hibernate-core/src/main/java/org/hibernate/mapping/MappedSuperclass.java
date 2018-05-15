@@ -5,9 +5,24 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.mapping;
-import java.util.ArrayList;
+
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
+import javax.persistence.metamodel.Type;
+
+import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.EmbeddedValueMapping;
+import org.hibernate.boot.model.domain.EntityMappingHierarchy;
+import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
+import org.hibernate.boot.model.domain.MappedJoin;
+import org.hibernate.boot.model.domain.MappedSuperclassJavaTypeMapping;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.boot.model.domain.internal.AbstractMappedSuperclassMapping;
+import org.hibernate.boot.model.relational.MappedTable;
+import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
 
 /**
  * Represents a @MappedSuperclass.
@@ -26,19 +41,19 @@ import java.util.List;
  *
  * @author Emmanuel Bernard
  */
-public class MappedSuperclass {
-	private final MappedSuperclass superMappedSuperclass;
-	private final PersistentClass superPersistentClass;
-	private final List declaredProperties;
-	private Class mappedClass;
-	private Property identifierProperty;
-	private Property version;
-	private Component identifierMapper;
+public class MappedSuperclass extends AbstractMappedSuperclassMapping implements PropertyContainer {
+	public MappedSuperclass(
+			EntityMappingHierarchy entityMappingHierarchy,
+			IdentifiableTypeMapping superIdentifiableTypeMapping,
+			MappedSuperclassJavaTypeMapping javaTypeMapping) {
+		super( entityMappingHierarchy );
+		setJavaTypeMapping( javaTypeMapping );
+		setSuperManagedType( superIdentifiableTypeMapping );
+	}
 
-	public MappedSuperclass(MappedSuperclass superMappedSuperclass, PersistentClass superPersistentClass) {
-		this.superMappedSuperclass = superMappedSuperclass;
-		this.superPersistentClass = superPersistentClass;
-		this.declaredProperties = new ArrayList();
+	@Override
+	public RepresentationMode getExplicitRepresentationMode() {
+		return getEntityMappingHierarchy().getExplicitRepresentationMode();
 	}
 
 	/**
@@ -49,15 +64,23 @@ public class MappedSuperclass {
 	 * @return the super MappedSuperclass
 	 */
 	public MappedSuperclass getSuperMappedSuperclass() {
-		return superMappedSuperclass;
+		return (MappedSuperclass) getSuperManagedTypeMappingOfType( Type.PersistenceType.MAPPED_SUPERCLASS );
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #hasSingleIdentifierAttributeMapping()}.
+	 */
+	@Deprecated
 	public boolean hasIdentifierProperty() {
-		return getIdentifierProperty() != null;
+		return hasSingleIdentifierAttributeMapping();
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #hasVersionAttributeMapping()}.
+	 */
+	@Deprecated
 	public boolean isVersioned() {
-		return getVersion() != null;
+		return hasVersionAttributeMapping();
 	}
 
 	/**
@@ -67,101 +90,96 @@ public class MappedSuperclass {
 	 * @return the PersistentClass of the superclass
 	 */
 	public PersistentClass getSuperPersistentClass() {
-		return superPersistentClass;
+		return (PersistentClass) getSuperManagedTypeMappingOfType( Type.PersistenceType.ENTITY );
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getDeclaredPersistentAttributes()}.
+	 */
+	@Deprecated
 	public Iterator getDeclaredPropertyIterator() {
-		return declaredProperties.iterator();
+		return getDeclaredProperties().iterator();
 	}
 
+	/**
+	 * @param p the declared property.
+	 * @deprecated since 6.0, use {@link #addDeclaredPersistentAttribute(PersistentAttributeMapping)}.
+	 */
+	@Deprecated
 	public void addDeclaredProperty(Property p) {
-		//Do not add duplicate properties
-		//TODO is it efficient enough?
-		String name = p.getName();
-		Iterator it = declaredProperties.iterator();
-		while (it.hasNext()) {
-			if ( name.equals( ((Property)it.next()).getName() ) ) {
-				return;
-			}
-		}
-		declaredProperties.add(p);
+		addDeclaredPersistentAttribute( p );
 	}
 
-	public Class getMappedClass() {
-		return mappedClass;
-	}
-
-	public void setMappedClass(Class mappedClass) {
-		this.mappedClass = mappedClass;
-	}
-
+	/**
+	 * @deprecated since 6.0, use {@link #getIdentifierAttributeMapping()}.
+	 */
+	@Deprecated
 	public Property getIdentifierProperty() {
-		//get direct identifiermapper or the one from the super mappedSuperclass
-		// or the one from the super persistentClass
-		Property propagatedIdentifierProp = identifierProperty;
-		if ( propagatedIdentifierProp == null ) {
-			if ( superMappedSuperclass != null ) {
-				propagatedIdentifierProp = superMappedSuperclass.getIdentifierProperty();
-			}
-			if (propagatedIdentifierProp == null && superPersistentClass != null){
-				propagatedIdentifierProp = superPersistentClass.getIdentifierProperty();
-			}
-		}
-		return propagatedIdentifierProp;
+		return (Property) getIdentifierAttributeMapping();
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getDeclaredIdentifierAttributeMapping()}.
+	 */
+	@Deprecated
 	public Property getDeclaredIdentifierProperty() {
-		return identifierProperty;
+		return (Property) getDeclaredIdentifierAttributeMapping();
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #setDeclaredIdentifierAttributeMapping(PersistentAttributeMapping)}.
+	 */
+	@Deprecated
 	public void setDeclaredIdentifierProperty(Property prop) {
-		this.identifierProperty = prop;
+		setDeclaredIdentifierAttributeMapping( prop );
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getVersionAttributeMapping()}.
+	 */
+	@Deprecated
 	public Property getVersion() {
-		//get direct version or the one from the super mappedSuperclass
-		// or the one from the super persistentClass
-		Property propagatedVersion = version;
-		if (propagatedVersion == null) {
-			if ( superMappedSuperclass != null ) {
-				propagatedVersion = superMappedSuperclass.getVersion();
-			}
-			if (propagatedVersion == null && superPersistentClass != null){
-				propagatedVersion = superPersistentClass.getVersion();
-			}
-		}
-		return propagatedVersion;
+		return (Property) getVersionAttributeMapping();
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getDeclaredVersionAttributeMapping()}.
+	 */
+	@Deprecated
 	public Property getDeclaredVersion() {
-		return version;
+		return (Property) getDeclaredVersionAttributeMapping();
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #setDeclaredVersionAttributeMapping(PersistentAttributeMapping)}.
+	 */
+	@Deprecated
 	public void setDeclaredVersion(Property prop) {
-		this.version = prop;
+		setDeclaredVersionAttributeMapping( prop );
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getEmbeddedIdentifierAttributeMapping()}.
+	 */
+	@Deprecated
 	public Component getIdentifierMapper() {
-		//get direct identifiermapper or the one from the super mappedSuperclass
-		// or the one from the super persistentClass
-		Component propagatedMapper = identifierMapper;
-		if ( propagatedMapper == null ) {
-			if ( superMappedSuperclass != null ) {
-				propagatedMapper = superMappedSuperclass.getIdentifierMapper();
-			}
-			if (propagatedMapper == null && superPersistentClass != null){
-				propagatedMapper = superPersistentClass.getIdentifierMapper();
-			}
-		}
-		return propagatedMapper;
+		return (Component) getEmbeddedIdentifierAttributeMapping();
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getDeclaredEmbeddedIdentifierAttributeMapping()}.
+	 */
+	@Deprecated
 	public Component getDeclaredIdentifierMapper() {
-		return identifierMapper;
+		return (Component) getDeclaredEmbeddedIdentifierAttributeMapping();
 	}
 
-	public void setDeclaredIdentifierMapper(Component identifierMapper) {
-		this.identifierMapper = identifierMapper;
+	/**
+	 * @deprecated since 6.0, use {@link #setDeclaredIdentifierEmbeddedValueMapping(EmbeddedValueMapping)}.
+	 */
+	@Deprecated
+	public void setDeclaredIdentifierMapper(EmbeddedValueMapping identifierMapper) {
+		setDeclaredIdentifierEmbeddedValueMapping( identifierMapper );
 	}
 
 	/**
@@ -170,18 +188,12 @@ public class MappedSuperclass {
 	 * @param name The property name to check
 	 *
 	 * @return {@code true} if a property with that name exists; {@code false} if not
+	 *
+	 * @deprecated since 6.0, use {@link #hasDeclaredPersistentAttribute(String)}.
 	 */
-	@SuppressWarnings("WeakerAccess")
+	@Deprecated
 	public boolean hasProperty(String name) {
-		final Iterator itr = getDeclaredPropertyIterator();
-		while ( itr.hasNext() ) {
-			final Property property = (Property) itr.next();
-			if ( property.getName().equals( name ) ) {
-				return true;
-			}
-		}
-
-		return false;
+		return hasDeclaredPersistentAttribute( name );
 	}
 
 	/**
@@ -191,23 +203,47 @@ public class MappedSuperclass {
 	 * @param name The property name to check
 	 *
 	 * @return {@code true} if a property with that name exists; {@code false} if not
+	 * @deprecated since 6.0, use {@link #hasPersistentAttribute(String)}.
 	 */
-	@SuppressWarnings({"WeakerAccess", "RedundantIfStatement"})
+	@Deprecated
 	public boolean isPropertyDefinedInHierarchy(String name) {
-		if ( hasProperty( name ) ) {
-			return true;
-		}
+		return hasPersistentAttribute( name );
+	}
 
-		if ( getSuperMappedSuperclass() != null
-				&& getSuperMappedSuperclass().isPropertyDefinedInHierarchy( name ) ) {
-			return true;
+	/**
+	 * @deprecated since 6.0, use {@link #getSuperManagedTypeMapping()}.
+	 */
+	@Override
+	@Deprecated
+	public PropertyContainer getSuperPropertyContainer() {
+		MappedSuperclass superMappedSuperclass = getSuperMappedSuperclass();
+		if ( superMappedSuperclass != null ) {
+			return superMappedSuperclass;
 		}
+		return getSuperPersistentClass();
+	}
 
-		if ( getSuperPersistentClass() != null
-				&& getSuperPersistentClass().isPropertyDefinedInHierarchy( name ) ) {
-			return true;
-		}
+	/**
+	 * @deprecated since 6.0, use {@link #getDeclaredPersistentAttributes()}.
+	 */
+	@Override
+	@Deprecated
+	public List<Property> getDeclaredProperties() {
+		return getDeclaredPersistentAttributes().stream().map( e -> (Property) e ).collect( Collectors.toList() );
+	}
 
-		return false;
+	@Override
+	public int nextSubclassId() {
+		throw new MappingException( "This should not be called on a MappedSuperclass" );
+	}
+
+	@Override
+	public Collection<MappedJoin> getMappedJoins() {
+		throw new NotYetImplementedException( "Mapped superclass secondary tables is not implemented yet" );
+	}
+
+	@Override
+	public MappedTable getMappedTable() {
+		throw new MappingException( "This should not be called on a MappedSuperclass" );
 	}
 }

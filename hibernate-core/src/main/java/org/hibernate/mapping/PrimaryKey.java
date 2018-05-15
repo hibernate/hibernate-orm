@@ -5,10 +5,11 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.mapping;
-import java.util.Iterator;
 
-import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.StringHelper;
+import java.util.Collection;
+
+import org.hibernate.boot.model.relational.MappedPrimaryKey;
+import org.hibernate.boot.model.relational.MappedTable;
 
 import org.jboss.logging.Logger;
 
@@ -18,77 +19,51 @@ import org.jboss.logging.Logger;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class PrimaryKey extends Constraint {
+public class PrimaryKey extends Constraint implements MappedPrimaryKey {
 	private static final Logger log = Logger.getLogger( PrimaryKey.class );
 
-	public PrimaryKey(Table table){
+	public PrimaryKey(MappedTable table){
 		setTable( table );
 	}
 
 	@Override
 	public void addColumn(Column column) {
-		final Iterator<Column> columnIterator = getTable().getColumnIterator();
-		while ( columnIterator.hasNext() ) {
-			final Column next = columnIterator.next();
-			if ( next.getCanonicalName().equals( column.getCanonicalName() ) ) {
-				next.setNullable( false );
-				log.debugf(
-						"Forcing column [%s] to be non-null as it is part of the primary key for table [%s]",
-						column.getCanonicalName(),
-						getTableNameForLogging( column )
-				);
-			}
-		}
+		final Collection<Column> columns = getMappedTable().getMappedColumns();
+		columns.stream().filter( c -> c.getCanonicalName().equals( column.getCanonicalName() ) )
+				.forEach( c -> {
+					c.setNullable( false );
+					log.debugf(
+							"Forcing column [%s] to be non-null as it is part of the primary key for table [%s]",
+							column.getCanonicalName(),
+							getTableNameForLogging( column )
+					);
+				} );
 		super.addColumn( column );
 	}
 
 	protected String getTableNameForLogging(Column column) {
-		if ( getTable() != null ) {
-			if ( getTable().getNameIdentifier() != null ) {
-				return getTable().getNameIdentifier().getCanonicalName();
+		if ( getMappedTable() != null ) {
+			if ( getMappedTable().getNameIdentifier() != null ) {
+				return getMappedTable().getNameIdentifier().getCanonicalName();
 			}
 			else {
 				return "<unknown>";
 			}
 		}
-		else if ( column.getValue() != null && column.getValue().getTable() != null ) {
-			return column.getValue().getTable().getNameIdentifier().getCanonicalName();
+		else if ( column.getTableName() != null ) {
+			return column.getTableName().getCanonicalName();
 		}
 		return "<unknown>";
 	}
 
-	public String sqlConstraintString(Dialect dialect) {
-		StringBuilder buf = new StringBuilder("primary key (");
-		Iterator iter = getColumnIterator();
-		while ( iter.hasNext() ) {
-			buf.append( ( (Column) iter.next() ).getQuotedName(dialect) );
-			if ( iter.hasNext() ) {
-				buf.append(", ");
-			}
-		}
-		return buf.append(')').toString();
-	}
-
-	public String sqlConstraintString(Dialect dialect, String constraintName, String defaultCatalog, String defaultSchema) {
-		StringBuilder buf = new StringBuilder(
-			dialect.getAddPrimaryKeyConstraintString(constraintName)
-		).append('(');
-		Iterator iter = getColumnIterator();
-		while ( iter.hasNext() ) {
-			buf.append( ( (Column) iter.next() ).getQuotedName(dialect) );
-			if ( iter.hasNext() ) {
-				buf.append(", ");
-			}
-		}
-		return buf.append(')').toString();
-	}
-	
+	@Override
 	public String generatedConstraintNamePrefix() {
 		return "PK_";
 	}
 
-	@Override
-	public String getExportIdentifier() {
-		return StringHelper.qualify( getTable().getExportIdentifier(), "PK-" + getName() );
-	}
+	// todo (6.0) - Should this class implement Exportable like in 5.x?
+//	@Override
+//	public String getExportIdentifier() {
+//		return StringHelper.qualify( getTable().getExportIdentifier(), "PK-" + getName() );
+//	}
 }

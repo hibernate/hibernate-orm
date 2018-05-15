@@ -6,8 +6,6 @@
  */
 package org.hibernate;
 
-import java.io.Serializable;
-
 /**
  * Thrown when loading an entity (by identifier) results in a value that cannot be treated as the subclass
  * type requested by the caller.
@@ -15,7 +13,7 @@ import java.io.Serializable;
  * @author Gavin King
  */
 public class WrongClassException extends HibernateException {
-	private final Serializable identifier;
+	private final Object identifier;
 	private final String entityName;
 
 	/**
@@ -25,7 +23,7 @@ public class WrongClassException extends HibernateException {
 	 * @param identifier The identifier of the entity
 	 * @param entityName The entity-type requested
 	 */
-	public WrongClassException(String message, Serializable identifier, String entityName) {
+	public WrongClassException(String message, Object identifier, String entityName) {
 		super(
 				String.format(
 						"Object [id=%s] was not of the specified subclass [%s] : %s",
@@ -42,7 +40,7 @@ public class WrongClassException extends HibernateException {
 		return entityName;
 	}
 
-	public Serializable getIdentifier() {
+	public Object getIdentifier() {
 		return identifier;
 	}
 }

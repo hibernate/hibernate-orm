@@ -18,8 +18,9 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.TypeHelper;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.internal.TypeHelper;
 
 /**
  * Standard representation of entity cached data using the "disassembled state".
@@ -36,7 +37,7 @@ public class StandardCacheEntryImpl implements CacheEntry {
 	 * Constructs a StandardCacheEntryImpl
 	 *
 	 * @param state The extracted state
-	 * @param persister The entity persister
+	 * @param descriptor The entity descriptor
 	 * @param version The current version (if versioned)
 	 * @param session The originating session
 	 * @param owner The owner
@@ -45,19 +46,16 @@ public class StandardCacheEntryImpl implements CacheEntry {
 	 */
 	public StandardCacheEntryImpl(
 			final Object[] state,
-			final EntityPersister persister,
+			final EntityTypeDescriptor descriptor,
 			final Object version,
 			final SharedSessionContractImplementor session,
 			final Object owner) throws HibernateException {
 		// disassembled state gets put in a new array (we write to cache by value!)
-		this.disassembledState = TypeHelper.disassemble(
-				state,
-				persister.getPropertyTypes(),
-				persister.isLazyPropertiesCacheable() ? null : persister.getPropertyLaziness(),
-				session,
-				owner
-		);
-		this.subclass = persister.getEntityName();
+		final boolean[] nonCacheable = descriptor.isLazyPropertiesCacheable()
+				? null
+				: descriptor.getPropertyLaziness();
+		this.disassembledState = TypeHelper.disassemble( state, nonCacheable, descriptor );
+		this.subclass = descriptor.getEntityName();
 		this.version = version;
 	}
 
@@ -66,8 +64,6 @@ public class StandardCacheEntryImpl implements CacheEntry {
 		this.subclass = subclass;
 		this.version = version;
 	}
-
-
 
 	@Override
 	public boolean isReferenceEntry() {
@@ -110,7 +106,7 @@ public class StandardCacheEntryImpl implements CacheEntry {
 	 *
 	 * @param instance The entity instance
 	 * @param id The entity identifier
-	 * @param persister The entity persister
+	 * @param descriptor The entity descriptor
 	 * @param interceptor (currently unused)
 	 * @param session The session
 	 *
@@ -118,34 +114,30 @@ public class StandardCacheEntryImpl implements CacheEntry {
 	 *
 	 * @throws HibernateException Indicates a problem performing assembly or calling the PreLoadEventListeners.
 	 *
-	 * @see org.hibernate.type.Type#assemble
-	 * @see org.hibernate.type.Type#disassemble
+	 * @see MutabilityPlan#assemble
+	 * @see MutabilityPlan#disassemble
 	 */
 	public Object[] assemble(
 			final Object instance,
 			final Serializable id,
-			final EntityPersister persister,
+			final EntityTypeDescriptor descriptor,
 			final Interceptor interceptor,
 			final EventSource session) throws HibernateException {
-		if ( !persister.getEntityName().equals( subclass ) ) {
+		if ( !descriptor.getEntityName().equals( subclass ) ) {
 			throw new AssertionFailure( "Tried to assemble a different subclass instance" );
 		}
 
 		//assembled state gets put in a new array (we read from cache by value!)
-		final Object[] state = TypeHelper.assemble(
-				disassembledState,
-				persister.getPropertyTypes(),
-				session, instance
-		);
+		Object[] state = TypeHelper.assemble( disassembledState, descriptor );
 
-		//persister.setIdentifier(instance, id); //before calling interceptor, for consistency with normal load
+		//descriptor.setIdentifier(instance, id); //before calling interceptor, for consistency with normal load
 
 		//TODO: reuse the PreLoadEvent
 		final PreLoadEvent preLoadEvent = new PreLoadEvent( session )
 				.setEntity( instance )
 				.setState( state )
 				.setId( id )
-				.setPersister( persister );
+				.setDescriptor( descriptor );
 
 		final EventListenerGroup<PreLoadEventListener> listenerGroup = session
 				.getFactory()
@@ -156,7 +148,7 @@ public class StandardCacheEntryImpl implements CacheEntry {
 			listener.onPreLoad( preLoadEvent );
 		}
 
-		persister.setPropertyValues( instance, state );
+		descriptor.setPropertyValues( instance, state );
 
 		return state;
 	}

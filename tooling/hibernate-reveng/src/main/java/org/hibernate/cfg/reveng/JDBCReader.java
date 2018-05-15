@@ -24,6 +24,7 @@ import org.hibernate.tool.api.reveng.ReverseEngineeringRuntimeInfo;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.internal.reveng.ForeignKeysInfo;
+import org.hibernate.tool.internal.reveng.TableProcessor;
 
 public class JDBCReader {
 

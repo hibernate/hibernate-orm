@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import org.hibernate.cfg.reveng.ReverseEngineeringStrategyUtil;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Array;
@@ -30,6 +29,7 @@ import org.hibernate.tool.hbm2x.pojo.ImportContext;
 import org.hibernate.tool.hbm2x.pojo.NoopImportContext;
 import org.hibernate.tool.hbm2x.pojo.POJOClass;
 import org.hibernate.tool.hbm2x.visitor.JavaTypeFromValueVisitor;
+import org.hibernate.tool.internal.util.NameConverter;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.PrimitiveType;
 import org.hibernate.type.Type;
@@ -403,11 +403,11 @@ public class Cfg2JavaTool {
 
 
 	public String simplePluralize(String str) {
-		return ReverseEngineeringStrategyUtil.simplePluralize(str);
+		return NameConverter.simplePluralize(str);
 	}
 	
 	public String keyWordCheck(String possibleKeyword) {
-		if(ReverseEngineeringStrategyUtil.isReservedJavaKeyword(possibleKeyword)) {
+		if(NameConverter.isReservedJavaKeyword(possibleKeyword)) {
 			possibleKeyword = possibleKeyword + "_";
 		}
 		return possibleKeyword;

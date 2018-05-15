@@ -23,6 +23,7 @@ import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
+import org.hibernate.tool.internal.util.NameConverter;
 import org.hibernate.tool.internal.util.TableNameQualifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,14 +55,14 @@ public class DefaultReverseEngineeringStrategy implements ReverseEngineeringStra
 	}
 
 	private String keywordCheck(String possibleKeyword) {
-		if(ReverseEngineeringStrategyUtil.isReservedJavaKeyword(possibleKeyword)) {
+		if(NameConverter.isReservedJavaKeyword(possibleKeyword)) {
 			possibleKeyword = possibleKeyword + "_";
 		}
 		return possibleKeyword;
 	}
 	
 	protected String toUpperCamelCase(String s) {
-		return ReverseEngineeringStrategyUtil.toUpperCamelCase(s);
+		return NameConverter.toUpperCamelCase(s);
 	}
 	
 	/**
@@ -85,7 +86,7 @@ public class DefaultReverseEngineeringStrategy implements ReverseEngineeringStra
     }
 
 	protected String pluralize(String singular) {
-		return ReverseEngineeringStrategyUtil.simplePluralize(singular);
+		return NameConverter.simplePluralize(singular);
 	}
 
 	public String foreignKeyToInverseEntityName(String keyname,

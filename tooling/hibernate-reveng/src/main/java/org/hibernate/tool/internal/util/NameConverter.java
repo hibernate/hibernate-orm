@@ -1,9 +1,9 @@
-package org.hibernate.cfg.reveng;
+package org.hibernate.tool.internal.util;
 
 import java.util.HashSet;
 import java.util.Set;
 
-final public class ReverseEngineeringStrategyUtil {
+final public class NameConverter {
 
 	private static Set<String> RESERVED_KEYWORDS;
 	static {
@@ -61,7 +61,7 @@ final public class ReverseEngineeringStrategyUtil {
 		RESERVED_KEYWORDS.add( "while" );
 	}
 
-	private ReverseEngineeringStrategyUtil() {
+	private NameConverter() {
 
 	}
 	

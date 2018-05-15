@@ -6,7 +6,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.cfg.reveng.ReverseEngineeringStrategyUtil;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Array;
 import org.hibernate.mapping.Bag;
@@ -26,6 +25,7 @@ import org.hibernate.tool.hbm2x.Cfg2JavaTool;
 import org.hibernate.tool.hbm2x.MetaAttributeConstants;
 import org.hibernate.tool.hbm2x.MetaAttributeHelper;
 import org.hibernate.tool.hbm2x.visitor.DefaultValueVisitor;
+import org.hibernate.tool.internal.util.NameConverter;
 import org.hibernate.tuple.GenerationTiming;
 
 /**
@@ -580,7 +580,7 @@ abstract public class BasicPOJOClass implements POJOClass, MetaAttributeConstant
 	// get the "opposite" collectionnae for a property. Currently a "hack" that just uses the same naming algorithm as in reveng, will fail on more general models!
 	public String getCollectionNameFor(Property property) {
 		String str = getPropertyName(property);
-		return ReverseEngineeringStrategyUtil.simplePluralize(str);
+		return NameConverter.simplePluralize(str);
 	}
 	
 	

@@ -1,4 +1,4 @@
-package org.hibernate.cfg.reveng;
+package org.hibernate.tool.internal.reveng;
 
 public class SQLTypeMapping implements Comparable<SQLTypeMapping> {
 

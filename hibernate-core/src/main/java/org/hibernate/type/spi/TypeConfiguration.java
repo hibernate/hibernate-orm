@@ -138,14 +138,20 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 	public void scope(MetadataBuildingContext metadataBuildingContext) {
-		log.debugf( "Scoping TypeConfiguration [%s] to MetadataBuildingContext [%s]", this, metadataBuildingContext );
+		if ( log.isDebugEnabled() ) {
+			log.debugf(
+					"Scoping TypeConfiguration [%s] to MetadataBuildingContext [%s]",
+					this,
+					metadataBuildingContext
+			);
+		}
 		scope.setMetadataBuildingContext( metadataBuildingContext );
 	}
 
 	public MetamodelImplementor scope(SessionFactoryImplementor sessionFactory,  BootstrapContext bootstrapContext) {
-		log.debugf( "Scoping TypeConfiguration [%s] to SessionFactoryImpl [%s]", this, sessionFactory );
-		scope.setSessionFactory( sessionFactory );
-		log.debugf( "Scoping TypeConfiguration [%s] to SessionFactory [%s]", this, sessionFactory );
+		if ( log.isDebugEnabled() ) {
+			log.debugf( "Scoping TypeConfiguration [%s] to SessionFactoryImpl [%s]", this, sessionFactory );
+		}
 
 		for ( Map.Entry<String, String> importEntry : scope.metadataBuildingContext.getMetadataCollector().getImports().entrySet() ) {
 			if ( importMap.containsKey( importEntry.getKey() ) ) {
@@ -181,13 +187,17 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		// Instead of allowing scope#setSessionFactory to influence this, we use the SessionFactoryObserver callback
 		// to handle this, allowing any SessionFactory constructor code to be able to continue to have access to the
 		// MetadataBuildingContext through TypeConfiguration until this callback is fired.
-		log.tracef( "Handling #sessionFactoryCreated from [%s] for TypeConfiguration", factory );
+		if ( log.isDebugEnabled() ) {
+			log.tracef( "Handling #sessionFactoryCreated from [%s] for TypeConfiguration", factory );
+		}
 		scope.setMetadataBuildingContext( null );
 	}
 
 	@Override
 	public void sessionFactoryClosed(SessionFactory factory) {
-		log.tracef( "Handling #sessionFactoryClosed from [%s] for TypeConfiguration", factory );
+		if ( log.isDebugEnabled() ) {
+			log.tracef( "Handling #sessionFactoryClosed from [%s] for TypeConfiguration", factory );
+		}
 
 		TypeConfigurationRegistry.INSTANCE.deregisterTypeConfiguration( this );
 
@@ -288,7 +298,9 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		}
 
 		public void unsetSessionFactory(SessionFactory factory) {
-			log.debugf( "Un-scoping TypeConfiguration [%s] from SessionFactory [%s]", this, factory );
+			if ( log.isDebugEnabled() ) {
+				log.debugf( "Un-scoping TypeConfiguration [%s] from SessionFactory [%s]", this, factory );
+			}
 			this.sessionFactory = null;
 		}
 

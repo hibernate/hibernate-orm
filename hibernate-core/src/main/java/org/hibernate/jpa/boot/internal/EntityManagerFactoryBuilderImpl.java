@@ -24,7 +24,6 @@ import javax.persistence.PersistenceException;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
 
-
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.CacheRegionDefinition;
@@ -46,6 +45,7 @@ import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.boot.spi.MetadataBuilderContributor;
 import org.hibernate.boot.spi.MetadataBuilderImplementor;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
@@ -131,6 +131,11 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	 * Names a {@link TypeContributorList}
 	 */
 	public static final String TYPE_CONTRIBUTORS = "hibernate.type_contributors";
+
+	/**
+	 * Names a {@link MetadataBuilderImplementor}
+	 */
+	public static final String METADATA_BUILDER_CONTRIBUTOR = "hibernate.metadata_builder_contributor";
 
 	/**
 	 * Names a Jandex {@link Index} instance to use.
@@ -229,6 +234,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				metamodelBuilder.getBootstrapContext()
 		);
 
+		applyMetadataBuilderContributor();
+
+
 		withValidatorFactory( configurationValues.get( org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY ) );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -251,6 +259,51 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 		// for the time being we want to revoke access to the temp ClassLoader if one was passed
 		metamodelBuilder.applyTempClassLoader( null );
+	}
+
+	private void applyMetadataBuilderContributor() {
+
+		Object metadataBuilderContributorSetting = configurationValues.get( METADATA_BUILDER_CONTRIBUTOR );
+
+		if ( metadataBuilderContributorSetting == null ) {
+			return;
+		}
+
+		MetadataBuilderContributor metadataBuilderContributor = null;
+		Class<? extends MetadataBuilderContributor> metadataBuilderContributorImplClass = null;
+
+		if ( metadataBuilderContributorSetting instanceof MetadataBuilderContributor ) {
+			metadataBuilderContributor = (MetadataBuilderContributor) metadataBuilderContributorSetting;
+		}
+		else if ( metadataBuilderContributorSetting instanceof Class ) {
+			metadataBuilderContributorImplClass = (Class<? extends MetadataBuilderContributor>) metadataBuilderContributorSetting;
+		}
+		else if ( metadataBuilderContributorSetting instanceof String ) {
+			final ClassLoaderService classLoaderService = standardServiceRegistry.getService( ClassLoaderService.class );
+
+			metadataBuilderContributorImplClass = classLoaderService.classForName( (String) metadataBuilderContributorSetting );
+		}
+		else {
+			throw new IllegalArgumentException(
+					"The provided " + METADATA_BUILDER_CONTRIBUTOR + " setting value [" + metadataBuilderContributorSetting + "] is not supported!"
+			);
+		}
+
+		if ( metadataBuilderContributorImplClass != null ) {
+			try {
+				metadataBuilderContributor = metadataBuilderContributorImplClass.newInstance();
+			}
+			catch (InstantiationException | IllegalAccessException e) {
+				throw new IllegalArgumentException(
+						"The MetadataBuilderContributor class [" + metadataBuilderContributorImplClass + "] could not be instantiated!",
+						e
+				);
+			}
+		}
+
+		if ( metadataBuilderContributor != null ) {
+			metadataBuilderContributor.contribute( metamodelBuilder );
+		}
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

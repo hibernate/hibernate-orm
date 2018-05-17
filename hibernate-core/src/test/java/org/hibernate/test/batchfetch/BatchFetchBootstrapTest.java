@@ -51,18 +51,12 @@ public class BatchFetchBootstrapTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected void buildSessionFactory() {
-		try {
-			super.buildSessionFactory();
-		}
-		catch (Exception e) {
-			throw new IllegalStateException( e );
-		}
 	}
 
 	@Test
 	@FailureExpected( jiraKey = "HHH-12594")
 	public void test() {
-
+		super.buildSessionFactory();
 	}
 
 	@Entity(name = "File")

@@ -152,7 +152,7 @@ public class JdbcTimestampTypeDescriptor extends AbstractTypeDescriptor<Date> {
 		}
 
 		if ( Date.class.isInstance( value ) ) {
-			return (Date) value;
+			return new Timestamp( ( (Date) value ).getTime() );
 		}
 
 		throw unknownWrap( value.getClass() );

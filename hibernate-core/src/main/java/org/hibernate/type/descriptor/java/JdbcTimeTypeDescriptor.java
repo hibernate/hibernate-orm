@@ -143,7 +143,7 @@ public class JdbcTimeTypeDescriptor extends AbstractTypeDescriptor<Date> {
 		}
 
 		if ( Date.class.isInstance( value ) ) {
-			return (Date) value;
+			return new Time( ( (Date) value ).getTime() );
 		}
 
 		throw unknownWrap( value.getClass() );

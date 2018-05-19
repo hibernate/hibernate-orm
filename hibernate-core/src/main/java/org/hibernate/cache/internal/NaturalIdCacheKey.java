@@ -10,11 +10,11 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Objects;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ValueHolder;
-import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
@@ -143,8 +143,8 @@ public class NaturalIdCacheKey implements Serializable {
 		}
 
 		final NaturalIdCacheKey other = (NaturalIdCacheKey) o;
-		return EqualsHelper.equals( entityName, other.entityName )
-				&& EqualsHelper.equals( tenantId, other.tenantId )
+		return Objects.equals( entityName, other.entityName )
+				&& Objects.equals( tenantId, other.tenantId )
 				&& Arrays.deepEquals( this.naturalIdValues, other.naturalIdValues );
 	}
 

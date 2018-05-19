@@ -11,9 +11,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
-
-import org.hibernate.internal.util.compare.EqualsHelper;
 
 /**
  * Models the information pertaining to a custom type definition supplied by the user.  Used
@@ -110,10 +109,10 @@ public class TypeDefinition implements Serializable {
 		}
 
 		final TypeDefinition that = (TypeDefinition) o;
-		return EqualsHelper.equals( this.name, that.name )
-				&& EqualsHelper.equals( this.typeImplementorClass, that.typeImplementorClass )
+		return Objects.equals( this.name, that.name )
+				&& Objects.equals( this.typeImplementorClass, that.typeImplementorClass )
 				&& Arrays.equals( this.registrationKeys, that.registrationKeys )
-				&& EqualsHelper.equals( this.parameters, that.parameters );
+				&& Objects.equals( this.parameters, that.parameters );
 	}
 
 	@Override

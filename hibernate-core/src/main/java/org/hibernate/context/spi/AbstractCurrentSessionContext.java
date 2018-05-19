@@ -6,11 +6,12 @@
  */
 package org.hibernate.context.spi;
 
+import java.util.Objects;
+
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.context.TenantIdentifierMismatchException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.compare.EqualsHelper;
 
 /**
  * Base support for {@link CurrentSessionContext} implementors.
@@ -46,7 +47,7 @@ public abstract class AbstractCurrentSessionContext implements CurrentSessionCon
 		final CurrentTenantIdentifierResolver resolver = factory.getCurrentTenantIdentifierResolver();
 		if ( resolver != null && resolver.validateExistingCurrentSessions() ) {
 			final String current = resolver.resolveCurrentTenantIdentifier();
-			if ( ! EqualsHelper.equals( existingSession.getTenantIdentifier(), current ) ) {
+			if ( !Objects.equals( existingSession.getTenantIdentifier(), current ) ) {
 				throw new TenantIdentifierMismatchException(
 						String.format(
 								"Reported current tenant identifier [%s] did not match tenant identifier from " +

@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.hibernate.engine.spi.QueryParameters;
@@ -17,7 +18,6 @@ import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.transform.CacheableResultTransformer;
 import org.hibernate.type.Type;
 
@@ -214,10 +214,10 @@ public class QueryKey implements Serializable {
 		if ( !sqlQueryString.equals( that.sqlQueryString ) ) {
 			return false;
 		}
-		if ( !EqualsHelper.equals( firstRow, that.firstRow ) || !EqualsHelper.equals( maxRows, that.maxRows ) ) {
+		if ( !Objects.equals( firstRow, that.firstRow ) || !Objects.equals( maxRows, that.maxRows ) ) {
 			return false;
 		}
-		if ( !EqualsHelper.equals( customTransformer, that.customTransformer ) ) {
+		if ( !Objects.equals( customTransformer, that.customTransformer ) ) {
 			return false;
 		}
 		if ( positionalParameterTypes == null ) {
@@ -242,9 +242,9 @@ public class QueryKey implements Serializable {
 			}
 		}
 
-		return EqualsHelper.equals( filterKeys, that.filterKeys )
-				&& EqualsHelper.equals( namedParameters, that.namedParameters )
-				&& EqualsHelper.equals( tenantIdentifier, that.tenantIdentifier );
+		return Objects.equals( filterKeys, that.filterKeys )
+				&& Objects.equals( namedParameters, that.namedParameters )
+				&& Objects.equals( tenantIdentifier, that.tenantIdentifier );
 	}
 
 	@Override

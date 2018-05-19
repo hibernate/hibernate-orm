@@ -6,8 +6,9 @@
  */
 package org.hibernate.envers.internal.entities;
 
+import java.util.Objects;
+
 import org.hibernate.envers.ModificationStore;
-import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.type.Type;
 
 /**
@@ -169,10 +170,10 @@ public class PropertyData {
 		final PropertyData that = (PropertyData) o;
 		return usingModifiedFlag == that.usingModifiedFlag
 				&& store == that.store
-				&& EqualsHelper.equals( accessType, that.accessType )
-				&& EqualsHelper.equals( beanName, that.beanName )
-				&& EqualsHelper.equals( name, that.name )
-				&& EqualsHelper.equals( synthetic, that.synthetic );
+				&& Objects.equals( accessType, that.accessType )
+				&& Objects.equals( beanName, that.beanName )
+				&& Objects.equals( name, that.name )
+				&& Objects.equals( synthetic, that.synthetic );
 	}
 
 	@Override

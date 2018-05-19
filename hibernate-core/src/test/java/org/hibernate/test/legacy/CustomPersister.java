@@ -12,6 +12,7 @@ import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -40,7 +41,6 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDHexGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.StaticFilterAliasGenerator;
-import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -245,7 +245,7 @@ public class CustomPersister implements EntityPersister {
 		Object[] y,
 		Object owner,
 		SharedSessionContractImplementor session) throws HibernateException {
-		if ( !EqualsHelper.equals( x[0], y[0] ) ) {
+		if ( !Objects.equals( x[0], y[0] ) ) {
 			return new int[] { 0 };
 		}
 		else {
@@ -258,7 +258,7 @@ public class CustomPersister implements EntityPersister {
 		Object[] y,
 		Object owner,
 		SharedSessionContractImplementor session) throws HibernateException {
-		if ( !EqualsHelper.equals( x[0], y[0] ) ) {
+		if ( !Objects.equals( x[0], y[0] ) ) {
 			return new int[] { 0 };
 		}
 		else {

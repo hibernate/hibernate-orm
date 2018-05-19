@@ -6,10 +6,11 @@
  */
 package org.hibernate.boot.model.relational;
 
+import java.util.Objects;
+
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.IllegalIdentifierException;
-import org.hibernate.internal.util.compare.EqualsHelper;
 
 /**
  * Parses a qualified name.
@@ -86,9 +87,9 @@ public class QualifiedNameParser {
 
 			NameParts that = (NameParts) o;
 
-			return EqualsHelper.equals( this.getCatalogName(), that.getCatalogName() )
-					&& EqualsHelper.equals( this.getSchemaName(), that.getSchemaName() )
-					&& EqualsHelper.equals( this.getObjectName(), that.getObjectName() );
+			return Objects.equals( this.getCatalogName(), that.getCatalogName() )
+					&& Objects.equals( this.getSchemaName(), that.getSchemaName() )
+					&& Objects.equals( this.getObjectName(), that.getObjectName() );
 		}
 
 		@Override

@@ -10,12 +10,12 @@ import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.Objects;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.compare.EqualsHelper;
 
 /**
  * Abstract superclass of the built in Type hierarchy.
@@ -106,7 +106,7 @@ public abstract class AbstractType implements Type {
 	}
 
 	public boolean isEqual(Object x, Object y) {
-		return EqualsHelper.equals(x, y);
+		return Objects.equals( x, y );
 	}
 	
 	public int getHashCode(Object x) {

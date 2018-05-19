@@ -3,7 +3,6 @@ package org.hibernate.tool.internal.reveng;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.hibernate.cfg.reveng.RevEngUtils;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.Property;

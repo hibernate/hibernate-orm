@@ -26,7 +26,6 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.reveng.JDBCReader;
 import org.hibernate.cfg.reveng.MappingsDatabaseCollector;
-import org.hibernate.cfg.reveng.RevEngUtils;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.Mapping;

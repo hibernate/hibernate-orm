@@ -16,6 +16,7 @@ import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.internal.reveng.JdbcBinderException;
+import org.hibernate.tool.internal.reveng.RevEngUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

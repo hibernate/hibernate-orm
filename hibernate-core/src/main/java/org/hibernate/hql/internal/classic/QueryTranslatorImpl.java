@@ -543,7 +543,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 			superQuery.addNamedParameter( name );
 		}
 
-		final Integer loc = parameterCount++;
+		final int loc = parameterCount++;
 
 		final NamedParameterInformationImpl info = namedParameters.computeIfAbsent(
 				name,
@@ -571,12 +571,12 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 			throw new QueryException( "Cannot mix legacy and labeled positional parameters" );
 		}
 
-		final Integer label = legacyPositionalParameterCount++;
+		final int label = legacyPositionalParameterCount++;
 		final PositionalParameterInformationImpl paramInfo = new PositionalParameterInformationImpl( label );
 		ordinalParameters.put( label, paramInfo );
 		paramValueBinders.add( paramInfo );
 
-		final Integer loc = parameterCount++;
+		final int loc = parameterCount++;
 		paramInfo.addSourceLocation( loc );
 
 	}
@@ -593,7 +593,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 			throw new QueryException( "Cannot mix legacy and labeled positional parameters" );
 		}
 
-		final Integer loc = parameterCount++;
+		final int loc = parameterCount++;
 
 		final PositionalParameterInformationImpl  info = ordinalParameters.computeIfAbsent(
 				label,

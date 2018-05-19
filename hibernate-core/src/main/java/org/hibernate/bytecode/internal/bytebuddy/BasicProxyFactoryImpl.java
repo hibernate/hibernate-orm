@@ -6,10 +6,6 @@
  */
 package org.hibernate.bytecode.internal.bytebuddy;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.spi.BasicProxyFactory;
@@ -35,14 +31,6 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 	public BasicProxyFactoryImpl(Class superClass, Class[] interfaces, ByteBuddyState bytebuddy) {
 		if ( superClass == null && ( interfaces == null || interfaces.length < 1 ) ) {
 			throw new AssertionFailure( "attempting to build proxy without any superclass or interfaces" );
-		}
-
-		Set<Class> key = new HashSet<Class>();
-		if ( superClass != null ) {
-			key.add( superClass );
-		}
-		if ( interfaces != null && interfaces.length > 0 ) {
-			key.addAll( Arrays.asList( interfaces ) );
 		}
 
 		this.proxyClass = bytebuddy.getCurrentyByteBuddy()

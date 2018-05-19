@@ -1131,8 +1131,6 @@ public class ActionQueue {
 		// the mapping of entity names to their latest batch numbers.
 		private List<BatchIdentifier> latestBatches;
 
-		private Map<Object, BatchIdentifier> entityBatchIdentifier;
-
 		// the map of batch numbers to EntityInsertAction lists
 		private Map<BatchIdentifier, List<AbstractEntityInsertAction>> actionBatches;
 
@@ -1145,7 +1143,6 @@ public class ActionQueue {
 		public void sort(List<AbstractEntityInsertAction> insertions) {
 			// optimize the hash size to eliminate a rehash.
 			this.latestBatches = new ArrayList<>( );
-			this.entityBatchIdentifier = new HashMap<>( insertions.size() + 1, 1.0f );
 			this.actionBatches = new HashMap<>();
 
 			for ( AbstractEntityInsertAction action : insertions ) {
@@ -1169,7 +1166,6 @@ public class ActionQueue {
 					latestBatches.add( batchIdentifier );
 				}
 				addParentChildEntityNames( action, batchIdentifier );
-				entityBatchIdentifier.put( currentEntity, batchIdentifier );
 				addToBatch( batchIdentifier, action );
 			}
 			insertions.clear();

@@ -3,7 +3,6 @@ package org.hibernate.tool.internal.reveng;
 import java.util.Properties;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.reveng.JDBCReader;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.exception.spi.SQLExceptionConverter;

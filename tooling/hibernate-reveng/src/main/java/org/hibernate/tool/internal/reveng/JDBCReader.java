@@ -1,4 +1,4 @@
-package org.hibernate.cfg.reveng;
+package org.hibernate.tool.internal.reveng;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -13,6 +13,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.hibernate.cfg.reveng.BasicColumnProcessor;
+import org.hibernate.cfg.reveng.ForeignKeyProcessor;
+import org.hibernate.cfg.reveng.IndexProcessor;
+import org.hibernate.cfg.reveng.PrimaryKeyProcessor;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.mapping.ForeignKey;
@@ -23,8 +27,6 @@ import org.hibernate.tool.api.reveng.ProgressListener;
 import org.hibernate.tool.api.reveng.ReverseEngineeringRuntimeInfo;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
-import org.hibernate.tool.internal.reveng.ForeignKeysInfo;
-import org.hibernate.tool.internal.reveng.TableProcessor;
 
 public class JDBCReader {
 

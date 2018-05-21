@@ -88,7 +88,7 @@ public class DB2ExpectationsFactory extends AbstractExpectationsFactory {
 
 	@Override
 	protected NativeSQLStatement createNativeDwithinStatement(Point geom, double distance) {
-		String sql = "select t.id, DB2GSE.ST_dwithin(t.geom, DB2GSE.ST_GeomFromText(?, 4326), " + distance + " ) from GeomTest t where DB2GSE.ST_dwithin(t.geom, DB2GSE.ST_GeomFromText(?, 4326), " + distance + ") = 1 and db2gse.st_srid(t.geom) = 4326";
+		String sql = "select t.id, DB2GSE.ST_dwithin(DB2GSE.ST_GeomFromText(?, 4326), t.geom, " + distance + " , 'METER') from GeomTest t where DB2GSE.ST_dwithin(DB2GSE.ST_GeomFromText(?, 4326), t.geom,  " + distance + ", 'METER') = 1 and db2gse.st_srid(t.geom) = 4326";
 		return createNativeSQLStatementAllWKTParams( sql, geom.toText() );
 	}
 

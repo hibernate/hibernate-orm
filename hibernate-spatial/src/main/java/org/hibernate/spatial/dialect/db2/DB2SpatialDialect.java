@@ -7,6 +7,7 @@
 package org.hibernate.spatial.dialect.db2;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
@@ -14,6 +15,7 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
 import org.hibernate.spatial.GeolatteGeometryType;
@@ -25,6 +27,9 @@ import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.Type;
+
+import static java.lang.String.format;
 
 /**
  * @author David Adler, Adtech Geospatial
@@ -223,6 +228,7 @@ public class DB2SpatialDialect extends DB2Dialect implements SpatialDialect {
 		) );
 
 		// Register non-SFS functions listed in Hibernate Spatial
+		registerFunction( "dwithin", new DWithinFunction());
 
 //		// The srid parameter needs to be explicitly cast to INTEGER to avoid a -245 SQLCODE,
 //		// ambiguous parameter.
@@ -244,7 +250,7 @@ public class DB2SpatialDialect extends DB2Dialect implements SpatialDialect {
 
 	@Override
 	public String getDWithinSQL(String columnName) {
-		return "db2gse.ST_Distance(" + columnName + ",?) < ?";
+		return "db2gse.ST_Intersects(" + columnName + ", db2gse.ST_Buffer(?, ?, 'METER')) = 1";
 	}
 
 	@Override
@@ -316,5 +322,25 @@ public class DB2SpatialDialect extends DB2Dialect implements SpatialDialect {
 	@Override
 	public boolean supportsFiltering() {
 		return false;
+	}
+
+
+	private static class DWithinFunction extends StandardSQLFunction {
+
+		public DWithinFunction() {
+			super( "db2gse.ST_Dwithin" , StandardBasicTypes.NUMERIC_BOOLEAN);
+		}
+
+		public String render(Type firstArgumentType, final List args, final SessionFactoryImplementor factory) {
+			StringBuilder sb = new StringBuilder( "db2gse.ST_Intersects( " );
+			sb.append( (String)args.get(0) ) //
+					.append(", db2gse.ST_Buffer(")
+					.append((String)args.get(1) )
+					.append(", ")
+					.append((String)args.get(2) )
+					.append(", 'METER'))");
+			return sb.toString();
+		}
+
 	}
 }

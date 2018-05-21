@@ -113,7 +113,7 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 			.implement( ProxyConfiguration.class )
 			.intercept( FieldAccessor.ofField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME ).withAssigner( Assigner.DEFAULT, Assigner.Typing.DYNAMIC ) )
 			.make()
-			.load( persistentClass.getClassLoader() )
+			.load( persistentClass.getClassLoader(), ByteBuddyState.getLoadingStrategy() )
 			.getLoaded(), cacheForProxies );
 	}
 

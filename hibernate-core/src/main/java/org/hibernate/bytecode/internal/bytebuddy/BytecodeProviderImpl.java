@@ -67,7 +67,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				.method( newInstanceMethodName )
 				.intercept( MethodCall.construct( constructor ) )
 				.make()
-				.load( clazz.getClassLoader() )
+				.load( clazz.getClassLoader(), ByteBuddyState.getLoadingStrategy() )
 				.getLoaded();
 
 		final Class bulkAccessor = bytebuddy.getCurrentyByteBuddy()
@@ -80,7 +80,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				.method( getPropertyNamesMethodName )
 				.intercept( MethodCall.call( new CloningPropertyCall( getterNames ) ) )
 				.make()
-				.load( clazz.getClassLoader() )
+				.load( clazz.getClassLoader(), ByteBuddyState.getLoadingStrategy() )
 				.getLoaded();
 
 		try {

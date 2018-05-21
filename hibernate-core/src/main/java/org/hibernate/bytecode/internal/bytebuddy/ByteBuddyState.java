@@ -8,6 +8,7 @@ package org.hibernate.bytecode.internal.bytebuddy;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.TypeCache;
+import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.dynamic.scaffold.TypeValidation;
 
 /**
@@ -22,6 +23,11 @@ public final class ByteBuddyState {
 	 * deprecated static methods.
 	 */
 	private static final ByteBuddy buddy = new ByteBuddy().with( TypeValidation.DISABLED );
+
+	/**
+	 * This will need to change depending on the runtime JDK.
+	 */
+	private static final ClassLoadingStrategy loadingStrategy = new ClassLoadingStrategy.ForUnsafeInjection();
 
 	/**
 	 * This currently needs to be static: the BytecodeProvider is a static field of Environment and
@@ -73,6 +79,10 @@ public final class ByteBuddyState {
 	@Deprecated
 	public static ByteBuddy getStaticByteBuddyInstance() {
 		return buddy;
+	}
+
+	public static ClassLoadingStrategy getLoadingStrategy() {
+		return loadingStrategy;
 	}
 
 }

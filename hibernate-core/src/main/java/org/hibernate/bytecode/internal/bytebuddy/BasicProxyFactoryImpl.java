@@ -55,7 +55,7 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 			.implement( ProxyConfiguration.class )
 			.intercept( FieldAccessor.ofField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME ).withAssigner( Assigner.DEFAULT, Assigner.Typing.DYNAMIC ) )
 			.make()
-			.load( BasicProxyFactory.class.getClassLoader() )
+			.load( BasicProxyFactory.class.getClassLoader(), ByteBuddyState.getLoadingStrategy() )
 			.getLoaded();
 	}
 

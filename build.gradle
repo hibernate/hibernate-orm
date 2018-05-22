@@ -35,6 +35,7 @@ plugins {
 
 allprojects {
 	repositories {
+		mavenLocal()
 		mavenCentral()
 		maven {
 			name "jboss-snapshots"

@@ -9,6 +9,8 @@ package org.hibernate.type.descriptor.java;
 import java.io.Serializable;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.persistence.AttributeConverter;
+
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.internal.CoreLogging;
@@ -121,13 +123,15 @@ public class JavaTypeDescriptorRegistry implements Serializable {
 						return new SerializableTypeDescriptor( cls );
 					}
 
-					log.debugf(
-							"Could not find matching JavaTypeDescriptor for requested Java class [%s]; using fallback.  " +
-									"This means Hibernate does not know how to perform certain basic operations in relation to this Java type." +
-									"",
-							cls.getName()
-					);
-					checkEqualsAndHashCode( cls );
+					if ( !AttributeConverter.class.isAssignableFrom( cls ) ) {
+						log.debugf(
+								"Could not find matching JavaTypeDescriptor for requested Java class [%s]; using fallback.  " +
+										"This means Hibernate does not know how to perform certain basic operations in relation to this Java type." +
+										"",
+								cls.getName()
+						);
+						checkEqualsAndHashCode( cls );
+					}
 
 					return new FallbackJavaTypeDescriptor<>( cls );
 				}

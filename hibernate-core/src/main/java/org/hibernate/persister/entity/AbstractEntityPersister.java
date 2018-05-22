@@ -534,7 +534,7 @@ public abstract class AbstractEntityPersister
 		this.navigableRole = new NavigableRole( persistentClass.getEntityName() );
 
 		if ( creationContext.getSessionFactory().getSessionFactoryOptions().isSecondLevelCacheEnabled() ) {
-			this.canWriteToCache = persistentClass.isCached();
+			this.canWriteToCache = determineCanWriteToCache( persistentClass, cacheAccessStrategy );
 			this.canReadFromCache = determineCanReadFromCache( persistentClass );
 			this.cacheAccessStrategy = cacheAccessStrategy;
 			this.isLazyPropertiesCacheable = persistentClass.getRootClass().isLazyPropertiesCacheable();
@@ -905,6 +905,14 @@ public abstract class AbstractEntityPersister
 		}
 
 		return false;
+	}
+
+	private boolean determineCanWriteToCache(PersistentClass persistentClass, EntityDataAccess cacheAccessStrategy) {
+		if ( cacheAccessStrategy == null ) {
+			return false;
+		}
+
+		return persistentClass.isCached();
 	}
 
 	@SuppressWarnings("unchecked")

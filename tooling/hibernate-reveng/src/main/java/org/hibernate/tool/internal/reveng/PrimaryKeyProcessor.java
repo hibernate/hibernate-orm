@@ -1,4 +1,4 @@
-package org.hibernate.cfg.reveng;
+package org.hibernate.tool.internal.reveng;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,8 +15,6 @@ import org.hibernate.sql.Alias;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
-import org.hibernate.tool.internal.reveng.JdbcBinderException;
-import org.hibernate.tool.internal.reveng.RevEngUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

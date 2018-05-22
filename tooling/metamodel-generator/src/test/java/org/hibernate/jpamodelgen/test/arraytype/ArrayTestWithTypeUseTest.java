@@ -7,13 +7,12 @@
 package org.hibernate.jpamodelgen.test.arraytype;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
-import org.hibernate.jpamodelgen.test.util.IgnoreCompilationErrors;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
-import org.hibernate.jpamodelgen.test.util.TestUtil;
 import org.hibernate.jpamodelgen.test.util.WithClasses;
 import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 
 /**
  * @author Chris Cranford
@@ -22,9 +21,8 @@ public class ArrayTestWithTypeUseTest extends CompilationTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-12011")
 	@WithClasses(TestEntity.class)
-	@IgnoreCompilationErrors
 	public void testArrayWithBeanValidation() {
-		System.out.println( TestUtil.getMetaModelSourceAsString( TestEntity.class ) );
+		assertMetamodelClassGeneratedFor(  TestEntity.class );
 
 		// Primitive Arrays
 		assertAttributeTypeInMetaModelFor( TestEntity.class, "primitiveAnnotatedArray", byte[].class, "Wrong type for field." );

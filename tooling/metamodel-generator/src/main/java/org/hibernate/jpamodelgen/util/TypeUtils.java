@@ -121,7 +121,14 @@ public final class TypeUtils {
 			return extractClosestRealTypeAsString( compositeUpperBound, context );
 		}
 		else {
-			return context.getTypeUtils().erasure( type ).toString();
+			final TypeMirror erasureType = context.getTypeUtils().erasure( type );
+			if ( TypeKind.ARRAY.equals( erasureType.getKind() ) ) {
+				// keep old behavior here for arrays since #asElement returns null for them.
+				return erasureType.toString();
+			}
+			else {
+				return context.getTypeUtils().asElement( erasureType ).toString();
+			}
 		}
 	}
 

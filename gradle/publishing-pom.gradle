@@ -24,8 +24,8 @@ afterEvaluate {
 			asNode().appendNode( 'description', project.description )
 
 			Node lgplLicenseNode = asNode().appendNode( "licenses" ).appendNode( "license" )
-			lgplLicenseNode.appendNode( 'name', 'GNU Lesser General Public License' )
-			lgplLicenseNode.appendNode( 'url', 'http://www.gnu.org/licenses/lgpl-2.1.html' )
+			lgplLicenseNode.appendNode( 'name', 'GNU Library General Public License v2.1 or later' )
+			lgplLicenseNode.appendNode( 'url', 'http://www.opensource.org/licenses/LGPL-2.1' )
 			lgplLicenseNode.appendNode(
 					'comments',
 					'See discussion at http://hibernate.org/community/license/ for more details.'

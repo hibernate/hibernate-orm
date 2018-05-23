@@ -14,7 +14,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.hibernate.cfg.reveng.BasicColumnProcessor;
-import org.hibernate.cfg.reveng.ForeignKeyProcessor;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.mapping.ForeignKey;

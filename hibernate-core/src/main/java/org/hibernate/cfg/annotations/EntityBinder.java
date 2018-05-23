@@ -622,7 +622,11 @@ public class EntityBinder {
 		}
 		else {
 			if ( explicitCacheAnn != null ) {
-				LOG.cacheOrCacheableAnnotationOnNonRoot( persistentClass.getClassName() );
+				LOG.cacheOrCacheableAnnotationOnNonRoot(
+						persistentClass.getClassName() == null
+								? annotatedClass.getName()
+								: persistentClass.getClassName()
+				);
 			}
 			else if ( explicitCacheableAnn == null && persistentClass.getSuperclass() != null ) {
 				// we should inherit our super's caching config

@@ -38,8 +38,8 @@ import net.bytebuddy.matcher.ElementMatchers;
 public class BytecodeProviderImpl implements BytecodeProvider {
 
 	private static final ByteBuddyState bytebuddy = new ByteBuddyState();
-	private static final NamingStrategy.SuffixingRandom instantiatorName = new NamingStrategy.SuffixingRandom( "HibernateInstantiator" );
-	private static final NamingStrategy.SuffixingRandom optimizerName = new NamingStrategy.SuffixingRandom( "HibernateAccessOptimizer" );
+	private static final String INSTANTIATOR_PROXY_NAMING_SUFFIX = "HibernateInstantiator";
+	private static final String OPTIMIZER_PROXY_NAMING_SUFFIX = "HibernateAccessOptimizer";
 	private static final ElementMatcher.Junction newInstanceMethodName = ElementMatchers.named( "newInstance" );
 	private static final ElementMatcher.Junction getPropertyValuesMethodName = ElementMatchers.named( "getPropertyValues" );
 	private static final ElementMatcher.Junction setPropertyValuesMethodName = ElementMatchers.named( "setPropertyValues" );
@@ -62,7 +62,8 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		final Constructor<?> constructor = findConstructor( clazz );
 
 		final Class fastClass = bytebuddy.getCurrentyByteBuddy()
-				.with( instantiatorName )
+				.with( new NamingStrategy.SuffixingRandom( INSTANTIATOR_PROXY_NAMING_SUFFIX,
+						new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( clazz.getName() ) ) )
 				.subclass( ReflectionOptimizer.InstantiationOptimizer.class )
 				.method( newInstanceMethodName )
 				.intercept( MethodCall.construct( constructor ) )
@@ -71,7 +72,8 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				.getLoaded();
 
 		final Class bulkAccessor = bytebuddy.getCurrentyByteBuddy()
-				.with( optimizerName )
+				.with( new NamingStrategy.SuffixingRandom( OPTIMIZER_PROXY_NAMING_SUFFIX,
+						new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( clazz.getName() ) ) )
 				.subclass( ReflectionOptimizer.AccessOptimizer.class )
 				.method( getPropertyValuesMethodName )
 				.intercept( new Implementation.Simple( new GetPropertyValues( clazz, getters ) ) )

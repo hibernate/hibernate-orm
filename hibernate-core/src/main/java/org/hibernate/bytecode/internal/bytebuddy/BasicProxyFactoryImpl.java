@@ -26,9 +26,7 @@ import net.bytebuddy.matcher.ElementMatchers;
 public class BasicProxyFactoryImpl implements BasicProxyFactory {
 
 	private static final Class[] NO_INTERFACES = new Class[0];
-	private static final NamingStrategy PROXY_NAMING = Environment.useLegacyProxyClassnames() ?
-			new NamingStrategy.SuffixingRandom( "HibernateBasicProxy$" ) :
-			new NamingStrategy.SuffixingRandom( "HibernateBasicProxy" );
+	private static final String PROXY_NAMING_SUFFIX = Environment.useLegacyProxyClassnames() ? "HibernateBasicProxy$" : "HibernateBasicProxy";
 
 	private final Class proxyClass;
 
@@ -48,7 +46,7 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 		}
 
 		this.proxyClass = bytebuddy.getCurrentyByteBuddy()
-			.with( PROXY_NAMING )
+			.with( new NamingStrategy.SuffixingRandom( PROXY_NAMING_SUFFIX, new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( superClassOrMainInterface.getName() ) ) )
 			.subclass( superClass == null ? Object.class : superClass )
 			.implement( interfaces == null ? NO_INTERFACES : interfaces )
 			.defineField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE )

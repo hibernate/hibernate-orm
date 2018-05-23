@@ -47,9 +47,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 
 	private static final CoreMessageLogger LOG = messageLogger( ByteBuddyProxyFactory.class );
-	private static final NamingStrategy PROXY_NAMING = Environment.useLegacyProxyClassnames() ?
-			new NamingStrategy.SuffixingRandom( "HibernateProxy$" ) :
-			new NamingStrategy.SuffixingRandom( "HibernateProxy" );
+	private static final String PROXY_NAMING_SUFFIX = Environment.useLegacyProxyClassnames() ? "HibernateProxy$" : "HibernateProxy";
 
 	private Class persistentClass;
 	private String entityName;
@@ -102,7 +100,7 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 		return cacheForProxies.findOrInsert( persistentClass.getClassLoader(), new TypeCache.SimpleKey(key), () ->
 			ByteBuddyState.getStaticByteBuddyInstance()
 			.ignore( isSynthetic().and( named( "getMetaClass" ).and( returns( td -> "groovy.lang.MetaClass".equals( td.getName() ) ) ) ) )
-			.with( PROXY_NAMING )
+			.with( new NamingStrategy.SuffixingRandom( PROXY_NAMING_SUFFIX, new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( persistentClass.getName() ) ) )
 			.subclass( interfaces.length == 1 ? persistentClass : Object.class, ConstructorStrategy.Default.IMITATE_SUPER_CLASS_OPENING )
 			.implement( (Type[]) interfaces )
 			.method( isVirtual().and( not( isFinalizer() ) ) )

@@ -37,6 +37,8 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 			throw new AssertionFailure( "attempting to build proxy without any superclass or interfaces" );
 		}
 
+		Class<?> superClassOrMainInterface = superClass != null ? superClass : interfaces[0];
+
 		Set<Class> key = new HashSet<Class>();
 		if ( superClass != null ) {
 			key.add( superClass );
@@ -55,7 +57,7 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 			.implement( ProxyConfiguration.class )
 			.intercept( FieldAccessor.ofField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME ).withAssigner( Assigner.DEFAULT, Assigner.Typing.DYNAMIC ) )
 			.make()
-			.load( BasicProxyFactory.class.getClassLoader(), ByteBuddyState.getLoadingStrategy() )
+			.load( superClassOrMainInterface.getClassLoader(), ByteBuddyState.resolveClassLoadingStrategy( superClassOrMainInterface ) )
 			.getLoaded();
 	}
 

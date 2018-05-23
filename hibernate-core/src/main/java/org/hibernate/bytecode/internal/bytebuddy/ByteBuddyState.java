@@ -25,11 +25,6 @@ public final class ByteBuddyState {
 	private static final ByteBuddy buddy = new ByteBuddy().with( TypeValidation.DISABLED );
 
 	/**
-	 * This will need to change depending on the runtime JDK.
-	 */
-	private static final ClassLoadingStrategy loadingStrategy = new ClassLoadingStrategy.ForUnsafeInjection();
-
-	/**
 	 * This currently needs to be static: the BytecodeProvider is a static field of Environment and
 	 * is being accessed from static methods.
 	 * It will be easier to maintain the cache and its state when it will no longer be static
@@ -81,8 +76,8 @@ public final class ByteBuddyState {
 		return buddy;
 	}
 
-	public static ClassLoadingStrategy getLoadingStrategy() {
-		return loadingStrategy;
+	public static ClassLoadingStrategy<?> resolveClassLoadingStrategy(Class<?> originalClass) {
+		return new ClassLoadingStrategy.ForUnsafeInjection( originalClass.getProtectionDomain() );
 	}
 
 }

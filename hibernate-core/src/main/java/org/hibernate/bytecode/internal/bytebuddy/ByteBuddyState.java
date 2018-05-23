@@ -6,8 +6,19 @@
  */
 package org.hibernate.bytecode.internal.bytebuddy;
 
+import static org.hibernate.internal.CoreLogging.messageLogger;
+
+import java.lang.invoke.MethodHandles;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
+import org.hibernate.HibernateException;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyFactory;
+
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.TypeCache;
+import net.bytebuddy.dynamic.loading.ClassInjector;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.dynamic.scaffold.TypeValidation;
 
@@ -17,6 +28,8 @@ import net.bytebuddy.dynamic.scaffold.TypeValidation;
  * is able to benefit from some caching and general state reuse.
  */
 public final class ByteBuddyState {
+
+	private static final CoreMessageLogger LOG = messageLogger( ByteBuddyProxyFactory.class );
 
 	/**
 	 * Ideally shouldn't be static but it has to until we can remove the
@@ -34,6 +47,8 @@ public final class ByteBuddyState {
 	 */
 	private static final TypeCache<TypeCache.SimpleKey> CACHE = new TypeCache.WithInlineExpunction<TypeCache.SimpleKey>(
 			TypeCache.Sort.WEAK );
+
+	private static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
 
 	/**
 	 * Access to ByteBuddy. It's almost equivalent to creating a new ByteBuddy instance,
@@ -77,7 +92,41 @@ public final class ByteBuddyState {
 	}
 
 	public static ClassLoadingStrategy<?> resolveClassLoadingStrategy(Class<?> originalClass) {
-		return new ClassLoadingStrategy.ForUnsafeInjection( originalClass.getProtectionDomain() );
+		if ( ClassInjector.UsingLookup.isAvailable() ) {
+			// This is only enabled for JDK 9+
+
+			Method privateLookupIn;
+			try {
+				privateLookupIn = MethodHandles.class.getMethod( "privateLookupIn", Class.class, MethodHandles.Lookup.class );
+			}
+			catch (Exception e) {
+				throw new HibernateException( LOG.bytecodeEnhancementFailed( originalClass.getName() ), e );
+			}
+
+			try {
+				Object privateLookup;
+
+				try {
+					privateLookup = privateLookupIn.invoke( null, originalClass, LOOKUP );
+				}
+				catch (InvocationTargetException exception) {
+					if ( exception.getCause() instanceof IllegalAccessException ) {
+						return new ClassLoadingStrategy.ForUnsafeInjection( originalClass.getProtectionDomain() );
+					}
+					else {
+						throw new HibernateException( LOG.bytecodeEnhancementFailed( originalClass.getName() ), exception.getCause() );
+					}
+				}
+
+				return ClassLoadingStrategy.UsingLookup.of( privateLookup );
+			}
+			catch (Throwable e) {
+				throw new HibernateException( LOG.bytecodeEnhancementFailedUnableToGetPrivateLookupFor( originalClass.getName() ), e );
+			}
+		}
+		else {
+			return new ClassLoadingStrategy.ForUnsafeInjection( originalClass.getProtectionDomain() );
+		}
 	}
 
 }

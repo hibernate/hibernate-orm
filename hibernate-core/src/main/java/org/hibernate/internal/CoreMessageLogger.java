@@ -1807,4 +1807,8 @@ public interface CoreMessageLogger extends BasicLogger {
 			id = 487)
 	void immutableEntityUpdateQuery(String sourceQuery, String querySpaces);
 
+	@Message(value = "Bytecode enhancement failed for class: %1$s. It might be due to the Java module system preventing Hibernate ORM from defining an enhanced class "
+			+ "in the same package as class %1$s. In this case, the class should be opened and exported to Hibernate ORM.", id = 488)
+	String bytecodeEnhancementFailedUnableToGetPrivateLookupFor(String className);
+
 }

@@ -138,14 +138,6 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 				accessTypeInfo.setDefaultAccessType( entity.getEntityAccessTypeInfo().getAccessType() );
 			}
 		}
-		if ( TypeUtils.containsAnnotation( element, Constants.CONVERT ) ||
-				TypeUtils.containsAnnotation( element, Constants.HIBERNATE_TYPE )	) {
-			return new AnnotationMetaSingleAttribute(
-					entity,
-					element,
-					TypeUtils.toTypeString( declaredType )
-			);
-		}
 		if ( collection.equals( Constants.MAP_ATTRIBUTE ) ) {
 			return createAnnotationMetaAttributeForMap( declaredType, element, collection, targetEntity );
 		}

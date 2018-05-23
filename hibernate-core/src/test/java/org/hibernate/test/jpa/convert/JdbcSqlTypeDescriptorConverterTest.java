@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import javax.persistence.AttributeConverter;
+import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -33,19 +34,19 @@ import static org.junit.Assert.assertEquals;
 public class JdbcSqlTypeDescriptorConverterTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { JavaTime.class };
+		return new Class<?>[] { JavaTimeBean.class };
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12586")
-	public void testJavaTimeStuff() {
+	public void testJava8TimeObjectsUsingJdbcSqlTypeDescriptors() {
 		// Because some databases do not support millisecond values in timestamps, we clear it here.
 		// This will serve sufficient for our test to verify that the retrieved values match persisted.
 		LocalDateTime now = LocalDateTime.now().withNano( 0 );
 
 		// persist the record.
 		Integer rowId = doInJPA( this::entityManagerFactory, entityManager -> {
-			JavaTime javaTime = new JavaTime();
+			JavaTimeBean javaTime = new JavaTimeBean();
 			javaTime.setLocalDate( now.toLocalDate() );
 			javaTime.setLocalTime( now.toLocalTime() );
 			javaTime.setLocalDateTime( now );
@@ -55,26 +56,29 @@ public class JdbcSqlTypeDescriptorConverterTest extends BaseEntityManagerFunctio
 
 		// retrieve the record and verify values.
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			final JavaTime javaTime = entityManager.find( JavaTime.class, rowId );
+			final JavaTimeBean javaTime = entityManager.find( JavaTimeBean.class, rowId );
 			assertEquals( now.toLocalDate(), javaTime.getLocalDate() );
 			assertEquals( now.toLocalTime(), javaTime.getLocalTime() );
 			assertEquals( now, javaTime.getLocalDateTime() );
 		} );
 	}
 
-	@Entity(name = "JavaTime")
-	public static class JavaTime {
+	@Entity(name = "JavaTimeBean")
+	public static class JavaTimeBean {
 		@Id
 		@GeneratedValue
 		private Integer id;
 
 		@Convert(converter = LocalDateToDateConverter.class)
+		@Column(name = "LDATE")
 		private LocalDate localDate;
 
 		@Convert(converter = LocalTimeToTimeConverter.class)
+		@Column(name = "LTIME" )
 		private LocalTime localTime;
 
 		@Convert(converter = LocalDateTimeToTimestampConverter.class)
+		@Column(name = "LDATETIME")
 		private LocalDateTime localDateTime;
 
 		public Integer getId() {

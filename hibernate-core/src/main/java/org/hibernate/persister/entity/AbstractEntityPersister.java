@@ -2632,7 +2632,7 @@ public abstract class AbstractEntityPersister
 		return hasColumns ? update.toStatementString() : null;
 	}
 
-	private boolean checkVersion(final boolean[] includeProperty) {
+	protected final boolean checkVersion(final boolean[] includeProperty) {
 		return includeProperty[getVersionProperty()]
 				|| entityMetamodel.isVersionGenerated();
 	}
@@ -4162,7 +4162,7 @@ public abstract class AbstractEntityPersister
 		);
 	}
 
-	private UniqueEntityLoader getLoaderByLockMode(LockMode lockMode) {
+	protected final UniqueEntityLoader getLoaderByLockMode(LockMode lockMode) {
 		if ( LockMode.NONE == lockMode ) {
 			return noneLockLoader;
 		}
@@ -4302,7 +4302,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private boolean isAllNull(Object[] array, int tableNumber) {
+	protected final boolean isAllNull(Object[] array, int tableNumber) {
 		for ( int i = 0; i < array.length; i++ ) {
 			if ( isPropertyOfTable( i, tableNumber ) && array[i] != null ) {
 				return false;
@@ -4648,7 +4648,7 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.isMutable();
 	}
 
-	private boolean isModifiableEntity(EntityEntry entry) {
+	protected final boolean isModifiableEntity(EntityEntry entry) {
 		return ( entry == null ? isMutable() : entry.isModifiableEntity() );
 	}
 

@@ -1,4 +1,4 @@
-package org.hibernate.cfg.reveng;
+package org.hibernate.tool.internal.metadata;
 
 import java.util.ArrayList;
 import java.util.HashMap;

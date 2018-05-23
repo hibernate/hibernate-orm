@@ -1,4 +1,4 @@
-package org.hibernate.cfg.reveng;
+package org.hibernate.tool.internal.reveng;
 
 import java.sql.DatabaseMetaData;
 import java.util.ArrayList;
@@ -14,7 +14,6 @@ import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
-import org.hibernate.tool.internal.reveng.JdbcBinderException;
 import org.hibernate.tool.internal.util.TableNameQualifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -19,6 +19,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.List;
 import javax.persistence.metamodel.ListAttribute;
+import javax.persistence.metamodel.SetAttribute;
 import javax.tools.Diagnostic;
 
 import org.jboss.logging.Logger;
@@ -113,25 +114,12 @@ public class TestUtil {
 		);
 	}
 
+	public static void assertSetAttributeTypeInMetaModelFor(Class<?> clazz, String fieldName, Class<?> expectedType, String errorString) {
+		assertCollectionAttributeTypeInMetaModelFor( clazz, fieldName, SetAttribute.class, expectedType, errorString );
+	}
+
 	public static void assertListAttributeTypeInMetaModelFor(Class<?> clazz, String fieldName, Class<?> expectedType, String errorString) {
-		Field field = getFieldFromMetamodelFor( clazz, fieldName );
-		assertNotNull( "Cannot find field '" + fieldName + "' in " + clazz.getName(), field );
-		ParameterizedType type = (ParameterizedType) field.getGenericType();
-		Type rawType = type.getRawType();
-
-		assertEquals(
-			"Types do not match: " + buildErrorString( errorString, clazz ),
-			ListAttribute.class,
-			rawType
-		);
-
-		Type genericType = type.getActualTypeArguments()[1];
-
-		assertEquals(
-				"Types do not match: " + buildErrorString( errorString, clazz ),
-				expectedType,
-				genericType
-		);
+		assertCollectionAttributeTypeInMetaModelFor( clazz, fieldName, ListAttribute.class, expectedType, errorString );
 	}
 
 	public static void assertMapAttributesInMetaModelFor(Class<?> clazz, String fieldName, Class<?> expectedMapKey, Class<?> expectedMapValue, String errorString) {
@@ -351,6 +339,33 @@ public class TestUtil {
 		}
 		return targetDir;
 	}
+
+	private static void assertCollectionAttributeTypeInMetaModelFor(
+			Class<?> clazz,
+			String fieldName,
+			Class<?> collectionType,
+			Class<?> expectedType,
+			String errorString) {
+		Field field = getFieldFromMetamodelFor( clazz, fieldName );
+		assertNotNull( "Cannot find field '" + fieldName + "' in " + clazz.getName(), field );
+		ParameterizedType type = (ParameterizedType) field.getGenericType();
+		Type rawType = type.getRawType();
+
+		assertEquals(
+				"Types do not match: " + buildErrorString( errorString, clazz ),
+				collectionType,
+				rawType
+		);
+
+		Type genericType = type.getActualTypeArguments()[1];
+
+		assertEquals(
+				"Types do not match: " + buildErrorString( errorString, clazz ),
+				expectedType,
+				genericType
+		);
+	}
+
 }
 
 

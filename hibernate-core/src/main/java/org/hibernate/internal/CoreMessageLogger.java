@@ -1770,8 +1770,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unknownJavaTypeNoEqualsHashCode(Class javaType);
 
 	@LogMessage(level = WARN)
-	@Message(value = "@org.hibernate.annotations.Cache used on a non-root entity: ignored for [%s]. Please " +
-					 "see the Hibernate documentation for proper usage.", id = 482)
+	@Message(value = "@org.hibernate.annotations.Cache used on a non-root entity: ignored for [%s]. Please see the Hibernate documentation for proper usage.", id = 482)
 	void cacheOrCacheableAnnotationOnNonRoot(String className);
 
 	@LogMessage(level = WARN)

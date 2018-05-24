@@ -127,7 +127,7 @@ public final class TypeUtils {
 				return erasureType.toString();
 			}
 			else {
-				return context.getTypeUtils().asElement( erasureType ).toString();
+				return ( (TypeElement) context.getTypeUtils().asElement( erasureType ) ).getQualifiedName().toString();
 			}
 		}
 	}

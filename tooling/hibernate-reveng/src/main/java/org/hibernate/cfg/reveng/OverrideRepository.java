@@ -29,6 +29,7 @@ import org.hibernate.tool.api.reveng.AssociationInfo;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
+import org.hibernate.tool.internal.reveng.DelegatingReverseEngineeringStrategy;
 import org.hibernate.tool.internal.reveng.MetaAttributeHelper;
 import org.hibernate.tool.internal.reveng.OverrideBinder;
 import org.hibernate.tool.internal.reveng.SQLTypeMapping;

@@ -6,9 +6,9 @@ package org.hibernate.tool.hbmlint.detector;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.cfg.reveng.DelegatingReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
+import org.hibernate.tool.internal.reveng.DelegatingReverseEngineeringStrategy;
 
 public class TableSelectorStrategy extends DelegatingReverseEngineeringStrategy {
 	

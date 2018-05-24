@@ -56,6 +56,11 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			final String[] getterNames,
 			final String[] setterNames,
 			final Class[] types) {
+		if ( clazz.isInterface() || Modifier.isAbstract( clazz.getModifiers() ) ) {
+			// we don't provide an optimizer for interfaces and abstract classes - similar to what we do with Javassist
+			return null;
+		}
+
 		final Method[] getters = new Method[getterNames.length];
 		final Method[] setters = new Method[setterNames.length];
 		findAccessors( clazz, getterNames, setterNames, types, getters, setters );

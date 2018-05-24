@@ -309,7 +309,8 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 
 		@Override
 		public void markRollbackOnly() {
-			if ( getStatus() != TransactionStatus.ROLLED_BACK ) {
+			final TransactionStatus transactionStatus = getStatus();
+			if ( transactionStatus != TransactionStatus.NOT_ACTIVE && transactionStatus != TransactionStatus.ROLLED_BACK ) {
 				if ( log.isDebugEnabled() ) {
 					log.debug(
 							"JDBC transaction marked for rollback-only (exception provided for stack trace)",

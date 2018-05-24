@@ -223,6 +223,8 @@ public class QueryApiTest extends BaseNonConfigCoreFunctionalTestCase {
 				session -> {
 					try {
 						assertFalse( session.getTransaction().isActive() );
+						session.getTransaction().begin();
+
 						// Query
 						session.createQuery( "invalid" ).list();
 						fail( "expecting failure" );

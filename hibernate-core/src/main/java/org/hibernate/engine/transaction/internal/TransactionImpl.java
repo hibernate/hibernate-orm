@@ -194,7 +194,11 @@ public class TransactionImpl implements TransactionImplementor {
 		// JPA-defined API.  In our opinion it is much more user-friendly to
 		// always allow user/integration to indicate that the transaction
 		// should not be allowed to commit.
-		internalGetTransactionDriverControl().markRollbackOnly();
+		//
+		// However.. should only "do something" on an active transaction
+		if ( isActive() ) {
+			internalGetTransactionDriverControl().markRollbackOnly();
+		}
 	}
 
 	@Override

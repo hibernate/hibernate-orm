@@ -10,6 +10,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 buildscript {
 	repositories {
 		jcenter()
+		mavenCentral()
 		maven {
 			name "jboss-snapshots"
 			url "http://snapshots.jboss.org/maven2/"
@@ -34,7 +35,6 @@ plugins {
 
 allprojects {
 	repositories {
-		mavenLocal()
 		mavenCentral()
 		maven {
 			name "jboss-snapshots"

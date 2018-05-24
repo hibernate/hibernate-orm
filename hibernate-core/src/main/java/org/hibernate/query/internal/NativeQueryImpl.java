@@ -80,7 +80,7 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 
 		this.sqlString = queryDef.getQueryString();
 		this.callable = queryDef.isCallable();
-		this.querySpaces = queryDef.getQuerySpaces();
+		this.querySpaces = queryDef.getQuerySpaces() == null ? null : new ArrayList<>( queryDef.getQuerySpaces() );
 
 		if ( queryDef.getResultSetRef() != null ) {
 			ResultSetMappingDefinition definition = session.getFactory()

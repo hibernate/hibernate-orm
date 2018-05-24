@@ -17,6 +17,7 @@ import javax.persistence.Id;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.junit.Test;
 
 import static org.hamcrest.core.Is.is;
@@ -35,6 +36,7 @@ public class JtaReusingEntityTransactionTest extends BaseEntityManagerFunctional
 	@Override
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
+		TestingJtaBootstrap.prepare( options );
 		options.put( AvailableSettings.JPA_TRANSACTION_TYPE, "JTA" );
 	}
 

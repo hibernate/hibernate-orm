@@ -18,7 +18,7 @@ import javax.persistence.Query;
 
 import org.hibernate.Session;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-
+import org.hibernate.query.NativeQuery;
 import org.hibernate.testing.TestForIssue;
 import org.junit.After;
 import org.junit.Before;
@@ -157,6 +157,25 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 					 assertEquals( 1, list.size() );
 				 }
 		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12621")
+	public void testNativeQueriesFromNamedQueriesDoNotShareQuerySpaces() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Query originalQuery = entityManager.createNativeQuery( "select g from Game g where title = ?1" );
+			entityManager.getEntityManagerFactory().addNamedQuery( "myQuery", originalQuery );
+
+			NativeQuery<?> query1 = entityManager.createNamedQuery( "myQuery" ).unwrap( NativeQuery.class );
+			query1.addSynchronizedQuerySpace( "newQuerySpace" );
+
+			assertEquals( 1, query1.getSynchronizedQuerySpaces().size() );
+			assertEquals( "newQuerySpace", query1.getSynchronizedQuerySpaces().iterator().next() );
+
+			NativeQuery<?> query2 = entityManager.createNamedQuery( "myQuery" ).unwrap( NativeQuery.class );
+
+			assertEquals( 0, query2.getSynchronizedQuerySpaces().size() );
+		} );
 	}
 
 	@Entity(name = "Game")

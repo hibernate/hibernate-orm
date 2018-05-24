@@ -106,7 +106,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	private transient SessionFactoryImpl factory;
 	private final String tenantIdentifier;
-	private final UUID sessionIdentifier;
+	private UUID sessionIdentifier;
 
 	private transient JdbcConnectionAccess jdbcConnectionAccess;
 	private transient JdbcSessionContext jdbcSessionContext;
@@ -140,8 +140,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	public AbstractSharedSessionContract(SessionFactoryImpl factory, SessionCreationOptions options) {
 		this.factory = factory;
-		this.sessionIdentifier = StandardRandomStrategy.INSTANCE.generateUUID( null );
-
 		this.cacheTransactionSync = factory.getCache().getRegionFactory().createTransactionContext( this );
 
 		this.flushMode = options.getInitialSessionFlushMode();
@@ -269,6 +267,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public UUID getSessionIdentifier() {
+		if ( this.sessionIdentifier == null ) {
+			//Lazily initialized: otherwise all the UUID generations will cause of significant amount of contention.
+			this.sessionIdentifier = StandardRandomStrategy.INSTANCE.generateUUID( null );
+		}
 		return sessionIdentifier;
 	}
 
@@ -1072,7 +1074,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@SuppressWarnings("unused")
 	private void writeObject(ObjectOutputStream oos) throws IOException {
-		log.trace( "Serializing " + getClass().getSimpleName() + " [" );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "Serializing " + getClass().getSimpleName() + " [" );
+		}
+
 
 		if ( !jdbcCoordinator.isReadyForSerialization() ) {
 			// throw a more specific (helpful) exception message when this happens from Session,
@@ -1103,7 +1108,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException, SQLException {
-		log.trace( "Deserializing " + getClass().getSimpleName() );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "Deserializing " + getClass().getSimpleName() );
+		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Step 1 :: read back non-transient state...

@@ -56,25 +56,28 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			final String[] getterNames,
 			final String[] setterNames,
 			final Class[] types) {
-		if ( clazz.isInterface() || Modifier.isAbstract( clazz.getModifiers() ) ) {
-			// we don't provide an optimizer for interfaces and abstract classes - similar to what we do with Javassist
-			return null;
+		final Class fastClass;
+		if ( !clazz.isInterface() && !Modifier.isAbstract( clazz.getModifiers() ) ) {
+			// we only provide a fast class instantiator if the class can be instantiated
+			final Constructor<?> constructor = findConstructor( clazz );
+
+			fastClass = bytebuddy.getCurrentyByteBuddy()
+					.with( new NamingStrategy.SuffixingRandom( INSTANTIATOR_PROXY_NAMING_SUFFIX,
+							new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( clazz.getName() ) ) )
+					.subclass( ReflectionOptimizer.InstantiationOptimizer.class )
+					.method( newInstanceMethodName )
+					.intercept( MethodCall.construct( constructor ) )
+					.make()
+					.load( clazz.getClassLoader(), ByteBuddyState.resolveClassLoadingStrategy( clazz ) )
+					.getLoaded();
+		}
+		else {
+			fastClass = null;
 		}
 
 		final Method[] getters = new Method[getterNames.length];
 		final Method[] setters = new Method[setterNames.length];
 		findAccessors( clazz, getterNames, setterNames, types, getters, setters );
-		final Constructor<?> constructor = findConstructor( clazz );
-
-		final Class fastClass = bytebuddy.getCurrentyByteBuddy()
-				.with( new NamingStrategy.SuffixingRandom( INSTANTIATOR_PROXY_NAMING_SUFFIX,
-						new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( clazz.getName() ) ) )
-				.subclass( ReflectionOptimizer.InstantiationOptimizer.class )
-				.method( newInstanceMethodName )
-				.intercept( MethodCall.construct( constructor ) )
-				.make()
-				.load( clazz.getClassLoader(), ByteBuddyState.resolveClassLoadingStrategy( clazz ) )
-				.getLoaded();
 
 		final Class bulkAccessor = bytebuddy.getCurrentyByteBuddy()
 				.with( new NamingStrategy.SuffixingRandom( OPTIMIZER_PROXY_NAMING_SUFFIX,
@@ -92,7 +95,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 
 		try {
 			return new ReflectionOptimizerImpl(
-					(ReflectionOptimizer.InstantiationOptimizer) fastClass.newInstance(),
+					fastClass != null ? (ReflectionOptimizer.InstantiationOptimizer) fastClass.newInstance() : null,
 					(ReflectionOptimizer.AccessOptimizer) bulkAccessor.newInstance()
 			);
 		}

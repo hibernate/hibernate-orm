@@ -53,32 +53,33 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			final String[] getterNames,
 			final String[] setterNames,
 			final Class[] types) {
-		if ( clazz.isInterface() || Modifier.isAbstract( clazz.getModifiers() ) ) {
-			// we don't provide an optimizer for interfaces and abstract classes - similar to what we do with Javassist
-			return null;
+		final Class fastClass;
+		if ( !clazz.isInterface() && !Modifier.isAbstract( clazz.getModifiers() ) ) {
+			// we only provide a fast class instantiator if the class can be instantiated
+			final Constructor<?> constructor = findConstructor( clazz );
+
+			fastClass = FAST_CLASSES.findOrInsert( clazz.getClassLoader(), clazz.getName(), new Callable<Class<?>>() {
+				@Override
+				public Class<?> call() throws Exception {
+					return new ByteBuddy()
+							.with(TypeValidation.DISABLED)
+							.with(new NamingStrategy.SuffixingRandom("HibernateInstantiator"))
+							.subclass(ReflectionOptimizer.InstantiationOptimizer.class)
+							.method(ElementMatchers.named("newInstance"))
+							.intercept(MethodCall.construct(constructor))
+							.make()
+							.load(clazz.getClassLoader())
+							.getLoaded();
+				}
+			}, FAST_CLASSES);
+		}
+		else {
+			fastClass = null;
 		}
 
 		final Method[] getters = new Method[getterNames.length];
 		final Method[] setters = new Method[setterNames.length];
 		findAccessors( clazz, getterNames, setterNames, types, getters, setters );
-		final Constructor<?> constructor = findConstructor( clazz );
-
-		Class fastClass = FAST_CLASSES.findOrInsert( clazz.getClassLoader(), clazz.getName(), new Callable<Class<?>>() {
-			@Override
-			public Class<?> call() throws Exception {
-				return new ByteBuddy()
-						.with(TypeValidation.DISABLED)
-						.with(new NamingStrategy.SuffixingRandom("HibernateInstantiator"))
-						.subclass(ReflectionOptimizer.InstantiationOptimizer.class)
-						.method(ElementMatchers.named("newInstance"))
-						.intercept(MethodCall.construct(constructor))
-						.make()
-						.load(clazz.getClassLoader())
-						.getLoaded();
-			}
-		}, FAST_CLASSES);
-
-		fastClass = FAST_CLASSES.insert( clazz.getClassLoader(), clazz.getName(), fastClass );
 
 		Class bulkAccessor = BULK_ACCESSORS.findOrInsert( clazz.getClassLoader(), clazz.getName(), new Callable<Class<?>>() {
 			@Override
@@ -101,7 +102,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 
 		try {
 			return new ReflectionOptimizerImpl(
-					(ReflectionOptimizer.InstantiationOptimizer) fastClass.newInstance(),
+					fastClass != null ? (ReflectionOptimizer.InstantiationOptimizer) fastClass.newInstance() : null,
 					(ReflectionOptimizer.AccessOptimizer) bulkAccessor.newInstance()
 			);
 		}

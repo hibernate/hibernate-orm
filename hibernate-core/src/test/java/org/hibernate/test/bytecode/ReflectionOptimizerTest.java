@@ -8,7 +8,6 @@ package org.hibernate.test.bytecode;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import org.hibernate.bytecode.internal.javassist.BulkAccessor;
 import org.hibernate.bytecode.spi.BytecodeProvider;
@@ -61,7 +60,7 @@ public class ReflectionOptimizerTest extends BaseUnitTestCase {
 		BytecodeProvider provider = Environment.getBytecodeProvider();
 		ReflectionOptimizer reflectionOptimizer = provider.getReflectionOptimizer( AbstractClass.class, new String[]{ "getProperty" },
 				new String[]{ "setProperty" }, new Class[]{ String.class } );
-		assertNull( reflectionOptimizer );
+		assertNotNull( reflectionOptimizer );
 	}
 
 	@Test
@@ -70,7 +69,7 @@ public class ReflectionOptimizerTest extends BaseUnitTestCase {
 		BytecodeProvider provider = Environment.getBytecodeProvider();
 		ReflectionOptimizer reflectionOptimizer = provider.getReflectionOptimizer( Interface.class, new String[]{ "getProperty" },
 				new String[]{ "setProperty" }, new Class[]{ String.class } );
-		assertNull( reflectionOptimizer );
+		assertNotNull( reflectionOptimizer );
 	}
 
 	private void assertEquivalent(Object[] checkValues, Object[] values) {

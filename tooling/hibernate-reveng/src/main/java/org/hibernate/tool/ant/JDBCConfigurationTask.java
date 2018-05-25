@@ -11,12 +11,12 @@ import java.util.Properties;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.types.Path;
-import org.hibernate.cfg.reveng.OverrideRepository;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.reveng.ReverseEngineeringSettings;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.internal.reveng.DefaultReverseEngineeringStrategy;
+import org.hibernate.tool.internal.reveng.OverrideRepository;
 import org.hibernate.tool.internal.util.ReflectHelper;
 
 

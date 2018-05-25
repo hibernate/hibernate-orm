@@ -7,7 +7,6 @@ import java.util.Properties;
 import org.apache.commons.collections.MultiMap;
 import org.apache.commons.collections.map.MultiValueMap;
 import org.hibernate.MappingException;
-import org.hibernate.cfg.reveng.OverrideRepository;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;

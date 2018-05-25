@@ -40,6 +40,25 @@ public class MergeEnhancedDetachedOrphanRemovalTest extends BaseCoreFunctionalTe
 			entity.setName( "updated" );
 			Root entityMerged = (Root) session.merge( entity );
 			assertNotSame( entity, entityMerged );
+			assertNotSame( entity.getLeaves(), entityMerged.getLeaves() );
+		} );
+	}
+
+	@Test
+	public void testMergeDetachedNonEmptyCollection() {
+		final Root entity = doInHibernate( this::sessionFactory, session -> {
+			Root root = new Root();
+			root.setName( "new" );
+			Leaf leaf = new Leaf();
+			leaf.setRoot( root );
+			root.getLeaves().add( leaf );
+			session.save( root );
+			return root;
+		} );
+
+		doInHibernate( this::sessionFactory, session -> {
+			entity.setName( "updated" );
+			Root entityMerged = (Root) session.merge( entity );
 			assertNotSame( entity, entityMerged );
 			assertNotSame( entity.getLeaves(), entityMerged.getLeaves() );
 		} );

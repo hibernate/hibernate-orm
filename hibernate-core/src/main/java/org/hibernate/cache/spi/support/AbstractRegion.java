@@ -16,6 +16,12 @@ public abstract class AbstractRegion implements Region {
 	private final String name;
 	private final RegionFactory regionFactory;
 
+	/**
+	 * Constructs an {@link AbstractRegion}.
+	 *
+	 * @param name - the unqualified region name
+	 * @param regionFactory - the region factory
+	 */
 	public AbstractRegion(String name, RegionFactory regionFactory) {
 		this.name = name;
 		this.regionFactory = regionFactory;

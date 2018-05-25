@@ -64,7 +64,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 	 */
 	@Override
 	public Object get(SharedSessionContractImplementor session, Object key) {
-		log.debugf( "Getting cached data from region [`%s` (%s)] by key [%s]", getRegion().getName(), key );
+		log.debugf( "Getting cached data from region [`%s` (%s)] by key [%s]", getRegion().getName(), getAccessType(), key );
 		try {
 			readLock.lock();
 			Lockable item = (Lockable) getStorageAccess().getFromCache( key, session );

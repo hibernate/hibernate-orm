@@ -90,7 +90,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		doOnLoad( persister, event, loadType );
 	}
 
-	private EntityPersister getPersister( final LoadEvent event ) {
+	protected EntityPersister getPersister( final LoadEvent event ) {
 		if ( event.getInstanceToLoad() != null ) {
 			//the load() which takes an entity does not pass an entityName
 			event.setEntityClassName( event.getInstanceToLoad().getClass().getName() );
@@ -503,7 +503,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	 *
 	 * @return The object loaded from the datasource, or null if not found.
 	 */
-	private Object loadFromDatasource(
+	protected Object loadFromDatasource(
 			final LoadEvent event,
 			final EntityPersister persister) {
 		Object entity = persister.load(
@@ -807,100 +807,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		return entity;
 	}
 
-	private Object assembleCacheEntry(
-			final StandardCacheEntryImpl entry,
-			final Serializable id,
-			final EntityPersister persister,
-			final LoadEvent event) throws HibernateException {
-
-		final Object optionalObject = event.getInstanceToLoad();
-		final EventSource session = event.getSession();
-		final SessionFactoryImplementor factory = session.getFactory();
-
-		if ( traceEnabled ) {
-			LOG.tracev(
-					"Assembling entity from second-level cache: {0}",
-					MessageHelper.infoString( persister, id, factory )
-			);
-		}
-
-		EntityPersister subclassPersister = factory.getEntityPersister( entry.getSubclass() );
-		Object result = optionalObject == null ?
-				session.instantiate( subclassPersister, id ) : optionalObject;
-
-		// make it circular-reference safe
-		final EntityKey entityKey = session.generateEntityKey( id, subclassPersister );
-		TwoPhaseLoad.addUninitializedCachedEntity(
-				entityKey,
-				result,
-				subclassPersister,
-				LockMode.NONE,
-				entry.getVersion(),
-				session
-		);
-
-		Type[] types = subclassPersister.getPropertyTypes();
-		Object[] values = entry.assemble(
-				result,
-				id,
-				subclassPersister,
-				session.getInterceptor(),
-				session
-		); // intializes result by side-effect
-		TypeHelper.deepCopy(
-				values,
-				types,
-				subclassPersister.getPropertyUpdateability(),
-				values,
-				session
-		);
-
-		Object version = Versioning.getVersion( values, subclassPersister );
-		LOG.tracev( "Cached Version: {0}", version );
-
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
-		boolean isReadOnly = session.isDefaultReadOnly();
-		if ( persister.isMutable() ) {
-			Object proxy = persistenceContext.getProxy( entityKey );
-			if ( proxy != null ) {
-				// there is already a proxy for this impl
-				// only set the status to read-only if the proxy is read-only
-				isReadOnly = ( (HibernateProxy) proxy ).getHibernateLazyInitializer().isReadOnly();
-			}
-		}
-		else {
-			isReadOnly = true;
-		}
-		persistenceContext.addEntry(
-				result,
-				( isReadOnly ? Status.READ_ONLY : Status.MANAGED ),
-				values,
-				null,
-				id,
-				version,
-				LockMode.NONE,
-				true,
-				subclassPersister,
-				false
-		);
-		subclassPersister.afterInitialize( result, session );
-		persistenceContext.initializeNonLazyCollections();
-		// upgrade the lock if necessary:
-		//lock(result, lockMode);
-
-		//PostLoad is needed for EJB3
-		//TODO: reuse the PostLoadEvent...
-		PostLoadEvent postLoadEvent = event.getPostLoadEvent()
-				.setEntity( result )
-				.setId( id )
-				.setPersister( persister );
-
-		for ( PostLoadEventListener listener : postLoadEventListeners( session ) ) {
-			listener.onPostLoad( postLoadEvent );
-		}
-
-		return result;
-	}
+	
 
 	private Iterable<PostLoadEventListener> postLoadEventListeners(EventSource session) {
 		return session
@@ -909,15 +816,6 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 				.getService( EventListenerRegistry.class )
 				.getEventListenerGroup( EventType.POST_LOAD )
 				.listeners();
-	}
-
-	private EventListenerGroup<PostLoadEventListener> getEvenListenerGroup(EventSource session) {
-		return session
-				.getFactory()
-				.getServiceRegistry()
-				.getService( EventListenerRegistry.class)
-				.getEventListenerGroup( EventType.POST_LOAD);
-
 	}
 
 }

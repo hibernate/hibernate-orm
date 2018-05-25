@@ -14,6 +14,7 @@ import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.Assert.assertNotSame;
 
 /**
  * @author Chris Cranford
@@ -37,7 +38,10 @@ public class MergeEnhancedDetachedOrphanRemovalTest extends BaseCoreFunctionalTe
 
 		doInHibernate( this::sessionFactory, session -> {
 			entity.setName( "updated" );
-			session.merge( entity );
+			Root entityMerged = (Root) session.merge( entity );
+			assertNotSame( entity, entityMerged );
+			assertNotSame( entity, entityMerged );
+			assertNotSame( entity.getLeaves(), entityMerged.getLeaves() );
 		} );
 	}
 }

@@ -55,6 +55,7 @@ dependencies {
 	testCompile( libraries.mockito )
 	testCompile( libraries.mockito_inline )
 
+	testRuntime(libraries.wildfly_transaction_client)
 	testRuntime( libraries.h2 )
 	testRuntime( libraries.hsqldb )
 	testRuntime( libraries.postgresql )

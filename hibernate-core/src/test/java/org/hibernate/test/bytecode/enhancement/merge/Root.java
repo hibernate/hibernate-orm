@@ -15,12 +15,11 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
-import javax.persistence.SequenceGenerator;
 
 /**
+ *
  * @author Chris Cranford
  */
 @Entity
@@ -31,8 +30,7 @@ public class Root {
 	private Set<Leaf> leaves = new HashSet<>();
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "ROOT_SEQ")
-	@SequenceGenerator(name = "ROOT_SEQ", sequenceName = "ROOT_SEQ")
+	@GeneratedValue
 	public Long getId() {
 		return id;
 	}

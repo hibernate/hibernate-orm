@@ -11,11 +11,9 @@ import javax.persistence.AccessType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.SequenceGenerator;
 
 /**
  * @author Chris Cranford
@@ -24,8 +22,7 @@ import javax.persistence.SequenceGenerator;
 @Access(AccessType.FIELD)
 public class Leaf {
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator="LEAF_SEQ")
-	@SequenceGenerator(name = "LEAF_SEQ", sequenceName = "LEAF_SEQ")
+	@GeneratedValue
 	private Long id;
 
 	@ManyToOne(optional = false)

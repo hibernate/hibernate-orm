@@ -28,6 +28,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
@@ -257,20 +258,27 @@ public class CollectionLoadContext {
 			final BytecodeEnhancementMetadata bytecodeEnhancementMetadata =
 					persister.getOwnerEntityPersister().getInstrumentationMetadata();
 			if ( bytecodeEnhancementMetadata.isEnhancedForLazyLoading() ) {
-				// Figure out the collection property name.
-				// TODO: what if the collection is in an embeddable???
-				final String propertyName = persister.getRole().substring(
-						persister.getOwnerEntityPersister().getEntityName().length() + 1
-				);
-				if ( !bytecodeEnhancementMetadata.isAttributeLoaded( lce.getCollection().getOwner(), propertyName ) ) {
-					int propertyIndex = persister.getOwnerEntityPersister().getEntityMetamodel().getPropertyIndex(
-							propertyName
+				// Lazy properties in embeddables/composites are not currently supported for embeddables (HHH-10480),
+				// so check to make sure the collection is not in an embeddable before checking to see if
+				// the collection is lazy.
+				// TODO: More will probably need to be done here when HHH-10480 is fixed..
+				if ( StringHelper.qualifier( persister.getRole() ).length() ==
+						persister.getOwnerEntityPersister().getEntityName().length() ) {
+					// Assume the collection is not in an embeddable.
+					// Strip off <entityName><dot> to get the collection property name.
+					final String propertyName = persister.getRole().substring(
+							persister.getOwnerEntityPersister().getEntityName().length() + 1
 					);
-					persister.getOwnerEntityPersister().setPropertyValue(
-							lce.getCollection().getOwner(),
-							propertyIndex,
-							lce.getCollection()
-					);
+					if ( !bytecodeEnhancementMetadata.isAttributeLoaded( lce.getCollection().getOwner(), propertyName ) ) {
+						int propertyIndex = persister.getOwnerEntityPersister().getEntityMetamodel().getPropertyIndex(
+								propertyName
+						);
+						persister.getOwnerEntityPersister().setPropertyValue(
+								lce.getCollection().getOwner(),
+								propertyIndex,
+								lce.getCollection()
+						);
+					}
 				}
 			}
 		}

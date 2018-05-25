@@ -112,10 +112,10 @@ buildScan {
 
 
 
-//allprojects {
-//	apply plugin: 'idea'
-//	apply plugin: 'eclipse'
-//}
+allprojects {
+	apply plugin: 'idea'
+	apply plugin: 'eclipse'
+}
 
 
 

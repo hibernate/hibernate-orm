@@ -52,7 +52,7 @@ dependencies {
     //      3) hibernate-commons-annotations
     compile( libraries.dom4j )
     compile( libraries.commons_annotations )
-
+    compile(libraries.wildfly_transaction_client)
     antlr( libraries.antlr )
 
     provided( libraries.jacc )

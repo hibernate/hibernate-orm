@@ -17,6 +17,7 @@ import java.util.Set;
 import org.hibernate.CacheMode;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -248,6 +249,31 @@ public class CollectionLoadContext {
 //			}
 		}
 
+		// The collection has been completely initialized and added to the PersistenceContext.
+
+		if ( lce.getCollection().getOwner() != null ) {
+			// If the owner is bytecode-enhanced and the owner's collection value is uninitialized,
+			// then go ahead and set it to the newly initialized collection.
+			final BytecodeEnhancementMetadata bytecodeEnhancementMetadata =
+					persister.getOwnerEntityPersister().getInstrumentationMetadata();
+			if ( bytecodeEnhancementMetadata.isEnhancedForLazyLoading() ) {
+				// Figure out the collection property name.
+				// TODO: what if the collection is in an embeddable???
+				final String propertyName = persister.getRole().substring(
+						persister.getOwnerEntityPersister().getEntityName().length() + 1
+				);
+				if ( !bytecodeEnhancementMetadata.isAttributeLoaded( lce.getCollection().getOwner(), propertyName ) ) {
+					int propertyIndex = persister.getOwnerEntityPersister().getEntityMetamodel().getPropertyIndex(
+							propertyName
+					);
+					persister.getOwnerEntityPersister().setPropertyValue(
+							lce.getCollection().getOwner(),
+							propertyIndex,
+							lce.getCollection()
+					);
+				}
+			}
+		}
 
 		// add to cache if:
 		boolean addToCache =

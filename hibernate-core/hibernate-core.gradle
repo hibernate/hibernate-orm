@@ -52,7 +52,6 @@ dependencies {
     //      3) hibernate-commons-annotations
     compile( libraries.dom4j )
     compile( libraries.commons_annotations )
-
     antlr( libraries.antlr )
 
     provided( libraries.jacc )
@@ -90,8 +89,9 @@ dependencies {
     testRuntime( libraries.javassist )
     testRuntime( libraries.byteBuddy )
     testRuntime( libraries.weld )
+    testRuntime(libraries.wildfly_transaction_client)
 
-    testCompile( project( ':hibernate-jpamodelgen' ) )
+	testCompile( project( ':hibernate-jpamodelgen' ) )
 
     testCompile libraries.arquillian_junit_container
     testCompile libraries.arquillian_protocol_servlet

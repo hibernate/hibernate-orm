@@ -5,6 +5,56 @@ Note: Please refer to JIRA to learn more about each issue.
 
 
 
+Changes in 5.3.1.final (May 25, 2018)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31673/tab/release-report-done
+
+** Bug
+    * [HHH-12569] - Referential integrity violation on insert when using @OneToOne with @JoinColumn with hibernate.order_inserts=true
+    * [HHH-12577] - Warning log appears on an AttributeConverter<enum, String>
+    * [HHH-12579] - Bytecode enhancement with Generics on @MappedSuperclass crashes bootstrapping while using Bytebuddy
+    * [HHH-12581] - NPE for Criteria query containing fetch join as a regression of HHH-12338
+    * [HHH-12584] - Bytebuddy ReflectionOptimizer does not work with abstract class
+    * [HHH-12586] - Strange date type confusion in JdbcDateTypeDescriptor
+    * [HHH-12587] - Flushing enhanced entity with @Cache(usage = CacheConcurrencyStrategy.NONE) fails
+    * [HHH-12592] - Merge of detached, enhanced entity with orphanRemoval = true collection fails since 5.2.13
+    * [HHH-12599] - Add Javadoc indicating that region names do not include a prefix
+    * [HHH-12602] - Bytecode Enhancement documentation refers to removed property hibernate.ejb.use_class_enhancer
+    * [HHH-12612] - TYPE_USE annotated collections and elements fail metamodel generation.
+    * [HHH-12614] - Protection domain ignored when enhancing+loading classes with ByteBuddy
+    * [HHH-12617] - Caching log message prints null rather than class name.
+    * [HHH-12620] - Update JBossStandAloneJtaPlatform to use org.wildfly.transaction.client.* TM/UT
+    * [HHH-12621] - Thread-unsafe behavior of Query Spaces in Named Queries
+    * [HHH-12622] - JdbcResourceLocalTransactionCoordinatorImpl#markRollbackOnly should be ignored if there is no TX
+    * [HHH-12627] - Caching debug log error: java.util.MissingFormatArgumentException: Format specifier '%s'
+    * [HHH-12631] - Fix invalid tracev calls in DefaultResolveNaturalIdEventListener
+    * [HHH-12634] - Make EntityPrinter more permissive regarding the parameters passed
+
+** Task
+    * [HHH-12575] - Upgrade to Classmate 1.3.4
+    * [HHH-12576] - Upgrade to jboss-transaction-api 1.1.1.Final
+    * [HHH-12580] - The WildFly module of ByteBuddy should be marked as private API
+    * [HHH-12583] - Deprecate hibernate.proc.param_null_passing setting
+    * [HHH-12610] - Upgrade to Byte Buddy 1.8.11 to improve JDK compatibility
+
+** Improvement
+    * [HHH-12559] - Add support for MySQL 8 SKIP LOCKED and NOWAIT
+    * [HHH-12572] - Exclude LockMode.WRITE from loader creation loop
+    * [HHH-12585] - Improve DefaultFlushEntityEventListener#invokeInterceptor method execution
+    * [HHH-12589] - Add support for registering custom SQL functions when bootstrapping via JPA
+    * [HHH-12591] - Remove second call to Scope#setSessionFactory(SessionFactoryImplementor)  from TypeConfiguration#scope(SessionFactoryImplementor,BootstrapContext)
+    * [HHH-12605] - Boxed variables never null
+    * [HHH-12606] - Container contents are never accessed
+    * [HHH-12615] - Make AbstractEntityPersister#getLoaderByLockMode() and a few others protected final
+    * [HHH-12616] - Clarify ambiguity in License name
+    * [HHH-12618] - ByteBuddy enhancement - Use MethodHandle lookup if available
+    * [HHH-12626] - Avoid high CPU contention by not allocating Session UUIDs eagerly
+    * [HHH-12629] - Make some methods protected in DefaultLoadListener
+    * [HHH-12636] - Upgrade to ByteBuddy 1.8.12 to fix issue with entities having no package
+
+
+
 Changes in 5.3.0.Final (May 14, 2018)
 ------------------------------------------------------------------------------------------------------------------------
 

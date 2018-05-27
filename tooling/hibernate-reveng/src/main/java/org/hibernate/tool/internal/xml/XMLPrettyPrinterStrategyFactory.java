@@ -1,4 +1,4 @@
-package org.hibernate.tool.hbm2x.xml;
+package org.hibernate.tool.internal.xml;
 
 import org.hibernate.tool.api.xml.XMLPrettyPrinterStrategy;
 

@@ -4,14 +4,14 @@
  */
 package org.hibernate.tool.hbm2x;
 
-import org.hibernate.tool.hbm2x.xml.XMLPrettyPrinterStrategyFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+
+import org.hibernate.tool.internal.xml.XMLPrettyPrinterStrategyFactory;
 
 /**
  * @author max

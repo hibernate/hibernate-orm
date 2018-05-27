@@ -13,16 +13,15 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformException;
 
 /**
- * Return a standalone JTA transaction manager for WildFly transaction client
- * Known to work for WildFly 13
+ * Return a standalone JTA transaction manager for JBoss Transactions
+ * Known to work for org.jboss.jbossts:jbossjta:4.9.0.GA
  *
  * @author Emmanuel Bernard
  * @author Steve Ebersole
- * @author Scott Marlow
  */
 public class JBossStandAloneJtaPlatform extends AbstractJtaPlatform {
-	public static final String JBOSS_TM_CLASS_NAME = "org.wildfly.transaction.client.ContextTransactionManager";
-	public static final String JBOSS_UT_CLASS_NAME = "org.wildfly.transaction.client.LocalUserTransaction";
+	public static final String JBOSS_TM_CLASS_NAME = "com.arjuna.ats.jta.TransactionManager";
+	public static final String JBOSS_UT_CLASS_NAME = "com.arjuna.ats.jta.UserTransaction";
 
 	@Override
 	protected TransactionManager locateTransactionManager() {
@@ -30,10 +29,10 @@ public class JBossStandAloneJtaPlatform extends AbstractJtaPlatform {
 			final Class jbossTmClass = serviceRegistry()
 					.getService( ClassLoaderService.class )
 					.classForName( JBOSS_TM_CLASS_NAME );
-			return (TransactionManager) jbossTmClass.getMethod( "getInstance" ).invoke( null );
+			return (TransactionManager) jbossTmClass.getMethod( "transactionManager" ).invoke( null );
 		}
 		catch ( Exception e ) {
-			throw new JtaPlatformException( "Could not obtain WildFly Transaction Client transaction manager instance", e );
+			throw new JtaPlatformException( "Could not obtain JBoss Transactions transaction manager instance", e );
 		}
 	}
 
@@ -43,10 +42,10 @@ public class JBossStandAloneJtaPlatform extends AbstractJtaPlatform {
 			final Class jbossUtClass = serviceRegistry()
 					.getService( ClassLoaderService.class )
 					.classForName( JBOSS_UT_CLASS_NAME );
-			return (UserTransaction) jbossUtClass.getMethod( "getInstance" ).invoke( null );
+			return (UserTransaction) jbossUtClass.getMethod( "userTransaction" ).invoke( null );
 		}
 		catch ( Exception e ) {
-			throw new JtaPlatformException( "Could not obtain WildFly Transaction Client user transaction instance", e );
+			throw new JtaPlatformException( "Could not obtain JBoss Transactions user transaction instance", e );
 		}
 	}
 }

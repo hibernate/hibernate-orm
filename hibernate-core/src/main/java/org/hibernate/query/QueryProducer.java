@@ -117,7 +117,7 @@ public interface QueryProducer {
 	 * implicit mapping to the specified Java type.
 	 *
 	 * @param sqlString Native (SQL) query string
-	 * @param resultClass The Java type to map results to
+	 * @param resultClass The entity to map results to
 	 *
 	 * @return The NativeQuery instance for manipulation and execution
 	 *

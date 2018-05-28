@@ -67,7 +67,7 @@ public class LazyInitializationWithoutInlineDirtyTrackingTest extends BaseCoreFu
 
 		private String name;
 
-		@Column(name = "bytes", columnDefinition = "BLOB")
+		@Column(name = "bytes")
 		@Lob
 		@Basic(fetch = FetchType.LAZY)
 		private byte[] bytes;

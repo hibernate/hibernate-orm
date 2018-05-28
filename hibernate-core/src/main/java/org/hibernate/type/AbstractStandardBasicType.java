@@ -71,11 +71,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	protected T getReplacement(T original, T target, SharedSessionContractImplementor session) {
-		if ( original == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
-			return target;
-		}
-		else if ( !isMutable() ||
-					( target != LazyPropertyInitializer.UNFETCHED_PROPERTY && isEqual( original, target ) ) ) {
+		if ( !isMutable() || ( target != null && isEqual( original, target ) ) ) {
 			return original;
 		}
 		else {
@@ -351,6 +347,10 @@ public abstract class AbstractStandardBasicType<T>
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public final Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map copyCache) {
+		if ( original == null && target == null ) {
+			return null;
+		}
+
 		return getReplacement( (T) original, (T) target, session );
 	}
 

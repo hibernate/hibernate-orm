@@ -289,7 +289,7 @@ public class TypeHelper {
 	 * @param previousState The baseline state of the entity
 	 * @param includeColumns Columns to be included in the dirty checking, per property
 	 * @param session The session from which the dirty check request originated.
-	 * 
+	 *
 	 * @return Array containing indices of the dirty properties, or null if no properties considered dirty.
 	 */
 	public static int[] findDirty(
@@ -303,9 +303,10 @@ public class TypeHelper {
 		int span = properties.length;
 
 		for ( int i = 0; i < span; i++ ) {
-			final boolean dirty = currentState[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY
-					&& properties[i].isDirtyCheckable()
-					&& properties[i].getType().isDirty( previousState[i], currentState[i], includeColumns[i], session );
+			final boolean dirty = currentState[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY &&
+					( previousState[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ||
+							( properties[i].isDirtyCheckable()
+									&& properties[i].getType().isDirty( previousState[i], currentState[i], includeColumns[i], session ) ) );
 			if ( dirty ) {
 				if ( results == null ) {
 					results = new int[span];

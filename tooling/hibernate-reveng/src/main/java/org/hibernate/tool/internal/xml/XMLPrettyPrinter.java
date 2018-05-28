@@ -2,7 +2,7 @@
  * Created on 17-Dec-2004
  *
  */
-package org.hibernate.tool.hbm2x;
+package org.hibernate.tool.internal.xml;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,8 +10,6 @@ import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-
-import org.hibernate.tool.internal.xml.XMLPrettyPrinterStrategyFactory;
 
 /**
  * @author max

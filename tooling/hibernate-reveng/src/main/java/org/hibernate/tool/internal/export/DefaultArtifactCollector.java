@@ -11,7 +11,7 @@ import java.util.Set;
 
 import org.hibernate.tool.api.export.ArtifactCollector;
 import org.hibernate.tool.hbm2x.ExporterException;
-import org.hibernate.tool.hbm2x.XMLPrettyPrinter;
+import org.hibernate.tool.internal.xml.XMLPrettyPrinter;
 
 /**
  * Callback class that all exporters are given to allow better feedback and

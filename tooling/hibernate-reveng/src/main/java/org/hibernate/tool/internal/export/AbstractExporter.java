@@ -1,7 +1,7 @@
 /*
  * Created on 21-Dec-2004
  */
-package org.hibernate.tool.hbm2x;
+package org.hibernate.tool.internal.export;
 
 import java.io.File;
 import java.util.Iterator;
@@ -14,7 +14,11 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.tool.api.export.ArtifactCollector;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.internal.export.DefaultArtifactCollector;
+import org.hibernate.tool.hbm2x.Cfg2HbmTool;
+import org.hibernate.tool.hbm2x.Cfg2JavaTool;
+import org.hibernate.tool.hbm2x.ExporterException;
+import org.hibernate.tool.hbm2x.ExporterSettings;
+import org.hibernate.tool.hbm2x.TemplateHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

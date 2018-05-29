@@ -20,6 +20,7 @@ import java.util.TreeMap;
 import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.tool.internal.export.AbstractExporter;
 
 /**
  * @author max

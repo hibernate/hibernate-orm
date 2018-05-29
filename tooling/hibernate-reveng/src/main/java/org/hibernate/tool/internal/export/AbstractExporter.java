@@ -17,7 +17,6 @@ import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.hbm2x.Cfg2HbmTool;
 import org.hibernate.tool.hbm2x.Cfg2JavaTool;
 import org.hibernate.tool.hbm2x.ExporterException;
-import org.hibernate.tool.hbm2x.ExporterSettings;
 import org.hibernate.tool.hbm2x.TemplateHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

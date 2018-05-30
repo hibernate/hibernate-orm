@@ -211,11 +211,13 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 
 		classes.addAll( Arrays.asList( getAnnotatedClasses() ) );
 		config.put( AvailableSettings.LOADED_CLASSES, classes );
-		for ( Map.Entry<Class, String> entry : getCachedClasses().entrySet() ) {
-			config.put( AvailableSettings.CLASS_CACHE_PREFIX + "." + entry.getKey().getName(), entry.getValue() );
-		}
-		for ( Map.Entry<String, String> entry : getCachedCollections().entrySet() ) {
-			config.put( AvailableSettings.COLLECTION_CACHE_PREFIX + "." + entry.getKey(), entry.getValue() );
+		if ( registerCachesManually() ) {
+			for ( Map.Entry<Class, String> entry : getCachedClasses().entrySet() ) {
+				config.put( AvailableSettings.CLASS_CACHE_PREFIX + "." + entry.getKey().getName(), entry.getValue() );
+			}
+			for ( Map.Entry<String, String> entry : getCachedCollections().entrySet() ) {
+				config.put( AvailableSettings.COLLECTION_CACHE_PREFIX + "." + entry.getKey(), entry.getValue() );
+			}
 		}
 		if ( getEjb3DD().length > 0 ) {
 			ArrayList<String> dds = new ArrayList<String>();
@@ -225,6 +227,10 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 
 		addConfigOptions( config );
 		return config;
+	}
+
+	protected boolean registerCachesManually() {
+		return true;
 	}
 
 	protected void addConfigOptions(Map options) {

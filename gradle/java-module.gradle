@@ -227,6 +227,13 @@ processTestResources {
 			into file( "${buildDir}/resources/test" )
 			filter( ReplaceTokens, tokens: dbBundle[db] )
 		}
+		if( new File( '${buildDir}/../out/test/' ).exists() ) {
+			copy {
+				from file( 'src/test/resources/hibernate.properties' )
+				into file( "${buildDir}/../out/test/resources" )
+				filter( ReplaceTokens, tokens: dbBundle[db] )
+			}
+		}
 	}
 }
 

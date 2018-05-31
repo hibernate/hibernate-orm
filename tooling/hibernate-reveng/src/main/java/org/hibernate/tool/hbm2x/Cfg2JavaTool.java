@@ -30,6 +30,7 @@ import org.hibernate.tool.hbm2x.pojo.NoopImportContext;
 import org.hibernate.tool.hbm2x.pojo.POJOClass;
 import org.hibernate.tool.hbm2x.visitor.JavaTypeFromValueVisitor;
 import org.hibernate.tool.internal.util.NameConverter;
+import org.hibernate.tool.internal.util.StringUtil;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.PrimitiveType;
 import org.hibernate.type.Type;
@@ -104,11 +105,11 @@ public class Cfg2JavaTool {
 		StringBuffer result = new StringBuffer();
 
 		if ( string != null ) {
-			String[] lines = StringUtils.split( string, "\n\r\f" );
+			String[] lines = StringUtil.split( string, "\n\r\f" );
 			for ( int i = 0; i < lines.length ; i++ ) {
 				String docline = " * " + lines[i];
 				if ( i < lines.length - 1 ) docline += "\n";
-				result.append( StringUtils.leftPad( docline, docline.length() + indent ) );
+				result.append( StringUtil.leftPad( docline, docline.length() + indent ) );
 			}
 		}
 

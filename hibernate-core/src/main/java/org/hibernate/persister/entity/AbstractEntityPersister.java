@@ -1833,7 +1833,7 @@ public abstract class AbstractEntityPersister
 			update.setComment( "forced version increment" );
 		}
 		update.addColumn( getVersionColumnName() );
-		update.addPrimaryKeyColumns( getIdentifierColumnNames() );
+		update.addPrimaryKeyColumns( rootTableKeyColumnNames );
 		update.setVersionColumnName( getVersionColumnName() );
 		return update.toStatementString();
 	}

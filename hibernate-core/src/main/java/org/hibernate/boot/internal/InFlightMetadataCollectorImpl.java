@@ -307,7 +307,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				);
 			}
 
-			if ( persistentClass.hasNaturalId() && persistentClass.getNaturalIdCacheRegionName() != null ) {
+			if ( persistentClass.hasNaturalId() && persistentClass instanceof RootClass && persistentClass.getNaturalIdCacheRegionName() != null ) {
 				locateCacheRegionConfigBuilder( persistentClass.getNaturalIdCacheRegionName() ).addNaturalIdConfig(
 						(RootClass) persistentClass,
 						accessType

@@ -1,7 +1,9 @@
-package org.hibernate.tool.hbm2x.doc;
+package org.hibernate.tool.internal.export.doc;
 
 import java.io.File;
 import java.util.List;
+
+import org.hibernate.tool.hbm2x.doc.DocFolder;
 
 /**
  * Represents a documentation file.

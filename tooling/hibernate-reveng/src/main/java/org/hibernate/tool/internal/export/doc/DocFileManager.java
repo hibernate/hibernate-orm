@@ -9,7 +9,6 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.hbm2x.doc.DocFile;
 import org.hibernate.tool.hbm2x.doc.DocFolder;
 import org.hibernate.tool.hbm2x.doc.DocHelper;
 import org.hibernate.tool.hbm2x.pojo.POJOClass;

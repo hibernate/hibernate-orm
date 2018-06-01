@@ -10,7 +10,8 @@ import java.io.Serializable;
 import java.util.Properties;
 
 import org.hibernate.MappingException;
-import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
@@ -24,11 +25,11 @@ import org.hibernate.usertype.UserType;
  */
 @Deprecated
 public class TypeResolver implements Serializable {
-	private final BasicTypeRegistry basicTypeRegistry;
 	private final TypeFactory typeFactory;
+	private final TypeConfiguration typeConfiguration;
 
 	public TypeResolver(TypeConfiguration typeConfiguration, TypeFactory typeFactory){
-		this.basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
+		this.typeConfiguration = typeConfiguration;
 		this.typeFactory = typeFactory;
 	}
 
@@ -51,15 +52,15 @@ public class TypeResolver implements Serializable {
 //	}
 
 	public void registerTypeOverride(BasicType type) {
-		basicTypeRegistry.register( type );
+		typeConfiguration.getBasicTypeRegistry().register( type );
 	}
 
 	public void registerTypeOverride(UserType type, String[] keys) {
-		basicTypeRegistry.register( type, keys );
+		typeConfiguration.getBasicTypeRegistry().register( type, keys );
 	}
 
 	public void registerTypeOverride(CompositeUserType type, String[] keys) {
-		basicTypeRegistry.register( type, keys );
+		typeConfiguration.getBasicTypeRegistry().register( type, keys );
 	}
 
 	public TypeFactory getTypeFactory() {
@@ -74,7 +75,7 @@ public class TypeResolver implements Serializable {
 	 * @return The registered type
 	 */
 	public BasicType basic(String name) {
-		return basicTypeRegistry.getRegisteredType( name );
+		return typeConfiguration.getBasicTypeRegistry().getRegisteredType( name );
 	}
 
 	/**
@@ -119,12 +120,13 @@ public class TypeResolver implements Serializable {
 		}
 
 		try {
-			Class typeClass = ReflectHelper.classForName( typeName );
+			final ClassLoaderService classLoaderService = typeConfiguration.getServiceRegistry().getService( ClassLoaderService.class );
+			Class typeClass = classLoaderService.classForName( typeName );
 			if ( typeClass != null ) {
 				return typeFactory.byClass( typeClass, parameters );
 			}
 		}
-		catch ( ClassNotFoundException ignore ) {
+		catch ( ClassLoadingException ignore ) {
 		}
 
 		return null;

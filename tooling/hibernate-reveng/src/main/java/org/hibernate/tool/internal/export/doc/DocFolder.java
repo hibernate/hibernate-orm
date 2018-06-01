@@ -1,4 +1,4 @@
-package org.hibernate.tool.hbm2x.doc;
+package org.hibernate.tool.internal.export.doc;
 
 import java.io.File;
 import java.util.ArrayList;

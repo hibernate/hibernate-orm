@@ -1,4 +1,4 @@
-package org.hibernate.tool.hbm2x.doc;
+package org.hibernate.tool.internal.export.doc;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -9,6 +9,9 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.mapping.Table;
+import org.hibernate.tool.hbm2x.doc.DocFile;
+import org.hibernate.tool.hbm2x.doc.DocFolder;
+import org.hibernate.tool.hbm2x.doc.DocHelper;
 import org.hibernate.tool.hbm2x.pojo.POJOClass;
 
 /**

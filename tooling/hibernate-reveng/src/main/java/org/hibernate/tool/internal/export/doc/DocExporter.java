@@ -1,4 +1,4 @@
-package org.hibernate.tool.hbm2x;
+package org.hibernate.tool.internal.export.doc;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -14,6 +14,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Table;
+import org.hibernate.tool.hbm2x.ExporterException;
+import org.hibernate.tool.hbm2x.GenericExporter;
+import org.hibernate.tool.hbm2x.TemplateProducer;
 import org.hibernate.tool.hbm2x.doc.DocFile;
 import org.hibernate.tool.hbm2x.doc.DocFileManager;
 import org.hibernate.tool.hbm2x.doc.DocHelper;

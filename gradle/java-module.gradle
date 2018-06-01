@@ -35,6 +35,7 @@ apply plugin: 'project-report'
 ext {
 	java9ModuleNameBase = project.name.startsWith( 'hibernate-' ) ? name.drop( 'hibernate-'.length() ): name
 	java9ModuleName = "org.hibernate.orm.$project.java9ModuleNameBase"
+	forbiddenAPITargetJDKCompatibility = '10'
 }
 
 
@@ -337,6 +338,7 @@ checkstyleMain.exclude '**/org/hibernate/cfg/*'
 task forbiddenApisSystemOut(type: CheckForbiddenApis, dependsOn: compileJava) {
 	classesDirs = project.files( project.sourceSets.main.java.outputDir )
 	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
+	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
 	bundledSignatures += 'jdk-system-out'
 	suppressAnnotations += ['org.hibernate.internal.build.AllowSysOut', 'org.hibernate.internal.build.AllowPrintStacktrace']
 }
@@ -344,6 +346,7 @@ task forbiddenApisSystemOut(type: CheckForbiddenApis, dependsOn: compileJava) {
 task forbiddenApisUnsafe(type: CheckForbiddenApis, dependsOn: compileJava) {
 	classesDirs = project.files( project.sourceSets.main.java.outputDir )
 	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
+	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
 	bundledSignatures += "jdk-unsafe-${baselineJavaVersion}".toString()
 
 	// unfortunately we currently have many uses of default Locale implicitly (~370) which need to be fixed
@@ -356,6 +359,7 @@ task forbiddenApisUnsafe(type: CheckForbiddenApis, dependsOn: compileJava) {
 task forbiddenApisNonPortable(type: CheckForbiddenApis, dependsOn: compileJava) {
 	classesDirs = project.files( project.sourceSets.main.java.outputDir )
 	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
+	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
 	bundledSignatures += 'jdk-non-portable'
 }
 

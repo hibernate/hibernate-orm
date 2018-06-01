@@ -29,7 +29,7 @@ import org.junit.Test;
 public abstract class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {A.class, Another.class, AllCached.class, B.class};
+		return new Class[] {A.class, Another.class, AllCached.class, B.class, SubClass.class};
 	}
 
 	@Override
@@ -161,6 +161,33 @@ public abstract class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestC
 			assertNull( it );
 			it = (AllCached) session.bySimpleNaturalId( AllCached.class ).load( "it2" );
 			assertNotNull( it );
+			session.delete( it );
+			session.getTransaction().commit();
+			session.close();
+	}
+	
+	@Test
+	@TestForIssue( jiraKey = "HHH-12657" )
+	public void testbySimpleNaturalIdResolveEntityFrom2LCacheSubClass() {
+			Session session = openSession();
+			session.beginTransaction();
+			SubClass it = new SubClass( "it" );
+			
+			session.save( it );
+			session.getTransaction().commit();
+			session.close();
+
+			session = openSession();
+			session.beginTransaction();
+			
+			// verify instance can be retrieved by bySimpleNaturalId called on superclass 
+			it = (SubClass) session.bySimpleNaturalId( AllCached.class ).load( "it" );
+			assertNotNull( it );
+			
+			// verify instance can be retrieved by bySimpleNaturalId called on concrete sub class too 
+			it = session.bySimpleNaturalId( SubClass.class ).load( "it" );
+			assertNotNull( it );
+					
 			session.delete( it );
 			session.getTransaction().commit();
 			session.close();

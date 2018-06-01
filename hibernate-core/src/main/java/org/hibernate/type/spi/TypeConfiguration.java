@@ -25,6 +25,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.metamodel.internal.MetamodelImpl;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
@@ -174,6 +175,18 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return scope.getSessionFactory();
 	}
 
+	/**
+	 * Obtain the ServiceRegistry scoped to the TypeConfiguration.
+	 *
+	 * @apiNote Depending on what the {@link Scope} is currently scoped to will determine where the
+	 * {@link ServiceRegistry} is obtained from.
+	 *
+	 * @return The ServiceRegistry
+	 */
+	public ServiceRegistry getServiceRegistry() {
+		return scope.getServiceRegistry();
+	}
+
 	@Override
 	public void sessionFactoryCreated(SessionFactory factory) {
 		// Instead of allowing scope#setSessionFactory to influence this, we use the SessionFactoryObserver callback
@@ -235,6 +248,16 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 				throw new HibernateException( "TypeConfiguration is not currently scoped to MetadataBuildingContext" );
 			}
 			return metadataBuildingContext;
+		}
+
+		public ServiceRegistry getServiceRegistry() {
+			if ( metadataBuildingContext != null ) {
+				return metadataBuildingContext.getBootstrapContext().getServiceRegistry();
+			}
+			else if ( sessionFactory != null ) {
+				return sessionFactory.getServiceRegistry();
+			}
+			return null;
 		}
 
 		public void setMetadataBuildingContext(MetadataBuildingContext metadataBuildingContext) {

@@ -6,17 +6,16 @@
  */
 package org.hibernate.test.naturalid.mutable.cached;
 
-import org.hibernate.Session;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.stat.NaturalIdCacheStatistics;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.cache.CachingRegionFactory;
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+
+import org.hibernate.Session;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.stat.NaturalIdCacheStatistics;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.cache.CachingRegionFactory;
+import org.junit.Test;
 
 public class CachedMutableNaturalIdStrictReadWriteTest extends
 		CachedMutableNaturalIdTest {

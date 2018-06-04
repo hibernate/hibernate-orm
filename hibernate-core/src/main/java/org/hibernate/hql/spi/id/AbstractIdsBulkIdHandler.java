@@ -21,6 +21,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.tree.AbstractRestrictableStatement;
 import org.hibernate.hql.internal.ast.tree.FromElement;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
 
@@ -83,6 +84,8 @@ public abstract class AbstractIdsBulkIdHandler
 					position += parameterSpecification.bind( ps, queryParameters, session, position );
 				}
 
+				Dialect dialect = session.getFactory().getServiceRegistry().getService( JdbcServices.class ).getDialect();
+
 				ResultSet rs = session
 						.getJdbcCoordinator()
 						.getResultSetReturn()
@@ -90,8 +93,9 @@ public abstract class AbstractIdsBulkIdHandler
 				while ( rs.next() ) {
 					Object[] result = new Object[targetedPersister.getIdentifierColumnNames().length];
 					for ( String columnName : targetedPersister.getIdentifierColumnNames() ) {
-						Object column = rs.getObject( columnName );
-						result[rs.findColumn( columnName ) - 1] = column;
+						int columnIndex = rs.findColumn( StringHelper.unquote( columnName, dialect ) );
+						Object column = rs.getObject(columnIndex);
+						result[columnIndex - 1] = column;
 					}
 					ids.add( result );
 				}

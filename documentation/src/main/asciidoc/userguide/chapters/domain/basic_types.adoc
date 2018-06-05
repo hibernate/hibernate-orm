@@ -3,6 +3,7 @@
 :modeldir: ../../../../../main/java/org/hibernate/userguide/model
 :sourcedir: ../../../../../test/java/org/hibernate/userguide/mapping
 :resourcedir: ../../../../../test/resources/org/hibernate/userguide/
+:converter-sourcedir: ../../../../../../../hibernate-core/src/test/java/org/hibernate/test/converter
 :extrasdir: extras
 
 Basic value types usually map a single database column, to a single, non-aggregated Java type.
@@ -535,6 +536,66 @@ For additional details on using AttributeConverters, see <<basic-jpa-convert>> s
 JPA explicitly disallows the use of an AttributeConverter with an attribute marked as `@Enumerated`.
 So if using the AttributeConverter approach, be sure not to mark the attribute as `@Enumerated`.
 ====
+
+[[basic-attribute-converter-query-parameter]]
+====== Using the AttributeConverter entity property as a query parameter
+
+Assuming you have the following entity:
+
+[[basic-attribute-converter-query-parameter-entity-example]]
+.`Photo` entity with `AttributeConverter`
+====
+[source, JAVA, indent=0]
+----
+include::{converter-sourcedir}/ConverterTest.java[tags=basic-attribute-converter-query-parameter-entity-example]
+----
+====
+
+And the `Caption` class looks as follows:
+
+[[basic-attribute-converter-query-parameter-object-example]]
+.`Caption` Java object
+====
+[source, JAVA, indent=0]
+----
+include::{converter-sourcedir}/ConverterTest.java[tags=basic-attribute-converter-query-parameter-object-example]
+----
+====
+
+And we have an `AttributeConverter` to handle the `Caption` Java object:
+
+[[basic-attribute-converter-query-parameter-converter-example]]
+.`Caption` Java object AttributeConverter
+====
+[source, JAVA, indent=0]
+----
+include::{converter-sourcedir}/ConverterTest.java[tags=basic-attribute-converter-query-parameter-converter-example]
+----
+====
+
+Traditionally, you could only use the dbData `Caption` representation, which in our case is a `String`, when referencing the `caption` entity property.
+
+[[basic-attribute-converter-query-parameter-converter-dbdata-example]]
+.Filtering by the `Caption` property using the DB data representation
+====
+[source, JAVA, indent=0]
+----
+include::{converter-sourcedir}/ConverterTest.java[tags=basic-attribute-converter-query-parameter-converter-dbdata-example]
+----
+====
+
+In order to use the Java object `Caption` representation, you have to get the associated Hibernate `Type`.
+
+[[basic-attribute-converter-query-parameter-converter-object-example]]
+.Filtering by the `Caption` property using the Java Object representation
+====
+[source, JAVA, indent=0]
+----
+include::{converter-sourcedir}/ConverterTest.java[tags=basic-attribute-converter-query-parameter-converter-object-example]
+----
+====
+
+By passing the associated Hibernate `Type`, you can use the `Caption` object when binding the query parameter value.
 
 [[basic-hbm-attribute-converter]]
 ====== Mapping an AttributeConverter using HBM mappings

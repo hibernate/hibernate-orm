@@ -62,10 +62,10 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 		if ( isBindingValidationRequired ) {
 			validate( value, clarifiedType );
 		}
-		bindValue( value );
 		if ( clarifiedType != null ) {
 			this.bindType = clarifiedType;
 		}
+		bindValue( value );
 	}
 
 	@Override

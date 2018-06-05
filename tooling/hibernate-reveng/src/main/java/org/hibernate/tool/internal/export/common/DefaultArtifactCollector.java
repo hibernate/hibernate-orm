@@ -1,4 +1,4 @@
-package org.hibernate.tool.internal.export;
+package org.hibernate.tool.internal.export.common;
 
 import java.io.File;
 import java.io.IOException;

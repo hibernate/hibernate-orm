@@ -1,7 +1,7 @@
 /*
  * Created on 21-Dec-2004
  */
-package org.hibernate.tool.internal.export;
+package org.hibernate.tool.internal.export.common;
 
 import java.io.File;
 import java.util.Iterator;

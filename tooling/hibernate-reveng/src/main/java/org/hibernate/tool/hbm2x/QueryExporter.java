@@ -11,7 +11,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.hibernate.tool.internal.export.AbstractExporter;
+import org.hibernate.tool.internal.export.common.AbstractExporter;
 
 /** 
  * exporter for query execution.

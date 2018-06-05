@@ -18,7 +18,7 @@ import org.hibernate.tool.hbm2x.ExporterException;
 import org.hibernate.tool.hbm2x.GenericExporter;
 import org.hibernate.tool.hbm2x.TemplateProducer;
 import org.hibernate.tool.hbm2x.pojo.POJOClass;
-import org.hibernate.tool.internal.export.AbstractExporter;
+import org.hibernate.tool.internal.export.common.AbstractExporter;
 
 /**
  * Exporter implementation that creates Hibernate Documentation.

@@ -648,7 +648,7 @@ public class SimpleValue implements KeyValue {
 				jpaAttributeConverter.getDomainJavaTypeDescriptor().getJavaType().getSimpleName(),
 				jpaAttributeConverter.getRelationalJavaTypeDescriptor().getJavaType().getSimpleName()
 		);
-		return new AttributeConverterTypeAdapter(
+		AttributeConverterTypeAdapter attributeConverterTypeAdapter = new AttributeConverterTypeAdapter(
 				name,
 				description,
 				jpaAttributeConverter,
@@ -657,6 +657,10 @@ public class SimpleValue implements KeyValue {
 				jpaAttributeConverter.getRelationalJavaTypeDescriptor().getJavaType(),
 				entityAttributeJavaTypeDescriptor
 		);
+
+		getMetadata().getTypeConfiguration().getBasicTypeRegistry().register( attributeConverterTypeAdapter );
+
+		return attributeConverterTypeAdapter;
 	}
 
 	public boolean isTypeSpecified() {

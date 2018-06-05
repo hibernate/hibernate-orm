@@ -79,6 +79,17 @@ public class TypeResolver implements Serializable {
 	}
 
 	/**
+	 * Locate a Hibernate {@linkplain BasicType basic type} given (one of) its registration class.
+	 *
+	 * @param clazz The registration class
+	 *
+	 * @return The registered type
+	 */
+	public BasicType basic(Class clazz) {
+		return typeConfiguration.getBasicTypeRegistry().getRegisteredType( clazz );
+	}
+
+	/**
 	 * See {@link #heuristicType(String, Properties)}
 	 *
 	 * @param typeName The name (see heuristic algorithm discussion on {@link #heuristicType(String, Properties)}).
@@ -123,7 +134,8 @@ public class TypeResolver implements Serializable {
 			final ClassLoaderService classLoaderService = typeConfiguration.getServiceRegistry().getService( ClassLoaderService.class );
 			Class typeClass = classLoaderService.classForName( typeName );
 			if ( typeClass != null ) {
-				return typeFactory.byClass( typeClass, parameters );
+				type = typeFactory.byClass( typeClass, parameters );
+				return ( type != null ) ? type : basic( typeClass );
 			}
 		}
 		catch ( ClassLoadingException ignore ) {

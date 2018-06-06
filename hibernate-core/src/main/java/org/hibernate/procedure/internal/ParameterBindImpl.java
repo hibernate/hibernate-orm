@@ -79,7 +79,7 @@ public class ParameterBindImpl<T> implements ParameterBind<T> {
 		}
 
 		if ( procedureParameter.getParameterType() != null ) {
-			if ( !procedureParameter.getParameterType().isInstance( value ) ) {
+			if ( !procedureParameter.getParameterType().isInstance( value ) && !procedureParameter.getHibernateType().getReturnedClass().isInstance( value ) ) {
 				throw new IllegalArgumentException( "Bind value [" + value + "] was not of specified type [" + procedureParameter.getParameterType() );
 			}
 		}

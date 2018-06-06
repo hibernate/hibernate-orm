@@ -31,6 +31,8 @@ public class Phone {
     @Column(name = "phone_number")
     private String number;
 
+    private boolean valid;
+
     @ElementCollection
     private List<Date> repairTimestamps = new ArrayList<>(  );
 
@@ -58,5 +60,13 @@ public class Phone {
 
     public void setPerson(Person person) {
         this.person = person;
+    }
+
+    public boolean isValid() {
+        return valid;
+    }
+
+    public void setValid(boolean valid) {
+        this.valid = valid;
     }
 }

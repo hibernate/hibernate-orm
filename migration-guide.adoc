@@ -187,6 +187,9 @@ can be used to enable the JPA compliant global scoping.
 	e.g. begin() now throws an exception if transaction is already active.
 * (todo) following the above one, JPA also says that only PersistenceUnitTransactionType#JTA EntityManagers
 	are allowed to access EntityTransactions.  Need a strategy to handle this
+* Hibernate now conforms with the JPA specification to not allow flushing updates outside of a transaction
+	boundary. To restore 5.1 behavior, allowing flush operations outside of a transaction boundary,
+	set `hibernate.allow_update_outside_transaction=true`.
 * Session#getFlushMode and Query#getFlushMode clash in terms of Hibernate (FlushMode) and JPA (FlushModeType)
 	returns.  #getFlushMode has been altered to return JPA's FlushModeType.  The Hibernate FlushMode
 	is still available via #getHibernateFlushMode and #setHibernateFlushMode.  Same for Session#getFlushMode

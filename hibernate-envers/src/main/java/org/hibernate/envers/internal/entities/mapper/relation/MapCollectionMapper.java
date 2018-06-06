@@ -7,18 +7,24 @@
 package org.hibernate.envers.internal.entities.mapper.relation;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.MapCollectionInitializor;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+import org.hibernate.persister.collection.CollectionPersister;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -113,5 +119,66 @@ public class MapCollectionMapper<T extends Map> extends AbstractCollectionMapper
 			}
 		}
 		return changeSet;
+	}
+
+	@Override
+	protected boolean isSame(CollectionPersister collectionPersister, Object oldObject, Object newObject) {
+		final Map.Entry oldEntry = Map.Entry.class.cast( oldObject );
+		final Map.Entry newEntry = Map.Entry.class.cast( newObject );
+		if ( collectionPersister.getKeyType().isSame( oldEntry.getKey(), newEntry.getKey() ) ) {
+			if ( collectionPersister.getElementType().isSame( oldEntry.getValue(), newEntry.getValue() ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public List<PersistentCollectionChangeData> mapCollectionChanges(
+			SessionImplementor session,
+			PersistentCollection newColl,
+			Serializable oldColl,
+			Serializable id) {
+		final List<PersistentCollectionChangeData> collectionChanges = new ArrayList<>();
+		final CollectionPersister collectionPersister = resolveCollectionPersister( session, newColl );
+
+		// Comparing new and old collection content
+		final Collection newCollection = getNewCollectionContent( newColl );
+		final Collection oldCollection = getOldCollectionContent( oldColl );
+
+		// take the new collection and remove any that exist in the old collection.
+		// take the resulting Set<> and generate ADD changes
+		final Set<Object> added = buildCollectionChangeSet( newColl, newCollection );
+		if ( oldColl != null ) {
+			for ( Object oldObject : oldCollection ) {
+				for ( Iterator itor = added.iterator(); itor.hasNext(); ) {
+					Object newObject = itor.next();
+					if ( isSame( collectionPersister, oldObject, newObject ) ) {
+						itor.remove();
+						break;
+					}
+				}
+			}
+		}
+
+		// take the old collection and remove any that exist in the new collection.
+		// take the resulting Set<> and generate DEL changes.
+		final Set<Object> deleted = buildCollectionChangeSet( oldColl, oldCollection );
+		if ( newColl != null ) {
+			for ( Object newObject : newCollection ) {
+				for ( Iterator itor = deleted.iterator(); itor.hasNext(); ) {
+					Object oldObject = itor.next();
+					if ( isSame( collectionPersister, newObject, oldObject ) ) {
+						itor.remove();
+						break;
+					}
+				}
+			}
+		}
+
+		addCollectionChanges( session, collectionChanges, added, RevisionType.ADD, id );
+		addCollectionChanges( session, collectionChanges, deleted, RevisionType.DEL, id );
+
+		return collectionChanges;
 	}
 }

@@ -104,7 +104,7 @@ public class HibernateTypeInParameterStoredProcedureQueryTest extends BaseNonCon
         inTransaction(
                 session -> session.createStoredProcedureQuery("test")
                         .registerStoredProcedureParameter(1, ByteType.class, ParameterMode.IN)
-                        .setParameter(1, 'a')
+                        .setParameter(1, (byte) 'a')
         );
     }
 
@@ -113,7 +113,7 @@ public class HibernateTypeInParameterStoredProcedureQueryTest extends BaseNonCon
         inTransaction(
                 session -> session.createStoredProcedureQuery("test")
                         .registerStoredProcedureParameter(1, ShortType.class, ParameterMode.IN)
-                        .setParameter(1, 2)
+                        .setParameter(1, (short) 2)
         );
     }
 

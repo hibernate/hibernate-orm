@@ -242,9 +242,12 @@ public final class CollectionMetadataGenerator {
 
 		// Creating common mapper data.
 		final CommonCollectionMapperData commonCollectionMapperData = new CommonCollectionMapperData(
-				mainGenerator.getVerEntCfg(), referencedEntityName,
+				mainGenerator.getVerEntCfg(),
+				referencedEntityName,
 				propertyAuditingData.getPropertyData(),
-				referencingIdData, queryGenerator
+				referencingIdData,
+				queryGenerator,
+				propertyValue.getRole()
 		);
 
 		PropertyMapper fakeBidirectionalRelationMapper;
@@ -490,7 +493,8 @@ public final class CollectionMetadataGenerator {
 				auditMiddleEntityName,
 				propertyAuditingData.getPropertyData(),
 				referencingIdData,
-				queryGenerator
+				queryGenerator,
+				propertyValue.getRole()
 		);
 
 		// Checking the type of the collection and adding an appropriate mapper.

@@ -15,7 +15,7 @@
 
     <xsd:annotation>
         <xsd:documentation>
-            @(#)orm_2_1.xsd 2.1  February 4 2013
+            @(#)orm_2_2.xsd 2.2  July 7 2017
         </xsd:documentation>
     </xsd:annotation>
 
@@ -39,8 +39,8 @@
       <entity-mappings xmlns="http://xmlns.jcp.org/xml/ns/persistence/orm"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence/orm
-          http://xmlns.jcp.org/xml/ns/persistence/orm_2_1.xsd"
-        version="2.1">
+          http://xmlns.jcp.org/xml/ns/persistence/orm_2_2.xsd"
+        version="2.2">
           ...
       </entity-mappings>
 
@@ -131,7 +131,7 @@
                              minOccurs="0" maxOccurs="unbounded"/>
             </xsd:sequence>
             <xsd:attribute name="version" type="orm:versionType"
-                           fixed="2.1" use="required"/>
+                           fixed="2.2" use="required"/>
         </xsd:complexType>
     </xsd:element>
 
@@ -545,6 +545,21 @@
         <xsd:attribute name="name" type="xsd:string" use="required"/>
         <xsd:attribute name="class" type="xsd:string"/>
     </xsd:complexType>
+
+    <!-- **************************************************** -->
+
+    <xsd:simpleType name="constraint-mode">
+        <xsd:annotation>
+            <xsd:documentation>
+                public enum ConstraintMode {CONSTRAINT, NO_CONSTRAINT, PROVIDER_DEFAULT};
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="xsd:token">
+            <xsd:enumeration value="CONSTRAINT"/>
+            <xsd:enumeration value="NO_CONSTRAINT"/>
+            <xsd:enumeration value="PROVIDER_DEFAULT"/>
+        </xsd:restriction>
+    </xsd:simpleType>
 
     <!-- **************************************************** -->
 
@@ -996,8 +1011,11 @@
                 @Target({}) @Retention(RUNTIME)
                 public @interface ForeignKey {
                 String name() default "";
+                ConstraintMode value() defalut CONSTRAINT
                 String foreign-key-definition() default "";
-                boolean disable-foreign-key() default false;
+
+                Note that the elements that embed the use of the annotation
+                default this use as @ForeignKey(PROVIDER_DEFAULT)
                 }
 
             </xsd:documentation>
@@ -1006,8 +1024,8 @@
             <xsd:element name="description" type="xsd:string" minOccurs="0"/>
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:string"/>
+        <xsd:attribute name="constraint-mode" type="orm:constraint-mode"/>
         <xsd:attribute name="foreign-key-definition" type="xsd:string"/>
-        <xsd:attribute name="disable-foreign-key" type="xsd:boolean"/>
     </xsd:complexType>
 
     <!-- **************************************************** -->

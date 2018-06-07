@@ -2316,9 +2316,13 @@ public final class SessionImpl
 		StringBuilder buf = new StringBuilder( 500 )
 				.append( "SessionImpl(" );
 		if ( !isClosed() ) {
+			if(TRACE_ENABLED) {
 			buf.append( persistenceContext )
 					.append( ";" )
 					.append( actionQueue );
+			}
+			else
+				buf.append("<open>");
 		}
 		else {
 			buf.append( "<closed>" );

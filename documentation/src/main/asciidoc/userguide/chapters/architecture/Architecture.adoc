@@ -13,7 +13,7 @@ This will be a brief introduction; we will discuss these contracts in detail lat
 
 As a JPA provider, Hibernate implements the Java Persistence API specifications and the association between JPA interfaces and Hibernate specific implementations can be visualized in the following diagram:
 
-image:images/architecture/JPA_Hibernate.svg[image]
+image:images/architecture/JPA_Hibernate.jpg[image]
 
 SessionFactory (`org.hibernate.SessionFactory`):: A thread-safe (and immutable) representation of the mapping of the application domain model to a database.
 Acts as a factory for `org.hibernate.Session` instances. The `EntityManagerFactory` is the JPA equivalent of a `SessionFactory` and basically those two converge into the same `SessionFactory` implementation.

@@ -6,6 +6,8 @@
  */
 package org.hibernate.test.generated;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -22,6 +24,8 @@ import java.util.Calendar;
 import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
@@ -32,8 +36,11 @@ import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
 import org.hibernate.annotations.GeneratorType;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.tuple.AnnotationValueGeneration;
+import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.ValueGenerator;
 
 import org.hibernate.testing.SkipForDialect;
@@ -79,6 +86,7 @@ public class DefaultGeneratedValueTest extends BaseCoreFunctionalTestCase {
 		assertNull( theEntity.vmCreatedSqlYear );
 		assertNull( theEntity.vmCreatedSqlYearMonth );
 		assertNull( theEntity.vmCreatedSqlZonedDateTime );
+		assertNull( theEntity.dbCreatedDate );
 
 		assertNull( theEntity.name );
 		s.save( theEntity );
@@ -98,6 +106,7 @@ public class DefaultGeneratedValueTest extends BaseCoreFunctionalTestCase {
 		assertNull( theEntity.vmCreatedSqlYear );
 		assertNull( theEntity.vmCreatedSqlYearMonth );
 		assertNull( theEntity.vmCreatedSqlZonedDateTime );
+		assertNull( theEntity.dbCreatedDate );
 		assertNull( theEntity.name );
 		s.getTransaction().commit();
 		s.close();
@@ -124,6 +133,85 @@ public class DefaultGeneratedValueTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( theEntity.vmCreatedSqlYear );
 		assertNotNull( theEntity.vmCreatedSqlYearMonth );
 		assertNotNull( theEntity.vmCreatedSqlZonedDateTime );
+		assertNotNull( theEntity.dbCreatedDate );
+		assertEquals( "Bob", theEntity.name );
+
+		theEntity.lastName = "Smith";
+		s.delete( theEntity );
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12671" )
+	public void testGenerationWithIdentityInsert() {
+		Session s = openSession();
+		s.beginTransaction();
+		TheEntityB theEntity = new TheEntityB( 1 );
+		assertNull( theEntity.createdDate );
+		assertNull( theEntity.alwaysDate );
+		assertNull( theEntity.vmCreatedDate );
+		assertNull( theEntity.vmCreatedSqlDate );
+		assertNull( theEntity.vmCreatedSqlTime );
+		assertNull( theEntity.vmCreatedSqlTimestamp );
+
+		assertNull( theEntity.vmCreatedSqlLocalDate );
+		assertNull( theEntity.vmCreatedSqlLocalTime );
+		assertNull( theEntity.vmCreatedSqlLocalDateTime );
+		assertNull( theEntity.vmCreatedSqlMonthDay );
+		assertNull( theEntity.vmCreatedSqlOffsetDateTime );
+		assertNull( theEntity.vmCreatedSqlOffsetTime );
+		assertNull( theEntity.vmCreatedSqlYear );
+		assertNull( theEntity.vmCreatedSqlYearMonth );
+		assertNull( theEntity.vmCreatedSqlZonedDateTime );
+		assertNull( theEntity.dbCreatedDate );
+
+		assertNull( theEntity.name );
+		s.save( theEntity );
+
+		assertNotNull( theEntity.createdDate );
+		assertNotNull( theEntity.alwaysDate );
+		assertNotNull( theEntity.vmCreatedDate );
+		assertNotNull( theEntity.vmCreatedSqlDate );
+		assertNotNull( theEntity.vmCreatedSqlTime );
+		assertNotNull( theEntity.vmCreatedSqlTimestamp );
+		assertNotNull( theEntity.vmCreatedSqlLocalDate );
+		assertNotNull( theEntity.vmCreatedSqlLocalTime );
+		assertNotNull( theEntity.vmCreatedSqlLocalDateTime );
+		assertNotNull( theEntity.vmCreatedSqlMonthDay );
+		assertNotNull( theEntity.vmCreatedSqlOffsetDateTime );
+		assertNotNull( theEntity.vmCreatedSqlOffsetTime );
+		assertNotNull( theEntity.vmCreatedSqlYear );
+		assertNotNull( theEntity.vmCreatedSqlYearMonth );
+		assertNotNull( theEntity.vmCreatedSqlZonedDateTime );
+		assertNotNull( theEntity.dbCreatedDate );
+		assertNotNull( theEntity.name );
+		s.getTransaction().commit();
+		s.close();
+
+		assertNotNull( theEntity.createdDate );
+		assertNotNull( theEntity.alwaysDate );
+		assertEquals( "Bob", theEntity.name );
+
+		s = openSession();
+		s.beginTransaction();
+		theEntity = (TheEntityB) s.get( TheEntityB.class, 1 );
+		assertNotNull( theEntity.createdDate );
+		assertNotNull( theEntity.alwaysDate );
+		assertNotNull( theEntity.vmCreatedDate );
+		assertNotNull( theEntity.vmCreatedSqlDate );
+		assertNotNull( theEntity.vmCreatedSqlTime );
+		assertNotNull( theEntity.vmCreatedSqlTimestamp );
+		assertNotNull( theEntity.vmCreatedSqlLocalDate );
+		assertNotNull( theEntity.vmCreatedSqlLocalTime );
+		assertNotNull( theEntity.vmCreatedSqlLocalDateTime );
+		assertNotNull( theEntity.vmCreatedSqlMonthDay );
+		assertNotNull( theEntity.vmCreatedSqlOffsetDateTime );
+		assertNotNull( theEntity.vmCreatedSqlOffsetTime );
+		assertNotNull( theEntity.vmCreatedSqlYear );
+		assertNotNull( theEntity.vmCreatedSqlYearMonth );
+		assertNotNull( theEntity.vmCreatedSqlZonedDateTime );
+		assertNotNull( theEntity.dbCreatedDate );
 		assertEquals( "Bob", theEntity.name );
 
 		theEntity.lastName = "Smith";
@@ -178,7 +266,7 @@ public class DefaultGeneratedValueTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { TheEntity.class };
+		return new Class[] { TheEntity.class, TheEntityB.class };
 	}
 
 	@Entity( name = "TheEntity" )
@@ -242,6 +330,9 @@ public class DefaultGeneratedValueTest extends BaseCoreFunctionalTestCase {
 		@CreationTimestamp
 		private ZonedDateTime vmCreatedSqlZonedDateTime;
 
+		@FunctionCreationTimestamp
+		private Date dbCreatedDate;
+
 		@UpdateTimestamp
 		private Timestamp updated;
 
@@ -259,6 +350,88 @@ public class DefaultGeneratedValueTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
+	@Entity( name = "TheEntityB" )
+	@Table( name = "T_ENT_GEN_DEF_B" )
+	private static class TheEntityB {
+		@Id
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		private Integer id;
+
+		@Generated( GenerationTime.INSERT )
+		@ColumnDefault( "CURRENT_TIMESTAMP" )
+		@Column( nullable = false )
+		private Date createdDate;
+
+		@Generated( GenerationTime.ALWAYS )
+		@ColumnDefault( "CURRENT_TIMESTAMP" )
+		@Column( nullable = false )
+		private Calendar alwaysDate;
+
+		@CreationTimestamp
+		private Date vmCreatedDate;
+
+		@CreationTimestamp
+		private Calendar vmCreatedCalendar;
+
+		@CreationTimestamp
+		private java.sql.Date vmCreatedSqlDate;
+
+		@CreationTimestamp
+		private Time vmCreatedSqlTime;
+
+		@CreationTimestamp
+		private Timestamp vmCreatedSqlTimestamp;
+
+		@CreationTimestamp
+		private Instant vmCreatedSqlInstant;
+
+		@CreationTimestamp
+		private LocalDate vmCreatedSqlLocalDate;
+
+		@CreationTimestamp
+		private LocalTime vmCreatedSqlLocalTime;
+
+		@CreationTimestamp
+		private LocalDateTime vmCreatedSqlLocalDateTime;
+
+		@CreationTimestamp
+		private MonthDay vmCreatedSqlMonthDay;
+
+		@CreationTimestamp
+		private OffsetDateTime vmCreatedSqlOffsetDateTime;
+
+		@CreationTimestamp
+		private OffsetTime vmCreatedSqlOffsetTime;
+
+		@CreationTimestamp
+		private Year vmCreatedSqlYear;
+
+		@CreationTimestamp
+		private YearMonth vmCreatedSqlYearMonth;
+
+		@CreationTimestamp
+		private ZonedDateTime vmCreatedSqlZonedDateTime;
+
+		@FunctionCreationTimestamp
+		private Date dbCreatedDate;
+
+		@UpdateTimestamp
+		private Timestamp updated;
+
+		@GeneratorType( type = MyVmValueGenerator.class, when = GenerationTime.INSERT )
+		private String name;
+
+		@SuppressWarnings("unused")
+		private String lastName;
+
+		private TheEntityB() {
+		}
+
+		private TheEntityB(Integer id) {
+			this.id = id;
+		}
+	}
+
 	public static class MyVmValueGenerator implements ValueGenerator<String> {
 
 		@Override
@@ -266,4 +439,36 @@ public class DefaultGeneratedValueTest extends BaseCoreFunctionalTestCase {
 			return "Bob";
 		}
 	}
+
+	@ValueGenerationType(generatedBy = FunctionCreationValueGeneration.class)
+	@Retention(RetentionPolicy.RUNTIME)
+	public @interface FunctionCreationTimestamp {
+	}
+
+	public static class FunctionCreationValueGeneration
+			implements AnnotationValueGeneration<FunctionCreationTimestamp> {
+
+		@Override
+		public void initialize(FunctionCreationTimestamp annotation, Class<?> propertyType) {
+		}
+
+		public GenerationTiming getGenerationTiming() {
+			// its creation...
+			return GenerationTiming.INSERT;
+		}
+
+		public ValueGenerator<?> getValueGenerator() {
+			// no in-memory generation
+			return null;
+		}
+
+		public boolean referenceColumnInSql() {
+			return true;
+		}
+
+		public String getDatabaseGeneratedReferencedColumnValue() {
+			return "current_timestamp";
+		}
+	}
+
 }

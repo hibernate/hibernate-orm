@@ -6,6 +6,7 @@
  */
 package org.hibernate.jpa.test.query;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
@@ -20,6 +21,8 @@ import javax.persistence.SqlResultSetMapping;
 import javax.persistence.Table;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 /**
@@ -58,24 +61,64 @@ public class ScalarResultNativeQueryTest extends BaseEntityManagerFunctionalTest
 
 	@Test
 	public void shouldApplyConfiguredTypeForProjectionOfScalarValue() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		em.persist( new Person( 1, 29 ) );
-		em.getTransaction().commit();
-		em.close();
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			entityManager.persist( new Person( 1, 29 ) );
+		} );
 
-		em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		List<String> results = em.createNamedQuery( "personAge", String.class ).getResultList();
-		assertEquals( 1, results.size() );
-		assertEquals( "29", results.get( 0 ) );
-		em.getTransaction().commit();
-		em.close();
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			List<String> results = entityManager.createNamedQuery( "personAge", String.class ).getResultList();
+			assertEquals( 1, results.size() );
+			assertEquals( "29", results.get( 0 ) );
+		} );
+	}
 
-		em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		em.createQuery( "delete from Person" ).executeUpdate();
-		em.getTransaction().commit();
-		em.close();
+	@Test
+	@TestForIssue( jiraKey = "HHH-12670" )
+	public void testNativeSQLWithExplicitScalarMapping() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			entityManager.persist( new Person( 1, 29 ) );
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			List<Integer> results = entityManager.createNativeQuery(
+				"select p.age from person p", Integer.class )
+			.getResultList();
+			assertEquals( 1, results.size() );
+			assertEquals( Integer.valueOf( 29 ), results.get( 0 ) );
+		} );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12670" )
+	public void testNativeSQLWithExplicitTypedArrayMapping() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			entityManager.persist( new Person( 1, 29 ) );
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			List<Integer[]> results = entityManager.createNativeQuery(
+					"select p.id, p.age from person p", Integer[].class )
+					.getResultList();
+			assertEquals( 1, results.size() );
+			assertEquals( Integer.valueOf( 1 ), results.get( 0 )[0] );
+			assertEquals( Integer.valueOf( 29 ), results.get( 0 )[1] );
+		} );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12670" )
+	public void testNativeSQLWithObjectArrayMapping() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			entityManager.persist( new Person( 1, 29 ) );
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			List<Object[]> results = entityManager.createNativeQuery(
+					"select p.id, p.age from person p", Object[].class )
+					.getResultList();
+			assertEquals( 1, results.size() );
+			assertEquals( Integer.valueOf( 1 ), results.get( 0 )[0] );
+			assertEquals( Integer.valueOf( 29 ), results.get( 0 )[1] );
+		} );
 	}
 }

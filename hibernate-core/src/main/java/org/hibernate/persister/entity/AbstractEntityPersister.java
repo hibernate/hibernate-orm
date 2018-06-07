@@ -2753,9 +2753,40 @@ public abstract class AbstractEntityPersister
 
 		// add normal properties except lobs
 		for ( int i = 0; i < entityMetamodel.getPropertySpan(); i++ ) {
-			if ( includeProperty[i] && isPropertyOfTable( i, 0 ) && !lobProperties.contains( i ) ) {
-				// this property belongs on the table and is to be inserted
-				insert.addColumns( getPropertyColumnNames( i ), propertyColumnInsertable[i], propertyColumnWriters[i] );
+			if ( isPropertyOfTable( i, 0 ) && !lobProperties.contains( i ) ) {
+				final InDatabaseValueGenerationStrategy generationStrategy = entityMetamodel.getInDatabaseValueGenerationStrategies()[i];
+
+				if ( includeProperty[i] ) {
+					insert.addColumns(
+							getPropertyColumnNames( i ),
+							propertyColumnInsertable[i],
+							propertyColumnWriters[i]
+					);
+				}
+				else if ( generationStrategy != null &&
+					 generationStrategy.getGenerationTiming().includesInsert() &&
+					 generationStrategy.referenceColumnsInSql() ) {
+
+					final String[] values;
+
+					if ( generationStrategy.getReferencedColumnValues() == null ) {
+						values = propertyColumnWriters[i];
+					}
+					else {
+						values = new String[propertyColumnWriters[i].length];
+
+						for ( int j = 0; j < values.length; j++ ) {
+							values[j] = ( generationStrategy.getReferencedColumnValues()[j] != null ) ?
+									generationStrategy.getReferencedColumnValues()[j] :
+									propertyColumnWriters[i][j];
+						}
+					}
+					insert.addColumns(
+							getPropertyColumnNames( i ),
+							propertyColumnInsertable[i],
+							values
+					);
+				}
 			}
 		}
 

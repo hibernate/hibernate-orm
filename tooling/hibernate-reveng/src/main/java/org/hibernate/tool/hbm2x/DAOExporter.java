@@ -3,6 +3,7 @@ package org.hibernate.tool.hbm2x;
 import java.util.Map;
 
 import org.hibernate.tool.hbm2x.pojo.POJOClass;
+import org.hibernate.tool.internal.export.pojo.POJOExporter;
 
 public class DAOExporter extends POJOExporter {
 

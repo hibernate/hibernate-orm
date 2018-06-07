@@ -5,7 +5,7 @@
 package org.hibernate.tool.ant;
 
 import org.hibernate.tool.api.export.Exporter;
-import org.hibernate.tool.hbm2x.POJOExporter;
+import org.hibernate.tool.internal.export.pojo.POJOExporter;
 
 /**
  * @author max

@@ -1,13 +1,13 @@
 package org.hibernate.mvn;
 
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
-import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.hbm2x.POJOExporter;
+import static org.apache.maven.plugins.annotations.LifecyclePhase.GENERATE_SOURCES;
 
 import java.io.File;
 
-import static org.apache.maven.plugins.annotations.LifecyclePhase.GENERATE_SOURCES;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.internal.export.pojo.POJOExporter;
 
 /**
  * Mojo to generate Java JPA Entities from an existing database.

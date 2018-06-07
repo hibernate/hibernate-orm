@@ -2,7 +2,9 @@
  * Created on 2004-12-01
  *
  */
-package org.hibernate.tool.hbm2x;
+package org.hibernate.tool.internal.export.pojo;
+
+import org.hibernate.tool.hbm2x.GenericExporter;
 
 /**
  * @author max

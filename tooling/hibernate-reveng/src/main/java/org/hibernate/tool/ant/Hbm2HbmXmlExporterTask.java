@@ -5,7 +5,7 @@
 package org.hibernate.tool.ant;
 
 import org.hibernate.tool.api.export.Exporter;
-import org.hibernate.tool.hbm2x.HibernateMappingExporter;
+import org.hibernate.tool.internal.export.hbm.HibernateMappingExporter;
 
 public class Hbm2HbmXmlExporterTask extends ExporterTask {
 

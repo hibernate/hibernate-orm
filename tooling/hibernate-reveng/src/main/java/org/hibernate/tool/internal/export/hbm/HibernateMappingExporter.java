@@ -1,7 +1,7 @@
 /*
  * Created on 2004-12-03
  */
-package org.hibernate.tool.hbm2x;
+package org.hibernate.tool.internal.export.hbm;
 
 import java.io.File;
 import java.util.HashMap;
@@ -10,6 +10,10 @@ import java.util.Map;
 import org.hibernate.boot.Metadata;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.tool.hbm2x.Cfg2HbmTool;
+import org.hibernate.tool.hbm2x.GenericExporter;
+import org.hibernate.tool.hbm2x.HibernateMappingGlobalSettings;
+import org.hibernate.tool.hbm2x.TemplateProducer;
 import org.hibernate.tool.hbm2x.pojo.POJOClass;
 
 /**

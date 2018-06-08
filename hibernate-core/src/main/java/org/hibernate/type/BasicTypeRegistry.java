@@ -179,6 +179,15 @@ public class BasicTypeRegistry implements Serializable {
 		return registry.get( key );
 	}
 
+	public BasicType getRegisteredType(Class clazz) {
+		for ( BasicType type : registry.values() ) {
+			if ( type.getReturnedClass().equals( clazz ) ) {
+				return type;
+			}
+		}
+		return null;
+	}
+
 	public BasicTypeRegistry shallowCopy() {
 		return new BasicTypeRegistry( this.registry );
 	}

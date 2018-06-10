@@ -258,13 +258,10 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			if ( join.isSequentialSelect() && !persistentClass.isClassOrSuperclassJoin( join ) ) {
 				hasDeferred = true;
 			}
-			subclassTables.add(
-					join.getTable().getQualifiedName(
-							factory.getDialect(),
-							factory.getSettings().getDefaultCatalogName(),
-							factory.getSettings().getDefaultSchemaName()
-					)
-			);
+
+			String joinTableName = determineTableName( join.getTable(), jdbcEnvironment );
+			subclassTables.add( joinTableName );
+
 			Iterator iter = join.getKey().getColumnIterator();
 			String[] keyCols = new String[join.getKey().getColumnSpan()];
 			int i = 0;

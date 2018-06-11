@@ -36,9 +36,9 @@ import org.hibernate.annotations.NamedNativeQuery;
 )
 @NamedNativeQuery(
 	    name = "fn_person_and_phones_hana",
-	    query = "select * from fn_person_and_phones( ? )",
+	    query = "select \"pr.id\", \"pr.name\", \"pr.nickName\", \"pr.address\", \"pr.createdOn\", \"pr.version\", \"ph.id\", \"ph.person_id\", \"ph.phone_number\", \"ph.valid\" from fn_person_and_phones( ? )",
 	    callable = false,
-	    resultSetMapping = "person_with_phones"
+	    resultSetMapping = "person_with_phones_hana"
 	)
 @SqlResultSetMappings({
      @SqlResultSetMapping(
@@ -61,6 +61,31 @@ import org.hibernate.annotations.NamedNativeQuery;
                      @FieldResult( name = "id", column = "ph.id" ),
                      @FieldResult( name = "person", column = "ph.person_id" ),
                      @FieldResult( name = "number", column = "ph.phone_number" )
+                 }
+             )
+         }
+     ),
+     @SqlResultSetMapping(
+         name = "person_with_phones_hana",
+         entities = {
+             @EntityResult(
+                 entityClass = Person.class,
+                 fields = {
+                     @FieldResult( name = "id", column = "pr.id" ),
+                     @FieldResult( name = "name", column = "pr.name" ),
+                     @FieldResult( name = "nickName", column = "pr.nickName" ),
+                     @FieldResult( name = "address", column = "pr.address" ),
+                     @FieldResult( name = "createdOn", column = "pr.createdOn" ),
+                     @FieldResult( name = "version", column = "pr.version" ),
+                 }
+             ),
+             @EntityResult(
+                 entityClass = Phone.class,
+                 fields = {
+                     @FieldResult( name = "id", column = "ph.id" ),
+                     @FieldResult( name = "person", column = "ph.person_id" ),
+                     @FieldResult( name = "number", column = "ph.phone_number" ),
+                     @FieldResult( name = "valid", column = "ph.valid" )
                  }
              )
          }

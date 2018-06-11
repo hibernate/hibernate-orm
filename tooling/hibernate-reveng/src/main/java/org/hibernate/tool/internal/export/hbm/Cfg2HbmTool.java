@@ -1,7 +1,7 @@
 /*
  * Created on 2004-12-03
  */
-package org.hibernate.tool.hbm2x;
+package org.hibernate.tool.internal.export.hbm;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -41,6 +41,7 @@ import org.hibernate.mapping.Value;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
+import org.hibernate.tool.hbm2x.ExporterException;
 import org.hibernate.tool.hbm2x.pojo.SkipBackRefPropertyIterator;
 import org.hibernate.tool.hbm2x.visitor.EntityNameFromValueVisitor;
 import org.hibernate.tool.hbm2x.visitor.HBMTagForPersistentClassVisitor;

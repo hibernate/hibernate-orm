@@ -156,7 +156,8 @@ public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCa
 						"            pr.version AS \"pr.version\", " +
 						"            ph.id AS \"ph.id\", " +
 						"            ph.person_id AS \"ph.person_id\", " +
-						"            ph.phone_number AS \"ph.phone_number\" " +
+						"            ph.phone_number AS \"ph.phone_number\", " +
+						"            ph.valid AS \"ph.valid\" " +
 						"       FROM person pr " +
 						"       JOIN phone ph ON pr.id = ph.person_id " +
 						"       WHERE pr.id = personId; " +

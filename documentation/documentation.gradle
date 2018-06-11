@@ -126,7 +126,7 @@ task aggregateJavadocs(type: Javadoc) {
 				'https://docs.oracle.com/javase/8/docs/api/',
 				'https://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
 				'http://docs.jboss.org/cdi/api/2.0/',
-				'https://docs.oracle.com/javaee/7/api/'
+				'https://javaee.github.io/javaee-spec/javadocs/'
 		]
 
 		if ( JavaVersion.current().isJava8Compatible() ) {

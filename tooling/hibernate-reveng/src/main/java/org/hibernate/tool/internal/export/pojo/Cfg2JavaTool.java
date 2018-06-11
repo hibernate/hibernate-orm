@@ -2,7 +2,7 @@
  * Created on 02-Dec-2004
  *
  */
-package org.hibernate.tool.hbm2x;
+package org.hibernate.tool.internal.export.pojo;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -23,6 +23,9 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
+import org.hibernate.tool.hbm2x.Cfg2HbmTool;
+import org.hibernate.tool.hbm2x.ExporterException;
+import org.hibernate.tool.hbm2x.MetaAttributeHelper;
 import org.hibernate.tool.hbm2x.pojo.ComponentPOJOClass;
 import org.hibernate.tool.hbm2x.pojo.EntityPOJOClass;
 import org.hibernate.tool.hbm2x.pojo.ImportContext;

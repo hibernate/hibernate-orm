@@ -15,9 +15,9 @@ import org.hibernate.tool.api.export.ArtifactCollector;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.hbm2x.Cfg2HbmTool;
-import org.hibernate.tool.hbm2x.Cfg2JavaTool;
 import org.hibernate.tool.hbm2x.ExporterException;
 import org.hibernate.tool.hbm2x.TemplateHelper;
+import org.hibernate.tool.internal.export.pojo.Cfg2JavaTool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

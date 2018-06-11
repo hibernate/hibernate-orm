@@ -90,7 +90,7 @@ public class Cfg2HbmTool {
 	 * @param properties
 	 * @return
 	 */
-	static Properties getFilteredIdentifierGeneratorProperties(Properties properties, Properties environmentProperties) {
+	public static Properties getFilteredIdentifierGeneratorProperties(Properties properties, Properties environmentProperties) {
 		if (properties != null){
 			Properties fProp = new Properties();
 			Iterator<?> itr = properties.keySet().iterator();

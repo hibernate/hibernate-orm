@@ -18,8 +18,8 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
-import org.hibernate.tool.hbm2x.Cfg2JavaTool;
 import org.hibernate.tool.hbm2x.pojo.EntityPOJOClass;
+import org.hibernate.tool.internal.export.pojo.Cfg2JavaTool;
 
 /**
  * @author Max Rydahl Andersen

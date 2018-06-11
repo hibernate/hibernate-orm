@@ -12,6 +12,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.tool.hbm2x.pojo.ComponentPOJOClass;
 import org.hibernate.tool.hbm2x.pojo.POJOClass;
+import org.hibernate.tool.internal.export.pojo.Cfg2JavaTool;
 import org.hibernate.tool.internal.export.pojo.POJOExporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

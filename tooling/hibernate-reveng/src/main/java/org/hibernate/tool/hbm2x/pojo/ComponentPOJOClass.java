@@ -8,7 +8,7 @@ import java.util.List;
 
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
-import org.hibernate.tool.hbm2x.Cfg2JavaTool;
+import org.hibernate.tool.internal.export.pojo.Cfg2JavaTool;
 
 public class ComponentPOJOClass extends BasicPOJOClass {
 

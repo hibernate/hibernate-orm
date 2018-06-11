@@ -77,9 +77,9 @@ task ciBuild {
 }
 
 
-task wrapper(type: Wrapper) {
+wrapper {
 	gradleVersion = '4.7'
-	distributionType = 'ALL'
+	distributionType = Wrapper.DistributionType.ALL
 }
 
 

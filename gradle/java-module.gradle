@@ -336,7 +336,7 @@ checkstyleMain.exclude '**/org/hibernate/cfg/*'
 
 
 task forbiddenApisSystemOut(type: CheckForbiddenApis, dependsOn: compileJava) {
-	classesDirs = project.files( project.sourceSets.main.java.outputDir )
+	classesDirs = project.sourceSets.main.output.classesDirs
 	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
 	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
 	bundledSignatures += 'jdk-system-out'
@@ -344,7 +344,7 @@ task forbiddenApisSystemOut(type: CheckForbiddenApis, dependsOn: compileJava) {
 }
 
 task forbiddenApisUnsafe(type: CheckForbiddenApis, dependsOn: compileJava) {
-	classesDirs = project.files( project.sourceSets.main.java.outputDir )
+	classesDirs = project.sourceSets.main.output.classesDirs
 	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
 	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
 	bundledSignatures += "jdk-unsafe-${baselineJavaVersion}".toString()
@@ -357,7 +357,7 @@ task forbiddenApisUnsafe(type: CheckForbiddenApis, dependsOn: compileJava) {
 }
 
 task forbiddenApisNonPortable(type: CheckForbiddenApis, dependsOn: compileJava) {
-	classesDirs = project.files( project.sourceSets.main.java.outputDir )
+	classesDirs = project.sourceSets.main.output.classesDirs
 	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
 	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
 	bundledSignatures += 'jdk-non-portable'

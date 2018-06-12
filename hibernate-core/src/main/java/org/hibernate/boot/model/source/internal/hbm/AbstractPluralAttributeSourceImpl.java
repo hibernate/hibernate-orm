@@ -6,9 +6,13 @@
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
+import java.util.Optional;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToOneType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmRootEntityType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSynchronizeType;
 import org.hibernate.boot.jaxb.hbm.spi.PluralAttributeInfo;
 import org.hibernate.boot.model.Caching;
@@ -66,11 +70,37 @@ public abstract class AbstractPluralAttributeSourceImpl
 		this.attributeRole = container.getAttributeRoleBase().append( pluralAttributeJaxbMapping.getName() );
 		this.attributePath = container.getAttributePathBase().append( pluralAttributeJaxbMapping.getName() );
 
-		this.keySource = new PluralAttributeKeySourceImpl(
+		Optional<JaxbHbmManyToOneType> jaxbHbmManyToOneTypeOptional = Optional.empty();
+
+		if(pluralAttributeJaxbMapping.isInverse() && pluralAttributeJaxbMapping.getOneToMany() != null) {
+			String childClass = pluralAttributeJaxbMapping.getOneToMany().getClazz();
+
+			if ( childClass != null ) {
+				jaxbHbmManyToOneTypeOptional = mappingDocument.getDocumentRoot().getClazz()
+						.stream()
+						.filter( (JaxbHbmRootEntityType entityType) ->
+								 childClass.equals( entityType.getName() ) )
+						.flatMap( jaxbHbmRootEntityType -> jaxbHbmRootEntityType.getAttributes().stream() )
+						.filter(
+								attribute -> attribute instanceof JaxbHbmManyToOneType &&
+								((JaxbHbmManyToOneType) attribute).getPropertyRef() != null )
+						.map( JaxbHbmManyToOneType.class::cast )
+						.findFirst();
+			}
+		}
+
+		this.keySource = jaxbHbmManyToOneTypeOptional
+		.map( jaxbHbmManyToOneType -> new PluralAttributeKeySourceImpl(
 				sourceMappingDocument(),
-				pluralAttributeJaxbMapping.getKey(),
+				jaxbHbmManyToOneType,
 				container
-		);
+		) ).orElseGet( () -> new PluralAttributeKeySourceImpl(
+				sourceMappingDocument(),
+				pluralAttributeJaxbMapping.isInverse() ?
+						pluralAttributeJaxbMapping.getKey() :
+						pluralAttributeJaxbMapping.getKey(),
+				container
+		) );
 
 		this.typeInformation = new HibernateTypeSourceImpl( pluralAttributeJaxbMapping.getCollectionType() );
 

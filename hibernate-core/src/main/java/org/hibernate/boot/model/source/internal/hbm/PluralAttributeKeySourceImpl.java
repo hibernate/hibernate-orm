@@ -9,6 +9,7 @@ package org.hibernate.boot.model.source.internal.hbm;
 import java.util.List;
 
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmKeyType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToOneType;
 import org.hibernate.boot.model.source.spi.AttributeSourceContainer;
 import org.hibernate.boot.model.source.spi.PluralAttributeKeySource;
 import org.hibernate.boot.model.source.spi.RelationalValueSource;
@@ -65,6 +66,47 @@ public class PluralAttributeKeySourceImpl
 					@Override
 					public List getColumnOrFormulaElements() {
 						return jaxbKey.getColumn();
+					}
+
+				}
+		);
+	}
+
+	public PluralAttributeKeySourceImpl(
+			MappingDocument mappingDocument,
+			final JaxbHbmManyToOneType jaxbKey,
+			final AttributeSourceContainer container) {
+		super( mappingDocument );
+
+		this.explicitFkName = StringHelper.nullIfEmpty( jaxbKey.getForeignKey() );
+		this.referencedPropertyName = StringHelper.nullIfEmpty( jaxbKey.getPropertyRef() );
+		this.cascadeDeletesAtFkLevel = jaxbKey.getOnDelete() != null
+				&& "cascade".equals( jaxbKey.getOnDelete().value() );
+		this.nullable = jaxbKey.isNotNull() == null || !jaxbKey.isNotNull();
+		this.updateable = jaxbKey.isUpdate();
+
+		this.valueSources = RelationalValueSourceHelper.buildValueSources(
+				sourceMappingDocument(),
+				null, // todo : collection table name
+				new RelationalValueSourceHelper.AbstractColumnsAndFormulasSource() {
+					@Override
+					public XmlElementMetadata getSourceType() {
+						return XmlElementMetadata.KEY;
+					}
+
+					@Override
+					public String getSourceName() {
+						return null;
+					}
+
+					@Override
+					public String getColumnAttribute() {
+						return StringHelper.nullIfEmpty( jaxbKey.getColumnAttribute() );
+					}
+
+					@Override
+					public List getColumnOrFormulaElements() {
+						return jaxbKey.getColumnOrFormula();
 					}
 
 				}

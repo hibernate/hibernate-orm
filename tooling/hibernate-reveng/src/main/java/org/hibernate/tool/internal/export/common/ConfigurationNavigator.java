@@ -1,7 +1,7 @@
 /*
  * Created on 2004-12-01
  */
-package org.hibernate.tool.hbm2x;
+package org.hibernate.tool.internal.export.common;
 
 import java.util.Iterator;
 import java.util.Map;

@@ -22,9 +22,9 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tool.hbm2x.ConfigurationNavigator;
 import org.hibernate.tool.hbm2x.pojo.ComponentPOJOClass;
 import org.hibernate.tool.hbm2x.pojo.POJOClass;
+import org.hibernate.tool.internal.export.common.ConfigurationNavigator;
 import org.hibernate.tool.internal.export.pojo.Cfg2JavaTool;
 import org.hibernate.type.Type;
 

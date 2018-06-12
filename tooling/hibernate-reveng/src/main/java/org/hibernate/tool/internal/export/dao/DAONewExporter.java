@@ -1,4 +1,4 @@
-package org.hibernate.tool.hbm2x;
+package org.hibernate.tool.internal.export.dao;
 
 import java.io.File;
 import java.util.Map;
@@ -6,6 +6,7 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.hibernate.tool.hbm2x.GenericExporter;
 import org.hibernate.tool.hbm2x.pojo.POJOClass;
 
 /**

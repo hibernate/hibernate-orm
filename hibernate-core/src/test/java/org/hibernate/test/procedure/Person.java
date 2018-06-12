@@ -91,6 +91,31 @@ import org.hibernate.annotations.NamedNativeQuery;
              )
          }
      ),
+     @SqlResultSetMapping(
+         name = "person_with_phones_hana",
+         entities = {
+             @EntityResult(
+                 entityClass = Person.class,
+                 fields = {
+                     @FieldResult( name = "id", column = "pr.id" ),
+                     @FieldResult( name = "name", column = "pr.name" ),
+                     @FieldResult( name = "nickName", column = "pr.nickName" ),
+                     @FieldResult( name = "address", column = "pr.address" ),
+                     @FieldResult( name = "createdOn", column = "pr.createdOn" ),
+                     @FieldResult( name = "version", column = "pr.version" ),
+                 }
+             ),
+             @EntityResult(
+                 entityClass = Phone.class,
+                 fields = {
+                     @FieldResult( name = "id", column = "ph.id" ),
+                     @FieldResult( name = "person", column = "ph.person_id" ),
+                     @FieldResult( name = "number", column = "ph.phone_number" ),
+                     @FieldResult( name = "valid", column = "ph.valid" )
+                 }
+             )
+         }
+     ),
 })
 @Entity
 public class Person {

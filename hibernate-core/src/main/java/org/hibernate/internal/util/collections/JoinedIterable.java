@@ -6,6 +6,7 @@
  */
 package org.hibernate.internal.util.collections;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -76,7 +77,7 @@ public class JoinedIterable<T> implements Iterable<T> {
 
 			if ( currentIterator == null) {
 				if( iterables.size() == 0  ) {
-					currentIterator = EmptyIterator.INSTANCE;
+					currentIterator = Collections.emptyIterator();
 				}
 				else {
 					currentIterator = iterables.get( 0 ).iterator();

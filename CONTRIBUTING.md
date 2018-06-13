@@ -103,4 +103,4 @@ It is important that this topic branch on your fork:
 	PR will be closed, if not already, and the changes will be lost.
 
 # Notes
-<sup>(1)</sup> Currently, there are some issues with the Gradle `eclipse` plugin due to some upgrades made by the gradle development team. If you get some error message running `./gradlew clean eclipse --refresh-dependencies` command, you can try either with `./gradlew clean --refresh-dependencies` or with the IDE tools to import gradle projects, being this last one the suggested approach
+<sup>(1)</sup> Gradle `eclipse` plugin is no longer supported, so the recommended way to import the project in your IDE is with the proper IDE tools/plugins. Don't try to run `./gradlew clean eclipse --refresh-dependencies` from the command line as you'll get an error because `eclipse` no longer exists

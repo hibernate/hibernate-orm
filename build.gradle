@@ -42,7 +42,6 @@ allprojects {
 		}
 		
 	apply plugin: 'idea'
-	apply plugin: 'eclipse'
 	}
 
 	// minimize changes, at least for now (gradle uses 'build' by default)..

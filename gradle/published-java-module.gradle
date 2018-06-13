@@ -7,8 +7,8 @@
 
 apply from: rootProject.file( 'gradle/java-module.gradle' )
 
-apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 apply from: rootProject.file( 'gradle/publishing-repos.gradle' )
+apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 
 
 

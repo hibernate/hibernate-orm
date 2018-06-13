@@ -26,6 +26,9 @@ apply plugin: 'idea'
 project.tasks.jar.enabled = false
 project.tasks.javadoc.enabled = false
 
+evaluationDependsOn( ':hibernate-core' )
+evaluationDependsOn( ':hibernate-envers' )
+
 ext {
 	// NOTE : `wildflyVersion` comes from libraries.gradle...
 

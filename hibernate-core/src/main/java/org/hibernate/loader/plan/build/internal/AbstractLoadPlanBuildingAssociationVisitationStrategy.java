@@ -662,10 +662,6 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 	@Override
 	public void foundCircularAssociation(AssociationAttributeDefinition attributeDefinition) {
 		final FetchStrategy fetchStrategy = determineFetchStrategy( attributeDefinition );
-		if ( fetchStrategy.getStyle() != FetchStyle.JOIN ) {
-			return; // nothing to do
-		}
-
 		final AssociationKey associationKey = attributeDefinition.getAssociationKey();
 
 		// go ahead and build the bidirectional fetch

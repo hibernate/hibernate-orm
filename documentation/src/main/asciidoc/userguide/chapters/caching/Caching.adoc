@@ -87,7 +87,7 @@ or by using the `javax.persistence.sharedCache.mode` property in your configurat
 The following values are possible:
 
 `ENABLE_SELECTIVE` (Default and recommended value)::
-	Entities are not cached unless explicitly marked as cacheable (with the https://docs.oracle.com/javaee/7/api/javax/persistence/Cacheable.html[`@Cacheable`] annotation).
+	Entities are not cached unless explicitly marked as cacheable (with the https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Cacheable.html[`@Cacheable`] annotation).
 `DISABLE_SELECTIVE`::
 	Entities are cached unless explicitly marked as non-cacheable.
 `ALL`::
@@ -453,7 +453,7 @@ include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-management-cache-mod
 Because the second level cache is bound to the `EntityManagerFactory` or the `SessionFactory`,
 cache eviction must be done through these two interfaces.
 
-JPA only supports entity eviction through the https://docs.oracle.com/javaee/7/api/javax/persistence/Cache.html[`javax.persistence.Cache`] interface:
+JPA only supports entity eviction through the https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Cache.html[`javax.persistence.Cache`] interface:
 
 [[caching-management-evict-jpa-example]]
 .Evicting entities with JPA

@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.tool.internal.export.pojo.ImportContext;
 
 public class ImportContextImpl implements ImportContext {
 

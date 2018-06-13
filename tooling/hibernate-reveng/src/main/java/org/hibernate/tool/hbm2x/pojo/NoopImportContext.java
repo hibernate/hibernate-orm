@@ -1,5 +1,7 @@
 package org.hibernate.tool.hbm2x.pojo;
 
+import org.hibernate.tool.internal.export.pojo.ImportContext;
+
 public class NoopImportContext implements ImportContext {
 
 	public String importType(String fqcn) {

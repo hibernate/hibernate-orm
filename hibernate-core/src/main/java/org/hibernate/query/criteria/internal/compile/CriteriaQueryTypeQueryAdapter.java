@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
+
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.Parameter;
@@ -332,7 +333,15 @@ public class CriteriaQueryTypeQueryAdapter<X> implements QueryImplementor<X> {
 	@Override
 	public boolean isBound(Parameter<?> param) {
 		entityManager.checkOpen( false );
-		return jpqlQuery.isBound( param );
+		final ExplicitParameterInfo<?> parameterInfo = resolveParameterInfo( param );
+		Parameter<?> jpqlParameter;
+		if ( parameterInfo.isNamed() ) {
+			jpqlParameter = jpqlQuery.getParameter( parameterInfo.getName() );
+		}
+		else {
+			jpqlParameter = jpqlQuery.getParameter( parameterInfo.getPosition() );
+		}
+		return jpqlQuery.isBound( jpqlParameter );
 	}
 
 	@Override

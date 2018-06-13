@@ -8,6 +8,7 @@ package org.hibernate.mapping;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -23,7 +24,6 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.SingletonIterator;
 import org.hibernate.service.ServiceRegistry;
@@ -888,7 +888,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	}
 
 	protected Iterator getDiscriminatorColumnIterator() {
-		return EmptyIterator.INSTANCE;
+		return Collections.emptyIterator();
 	}
 
 	protected void checkColumnDuplication() {

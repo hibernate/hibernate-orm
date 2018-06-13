@@ -34,7 +34,6 @@ import org.hibernate.hql.spi.QueryTranslatorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.query.internal.ParameterMetadataImpl;
@@ -308,7 +307,7 @@ public class HQLQueryPlan implements Serializable {
 			queryParameters.traceParameters( session.getFactory() );
 		}
 		if ( translators.length == 0 ) {
-			return EmptyIterator.INSTANCE;
+			return Collections.emptyIterator();
 		}
 
 		final boolean many = translators.length > 1;

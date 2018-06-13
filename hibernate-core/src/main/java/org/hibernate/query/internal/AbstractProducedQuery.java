@@ -59,7 +59,6 @@ import org.hibernate.internal.EmptyScrollableResults;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.TypedParameterValue;
 import org.hibernate.jpa.graph.internal.EntityGraphImpl;
@@ -1443,7 +1442,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@SuppressWarnings("unchecked")
 	protected Iterator<R> doIterate() {
 		if (getMaxResults() == 0){
-			return EmptyIterator.INSTANCE;
+			return Collections.emptyIterator();
 		}
 		return getProducer().iterate(
 				getQueryParameterBindings().expandListValuedParameters( getQueryString(), getProducer() ),

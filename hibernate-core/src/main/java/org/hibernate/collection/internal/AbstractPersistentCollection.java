@@ -33,7 +33,6 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.MarkerObject;
-import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -784,7 +783,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			};
 		}
 		else {
-			return EmptyIterator.INSTANCE;
+			return Collections.emptyIterator();
 		}
 	}
 

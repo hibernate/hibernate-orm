@@ -1,10 +1,9 @@
-package org.hibernate.tool.hbm2x.pojo;
+package org.hibernate.tool.internal.export.pojo;
 
 import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.mapping.Property;
-import org.hibernate.tool.internal.export.pojo.ImportContext;
 
 /**
  * Wrapper class over PersistentClass used in hbm2java and hbm2doc tool

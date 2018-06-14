@@ -27,7 +27,6 @@ import org.hibernate.tool.hbm2x.ExporterException;
 import org.hibernate.tool.hbm2x.MetaAttributeHelper;
 import org.hibernate.tool.hbm2x.pojo.ComponentPOJOClass;
 import org.hibernate.tool.hbm2x.pojo.EntityPOJOClass;
-import org.hibernate.tool.hbm2x.pojo.POJOClass;
 import org.hibernate.tool.hbm2x.visitor.JavaTypeFromValueVisitor;
 import org.hibernate.tool.internal.export.hbm.Cfg2HbmTool;
 import org.hibernate.tool.internal.util.NameConverter;

@@ -7,7 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.hibernate.tool.hbm2x.GenericExporter;
-import org.hibernate.tool.hbm2x.pojo.POJOClass;
+import org.hibernate.tool.internal.export.pojo.POJOClass;
 
 /**
  * Creates domain model abstract base classes from .hbm files

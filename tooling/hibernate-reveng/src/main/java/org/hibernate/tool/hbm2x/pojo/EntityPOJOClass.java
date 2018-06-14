@@ -34,6 +34,7 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
 import org.hibernate.tool.internal.export.pojo.Cfg2JavaTool;
+import org.hibernate.tool.internal.export.pojo.POJOClass;
 import org.hibernate.type.ForeignKeyDirection;
 
 public class EntityPOJOClass extends BasicPOJOClass {

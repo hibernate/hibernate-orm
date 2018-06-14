@@ -27,6 +27,7 @@ import org.hibernate.tool.hbm2x.visitor.DefaultValueVisitor;
 import org.hibernate.tool.internal.export.pojo.Cfg2JavaTool;
 import org.hibernate.tool.internal.export.pojo.ImportContext;
 import org.hibernate.tool.internal.export.pojo.ImportContextImpl;
+import org.hibernate.tool.internal.export.pojo.POJOClass;
 import org.hibernate.tool.internal.util.NameConverter;
 import org.hibernate.tuple.GenerationTiming;
 

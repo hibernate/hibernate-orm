@@ -42,10 +42,10 @@ import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.tool.hbm2x.ExporterException;
-import org.hibernate.tool.hbm2x.pojo.SkipBackRefPropertyIterator;
 import org.hibernate.tool.hbm2x.visitor.EntityNameFromValueVisitor;
 import org.hibernate.tool.hbm2x.visitor.HBMTagForPersistentClassVisitor;
 import org.hibernate.tool.hbm2x.visitor.HBMTagForValueVisitor;
+import org.hibernate.tool.internal.util.SkipBackRefPropertyIterator;
 
 /**
  * @author David Channon and Max

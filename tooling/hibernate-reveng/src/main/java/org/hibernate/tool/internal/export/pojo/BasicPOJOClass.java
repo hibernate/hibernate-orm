@@ -1,4 +1,4 @@
-package org.hibernate.tool.hbm2x.pojo;
+package org.hibernate.tool.internal.export.pojo;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,10 +24,6 @@ import org.hibernate.mapping.Value;
 import org.hibernate.tool.hbm2x.MetaAttributeConstants;
 import org.hibernate.tool.hbm2x.MetaAttributeHelper;
 import org.hibernate.tool.hbm2x.visitor.DefaultValueVisitor;
-import org.hibernate.tool.internal.export.pojo.Cfg2JavaTool;
-import org.hibernate.tool.internal.export.pojo.ImportContext;
-import org.hibernate.tool.internal.export.pojo.ImportContextImpl;
-import org.hibernate.tool.internal.export.pojo.POJOClass;
 import org.hibernate.tool.internal.util.NameConverter;
 import org.hibernate.tuple.GenerationTiming;
 

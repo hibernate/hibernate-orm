@@ -207,4 +207,9 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends
 		session.getTransaction().commit();
 		session.clear();
 	}
+
+	@Override
+	protected boolean isCleanupTestDataRequired() {
+		return true;
+	}
 }

@@ -1,6 +1,4 @@
-package org.hibernate.tool.hbm2x.pojo;
-
-import org.hibernate.tool.internal.export.pojo.ImportContext;
+package org.hibernate.tool.internal.export.pojo;
 
 public class NoopImportContext implements ImportContext {
 

@@ -18,12 +18,12 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
 import org.hibernate.Hibernate;
+import org.hibernate.Session;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -47,24 +47,31 @@ public class EmbeddableCollectionElementWithLazyManyToOneTest extends BaseCoreFu
 		Parent p = new Parent();
 		p.containedChild = new ContainedChild( new Child() );
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					session.persist( p );
-				}
-		);
+		Session session = openSession();
+		session.beginTransaction();
+		{
+			session.persist( p );
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					Parent pRead = session.get( Parent.class, p.id );
-					assertFalse( Hibernate.isInitialized( pRead.containedChild.child ) );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					session.delete( p );
-				}
-		);
+		session = openSession();
+		session.beginTransaction();
+		{
+			Parent pRead = (Parent) session.get( Parent.class, p.id );
+			assertFalse( Hibernate.isInitialized( pRead.containedChild.child ) );
+		}
+		session.getTransaction().commit();
+		session.close();
+
+		session = openSession();
+		session.beginTransaction();
+		{
+			session.delete( p );
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
@@ -73,27 +80,33 @@ public class EmbeddableCollectionElementWithLazyManyToOneTest extends BaseCoreFu
 		Parent p = new Parent();
 		p.containedChildren.add( new ContainedChild( new Child() ) );
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					session.persist( p );
-				}
-		);
+		Session session = openSession();
+		session.beginTransaction();
+		{
+			session.persist( p );
+		}
+		session.getTransaction().commit();
+		session.close();
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					Parent pRead = session.get( Parent.class, p.id );
-					assertFalse( Hibernate.isInitialized( pRead.containedChildren ) );
-					assertEquals( 1, pRead.containedChildren.size() );
-					assertTrue( Hibernate.isInitialized( pRead.containedChildren ) );
-					assertFalse( Hibernate.isInitialized( pRead.containedChildren.iterator().next().child ) );
-				}
-		);
+		session = openSession();
+		session.beginTransaction();
+		{
+			Parent pRead = (Parent) session.get( Parent.class, p.id );
+			assertFalse( Hibernate.isInitialized( pRead.containedChildren ) );
+			assertEquals( 1, pRead.containedChildren.size() );
+			assertTrue( Hibernate.isInitialized( pRead.containedChildren ) );
+			assertFalse( Hibernate.isInitialized( pRead.containedChildren.iterator().next().child ) );
+		}
+		session.getTransaction().commit();
+		session.close();
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					session.delete( p );
-				}
-		);
+		session = openSession();
+		session.beginTransaction();
+		{
+			session.delete( p );
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
@@ -104,28 +117,34 @@ public class EmbeddableCollectionElementWithLazyManyToOneTest extends BaseCoreFu
 		p.containedChild = containedChild;
 		p.containedChildren.add( containedChild );
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					session.persist( p );
-				}
-		);
+		Session session = openSession();
+		session.beginTransaction();
+		{
+			session.persist( p );
+		}
+		session.getTransaction().commit();
+		session.close();
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					Parent pRead = session.get( Parent.class, p.id );
-					assertFalse( Hibernate.isInitialized( pRead.containedChild.child ) );
-					assertFalse( Hibernate.isInitialized( pRead.containedChildren ) );
-					assertEquals( 1, pRead.containedChildren.size() );
-					assertTrue( Hibernate.isInitialized( pRead.containedChildren ) );
-					assertFalse( Hibernate.isInitialized( pRead.containedChildren.iterator().next().child ) );
-				}
-		);
+		session = openSession();
+		session.beginTransaction();
+		{
+			Parent pRead = (Parent) session.get( Parent.class, p.id );
+			assertFalse( Hibernate.isInitialized( pRead.containedChild.child ) );
+			assertFalse( Hibernate.isInitialized( pRead.containedChildren ) );
+			assertEquals( 1, pRead.containedChildren.size() );
+			assertTrue( Hibernate.isInitialized( pRead.containedChildren ) );
+			assertFalse( Hibernate.isInitialized( pRead.containedChildren.iterator().next().child ) );
+		}
+		session.getTransaction().commit();
+		session.close();
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					session.delete( p );
-				}
-		);
+		session = openSession();
+		session.beginTransaction();
+		{
+			session.delete( p );
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Entity(name = "Parent")

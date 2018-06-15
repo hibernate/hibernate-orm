@@ -1,4 +1,4 @@
-package org.hibernate.tool.hbm2x.pojo;
+package org.hibernate.tool.internal.util;
 
 import java.util.Iterator;
 

@@ -36,6 +36,7 @@ import org.hibernate.mapping.Value;
 import org.hibernate.tool.internal.export.pojo.BasicPOJOClass;
 import org.hibernate.tool.internal.export.pojo.Cfg2JavaTool;
 import org.hibernate.tool.internal.export.pojo.POJOClass;
+import org.hibernate.tool.internal.util.AnnotationBuilder;
 import org.hibernate.tool.internal.util.IteratorTransformer;
 import org.hibernate.tool.internal.util.SkipBackRefPropertyIterator;
 import org.hibernate.type.ForeignKeyDirection;

@@ -97,8 +97,64 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor, Hibe
 		}
 	}
 
+	/**
+	 * @see #getAttribute(Attribute, boolean)
+	 */
 	public AttributeNodeImpl addAttribute(String attributeName) {
+		// This method does not allow both map keys and values to be configured.
+		// See HHH-12696 for details.
+		// Not modifying it for compatibility.
 		return addAttributeNode( buildAttributeNode( attributeName ) );
+	}
+
+	/**
+	 * Returns an attribute by name (existing or new one if requested).
+	 * 
+	 * @param attributeName Name of the attribute being sought.
+	 * 
+	 * @param createIfNotPresent If {@code true} and the attribute has not been previously added,
+	 * a new one will be created.
+	 * 
+	 * @return An existing or newly created attribute (if {@code createIfNotPresent} is {@code true})
+	 * or {@code null} if {@code createIfNotPresent==false} and the specified attribute has not been
+	 * previously added.
+	 */
+	public AttributeNodeImplementor<?> getAttribute(String attributeName, boolean createIfNotPresent) {
+
+		if ( attributeNodeMap == null ) {
+			if ( !createIfNotPresent ) {
+				return null;
+			}
+			initializeAttributeNodeMap();
+		}
+		AttributeNodeImplementor<?> attrNode = attributeNodeMap.get( attributeName );
+		if ( ( attrNode == null ) && createIfNotPresent ) {
+			attrNode = addAttributeNode( buildAttributeNode( attributeName ) );
+		}
+		return attrNode;
+	}
+	
+	protected <T> AttributeNodeImplementor<T> getAttribute(Attribute<?,T> attributeToAdd, boolean createIfNotPresent) {
+		if ( attributeNodeMap == null ) {
+			if ( !createIfNotPresent ) {
+				return null;
+			}
+			initializeAttributeNodeMap();
+		}
+		@SuppressWarnings("unchecked")
+		AttributeNodeImplementor<T> attrNode = (AttributeNodeImplementor<T>) attributeNodeMap.get( attributeToAdd.getName() );
+		if ( attrNode == null ) {
+			if ( createIfNotPresent ) {
+				attrNode = addAttributeNode( buildAttributeNode( attributeToAdd.getName() ) );
+			}
+		}
+		else {
+			// Validate it is the same attribute
+			if ( attrNode.getAttribute().equals( attributeToAdd ) ) {
+				throw new IllegalStateException( "Different attribute by the same name is present already." );
+			}
+		}
+		return attrNode;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -112,15 +168,24 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor, Hibe
 	protected <X> AttributeNodeImpl<X> buildAttributeNode(Attribute<T, X> attribute) {
 		return new AttributeNodeImpl<>( sessionFactory, getManagedType(), attribute );
 	}
-
+	
+	private final void initializeAttributeNodeMap() {
+		if ( attributeNodeMap == null ) {
+			attributeNodeMap = new HashMap<>();
+		}
+	}
+	
 	@SuppressWarnings("WeakerAccess")
 	protected AttributeNodeImpl addAttributeNode(AttributeNodeImpl attributeNode) {
+		// This method does not allow both map keys and values to be configured.
+		// See HHH-12696 for details.
+		// Not modifying it for compatibility.
 		if ( ! mutable ) {
 			throw new IllegalStateException( "Entity/sub graph is not mutable" );
 		}
 
 		if ( attributeNodeMap == null ) {
-			attributeNodeMap = new HashMap<>();
+			initializeAttributeNodeMap();
 		}
 		else {
 			final AttributeNode old = attributeNodeMap.get( attributeNode.getRegistrationName() );
@@ -146,49 +211,53 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor, Hibe
 		}
 	}
 
+	/**
+	 * @see #getAttribute(Attribute, boolean)
+	 */
 	@SuppressWarnings("unchecked")
 	protected AttributeNodeImpl addAttribute(Attribute attribute) {
+		// This method does not allow both map keys and values to be configured.
+		// See HHH-12696 for details.
+		// Not modifying it for compatibility.
 		return addAttributeNode( buildAttributeNode( attribute ) );
 	}
 
-	@SuppressWarnings("unchecked")
 	public <X> SubgraphImpl<X> addSubgraph(Attribute<T, X> attribute) {
-		return addAttribute( attribute ).makeSubgraph();
+		return getAttribute( attribute, true ).getSubgraph( true );
 	}
 
-	@SuppressWarnings("unchecked")
 	public <X> SubgraphImpl<? extends X> addSubgraph(Attribute<T, X> attribute, Class<? extends X> type) {
-		return addAttribute( attribute ).makeSubgraph( type );
+		return getAttribute( attribute, true ).getSubgraph( type, true );
 	}
 
 	@SuppressWarnings("unchecked")
 	public <X> SubgraphImpl<X> addSubgraph(String attributeName) {
-		return addAttribute( attributeName ).makeSubgraph();
+		return (SubgraphImpl<X>) getAttribute( attributeName, true ).getSubgraph( true );
 	}
 
-	@SuppressWarnings("unchecked")
 	public <X> SubgraphImpl<X> addSubgraph(String attributeName, Class<X> type) {
-		return addAttribute( attributeName ).makeSubgraph( type );
+		@SuppressWarnings("unchecked")
+		final AttributeNodeImplementor<X> attrNode = (AttributeNodeImplementor<X>) getAttribute( attributeName, true );
+		return attrNode.getSubgraph( type, true );
 	}
 
-	@SuppressWarnings("unchecked")
 	public <X> SubgraphImpl<X> addKeySubgraph(Attribute<T, X> attribute) {
-		return addAttribute( attribute ).makeKeySubgraph();
+		return getAttribute( attribute, true ).getKeySubgraph( true );
 	}
 
-	@SuppressWarnings("unchecked")
 	public <X> SubgraphImpl<? extends X> addKeySubgraph(Attribute<T, X> attribute, Class<? extends X> type) {
-		return addAttribute( attribute ).makeKeySubgraph( type );
+		return getAttribute( attribute, true ).getKeySubgraph( type, true );
 	}
 
 	@SuppressWarnings("unchecked")
 	public <X> SubgraphImpl<X> addKeySubgraph(String attributeName) {
-		return addAttribute( attributeName ).makeKeySubgraph();
+		return (SubgraphImpl<X>) getAttribute( attributeName, true ).getKeySubgraph( true );
 	}
 
-	@SuppressWarnings("unchecked")
 	public <X> SubgraphImpl<X> addKeySubgraph(String attributeName, Class<X> type) {
-		return addAttribute( attributeName ).makeKeySubgraph( type );
+		@SuppressWarnings("unchecked")
+		final AttributeNodeImplementor<X> attrNode = (AttributeNodeImplementor<X>) getAttribute( attributeName, true );
+		return attrNode.getKeySubgraph( type, true );
 	}
 	
 	@Override

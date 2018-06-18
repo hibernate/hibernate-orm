@@ -9,10 +9,17 @@ package org.hibernate.graph.spi;
 import javax.persistence.AttributeNode;
 import javax.persistence.metamodel.Attribute;
 
+import org.hibernate.jpa.graph.internal.SubgraphImpl;
+
 /**
  * @author Strong Liu <stliu@hibernate.org>
  */
 public interface AttributeNodeImplementor<T> extends AttributeNode<T> {
 	public Attribute<?,T> getAttribute();
 	public AttributeNodeImplementor<T> makeImmutableCopy();
+	
+	public <X extends T> SubgraphImpl<X> getSubgraph(boolean createIfNotPresent);
+	public <X extends T> SubgraphImpl<X> getSubgraph(Class<X> type, boolean createIfNotPresent);
+	public <X extends T> SubgraphImpl<X> getKeySubgraph(boolean createIfNotPresent);
+	public <X extends T> SubgraphImpl<X> getKeySubgraph(Class<X> type, boolean createIfNotPresent);
 }

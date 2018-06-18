@@ -25,6 +25,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphNodeImplementor;
 import org.hibernate.internal.CoreLogging;
+import org.hibernate.jpa.graph.internal.SubgraphImpl;
 import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.Return;
@@ -301,6 +302,26 @@ public abstract class AbstractEntityGraphVisitationStrategy
 		@Override
 		public String toString() {
 			return "Mocked NON-EXIST attribute node";
+		}
+
+		@Override
+		public SubgraphImpl getSubgraph(boolean createIfNotPresent) {
+			return null;
+		}
+
+		@Override
+		public SubgraphImpl getSubgraph(Class type, boolean createIfNotPresent) {
+			return null;
+		}
+
+		@Override
+		public SubgraphImpl getKeySubgraph(boolean createIfNotPresent) {
+			return null;
+		}
+
+		@Override
+		public SubgraphImpl getKeySubgraph(Class type, boolean createIfNotPresent) {
+			return null;
 		}
 	};
 	private static final GraphNodeImplementor NON_EXIST_SUBGRAPH_NODE = new GraphNodeImplementor() {

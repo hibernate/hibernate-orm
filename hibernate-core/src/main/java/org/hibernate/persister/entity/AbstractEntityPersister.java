@@ -2764,8 +2764,8 @@ public abstract class AbstractEntityPersister
 					);
 				}
 				else if ( generationStrategy != null &&
-					 generationStrategy.getGenerationTiming().includesInsert() &&
-					 generationStrategy.referenceColumnsInSql() ) {
+						generationStrategy.getGenerationTiming().includesInsert() &&
+						generationStrategy.referenceColumnsInSql() ) {
 
 					final String[] values;
 

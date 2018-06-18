@@ -1,4 +1,4 @@
-package org.hibernate.tool.hbm2x.pojo;
+package org.hibernate.tool.internal.export.pojo;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -8,9 +8,6 @@ import java.util.List;
 
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
-import org.hibernate.tool.internal.export.pojo.BasicPOJOClass;
-import org.hibernate.tool.internal.export.pojo.Cfg2JavaTool;
-import org.hibernate.tool.internal.export.pojo.POJOClass;
 
 public class ComponentPOJOClass extends BasicPOJOClass {
 

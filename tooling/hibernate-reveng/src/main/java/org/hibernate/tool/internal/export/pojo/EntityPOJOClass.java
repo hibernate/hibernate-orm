@@ -1,4 +1,4 @@
-package org.hibernate.tool.hbm2x.pojo;
+package org.hibernate.tool.internal.export.pojo;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -33,9 +33,6 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
-import org.hibernate.tool.internal.export.pojo.BasicPOJOClass;
-import org.hibernate.tool.internal.export.pojo.Cfg2JavaTool;
-import org.hibernate.tool.internal.export.pojo.POJOClass;
 import org.hibernate.tool.internal.util.AnnotationBuilder;
 import org.hibernate.tool.internal.util.IteratorTransformer;
 import org.hibernate.tool.internal.util.SkipBackRefPropertyIterator;

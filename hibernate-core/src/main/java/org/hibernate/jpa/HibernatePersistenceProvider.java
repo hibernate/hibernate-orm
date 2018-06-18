@@ -47,22 +47,14 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	@Override
 	public EntityManagerFactory createEntityManagerFactory(String persistenceUnitName, Map properties) {
 		log.tracef( "Starting createEntityManagerFactory for persistenceUnitName %s", persistenceUnitName );
-
-		try {
-			final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties );
-			if ( builder == null ) {
-				log.trace( "Could not obtain matching EntityManagerFactoryBuilder, returning null" );
-				return null;
-			}
-			else {
-				return builder.build();
-			}
+		final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties );
+		if ( builder == null ) {
+			log.trace( "Could not obtain matching EntityManagerFactoryBuilder, returning null" );
+			return null;
 		}
-		catch (Exception e) {
-			log.debug( "Unable to create EntityManagerFactory", e );
+		else {
+			return builder.build();
 		}
-
-		return null;
 	}
 
 	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map properties) {

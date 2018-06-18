@@ -109,17 +109,16 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 		return keySubgraphMap == null ? Collections.<Class, Subgraph>emptyMap() : keySubgraphMap;
 	}
 
-	@SuppressWarnings("unchecked")
 	public <T> SubgraphImpl<T> makeSubgraph() {
-		return (SubgraphImpl<T>) internalMakeSubgraph( null );
+		return (SubgraphImpl<T>) internalMakeSubgraph( (Class<T>)null, true, true );
 	}
 
 	@SuppressWarnings("unchecked")
 	public <X extends T> SubgraphImpl<X> makeSubgraph(Class<X> type) {
-		return (SubgraphImpl<X>) internalMakeSubgraph( type );
+		return (SubgraphImpl<X>) internalMakeSubgraph( type, true, true );
 	}
 
-	private SubgraphImpl internalMakeSubgraph(Class type) {
+	private SubgraphImpl internalMakeSubgraph(Class type, boolean replaceExisting, boolean createIfNotPresent) {
 		if ( attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.BASIC
 				|| attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED ) {
 			throw new IllegalArgumentException(
@@ -133,6 +132,9 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 		}
 
 		if ( subgraphMap == null ) {
+			if ( !createIfNotPresent ) {
+				return null;
+			}
 			subgraphMap = new HashMap<Class, Subgraph>();
 		}
 
@@ -187,8 +189,12 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 			managedType = attribute.getDeclaringType();
 		}
 
-		final SubgraphImpl subgraph = new SubgraphImpl( this.entityManagerFactory, managedType, type );
-		subgraphMap.put( type, subgraph );
+		SubgraphImpl subgraph = (SubgraphImpl) subgraphMap.get( type );
+		if ( ( ( subgraph == null ) && createIfNotPresent ) || ( (subgraph != null) && replaceExisting ) ) {
+			subgraph = new SubgraphImpl( this.entityManagerFactory, managedType, type );
+			subgraphMap.put( type, subgraph );
+		}
+
 		return subgraph;
 	}
 
@@ -208,15 +214,16 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 
 	@SuppressWarnings("unchecked")
 	public <T> SubgraphImpl<T> makeKeySubgraph() {
-		return (SubgraphImpl<T>) internalMakeKeySubgraph( null );
+		return (SubgraphImpl<T>) internalMakeKeySubgraph( (Class<T>)null, true, true );
 	}
 
 	@SuppressWarnings("unchecked")
-	public <X extends T> SubgraphImpl<X> makeKeySubgraph(Class<X> type) {
-		return (SubgraphImpl<X>) internalMakeKeySubgraph( type );
+	public <X extends T> SubgraphImpl<X> makeKeySubgraph(Class<X> type ) {
+		return (SubgraphImpl<X>) internalMakeKeySubgraph( type, true, true );
 	}
 
-	public SubgraphImpl internalMakeKeySubgraph(Class type) {
+	@SuppressWarnings("unchecked")
+	public <X> SubgraphImpl internalMakeKeySubgraph(Class<X> type, boolean replaceExisting, boolean createIfNotPresent) {
 		if ( ! attribute.isCollection() ) {
 			throw new IllegalArgumentException(
 					String.format( "Non-collection attribute [%s] cannot be target of key subgraph", getAttributeName() )
@@ -241,6 +248,9 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 		}
 
 		if ( keySubgraphMap == null ) {
+			if ( !createIfNotPresent ) {
+				return null;
+			}
 			keySubgraphMap = new HashMap<Class, Subgraph>();
 		}
 
@@ -263,8 +273,12 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 			}
 		}
 
-		final SubgraphImpl subgraph = new SubgraphImpl( this.entityManagerFactory, attribute.getDeclaringType(), type );
-		keySubgraphMap.put( type, subgraph );
+		SubgraphImpl<X> subgraph = (SubgraphImpl<X>) keySubgraphMap.get( type );
+		if ( ( ( subgraph == null ) && createIfNotPresent ) || ( (subgraph != null) && replaceExisting ) ) {
+			subgraph = new SubgraphImpl<X>( this.entityManagerFactory, attribute.getDeclaringType(), type );
+			keySubgraphMap.put( type, subgraph );
+		}
+
 		return subgraph;
 	}
 
@@ -292,6 +306,26 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 			);
 		}
 		return copy;
+	}
+
+	@Override
+	public <X extends T> SubgraphImpl<X> getSubgraph(boolean createIfNotPresent) {
+		return getSubgraph( (Class<X>)null, createIfNotPresent );
+	}
+
+	@Override
+	public <X extends T> SubgraphImpl<X> getSubgraph(Class<X> type, boolean createIfNotPresent) {
+		return internalMakeSubgraph( type, true, createIfNotPresent );
+	}
+
+	@Override
+	public <X extends T> SubgraphImpl<X> getKeySubgraph(boolean createIfNotPresent) {
+		return getKeySubgraph( (Class<X>)null, createIfNotPresent );
+	}
+
+	@Override
+	public <X extends T> SubgraphImpl<X> getKeySubgraph(Class<X> type, boolean createIfNotPresent) {
+		return internalMakeKeySubgraph( type, true, createIfNotPresent );
 	}
 
 }

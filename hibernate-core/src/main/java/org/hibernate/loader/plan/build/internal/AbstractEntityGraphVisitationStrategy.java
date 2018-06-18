@@ -322,6 +322,26 @@ public abstract class AbstractEntityGraphVisitationStrategy
 		public String toString() {
 			return "Mocked NON-EXIST attribute node";
 		}
+
+		@Override
+		public Subgraph getSubgraph(boolean createIfNotPresent) {
+			return null;
+		}
+
+		@Override
+		public Subgraph getSubgraph(Class type, boolean createIfNotPresent) {
+			return null;
+		}
+
+		@Override
+		public Subgraph getKeySubgraph(boolean createIfNotPresent) {
+			return null;
+		}
+
+		@Override
+		public Subgraph getKeySubgraph(Class type, boolean createIfNotPresent) {
+			return null;
+		}
 	};
 	private static final GraphNodeImplementor NON_EXIST_SUBGRAPH_NODE = new GraphNodeImplementor() {
 		@Override

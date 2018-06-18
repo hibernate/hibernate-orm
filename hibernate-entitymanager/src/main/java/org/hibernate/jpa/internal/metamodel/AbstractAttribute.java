@@ -129,4 +129,57 @@ public abstract class AbstractAttribute<X, Y>
 		// should only ever be a field or the getter-method...
 		oos.writeObject( Method.class.isInstance( getJavaMember() ) ? "method" : "field" );
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ( ( declaringType == null ) ? 0 : declaringType.hashCode() );
+		result = prime * result + ( ( javaType == null ) ? 0 : javaType.hashCode() );
+		result = prime * result + ( ( name == null ) ? 0 : name.hashCode() );
+		result = prime * result + ( ( persistentAttributeType == null ) ? 0 : persistentAttributeType.hashCode() );
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if ( this == obj ) {
+			return true;
+		}
+		if ( obj == null ) {
+			return false;
+		}
+		if ( getClass() != obj.getClass() ) {
+			return false;
+		}
+		AbstractAttribute other = (AbstractAttribute) obj;
+		if ( declaringType == null ) {
+			if ( other.declaringType != null ) {
+				return false;
+			}
+		}
+		else if ( !declaringType.equals( other.declaringType ) ) {
+			return false;
+		}
+		if ( javaType == null ) {
+			if ( other.javaType != null ) {
+				return false;
+			}
+		}
+		else if ( !javaType.equals( other.javaType ) ) {
+			return false;
+		}
+		if ( name == null ) {
+			if ( other.name != null ) {
+				return false;
+			}
+		}
+		else if ( !name.equals( other.name ) ) {
+			return false;
+		}
+		if ( persistentAttributeType != other.persistentAttributeType ) {
+			return false;
+		}
+		return true;
+	}
 }

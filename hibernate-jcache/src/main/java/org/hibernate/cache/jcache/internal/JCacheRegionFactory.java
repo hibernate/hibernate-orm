@@ -130,22 +130,35 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 
 		final CachingProvider cachingProvider = getCachingProvider( properties );
 		final CacheManager cacheManager;
-		final String cacheManagerUri = getProp( properties, ConfigSettings.CONFIG_URI );
+		final URI cacheManagerUri = getUri( properties );
 		if ( cacheManagerUri != null ) {
-			URI uri;
-			try {
-				uri = new URI( cacheManagerUri );
-			}
-			catch ( URISyntaxException e ) {
-				throw new CacheException( "Couldn't create URI from " + cacheManagerUri, e );
-			}
-			// todo (5.3) : shouldn't this use Hibernate's AggregatedClassLoader?
-			cacheManager = cachingProvider.getCacheManager( uri, cachingProvider.getDefaultClassLoader() );
+			cacheManager = cachingProvider.getCacheManager( cacheManagerUri, getClassLoader( cachingProvider ));
 		}
 		else {
 			cacheManager = cachingProvider.getCacheManager();
 		}
 		return cacheManager;
+	}
+
+	@SuppressWarnings("WeakerAccess")
+	protected ClassLoader getClassLoader(CachingProvider cachingProvider) {
+		// todo (5.3) : shouldn't this use Hibernate's AggregatedClassLoader?
+		return cachingProvider.getDefaultClassLoader();
+	}
+
+	@SuppressWarnings("WeakerAccess")
+	protected URI getUri(Map properties) {
+		String cacheManagerUri = getProp( properties, ConfigSettings.CONFIG_URI );
+		if ( cacheManagerUri == null ) {
+			return null;
+		}
+
+		try {
+			return new URI( cacheManagerUri );
+		}
+		catch ( URISyntaxException e ) {
+			throw new CacheException( "Couldn't create URI from " + cacheManagerUri, e );
+		}
 	}
 
 	private String getProp(Map properties, String prop) {

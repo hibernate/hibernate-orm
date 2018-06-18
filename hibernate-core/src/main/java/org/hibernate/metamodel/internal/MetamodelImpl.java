@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 import javax.persistence.EntityGraph;
 import javax.persistence.NamedAttributeNode;
 import javax.persistence.NamedEntityGraph;
@@ -90,6 +91,18 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 
 	private final Map<Class<?>, EntityTypeImpl<?>> jpaEntityTypeMap = new ConcurrentHashMap<>();
+	/**
+	 * There can be multiple instances of an Embeddable type, each one being relative to its parent entity.
+	 */
+	private final Set<EmbeddableTypeImpl<?>> jpaEmbeddableTypes = new CopyOnWriteArraySet<>();
+	/**
+	 * That's not strictly correct in the JPA standard since for a given Java type we could have
+	 * multiple instances of an embeddable type. Some embeddable might override attributes, but we
+	 * can only return a single EmbeddableTypeImpl for a given Java object class.
+	 *
+	 * A better approach would be if the parent class and attribute name would be included as well
+	 * when trying to locate the embeddable type.
+	 */
 	private final Map<Class<?>, EmbeddableTypeImpl<?>> jpaEmbeddableTypeMap = new ConcurrentHashMap<>();
 	private final Map<Class<?>, MappedSuperclassType<?>> jpaMappedSuperclassTypeMap = new ConcurrentHashMap<>();
 	private final Map<String, EntityTypeImpl<?>> jpaEntityTypesByEntityName = new ConcurrentHashMap<>();
@@ -230,7 +243,10 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 			context.wrapUp();
 
 			this.jpaEntityTypeMap.putAll( context.getEntityTypeMap() );
-			this.jpaEmbeddableTypeMap.putAll( context.getEmbeddableTypeMap() );
+			this.jpaEmbeddableTypes.addAll( context.getEmbeddableTypeMap() );
+			for ( EmbeddableTypeImpl<?> embeddable: jpaEmbeddableTypes ) {
+				this.jpaEmbeddableTypeMap.put( embeddable.getJavaType(), embeddable );
+			}
 			this.jpaMappedSuperclassTypeMap.putAll( context.getMappedSuperclassTypeMap() );
 			this.jpaEntityTypesByEntityName.putAll( context.getEntityTypesByEntityName() );
 
@@ -547,12 +563,12 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	@Override
 	public Set<ManagedType<?>> getManagedTypes() {
 		final int setSize = CollectionHelper.determineProperSizing(
-				jpaEntityTypeMap.size() + jpaMappedSuperclassTypeMap.size() + jpaEmbeddableTypeMap.size()
+				jpaEntityTypeMap.size() + jpaMappedSuperclassTypeMap.size() + jpaEmbeddableTypes.size()
 		);
 		final Set<ManagedType<?>> managedTypes = new HashSet<ManagedType<?>>( setSize );
 		managedTypes.addAll( jpaEntityTypeMap.values() );
 		managedTypes.addAll( jpaMappedSuperclassTypeMap.values() );
-		managedTypes.addAll( jpaEmbeddableTypeMap.values() );
+		managedTypes.addAll( jpaEmbeddableTypes );
 		return managedTypes;
 	}
 
@@ -563,7 +579,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 	@Override
 	public Set<EmbeddableType<?>> getEmbeddables() {
-		return new HashSet<>( jpaEmbeddableTypeMap.values() );
+		return new HashSet<>( jpaEmbeddableTypes );
 	}
 
 	@Override

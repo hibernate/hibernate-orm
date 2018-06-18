@@ -57,7 +57,7 @@ class MetadataContext {
 	private Map<Class<?>, EntityTypeImpl<?>> entityTypes = new HashMap<>();
 	private Map<String, EntityTypeImpl<?>> entityTypesByEntityName = new HashMap<>();
 	private Map<PersistentClass, EntityTypeImpl<?>> entityTypesByPersistentClass = new HashMap<>();
-	private Map<Class<?>, EmbeddableTypeImpl<?>> embeddables = new HashMap<>();
+	private Set<EmbeddableTypeImpl<?>> embeddables = new HashSet<>();
 	private Map<MappedSuperclass, MappedSuperclassTypeImpl<?>> mappedSuperclassByMappedSuperclassMapping = new HashMap<>();
 	//this list contains MappedSuperclass and EntityTypes ordered by superclass first
 	private List<Object> orderedMappings = new ArrayList<>();
@@ -93,8 +93,8 @@ class MetadataContext {
 		return Collections.unmodifiableMap( entityTypes );
 	}
 
-	public Map<Class<?>, EmbeddableTypeImpl<?>> getEmbeddableTypeMap() {
-		return Collections.unmodifiableMap( embeddables );
+	public Set<EmbeddableTypeImpl<?>> getEmbeddableTypeMap() {
+		return Collections.unmodifiableSet( embeddables );
 	}
 
 	public Map<Class<?>, MappedSuperclassType<?>> getMappedSuperclassTypeMap() {
@@ -123,7 +123,7 @@ class MetadataContext {
 	}
 
 	/*package*/ void registerEmbeddedableType(EmbeddableTypeImpl<?> embeddableType) {
-		embeddables.put( embeddableType.getJavaType(), embeddableType );
+		embeddables.add( embeddableType );
 	}
 
 	/*package*/ void registerMappedSuperclassType(
@@ -268,7 +268,7 @@ class MetadataContext {
 		}
 
 		if ( staticMetamodelScanEnabled ) {
-			for ( EmbeddableTypeImpl embeddable : embeddables.values() ) {
+			for ( EmbeddableTypeImpl embeddable : embeddables ) {
 				populateStaticMetamodel( embeddable );
 			}
 		}

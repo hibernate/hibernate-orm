@@ -5,7 +5,7 @@ import java.util.Iterator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.tool.hbmlint.Detector;
-import org.hibernate.tool.hbmlint.IssueCollector;
+import org.hibernate.tool.internal.export.lint.IssueCollector;
 
 public abstract class EntityModelDetector extends Detector {
 

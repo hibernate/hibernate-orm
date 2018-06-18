@@ -29,7 +29,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.hbmlint.Issue;
-import org.hibernate.tool.hbmlint.IssueCollector;
+import org.hibernate.tool.internal.export.lint.IssueCollector;
 import org.hibernate.tool.internal.metadata.DefaultDatabaseCollector;
 import org.hibernate.tool.internal.reveng.DefaultReverseEngineeringStrategy;
 import org.hibernate.tool.internal.reveng.JDBCReader;

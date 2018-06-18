@@ -1,6 +1,7 @@
 package org.hibernate.tool.hbmlint;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.tool.internal.export.lint.IssueCollector;
 
 public abstract class Detector {
 

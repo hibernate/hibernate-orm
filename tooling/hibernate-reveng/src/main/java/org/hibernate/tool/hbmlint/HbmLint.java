@@ -8,6 +8,7 @@ import org.hibernate.tool.hbmlint.detector.BadCachingDetector;
 import org.hibernate.tool.hbmlint.detector.InstrumentationDetector;
 import org.hibernate.tool.hbmlint.detector.SchemaByMetaDataDetector;
 import org.hibernate.tool.hbmlint.detector.ShadowedIdentifierDetector;
+import org.hibernate.tool.internal.export.lint.IssueCollector;
 
 public class HbmLint implements IssueCollector {
 

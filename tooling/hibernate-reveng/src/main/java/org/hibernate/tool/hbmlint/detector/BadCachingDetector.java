@@ -6,7 +6,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
 import org.hibernate.tool.hbm2x.visitor.EntityNameFromValueVisitor;
 import org.hibernate.tool.hbmlint.Issue;
-import org.hibernate.tool.hbmlint.IssueCollector;
+import org.hibernate.tool.internal.export.lint.IssueCollector;
 
 public class BadCachingDetector extends EntityModelDetector {
 	

@@ -8,7 +8,7 @@ import org.hibernate.engine.spi.Managed;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.tool.hbmlint.Issue;
-import org.hibernate.tool.hbmlint.IssueCollector;
+import org.hibernate.tool.internal.export.lint.IssueCollector;
 
 public class InstrumentationDetector extends EntityModelDetector {
 	

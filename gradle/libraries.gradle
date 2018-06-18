@@ -44,7 +44,7 @@ ext {
 
             // Annotations
             commons_annotations: 'org.hibernate.common:hibernate-commons-annotations:5.0.4.Final',
-            jandex:         'org.jboss:jandex:2.0.3.Final',
+            jandex:         'org.jboss:jandex:2.0.5.Final',
             classmate:      'com.fasterxml:classmate:1.3.4',
 
             // Woodstox

@@ -10,6 +10,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import javax.persistence.AttributeNode;
+import javax.persistence.CascadeType;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
@@ -34,6 +38,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -45,7 +50,8 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { Foo.class, Bar.class, Baz.class,
-				Company.class, Employee.class, Manager.class, Location.class };
+				Company.class, Employee.class, Manager.class, Location.class,
+				EntityWithMap.class };
 	}
 
 	@Test
@@ -296,6 +302,53 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
         em.getTransaction().commit();
         em.close();
     }
+    
+
+    @Test
+    @TestForIssue(jiraKey = "HHH-12696")
+    public void createKeyThenValueMapSubgraphs() {
+
+        EntityManager em = getOrCreateEntityManager();
+        
+        EntityGraph<EntityWithMap> graph = em.createEntityGraph(EntityWithMap.class);
+        Subgraph<EntityWithMap> keySubgraph = graph.addKeySubgraph("map");
+        assertNotNull( keySubgraph );
+        Subgraph<EntityWithMap> valueSubgraph = graph.addSubgraph("map");
+        assertNotNull( valueSubgraph );
+        
+        validateMapKeyAndValueSubgraphs( graph );
+        
+        em.close();
+    }
+    
+    @Test
+    @TestForIssue(jiraKey = "HHH-12696")
+    public void createValueThenKeyMapSubgraphs() {
+
+        EntityManager em = getOrCreateEntityManager();
+        
+        EntityGraph<EntityWithMap> graph = em.createEntityGraph(EntityWithMap.class);
+        Subgraph<EntityWithMap> valueSubgraph = graph.addSubgraph("map");
+        assertNotNull( valueSubgraph );
+        Subgraph<EntityWithMap> keySubgraph = graph.addKeySubgraph("map");
+        assertNotNull( keySubgraph );
+        
+        validateMapKeyAndValueSubgraphs( graph );
+        
+        em.close();
+    }
+
+	private void validateMapKeyAndValueSubgraphs(EntityGraph<EntityWithMap> graph) {
+		int count = 0;
+        for (AttributeNode<?>node: graph.getAttributeNodes()) {
+            if ("map".equals(node.getAttributeName())) {
+                count++;
+                assertTrue("Missing the value subgraph", !node.getSubgraphs().isEmpty());
+                assertTrue("Missing the key subgraph", !node.getKeySubgraphs().isEmpty());
+            }
+        }
+        assertEquals( "Incorrect number of attributes found", 1, count );
+	}
 
     @Entity
 	@Table(name = "foo")
@@ -337,4 +390,16 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 
 	}
 
+    @Entity
+	@Table(name = "entitywithmap")
+    public static class EntityWithMap {
+
+		@Id
+		@GeneratedValue
+		public Integer id;
+
+	    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	    @ElementCollection( targetClass = EntityWithMap.class)
+		public Map<EntityWithMap, EntityWithMap> map;
+	}
 }

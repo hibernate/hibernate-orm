@@ -100,7 +100,7 @@ public class EntityUniqueKey implements Serializable, SerializableKey {
 			throw new IllegalStateException(
 					"Cannot serialize an EntityUniqueKey which represents a non " +
 							"serializable property value [" + entityName + "." + uniqueKeyName + "]"
-					);
+			);
 		}
 	}
 

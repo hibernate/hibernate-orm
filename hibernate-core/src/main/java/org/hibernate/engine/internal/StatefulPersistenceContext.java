@@ -603,7 +603,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( li.getSession() != this.getSession() ) {
 			final EntityPersister persister = session.getFactory().getMetamodel().entityPersister( li.getEntityName() );
 			final EntityKey key = session.generateEntityKey( li.getIdentifier(), persister );
-		  	// any earlier proxy takes precedence
+			// any earlier proxy takes precedence
 			proxiesByKey.putIfAbsent( key, proxy );
 			proxy.getHibernateLazyInitializer().setSession( session );
 		}
@@ -1137,7 +1137,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		final EntityPersister persister = session.getFactory().getMetamodel().entityPersister( entityName );
 		final CollectionPersister collectionPersister = session.getFactory().getMetamodel().collectionPersister( collectionRole );
 
-	    // try cache lookup first
+		// try cache lookup first
 		final Object parent = parentsByChild.get( childEntity );
 		if ( parent != null ) {
 			final EntityEntry entityEntry = entityEntryContext.getEntityEntry( parent );
@@ -1256,7 +1256,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		final EntityPersister persister = session.getFactory().getMetamodel().entityPersister( entity );
 		final CollectionPersister cp = session.getFactory().getMetamodel().collectionPersister( entity + '.' + property );
 
-	    // try cache lookup first
+		// try cache lookup first
 		final Object parent = parentsByChild.get( childEntity );
 		if ( parent != null ) {
 			final EntityEntry entityEntry = entityEntryContext.getEntityEntry( parent );
@@ -1444,52 +1444,14 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		oos.writeBoolean( defaultReadOnly );
 		oos.writeBoolean( hasNonReadOnlyEntities );
 
-		oos.writeInt( entitiesByKey.size() );
-		if ( tracing ) {
-			LOG.trace( "Starting serialization of [" + entitiesByKey.size() + "] entitiesByKey entries" );
-		}
-		for ( Map.Entry<EntityKey,Object> entry : entitiesByKey.entrySet() ) {
-			entry.getKey().serialize( oos );
-			oos.writeObject( entry.getValue() );
-		}
-
-		oos.writeInt( entitiesByUniqueKey.size() );
-		if ( tracing ) {
-			LOG.trace( "Starting serialization of [" + entitiesByUniqueKey.size() + "] entitiesByUniqueKey entries" );
-		}
-		for ( Map.Entry<EntityUniqueKey,Object> entry : entitiesByUniqueKey.entrySet() ) {
-			entry.getKey().serialize( oos );
-			oos.writeObject( entry.getValue() );
-		}
-
-		oos.writeInt( proxiesByKey.size() );
-		if ( tracing ) {
-			LOG.trace( "Starting serialization of [" + proxiesByKey.size() + "] proxiesByKey entries" );
-		}
-		for ( Map.Entry<EntityKey,Object> entry : proxiesByKey.entrySet() ) {
-			entry.getKey().serialize( oos );
-			oos.writeObject( entry.getValue() );
-		}
-
-		oos.writeInt( entitySnapshotsByKey.size() );
-		if ( tracing ) {
-			LOG.trace( "Starting serialization of [" + entitySnapshotsByKey.size() + "] entitySnapshotsByKey entries" );
-		}
-		for ( Map.Entry<EntityKey,Object> entry : entitySnapshotsByKey.entrySet() ) {
-			entry.getKey().serialize( oos );
-			oos.writeObject( entry.getValue() );
-		}
+		writeKeyMapToStream( entitiesByKey, oos, tracing, "entitiesByKey" );
+		writeKeyMapToStream( entitiesByUniqueKey, oos, tracing, "entitiesByUniqueKey" );
+		writeKeyMapToStream( proxiesByKey, oos, tracing, "proxiesByKey" );
+		writeKeyMapToStream( entitySnapshotsByKey, oos, tracing, "entitySnapshotsByKey" );
 
 		entityEntryContext.serialize( oos );
 
-		oos.writeInt( collectionsByKey.size() );
-		if ( tracing ) {
-			LOG.trace( "Starting serialization of [" + collectionsByKey.size() + "] collectionsByKey entries" );
-		}
-		for ( Map.Entry<CollectionKey,PersistentCollection> entry : collectionsByKey.entrySet() ) {
-			entry.getKey().serialize( oos );
-			oos.writeObject( entry.getValue() );
-		}
+		writeKeyMapToStream( collectionsByKey, oos, tracing, "collectionsByKey" );
 
 		oos.writeInt( collectionEntries.size() );
 		if ( tracing ) {
@@ -1515,6 +1477,29 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 		for ( EntityKey entry : nullifiableEntityKeys ) {
 			entry.serialize( oos );
+		}
+	}
+
+	/**
+	 * Writes a {@link Map} into an {@link ObjectOutputStream}
+	 *
+	 * @param keyMap The map to be serialized
+	 * @param oos The stream used for serialization
+	 * @param tracing Indicates whether the operation should be logged or not
+	 * @param keysName String used for logging purposes, usually the variable name of {@code keyMap}
+	 *
+	 * @throws IOException Thrown by Java I/O
+	 */
+	// TODO improve parameters: is tracing and keysName needed?
+	private void writeKeyMapToStream(Map<? extends SerializableKey, ? extends Object> keyMap, ObjectOutputStream oos, boolean tracing, String keysName)
+			throws IOException {
+		oos.writeInt( keyMap.size() );
+		if ( tracing ) {
+			LOG.trace( "Starting serialization of [" + keyMap.size() + "] " + keysName + " entries" );
+		}
+		for ( Entry<? extends SerializableKey, ? extends Object> entry : keyMap.entrySet() ) {
+			entry.getKey().serialize( oos );
+			oos.writeObject( entry.getValue() );
 		}
 	}
 
@@ -1905,10 +1890,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			persister = locateProperPersister( persister );
 			final Object[] naturalIdValues = getNaturalIdValues( state, persister );
 
-			final Object[] localNaturalIdValues = naturalIdXrefDelegate.removeNaturalIdCrossReference( 
-					persister, 
-					id, 
-					naturalIdValues 
+			final Object[] localNaturalIdValues = naturalIdXrefDelegate.removeNaturalIdCrossReference(
+					persister,
+					id,
+					naturalIdValues
 			);
 
 			return localNaturalIdValues != null ? localNaturalIdValues : naturalIdValues;

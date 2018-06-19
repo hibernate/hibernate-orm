@@ -1572,117 +1572,86 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		oos.writeBoolean( defaultReadOnly );
 		oos.writeBoolean( hasNonReadOnlyEntities );
 
-		if ( entitiesByKey == null ) {
-			oos.writeInt( 0 );
-		}
-		else {
-			oos.writeInt( entitiesByKey.size() );
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Starting serialization of [" + entitiesByKey.size() + "] entitiesByKey entries" );
-			}
-			for ( Map.Entry<EntityKey,Object> entry : entitiesByKey.entrySet() ) {
-				entry.getKey().serialize( oos );
-				oos.writeObject( entry.getValue() );
-			}
-		}
+		final Serializer<Map.Entry<EntityKey, Object>> entityKeySerializer = (entry, stream) -> {
+			entry.getKey().serialize( stream );
+			stream.writeObject( entry.getValue() );
+		};
 
-		if ( entitiesByUniqueKey == null ) {
-			oos.writeInt( 0 );
-		}
-		else {
-			oos.writeInt( entitiesByUniqueKey.size() );
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Starting serialization of [" + entitiesByUniqueKey.size() + "] entitiesByUniqueKey entries" );
-			}
-			for ( Map.Entry<EntityUniqueKey,Object> entry : entitiesByUniqueKey.entrySet() ) {
-				entry.getKey().serialize( oos );
-				oos.writeObject( entry.getValue() );
-			}
-		}
-
-		if ( proxiesByKey == null ) {
-			oos.writeInt( 0 );
-		}
-		else {
-			oos.writeInt( proxiesByKey.size() );
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Starting serialization of [" + proxiesByKey.size() + "] proxiesByKey entries" );
-			}
-			for ( Map.Entry<EntityKey,Object> entry : proxiesByKey.entrySet() ) {
-				entry.getKey().serialize( oos );
-				oos.writeObject( entry.getValue() );
-			}
-		}
-
-		if ( entitySnapshotsByKey == null ) {
-			oos.writeInt( 0 );
-		}
-		else {
-			oos.writeInt( entitySnapshotsByKey.size() );
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Starting serialization of [" + entitySnapshotsByKey.size() + "] entitySnapshotsByKey entries" );
-			}
-			for ( Map.Entry<EntityKey,Object> entry : entitySnapshotsByKey.entrySet() ) {
-				entry.getKey().serialize( oos );
-				oos.writeObject( entry.getValue() );
-			}
-		}
+		writeMapToStream( entitiesByKey, oos, "entitiesByKey", entityKeySerializer );
+		writeMapToStream(
+				entitiesByUniqueKey,
+				oos, "entitiesByUniqueKey", (entry, stream) -> {
+					entry.getKey().serialize( stream );
+					stream.writeObject( entry.getValue() );
+				}
+		);
+		writeMapToStream( proxiesByKey, oos, "proxiesByKey", entityKeySerializer );
+		writeMapToStream( entitySnapshotsByKey, oos, "entitySnapshotsByKey", entityKeySerializer );
 
 		entityEntryContext.serialize( oos );
+		writeMapToStream(
+				collectionsByKey,
+				oos,
+				"collectionsByKey",
+				(entry, stream) -> {
+					entry.getKey().serialize( stream );
+					stream.writeObject( entry.getValue() );
+				}
+		);
+		writeMapToStream(
+				collectionEntries,
+				oos,
+				"collectionEntries",
+				(entry, stream) -> {
+					stream.writeObject( entry.getKey() );
+					entry.getValue().serialize( stream );
+				}
+		);
+		writeMapToStream(
+				arrayHolders,
+				oos,
+				"arrayHolders",
+				(entry, stream) -> {
+					stream.writeObject( entry.getKey() );
+					stream.writeObject( entry.getValue() );
+				}
+		);
+		writeCollectionToStream( nullifiableEntityKeys, oos, "nullifiableEntityKey", EntityKey::serialize );
+	}
 
-		if ( collectionsByKey == null ) {
+	private interface Serializer<E> {
+
+		void serialize(E element, ObjectOutputStream oos) throws IOException;
+	}
+
+	private <K, V> void writeMapToStream(
+			Map<K, V> map,
+			ObjectOutputStream oos,
+			String keysName,
+			Serializer<Entry<K, V>> serializer) throws IOException {
+		if ( map == null ) {
 			oos.writeInt( 0 );
 		}
 		else {
-			oos.writeInt( collectionsByKey.size() );
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Starting serialization of [" + collectionsByKey.size() + "] collectionsByKey entries" );
-			}
-			for ( Map.Entry<CollectionKey, PersistentCollection> entry : collectionsByKey.entrySet() ) {
-				entry.getKey().serialize( oos );
-				oos.writeObject( entry.getValue() );
-			}
+			writeCollectionToStream( map.entrySet(), oos, keysName, serializer );
 		}
+	}
 
-		if ( collectionEntries == null ) {
+	private <E> void writeCollectionToStream(
+			Collection<E> collection,
+			ObjectOutputStream oos,
+			String keysName,
+			Serializer<E> serializer) throws IOException {
+		if ( collection == null ) {
 			oos.writeInt( 0 );
 		}
 		else {
-			oos.writeInt( collectionEntries.size() );
+			oos.writeInt( collection.size() );
 			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Starting serialization of [" + collectionEntries.size() + "] collectionEntries entries" );
+				LOG.trace( "Starting serialization of [" + collection.size() + "] " + keysName + " entries" );
 			}
-			for ( Map.Entry<PersistentCollection,CollectionEntry> entry : collectionEntries.entrySet() ) {
-				oos.writeObject( entry.getKey() );
-				entry.getValue().serialize( oos );
-			}
-		}
-
-		if ( arrayHolders == null ) {
-			oos.writeInt( 0 );
-		}
-		else {
-			oos.writeInt( arrayHolders.size() );
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Starting serialization of [" + arrayHolders.size() + "] arrayHolders entries" );
-			}
-			for ( Map.Entry<Object,PersistentCollection> entry : arrayHolders.entrySet() ) {
-				oos.writeObject( entry.getKey() );
-				oos.writeObject( entry.getValue() );
-			}
-		}
-
-		if ( nullifiableEntityKeys == null ) {
-			oos.writeInt( 0 );
-		}
-		else {
-			final int size = nullifiableEntityKeys.size();
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Starting serialization of [" + size + "] nullifiableEntityKey entries" );
-			}
-			oos.writeInt( size );
-			for ( EntityKey entry : nullifiableEntityKeys ) {
-				entry.serialize( oos );
+			for ( E entry : collection ) {
+				serializer.serialize( entry, oos );
 			}
 		}
 	}
@@ -2142,9 +2111,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			final Object[] naturalIdValues = getNaturalIdValues( state, persister );
 
 			final Object[] localNaturalIdValues = getNaturalIdXrefDelegate().removeNaturalIdCrossReference(
-					persister, 
-					id, 
-					naturalIdValues 
+					persister,
+					id,
+					naturalIdValues
 			);
 
 			return localNaturalIdValues != null ? localNaturalIdValues : naturalIdValues;

@@ -15,6 +15,7 @@ ext {
     jnpVersion = '5.0.6.CR1'
 
     hibernateValidatorVersion = '6.0.7.Final'
+    hibernateCommonsVersion = '5.0.4.Final'
     validationApiVersion = '2.0.1.Final'
     elVersion = '3.0.1-b08'
 
@@ -27,7 +28,7 @@ ext {
     geolatteVersion = '1.3.0'
 
     // Wildfly version targeted by module ZIP; Arquillian/Shrinkwrap versions used for CDI testing and testing the module ZIP
-    wildflyVersion = '12.0.0.Final'
+    wildflyVersion = '13.0.0.Final'
     arquillianVersion = '1.1.11.Final'
     shrinkwrapVersion = '1.2.6'
     shrinkwrapDescriptorsVersion = '2.0.0-alpha-8'
@@ -43,7 +44,7 @@ ext {
             antlr:          'antlr:antlr:2.7.7',
 
             // Annotations
-            commons_annotations: 'org.hibernate.common:hibernate-commons-annotations:5.0.4.Final',
+            commons_annotations: "org.hibernate.common:hibernate-commons-annotations:${hibernateCommonsVersion}",
             jandex:         'org.jboss:jandex:2.0.5.Final',
             classmate:      'com.fasterxml:classmate:1.3.4',
 
@@ -151,7 +152,7 @@ ext {
 
             wildfly_arquillian_container_managed: "org.wildfly.arquillian:wildfly-arquillian-container-managed:${wildflyArquillianContainerVersion}",
             jboss_vfs: "org.jboss:jboss-vfs:3.2.11.Final",
-            jipijapa_spi: "org.wildfly:jipijapa-spi:12.0.0.Final",
+            jipijapa_spi: "org.wildfly:jipijapa-spi:${wildflyVersion}",
             wildfly_transaction_client : 'org.wildfly.transaction:wildfly-transaction-client:1.0.3.Final',
 
             jboss_ejb_spec_jar          : 'org.jboss.spec.javax.ejb:jboss-ejb-api_3.2_spec:1.0.0.Final',

@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.tool.hbmlint.Detector;
-import org.hibernate.tool.hbmlint.Issue;
 import org.hibernate.tool.hbmlint.detector.BadCachingDetector;
 import org.hibernate.tool.hbmlint.detector.InstrumentationDetector;
 import org.hibernate.tool.hbmlint.detector.SchemaByMetaDataDetector;

@@ -2,7 +2,7 @@ package org.hibernate.tool.hbmlint.detector;
 
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.tool.hbmlint.Issue;
+import org.hibernate.tool.internal.export.lint.Issue;
 import org.hibernate.tool.internal.export.lint.IssueCollector;
 
 public class ShadowedIdentifierDetector extends EntityModelDetector {

@@ -12,6 +12,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import org.hibernate.EntityMode;
+import org.hibernate.engine.internal.SerializableKey;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
@@ -21,7 +22,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-public final class CollectionKey implements Serializable {
+public final class CollectionKey implements Serializable, SerializableKey {
 	private final String role;
 	private final Serializable key;
 	private final Type keyType;
@@ -99,15 +100,7 @@ public final class CollectionKey implements Serializable {
 		return hashCode;
 	}
 
-
-	/**
-	 * Custom serialization routine used during serialization of a
-	 * Session/PersistenceContext for increased performance.
-	 *
-	 * @param oos The stream to which we should write the serial data.
-	 *
-	 * @throws java.io.IOException
-	 */
+	@Override
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		oos.writeObject( role );
 		oos.writeObject( key );

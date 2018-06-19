@@ -12,6 +12,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import org.hibernate.EntityMode;
+import org.hibernate.engine.internal.SerializableKey;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 
@@ -25,7 +26,7 @@ import org.hibernate.type.Type;
  * @author Gavin King
  * @see EntityKey
  */
-public class EntityUniqueKey implements Serializable {
+public class EntityUniqueKey implements Serializable, SerializableKey {
 	private final String uniqueKeyName;
 	private final String entityName;
 	private final Object key;
@@ -99,18 +100,11 @@ public class EntityUniqueKey implements Serializable {
 			throw new IllegalStateException(
 					"Cannot serialize an EntityUniqueKey which represents a non " +
 							"serializable property value [" + entityName + "." + uniqueKeyName + "]"
-			);
+					);
 		}
 	}
 
-	/**
-	 * Custom serialization routine used during serialization of a
-	 * Session/PersistenceContext for increased performance.
-	 *
-	 * @param oos The stream to which we should write the serial data.
-	 *
-	 * @throws IOException
-	 */
+	@Override
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		checkAbilityToSerialize();
 		oos.writeObject( uniqueKeyName );

@@ -13,6 +13,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.engine.internal.SerializableKey;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 
@@ -29,7 +30,7 @@ import org.hibernate.pretty.MessageHelper;
  * @author Gavin King
  * @author Sanne Grinovero
  */
-public final class EntityKey implements Serializable {
+public final class EntityKey implements Serializable, SerializableKey {
 
 	private final Serializable identifier;
 	private final int hashCode;
@@ -113,15 +114,9 @@ public final class EntityKey implements Serializable {
 				MessageHelper.infoString( this.persister, identifier, persister.getFactory() );
 	}
 
-	/**
-	 * Custom serialization routine used during serialization of a
-	 * Session/PersistenceContext for increased performance.
-	 *
-	 * @param oos The stream to which we should write the serial data.
-	 *
-	 * @throws IOException Thrown by Java I/O
-	 */
-	public void serialize(ObjectOutputStream oos) throws IOException {
+
+	@Override
+	public void serialize(final ObjectOutputStream oos) throws IOException {
 		oos.writeObject( identifier );
 		oos.writeObject( persister.getEntityName() );
 	}

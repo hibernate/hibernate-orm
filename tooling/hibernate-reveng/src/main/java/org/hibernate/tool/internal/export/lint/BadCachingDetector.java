@@ -1,12 +1,11 @@
-package org.hibernate.tool.hbmlint.detector;
+package org.hibernate.tool.internal.export.lint;
 
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
 import org.hibernate.tool.hbm2x.visitor.EntityNameFromValueVisitor;
-import org.hibernate.tool.internal.export.lint.Issue;
-import org.hibernate.tool.internal.export.lint.IssueCollector;
+import org.hibernate.tool.hbmlint.detector.EntityModelDetector;
 
 public class BadCachingDetector extends EntityModelDetector {
 	

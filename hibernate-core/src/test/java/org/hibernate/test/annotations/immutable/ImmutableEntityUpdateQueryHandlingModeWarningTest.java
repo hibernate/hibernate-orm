@@ -6,8 +6,6 @@
  */
 package org.hibernate.test.annotations.immutable;
 
-import org.hibernate.HibernateException;
-import org.hibernate.boot.model.process.internal.ScanningCoordinator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionImpl;
 

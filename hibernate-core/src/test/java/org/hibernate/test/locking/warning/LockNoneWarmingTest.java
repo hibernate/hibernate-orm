@@ -94,7 +94,7 @@ public class LockNoneWarmingTest extends BaseCoreFunctionalTestCase {
 			query.setLockMode( "i", LockMode.NONE );
 			query.setLockMode( "b", LockMode.NONE );
 			query.list();
-			assertFalse( triggerable.triggerMessage(), triggerable.wasTriggered() );
+			assertFalse( "Log message was not triggered", triggerable.wasTriggered() );
 		}
 	}
 

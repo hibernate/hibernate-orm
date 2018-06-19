@@ -7,7 +7,9 @@
 package org.hibernate.testing.logger;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -16,8 +18,8 @@ import org.jboss.logging.Logger.Level;
 final class TriggerOnPrefixLogListener implements LogListener, Triggerable {
 
 	private Set<String> expectedPrefixes = new HashSet<>();
-	private final AtomicBoolean triggered = new AtomicBoolean( false );
-	private final AtomicReference<String> triggerMessage = new AtomicReference<String>( null );
+
+	private final List<String> triggerMessages = new CopyOnWriteArrayList<>();
 
 	public TriggerOnPrefixLogListener(String expectedPrefix) {
 		expectedPrefixes.add( expectedPrefix );
@@ -32,8 +34,7 @@ final class TriggerOnPrefixLogListener implements LogListener, Triggerable {
 		if ( renderedMessage != null ) {
 			for ( String expectedPrefix : expectedPrefixes ) {
 				if ( renderedMessage.startsWith( expectedPrefix ) ) {
-					triggered.set( true );
-					triggerMessage.set( renderedMessage );
+					triggerMessages.add( renderedMessage );
 				}
 			}
 		}
@@ -41,17 +42,21 @@ final class TriggerOnPrefixLogListener implements LogListener, Triggerable {
 
 	@Override
 	public String triggerMessage() {
-		return triggerMessage.get();
+		return !triggerMessages.isEmpty() ? triggerMessages.get(0) : null;
+	}
+
+	@Override
+	public List<String> triggerMessages() {
+		return triggerMessages;
 	}
 
 	@Override
 	public boolean wasTriggered() {
-		return triggered.get();
+		return !triggerMessages.isEmpty();
 	}
 
 	@Override
 	public void reset() {
-		triggered.set( false );
-		triggerMessage.set( null );
+		triggerMessages.clear();
 	}
 }

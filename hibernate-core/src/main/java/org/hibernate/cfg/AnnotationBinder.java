@@ -19,6 +19,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import javax.persistence.AttributeOverride;
+import javax.persistence.AttributeOverrides;
 import javax.persistence.Basic;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -555,6 +557,15 @@ public final class AnnotationBinder {
 				context,
 				inheritanceState
 		);
+
+		if(superEntity != null && (
+				clazzToProcess.getAnnotation( AttributeOverride.class ) != null ||
+				clazzToProcess.getAnnotation( AttributeOverrides.class ) != null ) ) {
+			throw new AnnotationException(
+					"An entity annotated with @Inheritance cannot use @AttributeOverride or @AttributeOverrides: " +
+							clazzToProcess.getName()
+			);
+		}
 
 		PersistentClass persistentClass = makePersistentClass( inheritanceState, superEntity, context );
 		Entity entityAnn = clazzToProcess.getAnnotation( Entity.class );

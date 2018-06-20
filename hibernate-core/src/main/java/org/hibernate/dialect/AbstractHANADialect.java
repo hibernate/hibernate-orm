@@ -85,8 +85,10 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.DataHelper;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.AbstractTemplateSqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BasicBinder;
 import org.hibernate.type.descriptor.sql.BasicExtractor;
 import org.hibernate.type.descriptor.sql.BitTypeDescriptor;
@@ -325,7 +327,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 	}
 
-	private static class HANAStreamBlobTypeDescriptor implements SqlTypeDescriptor {
+	private static class HANAStreamBlobTypeDescriptor extends AbstractTemplateSqlTypeDescriptor {
 
 		private static final long serialVersionUID = -2476600722093442047L;
 
@@ -346,7 +348,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
-		public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
+		public <X> ValueBinder<X> createBinder(BasicJavaDescriptor<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 
 				@Override
@@ -384,7 +386,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
-		public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
+		public <X> ValueExtractor<X> createExtractor(BasicJavaDescriptor<X> javaTypeDescriptor) {
 			return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 
 				@Override
@@ -474,7 +476,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
-		public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
+		public <X> ValueExtractor<X> createExtractor(BasicJavaDescriptor<X> javaTypeDescriptor) {
 			return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 
 				@Override
@@ -568,7 +570,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
-		public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
+		public <X> ValueExtractor<X> createExtractor(BasicJavaDescriptor<X> javaTypeDescriptor) {
 			return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 
 				@Override
@@ -598,7 +600,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 	}
 
-	public static class HANABlobTypeDescriptor implements SqlTypeDescriptor {
+	public static class HANABlobTypeDescriptor extends AbstractTemplateSqlTypeDescriptor {
 
 		private static final long serialVersionUID = 5874441715643764323L;
 
@@ -622,7 +624,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
-		public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+		public <X> ValueExtractor<X> createExtractor(final BasicJavaDescriptor<X> javaTypeDescriptor) {
 			return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 
 				@Override
@@ -648,7 +650,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
-		public <X> BasicBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+		public <X> BasicBinder<X> createBinder(final BasicJavaDescriptor<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 
 				@Override

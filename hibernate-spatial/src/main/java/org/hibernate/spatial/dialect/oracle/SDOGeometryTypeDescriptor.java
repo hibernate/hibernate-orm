@@ -11,8 +11,8 @@ import java.sql.Types;
 
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.sql.AbstractTemplateSqlTypeDescriptor;
 
 import org.geolatte.geom.codec.db.oracle.OracleJDBCTypeFactory;
 
@@ -21,7 +21,7 @@ import org.geolatte.geom.codec.db.oracle.OracleJDBCTypeFactory;
  *
  * @author Karel Maesen, Geovise BVBA
  */
-public class SDOGeometryTypeDescriptor implements SqlTypeDescriptor {
+public class SDOGeometryTypeDescriptor extends AbstractTemplateSqlTypeDescriptor {
 
 	private final OracleJDBCTypeFactory typeFactory;
 
@@ -45,12 +45,12 @@ public class SDOGeometryTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public <X> ValueBinder<X> createBinder(final BasicJavaDescriptor<X> javaTypeDescriptor) {
 		return (ValueBinder<X>) new SDOGeometryValueBinder( javaTypeDescriptor, this, typeFactory );
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public <X> ValueExtractor<X> createExtractor(final BasicJavaDescriptor<X> javaTypeDescriptor) {
 		return (ValueExtractor<X>) new SDOGeometryValueExtractor( javaTypeDescriptor, this );
 	}
 

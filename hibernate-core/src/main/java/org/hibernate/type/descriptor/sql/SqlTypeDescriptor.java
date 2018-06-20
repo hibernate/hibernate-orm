@@ -10,6 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
+import org.hibernate.type.descriptor.JdbcValueMapper;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -23,6 +24,9 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public interface SqlTypeDescriptor extends Serializable {
+
+	<X> JdbcValueMapper<X> getJdbcValueMapper(BasicJavaDescriptor<X> javaTypeDescriptor);
+
 	/**
 	 * Return the {@linkplain java.sql.Types JDBC type-code} for the column mapped by this type.
 	 *
@@ -56,8 +60,13 @@ public interface SqlTypeDescriptor extends Serializable {
 	 * @param javaTypeDescriptor The descriptor describing the types of Java values to be bound
 	 *
 	 * @return The appropriate binder.
+	 *
+	 * @deprecated since 5.3, use {@link #getJdbcValueMapper(BasicJavaDescriptor)} instead.
 	 */
-	<X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor);
+	@Deprecated
+	default <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor){
+		return getJdbcValueMapper( (BasicJavaDescriptor<X>) javaTypeDescriptor ).getValueBinder();
+	}
 
 	/**
 	 * Get the extractor (pulling out-going values from JDBC objects) capable of handling values of the type described
@@ -66,6 +75,11 @@ public interface SqlTypeDescriptor extends Serializable {
 	 * @param javaTypeDescriptor The descriptor describing the types of Java values to be extracted
 	 *
 	 * @return The appropriate extractor
+	 *
+	 * @deprecated since 5.3, use {@link #getJdbcValueMapper(BasicJavaDescriptor)} instead.
 	 */
-	<X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor);
+	@Deprecated
+	default <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor){
+		return getJdbcValueMapper( (BasicJavaDescriptor<X>) javaTypeDescriptor ).getValueExtractor();
+	}
 }

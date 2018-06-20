@@ -14,9 +14,9 @@ import java.sql.Types;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.sql.AbstractTemplateSqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BasicBinder;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 
 /**
@@ -28,7 +28,7 @@ import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class MyCustomSqlTypeDescriptor implements SqlTypeDescriptor {
+public class MyCustomSqlTypeDescriptor extends AbstractTemplateSqlTypeDescriptor {
 	/**
 	 * Singleton access
 	 */
@@ -50,7 +50,7 @@ public class MyCustomSqlTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public <X> ValueBinder<X> createBinder(BasicJavaDescriptor<X> javaTypeDescriptor) {
 		return new BasicBinder<X>( javaTypeDescriptor, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
@@ -77,7 +77,7 @@ public class MyCustomSqlTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public <X> ValueExtractor<X> createExtractor(BasicJavaDescriptor<X> javaTypeDescriptor) {
 		return VarcharTypeDescriptor.INSTANCE.getExtractor( javaTypeDescriptor );
 	}
 }

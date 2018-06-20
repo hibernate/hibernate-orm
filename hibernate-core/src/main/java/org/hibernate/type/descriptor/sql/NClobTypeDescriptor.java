@@ -17,6 +17,7 @@ import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -25,7 +26,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  * @author Gail Badner
  */
-public abstract class NClobTypeDescriptor implements SqlTypeDescriptor {
+public abstract class NClobTypeDescriptor extends AbstractTemplateSqlTypeDescriptor {
 	@Override
 	public int getSqlType() {
 		return Types.NCLOB;
@@ -37,7 +38,7 @@ public abstract class NClobTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public <X> ValueExtractor<X> createExtractor(final BasicJavaDescriptor<X> javaTypeDescriptor) {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
@@ -61,7 +62,7 @@ public abstract class NClobTypeDescriptor implements SqlTypeDescriptor {
 	protected abstract <X> BasicBinder<X> getNClobBinder(JavaTypeDescriptor<X> javaTypeDescriptor);
 
 	@Override
-	public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public <X> ValueBinder<X> createBinder(BasicJavaDescriptor<X> javaTypeDescriptor) {
 		return getNClobBinder( javaTypeDescriptor );
 	}
 

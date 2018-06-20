@@ -19,7 +19,7 @@ import org.hibernate.type.StringType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.sql.BasicBinder;
 import org.hibernate.type.descriptor.sql.BasicExtractor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -37,7 +37,7 @@ public class StoredPrefixedStringType
 
 	public static final SqlTypeDescriptor PREFIXED_VARCHAR_TYPE_DESCRIPTOR =
 			new VarcharTypeDescriptor() {
-				public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+				public <X> ValueBinder<X> createBinder(final BasicJavaDescriptor<X> javaTypeDescriptor) {
 					return new BasicBinder<X>( javaTypeDescriptor, this ) {
 						@Override
 						protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
@@ -54,7 +54,7 @@ public class StoredPrefixedStringType
 					};
 				}
 
-				public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+				public <X> ValueExtractor<X> createExtractor(final BasicJavaDescriptor<X> javaTypeDescriptor) {
 					return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 						@Override
 						protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {

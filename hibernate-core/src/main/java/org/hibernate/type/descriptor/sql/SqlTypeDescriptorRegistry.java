@@ -17,7 +17,7 @@ import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
@@ -132,7 +132,7 @@ public class SqlTypeDescriptorRegistry implements Serializable {
 		return fallBackDescriptor;
 	}
 
-	public static class ObjectSqlTypeDescriptor implements SqlTypeDescriptor {
+	public static class ObjectSqlTypeDescriptor extends AbstractTemplateSqlTypeDescriptor {
 		private final int jdbcTypeCode;
 
 		public ObjectSqlTypeDescriptor(int jdbcTypeCode) {
@@ -150,7 +150,7 @@ public class SqlTypeDescriptorRegistry implements Serializable {
 		}
 
 		@Override
-		public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
+		public <X> ValueBinder<X> createBinder(BasicJavaDescriptor<X> javaTypeDescriptor) {
 			if ( Serializable.class.isAssignableFrom( javaTypeDescriptor.getJavaType() ) ) {
 				return VarbinaryTypeDescriptor.INSTANCE.getBinder( javaTypeDescriptor );
 			}
@@ -172,7 +172,7 @@ public class SqlTypeDescriptorRegistry implements Serializable {
 
 		@Override
 		@SuppressWarnings("unchecked")
-		public ValueExtractor getExtractor(JavaTypeDescriptor javaTypeDescriptor) {
+		public ValueExtractor createExtractor(BasicJavaDescriptor javaTypeDescriptor) {
 			if ( Serializable.class.isAssignableFrom( javaTypeDescriptor.getJavaType() ) ) {
 				return VarbinaryTypeDescriptor.INSTANCE.getExtractor( javaTypeDescriptor );
 			}

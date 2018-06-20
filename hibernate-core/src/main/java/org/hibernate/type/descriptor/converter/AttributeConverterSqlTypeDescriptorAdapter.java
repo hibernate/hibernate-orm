@@ -17,7 +17,9 @@ import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.AbstractTemplateSqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 import org.jboss.logging.Logger;
@@ -33,7 +35,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class AttributeConverterSqlTypeDescriptorAdapter implements SqlTypeDescriptor {
+public class AttributeConverterSqlTypeDescriptorAdapter extends AbstractTemplateSqlTypeDescriptor {
 	private static final Logger log = Logger.getLogger( AttributeConverterSqlTypeDescriptorAdapter.class );
 
 	private final JpaAttributeConverter converter;
@@ -66,7 +68,7 @@ public class AttributeConverterSqlTypeDescriptorAdapter implements SqlTypeDescri
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public <X> ValueBinder<X> createBinder(BasicJavaDescriptor<X> javaTypeDescriptor) {
 		// Get the binder for the intermediate type representation
 		final ValueBinder realBinder = delegate.getBinder( intermediateJavaTypeDescriptor );
 
@@ -111,7 +113,7 @@ public class AttributeConverterSqlTypeDescriptorAdapter implements SqlTypeDescri
 	// Extraction ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public <X> ValueExtractor<X> createExtractor(BasicJavaDescriptor<X> javaTypeDescriptor) {
 		// Get the extractor for the intermediate type representation
 		final ValueExtractor realExtractor = delegate.getExtractor( intermediateJavaTypeDescriptor );
 

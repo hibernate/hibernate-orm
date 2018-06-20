@@ -27,18 +27,16 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.sql.AbstractTemplateSqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BasicBinder;
 import org.hibernate.type.descriptor.sql.BasicExtractor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Vlad Mihalcea
@@ -85,6 +83,7 @@ public class QueryParametersValidationArrayTest extends BaseEntityManagerFunctio
 			super( StringArraySqlTypeDescriptor.INSTANCE, StringArrayTypeDescriptor.INSTANCE);
 		}
 
+		@Override
 		public String getName() {
 			return "string-array";
 		}
@@ -95,7 +94,7 @@ public class QueryParametersValidationArrayTest extends BaseEntityManagerFunctio
 		}
 	}
 
-	public static class StringArraySqlTypeDescriptor implements SqlTypeDescriptor {
+	public static class StringArraySqlTypeDescriptor extends AbstractTemplateSqlTypeDescriptor {
 
 		public static final StringArraySqlTypeDescriptor INSTANCE = new StringArraySqlTypeDescriptor();
 
@@ -110,7 +109,7 @@ public class QueryParametersValidationArrayTest extends BaseEntityManagerFunctio
 		}
 
 		@Override
-		public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
+		public <X> ValueBinder<X> createBinder(BasicJavaDescriptor<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
@@ -130,7 +129,7 @@ public class QueryParametersValidationArrayTest extends BaseEntityManagerFunctio
 		}
 
 		@Override
-		public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+		public <X> ValueExtractor<X> createExtractor(final BasicJavaDescriptor<X> javaTypeDescriptor) {
 			return new BasicExtractor<X>( javaTypeDescriptor, this) {
 				@Override
 				protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
@@ -160,6 +159,7 @@ public class QueryParametersValidationArrayTest extends BaseEntityManagerFunctio
 			super(String[].class);
 		}
 
+		@Override
 		public boolean areEqual(String[] one, String[] another) {
 			if ( one == another ) {
 				return true;
@@ -167,6 +167,7 @@ public class QueryParametersValidationArrayTest extends BaseEntityManagerFunctio
 			return !( one == null || another == null ) && Arrays.equals( one, another );
 		}
 
+		@Override
 		public String toString(String[] value) {
 			return Arrays.deepToString( value);
 		}

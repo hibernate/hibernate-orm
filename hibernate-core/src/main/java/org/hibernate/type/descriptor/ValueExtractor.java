@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.descriptor;
 
+import java.io.Serializable;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -15,7 +16,7 @@ import java.sql.SQLException;
  *
  * @author Steve Ebersole
  */
-public interface ValueExtractor<X> {
+public interface ValueExtractor<X> extends Serializable {
 	/**
 	 * Extract value from result set
 	 *
@@ -27,9 +28,9 @@ public interface ValueExtractor<X> {
 	 *
 	 * @throws SQLException Indicates a JDBC error occurred.
 	 */
-	public X extract(ResultSet rs, String name, WrapperOptions options) throws SQLException;
+	X extract(ResultSet rs, String name, WrapperOptions options) throws SQLException;
 
-	public X extract(CallableStatement statement, int index, WrapperOptions options) throws SQLException;
+	X extract(CallableStatement statement, int index, WrapperOptions options) throws SQLException;
 
-	public X extract(CallableStatement statement, String[] paramNames, WrapperOptions options) throws SQLException;
+	X extract(CallableStatement statement, String[] paramNames, WrapperOptions options) throws SQLException;
 }

@@ -248,6 +248,65 @@ include::{extrasdir}/fetching-strategies-dynamic-fetching-entity-subgraph-exampl
 ----
 ====
 
+[[fetching-strategies-dynamic-fetching-entity-graph-parsing]]
+==== Creating and applying JPA graphs from text representations
+
+JPA graphs can also be created by parsing their text representations. These are not a part of the official JPA standard (yet).
+Details of syntax can be found in the `EntityGraphParser` class JavaDoc. The equivalent text representation of previous example is as follows:
+
+.Parsing a simple graph
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-parsing-example-1]
+----
+====
+
+More complex graphs can easily be created. For example, we could add in the usernames, passwords and access levels for each project employee
+and also request usernames of all other employees of departments of initially found employees:
+
+.Parsing a more complex graph
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-parsing-example-2]
+----
+====
+
+[[fetching-strategies-dynamic-fetching-entity-graph-merging]]
+==== Combining multiple JPA entity graphs into one
+
+Multiple entity graphs can be combined into a single supergraph that acts as a union. Graph from the previous example can also be build by combining separate aspect graphs into one, such as:
+
+.Combining multiple graphs into one
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-merging-example]
+----
+====
+
+[[fetching-strategies-dynamic-fetching-entity-graph-applying]]
+==== Applying entity graphs to queries
+
+Convenience/utility methods were created to make application of entity graphs to queries easier. Following examples show
+
+.Applying an entity graph to entityManager.find()
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-apply-example-find]
+----
+====
+
+.Applying an entity graph to entityManager.createQuery()
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-apply-example-query]
+----
+====
+
 [[fetching-strategies-dynamic-fetching-profile]]
 === Dynamic fetching via Hibernate profiles
 

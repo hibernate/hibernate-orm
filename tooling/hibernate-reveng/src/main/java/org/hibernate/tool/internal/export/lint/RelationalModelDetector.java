@@ -1,11 +1,9 @@
-package org.hibernate.tool.hbmlint.detector;
+package org.hibernate.tool.internal.export.lint;
 
 import java.util.Iterator;
 
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.internal.export.lint.Detector;
-import org.hibernate.tool.internal.export.lint.IssueCollector;
 
 public abstract class RelationalModelDetector extends Detector {
 

@@ -6,6 +6,7 @@
  */
 package org.hibernate.testing.junit4;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -204,8 +205,12 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		String[] xmlFiles = getXmlFiles();
 		if ( xmlFiles != null ) {
 			for ( String xmlFile : xmlFiles ) {
-				InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( xmlFile );
-				configuration.addInputStream( is );
+				try ( InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( xmlFile ) ) {
+					configuration.addInputStream( is );
+				}
+				catch (IOException e) {
+					throw new IllegalArgumentException( e );
+				}
 			}
 		}
 	}

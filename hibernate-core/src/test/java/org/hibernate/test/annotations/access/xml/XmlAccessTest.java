@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.annotations.access.xml;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -164,8 +165,12 @@ public class XmlAccessTest extends BaseUnitTestCase {
 			cfg.addAnnotatedClass( clazz );
 		}
 		for ( String configFile : configFiles ) {
-			InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( configFile );
-			cfg.addInputStream( is );
+			try ( InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( configFile ) ) {
+				cfg.addInputStream( is );
+			}
+			catch (IOException e) {
+				throw new IllegalArgumentException( e );
+			}
 		}
 		return ( SessionFactoryImplementor ) cfg.buildSessionFactory();
 	}

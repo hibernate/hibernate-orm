@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.tool.hbmlint.detector.SchemaByMetaDataDetector;
 import org.hibernate.tool.hbmlint.detector.ShadowedIdentifierDetector;
 
 public class HbmLint implements IssueCollector {

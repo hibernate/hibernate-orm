@@ -1,4 +1,4 @@
-package org.hibernate.tool.hbmlint.detector;
+package org.hibernate.tool.internal.export.lint;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -28,9 +28,6 @@ import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.SchemaSelection;
-import org.hibernate.tool.internal.export.lint.Issue;
-import org.hibernate.tool.internal.export.lint.IssueCollector;
-import org.hibernate.tool.internal.export.lint.RelationalModelDetector;
 import org.hibernate.tool.internal.metadata.DefaultDatabaseCollector;
 import org.hibernate.tool.internal.reveng.DefaultReverseEngineeringStrategy;
 import org.hibernate.tool.internal.reveng.JDBCReader;

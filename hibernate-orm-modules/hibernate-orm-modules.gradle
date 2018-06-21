@@ -21,7 +21,6 @@ apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 
 apply plugin: 'build-dashboard'
 apply plugin: 'project-report'
-apply plugin: 'idea'
 
 project.tasks.jar.enabled = false
 project.tasks.javadoc.enabled = false

@@ -40,6 +40,8 @@ allprojects {
 			name "jboss-snapshots"
 			url "http://snapshots.jboss.org/maven2/"
 		}
+		
+	apply plugin: 'idea'
 	}
 	apply plugin: 'idea'
 

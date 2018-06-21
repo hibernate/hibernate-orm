@@ -332,15 +332,20 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		final boolean intercepted = invokeInterceptor( session, entity, entry, values, persister );
 
 		//now we might need to recalculate the dirtyProperties array
-		if ( intercepted && event.isDirtyCheckPossible() && !event.isDirtyCheckHandledByInterceptor() ) {
-			int[] dirtyProperties;
-			if ( event.hasDatabaseSnapshot() ) {
-				dirtyProperties = persister.findModified( event.getDatabaseSnapshot(), values, entity, session );
+		if ( intercepted && event.isDirtyCheckPossible() ) {
+			if ( !event.isDirtyCheckHandledByInterceptor() ) {
+				int[] dirtyProperties;
+				if ( event.hasDatabaseSnapshot() ) {
+					dirtyProperties = persister.findModified( event.getDatabaseSnapshot(), values, entity, session );
+				}
+				else {
+					dirtyProperties = persister.findDirty( values, entry.getLoadedState(), entity, session );
+				}
+				event.setDirtyProperties( dirtyProperties );
 			}
 			else {
-				dirtyProperties = persister.findDirty( values, entry.getLoadedState(), entity, session );
+				dirtyCheck( event );
 			}
-			event.setDirtyProperties( dirtyProperties );
 		}
 
 		return intercepted;

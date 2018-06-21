@@ -1436,25 +1436,24 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 * @throws IOException serialization errors.
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
-		final boolean tracing = LOG.isTraceEnabled();
-		if ( tracing ) {
+		if ( TRACE_ENABLED ) {
 			LOG.trace( "Serializing persistence-context" );
 		}
 
 		oos.writeBoolean( defaultReadOnly );
 		oos.writeBoolean( hasNonReadOnlyEntities );
 
-		writeKeyMapToStream( entitiesByKey, oos, tracing, "entitiesByKey" );
-		writeKeyMapToStream( entitiesByUniqueKey, oos, tracing, "entitiesByUniqueKey" );
-		writeKeyMapToStream( proxiesByKey, oos, tracing, "proxiesByKey" );
-		writeKeyMapToStream( entitySnapshotsByKey, oos, tracing, "entitySnapshotsByKey" );
+		writeKeyMapToStream( entitiesByKey, oos, "entitiesByKey" );
+		writeKeyMapToStream( entitiesByUniqueKey, oos, "entitiesByUniqueKey" );
+		writeKeyMapToStream( proxiesByKey, oos, "proxiesByKey" );
+		writeKeyMapToStream( entitySnapshotsByKey, oos, "entitySnapshotsByKey" );
 
 		entityEntryContext.serialize( oos );
 
-		writeKeyMapToStream( collectionsByKey, oos, tracing, "collectionsByKey" );
+		writeKeyMapToStream( collectionsByKey, oos, "collectionsByKey" );
 
 		oos.writeInt( collectionEntries.size() );
-		if ( tracing ) {
+		if ( TRACE_ENABLED ) {
 			LOG.trace( "Starting serialization of [" + collectionEntries.size() + "] collectionEntries entries" );
 		}
 		for ( Map.Entry<PersistentCollection,CollectionEntry> entry : collectionEntries.entrySet() ) {
@@ -1463,7 +1462,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		oos.writeInt( arrayHolders.size() );
-		if ( tracing ) {
+		if ( TRACE_ENABLED ) {
 			LOG.trace( "Starting serialization of [" + arrayHolders.size() + "] arrayHolders entries" );
 		}
 		for ( Map.Entry<Object,PersistentCollection> entry : arrayHolders.entrySet() ) {
@@ -1472,7 +1471,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		oos.writeInt( nullifiableEntityKeys.size() );
-		if ( tracing ) {
+		if ( TRACE_ENABLED ) {
 			LOG.trace( "Starting serialization of [" + nullifiableEntityKeys.size() + "] nullifiableEntityKey entries" );
 		}
 		for ( EntityKey entry : nullifiableEntityKeys ) {
@@ -1490,11 +1489,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 *
 	 * @throws IOException Thrown by Java I/O
 	 */
-	// TODO improve parameters: is tracing and keysName needed?
-	private void writeKeyMapToStream(Map<? extends SerializableKey, ? extends Object> keyMap, ObjectOutputStream oos, boolean tracing, String keysName)
+	private void writeKeyMapToStream(Map<? extends SerializableKey, ? extends Object> keyMap, ObjectOutputStream oos, String keysName)
 			throws IOException {
 		oos.writeInt( keyMap.size() );
-		if ( tracing ) {
+		if ( TRACE_ENABLED ) {
 			LOG.trace( "Starting serialization of [" + keyMap.size() + "] " + keysName + " entries" );
 		}
 		for ( Entry<? extends SerializableKey, ? extends Object> entry : keyMap.entrySet() ) {

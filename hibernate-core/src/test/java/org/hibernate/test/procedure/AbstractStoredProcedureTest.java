@@ -31,7 +31,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
-public class AbstractStoredProcedureTest extends BaseEntityManagerFunctionalTestCase {
+public abstract class AbstractStoredProcedureTest extends BaseEntityManagerFunctionalTestCase {
 
 	protected void doInAutoCommit(Consumer<Statement> consumer, Map settings) {
 		StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();

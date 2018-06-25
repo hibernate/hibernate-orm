@@ -21,7 +21,6 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Set;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
-import org.hibernate.tool.hbm2x.MetaAttributeConstants;
 import org.hibernate.tool.hbm2x.MetaAttributeHelper;
 import org.hibernate.tool.hbm2x.visitor.DefaultValueVisitor;
 import org.hibernate.tool.internal.util.NameConverter;

@@ -1,4 +1,4 @@
-package org.hibernate.tool.hbm2x;
+package org.hibernate.tool.internal.export.pojo;
 
 public interface MetaAttributeConstants {
 

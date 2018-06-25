@@ -87,17 +87,14 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 	protected EntityLoadQueryDetails(
 			EntityLoadQueryDetails initialEntityLoadQueryDetails,
 			QueryBuildingParameters buildingParameters) {
-		super(
+		this(
 				initialEntityLoadQueryDetails.getLoadPlan(),
-				(AliasResolutionContextImpl) initialEntityLoadQueryDetails.getAliasResolutionContext(),
-				buildingParameters,
 				initialEntityLoadQueryDetails.getKeyColumnNames(),
-				initialEntityLoadQueryDetails.getRootReturn(),
+				new AliasResolutionContextImpl( initialEntityLoadQueryDetails.getSessionFactory() ),
+				(EntityReturn) initialEntityLoadQueryDetails.getRootReturn(),
+				buildingParameters,
 				initialEntityLoadQueryDetails.getSessionFactory()
 		);
-		this.entityReferenceAliases = initialEntityLoadQueryDetails.entityReferenceAliases;
-		this.readerCollector = initialEntityLoadQueryDetails.readerCollector;
-		generate();
 	}
 
 	private EntityReturn getRootEntityReturn() {

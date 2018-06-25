@@ -359,11 +359,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			}
 		}
 
-		if ( isDirty ) {
-			return true;
-		}
-
-		return session.getInterceptor().onFlushDirty(
+		final boolean answerFromInterceptor =  session.getInterceptor().onFlushDirty(
 				entity,
 				entry.getId(),
 				values,
@@ -371,6 +367,8 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				persister.getPropertyNames(),
 				persister.getPropertyTypes()
 		);
+
+		return answerFromInterceptor || isDirty;
 	}
 
 	private boolean copyState(Object entity, Type[] types, Object[] state, SessionFactory sf) {

@@ -12,7 +12,6 @@ import javax.persistence.MappedSuperclass;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -35,7 +34,6 @@ public class BatchFetchBootstrapTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-12594")
 	public void test() {
 		super.buildSessionFactory();
 	}

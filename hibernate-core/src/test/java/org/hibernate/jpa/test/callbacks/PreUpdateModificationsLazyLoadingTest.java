@@ -35,8 +35,9 @@ public class PreUpdateModificationsLazyLoadingTest extends BaseEntityManagerFunc
         assertNotNull(p.createdAt);
         assertNull(p.lastUpdatedAt);
 
-        p.name = "Changed Name";
+        p.setName("Changed Name");
         em.getTransaction().commit();
+        assertNotNull(p.lastUpdatedAt);
 
         em.clear();
 
@@ -66,9 +67,33 @@ public class PreUpdateModificationsLazyLoadingTest extends BaseEntityManagerFunc
 
         private String name;
 
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
         private Instant createdAt;
 
+        public Instant getCreatedAt() {
+            return createdAt;
+        }
+
+        public void setCreatedAt(Instant createdAt) {
+            this.createdAt = createdAt;
+        }
+
         private Instant lastUpdatedAt;
+
+        public Instant getLastUpdatedAt() {
+            return lastUpdatedAt;
+        }
+
+        public void setLastUpdatedAt(Instant lastUpdatedAt) {
+            this.lastUpdatedAt = lastUpdatedAt;
+        }
 
         @ElementCollection
         private List<String> tags;
@@ -79,12 +104,12 @@ public class PreUpdateModificationsLazyLoadingTest extends BaseEntityManagerFunc
 
         @PrePersist
         void beforeCreate() {
-            createdAt = Instant.now();
+            this.setCreatedAt(Instant.now());
         }
 
         @PreUpdate
         void beforeUpdate() {
-            lastUpdatedAt = Instant.now();
+            this.setLastUpdatedAt(Instant.now());
         }
     }
 }

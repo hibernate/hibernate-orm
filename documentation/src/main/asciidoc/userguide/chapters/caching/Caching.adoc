@@ -557,6 +557,36 @@ In order to control which provider to use and specify configuration for the `Cac
 
 Only by specifying the second property `hibernate.javax.cache.uri` will you be able to have a `CacheManager` per `SessionFactory`.
 
+[[caching-provider-jcache-missing-cache-strategy]]
+==== JCache missing cache strategy
+
+By default, the JCache region factory
+will throw an exception when asked to retrieve a cache that is not pre-configured and pre-started in the underlying cache manager.
+Thus if you configure an entity type or a collection as cached, but do not configure the corresponding cache explicitly,
+Hibernate ORM will fail to start.
+
+You may change this behavior by setting the `hibernate.javax.cache.missing_cache_strategy` property
+to one of the following values:
+
+.Missing cache strategies
+[cols=",",options="header",]
+|======================================
+| Value        | Description
+|`fail`        | **Default value**. Fail with an exception on missing caches.
+|`create-warn` | Create a new cache when a cache is not found (see `create` below),
+and also log a warning about the missing cache.
+|`create`      | Create a new cache when a cache is not found, without logging any warning about the missing cache.
+|======================================
+
+[WARNING]
+====
+Note that caches created this way may be very badly configured (unlimited size and no eviction in particular)
+unless the cache provider was explicitly configured to use a specific configuration for default caches.
+
+Ehcache in particular allows to set such default configuration using cache templates,
+see http://www.ehcache.org/documentation/3.0/107.html#supplement-jsr-107-configurations
+====
+
 [[caching-provider-ehcache]]
 === Ehcache
 
@@ -613,6 +643,33 @@ shared among multiple `SessionFactory` instances in the same JVM.
 [NOTE]
 ====
 http://www.ehcache.org/documentation/2.8/integrations/hibernate#optional[Ehcache documentation] recommends using multiple non-singleton `CacheManager(s)` when there are multiple Hibernate `SessionFactory` instances running in the same JVM.
+====
+
+[[caching-provider-ehcache-missing-cache-strategy]]
+==== Ehcache missing cache strategy
+
+By default, the Ehcache region factory
+will log a warning when asked to create a cache that is not explicitly configured and pre-started in the underlying cache manager.
+Thus if you configure an entity type or a collection as cached, but do not configure the corresponding cache explicitly,
+one warning will be logged for each cache that was not configured explicitly.
+
+You may change this behavior by setting the `hibernate.cache.ehcache.missing_cache_strategy` property
+to one of the following values:
+
+.Missing cache strategies
+[cols=",",options="header",]
+|======================================
+| Value        | Description
+|`fail`        | Fail with an exception on missing caches.
+|`create-warn` | **Default value**. Create a new cache when a cache is not found (see `create` below),
+and also log a warning about the missing cache.
+|`create`      | Create a new cache when a cache is not found, without logging any warning about the missing cache.
+|======================================
+
+[WARNING]
+====
+Note that caches created this way may be very badly configured (large size in particular)
+unless an appropriate `<defaultCache>` entry is added to the Ehcache configuration.
 ====
 
 [[caching-provider-infinispan]]

@@ -38,26 +38,22 @@ public class MissingCacheStrategyTest extends BaseUnitTestCase {
 
 	@Test
 	public void testMissingCacheStrategyDefault() {
-		doTestMissingCacheStrategyFail(
+		doTestMissingCacheStrategyCreateWarn(
 				ignored -> { } // default settings
 		);
 	}
 
 	@Test
 	public void testMissingCacheStrategyFail() {
-		doTestMissingCacheStrategyFail(
-				builder -> builder.applySetting( ConfigSettings.MISSING_CACHE_STRATEGY, "fail" )
-		);
-	}
-
-	private void doTestMissingCacheStrategyFail(Consumer<StandardServiceRegistryBuilder> additionalSettings) {
 		/*
 		 * The cache manager is created per session factory, and we don't use any specific ehcache configuration,
 		 * so we know the caches don't exist before we start the session factory.
 		 */
 
 		// let's try to build the standard testing SessionFactory, without pre-defining caches
-		try ( SessionFactoryImplementor ignored = TestHelper.buildStandardSessionFactory( additionalSettings ) ) {
+		try ( SessionFactoryImplementor ignored = TestHelper.buildStandardSessionFactory(
+				builder -> builder.applySetting( ConfigSettings.MISSING_CACHE_STRATEGY, "fail" )
+		) ) {
 			fail();
 		}
 		catch (ServiceException expected) {
@@ -91,6 +87,12 @@ public class MissingCacheStrategyTest extends BaseUnitTestCase {
 
 	@Test
 	public void testMissingCacheStrategyCreateWarn() {
+		doTestMissingCacheStrategyCreateWarn(
+				builder -> builder.applySetting( ConfigSettings.MISSING_CACHE_STRATEGY, "create-warn" )
+		);
+	}
+
+	private void doTestMissingCacheStrategyCreateWarn(Consumer<StandardServiceRegistryBuilder> additionalSettings) {
 		/*
 		 * The cache manager is created per session factory, and we don't use any specific ehcache configuration,
 		 * so we know the caches don't exist before we start the session factory.
@@ -106,9 +108,7 @@ public class MissingCacheStrategyTest extends BaseUnitTestCase {
 			);
 		}
 
-		try ( SessionFactoryImplementor sessionFactory = TestHelper.buildStandardSessionFactory(
-				builder -> builder.applySetting( ConfigSettings.MISSING_CACHE_STRATEGY, "create-warn" )
-		) ) {
+		try ( SessionFactoryImplementor sessionFactory = TestHelper.buildStandardSessionFactory( additionalSettings ) ) {
 			for ( String regionName : TestHelper.allRegionNames ) {
 				// The caches should have been created automatically
 				assertThat(

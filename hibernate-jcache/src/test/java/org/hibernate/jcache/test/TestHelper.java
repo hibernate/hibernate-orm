@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -20,12 +19,10 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cache.internal.EnabledCaching;
 import org.hibernate.cache.jcache.JCacheHelper;
-import org.hibernate.cache.spi.QueryResultsRegion;
-import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.support.RegionNameQualifier;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -70,8 +67,8 @@ public class TestHelper {
 			createCache( cacheManager, regionName, prefixCaches );
 		}
 
-		createCache( cacheManager, TimestampsRegion.class.getName(), prefixCaches );
-		createCache( cacheManager, QueryResultsRegion.class.getName(), prefixCaches );
+		createCache( cacheManager, EnabledCaching.TIMESTAMPS_REGION_UNQUALIFIED_NAME, prefixCaches );
+		createCache( cacheManager, EnabledCaching.QUERY_RESULT_REGION_UNQUALIFIED_NAME, prefixCaches );
 	}
 
 	public static SessionFactoryImplementor buildStandardSessionFactory() {
@@ -187,8 +184,8 @@ public class TestHelper {
 		}
 
 		if ( queryRegions ) {
-			createCache( cacheManager, TimestampsRegion.class.getName(), prefixRegions );
-			createCache( cacheManager, QueryResultsRegion.class.getName(), prefixRegions );
+			createCache( cacheManager, EnabledCaching.TIMESTAMPS_REGION_UNQUALIFIED_NAME, prefixRegions );
+			createCache( cacheManager, EnabledCaching.QUERY_RESULT_REGION_UNQUALIFIED_NAME, prefixRegions );
 		}
 	}
 

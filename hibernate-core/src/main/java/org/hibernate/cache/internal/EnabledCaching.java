@@ -52,6 +52,10 @@ import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildingContext {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EnabledCaching.class );
 
+	// These are legacy names that users have to include in their caching configuration, do not change them
+	public static final String QUERY_RESULT_REGION_UNQUALIFIED_NAME = "org.hibernate.cache.internal.StandardQueryCache";
+	public static final String TIMESTAMPS_REGION_UNQUALIFIED_NAME = "org.hibernate.cache.spi.UpdateTimestampsCache";
+
 	private final SessionFactoryImplementor sessionFactory;
 	private final RegionFactory regionFactory;
 
@@ -78,7 +82,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 		if ( getSessionFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
 			final TimestampsRegion timestampsRegion = regionFactory.buildTimestampsRegion(
-					TimestampsRegion.class.getName(),
+					TIMESTAMPS_REGION_UNQUALIFIED_NAME,
 					sessionFactory
 			);
 			timestampsCache = sessionFactory.getSessionFactoryOptions()
@@ -87,7 +91,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 			legacySecondLevelCacheNames.add( timestampsRegion.getName() );
 
 			final QueryResultsRegion queryResultsRegion = regionFactory.buildQueryResultsRegion(
-					QueryResultsRegion.class.getName(),
+					QUERY_RESULT_REGION_UNQUALIFIED_NAME,
 					sessionFactory
 			);
 			regionsByName.put( queryResultsRegion.getName(), queryResultsRegion );

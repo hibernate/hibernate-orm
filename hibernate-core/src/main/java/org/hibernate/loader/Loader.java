@@ -2227,7 +2227,7 @@ public abstract class Loader {
 				return session.getFactory()
 						.getServiceRegistry()
 						.getService( JdbcServices.class )
-						.getResultSetWrapper().wrap( rs, retreiveColumnNameToIndexCache( rs ) );
+						.getResultSetWrapper().wrap( rs, retrieveColumnNameToIndexCache( rs ) );
 			}
 			catch (SQLException e) {
 				LOG.unableToWrapResultSet( e );
@@ -2239,7 +2239,7 @@ public abstract class Loader {
 		}
 	}
 
-	private ColumnNameCache retreiveColumnNameToIndexCache(final ResultSet rs) throws SQLException {
+	private ColumnNameCache retrieveColumnNameToIndexCache(final ResultSet rs) throws SQLException {
 		final ColumnNameCache cache = columnNameCache;
 		if ( cache == null ) {
 			//there is no need for a synchronized second check, as in worst case

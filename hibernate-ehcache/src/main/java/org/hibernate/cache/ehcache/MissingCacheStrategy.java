@@ -45,7 +45,8 @@ public enum MissingCacheStrategy {
 
 		if ( StringHelper.isEmpty( externalRepresentation ) ) {
 			// Use the default
-			return MissingCacheStrategy.FAIL;
+			// Default is CREATE_WARN for backward compatibility reasons; we should switch to FAIL at some point.
+			return MissingCacheStrategy.CREATE_WARN;
 		}
 
 		for ( MissingCacheStrategy strategy : values() ) {

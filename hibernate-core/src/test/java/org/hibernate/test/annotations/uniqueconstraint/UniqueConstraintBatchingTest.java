@@ -10,10 +10,12 @@ import java.util.Map;
 import javax.persistence.PersistenceException;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
@@ -31,6 +33,7 @@ import static org.junit.Assert.fail;
  * @author Vlad Mihalcea
  */
 @TestForIssue(jiraKey = "HHH-12688")
+@RequiresDialect(H2Dialect.class)
 public class UniqueConstraintBatchingTest extends BaseEntityManagerFunctionalTestCase {
 
 	protected Class[] getAnnotatedClasses() {

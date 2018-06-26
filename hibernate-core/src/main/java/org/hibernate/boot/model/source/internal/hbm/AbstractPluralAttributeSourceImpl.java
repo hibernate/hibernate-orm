@@ -78,8 +78,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 			if ( childClass != null ) {
 				jaxbHbmManyToOneTypeOptional = mappingDocument.getDocumentRoot().getClazz()
 						.stream()
-						.filter( (JaxbHbmRootEntityType entityType) ->
-										 childClass.equals( entityType.getName() ) )
+						.filter( (JaxbHbmRootEntityType entityType) -> childClass.equals( entityType.getName() ) )
 						.flatMap( jaxbHbmRootEntityType -> jaxbHbmRootEntityType.getAttributes().stream() )
 						.filter(
 								attribute -> attribute instanceof JaxbHbmManyToOneType &&

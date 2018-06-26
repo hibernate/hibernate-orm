@@ -6,10 +6,12 @@
  */
 package org.hibernate.jcache.test;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.configuration.MutableConfiguration;
@@ -49,27 +51,38 @@ public class TestHelper {
 			org.hibernate.jcache.test.domain.Event.class.getName() + ".participants"
 	};
 
-	public static SessionFactoryImplementor buildStandardSessionFactory(boolean preBuildCaches) {
-		return buildStandardSessionFactory( preBuildCaches, true );
+	public static String[] allRegionNames =
+			Stream.concat( Arrays.stream( entityRegionNames ), Arrays.stream( collectionRegionNames ) )
+					.toArray( String[]::new );
+
+	public static void preBuildCaches() {
+		preBuildCaches( true );
 	}
 
-	public static SessionFactoryImplementor buildStandardSessionFactory(boolean preBuildCaches, boolean prefixCaches) {
-		if ( preBuildCaches ) {
-			final CacheManager cacheManager = locateStandardCacheManager();
+	public static void preBuildCaches(boolean prefixCaches) {
+		final CacheManager cacheManager = locateStandardCacheManager();
 
-			for ( String regionName : entityRegionNames ) {
-				createCache( cacheManager, regionName, prefixCaches );
-			}
-
-			for ( String regionName : collectionRegionNames ) {
-				createCache( cacheManager, regionName, prefixCaches );
-			}
-
-			createCache( cacheManager, TimestampsRegion.class.getName(), prefixCaches );
-			createCache( cacheManager, QueryResultsRegion.class.getName(), prefixCaches );
+		for ( String regionName : entityRegionNames ) {
+			createCache( cacheManager, regionName, prefixCaches );
 		}
 
+		for ( String regionName : collectionRegionNames ) {
+			createCache( cacheManager, regionName, prefixCaches );
+		}
+
+		createCache( cacheManager, TimestampsRegion.class.getName(), prefixCaches );
+		createCache( cacheManager, QueryResultsRegion.class.getName(), prefixCaches );
+	}
+
+	public static SessionFactoryImplementor buildStandardSessionFactory() {
+		return buildStandardSessionFactory( ignored -> { } );
+
+	}
+
+	public static SessionFactoryImplementor buildStandardSessionFactory(Consumer<StandardServiceRegistryBuilder> additionalSettings) {
 		final StandardServiceRegistryBuilder ssrb = getStandardServiceRegistryBuilder();
+
+		additionalSettings.accept( ssrb );
 
 		final StandardServiceRegistry ssr = ssrb.build();
 
@@ -95,7 +108,7 @@ public class TestHelper {
 
 	public static void createCache(CacheManager cacheManager, String name, boolean usePrefix) {
 		if ( usePrefix ) {
-			name = RegionNameQualifier.INSTANCE.qualify( "hibernate.test", name );
+			name = prefix( name );
 		}
 
 		if ( cacheManager.getCache( name ) != null ) {
@@ -107,6 +120,16 @@ public class TestHelper {
 
 	public static void createCache(String name) {
 		createCache( locateStandardCacheManager(), name );
+	}
+
+	public static String prefix(String regionName) {
+		return RegionNameQualifier.INSTANCE.qualify( "hibernate.test", regionName );
+	}
+
+	public static Cache<?, ?> getCache(String regionName) {
+		final CacheManager cacheManager = JCacheHelper.locateStandardCacheManager();
+		regionName = prefix( regionName );
+		return cacheManager.getCache( regionName );
 	}
 
 	public static void visitAllRegions(Consumer<Cache> action) {

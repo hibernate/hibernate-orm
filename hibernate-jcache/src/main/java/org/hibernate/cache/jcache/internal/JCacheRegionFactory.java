@@ -12,6 +12,7 @@ import java.util.Map;
 import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
+import javax.cache.configuration.MutableConfiguration;
 import javax.cache.spi.CachingProvider;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -21,6 +22,7 @@ import org.hibernate.cache.cfg.spi.DomainDataRegionBuildingContext;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.jcache.ConfigSettings;
+import org.hibernate.cache.jcache.MissingCacheStrategy;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.support.DomainDataStorageAccess;
 import org.hibernate.cache.spi.support.RegionFactoryTemplate;
@@ -32,9 +34,12 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  * @author Alex Snaps
  */
 public class JCacheRegionFactory extends RegionFactoryTemplate {
+	private static final JCacheMessageLogger LOG = JCacheMessageLogger.INSTANCE;
+
 	private final CacheKeysFactory cacheKeysFactory;
 
 	private volatile CacheManager cacheManager;
+	private volatile MissingCacheStrategy missingCacheStrategy;
 
 	@SuppressWarnings("unused")
 	public JCacheRegionFactory() {
@@ -83,7 +88,17 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 
 	@SuppressWarnings("WeakerAccess")
 	protected Cache<Object, Object> createCache(String regionName) {
-		throw new CacheException( "On-the-fly creation of JCache Cache objects is not supported [" + regionName + "]" );
+		switch ( missingCacheStrategy ) {
+			case CREATE_WARN:
+				LOG.missingCacheCreated( regionName );
+				return cacheManager.createCache( regionName, new MutableConfiguration<>() );
+			case CREATE:
+				return cacheManager.createCache( regionName, new MutableConfiguration<>() );
+			case FAIL:
+				throw new CacheException( "On-the-fly creation of JCache Cache objects is not supported [" + regionName + "]" );
+			default:
+				throw new IllegalStateException( "Unsupported missing cache strategy: " + missingCacheStrategy );
+		}
 	}
 
 	@Override
@@ -105,6 +120,7 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 	}
 
 
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Lifecycle
 
@@ -119,6 +135,9 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 		if ( this.cacheManager == null ) {
 			throw new CacheException( "Could not locate/create CacheManager" );
 		}
+		this.missingCacheStrategy = MissingCacheStrategy.interpretSetting(
+				getProp( configValues, ConfigSettings.MISSING_CACHE_STRATEGY )
+		);
 	}
 
 	@SuppressWarnings("WeakerAccess")

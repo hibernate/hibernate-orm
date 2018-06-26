@@ -21,7 +21,7 @@ buildscript {
 		classpath 'org.hibernate.build.gradle:hibernate-matrix-testing:2.0.0.Final'
 		classpath 'org.hibernate.build.gradle:version-injection-plugin:1.0.0'
 		classpath 'org.hibernate.build.gradle:gradle-xjc-plugin:1.0.2.Final'
-		classpath 'com.github.lburgazzoli:lb-karaf-features-gen:1.0.0-SNAPSHOT'
+		classpath 'com.github.lburgazzoli:gradle-karaf-plugin:0.0.49'
 		classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.7'
 		classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
 		classpath 'de.thetaphi:forbiddenapis:2.5'

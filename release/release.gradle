@@ -139,7 +139,7 @@ distributions {
                                 - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
                 )
                 from(
-                        parent.project( 'hibernate-osgi' ).extensions.karafFeatures.featuresXmlFile
+                        parent.project( 'hibernate-osgi' ).extensions.karaf.features.outputFile
                 )
             }
 

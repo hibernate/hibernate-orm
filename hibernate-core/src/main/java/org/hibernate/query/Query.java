@@ -75,17 +75,6 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	QueryProducer getProducer();
 
-	/**
-	 * "QueryOptions" is a better name, I think, than "RowSelection" -> 6.0
-	 *
-	 * @todo 6.0 rename RowSelection to QueryOptions
-	 *
-	 * @return Return the encapsulation of this query's options, which includes access to
-	 * firstRow, maxRows, timeout and fetchSize.   Important because this gives access to
-	 * those values in their Integer form rather than the primitive form (int) required by JPA.
-	 */
-	RowSelection getQueryOptions();
-
 	Optional<R> uniqueResultOptional();
 
 	/**

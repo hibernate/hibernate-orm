@@ -22,6 +22,7 @@ import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.query.CommonQueryContract;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
@@ -63,6 +64,106 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @return the query string
 	 */
 	String getQueryString();
+
+	/**
+	 * "QueryOptions" is a better name, I think, than "RowSelection" -> 6.0
+	 *
+	 * @todo 6.0 rename RowSelection to QueryOptions
+	 *
+	 * @return Return the encapsulation of this query's options, which includes access to
+	 * firstRow, maxRows, timeout and fetchSize.   Important because this gives access to
+	 * those values in their Integer form rather than the primitive form (int) required by JPA.
+	 */
+	RowSelection getQueryOptions();
+
+	/**
+	 * The position of the first query result to be retrieved, previously set by
+	 * {@link #setFirstResult(int)} or {@link #setHibernateFirstResult(int)}.
+	 * <p/>
+	 * If the value was not initialized by {@link #setFirstResult(int)} or
+	 * {@link #setHibernateFirstResult(int)}, then {@code null} is returned, resulting
+	 * in pagination starting from position 0.
+	 * <p/>
+	 * If {@link #setHibernateFirstResult(int)} was called with a negative value, then 0
+	 * is returned.
+	 *
+	 * @return the position of the first query result, or {@code null} if uninitialized.
+	 *
+	 * @see #setFirstResult(int)
+	 * @see #setHibernateFirstResult(int)
+	 *
+	 * @deprecated {@link #setFirstResult(int)} should be used instead.
+	 */
+	@Deprecated
+	default Integer getHibernateFirstResult() {
+		return getQueryOptions().getFirstRow();
+	}
+
+	/**
+	 * Set the position of the first query result to be retrieved. A negative value will
+	 * result in pagination starting from position 0.
+	 *
+	 * @param firstRow - the position of the first query result
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated {@link #setFirstResult(int)} should be used instead.
+	 */
+	@Deprecated
+	default Query setHibernateFirstResult(int firstRow) {
+		if ( firstRow < 0 ) {
+			getQueryOptions().setFirstRow( 0 );
+		}
+		else {
+			getQueryOptions().setFirstRow( firstRow );
+		}
+		return this;
+	}
+
+	/**
+	 * The maximum number of query results to be retrieved, previously set by
+	 * {@link #setMaxResults(int)} or {@link #setHibernateMaxResults(int)}.
+	 * <p/>
+	 * If the value was not initialized by {@link #setMaxResults(int)} or
+	 * {@link #setHibernateMaxResults(int)}, then {@code null} is returned
+	 * <p/>
+	 * If {@link #setHibernateMaxResults(int)} was called with a value less than
+	 * or equal to 0, the value is considered to be uninitialized, and {@code null}
+	 * is returned, resulting in no limit on the number of results.
+	 *
+	 * @return the maximum number of query results, or {@code null} if uninitialized.
+	 *
+	 * @see #setFirstResult(int)
+	 * @see #setHibernateFirstResult(int)
+	 *
+	 * @deprecated {@link #setFirstResult(int)} should be used instead.
+	 */
+	@Deprecated
+	default Integer getHibernateMaxResults() {
+		return getQueryOptions().getMaxRows();
+	}
+
+	/**
+	 * Set the maximum number of query results to be retrieved. A value less than
+	 * or equal to 0 is considered uninitialized, resulting in no limit on the number
+	 * of results.
+	 *
+	 * @param maxResults - the maximum number of query results
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated {@link #setMaxResults(int)} should be used instead.
+	 */
+	@Deprecated
+	default Query setHibernateMaxResults(int maxResults) {
+		// maxResults <= 0 is the same as uninitialized (with no limit),
+		if ( maxResults <= 0 ) {
+			// treat zero and negatives specifically as meaning no limit...
+			getQueryOptions().setMaxRows( null );
+		}
+		else {
+			getQueryOptions().setMaxRows( maxResults );
+		}
+		return this;
+	}
 
 	/**
 	 * Obtain the FlushMode in effect for this query.  By default, the query inherits the FlushMode of the Session

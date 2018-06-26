@@ -23,6 +23,8 @@ public abstract class AbstractRegionFactory implements RegionFactory {
 
 	private final AtomicBoolean started = new AtomicBoolean( false );
 
+	private Exception startingException;
+
 	private SessionFactoryOptions options;
 
 
@@ -33,13 +35,13 @@ public abstract class AbstractRegionFactory implements RegionFactory {
 		}
 		else {
 			assert options == null;
-			throw new IllegalStateException( "Cache provider not started" );
+			throw new IllegalStateException( "Cache provider not started", startingException );
 		}
 	}
 
 	protected void verifyStarted() {
 		if ( ! verifiedStartStatus() ) {
-			throw new IllegalStateException( "Cache provider not started" );
+			throw new IllegalStateException( "Cache provider not started", startingException );
 		}
 	}
 
@@ -66,10 +68,12 @@ public abstract class AbstractRegionFactory implements RegionFactory {
 				this.options = settings;
 				try {
 					prepareForUse( settings, configValues );
+					startingException = null;
 				}
 				catch ( Exception e ) {
 					options = null;
 					started.set( false );
+					startingException = e;
 				}
 			}
 		}
@@ -89,6 +93,7 @@ public abstract class AbstractRegionFactory implements RegionFactory {
 				}
 				finally {
 					options = null;
+					startingException = null;
 				}
 			}
 		}

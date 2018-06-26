@@ -484,7 +484,15 @@ public class JdbcBinder {
         	String tableToClassName = bindCollection( rc, foreignKey, fk, collection );
 
 			element.setReferencedEntityName( tableToClassName );
-			element.addColumn( fk.getColumn( 0 ) );
+			
+			Iterator<Column> columnIterator = fk.getColumns().iterator();
+			while (columnIterator.hasNext()) {
+				Column fkcolumn = (Column) columnIterator.next();
+				if(fkcolumn.getSqlTypeCode() != null) {  // TODO: user defined foreign ref columns does not have a type set.
+					guessAndAlignType(fk.getTable(), fkcolumn, mapping, false); // needed to ensure foreign key columns has same type as the "property" column.
+				}
+				element.addColumn(fkcolumn);
+			}
 			collection.setElement( element );
 
         } else {

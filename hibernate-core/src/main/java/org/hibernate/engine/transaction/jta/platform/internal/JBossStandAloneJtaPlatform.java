@@ -20,19 +20,17 @@ import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformException;
  * @author Steve Ebersole
  */
 public class JBossStandAloneJtaPlatform extends AbstractJtaPlatform {
+
 	public static final String JBOSS_TM_CLASS_NAME = "com.arjuna.ats.jta.TransactionManager";
 	public static final String JBOSS_UT_CLASS_NAME = "com.arjuna.ats.jta.UserTransaction";
-	public static final String WILDFLY_TM_CLASS_NAME = "org.wildfly.transaction.client.ContextTransactionManager";
-	public static final String WILDFLY_UT_CLASS_NAME = "org.wildfly.transaction.client.LocalUserTransaction";
 
+	private static final WildFlyStandAloneJtaPlatform wildflyBasedAlternative = new WildFlyStandAloneJtaPlatform();
 
 	@Override
 	protected TransactionManager locateTransactionManager() {
+		//Try WildFly first as it's the "new generation":
 		try {
-			final Class wildflyTmClass = serviceRegistry()
-					.getService( ClassLoaderService.class )
-					.classForName( WILDFLY_TM_CLASS_NAME );
-			return (TransactionManager) wildflyTmClass.getMethod( "getInstance" ).invoke( null );
+			return wildflyBasedAlternative.locateTransactionManager();
 		}
 		catch ( Exception ignore) {
 			// ignore and look for Arjuna class
@@ -51,11 +49,9 @@ public class JBossStandAloneJtaPlatform extends AbstractJtaPlatform {
 
 	@Override
 	protected UserTransaction locateUserTransaction() {
+		//Try WildFly first as it's the "new generation":
 		try {
-			final Class jbossUtClass = serviceRegistry()
-					.getService( ClassLoaderService.class )
-					.classForName( WILDFLY_UT_CLASS_NAME );
-			return (UserTransaction) jbossUtClass.getMethod( "getInstance" ).invoke( null );
+			return wildflyBasedAlternative.locateUserTransaction();
 		}
 		catch ( Exception ignore) {
 			// ignore and look for Arjuna class

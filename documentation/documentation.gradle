@@ -205,30 +205,6 @@ task buildTutorialZip(type: Zip) {
 
 renderGettingStartedGuides.dependsOn buildTutorialZip
 
-
-
-// Mapping Guides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-task renderMappingGuide(type: AsciidoctorTask, group: 'Documentation') {
-    description = 'Renders the Mapping Guides in HTML format using Asciidoctor.'
-    sourceDir = file( 'src/main/asciidoc/mapping' )
-    sources {
-        include 'index.adoc'
-    }
-    outputDir = new File("$buildDir/asciidoc/mapping/html")
-    backends "html5"
-    separateOutputDirs false
-    options logDocuments: true
-    //attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true, stylesheet: "css/hibernate.css"
-    attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true
-    resources {
-        from('src/main/asciidoc/') {
-            include 'images/**'
-            include 'css/**'
-        }
-    }
-}
-
 // User Guide ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {

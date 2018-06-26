@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+
+    <class name="org.hibernate.cache.ehcache.test.domain.HolidayCalendar" table="CALENDAR" lazy="false">
+        <id name="id" column="CALENDAR_ID">
+            <generator class="native"/>
+        </id>
+
+        <map name="holidays" table="CALENDAR_HOLIDAYS" lazy="false">
+            <key column="CALENDAR_ID"/>
+            <map-key column="hol_date" type="date"/>
+            <element column="hol_name" type="string"/>
+        </map>
+
+    </class>
+
+</hibernate-mapping>

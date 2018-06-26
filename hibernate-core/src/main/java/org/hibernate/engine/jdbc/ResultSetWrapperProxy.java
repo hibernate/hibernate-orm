@@ -6,18 +6,22 @@
  */
 package org.hibernate.engine.jdbc;
 
+import static org.hibernate.internal.CoreLogging.messageLogger;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.ServiceRegistry;
-
-import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
  * A proxy for a ResultSet delegate, responsible for locally caching the columnName-to-columnIndex resolution that
@@ -31,8 +35,28 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 
 	private static final SqlExceptionHelper SQL_EXCEPTION_HELPER = new SqlExceptionHelper( false );
 
+	private static final Map<ResultSetMethodKey, Method> NAME_TO_INDEX_METHOD_MAPPING;
+
 	private final ResultSet rs;
 	private final ColumnNameCache columnNameCache;
+
+	static {
+		Map<ResultSetMethodKey, Method> nameToIndexMethodMapping = new HashMap<>();
+		for ( Method method : ResultSet.class.getDeclaredMethods() ) {
+			if ( isFirstArgColumnLabel( method ) ) {
+				try {
+					nameToIndexMethodMapping.put(
+							new ResultSetMethodKey( method.getName(), method.getParameterTypes() ),
+							locateCorrespondingColumnIndexMethod( method )
+					);
+				}
+				catch (NoSuchMethodException e) {
+					LOG.unableToSwitchToMethodUsingColumnIndex( method );
+				}
+			}
+		}
+		NAME_TO_INDEX_METHOD_MAPPING = Collections.unmodifiableMap( nameToIndexMethodMapping );
+	}
 
 	private ResultSetWrapperProxy(ResultSet rs, ColumnNameCache columnNameCache) {
 		this.rs = rs;
@@ -64,24 +88,23 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 			return findColumn( (String) args[0] );
 		}
 
-		if ( isFirstArgColumnLabel( method, args ) ) {
-			try {
-				final Integer columnIndex = findColumn( (String) args[0] );
-				return invokeMethod(
-						locateCorrespondingColumnIndexMethod( method ),
-						buildColumnIndexMethodArgs( args, columnIndex )
-				);
-			}
-			catch ( SQLException ex ) {
-				final String msg = "Exception getting column index for column: [" + args[0] +
-						"].\nReverting to using: [" + args[0] +
-						"] as first argument for method: [" + method + "]";
-				SQL_EXCEPTION_HELPER.logExceptions( ex, msg );
-			}
-			catch ( NoSuchMethodException ex ) {
-				LOG.unableToSwitchToMethodUsingColumnIndex( method );
+		if ( isFirstArgColumnLabel( method ) ) {
+			Method columnIndexMethod = NAME_TO_INDEX_METHOD_MAPPING.get( new ResultSetMethodKey( method.getName(), method.getParameterTypes() ) );
+			if ( columnIndexMethod != null ) {
+				try {
+					final Integer columnIndex = findColumn( (String) args[0] );
+
+					return invokeMethod( columnIndexMethod, buildColumnIndexMethodArgs( args, columnIndex ) );
+				}
+				catch ( SQLException ex ) {
+					final String msg = "Exception getting column index for column: [" + args[0] +
+							"].\nReverting to using: [" + args[0] +
+							"] as first argument for method: [" + method + "]";
+					SQL_EXCEPTION_HELPER.logExceptions( ex, msg );
+				}
 			}
 		}
+
 		return invokeMethod( method, args );
 	}
 
@@ -96,20 +119,19 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 		return columnNameCache.getIndexForColumnName( columnName, rs );
 	}
 
-	private boolean isFirstArgColumnLabel(Method method, Object[] args) {
+	private static boolean isFirstArgColumnLabel(Method method) {
 		// method name should start with either get or update
 		if ( ! ( method.getName().startsWith( "get" ) || method.getName().startsWith( "update" ) ) ) {
 			return false;
 		}
 
-		// method should have arguments, and have same number as incoming arguments
-		if ( ! ( method.getParameterCount() > 0 && args.length == method.getParameterCount() ) ) {
+		// method should have at least one parameter
+		if ( ! ( method.getParameterCount() > 0 ) ) {
 			return false;
 		}
 
-		// The first argument should be a String (the column name)
-		//noinspection RedundantIfStatement
-		if ( ! ( String.class.isInstance( args[0] ) && method.getParameterTypes()[0].equals( String.class ) ) ) {
+		// The first parameter should be a String (the column name)
+		if ( ! method.getParameterTypes()[0].equals( String.class ) ) {
 			return false;
 		}
 
@@ -124,8 +146,8 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 	 * @return The corresponding method passed the column index.
 	 * @throws NoSuchMethodException Should never happen, but...
 	 */
-	private Method locateCorrespondingColumnIndexMethod(Method columnNameMethod) throws NoSuchMethodException {
-		final Class[] actualParameterTypes = new Class[columnNameMethod.getParameterCount()];
+	private static Method locateCorrespondingColumnIndexMethod(Method columnNameMethod) throws NoSuchMethodException {
+		final Class<?>[] actualParameterTypes = new Class[columnNameMethod.getParameterCount()];
 		actualParameterTypes[0] = int.class;
 		System.arraycopy(
 				columnNameMethod.getParameterTypes(),
@@ -150,6 +172,49 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 		}
 		catch ( InvocationTargetException e ) {
 			throw e.getTargetException();
+		}
+	}
+
+	private static class ResultSetMethodKey {
+
+		private String methodName;
+
+		private Class<?>[] parameterTypes;
+
+		public ResultSetMethodKey(String methodName, Class<?>[] parameterTypes) {
+			this.methodName = methodName;
+			this.parameterTypes = parameterTypes;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + methodName.hashCode();
+			result = prime * result + Arrays.hashCode( parameterTypes );
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if ( this == obj ) {
+				return true;
+			}
+			if ( obj == null ) {
+				return false;
+			}
+			if ( getClass() != obj.getClass() ) {
+				return false;
+			}
+
+			ResultSetMethodKey other = (ResultSetMethodKey) obj;
+			if ( !methodName.equals( other.methodName ) ) {
+				return false;
+			}
+			if ( !Arrays.equals( parameterTypes, other.parameterTypes ) ) {
+				return false;
+			}
+			return true;
 		}
 	}
 }

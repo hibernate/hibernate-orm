@@ -1,6 +1,6 @@
-package org.hibernate.tool.hbm2x;
+package org.hibernate.tool.internal.export.lint;
 
-import org.hibernate.tool.internal.export.lint.HbmLint;
+import org.hibernate.tool.hbm2x.GenericExporter;
 
 public class HbmLintExporter extends GenericExporter {
 

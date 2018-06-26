@@ -72,35 +72,35 @@ public abstract class AbstractPluralAttributeSourceImpl
 
 		Optional<JaxbHbmManyToOneType> jaxbHbmManyToOneTypeOptional = Optional.empty();
 
-		if(pluralAttributeJaxbMapping.isInverse() && pluralAttributeJaxbMapping.getOneToMany() != null) {
+		if ( pluralAttributeJaxbMapping.isInverse() && pluralAttributeJaxbMapping.getOneToMany() != null ) {
 			String childClass = pluralAttributeJaxbMapping.getOneToMany().getClazz();
 
 			if ( childClass != null ) {
 				jaxbHbmManyToOneTypeOptional = mappingDocument.getDocumentRoot().getClazz()
 						.stream()
 						.filter( (JaxbHbmRootEntityType entityType) ->
-								 childClass.equals( entityType.getName() ) )
+										 childClass.equals( entityType.getName() ) )
 						.flatMap( jaxbHbmRootEntityType -> jaxbHbmRootEntityType.getAttributes().stream() )
 						.filter(
 								attribute -> attribute instanceof JaxbHbmManyToOneType &&
-								((JaxbHbmManyToOneType) attribute).getPropertyRef() != null )
+										( (JaxbHbmManyToOneType) attribute ).getPropertyRef() != null )
 						.map( JaxbHbmManyToOneType.class::cast )
 						.findFirst();
 			}
 		}
 
 		this.keySource = jaxbHbmManyToOneTypeOptional
-		.map( jaxbHbmManyToOneType -> new PluralAttributeKeySourceImpl(
-				sourceMappingDocument(),
-				jaxbHbmManyToOneType,
-				container
-		) ).orElseGet( () -> new PluralAttributeKeySourceImpl(
-				sourceMappingDocument(),
-				pluralAttributeJaxbMapping.isInverse() ?
-						pluralAttributeJaxbMapping.getKey() :
-						pluralAttributeJaxbMapping.getKey(),
-				container
-		) );
+				.map( jaxbHbmManyToOneType -> new PluralAttributeKeySourceImpl(
+						sourceMappingDocument(),
+						jaxbHbmManyToOneType,
+						container
+				) ).orElseGet( () -> new PluralAttributeKeySourceImpl(
+						sourceMappingDocument(),
+						pluralAttributeJaxbMapping.isInverse() ?
+								pluralAttributeJaxbMapping.getKey() :
+								pluralAttributeJaxbMapping.getKey(),
+						container
+				) );
 
 		this.typeInformation = new HibernateTypeSourceImpl( pluralAttributeJaxbMapping.getCollectionType() );
 
@@ -129,7 +129,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 			return new String[0];
 		}
 
-		final String[] names = new String[ pluralAttributeElement.getSynchronize().size() ];
+		final String[] names = new String[pluralAttributeElement.getSynchronize().size()];
 		int i = 0;
 		for ( JaxbHbmSynchronizeType jaxbHbmSynchronizeType : pluralAttributeElement.getSynchronize() ) {
 			names[i++] = jaxbHbmSynchronizeType.getTable();

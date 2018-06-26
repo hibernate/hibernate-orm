@@ -103,7 +103,7 @@ public class EhcacheRegionFactory extends RegionFactoryTemplate {
 	}
 
 	protected Cache createCache(String regionName) {
-		throw new CacheException( "On-the-fly creation of JCache Cache objects is not supported [" + regionName + "]" );
+		throw new CacheException( "On-the-fly creation of Ehcache Cache objects is not supported [" + regionName + "]" );
 	}
 
 

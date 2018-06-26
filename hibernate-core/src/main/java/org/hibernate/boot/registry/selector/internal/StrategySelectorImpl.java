@@ -130,7 +130,8 @@ public class StrategySelectorImpl implements StrategySelector {
 		}
 		catch (ClassLoadingException e) {
 			throw new StrategySelectionException(
-					"Unable to resolve name [" + name + "] as strategy [" + strategy.getName() + "]"
+					"Unable to resolve name [" + name + "] as strategy [" + strategy.getName() + "]",
+					e
 			);
 		}
 	}

@@ -13,6 +13,26 @@ import org.hibernate.LockOptions;
  */
 public class MySQL8Dialect extends MySQL57Dialect {
 
+	public MySQL8Dialect() {
+		registerKeyword("CUME_DIST");
+		registerKeyword("DENSE_RANK");
+		registerKeyword("EMPTY");
+		registerKeyword("EXCEPT");
+		registerKeyword("FIRST_VALUE");
+		registerKeyword("GROUPS");
+		registerKeyword("JSON_TABLE");
+		registerKeyword("LAG");
+		registerKeyword("LAST_VALUE");
+		registerKeyword("LEAD");
+		registerKeyword("NTH_VALUE");
+		registerKeyword("NTILE");
+		registerKeyword("PERSIST");
+		registerKeyword("PERCENT_RANK");
+		registerKeyword("PERSIST_ONLY");
+		registerKeyword("RANK");
+		registerKeyword("ROW_NUMBER");
+	}
+
 	@Override
 	public String getWriteLockString(int timeout) {
 		if ( timeout == LockOptions.NO_WAIT ) {

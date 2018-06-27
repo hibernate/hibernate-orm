@@ -38,7 +38,7 @@ ext {
 test.enabled = false
 
 if ( JavaVersion.current().isJava9Compatible() ) {
-	logger.warn( '[WARN] Skipping all tests for hibernate-osg due to Karaf issues with JDK 9' )
+	logger.warn( '[WARN] Skipping all tests for hibernate-osgi due to Karaf issues with JDK 9' )
 	// Hikari CP relies on Javassist which we know has issues with Java 9
 	test.enabled = false
 }

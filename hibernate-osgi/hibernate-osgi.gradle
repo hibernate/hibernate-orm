@@ -139,22 +139,24 @@ task generateVersionFile {
 karaf {
 	features {
         xsdVersion  = '1.2.0'
-		includeProject = true
         feature {
             name        = 'hibernate-orm'
             description = 'Combines all Hibernate core dependencies and required modules into a single feature'
+			includeProject = true
         }
 		// NOTE : would like to include spatial as well, but we need to wait for
 		//		it to not define dependency on postgresql driver
 		feature {
 			name = 'hibernate-envers'
 			description = 'Feature for easily adding Envers support to hibernate-orm'
+			includeProject = false
 			configurations 'hibernateEnvers'
 			feature 'hibernate-orm'
 		}
 		feature {
 			name = 'hibernate-infinispan'
 			description = 'Feature for easily adding Infinispan-based caching support to hibernate-orm'
+			includeProject = false
 			configurations 'hibernateInfinispan'
 			feature 'hibernate-orm'
 		}

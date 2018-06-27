@@ -15,6 +15,8 @@ import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -36,15 +38,15 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-12738" )
+@TestForIssue(jiraKey = "HHH-12738")
 public class ForeignGeneratorResourceLocalTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {
-			Contract.class,
-			Customer.class,
-			CustomerContractRelation.class
+				Contract.class,
+				Customer.class,
+				CustomerContractRelation.class
 		};
 	}
 
@@ -128,17 +130,73 @@ public class ForeignGeneratorResourceLocalTest extends BaseEntityManagerFunction
 			entityManager.persist( customer );
 
 			customer = entityManager.createQuery(
-				"SELECT c " +
-				"FROM Customer c " +
-				" LEFT JOIN FETCH c.contractRelations " +
-				" WHERE c.id = :customerId", Customer.class )
-			.setParameter( "customerId", customer.getId() )
-			.getSingleResult();
+					"SELECT c " +
+							"FROM Customer c " +
+							" LEFT JOIN FETCH c.contractRelations " +
+							" WHERE c.id = :customerId", Customer.class )
+					.setParameter( "customerId", customer.getId() )
+					.getSingleResult();
 
 			CustomerContractRelation relation = new CustomerContractRelation();
 			relation.setContractId( customer.getId() );
 			customer.addContractRelation( relation );
 		} );
+	}
+
+	@Test
+	public void addRelationImplicitFlushCloseEntityManager() throws Exception {
+
+		Long contractId = doInJPA( this::entityManagerFactory, entityManager -> {
+			Contract contract = new Contract();
+
+			entityManager.persist( contract );
+			return contract.getId();
+		} );
+
+		Long customerId = doInJPA( this::entityManagerFactory, entityManager -> {
+			Customer customer = new Customer();
+
+			entityManager.persist( customer );
+			return customer.getId();
+		} );
+
+		EntityManager entityManager = null;
+		EntityTransaction txn = null;
+		try {
+			entityManager = entityManagerFactory().createEntityManager();
+			txn = entityManager.getTransaction();
+			txn.begin();
+
+			Customer customer = entityManager.createQuery(
+					"SELECT c " +
+							"FROM Customer c " +
+							" LEFT JOIN FETCH c.contractRelations " +
+							" WHERE c.id = :customerId", Customer.class )
+					.setParameter( "customerId", customerId )
+					.getSingleResult();
+
+			CustomerContractRelation relation = new CustomerContractRelation();
+			relation.setContractId( contractId );
+			customer.addContractRelation( relation );
+
+			//Close the EntityManager
+			entityManager.close();
+
+			//And, afterward commit the currently running Tx.
+			//This might happen in JTA environments where the Tx is committed by the JTA TM.
+			txn.commit();
+		}
+		catch (Throwable t) {
+			if ( txn != null && txn.isActive() ) {
+				try {
+					txn.rollback();
+				}
+				catch (Exception e) {
+					log.error( "Rollback failure", e );
+				}
+			}
+			throw t;
+		}
 	}
 
 	@Entity(name = "Contract")
@@ -160,13 +218,12 @@ public class ForeignGeneratorResourceLocalTest extends BaseEntityManagerFunction
 	@Entity(name = "Customer")
 	@Table(name = "CUSTOMER")
 	public static class Customer {
-		@Id
-		@GeneratedValue
-		private Long id;
-
 		@OneToMany(mappedBy = "customer", fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE },
 				orphanRemoval = true, targetEntity = CustomerContractRelation.class)
 		private final Set<CustomerContractRelation> contractRelations = new HashSet<>();
+		@Id
+		@GeneratedValue
+		private Long id;
 
 		public Long getId() {
 			return id;

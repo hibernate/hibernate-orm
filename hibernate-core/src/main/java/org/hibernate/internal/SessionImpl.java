@@ -2107,7 +2107,7 @@ public final class SessionImpl
 
 	@Override
 	public boolean contains(String entityName, Object object) {
-		checkOpen();
+		checkOpenOrWaitingForAutoClose();
 		checkTransactionSynchStatus();
 
 		if ( object == null ) {

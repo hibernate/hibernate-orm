@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * Hibernate, Relational Persistence for Idiomatic Java License: GNU Lesser General Public License (LGPL), version 2.1
+ * or later. See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.idgen.foreign;
 
@@ -36,275 +34,366 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-12738" )
-public class ForeignGeneratorResourceLocalTest extends BaseEntityManagerFunctionalTestCase {
+@TestForIssue(jiraKey = "HHH-12738")
+public class ForeignGeneratorResourceLocalTest extends BaseEntityManagerFunctionalTestCase
+{
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-			Contract.class,
-			Customer.class,
-			CustomerContractRelation.class
-		};
-	}
+    @Override
+    protected Class<?>[] getAnnotatedClasses()
+    {
+        return new Class[]{
+            Contract.class,
+            Customer.class,
+            CustomerContractRelation.class
+        };
+    }
 
-	@Test
-	public void addRelationImplicitFlush() throws Exception {
+    @Test
+    public void addRelationImplicitFlush() throws Exception
+    {
 
-		Long contractId = doInJPA( this::entityManagerFactory, entityManager -> {
-			Contract contract = new Contract();
+        Long contractId = doInJPA(this::entityManagerFactory, entityManager ->
+        {
+            Contract contract = new Contract();
 
-			entityManager.persist( contract );
-			return contract.getId();
-		} );
+            entityManager.persist(contract);
+            return contract.getId();
+        });
 
-		Long customerId = doInJPA( this::entityManagerFactory, entityManager -> {
-			Customer customer = new Customer();
+        Long customerId = doInJPA(this::entityManagerFactory, entityManager ->
+        {
+            Customer customer = new Customer();
 
-			entityManager.persist( customer );
-			return customer.getId();
-		} );
+            entityManager.persist(customer);
+            return customer.getId();
+        });
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+        doInJPA(this::entityManagerFactory, entityManager ->
+        {
 
-			Customer customer = entityManager.createQuery(
-					"SELECT c " +
-							"FROM Customer c " +
-							" LEFT JOIN FETCH c.contractRelations " +
-							" WHERE c.id = :customerId", Customer.class )
-					.setParameter( "customerId", customerId )
-					.getSingleResult();
+            Customer customer = entityManager.createQuery(
+                "SELECT c " +
+                    "FROM Customer c " +
+                    " LEFT JOIN FETCH c.contractRelations " +
+                    " WHERE c.id = :customerId",
+                Customer.class)
+                .setParameter("customerId", customerId)
+                .getSingleResult();
 
-			CustomerContractRelation relation = new CustomerContractRelation();
-			relation.setContractId( contractId );
-			customer.addContractRelation( relation );
-		} );
-	}
+            CustomerContractRelation relation = new CustomerContractRelation();
+            relation.setContractId(contractId);
+            customer.addContractRelation(relation);
+        });
+    }
 
-	@Test
-	public void addRelationExplicitFlush() throws Exception {
-		Long contractId = doInJPA( this::entityManagerFactory, entityManager -> {
-			Contract contract = new Contract();
+    @Test
+    public void addRelationImplicitFlushClosedEM() throws Exception
+    {
 
-			entityManager.persist( contract );
-			return contract.getId();
-		} );
+        Long contractId = doInJPA(this::entityManagerFactory, entityManager ->
+        {
+            Contract contract = new Contract();
 
-		Long customerId = doInJPA( this::entityManagerFactory, entityManager -> {
-			Customer customer = new Customer();
+            entityManager.persist(contract);
+            return contract.getId();
+        });
 
-			entityManager.persist( customer );
-			return customer.getId();
-		} );
+        Long customerId = doInJPA(this::entityManagerFactory, entityManager ->
+        {
+            Customer customer = new Customer();
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+            entityManager.persist(customer);
+            return customer.getId();
+        });
 
-			Customer customer = entityManager.createQuery(
-					"SELECT c " +
-							"FROM Customer c " +
-							" LEFT JOIN FETCH c.contractRelations " +
-							" WHERE c.id = :customerId", Customer.class )
-					.setParameter( "customerId", customerId )
-					.getSingleResult();
+        doInJPA(this::entityManagerFactory, entityManager ->
+        {
 
-			CustomerContractRelation relation = new CustomerContractRelation();
-			relation.setContractId( contractId );
-			customer.addContractRelation( relation );
+            Customer customer = entityManager.createQuery(
+                "SELECT c " +
+                    "FROM Customer c " +
+                    " LEFT JOIN FETCH c.contractRelations " +
+                    " WHERE c.id = :customerId",
+                Customer.class)
+                .setParameter("customerId", customerId)
+                .getSingleResult();
 
-			entityManager.flush();
-		} );
-	}
+            CustomerContractRelation relation = new CustomerContractRelation();
+            relation.setContractId(contractId);
+            customer.addContractRelation(relation);
 
-	@Test
-	public void addRelationImplicitFlushOneTx() throws Exception {
+            // simulating spring JtaTransactionManager.triggerBeforeCompletion()
+            entityManager.close();
+        });
+    }
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Contract contract = new Contract();
+    @Test
+    public void addRelationExplicitFlush() throws Exception
+    {
+        Long contractId = doInJPA(this::entityManagerFactory, entityManager ->
+        {
+            Contract contract = new Contract();
 
-			entityManager.persist( contract );
+            entityManager.persist(contract);
+            return contract.getId();
+        });
 
-			Customer customer = new Customer();
+        Long customerId = doInJPA(this::entityManagerFactory, entityManager ->
+        {
+            Customer customer = new Customer();
 
-			entityManager.persist( customer );
+            entityManager.persist(customer);
+            return customer.getId();
+        });
 
-			customer = entityManager.createQuery(
-				"SELECT c " +
-				"FROM Customer c " +
-				" LEFT JOIN FETCH c.contractRelations " +
-				" WHERE c.id = :customerId", Customer.class )
-			.setParameter( "customerId", customer.getId() )
-			.getSingleResult();
+        doInJPA(this::entityManagerFactory, entityManager ->
+        {
 
-			CustomerContractRelation relation = new CustomerContractRelation();
-			relation.setContractId( customer.getId() );
-			customer.addContractRelation( relation );
-		} );
-	}
+            Customer customer = entityManager.createQuery(
+                "SELECT c " +
+                    "FROM Customer c " +
+                    " LEFT JOIN FETCH c.contractRelations " +
+                    " WHERE c.id = :customerId",
+                Customer.class)
+                .setParameter("customerId", customerId)
+                .getSingleResult();
 
-	@Entity(name = "Contract")
-	@Table(name = "CONTRACT")
-	public static class Contract {
-		@Id
-		@GeneratedValue
-		private Long id;
+            CustomerContractRelation relation = new CustomerContractRelation();
+            relation.setContractId(contractId);
+            customer.addContractRelation(relation);
 
-		public Long getId() {
-			return id;
-		}
+            entityManager.flush();
+        });
+    }
 
-		public void setId(Long id) {
-			this.id = id;
-		}
-	}
+    @Test
+    public void addRelationImplicitFlushOneTx() throws Exception
+    {
 
-	@Entity(name = "Customer")
-	@Table(name = "CUSTOMER")
-	public static class Customer {
-		@Id
-		@GeneratedValue
-		private Long id;
+        doInJPA(this::entityManagerFactory, entityManager ->
+        {
+            Contract contract = new Contract();
 
-		@OneToMany(mappedBy = "customer", fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE },
-				orphanRemoval = true, targetEntity = CustomerContractRelation.class)
-		private final Set<CustomerContractRelation> contractRelations = new HashSet<>();
+            entityManager.persist(contract);
 
-		public Long getId() {
-			return id;
-		}
+            Customer customer = new Customer();
 
-		public void setId(Long id) {
-			this.id = id;
-		}
+            entityManager.persist(customer);
 
-		public Set<CustomerContractRelation> getContractRelations() {
-			return contractRelations;
-		}
+            customer = entityManager.createQuery(
+                "SELECT c " +
+                    "FROM Customer c " +
+                    " LEFT JOIN FETCH c.contractRelations " +
+                    " WHERE c.id = :customerId",
+                Customer.class)
+                .setParameter("customerId", customer.getId())
+                .getSingleResult();
 
-		public boolean addContractRelation(CustomerContractRelation relation) {
-			if ( relation != null ) {
-				relation.setCustomer( this );
-				return contractRelations.add( relation );
-			}
-			return false;
-		}
-	}
+            CustomerContractRelation relation = new CustomerContractRelation();
+            relation.setContractId(customer.getId());
+            customer.addContractRelation(relation);
+        });
+    }
 
-	@Embeddable
-	public static class CustomerContractId implements Serializable {
-		private static final long serialVersionUID = 1115591676841551563L;
+    @Entity(name = "Contract")
+    @Table(name = "CONTRACT")
+    public static class Contract
+    {
+        @Id
+        @GeneratedValue
+        private Long id;
 
-		@Column(name = "CUSTOMERID", nullable = false)
-		private Long customerId;
+        public Long getId()
+        {
+            return id;
+        }
 
-		@Column(name = "CONTRACTID", nullable = false)
-		private Long contractId;
+        public void setId(Long id)
+        {
+            this.id = id;
+        }
+    }
 
-		public Long getCustomerId() {
-			return customerId;
-		}
+    @Entity(name = "Customer")
+    @Table(name = "CUSTOMER")
+    public static class Customer
+    {
+        @Id
+        @GeneratedValue
+        private Long id;
 
-		public void setCustomerId(Long customerId) {
-			this.customerId = customerId;
-		}
+        @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+            orphanRemoval = true, targetEntity = CustomerContractRelation.class)
+        private final Set<CustomerContractRelation> contractRelations = new HashSet<>();
 
-		public Long getContractId() {
-			return contractId;
-		}
+        public Long getId()
+        {
+            return id;
+        }
 
-		public void setContractId(Long contractId) {
-			this.contractId = contractId;
-		}
+        public void setId(Long id)
+        {
+            this.id = id;
+        }
 
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + ( ( contractId == null ) ? 0 : contractId.hashCode() );
-			result = prime * result + ( ( customerId == null ) ? 0 : customerId.hashCode() );
-			return result;
-		}
+        public Set<CustomerContractRelation> getContractRelations()
+        {
+            return contractRelations;
+        }
 
-		@Override
-		public boolean equals(Object obj) {
-			if ( this == obj ) {
-				return true;
-			}
-			if ( obj == null ) {
-				return false;
-			}
-			if ( getClass() != obj.getClass() ) {
-				return false;
-			}
-			CustomerContractId other = (CustomerContractId) obj;
-			if ( contractId == null ) {
-				if ( other.contractId != null ) {
-					return false;
-				}
-			}
-			else if ( !contractId.equals( other.contractId ) ) {
-				return false;
-			}
-			if ( customerId == null ) {
-				if ( other.customerId != null ) {
-					return false;
-				}
-			}
-			else if ( !customerId.equals( other.customerId ) ) {
-				return false;
-			}
-			return true;
-		}
-	}
+        public boolean addContractRelation(CustomerContractRelation relation)
+        {
+            if (relation != null)
+            {
+                relation.setCustomer(this);
+                return contractRelations.add(relation);
+            }
+            return false;
+        }
+    }
 
-	@Entity(name = "CustomerContractRelation")
-	@Table(name = "CUSTOMER_CONTRACT_RELATION")
-	public static class CustomerContractRelation {
-		@EmbeddedId
-		private final CustomerContractId id = new CustomerContractId();
+    @Embeddable
+    public static class CustomerContractId implements Serializable
+    {
+        private static final long serialVersionUID = 1115591676841551563L;
 
-		@Temporal(TemporalType.TIMESTAMP)
-		@Column(nullable = true, name = "SIGNEDONDATE")
-		private Date signedOn;
+        @Column(name = "CUSTOMERID", nullable = false)
+        private Long customerId;
 
-		@MapsId(value = "customerId")
-		@JoinColumn(name = "CUSTOMERID", nullable = false)
-		@ManyToOne(fetch = FetchType.LAZY)
-		private Customer customer;
+        @Column(name = "CONTRACTID", nullable = false)
+        private Long contractId;
 
-		public CustomerContractId getId() {
-			return id;
-		}
+        public Long getCustomerId()
+        {
+            return customerId;
+        }
 
-		public Customer getCustomer() {
-			return customer;
-		}
+        public void setCustomerId(Long customerId)
+        {
+            this.customerId = customerId;
+        }
 
-		public void setCustomer(Customer customer) {
-			this.customer = customer;
-		}
+        public Long getContractId()
+        {
+            return contractId;
+        }
 
-		public Date getSignedOn() {
-			return signedOn;
-		}
+        public void setContractId(Long contractId)
+        {
+            this.contractId = contractId;
+        }
 
-		public void setSignedOn(Date signedOn) {
-			this.signedOn = signedOn;
-		}
+        @Override
+        public int hashCode()
+        {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((contractId == null) ? 0 : contractId.hashCode());
+            result = prime * result + ((customerId == null) ? 0 : customerId.hashCode());
+            return result;
+        }
 
-		public Long getCustomerId() {
-			return id.getCustomerId();
-		}
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+            {
+                return true;
+            }
+            if (obj == null)
+            {
+                return false;
+            }
+            if (getClass() != obj.getClass())
+            {
+                return false;
+            }
+            CustomerContractId other = (CustomerContractId) obj;
+            if (contractId == null)
+            {
+                if (other.contractId != null)
+                {
+                    return false;
+                }
+            }
+            else if (!contractId.equals(other.contractId))
+            {
+                return false;
+            }
+            if (customerId == null)
+            {
+                if (other.customerId != null)
+                {
+                    return false;
+                }
+            }
+            else if (!customerId.equals(other.customerId))
+            {
+                return false;
+            }
+            return true;
+        }
+    }
 
-		public void setCustomerId(Long customerId) {
-			id.setCustomerId( customerId );
-		}
+    @Entity(name = "CustomerContractRelation")
+    @Table(name = "CUSTOMER_CONTRACT_RELATION")
+    public static class CustomerContractRelation
+    {
+        @EmbeddedId
+        private final CustomerContractId id = new CustomerContractId();
 
-		public Long getContractId() {
-			return id.getContractId();
-		}
+        @Temporal(TemporalType.TIMESTAMP)
+        @Column(nullable = true, name = "SIGNEDONDATE")
+        private Date signedOn;
 
-		public void setContractId(Long contractId) {
-			id.setContractId( contractId );
-		}
-	}
+        @MapsId(value = "customerId")
+        @JoinColumn(name = "CUSTOMERID", nullable = false)
+        @ManyToOne(fetch = FetchType.LAZY)
+        private Customer customer;
+
+        public CustomerContractId getId()
+        {
+            return id;
+        }
+
+        public Customer getCustomer()
+        {
+            return customer;
+        }
+
+        public void setCustomer(Customer customer)
+        {
+            this.customer = customer;
+        }
+
+        public Date getSignedOn()
+        {
+            return signedOn;
+        }
+
+        public void setSignedOn(Date signedOn)
+        {
+            this.signedOn = signedOn;
+        }
+
+        public Long getCustomerId()
+        {
+            return id.getCustomerId();
+        }
+
+        public void setCustomerId(Long customerId)
+        {
+            id.setCustomerId(customerId);
+        }
+
+        public Long getContractId()
+        {
+            return id.getContractId();
+        }
+
+        public void setContractId(Long contractId)
+        {
+            id.setContractId(contractId);
+        }
+    }
 }

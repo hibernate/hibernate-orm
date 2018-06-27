@@ -14,6 +14,8 @@ import org.hibernate.LockOptions;
 public class MySQL8Dialect extends MySQL57Dialect {
 
 	public MySQL8Dialect() {
+		// MySQL doesn't add the new reserved keywords to their JDBC driver to preserve backward compatibility.
+
 		registerKeyword("CUME_DIST");
 		registerKeyword("DENSE_RANK");
 		registerKeyword("EMPTY");

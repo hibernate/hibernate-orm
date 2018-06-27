@@ -2,7 +2,7 @@
  * Created on 2004-12-26
  *
  */
-package org.hibernate.tool.hbm2x;
+package org.hibernate.tool.internal.export.hbm;
 
 import org.hibernate.internal.util.StringHelper;
 

@@ -121,14 +121,15 @@ include::{sourcedir}/AutoFlushTest.java[tags=flushing-auto-flush-sql-example]
 ----
 ====
 
-The `Session` API  doesn't trigger an `AUTO` flush when executing a native query
+If you bootstrap Hibernate natively, and not through JPA, by default,
+the `Session` API will trigger a flush automatically when executing a native query.
 
 [[flushing-auto-flush-sql-native-example]]
 .Automatic flushing on native SQL using `Session`
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/AutoFlushTest.java[tags=flushing-auto-flush-sql-native-example]
+include::{sourcedir}/HibernateAutoFlushTest.java[tags=flushing-auto-flush-sql-native-example]
 ----
 ====
 

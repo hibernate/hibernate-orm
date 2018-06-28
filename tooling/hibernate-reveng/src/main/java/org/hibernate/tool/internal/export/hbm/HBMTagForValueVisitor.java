@@ -1,4 +1,4 @@
-package org.hibernate.tool.hbm2x.visitor;
+package org.hibernate.tool.internal.export.hbm;
 
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Array;
@@ -14,6 +14,7 @@ import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PrimitiveArray;
 import org.hibernate.mapping.Set;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.tool.hbm2x.visitor.DefaultValueVisitor;
 
 public class HBMTagForValueVisitor extends DefaultValueVisitor {
 

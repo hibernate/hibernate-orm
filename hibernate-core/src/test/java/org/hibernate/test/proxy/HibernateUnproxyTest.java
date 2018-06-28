@@ -8,7 +8,11 @@ package org.hibernate.test.proxy;
 
 import org.hibernate.Hibernate;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.proxy.HibernateProxy;
+
 import org.jboss.logging.Logger;
+
+import org.junit.Assert;
 import org.junit.Test;
 
 import javax.persistence.*;
@@ -22,8 +26,45 @@ public class HibernateUnproxyTest extends BaseEntityManagerFunctionalTestCase {
 
     @Override
     protected Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{Parent.class, Child.class};
+        return new Class<?>[]{Parent.class, Child.class, SubChild.class};
     }
+
+    @Test
+    public void testInitializedProxySubChildCanBeUnproxied() {
+        Parent u = new Parent();
+        SubChild c = new SubChild();
+        u.setChild(c);
+        doInJPA(this::entityManagerFactory, (entityManager -> {
+            entityManager.persist(u);
+        }));
+        doInJPA(this::entityManagerFactory, (entityManager -> {
+            Parent parent = entityManager.find(Parent.class, u.getId());
+            SubChild unproxiedChild = initializeAndUnproxy(getUser(parent));
+            assertEquals(SubChild.class, unproxiedChild.getClass());
+        }));
+    }
+
+
+    public <U extends Child> U getUser(Parent p) {
+        return (U) p.getChild();
+    }
+
+    public <T> T initializeAndUnproxy(T entity) {
+        if (entity == null) {
+            throw new NullPointerException("Entity passed for initialization is null!");
+        }
+
+        if (!Hibernate.isInitialized(entity)) {
+            Hibernate.initialize(entity);
+            if (entity instanceof HibernateProxy) {
+                entity = (T) ((HibernateProxy) entity).getHibernateLazyInitializer().getImplementation();
+            } else {
+                Assert.fail();
+            }
+        }
+        return entity;
+    }
+
 
     @Test
     public void testInitializedProxyCanBeUnproxied() {
@@ -153,5 +194,10 @@ public class HibernateUnproxyTest extends BaseEntityManagerFunctionalTestCase {
         public Parent getParent() {
             return parent;
         }
+    }
+
+    @Entity(name = "SubChild")
+    public static class SubChild extends Child {
+
     }
 }

@@ -4,13 +4,18 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.criteria.hhh12685;
+package org.hibernate.jpa.test.criteria;
+
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
@@ -26,15 +31,12 @@ import javax.persistence.criteria.Root;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.type.StringType;
-
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.type.StringType;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertFalse;
+public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunctionalTestCase {
 
-public class CriteriaQueryIsBoundManualParameterTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {
@@ -57,6 +59,27 @@ public class CriteriaQueryIsBoundManualParameterTest extends BaseEntityManagerFu
 			Parameter<?> dynamicParameter = criteriaQuery.getParameter( "name" );
 			boolean bound = criteriaQuery.isBound( dynamicParameter );
 			assertFalse( bound );
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12685")
+	public void testCriteriaQueryGetParameters() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+			CriteriaQuery<Item> query = builder.createQuery( Item.class );
+			Root<Item> root = query.from( Item.class );
+			ParameterExpression<String> parameter = builder.parameter( String.class, "name" );
+			Predicate predicate = builder.equal( root.get( "name" ), parameter );
+			query.where( predicate );
+
+			TypedQuery<Item> criteriaQuery = entityManager.createQuery( query );
+
+			Set<Parameter<?>> parameters = criteriaQuery.getParameters();
+			assertEquals( 1, parameters.size() );
+
+			Parameter<?> dynamicParameter = parameters.iterator().next();
+			assertEquals( "name", dynamicParameter.getName() );
 		} );
 	}
 
@@ -94,7 +117,7 @@ public class CriteriaQueryIsBoundManualParameterTest extends BaseEntityManagerFu
 	public void testSetParameterPassingTypeNotFails() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-			CriteriaQuery query = builder.createQuery( Item.class );
+			CriteriaQuery<Item> query = builder.createQuery( Item.class );
 
 			Predicate predicate = builder.equal(
 					query.from( Item.class ).get( "name" ),
@@ -102,7 +125,7 @@ public class CriteriaQueryIsBoundManualParameterTest extends BaseEntityManagerFu
 			);
 			query.where( predicate );
 
-			QueryImplementor criteriaQuery = (QueryImplementor) entityManager.createQuery( query );
+			QueryImplementor<?> criteriaQuery = (QueryImplementor<?>) entityManager.createQuery( query );
 
 			criteriaQuery.setParameter( "name", "2", StringType.INSTANCE ).list();
 		} );
@@ -112,7 +135,7 @@ public class CriteriaQueryIsBoundManualParameterTest extends BaseEntityManagerFu
 	public void testSetParameterTypeInstantNotFails() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-			CriteriaQuery query = builder.createQuery( Bid.class );
+			CriteriaQuery<Bid> query = builder.createQuery( Bid.class );
 
 			Predicate predicate = builder.equal(
 					query.from( Bid.class ).get( "placedAt" ),
@@ -120,7 +143,7 @@ public class CriteriaQueryIsBoundManualParameterTest extends BaseEntityManagerFu
 			);
 			query.where( predicate );
 
-			QueryImplementor criteriaQuery = (QueryImplementor) entityManager.createQuery( query );
+			QueryImplementor<?> criteriaQuery = (QueryImplementor<?>) entityManager.createQuery( query );
 
 			criteriaQuery.setParameter( "placedAt", Instant.now(), TemporalType.TIMESTAMP ).list();
 		} );
@@ -130,7 +153,7 @@ public class CriteriaQueryIsBoundManualParameterTest extends BaseEntityManagerFu
 	public void testSetParameterOfTypeInstantToAFloatParameterType() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-			CriteriaQuery query = builder.createQuery( Bid.class );
+			CriteriaQuery<Bid> query = builder.createQuery( Bid.class );
 
 			Predicate predicate = builder.equal(
 					query.from( Bid.class ).get( "amount" ),
@@ -138,7 +161,7 @@ public class CriteriaQueryIsBoundManualParameterTest extends BaseEntityManagerFu
 			);
 			query.where( predicate );
 
-			QueryImplementor criteriaQuery = (QueryImplementor) entityManager.createQuery( query );
+			QueryImplementor<?> criteriaQuery = (QueryImplementor<?>) entityManager.createQuery( query );
 
 			criteriaQuery.setParameter( "placedAt", Instant.now(), TemporalType.TIMESTAMP ).list();
 		} );
@@ -149,7 +172,7 @@ public class CriteriaQueryIsBoundManualParameterTest extends BaseEntityManagerFu
 	public void testSetParameterOfTypeDateToAFloatParameterType() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-			CriteriaQuery query = builder.createQuery( Bid.class );
+			CriteriaQuery<Bid> query = builder.createQuery( Bid.class );
 
 			Predicate predicate = builder.equal(
 					query.from( Bid.class ).get( "amount" ),
@@ -157,7 +180,7 @@ public class CriteriaQueryIsBoundManualParameterTest extends BaseEntityManagerFu
 			);
 			query.where( predicate );
 
-			QueryImplementor criteriaQuery = (QueryImplementor) entityManager.createQuery( query );
+			QueryImplementor<?> criteriaQuery = (QueryImplementor<?>) entityManager.createQuery( query );
 
 			criteriaQuery.setParameter( "placedAt", Date.from(Instant.now()), TemporalType.DATE ).list();
 		} );

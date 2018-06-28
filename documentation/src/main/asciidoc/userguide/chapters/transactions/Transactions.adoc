@@ -189,7 +189,7 @@ For backwards compatibility, if this configuration parameter is not set but a `o
 === Transactional patterns (and anti-patterns)
 
 [[session-per-operation]]
-=== Session-per-operation anti-pattern
+==== Session-per-operation anti-pattern
 
 This is an anti-pattern of opening and closing a `Session` for each database call in a single thread.
 It is also an anti-pattern in terms of database transactions.
@@ -208,7 +208,7 @@ It is as if your application called commit after each and every JDBC call.
 ====
 
 [[session-per-request]]
-=== Session-per-request pattern
+==== Session-per-request pattern
 
 This is the most common transaction pattern.
 The term request here relates to the concept of a system that reacts to a series of requests from a client/user.
@@ -245,7 +245,7 @@ Release the underlying database cursor by calling `ScrollableResults#close()` or
 ====
 
 [[long-conversations]]
-=== Conversations
+==== Conversations (application-level transactions)
 
 The session-per-request pattern is not the only valid way of designing units of work.
 Many business processes require a whole series of interactions with the user that are interleaved with database accesses.
@@ -291,7 +291,7 @@ Automatic versioning is used to isolate concurrent modifications and the `Sessio
 Session-per-request-with-detached-objects and session-per-conversation each have advantages and disadvantages.
 
 [[session-per-application]]
-=== Session-per-application
+==== Session-per-application anti-pattern
 
 The _session-per-application_ is also considered an anti-pattern.
 The Hibernate `Session`, like the JPA `EntityManager`, is not a thread-safe object and it is intended to be confined to a single thread at once.

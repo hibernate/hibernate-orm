@@ -244,7 +244,7 @@ include::{sourcedir-mapping}/identifier/NaiveEqualsHashCodeEntityTest.java[tag=e
 
 It turns out that this still breaks when adding transient instance of `Book` to a set as we saw in the last example:
 
-[[entity-pojo-naive-equals-hashcode-example]]
+[[entity-pojo-naive-equals-hashcode-persist-example]]
 .Auto-generated identifiers with Sets and naive equals/hashCode
 ====
 [source,java]

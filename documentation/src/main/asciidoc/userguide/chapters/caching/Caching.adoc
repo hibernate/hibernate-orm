@@ -157,7 +157,7 @@ Nevertheless, the reasons why we advise you to have all entities belonging to an
 - from a performance perspective, adding an additional check on a per entity type level slows the bootstrap process.
 - providing different caching semantics for subclasses would violate the https://en.wikipedia.org/wiki/Liskov_substitution_principle[Liskov substitution principle].
 
-[[caching-query]]
+[[caching-entity]]
 === Entity cache
 
 [[caching-entity-mapping-example]]
@@ -363,7 +363,7 @@ include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-query-region-store-m
 ----
 ====
 
-[[caching-query-region-native-example]]
+[[caching-query-region-store-mode-native-example]]
 .Using custom query cache mode with Hibernate native API
 ====
 [source, JAVA, indent=0]

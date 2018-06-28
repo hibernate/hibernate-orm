@@ -989,7 +989,7 @@ The property name defines the role (e.g. `allowed`) and the entity class name (e
 `*hibernate.jacc_context_id*`::
 A String identifying the policy context whose PolicyConfiguration interface is to be returned. The value passed to this parameter must not be null.
 
-[[configurations-misc]]
+[[configurations-classloader]]
 === ClassLoaders properties
 
 `*hibernate.classLoaders*`::

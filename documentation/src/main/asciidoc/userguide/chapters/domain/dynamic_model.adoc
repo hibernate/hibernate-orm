@@ -44,7 +44,7 @@ include::{sourcedir}/DynamicEntityTest.java[tag=mapping-model-dynamic-setting-ex
 When you are going to save the following `Book` dynamic entity,
 Hibernate is going to generate the following SQL statement:
 
-[[mapping-model-dynamic-setting-example]]
+[[mapping-model-dynamic-persist-example]]
 .Persist dynamic entity
 ====
 [source,java]

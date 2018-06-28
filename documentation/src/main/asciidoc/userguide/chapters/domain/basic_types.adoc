@@ -1952,7 +1952,7 @@ include::{extrasdir}/basic/mapping-filter-join-table-persistence-example.sql[]
 The collections can be filtered if the associated filter is enabled on the currently running Hibernate `Session`.
 This way, when fetching the `accounts` collections, Hibernate is going to apply the `@FilterJoinTable` clause filtering criteria to the associated collection entries.
 
-[[mapping-filter-collection-query-example]]
+[[mapping-filter-join-table-collection-query-example]]
 .Traversing collections mapped with `@FilterJoinTable`
 ====
 [source, JAVA, indent=0]

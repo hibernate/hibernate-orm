@@ -164,7 +164,7 @@ In terms of execution, JPA `Query` offers 2 different methods for retrieving a r
 * `Query#getResultList()` - executes the select query and returns back the list of results.
 * `Query#getSingleResult()` - executes the select query and returns a single result. If there were more than one result an exception is thrown.
 
-[[hql-api-list-example]]
+[[jpql-api-list-example]]
 .JPA `getResultList()` result
 ====
 [source, JAVA, indent=0]
@@ -173,7 +173,7 @@ include::{sourcedir}/HQLTest.java[tags=jpql-api-list-example]
 ----
 ====
 
-[[hql-api-unique-result-example]]
+[[jpql-api-unique-result-example]]
 .JPA `getSingleResult()`
 ====
 [source, JAVA, indent=0]

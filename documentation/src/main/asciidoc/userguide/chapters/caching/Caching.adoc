@@ -176,7 +176,7 @@ Should Hibernate load the `CreditCardPayment` from the cache as indicated by the
 Because of all these intricacies, Hibernate only considers the base class `@Cacheable` and `@Cache` definition.
 ====
 
-[[caching-query]]
+[[caching-entity]]
 === Entity cache
 
 [[caching-entity-mapping-example]]
@@ -382,7 +382,7 @@ include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-query-region-store-m
 ----
 ====
 
-[[caching-query-region-native-example]]
+[[caching-query-region-store-mode-native-example]]
 .Using custom query cache mode with Hibernate native API
 ====
 [source, JAVA, indent=0]

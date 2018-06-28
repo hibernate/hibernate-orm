@@ -58,6 +58,9 @@ public class CharacterTypeDescriptor extends AbstractTypeDescriptor<Character> {
 		}
 		if ( String.class.isInstance( value ) ) {
 			final String str = (String) value;
+			if(str.length()==0){
+				return null;
+			}
 			return str.charAt( 0 );
 		}
 		if ( Number.class.isInstance( value ) ) {

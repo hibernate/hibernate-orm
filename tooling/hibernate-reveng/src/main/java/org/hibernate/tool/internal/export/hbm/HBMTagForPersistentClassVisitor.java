@@ -2,7 +2,7 @@
  * Created on 07-Dec-2004
  *
  */
-package org.hibernate.tool.hbm2x.visitor;
+package org.hibernate.tool.internal.export.hbm;
 
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.PersistentClassVisitor;

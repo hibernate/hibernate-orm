@@ -121,6 +121,11 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-get-reference-native-ex
 The above works on the assumption that the entity is defined to allow lazy loading, generally through use of runtime proxies.
 In both cases an exception will be thrown later if the given entity does not refer to actual database state when the application attempts to use the returned proxy in any way that requires access to its data.
 
+[IMPORTANT]
+====
+Unless the entity class is declared `final`, the proxy extends the entity class. If the entity class is `final`, the Proxy will implement an interface instead. See the <<chapters/domain/entity.adoc#entity-proxy, `@Proxy` mapping>> section for more info.
+====
+
 [[pc-find]]
 === Obtain an entity with its data initialized
 

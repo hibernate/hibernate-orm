@@ -66,10 +66,10 @@ If enabled, Hibernate will operate in the JPA specified way, throwing exceptions
 The JPA spec says that a `javax.persistence.EntityNotFoundException` should be thrown when accessing an entity Proxy
 which does not have an associated table row in the database.
 +
-Traditionally, Hibernate does not initialize an entity Proxy when accessing its identifier since we already know the identifier value,
+Traditionally, Hibernate does not initialize an entity proxy when accessing its identifier since we already know the identifier value,
 hence we can save a database roundtrip.
 +
-If enabled Hibernate will initialize the entity Proxy even when accessing its identifier.
+If enabled Hibernate will initialize the entity proxy even when accessing its identifier.
 
 `*hibernate.jpa.compliance.global_id_generators*` (e.g. `true` or `false` (default value) )::
 The JPA spec says that the scope of TableGenerator and SequenceGenerator names is global to the persistence unit (across all generator types).

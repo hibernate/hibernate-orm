@@ -361,7 +361,7 @@ By default, when it needs to use a proxy instead of the actual Pojo, Hibernate i
 http://jboss-javassist.github.io/javassist/[Javassist] or
 http://bytebuddy.net/[Byte Buddy].
 
-However, if the entity class is final, Javassist will not create a Proxy and you will get a Pojo even when you only need a Proxy reference.
+However, if the entity class is final, Javassist will not create a proxy and you will get a Pojo even when you only need a proxy reference.
 In this case, you could proxy an interface that this particular entity implements, as illustrated by the following example.
 
 [[entity-proxy-interface-mapping]]
@@ -374,7 +374,7 @@ include::{sourcedir-proxy}/ProxyInterfaceTest.java[tag=entity-proxy-interface-ma
 ====
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Proxy.html[`@Proxy`]
-annotation is used to specify a custom Proxy implementation for the current annotated entity.
+annotation is used to specify a custom proxy implementation for the current annotated entity.
 
 When loading the `Book` entity proxy, Hibernate is going to proxy the `Identifiable` interface instead as illustrated by the following example:
 
@@ -392,7 +392,7 @@ include::{extrasdir}/entity/entity-proxy-persist-mapping.sql[]
 ----
 ====
 
-As you can see in the associated SQL snippet, Hibernate issues no SQL SELECT query since the Proxy can be
+As you can see in the associated SQL snippet, Hibernate issues no SQL SELECT query since the proxy can be
 constructed without needing to fetch the actual entity Pojo.
 
 [[entity-tuplizer]]

@@ -1,6 +1,6 @@
 CREATE TABLE Product (
-  id INTEGER NOT NULL
-  image clob
-  name VARCHAR(255)
-  PRIMARY KEY ( id )
+  id INTEGER NOT NULL,
+  name VARCHAR(255),
+  warranty CLOB,
+  PRIMARY KEY (id)
 )

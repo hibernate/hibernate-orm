@@ -25,79 +25,80 @@ import static org.junit.Assert.assertArrayEquals;
  * @author Vlad Mihalcea
  */
 @SkipForDialect(
-		value = {
-				PostgreSQL81Dialect.class,
-				MySQL5Dialect.class
-		},
-		comment = "@see https://hibernate.atlassian.net/browse/HHH-10693 and https://hibernate.atlassian.net/browse/HHH-10695"
+        value = {
+                PostgreSQL81Dialect.class,
+                MySQL5Dialect.class
+        },
+        comment = "@see https://hibernate.atlassian.net/browse/HHH-10693 and https://hibernate.atlassian.net/browse/HHH-10695"
 )
 public class NClobCharArrayTest extends BaseEntityManagerFunctionalTestCase {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Product.class
-		};
-	}
+    @Override
+    protected Class<?>[] getAnnotatedClasses() {
+        return new Class<?>[] {
+            Product.class
+        };
+    }
 
-	@Test
-	public void test() {
-		Integer productId = doInJPA( this::entityManagerFactory, entityManager -> {
-			final Product product = new Product( );
-			product.setId( 1 );
-			product.setName( "Mobile phone" );
-			product.setWarranty( "My product warranty".toCharArray() );
+    @Test
+    public void test() {
+        Integer productId = doInJPA( this::entityManagerFactory, entityManager -> {
+            final Product product = new Product( );
+            product.setId( 1 );
+            product.setName( "Mobile phone" );
+            product.setWarranty( "My product warranty".toCharArray() );
 
-			entityManager.persist( product );
-			return product.getId();
-		} );
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Product product = entityManager.find( Product.class, productId );
-			assertArrayEquals( "My product warranty".toCharArray(), product.getWarranty() );
-		} );
-	}
+            entityManager.persist( product );
+            return product.getId();
+        } );
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            Product product = entityManager.find( Product.class, productId );
 
-	//tag::basic-nclob-char-array-example[]
-	@Entity(name = "Product")
-	public static class Product {
+            assertArrayEquals( "My product warranty".toCharArray(), product.getWarranty() );
+        } );
+    }
 
-		@Id
-		private Integer id;
+    //tag::basic-nclob-char-array-example[]
+    @Entity(name = "Product")
+    public static class Product {
 
-		private String name;
+        @Id
+        private Integer id;
 
-		@Lob
-		@Nationalized
-		private char[] warranty;
+        private String name;
 
-		//Getters and setters are omitted for brevity
+        @Lob
+        @Nationalized
+        private char[] warranty;
 
-	//end::basic-nclob-char-array-example[]
-		public Integer getId() {
-			return id;
-		}
+        //Getters and setters are omitted for brevity
 
-		public void setId(Integer id) {
-			this.id = id;
-		}
+    //end::basic-nclob-char-array-example[]
+        public Integer getId() {
+            return id;
+        }
 
-		public String getName() {
-			return name;
-		}
+        public void setId(Integer id) {
+            this.id = id;
+        }
 
-		public void setName(String name) {
-			this.name = name;
-		}
+        public String getName() {
+            return name;
+        }
 
-		public char[] getWarranty() {
-			return warranty;
-		}
+        public void setName(String name) {
+            this.name = name;
+        }
 
-		public void setWarranty(char[] warranty) {
-			this.warranty = warranty;
-		}
+        public char[] getWarranty() {
+            return warranty;
+        }
 
-		//tag::basic-nclob-char-array-example[]
-	}
-	//end::basic-nclob-char-array-example[]
+        public void setWarranty(char[] warranty) {
+            this.warranty = warranty;
+        }
+
+        //tag::basic-nclob-char-array-example[]
+    }
+    //end::basic-nclob-char-array-example[]
 }

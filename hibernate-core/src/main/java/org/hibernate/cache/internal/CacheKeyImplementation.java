@@ -55,6 +55,7 @@ final class CacheKeyImplementation implements Serializable {
 
 	private int calculateHashCode(Type type, SessionFactoryImplementor factory) {
 		int result = type.getHashCode( id, factory );
+		result = 31 * result + entityOrRoleName.hashCode();
 		result = 31 * result + (tenantId != null ? tenantId.hashCode() : 0);
 		return result;
 	}

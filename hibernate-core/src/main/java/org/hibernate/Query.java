@@ -92,7 +92,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @see #setFirstResult(int)
 	 * @see #setHibernateFirstResult(int)
 	 *
-	 * @deprecated {@link #setFirstResult(int)} should be used instead.
+	 * @deprecated {@link #getFirstResult()} should be used instead.
 	 */
 	@Deprecated
 	default Integer getHibernateFirstResult() {
@@ -132,10 +132,10 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return the maximum number of query results, or {@code null} if uninitialized.
 	 *
-	 * @see #setFirstResult(int)
-	 * @see #setHibernateFirstResult(int)
+	 * @see #setMaxResults(int) (int)
+	 * @see #setHibernateMaxResults(int) (int)
 	 *
-	 * @deprecated {@link #setFirstResult(int)} should be used instead.
+	 * @deprecated {@link #setMaxResults(int)} should be used instead.
 	 */
 	@Deprecated
 	default Integer getHibernateMaxResults() {

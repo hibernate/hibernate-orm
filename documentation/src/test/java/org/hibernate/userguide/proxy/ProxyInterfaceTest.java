@@ -47,11 +47,11 @@ public class ProxyInterfaceTest extends BaseCoreFunctionalTestCase {
 
 			assertTrue(
 				"Loaded entity is not an instance of the proxy interface",
-				Identifiable.class.isInstance( book )
+				book instanceof Identifiable
 			);
 			assertFalse(
 				"Proxy class was not created",
-				Book.class.isInstance( book )
+				book instanceof Book
 			);
 		} );
 		//end::entity-proxy-persist-mapping[]

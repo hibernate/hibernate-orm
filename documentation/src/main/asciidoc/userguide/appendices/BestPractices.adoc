@@ -40,7 +40,7 @@ log4j.logger.org.hibernate.type.descriptor.sql=trace
 ----
 
 However, there are some other alternatives like using datasource-proxy or p6spy.
-The advantage of using a JDBC `Driver` or `DataSource` Proxy is that you can go beyond simple SQL logging:
+The advantage of using a JDBC `Driver` or `DataSource` proxy is that you can go beyond simple SQL logging:
 
 - statement execution time
 - JDBC batching logging

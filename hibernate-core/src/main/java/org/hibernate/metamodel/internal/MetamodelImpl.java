@@ -111,6 +111,8 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 	private final TypeConfiguration typeConfiguration;
 
+	private final transient Map<String, String[]> implementorsCache = new ConcurrentHashMap<>();
+
 	public MetamodelImpl(SessionFactoryImplementor sessionFactory, TypeConfiguration typeConfiguration) {
 		this.sessionFactory = sessionFactory;
 		this.typeConfiguration = typeConfiguration;
@@ -623,12 +625,20 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	 */
 	public String[] getImplementors(String className) throws MappingException {
 
+		if (implementorsCache.containsKey(className)) {
+			return implementorsCache.get(className);
+		}
+
 		final Class clazz;
+		String[] implementors;
+
 		try {
 			clazz = getSessionFactory().getServiceRegistry().getService( ClassLoaderService.class ).classForName( className );
 		}
 		catch (ClassLoadingException e) {
-			return new String[] { className }; //for a dynamic-class
+			implementors = return new String[] { className }; //for a dynamic-class
+			implementorsCache.put(className, implementors);
+			return implementors;
 		}
 
 		ArrayList<String> results = new ArrayList<>();
@@ -641,7 +651,9 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 			final boolean isMappedClass = className.equals( checkQueryableEntityName );
 			if ( checkQueryable.isExplicitPolymorphism() ) {
 				if ( isMappedClass ) {
-					return new String[] { className }; //NOTE EARLY EXIT
+					implementors =  new String[] {className}; //NOTE EARLY EXIT
+					implementorsCache.put(className, implementors);
+					return implementors;
 				}
 			}
 			else {
@@ -666,7 +678,9 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 				}
 			}
 		}
-		return results.toArray( new String[results.size()] );
+		implementors = (String[]) results.toArray( new String[results.size()] );
+		implementorsCache.put(className, implementors);
+		return implementors;
 	}
 
 	@Override

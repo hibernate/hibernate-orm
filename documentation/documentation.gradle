@@ -65,6 +65,7 @@ dependencies {
 	testRuntime( libraries.hana )
 
 	testCompile( project( ':hibernate-jcache' ) )
+	testCompile( project( ':hibernate-ehcache' ) )
 	testRuntime( libraries.ehcache3 )
 }
 

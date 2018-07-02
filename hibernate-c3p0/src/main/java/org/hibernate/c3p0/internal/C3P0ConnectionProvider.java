@@ -70,7 +70,7 @@ public class C3P0ConnectionProvider
 	@SuppressWarnings("UnnecessaryUnboxing")
 	public Connection getConnection() throws SQLException {
 		final Connection c = ds.getConnection();
-		if ( isolation != null ) {
+		if ( isolation != null && !isolation.equals( c.getTransactionIsolation() ) ) {
 			c.setTransactionIsolation( isolation.intValue() );
 		}
 		if ( c.getAutoCommit() != autocommit ) {

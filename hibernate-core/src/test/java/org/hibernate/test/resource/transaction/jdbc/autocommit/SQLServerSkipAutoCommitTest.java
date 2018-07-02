@@ -10,11 +10,10 @@ import javax.sql.DataSource;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.test.util.ReflectionUtil;
+import org.hibernate.testing.util.ReflectionUtil;
 
 /**
  * @author Vlad Mihalcea

@@ -15,7 +15,7 @@ import org.hibernate.dialect.MySQL8Dialect;
 import org.hibernate.dialect.MySQLDialect;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.test.util.ReflectionUtil;
+import org.hibernate.testing.util.ReflectionUtil;
 
 
 /**

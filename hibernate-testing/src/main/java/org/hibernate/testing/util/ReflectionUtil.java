@@ -1,4 +1,4 @@
-package org.hibernate.test.util;
+package org.hibernate.testing.util;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -24,6 +24,10 @@ public class ReflectionUtil {
 			return field;
 		}
 		catch ( NoSuchFieldException e ) {
+			Class superClass = clazz.getSuperclass();
+			if ( !clazz.equals( superClass ) ) {
+				return getField( superClass, name );
+			}
 			throw new IllegalArgumentException( "Class " + clazz + " does not contain a " + name + " field", e);
 		}
 	}

@@ -28,7 +28,7 @@ import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.util.jdbc.SQLStatementInterceptor;
+import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.junit.Before;
 import org.junit.Test;
 

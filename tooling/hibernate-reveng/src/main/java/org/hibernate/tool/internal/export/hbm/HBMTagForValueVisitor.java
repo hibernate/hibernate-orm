@@ -14,7 +14,7 @@ import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PrimitiveArray;
 import org.hibernate.mapping.Set;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.tool.hbm2x.visitor.DefaultValueVisitor;
+import org.hibernate.tool.internal.export.common.DefaultValueVisitor;
 
 public class HBMTagForValueVisitor extends DefaultValueVisitor {
 

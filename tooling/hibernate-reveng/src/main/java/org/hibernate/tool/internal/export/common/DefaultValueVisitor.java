@@ -1,4 +1,4 @@
-package org.hibernate.tool.hbm2x.visitor;
+package org.hibernate.tool.internal.export.common;
 
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Array;

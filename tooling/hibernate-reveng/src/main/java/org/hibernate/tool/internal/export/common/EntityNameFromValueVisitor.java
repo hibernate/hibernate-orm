@@ -14,7 +14,6 @@ import org.hibernate.mapping.PrimitiveArray;
 import org.hibernate.mapping.Set;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
-import org.hibernate.tool.hbm2x.visitor.DefaultValueVisitor;
 
 public class EntityNameFromValueVisitor extends DefaultValueVisitor {
 

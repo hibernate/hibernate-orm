@@ -16,7 +16,6 @@ import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
 import org.apache.tools.ant.types.FileSet;
-import org.hibernate.tool.hbm2x.ExporterException;
 import org.hibernate.tool.ide.formatting.JavaFormatter;
 
 public class JavaFormatterTask extends Task {
@@ -83,7 +82,7 @@ public class JavaFormatterTask extends Task {
 					} else {
 						getProject().log(this, "Formatted " + file, Project.MSG_VERBOSE);
 					}
-				} catch(ExporterException ee) {
+				} catch(RuntimeException ee) {
 					failed++;
 					if(failOnError) {
 						throw new BuildException("Java formatting failed on " + file, ee);

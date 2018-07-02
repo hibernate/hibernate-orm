@@ -13,7 +13,6 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.text.edits.TextEdit;
-import org.hibernate.tool.hbm2x.ExporterException;
 
 
 public class JavaFormatter {
@@ -40,7 +39,7 @@ public class JavaFormatter {
 	 * @param codeFormatter
 	 * @return
 	 */
-	public boolean formatFile(File file) throws ExporterException {
+	public boolean formatFile(File file) {
 		IDocument doc = new Document();
 		try {
 			String contents = new String(org.eclipse.jdt.internal.compiler.util.Util.getFileCharContent(file, null));
@@ -65,10 +64,8 @@ public class JavaFormatter {
 				}
 			}
 			return true;
-		} catch (IOException e) {
-			throw new ExporterException("Could not format " + file, e);
-		} catch (BadLocationException e) {			
-			throw new ExporterException("Could not format " + file, e);
+		} catch (IOException | BadLocationException e) {
+			throw new RuntimeException("Could not format " + file, e);
 		}
 	}
 

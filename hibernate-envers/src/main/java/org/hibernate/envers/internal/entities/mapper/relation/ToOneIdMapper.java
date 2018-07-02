@@ -8,6 +8,7 @@ package org.hibernate.envers.internal.entities.mapper.relation;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
@@ -17,7 +18,6 @@ import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.EntityTools;
 import org.hibernate.envers.internal.tools.query.Parameters;
-import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -113,7 +113,7 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 			resolvedOldObjectId = EntityTools.getIdentifier( session, referencedEntityName, oldObj );
 		}
 
-		return !EqualsHelper.areEqual( resolvedNewObjectId, resolvedOldObjectId );
+		return !Objects.deepEquals( resolvedNewObjectId, resolvedOldObjectId );
 	}
 
 	@Override

@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.persistence.PersistenceException;
@@ -43,7 +44,6 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -108,7 +108,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 			final DomainDataRegion region = getRegionFactory().buildDomainDataRegion( regionConfig, this );
 			regionsByName.put( region.getName(), region );
 
-			if ( !StringTypeDescriptor.INSTANCE.areEqual( region.getName(), regionConfig.getRegionName() ) ) {
+			if ( ! Objects.equals( region.getName(), regionConfig.getRegionName() ) ) {
 				throw new HibernateException(
 						String.format(
 								Locale.ROOT,

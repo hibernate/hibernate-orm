@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.hibernate.collection.spi.PersistentCollection;
@@ -29,7 +30,6 @@ import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeD
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.ReflectionTools;
-import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.property.access.spi.Setter;
 
@@ -167,7 +167,7 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 		if ( propertyData.isUsingModifiedFlag() ) {
 			if ( isNotPersistentCollection( newObj ) || isNotPersistentCollection( oldObj ) ) {
 				// Compare POJOs.
-				data.put( propertyData.getModifiedFlagPropertyName(), !EqualsHelper.areEqual( newObj, oldObj ) );
+				data.put( propertyData.getModifiedFlagPropertyName(), !Objects.deepEquals( newObj, oldObj ) );
 			}
 			else if ( isFromNullToEmptyOrFromEmptyToNull( (PersistentCollection) newObj, (Serializable) oldObj ) ) {
 				data.put( propertyData.getModifiedFlagPropertyName(), true );

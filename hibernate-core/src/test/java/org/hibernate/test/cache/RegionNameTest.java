@@ -21,7 +21,6 @@ import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.CacheImplementor;
-import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.stat.NaturalIdCacheStatistics;
 import org.hibernate.stat.SecondLevelCacheStatistics;
@@ -149,7 +148,7 @@ public class RegionNameTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		boolean foundRegion = false;
 		for ( String name : cache.getSecondLevelCacheRegionNames() ) {
-			if ( EqualsHelper.areEqual( name, regionName ) ) {
+			if ( regionName.equals( name ) ) {
 				foundRegion = true;
 				break;
 			}

@@ -15,9 +15,7 @@ import javassist.CtClass;
 import javassist.CtField;
 import javassist.NotFoundException;
 
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
-import org.hibernate.internal.util.compare.EqualsHelper;
 
 /**
  * utility class to generate interceptor methods
@@ -66,8 +64,7 @@ public abstract class AttributeTypeDescriptor {
 				}
 				builder.append(
 						String.format(
-								"  if ( !%s.areEqual( %s, $1 ) )",
-								EqualsHelper.class.getName(),
+								"  if ( !Objects.deepEquals( %s, $1 ) )",
 								readFragment
 						)
 				);

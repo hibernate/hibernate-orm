@@ -7,12 +7,12 @@
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
 import java.util.Collection;
+import java.util.Objects;
 import javax.persistence.Embedded;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Id;
 
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
-import org.hibernate.internal.util.compare.EqualsHelper;
 
 import net.bytebuddy.ClassFileVersion;
 import net.bytebuddy.asm.Advice;
@@ -125,8 +125,8 @@ class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppender {
 		else {
 			methodVisitor.visitMethodInsn(
 					Opcodes.INVOKESTATIC,
-					Type.getInternalName( EqualsHelper.class ),
-					"areEqual",
+					Type.getInternalName( Objects.class ),
+					"deepEquals",
 					Type.getMethodDescriptor( Type.getType( boolean.class ), Type.getType( Object.class ), Type.getType( Object.class ) ),
 					false
 			);

@@ -23,15 +23,15 @@
         <container qualifier="container.active-1" mode="suite" default="true">
             <configuration>
                 <property name="jbossHome">${wildFlyInstallDir}</property>
+                <!-- For Remote debugging of Wildfly add the following line to the 'javaVmArguments' section below: -->
+                <!-- -Xrunjdwp:transport=dt_socket,address=5005,server=y,suspend=y-->
+                <!-- DO NOT add comments within the property section below as the Arquillian parser can't deal with it -->
+                <!-- The port offset is defined to avoid classhing with NVidia drivers on Windows -->
                 <property name="javaVmArguments">
+                    -Dee8.preview.mode=true
                     -Djava.net.preferIPv4Stack=true
                     -Djgroups.bind_addr=127.0.0.1
                     -Djboss.socket.binding.port-offset=137
-                    -Dee8.preview.mode=true
-                    <!-- Uncomment for Remote debugging Wildfly -->
-                    <!--
-                    -Xrunjdwp:transport=dt_socket,address=5005,server=y,suspend=y
-                    -->
                 </property>
             </configuration>
         </container>

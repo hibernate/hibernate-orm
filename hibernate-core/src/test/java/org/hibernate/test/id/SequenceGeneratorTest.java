@@ -19,7 +19,7 @@ import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.util.jdbc.SQLStatementInterceptor;
+import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;

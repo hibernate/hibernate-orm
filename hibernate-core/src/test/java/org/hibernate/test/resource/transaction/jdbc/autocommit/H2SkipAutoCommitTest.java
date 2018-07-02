@@ -13,7 +13,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.test.util.ReflectionUtil;
+import org.hibernate.testing.util.ReflectionUtil;
 
 /**
  * @author Vlad Mihalcea

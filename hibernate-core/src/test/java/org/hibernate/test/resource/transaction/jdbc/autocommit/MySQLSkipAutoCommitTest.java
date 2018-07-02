@@ -14,7 +14,7 @@ import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.test.util.ReflectionUtil;
+import org.hibernate.testing.util.ReflectionUtil;
 
 
 /**

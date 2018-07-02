@@ -19,8 +19,8 @@ import org.apache.tools.ant.types.Path;
 import org.apache.tools.ant.types.PropertySet;
 import org.hibernate.boot.MappingNotFoundException;
 import org.hibernate.boot.jaxb.Origin;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.internal.util.StringUtil;
 
 /**
  * @author max
@@ -199,7 +199,7 @@ public class HibernateToolTask extends Task {
 				cause=cause.getCause();
 			}
 		}
-		if(StringHelper.isNotEmpty(ex)) {
+		if(StringUtil.isNotEmpty(ex)) {
 			log(ex, Project.MSG_ERR);
 		}
 

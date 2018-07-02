@@ -123,7 +123,7 @@ In both cases an exception will be thrown later if the given entity does not ref
 
 [IMPORTANT]
 ====
-Unless the entity class is declared `final`, the proxy extends the entity class. If the entity class is `final`, the Proxy will implement an interface instead. See the <<chapters/domain/entity.adoc#entity-proxy, `@Proxy` mapping>> section for more info.
+Unless the entity class is declared `final`, the proxy extends the entity class. If the entity class is `final`, the proxy will implement an interface instead. See the <<chapters/domain/entity.adoc#entity-proxy, `@Proxy` mapping>> section for more info.
 ====
 
 [[pc-find]]

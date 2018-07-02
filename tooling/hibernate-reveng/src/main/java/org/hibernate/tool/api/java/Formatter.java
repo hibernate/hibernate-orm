@@ -1,4 +1,4 @@
-package org.hibernate.tool.ide.formatting;
+package org.hibernate.tool.api.java;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -15,11 +15,11 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.text.edits.TextEdit;
 
 
-public class JavaFormatter {
+public class Formatter {
 
 	private CodeFormatter codeFormatter;
 
-	public JavaFormatter(Map<Object, Object> settings) {
+	public Formatter(Map<Object, Object> settings) {
 		if(settings==null) {
 			// if no settings run with jdk 5 as default 
 			settings = new HashMap<Object, Object>();

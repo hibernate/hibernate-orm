@@ -16,7 +16,7 @@ import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
 import org.apache.tools.ant.types.FileSet;
-import org.hibernate.tool.ide.formatting.JavaFormatter;
+import org.hibernate.tool.api.java.Formatter;
 
 public class JavaFormatterTask extends Task {
 	
@@ -71,7 +71,7 @@ public class JavaFormatterTask extends Task {
 	
 		if(files.length>0) {
 			
-			JavaFormatter formatter = new JavaFormatter(settings);
+			Formatter formatter = new Formatter(settings);
 			for (int i = 0; i < files.length; i++) {
 				File file = files[i];			
 				try {

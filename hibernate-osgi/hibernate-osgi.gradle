@@ -6,7 +6,7 @@
  */
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
-apply plugin: 'karaf-featuresgen'
+apply plugin: 'com.github.lburgazzoli.karaf'
 
 description = 'Support for running Hibernate O/RM in OSGi environments'
 
@@ -62,6 +62,14 @@ configurations {
 		description = 'Used in Karaf feature generation to define the Hibernate JPA dependencies'
 		transitive = false
 	}
+	hibernateEnvers {
+		description = 'Feature for easily adding Envers support to hibernate-orm'
+		transitive = false
+	}
+	hibernateInfinispan {
+		description = 'Feature for easily adding Infinispan-based caching support to hibernate-orm'
+		transitive = false
+	}
 }
 
 dependencies {
@@ -90,6 +98,8 @@ dependencies {
 	}
 
 	karafDistro "org.apache.karaf:apache-karaf:${project.karafVersion}@tar.gz"
+
+	hibernateEnvers( project( ':hibernate-envers' ) )
 }
 
 jar {
@@ -126,149 +136,29 @@ task generateVersionFile {
 	}
 }
 
-karafFeatures {
+karaf {
 	features {
-		hibernateOrm {
-			name = 'hibernate-orm'
-			description = 'Combines all Hibernate core dependencies and required modules into a single feature'
-			projects = [
-					rootProject.childProjects.'hibernate-core',
-					project
-			]
-			// According to Christian Schneider, these should not be needed
-			bundle {
-				match {
-					group = 'org.osgi'
-					module = 'org.osgi.core'
-				}
-				include = false
-			}
-			bundle {
-				match {
-					group = 'org.osgi'
-					module = 'org.osgi.compendium'
-				}
-				include = false
-			}
-			bundle {
-				match {
-					group = 'org.jboss.logging'
-					module = 'jboss-logging-annotations'
-				}
-				include = false
-			}
-			bundle {
-				match group: 'org.jboss.logging', module: 'jboss-logging-processor'
-				include = false
-			}
-			bundle {
-				match {
-					group = 'javax.persistence'
-					module = 'javax.persistence-api'
-				}
-				dependency = true
-			}
-			bundle {
-				match {
-					group = 'javax.interceptor'
-					module = 'javax.interceptor-api'
-				}
-				dependency = true
-			}
-			bundle {
-				match {
-					group = 'org.jboss.spec.javax.transaction'
-					module = 'jboss-transaction-api_1.2_spec'
-				}
-				dependency = true
-			}
-			bundle {
-				match group: 'antlr', module: 'antlr'
-				remap group: 'org.apache.servicemix.bundles', module: 'org.apache.servicemix.bundles.antlr', version: '2.7.7_5'
-			}
-			bundle {
-				match group: 'dom4j', module: 'dom4j'
-				remap group: 'org.apache.servicemix.bundles', module: 'org.apache.servicemix.bundles.dom4j', version: '1.6.1_5'
-			}
-		}
+        xsdVersion  = '1.2.0'
+        feature {
+            name        = 'hibernate-orm'
+            description = 'Combines all Hibernate core dependencies and required modules into a single feature'
+			includeProject = true
+        }
 		// NOTE : would like to include spatial as well, but we need to wait for
 		//		it to not define dependency on postgresql driver
-		hibernateEnvers {
+		feature {
 			name = 'hibernate-envers'
 			description = 'Feature for easily adding Envers support to hibernate-orm'
-			dependencyFeatureNames = ['hibernate-orm']
-			projects = [rootProject.childProjects.'hibernate-envers']
-			bundle {
-				match group: 'org.hibernate', module: 'hibernate-core'
-				include = false
-			}
-			bundle {
-				match group: 'org.hibernate', module: 'hibernate-osgi'
-				include = false
-			}
-			bundle {
-				match group: 'org.hibernate', module: 'hibernate-entitymanager'
-				include = false
-			}
-			bundle {
-				match group: 'org.jboss.logging', module: 'jboss-logging'
-				include = false
-			}
-			bundle {
-				match group: 'org.jboss.logging', module: 'jboss-logging-annotations'
-				include = false
-			}
-			bundle {
-				match group: 'org.jboss.logging', module: 'jboss-logging-processor'
-				include = false
-			}
+			includeProject = false
+			configurations 'hibernateEnvers'
+			feature 'hibernate-orm'
 		}
-		hibernateInfinispan {
+		feature {
 			name = 'hibernate-infinispan'
 			description = 'Feature for easily adding Infinispan-based caching support to hibernate-orm'
-			dependencyFeatureNames = ['hibernate-orm']
-			bundle {
-				match group: 'org.infinispan', module: 'infinispan-hibernate-cache'
-				include = true
-			}
-			bundle {
-				match group: 'org.hibernate', module: 'hibernate-core'
-				include = false
-			}
-			bundle {
-				match group: 'org.hibernate', module: 'hibernate-osgi'
-				include = false
-			}
-			bundle {
-				match group: 'org.jboss.logging', module: 'jboss-logging'
-				include = false
-			}
-			bundle {
-				match group: 'org.jboss.logging', module: 'jboss-logging-annotations'
-				include = false
-			}
-			bundle {
-				match group: 'org.jboss.logging', module: 'jboss-logging-processor'
-				include = false
-			}
-			bundle {
-				match group: 'org.jboss.spec.javax.transaction', module: 'jboss-transaction-api_1.1_spec'
-				include = false
-			}
-			bundle {
-				match {
-					group = 'org.infinispan'
-					module = 'infinispan-commons'
-				}
-				dependency = true
-			}
-			bundle {
-				match {
-					group = 'org.jgroups'
-					module = 'jgroups'
-				}
-				dependency = true
-			}
+			includeProject = false
+			configurations 'hibernateInfinispan'
+			feature 'hibernate-orm'
 		}
 	}
 }
@@ -334,7 +224,7 @@ task generatePaxExamEnvironmentFile {
 		properties.setProperty( 'org.ops4j.pax.exam.container.karaf.version', karafVersion as String )
 		properties.setProperty( 'org.ops4j.pax.exam.container.karaf.probe.classesDir', sourceSets.test.output.classesDir.absolutePath )
 		properties.setProperty( 'org.ops4j.pax.exam.container.karaf.probe.resourcesDir', sourceSets.test.output.resourcesDir.absolutePath )
-		properties.setProperty( 'org.hibernate.osgi.test.karafFeatureFile', karafFeatures.featuresXmlFile.absolutePath )
+		properties.setProperty( 'org.hibernate.osgi.test.karafFeatureFile', karaf.features.outputFile.absolutePath )
 
 		outputFile.parentFile.mkdirs()
 
@@ -348,7 +238,7 @@ task generatePaxExamEnvironmentFile {
 	}
 }
 
-tasks.test.dependsOn tasks.generateKarafFeatures
+tasks.test.dependsOn tasks.generateFeatures
 tasks.test.dependsOn tasks.jar
 tasks.test.dependsOn tasks.generateDependsFile
 tasks.test.dependsOn tasks.generatePaxExamEnvironmentFile
@@ -362,9 +252,9 @@ tasks.test.dependsOn tasks.publishToMavenLocal
 publishing {
 	publications {
 		publishedArtifacts( MavenPublication ) {
-			artifact( project.extensions.karafFeatures.featuresXmlFile ) {
+			artifact( project.extensions.karaf.features.outputFile ) {
 				classifier 'karaf'
-				builtBy generateKarafFeatures
+				builtBy generateFeatures
 			}
 		}
 	}

@@ -1,6 +1,7 @@
 package org.hibernate.test.annotations.onetomany;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Assert;
@@ -27,6 +28,7 @@ public class OneToManyNonPrimaryKeyJoin extends BaseEntityManagerFunctionalTestC
 	}
 
 	@Test
+	@FailureExpected(jiraKey = "HHH-12752")
 	public void testJoinOnNonPrimaryKey() {
 		clearStatistics();
 		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {

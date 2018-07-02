@@ -30,6 +30,7 @@ import org.hibernate.testing.TestForIssue;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * This test verifies that when a set-based {@link ElementCollection} of {@link Embeddable} objects
@@ -93,27 +94,27 @@ public class SetEqualsHashCodeTest extends BaseEnversJPAFunctionalTestCase {
 	public void testAuditRowsForValidityAuditStrategy() {
 		if ( ValidityAuditStrategy.class.getName().equals( getAuditStrategy() ) ) {
 			doInJPA( this::entityManagerFactory, entityManager -> {
-				List<Tuple> results = entityManager
-						.createNativeQuery(
+				Long results = entityManager
+						.createQuery(
 								"SELECT COUNT(1) FROM TestEntity_embs1_AUD WHERE REVEND IS NULL",
-								Tuple.class
+								Long.class
 						)
-						.getResultList();
+						.getSingleResult();
 
-				assertEquals( 1, results.size() );
-				assertEquals( BigInteger.valueOf( 3 ), results.get( 0 ).get( 0 ) );
+				assertNotNull( results );
+				assertEquals( Long.valueOf( 3 ), results );
 			} );
 
 			doInJPA( this::entityManagerFactory, entityManager -> {
-				List<Tuple> results = entityManager
-						.createNativeQuery(
+				Long results = entityManager
+						.createQuery(
 								"SELECT COUNT(1) FROM TestEntity_embs1_AUD",
-								Tuple.class
+								Long.class
 						)
-						.getResultList();
+						.getSingleResult();
 
-				assertEquals( 1, results.size() );
-				assertEquals( BigInteger.valueOf( 4 ), results.get( 0 ).get( 0 ) );
+				assertNotNull( results );
+				assertEquals( Long.valueOf( 4 ), results );
 			} );
 		}
 	}

@@ -58,10 +58,6 @@ configurations {
 		description = 'Configuration used to isolate the dependency on the Karaf distro'
 		transitive = false
 	}
-	hibernateEntityManager {
-		description = 'Used in Karaf feature generation to define the Hibernate JPA dependencies'
-		transitive = false
-	}
 	hibernateEnvers {
 		description = 'Feature for easily adding Envers support to hibernate-orm'
 		transitive = false

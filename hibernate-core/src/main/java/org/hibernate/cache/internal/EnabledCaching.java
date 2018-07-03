@@ -78,7 +78,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 		if ( getSessionFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
 			final TimestampsRegion timestampsRegion = regionFactory.buildTimestampsRegion(
-					TimestampsRegion.class.getName(),
+					RegionFactory.DEFAULT_UPDATE_TIMESTAMPS_REGION_UNQUALIFIED_NAME,
 					sessionFactory
 			);
 			timestampsCache = sessionFactory.getSessionFactoryOptions()
@@ -87,7 +87,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 			legacySecondLevelCacheNames.add( timestampsRegion.getName() );
 
 			final QueryResultsRegion queryResultsRegion = regionFactory.buildQueryResultsRegion(
-					QueryResultsRegion.class.getName(),
+					RegionFactory.DEFAULT_QUERY_RESULTS_REGION_UNQUALIFIED_NAME,
 					sessionFactory
 			);
 			regionsByName.put( queryResultsRegion.getName(), queryResultsRegion );

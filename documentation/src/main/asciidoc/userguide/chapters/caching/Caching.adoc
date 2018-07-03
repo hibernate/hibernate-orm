@@ -316,17 +316,19 @@ Just as with collection caching, the query cache should always be used in conjun
 
 This setting creates two new cache regions:
 
-`org.hibernate.cache.internal.StandardQueryCache`::
+`default-query-results-region`::
 	Holding the cached query results
-`org.hibernate.cache.spi.UpdateTimestampsCache`::
+`default-update-timestamps-region`::
 	Holding timestamps of the most recent updates to queryable tables.
 	These are used to validate the results as they are served from the query cache.
 
 [IMPORTANT]
 ====
-If you configure your underlying cache implementation to use expiration, it's very important that the timeout of the underlying cache region for the `UpdateTimestampsCache` is set to a higher value than the timeouts of any of the query caches.
+If you configure your underlying cache implementation to use expiration, it's very important
+that the timeout of the underlying cache region for the `default-update-timestamps-region`
+is set to a higher value than the timeouts of any of the query caches.
 
-In fact, we recommend that the `UpdateTimestampsCache` region is not configured for expiration (time-based) or eviction (size/memory-based) at all.
+In fact, we recommend that the `default-update-timestamps-region` region is not configured for expiration (time-based) or eviction (size/memory-based) at all.
 Note that an LRU (Least Recently Used) cache eviction policy is never appropriate for this particular cache region.
 ====
 

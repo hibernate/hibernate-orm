@@ -27,7 +27,7 @@
             <key column="category_id" not-null="true" />
             <map-key-many-to-many column="item_id" class="org.hibernate.envers.test.integration.collection.EntityMapCompositeElementTest$Item" />
             <composite-element class="org.hibernate.envers.test.integration.collection.EntityMapCompositeElementTest$Value">
-                <property name="number" column="number" />
+                <property name="numberValue" column="numberValue" />
                 <property name="text" column="text" />
             </composite-element>
         </map>

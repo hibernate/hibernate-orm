@@ -625,6 +625,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	 *     and excluding mapped subclasses/joined-subclasses of other classes in the result.
 	 * @throws MappingException
 	 */
+	@Override
 	public String[] getImplementors(String className) throws MappingException {
 		// computeIfAbsent() can be a contention point and we expect all the values to be in the map at some point so
 		// let's do an optimistic check first

@@ -80,6 +80,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( MetamodelImpl.class );
 	private static final Object ENTITY_NAME_RESOLVER_MAP_VALUE = new Object();
 	private static final String INVALID_IMPORT = "";
+	private static final String[] EMPTY_IMPLEMENTORS = new String[0];
 
 	private final SessionFactoryImplementor sessionFactory;
 
@@ -635,8 +636,13 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 		try {
 			final Class<?> clazz = getSessionFactory().getServiceRegistry().getService( ClassLoaderService.class ).classForName( className );
 			implementors = doGetImplementors( clazz );
-			implementorsCache.putIfAbsent( className, implementors );
-			return Arrays.copyOf( implementors, implementors.length );
+			if ( implementors.length > 0 ) {
+				implementorsCache.putIfAbsent( className, implementors );
+				return Arrays.copyOf( implementors, implementors.length );
+			}
+			else {
+				return EMPTY_IMPLEMENTORS;
+			}
 		}
 		catch (ClassLoadingException e) {
 			return new String[]{ className }; // we don't cache anything for dynamic classes

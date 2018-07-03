@@ -35,14 +35,14 @@ public class StorageAccessTest extends BaseUnitTestCase {
 	 */
 	@Test
 	public void testPreDefinedCachesAllowed() {
-		TestHelper.preBuildCaches();
+		TestHelper.preBuildAllCaches();
 		SessionFactoryImplementor sessionFactory = TestHelper.buildStandardSessionFactory();
 		sessionFactory.close();
 	}
 
 	@Test
 	public void testBasicStorageAccessUse() {
-		TestHelper.preBuildCaches();
+		TestHelper.preBuildAllCaches();
 		try (final SessionFactoryImplementor sessionFactory = TestHelper.buildStandardSessionFactory() ) {
 			final Region region = sessionFactory.getCache().getRegion( TestHelper.entityRegionNames[0] );
 
@@ -67,11 +67,11 @@ public class StorageAccessTest extends BaseUnitTestCase {
 	@Test
 	@SuppressWarnings({"EmptyTryBlock", "unused"})
 	public void testCachesReleasedOnSessionFactoryClose() {
-		TestHelper.preBuildCaches();
+		TestHelper.preBuildAllCaches();
 		try (SessionFactoryImplementor sessionFactory = TestHelper.buildStandardSessionFactory() ) {
 		}
 
-		TestHelper.visitAllRegions(
+		TestHelper.visitDomainRegions(
 				cache -> {
 					if ( cache == null ) {
 						return;

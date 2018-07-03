@@ -8,6 +8,7 @@ package org.hibernate.cache.ehcache.internal;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
 
 import net.sf.ehcache.Cache;
@@ -77,14 +78,43 @@ public class EhcacheRegionFactory extends RegionFactoryTemplate {
 	protected StorageAccess createQueryResultsRegionStorageAccess(
 			String regionName,
 			SessionFactoryImplementor sessionFactory) {
-		return new StorageAccessImpl( getOrCreateCache( regionName, sessionFactory ) );
+		String defaultedRegionName = defaultRegionName(
+				regionName,
+				sessionFactory,
+				DEFAULT_QUERY_RESULTS_REGION_UNQUALIFIED_NAME,
+				LEGACY_QUERY_RESULTS_REGION_UNQUALIFIED_NAMES
+		);
+		return new StorageAccessImpl( getOrCreateCache( defaultedRegionName, sessionFactory ) );
 	}
 
 	@Override
 	protected StorageAccess createTimestampsRegionStorageAccess(
 			String regionName,
 			SessionFactoryImplementor sessionFactory) {
-		return new StorageAccessImpl( getOrCreateCache( regionName, sessionFactory ) );
+		String defaultedRegionName = defaultRegionName(
+				regionName,
+				sessionFactory,
+				DEFAULT_UPDATE_TIMESTAMPS_REGION_UNQUALIFIED_NAME,
+				LEGACY_UPDATE_TIMESTAMPS_REGION_UNQUALIFIED_NAMES
+		);
+		return new StorageAccessImpl( getOrCreateCache( defaultedRegionName, sessionFactory ) );
+	}
+
+	protected final String defaultRegionName(String regionName, SessionFactoryImplementor sessionFactory,
+			String defaultRegionName, List<String> legacyDefaultRegionNames) {
+		if ( defaultRegionName.equals( regionName )
+				&& !cacheExists( regionName, sessionFactory ) ) {
+			// Maybe the user configured caches explicitly with legacy names; try them and use the first that exists
+
+			for ( String legacyDefaultRegionName : legacyDefaultRegionNames ) {
+				if ( cacheExists( legacyDefaultRegionName, sessionFactory ) ) {
+					SecondLevelCacheLogger.INSTANCE.usingLegacyCacheName( defaultRegionName, legacyDefaultRegionName );
+					return legacyDefaultRegionName;
+				}
+			}
+		}
+
+		return regionName;
 	}
 
 	protected Cache getOrCreateCache(String unqualifiedRegionName, SessionFactoryImplementor sessionFactory) {
@@ -120,6 +150,14 @@ public class EhcacheRegionFactory extends RegionFactoryTemplate {
 			default:
 				throw new IllegalStateException( "Unsupported missing cache strategy: " + missingCacheStrategy );
 		}
+	}
+
+	protected boolean cacheExists(String unqualifiedRegionName, SessionFactoryImplementor sessionFactory) {
+		final String qualifiedRegionName = RegionNameQualifier.INSTANCE.qualify(
+				unqualifiedRegionName,
+				sessionFactory.getSessionFactoryOptions()
+		);
+		return cacheManager.getCache( qualifiedRegionName ) != null;
 	}
 
 

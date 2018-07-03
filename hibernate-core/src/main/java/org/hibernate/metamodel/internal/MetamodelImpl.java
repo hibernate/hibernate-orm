@@ -8,6 +8,7 @@ package org.hibernate.metamodel.internal;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -624,7 +625,9 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	 * @throws MappingException
 	 */
 	public String[] getImplementors(String className) throws MappingException {
-		return implementorsCache.computeIfAbsent( className, this::doGetImplementors );
+		String[] implementors = implementorsCache.computeIfAbsent( className, this::doGetImplementors );
+
+		return Arrays.copyOf( implementors, implementors.length );
 	}
 
 	@Override

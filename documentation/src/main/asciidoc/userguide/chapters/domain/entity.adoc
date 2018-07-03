@@ -350,9 +350,15 @@ include::{sourcedir-mapping}/basic/SubselectTest.java[tag=mapping-Subselect-enti
 ----
 ====
 
+[TIP]
+====
 The goal of the `@Synchronize` annotation in the `AccountSummary` entity mapping is to instruct Hibernate which database tables are needed by the
-underlying `@Subselect` SQL query. This way, when executing a HQL or JPQL which selects from the `AccountSummary` entity,
+underlying `@Subselect` SQL query. This is because, unlike JPQL and HQL queries, Hibernate cannot parse the underlying native SQL query.
+
+With the `@Synchronize` annotation in place,
+when executing a HQL or JPQL which selects from the `AccountSummary` entity,
 Hibernate will trigger a Persistence Context flush if there are pending `Account`, `Client` or `AccountTransaction` entity state transitions.
+====
 
 [[entity-proxy]]
 ==== Define a custom entity proxy

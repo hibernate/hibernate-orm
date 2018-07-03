@@ -222,8 +222,6 @@ test.dependsOn ':hibernate-orm-modules:prepareWildFlyForTests'
 
 test {
     systemProperty 'file.encoding', 'utf-8'
-    //Set the port-offset to match the offset in arquillian.xml
-    systemProperty 'jboss.socket.binding.port-offset', '137'
     beforeTest { descriptor ->
         //println "Starting test: " + descriptor
     }

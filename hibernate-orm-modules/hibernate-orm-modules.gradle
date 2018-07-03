@@ -156,7 +156,3 @@ processTestResources {
 	)
 }
 
-test {
-	//Set the port-offset to match the offset in arquillian.xml
-	systemProperties['jboss.socket.binding.port-offset'] = 137
-}

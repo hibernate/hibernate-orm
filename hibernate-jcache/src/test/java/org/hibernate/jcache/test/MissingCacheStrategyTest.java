@@ -13,7 +13,7 @@ import java.util.function.Consumer;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.jcache.ConfigSettings;
-import org.hibernate.cache.jcache.internal.JCacheMessageLogger;
+import org.hibernate.cache.spi.SecondLevelCacheLogger;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.spi.ServiceException;
 
@@ -41,7 +41,7 @@ import static org.junit.Assert.fail;
 public class MissingCacheStrategyTest extends BaseUnitTestCase {
 
 	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule( JCacheMessageLogger.INSTANCE );
+	public LoggerInspectionRule logInspection = new LoggerInspectionRule( SecondLevelCacheLogger.INSTANCE );
 
 	@Test
 	public void testMissingCacheStrategyDefault() {
@@ -106,7 +106,7 @@ public class MissingCacheStrategyTest extends BaseUnitTestCase {
 			triggerables.put(
 					regionName,
 					logInspection.watchForLogMessages(
-							"HHH025001: Missing cache[" + TestHelper.prefix( regionName ) + "] was created on-the-fly"
+							"HHH90001006: Missing cache[" + TestHelper.prefix( regionName ) + "] was created on-the-fly"
 					)
 			);
 		}

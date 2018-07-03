@@ -72,4 +72,14 @@ public interface SecondLevelCacheLogger extends BasicLogger {
 	)
 	void softLockedCacheExpired(String regionName, Object key);
 
+	@LogMessage(level = WARN)
+	@Message(
+			value = "Missing cache[%1$s] was created on-the-fly." +
+					" The created cache will use a provider-specific default configuration:" +
+					" make sure you defined one." +
+					" You can disable this warning by setting '%2$s' to '%3$s'.",
+			id = NAMESPACE + 6
+	)
+	void missingCacheCreated(String regionName, String configurationPropertyToDisableKey, String configurationPropertyToDisableValue);
+
 }

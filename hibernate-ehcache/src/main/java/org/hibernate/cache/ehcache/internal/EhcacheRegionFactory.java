@@ -24,13 +24,12 @@ import org.hibernate.cache.ehcache.ConfigSettings;
 import org.hibernate.cache.ehcache.MissingCacheStrategy;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.spi.CacheKeysFactory;
+import org.hibernate.cache.spi.SecondLevelCacheLogger;
 import org.hibernate.cache.spi.support.DomainDataStorageAccess;
 import org.hibernate.cache.spi.support.RegionFactoryTemplate;
 import org.hibernate.cache.spi.support.RegionNameQualifier;
 import org.hibernate.cache.spi.support.StorageAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-
-import org.jboss.logging.Logger;
 
 import static org.hibernate.cache.ehcache.ConfigSettings.EHCACHE_CONFIGURATION_RESOURCE_NAME;
 import static org.hibernate.cache.ehcache.internal.HibernateEhcacheUtils.setCacheManagerNameIfNeeded;
@@ -107,7 +106,10 @@ public class EhcacheRegionFactory extends RegionFactoryTemplate {
 	protected Cache createCache(String regionName) {
 		switch ( missingCacheStrategy ) {
 			case CREATE_WARN:
-				LOG.missingCacheCreated( regionName );
+				SecondLevelCacheLogger.INSTANCE.missingCacheCreated(
+						regionName,
+						ConfigSettings.MISSING_CACHE_STRATEGY, MissingCacheStrategy.CREATE.getExternalRepresentation()
+				);
 				cacheManager.addCache( regionName );
 				return cacheManager.getCache( regionName );
 			case CREATE:

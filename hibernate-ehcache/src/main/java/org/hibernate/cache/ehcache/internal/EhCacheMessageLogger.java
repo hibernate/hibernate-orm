@@ -113,15 +113,4 @@ public interface EhCacheMessageLogger extends CoreMessageLogger {
 	)
 	void softLockedCacheExpired(String regionName, Object key, String lock);
 
-	@LogMessage(level = WARN)
-	@Message(
-			value = "Missing cache[%s] was created on-the-fly." +
-					" The created cache will use the <defaultCache> configuration: " +
-					" make sure to configure it." +
-					" You can disable this warning by setting '" + ConfigSettings.MISSING_CACHE_STRATEGY +
-					"' to 'create'.",
-			id = 20009
-	)
-	void missingCacheCreated(String regionName);
-
 }

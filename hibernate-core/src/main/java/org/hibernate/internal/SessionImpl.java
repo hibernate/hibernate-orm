@@ -2314,11 +2314,15 @@ public final class SessionImpl
 	@Override
 	public String toString() {
 		StringBuilder buf = new StringBuilder( 500 )
-				.append( "SessionImpl(" );
+				.append( "SessionImpl(" ).append(System.identityHashCode(this));
 		if ( !isClosed() ) {
+			if(TRACE_ENABLED) {
 			buf.append( persistenceContext )
 					.append( ";" )
 					.append( actionQueue );
+			}
+			else
+				buf.append("<open>");
 		}
 		else {
 			buf.append( "<closed>" );

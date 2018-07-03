@@ -15,6 +15,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.customtype.UnspecifiedEnumTypeEntity;
+import org.hibernate.type.IntegerType;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -103,7 +104,9 @@ public class UnspecifiedEnumTypeTest extends BaseEnversFunctionalTestCase {
 
 		@SuppressWarnings("unchecked")
 		List<Object[]> values = session
-				.createSQLQuery( "SELECT enum1, enum2 FROM ENUM_ENTITY_AUD ORDER BY rev ASC" )
+				.createNativeQuery( "SELECT enum1 e1, enum2 e2 FROM ENUM_ENTITY_AUD ORDER BY rev ASC" )
+				.addScalar( "e1", IntegerType.INSTANCE )
+				.addScalar( "e2", IntegerType.INSTANCE )
 				.list();
 		session.close();
 

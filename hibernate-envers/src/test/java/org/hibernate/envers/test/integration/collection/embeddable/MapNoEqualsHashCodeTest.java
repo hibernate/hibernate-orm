@@ -7,16 +7,13 @@
 package org.hibernate.envers.test.integration.collection.embeddable;
 
 import java.io.Serializable;
-import java.math.BigInteger;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.Tuple;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
@@ -116,15 +113,15 @@ public class MapNoEqualsHashCodeTest extends BaseEnversJPAFunctionalTestCase {
 	public void testAuditRowsForDefaultAuditStrategy() {
 		if ( !ValidityAuditStrategy.class.getName().equals( getAuditStrategy() ) ) {
 			doInJPA( this::entityManagerFactory, entityManager -> {
-				List<Tuple> results = entityManager
-						.createNativeQuery(
+				Long results = entityManager
+						.createQuery(
 								"SELECT COUNT(1) FROM TestEntity_embs1_AUD",
-								Tuple.class
+								Long.class
 						)
-						.getResultList();
+						.getSingleResult();
 
-				assertEquals( 1, results.size() );
-				assertEquals( BigInteger.valueOf( 4 ), results.get( 0 ).get( 0 ) );
+				assertNotNull( results );
+				assertEquals( Long.valueOf( 4 ), results );
 			} );
 		}
 	}

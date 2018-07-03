@@ -1,0 +1,20 @@
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<ehcache>
+    <diskStore path="java.io.tmpdir"/>
+
+    <!-- Domain caches -->
+    <cache name="hibernate.test.org.hibernate.cache.ehcache.test.domain.Item" maxElementsInMemory="10000" />
+    <cache name="hibernate.test.org.hibernate.cache.ehcache.test.domain.VersionedItem" maxElementsInMemory="10000" />
+    <cache name="hibernate.test.org.hibernate.cache.ehcache.test.domain.Event" maxElementsInMemory="10000" />
+    <cache name="hibernate.test.org.hibernate.cache.ehcache.test.domain.Event.participants" maxElementsInMemory="10000" />
+
+    <!-- Query caches with legacy names -->
+    <cache name="hibernate.test.org.hibernate.cache.internal.StandardQueryCache" maxElementsInMemory="10000" />
+    <cache name="hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache" maxElementsInMemory="10000" />
+
+</ehcache>

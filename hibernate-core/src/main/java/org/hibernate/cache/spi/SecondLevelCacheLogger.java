@@ -82,4 +82,12 @@ public interface SecondLevelCacheLogger extends BasicLogger {
 	)
 	void missingCacheCreated(String regionName, String configurationPropertyToDisableKey, String configurationPropertyToDisableValue);
 
+	@LogMessage(level = WARN)
+	@Message(
+			value = "Using legacy cache name [%2$s] because configuration could not be found for cache [%1$s]." +
+					" Update your configuration to rename cache [%2$s] to [%1$s].",
+			id = NAMESPACE + 7
+	)
+	void usingLegacyCacheName(String currentName, String legacyName);
+
 }

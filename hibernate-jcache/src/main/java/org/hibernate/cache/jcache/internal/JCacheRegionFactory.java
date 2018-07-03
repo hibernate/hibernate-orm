@@ -8,6 +8,7 @@ package org.hibernate.cache.jcache.internal;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Map;
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -103,12 +104,26 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 		}
 	}
 
+	protected boolean cacheExists(String unqualifiedRegionName, SessionFactoryImplementor sessionFactory) {
+		final String qualifiedRegionName = RegionNameQualifier.INSTANCE.qualify(
+				unqualifiedRegionName,
+				sessionFactory.getSessionFactoryOptions()
+		);
+		return cacheManager.getCache( qualifiedRegionName ) != null;
+	}
+
 	@Override
 	protected StorageAccess createQueryResultsRegionStorageAccess(
 			String regionName,
 			SessionFactoryImplementor sessionFactory) {
+		String defaultedRegionName = defaultRegionName(
+				regionName,
+				sessionFactory,
+				DEFAULT_QUERY_RESULTS_REGION_UNQUALIFIED_NAME,
+				LEGACY_QUERY_RESULTS_REGION_UNQUALIFIED_NAMES
+		);
 		return new JCacheAccessImpl(
-				getOrCreateCache( regionName, sessionFactory )
+				getOrCreateCache( defaultedRegionName, sessionFactory )
 		);
 	}
 
@@ -116,9 +131,32 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 	protected StorageAccess createTimestampsRegionStorageAccess(
 			String regionName,
 			SessionFactoryImplementor sessionFactory) {
-		return new JCacheAccessImpl(
-				getOrCreateCache( regionName, sessionFactory )
+		String defaultedRegionName = defaultRegionName(
+				regionName,
+				sessionFactory,
+				DEFAULT_UPDATE_TIMESTAMPS_REGION_UNQUALIFIED_NAME,
+				LEGACY_UPDATE_TIMESTAMPS_REGION_UNQUALIFIED_NAMES
 		);
+		return new JCacheAccessImpl(
+				getOrCreateCache( defaultedRegionName, sessionFactory )
+		);
+	}
+
+	protected final String defaultRegionName(String regionName, SessionFactoryImplementor sessionFactory,
+			String defaultRegionName, List<String> legacyDefaultRegionNames) {
+		if ( defaultRegionName.equals( regionName )
+				&& !cacheExists( regionName, sessionFactory ) ) {
+			// Maybe the user configured caches explicitly with legacy names; try them and use the first that exists
+
+			for ( String legacyDefaultRegionName : legacyDefaultRegionNames ) {
+				if ( cacheExists( legacyDefaultRegionName, sessionFactory ) ) {
+					SecondLevelCacheLogger.INSTANCE.usingLegacyCacheName( defaultRegionName, legacyDefaultRegionName );
+					return legacyDefaultRegionName;
+				}
+			}
+		}
+
+		return regionName;
 	}
 
 

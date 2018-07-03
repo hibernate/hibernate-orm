@@ -41,13 +41,25 @@ public class TestHelper {
 			Event.class.getName() + ".participants"
 	};
 
-	public static String[] allRegionNames =
+	public static String[] allDomainRegionNames =
 			Stream.concat( Arrays.stream( entityRegionNames ), Arrays.stream( collectionRegionNames ) )
 					.toArray( String[]::new );
 
+	public static String[] queryRegionNames = new String[] {
+			RegionFactory.DEFAULT_QUERY_RESULTS_REGION_UNQUALIFIED_NAME,
+			RegionFactory.DEFAULT_UPDATE_TIMESTAMPS_REGION_UNQUALIFIED_NAME
+	};
+	public static String[] queryRegionLegacyNames1 = new String[] {
+			"org.hibernate.cache.spi.QueryResultsRegion",
+			"org.hibernate.cache.spi.TimestampsRegion"
+	};
+	public static String[] queryRegionLegacyNames2 = new String[] {
+			"org.hibernate.cache.internal.StandardQueryCache",
+			"org.hibernate.cache.spi.UpdateTimestampsCache"
+	};
+
 	public static SessionFactoryImplementor buildStandardSessionFactory() {
 		return buildStandardSessionFactory( ignored -> { } );
-
 	}
 
 	public static SessionFactoryImplementor buildStandardSessionFactory(Consumer<StandardServiceRegistryBuilder> additionalSettings) {

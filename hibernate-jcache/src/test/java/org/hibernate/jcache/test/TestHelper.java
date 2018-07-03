@@ -48,15 +48,42 @@ public class TestHelper {
 			org.hibernate.jcache.test.domain.Event.class.getName() + ".participants"
 	};
 
-	public static String[] allRegionNames =
+	public static String[] allDomainRegionNames =
 			Stream.concat( Arrays.stream( entityRegionNames ), Arrays.stream( collectionRegionNames ) )
 					.toArray( String[]::new );
 
-	public static void preBuildCaches() {
-		preBuildCaches( true );
+	public static String[] queryRegionNames = new String[] {
+			RegionFactory.DEFAULT_QUERY_RESULTS_REGION_UNQUALIFIED_NAME,
+			RegionFactory.DEFAULT_UPDATE_TIMESTAMPS_REGION_UNQUALIFIED_NAME
+	};
+	public static String[] queryRegionLegacyNames1 = new String[] {
+			"org.hibernate.cache.spi.QueryResultsRegion",
+			"org.hibernate.cache.spi.TimestampsRegion"
+	};
+	public static String[] queryRegionLegacyNames2 = new String[] {
+			"org.hibernate.cache.internal.StandardQueryCache",
+			"org.hibernate.cache.spi.UpdateTimestampsCache"
+	};
+
+	public static void preBuildAllCaches() {
+		preBuildAllCaches( true );
 	}
 
-	public static void preBuildCaches(boolean prefixCaches) {
+	public static void preBuildAllCaches(boolean prefixCaches) {
+		preBuildDomainCaches( prefixCaches );
+
+		final CacheManager cacheManager = locateStandardCacheManager();
+
+		for ( String regionName : queryRegionNames ) {
+			createCache( cacheManager, regionName, prefixCaches );
+		}
+	}
+
+	public static void preBuildDomainCaches() {
+		preBuildDomainCaches( true );
+	}
+
+	public static void preBuildDomainCaches(boolean prefixCaches) {
 		final CacheManager cacheManager = locateStandardCacheManager();
 
 		for ( String regionName : entityRegionNames ) {
@@ -66,14 +93,10 @@ public class TestHelper {
 		for ( String regionName : collectionRegionNames ) {
 			createCache( cacheManager, regionName, prefixCaches );
 		}
-
-		createCache( cacheManager, RegionFactory.DEFAULT_UPDATE_TIMESTAMPS_REGION_UNQUALIFIED_NAME, prefixCaches );
-		createCache( cacheManager, RegionFactory.DEFAULT_QUERY_RESULTS_REGION_UNQUALIFIED_NAME, prefixCaches );
 	}
 
 	public static SessionFactoryImplementor buildStandardSessionFactory() {
 		return buildStandardSessionFactory( ignored -> { } );
-
 	}
 
 	public static SessionFactoryImplementor buildStandardSessionFactory(Consumer<StandardServiceRegistryBuilder> additionalSettings) {
@@ -129,7 +152,7 @@ public class TestHelper {
 		return cacheManager.getCache( regionName );
 	}
 
-	public static void visitAllRegions(Consumer<Cache> action) {
+	public static void visitDomainRegions(Consumer<Cache> action) {
 		final CacheManager cacheManager = JCacheHelper.locateStandardCacheManager();
 
 		for ( String regionName : entityRegionNames ) {
@@ -184,8 +207,9 @@ public class TestHelper {
 		}
 
 		if ( queryRegions ) {
-			createCache( cacheManager, RegionFactory.DEFAULT_UPDATE_TIMESTAMPS_REGION_UNQUALIFIED_NAME, prefixRegions );
-			createCache( cacheManager, RegionFactory.DEFAULT_QUERY_RESULTS_REGION_UNQUALIFIED_NAME, prefixRegions );
+			for ( String regionName : queryRegionNames ) {
+				createCache( cacheManager, regionName, prefixRegions );
+			}
 		}
 	}
 

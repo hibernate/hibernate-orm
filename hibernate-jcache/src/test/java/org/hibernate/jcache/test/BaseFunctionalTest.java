@@ -21,7 +21,7 @@ public abstract class BaseFunctionalTest extends BaseUnitTestCase {
 	@Before
 	public void createSessionFactory() {
 		assert sessionFactory == null || sessionFactory.isClosed();
-		TestHelper.preBuildCaches();
+		TestHelper.preBuildAllCaches();
 		sessionFactory = TestHelper.buildStandardSessionFactory();
 	}
 

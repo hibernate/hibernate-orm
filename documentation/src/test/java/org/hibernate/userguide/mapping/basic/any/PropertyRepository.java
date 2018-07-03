@@ -37,7 +37,7 @@ public class PropertyRepository {
     )
     private List<Property<?>> properties = new ArrayList<>(  );
 
-	//Getters and setters are omitted for brevity
+    //Getters and setters are omitted for brevity
 
 //end::mapping-column-many-to-any-example[]
     public Long getId() {

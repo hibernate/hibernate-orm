@@ -2087,19 +2087,40 @@ include::{sourcedir}/basic/any/package-info.java[tags=mapping-column-any-meta-de
 It is recommended to place the `@AnyMetaDef` mapping as a package metadata.
 ====
 
-To see how the `@Any` annotation in action, consider the following example:
+To see the `@Any` annotation in action, consider the next examples.
 
-[[mapping-column-any-persistence-example]]
-.`@Any` mapping usage
+If we persist an `IntegerProperty` as well as a `StringProperty` entity, and associate
+the `StringProperty` entity with a `PropertyHolder`,
+Hibernate will generate the following SQL queries:
+
+[[mapping-column-any-persist-example]]
+.`@Any` mapping persist example
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/basic/any/AnyTest.java[tags=mapping-column-any-persistence-example]
+include::{sourcedir}/basic/any/AnyTest.java[tags=mapping-column-any-persist-example]
 ----
 
 [source, SQL, indent=0]
 ----
-include::{extrasdir}/basic/mapping-column-any-persistence-example.sql[]
+include::{extrasdir}/basic/mapping-column-any-persist-example.sql[]
+----
+====
+
+When fetching the `PropertyHolder` entity and navigating its `property` association,
+Hibernate will fetch the associated `StringProperty` entity like this:
+
+[[mapping-column-any-query-example]]
+.`@Any` mapping query example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/any/AnyTest.java[tags=mapping-column-any-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-column-any-query-example.sql[]
 ----
 ====
 
@@ -2110,6 +2131,7 @@ The `@Any` mapping is useful to emulate a `@ManyToOne` association when there ca
 To emulate a `@OneToMany` association, the `@ManyToAny` annotation must be used.
 
 In the following example, the `PropertyRepository` entity has a collection of `Property` entities.
+
 The `repository_properties` link table holds the associations between `PropertyRepository` and `Property` entities.
 
 [[mapping-column-many-to-any-example]]
@@ -2126,20 +2148,40 @@ include::{extrasdir}/basic/mapping-column-many-to-any-example.sql[]
 ----
 ====
 
+To see the `@ManyToAny` annotation in action, consider the next examples.
 
-To see how the `@ManyToAny` annotation works, consider the following example:
+If we persist an `IntegerProperty` as well as a `StringProperty` entity,
+and associate both of them with a `PropertyRepository` parent entity,
+Hibernate will generate the following SQL queries:
 
-[[mapping-column-many-to-any-persistence-example]]
-.`@Any` mapping usage
+[[mapping-column-many-to-any-persist-example]]
+.`@ManyToAny` mapping persist example
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/basic/any/ManyToAnyTest.java[tags=mapping-column-many-to-any-persistence-example]
+include::{sourcedir}/basic/any/ManyToAnyTest.java[tags=mapping-column-many-to-any-persist-example]
 ----
 
 [source, SQL, indent=0]
 ----
-include::{extrasdir}/basic/mapping-column-many-to-any-persistence-example.sql[]
+include::{extrasdir}/basic/mapping-column-many-to-any-persist-example.sql[]
+----
+====
+
+When fetching the `PropertyRepository` entity and navigating its `properties` association,
+Hibernate will fetch the associated `IntegerProperty` and `StringProperty` entities like this:
+
+[[mapping-column-many-to-any-query-example]]
+.`@ManyToAny` mapping query example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/any/ManyToAnyTest.java[tags=mapping-column-many-to-any-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-column-many-to-any-query-example.sql[]
 ----
 ====
 

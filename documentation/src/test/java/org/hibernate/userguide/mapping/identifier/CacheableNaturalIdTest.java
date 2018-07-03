@@ -31,8 +31,8 @@ public class CacheableNaturalIdTest extends BaseEntityManagerFunctionalTestCase 
 
 	@Override
 	public void buildEntityManagerFactory() {
-		JCacheHelper.locateStandardCacheManager().createCache( "org.hibernate.cache.spi.TimestampsRegion", new MutableConfiguration<>() );
-		JCacheHelper.locateStandardCacheManager().createCache( "org.hibernate.cache.spi.QueryResultsRegion", new MutableConfiguration<>() );
+		JCacheHelper.locateStandardCacheManager().createCache( "org.hibernate.cache.spi.UpdateTimestampsCache", new MutableConfiguration<>() );
+		JCacheHelper.locateStandardCacheManager().createCache( "org.hibernate.cache.internal.StandardQueryCache", new MutableConfiguration<>() );
 		JCacheHelper.locateStandardCacheManager().createCache( "org.hibernate.userguide.mapping.identifier.CacheableNaturalIdTest$Book##NaturalId", new MutableConfiguration<>() );
 //		JCacheHelper.locateStandardCacheManager().createCache( "", new MutableConfiguration<>() );
 

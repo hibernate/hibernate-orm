@@ -21,6 +21,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.cfg.spi.DomainDataRegionBuildingContext;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
 import org.hibernate.cache.ehcache.ConfigSettings;
+import org.hibernate.cache.ehcache.MissingCacheStrategy;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.support.DomainDataStorageAccess;
@@ -39,11 +40,12 @@ import static org.hibernate.cache.ehcache.internal.HibernateEhcacheUtils.setCach
  * @author Alex Snaps
  */
 public class EhcacheRegionFactory extends RegionFactoryTemplate {
-	private static final Logger LOG = Logger.getLogger( EhcacheRegionFactory.class );
+	private static final EhCacheMessageLogger LOG = EhCacheMessageLogger.INSTANCE;
 
 	private final CacheKeysFactory cacheKeysFactory;
 
 	private volatile CacheManager cacheManager;
+	private volatile MissingCacheStrategy missingCacheStrategy;
 
 	public EhcacheRegionFactory() {
 		this( DefaultCacheKeysFactory.INSTANCE );
@@ -103,9 +105,20 @@ public class EhcacheRegionFactory extends RegionFactoryTemplate {
 	}
 
 	protected Cache createCache(String regionName) {
-		throw new CacheException( "On-the-fly creation of JCache Cache objects is not supported [" + regionName + "]" );
+		switch ( missingCacheStrategy ) {
+			case CREATE_WARN:
+				LOG.missingCacheCreated( regionName );
+				cacheManager.addCache( regionName );
+				return cacheManager.getCache( regionName );
+			case CREATE:
+				cacheManager.addCache( regionName );
+				return cacheManager.getCache( regionName );
+			case FAIL:
+				throw new CacheException( "On-the-fly creation of Ehcache Cache objects is not supported [" + regionName + "]" );
+			default:
+				throw new IllegalStateException( "Unsupported missing cache strategy: " + missingCacheStrategy );
+		}
 	}
-
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -122,6 +135,9 @@ public class EhcacheRegionFactory extends RegionFactoryTemplate {
 			if ( this.cacheManager == null ) {
 				throw new CacheException( "Could not start Ehcache CacheManager" );
 			}
+			this.missingCacheStrategy = MissingCacheStrategy.interpretSetting(
+					configValues.get( ConfigSettings.MISSING_CACHE_STRATEGY )
+			);
 		}
 	}
 

@@ -59,7 +59,7 @@ public class LazyInitializationWithoutInlineDirtyTrackingTest extends BaseCoreFu
 	// --- //
 
 	@Entity
-	@Table(name = "FILE")
+	@Table(name = "T_FILE")
 	public static class File {
 
 		@Id

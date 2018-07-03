@@ -25,7 +25,12 @@ public class IdClassReferenceIdentifierTest extends BaseEnversJPAFunctionalTestC
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {ReferenceIdentifierEntity.class, ReferenceIdentifierClassId.class, ClassType.class, IntegerGeneratedIdentityEntity.class};
+		return new Class<?>[] {
+				ReferenceIdentifierEntity.class,
+				ReferenceIdentifierClassId.class,
+				ClassType.class,
+				IntegerGeneratedIdentityEntity.class
+		};
 	}
 
 	@Test

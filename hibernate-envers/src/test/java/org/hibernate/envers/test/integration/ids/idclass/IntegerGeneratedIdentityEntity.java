@@ -17,7 +17,7 @@ import java.io.Serializable;
  * @author Matthew Morrissette (yinzara at gmail dot com)
  */
 @Audited
-@Entity
+@Entity(name = "IntegerGenIdEntity")
 public class IntegerGeneratedIdentityEntity implements Serializable {
 
 	@Id

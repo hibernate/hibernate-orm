@@ -39,7 +39,15 @@ public interface Metamodel extends javax.persistence.metamodel.Metamodel {
 	String getImportedClassName(String className);
 
 	/**
-	 * Get the names of all persistent classes that implement/extend the given interface/class
+	 * Given the name of an entity class, determine all the class and interface names by which it can be
+	 * referenced in an HQL query.
+	 *
+	 * @param entityName The name of the entity class
+	 *
+	 * @return the names of all persistent (mapped) classes that extend or implement the
+	 *     given class or interface, accounting for implicit/explicit polymorphism settings
+	 *     and excluding mapped subclasses/joined-subclasses of other classes in the result.
+	 * @throws MappingException
 	 */
 	String[] getImplementors(String entityName);
 

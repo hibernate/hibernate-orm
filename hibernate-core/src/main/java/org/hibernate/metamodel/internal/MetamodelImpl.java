@@ -614,17 +614,6 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 		}
 	}
 
-	/**
-	 * Given the name of an entity class, determine all the class and interface names by which it can be
-	 * referenced in an HQL query.
-	 *
-	 * @param className The name of the entity class
-	 *
-	 * @return the names of all persistent (mapped) classes that extend or implement the
-	 *     given class or interface, accounting for implicit/explicit polymorphism settings
-	 *     and excluding mapped subclasses/joined-subclasses of other classes in the result.
-	 * @throws MappingException
-	 */
 	@Override
 	public String[] getImplementors(String className) throws MappingException {
 		// computeIfAbsent() can be a contention point and we expect all the values to be in the map at some point so

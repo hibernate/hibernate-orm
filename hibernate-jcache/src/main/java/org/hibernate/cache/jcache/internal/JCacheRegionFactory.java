@@ -24,6 +24,7 @@ import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.jcache.ConfigSettings;
 import org.hibernate.cache.jcache.MissingCacheStrategy;
 import org.hibernate.cache.spi.CacheKeysFactory;
+import org.hibernate.cache.spi.SecondLevelCacheLogger;
 import org.hibernate.cache.spi.support.DomainDataStorageAccess;
 import org.hibernate.cache.spi.support.RegionFactoryTemplate;
 import org.hibernate.cache.spi.support.RegionNameQualifier;
@@ -34,8 +35,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  * @author Alex Snaps
  */
 public class JCacheRegionFactory extends RegionFactoryTemplate {
-	private static final JCacheMessageLogger LOG = JCacheMessageLogger.INSTANCE;
-
 	private final CacheKeysFactory cacheKeysFactory;
 
 	private volatile CacheManager cacheManager;
@@ -90,7 +89,10 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 	protected Cache<Object, Object> createCache(String regionName) {
 		switch ( missingCacheStrategy ) {
 			case CREATE_WARN:
-				LOG.missingCacheCreated( regionName );
+				SecondLevelCacheLogger.INSTANCE.missingCacheCreated(
+						regionName,
+						ConfigSettings.MISSING_CACHE_STRATEGY, MissingCacheStrategy.CREATE.getExternalRepresentation()
+				);
 				return cacheManager.createCache( regionName, new MutableConfiguration<>() );
 			case CREATE:
 				return cacheManager.createCache( regionName, new MutableConfiguration<>() );

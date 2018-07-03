@@ -39,6 +39,10 @@ public enum MissingCacheStrategy {
 		this.externalRepresentation = externalRepresentation;
 	}
 
+	public String getExternalRepresentation() {
+		return externalRepresentation;
+	}
+
 	public static MissingCacheStrategy interpretSetting(Object value) {
 		if ( value instanceof MissingCacheStrategy ) {
 			return (MissingCacheStrategy) value;

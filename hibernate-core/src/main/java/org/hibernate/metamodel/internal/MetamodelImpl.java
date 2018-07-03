@@ -625,9 +625,22 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	 * @throws MappingException
 	 */
 	public String[] getImplementors(String className) throws MappingException {
-		String[] implementors = implementorsCache.computeIfAbsent( className, this::doGetImplementors );
+		// computeIfAbsent() can be a contention point and we expect all the values to be in the map at some point so
+		// let's do an optimistic check first
+		String[] implementors = implementorsCache.get( className );
+		if ( implementors != null ) {
+			return Arrays.copyOf( implementors, implementors.length );
+		}
 
-		return Arrays.copyOf( implementors, implementors.length );
+		try {
+			final Class<?> clazz = getSessionFactory().getServiceRegistry().getService( ClassLoaderService.class ).classForName( className );
+			implementors = doGetImplementors( clazz );
+			implementorsCache.putIfAbsent( className, implementors );
+			return Arrays.copyOf( implementors, implementors.length );
+		}
+		catch (ClassLoadingException e) {
+			return new String[]{ className }; // we don't cache anything for dynamic classes
+		}
 	}
 
 	@Override
@@ -751,16 +764,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 		// anything to do ?
 	}
 
-	private String[] doGetImplementors(String className) throws MappingException {
-		final Class<?> clazz;
-
-		try {
-			clazz = getSessionFactory().getServiceRegistry().getService( ClassLoaderService.class ).classForName( className );
-		}
-		catch (ClassLoadingException e) {
-			return new String[]{ className }; //for a dynamic-class
-		}
-
+	private String[] doGetImplementors(Class<?> clazz) throws MappingException {
 		ArrayList<String> results = new ArrayList<>();
 		for ( EntityPersister checkPersister : entityPersisters().values() ) {
 			if ( !Queryable.class.isInstance( checkPersister ) ) {
@@ -768,10 +772,10 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 			}
 			final Queryable checkQueryable = Queryable.class.cast( checkPersister );
 			final String checkQueryableEntityName = checkQueryable.getEntityName();
-			final boolean isMappedClass = className.equals( checkQueryableEntityName );
+			final boolean isMappedClass = clazz.getName().equals( checkQueryableEntityName );
 			if ( checkQueryable.isExplicitPolymorphism() ) {
 				if ( isMappedClass ) {
-					return new String[]{ className }; // NOTE EARLY EXIT
+					return new String[]{ clazz.getName() }; // NOTE EARLY EXIT
 				}
 			}
 			else {

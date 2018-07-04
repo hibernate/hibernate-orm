@@ -31,7 +31,6 @@ import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.proxy.AbstractLazyInitializer;
 import org.hibernate.proxy.HibernateProxy;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;
@@ -139,7 +138,6 @@ public class EntityProxySerializationTest extends BaseCoreFunctionalTestCase {
 	@SuppressWarnings("unchecked")
 	@Test
 	@TestForIssue(jiraKey = "HHH-12720")
-	@FailureExpected(jiraKey = "HHH-12720")
 	public void testProxyInitializationWithoutTXAfterDeserialization() {
 		final Session s = openSession();
 

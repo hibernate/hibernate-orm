@@ -105,6 +105,7 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 
 		if ( isUninitialized() ) {
 			if ( replacement == null ) {
+				prepareForPossibleLoadingOutsideTransaction();
 				replacement = serializableProxy();
 			}
 			return replacement;

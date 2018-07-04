@@ -46,6 +46,7 @@ public interface ParameterRegistrationImplementor<T> extends ParameterRegistrati
 	 * that the parameter will simply be ignored, with the assumption that the corresponding argument
 	 * defined a default value.
 	 */
+	@Override
 	boolean isPassNullsEnabled();
 
 	/**

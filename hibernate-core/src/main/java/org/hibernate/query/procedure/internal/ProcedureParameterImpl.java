@@ -308,6 +308,7 @@ public class ProcedureParameterImpl<T>
 						&& ((ProcedureParameterNamedBinder) hibernateType).canDoSetting();
 	}
 
+	@Override
 	public int[] getSqlTypes() {
 		if ( mode == ParameterMode.REF_CURSOR ) {
 			// we could use the Types#REF_CURSOR added in Java 8, but that would require requiring Java 8...

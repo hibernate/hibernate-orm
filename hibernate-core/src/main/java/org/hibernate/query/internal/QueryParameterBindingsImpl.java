@@ -119,7 +119,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			);
 		}
 
-		final QueryParameterBinding binding = makeBinding( queryParameter.getType() );
+		final QueryParameterBinding binding = makeBinding( queryParameter.getHibernateType() );
 		parameterBindingMap.put( queryParameter, binding );
 
 		return binding;
@@ -145,7 +145,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 		return parameterListBindingMap.computeIfAbsent(
 				param,
 				p -> new QueryParameterListBindingImpl(
-						param.getType(),
+						param.getHibernateType(),
 						shouldValidateBindingValue()
 				)
 		);
@@ -606,7 +606,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 					syntheticParam = new NamedParameterDescriptor(
 							syntheticName,
-							sourceParam.getType(),
+							sourceParam.getHibernateType(),
 							sourceParam.getSourceLocations()
 					);
 				}
@@ -624,7 +624,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 						syntheticParam = new OrdinalParameterDescriptor(
 								syntheticPosition,
 								syntheticPosition - jdbcStyleOrdinalCountBase,
-								sourceParam.getType(),
+								sourceParam.getHibernateType(),
 								sourceParam.getSourceLocations()
 						);
 					}

@@ -42,7 +42,7 @@ public abstract class AbstractParameterDescriptor implements QueryParameter {
 	}
 
 	@Override
-	public Type getType() {
+	public Type getHibernateType() {
 		return getExpectedType();
 	}
 

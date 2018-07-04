@@ -425,9 +425,10 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		final CountDownLatch latch = new CountDownLatch( 1 );
 		final Lock lock = new Lock();
 
+		final AtomicBoolean backgroundThreadHasReadNewValue = new AtomicBoolean();
+
 		FutureTask<Boolean> bgTask = new FutureTask<>(
 				() -> {
-					AtomicBoolean backgroundThreadHasReadNewValue = new AtomicBoolean();
 					try {
 
 						doInJPA( this::entityManagerFactory, _entityManager -> {
@@ -490,28 +491,21 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 					if ( backGroundThreadCompleted ) {
 						// the background thread read a value. At the very least we need to assert that he did not see the
 						// changed value
-						boolean backgroundThreadHasReadNewValue = bgTask.get();
 						assertFalse(
 								"The background thread is not allowed to see the updated value while the first transaction has not committed yet",
-								backgroundThreadHasReadNewValue
+								backgroundThreadHasReadNewValue.get()
 						);
 					}
 					else {
 						log.debug( "The background thread was blocked" );
-						boolean backgroundThreadHasReadNewValue = bgTask.get();
 						assertTrue(
 								"Background thread should read the new value after being unblocked",
-								backgroundThreadHasReadNewValue
+								backgroundThreadHasReadNewValue.get()
 						);
 					}
 				}
 				catch (InterruptedException e) {
 					Thread.interrupted();
-				}
-				catch (ExecutionException e) {
-					if ( !Oracle8iDialect.class.isAssignableFrom( Dialect.getDialect().getClass() ) ) {
-						fail(e.getMessage());
-					}
 				}
 			} );
 		}

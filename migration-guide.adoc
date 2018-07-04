@@ -178,6 +178,29 @@ From 5.2.13 the id generator name scope was considered global but realizing this
 will be considered local by default (which is the pre-5.2.13 behavior) and a new configuration setting `hibernate.jpa.compliance.global_id_generators`
 can be used to enable the JPA compliant global scoping.
 
+== Other changes
+
+=== Many-to-one association in embeddable collection elements and composite IDs
+
+A bug introduced in 4.3 caused many-to-one associations in embeddable collection elements and
+composite IDs to be eagerly fetched, even when explicitly mapped as lazy.
+
+This bug does not affect many-to-one associations that are not in a composite ID or embeddable
+collection element.
+
+In 5.2.18, this bug was fixed. As a result, such associations will be fetched as specified
+by their mappings.
+
+Many-to-one associations mapped by using native HBM xml are lazy by default. In order to keep
+the associations eager in 5.2.18 and later, mappings will need to explicitly specify that
+they are non-lazy.
+
+When mapped with annotations, many-to-one associations use `FetchType.EAGER` by default.
+Starting in 5.2.18, if an association is mapped with `FetchType.LAZY`, the assocation will
+be lazily fetched, as expected.
+
+See details on the https://hibernate.atlassian.net/browse/HHH-12687[HHH-12687] Jira issue.
+
 == Misc
 
 * QueryCacheFactory contract changed

@@ -6,11 +6,15 @@
  */
 package org.hibernate.query.procedure.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.query.procedure.ProcedureParameter;
 
 /**
+ * NOTE: Consider this contract (and its sub-contracts) as incubating as we transition to 6.0 and SQM
+ *
  * @author Steve Ebersole
  */
+@Incubating
 public interface ProcedureParameterImplementor<T> extends ProcedureParameter<T>, ParameterRegistrationImplementor<T> {
 }

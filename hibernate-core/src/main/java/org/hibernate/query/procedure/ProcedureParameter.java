@@ -8,12 +8,16 @@ package org.hibernate.query.procedure;
 
 import javax.persistence.ParameterMode;
 
+import org.hibernate.Incubating;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.query.QueryParameter;
 
 /**
+ * NOTE: Consider this contract (and its sub-contracts) as incubating as we transition to 6.0 and SQM
+ *
  * @author Steve Ebersole
  */
+@Incubating
 public interface ProcedureParameter<T> extends QueryParameter<T> {
 	/**
 	 * Retrieves the parameter "mode".  Only really pertinent in regards to procedure/function calls.

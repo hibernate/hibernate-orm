@@ -109,7 +109,7 @@ public class ManyToOneType extends EntityType {
 	}
 
 	@Override
-	protected boolean isNullable() {
+	public boolean isNullable() {
 		return ignoreNotFound;
 	}
 

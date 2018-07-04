@@ -155,7 +155,7 @@ public class OneToOneType extends EntityType {
 	}
 
 	@Override
-	protected boolean isNullable() {
+	public boolean isNullable() {
 		return foreignKeyType==ForeignKeyDirection.TO_PARENT;
 	}
 

@@ -52,7 +52,7 @@ public enum MissingCacheStrategy {
 
 		if ( StringHelper.isEmpty( externalRepresentation ) ) {
 			// Use the default
-			return MissingCacheStrategy.FAIL;
+			return MissingCacheStrategy.CREATE_WARN;
 		}
 
 		for ( MissingCacheStrategy strategy : values() ) {

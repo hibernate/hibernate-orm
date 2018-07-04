@@ -563,9 +563,9 @@ Only by specifying the second property `hibernate.javax.cache.uri` will you be a
 ==== JCache missing cache strategy
 
 By default, the JCache region factory
-will throw an exception when asked to retrieve a cache that is not pre-configured and pre-started in the underlying cache manager.
+will log a warning when asked to create a cache that is not explicitly configured and pre-started in the underlying cache manager.
 Thus if you configure an entity type or a collection as cached, but do not configure the corresponding cache explicitly,
-Hibernate ORM will fail to start.
+one warning will be logged for each cache that was not configured explicitly.
 
 You may change this behavior by setting the `hibernate.javax.cache.missing_cache_strategy` property
 to one of the following values:
@@ -574,8 +574,8 @@ to one of the following values:
 [cols=",",options="header",]
 |======================================
 | Value        | Description
-|`fail`        | **Default value**. Fail with an exception on missing caches.
-|`create-warn` | Create a new cache when a cache is not found (see `create` below),
+|`fail`        | Fail with an exception on missing caches.
+|`create-warn` | **Default value**. Create a new cache when a cache is not found (see `create` below),
 and also log a warning about the missing cache.
 |`create`      | Create a new cache when a cache is not found, without logging any warning about the missing cache.
 |======================================

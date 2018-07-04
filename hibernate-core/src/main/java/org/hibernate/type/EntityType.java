@@ -659,7 +659,12 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 	}
 
-	protected abstract boolean isNullable();
+	/**
+	 * The nullability of the property.
+	 *
+	 * @return The nullability of the property.
+	 */
+	public abstract boolean isNullable();
 
 	/**
 	 * Resolve an identifier via a load.

@@ -7,6 +7,8 @@
 package org.hibernate.cache.ehcache.internal;
 
 
+import org.hibernate.cache.ehcache.ConfigSettings;
+import org.hibernate.cache.ehcache.MissingCacheStrategy;
 import org.hibernate.internal.CoreMessageLogger;
 
 import org.jboss.logging.Logger;
@@ -19,12 +21,12 @@ import static org.jboss.logging.Logger.Level.WARN;
 
 /**
  * The jboss-logging {@link MessageLogger} for the hibernate-ehcache module.  It reserves message ids ranging from
- * 20099 to 20099 (allow 20100 for our DeprecationLogger) inclusively.
+ * 20001 to 20099 (allow 20100 for our DeprecationLogger) inclusively.
  * <p/>
  * New messages must be added after the last message defined to ensure message codes are unique.
  */
 @MessageLogger(projectCode = "HHH")
-@ValidIdRange( min = 20001, max = 20099)
+@ValidIdRange(min = 20001, max = 20099)
 public interface EhCacheMessageLogger extends CoreMessageLogger {
 	EhCacheMessageLogger INSTANCE = Logger.getMessageLogger(
 			EhCacheMessageLogger.class,

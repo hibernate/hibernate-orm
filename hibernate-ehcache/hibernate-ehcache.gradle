@@ -12,4 +12,6 @@ description = "Integration for using Ehcache 2.x as a Hibernate second-level-cac
 dependencies {
     compile project( ':hibernate-core' )
     compile( libraries.ehcache )
+
+    testCompile project( ':hibernate-testing' )
 }

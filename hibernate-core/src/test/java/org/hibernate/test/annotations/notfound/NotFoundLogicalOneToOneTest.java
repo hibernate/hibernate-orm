@@ -66,7 +66,7 @@ public class NotFoundLogicalOneToOneTest extends BaseCoreFunctionalTestCase {
 		return new Class[] { Coin.class, Currency.class };
 	}
 
-	@Entity
+	@Entity(name = "Coin")
 	public static class Coin {
 		private Integer id;
 		private String name;
@@ -102,7 +102,7 @@ public class NotFoundLogicalOneToOneTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Currency")
 	public static class Currency implements Serializable {
 		private Integer id;
 		private String name;

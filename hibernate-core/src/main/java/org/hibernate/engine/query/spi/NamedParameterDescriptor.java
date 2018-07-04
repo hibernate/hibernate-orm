@@ -30,6 +30,7 @@ public class NamedParameterDescriptor extends AbstractParameterDescriptor {
 		this.name = name;
 	}
 
+	@Override
 	public String getName() {
 		return name;
 	}

@@ -29,7 +29,7 @@ public abstract class AbstractRegionFactory implements RegionFactory {
 	/**
 	 * Legacy names that used to be the default for the query results region.
 	 */
-	protected static final List<String> LEGACY_QUERY_RESULTS_REGION_UNQUALIFIED_NAMES =
+	public static final List<String> LEGACY_QUERY_RESULTS_REGION_UNQUALIFIED_NAMES =
 			Collections.unmodifiableList( Arrays.asList(
 					"org.hibernate.cache.spi.QueryResultsRegion",
 					"org.hibernate.cache.internal.StandardQueryCache"
@@ -38,7 +38,7 @@ public abstract class AbstractRegionFactory implements RegionFactory {
 	/**
 	 * Legacy names that used to be the default for the update timestamps region.
 	 */
-	protected static final List<String> LEGACY_UPDATE_TIMESTAMPS_REGION_UNQUALIFIED_NAMES =
+	public static final List<String> LEGACY_UPDATE_TIMESTAMPS_REGION_UNQUALIFIED_NAMES =
 			Collections.unmodifiableList( Arrays.asList(
 					"org.hibernate.cache.spi.TimestampsRegion",
 					"org.hibernate.cache.spi.UpdateTimestampsCache"

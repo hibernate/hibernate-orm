@@ -25,6 +25,7 @@ public interface ParameterRegistration<T> extends ProcedureParameter<T> {
 	 *
 	 * @return The name;
 	 */
+	@Override
 	String getName();
 
 	/**
@@ -33,6 +34,7 @@ public interface ParameterRegistration<T> extends ProcedureParameter<T> {
 	 *
 	 * @return The name;
 	 */
+	@Override
 	Integer getPosition();
 
 	/**
@@ -41,6 +43,7 @@ public interface ParameterRegistration<T> extends ProcedureParameter<T> {
 	 *
 	 * @return The parameter mode.
 	 */
+	@Override
 	ParameterMode getMode();
 
 	/**
@@ -59,6 +62,7 @@ public interface ParameterRegistration<T> extends ProcedureParameter<T> {
 	 *
 	 * @param enabled {@code true} indicates that the NULL should be passed; {@code false} indicates it should not.
 	 */
+	@Override
 	void enablePassingNulls(boolean enabled);
 
 	/**

@@ -119,11 +119,6 @@ public class ProcedureParameterImpl<T>
 	}
 
 	@Override
-	public Type getHibernateType() {
-		return getType();
-	}
-
-	@Override
 	public void setHibernateType(Type expectedType) {
 		super.setHibernateType( expectedType );
 

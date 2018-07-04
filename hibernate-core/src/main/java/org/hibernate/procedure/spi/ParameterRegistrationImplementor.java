@@ -34,6 +34,7 @@ public interface ParameterRegistrationImplementor<T> extends ParameterRegistrati
 	 *
 	 * @return The Hibernate Type
 	 */
+	@Override
 	Type getHibernateType();
 
 	/**

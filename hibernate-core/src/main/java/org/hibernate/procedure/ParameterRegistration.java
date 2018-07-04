@@ -38,6 +38,17 @@ public interface ParameterRegistration<T> extends ProcedureParameter<T> {
 	Integer getPosition();
 
 	/**
+	 * Return the Java type of the parameter.
+	 *
+	 * @return The Java type of the parameter.
+	 * @deprecated Call {@link #getParameterType()} instead.
+	 */
+	@Deprecated
+	default Class<T> getType() {
+		return getParameterType();
+	}
+
+	/**
 	 * Retrieves the parameter "mode" which describes how the parameter is defined in the actual database procedure
 	 * definition (is it an INPUT parameter?  An OUTPUT parameter? etc).
 	 *

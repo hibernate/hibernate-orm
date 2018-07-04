@@ -105,7 +105,7 @@ public class Hbm2DDLExporter extends AbstractExporter {
 					}
 					log.error(i - 1 + " errors occurred while performing Hbm2DDLExporter.");
 					if (haltOnError) {
-						throw new ExporterException(
+						throw new RuntimeException(
 								"Errors while performing Hbm2DDLExporter");
 					}
 				}					

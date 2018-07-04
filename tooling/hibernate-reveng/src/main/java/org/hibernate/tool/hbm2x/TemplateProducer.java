@@ -44,7 +44,7 @@ public class TemplateProducer {
             fileWriter.write(tempResult);			
 		} 
 		catch (Exception e) {
-		    throw new ExporterException("Error while writing result to file", e);	
+		    throw new RuntimeException("Error while writing result to file", e);	
 		} finally {
 			if(fileWriter!=null) {
 				try {

@@ -23,7 +23,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
-import org.hibernate.tool.hbm2x.ExporterException;
 import org.hibernate.tool.internal.export.hbm.Cfg2HbmTool;
 import org.hibernate.tool.internal.util.NameConverter;
 import org.hibernate.tool.internal.util.StringUtil;
@@ -237,7 +236,7 @@ public class Cfg2JavaTool {
 				return typename;
 			}
 			else {
-				throw new ExporterException( msg, e );
+				throw new RuntimeException( msg, e );
 			}
 		}
 	}

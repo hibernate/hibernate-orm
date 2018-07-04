@@ -51,7 +51,7 @@ public class QueryExporter extends AbstractExporter {
 						
 					}
 					catch (IOException e) {
-						throw new ExporterException("Could not write query output",e);
+						throw new RuntimeException("Could not write query output",e);
 					} finally {
 						if(pw!=null) {
 							pw.flush();
@@ -65,7 +65,7 @@ public class QueryExporter extends AbstractExporter {
 			if(transaction!=null) {
 				transaction.rollback();
 			}
-			throw new ExporterException("Error occured while trying to execute query", he);
+			throw new RuntimeException("Error occured while trying to execute query", he);
 		} finally {			
 			if(session!=null) {
 				session.close();				

@@ -14,7 +14,6 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.tool.api.export.ArtifactCollector;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.hbm2x.ExporterException;
 import org.hibernate.tool.hbm2x.TemplateHelper;
 import org.hibernate.tool.internal.export.hbm.Cfg2HbmTool;
 import org.hibernate.tool.internal.export.pojo.Cfg2JavaTool;
@@ -174,7 +173,7 @@ public abstract class AbstractExporter implements Exporter {
 							getTemplateHelper().putInContext(key.substring(ExporterSettings.PREFIX_KEY.length(),key.length()-".toolclass".length()), object);
 						}
 						catch (Exception e) {
-							throw new ExporterException("Exception when instantiating tool " + element.getKey() + " with " + value,e);
+							throw new RuntimeException("Exception when instantiating tool " + element.getKey() + " with " + value,e);
 						}
 					} 
 				}								

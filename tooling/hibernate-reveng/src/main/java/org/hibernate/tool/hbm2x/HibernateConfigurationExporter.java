@@ -50,7 +50,7 @@ public class HibernateConfigurationExporter extends AbstractExporter {
 	/* (non-Javadoc)
 	 * @see org.hibernate.tool.hbm2x.Exporter#finish()
 	 */
-	public void doStart() throws ExporterException {
+	public void doStart() {
 		PrintWriter pw = null;
 		File file = null;
 		try  {
@@ -121,7 +121,7 @@ public class HibernateConfigurationExporter extends AbstractExporter {
 		} 
 		
 		catch (IOException e) {
-			throw new ExporterException("Problems while creating hibernate.cfg.xml", e);
+			throw new RuntimeException("Problems while creating hibernate.cfg.xml", e);
 		} 
 		finally {
 			if(pw!=null) {

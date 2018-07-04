@@ -41,7 +41,6 @@ import org.hibernate.mapping.Value;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
-import org.hibernate.tool.hbm2x.ExporterException;
 import org.hibernate.tool.internal.export.common.EntityNameFromValueVisitor;
 import org.hibernate.tool.internal.util.SkipBackRefPropertyIterator;
 
@@ -394,7 +393,7 @@ public class Cfg2HbmTool {
 		}
 		else {
 			// todo: return null?
-			throw new ExporterException(pc + " does not have a pojo rep.");
+			throw new RuntimeException(pc + " does not have a pojo rep.");
 		}
 	}
 
@@ -407,7 +406,7 @@ public class Cfg2HbmTool {
 			return pc.getProxyInterfaceName();
 		}
 		else {
-			throw new ExporterException(pc + " does not have a pojo rep.");
+			throw new RuntimeException(pc + " does not have a pojo rep.");
 		}
 	}
 

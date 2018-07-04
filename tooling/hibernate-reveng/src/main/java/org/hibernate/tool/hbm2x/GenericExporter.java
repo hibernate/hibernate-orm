@@ -95,10 +95,10 @@ public class GenericExporter extends AbstractExporter {
 	protected void doStart() {
 				
 		if(filePattern==null) {
-			throw new ExporterException("File pattern not set on " + this.getClass());
+			throw new RuntimeException("File pattern not set on " + this.getClass());
 		}
 		if(templateName==null) {
-			throw new ExporterException("Template name not set on " + this.getClass());
+			throw new RuntimeException("Template name not set on " + this.getClass());
 		}
 		
 		List<ModelIterator> exporters = new ArrayList<ModelIterator>();
@@ -117,7 +117,7 @@ public class GenericExporter extends AbstractExporter {
 				String nextToken = tokens.nextToken();
 				ModelIterator modelIterator = modelIterators.get(nextToken);
 				if(modelIterator==null) {
-					throw new ExporterException("for-each does not support [" + nextToken + "]");
+					throw new RuntimeException("for-each does not support [" + nextToken + "]");
 				}
 				exporters.add(modelIterator);
 			}

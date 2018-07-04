@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.tool.api.export.ArtifactCollector;
-import org.hibernate.tool.hbm2x.ExporterException;
 import org.hibernate.tool.internal.xml.XMLPrettyPrinter;
 
 /**
@@ -81,7 +80,7 @@ public class DefaultArtifactCollector implements ArtifactCollector {
 
 	}
 
-	private void formatXml(String type) throws ExporterException {
+	private void formatXml(String type) {
 		List<File> list = files.get(type);
 		if (list != null && !list.isEmpty()) {
 			for (Iterator<File> iter = list.iterator(); iter.hasNext();) {
@@ -89,7 +88,7 @@ public class DefaultArtifactCollector implements ArtifactCollector {
 				try {
 					XMLPrettyPrinter.prettyPrintFile(xmlFile);
 				} catch (IOException e) {
-					throw new ExporterException("Could not format XML file: " + xmlFile, e);
+					throw new RuntimeException("Could not format XML file: " + xmlFile, e);
 				}
 			}
 		}

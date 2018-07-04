@@ -14,7 +14,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.hbm2x.ExporterException;
 import org.hibernate.tool.hbm2x.GenericExporter;
 import org.hibernate.tool.hbm2x.TemplateProducer;
 import org.hibernate.tool.internal.export.common.AbstractExporter;
@@ -130,7 +129,7 @@ public class DocExporter extends AbstractExporter {
      */
     private DocFileManager docFileManager;
     
-	public void doStart() throws ExporterException {
+	public void doStart() {
         generateCommmonAndAssets();
         
         boolean graphsGenerated = generateDot();

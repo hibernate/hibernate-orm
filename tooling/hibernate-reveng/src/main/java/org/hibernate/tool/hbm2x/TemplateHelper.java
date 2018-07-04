@@ -73,7 +73,7 @@ public class TemplateHelper {
 					loaders.add(new FileTemplateLoader(file));
 				}
 				catch (IOException e) {
-					throw new ExporterException("Problems with templatepath " + file, e);
+					throw new RuntimeException("Problems with templatepath " + file, e);
 				}
         	} else {
         		log.warn("template path" + file + " either does not exist or is not a directory");
@@ -94,7 +94,7 @@ public class TemplateHelper {
     		fw = new BufferedWriter(new FileWriter(new File(getOutputDirectory(), fileName)));
     		fw.write(content);
     		} catch(IOException io) {
-    			throw new ExporterException("Problem when writing to " + fileName, io);
+    			throw new RuntimeException("Problem when writing to " + fileName, io);
     		} finally {
     			if(fw!=null) {
     				try {
@@ -136,7 +136,7 @@ public class TemplateHelper {
     	// if the directory exists, make sure it is a directory
     	File dir = destination.getAbsoluteFile().getParentFile();
     	if ( dir.exists() && !dir.isDirectory() ) {
-    		throw new ExporterException("The path: " + dir.getAbsolutePath() + " exists, but is not a directory");
+    		throw new RuntimeException("The path: " + dir.getAbsolutePath() + " exists, but is not a directory");
     	} 	// else make the directory and any non-existent parent directories
     	else if ( !dir.exists() ) {
     		if ( !dir.mkdirs() ) {
@@ -145,7 +145,7 @@ public class TemplateHelper {
     					return;
     				}
     			}
-    			throw new ExporterException( "unable to create directory: " + dir.getAbsolutePath() );
+    			throw new RuntimeException( "unable to create directory: " + dir.getAbsolutePath() );
     		}
     	}
     }	
@@ -167,13 +167,13 @@ public class TemplateHelper {
 			t.process(getContext(), output);           
 	    } 
 	    catch (IOException e) {
-	        throw new ExporterException("Error while processing template string", e);
+	        throw new RuntimeException("Error while processing template string", e);
 	    } 
 	    catch (TemplateException te) {
-	    	throw new ExporterException("Error while processing template string", te);
+	    	throw new RuntimeException("Error while processing template string", te);
 	    }
 	    catch (Exception e) {
-	        throw new ExporterException("Error while processing template string", e);
+	        throw new RuntimeException("Error while processing template string", e);
 	    }
 	}
 	
@@ -192,7 +192,7 @@ public class TemplateHelper {
 			model = getContext().get(key);
 		}
 		catch (TemplateModelException e) {
-			throw new ExporterException("Could not get key " + key, e);
+			throw new RuntimeException("Could not get key " + key, e);
 		}
     	getContext().put(key, value);
     	return model;
@@ -204,7 +204,7 @@ public class TemplateHelper {
 			model = getContext().get(key);
 		}
 		catch (TemplateModelException e) {
-			throw new ExporterException("Could not get key " + key, e);
+			throw new RuntimeException("Could not get key " + key, e);
 		}
     	getContext().remove(key);
     	return model;
@@ -221,13 +221,13 @@ public class TemplateHelper {
     		template.process(getContext(), output);            
         } 
         catch (IOException e) {
-            throw new ExporterException("Error while processing " + rootContext + " with template " + templateName, e);
+            throw new RuntimeException("Error while processing " + rootContext + " with template " + templateName, e);
         }
         catch (TemplateException te) {        	
-        	throw new ExporterException("Error while processing " + rootContext + " with template " + templateName, te);
+        	throw new RuntimeException("Error while processing " + rootContext + " with template " + templateName, te);
         }        
         catch (Exception e) {
-        	throw new ExporterException("Error while processing " + rootContext + " with template " + templateName, e);
+        	throw new RuntimeException("Error while processing " + rootContext + " with template " + templateName, e);
         }    	
     }
         
@@ -261,7 +261,7 @@ public class TemplateHelper {
 			return templateLoader.findTemplateSource(templateName)!=null;
 		}
 		catch (IOException e) {
-			throw new ExporterException("templateExists for " + templateName + " failed", e);
+			throw new RuntimeException("templateExists for " + templateName + " failed", e);
 		}
     }
 

@@ -21,7 +21,6 @@ import org.hibernate.proxy.AbstractLazyInitializer;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.map.MapProxy;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;
@@ -86,7 +85,6 @@ public class MapProxySerializationTest extends BaseCoreFunctionalTestCase {
 	@SuppressWarnings("unchecked")
 	@Test
 	@TestForIssue(jiraKey = "HHH-7686")
-	@FailureExpected(jiraKey = "HHH-7686")
 	public void testInitializedProxySerializationIfTargetInPersistenceContext() {
 		final Session s = openSession();
 
@@ -128,7 +126,6 @@ public class MapProxySerializationTest extends BaseCoreFunctionalTestCase {
 	@SuppressWarnings("unchecked")
 	@Test
 	@TestForIssue(jiraKey = "HHH-7686")
-	@FailureExpected(jiraKey = "HHH-7686")
 	public void testUninitializedProxySerializationIfTargetInPersistenceContext() {
 		final Session s = openSession();
 
@@ -210,7 +207,6 @@ public class MapProxySerializationTest extends BaseCoreFunctionalTestCase {
 	@SuppressWarnings("unchecked")
 	@Test
 	@TestForIssue(jiraKey = "HHH-7686")
-	@FailureExpected(jiraKey = "HHH-7686")
 	public void testProxyInitializationWithoutTXAfterDeserialization() {
 		final Session s = openSession();
 

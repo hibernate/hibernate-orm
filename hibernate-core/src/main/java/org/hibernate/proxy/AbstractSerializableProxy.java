@@ -9,7 +9,7 @@ package org.hibernate.proxy;
 import java.io.Serializable;
 
 /**
- * Convenience base class for SerializableProxy.
+ * Convenience base class for the serialized form of {@link AbstractLazyInitializer}.
  * 
  * @author Gail Badner
  */

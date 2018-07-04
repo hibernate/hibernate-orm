@@ -21,8 +21,10 @@ public abstract class AbstractSerializableProxy implements Serializable {
 	private boolean allowLoadOutsideTransaction;
 
 	/**
-	 * For serialization
+	 * @deprecated This constructor was initially intended for serialization only, and is not useful anymore.
+	 * In any case it should not be relied on by user code.
 	 */
+	@Deprecated
 	protected AbstractSerializableProxy() {
 	}
 

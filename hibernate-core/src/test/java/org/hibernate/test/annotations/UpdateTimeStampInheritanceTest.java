@@ -277,7 +277,7 @@ public class UpdateTimeStampInheritanceTest extends BaseEntityManagerFunctionalT
 		}
 	}
 
-	@Entity
+	@Entity(name = "Customer")
 	@Table(name = "customer")
 	public static class Customer extends AbstractPerson {
 		private String email;

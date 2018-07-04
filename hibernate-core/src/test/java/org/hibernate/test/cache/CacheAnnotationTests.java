@@ -48,7 +48,7 @@ public class CacheAnnotationTests extends BaseCoreFunctionalTestCase {
 		} );
 	}
 
-	@Entity(name = "NoCacheConcurrencyStrategyEntity")
+	@Entity(name = "NoCacheConcurrencyStrategy")
 	@Cache(usage = CacheConcurrencyStrategy.NONE)
 	public static class NoCacheConcurrencyStrategyEntity {
 		@Id

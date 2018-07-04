@@ -94,7 +94,7 @@ public class InsertOrderingWithBaseClassReferencingSubclass
 	public static class TableA extends OwnedTable {
 	}
 
-	@Entity
+	@Entity(name = "TableB")
 	public static class TableB extends OwnedTable {
 	}
 

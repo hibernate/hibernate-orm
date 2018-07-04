@@ -186,7 +186,7 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 		} );
 	}
 
-	@Entity
+	@Entity(name = "Bid")
 	public static class Bid implements Serializable {
 		@Id
 		Long id;
@@ -200,7 +200,7 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 		Item item;
 	}
 
-	@Entity
+	@Entity(name = "Item")
 	public static class Item implements Serializable {
 		@Id
 		Long id;

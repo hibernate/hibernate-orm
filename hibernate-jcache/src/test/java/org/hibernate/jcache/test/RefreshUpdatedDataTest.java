@@ -188,7 +188,7 @@ public class RefreshUpdatedDataTest extends BaseUnitTestCase {
 		);
 	}
 
-	@Entity(name = "ReadWriteCacheableItem")
+	@Entity(name = "RwItem")
 	@Table(name = "RW_ITEM")
 	@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "item")
 	public static class ReadWriteCacheableItem {
@@ -231,7 +231,7 @@ public class RefreshUpdatedDataTest extends BaseUnitTestCase {
 		}
 	}
 
-	@Entity(name = "ReadWriteVersionedCacheableItem")
+	@Entity(name = "RwVersionedItem")
 	@Table(name = "RW_VERSIONED_ITEM")
 	@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "item")
 	public static class ReadWriteVersionedCacheableItem {
@@ -277,7 +277,7 @@ public class RefreshUpdatedDataTest extends BaseUnitTestCase {
 		}
 	}
 
-	@Entity(name = "NonStrictReadWriteCacheableItem")
+	@Entity(name = "NrwItem")
 	@Table(name = "RW_NOSTRICT_ITEM")
 	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, region = "item")
 	public static class NonStrictReadWriteCacheableItem {
@@ -320,7 +320,7 @@ public class RefreshUpdatedDataTest extends BaseUnitTestCase {
 		}
 	}
 
-	@Entity(name = "NonStrictReadWriteVersionedCacheableItem")
+	@Entity(name = "NrwVersionedItem")
 	@Table(name = "RW_NOSTRICT_VER_ITEM")
 	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, region = "item")
 	public static class NonStrictReadWriteVersionedCacheableItem {

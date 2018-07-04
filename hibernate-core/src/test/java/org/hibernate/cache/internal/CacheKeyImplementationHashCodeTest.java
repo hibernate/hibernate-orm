@@ -50,7 +50,6 @@ public class CacheKeyImplementationHashCodeTest {
 				1, sessionFactory.getMetamodel().entityPersister( AnotherEntity.class ), sessionFactory
 		);
 		assertFalse( anEntityCacheKey.equals( anotherEntityCacheKey ) );
-		assertNotEquals( anEntityCacheKey.hashCode(), anotherEntityCacheKey.hashCode() );
 	}
 
 	private CacheKeyImplementation createCacheKeyImplementation(

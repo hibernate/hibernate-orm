@@ -1112,16 +1112,23 @@ public final class SessionImpl
 		LoadEvent event = loadEvent;
 		loadEvent = null;
 		event = recycleEventInstance( event, id, entityName );
-		fireLoad( event, LoadEventListener.IMMEDIATE_LOAD );
-		Object result = event.getResult();
-		if ( loadEvent == null ) {
-			event.setEntityClassName( null );
-			event.setEntityId( null );
-			event.setInstanceToLoad( null );
-			event.setResult( null );
-			loadEvent = event;
+		boolean success = false;
+		try {
+			fireLoad( event, LoadEventListener.IMMEDIATE_LOAD );
+			Object result = event.getResult();
+			if ( loadEvent == null ) {
+				event.setEntityClassName( null );
+				event.setEntityId( null );
+				event.setInstanceToLoad( null );
+				event.setResult( null );
+				loadEvent = event;
+			}
+			success = true;
+			return result;
 		}
-		return result;
+		finally {
+			afterOperation( success );
+		}
 	}
 
 	@Override
@@ -2241,11 +2248,18 @@ public final class SessionImpl
 	public void initializeCollection(PersistentCollection collection, boolean writing) {
 		checkOpenOrWaitingForAutoClose();
 		checkTransactionSynchStatus();
-		InitializeCollectionEvent event = new InitializeCollectionEvent( collection, this );
-		for ( InitializeCollectionEventListener listener : listeners( EventType.INIT_COLLECTION ) ) {
-			listener.onInitializeCollection( event );
+		boolean success = false;
+		try {
+			InitializeCollectionEvent event = new InitializeCollectionEvent( collection, this );
+			for ( InitializeCollectionEventListener listener : listeners( EventType.INIT_COLLECTION ) ) {
+				listener.onInitializeCollection( event );
+			}
+			success = true;
 		}
-		delayedAfterCompletion();
+		finally {
+			delayedAfterCompletion();
+			afterOperation( success );
+		}
 	}
 
 	@Override

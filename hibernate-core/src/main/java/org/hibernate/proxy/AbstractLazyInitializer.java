@@ -234,6 +234,26 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	}
 
 	/**
+	 * Attempt to initialize the proxy without loading anything from the database.
+	 *
+	 * This will only have any effect if the proxy is still attached to a session,
+	 * and the entity being proxied has been loaded and added to the persistence context
+	 * of that session since the proxy was created.
+	 */
+	protected final void initializeWithoutLoadIfPossible() {
+		if ( !initialized && session != null && session.isOpen() ) {
+			final EntityKey key = session.generateEntityKey(
+					getIdentifier(),
+					session.getFactory().getMetamodel().entityPersister( getEntityName() )
+			);
+			final Object entity = session.getPersistenceContext().getEntity( key );
+			if ( entity != null ) {
+				setImplementation( entity );
+			}
+		}
+	}
+
+	/**
 	 * Initialize internal state based on the currently attached session,
 	 * in order to be ready to load data even after the proxy is detached from the session.
 	 *

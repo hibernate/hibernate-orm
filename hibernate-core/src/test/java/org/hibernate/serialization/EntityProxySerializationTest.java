@@ -8,6 +8,7 @@ package org.hibernate.serialization;
 
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -90,6 +91,86 @@ public class EntityProxySerializationTest extends BaseCoreFunctionalTestCase {
 		}
 		finally {
 			t.commit();
+			s.close();
+		}
+	}
+
+	/**
+	 * Tests that serializing an initialized proxy will serialize the target instead.
+	 */
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testInitializedProxySerializationIfTargetInPersistenceContext() {
+		final Session s = openSession();
+
+		final Transaction t = s.beginTransaction();
+		try {
+			final ChildEntity child = s.find( ChildEntity.class, 1L );
+
+			final SimpleEntity parent = child.getParent();
+
+			// assert we have an uninitialized proxy
+			assertTrue( parent instanceof HibernateProxy );
+			assertFalse( Hibernate.isInitialized( parent ) );
+
+			// Initialize the proxy
+			parent.getName();
+			assertTrue( Hibernate.isInitialized( parent ) );
+
+			// serialize/deserialize the proxy
+			final SimpleEntity deserializedParent = (SimpleEntity) SerializationHelper.clone( parent );
+
+			// assert the deserialized object is no longer a proxy, but the target of the proxy
+			assertFalse( deserializedParent instanceof HibernateProxy );
+			assertEquals( "TheParent", deserializedParent.getName() );
+		}
+		finally {
+			if ( t.isActive() ) {
+				t.rollback();
+			}
+			s.close();
+		}
+	}
+
+	/**
+	 * Tests that serializing a proxy which is not initialized
+	 * but whose target has been (separately) added to the persistence context
+	 * will serialize the target instead.
+	 */
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testUninitializedProxySerializationIfTargetInPersistenceContext() {
+		final Session s = openSession();
+
+		final Transaction t = s.beginTransaction();
+		try {
+			final ChildEntity child = s.find( ChildEntity.class, 1L );
+
+			final SimpleEntity parent = child.getParent();
+
+			// assert we have an uninitialized proxy
+			assertTrue( parent instanceof HibernateProxy );
+			assertFalse( Hibernate.isInitialized( parent ) );
+
+			// Load the target of the proxy without the proxy being made aware of it
+			s.detach( parent );
+			s.find( SimpleEntity.class, 1L );
+			s.update( parent );
+
+			// assert we still have an uninitialized proxy
+			assertFalse( Hibernate.isInitialized( parent ) );
+
+			// serialize/deserialize the proxy
+			final SimpleEntity deserializedParent = (SimpleEntity) SerializationHelper.clone( parent );
+
+			// assert the deserialized object is no longer a proxy, but the target of the proxy
+			assertFalse( deserializedParent instanceof HibernateProxy );
+			assertEquals( "TheParent", deserializedParent.getName() );
+		}
+		finally {
+			if ( t.isActive() ) {
+				t.rollback();
+			}
 			s.close();
 		}
 	}

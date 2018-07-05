@@ -187,6 +187,8 @@ distributions {
                     exclude( '**/.nbattrs' )
                     exclude( '**/out/**' )
                     exclude( '**/bin/**' )
+                    exclude( 'build/**' )
+                    exclude( '*/build/**' )
                 }
             }
         }

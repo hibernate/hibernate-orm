@@ -610,12 +610,12 @@ The default value of this setting is determined by the value for `hibernate.gene
 [[configurations-cache]]
 === Cache Properties
 
-`*hibernate.cache.region.factory_class*` (e.g. `org.hibernate.cache.infinispan.InfinispanRegionFactory`)::
-The fully-qualified name of the `RegionFactory` implementation class.
+`*hibernate.cache.region.factory_class*` (e.g. `jcache`)::
+Either a shortcut name (e.g. `jcache`, `ehcache`) or the fully-qualified name of the `RegionFactory` implementation class.
 
 `*hibernate.cache.default_cache_concurrency_strategy*`::
 Setting used to give the name of the default https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CacheConcurrencyStrategy.html[`CacheConcurrencyStrategy`] to use
-when either `@javax.persistence.Cacheable` or `@org.hibernate.annotations.Cache`.  `@org.hibernate.annotations.Cache` is used to override the global setting.
+when either `@javax.persistence.Cacheable` or `@org.hibernate.annotations.Cache`. `@org.hibernate.annotations.Cache` is used to override the global setting.
 
 `*hibernate.cache.use_minimal_puts*` (e.g. `true` (default value) or `false`)::
 Optimizes second-level cache operation to minimize writes, at the cost of more frequent reads. This is most useful for clustered caches and is enabled by default for clustered cache implementations.
@@ -650,17 +650,8 @@ Sets the associated collection cache concurrency strategy for the designated reg
 [[configurations-infinispan]]
 === Infinispan properties
 
-`*hibernate.cache.infinispan.cfg*` (e.g. `org/hibernate/cache/infinispan/builder/infinispan-configs.xml`)::
-Classpath or filesystem resource containing the Infinispan configuration settings.
-
-`*hibernate.cache.infinispan.statistics*`::
-Property name that controls whether Infinispan statistics are enabled. The property value is expected to be a boolean true or false, and it overrides statistic configuration in base Infinispan configuration, if provided.
-
-`*hibernate.cache.infinispan.use_synchronization*`::
-Deprecated setting because Infinispan is designed to always register a `Synchronization` for `TRANSACTIONAL` caches.
-
-`*hibernate.cache.infinispan.cachemanager*` (e.g. There is no default value, the user must specify the property.)::
-Specifies the JNDI name under which the `EmbeddedCacheManager` is bound.
+For more details about how to customize the Infinispan second-level cache provider, check out the
+http://infinispan.org/docs/stable/user_guide/user_guide.html#configuration_properties[Infinispan User Guide]
 
 [[configurations-transactions]]
 === Transactions properties

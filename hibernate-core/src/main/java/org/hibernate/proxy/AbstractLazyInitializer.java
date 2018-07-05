@@ -163,22 +163,29 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	@Override
 	public final void initialize() throws HibernateException {
 		if ( !initialized ) {
-			if ( allowLoadOutsideTransaction ) {
-				permissiveInitialization();
+			try {
+				if ( allowLoadOutsideTransaction ) {
+					permissiveInitialization();
+				}
+				else if ( session == null ) {
+					throw new LazyInitializationException( "could not initialize proxy [" + entityName + "#" + id + "] - no Session" );
+				}
+				else if ( !session.isOpenOrWaitingForAutoClose() ) {
+					throw new LazyInitializationException( "could not initialize proxy [" + entityName + "#" + id + "] - the owning Session was closed" );
+				}
+				else if ( !session.isConnected() ) {
+					throw new LazyInitializationException( "could not initialize proxy [" + entityName + "#" + id + "] - the owning Session is disconnected" );
+				}
+				else {
+					target = session.immediateLoad( entityName, id );
+					initialized = true;
+					checkTargetState( session );
+				}
 			}
-			else if ( session == null ) {
-				throw new LazyInitializationException( "could not initialize proxy [" + entityName + "#" + id + "] - no Session" );
-			}
-			else if ( !session.isOpenOrWaitingForAutoClose() ) {
-				throw new LazyInitializationException( "could not initialize proxy [" + entityName + "#" + id + "] - the owning Session was closed" );
-			}
-			else if ( !session.isConnected() ) {
-				throw new LazyInitializationException( "could not initialize proxy [" + entityName + "#" + id + "] - the owning Session is disconnected" );
-			}
-			else {
-				target = session.immediateLoad( entityName, id );
-				initialized = true;
-				checkTargetState(session);
+			finally {
+				if ( session != null && !session.isTransactionInProgress() ) {
+					session.getJdbcCoordinator().afterTransaction();
+				}
 			}
 		}
 		else {

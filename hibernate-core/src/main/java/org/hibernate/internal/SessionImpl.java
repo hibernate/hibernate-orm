@@ -3380,7 +3380,7 @@ public class SessionImpl
 			if ( getLoadQueryInfluencers().getEffectiveEntityGraph().getSemantic() == GraphSemantic.FETCH ) {
 				setEnforcingFetchGraph( true );
 			}
-			
+
 			return loadAccess.load( (Serializable) primaryKey );
 		}
 		catch ( EntityNotFoundException ignored ) {

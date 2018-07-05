@@ -186,6 +186,7 @@ distributions {
                     exclude( '**/.settings' )
                     exclude( '**/.nbattrs' )
                     exclude( '**/out/**' )
+                    exclude( '**/bin/**' )
                 }
             }
         }

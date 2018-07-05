@@ -979,7 +979,7 @@ This behavior can be altered in two ways:
 
 [NOTE]
 ====
-The HQL query `from java.lang.Object` is totally valid (although not very practical from a performance perspetive)!
+The HQL query `from java.lang.Object` is totally valid (although not very practical from a performance perspective)!
 
 It returns every object of every entity type defined by your application mappings.
 ====

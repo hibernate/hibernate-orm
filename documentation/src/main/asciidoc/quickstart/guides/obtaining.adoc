@@ -17,8 +17,6 @@ hibernate-proxool:: Integrates the http://proxool.sourceforge.net/[Proxool] conn
 hibernate-jcache:: Integrates the https://jcp.org/en/jsr/detail?id=107$$[JCache] caching specification into Hibernate,
 enabling any compliant implementation to become a second-level cache provider.
 hibernate-ehcache:: Integrates the http://ehcache.org/[Ehcache] caching library into Hibernate as a second-level cache provider.
-hibernate-infinispan:: Integrates the http://infinispan.org/[Infinispan] caching library into Hibernate as a second-level cache provider.
-
 
 === Release Bundle Downloads
 

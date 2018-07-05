@@ -28,54 +28,67 @@ public class MapProxy implements HibernateProxy, Map, Serializable {
 		this.li = li;
 	}
 
+	@Override
 	public LazyInitializer getHibernateLazyInitializer() {
 		return li;
 	}
 
+	@Override
 	public int size() {
 		return li.getMap().size();
 	}
 
+	@Override
 	public void clear() {
 		li.getMap().clear();
 	}
 
+	@Override
 	public boolean isEmpty() {
 		return li.getMap().isEmpty();
 	}
 
+	@Override
 	public boolean containsKey(Object key) {
 		return li.getMap().containsKey(key);
 	}
 
+	@Override
 	public boolean containsValue(Object value) {
 		return li.getMap().containsValue(value);
 	}
 
+	@Override
 	public Collection values() {
 		return li.getMap().values();
 	}
 
+	@Override
 	public void putAll(Map t) {
 		li.getMap().putAll(t);
 	}
 
+	@Override
 	public Set entrySet() {
 		return li.getMap().entrySet();
 	}
 
+	@Override
 	public Set keySet() {
 		return li.getMap().keySet();
 	}
 
+	@Override
 	public Object get(Object key) {
 		return li.getMap().get(key);
 	}
 
+	@Override
 	public Object remove(Object key) {
 		return li.getMap().remove(key);
 	}
 
+	@Override
 	public Object put(Object key, Object value) {
 		return li.getMap().put(key, value);
 	}

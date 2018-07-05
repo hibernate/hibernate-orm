@@ -1,4 +1,4 @@
-package org.hibernate.tool.stat; 
+package org.hibernate.tool.internal.util; 
 
 import javax.swing.event.EventListenerList;
 import javax.swing.event.TreeModelEvent;

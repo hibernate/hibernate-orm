@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
+import org.hibernate.tool.internal.util.AbstractTreeModel;
 import org.hibernate.internal.util.collections.IdentityMap;
 
 public class StatisticsTreeModel extends AbstractTreeModel {

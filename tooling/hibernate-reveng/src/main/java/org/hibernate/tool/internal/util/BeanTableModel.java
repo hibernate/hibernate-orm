@@ -1,4 +1,4 @@
-package org.hibernate.tool.stat;
+package org.hibernate.tool.internal.util;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;

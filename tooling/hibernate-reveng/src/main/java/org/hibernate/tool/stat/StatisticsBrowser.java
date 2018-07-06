@@ -20,6 +20,7 @@ import javax.swing.event.TreeSelectionListener;
 import javax.swing.table.TableCellRenderer;
 
 import org.hibernate.stat.Statistics;
+import org.hibernate.tool.internal.util.BeanTableModel;
 
 /**
  * Very rudimentary statistics browser.

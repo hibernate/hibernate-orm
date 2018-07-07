@@ -3004,4 +3004,13 @@ public abstract class Dialect implements ConversionContext {
 	protected String prependComment(String sql, String comment) {
 		return  "/* " + comment + " */ " + sql;
 	}
+
+	/**
+	 * Does this dialect support ARRAY parameters being passed to the ANY clause?
+	 *
+	 * @return True if feature is supported; false otherwise.
+	 */
+	public boolean supportsArrayParameterInAnyClause() {
+		return false;
+	}
 }

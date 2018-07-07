@@ -789,6 +789,12 @@ public final class StringHelper {
 		}
 	}
 
+	public static StringBuilder buildBatchFetchArrayRestrictionFragment(
+			String alias,
+			String columnName) {
+		return new StringBuilder( StringHelper.qualify( alias, columnName ) ).append( " = ANY(?)" );
+	}
+
 	public static String expandBatchIdPlaceholder(
 			String sql,
 			Serializable[] ids,

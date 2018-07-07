@@ -39,7 +39,11 @@ public enum BatchFetchStyle {
 	 * Dynamically builds its SQL based on the actual number of available ids.  Does still limit to the batch-size
 	 * defined on the entity/collection
 	 */
-	DYNAMIC;
+	DYNAMIC,
+	/**
+	 * Use the ANY SQL operator and pass the identifier as an ARRAY.
+	 */
+	ANY_ARRAY;
 
 	private static final Logger log = Logger.getLogger( BatchFetchStyle.class );
 

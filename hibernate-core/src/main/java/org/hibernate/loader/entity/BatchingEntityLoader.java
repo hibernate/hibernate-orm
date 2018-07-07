@@ -58,6 +58,15 @@ public abstract class BatchingEntityLoader implements UniqueEntityLoader {
 		Type[] types = new Type[ids.length];
 		Arrays.fill( types, persister().getIdentifierType() );
 
+		return buildQueryParameters( id, ids, optionalObject, lockOptions, types );
+	}
+
+	protected QueryParameters buildQueryParameters(
+			Serializable id,
+			Serializable[] ids,
+			Object optionalObject,
+			LockOptions lockOptions,
+			Type[] types) {
 		QueryParameters qp = new QueryParameters();
 		qp.setPositionalParameterTypes( types );
 		qp.setPositionalParameterValues( ids );

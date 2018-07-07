@@ -27,7 +27,8 @@ public abstract class BatchingEntityLoaderBuilder {
 			case PADDED: {
 				return PaddedBatchingEntityLoaderBuilder.INSTANCE;
 			}
-			case DYNAMIC: {
+			case DYNAMIC:
+			case ANY_ARRAY: {
 				return DynamicBatchingEntityLoaderBuilder.INSTANCE;
 			}
 			default: {

@@ -8,6 +8,9 @@ package org.hibernate.type;
 
 import java.io.Serializable;
 import java.lang.reflect.Array;
+import java.sql.JDBCType;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -31,11 +34,20 @@ public class ArrayType extends CollectionType {
 
 	private final Class elementClass;
 	private final Class arrayClass;
+	private final Integer sqlType;
 
 	public ArrayType(TypeFactory.TypeScope typeScope, String role, String propertyRef, Class elementClass) {
 		super( typeScope, role, propertyRef );
 		this.elementClass = elementClass;
 		arrayClass = Array.newInstance(elementClass, 0).getClass();
+		sqlType = null;
+	}
+
+	public ArrayType(int sqlType, Class elementClass) {
+		super( null, null, null );
+		this.elementClass = elementClass;
+		arrayClass = Array.newInstance(elementClass, 0).getClass();
+		this.sqlType = sqlType;
 	}
 
 	@Override
@@ -142,4 +154,25 @@ public class ArrayType extends CollectionType {
 		return true;
 	}
 
+	@Override
+	public void nullSafeSet(
+			PreparedStatement st,
+			Object value,
+			int index,
+			SharedSessionContractImplementor session) throws HibernateException, SQLException {
+		if ( sqlType != null ) {
+			if ( value != null ) {
+				Object[] arrayValue = (Object[]) value;
+				String arrayTypeName = JDBCType.valueOf( sqlType ).getName();
+				java.sql.Array array = session.connection().createArrayOf( arrayTypeName, arrayValue );
+				st.setArray( index, array );
+			}
+			else {
+				st.setNull( index, sqlType );
+			}
+		}
+		else {
+			super.nullSafeSet( st, value, index, session );
+		}
+	}
 }

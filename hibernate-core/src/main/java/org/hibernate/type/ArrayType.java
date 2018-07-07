@@ -8,6 +8,8 @@ package org.hibernate.type;
 
 import java.io.Serializable;
 import java.lang.reflect.Array;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -19,9 +21,11 @@ import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.collection.internal.PersistentArrayHolder;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * A type for persistent arrays.
@@ -31,11 +35,23 @@ public class ArrayType extends CollectionType {
 
 	private final Class elementClass;
 	private final Class arrayClass;
+	private final SqlTypeDescriptor sqlType;
+	private final Dialect dialect;
 
 	public ArrayType(TypeFactory.TypeScope typeScope, String role, String propertyRef, Class elementClass) {
 		super( typeScope, role, propertyRef );
 		this.elementClass = elementClass;
 		arrayClass = Array.newInstance(elementClass, 0).getClass();
+		sqlType = null;
+		dialect = null;
+	}
+
+	public ArrayType(SqlTypeDescriptor sqlType, Dialect dialect, Class elementClass) {
+		super( null, null, null );
+		this.elementClass = elementClass;
+		arrayClass = Array.newInstance(elementClass, 0).getClass();
+		this.sqlType = sqlType;
+		this.dialect = dialect;
 	}
 
 	@Override
@@ -142,4 +158,22 @@ public class ArrayType extends CollectionType {
 		return true;
 	}
 
+	@Override
+	public void nullSafeSet(
+			PreparedStatement st,
+			Object value,
+			int index,
+			SharedSessionContractImplementor session) throws HibernateException, SQLException {
+		if (dialect == null || sqlType == null) {
+			return;
+		}
+		if (value != null) {
+			Object[] arrayValue = (Object[])value;
+			java.sql.Array array = session.connection().createArrayOf(dialect.getTypeName(sqlType.getSqlType()), arrayValue);
+			st.setArray(index, array);
+		}
+		else {
+			st.setNull(index, sqlType.getSqlType());
+		}
+	}
 }

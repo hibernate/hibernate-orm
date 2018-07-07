@@ -6,6 +6,7 @@
  */
 package org.hibernate.loader.plan.exec.spi;
 
+import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessor;
 
 /**
@@ -15,5 +16,8 @@ public interface LoadQueryDetails {
 	public String getSqlStatement();
 
 	public ResultSetProcessor getResultSetProcessor();
+
+	default public void modifyQueryParameters(QueryParameters qp) {
+	}
 
 }

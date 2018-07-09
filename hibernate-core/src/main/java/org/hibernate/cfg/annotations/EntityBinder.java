@@ -1007,8 +1007,8 @@ public class EntityBinder {
 		SecondaryTables secondaryTables = annotatedClass.getAnnotation( SecondaryTables.class );
 		if ( secondaryTables != null ) {
 			for ( SecondaryTable secondaryTable2 : secondaryTables.value() ) {
-				if ( secondaryTable != null && nameToMatch.equals( secondaryTable.name() ) ) {
-					return secondaryTable;
+				if ( secondaryTable2 != null && nameToMatch.equals( secondaryTable2.name() ) ) {
+					return secondaryTable2;
 				}
 			}
 

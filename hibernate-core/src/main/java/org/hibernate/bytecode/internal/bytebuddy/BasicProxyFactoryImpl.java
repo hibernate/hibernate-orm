@@ -54,7 +54,7 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 			return proxy;
 		}
 		catch (Throwable t) {
-			throw new HibernateException( "Unable to instantiate proxy instance" );
+			throw new HibernateException( "Unable to instantiate proxy instance", t );
 		}
 	}
 

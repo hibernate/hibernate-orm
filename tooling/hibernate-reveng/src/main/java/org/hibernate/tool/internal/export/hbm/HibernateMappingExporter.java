@@ -11,7 +11,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.tool.hbm2x.GenericExporter;
-import org.hibernate.tool.hbm2x.TemplateProducer;
+import org.hibernate.tool.internal.export.common.TemplateProducer;
 import org.hibernate.tool.internal.export.pojo.POJOClass;
 
 /**

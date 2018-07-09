@@ -12,6 +12,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.tool.internal.export.common.AbstractExporter;
 import org.hibernate.tool.internal.export.common.ConfigurationNavigator;
+import org.hibernate.tool.internal.export.common.TemplateProducer;
 import org.hibernate.tool.internal.export.pojo.ComponentPOJOClass;
 import org.hibernate.tool.internal.export.pojo.POJOClass;
 

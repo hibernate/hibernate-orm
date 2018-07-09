@@ -953,18 +953,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				}
 			} );
 		}
-		else if ( this.getFactory().getMetamodel().getEntities()
-				.stream()
-				.anyMatch( entityType -> entityType.getJavaType().isAssignableFrom( resultClass ) ) ) {
+		else {
 			query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
-		}
-		else if ( !isObjectArray ) {
-			query.setResultTransformer( new BasicTransformerAdapter() {
-				@Override
-				public Object transformTuple(Object[] tuple, String[] aliases) {
-					return resultClass.cast( tuple[0] );
-				}
-			} );
 		}
 	}
 

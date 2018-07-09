@@ -13,6 +13,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.SessionException;
 import org.hibernate.TransientObjectException;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -44,8 +45,17 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	private boolean allowLoadOutsideTransaction;
 
 	/**
-	 * For serialization from the non-pojo initializers (HHH-3309)
+	 * @deprecated This constructor was initially intended for serialization only, and is not useful anymore.
+	 * In any case it should not be relied on by user code.
+	 * Subclasses should rather implement Serializable with an {@code Object writeReplace()} method returning
+	 * a subclass of {@link AbstractSerializableProxy},
+	 * which in turn implements Serializable and an {@code Object readResolve()} method
+	 * instantiating the {@link AbstractLazyInitializer} subclass
+	 * and calling {@link AbstractSerializableProxy#afterDeserialization(AbstractLazyInitializer)} on it.
+	 * See {@link org.hibernate.proxy.pojo.bytebuddy.ByteBuddyInterceptor} and
+	 * {@link org.hibernate.proxy.pojo.bytebuddy.SerializableProxy} for examples.
 	 */
+	@Deprecated
 	protected AbstractLazyInitializer() {
 	}
 
@@ -232,10 +242,37 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		}
 	}
 
+	/**
+	 * Attempt to initialize the proxy without loading anything from the database.
+	 *
+	 * This will only have any effect if the proxy is still attached to a session,
+	 * and the entity being proxied has been loaded and added to the persistence context
+	 * of that session since the proxy was created.
+	 */
+	public final void initializeWithoutLoadIfPossible() {
+		if ( !initialized && session != null && session.isOpen() ) {
+			final EntityKey key = session.generateEntityKey(
+					getIdentifier(),
+					session.getFactory().getMetamodel().entityPersister( getEntityName() )
+			);
+			final Object entity = session.getPersistenceContext().getEntity( key );
+			if ( entity != null ) {
+				setImplementation( entity );
+			}
+		}
+	}
+
+	/**
+	 * Initialize internal state based on the currently attached session,
+	 * in order to be ready to load data even after the proxy is detached from the session.
+	 *
+	 * This method only has any effect if
+	 * {@link SessionFactoryOptions#isInitializeLazyStateOutsideTransactionsEnabled()} is {@code true}.
+	 */
 	protected void prepareForPossibleLoadingOutsideTransaction() {
 		if ( session != null ) {
 			allowLoadOutsideTransaction = session.getFactory().getSessionFactoryOptions().isInitializeLazyStateOutsideTransactionsEnabled();
-
+			
 			if ( allowLoadOutsideTransaction && sessionFactoryUuid == null ) {
 				sessionFactoryUuid = session.getFactory().getUuid();
 			}
@@ -352,7 +389,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	 *
 	 * @throws IllegalStateException if isReadOnlySettingAvailable() == true
 	 */
-	protected final Boolean isReadOnlyBeforeAttachedToSession() {
+	public final Boolean isReadOnlyBeforeAttachedToSession() {
 		if ( isReadOnlySettingAvailable() ) {
 			throw new IllegalStateException(
 					"Cannot call isReadOnlyBeforeAttachedToSession when isReadOnlySettingAvailable == true [" + entityName + "#" + id + "]"
@@ -362,25 +399,57 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	}
 
 	/**
-	 * Set the read-only/modifiable setting that should be put in affect when it is
-	 * attached to a session.
-	 * <p/>
+	 * Get whether the proxy can load data even
+	 * if it's not attached to a session with an ongoing transaction.
+	 *
+	 * This method should only be called during serialization,
+	 * and only makes sense after a call to {@link #prepareForPossibleLoadingOutsideTransaction()}.
+	 *
+	 * @return {@code true} if out-of-transaction loads are allowed, {@code false} otherwise.
+	 */
+	protected boolean isAllowLoadOutsideTransaction() {
+		return allowLoadOutsideTransaction;
+	}
+
+	/**
+	 * Get the session factory UUID.
+	 *
+	 * This method should only be called during serialization,
+	 * and only makes sense after a call to {@link #prepareForPossibleLoadingOutsideTransaction()}.
+	 *
+	 * @return the session factory UUID.
+	 */
+	protected String getSessionFactoryUuid() {
+		return sessionFactoryUuid;
+	}
+
+	/**
+	 * Restore settings that are not passed to the constructor,
+	 * but are still preserved during serialization.
+	 * 
 	 * This method should only be called during deserialization, before associating
 	 * the proxy with a session.
 	 *
 	 * @param readOnlyBeforeAttachedToSession, the read-only/modifiable setting to use when
 	 * associated with a session; null indicates that the default should be used.
+	 * @param sessionFactoryUuid the session factory uuid, to be used if {@code allowLoadOutsideTransaction} is {@code true}.
+	 * @param allowLoadOutsideTransaction whether the proxy can load data even
+	 * if it's not attached to a session with an ongoing transaction.
 	 *
 	 * @throws IllegalStateException if isReadOnlySettingAvailable() == true
 	 */
 	/* package-private */
-	final void setReadOnlyBeforeAttachedToSession(Boolean readOnlyBeforeAttachedToSession) {
+	final void afterDeserialization(Boolean readOnlyBeforeAttachedToSession,
+			String sessionFactoryUuid, boolean allowLoadOutsideTransaction) {
 		if ( isReadOnlySettingAvailable() ) {
 			throw new IllegalStateException(
-					"Cannot call setReadOnlyBeforeAttachedToSession when isReadOnlySettingAvailable == true [" + entityName + "#" + id + "]"
+					"Cannot call afterDeserialization when isReadOnlySettingAvailable == true [" + entityName + "#" + id + "]"
 			);
 		}
 		this.readOnlyBeforeAttachedToSession = readOnlyBeforeAttachedToSession;
+
+		this.sessionFactoryUuid = sessionFactoryUuid;
+		this.allowLoadOutsideTransaction = allowLoadOutsideTransaction;
 	}
 
 	@Override

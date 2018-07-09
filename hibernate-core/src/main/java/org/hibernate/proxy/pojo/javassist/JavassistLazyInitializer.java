@@ -125,6 +125,8 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 				interfaces,
 				getIdentifier(),
 				( isReadOnlySettingAvailable() ? Boolean.valueOf( isReadOnly() ) : isReadOnlyBeforeAttachedToSession() ),
+				getSessionFactoryUuid(),
+				isAllowLoadOutsideTransaction(),
 				getIdentifierMethod,
 				setIdentifierMethod,
 				componentIdType

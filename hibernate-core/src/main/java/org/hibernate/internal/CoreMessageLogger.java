@@ -1818,4 +1818,10 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = INFO)
 	@Message(value = "Using JtaPlatform implementation: [%s]", id = 490)
 	void usingJtaPlatform(String jtaPlatformClassName);
+
+	@LogMessage(level = WARN)
+	@Message(value = "The [%2$s] association in the [%1$s] entity uses both @NotFound(action = NotFoundAction.IGNORE) and FetchType.LAZY. " +
+			"The NotFoundAction.IGNORE @ManyToOne and @OneToOne associations are always fetched eagerly.", id = 491)
+	void ignoreNotFoundWithFetchTypeLazy(String entity, String association);
+
 }

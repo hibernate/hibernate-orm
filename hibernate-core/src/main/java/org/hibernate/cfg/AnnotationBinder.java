@@ -1750,6 +1750,7 @@ public final class AnnotationBinder {
 				Cascade hibernateCascade = property.getAnnotation( Cascade.class );
 				NotFound notFound = property.getAnnotation( NotFound.class );
 				boolean ignoreNotFound = notFound != null && notFound.action().equals( NotFoundAction.IGNORE );
+				matchIgnoreNotFoundWithFetchType(propertyHolder.getEntityName(), property.getName(), ignoreNotFound, ann.fetch());
 				OnDelete onDeleteAnn = property.getAnnotation( OnDelete.class );
 				boolean onDeleteCascade = onDeleteAnn != null && OnDeleteAction.CASCADE.equals( onDeleteAnn.action() );
 				JoinTable assocTable = propertyHolder.getJoinTable( property );
@@ -1794,6 +1795,7 @@ public final class AnnotationBinder {
 				Cascade hibernateCascade = property.getAnnotation( Cascade.class );
 				NotFound notFound = property.getAnnotation( NotFound.class );
 				boolean ignoreNotFound = notFound != null && notFound.action().equals( NotFoundAction.IGNORE );
+				matchIgnoreNotFoundWithFetchType(propertyHolder.getEntityName(), property.getName(), ignoreNotFound, ann.fetch());
 				OnDelete onDeleteAnn = property.getAnnotation( OnDelete.class );
 				boolean onDeleteCascade = onDeleteAnn != null && OnDeleteAction.CASCADE.equals( onDeleteAnn.action() );
 				JoinTable assocTable = propertyHolder.getJoinTable( property );
@@ -3524,5 +3526,15 @@ public final class AnnotationBinder {
 			}
 		}
 		return false;
+	}
+
+	private static void matchIgnoreNotFoundWithFetchType(
+			String entity,
+			String association,
+			boolean ignoreNotFound,
+			FetchType fetchType) {
+		if ( ignoreNotFound && fetchType == FetchType.LAZY ) {
+			LOG.ignoreNotFoundWithFetchTypeLazy( entity, association );
+		}
 	}
 }

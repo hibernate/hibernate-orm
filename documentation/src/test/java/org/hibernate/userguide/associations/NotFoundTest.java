@@ -82,7 +82,7 @@ public class NotFoundTest extends BaseEntityManagerFunctionalTestCase {
 
 		private String cityName;
 
-		@ManyToOne( fetch = FetchType.LAZY )
+		@ManyToOne
 		@NotFound ( action = NotFoundAction.IGNORE )
 		@JoinColumn(
 			name = "cityName",

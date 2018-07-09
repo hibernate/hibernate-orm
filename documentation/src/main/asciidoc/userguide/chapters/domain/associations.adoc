@@ -425,6 +425,12 @@ However, you can configure this behavior so that Hibernate can ignore such an Ex
 
 To ignore non-existing parent entity references, even though not really recommended, it's possible to use the annotation `org.hibernate.annotation.NotFound` annotation with a value of `org.hibernate.annotations.NotFoundAction.IGNORE`.
 
+[NOTE]
+====
+`@ManyToOne` and `@OneToOne` associations annotated with `@NotFound(action = NotFoundAction.IGNORE)` are always fetched eagerly
+even if you set the `fetch` attribute to `FetchType.LAZY`.
+====
+
 Considering the following `City` and `Person` entity mappings:
 
 [[associations-not-found-domain-model-example]]
@@ -439,7 +445,7 @@ include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-domain-model-
 If we have the following entities in our database:
 
 [[associations-not-found-persist-example]]
-.`@NotFound` mapping example
+.`@NotFound` persist example
 ====
 [source,java]
 ----

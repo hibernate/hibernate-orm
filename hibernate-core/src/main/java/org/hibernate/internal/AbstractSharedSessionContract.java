@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.TimeZone;
@@ -81,7 +80,6 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
-import org.hibernate.transform.BasicTransformerAdapter;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
@@ -934,37 +932,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	private void handleNativeQueryResult(NativeQueryImplementor query, Class resultClass) {
-		boolean isObjectArray = Object[].class.equals( resultClass );
-
 		if ( Tuple.class.equals( resultClass ) ) {
 			query.setResultTransformer( new NativeQueryTupleTransformer() );
 		}
-		else if ( resultClass.isArray() && !isObjectArray ) {
-			Class elementClass = resultClass.getComponentType();
-
-			query.setResultTransformer( new BasicTransformerAdapter() {
-				@Override
-				public Object transformTuple(Object[] tuple, String[] aliases) {
-					Object[] result = (Object[]) Array.newInstance( elementClass, tuple.length );
-					for ( int i = 0; i < tuple.length; i++ ) {
-						result[i] = elementClass.cast( tuple[i] );
-					}
-					return result;
-				}
-			} );
-		}
-		else if ( this.getFactory().getMetamodel().getEntities()
-				.stream()
-				.anyMatch( entityType -> entityType.getJavaType().isAssignableFrom( resultClass ) ) ) {
+		else {
 			query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
-		}
-		else if ( !isObjectArray ) {
-			query.setResultTransformer( new BasicTransformerAdapter() {
-				@Override
-				public Object transformTuple(Object[] tuple, String[] aliases) {
-					return resultClass.cast( tuple[0] );
-				}
-			} );
 		}
 	}
 

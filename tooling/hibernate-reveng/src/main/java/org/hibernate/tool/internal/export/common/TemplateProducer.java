@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.hibernate.tool.api.export.ArtifactCollector;
-import org.hibernate.tool.hbm2x.TemplateHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

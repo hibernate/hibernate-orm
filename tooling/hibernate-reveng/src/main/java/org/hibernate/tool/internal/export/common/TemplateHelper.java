@@ -3,7 +3,7 @@
  *
 
  */
-package org.hibernate.tool.hbm2x;
+package org.hibernate.tool.internal.export.common;
 
 import java.io.BufferedWriter;
 import java.io.File;

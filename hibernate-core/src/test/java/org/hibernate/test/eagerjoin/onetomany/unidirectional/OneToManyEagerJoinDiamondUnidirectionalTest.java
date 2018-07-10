@@ -8,6 +8,7 @@ package org.hibernate.test.eagerjoin.onetomany.unidirectional;
 
 import org.hibernate.stat.Statistics;
 
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.test.eagerjoin.onetomany.OneToManyEagerJoinDiamondTest;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,20 +33,20 @@ public class OneToManyEagerJoinDiamondUnidirectionalTest extends OneToManyEagerJ
 
 	/**
 	 * Entity-Relationship-Diagram:
-	 *
-	 *            +-----+
-	 *   1  +-----+ TOP +------+  1
-	 *      |     +-----+      |
-	 *   N  |                  |  N
-	 *      v                  v
-	 *   +----+             +-----+
-	 *   |LEFT|             |RIGHT|
-	 *   +----+             +-----+
-	 *      |                  |
-	 *   1  |                  |  1
-	 *      |     +------+     |
-	 *   N  +---> |BOTTOM| <---+  N
-	 *            +------+
+	 * <p>
+	 * +-----+
+	 * 1  +-----+ TOP +------+  1
+	 * |     +-----+      |
+	 * N  |                  |  N
+	 * v                  v
+	 * +----+             +-----+
+	 * |LEFT|             |RIGHT|
+	 * +----+             +-----+
+	 * |                  |
+	 * 1  |                  |  1
+	 * |     +------+     |
+	 * N  +---> |BOTTOM| <---+  N
+	 * +------+
 	 */
 	@Before
 	public void createTestData() {
@@ -75,6 +76,7 @@ public class OneToManyEagerJoinDiamondUnidirectionalTest extends OneToManyEagerJ
 	}
 
 	@Test
+	@FailureExpected(jiraKey = "HHH-12752")
 	public void test() {
 		Statistics statistics = runInTransaction( session -> {
 

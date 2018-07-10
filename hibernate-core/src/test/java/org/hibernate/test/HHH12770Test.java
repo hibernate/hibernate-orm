@@ -3,6 +3,8 @@ package org.hibernate.test;
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinColumnsOrFormulas;
 import org.hibernate.annotations.JoinFormula;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.TestForIssue;
@@ -14,7 +16,6 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -32,7 +33,7 @@ public class HHH12770Test extends BaseEntityManagerFunctionalTestCase {
     protected Class<?>[] getAnnotatedClasses() {
         return new Class<?>[]{
                 Stock.class,
-                Code.class
+                Code.class,
         };
     }
 
@@ -47,39 +48,21 @@ public class HHH12770Test extends BaseEntityManagerFunctionalTestCase {
     @Before
     public void setUp() {
         doInJPA(this::entityManagerFactory, entityManager -> {
-            Code codeA1 = new Code();
-            codeA1.setId((long) 1);
-            codeA1.setCopeType(CodeType.TYPE_A);
-            entityManager.persist(codeA1);
+            Code code = new Code();
+            code.setId((long)1);
+            code.setCopeType(CodeType.TYPE_A);
+            entityManager.persist(code);
 
-            Code codeA2 = new Code();
-            codeA2.setId((long) 2);
-            codeA2.setCopeType(CodeType.TYPE_A);
-            entityManager.persist(codeA2);
-
-            Code codeB1 = new Code();
-            codeB1.setId((long) 1);
-            codeB1.setCopeType(CodeType.TYPE_B);
-            entityManager.persist(codeB1);
-
-            Code codeB2 = new Code();
-            codeB2.setId((long) 2);
-            codeB2.setCopeType(CodeType.TYPE_B);
-            entityManager.persist(codeB2);
 
             Stock stock1 = new Stock();
             stock1.setId((long) 1);
-            stock1.setCode(codeA1);
+            stock1.setCode(code);
             entityManager.persist(stock1);
 
             Stock stock2 = new Stock();
             stock2.setId((long) 2);
             entityManager.persist(stock2);
 
-            Stock stock3 = new Stock();
-            stock3.setId((long) 3);
-            stock3.setCode(codeA2);
-            entityManager.persist(stock3);
         });
     }
 
@@ -91,7 +74,7 @@ public class HHH12770Test extends BaseEntityManagerFunctionalTestCase {
                     "  SELECT s FROM Stock s  ")
                     .getResultList();
 
-            assertEquals(3, stocks.size());
+            assertEquals(2, stocks.size());
         });
 
     }
@@ -105,6 +88,7 @@ public class HHH12770Test extends BaseEntityManagerFunctionalTestCase {
         private Long id;
 
         @ManyToOne(fetch = FetchType.LAZY)
+        @NotFound(action = NotFoundAction.IGNORE)
         @JoinColumnsOrFormulas({@JoinColumnOrFormula(column = @JoinColumn(name = "CODE_ID", referencedColumnName = "ID")),
                 @JoinColumnOrFormula(formula = @JoinFormula(referencedColumnName = "TYPE", value = "'TYPE_A'"))})
         private Code code;
@@ -125,7 +109,6 @@ public class HHH12770Test extends BaseEntityManagerFunctionalTestCase {
             this.code = code;
         }
     }
-
 
     @Entity(name = "Code")
     public static class Code implements Serializable {
@@ -159,6 +142,5 @@ public class HHH12770Test extends BaseEntityManagerFunctionalTestCase {
     public enum CodeType {
         TYPE_A, TYPE_B;
     }
-
 
 }

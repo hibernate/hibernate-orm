@@ -8,6 +8,8 @@ package org.hibernate.bytecode.enhance.internal.javassist;
 
 import java.util.Collection;
 import java.util.Locale;
+import java.util.Objects;
+
 import javax.persistence.EmbeddedId;
 import javax.persistence.Id;
 
@@ -20,7 +22,7 @@ import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 /**
  * utility class to generate interceptor methods
  * @see org.hibernate.engine.spi.PersistentAttributeInterceptor
- * 
+ *
  * @author <a href="mailto:lbarreiro@redhat.com">Luis Barreiro</a>
  */
 public abstract class AttributeTypeDescriptor {
@@ -64,7 +66,8 @@ public abstract class AttributeTypeDescriptor {
 				}
 				builder.append(
 						String.format(
-								"  if ( !Objects.deepEquals( %s, $1 ) )",
+								"  if ( !%s.deepEquals( %s, $1 ) )",
+								Objects.class.getName(),
 								readFragment
 						)
 				);

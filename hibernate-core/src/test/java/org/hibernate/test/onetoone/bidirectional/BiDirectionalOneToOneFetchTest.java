@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.onetoone.bidirectional;
 
+import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.engine.internal.StatisticalLoggingSessionEventListener;
 import org.hibernate.testing.TestForIssue;
@@ -33,8 +34,6 @@ import org.junit.Test;
 import javax.persistence.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernateSessionBuilder;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -56,10 +55,14 @@ public class BiDirectionalOneToOneFetchTest extends BaseCoreFunctionalTestCase {
 
 	@After
 	public void delete() {
-		doInHibernate( this::sessionFactory, session -> {
+		Session session = openSession();
+		session.getTransaction().begin();
+		{
 			session.createQuery( "delete from EntityA" ).executeUpdate();
 			session.createQuery( "delete from EntityB" ).executeUpdate();
-		} );
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	public SessionBuilder sessionBuilder() {
@@ -79,28 +82,34 @@ public class BiDirectionalOneToOneFetchTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-3930" )
 	public void testEagerFetchBidirectionalOneToOneWithDirectFetching() {
-		doInHibernateSessionBuilder( this::sessionBuilder, session -> {
+		Session session = sessionBuilder().openSession();
+		session.getTransaction().begin();
+		{
 			EntityA a = new EntityA( 1L, new EntityB( 2L ) );
-			
+
 			session.persist( a );
 			session.flush();
 			session.clear();
 
 			queryExecutionCount.set( 0 );
-			session.find( EntityA.class, 1L );
-			
+			session.get( EntityA.class, 1L );
+
 			assertEquals(
 					"Join fetching inverse one-to-one didn't use the object already present in the result set!",
 					1,
 					queryExecutionCount.get()
 			);
-		} );
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-3930" )
 	public void testFetchBidirectionalOneToOneWithOneJoinFetch() {
-		doInHibernateSessionBuilder( this::sessionBuilder, session -> {
+		Session session = sessionBuilder().openSession();
+		session.getTransaction().begin();
+		{
 			EntityA a = new EntityA( 1L, new EntityB( 2L ) );
 
 			session.persist( a );
@@ -117,13 +126,17 @@ public class BiDirectionalOneToOneFetchTest extends BaseCoreFunctionalTestCase {
 					1,
 					queryExecutionCount.get()
 			);
-		} );
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-3930" )
 	public void testFetchBidirectionalOneToOneWithCircularJoinFetch() {
-		doInHibernateSessionBuilder( this::sessionBuilder, session -> {
+		Session session = sessionBuilder().openSession();
+		session.getTransaction().begin();
+		{
 			EntityA a = new EntityA( 1L, new EntityB( 2L ) );
 
 			session.persist( a );
@@ -140,15 +153,17 @@ public class BiDirectionalOneToOneFetchTest extends BaseCoreFunctionalTestCase {
 					1,
 					queryExecutionCount.get()
 			);
-		} );
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Entity(name = "EntityA")
 	public static class EntityA {
-		
+
 		@Id
 		private Long id;
-		
+
 		@OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 		@JoinColumn(name = "b_id")
 		private EntityB b;
@@ -165,10 +180,10 @@ public class BiDirectionalOneToOneFetchTest extends BaseCoreFunctionalTestCase {
 
 	@Entity(name = "EntityB")
 	public static class EntityB {
-		
+
 		@Id
 		private Long id;
-		
+
 		@OneToOne(mappedBy = "b", fetch = FetchType.EAGER)
 		private EntityA a;
 

@@ -1,7 +1,8 @@
 package org.hibernate.test.cache.infinispan.functional;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -12,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
+import javax.persistence.OptimisticLockException;
 import javax.transaction.Synchronization;
 
 import org.hibernate.PessimisticLockException;
@@ -21,6 +23,7 @@ import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.infinispan.util.VersionedEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.jdbc.Work;
 
 import org.hibernate.test.cache.infinispan.functional.entities.Item;
 import org.hibernate.test.cache.infinispan.functional.entities.OtherItem;
@@ -186,6 +189,54 @@ public class VersionedTest extends AbstractNonInvalidationTest {
       assertTrue(action.get(WAIT_TIMEOUT, TimeUnit.SECONDS));
       assertNull(synchronizationException.get());
       return entryRef;
+   }
+
+   @Test
+   public void testStaleReadAfterUpdate() throws Exception {
+      withTxSession(
+              s -> {
+                 s.get( Item.class, itemId );
+              }
+      );
+      assertSingleCacheEntry();
+
+      withTxSession(
+              s -> {
+                 s.doWork(
+                         new Work() {
+                            @Override
+                            public void execute(Connection connection) throws SQLException {
+                               connection.createStatement().execute( "update Items set version = version + 1" );
+                            }
+                         }
+                 );
+              }
+      );
+
+      assertSingleCacheEntry();
+
+      for ( int i = 0 ; i < 10 ; i++) {
+         final String description = "description" + i;
+         try {
+            withTxSession(
+                 s -> {
+                       Item item = s.get( Item.class, itemId );
+                       item.setDescription( description );
+                 }
+            );
+         }
+         catch ( OptimisticLockException ex ) {
+            // ignore
+         }
+      }
+
+      // do one more time to make sure it actually recovers
+      withTxSession(
+              s -> {
+                 Item item = s.get( Item.class, itemId );
+                 item.setDescription( "last try" );
+              }
+      );
    }
 
    @Test

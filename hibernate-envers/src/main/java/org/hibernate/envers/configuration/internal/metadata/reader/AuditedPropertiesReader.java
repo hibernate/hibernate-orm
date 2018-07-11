@@ -7,6 +7,8 @@
 package org.hibernate.envers.configuration.internal.metadata.reader;
 
 import java.lang.annotation.Annotation;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -335,29 +337,50 @@ public class AuditedPropertiesReader {
 	 *
 	 * @param clazz Currently processed class.
 	 */
-	private void addPropertiesFromClass(XClass clazz) {
+	private void addPropertiesFromClass(final XClass clazz) {
 		final Audited allClassAudited = computeAuditConfiguration( clazz );
 
 		//look in the class
 		addFromProperties(
-				clazz.getDeclaredProperties( "field" ),
+				getPropertiesFromClassByType( clazz, AccessType.FIELD ),
 				"field",
 				fieldAccessedPersistentProperties,
 				allClassAudited
 		);
+
 		addFromProperties(
-				clazz.getDeclaredProperties( "property" ),
+				getPropertiesFromClassByType( clazz, AccessType.PROPERTY ),
 				"property",
 				propertyAccessedPersistentProperties,
 				allClassAudited
 		);
 
 		if ( allClassAudited != null || !auditedPropertiesHolder.isEmpty() ) {
-			final XClass superclazz = clazz.getSuperclass();
+			final PrivilegedAction<XClass> action = new PrivilegedAction<XClass>() {
+				@Override
+				public XClass run() {
+					return clazz.getSuperclass();
+				}
+			};
+
+			final XClass superclazz = System.getSecurityManager() != null
+					? AccessController.doPrivileged( action )
+					: action.run();
+
 			if ( !clazz.isInterface() && !"java.lang.Object".equals( superclazz.getName() ) ) {
 				addPropertiesFromClass( superclazz );
 			}
 		}
+	}
+
+	private Iterable<XProperty> getPropertiesFromClassByType(final XClass clazz, final AccessType accessType) {
+		final PrivilegedAction<Iterable<XProperty>> action = new PrivilegedAction<Iterable<XProperty>>() {
+			@Override
+			public Iterable<XProperty> run() {
+				return clazz.getDeclaredProperties( accessType.getType() );
+			}
+		};
+		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
 	}
 
 	private void addFromProperties(

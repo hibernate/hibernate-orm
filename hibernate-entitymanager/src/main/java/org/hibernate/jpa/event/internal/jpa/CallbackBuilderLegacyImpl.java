@@ -10,6 +10,8 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.Entity;
@@ -89,7 +91,7 @@ public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 		boolean stopDefaultListeners = false;
 		do {
 			Callback callback = null;
-			List<XMethod> methods = currentClazz.getDeclaredMethods();
+			List<XMethod> methods = getDeclaredMethods( currentClazz );
 			for ( final XMethod xMethod : methods ) {
 				if ( xMethod.isAnnotationPresent( callbackType.getCallbackAnnotation() ) ) {
 					Method method = reflectionManager.toMethod( xMethod );
@@ -158,7 +160,7 @@ public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 			if ( listener != null ) {
 				XClass xListener = reflectionManager.toXClass( listener );
 				callbacksMethodNames = new ArrayList<String>();
-				List<XMethod> methods = xListener.getDeclaredMethods();
+				List<XMethod> methods = getDeclaredMethods( xListener );
 				for ( final XMethod xMethod : methods ) {
 					if ( xMethod.isAnnotationPresent( callbackType.getCallbackAnnotation() ) ) {
 						final Method method = reflectionManager.toMethod( xMethod );
@@ -245,4 +247,15 @@ public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 			}
 		}
 	}
+
+	private static List<XMethod> getDeclaredMethods(final XClass clazz) {
+		final PrivilegedAction<List<XMethod>> action = new PrivilegedAction<List<XMethod>>() {
+			@Override
+			public List<XMethod> run() {
+				return clazz.getDeclaredMethods();
+			}
+		};
+		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
+	}
+
 }

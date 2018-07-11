@@ -6,6 +6,7 @@
  */
 package org.hibernate.cache.spi;
 
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 
 import org.jboss.logging.BasicLogger;
@@ -89,5 +90,13 @@ public interface SecondLevelCacheLogger extends BasicLogger {
 			id = NAMESPACE + 7
 	)
 	void usingLegacyCacheName(String currentName, String legacyName);
+
+	@LogMessage(level = WARN)
+	@Message(
+			value = "Cache [%1$s] uses the [%2$s] access type, but [%3$s] does not support it natively." +
+					" Make sure your cache implementation supports JTA transactions.",
+			id = NAMESPACE + 8
+	)
+	void nonStandardSupportForAccessType(String key, String accessType, String regionName);
 
 }

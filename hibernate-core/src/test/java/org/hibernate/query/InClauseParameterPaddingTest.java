@@ -15,12 +15,11 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -29,18 +28,13 @@ import static org.junit.Assert.assertTrue;
 @TestForIssue( jiraKey = "HHH-12469" )
 public class InClauseParameterPaddingTest extends BaseEntityManagerFunctionalTestCase {
 
-	private PreparedStatementSpyConnectionProvider connectionProvider;
+	private SQLStatementInterceptor sqlStatementInterceptor;
 
 	@Override
-	public void buildEntityManagerFactory() {
-		connectionProvider = new PreparedStatementSpyConnectionProvider();
-		super.buildEntityManagerFactory();
-	}
-
-	@Override
-	public void releaseResources() {
-		super.releaseResources();
-		connectionProvider.stop();
+	protected void addConfigOptions(Map options) {
+		sqlStatementInterceptor = new SQLStatementInterceptor( options );
+		options.put( AvailableSettings.USE_SQL_COMMENTS, Boolean.TRUE.toString() );
+		options.put( AvailableSettings.IN_CLAUSE_PARAMETER_PADDING, Boolean.TRUE.toString() );
 	}
 
 	@Override
@@ -48,15 +42,6 @@ public class InClauseParameterPaddingTest extends BaseEntityManagerFunctionalTes
 		return new Class[] {
 			Person.class
 		};
-	}
-
-	@Override
-	protected void addConfigOptions(Map options) {
-		options.put( AvailableSettings.IN_CLAUSE_PARAMETER_PADDING, Boolean.TRUE.toString() );
-		options.put(
-				org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
-				connectionProvider
-		);
 	}
 
 	@Override
@@ -87,7 +72,7 @@ public class InClauseParameterPaddingTest extends BaseEntityManagerFunctionalTes
 	}
 
 	private void validateInClauseParameterPadding(String expectedInClause, Integer... ids) {
-		connectionProvider.clear();
+		sqlStatementInterceptor.clear();
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			return entityManager.createQuery(
@@ -98,7 +83,7 @@ public class InClauseParameterPaddingTest extends BaseEntityManagerFunctionalTes
 			.getResultList();
 		} );
 
-		assertTrue(connectionProvider.getPreparedSQLStatements().get( 0 ).endsWith( expectedInClause ));
+		assertTrue(sqlStatementInterceptor.getSqlQueries().get( 0 ).endsWith( expectedInClause ));
 	}
 
 	@Entity(name = "Person")

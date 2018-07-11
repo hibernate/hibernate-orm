@@ -23,8 +23,8 @@ import org.hibernate.query.Query;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -37,27 +37,12 @@ import static org.junit.Assert.assertTrue;
 @RequiresDialect( Oracle8iDialect.class )
 public class QueryHintTest extends BaseNonConfigCoreFunctionalTestCase {
 
-	private PreparedStatementSpyConnectionProvider connectionProvider;
+	private SQLStatementInterceptor sqlStatementInterceptor;
 
 	@Override
 	protected void addSettings(Map settings) {
 		settings.put( AvailableSettings.USE_SQL_COMMENTS, "true" );
-		settings.put(
-				org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
-				connectionProvider
-		);
-	}
-
-	@Override
-	protected void buildResources() {
-		connectionProvider = new PreparedStatementSpyConnectionProvider( false, false );
-		super.buildResources();
-	}
-
-	@Override
-	public void releaseResources() {
-		super.releaseResources();
-		connectionProvider.stop();
+		sqlStatementInterceptor = new SQLStatementInterceptor( settings );
 	}
 
 	@Override
@@ -84,7 +69,7 @@ public class QueryHintTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testQueryHint() {
 
-		connectionProvider.clear();
+		sqlStatementInterceptor.clear();
 
 		// test Query w/ a simple Oracle optimizer hint
 		doInHibernate( this::sessionFactory, s -> {
@@ -96,12 +81,9 @@ public class QueryHintTest extends BaseNonConfigCoreFunctionalTestCase {
 			assertEquals(results.size(), 2);
 		} );
 
-		assertEquals(
-			1,
-			connectionProvider.getPreparedStatements().size()
-		);
-		assertTrue( connectionProvider.getPreparedSQLStatements().get( 0 ).contains( "select /*+ ALL_ROWS */" ) );
-		connectionProvider.clear();
+		sqlStatementInterceptor.assertExecutedCount( 1 );
+		assertTrue( sqlStatementInterceptor.getSqlQueries().get( 0 ).contains( "select /*+ ALL_ROWS */" ) );
+		sqlStatementInterceptor.clear();
 
 		// test multiple hints
 		doInHibernate( this::sessionFactory, s -> {
@@ -114,12 +96,9 @@ public class QueryHintTest extends BaseNonConfigCoreFunctionalTestCase {
 			assertEquals(results.size(), 2);
 		} );
 
-		assertEquals(
-				1,
-				connectionProvider.getPreparedStatements().size()
-		);
-		assertTrue( connectionProvider.getPreparedSQLStatements().get( 0 ).contains( "select /*+ ALL_ROWS, USE_CONCAT */" ) );
-		connectionProvider.clear();
+		sqlStatementInterceptor.assertExecutedCount( 1 );
+		assertTrue( sqlStatementInterceptor.getSqlQueries().get( 0 ).contains( "select /*+ ALL_ROWS, USE_CONCAT */" ) );
+		sqlStatementInterceptor.clear();
 		
 		// ensure the insertion logic can handle a comment appended to the front
 		doInHibernate( this::sessionFactory, s -> {
@@ -132,12 +111,10 @@ public class QueryHintTest extends BaseNonConfigCoreFunctionalTestCase {
 			assertEquals(results.size(), 2);
 		} );
 
-		assertEquals(
-				1,
-				connectionProvider.getPreparedStatements().size()
-		);
-		assertTrue( connectionProvider.getPreparedSQLStatements().get( 0 ).contains( "select /*+ ALL_ROWS */" ) );
-		connectionProvider.clear();
+		sqlStatementInterceptor.assertExecutedCount( 1 );
+
+		assertTrue( sqlStatementInterceptor.getSqlQueries().get( 0 ).contains( "select /*+ ALL_ROWS */" ) );
+		sqlStatementInterceptor.clear();
 
 		// test Criteria
 		doInHibernate( this::sessionFactory, s -> {
@@ -149,18 +126,16 @@ public class QueryHintTest extends BaseNonConfigCoreFunctionalTestCase {
 			assertEquals(results.size(), 2);
 		} );
 
-		assertEquals(
-				1,
-				connectionProvider.getPreparedStatements().size()
-		);
-		assertTrue( connectionProvider.getPreparedSQLStatements().get( 0 ).contains( "select /*+ ALL_ROWS */" ) );
-		connectionProvider.clear();
+				sqlStatementInterceptor.assertExecutedCount( 1 );
+
+		assertTrue( sqlStatementInterceptor.getSqlQueries().get( 0 ).contains( "select /*+ ALL_ROWS */" ) );
+		sqlStatementInterceptor.clear();
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12362" )
 	public void testQueryHintAndComment() {
-		connectionProvider.clear();
+		sqlStatementInterceptor.clear();
 
 		doInHibernate( this::sessionFactory, s -> {
 			Query query = s.createQuery( "FROM QueryHintTest$Employee e WHERE e.department.name = :departmentName" )
@@ -172,12 +147,10 @@ public class QueryHintTest extends BaseNonConfigCoreFunctionalTestCase {
 			assertEquals(results.size(), 2);
 		} );
 
-		assertEquals(
-				1,
-				connectionProvider.getPreparedStatements().size()
-		);
-		assertTrue( connectionProvider.getPreparedSQLStatements().get( 0 ).contains( "/* My_Query */ select /*+ ALL_ROWS */" ) );
-		connectionProvider.clear();
+				sqlStatementInterceptor.assertExecutedCount( 1 );
+
+		assertTrue( sqlStatementInterceptor.getSqlQueries().get( 0 ).contains( "/* My_Query */ select /*+ ALL_ROWS */" ) );
+		sqlStatementInterceptor.clear();
 	}
 	
 	@Entity

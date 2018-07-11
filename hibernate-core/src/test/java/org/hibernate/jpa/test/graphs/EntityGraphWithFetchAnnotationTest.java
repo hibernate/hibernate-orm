@@ -23,6 +23,7 @@ import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
 
@@ -36,28 +37,11 @@ import static org.junit.Assert.assertTrue;
 public class EntityGraphWithFetchAnnotationTest
 		extends BaseEntityManagerFunctionalTestCase {
 
-	private PreparedStatementSpyConnectionProvider connectionProvider;
+	private SQLStatementInterceptor sqlStatementInterceptor;
 
 	@Override
-	protected Map getConfig() {
-		Map config = super.getConfig();
-		config.put(
-				org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
-				connectionProvider
-		);
-		return config;
-	}
-
-	@Override
-	public void buildEntityManagerFactory() {
-		connectionProvider = new PreparedStatementSpyConnectionProvider( false, false );
-		super.buildEntityManagerFactory();
-	}
-
-	@Override
-	public void releaseResources() {
-		super.releaseResources();
-		connectionProvider.stop();
+	protected void addConfigOptions(Map options) {
+		sqlStatementInterceptor = new SQLStatementInterceptor( options );
 	}
 
 	@Override
@@ -79,7 +63,7 @@ public class EntityGraphWithFetchAnnotationTest
 				.createQuery( Order.class );
 			criteriaQuery.from( Order.class );
 
-			connectionProvider.clear();
+			sqlStatementInterceptor.clear();
 
 			entityManager
 				.createQuery( criteriaQuery )
@@ -87,7 +71,7 @@ public class EntityGraphWithFetchAnnotationTest
 				.setMaxResults( 20 )
 				.getResultList();
 
-			assertFalse( connectionProvider.getPreparedSQLStatements().get( 0 ).toLowerCase().contains( "left outer join" ) );
+			assertFalse( sqlStatementInterceptor.getSqlQueries().get( 0 ).toLowerCase().contains( "left outer join" ) );
 		} );
 	}
 
@@ -104,7 +88,7 @@ public class EntityGraphWithFetchAnnotationTest
 			EntityGraph<Order> entityGraph = entityManager.createEntityGraph( Order.class );
 			entityGraph.addAttributeNodes( "products" );
 
-			connectionProvider.clear();
+			sqlStatementInterceptor.clear();
 
 			entityManager
 				.createQuery( criteriaQuery )
@@ -113,7 +97,7 @@ public class EntityGraphWithFetchAnnotationTest
 				.setHint( QueryHints.HINT_FETCHGRAPH, entityGraph )
 				.getResultList();
 
-			assertTrue( connectionProvider.getPreparedSQLStatements().get( 0 ).toLowerCase().contains( "left outer join" ) );
+			assertTrue( sqlStatementInterceptor.getSqlQueries().get( 0 ).toLowerCase().contains( "left outer join" ) );
 		} );
 	}
 

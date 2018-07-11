@@ -6,6 +6,8 @@
  */
 package org.hibernate.envers.boot.internal;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Map;
 import java.util.Properties;
 
@@ -151,17 +153,22 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 				revInfoCfgResult.getRevisionInfoTimestampData(),
 				serviceRegistry
 		);
-		this.entitiesConfigurations = new EntitiesConfigurator().configure(
-				metadata,
-				serviceRegistry,
-				reflectionManager,
-				mappingCollector,
-				globalConfiguration,
-				auditEntitiesConfiguration,
-				auditStrategy,
-				revInfoCfgResult.getRevisionInfoXmlMapping(),
-				revInfoCfgResult.getRevisionInfoRelationMapping()
-		);
+		this.entitiesConfigurations = AccessController.doPrivileged( new PrivilegedAction<EntitiesConfigurations>() {
+			@Override
+			public EntitiesConfigurations run() {
+				return new EntitiesConfigurator().configure(
+						metadata,
+						serviceRegistry,
+						reflectionManager,
+						mappingCollector,
+						globalConfiguration,
+						auditEntitiesConfiguration,
+						auditStrategy,
+						revInfoCfgResult.getRevisionInfoXmlMapping(),
+						revInfoCfgResult.getRevisionInfoRelationMapping()
+				);
+			}
+		} );
 	}
 
 	private static AuditStrategy initializeAuditStrategy(

@@ -10,6 +10,8 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.Entity;
@@ -72,7 +74,14 @@ public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 					}
 					continue;
 				}
-				final Callback[] callbacks = resolveEntityCallbacks( entityXClass, callbackType, reflectionManager );
+
+				final Callback[] callbacks = AccessController.doPrivileged( new PrivilegedAction<Callback[]>() {
+					@Override
+					public Callback[] run() {
+						return resolveEntityCallbacks( entityXClass, callbackType, reflectionManager );
+					}
+				} );
+
 				callbackRegistrar.registerCallbacks( entityClass, callbacks );
 			}
 		}

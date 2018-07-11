@@ -7,6 +7,9 @@
 package org.hibernate.boot.jaxb.internal;
 
 import java.io.InputStream;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -98,8 +101,13 @@ public abstract class AbstractBinder implements Binder {
 
 	private Binding doBind(XMLEventReader eventReader, Origin origin) {
 		try {
-			final StartElement rootElementStartEvent = seekRootElementStartEvent( eventReader, origin );
-			return doBind( eventReader, rootElementStartEvent, origin );
+			return AccessController.doPrivileged( new PrivilegedAction<Binding>() {
+				@Override
+				public Binding run() {
+					final StartElement rootElementStartEvent = seekRootElementStartEvent( eventReader, origin );
+					return doBind( eventReader, rootElementStartEvent, origin );
+				}
+			} );
 		}
 		finally {
 			try {

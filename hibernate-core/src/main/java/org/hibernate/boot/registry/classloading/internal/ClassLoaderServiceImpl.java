@@ -347,49 +347,59 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	@Override
 	@SuppressWarnings({"unchecked"})
 	public <T> Class<T> classForName(String className) {
-		try {
-			return (Class<T>) Class.forName( className, true, getAggregatedClassLoader() );
-		}
-		catch (Exception e) {
-			throw new ClassLoadingException( "Unable to load class [" + className + "]", e );
-		}
-		catch (LinkageError e) {
-			throw new ClassLoadingException( "Unable to load class [" + className + "]", e );
-		}
+		return AccessController.doPrivileged( new PrivilegedAction<Class<T>>() {
+			@Override
+			public Class<T> run() {
+				try {
+					return (Class<T>) Class.forName( className, true, getAggregatedClassLoader() );
+				}
+				catch (Exception e) {
+					throw new ClassLoadingException( "Unable to load class [" + className + "]", e );
+				}
+				catch (LinkageError e) {
+					throw new ClassLoadingException( "Unable to load class [" + className + "]", e );
+				}
+			}
+		} );
 	}
 
 	@Override
-	public URL locateResource(String name) {
+	public URL locateResource(final String name) {
 		// first we try name as a URL
-		try {
-			return new URL( name );
-		}
-		catch (Exception ignore) {
-		}
-
-		try {
-			final URL url = getAggregatedClassLoader().getResource( name );
-			if ( url != null ) {
-				return url;
-			}
-		}
-		catch (Exception ignore) {
-		}
-
-		if ( name.startsWith( "/" ) ) {
-			name = name.substring( 1 );
-
-			try {
-				final URL url = getAggregatedClassLoader().getResource( name );
-				if ( url != null ) {
-					return url;
+		return AccessController.doPrivileged( new PrivilegedAction<URL>() {
+			@Override
+			public URL run() {
+				try {
+					return new URL( name );
 				}
-			}
-			catch (Exception ignore) {
-			}
-		}
+				catch (Exception ignore) {
+				}
 
-		return null;
+				try {
+					final URL url = getAggregatedClassLoader().getResource( name );
+					if ( url != null ) {
+						return url;
+					}
+				}
+				catch (Exception ignore) {
+				}
+
+				if ( name.startsWith( "/" ) ) {
+					final String resourceName = name.substring( 1 );
+
+					try {
+						final URL url = getAggregatedClassLoader().getResource( resourceName );
+						if ( url != null ) {
+							return url;
+						}
+					}
+					catch (Exception ignore) {
+					}
+				}
+
+				return null;
+			}
+		} );
 	}
 
 	@Override
@@ -456,16 +466,21 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <S> Collection<S> loadJavaServices(Class<S> serviceContract) {
-		ServiceLoader<S> serviceLoader = serviceLoaders.get( serviceContract );
-		if ( serviceLoader == null ) {
-			serviceLoader = ServiceLoader.load( serviceContract, getAggregatedClassLoader() );
-			serviceLoaders.put( serviceContract, serviceLoader );
-		}
-		final LinkedHashSet<S> services = new LinkedHashSet<S>();
-		for ( S service : serviceLoader ) {
-			services.add( service );
-		}
-		return services;
+		return AccessController.doPrivileged( new PrivilegedAction<Collection<S>>() {
+			@Override
+			public Collection<S> run() {
+				ServiceLoader<S> serviceLoader = serviceLoaders.get( serviceContract );
+				if ( serviceLoader == null ) {
+					serviceLoader = ServiceLoader.load( serviceContract, getAggregatedClassLoader() );
+					serviceLoaders.put( serviceContract, serviceLoader );
+				}
+				final LinkedHashSet<S> services = new LinkedHashSet<S>();
+				for ( S service : serviceLoader ) {
+					services.add( service );
+				}
+				return services;
+			}
+		} );
 	}
 
 	@Override
@@ -480,7 +495,12 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	@Override
 	public <T> T workWithClassLoader(Work<T> work) {
-		return work.doWork( getAggregatedClassLoader() );
+		return AccessController.doPrivileged( new PrivilegedAction<T>() {
+			@Override
+			public T run() {
+				return work.doWork( getAggregatedClassLoader() );
+			}
+		} );
 	}
 
 	private ClassLoader getAggregatedClassLoader() {

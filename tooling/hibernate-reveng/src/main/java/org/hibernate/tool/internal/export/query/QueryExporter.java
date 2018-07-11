@@ -1,4 +1,4 @@
-package org.hibernate.tool.hbm2x;
+package org.hibernate.tool.internal.export.query;
 
 import java.io.File;
 import java.io.FileWriter;

@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.apache.tools.ant.BuildException;
 import org.hibernate.tool.api.export.Exporter;
-import org.hibernate.tool.hbm2x.QueryExporter;
+import org.hibernate.tool.internal.export.query.QueryExporter;
 import org.hibernate.internal.util.StringHelper;
 
 public class QueryExporterTask extends ExporterTask {

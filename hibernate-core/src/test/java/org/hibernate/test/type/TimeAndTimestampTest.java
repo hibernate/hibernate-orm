@@ -47,14 +47,14 @@ public class TimeAndTimestampTest extends BaseNonConfigCoreFunctionalTestCase {
 		doInHibernate( this::sessionFactory, session -> {
 			Event event = new Event();
 			event.id = 1L;
-			event.timeValue = new Time( 12356 );
+			event.timeValue = new Time( 1000 );
 			event.timestampValue = new Timestamp( 45678 );
 
 			session.persist( event );
 		} );
 		doInHibernate( this::sessionFactory, session -> {
 			Event event = session.find( Event.class, 1L );
-			assertEquals(12356, event.timeValue.getTime() % TimeUnit.DAYS.toMillis( 1 ));
+			assertEquals(1000, event.timeValue.getTime() % TimeUnit.DAYS.toMillis( 1 ));
 			assertEquals(45678, event.timestampValue.getTime() % TimeUnit.DAYS.toMillis( 1 ));
 		} );
 	}

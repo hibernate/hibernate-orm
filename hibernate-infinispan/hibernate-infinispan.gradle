@@ -11,12 +11,12 @@ apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 apply plugin: 'maven-publish'
 apply plugin: 'maven-publish-auth'
 
-description = '(deprecated - use org.infinispan:infinispan-hibernate-cache instead)'
+description = '(deprecated - use org.infinispan:infinispan-hibernate-cache-v53 instead)'
 
 ext {
 	relocatedGroupId  = 'org.infinispan'
-	relocatedArtifactId  = 'infinispan-hibernate-cache'
-	relocatedVersion = '9.1.3.Final'
+	relocatedArtifactId  = 'infinispan-hibernate-cache-v53'
+	relocatedVersion = '9.3.0.Final'
 }
 
 publishing {

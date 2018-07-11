@@ -12,8 +12,6 @@ INNER JOIN
     Account a
 ON  ca.accounts_id=a.id
 WHERE
-    ca.order_id <= ?
-    AND ca.Client_id = ?
+    ca.Client_id = ?
 
--- binding parameter [1] as [INTEGER] - [1]
--- binding parameter [2] as [BIGINT] - [1]
+-- binding parameter [1] as [BIGINT] - [1]

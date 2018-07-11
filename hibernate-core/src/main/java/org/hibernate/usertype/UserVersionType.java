@@ -8,6 +8,7 @@ package org.hibernate.usertype;
 
 import java.util.Comparator;
 
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -27,6 +28,21 @@ public interface UserVersionType extends UserType, Comparator {
 	Object seed(SharedSessionContractImplementor session);
 
 	/**
+	 * Generate an initial version.
+	 *
+	 * @param session The session from which this request originates.  May be
+	 * null; currently this only happens during startup when trying to determine
+	 * the "unsaved value" of entities.
+	 * @return an instance of the type
+	 *
+	 * @deprecated {@link #seed(SharedSessionContractImplementor)} should be used instead.
+	 */
+	@Deprecated
+	default Object seed(SessionImplementor session) {
+		return seed( (SharedSessionContractImplementor) session );
+	}
+
+	/**
 	 * Increment the version.
 	 *
 	 * @param session The session from which this request originates.
@@ -34,5 +50,19 @@ public interface UserVersionType extends UserType, Comparator {
 	 * @return an instance of the type
 	 */
 	Object next(Object current, SharedSessionContractImplementor session);
+
+	/**
+	 * Increment the version.
+	 *
+	 * @param session The session from which this request originates.
+	 * @param current the current version
+	 * @return an instance of the type
+	 *
+	 * @deprecated {@link #next(Object, SharedSessionContractImplementor)} should be used instead.
+	 */
+	@Deprecated
+	default Object next(Object current, SessionImplementor session) {
+		return next( current, (SharedSessionContractImplementor) session );
+	}
 
 }

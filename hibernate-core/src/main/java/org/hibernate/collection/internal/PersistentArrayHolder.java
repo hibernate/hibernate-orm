@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.Iterator;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.CollectionAliases;
@@ -59,6 +60,20 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	 * Constructs a PersistentCollection instance for holding an array.
 	 *
 	 * @param session The session
+	 * @param array The array (the persistent "collection").
+	 *
+	 * @deprecated {@link #PersistentArrayHolder(SharedSessionContractImplementor, Object)}
+	 *             should be used instead.
+	 */
+	@Deprecated
+	public PersistentArrayHolder(SessionImplementor session, Object array) {
+		this( (SharedSessionContractImplementor) session, array );
+	}
+
+	/**
+	 * Constructs a PersistentCollection instance for holding an array.
+	 *
+	 * @param session The session
 	 * @param persister The persister for the array
 	 */
 	public PersistentArrayHolder(SharedSessionContractImplementor session, CollectionPersister persister) {
@@ -66,7 +81,19 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 		elementClass = persister.getElementClass();
 	}
 
-
+	/**
+	 * Constructs a PersistentCollection instance for holding an array.
+	 *
+	 * @param session The session
+	 * @param persister The persister for the array
+	 *
+	 * @deprecated {@link #PersistentArrayHolder(SharedSessionContractImplementor, CollectionPersister)}
+	 *             should be used instead.
+	 */
+	@Deprecated
+	public PersistentArrayHolder(SessionImplementor session, CollectionPersister persister) {
+		this( (SharedSessionContractImplementor) session, persister );
+	}
 
 	@Override
 	public Serializable getSnapshot(CollectionPersister persister) throws HibernateException {

@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.Type;
 
@@ -108,6 +109,27 @@ public interface CompositeUserType {
 	Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws HibernateException, SQLException;
 
 	/**
+	 * Retrieve an instance of the mapped class from a JDBC resultset. Implementors
+	 * should handle possibility of null values.
+	 *
+	 * @param rs a JDBC result set
+	 * @param names the column names
+	 * @param session
+	 * @param owner the containing entity
+	 * @return Object
+	 * @throws HibernateException
+	 * @throws SQLException
+	 *
+	 * @deprecated {@link #nullSafeGet(ResultSet, String[], SharedSessionContractImplementor, Object)}
+	 *             should be used instead.
+	 */
+	@Deprecated
+	default Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner)
+			throws HibernateException, SQLException {
+		return nullSafeGet( rs, names, (SharedSessionContractImplementor) session, owner );
+	}
+
+	/**
 	 * Write an instance of the mapped class to a prepared statement. Implementors
 	 * should handle possibility of null values. A multi-column type should be written
 	 * to parameters starting from <tt>index</tt>.
@@ -121,6 +143,26 @@ public interface CompositeUserType {
 	 */
 	void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException;
 
+	/**
+	 * Write an instance of the mapped class to a prepared statement. Implementors
+	 * should handle possibility of null values. A multi-column type should be written
+	 * to parameters starting from <tt>index</tt>.
+	 *
+	 * @param st a JDBC prepared statement
+	 * @param value the object to write
+	 * @param index statement parameter index
+	 * @param session
+	 * @throws HibernateException
+	 * @throws SQLException
+	 *
+	 * @deprecated {@link #nullSafeSet(PreparedStatement, Object, int, SharedSessionContractImplementor)}
+	 *             should be used instead.
+	 */
+	@Deprecated
+	default void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session)
+			throws HibernateException, SQLException {
+		nullSafeSet( st, value, index, (SharedSessionContractImplementor) session );
+	}
 	/**
 	 * Return a deep copy of the persistent state, stopping at entities and at collections.
 	 *
@@ -151,6 +193,24 @@ public interface CompositeUserType {
 	Serializable disassemble(Object value, SharedSessionContractImplementor session) throws HibernateException;
 
 	/**
+	 * Transform the object into its cacheable representation. At the very least this
+	 * method should perform a deep copy. That may not be enough for some implementations,
+	 * however; for example, associations must be cached as identifier values. (optional
+	 * operation)
+	 *
+	 * @param value the object to be cached
+	 * @param session
+	 * @return a cachable representation of the object
+	 * @throws HibernateException
+	 *
+	 * @deprecated {@link #disassemble(Object, SharedSessionContractImplementor)} should be used instead.
+	 */
+	@Deprecated
+	default Serializable disassemble(Object value, SessionImplementor session) throws HibernateException {
+		return disassemble( value, (SharedSessionContractImplementor) session );
+	}
+
+	/**
 	 * Reconstruct an object from the cacheable representation. At the very least this
 	 * method should perform a deep copy. (optional operation)
 	 *
@@ -163,6 +223,25 @@ public interface CompositeUserType {
 	Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) throws HibernateException;
 
 	/**
+	 * Reconstruct an object from the cacheable representation. At the very least this
+	 * method should perform a deep copy. (optional operation)
+	 *
+	 * @param cached the object to be cached
+	 * @param session
+	 * @param owner the owner of the cached object
+	 * @return a reconstructed object from the cachable representation
+	 * @throws HibernateException
+	 *
+	 * @deprecated {@link #assemble(Serializable, SharedSessionContractImplementor, Object)} should
+	 *             be used instead.
+	 */
+	@Deprecated
+	default Object assemble(Serializable cached, SessionImplementor session, Object owner)
+			throws HibernateException {
+		return assemble( cached, (SharedSessionContractImplementor) session, owner );
+	}
+
+	/**
 	 * During merge, replace the existing (target) value in the entity we are merging to
 	 * with a new (original) value from the detached entity we are merging. For immutable
 	 * objects, or null values, it is safe to simply return the first parameter. For
@@ -173,4 +252,23 @@ public interface CompositeUserType {
 	 * @throws HibernateException
 	 */
 	Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner) throws HibernateException;
+
+	/**
+	 * During merge, replace the existing (target) value in the entity we are merging to
+	 * with a new (original) value from the detached entity we are merging. For immutable
+	 * objects, or null values, it is safe to simply return the first parameter. For
+	 * mutable objects, it is safe to return a copy of the first parameter. However, since
+	 * composite user types often define component values, it might make sense to recursively
+	 * replace component values in the target object.
+	 *
+	 * @throws HibernateException
+	 *
+	 * @deprecated {@link #replace(Object, Object, SharedSessionContractImplementor, Object)}
+	 *             should be used instead.
+	 */
+	@Deprecated
+	default Object replace(Object original, Object target, SessionImplementor session, Object owner)
+			throws HibernateException {
+		return replace( original, target, (SharedSessionContractImplementor) session, owner );
+	}
 }

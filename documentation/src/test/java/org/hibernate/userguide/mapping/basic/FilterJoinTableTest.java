@@ -8,6 +8,7 @@ package org.hibernate.userguide.mapping.basic;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -35,180 +36,190 @@ import static org.junit.Assert.assertEquals;
  */
 public class FilterJoinTableTest extends BaseEntityManagerFunctionalTestCase {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Client.class,
-			Account.class
-		};
-	}
+    @Override
+    protected Class<?>[] getAnnotatedClasses() {
+        return new Class<?>[] {
+            Client.class,
+            Account.class
+        };
+    }
 
-	@Test
-	public void testLifecycle() {
-		//tag::mapping-filter-join-table-persistence-example[]
-		doInJPA( this::entityManagerFactory, entityManager -> {
+    @Test
+    public void testLifecycle() {
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            //tag::mapping-filter-join-table-persistence-example[]
+            Client client = new Client()
+            .setId( 1L )
+            .setName( "John Doe" );
 
-			Client client = new Client();
-			client.setId( 1L );
-			client.setName( "John Doe" );
-			entityManager.persist( client );
+            client.addAccount(
+                new Account()
+                .setId( 1L )
+                .setType( AccountType.CREDIT )
+                .setAmount( 5000d )
+                .setRate( 1.25 / 100 )
+            );
 
-			Account account1 = new Account( );
-			account1.setId( 1L );
-			account1.setType( AccountType.CREDIT );
-			account1.setAmount( 5000d );
-			account1.setRate( 1.25 / 100 );
-			account1.setActive( true );
-			client.getAccounts().add( account1 );
-			entityManager.persist( account1 );
+            client.addAccount(
+                new Account()
+                .setId( 2L )
+                .setType( AccountType.DEBIT )
+                .setAmount( 0d )
+                .setRate( 1.05 / 100 )
+            );
 
-			Account account2 = new Account( );
-			account2.setId( 2L );
-			account2.setType( AccountType.DEBIT );
-			account2.setAmount( 0d );
-			account2.setRate( 1.05 / 100 );
-			account2.setActive( false );
-			client.getAccounts().add( account2 );
-			entityManager.persist( account2 );
+            client.addAccount(
+                new Account()
+                .setType( AccountType.DEBIT )
+                .setId( 3L )
+                .setAmount( 250d )
+                .setRate( 1.05 / 100 )
+            );
 
-			Account account3 = new Account( );
-			account3.setType( AccountType.DEBIT );
-			account3.setId( 3L );
-			account3.setAmount( 250d );
-			account3.setRate( 1.05 / 100 );
-			account3.setActive( true );
-			client.getAccounts().add( account3 );
-			entityManager.persist( account3 );
-		} );
-		//end::mapping-filter-join-table-persistence-example[]
+            entityManager.persist( client );
+            //end::mapping-filter-join-table-persistence-example[]
+        } );
 
-		//tag::mapping-filter-join-table-collection-query-example[]
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Client client = entityManager.find( Client.class, 1L );
-			assertEquals( 3, client.getAccounts().size());
-		} );
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            //tag::mapping-no-filter-join-table-collection-query-example[]
+            Client client = entityManager.find( Client.class, 1L );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			log.infof( "Activate filter [%s]", "firstAccounts");
+            assertEquals( 3, client.getAccounts().size());
+            //end::mapping-no-filter-join-table-collection-query-example[]
+        } );
 
-			Client client = entityManager.find( Client.class, 1L );
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            log.infof( "Activate filter [%s]", "firstAccounts");
 
-			entityManager
-				.unwrap( Session.class )
-				.enableFilter( "firstAccounts" )
-				.setParameter( "maxOrderId", 1);
+            //tag::mapping-filter-join-table-collection-query-example[]
+            Client client = entityManager.find( Client.class, 1L );
 
-			assertEquals( 2, client.getAccounts().size());
-		} );
-		//end::mapping-filter-join-table-collection-query-example[]
-	}
+            entityManager
+                .unwrap( Session.class )
+                .enableFilter( "firstAccounts" )
+                .setParameter( "maxOrderId", 1);
 
-	//tag::mapping-filter-join-table-example[]
-	public enum AccountType {
-		DEBIT,
-		CREDIT
-	}
+            assertEquals( 2, client.getAccounts().size());
+            //end::mapping-filter-join-table-collection-query-example[]
+        } );
+    }
 
-	@Entity(name = "Client")
-	@FilterDef(name="firstAccounts", parameters=@ParamDef( name="maxOrderId", type="int" ) )
-	@Filter(name="firstAccounts", condition="order_id <= :maxOrderId")
-	public static class Client {
+    public enum AccountType {
+        DEBIT,
+        CREDIT
+    }
 
-		@Id
-		private Long id;
+    //tag::mapping-filter-join-table-example[]
+    @Entity(name = "Client")
+    @FilterDef(
+        name="firstAccounts",
+        parameters=@ParamDef(
+            name="maxOrderId",
+            type="int"
+        )
+    )
+    @Filter(
+        name="firstAccounts",
+        condition="order_id <= :maxOrderId"
+    )
+    public static class Client {
 
-		private String name;
+        @Id
+        private Long id;
 
-		@OneToMany
-		@OrderColumn(name = "order_id")
-		@FilterJoinTable(name="firstAccounts", condition="order_id <= :maxOrderId")
-		private List<Account> accounts = new ArrayList<>( );
+        private String name;
 
-		//Getters and setters omitted for brevity
+        @OneToMany(cascade = CascadeType.ALL)
+        @OrderColumn(name = "order_id")
+        @FilterJoinTable(
+            name="firstAccounts",
+            condition="order_id <= :maxOrderId"
+        )
+        private List<Account> accounts = new ArrayList<>( );
 
-		//end::mapping-filter-join-table-example[]
-		public Long getId() {
-			return id;
-		}
+        //Getters and setters omitted for brevity
+        //end::mapping-filter-join-table-example[]
+        public Long getId() {
+            return id;
+        }
 
-		public void setId(Long id) {
-			this.id = id;
-		}
+        public Client setId(Long id) {
+            this.id = id;
+            return this;
+        }
 
-		public String getName() {
-			return name;
-		}
+        public String getName() {
+            return name;
+        }
 
-		public void setName(String name) {
-			this.name = name;
-		}
+        public Client setName(String name) {
+            this.name = name;
+            return this;
+        }
 
-		public List<Account> getAccounts() {
-			return accounts;
-		}
-		//tag::mapping-filter-join-table-example[]
-	}
+        public List<Account> getAccounts() {
+            return accounts;
+        }
+        //tag::mapping-filter-join-table-example[]
 
-	@Entity(name = "Account")
-	public static class Account {
+        public void addAccount(Account account) {
+            this.accounts.add( account );
+        }
+    }
 
-		@Id
-		private Long id;
+    @Entity(name = "Account")
+    public static class Account {
 
-		@Column(name = "account_type")
-		@Enumerated(EnumType.STRING)
-		private AccountType type;
+        @Id
+        private Long id;
 
-		private Double amount;
+        @Column(name = "account_type")
+        @Enumerated(EnumType.STRING)
+        private AccountType type;
 
-		private Double rate;
+        private Double amount;
 
-		private boolean active;
+        private Double rate;
 
-		//Getters and setters omitted for brevity
+        //Getters and setters omitted for brevity
+    //end::mapping-filter-join-table-example[]
+        public Long getId() {
+            return id;
+        }
 
-	//end::mapping-filter-join-table-example[]
-		public Long getId() {
-			return id;
-		}
+        public Account setId(Long id) {
+            this.id = id;
+            return this;
+        }
 
-		public void setId(Long id) {
-			this.id = id;
-		}
+        public AccountType getType() {
+            return type;
+        }
 
-		public AccountType getType() {
-			return type;
-		}
+        public Account setType(AccountType type) {
+            this.type = type;
+            return this;
+        }
 
-		public void setType(AccountType type) {
-			this.type = type;
-		}
+        public Double getAmount() {
+            return amount;
+        }
 
-		public Double getAmount() {
-			return amount;
-		}
+        public Account setAmount(Double amount) {
+            this.amount = amount;
+            return this;
+        }
 
-		public void setAmount(Double amount) {
-			this.amount = amount;
-		}
+        public Double getRate() {
+            return rate;
+        }
 
-		public Double getRate() {
-			return rate;
-		}
+        public Account setRate(Double rate) {
+            this.rate = rate;
+            return this;
+        }
 
-		public void setRate(Double rate) {
-			this.rate = rate;
-		}
-
-		public boolean isActive() {
-			return active;
-		}
-
-		public void setActive(boolean active) {
-			this.active = active;
-		}
-
-		//tag::mapping-filter-join-table-example[]
-	}
-	//end::mapping-filter-join-table-example[]
+        //tag::mapping-filter-join-table-example[]
+    }
+    //end::mapping-filter-join-table-example[]
 }

@@ -10,32 +10,14 @@ apply plugin: 'com.github.lburgazzoli.karaf'
 
 description = 'Support for running Hibernate O/RM in OSGi environments'
 
-
 ext {
-	// MUST use 4.3.1!  4.3.0 was compiled with "-target jsr14".
-	// http://blog.osgi.org/2012/10/43-companion-code-for-java-7.html
-	osgiCoreVersion = '4.3.1'
-	karafVersion = '3.0.3'
-	paxExamVersion = '4.4.0'
-	paxUrlVersion = '2.4.1'
+	osgiCoreVersion = '6.0.0'
+	osgiCompediumVersion = '5.0.0'
+	karafVersion = '4.1.0'
+	paxExamVersion = '4.12.0'
 }
 
-
-// tests were failing for me, no idea why yet:
-//
-// java.lang.RuntimeException: Cannot get the remote bundle context
-//		at org.ops4j.pax.exam.rbc.client.intern.RemoteBundleContextClientImpl.getRemoteBundleContext(RemoteBundleContextClientImpl.java:255)
-//		at org.ops4j.pax.exam.rbc.client.intern.RemoteBundleContextClientImpl.waitForState(RemoteBundleContextClientImpl.java:211)
-// 		...
-// Caused by: java.rmi.ConnectException: Connection refused to host: 198.105.254.130; nested exception is:
-//		java.net.ConnectException: Connection timed out (Connection timed out)
-//		...
-// Caused by: java.net.ConnectException: Connection timed out (Connection timed out)
-//		...
-//
-//
-// todo : fix these tests and re-enable
-test.enabled = false
+test.enabled = true
 
 if ( JavaVersion.current().isJava9Compatible() ) {
 	logger.warn( '[WARN] Skipping all tests for hibernate-osgi due to Karaf issues with JDK 9' )
@@ -69,13 +51,13 @@ configurations {
 }
 
 dependencies {
-	compile( project( ':hibernate-core' ) )
+	compile( project( ':hibernate-core' ) ) {
+		exclude module: 'javax.activation-api'
+	}
 	testCompile( project( ':hibernate-envers' ) )
 
-	// MUST use 4.3.1!  4.3.0 was compiled with "-target jsr14".
-	// http://blog.osgi.org/2012/10/43-companion-code-for-java-7.html
 	compile "org.osgi:org.osgi.core:${osgiCoreVersion}"
-	compile "org.osgi:org.osgi.compendium:${osgiCoreVersion}"
+	compile "org.osgi:org.osgi.compendium:${osgiCompediumVersion}"
 	compile "net.bytebuddy:byte-buddy:${byteBuddyVersion}"
 
 	// Needed by JBoss JTA
@@ -134,11 +116,15 @@ task generateVersionFile {
 
 karaf {
 	features {
-        xsdVersion  = '1.2.0'
+        xsdVersion  = '1.4.0'
         feature {
             name        = 'hibernate-orm'
             description = 'Combines all Hibernate core dependencies and required modules into a single feature'
 			includeProject = true
+			feature ('wrap') {
+				prerequisite = true
+			}
+			feature 'transaction-api'
         }
 		// NOTE : would like to include spatial as well, but we need to wait for
 		//		it to not define dependency on postgresql driver

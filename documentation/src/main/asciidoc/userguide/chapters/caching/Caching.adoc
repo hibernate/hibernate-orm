@@ -399,7 +399,7 @@ and retrieval (http://docs.oracle.com/javaee/7/api/javax/persistence/CacheRetrie
 The relationship between Hibernate and JPA cache modes can be seen in the following table:
 
 .Cache modes relationships
-[cols=",,,",options="header",]
+[cols=",,",options="header",]
 |======================================
 |Hibernate 			 | JPA | Description
 |`CacheMode.NORMAL`  |`CacheStoreMode.USE` and `CacheRetrieveMode.USE` | Default. Reads/writes data from/into cache

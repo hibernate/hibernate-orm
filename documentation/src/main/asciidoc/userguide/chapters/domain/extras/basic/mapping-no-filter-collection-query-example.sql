@@ -1,8 +1,8 @@
 SELECT
     c.id as id1_1_0_,
-    c.name as name2_1_0_
+    c.name as name2_1_0_ 
 FROM
-    Client c
+    Client c 
 WHERE
     c.id = 1
 
@@ -16,5 +16,4 @@ SELECT
 FROM
     Account a
 WHERE
-    accounts0_.active_status = true
-    and a.client_id = 1
+    a.client_id = 1

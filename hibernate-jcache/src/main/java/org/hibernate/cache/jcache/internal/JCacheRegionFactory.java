@@ -25,11 +25,13 @@ import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.jcache.ConfigSettings;
 import org.hibernate.cache.jcache.MissingCacheStrategy;
 import org.hibernate.cache.spi.CacheKeysFactory;
+import org.hibernate.cache.spi.DomainDataRegion;
 import org.hibernate.cache.spi.SecondLevelCacheLogger;
 import org.hibernate.cache.spi.support.DomainDataStorageAccess;
 import org.hibernate.cache.spi.support.RegionFactoryTemplate;
 import org.hibernate.cache.spi.support.RegionNameQualifier;
 import org.hibernate.cache.spi.support.StorageAccess;
+import org.hibernate.cache.spi.support.DomainDataRegionImpl;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
@@ -58,6 +60,18 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 	@Override
 	protected CacheKeysFactory getImplicitCacheKeysFactory() {
 		return cacheKeysFactory;
+	}
+
+	@Override
+	public DomainDataRegion buildDomainDataRegion(
+			DomainDataRegionConfig regionConfig, DomainDataRegionBuildingContext buildingContext) {
+		return new JCacheDomainDataRegionImpl(
+				regionConfig,
+				this,
+				createDomainDataStorageAccess( regionConfig, buildingContext ),
+				cacheKeysFactory,
+				buildingContext
+		);
 	}
 
 	@Override

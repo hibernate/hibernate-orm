@@ -68,7 +68,10 @@ import static org.mockito.Mockito.verify;
  * @author Gavin King
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@RequiresDialectFeature(DialectChecks.SupportsSequences.class)
+@RequiresDialectFeature({
+	DialectChecks.SupportsSequences.class,
+	DialectChecks.SupportsJdbcDriverProxying.class
+})
 public class CriteriaQueryTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider( true, false );

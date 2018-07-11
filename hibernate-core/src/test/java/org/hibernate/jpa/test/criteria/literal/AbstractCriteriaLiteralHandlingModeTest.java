@@ -20,41 +20,27 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Before;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.hibernate.testing.transaction.TransactionUtil.setJdbcTimeout;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Vlad Mihalcea
  */
 public abstract class AbstractCriteriaLiteralHandlingModeTest extends BaseEntityManagerFunctionalTestCase {
 
-	private PreparedStatementSpyConnectionProvider connectionProvider;
+	private SQLStatementInterceptor sqlStatementInterceptor;
 
 	@Override
-	protected Map getConfig() {
-		Map config = super.getConfig();
-		config.put(
-				org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
-				connectionProvider
-		);
-		return config;
-	}
-
-	@Override
-	public void buildEntityManagerFactory() {
-		connectionProvider = new PreparedStatementSpyConnectionProvider( false, false );
-		super.buildEntityManagerFactory();
-	}
-
-	@Override
-	public void releaseResources() {
-		super.releaseResources();
-		connectionProvider.stop();
+	protected void addConfigOptions(Map options) {
+		sqlStatementInterceptor = new SQLStatementInterceptor( options );
 	}
 
 	@Override
@@ -101,12 +87,12 @@ public abstract class AbstractCriteriaLiteralHandlingModeTest extends BaseEntity
 					entity.get( "name" )
 			);
 
-			connectionProvider.clear();
-			List<Tuple> tuples = entityManager.createQuery( query )
-					.getResultList();
+			sqlStatementInterceptor.clear();
+
+			List<Tuple> tuples = entityManager.createQuery( query ).getResultList();
 			assertEquals( 1, tuples.size() );
 
-			assertNotNull( connectionProvider.getPreparedStatement( expectedSQL() ) );
+			sqlStatementInterceptor.assertExecuted( expectedSQL() );
 		} );
 	}
 

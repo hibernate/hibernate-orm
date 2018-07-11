@@ -6,6 +6,7 @@
  */
 package org.hibernate.testing;
 
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 
 /**
@@ -245,6 +246,14 @@ abstract public class DialectChecks {
 	public static class ForceLobAsLastValue implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return dialect.forceLobAsLastValue();
+		}
+	}
+
+	public static class SupportsJdbcDriverProxying implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return !(
+				dialect instanceof DB2Dialect
+			);
 		}
 	}
 }

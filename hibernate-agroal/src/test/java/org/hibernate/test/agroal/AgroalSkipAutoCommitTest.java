@@ -9,6 +9,8 @@ package org.hibernate.test.agroal;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.test.agroal.util.PreparedStatementSpyConnectionProvider;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -28,6 +30,7 @@ import static org.mockito.Mockito.verify;
 /**
  * @author Vlad Mihalcea
  */
+@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
 public class AgroalSkipAutoCommitTest extends BaseCoreFunctionalTestCase {
 
 	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();

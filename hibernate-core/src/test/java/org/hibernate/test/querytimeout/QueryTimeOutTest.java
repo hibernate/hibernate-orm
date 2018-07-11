@@ -19,6 +19,8 @@ import org.hibernate.jpa.QueryHints;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
@@ -33,6 +35,7 @@ import static org.mockito.Mockito.verify;
 /**
  * @author Gail Badner
  */
+@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
 public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	private static final PreparedStatementSpyConnectionProvider CONNECTION_PROVIDER = new PreparedStatementSpyConnectionProvider( true, false );

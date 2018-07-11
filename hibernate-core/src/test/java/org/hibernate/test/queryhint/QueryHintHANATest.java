@@ -26,9 +26,9 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.Query;
-import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -38,26 +38,12 @@ import org.junit.Test;
 @RequiresDialect(AbstractHANADialect.class)
 public class QueryHintHANATest extends BaseNonConfigCoreFunctionalTestCase {
 
-	private PreparedStatementSpyConnectionProvider connectionProvider;
+	private SQLStatementInterceptor sqlStatementInterceptor;
 
 	@Override
 	protected void addSettings(Map settings) {
 		settings.put( AvailableSettings.USE_SQL_COMMENTS, "true" );
-		settings.put(
-				org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
-				connectionProvider );
-	}
-
-	@Override
-	protected void buildResources() {
-		connectionProvider = new PreparedStatementSpyConnectionProvider( false, false );
-		super.buildResources();
-	}
-
-	@Override
-	public void releaseResources() {
-		super.releaseResources();
-		connectionProvider.stop();
+		sqlStatementInterceptor = new SQLStatementInterceptor( settings );
 	}
 
 	@Override
@@ -84,7 +70,7 @@ public class QueryHintHANATest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testQueryHint() {
 
-		connectionProvider.clear();
+		sqlStatementInterceptor.clear();
 
 		doInHibernate( this::sessionFactory, s -> {
 			Query<Employee> query = s.createQuery( "FROM QueryHintHANATest$Employee e WHERE e.department.name = :departmentName", Employee.class )
@@ -95,11 +81,9 @@ public class QueryHintHANATest extends BaseNonConfigCoreFunctionalTestCase {
 			assertEquals( results.size(), 2 );
 		} );
 
-		assertEquals(
-				1,
-				connectionProvider.getPreparedStatements().size() );
-		assertThat( connectionProvider.getPreparedSQLStatements().get( 0 ), containsString( " with hint (NO_CS_JOIN)" ) );
-		connectionProvider.clear();
+		sqlStatementInterceptor.assertExecutedCount( 1 );
+		assertThat( sqlStatementInterceptor.getSqlQueries().get( 0 ), containsString( " with hint (NO_CS_JOIN)" ) );
+		sqlStatementInterceptor.clear();
 
 		// test multiple hints
 		doInHibernate( this::sessionFactory, s -> {
@@ -112,11 +96,10 @@ public class QueryHintHANATest extends BaseNonConfigCoreFunctionalTestCase {
 			assertEquals( results.size(), 2 );
 		} );
 
-		assertEquals(
-				1,
-				connectionProvider.getPreparedStatements().size() );
-		assertThat( connectionProvider.getPreparedSQLStatements().get( 0 ), containsString( " with hint (NO_CS_JOIN,OPTIMIZE_METAMODEL)" ) );
-		connectionProvider.clear();
+		sqlStatementInterceptor.assertExecutedCount( 1 );
+
+		assertThat( sqlStatementInterceptor.getSqlQueries().get( 0 ), containsString( " with hint (NO_CS_JOIN,OPTIMIZE_METAMODEL)" ) );
+		sqlStatementInterceptor.clear();
 
 		// ensure the insertion logic can handle a comment appended to the front
 		doInHibernate( this::sessionFactory, s -> {
@@ -129,11 +112,10 @@ public class QueryHintHANATest extends BaseNonConfigCoreFunctionalTestCase {
 			assertEquals( results.size(), 2 );
 		} );
 
-		assertEquals(
-				1,
-				connectionProvider.getPreparedStatements().size() );
-		assertThat( connectionProvider.getPreparedSQLStatements().get( 0 ), containsString( " with hint (NO_CS_JOIN)" ) );
-		connectionProvider.clear();
+		sqlStatementInterceptor.assertExecutedCount( 1 );
+
+		assertThat( sqlStatementInterceptor.getSqlQueries().get( 0 ), containsString( " with hint (NO_CS_JOIN)" ) );
+		sqlStatementInterceptor.clear();
 
 		// test Criteria
 		doInHibernate( this::sessionFactory, s -> {
@@ -145,17 +127,16 @@ public class QueryHintHANATest extends BaseNonConfigCoreFunctionalTestCase {
 			assertEquals( results.size(), 2 );
 		} );
 
-		assertEquals(
-				1,
-				connectionProvider.getPreparedStatements().size() );
-		assertThat( connectionProvider.getPreparedSQLStatements().get( 0 ), containsString( " with hint (NO_CS_JOIN)" ) );
-		connectionProvider.clear();
+		sqlStatementInterceptor.assertExecutedCount( 1 );
+
+		assertThat( sqlStatementInterceptor.getSqlQueries().get( 0 ), containsString( " with hint (NO_CS_JOIN)" ) );
+		sqlStatementInterceptor.clear();
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12362")
 	public void testQueryHintAndComment() {
-		connectionProvider.clear();
+		sqlStatementInterceptor.clear();
 
 		doInHibernate( this::sessionFactory, s -> {
 			Query<Employee> query = s.createQuery( "FROM QueryHintHANATest$Employee e WHERE e.department.name = :departmentName", Employee.class )
@@ -167,12 +148,11 @@ public class QueryHintHANATest extends BaseNonConfigCoreFunctionalTestCase {
 			assertEquals( results.size(), 2 );
 		} );
 
-		assertEquals(
-				1,
-				connectionProvider.getPreparedStatements().size() );
-		assertThat( connectionProvider.getPreparedSQLStatements().get( 0 ), containsString( " with hint (NO_CS_JOIN)" ) );
-		assertThat( connectionProvider.getPreparedSQLStatements().get( 0 ), containsString( "/* My_Query */ select" ) );
-		connectionProvider.clear();
+		sqlStatementInterceptor.assertExecutedCount( 1 );
+
+		assertThat( sqlStatementInterceptor.getSqlQueries().get( 0 ), containsString( " with hint (NO_CS_JOIN)" ) );
+		assertThat( sqlStatementInterceptor.getSqlQueries().get( 0 ), containsString( "/* My_Query */ select" ) );
+		sqlStatementInterceptor.clear();
 	}
 
 	@Entity

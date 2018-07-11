@@ -26,6 +26,7 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.After;
 import org.junit.Before;
@@ -41,32 +42,12 @@ import static org.junit.Assert.assertNotNull;
 @TestForIssue(jiraKey = "HHH-11640")
 public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 
-	private PreparedStatementSpyConnectionProvider connectionProvider;
+	private SQLStatementInterceptor sqlStatementInterceptor;
 
 	@Override
-	protected Map getConfig() {
-		Map config = super.getConfig();
-		config.put(
-				org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
-				connectionProvider
-		);
-		config.put(
-				AvailableSettings.USE_SQL_COMMENTS,
-				Boolean.TRUE.toString()
-		);
-		return config;
-	}
-
-	@Override
-	public void buildEntityManagerFactory() {
-		connectionProvider = new PreparedStatementSpyConnectionProvider( false, false );
-		super.buildEntityManagerFactory();
-	}
-
-	@Override
-	public void releaseResources() {
-		super.releaseResources();
-		connectionProvider.stop();
+	protected void addConfigOptions(Map options) {
+		sqlStatementInterceptor = new SQLStatementInterceptor( options );
+		options.put( AvailableSettings.USE_SQL_COMMENTS, Boolean.TRUE.toString() );
 	}
 
 	private static final String[] GAME_TITLES = { "Halo", "Grand Theft Auto", "NetHack" };
@@ -74,11 +55,6 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[] { Game.class };
-	}
-
-	@Override
-	protected void addConfigOptions(Map options) {
-		options.put( AvailableSettings.USE_SQL_COMMENTS, Boolean.TRUE.toString() );
 	}
 
 	@Before
@@ -101,22 +77,17 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testSelectNamedQueryWithSqlComment() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			connectionProvider.clear();
+			sqlStatementInterceptor.clear();
 
 			TypedQuery<Game> query = entityManager.createNamedQuery( "SelectNamedQuery", Game.class );
 			query.setParameter( "title", GAME_TITLES[0] );
 			List<Game> list = query.getResultList();
 			assertEquals( 1, list.size() );
 
-			assertEquals(
-				1,
-				connectionProvider.getPreparedStatements().size()
-			);
+			sqlStatementInterceptor.assertExecutedCount(1);
 
-			assertNotNull(
-				connectionProvider.getPreparedStatement(
-					"/* COMMENT_SELECT_INDEX_game_title */ select namedquery0_.id as id1_0_, namedquery0_.title as title2_0_ from game namedquery0_ where namedquery0_.title=?"
-				)
+			sqlStatementInterceptor.assertExecuted(
+				"/* COMMENT_SELECT_INDEX_game_title */ select namedquery0_.id as id1_0_, namedquery0_.title as title2_0_ from game namedquery0_ where namedquery0_.title=?"
 			);
 		} );
 	}
@@ -124,22 +95,18 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testSelectNamedNativeQueryWithSqlComment() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			connectionProvider.clear();
+			sqlStatementInterceptor.clear();
 
 			TypedQuery<Game> query = entityManager.createNamedQuery( "SelectNamedNativeQuery", Game.class );
 			query.setParameter( "title", GAME_TITLES[0] );
 			List<Game> list = query.getResultList();
 			assertEquals( 1, list.size() );
 
-			assertEquals(
-				1,
-				connectionProvider.getPreparedStatements().size()
-			);
+			sqlStatementInterceptor.assertExecutedCount(1);
 
-			assertNotNull(
-				connectionProvider.getPreparedStatement(
+			sqlStatementInterceptor.assertExecuted(
 					"/* + INDEX (game idx_game_title)  */ select * from game g where title = ?"
-				)
+
 			);
 		} );
 	}
@@ -147,7 +114,7 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testUpdateNamedQueryWithSqlComment() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			connectionProvider.clear();
+			sqlStatementInterceptor.clear();
 
 			Query query = entityManager.createNamedQuery( "UpdateNamedNativeQuery" );
 			query.setParameter( "title", GAME_TITLES[0] );
@@ -155,15 +122,10 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 			int updateCount = query.executeUpdate();
 			assertEquals( 1, updateCount );
 
-			assertEquals(
-				1,
-				connectionProvider.getPreparedStatements().size()
-			);
+			sqlStatementInterceptor.assertExecutedCount(1);
 
-			assertNotNull(
-				connectionProvider.getPreparedStatement(
+			sqlStatementInterceptor.assertExecuted(
 					"/* COMMENT_INDEX_game_title */ update game set title = ? where id = ?"
-				)
 			);
 		} );
 	}
@@ -171,7 +133,7 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testUpdateNamedNativeQueryWithSqlComment() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			connectionProvider.clear();
+			sqlStatementInterceptor.clear();
 
 			Query query = entityManager.createNamedQuery( "UpdateNamedNativeQuery" );
 			query.setParameter( "title", GAME_TITLES[0] );
@@ -179,15 +141,10 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 			int updateCount = query.executeUpdate();
 			assertEquals( 1, updateCount );
 
-			assertEquals(
-				1,
-				connectionProvider.getPreparedStatements().size()
-			);
+			sqlStatementInterceptor.assertExecutedCount(1);
 
-			assertNotNull(
-				connectionProvider.getPreparedStatement(
+			sqlStatementInterceptor.assertExecuted(
 					"/* COMMENT_INDEX_game_title */ update game set title = ? where id = ?"
-				)
 			);
 		} );
 	}
@@ -196,7 +153,7 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 	@RequiresDialect(Oracle8iDialect.class)
 	public void testUpdateNamedNativeQueryWithQueryHintUsingOracle() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			connectionProvider.clear();
+			sqlStatementInterceptor.clear();
 
 			Query query = entityManager.createNamedQuery( "UpdateNamedNativeQuery" );
 			query.setParameter( "title", GAME_TITLES[0] );
@@ -205,15 +162,10 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 			int updateCount = query.executeUpdate();
 			assertEquals( 1, updateCount );
 
-			assertEquals(
-				1,
-				connectionProvider.getPreparedStatements().size()
-			);
+			sqlStatementInterceptor.assertExecutedCount(1);
 
-			assertNotNull(
-				connectionProvider.getPreparedStatement(
+			sqlStatementInterceptor.assertExecuted(
 					"/* COMMENT_INDEX_game_title */ update /*+ INDEX (game idx_game_id) */ game set title = ? where id = ?"
-				)
 			);
 		} );
 	}
@@ -222,7 +174,7 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 	@RequiresDialect(H2Dialect.class)
 	public void testUpdateNamedNativeQueryWithQueryHintUsingIndex() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			connectionProvider.clear();
+			sqlStatementInterceptor.clear();
 
 			Query query = entityManager.createNamedQuery( "UpdateNamedNativeQuery" );
 			query.setParameter( "title", GAME_TITLES[0] );
@@ -231,15 +183,10 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 			int updateCount = query.executeUpdate();
 			assertEquals( 1, updateCount );
 
-			assertEquals(
-				1,
-				connectionProvider.getPreparedStatements().size()
-			);
+			sqlStatementInterceptor.assertExecutedCount(1);
 
-			assertNotNull(
-				connectionProvider.getPreparedStatement(
+			sqlStatementInterceptor.assertExecuted(
 					"/* COMMENT_INDEX_game_title */ update game set title = ? where id = ?"
-				)
 			);
 		} );
 	}
@@ -249,7 +196,7 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 	@RequiresDialect(H2Dialect.class)
 	public void testSelectNamedNativeQueryWithQueryHintUsingIndex() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			connectionProvider.clear();
+			sqlStatementInterceptor.clear();
 
 			Query query = entityManager.createNamedQuery( "SelectNamedQuery" );
 			query.setParameter( "title", GAME_TITLES[0] );
@@ -257,16 +204,11 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 			List<Game> list = query.getResultList();
 			assertEquals( 1, list.size() );
 
-			assertEquals(
-				1,
-				connectionProvider.getPreparedStatements().size()
-			);
+			sqlStatementInterceptor.assertExecutedCount(1);
 
-			assertNotNull(
-				connectionProvider.getPreparedStatement(
-					"/* COMMENT_SELECT_INDEX_game_title */ select namedquery0_.id as id1_0_, namedquery0_.title as title2_0_ from game namedquery0_  USE INDEX (idx_game_id) where namedquery0_.title=?"
-				)
-			);
+			sqlStatementInterceptor.assertExecuted(
+					"/* COMMENT_SELECT_INDEX_game_title */ select namedquery0_.id as id1_0_, namedquery0_.title as title2_0_ from game namedquery0_  USE INDEX (idx_game_id) where namedquery0_.title=?"			)
+			;
 		} );
 	}
 

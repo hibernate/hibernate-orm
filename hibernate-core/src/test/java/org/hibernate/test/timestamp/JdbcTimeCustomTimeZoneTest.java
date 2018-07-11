@@ -23,6 +23,8 @@ import javax.persistence.Id;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.MySQL5Dialect;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
@@ -42,6 +44,7 @@ import static org.mockito.Mockito.verify;
  * @author Vlad Mihalcea
  */
 @SkipForDialect(MySQL5Dialect.class)
+@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
 public class JdbcTimeCustomTimeZoneTest
 		extends BaseNonConfigCoreFunctionalTestCase {
 

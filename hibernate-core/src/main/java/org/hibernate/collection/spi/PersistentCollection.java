@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -128,6 +129,20 @@ public interface PersistentCollection {
 	boolean unsetSession(SharedSessionContractImplementor currentSession);
 
 	/**
+	 * Disassociate this collection from the given session.
+	 *
+	 * @param currentSession The session we are disassociating from.  Used for validations.
+	 *
+	 * @return true if this was currently associated with the given session
+	 *
+	 * @deprecated {@link #unsetSession(SharedSessionContractImplementor)} should be used instead.
+	 */
+	@Deprecated
+	default boolean unsetSession(SessionImplementor currentSession) {
+		return unsetSession( (SharedSessionContractImplementor) currentSession );
+	}
+
+	/**
 	 * Associate the collection with the given session.
 	 *
 	 * @param session The session to associate with
@@ -138,6 +153,23 @@ public interface PersistentCollection {
 	 * with another open session
 	 */
 	boolean setCurrentSession(SharedSessionContractImplementor session) throws HibernateException;
+
+	/**
+	 * Associate the collection with the given session.
+	 *
+	 * @param session The session to associate with
+	 *
+	 * @return false if the collection was already associated with the session
+	 *
+	 * @throws HibernateException if the collection was already associated
+	 * with another open session
+	 *
+	 * @deprecated {@link #setCurrentSession(SharedSessionContractImplementor)} should be used instead.
+	 */
+	@Deprecated
+	default boolean setCurrentSession(SessionImplementor session) throws HibernateException {
+		return setCurrentSession( (SharedSessionContractImplementor) session );
+	}
 
 	/**
 	 * Read the state of the collection from a disassembled cached value

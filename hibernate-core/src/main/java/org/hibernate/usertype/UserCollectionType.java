@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 
@@ -29,9 +30,31 @@ public interface UserCollectionType {
 			throws HibernateException;
 
 	/**
+	 * Instantiate an uninitialized instance of the collection wrapper
+	 *
+	 * @deprecated {@link #instantiate(SharedSessionContractImplementor, CollectionPersister)}
+	 *             should be used instead.
+	 */
+	@Deprecated
+	default PersistentCollection instantiate(SessionImplementor session, CollectionPersister persister)
+			throws HibernateException {
+		return instantiate( (SharedSessionContractImplementor) session, persister );
+	}
+
+	/**
 	 * Wrap an instance of a collection
 	 */
 	PersistentCollection wrap(SharedSessionContractImplementor session, Object collection);
+
+	/**
+	 * Wrap an instance of a collection
+	 *
+	 * @deprecated {@link #wrap(SharedSessionContractImplementor, Object)} should be used instead.
+	 */
+	@Deprecated
+	default PersistentCollection wrap(SessionImplementor session, Object collection) {
+		return wrap( (SharedSessionContractImplementor) session, collection );
+	}
 
 	/**
 	 * Return an iterator over the elements of this collection - the passed collection
@@ -59,6 +82,30 @@ public interface UserCollectionType {
 			Object owner,
 			Map copyCache,
 			SharedSessionContractImplementor session) throws HibernateException;
+
+	/**
+	 * Replace the elements of a collection with the elements of another collection
+	 *
+	 * @deprecated {@link #replaceElements(Object, Object, CollectionPersister, Object, Map, SharedSessionContractImplementor)}
+	 *             should be used instead.
+	 */
+	@Deprecated
+	default Object replaceElements(
+			Object original,
+			Object target,
+			CollectionPersister persister,
+			Object owner,
+			Map copyCache,
+			SessionImplementor session) throws HibernateException {
+		return replaceElements(
+				original,
+				target,
+				persister,
+				owner,
+				copyCache,
+				(SharedSessionContractImplementor) session
+		);
+	}
 
 	/**
 	 * Instantiate an empty instance of the "underlying" collection (not a wrapper),

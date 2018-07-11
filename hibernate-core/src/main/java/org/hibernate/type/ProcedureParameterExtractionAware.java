@@ -9,6 +9,7 @@ package org.hibernate.type;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -43,6 +44,25 @@ public interface ProcedureParameterExtractionAware<T> {
 	 * Perform the extraction
 	 *
 	 * @param statement The CallableStatement from which to extract the parameter value(s).
+	 * @param startIndex The parameter index from which to start extracting; assumes the values (if multiple) are contiguous
+	 * @param session The originating session
+	 *
+	 * @return The extracted value.
+	 *
+	 * @throws SQLException Indicates an issue calling into the CallableStatement
+	 * @throws IllegalStateException Thrown if this method is called on instances that return {@code false} for {@link #canDoExtraction}
+	 *
+	 * @deprecated {@link #extract(CallableStatement, int, SharedSessionContractImplementor)} should be used instead.
+	 */
+	@Deprecated
+	default T extract(CallableStatement statement, int startIndex, SessionImplementor session) throws SQLException {
+		return extract( statement, startIndex, (SharedSessionContractImplementor) session );
+	}
+
+	/**
+	 * Perform the extraction
+	 *
+	 * @param statement The CallableStatement from which to extract the parameter value(s).
 	 * @param paramNames The parameter names.
 	 * @param session The originating session
 	 *
@@ -52,4 +72,23 @@ public interface ProcedureParameterExtractionAware<T> {
 	 * @throws IllegalStateException Thrown if this method is called on instances that return {@code false} for {@link #canDoExtraction}
 	 */
 	T extract(CallableStatement statement, String[] paramNames, SharedSessionContractImplementor session) throws SQLException;
+
+	/**
+	 * Perform the extraction
+	 *
+	 * @param statement The CallableStatement from which to extract the parameter value(s).
+	 * @param paramNames The parameter names.
+	 * @param session The originating session
+	 *
+	 * @return The extracted value.
+	 *
+	 * @throws SQLException Indicates an issue calling into the CallableStatement
+	 * @throws IllegalStateException Thrown if this method is called on instances that return {@code false} for {@link #canDoExtraction}
+	 *
+	 * @deprecated {@link #extract(CallableStatement, String[], SharedSessionContractImplementor)} should be used instead.
+	 */
+	@Deprecated
+	default T extract(CallableStatement statement, String[] paramNames, SessionImplementor session) throws SQLException {
+		return extract( statement, paramNames, (SharedSessionContractImplementor) session );
+	}
 }

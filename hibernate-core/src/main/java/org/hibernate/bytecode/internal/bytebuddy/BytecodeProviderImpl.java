@@ -66,7 +66,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 							new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( clazz.getName() ) ) )
 					.subclass( ReflectionOptimizer.InstantiationOptimizer.class )
 					.method( newInstanceMethodName )
-					.intercept( MethodCall.construct( constructor ) )
+							.intercept( MethodCall.construct( constructor ) )
 					.make()
 					.load( clazz.getClassLoader(), ByteBuddyState.resolveClassLoadingStrategy( clazz ) )
 					.getLoaded();
@@ -84,11 +84,11 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 						new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( clazz.getName() ) ) )
 				.subclass( ReflectionOptimizer.AccessOptimizer.class )
 				.method( getPropertyValuesMethodName )
-				.intercept( new Implementation.Simple( new GetPropertyValues( clazz, getters ) ) )
+						.intercept( new Implementation.Simple( new GetPropertyValues( clazz, getters ) ) )
 				.method( setPropertyValuesMethodName )
-				.intercept( new Implementation.Simple( new SetPropertyValues( clazz, setters ) ) )
+						.intercept( new Implementation.Simple( new SetPropertyValues( clazz, setters ) ) )
 				.method( getPropertyNamesMethodName )
-				.intercept( MethodCall.call( new CloningPropertyCall( getterNames ) ) )
+						.intercept( MethodCall.call( new CloningPropertyCall( getterNames ) ) )
 				.make()
 				.load( clazz.getClassLoader(), ByteBuddyState.resolveClassLoadingStrategy( clazz ) )
 				.getLoaded();

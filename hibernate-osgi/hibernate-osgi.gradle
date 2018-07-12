@@ -119,16 +119,16 @@ task generateVersionFile {
 
 karaf {
 	features {
-        xsdVersion  = '1.4.0'
-        feature {
-            name        = 'hibernate-orm'
-            description = 'Combines all Hibernate core dependencies and required modules into a single feature'
+		xsdVersion  = '1.4.0'
+		feature {
+			name        = 'hibernate-orm'
+			description = 'Combines all Hibernate core dependencies and required modules into a single feature'
 			includeProject = true
 			feature ('wrap') {
 				prerequisite = true
 			}
 			feature 'transaction-api'
-        }
+	}
 		// NOTE : would like to include spatial as well, but we need to wait for
 		//		it to not define dependency on postgresql driver
 		feature {

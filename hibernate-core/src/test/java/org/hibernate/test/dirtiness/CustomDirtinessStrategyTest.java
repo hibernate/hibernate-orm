@@ -18,7 +18,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -76,7 +75,6 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-12718")
 	public void testCustomStrategyWithFlushInterceptor() {
 		Session session = openSession();
 		session.beginTransaction();

@@ -52,6 +52,9 @@ configurations {
 
 dependencies {
 	compile( project( ':hibernate-core' ) ) {
+		// having javax.activation-api as a dependency requires us to have com.sun.activation:javax.activation
+		// this dependency wasn't there in the 5.2.x bundles so ignoring it for now
+		// we might reintroduce it at some point if users complain about it
 		exclude module: 'javax.activation-api'
 	}
 	testCompile( project( ':hibernate-envers' ) )

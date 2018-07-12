@@ -510,7 +510,11 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		final Serializable id = entry.getId();
 		final Object[] loadedState = entry.getLoadedState();
 
-		int[] dirtyProperties = session.getInterceptor().findDirty(
+		int[] dirtyProperties;
+
+		// First try: use the interceptor
+		final boolean interceptorHandledDirtyCheck;
+		dirtyProperties = session.getInterceptor().findDirty(
 				entity,
 				id,
 				values,
@@ -518,7 +522,15 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				persister.getPropertyNames(),
 				persister.getPropertyTypes()
 		);
+		if ( dirtyProperties != null ) {
+			// the Interceptor handled the dirty checking
+			interceptorHandledDirtyCheck = true;
+		}
+		else {
+			interceptorHandledDirtyCheck = false;
+		}
 
+		// If the above did not work, try custom dirtiness strategies and bytecode enhancement
 		if ( dirtyProperties == null ) {
 			if ( entity instanceof SelfDirtinessTracker ) {
 				if ( ( (SelfDirtinessTracker) entity ).$$_hibernate_hasDirtyAttributes() ) {
@@ -564,15 +576,14 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 		event.setDatabaseSnapshot( null );
 
-		final boolean interceptorHandledDirtyCheck;
-		boolean cannotDirtyCheck;
+		// The dirty check is considered possible unless proven otherwise (see below)
+		boolean cannotDirtyCheck = false;
 
+		// If none the above worked, try to compute dirtiness based on entity or database snapshots
 		if ( dirtyProperties == null ) {
-			// Interceptor returned null, so do the dirtycheck ourself, if possible
 			try {
 				session.getEventListenerManager().dirtyCalculationStart();
 
-				interceptorHandledDirtyCheck = false;
 				// object loaded by update()
 				cannotDirtyCheck = loadedState == null;
 				if ( !cannotDirtyCheck ) {
@@ -612,11 +623,6 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			finally {
 				session.getEventListenerManager().dirtyCalculationEnd( dirtyProperties != null );
 			}
-		}
-		else {
-			// the Interceptor handled the dirty checking
-			cannotDirtyCheck = false;
-			interceptorHandledDirtyCheck = true;
 		}
 
 		logDirtyProperties( id, dirtyProperties, persister );

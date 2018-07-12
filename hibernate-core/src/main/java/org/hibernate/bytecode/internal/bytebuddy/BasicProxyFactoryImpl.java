@@ -26,6 +26,7 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 
 	private final Class proxyClass;
 
+	@SuppressWarnings("unchecked")
 	public BasicProxyFactoryImpl(Class superClass, Class[] interfaces, ByteBuddyState bytebuddy) {
 		if ( superClass == null && ( interfaces == null || interfaces.length < 1 ) ) {
 			throw new AssertionFailure( "attempting to build proxy without any superclass or interfaces" );
@@ -39,7 +40,7 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 			.implement( interfaces == null ? NO_INTERFACES : interfaces )
 			.defineField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE )
 			.method( ElementMatchers.isVirtual().and( ElementMatchers.not( ElementMatchers.isFinalizer() ) ) )
-					.intercept( MethodDelegation.toField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME ) )
+					.intercept( MethodDelegation.to( ProxyConfiguration.InterceptorDispatcher.class ) )
 			.implement( ProxyConfiguration.class )
 					.intercept( FieldAccessor.ofField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME ).withAssigner( Assigner.DEFAULT, Assigner.Typing.DYNAMIC ) )
 			.make()

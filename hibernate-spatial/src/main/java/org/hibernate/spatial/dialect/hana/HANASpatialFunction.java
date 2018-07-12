@@ -57,50 +57,44 @@ public class HANASpatialFunction extends StandardSQLFunction {
 		if ( arguments.size() == 0 ) {
 			return getName() + "()";
 		}
-		else {
-			final StringBuilder buf = new StringBuilder();
-			int firstArgumentIndex;
-			if ( staticFunction ) {
-				// Add function call
-				buf.append( getName() );
-				firstArgumentIndex = 0;
-			}
-			else {
-				// If the first argument is an expression, e.g. a nested function, strip the .ST_AsEWKB() suffix
-				buf.append( stripEWKBSuffix( arguments.get( 0 ) ) );
 
-				// Add function call
-				buf.append( "." ).append( getName() );
-
-				firstArgumentIndex = 1;
-			}
-
-			buf.append( '(' );
-
-			// Add function arguments
-			for ( int i = firstArgumentIndex; i < arguments.size(); i++ ) {
-				final Object argument = arguments.get( i );
-				// Check if first argument needs to be parsed from EWKB. This is the case if the first argument is a
-				// parameter that is set as EWKB or if it's a nested function call.
-				final boolean parseFromWKB = ( isGeometryArgument( i ) && "?".equals( argument ) );
-				if ( parseFromWKB ) {
-					buf.append( "ST_GeomFromEWKB(" );
-				}
-				buf.append( stripEWKBSuffix( argument ) );
-				if ( parseFromWKB ) {
-					buf.append( ")" );
-				}
-				if ( i < arguments.size() - 1 ) {
-					buf.append( ", " );
-				}
-			}
-			buf.append( ')' );
-			// If it doesn't specify an explicit type, assume it's a geometry
-			if ( this.getType() == null ) {
-				buf.append( AS_EWKB_SUFFIX );
-			}
-			return buf.toString();
+		final StringBuilder buf = new StringBuilder();
+		int firstArgumentIndex;
+		if ( this.staticFunction ) {
+			// Add function call
+			buf.append( getName() );
+			firstArgumentIndex = 0;
 		}
+		else {
+			// If the first argument is an expression, e.g. a nested function, strip the .ST_AsEWKB() suffix
+			Object argument = arguments.get( 0 );
+			final boolean parseFromWKB = ( "?".equals( argument ) );
+			appendArgument( argument, parseFromWKB, buf );
+			// Add function call
+			buf.append( "." ).append( getName() );
+
+			firstArgumentIndex = 1;
+		}
+
+		buf.append( '(' );
+
+		// Add function arguments
+		for ( int i = firstArgumentIndex; i < arguments.size(); i++ ) {
+			final Object argument = arguments.get( i );
+			// Check if first argument needs to be parsed from EWKB. This is the case if the first argument is a
+			// parameter that is set as EWKB or if it's a nested function call.
+			final boolean parseFromWKB = ( isGeometryArgument( i ) && "?".equals( argument ) );
+			appendArgument( argument, parseFromWKB, buf );
+			if ( i < arguments.size() - 1 ) {
+				buf.append( ", " );
+			}
+		}
+		buf.append( ')' );
+		// If it doesn't specify an explicit type, assume it's a geometry
+		if ( this.getType() == null ) {
+			buf.append( AS_EWKB_SUFFIX );
+		}
+		return buf.toString();
 	}
 
 	private Object stripEWKBSuffix(Object argument) {
@@ -114,5 +108,15 @@ public class HANASpatialFunction extends StandardSQLFunction {
 
 	private boolean isGeometryArgument(int idx) {
 		return this.argumentIsGeometryTypeMask.size() > idx && this.argumentIsGeometryTypeMask.get( idx );
+	}
+
+	private void appendArgument(Object argument, boolean parseFromWKB, StringBuilder buf) {
+		if ( parseFromWKB ) {
+			buf.append( "ST_GeomFromEWKB(" );
+		}
+		buf.append( stripEWKBSuffix( argument ) );
+		if ( parseFromWKB ) {
+			buf.append( ")" );
+		}
 	}
 }

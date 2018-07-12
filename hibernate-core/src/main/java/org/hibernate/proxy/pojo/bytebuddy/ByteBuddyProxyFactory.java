@@ -98,21 +98,21 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 		final TypeCache<TypeCache.SimpleKey> cacheForProxies = ByteBuddyState.getCacheForProxies();
 
 		return cacheForProxies.findOrInsert( persistentClass.getClassLoader(), new TypeCache.SimpleKey(key), () ->
-			ByteBuddyState.getStaticByteBuddyInstance()
-			.ignore( isSynthetic().and( named( "getMetaClass" ).and( returns( td -> "groovy.lang.MetaClass".equals( td.getName() ) ) ) ) )
-			.with( new NamingStrategy.SuffixingRandom( PROXY_NAMING_SUFFIX, new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( persistentClass.getName() ) ) )
-			.subclass( interfaces.length == 1 ? persistentClass : Object.class, ConstructorStrategy.Default.IMITATE_SUPER_CLASS_OPENING )
-			.implement( (Type[]) interfaces )
-			.method( isVirtual().and( not( isFinalizer() ) ) )
-			.intercept( MethodDelegation.to( ProxyConfiguration.InterceptorDispatcher.class ) )
-			.method( nameStartsWith( "$$_hibernate_" ).and( isVirtual() ) )
-			.intercept( SuperMethodCall.INSTANCE )
-			.defineField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE )
-			.implement( ProxyConfiguration.class )
-			.intercept( FieldAccessor.ofField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME ).withAssigner( Assigner.DEFAULT, Assigner.Typing.DYNAMIC ) )
-			.make()
-			.load( persistentClass.getClassLoader(), ByteBuddyState.resolveClassLoadingStrategy( persistentClass ) )
-			.getLoaded(), cacheForProxies );
+				ByteBuddyState.getStaticByteBuddyInstance()
+						.ignore( isSynthetic().and( named( "getMetaClass" ).and( returns( td -> "groovy.lang.MetaClass".equals( td.getName() ) ) ) ) )
+						.with( new NamingStrategy.SuffixingRandom( PROXY_NAMING_SUFFIX, new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( persistentClass.getName() ) ) )
+						.subclass( interfaces.length == 1 ? persistentClass : Object.class, ConstructorStrategy.Default.IMITATE_SUPER_CLASS_OPENING )
+						.implement( (Type[]) interfaces )
+						.method( isVirtual().and( not( isFinalizer() ) ) )
+								.intercept( MethodDelegation.to( ProxyConfiguration.InterceptorDispatcher.class ) )
+						.method( nameStartsWith( "$$_hibernate_" ).and( isVirtual() ) )
+								.intercept( SuperMethodCall.INSTANCE )
+						.defineField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE )
+						.implement( ProxyConfiguration.class )
+								.intercept( FieldAccessor.ofField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME ).withAssigner( Assigner.DEFAULT, Assigner.Typing.DYNAMIC ) )
+						.make()
+						.load( persistentClass.getClassLoader(), ByteBuddyState.resolveClassLoadingStrategy( persistentClass ) )
+						.getLoaded(), cacheForProxies );
 	}
 
 	@Override

@@ -39,9 +39,9 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 			.implement( interfaces == null ? NO_INTERFACES : interfaces )
 			.defineField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE )
 			.method( ElementMatchers.isVirtual().and( ElementMatchers.not( ElementMatchers.isFinalizer() ) ) )
-			.intercept( MethodDelegation.toField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME ) )
+					.intercept( MethodDelegation.toField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME ) )
 			.implement( ProxyConfiguration.class )
-			.intercept( FieldAccessor.ofField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME ).withAssigner( Assigner.DEFAULT, Assigner.Typing.DYNAMIC ) )
+					.intercept( FieldAccessor.ofField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME ).withAssigner( Assigner.DEFAULT, Assigner.Typing.DYNAMIC ) )
 			.make()
 			.load( superClassOrMainInterface.getClassLoader(), ByteBuddyState.resolveClassLoadingStrategy( superClassOrMainInterface ) )
 			.getLoaded();

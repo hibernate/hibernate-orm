@@ -26,6 +26,7 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 	private static final String PROXY_NAMING_SUFFIX = Environment.useLegacyProxyClassnames() ? "HibernateBasicProxy$" : "HibernateBasicProxy";
 
 	private final Class proxyClass;
+	private final ProxyConfiguration.Interceptor interceptor;
 
 	@SuppressWarnings("unchecked")
 	public BasicProxyFactoryImpl(Class superClass, Class[] interfaces, ByteBuddyState bytebuddy) {
@@ -47,12 +48,13 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 			.make()
 			.load( superClassOrMainInterface.getClassLoader(), ByteBuddyState.resolveClassLoadingStrategy( superClassOrMainInterface ) )
 			.getLoaded();
+		this.interceptor = new PassThroughInterceptor( proxyClass.getName() );
 	}
 
 	public Object getProxy() {
 		try {
 			final ProxyConfiguration proxy = (ProxyConfiguration) proxyClass.newInstance();
-			proxy.$$_hibernate_set_interceptor( new PassThroughInterceptor( proxy, proxyClass.getName() ) );
+			proxy.$$_hibernate_set_interceptor( this.interceptor );
 			return proxy;
 		}
 		catch (Throwable t) {

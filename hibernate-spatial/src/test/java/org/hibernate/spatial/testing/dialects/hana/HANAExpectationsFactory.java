@@ -925,7 +925,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 				"select t.id, t.geom.ST_SnapToGrid() from GeomTest t where t.geom.ST_SRID() = "
 						+ getTestSrid() );
 	}
-	
+
 	/**
 	 * Returns the expected startpoint of all testsuite-suite geometries.
 	 *
@@ -939,7 +939,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	private NativeSQLStatement createNativeStartPointStatement() {
 		return createNativeSQLStatement( "select id, t.geom.ST_StartPoint() from GeomTest t where t.geom.ST_GeometryType() = 'ST_LineString'" );
 	}
-	
+
 	/**
 	 * Returns the expected aggregated union of all testsuite-suite geometries.
 	 *
@@ -953,7 +953,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	private NativeSQLStatement createNativeUnionAggrStatement() {
 		return createNativeSQLStatement( "select cast(count(*) as int), ST_UnionAggr(t.geom) from GeomTest t" );
 	}
-	
+
 	/**
 	 * Returns the x coordinate of all testsuite-suite geometries.
 	 *
@@ -969,7 +969,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 				"select t.id, t.geom.ST_X() from GeomTest t where t.geom.ST_GeometryType() in ('ST_Point') and t.geom.ST_SRID() = "
 						+ getTestSrid() );
 	}
-	
+
 	/**
 	 * Returns the maximum x coordinate of all testsuite-suite geometries.
 	 *
@@ -985,7 +985,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 				"select t.id, t.geom.ST_XMax() from GeomTest t where t.geom.ST_SRID() = "
 						+ getTestSrid() );
 	}
-	
+
 	/**
 	 * Returns the minimum x coordinate of all testsuite-suite geometries.
 	 *
@@ -1001,7 +1001,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 				"select t.id, t.geom.ST_XMin() from GeomTest t where t.geom.ST_SRID() = "
 						+ getTestSrid() );
 	}
-	
+
 	/**
 	 * Returns the y coordinate of all testsuite-suite geometries.
 	 *
@@ -1017,7 +1017,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 				"select t.id, t.geom.ST_Y() from GeomTest t where t.geom.ST_GeometryType() in ('ST_Point') and t.geom.ST_SRID() = "
 						+ getTestSrid() );
 	}
-	
+
 	/**
 	 * Returns the maximum y coordinate of all testsuite-suite geometries.
 	 *
@@ -1033,7 +1033,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 				"select t.id, t.geom.ST_YMax() from GeomTest t where t.geom.ST_SRID() = "
 						+ getTestSrid() );
 	}
-	
+
 	/**
 	 * Returns the minimum y coordinate of all testsuite-suite geometries.
 	 *
@@ -1049,7 +1049,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 				"select t.id, t.geom.ST_YMin() from GeomTest t where t.geom.ST_SRID() = "
 						+ getTestSrid() );
 	}
-	
+
 	/**
 	 * Returns the z coordinate of all testsuite-suite geometries.
 	 *
@@ -1065,7 +1065,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 				"select t.id, t.geom.ST_Z() from GeomTest t where t.geom.ST_GeometryType() in ('ST_Point') and t.geom.ST_SRID() = "
 						+ getTestSrid() );
 	}
-	
+
 	/**
 	 * Returns the maximum z coordinate of all testsuite-suite geometries.
 	 *
@@ -1081,7 +1081,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 				"select t.id, t.geom.ST_ZMax() from GeomTest t where t.geom.ST_SRID() = "
 						+ getTestSrid() );
 	}
-	
+
 	/**
 	 * Returns the minimum z coordinate of all testsuite-suite geometries.
 	 *
@@ -1096,5 +1096,38 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 		return createNativeSQLStatement(
 				"select t.id, t.geom.ST_ZMin() from GeomTest t where t.geom.ST_SRID() = "
 						+ getTestSrid() );
+	}
+
+	/**
+	 * Returns the result of a nested function call with a parameter inside the inner function
+	 *
+	 * @return map of identifier, geometry
+	 * @throws SQLException
+	 */
+	public Map<Integer, Geometry> getNestedFunctionInner(Geometry geom) throws SQLException {
+		return retrieveExpected( createNativeNestedFunctionInnerStatement( geom ), GEOMETRY );
+	}
+
+	private NativeSQLStatement createNativeNestedFunctionInnerStatement(Geometry geom) {
+		return createNativeSQLStatementAllWKTParams(
+				"select t.id, t.geom from GeomTest t where t.geom.ST_WithinDistance(ST_GeomFromText(?, " + getTestSrid()
+						+ ").ST_SRID(0), 1) = 1",
+				geom.toText() );
+	}
+
+	/**
+	 * Returns the result of a nested function call with a parameter inside the outer function
+	 *
+	 * @return map of identifier, geometry
+	 * @throws SQLException
+	 */
+	public Map<Integer, Geometry> getNestedFunctionOuter(Geometry geom) throws SQLException {
+		return retrieveExpected( createNativeNestedFunctionOuterStatement( geom ), GEOMETRY );
+	}
+
+	private NativeSQLStatement createNativeNestedFunctionOuterStatement(Geometry geom) {
+		return createNativeSQLStatementAllWKTParams(
+				"select t.id, t.geom from GeomTest t where ST_GeomFromText(?, " + getTestSrid() + ").ST_WithinDistance(geom.ST_SRID(0), 1) = 1",
+				geom.toText() );
 	}
 }

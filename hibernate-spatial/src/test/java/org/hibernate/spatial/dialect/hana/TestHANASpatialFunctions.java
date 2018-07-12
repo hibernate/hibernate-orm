@@ -1018,6 +1018,31 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
+	@Test
+	public void test_nestedfunction_on_jts() throws SQLException {
+		nestedfunction( JTS );
+	}
+
+	@Test
+	public void test_nestedfunction_on_geolatte() throws SQLException {
+		nestedfunction( GEOLATTE );
+	}
+
+	public void nestedfunction(String pckg) throws SQLException {
+		Map<Integer, Geometry> dbexpected = hanaExpectationsFactory.getNestedFunctionInner( expectationsFactory.getTestPolygon() );
+		String hql = format(
+				"SELECT id, geom FROM org.hibernate.spatial.integration.%s.GeomEntity g where dwithin(geom, srid(:filter, 0), 1) = true",
+				pckg );
+		Map<String, Object> params = createQueryParams( "filter", expectationsFactory.getTestPolygon() );
+		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
+		
+		dbexpected = hanaExpectationsFactory.getNestedFunctionOuter( expectationsFactory.getTestPolygon() );
+		hql = format(
+				"SELECT id, geom FROM org.hibernate.spatial.integration.%s.GeomEntity g where dwithin(:filter, srid(geom, 0), 1) = true",
+				pckg );
+		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
+	}
+
 	private String getGeometryTypeFromPackage(String pckg) {
 		switch ( pckg ) {
 			case GEOLATTE:

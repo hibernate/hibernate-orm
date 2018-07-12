@@ -170,42 +170,42 @@ public class EnhancerImpl implements Enhancer {
 				if ( collectCollectionFields( managedCtClass ).isEmpty() ) {
 					builder = builder.implement( SelfDirtinessTracker.class )
 							.defineField( EnhancerConstants.TRACKER_FIELD_NAME, DirtyTracker.class, FieldPersistence.TRANSIENT, Visibility.PRIVATE )
-							.annotateField( AnnotationDescription.Builder.ofType( Transient.class ).build() )
+									.annotateField( AnnotationDescription.Builder.ofType( Transient.class ).build() )
 							.defineMethod( EnhancerConstants.TRACKER_CHANGER_NAME, void.class, Visibility.PUBLIC )
-							.withParameters( String.class )
-							.intercept( Advice.to( CodeTemplates.TrackChange.class ).wrap( StubMethod.INSTANCE ) )
+									.withParameters( String.class )
+									.intercept( Advice.to( CodeTemplates.TrackChange.class ).wrap( StubMethod.INSTANCE ) )
 							.defineMethod( EnhancerConstants.TRACKER_GET_NAME, String[].class, Visibility.PUBLIC )
-							.intercept( Advice.to( CodeTemplates.GetDirtyAttributesWithoutCollections.class ).wrap( StubMethod.INSTANCE ) )
+									.intercept( Advice.to( CodeTemplates.GetDirtyAttributesWithoutCollections.class ).wrap( StubMethod.INSTANCE ) )
 							.defineMethod( EnhancerConstants.TRACKER_HAS_CHANGED_NAME, boolean.class, Visibility.PUBLIC )
-							.intercept( Advice.to( CodeTemplates.AreFieldsDirtyWithoutCollections.class ).wrap( StubMethod.INSTANCE ) )
+									.intercept( Advice.to( CodeTemplates.AreFieldsDirtyWithoutCollections.class ).wrap( StubMethod.INSTANCE ) )
 							.defineMethod( EnhancerConstants.TRACKER_CLEAR_NAME, void.class, Visibility.PUBLIC )
-							.intercept( Advice.to( CodeTemplates.ClearDirtyAttributesWithoutCollections.class ).wrap( StubMethod.INSTANCE ) )
+									.intercept( Advice.to( CodeTemplates.ClearDirtyAttributesWithoutCollections.class ).wrap( StubMethod.INSTANCE ) )
 							.defineMethod( EnhancerConstants.TRACKER_SUSPEND_NAME, void.class, Visibility.PUBLIC )
-							.withParameters( boolean.class )
-							.intercept( Advice.to( CodeTemplates.SuspendDirtyTracking.class ).wrap( StubMethod.INSTANCE ) )
+									.withParameters( boolean.class )
+									.intercept( Advice.to( CodeTemplates.SuspendDirtyTracking.class ).wrap( StubMethod.INSTANCE ) )
 							.defineMethod( EnhancerConstants.TRACKER_COLLECTION_GET_NAME, CollectionTracker.class, Visibility.PUBLIC )
-							.intercept( Advice.to( CodeTemplates.GetCollectionTrackerWithoutCollections.class ).wrap( StubMethod.INSTANCE ) );
+									.intercept( Advice.to( CodeTemplates.GetCollectionTrackerWithoutCollections.class ).wrap( StubMethod.INSTANCE ) );
 				}
 				else {
 					builder = builder.implement( ExtendedSelfDirtinessTracker.class )
 							.defineField( EnhancerConstants.TRACKER_FIELD_NAME, DirtyTracker.class, FieldPersistence.TRANSIENT, Visibility.PRIVATE )
-							.annotateField( AnnotationDescription.Builder.ofType( Transient.class ).build() )
+									.annotateField( AnnotationDescription.Builder.ofType( Transient.class ).build() )
 							.defineField( EnhancerConstants.TRACKER_COLLECTION_NAME, CollectionTracker.class, FieldPersistence.TRANSIENT, Visibility.PRIVATE )
-							.annotateField( AnnotationDescription.Builder.ofType( Transient.class ).build() )
+									.annotateField( AnnotationDescription.Builder.ofType( Transient.class ).build() )
 							.defineMethod( EnhancerConstants.TRACKER_CHANGER_NAME, void.class, Visibility.PUBLIC )
-							.withParameters( String.class )
-							.intercept( Advice.to( CodeTemplates.TrackChange.class ).wrap( StubMethod.INSTANCE ) )
+									.withParameters( String.class )
+									.intercept( Advice.to( CodeTemplates.TrackChange.class ).wrap( StubMethod.INSTANCE ) )
 							.defineMethod( EnhancerConstants.TRACKER_GET_NAME, String[].class, Visibility.PUBLIC )
-							.intercept( Advice.to( CodeTemplates.GetDirtyAttributes.class ).wrap( StubMethod.INSTANCE ) )
+									.intercept( Advice.to( CodeTemplates.GetDirtyAttributes.class ).wrap( StubMethod.INSTANCE ) )
 							.defineMethod( EnhancerConstants.TRACKER_HAS_CHANGED_NAME, boolean.class, Visibility.PUBLIC )
-							.intercept( Advice.to( CodeTemplates.AreFieldsDirty.class ).wrap( StubMethod.INSTANCE ) )
+									.intercept( Advice.to( CodeTemplates.AreFieldsDirty.class ).wrap( StubMethod.INSTANCE ) )
 							.defineMethod( EnhancerConstants.TRACKER_CLEAR_NAME, void.class, Visibility.PUBLIC )
-							.intercept( Advice.to( CodeTemplates.ClearDirtyAttributes.class ).wrap( StubMethod.INSTANCE ) )
+									.intercept( Advice.to( CodeTemplates.ClearDirtyAttributes.class ).wrap( StubMethod.INSTANCE ) )
 							.defineMethod( EnhancerConstants.TRACKER_SUSPEND_NAME, void.class, Visibility.PUBLIC )
-							.withParameters( boolean.class )
-							.intercept( Advice.to( CodeTemplates.SuspendDirtyTracking.class ).wrap( StubMethod.INSTANCE ) )
+									.withParameters( boolean.class )
+									.intercept( Advice.to( CodeTemplates.SuspendDirtyTracking.class ).wrap( StubMethod.INSTANCE ) )
 							.defineMethod( EnhancerConstants.TRACKER_COLLECTION_GET_NAME, CollectionTracker.class, Visibility.PUBLIC )
-							.intercept( FieldAccessor.ofField( EnhancerConstants.TRACKER_COLLECTION_NAME ) );
+									.intercept( FieldAccessor.ofField( EnhancerConstants.TRACKER_COLLECTION_NAME ) );
 
 					Implementation isDirty = StubMethod.INSTANCE, getDirtyNames = StubMethod.INSTANCE, clearDirtyNames = StubMethod.INSTANCE;
 					for ( FieldDescription collectionField : collectCollectionFields( managedCtClass ) ) {
@@ -252,13 +252,13 @@ public class EnhancerImpl implements Enhancer {
 					builder = builder.defineMethod( EnhancerConstants.TRACKER_COLLECTION_CHANGED_NAME, boolean.class, Visibility.PUBLIC )
 							.intercept( isDirty )
 							.defineMethod( EnhancerConstants.TRACKER_COLLECTION_CHANGED_FIELD_NAME, void.class, Visibility.PUBLIC )
-							.withParameters( DirtyTracker.class )
-							.intercept( getDirtyNames )
+									.withParameters( DirtyTracker.class )
+									.intercept( getDirtyNames )
 							.defineMethod( EnhancerConstants.TRACKER_COLLECTION_CLEAR_NAME, void.class, Visibility.PUBLIC )
-							.intercept( Advice.withCustomMapping().to( CodeTemplates.ClearDirtyCollectionNames.class ).wrap( StubMethod.INSTANCE ) )
+									.intercept( Advice.withCustomMapping().to( CodeTemplates.ClearDirtyCollectionNames.class ).wrap( StubMethod.INSTANCE ) )
 							.defineMethod( ExtendedSelfDirtinessTracker.REMOVE_DIRTY_FIELDS_NAME, void.class, Visibility.PUBLIC )
-							.withParameters( LazyAttributeLoadingInterceptor.class )
-							.intercept( clearDirtyNames );
+									.withParameters( LazyAttributeLoadingInterceptor.class )
+									.intercept( clearDirtyNames );
 				}
 			}
 
@@ -278,21 +278,21 @@ public class EnhancerImpl implements Enhancer {
 								FieldPersistence.TRANSIENT,
 								Visibility.PRIVATE
 						)
-						.annotateField( AnnotationDescription.Builder.ofType( Transient.class ).build() )
+								.annotateField( AnnotationDescription.Builder.ofType( Transient.class ).build() )
 						.defineMethod(
 								EnhancerConstants.TRACKER_COMPOSITE_SET_OWNER,
 								void.class,
 								Visibility.PUBLIC
 						)
-						.withParameters( String.class, CompositeOwner.class )
-						.intercept( Advice.to( CodeTemplates.SetOwner.class ).wrap( StubMethod.INSTANCE ) )
+								.withParameters( String.class, CompositeOwner.class )
+								.intercept( Advice.to( CodeTemplates.SetOwner.class ).wrap( StubMethod.INSTANCE ) )
 						.defineMethod(
 								EnhancerConstants.TRACKER_COMPOSITE_CLEAR_OWNER,
 								void.class,
 								Visibility.PUBLIC
 						)
-						.withParameters( String.class )
-						.intercept( Advice.to( CodeTemplates.ClearOwner.class ).wrap( StubMethod.INSTANCE ) );
+								.withParameters( String.class )
+								.intercept( Advice.to( CodeTemplates.ClearOwner.class ).wrap( StubMethod.INSTANCE ) );
 			}
 
 			return transformer.applyTo( builder, false );
@@ -348,13 +348,14 @@ public class EnhancerImpl implements Enhancer {
 			String fieldName,
 			String getterName,
 			String setterName) {
-		return builder.defineField( fieldName, type, Visibility.PRIVATE, FieldPersistence.TRANSIENT )
-				.annotateField( AnnotationDescription.Builder.ofType( Transient.class ).build() )
+		return builder
+				.defineField( fieldName, type, Visibility.PRIVATE, FieldPersistence.TRANSIENT )
+						.annotateField( AnnotationDescription.Builder.ofType( Transient.class ).build() )
 				.defineMethod( getterName, type, Visibility.PUBLIC )
-				.intercept( FieldAccessor.ofField( fieldName ) )
+						.intercept( FieldAccessor.ofField( fieldName ) )
 				.defineMethod( setterName, void.class, Visibility.PUBLIC )
-				.withParameters( type )
-				.intercept( FieldAccessor.ofField( fieldName ) );
+						.withParameters( type )
+						.intercept( FieldAccessor.ofField( fieldName ) );
 	}
 
 	private List<FieldDescription> collectCollectionFields(TypeDescription managedCtClass) {

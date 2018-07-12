@@ -7,11 +7,20 @@
 package org.hibernate.test.component.proxy;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
+import org.hibernate.EntityMode;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.test.annotations.basic.CollectionAsBasicTest.DelimitedStringsType;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.type.ComponentType;
 import org.junit.Test;
 
 /**
@@ -43,5 +52,29 @@ public class ComponentBasicProxyTest extends BaseEntityManagerFunctionalTestCase
 			Adult adult = adultsCalledArjun.iterator().next();
 			entityManager.remove( adult );
 		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12791")
+	public void testOnlyOneProxyClassGenerated() {
+		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+
+		try {
+			Metadata metadata = new MetadataSources( ssr ).addAnnotatedClass( Person.class )
+					.getMetadataBuilder().applyBasicType( new DelimitedStringsType() )
+					.build();
+			PersistentClass persistentClass = metadata.getEntityBinding( Person.class.getName() );
+
+			ComponentType componentType1 = (ComponentType) persistentClass.getIdentifierMapper().getType();
+			Object instance1 = componentType1.instantiate( EntityMode.POJO );
+
+			ComponentType componentType2 = (ComponentType) persistentClass.getIdentifierMapper().getType();
+			Object instance2 = componentType2.instantiate( EntityMode.POJO );
+
+			assertEquals( instance1.getClass(), instance2.getClass() );
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( ssr );
+		}
 	}
 }

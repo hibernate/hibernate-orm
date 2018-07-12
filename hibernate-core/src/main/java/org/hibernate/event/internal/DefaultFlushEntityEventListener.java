@@ -565,7 +565,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		event.setDatabaseSnapshot( null );
 
 		// The dirty check is considered possible unless proven otherwise (see below)
-		boolean cannotDirtyCheck = false;
+		boolean dirtyCheckPossible = true;
 
 		// If none the above worked, try to compute dirtiness based on entity or database snapshots
 		if ( dirtyProperties == null ) {
@@ -573,8 +573,8 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				session.getEventListenerManager().dirtyCalculationStart();
 
 				// object loaded by update()
-				cannotDirtyCheck = loadedState == null;
-				if ( !cannotDirtyCheck ) {
+				dirtyCheckPossible = loadedState != null;
+				if ( dirtyCheckPossible ) {
 					// dirty check against the usual snapshot of the entity
 					dirtyProperties = persister.findDirty( values, loadedState, entity, session );
 				}
@@ -596,14 +596,14 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 					// - dirtyProperties will only contain properties that refer to transient entities
 					final Object[] currentState = persister.getPropertyValues( event.getEntity() );
 					dirtyProperties = persister.findDirty( entry.getDeletedState(), currentState, entity, session );
-					cannotDirtyCheck = false;
+					dirtyCheckPossible = true;
 				}
 				else {
 					// dirty check against the database snapshot, if possible/necessary
 					final Object[] databaseSnapshot = getDatabaseSnapshot( session, persister, id );
 					if ( databaseSnapshot != null ) {
 						dirtyProperties = persister.findModified( databaseSnapshot, values, entity, session );
-						cannotDirtyCheck = false;
+						dirtyCheckPossible = true;
 						event.setDatabaseSnapshot( databaseSnapshot );
 					}
 				}
@@ -617,7 +617,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 		event.setDirtyProperties( dirtyProperties );
 		event.setDirtyCheckHandledByInterceptor( interceptorHandledDirtyCheck );
-		event.setDirtyCheckPossible( !cannotDirtyCheck );
+		event.setDirtyCheckPossible( dirtyCheckPossible );
 
 	}
 

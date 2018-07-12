@@ -3776,12 +3776,7 @@ public final class SessionImpl
 		}
 
 		if ( namedQueryDefinition.getFlushMode() != null ) {
-			if ( namedQueryDefinition.getFlushMode() == FlushMode.COMMIT ) {
-				query.setFlushMode( FlushModeType.COMMIT );
-			}
-			else {
-				query.setFlushMode( FlushModeType.AUTO );
-			}
+			query.setHibernateFlushMode( namedQueryDefinition.getFlushMode() );
 		}
 	}
 

@@ -35,7 +35,8 @@ public class SqlFunctionMetadataBuilderContributorIllegalClassArgumentTest
 			fail("Should throw exception!");
 		}
 		catch (ClassCastException e) {
-			assertTrue( e.getMessage().contains( "cannot be cast to org.hibernate.boot.spi.MetadataBuilderContributor" ) );
+			assertTrue( e.getMessage().contains( "cannot be cast to" ) );
+			assertTrue( e.getMessage().contains( "org.hibernate.boot.spi.MetadataBuilderContributor" ) );
 		}
 	}
 

@@ -91,7 +91,7 @@ public final class ByteBuddyState {
 		return buddy;
 	}
 
-	public static ClassLoadingStrategy<?> resolveClassLoadingStrategy(Class<?> originalClass) {
+	public static ClassLoadingStrategy<ClassLoader> resolveClassLoadingStrategy(Class<?> originalClass) {
 		if ( ClassInjector.UsingLookup.isAvailable() ) {
 			// This is only enabled for JDK 9+
 

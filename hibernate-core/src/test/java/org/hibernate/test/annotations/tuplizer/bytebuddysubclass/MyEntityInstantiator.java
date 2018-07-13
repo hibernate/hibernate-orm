@@ -8,11 +8,11 @@ package org.hibernate.test.annotations.tuplizer.bytebuddysubclass;
 
 import java.io.Serializable;
 
+import org.hibernate.bytecode.internal.bytebuddy.ByteBuddyState;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.tuple.Instantiator;
 
 import net.bytebuddy.ByteBuddy;
-import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.matcher.ElementMatchers;
 
@@ -42,7 +42,8 @@ public class MyEntityInstantiator implements Instantiator {
 				.method( ElementMatchers.named( "toString" ) )
 				.intercept( FixedValue.value( "transformed" ) )
 				.make()
-				.load( entityClass.getClassLoader(), ClassLoadingStrategy.Default.INJECTION )
+				// we use our internal helper to get a class loading strategy suitable for the JDK used
+				.load( entityClass.getClassLoader(), ByteBuddyState.resolveClassLoadingStrategy( entityClass ) )
 				.getLoaded();
 
 		try {

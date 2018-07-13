@@ -57,18 +57,18 @@ public class NonUniqueIdTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-12802" )
 	public void testLoadEntityWithNonUniqueId() {
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
-					try {
-						session.get( Category.class, 1 );
-						fail( "should have failed because there are 2 entities with id == 1" );
+		try {
+			doInHibernate(
+					this::sessionFactory,
+					session -> {
+							session.get( Category.class, 1 );
+							fail( "should have failed because there are 2 entities with id == 1" );
 					}
-					catch ( HibernateException ex) {
-						// expected
-					}
-				}
-		);
+			);
+		}
+		catch ( HibernateException ex) {
+			// expected
+		}
 	}
 
 	@Entity

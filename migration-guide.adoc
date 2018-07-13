@@ -123,6 +123,17 @@ be lazily fetched, as expected.
 
 See details on the https://hibernate.atlassian.net/browse/HHH-12687[HHH-12687] Jira issue.
 
+=== JpaIntegrator removed
+
+JPA and native implementations of Hibernate event listeners were unified (see https://hibernate.atlassian.net/browse/HHH-11264)
+making the `org.hibernate.jpa.event.spi.JpaIntegrator` no longer needed.
+
+[NOTE]
+====
+Existing applications migrating to 5.3 with classes extending `org.hibernate.jpa.event.spi.JpaIntegrator` have to change these classes to implement the `org.hibernate.integrator.spi.Integrator` interface.
+====
+
+
 === 5.3 -> 6.0 compatibility changes
 
 The original driving force behind these series of changes is an effort to be as proactive as possible

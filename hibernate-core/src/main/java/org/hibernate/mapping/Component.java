@@ -29,6 +29,8 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.tuple.component.ComponentMetamodel;
+import org.hibernate.tuple.component.ComponentTuplizer;
+import org.hibernate.tuple.component.ComponentTuplizerFactory;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
 
@@ -52,8 +54,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 
 	private java.util.Map<EntityMode,String> tuplizerImpls;
 
-	// cache the status of the type
-	private volatile Type type;
+	private ComponentTuplizer componentTuplizer;
 
 	/**
 	 * @deprecated User {@link Component#Component(MetadataBuildingContext, PersistentClass)} instead.
@@ -212,28 +213,23 @@ public class Component extends SimpleValue implements MetaAttributable {
 
 	@Override
 	public Type getType() throws MappingException {
-		// Resolve the type of the value once and for all as this operation generates a proxy class
-		// for each invocation.
-		// Unfortunately, there's no better way of doing that as none of the classes are immutable and
-		// we can't know for sure the current state of the property or the value.
-		Type localType = type;
+		if ( componentTuplizer == null ) {
+			EntityMode entityMode = hasPojoRepresentation() ? EntityMode.POJO : EntityMode.MAP;
+			final String tuplizerClassName = getTuplizerImplClassName( entityMode );
 
-		if ( localType == null ) {
-			synchronized ( this ) {
-				if ( type == null ) {
-					// TODO : temporary initial step towards HHH-1907
-					final ComponentMetamodel metamodel = new ComponentMetamodel(
-							this,
-							getMetadata().getMetadataBuildingOptions()
-					);
-					final TypeFactory factory = getMetadata().getTypeConfiguration().getTypeResolver().getTypeFactory();
-					localType = isEmbedded() ? factory.embeddedComponent( metamodel ) : factory.component( metamodel );
-					type = localType;
-				}
-			}
+			ComponentTuplizerFactory componentTuplizerFactory = new ComponentTuplizerFactory( getMetadata().getMetadataBuildingOptions() );
+			componentTuplizer = tuplizerClassName == null ? componentTuplizerFactory.constructDefaultTuplizer(
+					entityMode,
+					this
+			) : componentTuplizerFactory.constructTuplizer( tuplizerClassName, this );
+			// TODO : temporary initial step towards HHH-1907
 		}
-
-		return localType;
+		final ComponentMetamodel metamodel = new ComponentMetamodel(
+				this,
+				componentTuplizer
+		);
+		final TypeFactory factory = getMetadata().getTypeConfiguration().getTypeResolver().getTypeFactory();
+		return isEmbedded() ? factory.embeddedComponent( metamodel ) : factory.component( metamodel );
 	}
 
 	@Override

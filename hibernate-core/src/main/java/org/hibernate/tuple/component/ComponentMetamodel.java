@@ -37,7 +37,7 @@ public class ComponentMetamodel implements Serializable {
 	private final StandardProperty[] properties;
 
 	private final EntityMode entityMode;
-	private final ComponentTuplizer componentTuplizer;
+	private ComponentTuplizer componentTuplizer;
 
 	// cached for efficiency...
 	private final int propertySpan;
@@ -49,14 +49,15 @@ public class ComponentMetamodel implements Serializable {
 	 */
 	@Deprecated
 	public ComponentMetamodel(Component component, MetadataBuildingOptions metadataBuildingOptions) {
-		this( component, new ComponentTuplizerFactory( metadataBuildingOptions ) );
+		this( component, buildComponentTuplizer( component, new ComponentTuplizerFactory( metadataBuildingOptions ) ) );
 	}
 
 	public ComponentMetamodel(Component component, BootstrapContext bootstrapContext) {
-		this( component, new ComponentTuplizerFactory( bootstrapContext ) );
+		this( component, buildComponentTuplizer( component, new ComponentTuplizerFactory( bootstrapContext ) ) );
 	}
 
-	private ComponentMetamodel(Component component, ComponentTuplizerFactory componentTuplizerFactory){
+	public ComponentMetamodel(Component component, ComponentTuplizer componentTuplizer) {
+		this.componentTuplizer = componentTuplizer;
 		this.role = component.getRoleName();
 		this.isKey = component.isKey();
 		propertySpan = component.getPropertySpan();
@@ -64,7 +65,7 @@ public class ComponentMetamodel implements Serializable {
 		Iterator itr = component.getPropertyIterator();
 		int i = 0;
 		while ( itr.hasNext() ) {
-			Property property = ( Property ) itr.next();
+			Property property = (Property) itr.next();
 			properties[i] = PropertyFactory.buildStandardProperty( property, false );
 			propertyIndexes.put( property.getName(), i );
 			i++;
@@ -73,14 +74,9 @@ public class ComponentMetamodel implements Serializable {
 		entityMode = component.hasPojoRepresentation() ? EntityMode.POJO : EntityMode.MAP;
 
 		// todo : move this to SF per HHH-3517; also see HHH-1907 and ComponentMetamodel
-		final String tuplizerClassName = component.getTuplizerImplClassName( entityMode );
-		this.componentTuplizer = tuplizerClassName == null ? componentTuplizerFactory.constructDefaultTuplizer(
-				entityMode,
-				component
-		) : componentTuplizerFactory.constructTuplizer( tuplizerClassName, component );
 
 		final ConfigurationService cs = component.getMetadata().getMetadataBuildingOptions().getServiceRegistry()
-				.getService(ConfigurationService.class);
+				.getService( ConfigurationService.class );
 
 		this.createEmptyCompositesEnabled = ConfigurationHelper.getBoolean(
 				Environment.CREATE_EMPTY_COMPOSITES_ENABLED,
@@ -109,7 +105,7 @@ public class ComponentMetamodel implements Serializable {
 	}
 
 	public int getPropertyIndex(String propertyName) {
-		Integer index = ( Integer ) propertyIndexes.get( propertyName );
+		Integer index = (Integer) propertyIndexes.get( propertyName );
 		if ( index == null ) {
 			throw new HibernateException( "component does not contain such a property [" + propertyName + "]" );
 		}
@@ -130,6 +126,21 @@ public class ComponentMetamodel implements Serializable {
 
 	public boolean isCreateEmptyCompositesEnabled() {
 		return createEmptyCompositesEnabled;
+	}
+
+	private static ComponentTuplizer buildComponentTuplizer(
+			Component component,
+			ComponentTuplizerFactory componentTuplizerFactory) {
+		EntityMode entityMode = component.hasPojoRepresentation() ? EntityMode.POJO : EntityMode.MAP;
+
+// todo : move this to SF per HHH-3517; also see HHH-1907 and ComponentMetamodel
+		final String tuplizerClassName = component.getTuplizerImplClassName( entityMode );
+
+		return tuplizerClassName == null ? componentTuplizerFactory.constructDefaultTuplizer(
+				entityMode,
+				component
+		) : componentTuplizerFactory.constructTuplizer( tuplizerClassName, component );
+
 	}
 
 }

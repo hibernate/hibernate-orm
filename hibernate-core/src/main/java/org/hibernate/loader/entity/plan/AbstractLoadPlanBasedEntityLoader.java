@@ -49,7 +49,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 	private final Type uniqueKeyType;
 	private final String entityName;
 
-	private final LoadQueryDetails staticLoadQuery;
+	private final EntityLoadQueryDetails staticLoadQuery;
 
 	public AbstractLoadPlanBasedEntityLoader(
 			OuterJoinLoadable entityPersister,
@@ -189,7 +189,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 					false,
 					null
 			);
-			result = extractEntityResult( results );
+			result = extractEntityResult( results, id );
 		}
 		catch ( SQLException sqle ) {
 			throw session.getJdbcServices().getSqlExceptionHelper().convert(
@@ -208,14 +208,22 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 		return result;
 	}
 
+	/**
+	 * @deprecated {@link #extractEntityResult(List, Serializable)} should be used instead.
+	 */
+	@Deprecated
 	protected Object extractEntityResult(List results) {
+		return extractEntityResult( results, null );
+	}
+
+	protected Object extractEntityResult(List results, Serializable id) {
 		if ( results.size() == 0 ) {
 			return null;
 		}
 		else if ( results.size() == 1 ) {
 			return results.get( 0 );
 		}
-		else {
+		else if ( staticLoadQuery.hasCollectionInitializers() ) {
 			final Object row = results.get( 0 );
 			if ( row.getClass().isArray() ) {
 				// the logical type of the result list is List<Object[]>.  See if the contained
@@ -230,7 +238,20 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			}
 		}
 
-		throw new HibernateException( "Unable to interpret given query results in terms of a load-entity query" );
+		if ( id == null ) {
+			throw new HibernateException(
+					"Unable to interpret given query results in terms of a load-entity query for " +
+							entityName
+			);
+		}
+		else {
+			throw new HibernateException(
+					"More than one row with the given identifier was found: " +
+							id +
+							", for class: " +
+							entityName
+			);
+		}
 	}
 
 	protected int[] getNamedParameterLocs(String name) {

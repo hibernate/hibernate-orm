@@ -14,6 +14,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.plan.exec.process.internal.AbstractRowReader;
 import org.hibernate.loader.plan.exec.process.internal.EntityReferenceInitializerImpl;
 import org.hibernate.loader.plan.exec.process.internal.EntityReturnReader;
@@ -102,6 +103,11 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 		this.entityReferenceAliases = initialEntityLoadQueryDetails.entityReferenceAliases;
 		this.readerCollector = initialEntityLoadQueryDetails.readerCollector;
 		generate();
+	}
+
+	public boolean hasCollectionInitializers() {
+		return CollectionHelper.isNotEmpty( readerCollector.getArrayReferenceInitializers() ) ||
+				CollectionHelper.isNotEmpty( readerCollector.getNonArrayCollectionReferenceInitializers() );
 	}
 
 	private EntityReturn getRootEntityReturn() {

@@ -41,7 +41,7 @@ public class BatchingLoadQueryDetailsFactory {
 	 *
 	 * @return The EntityLoadQueryDetails
 	 */
-	public LoadQueryDetails makeEntityLoadQueryDetails(
+	public EntityLoadQueryDetails makeEntityLoadQueryDetails(
 			LoadPlan loadPlan,
 			String[] keyColumnNames,
 			QueryBuildingParameters buildingParameters,
@@ -76,7 +76,7 @@ public class BatchingLoadQueryDetailsFactory {
 	 * that add additional joins here)
 	 * @return The EntityLoadQueryDetails
 	 */
-	public LoadQueryDetails makeEntityLoadQueryDetails(
+	public EntityLoadQueryDetails makeEntityLoadQueryDetails(
 			EntityLoadQueryDetails entityLoadQueryDetailsTemplate,
 			QueryBuildingParameters buildingParameters) {
 		return new EntityLoadQueryDetails(

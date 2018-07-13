@@ -34,7 +34,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static javax.persistence.GenerationType.AUTO;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -84,9 +83,9 @@ public class MultiLoadSubSelectCollectionTest extends BaseNonConfigCoreFunctiona
 	@Test
 	@TestForIssue( jiraKey = "HHH-12740" )
 	public void testSubselect() {
-		doInHibernate(
-				this::sessionFactory, session -> {
-
+		Session session = openSession();
+		session.beginTransaction();
+		{
 
 					List<Parent> list = session.byMultipleIds( Parent.class ).multiLoad( ids(56) );
 					assertEquals( 56, list.size() );
@@ -118,8 +117,9 @@ public class MultiLoadSubSelectCollectionTest extends BaseNonConfigCoreFunctiona
 						assertTrue( Hibernate.isInitialized( list.get( i ).children ) );
 						assertEquals( i + 1, list.get( i ).children.size() );
 					}
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	private Integer[] ids(int count) {

@@ -5,7 +5,7 @@
 package org.hibernate.tool.ant;
 
 import org.hibernate.tool.api.export.Exporter;
-import org.hibernate.tool.hbm2x.Hbm2DDLExporter;
+import org.hibernate.tool.internal.export.ddl.Hbm2DDLExporter;
 
 /**
  * @author max

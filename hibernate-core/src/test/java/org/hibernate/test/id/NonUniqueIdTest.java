@@ -11,13 +11,13 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Session;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.fail;
 
 /**
@@ -32,43 +32,46 @@ public class NonUniqueIdTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Before
 	public void setup() {
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 					// drop and recreate table so it has no primary key
 
-					session.createNativeQuery(
+					session.createSQLQuery(
 							"DROP TABLE CATEGORY"
 					).executeUpdate();
 
-					session.createNativeQuery(
+					session.createSQLQuery(
 							"create table CATEGORY( id integer not null, name varchar(255) )"
 					).executeUpdate();
 
-					session.createNativeQuery( "insert into CATEGORY( id, name) VALUES( 1, 'clothes' )" )
+					session.createSQLQuery( "insert into CATEGORY( id, name) VALUES( 1, 'clothes' )" )
 							.executeUpdate();
-					session.createNativeQuery( "insert into CATEGORY( id, name) VALUES( 1, 'shoes' )" )
+					session.createSQLQuery( "insert into CATEGORY( id, name) VALUES( 1, 'shoes' )" )
 							.executeUpdate();
 
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12802" )
 	public void testLoadEntityWithNonUniqueId() {
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
-					try {
-						session.get( Category.class, 1 );
-						fail( "should have failed because there are 2 entities with id == 1" );
-					}
-					catch ( HibernateException ex) {
+		Session session = openSession();
+		session.beginTransaction();
+
+		try {
+			session.get( Category.class, 1 );
+			fail( "should have failed because there are 2 entities with id == 1" );
+		}
+		catch ( HibernateException ex) {
 						// expected
-					}
-				}
-		);
+		}
+		finally {
+			session.getTransaction().rollback();
+			session.close();
+		}
 	}
 
 	@Entity

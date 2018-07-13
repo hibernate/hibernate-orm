@@ -41,7 +41,7 @@ public class BatchingLoadQueryDetailsFactory {
 	 *
 	 * @return The EntityLoadQueryDetails
 	 */
-	public LoadQueryDetails makeEntityLoadQueryDetails(
+	public EntityLoadQueryDetails makeEntityLoadQueryDetails(
 			LoadPlan loadPlan,
 			String[] keyColumnNames,
 			QueryBuildingParameters buildingParameters,

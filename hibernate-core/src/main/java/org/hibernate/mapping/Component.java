@@ -29,6 +29,8 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.tuple.component.ComponentMetamodel;
+import org.hibernate.tuple.component.ComponentTuplizer;
+import org.hibernate.tuple.component.ComponentTuplizerFactory;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
 
@@ -51,6 +53,8 @@ public class Component extends SimpleValue implements MetaAttributable {
 	private String roleName;
 
 	private java.util.Map<EntityMode,String> tuplizerImpls;
+
+	private ComponentTuplizer componentTuplizer;
 
 	/**
 	 * @deprecated User {@link Component#Component(MetadataBuildingContext, PersistentClass)} instead.
@@ -209,10 +213,20 @@ public class Component extends SimpleValue implements MetaAttributable {
 
 	@Override
 	public Type getType() throws MappingException {
-		// TODO : temporary initial step towards HHH-1907
+		if ( componentTuplizer == null ) {
+			EntityMode entityMode = hasPojoRepresentation() ? EntityMode.POJO : EntityMode.MAP;
+			final String tuplizerClassName = getTuplizerImplClassName( entityMode );
+
+			ComponentTuplizerFactory componentTuplizerFactory = new ComponentTuplizerFactory( getMetadata().getMetadataBuildingOptions() );
+			componentTuplizer = tuplizerClassName == null ? componentTuplizerFactory.constructDefaultTuplizer(
+					entityMode,
+					this
+			) : componentTuplizerFactory.constructTuplizer( tuplizerClassName, this );
+			// TODO : temporary initial step towards HHH-1907
+		}
 		final ComponentMetamodel metamodel = new ComponentMetamodel(
 				this,
-				getMetadata().getMetadataBuildingOptions()
+				componentTuplizer
 		);
 		final TypeFactory factory = getMetadata().getTypeConfiguration().getTypeResolver().getTypeFactory();
 		return isEmbedded() ? factory.embeddedComponent( metamodel ) : factory.component( metamodel );
@@ -288,15 +302,15 @@ public class Component extends SimpleValue implements MetaAttributable {
 		}
 		return result;
 	}
-	
+
 	public boolean isKey() {
 		return isKey;
 	}
-	
+
 	public void setKey(boolean isKey) {
 		this.isKey = isKey;
 	}
-	
+
 	public boolean hasPojoRepresentation() {
 		return componentClassName!=null;
 	}

@@ -2,7 +2,7 @@
  * Created on 2004-12-03
  *
  */
-package org.hibernate.tool.hbm2x;
+package org.hibernate.tool.internal.export.cfg;
 
 import java.io.File;
 import java.io.FileWriter;

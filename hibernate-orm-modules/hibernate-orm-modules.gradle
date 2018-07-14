@@ -39,6 +39,11 @@ ext {
 	fpackStagingDir = file( "target/featurepack" ) //Target build directory for the Feature Pack
 }
 
+if ( JavaVersion.current().isJava11Compatible() ) {
+	logger.warn( '[WARN] Skipping all tests for hibernate-orm-modules due to Gradle issues with JDK 11' )
+	test.enabled = false
+}
+
 description = "Feature Pack of Hibernate ORM modules for WildFly ${project.wildFlyMajorVersion}"
 
 configurations {

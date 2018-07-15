@@ -6,10 +6,14 @@
  */
 package org.hibernate.annotations;
 
-import org.hibernate.tuple.UpdateTimestampGeneration;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+import org.hibernate.tuple.UpdateTimestampGeneration;
 
 /**
  * Marks a property as the update timestamp of the containing entity. The property value will be set to the current VM
@@ -38,5 +42,6 @@ import java.lang.annotation.RetentionPolicy;
  */
 @ValueGenerationType(generatedBy = UpdateTimestampGeneration.class)
 @Retention(RetentionPolicy.RUNTIME)
+@Target({ FIELD, METHOD })
 public @interface UpdateTimestamp {
 }

@@ -57,6 +57,14 @@ task release {
 	description = "The task performed when we are performing a release build.  Relies on " +
 			"the fact that subprojects will appropriately define a release task " +
 			"themselves if they have any release-related activities to perform"
+
+	// Force to release with JDK 8. Releasing with JDK 11 is not supported yet:
+	// - the hibernate-orm-modules tests do not run due to an issue with the ASM version currently used by Gradle
+	doFirst {
+		if ( !JavaVersion.current().isJava8() ) {
+			throw new IllegalStateException( "Please use JDK 8 to perform the release." )
+		}
+	}
 }
 
 task publish {

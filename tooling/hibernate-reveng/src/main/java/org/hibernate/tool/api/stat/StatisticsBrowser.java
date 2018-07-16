@@ -1,4 +1,4 @@
-package org.hibernate.tool.stat;
+package org.hibernate.tool.api.stat;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -21,6 +21,8 @@ import javax.swing.table.TableCellRenderer;
 
 import org.hibernate.stat.Statistics;
 import org.hibernate.tool.internal.util.BeanTableModel;
+import org.hibernate.tool.stat.StatisticsCellRenderer;
+import org.hibernate.tool.stat.StatisticsTreeModel;
 
 /**
  * Very rudimentary statistics browser.

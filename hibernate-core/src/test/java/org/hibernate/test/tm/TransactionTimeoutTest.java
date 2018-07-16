@@ -73,9 +73,6 @@ public class TransactionTimeoutTest extends BaseCoreFunctionalTestCase {
 		catch (TransactionException e) {
 			// expected
 		}
-		catch (PersistenceException e) {
-			assertTyping( TransactionException.class, e.getCause() );
-		}
 		finally {
 			session.close();
 		}

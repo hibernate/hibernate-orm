@@ -53,11 +53,8 @@ public class UniqueConstraintThrowsConstraintViolationExceptionTest extends Base
 			} );
 			fail( "Should throw" );
 		}
-		catch ( PersistenceException e ) {
-			assertEquals(
-					ConstraintViolationException.class,
-					e.getCause().getClass()
-			);
+		catch ( ConstraintViolationException e ) {
+			// expected
 		}
 	}
 

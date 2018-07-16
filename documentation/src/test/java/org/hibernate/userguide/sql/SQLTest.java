@@ -483,8 +483,8 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			});
 			fail("Should throw NonUniqueDiscoveredSqlAliasException!");
 		}
-		catch (PersistenceException expected) {
-			assertEquals( NonUniqueDiscoveredSqlAliasException.class, expected.getCause().getClass() );
+		catch (NonUniqueDiscoveredSqlAliasException e) {
+			// expected
 		}
 	}
 
@@ -506,9 +506,6 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 		}
 		catch (NonUniqueDiscoveredSqlAliasException e) {
 			// expected
-		}
-		catch (PersistenceException e) {
-			assertTyping( NonUniqueDiscoveredSqlAliasException.class, e.getCause() );
 		}
 	}
 

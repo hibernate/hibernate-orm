@@ -136,7 +136,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testReferenceColumnWithBacktics() throws Exception {
 		Session s=openSession();
@@ -150,7 +150,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testUniqueConstaintOnSecondaryTable() throws Exception {
 		Cat cat = new Cat();
@@ -167,7 +167,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		}
 		catch (PersistenceException e) {
 			try {
-				assertTyping( ConstraintViolationException.class, e.getCause() );
+				assertTyping( ConstraintViolationException.class, e );
 				//success
 			}
 			finally {
@@ -189,7 +189,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.persist( cat );
 		s.flush();
 		s.clear();
-		
+
 		s.get( Cat.class, cat.getId() );
 		//Find a way to test it, I need to define the secondary table on a subclass
 

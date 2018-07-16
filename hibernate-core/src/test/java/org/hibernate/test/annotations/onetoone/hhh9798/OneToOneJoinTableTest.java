@@ -43,8 +43,8 @@ public class OneToOneJoinTableTest extends BaseCoreFunctionalTestCase {
 			tx.commit();
 
 			fail();
-		}catch (PersistenceException e){
-			assertTyping( ConstraintViolationException.class, e.getCause());
+		}
+		catch (ConstraintViolationException e) {
 			// expected
 		}
 		finally {

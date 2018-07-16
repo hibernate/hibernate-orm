@@ -142,11 +142,11 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
             fail( "Transaction should have timed out" );
         }
 		catch (PersistenceException e){
-			assertTyping(TransactionException.class, e.getCause());
+			assertTyping(TransactionException.class, e);
 			assertTrue(
 					"Transaction failed for the wrong reason.  Expecting transaction timeout, but found [" +
-							e.getCause().getMessage() + "]"					,
-					e.getCause().getMessage().contains( "transaction timeout expired" )
+							e.getMessage() + "]"					,
+					e.getMessage().contains( "transaction timeout expired" )
 			);
 		}
 	}

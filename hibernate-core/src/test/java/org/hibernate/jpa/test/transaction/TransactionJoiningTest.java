@@ -208,7 +208,7 @@ public class TransactionJoiningTest extends BaseEntityManagerFunctionalTestCase 
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 	}
-	
+
 	/**
 	 * In certain JTA environments (JBossTM, etc.), a background thread (reaper)
 	 * can rollback a transaction if it times out.  These timeouts are rare and
@@ -243,7 +243,7 @@ public class TransactionJoiningTest extends BaseEntityManagerFunctionalTestCase 
 			em.persist( new Book( "The Book of Foo", 1 ) );
 		}
 		catch ( PersistenceException e ) {
-			caught = e.getCause().getClass().equals( HibernateException.class );
+			caught = e.getClass().equals( HibernateException.class );
 		}
 		assertTrue( caught );
 

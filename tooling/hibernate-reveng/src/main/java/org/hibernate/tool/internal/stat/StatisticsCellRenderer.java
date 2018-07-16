@@ -1,4 +1,4 @@
-package org.hibernate.tool.stat;
+package org.hibernate.tool.internal.stat;
 
 import java.awt.Component;
 import java.text.SimpleDateFormat;

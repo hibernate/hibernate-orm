@@ -20,9 +20,9 @@ import javax.swing.event.TreeSelectionListener;
 import javax.swing.table.TableCellRenderer;
 
 import org.hibernate.stat.Statistics;
+import org.hibernate.tool.internal.stat.StatisticsCellRenderer;
 import org.hibernate.tool.internal.stat.StatisticsTreeModel;
 import org.hibernate.tool.internal.util.BeanTableModel;
-import org.hibernate.tool.stat.StatisticsCellRenderer;
 
 /**
  * Very rudimentary statistics browser.

@@ -4,7 +4,7 @@
  */
 package org.hibernate.tool.internal.export.pojo;
 
-import org.hibernate.tool.hbm2x.GenericExporter;
+import org.hibernate.tool.internal.export.common.GenericExporter;
 
 /**
  * @author max

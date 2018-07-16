@@ -41,8 +41,7 @@ public class OptionalOneToOnePKJCTest extends BaseCoreFunctionalTestCase {
 			s.flush();
 			fail( "should have thrown IdentifierGenerationException.");
 		}
-		catch (PersistenceException ex) {
-			assertTyping(IdentifierGenerationException.class, ex.getCause());
+		catch (IdentifierGenerationException ex) {
 			// expected
 		}
 		finally {
@@ -65,8 +64,7 @@ public class OptionalOneToOnePKJCTest extends BaseCoreFunctionalTestCase {
 			s.flush();
 			fail( "should have thrown IdentifierGenerationException.");
 		}
-		catch (PersistenceException ex) {
-			assertTyping(IdentifierGenerationException.class, ex.getCause());
+		catch (IdentifierGenerationException ex) {
 			// expected
 		}
 		finally {

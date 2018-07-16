@@ -22,7 +22,7 @@ import static org.junit.Assert.fail;
  * @author Brett Meyer
  */
 public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
-	
+
 	protected Class[] getAnnotatedClasses() {
         return new Class[]{
                 Room.class,
@@ -57,8 +57,7 @@ public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
             s.flush();
             fail( "Database constraint non-existant" );
         }
-        catch (PersistenceException e) {
-            assertTyping( JDBCException.class, e.getCause() );
+        catch (JDBCException e) {
             //success
         }
         finally {
@@ -66,5 +65,5 @@ public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
             s.close();
         }
     }
-    
+
 }

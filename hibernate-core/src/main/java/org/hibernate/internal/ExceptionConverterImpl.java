@@ -145,6 +145,11 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			}
 			return new IllegalStateException( e ); //Spec 3.2.3 Synchronization rules
 		}
+		else if ( cause instanceof PersistenceException ) {
+			final PersistenceException converted = (PersistenceException) cause;
+			handlePersistenceException( converted );
+			return converted;
+		}
 		else {
 			final PersistenceException converted = new PersistenceException( cause );
 			handlePersistenceException( converted );

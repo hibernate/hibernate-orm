@@ -78,8 +78,7 @@ public class TablePerClassTest extends BaseCoreFunctionalTestCase {
 			s.flush();
 			fail( "Database Exception not handled" );
 		}
-		catch (PersistenceException e) {
-			assertTyping( JDBCException.class, e.getCause() );
+		catch (JDBCException e) {
 			//success
 		}
 		finally {

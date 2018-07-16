@@ -134,7 +134,7 @@ public class CreateTest extends AbstractOperationTestCase {
 		}
 		catch (PersistenceException e){
 			//verify that an exception is thrown!
-			assertTyping(ConstraintViolationException.class, e.getCause());
+			assertTyping(ConstraintViolationException.class, e);
 		}
 		tx.rollback();
 		s.close();
@@ -151,7 +151,7 @@ public class CreateTest extends AbstractOperationTestCase {
 		}
 		catch (PersistenceException e){
 			//verify that an exception is thrown!
-			assertTyping(ConstraintViolationException.class, e.getCause());
+			assertTyping(ConstraintViolationException.class, e);
 		}
 		tx.rollback();
 		s.close();
@@ -175,7 +175,7 @@ public class CreateTest extends AbstractOperationTestCase {
 		}
 		catch (PersistenceException e){
 			//verify that an exception is thrown!
-			assertTyping(PersistentObjectException.class, e.getCause());
+			assertTyping(PersistentObjectException.class, e);
 		}
 		tx.rollback();
 		s.close();
@@ -191,7 +191,7 @@ public class CreateTest extends AbstractOperationTestCase {
 		}
 		catch (PersistenceException e){
 			//verify that an exception is thrown!
-			assertTyping(PersistentObjectException.class, e.getCause());
+			assertTyping(PersistentObjectException.class, e);
 		}
 		tx.rollback();
 		s.close();

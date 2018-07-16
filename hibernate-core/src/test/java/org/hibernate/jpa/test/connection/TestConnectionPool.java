@@ -62,13 +62,8 @@ public class TestConnectionPool
 
 						entityManager.createQuery( criteriaQuery ).getResultList();
 					}
-					catch ( PersistenceException e ) {
-						if ( e.getCause() instanceof SQLGrammarException ) {
-							//expected, the schema was not created
-						}
-						else {
-							throw e;
-						}
+					catch ( SQLGrammarException e ) {
+						// Expected
 					}
 				}
 			}

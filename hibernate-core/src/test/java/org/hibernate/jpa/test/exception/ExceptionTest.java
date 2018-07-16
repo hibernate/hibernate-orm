@@ -111,8 +111,7 @@ public class ExceptionTest extends BaseEntityManagerFunctionalTestCase {
 			fail();
 		}
 		catch ( PersistenceException e ) {
-			Throwable t = e.getCause();
-			assertTrue( "Should be a constraint violation", t instanceof ConstraintViolationException );
+			assertTrue( "Should be a constraint violation", e instanceof ConstraintViolationException );
 			em.getTransaction().rollback();
 		}
 		finally {

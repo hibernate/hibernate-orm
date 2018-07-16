@@ -42,8 +42,7 @@ public class OptionalOneToOneMappedByTest extends BaseCoreFunctionalTestCase {
 				fail( "should have failed with IdentifierGenerationException" );
 			} );
 		}
-		catch (PersistenceException ex) {
-			assertTyping( IdentifierGenerationException.class, ex.getCause() );
+		catch (IdentifierGenerationException ex) {
 			// expected
 		}
 	}

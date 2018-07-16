@@ -80,9 +80,8 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 			}
 			session.getTransaction().commit();
 		}
-		catch (PersistenceException e) {
+		catch (NonUniqueDiscoveredSqlAliasException e) {
 			//expected
-			assertTyping( NonUniqueDiscoveredSqlAliasException.class, e.getCause() );
 		}
 		session.close();
 

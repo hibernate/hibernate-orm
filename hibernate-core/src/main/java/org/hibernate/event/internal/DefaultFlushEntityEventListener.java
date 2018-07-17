@@ -332,15 +332,8 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		final boolean intercepted = invokeInterceptor( session, entity, entry, values, persister );
 
 		//now we might need to recalculate the dirtyProperties array
-		if ( intercepted && event.isDirtyCheckPossible() && !event.isDirtyCheckHandledByInterceptor() ) {
-			int[] dirtyProperties;
-			if ( event.hasDatabaseSnapshot() ) {
-				dirtyProperties = persister.findModified( event.getDatabaseSnapshot(), values, entity, session );
-			}
-			else {
-				dirtyProperties = persister.findDirty( values, entry.getLoadedState(), entity, session );
-			}
-			event.setDirtyProperties( dirtyProperties );
+		if ( intercepted && event.isDirtyCheckPossible() ) {
+			dirtyCheck( event );
 		}
 
 		return intercepted;
@@ -505,7 +498,11 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		final Serializable id = entry.getId();
 		final Object[] loadedState = entry.getLoadedState();
 
-		int[] dirtyProperties = session.getInterceptor().findDirty(
+		int[] dirtyProperties;
+
+		// First try: use the interceptor
+		final boolean interceptorHandledDirtyCheck;
+		dirtyProperties = session.getInterceptor().findDirty(
 				entity,
 				id,
 				values,
@@ -513,7 +510,15 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				persister.getPropertyNames(),
 				persister.getPropertyTypes()
 		);
+		if ( dirtyProperties != null ) {
+			// the Interceptor handled the dirty checking
+			interceptorHandledDirtyCheck = true;
+		}
+		else {
+			interceptorHandledDirtyCheck = false;
+		}
 
+		// If the above did not work, try custom dirtiness strategies and bytecode enhancement
 		if ( dirtyProperties == null ) {
 			if ( entity instanceof SelfDirtinessTracker ) {
 				if ( ( (SelfDirtinessTracker) entity ).$$_hibernate_hasDirtyAttributes() ) {
@@ -559,18 +564,17 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 		event.setDatabaseSnapshot( null );
 
-		final boolean interceptorHandledDirtyCheck;
-		boolean cannotDirtyCheck;
+		// The dirty check is considered possible unless proven otherwise (see below)
+		boolean dirtyCheckPossible = true;
 
+		// If none the above worked, try to compute dirtiness based on entity or database snapshots
 		if ( dirtyProperties == null ) {
-			// Interceptor returned null, so do the dirtycheck ourself, if possible
 			try {
 				session.getEventListenerManager().dirtyCalculationStart();
 
-				interceptorHandledDirtyCheck = false;
 				// object loaded by update()
-				cannotDirtyCheck = loadedState == null;
-				if ( !cannotDirtyCheck ) {
+				dirtyCheckPossible = loadedState != null;
+				if ( dirtyCheckPossible ) {
 					// dirty check against the usual snapshot of the entity
 					dirtyProperties = persister.findDirty( values, loadedState, entity, session );
 				}
@@ -592,14 +596,14 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 					// - dirtyProperties will only contain properties that refer to transient entities
 					final Object[] currentState = persister.getPropertyValues( event.getEntity() );
 					dirtyProperties = persister.findDirty( entry.getDeletedState(), currentState, entity, session );
-					cannotDirtyCheck = false;
+					dirtyCheckPossible = true;
 				}
 				else {
 					// dirty check against the database snapshot, if possible/necessary
 					final Object[] databaseSnapshot = getDatabaseSnapshot( session, persister, id );
 					if ( databaseSnapshot != null ) {
 						dirtyProperties = persister.findModified( databaseSnapshot, values, entity, session );
-						cannotDirtyCheck = false;
+						dirtyCheckPossible = true;
 						event.setDatabaseSnapshot( databaseSnapshot );
 					}
 				}
@@ -608,17 +612,12 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				session.getEventListenerManager().dirtyCalculationEnd( dirtyProperties != null );
 			}
 		}
-		else {
-			// the Interceptor handled the dirty checking
-			cannotDirtyCheck = false;
-			interceptorHandledDirtyCheck = true;
-		}
 
 		logDirtyProperties( id, dirtyProperties, persister );
 
 		event.setDirtyProperties( dirtyProperties );
 		event.setDirtyCheckHandledByInterceptor( interceptorHandledDirtyCheck );
-		event.setDirtyCheckPossible( !cannotDirtyCheck );
+		event.setDirtyCheckPossible( dirtyCheckPossible );
 
 	}
 

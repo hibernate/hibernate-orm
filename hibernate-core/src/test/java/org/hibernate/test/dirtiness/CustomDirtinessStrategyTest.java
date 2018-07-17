@@ -6,14 +6,20 @@
  */
 package org.hibernate.test.dirtiness;
 
-import org.junit.Test;
+import java.io.Serializable;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
+import org.hibernate.EmptyInterceptor;
 import org.hibernate.Session;
+import org.hibernate.SessionBuilder;
+import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.Type;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -69,6 +75,38 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	public void testCustomStrategyWithFlushInterceptor() {
+		Session session = openSession();
+		session.beginTransaction();
+		Long id = (Long) session.save( new Thing( INITIAL_NAME ) );
+		session.getTransaction().commit();
+		session.close();
+
+		Strategy.INSTANCE.resetState();
+
+		session = sessionWithInterceptor().openSession();
+		session.beginTransaction();
+		Thing thing = (Thing) session.get( Thing.class, id );
+		thing.setName( SUBSEQUENT_NAME );
+		session.getTransaction().commit();
+		session.close();
+
+		// As we used an interceptor, the custom strategy should have been called twice to find dirty properties
+		assertEquals( 1, Strategy.INSTANCE.canDirtyCheckCount );
+		assertEquals( 1, Strategy.INSTANCE.isDirtyCount );
+		assertEquals( 1, Strategy.INSTANCE.resetDirtyCount );
+		assertEquals( 2, Strategy.INSTANCE.findDirtyCount );
+
+		session = openSession();
+		session.beginTransaction();
+		thing = (Thing) session.get( Thing.class, id );
+		assertEquals( SUBSEQUENT_NAME, thing.getName() );
+		session.delete( thing );
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	@Test
 	public void testOnlyCustomStrategyConsultedOnNonDirty() throws Exception {
 		Session session = openSession();
 		session.beginTransaction();
@@ -95,6 +133,12 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 		session.createQuery( "delete Thing" ).executeUpdate();
 		session.getTransaction().commit();
 		session.close();
+	}
+
+	private SessionBuilder sessionWithInterceptor() {
+		return sessionFactory().unwrap( SessionFactory.class )
+				.withOptions()
+				.interceptor( OnFlushDirtyInterceptor.INSTANCE );
 	}
 
 	public static class Strategy implements CustomEntityDirtinessStrategy {
@@ -151,4 +195,20 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
+
+	public static class OnFlushDirtyInterceptor extends EmptyInterceptor {
+		private static OnFlushDirtyInterceptor INSTANCE = new OnFlushDirtyInterceptor();
+
+		@Override
+		public boolean onFlushDirty(
+				Object entity,
+				Serializable id,
+				Object[] currentState,
+				Object[] previousState,
+				String[] propertyNames,
+				Type[] types) {
+			// Tell Hibernate ORM we did change the entity state, which should trigger another dirty check
+			return true;
+		}
+	}
 }

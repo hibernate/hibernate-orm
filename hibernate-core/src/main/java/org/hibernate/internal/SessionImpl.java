@@ -3732,55 +3732,11 @@ public final class SessionImpl
 	protected void initQueryFromNamedDefinition(Query query, NamedQueryDefinition namedQueryDefinition) {
 		super.initQueryFromNamedDefinition( query, namedQueryDefinition );
 
-		if ( namedQueryDefinition.isCacheable() ) {
-			query.setHint( QueryHints.HINT_CACHEABLE, true );
-			if ( namedQueryDefinition.getCacheRegion() != null ) {
-				query.setHint( QueryHints.HINT_CACHE_REGION, namedQueryDefinition.getCacheRegion() );
-			}
-		}
-
-		if ( namedQueryDefinition.getCacheMode() != null ) {
-			query.setHint( QueryHints.HINT_CACHE_MODE, namedQueryDefinition.getCacheMode() );
-		}
-
-		if ( namedQueryDefinition.isReadOnly() ) {
-			query.setHint( QueryHints.HINT_READONLY, true );
-		}
-
-		if ( namedQueryDefinition.getTimeout() != null ) {
-			query.setHint( QueryHints.SPEC_HINT_TIMEOUT, namedQueryDefinition.getTimeout() * 1000 );
-		}
-
-		if ( namedQueryDefinition.getFetchSize() != null ) {
-			query.setHint( QueryHints.HINT_FETCH_SIZE, namedQueryDefinition.getFetchSize() );
-		}
-
-		if ( namedQueryDefinition.getComment() != null ) {
-			query.setHint( QueryHints.HINT_COMMENT, namedQueryDefinition.getComment() );
-		}
-
-		if ( namedQueryDefinition.getFirstResult() != null ) {
-			query.setFirstResult( namedQueryDefinition.getFirstResult() );
-		}
-
-		if ( namedQueryDefinition.getMaxResults() != null ) {
-			query.setMaxResults( namedQueryDefinition.getMaxResults() );
-		}
-
 		if ( namedQueryDefinition.getLockOptions() != null ) {
 			if ( namedQueryDefinition.getLockOptions().getLockMode() != null ) {
 				query.setLockMode(
 						LockModeTypeHelper.getLockModeType( namedQueryDefinition.getLockOptions().getLockMode() )
 				);
-			}
-		}
-
-		if ( namedQueryDefinition.getFlushMode() != null ) {
-			if ( namedQueryDefinition.getFlushMode() == FlushMode.COMMIT ) {
-				query.setFlushMode( FlushModeType.COMMIT );
-			}
-			else {
-				query.setFlushMode( FlushModeType.AUTO );
 			}
 		}
 	}

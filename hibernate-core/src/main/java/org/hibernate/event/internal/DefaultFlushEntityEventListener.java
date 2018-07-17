@@ -603,7 +603,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			}
 		}
 		else {
-			// the Interceptor handled the dirty checking
+			// either the Interceptor, the bytecode enhancement or a custom dirtiness strategy handled the dirty checking
 			interceptorHandledDirtyCheck = true;
 		}
 

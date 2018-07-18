@@ -280,6 +280,15 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 				throw ex;
 			}
 		}
+		catch (PersistenceException e) {
+			SQLGrammarException cause = assertTyping( SQLGrammarException.class, e.getCause() );
+			if ( ! getDialect().supportsTupleCounts() ) {
+				// expected
+			}
+			else {
+				throw e;
+			}
+		}
 		finally {
 			t.rollback();
 			s.close();

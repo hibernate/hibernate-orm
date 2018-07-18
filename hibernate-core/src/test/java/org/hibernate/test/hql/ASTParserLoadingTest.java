@@ -770,7 +770,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 3, results.size() );
 		String query =
 				( getDialect() instanceof DB2Dialect || getDialect() instanceof HSQLDialect ) ?
-						"from Human where cast(? as string) is null" :
+						"from Human where cast(?1 as string) is null" :
 						"from Human where ?1 is null"
 				;
 		if ( getDialect() instanceof DerbyDialect ) {

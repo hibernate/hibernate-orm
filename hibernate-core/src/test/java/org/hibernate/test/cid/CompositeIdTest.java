@@ -17,20 +17,18 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.persistence.PersistenceException;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.PostgreSQL9Dialect;
-import org.hibernate.dialect.PostgresPlusDialect;
-import org.hibernate.dialect.SQLServer2005Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.hql.spi.QueryTranslator;
 
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -108,12 +106,12 @@ public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 		try {
 			long count = ( Long ) s.createQuery( "select count(distinct o) FROM Order o" ).uniqueResult();
 			if ( ! getDialect().supportsTupleDistinctCounts() ) {
-				fail( "expected SQLGrammarException" );
+				fail( "expected PersistenceException caused by SQLGrammarException" );
 			}
 			assertEquals( 2l, count );
 		}
-		catch ( SQLGrammarException e ) {
-			if ( getDialect().supportsTupleDistinctCounts() ) {
+		catch ( PersistenceException e ) {
+			if ( ! (e.getCause() instanceof SQLGrammarException) || getDialect().supportsTupleDistinctCounts() ) {
 				throw e;
 			}
 		}

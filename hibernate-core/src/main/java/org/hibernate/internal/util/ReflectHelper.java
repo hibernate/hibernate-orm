@@ -716,17 +716,6 @@ public final class ReflectHelper {
 	 * as an abstract - but again, that is such an edge case...
 	 */
 	public static Method findGetterMethodForFieldAccess(Field field, String propertyName) {
-//		final PrivilegedAction<Method[]> action = new PrivilegedAction<Method[]>() {
-//			@Override
-//			public Method[] run() {
-//				return field.getDeclaringClass().getDeclaredMethods();
-//			}
-//		};
-//
-//		final Method[] methods = System.getSecurityManager() != null
-//				? AccessController.doPrivileged( action )
-//				: action.run();
-
 		for ( Method method : getDeclaredMethods( field.getDeclaringClass() ) ) {
 			// if the method has parameters, skip it
 			if ( method.getParameterCount() != 0 ) {

@@ -159,51 +159,31 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 				null :
 				ReflectHelper.getMethod( proxyInterface, idSetterMethod );
 
-		if ( System.getSecurityManager() == null ) {
-			ProxyFactory pf = buildProxyFactoryInternal( persistentClass, idGetter, idSetter );
-			try {
-				pf.postInstantiate(
-						getEntityName(),
-						mappedClass,
-						proxyInterfaces,
-						proxyGetIdentifierMethod,
-						proxySetIdentifierMethod,
-						persistentClass.hasEmbeddedIdentifier() ?
-								(CompositeType) persistentClass.getIdentifier().getType() :
-								null
-				);
-			}
-			catch (HibernateException he) {
-				LOG.unableToCreateProxyFactory( getEntityName(), he );
-				pf = null;
-			}
-			return pf;
-		}
-		else {
-			return AccessController.doPrivileged( new PrivilegedAction<ProxyFactory>() {
-				@Override
-				public ProxyFactory run() {
-					ProxyFactory pf = buildProxyFactoryInternal( persistentClass, idGetter, idSetter );
-					try {
-						pf.postInstantiate(
-								getEntityName(),
-								mappedClass,
-								proxyInterfaces,
-								proxyGetIdentifierMethod,
-								proxySetIdentifierMethod,
-								persistentClass.hasEmbeddedIdentifier() ?
-										(CompositeType) persistentClass.getIdentifier().getType() :
-										null
-						);
-					}
-					catch ( HibernateException he ) {
-						LOG.unableToCreateProxyFactory( getEntityName(), he );
-						pf = null;
-					}
-					return pf;
+		final PrivilegedAction<ProxyFactory> action = new PrivilegedAction<ProxyFactory>() {
+			@Override
+			public ProxyFactory run() {
+				ProxyFactory pf = buildProxyFactoryInternal( persistentClass, idGetter, idSetter );
+				try {
+					pf.postInstantiate(
+							getEntityName(),
+							mappedClass,
+							proxyInterfaces,
+							proxyGetIdentifierMethod,
+							proxySetIdentifierMethod,
+							persistentClass.hasEmbeddedIdentifier() ?
+									(CompositeType) persistentClass.getIdentifier().getType() :
+									null
+					);
 				}
-			} );
-		}
+				catch (HibernateException he) {
+					LOG.unableToCreateProxyFactory( getEntityName(), he );
+					pf = null;
+				}
+				return pf;
+			}
+		};
+
+		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
 	}
 
 	protected ProxyFactory buildProxyFactoryInternal(

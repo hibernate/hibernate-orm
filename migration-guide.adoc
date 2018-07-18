@@ -7,7 +7,7 @@ earlier versions, see any other pertinent migration guides as well.
 == Background
 
 Lots of work has been done for 6.0.  One of the things 6.0 will need is a unified view of "type systems"
-including its own type system (Type, EntityPersister, CollectionPersister, etc) and JPA's type system - which
+including its own type system (`Type`, `EntityPersister`, `CollectionPersister`, etc) and JPA's type system - which
 would mean unifying all of this in hibernate-core.  Because of this and the other large changes slated for 6.0
 we decided to release a 5.2 that showed a clear migration path to the changes in 6.0 but that still supported the
 older calls and expectations as much as possible.
@@ -60,6 +60,11 @@ implement JPA methods now in core I decided to implement more of a composition a
 	has been moved into the `org.hibernate.Cache` and `org.hibernate.engine.spi.CacheImplementor` contracts
 	helping implement JPA's `javax.persistence.Cache` role.
 
+== Session and StatelessSession hierarchy cleanup
+
+This one can affect implementors of certain extension contracts.
+Specifically those previously accepting a `SessionImplementor` will likely now accept a `SharedSessionContract`.
+
 == LimitHandler changes
 
 In Hibernate 4.3, dialect implementations that did not support a limit offset would fetch all rows for a query and
@@ -72,16 +77,16 @@ users to enable the legacy 4.3 limit handler behavior.  By default, this setting
 
 The specific dialects impacted by this change are restricted to the following.
 
-* Cache71Dialect
-* DB2390Dialect
-* InformixDialect
-* IngresDialect
-* RDMSOS2200Dialect
-* SQLServerDialect
-* TimesTenDialect
+* `Cache71Dialect`
+* `DB2390Dialect`
+* `InformixDialect`
+* `IngresDialect`
+* `RDMSOS2200Dialect`
+* `SQLServerDialect`
+* `TimesTenDialect`
 
 NOTE: If a dialect that extends any in the above list but overrides the limit handler implementation, then those
-dialects remain unchanged, e.g. SQLServer2005Dialect.
+dialects remain unchanged, e.g. `SQLServer2005Dialect`.
 
 == Changes to schema management tooling
 
@@ -203,21 +208,21 @@ See details on the https://hibernate.atlassian.net/browse/HHH-12687[HHH-12687] J
 
 == Misc
 
-* QueryCacheFactory contract changed
-* RegionFactory contract changes
-* todo : merge AvailableSettings together
-* org.hibernate.Transaction now extends JPA's EntityTransaction and follows its pre- and post- assertions.
-	e.g. begin() now throws an exception if transaction is already active.
-* (todo) following the above one, JPA also says that only PersistenceUnitTransactionType#JTA EntityManagers
-	are allowed to access EntityTransactions.  Need a strategy to handle this
+* `QueryCacheFactory` contract changed
+* `RegionFactory` contract changes
+* todo : merge `AvailableSettings` together
+* `org.hibernate.Transaction` now extends JPA's `EntityTransaction` and follows its pre- and post- assertions.
+	e.g. `begin()` now throws an exception if transaction is already active.
+* (todo) following the above one, JPA also says that only `PersistenceUnitTransactionType#JTA` EntityManagers
+	are allowed to access ``EntityTransaction``s.  Need a strategy to handle this
 * Hibernate now conforms with the JPA specification to not allow flushing updates outside of a transaction
 	boundary. To restore 5.1 behavior, allowing flush operations outside of a transaction boundary,
 	set `hibernate.allow_update_outside_transaction=true`.
-* Session#getFlushMode and Query#getFlushMode clash in terms of Hibernate (FlushMode) and JPA (FlushModeType)
-	returns.  #getFlushMode has been altered to return JPA's FlushModeType.  The Hibernate FlushMode
-	is still available via #getHibernateFlushMode and #setHibernateFlushMode.  Same for Session#getFlushMode
-	and EntityManager#getFlushMode.
+* `Session#getFlushMode()` and `Query#getFlushMode()` clash in terms of Hibernate (`FlushMode`) and JPA (`FlushModeType`)
+	returns.  `#getFlushMode()` has been altered to return JPA's `FlushModeType`.  The Hibernate `FlushMode`
+	is still available via `#getHibernateFlushMode()` and `#setHibernateFlushMode()`.  Same for `Session#getFlushMode()`
+	and `EntityManager#getFlushMode()`.
 * Setting `hibernate.listeners.envers.autoRegister` has been deprecated in favor of
   `hibernate.envers.autoRegisterListeners`.
-* AuditReader#getCurrentRevision has been deprecated in favor of `org.hibernate.envers.RevisionListener`.
-* As of 5.2.11, NoopOptimizer#generate will no longer skip negative values and 0 when it has a positive increment size; instead it will return the value obtained from the database.
+* `AuditReader#getCurrentRevision()` has been deprecated in favor of `org.hibernate.envers.RevisionListener`.
+* As of 5.2.11, `NoopOptimizer#generate()` will no longer skip negative values and 0 when it has a positive increment size; instead it will return the value obtained from the database.

@@ -42,6 +42,11 @@ For backward compatibility, a new setting called `hibernate.id.generator.stored_
 Existing applications migrating to 5.3 and using the `@TableGenerator` have to set the `hibernate.id.generator.stored_last_used` configuration property to `false`.
 ====
 
+=== Query parameters
+
+Method `org.hibernate.type.Type getType()` in `org.hibernate.query.QueryParameter` was renamed to `getHibernateType()`.
+
+This was done in order to allow for the re-introduction of `Class<T> getType()` in a sub-interface, `org.hibernate.procedure.ParameterRegistration`. That second method had been removed in 5.2, breaking compatibility with 5.1.
 
 === Second-level cache provider SPI changes
 

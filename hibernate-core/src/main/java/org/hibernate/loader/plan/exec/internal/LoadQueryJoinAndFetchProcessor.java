@@ -222,16 +222,43 @@ public class LoadQueryJoinAndFetchProcessor {
 				: null;
 	}
 
-	private String resolveAdditionalJoinCondition(String rhsTableAlias, String withClause, Joinable joinable, AssociationType associationType) {
+	private String resolveAdditionalJoinCondition(
+			Join join,
+			String rhsTableAlias,
+			String withClause,
+			Joinable joinable,
+			AssociationType associationType) {
 		// turns out that the call to AssociationType#getOnCondition in the initial code really just translates to
 		// calls to the Joinable.filterFragment() method where the Joinable is either the entity or
 		// collection persister
-		final String filter = associationType!=null?
-				associationType.getOnCondition( rhsTableAlias, factory, queryInfluencers.getEnabledFilters() ):
-				joinable.filterFragment(
+
+		final String filter;
+		// If the left hand side
+		if ( associationType.isEntityType() &&
+				join.getLeftHandSide().getDisposition() != QuerySpace.Disposition.COLLECTION ) {
+			// We always need to get the filter (if any) for the following cases:
+			// * composite with entity fetch
+			// * entity with entity fetch
+			// EntityType#getOnCondition doesn't always do the right thing in this case,
+			// so explicitly call Joinable#filterFragment (instead of EntityType#getOnCondition.
+			filter = joinable.filterFragment(
 					rhsTableAlias,
 					queryInfluencers.getEnabledFilters()
-		);
+			);
+		}
+		else if ( associationType != null ) {
+			// We leave it up to the assocationType to in these cases:
+			// * entity with (element, one-to-many, or many-to-many) collection fetch
+			// * collection element with entity fetch.
+			filter = associationType.getOnCondition( rhsTableAlias, factory, queryInfluencers.getEnabledFilters() );
+		}
+		else {
+			// What falls into this category?
+			filter = joinable.filterFragment(
+						rhsTableAlias,
+						queryInfluencers.getEnabledFilters()
+				);
+		}
 
 		if ( StringHelper.isEmpty( withClause ) && StringHelper.isEmpty( filter ) ) {
 			return "";
@@ -274,6 +301,7 @@ public class LoadQueryJoinAndFetchProcessor {
 
 		// add join fragments from the collection table -> element entity table ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		final String additionalJoinConditions = resolveAdditionalJoinCondition(
+				join,
 				rhsTableAlias,
 				otherConditions,
 				joinable,

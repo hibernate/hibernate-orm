@@ -372,7 +372,7 @@ class MetadataContext {
 		}
 		final String metamodelClassName = managedTypeClass.getName() + '_';
 
-		AccessController.doPrivileged( new PrivilegedAction<Object>() {
+		final PrivilegedAction<Object> action = new PrivilegedAction<Object>() {
 			@Override
 			public Object run() {
 				try {
@@ -385,7 +385,13 @@ class MetadataContext {
 				}
 				return null;
 			}
-		} );
+		};
+		if ( System.getSecurityManager() != null ) {
+			AccessController.doPrivileged( action );
+		}
+		else {
+			action.run();
+		}
 
 		// todo : this does not account for @MappeSuperclass, mainly because this is not being tracked in our
 		// internal metamodel as populated from the annotatios properly

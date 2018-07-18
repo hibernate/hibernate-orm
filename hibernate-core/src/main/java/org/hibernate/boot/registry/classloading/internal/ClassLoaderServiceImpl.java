@@ -83,11 +83,16 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		orderedClassLoaderSet.add( ClassLoaderServiceImpl.class.getClassLoader() );
 
 		// now build the aggregated class loader...
-		this.aggregatedClassLoader = AccessController.doPrivileged( new PrivilegedAction<AggregatedClassLoader>() {
+		final PrivilegedAction<AggregatedClassLoader> action = new PrivilegedAction<AggregatedClassLoader>() {
+			@Override
 			public AggregatedClassLoader run() {
 				return new AggregatedClassLoader( orderedClassLoaderSet, lookupPrecedence );
 			}
-		} );
+		};
+
+		this.aggregatedClassLoader = System.getSecurityManager() != null
+				? AccessController.doPrivileged( action )
+				: action.run();
 	}
 
 	/**
@@ -347,7 +352,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	@Override
 	@SuppressWarnings({"unchecked"})
 	public <T> Class<T> classForName(String className) {
-		return AccessController.doPrivileged( new PrivilegedAction<Class<T>>() {
+		final PrivilegedAction<Class<T>> action = new PrivilegedAction<Class<T>>() {
 			@Override
 			public Class<T> run() {
 				try {
@@ -360,13 +365,14 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 					throw new ClassLoadingException( "Unable to load class [" + className + "]", e );
 				}
 			}
-		} );
+		};
+
+		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
 	}
 
 	@Override
 	public URL locateResource(final String name) {
-		// first we try name as a URL
-		return AccessController.doPrivileged( new PrivilegedAction<URL>() {
+		final PrivilegedAction<URL> action = new PrivilegedAction<URL>() {
 			@Override
 			public URL run() {
 				try {
@@ -399,7 +405,9 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 				return null;
 			}
-		} );
+		};
+
+		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
 	}
 
 	@Override
@@ -466,7 +474,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <S> Collection<S> loadJavaServices(Class<S> serviceContract) {
-		return AccessController.doPrivileged( new PrivilegedAction<Collection<S>>() {
+		final PrivilegedAction<Collection<S>> action = new PrivilegedAction<Collection<S>>() {
 			@Override
 			public Collection<S> run() {
 				ServiceLoader<S> serviceLoader = serviceLoaders.get( serviceContract );
@@ -480,7 +488,8 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 				}
 				return services;
 			}
-		} );
+		};
+		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
 	}
 
 	@Override
@@ -495,12 +504,13 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	@Override
 	public <T> T workWithClassLoader(Work<T> work) {
-		return AccessController.doPrivileged( new PrivilegedAction<T>() {
+		final PrivilegedAction<T> action = new PrivilegedAction<T>() {
 			@Override
 			public T run() {
 				return work.doWork( getAggregatedClassLoader() );
 			}
-		} );
+		};
+		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
 	}
 
 	private ClassLoader getAggregatedClassLoader() {

@@ -115,7 +115,7 @@ public final class ConfigHelper {
 	}
 
 	public static InputStream getResourceAsStream(String resource) {
-		return AccessController.doPrivileged( new PrivilegedAction<InputStream>() {
+		final PrivilegedAction<InputStream> action = new PrivilegedAction<InputStream>() {
 			@Override
 			public InputStream run() {
 				String stripped = resource.startsWith( "/" )
@@ -137,9 +137,9 @@ public final class ConfigHelper {
 					throw new HibernateException( resource + " not found" );
 				}
 				return stream;
-
 			}
-		} );
+		};
+		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
 	}
 
 	public static InputStream getUserResourceAsStream(String resource) {

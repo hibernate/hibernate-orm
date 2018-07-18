@@ -237,12 +237,14 @@ public final class ReflectHelper {
 	}
 
 	private static Getter getter(Class clazz, String name) throws MappingException {
-		return AccessController.doPrivileged( new PrivilegedAction<Getter>() {
+		final PrivilegedAction<Getter> action = new PrivilegedAction<Getter>() {
 			@Override
 			public Getter run() {
 				return PropertyAccessStrategyMixedImpl.INSTANCE.buildPropertyAccess( clazz, name ).getGetter();
 			}
-		} );
+		};
+
+		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
 	}
 
 	public static Object getConstantValue(String name, SessionFactoryImplementor factory) {
@@ -279,21 +281,23 @@ public final class ReflectHelper {
 			return null;
 		}
 
-		return AccessController.doPrivileged( new PrivilegedAction<Constructor<T>>() {
+		final PrivilegedAction<Constructor> action = new PrivilegedAction<Constructor>() {
 			@Override
-			public Constructor<T> run() {
+			public Constructor run() {
 				try {
 					Constructor<T> constructor = clazz.getDeclaredConstructor( NO_PARAM_SIGNATURE );
 					ensureAccessibility( constructor );
 					return constructor;
 				}
-				catch ( NoSuchMethodException nme ) {
+				catch (NoSuchMethodException e) {
 					throw new PropertyNotFoundException(
 							"Object class [" + clazz.getName() + "] must declare a default (no-argument) constructor"
 					);
 				}
 			}
-		} );
+		};
+
+		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
 	}
 
 	/**
@@ -360,17 +364,19 @@ public final class ReflectHelper {
 	}
 
 	public static Method getMethod(Class clazz, Method method) {
-		return AccessController.doPrivileged( new PrivilegedAction<Method>() {
+		final PrivilegedAction<Method> action = new PrivilegedAction<Method>() {
 			@Override
 			public Method run() {
 				try {
 					return clazz.getMethod( method.getName(), method.getParameterTypes() );
 				}
-				catch (Exception e) {
+				catch (Exception e){
 					return null;
 				}
 			}
-		} );
+		};
+
+		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
 	}
 
 	public static Field findField(Class containerClass, String propertyName) {
@@ -381,13 +387,14 @@ public final class ReflectHelper {
 			throw new IllegalArgumentException( "Illegal attempt to locate field [" + propertyName + "] on Object.class" );
 		}
 
-		Field field = AccessController.doPrivileged( new PrivilegedAction<Field>() {
+		final PrivilegedAction<Field> action = new PrivilegedAction<Field>() {
 			@Override
 			public Field run() {
 				return locateField( containerClass, propertyName );
 			}
-		} );
+		};
 
+		final Field field = System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
 		if ( field == null ) {
 			throw new PropertyNotFoundException(
 					String.format(
@@ -405,15 +412,22 @@ public final class ReflectHelper {
 	}
 
 	public static void ensureAccessibility(AccessibleObject accessibleObject) {
-		AccessController.doPrivileged( new PrivilegedAction<Object>() {
+		final PrivilegedAction<Object> action = new PrivilegedAction<Object>() {
 			@Override
-			public Void run() {
+			public Object run() {
 				if ( !accessibleObject.isAccessible() ) {
 					accessibleObject.setAccessible( true );
 				}
 				return null;
 			}
-		} );
+		};
+
+		if ( System.getSecurityManager() != null ) {
+			AccessController.doPrivileged( action );
+		}
+		else {
+			action.run();
+		}
 	}
 
 	private static Field locateField(Class clazz, String propertyName) {
@@ -438,45 +452,40 @@ public final class ReflectHelper {
 	}
 
 	public static Method findGetterMethod(Class containerClass, String propertyName) {
-		return AccessController.doPrivileged( new PrivilegedAction<Method>() {
-			@Override
-			public Method run() {
-				Class checkClass = containerClass;
-				Method getter = null;
+		Class checkClass = containerClass;
+		Method getter = null;
 
-				// check containerClass, and then its super types (if any)
-				while ( getter == null && checkClass != null ) {
-					if ( checkClass.equals( Object.class ) ) {
-						break;
-					}
-
-					getter = getGetterOrNull( checkClass, propertyName );
-
-					// if no getter found yet, check all implemented interfaces
-					if ( getter == null ) {
-						getter = getGetterOrNull( checkClass.getInterfaces(), propertyName );
-					}
-
-					checkClass = checkClass.getSuperclass();
-				}
-
-
-				if ( getter == null ) {
-					throw new PropertyNotFoundException(
-							String.format(
-									Locale.ROOT,
-									"Could not locate getter method for property [%s#%s]",
-									containerClass.getName(),
-									propertyName
-							)
-					);
-				}
-
-				ensureAccessibility( getter );
-
-				return getter;
+		// check containerClass, and then its super types (if any)
+		while ( getter == null && checkClass != null ) {
+			if ( checkClass.equals( Object.class ) ) {
+				break;
 			}
-		} );
+
+			getter = getGetterOrNull( checkClass, propertyName );
+
+			// if no getter found yet, check all implemented interfaces
+			if ( getter == null ) {
+				getter = getGetterOrNull( checkClass.getInterfaces(), propertyName );
+			}
+
+			checkClass = checkClass.getSuperclass();
+		}
+
+
+		if ( getter == null ) {
+			throw new PropertyNotFoundException(
+					String.format(
+							Locale.ROOT,
+							"Could not locate getter method for property [%s#%s]",
+							containerClass.getName(),
+							propertyName
+					)
+			);
+		}
+
+		ensureAccessibility( getter );
+
+		return getter;
 	}
 
 	private static Method getGetterOrNull(Class[] interfaces, String propertyName) {
@@ -493,7 +502,7 @@ public final class ReflectHelper {
 	}
 
 	private static Method getGetterOrNull(Class containerClass, String propertyName) {
-		for ( Method method : containerClass.getDeclaredMethods() ) {
+		for ( Method method : getDeclaredMethods( containerClass ) ) {
 			// if the method has parameters, skip it
 			if ( method.getParameterCount() != 0 ) {
 				continue;
@@ -544,17 +553,39 @@ public final class ReflectHelper {
 			String propertyName,
 			Method getMethod,
 			String stemName) {
-		// verify that the Class does not also define a method with the same stem name with 'is'
-		try {
-			final Method isMethod = containerClass.getDeclaredMethod( "is" + stemName );
+		final Method isMethod = getDeclaredMethod( containerClass, "is" + stemName );
+		if ( isMethod != null ) {
 			if ( !Modifier.isStatic( isMethod.getModifiers() ) && isMethod.getAnnotation( Transient.class ) == null ) {
 				// No such method should throw the caught exception.  So if we get here, there was
 				// such a method.
 				checkGetAndIsVariants( containerClass, propertyName, getMethod, isMethod );
 			}
 		}
-		catch (NoSuchMethodException ignore) {
-		}
+	}
+
+	private static Method getDeclaredMethod(Class containerClass, String methodName) {
+		final PrivilegedAction<Method> action = new PrivilegedAction<Method>() {
+			@Override
+			public Method run() {
+				try {
+					return containerClass.getDeclaredMethod( methodName );
+				}
+				catch (NoSuchMethodException ignore) {
+					return null;
+				}
+			}
+		};
+		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
+	}
+
+	private static Method[] getDeclaredMethods(Class containerClass) {
+		final PrivilegedAction<Method[]> action = new PrivilegedAction<Method[]>() {
+			@Override
+			public Method[] run() {
+				return containerClass.getDeclaredMethods();
+			}
+		};
+		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
 	}
 
 	private static void checkGetAndIsVariants(
@@ -585,15 +616,13 @@ public final class ReflectHelper {
 			Method isMethod,
 			String stemName) {
 		// verify that the Class does not also define a method with the same stem name with 'is'
-		try {
-			final Method getMethod = containerClass.getDeclaredMethod( "get" + stemName );
+		final Method getMethod = getDeclaredMethod( containerClass, "get" + stemName );
+		if ( getMethod != null ) {
 			// No such method should throw the caught exception.  So if we get here, there was
 			// such a method.
 			if ( !Modifier.isStatic( getMethod.getModifiers() ) && getMethod.getAnnotation( Transient.class ) == null ) {
 				checkGetAndIsVariants( containerClass, propertyName, getMethod, isMethod );
 			}
-		}
-		catch (NoSuchMethodException ignore) {
 		}
 	}
 
@@ -607,53 +636,43 @@ public final class ReflectHelper {
 	}
 
 	public static Method setterMethodOrNull(final Class containerClass, final  String propertyName, final Class propertyType) {
-		return AccessController.doPrivileged( new PrivilegedAction<Method>() {
-			@Override
-			public Method run() {
-				Class checkClass = containerClass;
-				Method setter = null;
+		Class checkClass = containerClass;
+		Method setter = null;
 
-				// check containerClass, and then its super types (if any)
-				while ( setter == null && checkClass != null ) {
-					if ( checkClass.equals( Object.class ) ) {
-						break;
-					}
-
-					setter = setterOrNull( checkClass, propertyName, propertyType );
-
-					// if no setter found yet, check all implemented interfaces
-					if ( setter == null ) {
-						setter = setterOrNull( checkClass.getInterfaces(), propertyName, propertyType );
-					}
-					else {
-						ensureAccessibility( setter );
-					}
-
-					checkClass = checkClass.getSuperclass();
-				}
-				return setter; // might be null
+		// check containerClass, and then its super types (if any)
+		while ( setter == null && checkClass != null ) {
+			if ( checkClass.equals( Object.class ) ) {
+				break;
 			}
-		} );
+
+			setter = setterOrNull( checkClass, propertyName, propertyType );
+
+			// if no setter found yet, check all implemented interfaces
+			if ( setter == null ) {
+				setter = setterOrNull( checkClass.getInterfaces(), propertyName, propertyType );
+			}
+			else {
+				ensureAccessibility( setter );
+			}
+
+			checkClass = checkClass.getSuperclass();
+		}
+		return setter; // might be null
 	}
 
 	public static Method findSetterMethod(final Class containerClass, final String propertyName, final Class propertyType) {
-		return AccessController.doPrivileged( new PrivilegedAction<Method>() {
-			@Override
-			public Method run() {
-				final Method setter = setterMethodOrNull( containerClass, propertyName, propertyType );
-				if ( setter == null ) {
-					throw new PropertyNotFoundException(
-							String.format(
-									Locale.ROOT,
-									"Could not locate setter method for property [%s#%s]",
-									containerClass.getName(),
-									propertyName
-							)
-					);
-				}
-				return setter;
-			}
-		} );
+		final Method setter = setterMethodOrNull( containerClass, propertyName, propertyType );
+		if ( setter == null ) {
+			throw new PropertyNotFoundException(
+					String.format(
+							Locale.ROOT,
+							"Could not locate setter method for property [%s#%s]",
+							containerClass.getName(),
+							propertyName
+					)
+			);
+		}
+		return setter;
 	}
 
 	private static Method setterOrNull(Class[] interfaces, String propertyName, Class propertyType) {
@@ -672,7 +691,7 @@ public final class ReflectHelper {
 	private static Method setterOrNull(Class theClass, String propertyName, Class propertyType) {
 		Method potentialSetter = null;
 
-		for ( Method method : theClass.getDeclaredMethods() ) {
+		for ( Method method : getDeclaredMethods( theClass ) ) {
 			final String methodName = method.getName();
 			if ( method.getParameterCount() == 1 && methodName.startsWith( "set" ) ) {
 				final String testOldMethod = methodName.substring( 3 );
@@ -697,47 +716,53 @@ public final class ReflectHelper {
 	 * as an abstract - but again, that is such an edge case...
 	 */
 	public static Method findGetterMethodForFieldAccess(Field field, String propertyName) {
-		return AccessController.doPrivileged( new PrivilegedAction<Method>() {
-			@Override
-			public Method run() {
-				for ( Method method : field.getDeclaringClass().getDeclaredMethods() ) {
-					// if the method has parameters, skip it
-					if ( method.getParameterCount() != 0 ) {
-						continue;
-					}
+//		final PrivilegedAction<Method[]> action = new PrivilegedAction<Method[]>() {
+//			@Override
+//			public Method[] run() {
+//				return field.getDeclaringClass().getDeclaredMethods();
+//			}
+//		};
+//
+//		final Method[] methods = System.getSecurityManager() != null
+//				? AccessController.doPrivileged( action )
+//				: action.run();
 
-					if ( Modifier.isStatic( method.getModifiers() ) ) {
-						continue;
-					}
+		for ( Method method : getDeclaredMethods( field.getDeclaringClass() ) ) {
+			// if the method has parameters, skip it
+			if ( method.getParameterCount() != 0 ) {
+				continue;
+			}
 
-					if ( ! method.getReturnType().isAssignableFrom( field.getType() ) ) {
-						continue;
-					}
+			if ( Modifier.isStatic( method.getModifiers() ) ) {
+				continue;
+			}
 
-					final String methodName = method.getName();
+			if ( ! method.getReturnType().isAssignableFrom( field.getType() ) ) {
+				continue;
+			}
 
-					// try "get"
-					if ( methodName.startsWith( "get" ) ) {
-						final String stemName = methodName.substring( 3 );
-						final String decapitalizedStemName = Introspector.decapitalize( stemName );
-						if ( stemName.equals( propertyName ) || decapitalizedStemName.equals( propertyName ) ) {
-							return method;
-						}
+			final String methodName = method.getName();
 
-					}
-
-					// if not "get", then try "is"
-					if ( methodName.startsWith( "is" ) ) {
-						final String stemName = methodName.substring( 2 );
-						String decapitalizedStemName = Introspector.decapitalize( stemName );
-						if ( stemName.equals( propertyName ) || decapitalizedStemName.equals( propertyName ) ) {
-							return method;
-						}
-					}
+			// try "get"
+			if ( methodName.startsWith( "get" ) ) {
+				final String stemName = methodName.substring( 3 );
+				final String decapitalizedStemName = Introspector.decapitalize( stemName );
+				if ( stemName.equals( propertyName ) || decapitalizedStemName.equals( propertyName ) ) {
+					return method;
 				}
 
-				return null;
 			}
-		} );
+
+			// if not "get", then try "is"
+			if ( methodName.startsWith( "is" ) ) {
+				final String stemName = methodName.substring( 2 );
+				String decapitalizedStemName = Introspector.decapitalize( stemName );
+				if ( stemName.equals( propertyName ) || decapitalizedStemName.equals( propertyName ) ) {
+					return method;
+				}
+			}
+		}
+
+		return null;
 	}
 }

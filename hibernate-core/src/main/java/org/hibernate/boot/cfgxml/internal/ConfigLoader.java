@@ -50,7 +50,7 @@ public class ConfigLoader {
 	}
 
 	public LoadedConfig loadConfigXmlResource(String cfgXmlResourceName) {
-		final JaxbCfgHibernateConfiguration jaxbCfg = AccessController.doPrivileged( new PrivilegedAction<JaxbCfgHibernateConfiguration>() {
+		final PrivilegedAction<JaxbCfgHibernateConfiguration> action = new PrivilegedAction<JaxbCfgHibernateConfiguration>() {
 			@Override
 			public JaxbCfgHibernateConfiguration run() {
 				final InputStream stream = bootstrapServiceRegistry.getService( ClassLoaderService.class ).locateResourceStream( cfgXmlResourceName );
@@ -73,9 +73,11 @@ public class ConfigLoader {
 					}
 				}
 			}
-		} );
+		};
 
-		return LoadedConfig.consume( jaxbCfg );
+		return LoadedConfig.consume(
+				System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run()
+		);
 	}
 
 	public LoadedConfig loadConfigXmlFile(File cfgXmlFile) {

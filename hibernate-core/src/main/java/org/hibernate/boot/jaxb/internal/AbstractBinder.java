@@ -101,13 +101,15 @@ public abstract class AbstractBinder implements Binder {
 
 	private Binding doBind(XMLEventReader eventReader, Origin origin) {
 		try {
-			return AccessController.doPrivileged( new PrivilegedAction<Binding>() {
+			final PrivilegedAction<Binding> action = new PrivilegedAction<Binding>() {
 				@Override
 				public Binding run() {
 					final StartElement rootElementStartEvent = seekRootElementStartEvent( eventReader, origin );
 					return doBind( eventReader, rootElementStartEvent, origin );
 				}
-			} );
+			};
+
+			return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
 		}
 		finally {
 			try {

@@ -10,7 +10,6 @@ import javax.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;
@@ -26,7 +25,6 @@ public class DeleteQuerySubqueryReferencingTargetPropertyTest extends BaseEntity
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-12492")
 	public void testSubQueryReferencingTargetProperty() {
 		// prepare
 		doInJPA( this::entityManagerFactory, entityManager -> {

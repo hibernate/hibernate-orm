@@ -10,6 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.action.internal.DelayedPostInsertIdentifier;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
@@ -245,9 +246,15 @@ public final class Collections {
 		if ( loadedPersister != null || currentPersister != null ) {
 			// it is or was referenced _somewhere_
 
+			// check if the key changed
+			// excludes marking key changed when the loaded key is a DelayedPostInsertIdentifier.
+			final boolean keyChanged = currentPersister != null
+					&& entry != null
+					&& !currentPersister.getKeyType().isEqual( entry.getLoadedKey(), entry.getCurrentKey(), factory )
+					&& !( entry.getLoadedKey() instanceof DelayedPostInsertIdentifier );
+
 			// if either its role changed, or its key changed
-			final boolean ownerChanged = loadedPersister != currentPersister
-					|| !currentPersister.getKeyType().isEqual( entry.getLoadedKey(), entry.getCurrentKey(), factory );
+			final boolean ownerChanged = loadedPersister != currentPersister || keyChanged;
 
 			if ( ownerChanged ) {
 				// do a check

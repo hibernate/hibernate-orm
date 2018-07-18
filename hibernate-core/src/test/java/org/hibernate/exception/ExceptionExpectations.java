@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import javax.persistence.PersistenceException;
 
 import org.hibernate.TransientObjectException;
+import org.hibernate.TransientPropertyValueException;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertThat;
@@ -39,6 +40,32 @@ interface ExceptionExpectations {
 			public void onTransientObjectOnPersistAndMergeAndFlush(RuntimeException e) {
 				assertThat( e, instanceOf( IllegalStateException.class ) );
 				assertThat( e.getCause(), instanceOf( TransientObjectException.class ) );
+			}
+		};
+	}
+
+	static ExceptionExpectations nativePre52() {
+		return new ExceptionExpectations() {
+			@Override
+			public void onConstraintViolationOnSaveAndSaveOrUpdate(RuntimeException e) {
+				assertThat( e, instanceOf( ConstraintViolationException.class ) );
+				assertThat( e.getCause(), instanceOf( SQLException.class ) );
+			}
+
+			@Override
+			public void onConstraintViolationOnPersistAndMergeAndFlush(RuntimeException e) {
+				assertThat( e, instanceOf( ConstraintViolationException.class ) );
+				assertThat( e.getCause(), instanceOf( SQLException.class ) );
+			}
+
+			@Override
+			public void onTransientObjectOnSaveAndSaveOrUpdate(RuntimeException e) {
+				assertThat( e, instanceOf( TransientObjectException.class ) );
+			}
+
+			@Override
+			public void onTransientObjectOnPersistAndMergeAndFlush(RuntimeException e) {
+				assertThat( e, instanceOf( TransientPropertyValueException.class ) );
 			}
 		};
 	}

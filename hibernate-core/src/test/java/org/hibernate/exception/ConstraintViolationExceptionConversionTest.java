@@ -34,8 +34,9 @@ import static org.junit.Assert.fail;
 public class ConstraintViolationExceptionConversionTest extends BaseExceptionConversionTest {
 
 	public ConstraintViolationExceptionConversionTest(BootstrapMethod bootstrapMethod,
+			ExceptionConversionSetting exceptionConversionSetting,
 			ExceptionExpectations exceptionExpectations) {
-		super( bootstrapMethod, exceptionExpectations );
+		super( bootstrapMethod, exceptionConversionSetting, exceptionExpectations );
 	}
 
 	@Override

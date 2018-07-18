@@ -16,6 +16,7 @@
 package org.hibernate.exception;
 
 import java.util.Arrays;
+import java.util.Map;
 
 import org.hibernate.testing.junit4.CustomParameterized;
 import org.junit.runner.RunWith;
@@ -23,21 +24,57 @@ import org.junit.runners.Parameterized;
 
 @RunWith(CustomParameterized.class)
 public abstract class BaseExceptionConversionTest extends BaseJpaOrNativeBootstrapFunctionalTestCase {
+	// FIXME use the actual setting
+	private static final String EXCEPTION_CONVERSION_PROPERTY = "FIXME_USE_ACTUAL_SETTING_HERE";
 
-	@Parameterized.Parameters(name = "{0}")
+	public enum ExceptionConversionSetting {
+		DEFAULT,
+		JPA,
+		NATIVE_PRE_52,
+		NATIVE_POST_52
+	}
+
+	@Parameterized.Parameters(name = "Bootstrap={0}, ConversionSetting={1}")
 	public static Iterable<Object[]> parameters() {
 		return Arrays.asList( new Object[][] {
-				{ BootstrapMethod.JPA, ExceptionExpectations.jpa() },
-				{ BootstrapMethod.NATIVE, ExceptionExpectations.nativePost52() }
+				{ BootstrapMethod.JPA, ExceptionConversionSetting.DEFAULT, ExceptionExpectations.jpa() },
+				{ BootstrapMethod.JPA, ExceptionConversionSetting.JPA, ExceptionExpectations.jpa() },
+				{ BootstrapMethod.JPA, ExceptionConversionSetting.NATIVE_PRE_52, ExceptionExpectations.nativePre52() },
+				{ BootstrapMethod.JPA, ExceptionConversionSetting.NATIVE_POST_52, ExceptionExpectations.nativePost52() },
+				{ BootstrapMethod.NATIVE, ExceptionConversionSetting.DEFAULT, ExceptionExpectations.nativePost52() },
+				{ BootstrapMethod.NATIVE, ExceptionConversionSetting.JPA, ExceptionExpectations.jpa() },
+				{ BootstrapMethod.NATIVE, ExceptionConversionSetting.NATIVE_PRE_52, ExceptionExpectations.nativePre52() },
+				{ BootstrapMethod.NATIVE, ExceptionConversionSetting.NATIVE_POST_52, ExceptionExpectations.nativePost52() }
 		} );
 	}
+
+	private final ExceptionConversionSetting exceptionConversionSetting;
 
 	protected final ExceptionExpectations exceptionExpectations;
 
 	protected BaseExceptionConversionTest(BootstrapMethod bootstrapMethod,
+			ExceptionConversionSetting exceptionConversionSetting,
 			ExceptionExpectations exceptionExpectations) {
 		super( bootstrapMethod );
+		this.exceptionConversionSetting = exceptionConversionSetting;
 		this.exceptionExpectations = exceptionExpectations;
 	}
 
+	@Override
+	protected void configure(Map<Object, Object> properties) {
+		switch ( exceptionConversionSetting ) {
+			case DEFAULT:
+				// Keep the default
+				break;
+			case JPA:
+				properties.put( EXCEPTION_CONVERSION_PROPERTY, "jpa" );
+				break;
+			case NATIVE_PRE_52:
+				properties.put( EXCEPTION_CONVERSION_PROPERTY, "native-5.1" );
+				break;
+			case NATIVE_POST_52:
+				properties.put( EXCEPTION_CONVERSION_PROPERTY, "native-5.2" );
+				break;
+		}
+	}
 }

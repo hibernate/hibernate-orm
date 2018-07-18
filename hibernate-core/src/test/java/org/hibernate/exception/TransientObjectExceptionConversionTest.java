@@ -32,8 +32,9 @@ import static org.junit.Assert.fail;
 public class TransientObjectExceptionConversionTest extends BaseExceptionConversionTest {
 
 	public TransientObjectExceptionConversionTest(BootstrapMethod bootstrapMethod,
+			ExceptionConversionSetting exceptionConversionSetting,
 			ExceptionExpectations exceptionExpectations) {
-		super( bootstrapMethod, exceptionExpectations );
+		super( bootstrapMethod, exceptionConversionSetting, exceptionExpectations );
 	}
 
 	@Override

@@ -341,12 +341,10 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 
 		final String propertyName = getIdentifierPropertyName();
 
-		if ( getWalker().getStatementType() == HqlSqlTokenTypes.SELECT ) {
-			return getPropertyMapping( propertyName ).toColumns( table, propertyName );
-		}
-		else {
-			return getPropertyMapping( propertyName ).toColumns( propertyName );
-		}
+		return toColumns(
+				table, propertyName,
+				getWalker().getStatementType() == HqlSqlTokenTypes.SELECT
+		);
 	}
 
 	public void setCollectionJoin(boolean collectionJoin) {

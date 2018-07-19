@@ -342,7 +342,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 						LOG.tracef( "Allowing invocation [%s] to proceed to real (non-transacted) session - deprecated methods", methodName );
 					}
 					else {
-						throw new HibernateException( methodName + " is not valid without active transaction" );
+						throw new HibernateException("'"+ methodName + "' is not valid without active transaction (Current state: " + realSession.getTransaction().getStatus() + ")" );
 					}
 				}
 				LOG.tracef( "Allowing proxy invocation [%s] to proceed to real session", methodName );

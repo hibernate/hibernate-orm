@@ -616,7 +616,7 @@ To use the `EhCacheRegionFactory`, you need to specify the following configurati
 ----
 <property
     name="hibernate.cache.region.factory_class"
-    value="org.hibernate.cache.ehcache.EhCacheRegionFactory"/>
+    value="ehcache"/>
 ----
 ====
 
@@ -635,7 +635,7 @@ To use the `SingletonEhCacheRegionFactory`, you need to specify the following co
 ----
 <property
     name="hibernate.cache.region.factory_class"
-    value="org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory"/>
+    value="ehcache-singleton"/>
 ----
 ====
 

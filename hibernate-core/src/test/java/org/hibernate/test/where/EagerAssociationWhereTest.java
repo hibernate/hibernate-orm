@@ -19,6 +19,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import org.hibernate.Session;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.Where;
@@ -27,7 +28,6 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -56,45 +56,49 @@ public class EagerAssociationWhereTest extends BaseNonConfigCoreFunctionalTestCa
 		product.categoriesOneToMany.add( category );
 		product.categoriesManyToMany.add( category );
 
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 					session.persist( product );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+		session = openSession();
+		session.beginTransaction();
+		{
 					Product p = session.get( Product.class, product.id );
 					assertNotNull( p );
 					assertNotNull( p.category );
 					assertNotNull( p.containedCategory.category );
 					assertEquals( 1, p.categoriesOneToMany.size() );
 					assertEquals( 1, p.categoriesManyToMany.size() );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+		session = openSession();
+		session.beginTransaction();
+		{
 					Category c = session.get( Category.class, category.id );
 					assertNotNull( c );
 					c.inactive = true;
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+		session = openSession();
+		session.beginTransaction();
+		{
 					Category c = session.get( Category.class, category.id );
 					assertNull( c );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+		session = openSession();
+		session.beginTransaction();
+		{
 					Product p = session.get( Product.class, product.id );
 					assertNotNull( p );
 					assertEquals( 0, p.categoriesOneToMany.size() );
@@ -105,8 +109,9 @@ public class EagerAssociationWhereTest extends BaseNonConfigCoreFunctionalTestCa
 					//       currently, the embeddable is instantiated, and the "not found" entity will be null.
 					// assertNull( p.containedCategory );
 					assertNull( p.containedCategory.category );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Entity(name = "Product")

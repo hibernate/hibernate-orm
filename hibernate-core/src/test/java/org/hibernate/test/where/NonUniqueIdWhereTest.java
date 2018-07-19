@@ -19,6 +19,7 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Table;
 
 import org.hibernate.Hibernate;
+import org.hibernate.Session;
 import org.hibernate.annotations.Where;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -26,7 +27,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -47,19 +47,19 @@ public class NonUniqueIdWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Before
 	public void setup() {
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
-					session.createNativeQuery(
+		Session session = openSession();
+		session.beginTransaction();
+		{
+					session.createSQLQuery(
 							"DROP TABLE PRODUCT_VALUES"
 					).executeUpdate();
 
-					session.createNativeQuery(
+					session.createSQLQuery(
 							"create table PRODUCT_VALUES( id integer not null, name varchar(255), valueType char(255) not null, primary key (id, valueType) )"
 					).executeUpdate();
 
-					session.createNativeQuery( "insert into PRODUCT_VALUES( id, valueType, name) VALUES( 1, 'C', 'clothes' )" ).executeUpdate();
-					session.createNativeQuery( "insert into PRODUCT_VALUES( id, valueType, name) VALUES( 1, 'R', 'high' )" ).executeUpdate();
+					session.createSQLQuery( "insert into PRODUCT_VALUES( id, valueType, name) VALUES( 1, 'C', 'clothes' )" ).executeUpdate();
+					session.createSQLQuery( "insert into PRODUCT_VALUES( id, valueType, name) VALUES( 1, 'R', 'high' )" ).executeUpdate();
 
 					Category c1 = session.get( Category.class, 1 );
 					Rating r1 = session.get( Rating.class, 1 );
@@ -78,31 +78,33 @@ public class NonUniqueIdWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 
 					p1.groupings.add( anotherGrouping );
 					session.persist( p1 );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 
 		sessionFactory().getCache().evictAllRegions();
 	}
 
 	@After
 	public void cleanup() {
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 					Product p = session.get( Product.class, 1 );
 					session.delete( p );
-					session.createNativeQuery(
+					session.createSQLQuery(
 							"DROP TABLE PRODUCT_VALUES"
 					).executeUpdate();
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
 	public void testLoad() {
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 					Product product = session.get( Product.class, 1 );
 					assertTrue( Hibernate.isInitialized( product.rating ) );
 					assertTrue( Hibernate.isInitialized( product.category ) );
@@ -119,8 +121,9 @@ public class NonUniqueIdWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 					assertTrue( Hibernate.isInitialized( collectionElement.rating ) );
 					assertSame( product.rating, collectionElement.rating );
 					assertSame( product.category, collectionElement.category );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Entity(name = "Product")

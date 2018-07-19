@@ -286,4 +286,8 @@ public interface SessionFactoryOptions {
 	default boolean inClauseParameterPaddingEnabled() {
 		return false;
 	}
+
+	default boolean nativeExceptionHandling51Compliance() {
+		return false;
+	}
 }

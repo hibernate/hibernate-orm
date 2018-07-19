@@ -1811,4 +1811,7 @@ public interface CoreMessageLogger extends BasicLogger {
 			+ "in the same package as class %1$s. In this case, the class should be opened and exported to Hibernate ORM.", id = 488)
 	String bytecodeEnhancementFailedUnableToGetPrivateLookupFor(String className);
 
+	@LogMessage(level = WARN)
+	@Message(value = "Setting " + AvailableSettings.NATIVE_EXCEPTION_HANDLING_51_COMPLIANCE + "=true is not valid with JPA bootstrapping; setting will be ignored.", id = 489 )
+	void nativeExceptionHandling51ComplianceJpaBootstrapping();
 }

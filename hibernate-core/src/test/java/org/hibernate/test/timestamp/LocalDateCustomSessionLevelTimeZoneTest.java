@@ -47,13 +47,7 @@ public class LocalDateCustomSessionLevelTimeZoneTest
 				url += "&";
 			}
 
-			String zeroDateTimeBehavior = "convertToNull";
-
-			if ( Dialect.getDialect() instanceof MySQL8Dialect ) {
-				zeroDateTimeBehavior = "CONVERT_TO_NULL";
-			}
-
-			url += "zeroDateTimeBehavior=" + zeroDateTimeBehavior +  "&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=Europe/Berlin";
+			url += "useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=Europe/Berlin";
 
 			configurationValues.put( AvailableSettings.URL, url);
 			super.configure( configurationValues );

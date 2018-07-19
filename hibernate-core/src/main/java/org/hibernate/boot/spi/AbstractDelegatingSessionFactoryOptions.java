@@ -427,4 +427,9 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	public boolean inClauseParameterPaddingEnabled() {
 		return delegate.inClauseParameterPaddingEnabled();
 	}
+
+	@Override
+	public boolean nativeExceptionHandling51Compliance() {
+		return delegate.nativeExceptionHandling51Compliance();
+	}
 }

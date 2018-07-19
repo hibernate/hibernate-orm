@@ -1,5 +1,5 @@
 = Services and Registries
-:imagesdir: .
+:imagesdir: images
 :toc:
 
 Services and Registries are new *as a formalized concept* starting in 4.0.  But the functionality provided by

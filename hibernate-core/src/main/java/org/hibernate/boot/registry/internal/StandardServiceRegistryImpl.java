@@ -71,14 +71,20 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 
 		this.configurationValues = configurationValues;
 
-		// process initiators
-		for ( ServiceInitiator initiator : serviceInitiators ) {
-			createServiceBinding( initiator );
-		}
+		try {
+			// process initiators
+			for ( ServiceInitiator initiator : serviceInitiators ) {
+				createServiceBinding( initiator );
+			}
 
-		// then, explicitly provided service instances
-		for ( ProvidedService providedService : providedServices ) {
-			createServiceBinding( providedService );
+			// then, explicitly provided service instances
+			for ( ProvidedService providedService : providedServices ) {
+				createServiceBinding( providedService );
+			}
+		}
+		catch (RuntimeException e) {
+			visitServiceBindings( binding -> binding.getLifecycleOwner().stopService( binding ) );
+			throw e;
 		}
 	}
 

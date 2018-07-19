@@ -1163,7 +1163,7 @@ See the <<chapters/domain/inheritance.adoc#entity-inheritance-polymorphism, `@Po
 [[annotations-hibernate-proxy]]
 ==== `@Proxy`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Proxy.html[`@Proxy`] annotation is used to specify a custom Proxy implementation for the current annotated entity.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Proxy.html[`@Proxy`] annotation is used to specify a custom proxy implementation for the current annotated entity.
 
 See the <<chapters/domain/entity.adoc#entity-proxy, `@Proxy` mapping>> section for more info.
 

@@ -52,6 +52,7 @@ import org.hibernate.Filter;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.IdentifierLoadAccess;
+import org.hibernate.JDBCException;
 import org.hibernate.LobHelper;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -418,7 +419,9 @@ public final class SessionImpl
 	}
 
 	public void closeWithoutOpenChecks() throws HibernateException {
-		log.tracef( "Closing session [%s]", getSessionIdentifier() );
+		if ( TRACE_ENABLED ) {
+			log.tracef( "Closing session [%s]", getSessionIdentifier() );
+		}
 
 		// todo : we want this check if usage is JPA, but not native Hibernate usage
 		if ( getSessionFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
@@ -2104,7 +2107,7 @@ public final class SessionImpl
 
 	@Override
 	public boolean contains(String entityName, Object object) {
-		checkOpen();
+		checkOpenOrWaitingForAutoClose();
 		checkTransactionSynchStatus();
 
 		if ( object == null ) {
@@ -2311,11 +2314,16 @@ public final class SessionImpl
 	@Override
 	public String toString() {
 		StringBuilder buf = new StringBuilder( 500 )
-				.append( "SessionImpl(" );
+				.append( "SessionImpl(" ).append( System.identityHashCode( this ) );
 		if ( !isClosed() ) {
-			buf.append( persistenceContext )
+			if ( TRACE_ENABLED ) {
+				buf.append( persistenceContext )
 					.append( ";" )
 					.append( actionQueue );
+			}
+			else {
+				buf.append( "<open>" );
+			}
 		}
 		else {
 			buf.append( "<closed>" );
@@ -2476,6 +2484,7 @@ public final class SessionImpl
 		catch (Throwable t) {
 			log.exceptionInBeforeTransactionCompletionInterceptor( t );
 		}
+		super.beforeTransactionCompletion();
 	}
 
 	@Override
@@ -2739,6 +2748,7 @@ public final class SessionImpl
 
 	@Override
 	protected void removeSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {
+		super.removeSharedSessionTransactionObserver( transactionCoordinator );
 		transactionCoordinator.removeObserver( transactionObserver );
 	}
 
@@ -3493,6 +3503,15 @@ public final class SessionImpl
 		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
 			throw exceptionConverter.convert( new IllegalArgumentException( e.getMessage(), e ) );
 		}
+		catch ( JDBCException e ) {
+			if ( accessTransaction().getRollbackOnly() ) {
+				// assume this is the similar to the WildFly / IronJacamar "feature" described under HHH-12472
+				return null;
+			}
+			else {
+				throw exceptionConverter.convert( e, lockOptions );
+			}
+		}
 		catch ( RuntimeException e ) {
 			throw exceptionConverter.convert( e, lockOptions );
 		}
@@ -3713,55 +3732,11 @@ public final class SessionImpl
 	protected void initQueryFromNamedDefinition(Query query, NamedQueryDefinition namedQueryDefinition) {
 		super.initQueryFromNamedDefinition( query, namedQueryDefinition );
 
-		if ( namedQueryDefinition.isCacheable() ) {
-			query.setHint( QueryHints.HINT_CACHEABLE, true );
-			if ( namedQueryDefinition.getCacheRegion() != null ) {
-				query.setHint( QueryHints.HINT_CACHE_REGION, namedQueryDefinition.getCacheRegion() );
-			}
-		}
-
-		if ( namedQueryDefinition.getCacheMode() != null ) {
-			query.setHint( QueryHints.HINT_CACHE_MODE, namedQueryDefinition.getCacheMode() );
-		}
-
-		if ( namedQueryDefinition.isReadOnly() ) {
-			query.setHint( QueryHints.HINT_READONLY, true );
-		}
-
-		if ( namedQueryDefinition.getTimeout() != null ) {
-			query.setHint( QueryHints.SPEC_HINT_TIMEOUT, namedQueryDefinition.getTimeout() * 1000 );
-		}
-
-		if ( namedQueryDefinition.getFetchSize() != null ) {
-			query.setHint( QueryHints.HINT_FETCH_SIZE, namedQueryDefinition.getFetchSize() );
-		}
-
-		if ( namedQueryDefinition.getComment() != null ) {
-			query.setHint( QueryHints.HINT_COMMENT, namedQueryDefinition.getComment() );
-		}
-
-		if ( namedQueryDefinition.getFirstResult() != null ) {
-			query.setFirstResult( namedQueryDefinition.getFirstResult() );
-		}
-
-		if ( namedQueryDefinition.getMaxResults() != null ) {
-			query.setMaxResults( namedQueryDefinition.getMaxResults() );
-		}
-
 		if ( namedQueryDefinition.getLockOptions() != null ) {
 			if ( namedQueryDefinition.getLockOptions().getLockMode() != null ) {
 				query.setLockMode(
 						LockModeTypeHelper.getLockModeType( namedQueryDefinition.getLockOptions().getLockMode() )
 				);
-			}
-		}
-
-		if ( namedQueryDefinition.getFlushMode() != null ) {
-			if ( namedQueryDefinition.getFlushMode() == FlushMode.COMMIT ) {
-				query.setFlushMode( FlushModeType.COMMIT );
-			}
-			else {
-				query.setFlushMode( FlushModeType.AUTO );
 			}
 		}
 	}
@@ -3941,7 +3916,9 @@ public final class SessionImpl
 	 * @throws IOException Indicates a general IO stream exception
 	 */
 	private void writeObject(ObjectOutputStream oos) throws IOException {
-		log.tracef( "Serializing Session [%s]", getSessionIdentifier() );
+		if ( TRACE_ENABLED ) {
+			log.tracef( "Serializing Session [%s]", getSessionIdentifier() );
+		}
 
 		oos.defaultWriteObject();
 
@@ -3960,7 +3937,9 @@ public final class SessionImpl
 	 * @throws ClassNotFoundException Indicates a class resolution issue
 	 */
 	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException, SQLException {
-		log.tracef( "Deserializing Session [%s]", getSessionIdentifier() );
+		if ( TRACE_ENABLED ) {
+			log.tracef( "Deserializing Session [%s]", getSessionIdentifier() );
+		}
 
 		ois.defaultReadObject();
 

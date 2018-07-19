@@ -7,6 +7,7 @@
 package org.hibernate;
 
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.build.AllowSysOut;
 
 import org.jboss.logging.Logger;
 
@@ -51,6 +52,7 @@ public class Version {
 	 *
 	 * @param args n/a
 	 */
+	@AllowSysOut
 	public static void main(String[] args) {
 		System.out.println( "Hibernate Core {" + getVersionString() + "}" );
 	}

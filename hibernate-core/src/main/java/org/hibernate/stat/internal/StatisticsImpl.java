@@ -9,6 +9,7 @@ package org.hibernate.stat.internal;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.QueryResultsRegion;
@@ -32,57 +33,57 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 public class StatisticsImpl implements StatisticsImplementor, Service {
 	private static final CoreMessageLogger LOG = messageLogger( StatisticsImpl.class );
 
-	private SessionFactoryImplementor sessionFactory;
+	private final SessionFactoryImplementor sessionFactory;
 
 	private volatile boolean isStatisticsEnabled;
 	private volatile long startTime;
 
-	private AtomicLong sessionOpenCount = new AtomicLong();
-	private AtomicLong sessionCloseCount = new AtomicLong();
-	private AtomicLong flushCount = new AtomicLong();
-	private AtomicLong connectCount = new AtomicLong();
+	private final LongAdder sessionOpenCount = new LongAdder();
+	private final LongAdder sessionCloseCount = new LongAdder();
+	private final LongAdder flushCount = new LongAdder();
+	private final LongAdder connectCount = new LongAdder();
 
-	private AtomicLong prepareStatementCount = new AtomicLong();
-	private AtomicLong closeStatementCount = new AtomicLong();
+	private final LongAdder prepareStatementCount = new LongAdder();
+	private final LongAdder closeStatementCount = new LongAdder();
 
-	private AtomicLong entityLoadCount = new AtomicLong();
-	private AtomicLong entityUpdateCount = new AtomicLong();
-	private AtomicLong entityInsertCount = new AtomicLong();
-	private AtomicLong entityDeleteCount = new AtomicLong();
-	private AtomicLong entityFetchCount = new AtomicLong();
-	private AtomicLong collectionLoadCount = new AtomicLong();
-	private AtomicLong collectionUpdateCount = new AtomicLong();
-	private AtomicLong collectionRemoveCount = new AtomicLong();
-	private AtomicLong collectionRecreateCount = new AtomicLong();
-	private AtomicLong collectionFetchCount = new AtomicLong();
+	private final LongAdder entityLoadCount = new LongAdder();
+	private final LongAdder entityUpdateCount = new LongAdder();
+	private final LongAdder entityInsertCount = new LongAdder();
+	private final LongAdder entityDeleteCount = new LongAdder();
+	private final LongAdder entityFetchCount = new LongAdder();
+	private final LongAdder collectionLoadCount = new LongAdder();
+	private final LongAdder collectionUpdateCount = new LongAdder();
+	private final LongAdder collectionRemoveCount = new LongAdder();
+	private final LongAdder collectionRecreateCount = new LongAdder();
+	private final LongAdder collectionFetchCount = new LongAdder();
 
-	private AtomicLong secondLevelCacheHitCount = new AtomicLong();
-	private AtomicLong secondLevelCacheMissCount = new AtomicLong();
-	private AtomicLong secondLevelCachePutCount = new AtomicLong();
+	private final LongAdder secondLevelCacheHitCount = new LongAdder();
+	private final LongAdder secondLevelCacheMissCount = new LongAdder();
+	private final LongAdder secondLevelCachePutCount = new LongAdder();
 	
-	private AtomicLong naturalIdCacheHitCount = new AtomicLong();
-	private AtomicLong naturalIdCacheMissCount = new AtomicLong();
-	private AtomicLong naturalIdCachePutCount = new AtomicLong();
-	private AtomicLong naturalIdQueryExecutionCount = new AtomicLong();
-	private AtomicLong naturalIdQueryExecutionMaxTime = new AtomicLong();
+	private final LongAdder naturalIdCacheHitCount = new LongAdder();
+	private final LongAdder naturalIdCacheMissCount = new LongAdder();
+	private final LongAdder naturalIdCachePutCount = new LongAdder();
+	private final LongAdder naturalIdQueryExecutionCount = new LongAdder();
+	private final AtomicLong naturalIdQueryExecutionMaxTime = new AtomicLong();
 	private volatile String naturalIdQueryExecutionMaxTimeRegion;
 	private volatile String naturalIdQueryExecutionMaxTimeEntity;
 
-	private AtomicLong queryExecutionCount = new AtomicLong();
-	private AtomicLong queryExecutionMaxTime = new AtomicLong();
+	private final LongAdder queryExecutionCount = new LongAdder();
+	private final AtomicLong queryExecutionMaxTime = new AtomicLong();
 	private volatile String queryExecutionMaxTimeQueryString;
-	private AtomicLong queryCacheHitCount = new AtomicLong();
-	private AtomicLong queryCacheMissCount = new AtomicLong();
-	private AtomicLong queryCachePutCount = new AtomicLong();
+	private final LongAdder queryCacheHitCount = new LongAdder();
+	private final LongAdder queryCacheMissCount = new LongAdder();
+	private final LongAdder queryCachePutCount = new LongAdder();
 
-	private AtomicLong updateTimestampsCacheHitCount = new AtomicLong();
-	private AtomicLong updateTimestampsCacheMissCount = new AtomicLong();
-	private AtomicLong updateTimestampsCachePutCount = new AtomicLong();
+	private final LongAdder updateTimestampsCacheHitCount = new LongAdder();
+	private final LongAdder updateTimestampsCacheMissCount = new LongAdder();
+	private final LongAdder updateTimestampsCachePutCount = new LongAdder();
 
-	private AtomicLong committedTransactionCount = new AtomicLong();
-	private AtomicLong transactionCount = new AtomicLong();
+	private final LongAdder committedTransactionCount = new LongAdder();
+	private final LongAdder transactionCount = new LongAdder();
 
-	private AtomicLong optimisticFailureCount = new AtomicLong();
+	private final LongAdder optimisticFailureCount = new LongAdder();
 
 	private final ConcurrentMap<String,EntityStatisticsImpl> entityStatsMap = new ConcurrentHashMap();
 	private final ConcurrentMap<String,NaturalIdStatisticsImpl> naturalIdQueryStatsMap = new ConcurrentHashMap();
@@ -103,7 +104,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@SuppressWarnings({ "UnusedDeclaration" })
 	public StatisticsImpl() {
-		clear();
+		this( null );
 	}
 
 	public StatisticsImpl(SessionFactoryImplementor sessionFactory) {
@@ -115,53 +116,53 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	 * reset all statistics
 	 */
 	public void clear() {
-		secondLevelCacheHitCount.set( 0 );
-		secondLevelCacheMissCount.set( 0 );
-		secondLevelCachePutCount.set( 0 );
+		secondLevelCacheHitCount.reset();
+		secondLevelCacheMissCount.reset();
+		secondLevelCachePutCount.reset();
 		
-		naturalIdCacheHitCount.set( 0 );
-		naturalIdCacheMissCount.set( 0 );
-		naturalIdCachePutCount.set( 0 );
-		naturalIdQueryExecutionCount.set( 0 );
-		naturalIdQueryExecutionMaxTime.set( 0 );
+		naturalIdCacheHitCount.reset();
+		naturalIdCacheMissCount.reset();
+		naturalIdCachePutCount.reset();
+		naturalIdQueryExecutionCount.reset();
+		naturalIdQueryExecutionMaxTime.set( 0L );
 		naturalIdQueryExecutionMaxTimeRegion = null;
 		naturalIdQueryExecutionMaxTimeEntity = null;
 
-		sessionCloseCount.set( 0 );
-		sessionOpenCount.set( 0 );
-		flushCount.set( 0 );
-		connectCount.set( 0 );
+		sessionCloseCount.reset();
+		sessionOpenCount.reset();
+		flushCount.reset();
+		connectCount.reset();
 
-		prepareStatementCount.set( 0 );
-		closeStatementCount.set( 0 );
+		prepareStatementCount.reset();
+		closeStatementCount.reset();
 
-		entityDeleteCount.set( 0 );
-		entityInsertCount.set( 0 );
-		entityUpdateCount.set( 0 );
-		entityLoadCount.set( 0 );
-		entityFetchCount.set( 0 );
+		entityDeleteCount.reset();
+		entityInsertCount.reset();
+		entityUpdateCount.reset();
+		entityLoadCount.reset();
+		entityFetchCount.reset();
 
-		collectionRemoveCount.set( 0 );
-		collectionUpdateCount.set( 0 );
-		collectionRecreateCount.set( 0 );
-		collectionLoadCount.set( 0 );
-		collectionFetchCount.set( 0 );
+		collectionRemoveCount.reset();
+		collectionUpdateCount.reset();
+		collectionRecreateCount.reset();
+		collectionLoadCount.reset();
+		collectionFetchCount.reset();
 
-		queryExecutionCount.set( 0 );
-		queryCacheHitCount.set( 0 );
-		queryExecutionMaxTime.set( 0 );
+		queryExecutionCount.reset();
+		queryCacheHitCount.reset();
+		queryExecutionMaxTime.set( 0L );
 		queryExecutionMaxTimeQueryString = null;
-		queryCacheMissCount.set( 0 );
-		queryCachePutCount.set( 0 );
+		queryCacheMissCount.reset();
+		queryCachePutCount.reset();
 
-		updateTimestampsCacheMissCount.set( 0 );
-		updateTimestampsCacheHitCount.set( 0 );
-		updateTimestampsCachePutCount.set( 0 );
+		updateTimestampsCacheMissCount.reset();
+		updateTimestampsCacheHitCount.reset();
+		updateTimestampsCachePutCount.reset();
 
-		transactionCount.set( 0 );
-		committedTransactionCount.set( 0 );
+		transactionCount.reset();
+		committedTransactionCount.reset();
 
-		optimisticFailureCount.set( 0 );
+		optimisticFailureCount.reset();
 
 		entityStatsMap.clear();
 		collectionStatsMap.clear();
@@ -217,87 +218,87 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public long getEntityLoadCount() {
-		return entityLoadCount.get();
+		return entityLoadCount.sum();
 	}
 
 	@Override
 	public long getEntityFetchCount() {
-		return entityFetchCount.get();
+		return entityFetchCount.sum();
 	}
 
 	@Override
 	public long getEntityDeleteCount() {
-		return entityDeleteCount.get();
+		return entityDeleteCount.sum();
 	}
 
 	@Override
 	public long getEntityInsertCount() {
-		return entityInsertCount.get();
+		return entityInsertCount.sum();
 	}
 
 	@Override
 	public long getEntityUpdateCount() {
-		return entityUpdateCount.get();
+		return entityUpdateCount.sum();
 	}
 
 	@Override
 	public long getOptimisticFailureCount() {
-		return optimisticFailureCount.get();
+		return optimisticFailureCount.sum();
 	}
 
 	@Override
 	public void loadEntity(String entityName) {
-		entityLoadCount.getAndIncrement();
+		entityLoadCount.increment();
 		getEntityStatistics( entityName ).incrementLoadCount();
 	}
 
 	@Override
 	public void fetchEntity(String entityName) {
-		entityFetchCount.getAndIncrement();
+		entityFetchCount.increment();
 		getEntityStatistics( entityName ).incrementFetchCount();
 	}
 
 	@Override
 	public void updateEntity(String entityName) {
-		entityUpdateCount.getAndIncrement();
+		entityUpdateCount.increment();
 		getEntityStatistics( entityName ).incrementUpdateCount();
 	}
 
 	@Override
 	public void insertEntity(String entityName) {
-		entityInsertCount.getAndIncrement();
+		entityInsertCount.increment();
 		getEntityStatistics( entityName ).incrementInsertCount();
 	}
 
 	@Override
 	public void deleteEntity(String entityName) {
-		entityDeleteCount.getAndIncrement();
+		entityDeleteCount.increment();
 		getEntityStatistics( entityName ).incrementDeleteCount();
 	}
 
 	@Override
 	public void optimisticFailure(String entityName) {
-		optimisticFailureCount.getAndIncrement();
+		optimisticFailureCount.increment();
 		getEntityStatistics( entityName ).incrementOptimisticFailureCount();
 	}
 
 	@Override
 	public void entityCachePut(NavigableRole entityName, String regionName) {
-		secondLevelCachePutCount.getAndIncrement();
+		secondLevelCachePutCount.increment();
 		getDomainDataRegionStatistics( regionName ).incrementPutCount();
 		getEntityStatistics( entityName.getFullPath() ).incrementCachePutCount();
 	}
 
 	@Override
 	public void entityCacheHit(NavigableRole entityName, String regionName) {
-		secondLevelCacheHitCount.getAndIncrement();
+		secondLevelCacheHitCount.increment();
 		getDomainDataRegionStatistics( regionName ).incrementHitCount();
 		getEntityStatistics( entityName.getFullPath() ).incrementCacheHitCount();
 	}
 
 	@Override
 	public void entityCacheMiss(NavigableRole entityName, String regionName) {
-		secondLevelCacheMissCount.getAndIncrement();
+		secondLevelCacheMissCount.increment();
 		getDomainDataRegionStatistics( regionName ).incrementMissCount();
 		getEntityStatistics( entityName.getFullPath() ).incrementCacheMissCount();
 	}
@@ -330,76 +331,76 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public long getCollectionLoadCount() {
-		return collectionLoadCount.get();
+		return collectionLoadCount.sum();
 	}
 
 	@Override
 	public long getCollectionFetchCount() {
-		return collectionFetchCount.get();
+		return collectionFetchCount.sum();
 	}
 
 	@Override
 	public long getCollectionUpdateCount() {
-		return collectionUpdateCount.get();
+		return collectionUpdateCount.sum();
 	}
 
 	@Override
 	public long getCollectionRemoveCount() {
-		return collectionRemoveCount.get();
+		return collectionRemoveCount.sum();
 	}
 
 	@Override
 	public long getCollectionRecreateCount() {
-		return collectionRecreateCount.get();
+		return collectionRecreateCount.sum();
 	}
 
 	@Override
 	public void loadCollection(String role) {
-		collectionLoadCount.getAndIncrement();
+		collectionLoadCount.increment();
 		getCollectionStatistics( role ).incrementLoadCount();
 	}
 
 	@Override
 	public void fetchCollection(String role) {
-		collectionFetchCount.getAndIncrement();
+		collectionFetchCount.increment();
 		getCollectionStatistics( role ).incrementFetchCount();
 	}
 
 	@Override
 	public void updateCollection(String role) {
-		collectionUpdateCount.getAndIncrement();
+		collectionUpdateCount.increment();
 		getCollectionStatistics( role ).incrementUpdateCount();
 	}
 
 	@Override
 	public void recreateCollection(String role) {
-		collectionRecreateCount.getAndIncrement();
+		collectionRecreateCount.increment();
 		getCollectionStatistics( role ).incrementRecreateCount();
 	}
 
 	@Override
 	public void removeCollection(String role) {
-		collectionRemoveCount.getAndIncrement();
+		collectionRemoveCount.increment();
 		getCollectionStatistics( role ).incrementRemoveCount();
 	}
 
 	@Override
 	public void collectionCachePut(NavigableRole collectionRole, String regionName) {
-		secondLevelCachePutCount.getAndIncrement();
+		secondLevelCachePutCount.increment();
 		getDomainDataRegionStatistics( regionName ).incrementPutCount();
 		getCollectionStatistics( collectionRole.getFullPath() ).incrementCachePutCount();
 	}
 
 	@Override
 	public void collectionCacheHit(NavigableRole collectionRole, String regionName) {
-		secondLevelCacheHitCount.getAndIncrement();
+		secondLevelCacheHitCount.increment();
 		getDomainDataRegionStatistics( regionName ).incrementHitCount();
 		getCollectionStatistics( collectionRole.getFullPath() ).incrementCacheHitCount();
 	}
 
 	@Override
 	public void collectionCacheMiss(NavigableRole collectionRole, String regionName) {
-		secondLevelCacheMissCount.getAndIncrement();
+		secondLevelCacheMissCount.increment();
 		getDomainDataRegionStatistics( regionName ).incrementMissCount();
 		getCollectionStatistics( collectionRole.getFullPath() ).incrementCacheMissCount();
 	}
@@ -439,7 +440,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public long getNaturalIdQueryExecutionCount() {
-		return naturalIdQueryExecutionCount.get();
+		return naturalIdQueryExecutionCount.sum();
 	}
 
 	@Override
@@ -459,24 +460,24 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public long getNaturalIdCacheHitCount() {
-		return naturalIdCacheHitCount.get();
+		return naturalIdCacheHitCount.sum();
 	}
 
 	@Override
 	public long getNaturalIdCacheMissCount() {
-		return naturalIdCacheMissCount.get();
+		return naturalIdCacheMissCount.sum();
 	}
 
 	@Override
 	public long getNaturalIdCachePutCount() {
-		return naturalIdCachePutCount.get();
+		return naturalIdCachePutCount.sum();
 	}
 
 	@Override
 	public void naturalIdCachePut(
 			NavigableRole rootEntityName,
 			String regionName) {
-		naturalIdCachePutCount.getAndIncrement();
+		naturalIdCachePutCount.increment();
 
 		getDomainDataRegionStatistics( regionName ).incrementPutCount();
 
@@ -489,7 +490,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	public void naturalIdCacheHit(
 			NavigableRole rootEntityName,
 			String regionName) {
-		naturalIdCacheHitCount.getAndIncrement();
+		naturalIdCacheHitCount.increment();
 
 		getDomainDataRegionStatistics( regionName ).incrementHitCount();
 
@@ -502,7 +503,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	public void naturalIdCacheMiss(
 			NavigableRole rootEntityName,
 			String regionName) {
-		naturalIdCacheMissCount.getAndIncrement();
+		naturalIdCacheMissCount.increment();
 
 		getDomainDataRegionStatistics( regionName ).incrementMissCount();
 
@@ -519,7 +520,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public void naturalIdQueryExecuted(String rootEntityName, long time) {
-		naturalIdQueryExecutionCount.getAndIncrement();
+		naturalIdQueryExecutionCount.increment();
 
 		boolean isLongestQuery;
 		//noinspection StatementWithEmptyBody
@@ -624,10 +625,12 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		return l2CacheStatsMap.computeIfAbsent(
 				regionName,
 				s -> {
-					final Region region = sessionFactory.getCache().getRegion( regionName );
+					Region region = sessionFactory.getCache().getRegion( regionName );
 
 					if ( region == null ) {
-						throw new IllegalArgumentException( "Unknown cache region : " + regionName );
+						// this is the pre-5.3 behavior.  and since this is a pre-5.3 method it should behave consistently
+						// NOTE that this method is deprecated
+						region = sessionFactory.getCache().getQueryResultsCache( regionName ).getRegion();
 					}
 
 					return new CacheRegionStatisticsImpl( region );
@@ -637,52 +640,55 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public CacheRegionStatisticsImpl getSecondLevelCacheStatistics(String regionName) {
+		if ( sessionFactory == null ) {
+			return null;
+		}
 		return getCacheRegionStatistics( sessionFactory.getCache().unqualifyRegionName( regionName ) );
 	}
 
 	@Override
 	public long getSecondLevelCacheHitCount() {
-		return secondLevelCacheHitCount.get();
+		return secondLevelCacheHitCount.sum();
 	}
 
 	@Override
 	public long getSecondLevelCacheMissCount() {
-		return secondLevelCacheMissCount.get();
+		return secondLevelCacheMissCount.sum();
 	}
 
 	@Override
 	public long getSecondLevelCachePutCount() {
-		return secondLevelCachePutCount.get();
+		return secondLevelCachePutCount.sum();
 	}
 
 	@Override
 	public long getUpdateTimestampsCacheHitCount() {
-		return updateTimestampsCacheHitCount.get();
+		return updateTimestampsCacheHitCount.sum();
 	}
 
 	@Override
 	public long getUpdateTimestampsCacheMissCount() {
-		return updateTimestampsCacheMissCount.get();
+		return updateTimestampsCacheMissCount.sum();
 	}
 
 	@Override
 	public long getUpdateTimestampsCachePutCount() {
-		return updateTimestampsCachePutCount.get();
+		return updateTimestampsCachePutCount.sum();
 	}
 
 	@Override
 	public void updateTimestampsCacheHit() {
-		updateTimestampsCacheHitCount.getAndIncrement();
+		updateTimestampsCacheHitCount.increment();
 	}
 
 	@Override
 	public void updateTimestampsCacheMiss() {
-		updateTimestampsCacheMissCount.getAndIncrement();
+		updateTimestampsCacheMissCount.increment();
 	}
 
 	@Override
 	public void updateTimestampsCachePut() {
-		updateTimestampsCachePutCount.getAndIncrement();
+		updateTimestampsCachePutCount.increment();
 	}
 
 
@@ -704,22 +710,22 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public long getQueryExecutionCount() {
-		return queryExecutionCount.get();
+		return queryExecutionCount.sum();
 	}
 
 	@Override
 	public long getQueryCacheHitCount() {
-		return queryCacheHitCount.get();
+		return queryCacheHitCount.sum();
 	}
 
 	@Override
 	public long getQueryCacheMissCount() {
-		return queryCacheMissCount.get();
+		return queryCacheMissCount.sum();
 	}
 
 	@Override
 	public long getQueryCachePutCount() {
-		return queryCachePutCount.get();
+		return queryCachePutCount.sum();
 	}
 
 	@Override
@@ -735,7 +741,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	@Override
 	public void queryExecuted(String hql, int rows, long time) {
 		LOG.hql(hql, time, (long) rows );
-		queryExecutionCount.getAndIncrement();
+		queryExecutionCount.increment();
 
 		boolean isLongestQuery;
 		//noinspection StatementWithEmptyBody
@@ -758,7 +764,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	public void queryCacheHit(String hql, String regionName) {
 		LOG.tracef( "Statistics#queryCacheHit( `%s`, `%s` )", hql, regionName );
 
-		queryCacheHitCount.getAndIncrement();
+		queryCacheHitCount.increment();
 
 		getQueryRegionStats( regionName ).incrementHitCount();
 
@@ -779,7 +785,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	public void queryCacheMiss(String hql, String regionName) {
 		LOG.tracef( "Statistics#queryCacheMiss( `%s`, `%s` )", hql, regionName );
 
-		queryCacheMissCount.getAndIncrement();
+		queryCacheMissCount.increment();
 
 		getQueryRegionStats( regionName ).incrementMissCount();
 
@@ -792,7 +798,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	public void queryCachePut(String hql, String regionName) {
 		LOG.tracef( "Statistics#queryCachePut( `%s`, `%s` )", hql, regionName );
 
-		queryCachePutCount.getAndIncrement();
+		queryCachePutCount.increment();
 
 		getQueryRegionStats( regionName ).incrementPutCount();
 
@@ -808,79 +814,79 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public long getSessionOpenCount() {
-		return sessionOpenCount.get();
+		return sessionOpenCount.sum();
 	}
 
 	@Override
 	public long getSessionCloseCount() {
-		return sessionCloseCount.get();
+		return sessionCloseCount.sum();
 	}
 
 	@Override
 	public long getFlushCount() {
-		return flushCount.get();
+		return flushCount.sum();
 	}
 
 	@Override
 	public long getConnectCount() {
-		return connectCount.get();
+		return connectCount.sum();
 	}
 
 	@Override
 	public long getSuccessfulTransactionCount() {
-		return committedTransactionCount.get();
+		return committedTransactionCount.sum();
 	}
 
 	@Override
 	public long getTransactionCount() {
-		return transactionCount.get();
+		return transactionCount.sum();
 	}
 
 	@Override
 	public long getCloseStatementCount() {
-		return closeStatementCount.get();
+		return closeStatementCount.sum();
 	}
 
 	@Override
 	public long getPrepareStatementCount() {
-		return prepareStatementCount.get();
+		return prepareStatementCount.sum();
 	}
 
 	@Override
 	public void openSession() {
-		sessionOpenCount.getAndIncrement();
+		sessionOpenCount.increment();
 	}
 
 	@Override
 	public void closeSession() {
-		sessionCloseCount.getAndIncrement();
+		sessionCloseCount.increment();
 	}
 
 	@Override
 	public void flush() {
-		flushCount.getAndIncrement();
+		flushCount.increment();
 	}
 
 	@Override
 	public void connect() {
-		connectCount.getAndIncrement();
+		connectCount.increment();
 	}
 
 	@Override
 	public void prepareStatement() {
-		prepareStatementCount.getAndIncrement();
+		prepareStatementCount.increment();
 	}
 
 	@Override
 	public void closeStatement() {
-		closeStatementCount.getAndIncrement();
+		closeStatementCount.increment();
 	}
 
 	@Override
 	public void endTransaction(boolean success) {
-		transactionCount.getAndIncrement();
+		transactionCount.increment();
 		if ( success ) {
-			committedTransactionCount.getAndIncrement();
+			committedTransactionCount.increment();
 		}
 	}
 
@@ -890,40 +896,40 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	public void logSummary() {
 		LOG.loggingStatistics();
 		LOG.startTime( startTime );
-		LOG.sessionsOpened( sessionOpenCount.get() );
-		LOG.sessionsClosed( sessionCloseCount.get() );
-		LOG.transactions( transactionCount.get() );
-		LOG.successfulTransactions( committedTransactionCount.get() );
-		LOG.optimisticLockFailures( optimisticFailureCount.get() );
-		LOG.flushes( flushCount.get() );
-		LOG.connectionsObtained( connectCount.get() );
-		LOG.statementsPrepared( prepareStatementCount.get() );
-		LOG.statementsClosed( closeStatementCount.get() );
-		LOG.secondLevelCachePuts( secondLevelCachePutCount.get() );
-		LOG.secondLevelCacheHits( secondLevelCacheHitCount.get() );
-		LOG.secondLevelCacheMisses( secondLevelCacheMissCount.get() );
-		LOG.entitiesLoaded( entityLoadCount.get() );
-		LOG.entitiesUpdated( entityUpdateCount.get() );
-		LOG.entitiesInserted( entityInsertCount.get() );
-		LOG.entitiesDeleted( entityDeleteCount.get() );
-		LOG.entitiesFetched( entityFetchCount.get() );
-		LOG.collectionsLoaded( collectionLoadCount.get() );
-		LOG.collectionsUpdated( collectionUpdateCount.get() );
-		LOG.collectionsRemoved( collectionRemoveCount.get() );
-		LOG.collectionsRecreated( collectionRecreateCount.get() );
-		LOG.collectionsFetched( collectionFetchCount.get() );
-		LOG.naturalIdCachePuts( naturalIdCachePutCount.get() );
-		LOG.naturalIdCacheHits( naturalIdCacheHitCount.get() );
-		LOG.naturalIdCacheMisses( naturalIdCacheMissCount.get() );
+		LOG.sessionsOpened( sessionOpenCount.sum() );
+		LOG.sessionsClosed( sessionCloseCount.sum() );
+		LOG.transactions( transactionCount.sum() );
+		LOG.successfulTransactions( committedTransactionCount.sum() );
+		LOG.optimisticLockFailures( optimisticFailureCount.sum() );
+		LOG.flushes( flushCount.sum() );
+		LOG.connectionsObtained( connectCount.sum() );
+		LOG.statementsPrepared( prepareStatementCount.sum() );
+		LOG.statementsClosed( closeStatementCount.sum() );
+		LOG.secondLevelCachePuts( secondLevelCachePutCount.sum() );
+		LOG.secondLevelCacheHits( secondLevelCacheHitCount.sum() );
+		LOG.secondLevelCacheMisses( secondLevelCacheMissCount.sum() );
+		LOG.entitiesLoaded( entityLoadCount.sum() );
+		LOG.entitiesUpdated( entityUpdateCount.sum() );
+		LOG.entitiesInserted( entityInsertCount.sum() );
+		LOG.entitiesDeleted( entityDeleteCount.sum() );
+		LOG.entitiesFetched( entityFetchCount.sum() );
+		LOG.collectionsLoaded( collectionLoadCount.sum() );
+		LOG.collectionsUpdated( collectionUpdateCount.sum() );
+		LOG.collectionsRemoved( collectionRemoveCount.sum() );
+		LOG.collectionsRecreated( collectionRecreateCount.sum() );
+		LOG.collectionsFetched( collectionFetchCount.sum() );
+		LOG.naturalIdCachePuts( naturalIdCachePutCount.sum() );
+		LOG.naturalIdCacheHits( naturalIdCacheHitCount.sum() );
+		LOG.naturalIdCacheMisses( naturalIdCacheMissCount.sum() );
 		LOG.naturalIdMaxQueryTime( naturalIdQueryExecutionMaxTime.get() );
-		LOG.naturalIdQueriesExecuted( naturalIdQueryExecutionCount.get() );
-		LOG.queriesExecuted( queryExecutionCount.get() );
-		LOG.queryCachePuts( queryCachePutCount.get() );
-		LOG.timestampCachePuts( updateTimestampsCachePutCount.get() );
-		LOG.timestampCacheHits( updateTimestampsCacheHitCount.get() );
-		LOG.timestampCacheMisses( updateTimestampsCacheMissCount.get() );
-		LOG.queryCacheHits( queryCacheHitCount.get() );
-		LOG.queryCacheMisses( queryCacheMissCount.get() );
+		LOG.naturalIdQueriesExecuted( naturalIdQueryExecutionCount.sum() );
+		LOG.queriesExecuted( queryExecutionCount.sum() );
+		LOG.queryCachePuts( queryCachePutCount.sum() );
+		LOG.timestampCachePuts( updateTimestampsCachePutCount.sum() );
+		LOG.timestampCacheHits( updateTimestampsCacheHitCount.sum() );
+		LOG.timestampCacheMisses( updateTimestampsCacheMissCount.sum() );
+		LOG.queryCacheHits( queryCacheHitCount.sum() );
+		LOG.queryCacheMisses( queryCacheMissCount.sum() );
 		LOG.maxQueryTime( queryExecutionMaxTime.get() );
 	}
 

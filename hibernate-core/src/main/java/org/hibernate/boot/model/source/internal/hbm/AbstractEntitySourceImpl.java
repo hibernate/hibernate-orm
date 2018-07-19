@@ -11,11 +11,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.EntityMode;
-import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.hbm.spi.EntityInfo;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmEntityBaseDefinition;
@@ -46,7 +44,6 @@ import org.hibernate.boot.model.source.spi.SubclassEntitySource;
 import org.hibernate.boot.model.source.spi.ToolingHintContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.internal.util.compare.EqualsHelper;
 
 /**
  * @author Steve Ebersole

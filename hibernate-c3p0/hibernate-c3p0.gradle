@@ -14,6 +14,8 @@ dependencies {
     compile( libraries.c3p0 )
 
     testCompile project( ':hibernate-testing' )
+    testCompile( libraries.mockito )
+    testCompile( libraries.mockito_inline )
 
     testCompile( libraries.validator ) {
         // for test runtime

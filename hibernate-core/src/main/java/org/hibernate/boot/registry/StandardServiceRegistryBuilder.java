@@ -208,6 +208,10 @@ public class StandardServiceRegistryBuilder {
 		return this;
 	}
 
+	public void clearSettings() {
+		settings.clear();
+	}
+
 	/**
 	 * Adds a service initiator.
 	 *

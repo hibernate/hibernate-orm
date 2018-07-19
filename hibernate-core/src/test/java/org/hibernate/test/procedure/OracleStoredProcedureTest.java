@@ -1,3 +1,9 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
 package org.hibernate.test.procedure;
 
 import java.math.BigDecimal;
@@ -27,6 +33,8 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
+import org.hibernate.type.NumericBooleanType;
+import org.hibernate.type.YesNoType;
 
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialect;
@@ -54,7 +62,8 @@ public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCa
         return new Class<?>[] {
             Person.class,
             Phone.class,
-			IdHolder.class
+			IdHolder.class,
+			Vote.class
         };
     }
 
@@ -147,7 +156,8 @@ public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCa
 						"            pr.version AS \"pr.version\", " +
 						"            ph.id AS \"ph.id\", " +
 						"            ph.person_id AS \"ph.person_id\", " +
-						"            ph.phone_number AS \"ph.phone_number\" " +
+						"            ph.phone_number AS \"ph.phone_number\", " +
+						"            ph.valid AS \"ph.valid\" " +
 						"       FROM person pr " +
 						"       JOIN phone ph ON pr.id = ph.person_id " +
 						"       WHERE pr.id = personId; " +
@@ -172,6 +182,30 @@ public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCa
                         "    FROM dual; " +
 						"	 SELECT 1 INTO p_value FROM dual; " +
                         "  END; "
+					);
+					statement.executeUpdate(
+						"CREATE OR REPLACE PROCEDURE sp_phone_validity ( " +
+						"   validity IN NUMBER, " +
+						"   personPhones OUT SYS_REFCURSOR ) " +
+						"AS  " +
+						"BEGIN " +
+						"    OPEN personPhones FOR " +
+						"    SELECT phone_number " +
+						"    FROM phone " +
+						"    WHERE valid = validity; " +
+						"END;"
+					);
+					statement.executeUpdate(
+						"CREATE OR REPLACE PROCEDURE sp_votes ( " +
+						"   validity IN CHAR, " +
+						"   votes OUT SYS_REFCURSOR ) " +
+						"AS  " +
+						"BEGIN " +
+						"    OPEN votes FOR " +
+						"    SELECT id " +
+						"    FROM vote " +
+						"    WHERE vote_choice = validity; " +
+						"END;"
 					);
 				} finally {
 					if ( statement != null ) {
@@ -198,11 +232,13 @@ public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCa
 
             Phone phone1 = new Phone( "123-456-7890" );
             phone1.setId( 1L );
+            phone1.setValid( true );
 
             person1.addPhone( phone1 );
 
             Phone phone2 = new Phone( "098_765-4321" );
             phone2.setId( 2L );
+			phone2.setValid( false );
 
             person1.addPhone( phone2 );
 
@@ -457,5 +493,48 @@ public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCa
 
 			assertEquals( value, function.getOutputParameterValue( 2 ) );
         } );
+    }
+
+    @Test
+    @TestForIssue( jiraKey = "HHH-12661")
+    public void testBindParameterAsHibernateType() {
+
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            StoredProcedureQuery query = entityManager.createStoredProcedureQuery("sp_phone_validity")
+			.registerStoredProcedureParameter( 1, NumericBooleanType.class, ParameterMode.IN )
+			.registerStoredProcedureParameter( 2, Class.class, ParameterMode.REF_CURSOR )
+			.setParameter( 1, true );
+
+			query.execute();
+			List phones = query.getResultList();
+			assertEquals( 1, phones.size() );
+			assertEquals( "123-456-7890", phones.get( 0 ) );
+        } );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Vote vote1 = new Vote();
+			vote1.setId( 1L );
+			vote1.setVoteChoice( true );
+
+			entityManager.persist( vote1 );
+
+			Vote vote2 = new Vote();
+			vote2.setId( 2L );
+			vote2.setVoteChoice( false );
+
+			entityManager.persist( vote2 );
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			StoredProcedureQuery query = entityManager.createStoredProcedureQuery("sp_votes")
+			.registerStoredProcedureParameter( 1, YesNoType.class, ParameterMode.IN )
+			.registerStoredProcedureParameter( 2, Class.class, ParameterMode.REF_CURSOR )
+			.setParameter( 1, true );
+
+			query.execute();
+			List votes = query.getResultList();
+			assertEquals( 1, votes.size() );
+			assertEquals( 1, ((Number) votes.get( 0 )).intValue() );
+		} );
     }
 }

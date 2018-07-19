@@ -8,6 +8,8 @@ package org.hibernate.bytecode.enhance.internal.javassist;
 
 import java.util.Collection;
 import java.util.Locale;
+import java.util.Objects;
+
 import javax.persistence.EmbeddedId;
 import javax.persistence.Id;
 
@@ -15,14 +17,12 @@ import javassist.CtClass;
 import javassist.CtField;
 import javassist.NotFoundException;
 
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
-import org.hibernate.internal.util.compare.EqualsHelper;
 
 /**
  * utility class to generate interceptor methods
  * @see org.hibernate.engine.spi.PersistentAttributeInterceptor
- * 
+ *
  * @author <a href="mailto:lbarreiro@redhat.com">Luis Barreiro</a>
  */
 public abstract class AttributeTypeDescriptor {
@@ -66,8 +66,8 @@ public abstract class AttributeTypeDescriptor {
 				}
 				builder.append(
 						String.format(
-								"  if ( !%s.areEqual( %s, $1 ) )",
-								EqualsHelper.class.getName(),
+								"  if ( !%s.deepEquals( %s, $1 ) )",
+								Objects.class.getName(),
 								readFragment
 						)
 				);

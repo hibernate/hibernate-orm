@@ -45,6 +45,7 @@ dependencies {
     compile( libraries.jta )
     compile( libraries.jandex )
     compile( libraries.classmate )
+    compile( libraries.activation )
 
     // We need dom4j for a number of things temporarily:
     //      1) (unsupported) EntityMode.DOM4J support
@@ -52,7 +53,6 @@ dependencies {
     //      3) hibernate-commons-annotations
     compile( libraries.dom4j )
     compile( libraries.commons_annotations )
-
     antlr( libraries.antlr )
 
     provided( libraries.jacc )
@@ -90,8 +90,9 @@ dependencies {
     testRuntime( libraries.javassist )
     testRuntime( libraries.byteBuddy )
     testRuntime( libraries.weld )
+    testRuntime(libraries.wildfly_transaction_client)
 
-    testCompile( project( ':hibernate-jpamodelgen' ) )
+	testCompile( project( ':hibernate-jpamodelgen' ) )
 
     testCompile libraries.arquillian_junit_container
     testCompile libraries.arquillian_protocol_servlet
@@ -117,10 +118,6 @@ jar {
             // TODO: Shouldn't have to explicitly list this, but the plugin
             // generates it with a [1.0,2) version.
             "javax.persistence;version=\"${project.jpaVersion.osgiName}\"",
-            // Temporarily support JTA 1.1 -- Karaf and other frameworks still
-            // use it.  Without this, the plugin generates [1.2,2).
-            // build.gradle adds javax.transaction for all modules
-            'javax.transaction.xa;version="[1.1,2)"',
             // optionals
             'javax.management;resolution:=optional',
             'javax.naming.event;resolution:=optional',
@@ -216,7 +213,7 @@ processTestResources {
             include 'arquillian.xml'
             include 'org/hibernate/test/wf/ddl/manifest.mf'
             expand wildFlyInstallDir: project( ':hibernate-orm-modules' ).wildFlyInstallDir,
-                   hibernateMajorMinorVersion: "${project.hibernateMajorMinorVersion}",
+                   hibernateMajorMinorVersion: "${project.ormVersion.family}",
                    arquillianDeploymentExportDir: "${rootProject.buildDir.absolutePath}/arquillian-deployments"
         }
     }
@@ -226,6 +223,8 @@ test.dependsOn ':hibernate-orm-modules:prepareWildFlyForTests'
 
 test {
     systemProperty 'file.encoding', 'utf-8'
+    //Set the port-offset to match the offset in arquillian.xml
+    systemProperty 'jboss.socket.binding.port-offset', '137'
     beforeTest { descriptor ->
         //println "Starting test: " + descriptor
     }

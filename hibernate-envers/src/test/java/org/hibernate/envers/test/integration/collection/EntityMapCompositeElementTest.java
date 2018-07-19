@@ -78,7 +78,7 @@ public class EntityMapCompositeElementTest extends BaseEnversJPAFunctionalTestCa
 
 		final Value value = category.getValue( this.item );
 		assertEquals( "The Value", value.getText() );
-		assertEquals( Long.valueOf( 4711L ), value.getNumber() );
+		assertEquals( Long.valueOf( 4711L ), value.getNumberValue() );
 	}
 
 	@Override
@@ -213,15 +213,15 @@ public class EntityMapCompositeElementTest extends BaseEnversJPAFunctionalTestCa
 
 	public static class Value implements Serializable {
 		private String text;
-		private Long number;
+		private Long numberValue;
 
 		Value() {
 
 		}
 
-		Value(String text, Long number) {
+		Value(String text, Long numberValue) {
 			this.text = text;
-			this.number = number;
+			this.numberValue = numberValue;
 		}
 
 		public String getText() {
@@ -232,12 +232,12 @@ public class EntityMapCompositeElementTest extends BaseEnversJPAFunctionalTestCa
 			this.text = text;
 		}
 
-		public Long getNumber() {
-			return number;
+		public Long getNumberValue() {
+			return numberValue;
 		}
 
-		public void setNumber(Long number) {
-			this.number = number;
+		public void setNumberValue(Long numberValue) {
+			this.numberValue = numberValue;
 		}
 	}
 }

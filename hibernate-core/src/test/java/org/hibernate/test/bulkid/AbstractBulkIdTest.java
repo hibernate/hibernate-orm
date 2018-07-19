@@ -10,8 +10,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;
 import org.junit.Test;
@@ -89,12 +87,10 @@ public abstract class AbstractBulkIdTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testDeleteFromPerson() {
 		doInHibernate( this::sessionFactory, session -> {
-			//tag::batch-bulk-hql-temp-table-delete-query-example[]
 			int updateCount = session.createQuery(
 				"delete from Person where employed = :employed" )
 			.setParameter( "employed", false )
 			.executeUpdate();
-			//end::batch-bulk-hql-temp-table-delete-query-example[]
 			assertEquals( entityCount(), updateCount );
 		});
 	}
@@ -109,7 +105,6 @@ public abstract class AbstractBulkIdTest extends BaseCoreFunctionalTestCase {
 		});
 	}
 
-	//tag::batch-bulk-hql-temp-table-base-class-example[]
 	@Entity(name = "Person")
 	@Inheritance(strategy = InheritanceType.JOINED)
 	public static class Person {

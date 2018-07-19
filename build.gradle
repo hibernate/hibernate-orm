@@ -9,8 +9,8 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 buildscript {
 	repositories {
-		mavenCentral()
 		jcenter()
+		mavenCentral()
 		maven {
 			name "jboss-snapshots"
 			url "http://snapshots.jboss.org/maven2/"
@@ -18,12 +18,13 @@ buildscript {
 	}
 	dependencies {
 		classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
-		classpath 'org.hibernate.build.gradle:hibernate-matrix-testing:2.0.0-SNAPSHOT'
+		classpath 'org.hibernate.build.gradle:hibernate-matrix-testing:2.0.0.Final'
 		classpath 'org.hibernate.build.gradle:version-injection-plugin:1.0.0'
 		classpath 'org.hibernate.build.gradle:gradle-xjc-plugin:1.0.2.Final'
-		classpath 'com.github.lburgazzoli:lb-karaf-features-gen:1.0.0-SNAPSHOT'
-		classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.2'
-		classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
+		classpath 'gradle.plugin.com.github.lburgazzoli:gradle-karaf-plugin:0.1.1'
+		classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.7'
+		classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.3'
+		classpath 'de.thetaphi:forbiddenapis:2.5'
 	}
 }
 
@@ -40,6 +41,7 @@ allprojects {
 			url "http://snapshots.jboss.org/maven2/"
 		}
 	}
+	apply plugin: 'idea'
 
 	// minimize changes, at least for now (gradle uses 'build' by default)..
 	buildDir = "target"
@@ -55,6 +57,14 @@ task release {
 	description = "The task performed when we are performing a release build.  Relies on " +
 			"the fact that subprojects will appropriately define a release task " +
 			"themselves if they have any release-related activities to perform"
+
+	// Force to release with JDK 8. Releasing with JDK 11 is not supported yet:
+	// - the hibernate-orm-modules tests do not run due to an issue with the ASM version currently used by Gradle
+	doFirst {
+		if ( !JavaVersion.current().isJava8() ) {
+			throw new IllegalStateException( "Please use JDK 8 to perform the release." )
+		}
+	}
 }
 
 task publish {
@@ -76,9 +86,9 @@ task ciBuild {
 }
 
 
-task wrapper(type: Wrapper) {
-	gradleVersion = '4.6'
-	distributionType = 'ALL'
+wrapper {
+	gradleVersion = '4.8.1'
+	distributionType = Wrapper.DistributionType.ALL
 }
 
 
@@ -106,14 +116,6 @@ buildScan {
 //    module {
 //        name = "hibernate-orm"
 //    }
-//}
-
-
-
-
-//allprojects {
-//	apply plugin: 'idea'
-//	apply plugin: 'eclipse'
 //}
 
 

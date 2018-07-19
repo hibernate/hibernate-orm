@@ -39,7 +39,7 @@
         </set>
         <bag name="systems" table="USER_SYSTEM" lazy="true" inverse="false" cascade="all">
             <key column="USER_ID" property-ref="userId" />
-            <element type="string" column="SYSTEM" />
+            <element type="string" column="SYSTEM_ID" />
         </bag>
     </class>
 

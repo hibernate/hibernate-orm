@@ -10,6 +10,7 @@ import java.util.UUID;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.UUIDGenerationStrategy;
+import org.hibernate.internal.build.AllowSysOut;
 import org.hibernate.internal.util.BytesHelper;
 
 /**
@@ -62,11 +63,12 @@ public class CustomVersionOneStrategy implements UUIDGenerationStrategy {
 		System.arraycopy( BytesHelper.fromInt( loTime ), 0, loBits, 2, 4 );
 		System.arraycopy( Helper.getCountBytes(), 0, loBits, 6, 2 );
 		loBits[0] &= 0x3f;
-		loBits[0] |= ((byte)2 << (byte)6);
+		loBits[0] |= ((byte)2 << (byte)6 );
 
 		return BytesHelper.asLong( loBits );
 	}
 
+	@AllowSysOut
 	public static void main(String[] args) {
 		CustomVersionOneStrategy strategy = new CustomVersionOneStrategy();
 

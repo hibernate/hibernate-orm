@@ -128,3 +128,21 @@ Use the following command:
     gradle clean compile -Pdb=pgsql
 
 _*NOTE : If you are running tests against a JDBC driver that is not available via Maven central (generally due to license nonsense - Oracle, DB2, etc) be sure to add these drivers to your local Maven repo cache (~/.m2/repository) or (better) add it to a personal Maven repo server*_
+
+Running database-specific tests from the IDE using "profiles"
+-------------------------------------------------------------
+
+You can run any test on any particular database that is configured in a `databases.gradle` profile.
+
+All you have to do is run the following command:
+
+    gradlew setDataBase -Pdb=pgsql
+    
+or you can use the shortcut version:    
+
+    gradlew sDB -Pdb=pgsql
+    
+You can do this from the module which you are interested in testing or from the `hibernate-orm` root folder.
+
+Afterward, just pick any test from the IDE and run it as usual. Hibernate will pick the database configuration from the `hibernate.properties`
+file that was set up by the `setDataBase` Gradle task.

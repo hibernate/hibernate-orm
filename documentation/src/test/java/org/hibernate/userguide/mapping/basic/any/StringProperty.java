@@ -26,6 +26,19 @@ public class StringProperty implements Property<String> {
     @Column(name = "`value`")
     private String value;
 
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public String getValue() {
+        return value;
+    }
+
+    //Getters and setters omitted for brevity
+//end::mapping-column-any-property-example[]
+
     public Long getId() {
         return id;
     }
@@ -34,21 +47,13 @@ public class StringProperty implements Property<String> {
         this.id = id;
     }
 
-    @Override
-    public String getName() {
-        return name;
-    }
-
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getValue() {
-        return value;
     }
 
     public void setValue(String value) {
         this.value = value;
     }
+//tag::mapping-column-any-property-example[]
 }
 //end::mapping-column-any-property-example[]

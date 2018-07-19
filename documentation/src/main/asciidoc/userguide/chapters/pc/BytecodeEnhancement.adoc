@@ -108,8 +108,17 @@ These are hard to discuss without diving into a discussion of Hibernate internal
 ===== Run-time enhancement
 
 Currently, run-time enhancement of the domain model is only supported in managed JPA environments following the JPA-defined SPI for performing class transformations.
-Even then, this support is disabled by default.
-To enable run-time enhancement, specify `hibernate.ejb.use_class_enhancer`=`true` as a persistent unit property.
+
+Even then, this support is disabled by default. To enable run-time enhancement, specify one of the following configuration properties:
+
+`*hibernate.enhancer.enableDirtyTracking*` (e.g. `true` or `false` (default value))::
+Enable dirty tracking feature in runtime bytecode enhancement.
+
+`*hibernate.enhancer.enableLazyInitialization*` (e.g. `true` or `false` (default value))::
+Enable lazy loading feature in runtime bytecode enhancement. This way, even basic types (e.g. `@Basic(fetch = FetchType.LAZY`)) can be fetched lazily.
+
+`*hibernate.enhancer.enableAssociationManagement*` (e.g. `true` or `false` (default value))::
+Enable association management feature in runtime bytecode enhancement which automatically synchronizes a bidirectional association when only one side is changed.
 
 [NOTE]
 ====

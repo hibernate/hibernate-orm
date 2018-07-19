@@ -66,10 +66,18 @@ If enabled, Hibernate will operate in the JPA specified way, throwing exceptions
 The JPA spec says that a `javax.persistence.EntityNotFoundException` should be thrown when accessing an entity Proxy
 which does not have an associated table row in the database.
 +
-Traditionally, Hibernate does not initialize an entity Proxy when accessing its identifier since we already know the identifier value,
+Traditionally, Hibernate does not initialize an entity proxy when accessing its identifier since we already know the identifier value,
 hence we can save a database roundtrip.
 +
-If enabled Hibernate will initialize the entity Proxy even when accessing its identifier.
+If enabled Hibernate will initialize the entity proxy even when accessing its identifier.
+
+`*hibernate.jpa.compliance.global_id_generators*` (e.g. `true` or `false` (default value) )::
+The JPA spec says that the scope of TableGenerator and SequenceGenerator names is global to the persistence unit (across all generator types).
++
+Traditionally, Hibernate has considered the names locally scoped.
++
+If enabled, the names used by `@TableGenerator` and `@SequenceGenerator` will be considered global so configuring two different generators
+with the same name will cause a `java.lang.IllegalArgumentException' to be thrown at boot time.
 
 [[configurations-database-connection]]
 === Database connection properties
@@ -393,6 +401,9 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 `*hibernate.bytecode.use_reflection_optimizer*` (e.g. `true` or `false` (default value))::
 Should we use reflection optimization? The reflection optimizer implements the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/bytecode/spi/ReflectionOptimizer.html[`ReflectionOptimizer`] interface and improves entity instantiation and property getter/setter calls.
 
+`*hibernate.bytecode.enforce_legacy_proxy_classnames*` (e.g. `true` or `false` (default value))::
+Some other libraries, such as Spring, used to depend on a specific naming pattern used for proxy classes generated at runtime. Set this to `true` to have proxy class names conform to the old pattern.
+
 [[configurations-query]]
 === Query settings
 
@@ -599,12 +610,12 @@ The default value of this setting is determined by the value for `hibernate.gene
 [[configurations-cache]]
 === Cache Properties
 
-`*hibernate.cache.region.factory_class*` (e.g. `org.hibernate.cache.infinispan.InfinispanRegionFactory`)::
-The fully-qualified name of the `RegionFactory` implementation class.
+`*hibernate.cache.region.factory_class*` (e.g. `jcache`)::
+Either a shortcut name (e.g. `jcache`, `ehcache`) or the fully-qualified name of the `RegionFactory` implementation class.
 
 `*hibernate.cache.default_cache_concurrency_strategy*`::
 Setting used to give the name of the default https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CacheConcurrencyStrategy.html[`CacheConcurrencyStrategy`] to use
-when either `@javax.persistence.Cacheable` or `@org.hibernate.annotations.Cache`.  `@org.hibernate.annotations.Cache` is used to override the global setting.
+when either `@javax.persistence.Cacheable` or `@org.hibernate.annotations.Cache`. `@org.hibernate.annotations.Cache` is used to override the global setting.
 
 `*hibernate.cache.use_minimal_puts*` (e.g. `true` (default value) or `false`)::
 Optimizes second-level cache operation to minimize writes, at the cost of more frequent reads. This is most useful for clustered caches and is enabled by default for clustered cache implementations.
@@ -639,17 +650,8 @@ Sets the associated collection cache concurrency strategy for the designated reg
 [[configurations-infinispan]]
 === Infinispan properties
 
-`*hibernate.cache.infinispan.cfg*` (e.g. `org/hibernate/cache/infinispan/builder/infinispan-configs.xml`)::
-Classpath or filesystem resource containing the Infinispan configuration settings.
-
-`*hibernate.cache.infinispan.statistics*`::
-Property name that controls whether Infinispan statistics are enabled. The property value is expected to be a boolean true or false, and it overrides statistic configuration in base Infinispan configuration, if provided.
-
-`*hibernate.cache.infinispan.use_synchronization*`::
-Deprecated setting because Infinispan is designed to always register a `Synchronization` for `TRANSACTIONAL` caches.
-
-`*hibernate.cache.infinispan.cachemanager*` (e.g. There is no default value, the user must specify the property.)::
-Specifies the JNDI name under which the `EmbeddedCacheManager` is bound.
+For more details about how to customize the Infinispan second-level cache provider, check out the
+http://infinispan.org/docs/stable/user_guide/user_guide.html#configuration_properties[Infinispan User Guide]
 
 [[configurations-transactions]]
 === Transactions properties
@@ -978,7 +980,7 @@ The property name defines the role (e.g. `allowed`) and the entity class name (e
 `*hibernate.jacc_context_id*`::
 A String identifying the policy context whose PolicyConfiguration interface is to be returned. The value passed to this parameter must not be null.
 
-[[configurations-misc]]
+[[configurations-classloader]]
 === ClassLoaders properties
 
 `*hibernate.classLoaders*`::
@@ -1016,6 +1018,9 @@ Like a `PersisterClassResolver`, the `PersisterFactory` can be used to customize
 
 `*hibernate.service.allow_crawling*` (e.g. `true` (default value) or `false`)::
 Crawl all available service bindings for an alternate registration of a given Hibernate `Service`.
+
+`*hibernate.metadata_builder_contributor*` (e.g. The instance, the class or the fully qualified class name of an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/boot/spi/MetadataBuilderContributor.html[`MetadataBuilderContributor`])::
+Used to define a instance, the class or the fully qualified class name of an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/boot/spi/MetadataBuilderContributor.html[`MetadataBuilderContributor`] which can be used to configure the `MetadataBuilder` when bootstrapping via the JPA `EntityManagerFactory`.
 
 [[configurations-misc]]
 === Miscellaneous properties

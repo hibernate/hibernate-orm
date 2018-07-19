@@ -6,13 +6,13 @@
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 
 import org.hibernate.AssertionFailure;
@@ -104,7 +104,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Array;
@@ -1684,7 +1683,7 @@ public class ModelBinder {
 				continue;
 			}
 
-			if (  EqualsHelper.equals( tableName, determinedName ) ) {
+			if ( Objects.equals( tableName, determinedName ) ) {
 				continue;
 			}
 
@@ -1715,7 +1714,7 @@ public class ModelBinder {
 		for ( RelationalValueSource relationalValueSource : relationalValueSources ) {
 			// We need to get the containing table name for both columns and formulas,
 			// particularly when a column/formula is for a property on a secondary table.
-			if ( EqualsHelper.equals( tableName, relationalValueSource.getContainingTableName() ) ) {
+			if ( Objects.equals( tableName, relationalValueSource.getContainingTableName() ) ) {
 				continue;
 			}
 

@@ -40,6 +40,7 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 	private final String[] keyColumnNames;
 	private final Return rootReturn;
 	private final LoadQueryJoinAndFetchProcessor queryProcessor;
+	private final QueryBuildingParameters buildingParameters;
 	private String sqlStatement;
 	private ResultSetProcessor resultSetProcessor;
 
@@ -58,7 +59,30 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 		this.keyColumnNames = keyColumnNames;
 		this.rootReturn = rootReturn;
 		this.loadPlan = loadPlan;
-		this.queryProcessor = new LoadQueryJoinAndFetchProcessor( aliasResolutionContext, buildingParameters, factory );
+		this.queryProcessor = new LoadQueryJoinAndFetchProcessor(
+				aliasResolutionContext, buildingParameters.getQueryInfluencers(), factory
+		);
+		this.buildingParameters = buildingParameters;
+	}
+
+	/**
+	 * Constructs an AbstractLoadQueryDetails object from an initial object and new building parameters,
+	 * with the guarantee that only batch size changed between the initial parameters and the new ones.
+	 *
+	 * @param initialLoadQueryDetails The initial object to be copied
+	 * @param buildingParameters The new building parameters, with only the batch size being different
+	 * from the parameters used in the initial object.
+	 */
+	protected AbstractLoadQueryDetails(
+			AbstractLoadQueryDetails initialLoadQueryDetails,
+			QueryBuildingParameters buildingParameters) {
+		this.keyColumnNames = initialLoadQueryDetails.keyColumnNames;
+		this.rootReturn = initialLoadQueryDetails.rootReturn;
+		this.loadPlan = initialLoadQueryDetails.loadPlan;
+		this.queryProcessor = new LoadQueryJoinAndFetchProcessor(
+				initialLoadQueryDetails.queryProcessor, buildingParameters.getQueryInfluencers()
+		);
+		this.buildingParameters = buildingParameters;
 	}
 
 	protected QuerySpace getQuerySpace(String querySpaceUid) {
@@ -84,12 +108,21 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 	}
 
 	protected final QueryBuildingParameters getQueryBuildingParameters() {
-		return queryProcessor.getQueryBuildingParameters();
+		return buildingParameters;
 	}
 
 	protected final SessionFactoryImplementor getSessionFactory() {
 		return queryProcessor.getSessionFactory();
 	}
+
+	protected LoadPlan getLoadPlan() {
+		return loadPlan;
+	}
+
+	protected String[] getKeyColumnNames() {
+		return keyColumnNames;
+	}
+
 	/**
 	 * Main entry point for properly handling the FROM clause and and joins and restrictions
 	 *

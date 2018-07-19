@@ -164,7 +164,7 @@ In terms of execution, JPA `Query` offers 2 different methods for retrieving a r
 * `Query#getResultList()` - executes the select query and returns back the list of results.
 * `Query#getSingleResult()` - executes the select query and returns a single result. If there were more than one result an exception is thrown.
 
-[[hql-api-list-example]]
+[[jpql-api-list-example]]
 .JPA `getResultList()` result
 ====
 [source, JAVA, indent=0]
@@ -173,7 +173,7 @@ include::{sourcedir}/HQLTest.java[tags=jpql-api-list-example]
 ----
 ====
 
-[[hql-api-unique-result-example]]
+[[jpql-api-unique-result-example]]
 .JPA `getSingleResult()`
 ====
 [source, JAVA, indent=0]
@@ -968,14 +968,20 @@ include::{sourcedir}/HQLTest.java[tags=hql-polymorphism-example, indent=0]
 
 This query names the `Payment` entity explicitly.
 However, all subclasses of `Payment` are also available to the query.
-So if the `CreditCardPayment` and `WireTransferPayment` entities extend the `Payment` class, all three types would be available to the entity query,
+So, if the `CreditCardPayment` and `WireTransferPayment` entities extend the `Payment` class, all three types would be available to the entity query,
 and the query would return instances of all three.
+
+
+This behavior can be altered in two ways:
+
+- by limiting the query to select only from the subclass entity
+- by using either the `org.hibernate.annotations.Polymorphism` annotation (global, and Hibernate-specific). See the <<chapters/domain/inheritance.adoc#entity-inheritance-polymorphism, `@Polymorphism` section for more info about this use case>>.
 
 [NOTE]
 ====
-This can be altered by using either the `org.hibernate.annotations.Polymorphism` annotation (global, and Hibernate-specific) or limiting them using in the query itself using an entity type expression.
+The HQL query `from java.lang.Object` is totally valid (although not very practical from a performance perspective)!
 
-The HQL query `from java.lang.Object` is totally valid! It returns every object of every type defined in your application.
+It returns every object of every entity type defined by your application mappings.
 ====
 
 [[hql-expressions]]

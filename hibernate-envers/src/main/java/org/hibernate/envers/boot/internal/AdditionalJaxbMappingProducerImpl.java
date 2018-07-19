@@ -18,10 +18,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.dom4j.Document;
-import org.dom4j.DocumentException;
-import org.dom4j.io.OutputFormat;
-import org.dom4j.io.XMLWriter;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
@@ -34,8 +30,14 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.envers.configuration.internal.MappingCollector;
 import org.hibernate.service.ServiceRegistry;
+
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
+
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.io.OutputFormat;
+import org.dom4j.io.XMLWriter;
 
 /**
  * @author Steve Ebersole
@@ -115,7 +117,7 @@ public class AdditionalJaxbMappingProducerImpl implements AdditionalJaxbMappingP
 			w.flush();
 		}
 		catch (IOException e1) {
-			e1.printStackTrace();
+			throw new RuntimeException( "Error dumping enhanced class", e1 );
 		}
 
 		log.tracef( "Envers-generate entity mapping -----------------------------\n%s", baos.toString() );

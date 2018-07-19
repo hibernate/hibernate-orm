@@ -3,6 +3,7 @@
 :modeldir: ../../../../../main/java/org/hibernate/userguide/model
 :sourcedir: ../../../../../test/java/org/hibernate/userguide/mapping
 :resourcedir: ../../../../../test/resources/org/hibernate/userguide/
+:converter-sourcedir: ../../../../../../../hibernate-core/src/test/java/org/hibernate/test/converter
 :extrasdir: extras
 
 Basic value types usually map a single database column, to a single, non-aggregated Java type.
@@ -39,7 +40,7 @@ Internally Hibernate uses a registry of basic types when it needs to resolve a s
 |CalendarType |TIMESTAMP |java.util.Calendar |calendar, java.util.Calendar
 |CalendarDateType |DATE |java.util.Calendar |calendar_date
 |CalendarTimeType |TIME |java.util.Calendar |calendar_time
-|CurrencyType |java.util.Currency |VARCHAR |currency, java.util.Currency
+|CurrencyType |VARCHAR |java.util.Currency |currency, java.util.Currency
 |LocaleType |VARCHAR |java.util.Locale |locale, java.utility.locale
 |TimeZoneType |VARCHAR, using the TimeZone ID |java.util.TimeZone |timezone, java.util.TimeZone
 |UrlType |VARCHAR |java.net.URL |url, java.net.URL
@@ -536,6 +537,66 @@ JPA explicitly disallows the use of an AttributeConverter with an attribute mark
 So if using the AttributeConverter approach, be sure not to mark the attribute as `@Enumerated`.
 ====
 
+[[basic-attribute-converter-query-parameter]]
+====== Using the AttributeConverter entity property as a query parameter
+
+Assuming you have the following entity:
+
+[[basic-attribute-converter-query-parameter-entity-example]]
+.`Photo` entity with `AttributeConverter`
+====
+[source, JAVA, indent=0]
+----
+include::{converter-sourcedir}/ConverterTest.java[tags=basic-attribute-converter-query-parameter-entity-example]
+----
+====
+
+And the `Caption` class looks as follows:
+
+[[basic-attribute-converter-query-parameter-object-example]]
+.`Caption` Java object
+====
+[source, JAVA, indent=0]
+----
+include::{converter-sourcedir}/ConverterTest.java[tags=basic-attribute-converter-query-parameter-object-example]
+----
+====
+
+And we have an `AttributeConverter` to handle the `Caption` Java object:
+
+[[basic-attribute-converter-query-parameter-converter-example]]
+.`Caption` Java object AttributeConverter
+====
+[source, JAVA, indent=0]
+----
+include::{converter-sourcedir}/ConverterTest.java[tags=basic-attribute-converter-query-parameter-converter-example]
+----
+====
+
+Traditionally, you could only use the dbData `Caption` representation, which in our case is a `String`, when referencing the `caption` entity property.
+
+[[basic-attribute-converter-query-parameter-converter-dbdata-example]]
+.Filtering by the `Caption` property using the DB data representation
+====
+[source, JAVA, indent=0]
+----
+include::{converter-sourcedir}/ConverterTest.java[tags=basic-attribute-converter-query-parameter-converter-dbdata-example]
+----
+====
+
+In order to use the Java object `Caption` representation, you have to get the associated Hibernate `Type`.
+
+[[basic-attribute-converter-query-parameter-converter-object-example]]
+.Filtering by the `Caption` property using the Java Object representation
+====
+[source, JAVA, indent=0]
+----
+include::{converter-sourcedir}/ConverterTest.java[tags=basic-attribute-converter-query-parameter-converter-object-example]
+----
+====
+
+By passing the associated Hibernate `Type`, you can use the `Caption` object when binding the query parameter value.
+
 [[basic-hbm-attribute-converter]]
 ====== Mapping an AttributeConverter using HBM mappings
 
@@ -626,7 +687,7 @@ They allow the JDBC driver to stream parts of the LOB data as needed, potentiall
 However they can be unnatural to deal with and have certain limitations.
 For example, a LOB locator is only portably valid during the duration of the transaction in which it was obtained.
 
-The idea of materialized LOBs is to trade-off the potential efficiency (not all drivers handle LOB data efficiently) for a more natural programming paradigm using familiar Java types such as String or byte[], etc for these LOBs.
+The idea of materialized LOBs is to trade-off the potential efficiency (not all drivers handle LOB data efficiently) for a more natural programming paradigm using familiar Java types such as `String` or `byte[]`, etc for these LOBs.
 
 Materialized deals with the entire LOB contents in memory, whereas LOB locators (in theory) allow streaming parts of the LOB contents into memory as needed.
 
@@ -639,7 +700,12 @@ The JDBC LOB locator types include:
 Mapping materialized forms of these LOB values would use more familiar Java types such as `String`, `char[]`, `byte[]`, etc.
 The trade off for _more familiar_ is usually performance.
 
+[[basic-clob]]
+===== Mapping CLOB
+
 For a first look, let's assume we have a `CLOB` column that we would like to map (`NCLOB` character `LOB` data will be covered in <<basic-nationalized>> section).
+
+Considering we have the following database table:
 
 [[basic-clob-sql-example]]
 .CLOB - SQL
@@ -661,7 +727,7 @@ include::{sourcedir}/basic/ClobTest.java[tags=basic-clob-example]
 ----
 ====
 
-To persist such an entity, you have to create a `Clob` using plain JDBC:
+To persist such an entity, you have to create a `Clob` using the `ClobProxy` Hibernate utility:
 
 [[basic-clob-persist-example]]
 .Persisting a `java.sql.Clob` entity
@@ -698,11 +764,11 @@ include::{sourcedir}/basic/ClobStringTest.java[tags=basic-clob-string-example]
 ====
 How JDBC deals with `LOB` data varies from driver to driver, and Hibernate tries to handle all these variances on your behalf.
 
-However, some drivers are trickier (e.g. PostgreSQL JDBC drivers), and, in such cases, you may have to do some extra to get LOBs working.
+However, some drivers are trickier (e.g. PostgreSQL), and, in such cases, you may have to do some extra to get LOBs working.
 Such discussions are beyond the scope of this guide.
 ====
 
-We might even want the materialized data as a char array (for some crazy reason).
+We might even want the materialized data as a char array (although this might not be a very good idea).
 
 [[basic-clob-char-array-example]]
 .CLOB - materialized `char[]` mapping
@@ -713,7 +779,12 @@ include::{sourcedir}/basic/ClobCharArrayTest.java[tags=basic-clob-char-array-exa
 ----
 ====
 
+[[basic-blob]]
+===== Mapping BLOB
+
 `BLOB` data is mapped in a similar fashion.
+
+Considering we have the following database table:
 
 [[basic-blob-sql-example]]
 .BLOB - SQL
@@ -735,7 +806,7 @@ include::{sourcedir}/basic/BlobTest.java[tags=basic-blob-example]
 ----
 ====
 
-To persist such an entity, you have to create a `Blob` using plain JDBC:
+To persist such an entity, you have to create a `Blob` using the `BlobProxy` Hibernate utility:
 
 [[basic-blob-persist-example]]
 .Persisting a `java.sql.Blob` entity
@@ -746,7 +817,7 @@ include::{sourcedir}/basic/BlobTest.java[tags=basic-blob-persist-example]
 ----
 ====
 
-To retrieve the `Blob` content, you need to transform the underlying `java.io.Reader`:
+To retrieve the `Blob` content, you need to transform the underlying `java.io.InputStream`:
 
 [[basic-blob-find-example]]
 .Returning a `java.sql.Blob` entity
@@ -778,6 +849,8 @@ To this end it added specific nationalized character data types.
 * `NVARCHAR`
 * `LONGNVARCHAR`
 * `NCLOB`
+
+Considering we have the following database table:
 
 [[basic-nationalized-sql-example]]
 .`NVARCHAR` - SQL
@@ -821,7 +894,7 @@ include::{sourcedir}/basic/NClobTest.java[tags=basic-nclob-example]
 ----
 ====
 
-To persist such an entity, you have to create a `NClob` using plain JDBC:
+To persist such an entity, you have to create a `NClob` using the `NClobProxy` Hibernate utility:
 
 [[basic-nclob-persist-example]]
 .Persisting a `java.sql.NClob` entity
@@ -894,7 +967,7 @@ Chosen as the default simply because it is generally more efficient from storage
 
 Maps the UUID to a String using `java.util.UUID#toString` and `java.util.UUID#fromString` and stores that as `CHAR` or `VARCHAR` data.
 
-==== PostgeSQL-specific UUID
+==== PostgreSQL-specific UUID
 
 [IMPORTANT]
 ====
@@ -1088,10 +1161,10 @@ it also supports `AttributeConverter` as well.
 
 With a custom `AttributeConverter`, the application developer can map a given JDBC type to an entity basic type.
 
-In the following example, the `java.util.Period` is going to be mapped to a `VARCHAR` database column.
+In the following example, the `java.time.Period` is going to be mapped to a `VARCHAR` database column.
 
 [[basic-jpa-convert-period-string-converter-example]]
-.`java.util.Period` custom `AttributeConverter`
+.`java.time.Period` custom `AttributeConverter`
 ====
 [source, JAVA, indent=0]
 ----
@@ -1102,7 +1175,7 @@ include::{sourcedir}/converter/PeriodStringConverter.java[tags=basic-jpa-convert
 To make use of this custom converter, the `@Convert` annotation must decorate the entity attribute.
 
 [[basic-jpa-convert-period-string-converter-mapping-example]]
-.Entity using the custom `java.util.Period` `AttributeConverter` mapping
+.Entity using the custom `java.time.Period` `AttributeConverter` mapping
 ====
 [source, JAVA, indent=0]
 ----
@@ -1500,7 +1573,7 @@ But `@ValueGenerationType` exposes more features than what `@Generated` currentl
 to leverage some of those features, you'd simply wire up a new generator annotation.
 
 As you'll see in the following examples, the `@ValueGenerationType` meta-annotation is used when declaring the custom annotation used to mark the entity properties that need a specific generation strategy.
-The actual generation logic must be implemented in class that implements the `AnnotationValueGeneration` interface.
+The actual generation logic must be added to the class that implements the `AnnotationValueGeneration` interface.
 
 [[mapping-database-generated-value]]
 ====== Database-generated values
@@ -1649,7 +1722,7 @@ The SQL fragment can be as complex as you want and even include subselects.
 [[mapping-column-where]]
 ==== `@Where`
 
-Sometimes, you want to filter out entities or collections using a custom SQL criteria.
+Sometimes, you want to filter out entities or collections using custom SQL criteria.
 This can be achieved using the `@Where` annotation, which can be applied to entities and collections.
 
 [[mapping-where-example]]
@@ -1756,19 +1829,40 @@ include::{sourcedir}/basic/WhereJoinTableTest.java[tags=mapping-where-join-table
 [[mapping-column-filter]]
 ==== `@Filter`
 
-The `@Filter` annotation is another way to filter out entities or collections using a custom SQL criteria, for both entities and collections.
+The `@Filter` annotation is another way to filter out entities or collections using custom SQL criteria.
 Unlike the `@Where` annotation, `@Filter` allows you to parameterize the filter clause at runtime.
 
-[[mapping-filter-example]]
-.`@Filter` mapping usage
+Now, considering we have the following `Account` entity:
+
+[[mapping-filter-account-example]]
+.`@Filter` mapping entity-level usage
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/basic/FilterTest.java[tags=mapping-filter-example]
+include::{sourcedir}/basic/FilterTest.java[tags=mapping-filter-Account-example]
 ----
 ====
 
-If the database contains the following entities:
+[NOTE]
+====
+Notice that the `active` property is mapped to the `active_status` column.
+
+This mapping was done to show you that the `@Filter` condition uses a SQL condition, and not a JPQL filtering criteria.
+====
+
+As already explained, we can also apply the `@Filter` annotation for collections as illustrated by the `Client` entity:
+
+[[mapping-filter-client-example]]
+.`@Filter` mapping collection-level usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/FilterTest.java[tags=mapping-filter-Client-example]
+----
+====
+
+If we persist a `Client` with three associated `Account` entities,
+Hibernate will execute the following SQL statements:
 
 [[mapping-filter-persistence-example]]
 .Persisting and fetching entities with a `@Filter` mapping
@@ -1785,6 +1879,21 @@ include::{extrasdir}/basic/mapping-filter-persistence-example.sql[]
 ====
 
 By default, without explicitly enabling the filter, Hibernate is going to fetch all `Account` entities.
+
+[[mapping-no-filter-entity-query-example]]
+.Query entities mapped without activating the `@Filter`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/FilterTest.java[tags=mapping-no-filter-entity-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-no-filter-entity-query-example.sql[]
+----
+====
+
 If the filter is enabled and the filter parameter value is provided,
 then Hibernate is going to apply the filtering criteria to the associated `Account` entities.
 
@@ -1805,6 +1914,7 @@ include::{extrasdir}/basic/mapping-filter-entity-query-example.sql[]
 [IMPORTANT]
 ====
 Filters apply to entity queries, but not to direct fetching.
+
 Therefore, in the following example, the filter is not taken into consideration when fetching an entity from the Persistence Context.
 
 [[mapping-filter-entity-example]]
@@ -1823,7 +1933,22 @@ As you can see from the example above, contrary to an entity query, the filter d
 ====
 
 Just like with entity queries, collections can be filtered as well, but only if the filter is explicitly enabled on the currently running Hibernate `Session`.
-This way, when fetching the `accounts` collections, Hibernate is going to apply the `@Filter` clause filtering criteria to the associated collection entries.
+
+[[mapping-no-filter-collection-query-example]]
+.Traversing collections without activating the `@Filter`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/FilterTest.java[tags=mapping-no-filter-collection-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-no-filter-collection-query-example.sql[]
+----
+====
+
+When activating the `@Filter` and fetching the `accounts` collections, Hibernate is going to apply the filter condition to the associated collection entries.
 
 [[mapping-filter-collection-query-example]]
 .Traversing collections mapped with `@Filter`
@@ -1849,7 +1974,7 @@ The main advantage of `@Filter` over the `@Where` clause is that the filtering c
 It's not possible to combine the `@Filter` and `@Cache` collection annotations.
 This limitation is due to ensuring consistency and because the filtering information is not stored in the second-level cache.
 
-If caching was allowed for a currently filtered collection, then the second-level cache would store only a subset of the whole collection.
+If caching were allowed for a currently filtered collection, then the second-level cache would store only a subset of the whole collection.
 Afterward, every other Session will get the filtered collection from the cache, even if the Session-level filters have not been explicitly activated.
 
 For this reason, the second-level collection cache is limited to storing whole collections, and not subsets.
@@ -1861,7 +1986,7 @@ For this reason, the second-level collection cache is limited to storing whole c
 When using the `@Filter` annotation with collections, the filtering is done against the child entries (entities or embeddables).
 However, if you have a link table between the parent entity and the child table, then you need to use the `@FilterJoinTable` to filter child entries according to some column contained in the join table.
 
-The `@FilterJoinTable` annotation can be, therefore, applied to a unidirectional `@OneToMany` collection as illustrate din the following mapping:
+The `@FilterJoinTable` annotation can be, therefore, applied to a unidirectional `@OneToMany` collection as illustrated in the following mapping:
 
 [[mapping-filter-join-table-example]]
 .`@FilterJoinTable` mapping usage
@@ -1872,7 +1997,11 @@ include::{sourcedir}/basic/FilterJoinTableTest.java[tags=mapping-filter-join-tab
 ----
 ====
 
-If the database contains the following entities:
+The `firstAccounts` filter will allow us to get only the `Account` entities that have the `order_id`
+(which tells the position of every entry inside the `accounts` collection)
+less than a given number (e.g. `maxOrderId`).
+
+Let's assume our database contains the following entities:
 
 [[mapping-filter-join-table-persistence-example]]
 .Persisting and fetching entities with a `@FilterJoinTable` mapping
@@ -1888,10 +2017,26 @@ include::{extrasdir}/basic/mapping-filter-join-table-persistence-example.sql[]
 ----
 ====
 
-The collections can be filtered if the associated filter is enabled on the currently running Hibernate `Session`.
-This way, when fetching the `accounts` collections, Hibernate is going to apply the `@FilterJoinTable` clause filtering criteria to the associated collection entries.
+The collections can be filtered only if the associated filter is enabled on the currently running Hibernate `Session`.
 
-[[mapping-filter-collection-query-example]]
+[[mapping-no-filter-join-table-collection-query-example]]
+.Traversing collections mapped with `@FilterJoinTable` without enabling the filter
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/FilterJoinTableTest.java[tags=mapping-no-filter-join-table-collection-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-no-filter-join-table-collection-query-example.sql[]
+----
+====
+
+If we enable the filter and set the `maxOrderId` to `1`, when fetching the `accounts` collections, Hibernate is going to apply the `@FilterJoinTable` clause filtering criteria, and we will get just
+`2` `Account` entities, with the `order_id` values of `0` and `1`.
+
+[[mapping-filter-join-table-collection-query-example]]
 .Traversing collections mapped with `@FilterJoinTable`
 ====
 [source, JAVA, indent=0]
@@ -2014,19 +2159,40 @@ include::{sourcedir}/basic/any/package-info.java[tags=mapping-column-any-meta-de
 It is recommended to place the `@AnyMetaDef` mapping as a package metadata.
 ====
 
-To see how the `@Any` annotation in action, consider the following example:
+To see the `@Any` annotation in action, consider the next examples.
 
-[[mapping-column-any-persistence-example]]
-.`@Any` mapping usage
+If we persist an `IntegerProperty` as well as a `StringProperty` entity, and associate
+the `StringProperty` entity with a `PropertyHolder`,
+Hibernate will generate the following SQL queries:
+
+[[mapping-column-any-persist-example]]
+.`@Any` mapping persist example
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/basic/any/AnyTest.java[tags=mapping-column-any-persistence-example]
+include::{sourcedir}/basic/any/AnyTest.java[tags=mapping-column-any-persist-example]
 ----
 
 [source, SQL, indent=0]
 ----
-include::{extrasdir}/basic/mapping-column-any-persistence-example.sql[]
+include::{extrasdir}/basic/mapping-column-any-persist-example.sql[]
+----
+====
+
+When fetching the `PropertyHolder` entity and navigating its `property` association,
+Hibernate will fetch the associated `StringProperty` entity like this:
+
+[[mapping-column-any-query-example]]
+.`@Any` mapping query example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/any/AnyTest.java[tags=mapping-column-any-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-column-any-query-example.sql[]
 ----
 ====
 
@@ -2037,6 +2203,7 @@ The `@Any` mapping is useful to emulate a `@ManyToOne` association when there ca
 To emulate a `@OneToMany` association, the `@ManyToAny` annotation must be used.
 
 In the following example, the `PropertyRepository` entity has a collection of `Property` entities.
+
 The `repository_properties` link table holds the associations between `PropertyRepository` and `Property` entities.
 
 [[mapping-column-many-to-any-example]]
@@ -2053,20 +2220,40 @@ include::{extrasdir}/basic/mapping-column-many-to-any-example.sql[]
 ----
 ====
 
+To see the `@ManyToAny` annotation in action, consider the next examples.
 
-To see how the `@ManyToAny` annotation works, consider the following example:
+If we persist an `IntegerProperty` as well as a `StringProperty` entity,
+and associate both of them with a `PropertyRepository` parent entity,
+Hibernate will generate the following SQL queries:
 
-[[mapping-column-many-to-any-persistence-example]]
-.`@Any` mapping usage
+[[mapping-column-many-to-any-persist-example]]
+.`@ManyToAny` mapping persist example
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/basic/any/ManyToAnyTest.java[tags=mapping-column-many-to-any-persistence-example]
+include::{sourcedir}/basic/any/ManyToAnyTest.java[tags=mapping-column-many-to-any-persist-example]
 ----
 
 [source, SQL, indent=0]
 ----
-include::{extrasdir}/basic/mapping-column-many-to-any-persistence-example.sql[]
+include::{extrasdir}/basic/mapping-column-many-to-any-persist-example.sql[]
+----
+====
+
+When fetching the `PropertyRepository` entity and navigating its `properties` association,
+Hibernate will fetch the associated `IntegerProperty` and `StringProperty` entities like this:
+
+[[mapping-column-many-to-any-query-example]]
+.`@ManyToAny` mapping query example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/any/ManyToAnyTest.java[tags=mapping-column-many-to-any-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-column-many-to-any-query-example.sql[]
 ----
 ====
 

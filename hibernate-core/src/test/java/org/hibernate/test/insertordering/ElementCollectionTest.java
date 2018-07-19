@@ -25,7 +25,6 @@ import org.hibernate.cfg.Environment;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -41,17 +40,11 @@ public class ElementCollectionTest extends BaseNonConfigCoreFunctionalTestCase {
 		return new Class[] {Task.class};
 	}
 
-	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
-
 	@Override
 	protected void addSettings(Map settings) {
 		settings.put( Environment.ORDER_INSERTS, "true" );
 		settings.put( Environment.STATEMENT_BATCH_SIZE, "10" );
-		settings.put(
-				org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
-				connectionProvider
-		);
-	}
+		}
 
 	@Test
 	public void testBatchOrdering() {
@@ -64,12 +57,6 @@ public class ElementCollectionTest extends BaseNonConfigCoreFunctionalTestCase {
 			task1.addCategory(Category.A);
 			session.persist( task1 );
 		} );
-	}
-
-	@Override
-	public void releaseResources() {
-		super.releaseResources();
-		connectionProvider.stop();
 	}
 
 	@Entity

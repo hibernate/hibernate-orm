@@ -1,3 +1,9 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
 package org.hibernate.test.procedure;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -31,6 +37,8 @@ import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.type.NumericBooleanType;
+import org.hibernate.type.YesNoType;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,7 +54,8 @@ public class HANAStoredProcedureTest extends BaseEntityManagerFunctionalTestCase
 		return new Class<?>[]{
 				Person.class,
 				Phone.class,
-				IdHolder.class
+				IdHolder.class,
+				Vote.class
 		};
 	}
 
@@ -120,7 +129,8 @@ public class HANAStoredProcedureTest extends BaseEntityManagerFunctionalTestCase
 									+ "                 \"pr.version\" INTEGER,"
 									+ "                 \"ph.id\" BIGINT,"
 									+ "                 \"ph.person_id\" BIGINT,"
-									+ "                 \"ph.phone_number\" NVARCHAR(5000)) " +
+									+ "                 \"ph.phone_number\" NVARCHAR(5000),"
+									+ "                 \"ph.valid\" BOOLEAN)" +
 									"AS " +
 									"BEGIN " +
 									"   RETURN " +
@@ -133,7 +143,8 @@ public class HANAStoredProcedureTest extends BaseEntityManagerFunctionalTestCase
 									"            pr.version AS \"pr.version\", " +
 									"            ph.id AS \"ph.id\", " +
 									"            ph.person_id AS \"ph.person_id\", " +
-									"            ph.phone_number AS \"ph.phone_number\" " +
+									"            ph.phone_number AS \"ph.phone_number\", " +
+									"            ph.valid AS \"ph.valid\" " +
 									"       FROM person pr " +
 									"       JOIN phone ph ON pr.id = ph.person_id " +
 									"       WHERE pr.id = personId; " +
@@ -144,7 +155,7 @@ public class HANAStoredProcedureTest extends BaseEntityManagerFunctionalTestCase
 									"  BEGIN " +
 									"    p_recordset = " +
 									"    SELECT 1 as id " +
-									"    FROM DUMMY; " +
+									"    FROM SYS.DUMMY; " +
 									"  END; " );
 					statement.executeUpdate(
 							"CREATE OR REPLACE " +
@@ -152,9 +163,29 @@ public class HANAStoredProcedureTest extends BaseEntityManagerFunctionalTestCase
 									"  BEGIN " +
 									"    p_recordset = " +
 									"    SELECT 1 as id " +
-									"    FROM DUMMY; " +
-									"	 SELECT 1 INTO p_value FROM DUMMY; " +
+									"    FROM SYS.DUMMY; " +
+									"	 SELECT 1 INTO p_value FROM SYS.DUMMY; " +
 									"  END; " );
+					statement.executeUpdate(
+							"CREATE OR REPLACE PROCEDURE sp_phone_validity ( " +
+									"   IN validity BOOLEAN, " +
+									"   OUT personPhones TABLE (\"phone_number\" VARCHAR(255)) ) " +
+									"AS  " +
+									"BEGIN " +
+									"    personPhones = SELECT phone_number as \"phone_number\" " +
+									"    FROM phone " +
+									"    WHERE valid = validity; " +
+									"END;" );
+					statement.executeUpdate(
+							"CREATE OR REPLACE PROCEDURE sp_votes ( " +
+									"   IN validity VARCHAR(1), " +
+									"   OUT votes TABLE (\"id\" BIGINT) ) " +
+									"AS  " +
+									"BEGIN " +
+									"    votes = SELECT id as \"id\" " +
+									"    FROM vote " +
+									"    WHERE vote_choice = validity; " +
+									"END;" );
 				}
 				finally {
 					if ( statement != null ) {
@@ -181,11 +212,13 @@ public class HANAStoredProcedureTest extends BaseEntityManagerFunctionalTestCase
 
 			Phone phone1 = new Phone( "123-456-7890" );
 			phone1.setId( 1L );
+			phone1.setValid( true );
 
 			person1.addPhone( phone1 );
 
 			Phone phone2 = new Phone( "098_765-4321" );
 			phone2.setId( 2L );
+			phone2.setValid( false );
 
 			person1.addPhone( phone2 );
 
@@ -365,7 +398,7 @@ public class HANAStoredProcedureTest extends BaseEntityManagerFunctionalTestCase
 
 		try {
 			Integer phoneCount = (Integer) entityManager
-					.createNativeQuery( "SELECT fn_count_phones(:personId) FROM DUMMY" )
+					.createNativeQuery( "SELECT fn_count_phones(:personId) FROM SYS.DUMMY" )
 					.setParameter( "personId", 1 )
 					.getSingleResult();
 			assertEquals( Integer.valueOf( 2 ), phoneCount );
@@ -459,6 +492,49 @@ public class HANAStoredProcedureTest extends BaseEntityManagerFunctionalTestCase
 			assertEquals( Integer.valueOf( 1 ), function.getOutputParameterValue( 1 ) );
 
 			assertFalse( function.hasMoreResults() );
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12661")
+	public void testBindParameterAsHibernateType() {
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_phone_validity" )
+					.registerStoredProcedureParameter( 1, NumericBooleanType.class, ParameterMode.IN )
+					.registerStoredProcedureParameter( 2, Class.class, ParameterMode.REF_CURSOR )
+					.setParameter( 1, true );
+
+			query.execute();
+			List phones = query.getResultList();
+			assertEquals( 1, phones.size() );
+			assertEquals( "123-456-7890", phones.get( 0 ) );
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Vote vote1 = new Vote();
+			vote1.setId( 1L );
+			vote1.setVoteChoice( true );
+
+			entityManager.persist( vote1 );
+
+			Vote vote2 = new Vote();
+			vote2.setId( 2L );
+			vote2.setVoteChoice( false );
+
+			entityManager.persist( vote2 );
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_votes" )
+					.registerStoredProcedureParameter( 1, YesNoType.class, ParameterMode.IN )
+					.registerStoredProcedureParameter( 2, Class.class, ParameterMode.REF_CURSOR )
+					.setParameter( 1, true );
+
+			query.execute();
+			List votes = query.getResultList();
+			assertEquals( 1, votes.size() );
+			assertEquals( 1, ( (Number) votes.get( 0 ) ).intValue() );
 		} );
 	}
 }

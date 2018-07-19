@@ -8,7 +8,7 @@ package org.hibernate.resource.transaction.spi;
 
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
-import org.hibernate.jpa.JpaCompliance;
+import org.hibernate.jpa.spi.JpaCompliance;
 
 /**
  * Models the coordination of all transaction related flows.
@@ -105,6 +105,8 @@ public interface TransactionCoordinator {
 	default boolean isTransactionActive(boolean isMarkedRollbackConsideredActive) {
 		return isJoined() && getTransactionDriverControl().isActive( isMarkedRollbackConsideredActive );
 	}
+
+	default void invalidate(){}
 
 	/**
 	 * Provides the means for "local transactions" (as transaction drivers) to control the

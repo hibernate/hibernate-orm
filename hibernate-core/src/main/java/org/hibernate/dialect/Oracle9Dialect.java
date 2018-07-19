@@ -401,4 +401,9 @@ public class Oracle9Dialect extends Dialect {
 	public boolean canCreateSchema() {
 		return false;
 	}
+
+	@Override
+	public boolean supportsNoWait() {
+		return true;
+	}
 }

@@ -280,7 +280,6 @@ Hibernate generates a value automatically.
 Automatic generation is only available if you use ID generators which operate on the database.
 Otherwise, Hibernate throws an exception during parsing.
 Available in-database generators are `org.hibernate.id.SequenceGenerator` and its subclasses, and objects which implement `org.hibernate.id.PostInsertIdentifierGenerator`.
-The most notable exception is `org.hibernate.id.TableHiLoGenerator`, which does not expose a selectable way to get its values.
 
 For properties mapped as either version or timestamp, the insert statement gives you two options.
 You can either specify the property in the properties_list, in which case its value is taken from the corresponding select expressions, or omit it from the properties_list,
@@ -317,7 +316,7 @@ The `Person` entity is the base class of this entity inheritance model, and is m
 ====
 [source, JAVA, indent=0]
 ----
-include::{bulkid-sourcedir}/AbstractBulkIdTest.java[tags=batch-bulk-hql-temp-table-base-class-example]
+include::{bulkid-sourcedir}/AbstractBulkCompositeIdTest.java[tags=batch-bulk-hql-temp-table-base-class-example]
 ----
 ====
 
@@ -328,7 +327,7 @@ Both the `Doctor` and `Engineer` entity classes extend the `Person` base class:
 ====
 [source, JAVA, indent=0]
 ----
-include::{bulkid-sourcedir}/AbstractBulkIdTest.java[tags=batch-bulk-hql-temp-table-sub-classes-example]
+include::{bulkid-sourcedir}/AbstractBulkCompositeIdTest.java[tags=batch-bulk-hql-temp-table-sub-classes-example]
 ----
 ====
 
@@ -342,7 +341,7 @@ Now, when you try to execute a bulk entity delete query:
 ====
 [source, JAVA, indent=0]
 ----
-include::{bulkid-sourcedir}/AbstractBulkIdTest.java[tags=batch-bulk-hql-temp-table-delete-query-example]
+include::{bulkid-sourcedir}/AbstractBulkCompositeIdTest.java[tags=batch-bulk-hql-temp-table-delete-query-example]
 ----
 
 [source, SQL, indent=0]

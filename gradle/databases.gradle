@@ -56,10 +56,11 @@ ext {
                         'jdbc.driver': 'com.mysql.jdbc.Driver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
-                        'jdbc.url'   : 'jdbc:mysql://127.0.0.1/hibernate_orm_test'
+                        'jdbc.url'   : 'jdbc:mysql://127.0.0.1/hibernate_orm_test?useSSL=false'
                 ],
                 mariadb : [
-                        'db.dialect' : 'org.hibernate.dialect.MariaDB102Dialect',
+                        'db.dialect' : '',
+//                        'db.dialect' : 'org.hibernate.dialect.MariaDB102Dialect',
                         'jdbc.driver': 'org.mariadb.jdbc.Driver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',

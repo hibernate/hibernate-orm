@@ -59,7 +59,6 @@ import org.hibernate.internal.EmptyScrollableResults;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.TypedParameterValue;
 import org.hibernate.jpa.graph.internal.EntityGraphImpl;
@@ -841,7 +840,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	protected Type determineType(String namedParam, Class retType) {
 		Type type = getQueryParameterBindings().getBinding( namedParam ).getBindType();
 		if ( type == null ) {
-			type = getParameterMetadata().getQueryParameter( namedParam ).getType();
+			type = getParameterMetadata().getQueryParameter( namedParam ).getHibernateType();
 		}
 		if ( type == null ) {
 			type = getProducer().getFactory().resolveParameterBindType( retType );
@@ -1103,10 +1102,14 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		}
 
 		if ( !applied ) {
-			MSG_LOGGER.debugf( "Skipping unsupported query hint [%s]", hintName );
+			handleUnrecognizedHint( hintName, value );
 		}
 
 		return this;
+	}
+
+	protected void handleUnrecognizedHint(String hintName, Object value) {
+		MSG_LOGGER.debugf( "Skipping unsupported query hint [%s]", hintName );
 	}
 
 	protected boolean applyJpaCacheRetrieveMode(CacheRetrieveMode mode) {
@@ -1439,7 +1442,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@SuppressWarnings("unchecked")
 	protected Iterator<R> doIterate() {
 		if (getMaxResults() == 0){
-			return EmptyIterator.INSTANCE;
+			return Collections.emptyIterator();
 		}
 		return getProducer().iterate(
 				getQueryParameterBindings().expandListValuedParameters( getQueryString(), getProducer() ),

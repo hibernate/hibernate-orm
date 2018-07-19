@@ -13,6 +13,7 @@ import java.sql.Types;
 
 import org.hibernate.JDBCException;
 import org.hibernate.NullPrecedence;
+import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
@@ -525,6 +526,16 @@ public class MySQLDialect extends Dialect {
 		return new SQLExceptionConversionDelegate() {
 			@Override
 			public JDBCException convert(SQLException sqlException, String message, String sql) {
+				switch ( sqlException.getErrorCode() ) {
+					case 1205: {
+						return new PessimisticLockException( message, sqlException, sql );
+					}
+					case 1207:
+					case 1206: {
+						return new LockAcquisitionException( message, sqlException, sql );
+					}
+				}
+
 				final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
 
 				if ( "41000".equals( sqlState ) ) {

@@ -18,6 +18,8 @@ import org.hibernate.hql.internal.ast.util.ASTIterator;
 import org.hibernate.hql.internal.ast.util.ASTParentsFirstIterator;
 import org.hibernate.hql.internal.ast.util.ASTPrinter;
 import org.hibernate.hql.internal.ast.util.ASTUtil;
+import org.hibernate.hql.internal.ast.util.TokenPrinters;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -36,7 +38,7 @@ public class ASTIteratorTest extends BaseUnitTestCase {
 		HqlParser parser = HqlParser.getInstance( input );
 		parser.statement();
 		AST ast = parser.getAST();
-		ASTPrinter printer = new ASTPrinter( HqlTokenTypes.class );
+		ASTPrinter printer = TokenPrinters.HQL_TOKEN_PRINTER;
 		printer.showAst( ast, new PrintWriter( System.out ) );
 		ASTIterator iterator = new ASTIterator( ast );
 		int count = 0;

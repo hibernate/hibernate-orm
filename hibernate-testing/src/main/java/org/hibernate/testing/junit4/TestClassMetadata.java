@@ -13,6 +13,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.hibernate.internal.SessionFactoryRegistry;
+import org.hibernate.internal.build.AllowPrintStacktrace;
+import org.hibernate.internal.build.AllowSysOut;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
@@ -183,6 +185,8 @@ public class TestClassMetadata {
 		}
 	}
 
+	@AllowSysOut
+	@AllowPrintStacktrace
 	private void invokeCallback(Method callback, Object target) {
 		try {
 			performCallbackInvocation( callback, target );

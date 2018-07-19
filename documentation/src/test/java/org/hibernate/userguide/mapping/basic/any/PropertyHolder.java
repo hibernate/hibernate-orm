@@ -29,7 +29,7 @@ public class PropertyHolder {
     @JoinColumn( name = "property_id" )
     private Property property;
 
-	//Getters and setters are omitted for brevity
+    //Getters and setters are omitted for brevity
 
 //end::mapping-column-any-example[]
     public Long getId() {

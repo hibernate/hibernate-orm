@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Map;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -160,6 +161,8 @@ public class NumericValidationTest implements ExecutionOptions {
 public static class TestEntity {
 	@Id
 	public Integer id;
+
+	@Column(name = "numberValue")
 	BigDecimal number;
 }
 

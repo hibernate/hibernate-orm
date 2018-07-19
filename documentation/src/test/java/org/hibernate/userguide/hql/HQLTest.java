@@ -416,6 +416,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			.getResultList();
 			//end::hql-collection-valued-associations[]
 			assertEquals(1, phones.size());
+			assertEquals( "123-456-7890", phones.get( 0 ).getNumber() );
 		});
 
 	}
@@ -430,7 +431,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 			// alternate syntax
 			List<Phone> phones = session.createQuery(
-				"select pr " +
+				"select ph " +
 				"from Person pr, " +
 				"in (pr.phones) ph, " +
 				"in (ph.calls) c " +
@@ -441,6 +442,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			.list();
 			//end::hql-collection-valued-associations[]
 			assertEquals(1, phones.size());
+			assertEquals( "123-456-7890", phones.get( 0 ).getNumber() );
 		});
 	}
 

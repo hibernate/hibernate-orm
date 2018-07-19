@@ -6,6 +6,7 @@
  */
 package org.hibernate.cache.spi;
 
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 
 import org.jboss.logging.BasicLogger;
@@ -71,5 +72,31 @@ public interface SecondLevelCacheLogger extends BasicLogger {
 			id = NAMESPACE + 5
 	)
 	void softLockedCacheExpired(String regionName, Object key);
+
+	@LogMessage(level = WARN)
+	@Message(
+			value = "Missing cache[%1$s] was created on-the-fly." +
+					" The created cache will use a provider-specific default configuration:" +
+					" make sure you defined one." +
+					" You can disable this warning by setting '%2$s' to '%3$s'.",
+			id = NAMESPACE + 6
+	)
+	void missingCacheCreated(String regionName, String configurationPropertyToDisableKey, String configurationPropertyToDisableValue);
+
+	@LogMessage(level = WARN)
+	@Message(
+			value = "Using legacy cache name [%2$s] because configuration could not be found for cache [%1$s]." +
+					" Update your configuration to rename cache [%2$s] to [%1$s].",
+			id = NAMESPACE + 7
+	)
+	void usingLegacyCacheName(String currentName, String legacyName);
+
+	@LogMessage(level = WARN)
+	@Message(
+			value = "Cache [%1$s] uses the [%2$s] access type, but [%3$s] does not support it natively." +
+					" Make sure your cache implementation supports JTA transactions.",
+			id = NAMESPACE + 8
+	)
+	void nonStandardSupportForAccessType(String key, String accessType, String regionName);
 
 }

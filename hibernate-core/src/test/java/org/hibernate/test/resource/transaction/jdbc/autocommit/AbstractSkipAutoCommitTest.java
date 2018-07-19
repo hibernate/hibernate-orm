@@ -17,6 +17,8 @@ import javax.sql.DataSource;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
 
@@ -30,10 +32,11 @@ import static org.mockito.Mockito.verify;
 /**
  * @author Vlad Mihalcea
  */
+@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
 public abstract class AbstractSkipAutoCommitTest extends BaseEntityManagerFunctionalTestCase {
 
 	private PreparedStatementSpyConnectionProvider connectionProvider =
-		new PreparedStatementSpyConnectionProvider() {
+		new PreparedStatementSpyConnectionProvider( false, true ) {
 			@Override
 			protected Connection actualConnection() throws SQLException {
 				Connection connection = super.actualConnection();

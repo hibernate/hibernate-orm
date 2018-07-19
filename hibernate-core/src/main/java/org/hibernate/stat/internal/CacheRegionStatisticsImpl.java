@@ -7,7 +7,7 @@
 package org.hibernate.stat.internal;
 
 import java.io.Serializable;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 import org.hibernate.cache.spi.ExtendedStatisticsSupport;
 import org.hibernate.cache.spi.Region;
@@ -22,9 +22,9 @@ import org.hibernate.stat.SecondLevelCacheStatistics;
 public class CacheRegionStatisticsImpl implements CacheRegionStatistics, SecondLevelCacheStatistics, Serializable {
 	private final transient Region region;
 
-	private AtomicLong hitCount = new AtomicLong();
-	private AtomicLong missCount = new AtomicLong();
-	private AtomicLong putCount = new AtomicLong();
+	private final LongAdder hitCount = new LongAdder();
+	private final LongAdder missCount = new LongAdder();
+	private final LongAdder putCount = new LongAdder();
 
 	CacheRegionStatisticsImpl(Region region) {
 		this.region = region;
@@ -37,17 +37,17 @@ public class CacheRegionStatisticsImpl implements CacheRegionStatistics, SecondL
 
 	@Override
 	public long getHitCount() {
-		return hitCount.get();
+		return hitCount.sum();
 	}
 
 	@Override
 	public long getMissCount() {
-		return missCount.get();
+		return missCount.sum();
 	}
 
 	@Override
 	public long getPutCount() {
-		return putCount.get();
+		return putCount.sum();
 	}
 
 	@Override
@@ -75,15 +75,15 @@ public class CacheRegionStatisticsImpl implements CacheRegionStatistics, SecondL
 	}
 
 	void incrementHitCount() {
-		hitCount.getAndIncrement();
+		hitCount.increment();
 	}
 
 	void incrementMissCount() {
-		missCount.getAndIncrement();
+		missCount.increment();
 	}
 
 	void incrementPutCount() {
-		putCount.getAndIncrement();
+		putCount.increment();
 	}
 
 	@Override

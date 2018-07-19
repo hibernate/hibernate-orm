@@ -16,5 +16,6 @@ dependencies {
     runtime( libraries.agroal_pool )
 
     testCompile project( ':hibernate-testing' )
-    testCompile(libraries.mockito)
+    testCompile( libraries.mockito )
+    testCompile( libraries.mockito_inline )
 }

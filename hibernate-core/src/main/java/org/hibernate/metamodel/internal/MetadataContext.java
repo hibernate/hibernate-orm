@@ -7,6 +7,8 @@
 package org.hibernate.metamodel.internal;
 
 import java.lang.reflect.Field;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -57,7 +59,7 @@ class MetadataContext {
 	private Map<Class<?>, EntityTypeImpl<?>> entityTypes = new HashMap<>();
 	private Map<String, EntityTypeImpl<?>> entityTypesByEntityName = new HashMap<>();
 	private Map<PersistentClass, EntityTypeImpl<?>> entityTypesByPersistentClass = new HashMap<>();
-	private Map<Class<?>, EmbeddableTypeImpl<?>> embeddables = new HashMap<>();
+	private Set<EmbeddableTypeImpl<?>> embeddables = new HashSet<>();
 	private Map<MappedSuperclass, MappedSuperclassTypeImpl<?>> mappedSuperclassByMappedSuperclassMapping = new HashMap<>();
 	//this list contains MappedSuperclass and EntityTypes ordered by superclass first
 	private List<Object> orderedMappings = new ArrayList<>();
@@ -93,8 +95,8 @@ class MetadataContext {
 		return Collections.unmodifiableMap( entityTypes );
 	}
 
-	public Map<Class<?>, EmbeddableTypeImpl<?>> getEmbeddableTypeMap() {
-		return Collections.unmodifiableMap( embeddables );
+	public Set<EmbeddableTypeImpl<?>> getEmbeddableTypeMap() {
+		return Collections.unmodifiableSet( embeddables );
 	}
 
 	public Map<Class<?>, MappedSuperclassType<?>> getMappedSuperclassTypeMap() {
@@ -123,7 +125,7 @@ class MetadataContext {
 	}
 
 	/*package*/ void registerEmbeddedableType(EmbeddableTypeImpl<?> embeddableType) {
-		embeddables.put( embeddableType.getJavaType(), embeddableType );
+		embeddables.add( embeddableType );
 	}
 
 	/*package*/ void registerMappedSuperclassType(
@@ -268,7 +270,7 @@ class MetadataContext {
 		}
 
 		if ( staticMetamodelScanEnabled ) {
-			for ( EmbeddableTypeImpl embeddable : embeddables.values() ) {
+			for ( EmbeddableTypeImpl embeddable : embeddables ) {
 				populateStaticMetamodel( embeddable );
 			}
 		}
@@ -369,13 +371,26 @@ class MetadataContext {
 			return;
 		}
 		final String metamodelClassName = managedTypeClass.getName() + '_';
-		try {
-			final Class metamodelClass = Class.forName( metamodelClassName, true, managedTypeClass.getClassLoader() );
-			// we found the class; so populate it...
-			registerAttributes( metamodelClass, managedType );
+
+		final PrivilegedAction<Object> action = new PrivilegedAction<Object>() {
+			@Override
+			public Object run() {
+				try {
+					final Class metamodelClass = Class.forName( metamodelClassName, true, managedTypeClass.getClassLoader() );
+					// we found the class; so populate it...
+					registerAttributes( metamodelClass, managedType );
+				}
+				catch (ClassNotFoundException ignore) {
+					// nothing to do...
+				}
+				return null;
+			}
+		};
+		if ( System.getSecurityManager() != null ) {
+			AccessController.doPrivileged( action );
 		}
-		catch (ClassNotFoundException ignore) {
-			// nothing to do...
+		else {
+			action.run();
 		}
 
 		// todo : this does not account for @MappeSuperclass, mainly because this is not being tracked in our

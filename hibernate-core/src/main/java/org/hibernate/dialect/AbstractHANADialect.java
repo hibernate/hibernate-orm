@@ -873,7 +873,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		registerFunction( "lcase", new StandardSQLFunction( "lcase", StandardBasicTypes.STRING ) );
 		registerFunction( "left", new StandardSQLFunction( "left", StandardBasicTypes.STRING ) );
 		registerFunction( "length", new StandardSQLFunction( "length", StandardBasicTypes.INTEGER ) );
-		registerFunction( "locate", new StandardSQLFunction( "locate", StandardBasicTypes.INTEGER ) );
+		registerFunction( "locate", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "locate(?2, ?1, ?3)" ) );
 		registerFunction( "lpad", new StandardSQLFunction( "lpad", StandardBasicTypes.STRING ) );
 		registerFunction( "ltrim", new StandardSQLFunction( "ltrim", StandardBasicTypes.STRING ) );
 		registerFunction( "nchar", new StandardSQLFunction( "nchar", StandardBasicTypes.STRING ) );
@@ -1025,7 +1025,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	@Override
 	public String getCurrentTimestampSelectString() {
-		return "select current_timestamp from dummy";
+		return "select current_timestamp from sys.dummy";
 	}
 
 	@Override
@@ -1099,7 +1099,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	@Override
 	public String getSequenceNextValString(final String sequenceName) {
-		return "select " + getSelectSequenceNextValString( sequenceName ) + " from dummy";
+		return "select " + getSelectSequenceNextValString( sequenceName ) + " from sys.dummy";
 	}
 
 	@Override
@@ -1219,12 +1219,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsCircularCascadeDeleteConstraints() {
-		// HANA does not support circular constraints
-		return false;
-	}
-
-	@Override
 	public ScrollMode defaultScrollMode() {
 		return ScrollMode.FORWARD_ONLY;
 	}
@@ -1320,7 +1314,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	@Override
 	public String getSelectGUIDString() {
-		return "select sysuuid from dummy";
+		return "select sysuuid from sys.dummy";
 	}
 
 	@Override
@@ -1410,7 +1404,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	@Override
 	public String getCurrentSchemaCommand() {
-		return "select current_schema from dummy";
+		return "select current_schema from sys.dummy";
 	}
 
 	@Override
@@ -1608,6 +1602,11 @@ public abstract class AbstractHANADialect extends Dialect {
 	public int registerResultSetOutParameter(CallableStatement statement, String name) throws SQLException {
 		// Result set (TABLE) OUT parameters don't need to be registered
 		return 0;
+	}
+
+	@Override
+	public boolean supportsNoWait() {
+		return true;
 	}
 
 }

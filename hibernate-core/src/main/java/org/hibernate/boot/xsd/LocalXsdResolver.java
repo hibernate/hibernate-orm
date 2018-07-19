@@ -45,13 +45,6 @@ public class LocalXsdResolver {
 	}
 
 	public static URL resolveLocalXsdUrl(String resourceName) {
-		// first we try name as a URL
-		try {
-			return new URL( resourceName );
-		}
-		catch (Exception ignore) {
-		}
-
 		try {
 			final URL url = LocalXsdResolver.class.getClassLoader().getResource( resourceName );
 			if ( url != null ) {
@@ -72,6 +65,13 @@ public class LocalXsdResolver {
 			}
 			catch (Exception ignore) {
 			}
+		}
+
+		// Last: we try name as a URL
+		try {
+			return new URL( resourceName );
+		}
+		catch (Exception ignore) {
 		}
 
 		return null;

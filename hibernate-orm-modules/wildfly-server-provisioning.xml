@@ -5,7 +5,7 @@
 	<feature-packs>
 		<feature-pack
 				groupId="org.hibernate"
-				artifactId="hibernate-core-jbossmodules"
+				artifactId="hibernate-orm-jbossmodules"
 				version="${hibernate-orm.version}" />
 		<feature-pack
 				groupId="org.wildfly"

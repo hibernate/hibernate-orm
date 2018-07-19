@@ -10,7 +10,7 @@ When placed on the identifier getter, Hibernate will use property-based access.
 
 [IMPORTANT]
 ====
-You should pay attention to https://docs.oracle.com/javase/7/docs/api/java/beans/Introspector.html#decapitalize(java.lang.String)[Java Beans specification] in regard to naming properties to avoid
+You should pay attention to https://docs.oracle.com/javase/8/docs/api/java/beans/Introspector.html#decapitalize(java.lang.String)[Java Beans specification] in regard to naming properties to avoid
 issues such as https://hibernate.atlassian.net/browse/HCANN-63[Property name beginning with at least two uppercase characters has odd functionality in HQL]!
 ====
 

@@ -91,6 +91,7 @@ public class RevisionConstraintQuery extends BaseEnversJPAFunctionalTestCase {
 				.forRevisionsOfEntity( StrIntTestEntity.class, false, true )
 				.addProjection( AuditEntity.revisionNumber().distinct() )
 				.add( AuditEntity.revisionNumber().lt( 3 ) )
+				.addOrder( AuditEntity.revisionNumber().asc() )
 				.getResultList();
 
 		Assert.assertEquals( Arrays.asList( 1, 2 ), result );
@@ -102,6 +103,7 @@ public class RevisionConstraintQuery extends BaseEnversJPAFunctionalTestCase {
 				.forRevisionsOfEntity( StrIntTestEntity.class, false, true )
 				.addProjection( AuditEntity.revisionNumber().distinct() )
 				.add( AuditEntity.revisionNumber().ge( 2 ) )
+				.addOrder( AuditEntity.revisionNumber().asc() )
 				.getResultList();
 
 		Assert.assertEquals( TestTools.makeSet( 2, 3, 4 ), new HashSet( result ) );

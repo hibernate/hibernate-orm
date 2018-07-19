@@ -210,7 +210,6 @@ public class PersistenceXmlParser {
 		return parser.persistenceUnits;
 	}
 
-	private final ConfigXsdSupport xsdSupport = new ConfigXsdSupport();
 	private final ClassLoaderService classLoaderService;
 	private final PersistenceUnitTransactionType defaultTransactionType;
 	private final Map<String, ParsedPersistenceXmlDescriptor> persistenceUnits;
@@ -465,7 +464,7 @@ public class PersistenceXmlParser {
 		// todo : add ability to disable validation...
 
 		final String version = document.getDocumentElement().getAttribute( "version" );
-		final Validator validator = xsdSupport.jpaXsd( version ).getSchema().newValidator();
+		final Validator validator = ConfigXsdSupport.INSTANCE.jpaXsd( version ).getSchema().newValidator();
 
 		List<SAXException> errors = new ArrayList<>();
 		validator.setErrorHandler( new ErrorHandlerImpl( errors ) );

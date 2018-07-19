@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.Objects;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -19,7 +20,6 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.type.AbstractType;
 import org.hibernate.type.Type;
 
@@ -112,7 +112,7 @@ public class DiscriminatorType extends AbstractType {
 
 	public boolean isDirty(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session)
 			throws HibernateException {
-		return EqualsHelper.equals( old, current );
+		return Objects.equals( old, current );
 	}
 
 

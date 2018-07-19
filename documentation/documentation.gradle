@@ -55,6 +55,7 @@ dependencies {
 	testCompile( libraries.mockito )
 	testCompile( libraries.mockito_inline )
 
+	testRuntime( libraries.wildfly_transaction_client )
 	testRuntime( libraries.h2 )
 	testRuntime( libraries.hsqldb )
 	testRuntime( libraries.postgresql )
@@ -68,7 +69,7 @@ dependencies {
 }
 
 
-if ( project.isSnapshot ) {
+if ( project.ormVersion.isSnapshot ) {
 	// only run the ci build tasks for SNAPSHOT versions
 	task ciBuild( dependsOn: [clean, test] )
 }
@@ -123,9 +124,9 @@ task aggregateJavadocs(type: Javadoc) {
 
 		links = [
 				'https://docs.oracle.com/javase/8/docs/api/',
-				'https://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
+				'http://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
 				'http://docs.jboss.org/cdi/api/2.0/',
-				'https://docs.oracle.com/javaee/7/api/'
+				'https://javaee.github.io/javaee-spec/javadocs/'
 		]
 
 		if ( JavaVersion.current().isJava8Compatible() ) {
@@ -161,7 +162,16 @@ task renderTopicalGuides(type: AsciidoctorTask, group: 'Documentation') {
 	backends "html5"
 	separateOutputDirs false
 	options logDocuments: true
-	attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', majorMinorVersion: rootProject.hibernateMajorMinorVersion, fullVersion: rootProject.hibernateVersion
+	attributes  icons: 'font',
+				experimental: true,
+				'source-highlighter': 'prettify',
+				majorMinorVersion: rootProject.ormVersion.family,
+				fullVersion: rootProject.ormVersion.fullName
+	resources {
+		from('src/main/asciidoc/topical/') {
+			include '**/images/**'
+		}
+	}
 }
 
 
@@ -170,6 +180,9 @@ task renderTopicalGuides(type: AsciidoctorTask, group: 'Documentation') {
 task renderGettingStartedGuides(type: AsciidoctorTask, group: 'Documentation') {
     description = 'Renders the Getting Started Guides (quick starts) in HTML format using Asciidoctor.'
     sourceDir = file( 'src/main/asciidoc/quickstart/guides' )
+    sources {
+        include 'index.adoc'
+    }
     outputDir = new File("$buildDir/asciidoc/quickstart/html_single")
 	backends "html5"
 	separateOutputDirs false
@@ -192,32 +205,14 @@ task buildTutorialZip(type: Zip) {
 
 renderGettingStartedGuides.dependsOn buildTutorialZip
 
-
-
-// Mapping Guides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-task renderMappingGuide(type: AsciidoctorTask, group: 'Documentation') {
-    description = 'Renders the Mapping Guides in HTML format using Asciidoctor.'
-    sourceDir = file( 'src/main/asciidoc/mapping' )
-    outputDir = new File("$buildDir/asciidoc/mapping/html")
-    backends "html5"
-    separateOutputDirs false
-    options logDocuments: true
-    //attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true, stylesheet: "css/hibernate.css"
-    attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true
-    resources {
-        from('src/main/asciidoc/') {
-            include 'images/**'
-            include 'css/**'
-        }
-    }
-}
-
 // User Guide ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {
     description = 'Renders the User Guides in HTML format using Asciidoctor.'
     sourceDir = file( 'src/main/asciidoc/userguide' )
+    sources {
+        include 'Hibernate_User_Guide.adoc'
+    }
     outputDir = new File("$buildDir/asciidoc/userguide/html_single")
     backends "html5"
     separateOutputDirs false
@@ -226,9 +221,9 @@ task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {
 			   'source-highlighter': 'prettify',
 			   linkcss: true,
 			   stylesheet: "css/hibernate.css",
-			   majorMinorVersion: rootProject.hibernateMajorMinorVersion,
-			   fullVersion: rootProject.hibernateVersion,
-			   docinfo: true
+			   majorMinorVersion: rootProject.ormVersion.family,
+			   fullVersion: rootProject.ormVersion.fullName,
+			   docinfo: 'private'
 
 	resources {
         from('src/main/asciidoc/userguide/') {
@@ -251,11 +246,19 @@ task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {
 task renderIntegrationGuide(type: AsciidoctorTask, group: 'Documentation') {
 	description = 'Renders the User Guides in HTML format using Asciidoctor.'
 	sourceDir = file( 'src/main/asciidoc/integrationguide' )
+	sources {
+		include 'Hibernate_Integration_Guide.adoc'
+	}
 	outputDir = new File("$buildDir/asciidoc/integrationguide/html_single")
 	backends "html5"
 	separateOutputDirs false
 	options logDocuments: true
-	attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true, stylesheet: "css/hibernate.css", majorMinorVersion: rootProject.hibernateMajorMinorVersion
+	attributes  icons: 'font',
+				experimental: true,
+				'source-highlighter': 'prettify',
+				linkcss: true,
+				stylesheet: "css/hibernate.css",
+				majorMinorVersion: rootProject.ormVersion.family
 	resources {
 		from('src/main/asciidoc/integrationguide/') {
 			include 'images/**'

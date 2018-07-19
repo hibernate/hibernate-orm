@@ -102,6 +102,11 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 		}
 
 
+		final RegionFactory fallback = getFallback( configurationValues, registry );
+		if ( fallback != null ) {
+			return fallback;
+		}
+
 		if ( implementors.size() == 1 ) {
 			final RegionFactory registeredFactory = selector.resolveStrategy( RegionFactory.class, implementors.iterator().next() );
 			configurationValues.put( AvailableSettings.CACHE_REGION_FACTORY, registeredFactory );
@@ -117,5 +122,10 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 		}
 
 		return NoCachingRegionFactory.INSTANCE;
+	}
+
+	@SuppressWarnings({"WeakerAccess", "unused"})
+	protected RegionFactory getFallback(Map configurationValues, ServiceRegistryImplementor registry) {
+		return null;
 	}
 }

@@ -332,15 +332,8 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		final boolean intercepted = invokeInterceptor( session, entity, entry, values, persister );
 
 		//now we might need to recalculate the dirtyProperties array
-		if ( intercepted && event.isDirtyCheckPossible() && !event.isDirtyCheckHandledByInterceptor() ) {
-			int[] dirtyProperties;
-			if ( event.hasDatabaseSnapshot() ) {
-				dirtyProperties = persister.findModified( event.getDatabaseSnapshot(), values, entity, session );
-			}
-			else {
-				dirtyProperties = persister.findDirty( values, entry.getLoadedState(), entity, session );
-			}
-			event.setDirtyProperties( dirtyProperties );
+		if ( intercepted && event.isDirtyCheckPossible() ) {
+			dirtyCheck( event );
 		}
 
 		return intercepted;
@@ -560,7 +553,8 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		event.setDatabaseSnapshot( null );
 
 		final boolean interceptorHandledDirtyCheck;
-		boolean cannotDirtyCheck;
+		//The dirty check is considered possible unless proven otherwise (see below)
+		boolean dirtyCheckPossible = true;
 
 		if ( dirtyProperties == null ) {
 			// Interceptor returned null, so do the dirtycheck ourself, if possible
@@ -569,8 +563,8 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 				interceptorHandledDirtyCheck = false;
 				// object loaded by update()
-				cannotDirtyCheck = loadedState == null;
-				if ( !cannotDirtyCheck ) {
+				dirtyCheckPossible = loadedState != null;
+				if ( dirtyCheckPossible ) {
 					// dirty check against the usual snapshot of the entity
 					dirtyProperties = persister.findDirty( values, loadedState, entity, session );
 				}
@@ -592,14 +586,14 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 					// - dirtyProperties will only contain properties that refer to transient entities
 					final Object[] currentState = persister.getPropertyValues( event.getEntity() );
 					dirtyProperties = persister.findDirty( entry.getDeletedState(), currentState, entity, session );
-					cannotDirtyCheck = false;
+					dirtyCheckPossible = true;
 				}
 				else {
 					// dirty check against the database snapshot, if possible/necessary
 					final Object[] databaseSnapshot = getDatabaseSnapshot( session, persister, id );
 					if ( databaseSnapshot != null ) {
 						dirtyProperties = persister.findModified( databaseSnapshot, values, entity, session );
-						cannotDirtyCheck = false;
+						dirtyCheckPossible = true;
 						event.setDatabaseSnapshot( databaseSnapshot );
 					}
 				}
@@ -609,8 +603,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			}
 		}
 		else {
-			// the Interceptor handled the dirty checking
-			cannotDirtyCheck = false;
+			// either the Interceptor, the bytecode enhancement or a custom dirtiness strategy handled the dirty checking
 			interceptorHandledDirtyCheck = true;
 		}
 
@@ -618,7 +611,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 		event.setDirtyProperties( dirtyProperties );
 		event.setDirtyCheckHandledByInterceptor( interceptorHandledDirtyCheck );
-		event.setDirtyCheckPossible( !cannotDirtyCheck );
+		event.setDirtyCheckPossible( dirtyCheckPossible );
 
 	}
 

@@ -182,15 +182,6 @@ ul {
     padding-top:.25em !important;
     padding-bottom:.25em !important;
 }
-.sectlevel1{
-    display: none;
-}
-.sectlevel2{
-    display: none;
-}
-.sectlevel3{
-    display: none;
-}
 .exampleblock>.title{
     text-rendering:optimizeLegibility !important;
     text-align:left !important;

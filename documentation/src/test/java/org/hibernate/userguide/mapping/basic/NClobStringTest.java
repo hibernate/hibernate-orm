@@ -25,79 +25,80 @@ import static org.junit.Assert.assertEquals;
  * @author Vlad Mihalcea
  */
 @SkipForDialect(
-		value = {
-				PostgreSQL81Dialect.class,
-				MySQL5Dialect.class
-		},
-		comment = "@see https://hibernate.atlassian.net/browse/HHH-10693 and https://hibernate.atlassian.net/browse/HHH-10695"
+        value = {
+                PostgreSQL81Dialect.class,
+                MySQL5Dialect.class
+        },
+        comment = "@see https://hibernate.atlassian.net/browse/HHH-10693 and https://hibernate.atlassian.net/browse/HHH-10695"
 )
 public class NClobStringTest extends BaseEntityManagerFunctionalTestCase {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Product.class
-		};
-	}
+    @Override
+    protected Class<?>[] getAnnotatedClasses() {
+        return new Class<?>[] {
+            Product.class
+        };
+    }
 
-	@Test
-	public void test() {
-		Integer productId = doInJPA( this::entityManagerFactory, entityManager -> {
-			final Product product = new Product( );
-			product.setId( 1 );
-			product.setName( "Mobile phone" );
-			product.setWarranty( "My product warranty" );
+    @Test
+    public void test() {
+        Integer productId = doInJPA( this::entityManagerFactory, entityManager -> {
+            final Product product = new Product( );
+            product.setId( 1 );
+            product.setName( "Mobile phone" );
+            product.setWarranty( "My product warranty" );
 
-			entityManager.persist( product );
-			return product.getId();
-		} );
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Product product = entityManager.find( Product.class, productId );
-			assertEquals( "My product warranty", product.getWarranty() );
-		} );
-	}
+            entityManager.persist( product );
+            return product.getId();
+        } );
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            Product product = entityManager.find( Product.class, productId );
 
-	//tag::basic-nclob-string-example[]
-	@Entity(name = "Product")
-	public static class Product {
+            assertEquals( "My product warranty", product.getWarranty() );
+        } );
+    }
 
-		@Id
-		private Integer id;
+    //tag::basic-nclob-string-example[]
+    @Entity(name = "Product")
+    public static class Product {
 
-		private String name;
+        @Id
+        private Integer id;
 
-		@Lob
-		@Nationalized
-		private String warranty;
+        private String name;
 
-		//Getters and setters are omitted for brevity
+        @Lob
+        @Nationalized
+        private String warranty;
 
-	//end::basic-nclob-string-example[]
-		public Integer getId() {
-			return id;
-		}
+        //Getters and setters are omitted for brevity
 
-		public void setId(Integer id) {
-			this.id = id;
-		}
+    //end::basic-nclob-string-example[]
+        public Integer getId() {
+            return id;
+        }
 
-		public String getName() {
-			return name;
-		}
+        public void setId(Integer id) {
+            this.id = id;
+        }
 
-		public void setName(String name) {
-			this.name = name;
-		}
+        public String getName() {
+            return name;
+        }
 
-		public String getWarranty() {
-			return warranty;
-		}
+        public void setName(String name) {
+            this.name = name;
+        }
 
-		public void setWarranty(String warranty) {
-			this.warranty = warranty;
-		}
+        public String getWarranty() {
+            return warranty;
+        }
 
-		//tag::basic-nclob-string-example[]
-	}
-	//end::basic-nclob-string-example[]
+        public void setWarranty(String warranty) {
+            this.warranty = warranty;
+        }
+
+        //tag::basic-nclob-string-example[]
+    }
+    //end::basic-nclob-string-example[]
 }

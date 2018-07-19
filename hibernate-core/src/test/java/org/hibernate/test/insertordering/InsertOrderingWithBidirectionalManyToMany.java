@@ -22,6 +22,8 @@ import javax.persistence.SequenceGenerator;
 
 import org.hibernate.cfg.Environment;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
@@ -36,10 +38,11 @@ import static org.mockito.Mockito.verify;
  * @author Vlad Mihalcea
  */
 @TestForIssue(jiraKey = "HHH-9864")
+@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
 public class InsertOrderingWithBidirectionalManyToMany
 		extends BaseNonConfigCoreFunctionalTestCase {
 
-	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
+	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider( true, false );
 
 	@Override
 	protected Class[] getAnnotatedClasses() {

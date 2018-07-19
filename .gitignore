@@ -47,3 +47,8 @@ ObjectStore
 # Additional databases used in local envs
 databases/mysql/
 databases/postgis/
+
+# Vim
+*.swp
+*.swo
+

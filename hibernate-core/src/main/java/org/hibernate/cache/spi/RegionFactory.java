@@ -31,6 +31,11 @@ import org.hibernate.service.spi.Stoppable;
  * @author Steve Ebersole
  */
 public interface RegionFactory extends Service, Stoppable {
+
+	// These are names that users have to include in their caching configuration, do not change them
+	String DEFAULT_QUERY_RESULTS_REGION_UNQUALIFIED_NAME = "default-query-results-region";
+	String DEFAULT_UPDATE_TIMESTAMPS_REGION_UNQUALIFIED_NAME = "default-update-timestamps-region";
+
 	/**
 	 * Lifecycle callback to perform any necessary initialization of the
 	 * underlying cache provider.  Called exactly once during the

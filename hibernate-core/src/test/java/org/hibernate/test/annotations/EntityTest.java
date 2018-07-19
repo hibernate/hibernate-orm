@@ -23,6 +23,10 @@ import org.hibernate.StaleStateException;
 import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.MySQL57Dialect;
+import org.hibernate.dialect.MySQL8Dialect;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.query.Query;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
@@ -369,14 +373,15 @@ public class EntityTest extends BaseNonConfigCoreFunctionalTestCase {
 	@SkipForDialect(value = Oracle10gDialect.class, comment = "oracle12c returns time in getDate.  For now, skip.")
 	public void testTemporalType() throws Exception {
 
+		final ZoneId zoneId = ( Dialect.getDialect() instanceof MySQL8Dialect ) ? ZoneId.of( "UTC")
+				: ZoneId.systemDefault();
 
 		Flight airFrance = doInHibernate( this::sessionFactory, session -> {
 			Flight _airFrance = new Flight();
 			_airFrance.setId( Long.valueOf( 747 ) );
 			_airFrance.setName( "Paris-Amsterdam" );
 			_airFrance.setDuration( Long.valueOf( 10 ) );
-			_airFrance.setDepartureDate( Date.from(LocalDate.of( 2005, 06, 21 ).atStartOfDay(
-					ZoneId.systemDefault()).toInstant()) );
+			_airFrance.setDepartureDate( Date.from(LocalDate.of( 2005, 06, 21 ).atStartOfDay(zoneId).toInstant()) );
 			_airFrance.setAlternativeDepartureDate( new GregorianCalendar( 2006, 02, 03, 10, 00 ) );
 			_airFrance.getAlternativeDepartureDate().setTimeZone( TimeZone.getTimeZone( "GMT" ) );
 			_airFrance.setBuyDate( new java.sql.Timestamp( 122367443 ) );
@@ -392,8 +397,7 @@ public class EntityTest extends BaseNonConfigCoreFunctionalTestCase {
 			Flight copyAirFrance = (Flight) q.uniqueResult();
 			assertNotNull( copyAirFrance );
 			assertEquals(
-					Date.from(LocalDate.of( 2005, 06, 21 ).atStartOfDay(
-							ZoneId.systemDefault()).toInstant()),
+					Date.from(LocalDate.of( 2005, 06, 21 ).atStartOfDay(zoneId).toInstant()),
 					copyAirFrance.getDepartureDate()
 			);
 			assertEquals( df.format( airFrance.getBuyDate() ), df.format( copyAirFrance.getBuyDate() ) );

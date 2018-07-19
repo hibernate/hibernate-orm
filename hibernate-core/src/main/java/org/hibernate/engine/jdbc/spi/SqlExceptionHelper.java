@@ -10,6 +10,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.JDBCException;
 import org.hibernate.exception.internal.SQLStateConverter;
@@ -124,11 +126,22 @@ public class SqlExceptionHelper {
 				LOG.debug( message, sqlException );
 			}
 			final boolean warnEnabled = LOG.isEnabled( Level.WARN );
+
+			List<String> previousWarnMessages = new ArrayList<>();
+			List<String> previousErrorMessages = new ArrayList<>();
+
 			while ( sqlException != null ) {
 				if ( warnEnabled ) {
-					LOG.warn( "SQL Error: " + sqlException.getErrorCode() + ", SQLState: " + sqlException.getSQLState() );
+					String warnMessage = "SQL Error: " + sqlException.getErrorCode() + ", SQLState: " + sqlException.getSQLState();
+					if ( !previousWarnMessages.contains( warnMessage ) ) {
+						LOG.warn( warnMessage );
+						previousWarnMessages.add( warnMessage );
+					}
 				}
-				LOG.error( sqlException.getMessage() );
+				if ( !previousErrorMessages.contains( sqlException.getMessage() ) ) {
+					LOG.error( sqlException.getMessage() );
+					previousErrorMessages.add( sqlException.getMessage() );
+				}
 				sqlException = sqlException.getNextException();
 			}
 		}

@@ -22,6 +22,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.internal.build.AllowSysOut;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
 
@@ -146,6 +147,7 @@ public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Confi
 		return delegate.unwrap( unwrapType );
 	}
 
+	@AllowSysOut
 	private void delist(Connection connection) {
 		// todo : verify the incoming connection is the currently enlisted one?
 		try {

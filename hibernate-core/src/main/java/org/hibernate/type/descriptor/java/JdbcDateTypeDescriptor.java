@@ -127,7 +127,7 @@ public class JdbcDateTypeDescriptor extends AbstractTypeDescriptor<Date> {
 		if ( value == null ) {
 			return null;
 		}
-		if ( Date.class.isInstance( value ) ) {
+		if ( java.sql.Date.class.isInstance( value ) ) {
 			return (Date) value;
 		}
 
@@ -139,8 +139,8 @@ public class JdbcDateTypeDescriptor extends AbstractTypeDescriptor<Date> {
 			return new java.sql.Date( ( (Calendar) value ).getTimeInMillis() );
 		}
 
-		if ( java.util.Date.class.isInstance( value ) ) {
-			return new java.sql.Date( ( (java.util.Date) value ).getTime() );
+		if ( Date.class.isInstance( value ) ) {
+			return new java.sql.Date( ( (Date) value ).getTime() );
 		}
 
 		throw unknownWrap( value.getClass() );

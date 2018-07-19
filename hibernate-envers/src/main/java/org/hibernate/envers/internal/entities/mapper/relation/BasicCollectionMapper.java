@@ -7,18 +7,24 @@
 package org.hibernate.envers.internal.entities.mapper.relation;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.BasicCollectionInitializor;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+import org.hibernate.persister.collection.CollectionPersister;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -95,5 +101,52 @@ public class BasicCollectionMapper<T extends Collection> extends AbstractCollect
 			}
 		}
 		return changeSet;
+	}
+
+	@Override
+	protected List<PersistentCollectionChangeData> mapCollectionChanges(
+			SessionImplementor session,
+			PersistentCollection newColl,
+			Serializable oldColl,
+			Serializable id) {
+
+		final List<PersistentCollectionChangeData> collectionChanges = new ArrayList<>();
+
+		final CollectionPersister collectionPersister = resolveCollectionPersister( session, newColl );
+
+		// Comparing new and old collection content.
+		final Collection newCollection = getNewCollectionContent( newColl );
+		final Collection oldCollection = getOldCollectionContent( oldColl );
+
+		final Set<Object> addedElements = buildCollectionChangeSet( newColl, newCollection );
+		if ( oldColl != null ) {
+			for ( Object oldEntry : oldCollection ) {
+				for ( Iterator itor = addedElements.iterator(); itor.hasNext(); ) {
+					Object newEntry = itor.next();
+					if ( collectionPersister.getElementType().isSame( oldEntry, newEntry ) ) {
+						itor.remove();
+						break;
+					}
+				}
+			}
+		}
+
+		final Set<Object> deleteElements = buildCollectionChangeSet( oldColl, oldCollection );
+		if ( newColl != null ) {
+			for ( Object newEntry : newCollection ) {
+				for ( Iterator itor = deleteElements.iterator(); itor.hasNext(); ) {
+					Object deletedEntry = itor.next();
+					if ( collectionPersister.getElementType().isSame( deletedEntry, newEntry ) ) {
+						itor.remove();
+						break;
+					}
+				}
+			}
+		}
+
+		addCollectionChanges( session, collectionChanges, addedElements, RevisionType.ADD, id );
+		addCollectionChanges( session, collectionChanges, deleteElements, RevisionType.DEL, id );
+
+		return collectionChanges;
 	}
 }

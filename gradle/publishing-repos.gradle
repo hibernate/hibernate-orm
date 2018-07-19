@@ -54,7 +54,7 @@ bintray {
 			}
 			attributes = [
 					'jpa': project.jpaVersion,
-					'family': project.hibernateMajorMinorVersion
+					'family': project.ormVersion.family
 			]
 			mavenCentralSync {
 				sync = true

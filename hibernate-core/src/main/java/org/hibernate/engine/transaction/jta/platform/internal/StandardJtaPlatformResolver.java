@@ -45,6 +45,25 @@ public class StandardJtaPlatformResolver implements JtaPlatformResolver {
 		// IMPL NOTE : essentially we attempt Class lookups and use the exceptions from the class(es) not
 		// being found as the indicator
 
+		// first try loading WildFly Transaction Client
+		try {
+			classLoaderService.classForName( WildFlyStandAloneJtaPlatform.WILDFLY_TM_CLASS_NAME );
+			classLoaderService.classForName( WildFlyStandAloneJtaPlatform.WILDFLY_UT_CLASS_NAME );
+
+			// we know that the WildFly Transaction Client TM classes are available
+			// if neither of these look-ups resulted in an error (no such class), then WildFly Transaction Client TM is available on
+			// the classpath.
+			//
+			// todo : we cannot really distinguish between the need for JBossStandAloneJtaPlatform versus JBossApServerJtaPlatform
+			// but discussions with David led to the JtaPlatformProvider solution above, so inside JBoss AS we
+			// should be relying on that.
+			// Note that on WF13+, we can expect org.jboss.as.jpa.hibernate5.service.WildFlyCustomJtaPlatformInitiator to choose
+			// the WildFlyCustomJtaPlatform, unless the application has disabled WildFlyCustomJtaPlatformInitiator.
+			return new WildFlyStandAloneJtaPlatform();
+		}
+		catch (ClassLoadingException ignore) {
+		}
+
 
 		// JBoss ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		try {

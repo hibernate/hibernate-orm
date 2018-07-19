@@ -11,23 +11,24 @@ ext {
 
     junitVersion = '4.12'
     h2Version = '1.4.196'
-    bytemanVersion = '4.0.1' //Compatible with JDK10
+    bytemanVersion = '4.0.3' //Compatible with JDK10
     jnpVersion = '5.0.6.CR1'
 
     hibernateValidatorVersion = '6.0.7.Final'
+    hibernateCommonsVersion = '5.0.4.Final'
     validationApiVersion = '2.0.1.Final'
     elVersion = '3.0.1-b08'
 
     cdiVersion = '2.0'
     weldVersion = '3.0.0.Final'
 
-    javassistVersion = '3.22.0-GA'
-    byteBuddyVersion = '1.8.0' // Now with JDK10 compatibility and preliminary support for JDK11
+    javassistVersion = '3.23.1-GA'
+    byteBuddyVersion = '1.8.13' // Now with JDK10 compatibility and preliminary support for JDK11
 
     geolatteVersion = '1.3.0'
 
     // Wildfly version targeted by module ZIP; Arquillian/Shrinkwrap versions used for CDI testing and testing the module ZIP
-    wildflyVersion = '12.0.0.Final'
+    wildflyVersion = '13.0.0.Final'
     arquillianVersion = '1.1.11.Final'
     shrinkwrapVersion = '1.2.6'
     shrinkwrapDescriptorsVersion = '2.0.0-alpha-8'
@@ -43,9 +44,9 @@ ext {
             antlr:          'antlr:antlr:2.7.7',
 
             // Annotations
-            commons_annotations: 'org.hibernate.common:hibernate-commons-annotations:5.0.3.Final',
-            jandex:         'org.jboss:jandex:2.0.3.Final',
-            classmate:      'com.fasterxml:classmate:1.3.0',
+            commons_annotations: "org.hibernate.common:hibernate-commons-annotations:${hibernateCommonsVersion}",
+            jandex:         'org.jboss:jandex:2.0.5.Final',
+            classmate:      'com.fasterxml:classmate:1.3.4',
 
             // Woodstox
             woodstox:           "org.codehaus.woodstox:woodstox-core-asl:4.3.0",
@@ -61,10 +62,12 @@ ext {
 
             // javax
             jpa:            "javax.persistence:javax.persistence-api:${project.jpaVersion}",
-            jta:            'org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec:1.0.1.Final',
+            jta:            'org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec:1.1.1.Final',
             validation:     "javax.validation:validation-api:${validationApiVersion}",
             jacc:           'org.jboss.spec.javax.security.jacc:jboss-jacc-api_1.4_spec:1.0.2.Final',
             interceptor:    'javax.interceptor:javax.interceptor-api:1.2',
+            // required by JAXB from JDK 9 as it is not available anymore in JDK 9
+            activation:     'javax.activation:javax.activation-api:1.2.0',
 
             // logging
             logging:        'org.jboss.logging:jboss-logging:3.3.2.Final',
@@ -102,12 +105,13 @@ ext {
             h2:              "com.h2database:h2:${h2Version}",
             hsqldb:          "org.hsqldb:hsqldb:2.3.2",
             derby:           "org.apache.derby:derby:10.11.1.1",
-            postgresql:      'org.postgresql:postgresql:42.1.1',
-            mysql:           'mysql:mysql-connector-java:6.0.5',
+            postgresql:      'org.postgresql:postgresql:42.2.2',
+            //Upgrade MySQL Driver only when this issue gets fixed: https://bugs.mysql.com/bug.php?id=85941
+            mysql:           'mysql:mysql-connector-java:5.1.46',
             mariadb:         'org.mariadb.jdbc:mariadb-java-client:2.2.3',
 
-            oracle:          'com.oracle.jdbc:ojdbc7:12.1.0.2',
-            mssql:           'com.microsoft.sqlserver:mssql-jdbc:6.1.0.jre8',
+            oracle:          'com.oracle.jdbc:ojdbc8:12.2.0.1',
+            mssql:           'com.microsoft.sqlserver:mssql-jdbc:6.4.0.jre8',
             db2:             'com.ibm.db2:db2jcc:10.5',
             hana:            'com.sap.cloud.db.jdbc:ngdbc:2.2.16', // for HANA 1 the minimum required client version is 1.120.20
 
@@ -116,8 +120,8 @@ ext {
             informix:        'com.ibm.informix:jdbc:4.10.7.20160517',
             jboss_jta:       "org.jboss.jbossts:jbossjta:4.16.4.Final",
             xapool:          "com.experlog:xapool:1.5.0",
-            mockito:         'org.mockito:mockito-core:2.18.0',
-            mockito_inline:  'org.mockito:mockito-inline:2.18.0',
+            mockito:         'org.mockito:mockito-core:2.19.1',
+            mockito_inline:  'org.mockito:mockito-inline:2.19.1',
 
             validator:       "org.hibernate.validator:hibernate-validator:${hibernateValidatorVersion}",
             // EL required by Hibernate Validator at test runtime
@@ -148,9 +152,19 @@ ext {
 
             wildfly_arquillian_container_managed: "org.wildfly.arquillian:wildfly-arquillian-container-managed:${wildflyArquillianContainerVersion}",
             jboss_vfs: "org.jboss:jboss-vfs:3.2.11.Final",
-            jipijapa_spi: "org.wildfly:jipijapa-spi:12.0.0.Final",
+            jipijapa_spi: "org.wildfly:jipijapa-spi:${wildflyVersion}",
+            wildfly_transaction_client : 'org.wildfly.transaction:wildfly-transaction-client:1.0.3.Final',
 
             jboss_ejb_spec_jar          : 'org.jboss.spec.javax.ejb:jboss-ejb-api_3.2_spec:1.0.0.Final',
             jboss_annotation_spec_jar   : 'org.jboss.spec.javax.annotation:jboss-annotations-api_1.2_spec:1.0.0.Final'
         ]
+}
+
+configurations.all {
+    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+        //Force the "byte buddy agent" version to match the Byte Buddy version we use, as Mockito might pull in a mismatched version transitively:
+        if (details.requested.group + ":" + details.requested.name == 'net.bytebuddy:byte-buddy-agent') {
+            details.useVersion byteBuddyVersion
+        }
+    }
 }

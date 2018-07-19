@@ -16,7 +16,7 @@ dependencies {
     compile( project(':hibernate-core') )
     compile( libraries.geolatte )
 
-    compile( 'org.postgresql:postgresql:42.1.4' )
+    compile( libraries.postgresql )
 
     compile(libraries.dom4j) {
         transitive = false

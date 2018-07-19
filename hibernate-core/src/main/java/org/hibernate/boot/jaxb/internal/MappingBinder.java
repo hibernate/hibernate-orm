@@ -38,7 +38,6 @@ public class MappingBinder extends AbstractBinder {
 	private static final Logger log = Logger.getLogger( MappingBinder.class );
 
 	private final XMLEventFactory xmlEventFactory = XMLEventFactory.newInstance();
-	private final MappingXsdSupport xsdSupport = new MappingXsdSupport();
 
 	private JAXBContext hbmJaxbContext;
 
@@ -60,7 +59,7 @@ public class MappingBinder extends AbstractBinder {
 			log.debugf( "Performing JAXB binding of hbm.xml document : %s", origin.toString() );
 
 			XMLEventReader hbmReader = new HbmEventReader( staxEventReader, xmlEventFactory );
-			JaxbHbmHibernateMapping hbmBindings = jaxb( hbmReader, xsdSupport.hbmXsd().getSchema(), hbmJaxbContext(), origin );
+			JaxbHbmHibernateMapping hbmBindings = jaxb( hbmReader, MappingXsdSupport.INSTANCE.hbmXsd().getSchema(), hbmJaxbContext(), origin );
 			return new Binding<>( hbmBindings, origin );
 		}
 		else {

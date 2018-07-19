@@ -17,6 +17,7 @@ import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
 import org.hibernate.cache.spi.support.RegionFactoryTemplate;
 import org.hibernate.cache.spi.support.StorageAccess;
+import org.hibernate.cache.spi.support.DomainDataRegionImpl;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import org.jboss.logging.Logger;
@@ -58,6 +59,7 @@ public class CachingRegionFactory extends RegionFactoryTemplate {
 		return new DomainDataRegionImpl(
 				regionConfig,
 				this,
+				new MapStorageAccessImpl(),
 				cacheKeysFactory,
 				buildingContext
 		);

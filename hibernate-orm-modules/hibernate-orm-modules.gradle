@@ -6,8 +6,8 @@
  */
 
 plugins {
-  id "org.wildfly.build.provision"   version '0.0.6'
-  id "org.wildfly.build.featurepack" version '0.0.6'
+  id "org.wildfly.build.provision"   version '0.0.9'
+  id "org.wildfly.build.featurepack" version '0.0.9'
 }
 
 apply from: rootProject.file( 'gradle/base-information.gradle' )
@@ -21,10 +21,12 @@ apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 
 apply plugin: 'build-dashboard'
 apply plugin: 'project-report'
-apply plugin: 'idea'
 
 project.tasks.jar.enabled = false
 project.tasks.javadoc.enabled = false
+
+evaluationDependsOn( ':hibernate-core' )
+evaluationDependsOn( ':hibernate-envers' )
 
 ext {
 	// NOTE : `wildflyVersion` comes from libraries.gradle...
@@ -35,6 +37,11 @@ ext {
 	artifactClassifier = "wildfly-${wildFlyMajorVersion}-dist"
 	wildFlyInstallDir = "$rootProject.buildDir/wildfly"
 	fpackStagingDir = file( "target/featurepack" ) //Target build directory for the Feature Pack
+}
+
+if ( JavaVersion.current().isJava11Compatible() ) {
+	logger.warn( '[WARN] Skipping all tests for hibernate-orm-modules due to Gradle issues with JDK 11' )
+	test.enabled = false
 }
 
 description = "Feature Pack of Hibernate ORM modules for WildFly ${project.wildFlyMajorVersion}"
@@ -68,10 +75,11 @@ featurepack {
 	configurationName 'featurePack'
 	// Variables to be replaced in the template. N.B. not all variables need to be replaced!
 	// Exact ORM version, e.g. "5.3.0.Final"
-	variables['slot'] = rootProject.hibernateVersion
+	variables['slot'] = rootProject.ormVersion.fullName
 	// Just the minor ORM version, e.g. "5.3"; Is used as an alias for the exact version
-	variables['minorSlot'] = rootProject.hibernateMajorMinorVersion
+	variables['minorSlot'] = rootProject.ormVersion.family
 	variables['bytebuddySlot'] = bytebuddyVersion
+	variables['infinispan2lcSlot'] = 'for-orm-' + rootProject.ormVersion.family
 	//Dependency on another Feature Pack:
 	dependency "org.wildfly:wildfly-feature-pack:${project.wildflyVersion}" // It will assume it is "zip" by default
 	//Ensure we declare all source repositories explicitly
@@ -79,7 +87,7 @@ featurepack {
 }
 
 task createCoreFeaturePackZip( type: Zip, dependsOn: [featurepack] ) {
-	baseName 'hibernate-core-jbossmodules'
+	baseName 'hibernate-orm-jbossmodules'
 	from project.fpackStagingDir
 }
 
@@ -89,19 +97,12 @@ provision {
 	dependsOn( ":hibernate-core:jar")
 	configuration = file( 'wildfly-server-provisioning.xml' )
 	destinationDir = file( "$project.wildFlyInstallDir" )
-	//Replace the JPA API with version 2.2 in the provisioned WildFly server:
-	override( 'org.hibernate.javax.persistence:hibernate-jpa-2.1-api' ) {
-		groupId = 'javax.persistence'
-		artifactId = 'javax.persistence-api'
-		version = project.jpaVersion
-	}
-	/**TODO: explore overriding any other library we might need?
-	   Example: (not currently necessary)
+	//Override HCANN:
 	override( 'org.hibernate.common:hibernate-commons-annotations' ) {
-		version = '5.0.2.Final'
-	}*/
+		version = project.hibernateCommonsVersion
+	}
 	variables['wildfly.version'] = project.wildflyVersion
-	variables['hibernate-orm.version'] = rootProject.hibernateVersion
+	variables['hibernate-orm.version'] = rootProject.ormVersion.fullName
 	//Ensure we declare all source repositories explicitly
 	autoAddRepositories = false
 }
@@ -126,8 +127,8 @@ publishing {
 	publications {
 		publishedArtifacts {
 			artifact( createCoreFeaturePackZip ) {
-				artifactId 'hibernate-core-jbossmodules'
-				description 'Main feature pack of Hibernate ORM: hibernate-core and hibernate-envers'
+				artifactId 'hibernate-orm-jbossmodules'
+				description 'Main feature pack of Hibernate ORM: hibernate-core and hibernate-envers, including essential dependencies such as Byte Buddy'
 			}
 		}
 	}
@@ -155,4 +156,7 @@ processTestResources {
 	)
 }
 
-
+test {
+	//Set the port-offset to match the offset in arquillian.xml
+	systemProperties['jboss.socket.binding.port-offset'] = 137
+}

@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.StringTokenizer;
 
 import org.hibernate.JDBCException;
@@ -29,7 +30,6 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
@@ -647,7 +647,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 						firstPass = false;
 					}
 					else {
-						if ( !EqualsHelper.equals( pkIdentifier, currentPkIdentifier ) ) {
+						if ( !Objects.equals( pkIdentifier, currentPkIdentifier ) ) {
 							throw new SchemaExtractionException(
 									String.format(
 											"Encountered primary keys differing name on table %s",

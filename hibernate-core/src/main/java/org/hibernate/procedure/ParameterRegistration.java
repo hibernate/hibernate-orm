@@ -25,6 +25,7 @@ public interface ParameterRegistration<T> extends ProcedureParameter<T> {
 	 *
 	 * @return The name;
 	 */
+	@Override
 	String getName();
 
 	/**
@@ -33,7 +34,19 @@ public interface ParameterRegistration<T> extends ProcedureParameter<T> {
 	 *
 	 * @return The name;
 	 */
+	@Override
 	Integer getPosition();
+
+	/**
+	 * Return the Java type of the parameter.
+	 *
+	 * @return The Java type of the parameter.
+	 * @deprecated Call {@link #getParameterType()} instead.
+	 */
+	@Deprecated
+	default Class<T> getType() {
+		return getParameterType();
+	}
 
 	/**
 	 * Retrieves the parameter "mode" which describes how the parameter is defined in the actual database procedure
@@ -41,6 +54,7 @@ public interface ParameterRegistration<T> extends ProcedureParameter<T> {
 	 *
 	 * @return The parameter mode.
 	 */
+	@Override
 	ParameterMode getMode();
 
 	/**
@@ -59,6 +73,7 @@ public interface ParameterRegistration<T> extends ProcedureParameter<T> {
 	 *
 	 * @param enabled {@code true} indicates that the NULL should be passed; {@code false} indicates it should not.
 	 */
+	@Override
 	void enablePassingNulls(boolean enabled);
 
 	/**

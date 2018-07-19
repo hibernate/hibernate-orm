@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.test.util.ReflectionUtil;
+import org.hibernate.testing.util.ReflectionUtil;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExternalResource;

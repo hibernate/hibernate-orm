@@ -6,6 +6,8 @@
  */
 package org.hibernate;
 
+import java.sql.Connection;
+
 /**
  * Specialized {@link SessionBuilder} with access to stuff from another session.
  *
@@ -88,6 +90,39 @@ public interface SharedSessionBuilder<T extends SharedSessionBuilder> extends Se
 	@SuppressWarnings("unchecked")
 	default T flushBeforeCompletion() {
 		flushMode();
+		return (T) this;
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// overrides to maintain binary compatibility
+
+	@Override
+	T interceptor(Interceptor interceptor);
+
+	@Override
+	T noInterceptor();
+
+	@Override
+	T connection(Connection connection);
+
+	@Override
+	T connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode);
+
+	@Override
+	T autoJoinTransactions(boolean autoJoinTransactions);
+
+	@Override
+	T autoClose(boolean autoClose);
+
+	@Override
+	default T flushBeforeCompletion(boolean flushBeforeCompletion) {
+		if ( flushBeforeCompletion ) {
+			flushMode( FlushMode.ALWAYS );
+		}
+		else {
+			flushMode( FlushMode.MANUAL );
+		}
 		return (T) this;
 	}
 }

@@ -22,70 +22,71 @@ import static org.junit.Assert.assertArrayEquals;
  */
 public class BlobByteArrayTest extends BaseEntityManagerFunctionalTestCase {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Product.class
-		};
-	}
+    @Override
+    protected Class<?>[] getAnnotatedClasses() {
+        return new Class<?>[] {
+            Product.class
+        };
+    }
 
-	@Test
-	public void test() {
-		Integer productId = doInJPA( this::entityManagerFactory, entityManager -> {
-			final Product product = new Product( );
-			product.setId( 1 );
-			product.setName( "Mobile phone" );
-			product.setImage( new byte[] {1, 2, 3} );
+    @Test
+    public void test() {
+        Integer productId = doInJPA( this::entityManagerFactory, entityManager -> {
+            final Product product = new Product( );
+            product.setId( 1 );
+            product.setName( "Mobile phone" );
+            product.setImage( new byte[] {1, 2, 3} );
 
-			entityManager.persist( product );
-			return product.getId();
-		} );
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Product product = entityManager.find( Product.class, productId );
-			assertArrayEquals( new byte[] {1, 2, 3}, product.getImage() );
-		} );
-	}
+            entityManager.persist( product );
+            return product.getId();
+        } );
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            Product product = entityManager.find( Product.class, productId );
 
-	//tag::basic-blob-byte-array-example[]
-	@Entity(name = "Product")
-	public static class Product {
+            assertArrayEquals( new byte[] {1, 2, 3}, product.getImage() );
+        } );
+    }
 
-		@Id
-		private Integer id;
+    //tag::basic-blob-byte-array-example[]
+    @Entity(name = "Product")
+    public static class Product {
 
-		private String name;
+        @Id
+        private Integer id;
 
-		@Lob
-		private byte[] image;
+        private String name;
 
-		//Getters and setters are omitted for brevity
+        @Lob
+        private byte[] image;
 
-	//end::basic-blob-byte-array-example[]
-		public Integer getId() {
-			return id;
-		}
+        //Getters and setters are omitted for brevity
 
-		public void setId(Integer id) {
-			this.id = id;
-		}
+    //end::basic-blob-byte-array-example[]
+        public Integer getId() {
+            return id;
+        }
 
-		public String getName() {
-			return name;
-		}
+        public void setId(Integer id) {
+            this.id = id;
+        }
 
-		public void setName(String name) {
-			this.name = name;
-		}
+        public String getName() {
+            return name;
+        }
 
-		public byte[] getImage() {
-			return image;
-		}
+        public void setName(String name) {
+            this.name = name;
+        }
 
-		public void setImage(byte[] image) {
-			this.image = image;
-		}
+        public byte[] getImage() {
+            return image;
+        }
 
-		//tag::basic-blob-byte-array-example[]
-	}
-	//end::basic-blob-byte-array-example[]
+        public void setImage(byte[] image) {
+            this.image = image;
+        }
+
+        //tag::basic-blob-byte-array-example[]
+    }
+    //end::basic-blob-byte-array-example[]
 }

@@ -632,4 +632,9 @@ public class PostgreSQL81Dialect extends Dialect {
 	public boolean supportsNationalizedTypes() {
 		return false;
 	}
+
+	@Override
+	public boolean supportsNoWait() {
+		return true;
+	}
 }

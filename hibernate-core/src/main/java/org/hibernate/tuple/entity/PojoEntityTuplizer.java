@@ -8,6 +8,8 @@ package org.hibernate.tuple.entity;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -157,24 +159,31 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 				null :
 				ReflectHelper.getMethod( proxyInterface, idSetterMethod );
 
-		ProxyFactory pf = buildProxyFactoryInternal( persistentClass, idGetter, idSetter );
-		try {
-			pf.postInstantiate(
-					getEntityName(),
-					mappedClass,
-					proxyInterfaces,
-					proxyGetIdentifierMethod,
-					proxySetIdentifierMethod,
-					persistentClass.hasEmbeddedIdentifier() ?
-							(CompositeType) persistentClass.getIdentifier().getType() :
-							null
-			);
-		}
-		catch (HibernateException he) {
-			LOG.unableToCreateProxyFactory( getEntityName(), he );
-			pf = null;
-		}
-		return pf;
+		final PrivilegedAction<ProxyFactory> action = new PrivilegedAction<ProxyFactory>() {
+			@Override
+			public ProxyFactory run() {
+				ProxyFactory pf = buildProxyFactoryInternal( persistentClass, idGetter, idSetter );
+				try {
+					pf.postInstantiate(
+							getEntityName(),
+							mappedClass,
+							proxyInterfaces,
+							proxyGetIdentifierMethod,
+							proxySetIdentifierMethod,
+							persistentClass.hasEmbeddedIdentifier() ?
+									(CompositeType) persistentClass.getIdentifier().getType() :
+									null
+					);
+				}
+				catch (HibernateException he) {
+					LOG.unableToCreateProxyFactory( getEntityName(), he );
+					pf = null;
+				}
+				return pf;
+			}
+		};
+
+		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
 	}
 
 	protected ProxyFactory buildProxyFactoryInternal(

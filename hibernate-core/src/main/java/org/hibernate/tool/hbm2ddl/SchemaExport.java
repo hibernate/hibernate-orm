@@ -356,7 +356,6 @@ public class SchemaExport {
 		}
 		catch (Exception e) {
 			LOG.unableToCreateSchema( e );
-			e.printStackTrace();
 		}
 	}
 

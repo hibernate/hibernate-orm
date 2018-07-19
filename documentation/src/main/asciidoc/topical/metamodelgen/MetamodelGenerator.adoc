@@ -1,12 +1,12 @@
 = JPA Static Metamodel Generator
-:imagesdir: .
-:version: CURRENT-VERSION
+:imagesdir: images
+:version: {fullVersion}
 :toc:
- 
+
 [[whatisit]]
 == What is it about?
 
-JPA 2 defines a typesafe Criteria API which allows +Criteria+ queries                    
+JPA 2 defines a typesafe Criteria API which allows `Criteria` queries
 to be constructed in a strongly-typed manner, utilizing so called 
 static metamodel classes. 
 For developers it is important that the task of the metamodel generation 
@@ -14,11 +14,11 @@ can be automated.
 Hibernate Static Metamodel Generator is an annotation processor based on 
 http://jcp.org/en/jsr/detail?id=269[JSR_269] with the task of creating JPA 2
 static metamodel classes.
-The following example shows two JPA 2 entities +Order+ and +Item+, together 
-with the metamodel class +Order_+ and a typesafe query.
+The following example shows two JPA 2 entities `Order` and `Item`, together
+with the metamodel class `Order_` and a typesafe query.
 
 [[jpa2-entity-example]]
-.JPA 2 annotated entities +Order+ and +Item+
+.JPA 2 annotated entities `Order` and `Item`
 
 ====
 [source, JAVA]
@@ -83,13 +83,13 @@ public class Order_ {
 ====
 [source, JAVA]
 ----
-
 CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+
 CriteriaQuery<Order> cq = cb.createQuery(Order.class);
+
 SetJoin<Order, Item> itemNode = cq.from(Order.class).join(Order_.items);
+
 cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
-
-
 ----
 
 ====
@@ -97,8 +97,8 @@ cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
 [TIP]
 ====
 Hibernate Static Metamodel Generator also takes into consideration xml
-configuration specified in +orm.xml+ or mapping files specified in
-+persistence.xml+. However, if XML is your only configuration source, 
+configuration specified in `orm.xml` or mapping files specified in
+`persistence.xml`. However, if XML is your only configuration source,
 you need to add in at least on of the mapping file the following 
 persistence unit metadata:
 ----
@@ -126,7 +126,7 @@ package p is created.
 managed class by appending "_" to the name of the managed class.
 
 * The metamodel class X_ must be annotated with the 
-+javax.persistence.StaticMetamodel+ annotation.
+`javax.persistence.StaticMetamodel` annotation.
 
 * If class X extends another class S, where S is the most derived
 managed class (i.e., entity or mapped superclass) extended by X, then
@@ -160,7 +160,7 @@ a declaration as follows:
 +
 where K is the type of the key of the map in class X
 
-Import statements must be included for the needed +javax.persistence.metamodel+ types as
+Import statements must be included for the needed `javax.persistence.metamodel` types as
 appropriate and all classes X, Y, Z, and K.
 
 [[chapter-usage]]
@@ -179,8 +179,8 @@ http://repository.jboss.com/[JBoss Maven repository] under:
     <version>{version}</version>
 </dependency>
 ----
-
 ====
+
 Alternatively, it can be found in the ORM distribution bundle on 
 http://sourceforge.net/projects/hibernate/files/hibernate4[SourceForge].
 
@@ -191,7 +191,7 @@ the the Hibernate Static Metamodel Generator jar files contains the
 file _javax.annotation.processing.Processor_ in the _META-INF/services_ directory. 
 
 The fully qualified name of the processor itself is: 
-+org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor+. 
+`org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor`.
 
 === Usage from the command line
 
@@ -225,10 +225,9 @@ Ant can be configured to just run annotation processing.
 The option _-proc:only_ instructs the compiler to just run the annotation processing.
 You can also completely disable processing by specifying _-proc:none_.
 
-
 [TIP]
 ====
-Run +'javac -help'+ to see which other annotation processor relevant
+Run `'javac -help'` to see which other annotation processor relevant
 options can be specified.
 ====
 
@@ -288,6 +287,7 @@ for annotation processing can be used:
 .Configuration with maven-processor-plugin
 ====
 [source, XML]
+[subs="verbatim,attributes"]
 ----
 <plugin>
     <groupId>org.bsc.maven</groupId>
@@ -311,9 +311,34 @@ for annotation processing can be used:
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-jpamodelgen</artifactId>
-            <version>WORKING</version>
+            <version>{version}</version>
         </dependency>
     </dependencies>
+</plugin>
+----
+====
+
+Another possibility is to supply the dependency as an annotation processor path to the maven-compiler-plugin:
+
+[[maven-compiler-plugin]]
+.Configuration with maven-compiler-plugin
+====
+[source, XML]
+[subs="verbatim,attributes"]
+----
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <version>3.7.0</version>
+    <configuration>
+        <annotationProcessorPaths>
+            <path>
+                <groupId>org.hibernate</groupId>
+                <artifactId>hibernate-jpamodelgen</artifactId>
+                <version>{fullVersion}</version>
+            </path>
+        </annotationProcessorPaths>
+    </configuration>
 </plugin>
 ----
 ====
@@ -330,11 +355,11 @@ Intellij Idea contains from version 9.x onwards a specific configuration section
 annotation processing under the project settings window.
 The screenshots show you how to configure the Hibernate Static Metamodel Generator.
 
-image::idea-annotation-processor-config.png[]
+image:idea-annotation-processor-config.png[]
 
 In the annotation processor configuration, enable annotation processing and select obtain
 from project classpath. 
-Add the annotation processor name +org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor+ 
+Add the annotation processor name `org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor`
 (and optionally the annotation processor options).
 Select the module(s) containing your entities. 
 If you have configured Maven as recommended, it is best to select the same output directory
@@ -350,12 +375,12 @@ Just check the "Enable annotation processing" option, configure the directory fo
 generated sources and finally add the Hibernate Static Metamodel Generator and JPA 2 jar
 files to the factory path.
 
-image::eclipse-annotation-processor-config.png[]
+image:eclipse-annotation-processor-config.png[]
 
 === Processor specific options
 
 The Hibernate Static Metamodel Generator accepts a series of custom 
-options which can be passed to the processor in the format: +-A[property]=[value]+
+options which can be passed to the processor in the format: `-A[property]=[value]`
 
 The supported properties can be found in the table below:
 
@@ -363,7 +388,7 @@ The supported properties can be found in the table below:
 |===============
 |*Option name*            | *Option value and usage*
 
-|debug                    | If set to +true+ additional trace
+|debug                    | If set to `true` additional trace
                             information will be outputted by the processor
 
 |persistenceXml           | Per default the processor looks in
@@ -378,8 +403,8 @@ The supported properties can be found in the table below:
                             Even when this option is specified
                             _/META-INF/orm.xml_ is implicit.
 
-|lazyXmlParsing           | Possible values are +true+ or +false+. If set to 
-                            +true+ the annotation processor tries to 
+|lazyXmlParsing           | Possible values are `true` or `false`. If set to
+                            `true` the annotation processor tries to
                             determine whether any of the xml files has 
                             changed between
                             invocations and if unchanged skips the xml parsing.
@@ -387,27 +412,27 @@ The supported properties can be found in the table below:
                             of wrong results in some cases of mixed mode
                             configurations. To determine wether a file has 
                             been modified a temporary file
-                            +Hibernate-Static-Metamodel-Generator.tmp+
+                            `Hibernate-Static-Metamodel-Generator.tmp`
                             is used. This file gets created in the
-                            +java.io.tmpdir+ directory.
+                            `java.io.tmpdir` directory.
 
-|fullyAnnotationConfigured | If set to +true+ the processor will
-                             ignore +orm.xml+ and +persistence.xml+.
+|fullyAnnotationConfigured | If set to `true` the processor will
+                             ignore `orm.xml` and `persistence.xml`.
 
-|addGeneratedAnnotation    | If set to +true+ the processor will
+|addGeneratedAnnotation    | If set to `true` the processor will
                              add the @Generated to the generated
                              Java source file. Adding this annotation using 
                              JDK 5 will cause a compilation error. In this
-                            case set the flag to false. The default for this option is +true+
+                            case set the flag to false. The default for this option is `true`
 
 |addGenerationDate         | If set to true the generation date
                              of the metamodel class will be inserted in the 
                              date parameter of the @Generated annotation. 
-                             The default is +false+. This parameter is
+                             The default is `false`. This parameter is
                              ignored if _addGeneratedAnnotation_ is set
                              to _false_.
-|addSuppressWarningsAnnotation| If set to +true+ the processor will
-                                add @SuppressWarnings("all")+ to the
+|addSuppressWarningsAnnotation| If set to `true` the processor will
+                                add `@SuppressWarnings("all")` to the
                                 generated Java source file. Per default this
                                 annotation is not generated. See also https://hibernate.onjira.com/browse/METAGEN-50[METAGEN-50].
 

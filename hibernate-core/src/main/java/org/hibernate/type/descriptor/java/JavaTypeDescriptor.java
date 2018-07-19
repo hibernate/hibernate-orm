@@ -8,9 +8,9 @@ package org.hibernate.type.descriptor.java;
 
 import java.io.Serializable;
 import java.util.Comparator;
+import java.util.Objects;
 
 import org.hibernate.internal.util.compare.ComparableComparator;
-import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
@@ -75,7 +75,7 @@ public interface JavaTypeDescriptor<T> extends Serializable {
 	 * @return True if the two are considered equal; false otherwise.
 	 */
 	default boolean areEqual(T one, T another) {
-		return EqualsHelper.areEqual( one, another );
+		return Objects.deepEquals( one, another );
 	}
 
 	/**

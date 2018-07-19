@@ -154,7 +154,6 @@ public class SchemaUpdate {
 		}
 		catch (Exception e) {
 			LOG.unableToRunSchemaUpdate( e );
-			e.printStackTrace();
 		}
 	}
 

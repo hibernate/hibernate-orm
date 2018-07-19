@@ -7,7 +7,6 @@
 package org.hibernate.test.insertordering;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 
 import javax.persistence.CascadeType;
@@ -20,6 +19,7 @@ import javax.persistence.ForeignKey;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -61,10 +61,11 @@ public class InsertOrderingWithCompositeTypeAssociation extends BaseEntityManage
 	}
 
 	@Entity(name = "Comment")
+	@Table(name = "COMMENT_TABLE")
 	public static class Comment {
 		@Id
 		private String id;
-		@Column(length = 256)
+		@Column(name = "`comment`", length = 256)
 		private String comment;
 
 		Comment() {

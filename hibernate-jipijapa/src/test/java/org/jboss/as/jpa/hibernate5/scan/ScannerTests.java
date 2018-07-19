@@ -7,7 +7,6 @@
 package org.jboss.as.jpa.hibernate5.scan;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.BufferedInputStream;
@@ -23,14 +22,12 @@ import java.nio.file.Paths;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import org.hibernate.boot.archive.internal.ArchiveHelper;
-
 import org.jboss.shrinkwrap.api.ArchivePath;
 import org.jboss.shrinkwrap.api.ArchivePaths;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.exporter.ZipExporter;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.vfs.TempFileProvider;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -128,21 +125,16 @@ public class ScannerTests {
 	public void testGetBytesFromInputStream() throws Exception {
 		File file = buildLargeJar();
 
-		long start = System.currentTimeMillis();
 		InputStream stream = new BufferedInputStream(
 				new FileInputStream( file ) );
 		int oldLength = getBytesFromInputStream( stream ).length;
 		stream.close();
-		long oldTime = System.currentTimeMillis() - start;
 
-		start = System.currentTimeMillis();
 		stream = new BufferedInputStream( new FileInputStream( file ) );
 		int newLength = ArchiveHelper.getBytesFromInputStream( stream ).length;
 		stream.close();
-		long newTime = System.currentTimeMillis() - start;
 
 		assertEquals( oldLength, newLength );
-		assertTrue( oldTime > newTime );
 	}
 
 	// This is the old getBytesFromInputStream from JarVisitorFactory before

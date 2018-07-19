@@ -42,6 +42,7 @@ import org.hibernate.hql.internal.ast.tree.UpdateStatement;
 import org.hibernate.hql.internal.ast.util.ASTPrinter;
 import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.hql.internal.ast.util.NodeTraverser;
+import org.hibernate.hql.internal.ast.util.TokenPrinters;
 import org.hibernate.hql.spi.FilterTranslator;
 import org.hibernate.hql.spi.ParameterTranslations;
 import org.hibernate.internal.CoreMessageLogger;
@@ -262,8 +263,6 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		}
 	}
 
-	private static final ASTPrinter SQL_TOKEN_PRINTER = new ASTPrinter( SqlTokenTypes.class );
-
 	private HqlSqlWalker analyze(HqlParser parser, String collectionRole) throws QueryException, RecognitionException {
 		final HqlSqlWalker w = new HqlSqlWalker( this, factory, parser, tokenReplacements, collectionRole );
 		final AST hqlAst = parser.getAST();
@@ -272,7 +271,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		w.statement( hqlAst );
 
 		if ( LOG.isDebugEnabled() ) {
-			LOG.debug( SQL_TOKEN_PRINTER.showAsString( w.getAST(), "--- SQL AST ---" ) );
+			LOG.debug( TokenPrinters.SQL_TOKEN_PRINTER.showAsString( w.getAST(), "--- SQL AST ---" ) );
 		}
 
 		w.getParseErrorHandler().throwQueryException();
@@ -304,11 +303,9 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		return parser;
 	}
 
-	private static final ASTPrinter HQL_TOKEN_PRINTER = new ASTPrinter( HqlTokenTypes.class );
-
 	void showHqlAst(AST hqlAst) {
 		if ( LOG.isDebugEnabled() ) {
-			LOG.debug( HQL_TOKEN_PRINTER.showAsString( hqlAst, "--- HQL AST ---" ) );
+			LOG.debug( TokenPrinters.HQL_TOKEN_PRINTER.showAsString( hqlAst, "--- HQL AST ---" ) );
 		}
 	}
 

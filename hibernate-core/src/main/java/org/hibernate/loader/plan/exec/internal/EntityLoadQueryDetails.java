@@ -10,17 +10,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
 
-import org.hibernate.LockOptions;
-import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.plan.exec.process.internal.AbstractRowReader;
 import org.hibernate.loader.plan.exec.process.internal.EntityReferenceInitializerImpl;
 import org.hibernate.loader.plan.exec.process.internal.EntityReturnReader;
 import org.hibernate.loader.plan.exec.process.internal.ResultSetProcessingContextImpl;
-import org.hibernate.loader.plan.exec.process.internal.ResultSetProcessorHelper;
 import org.hibernate.loader.plan.exec.process.spi.EntityReferenceInitializer;
 import org.hibernate.loader.plan.exec.process.spi.ReaderCollector;
 import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessingContext;
@@ -31,12 +29,9 @@ import org.hibernate.loader.plan.exec.spi.EntityReferenceAliases;
 import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.QuerySpace;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.entity.Queryable;
-import org.hibernate.type.CompositeType;
-import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 
@@ -88,6 +83,31 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 				new EntityReferenceInitializerImpl( rootReturn, entityReferenceAliases, true )
 		);
 		generate();
+	}
+
+	/**
+	 * Constructs an EntityLoadQueryDetails object from an initial object and new building parameters,
+	 * with the guarantee that only batch size changed between the initial parameters and the new ones.
+	 *
+	 * @param initialEntityLoadQueryDetails The initial object to be copied
+	 * @param buildingParameters The new building parameters, with only the batch size being different
+	 * from the parameters used in the initial object.
+	 */
+	protected EntityLoadQueryDetails(
+			EntityLoadQueryDetails initialEntityLoadQueryDetails,
+			QueryBuildingParameters buildingParameters) {
+		super(
+				initialEntityLoadQueryDetails,
+				buildingParameters
+		);
+		this.entityReferenceAliases = initialEntityLoadQueryDetails.entityReferenceAliases;
+		this.readerCollector = initialEntityLoadQueryDetails.readerCollector;
+		generate();
+	}
+
+	public boolean hasCollectionInitializers() {
+		return CollectionHelper.isNotEmpty( readerCollector.getArrayReferenceInitializers() ) ||
+				CollectionHelper.isNotEmpty( readerCollector.getNonArrayCollectionReferenceInitializers() );
 	}
 
 	private EntityReturn getRootEntityReturn() {

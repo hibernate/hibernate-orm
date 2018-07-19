@@ -25,7 +25,9 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
+import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
@@ -40,6 +42,7 @@ import static org.junit.Assert.assertTrue;
  */
 @TestForIssue(jiraKey = "HHH-11236")
 @RequiresDialect(MySQL5Dialect.class)
+@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
 public class MySQLDropConstraintThrowsExceptionTest extends BaseUnitTestCase {
 
 	@Before
@@ -91,7 +94,7 @@ public class MySQLDropConstraintThrowsExceptionTest extends BaseUnitTestCase {
 
 	@Test
 	public void testEnumTypeInterpretation() {
-		final PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
+		final PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider( false, false );
 
 		final StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				.enableAutoClose()

@@ -92,6 +92,9 @@ public interface SessionImplementor
 	NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMapping);
 
 	@Override
+	NativeQueryImplementor createSQLQuery(String sqlString);
+
+	@Override
 	NativeQueryImplementor getNamedNativeQuery(String name);
 
 	@Override

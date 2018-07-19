@@ -3,7 +3,6 @@ package org.hibernate.test.bulkid;
 import java.io.Serializable;
 import java.util.Objects;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
@@ -12,8 +11,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;
 import org.junit.Test;
@@ -77,7 +74,7 @@ public abstract class AbstractBulkCompositeIdTest extends BaseCoreFunctionalTest
 	}
 
 	protected int entityCount() {
-		return 100;
+		return 4;
 	}
 
 	@Test
@@ -95,9 +92,12 @@ public abstract class AbstractBulkCompositeIdTest extends BaseCoreFunctionalTest
 	@Test
 	public void testDeleteFromPerson() {
 		doInHibernate( this::sessionFactory, session -> {
-			int updateCount = session.createQuery( "delete from Person where employed = :employed" )
-					.setParameter( "employed", false )
-					.executeUpdate();
+			//tag::batch-bulk-hql-temp-table-delete-query-example[]
+			int updateCount = session.createQuery(
+				"delete from Person where employed = :employed" )
+			.setParameter( "employed", false )
+			.executeUpdate();
+			//end::batch-bulk-hql-temp-table-delete-query-example[]
 			assertEquals( entityCount(), updateCount );
 		});
 	}
@@ -112,6 +112,7 @@ public abstract class AbstractBulkCompositeIdTest extends BaseCoreFunctionalTest
 		});
 	}
 
+	//tag::batch-bulk-hql-temp-table-base-class-example[]
 	@Entity(name = "Person")
 	@Inheritance(strategy = InheritanceType.JOINED)
 	public static class Person implements Serializable {
@@ -176,7 +177,9 @@ public abstract class AbstractBulkCompositeIdTest extends BaseCoreFunctionalTest
 			return Objects.hash( getId(), getCompanyName() );
 		}
 	}
+	//end::batch-bulk-hql-temp-table-base-class-example[]
 
+	//tag::batch-bulk-hql-temp-table-sub-classes-example[]
 	@Entity(name = "Doctor")
 	public static class Doctor extends Person {
 	}
@@ -194,4 +197,5 @@ public abstract class AbstractBulkCompositeIdTest extends BaseCoreFunctionalTest
 			this.fellow = fellow;
 		}
 	}
+	//end::batch-bulk-hql-temp-table-sub-classes-example[]
 }

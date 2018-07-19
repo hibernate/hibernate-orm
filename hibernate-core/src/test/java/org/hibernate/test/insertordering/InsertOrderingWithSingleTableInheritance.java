@@ -30,6 +30,8 @@ import javax.persistence.Table;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.cfg.Environment;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
@@ -42,10 +44,11 @@ import static org.junit.Assert.assertEquals;
  * @author Steve Ebersole
  */
 @TestForIssue(jiraKey = "HHH-9864")
+@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
 public class InsertOrderingWithSingleTableInheritance
 		extends BaseNonConfigCoreFunctionalTestCase {
 
-	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
+	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider( false, false );
 
 	@Override
 	protected Class[] getAnnotatedClasses() {

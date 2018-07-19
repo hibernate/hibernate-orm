@@ -65,6 +65,7 @@ import org.hibernate.hql.internal.ast.util.LiteralProcessor;
 import org.hibernate.hql.internal.ast.util.NodeTraverser;
 import org.hibernate.hql.internal.ast.util.SessionFactoryHelper;
 import org.hibernate.hql.internal.ast.util.SyntheticAndFactory;
+import org.hibernate.hql.internal.ast.util.TokenPrinters;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
@@ -118,7 +119,6 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	private final AliasGenerator aliasGenerator = new AliasGenerator();
 	private final LiteralProcessor literalProcessor;
 	private final ParseErrorHandler parseErrorHandler;
-	private final ASTPrinter printer;
 	private final String collectionFilterRole;
 
 	private FromClause currentFromClause;
@@ -171,7 +171,6 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		this.tokenReplacements = tokenReplacements;
 		this.collectionFilterRole = collectionRole;
 		this.hqlParser = parser;
-		this.printer = new ASTPrinter( SqlTokenTypes.class );
 	}
 
 	// handle trace logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -194,7 +193,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	private String buildTraceNodeName(AST tree) {
 		return tree == null
 				? "???"
-				: tree.getText() + " [" + printer.getTokenTypeName( tree.getType() ) + "]";
+				: tree.getText() + " [" + TokenPrinters.SQL_TOKEN_PRINTER.getTokenTypeName( tree.getType() ) + "]";
 	}
 
 	@Override
@@ -1337,7 +1336,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	}
 
 	public ASTPrinter getASTPrinter() {
-		return printer;
+		return TokenPrinters.SQL_TOKEN_PRINTER;
 	}
 
 	public ArrayList<ParameterSpecification> getParameterSpecs() {

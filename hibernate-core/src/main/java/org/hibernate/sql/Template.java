@@ -88,6 +88,16 @@ public final class Template {
 
 	private Template() {}
 
+	public static String renderTransformerReadFragment(
+			String fragment,
+			String... columnNames) {
+		// NOTE : would need access to SessionFactoryImplementor to make this configurable
+		for ( String columnName : columnNames ) {
+			fragment = fragment.replace( columnName, TEMPLATE + '.' + columnName );
+		}
+		return fragment;
+	}
+
 	public static String renderWhereStringTemplate(String sqlWhereString, Dialect dialect, SQLFunctionRegistry functionRegistry) {
 		return renderWhereStringTemplate(sqlWhereString, TEMPLATE, dialect, functionRegistry);
 	}

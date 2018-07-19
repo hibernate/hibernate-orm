@@ -26,12 +26,14 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryConstructorReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
@@ -82,7 +84,7 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 
 		this.sqlString = queryDef.getQueryString();
 		this.callable = queryDef.isCallable();
-		this.querySpaces = queryDef.getQuerySpaces();
+		this.querySpaces = queryDef.getQuerySpaces() == null ? null : new ArrayList<>( queryDef.getQuerySpaces() );
 
 		if ( queryDef.getResultSetRef() != null ) {
 			ResultSetMappingDefinition definition = session.getFactory()
@@ -820,5 +822,12 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 	public NativeQueryImplementor<T> setHint(String hintName, Object value) {
 		super.setHint( hintName, value );
 		return this;
+	}
+
+	@Override
+	protected void applyEntityGraphQueryHint(EntityGraphQueryHint hint) {
+		throw new HibernateException(
+			"A native SQL query cannot use EntityGraphs"
+		);
 	}
 }

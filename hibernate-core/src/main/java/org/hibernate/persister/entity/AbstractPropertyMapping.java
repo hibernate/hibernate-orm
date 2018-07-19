@@ -269,7 +269,8 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 	}
 
 	private PersistentClass getCommonPersistentClass(PersistentClass clazz1, PersistentClass clazz2) {
-		while ( clazz2 != null && !clazz2.getMappedClass().isAssignableFrom( clazz1.getMappedClass() ) ) {
+		while ( clazz2 != null && clazz2.getMappedClass() != null && clazz1.getMappedClass() != null && !clazz2.getMappedClass()
+				.isAssignableFrom( clazz1.getMappedClass() ) ) {
 			clazz2 = clazz2.getSuperclass();
 		}
 		return clazz2;

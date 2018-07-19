@@ -68,6 +68,41 @@ public class EntityTransactionTests extends BaseUnitTestCase {
 	}
 
 	@Test
+	public void testMarkRollbackOnlyNoTransaction() {
+		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+				.applySetting( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, "true" )
+				.build();
+
+		try {
+			final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) new MetadataSources( ssr )
+					.buildMetadata()
+					.buildSessionFactory();
+
+			try {
+				inSession(
+						sessionFactory,
+						session -> {
+							final Transaction transaction = session.getTransaction();
+							assertFalse( transaction.isActive() );
+
+							// should just happen silently because there is no transaction
+							transaction.markRollbackOnly();
+
+							transaction.begin();
+							transaction.commit();
+						}
+				);
+			}
+			finally {
+				sessionFactory.close();
+			}
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( ssr );
+		}
+	}
+
+	@Test
 	public void testSetRollbackOnlyOutcomeExpectations() {
 		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, "true" )

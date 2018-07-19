@@ -8,10 +8,12 @@ package org.hibernate.cache.jcache.internal;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Map;
 import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
+import javax.cache.configuration.MutableConfiguration;
 import javax.cache.spi.CachingProvider;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -21,11 +23,15 @@ import org.hibernate.cache.cfg.spi.DomainDataRegionBuildingContext;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.jcache.ConfigSettings;
+import org.hibernate.cache.jcache.MissingCacheStrategy;
 import org.hibernate.cache.spi.CacheKeysFactory;
+import org.hibernate.cache.spi.DomainDataRegion;
+import org.hibernate.cache.spi.SecondLevelCacheLogger;
 import org.hibernate.cache.spi.support.DomainDataStorageAccess;
 import org.hibernate.cache.spi.support.RegionFactoryTemplate;
 import org.hibernate.cache.spi.support.RegionNameQualifier;
 import org.hibernate.cache.spi.support.StorageAccess;
+import org.hibernate.cache.spi.support.DomainDataRegionImpl;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
@@ -35,6 +41,7 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 	private final CacheKeysFactory cacheKeysFactory;
 
 	private volatile CacheManager cacheManager;
+	private volatile MissingCacheStrategy missingCacheStrategy;
 
 	@SuppressWarnings("unused")
 	public JCacheRegionFactory() {
@@ -53,6 +60,18 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 	@Override
 	protected CacheKeysFactory getImplicitCacheKeysFactory() {
 		return cacheKeysFactory;
+	}
+
+	@Override
+	public DomainDataRegion buildDomainDataRegion(
+			DomainDataRegionConfig regionConfig, DomainDataRegionBuildingContext buildingContext) {
+		return new JCacheDomainDataRegionImpl(
+				regionConfig,
+				this,
+				createDomainDataStorageAccess( regionConfig, buildingContext ),
+				cacheKeysFactory,
+				buildingContext
+		);
 	}
 
 	@Override
@@ -83,15 +102,42 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 
 	@SuppressWarnings("WeakerAccess")
 	protected Cache<Object, Object> createCache(String regionName) {
-		throw new CacheException( "On-the-fly creation of JCache Cache objects is not supported [" + regionName + "]" );
+		switch ( missingCacheStrategy ) {
+			case CREATE_WARN:
+				SecondLevelCacheLogger.INSTANCE.missingCacheCreated(
+						regionName,
+						ConfigSettings.MISSING_CACHE_STRATEGY, MissingCacheStrategy.CREATE.getExternalRepresentation()
+				);
+				return cacheManager.createCache( regionName, new MutableConfiguration<>() );
+			case CREATE:
+				return cacheManager.createCache( regionName, new MutableConfiguration<>() );
+			case FAIL:
+				throw new CacheException( "On-the-fly creation of JCache Cache objects is not supported [" + regionName + "]" );
+			default:
+				throw new IllegalStateException( "Unsupported missing cache strategy: " + missingCacheStrategy );
+		}
+	}
+
+	protected boolean cacheExists(String unqualifiedRegionName, SessionFactoryImplementor sessionFactory) {
+		final String qualifiedRegionName = RegionNameQualifier.INSTANCE.qualify(
+				unqualifiedRegionName,
+				sessionFactory.getSessionFactoryOptions()
+		);
+		return cacheManager.getCache( qualifiedRegionName ) != null;
 	}
 
 	@Override
 	protected StorageAccess createQueryResultsRegionStorageAccess(
 			String regionName,
 			SessionFactoryImplementor sessionFactory) {
+		String defaultedRegionName = defaultRegionName(
+				regionName,
+				sessionFactory,
+				DEFAULT_QUERY_RESULTS_REGION_UNQUALIFIED_NAME,
+				LEGACY_QUERY_RESULTS_REGION_UNQUALIFIED_NAMES
+		);
 		return new JCacheAccessImpl(
-				getOrCreateCache( regionName, sessionFactory )
+				getOrCreateCache( defaultedRegionName, sessionFactory )
 		);
 	}
 
@@ -99,10 +145,34 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 	protected StorageAccess createTimestampsRegionStorageAccess(
 			String regionName,
 			SessionFactoryImplementor sessionFactory) {
+		String defaultedRegionName = defaultRegionName(
+				regionName,
+				sessionFactory,
+				DEFAULT_UPDATE_TIMESTAMPS_REGION_UNQUALIFIED_NAME,
+				LEGACY_UPDATE_TIMESTAMPS_REGION_UNQUALIFIED_NAMES
+		);
 		return new JCacheAccessImpl(
-				getOrCreateCache( regionName, sessionFactory )
+				getOrCreateCache( defaultedRegionName, sessionFactory )
 		);
 	}
+
+	protected final String defaultRegionName(String regionName, SessionFactoryImplementor sessionFactory,
+			String defaultRegionName, List<String> legacyDefaultRegionNames) {
+		if ( defaultRegionName.equals( regionName )
+				&& !cacheExists( regionName, sessionFactory ) ) {
+			// Maybe the user configured caches explicitly with legacy names; try them and use the first that exists
+
+			for ( String legacyDefaultRegionName : legacyDefaultRegionNames ) {
+				if ( cacheExists( legacyDefaultRegionName, sessionFactory ) ) {
+					SecondLevelCacheLogger.INSTANCE.usingLegacyCacheName( defaultRegionName, legacyDefaultRegionName );
+					return legacyDefaultRegionName;
+				}
+			}
+		}
+
+		return regionName;
+	}
+
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -119,6 +189,9 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 		if ( this.cacheManager == null ) {
 			throw new CacheException( "Could not locate/create CacheManager" );
 		}
+		this.missingCacheStrategy = MissingCacheStrategy.interpretSetting(
+				getProp( configValues, ConfigSettings.MISSING_CACHE_STRATEGY )
+		);
 	}
 
 	@SuppressWarnings("WeakerAccess")
@@ -130,22 +203,35 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 
 		final CachingProvider cachingProvider = getCachingProvider( properties );
 		final CacheManager cacheManager;
-		final String cacheManagerUri = getProp( properties, ConfigSettings.CONFIG_URI );
+		final URI cacheManagerUri = getUri( properties );
 		if ( cacheManagerUri != null ) {
-			URI uri;
-			try {
-				uri = new URI( cacheManagerUri );
-			}
-			catch ( URISyntaxException e ) {
-				throw new CacheException( "Couldn't create URI from " + cacheManagerUri, e );
-			}
-			// todo (5.3) : shouldn't this use Hibernate's AggregatedClassLoader?
-			cacheManager = cachingProvider.getCacheManager( uri, cachingProvider.getDefaultClassLoader() );
+			cacheManager = cachingProvider.getCacheManager( cacheManagerUri, getClassLoader( cachingProvider ));
 		}
 		else {
 			cacheManager = cachingProvider.getCacheManager();
 		}
 		return cacheManager;
+	}
+
+	@SuppressWarnings("WeakerAccess")
+	protected ClassLoader getClassLoader(CachingProvider cachingProvider) {
+		// todo (5.3) : shouldn't this use Hibernate's AggregatedClassLoader?
+		return cachingProvider.getDefaultClassLoader();
+	}
+
+	@SuppressWarnings("WeakerAccess")
+	protected URI getUri(Map properties) {
+		String cacheManagerUri = getProp( properties, ConfigSettings.CONFIG_URI );
+		if ( cacheManagerUri == null ) {
+			return null;
+		}
+
+		try {
+			return new URI( cacheManagerUri );
+		}
+		catch ( URISyntaxException e ) {
+			throw new CacheException( "Couldn't create URI from " + cacheManagerUri, e );
+		}
 	}
 
 	private String getProp(Map properties, String prop) {

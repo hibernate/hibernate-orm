@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!--
+    Demonstrates use of a class-level where restriction
+ -->
+<hibernate-mapping package="org.hibernate.test.nonpkassociation">
+
+    <class name="org.hibernate.test.nonpkassociation.NonPkManyToOneAssociationHbmTest$Parent" table="T_PARENT">
+    	<id name="id">
+    		<generator class="increment"/>
+    	</id>
+
+    	<property name="collectionKey">
+			<column name="collectionKey" />
+		</property>
+
+    	<set name="children" inverse="true" cascade="all-delete-orphan">
+    		<key column="parentVal"/>
+    		<one-to-many class="org.hibernate.test.nonpkassociation.NonPkManyToOneAssociationHbmTest$Child"/>
+    	</set>
+    </class>
+
+    <class name="org.hibernate.test.nonpkassociation.NonPkManyToOneAssociationHbmTest$Child" table="T_CHILD">
+    	<id name="id">
+    		<generator class="increment"/>
+    	</id>
+
+    	<many-to-one name="parent" property-ref="collectionKey" not-null="true">
+			<column name="parentVal" />
+		</many-to-one>
+    </class>
+
+</hibernate-mapping>

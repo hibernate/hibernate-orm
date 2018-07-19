@@ -8,19 +8,13 @@
 apply plugin: 'base'
 
 ext {
-	hibernateVersion = '5.3.0-SNAPSHOT'
+	ormVersion = new HibernateVersion( '5.4.0-SNAPSHOT', project )
 	baselineJavaVersion = '1.8'
 	jpaVersion = new JpaVersion('2.2')
-
-	final String[] hibernateVersionComponents = project.hibernateVersion.split( '\\.' )
-	hibernateMajorMinorVersion = hibernateVersionComponents[0] + '.' + hibernateVersionComponents[1]
-	hibernateMajorVersion = hibernateVersionComponents[0]
-
-	isSnapshot = project.hibernateVersion.endsWith( "-SNAPSHOT" )
 }
 
 group = 'org.hibernate'
-version = project.hibernateVersion
+version = project.ormVersion.fullName
 
 class JpaVersion {
 	/** The *normal* name (1.0, 2.0, ..) */
@@ -36,5 +30,32 @@ class JpaVersion {
 	@Override
 	String toString() {
 		return name
+	}
+}
+
+class HibernateVersion {
+	final String fullName
+	final String majorVersion
+	final String family
+
+	final String osgiVersion
+
+	final boolean isSnapshot
+
+	HibernateVersion(String fullName, Project project) {
+		this.fullName = fullName
+
+		final String[] hibernateVersionComponents = fullName.split( '\\.' )
+		this.majorVersion = hibernateVersionComponents[0]
+		this.family = hibernateVersionComponents[0] + '.' + hibernateVersionComponents[1]
+
+		this.isSnapshot = fullName.endsWith( '-SNAPSHOT' )
+
+		this.osgiVersion = isSnapshot ? family + '.' + hibernateVersionComponents[2] + '.SNAPSHOT' : fullName
+	}
+
+	@Override
+	String toString() {
+		return this.fullName
 	}
 }

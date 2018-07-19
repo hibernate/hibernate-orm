@@ -6,6 +6,7 @@
  */
 package org.hibernate.stat.internal;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
@@ -29,7 +30,7 @@ import static org.hibernate.stat.CacheRegionStatistics.NO_EXTENDED_STAT_SUPPORT_
  * @author Eric Dalquist
  */
 @Deprecated
-public class DeprecatedNaturalIdCacheStatisticsImpl implements NaturalIdCacheStatistics {
+public class DeprecatedNaturalIdCacheStatisticsImpl implements NaturalIdCacheStatistics, Serializable {
 	private final String regionName;
 	private final transient Set<NaturalIdDataAccess> accessStrategies;
 
@@ -45,15 +46,12 @@ public class DeprecatedNaturalIdCacheStatisticsImpl implements NaturalIdCacheSta
 	private final Lock readLock;
 	private final Lock writeLock;
 
-	{
-		final ReadWriteLock lock = new ReentrantReadWriteLock();
-		this.readLock = lock.readLock();
-		this.writeLock = lock.writeLock();
-	}
-
 	DeprecatedNaturalIdCacheStatisticsImpl(String regionName, Set<NaturalIdDataAccess> accessStrategies) {
 		this.regionName = regionName;
 		this.accessStrategies = accessStrategies;
+		final ReadWriteLock lock = new ReentrantReadWriteLock();
+		this.readLock = lock.readLock();
+		this.writeLock = lock.writeLock();
 	}
 
 	/**

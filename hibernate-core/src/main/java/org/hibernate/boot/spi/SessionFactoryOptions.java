@@ -28,7 +28,7 @@ import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
-import org.hibernate.jpa.JpaCompliance;
+import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
@@ -161,6 +161,8 @@ public interface SessionFactoryOptions {
 
 	BatchFetchStyle getBatchFetchStyle();
 
+	boolean isDelayBatchFetchLoaderCreationsEnabled();
+
 	int getDefaultBatchFetchSize();
 
 	Integer getMaximumFetchDepth();
@@ -279,5 +281,9 @@ public interface SessionFactoryOptions {
 
 	default ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
 		return ImmutableEntityUpdateQueryHandlingMode.WARNING;
+	}
+
+	default boolean inClauseParameterPaddingEnabled() {
+		return false;
 	}
 }

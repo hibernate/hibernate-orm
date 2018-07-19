@@ -148,7 +148,7 @@ include::{sourcedir}/AbstractMultiTenancyTest.java[tags=multitenacy-multitenacy-
 ----
 ====
 
-[[multitenacy-hibernate-MultiTenantConnectionProvider]]
+[[multitenacy-hibernate-CurrentTenantIdentifierResolver]]
 ==== CurrentTenantIdentifierResolver
 
 `org.hibernate.context.spi.CurrentTenantIdentifierResolver` is a contract for Hibernate to be able to resolve what the application considers the current tenant identifier.

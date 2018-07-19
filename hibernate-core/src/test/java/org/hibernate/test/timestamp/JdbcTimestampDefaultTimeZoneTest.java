@@ -15,6 +15,8 @@ import javax.persistence.Id;
 
 import org.hibernate.cfg.AvailableSettings;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
@@ -30,10 +32,11 @@ import static org.mockito.Mockito.verify;
 /**
  * @author Vlad Mihalcea
  */
+@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
 public class JdbcTimestampDefaultTimeZoneTest
 		extends BaseNonConfigCoreFunctionalTestCase {
 
-	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
+	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider( true, false );
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

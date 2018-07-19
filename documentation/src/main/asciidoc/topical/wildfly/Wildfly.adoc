@@ -7,84 +7,253 @@ The http://wildfly.org/[WildFly application server] includes Hibernate ORM as th
 This means that you don't need to package Hibernate ORM with the applications you deploy on WildFly,
 instead the application server will automatically enable Hibernate support if it detects that your application is using JPA.
 
-You can also benefit from these modules when not using JPA or JavaEE, to avoid including Hibernate ORM and all its
+You can also benefit from these modules when not using JPA, to avoid including Hibernate ORM and all its
 dependencies into your deployment.
 This will require activating the module explicitly using a `jboss-deployment-structure.xml` file or a Manifest entry:
-see https://docs.jboss.org/author/display/WFLY10/Class+Loading+in+WildFly[Class Loading in WildFly] for some examples.
+see https://docs.jboss.org/author/display/WFLY/Class+Loading+in+WildFly[Class Loading in WildFly] for some examples.
 
-There may be times though where a newer version of Hibernate ORM is available than the one coming with a given WildFly release.
-For that case the Hibernate ORM project provides a ZIP file containing the required modules, so that each new version
-can also be included in WildFly. Such a module will not replace the existing Hibernate ORM module, but it will become an
-alternative option that your application can choose to use instead of the default version it includes.
+Often a newer version of Hibernate ORM is available than the one coming with a given WildFly release; to make sure
+you can enjoy the latest version of Hibernate on any reasonably recent WildFly edition we publish _WildFly feature packs_, these can be used with various WildFly provisioning tools to create a custom server with a different
+version of Hibernate ORM.
 
-Our goal is to provide a module ZIP file targeted at the WildFly version current at the time of the Hibernate release
-(e.g. WildFly 10 for Hibernate ORM releases until 5.2.10, since Hibernate ORM 5.2.11 we provide modules for WildFly 11).
+== What is a WildFly feature pack
 
-== Where to download the modules from
+WildFly is a runtime built on https://jboss-modules.github.io/jboss-modules/manual/[JBoss Modules]; this is a light weight and efficient modular classloader which allows the different components of a modern server to be defined as independent modules.
 
-The module ZIP files can be downloaded from Maven Central, to facilitate automatic unpacking during your build.
+Hibernate ORM and its components are defined as one such module; this implies you can even have multiple different versions of an Hibernate ORM module in the same runtime while having their classpaths isolated from each other: you can add the very latest Hibernate ORM releases to WildFly without having to remove the existing copy.
 
-.Maven identifier for the WildFly modules zip file
+This gives you the flexibility to use the latest version for one of your application with the peace of mind that you won't break other applications requiring a different version of Hibernate. We don't generally recommend to abuse this system but it's often useful to be able for example to upgrade and test one application at a time, rather than having to mandate a new version for multiple services and have to update them all in one shot.
+
+A feature pack is a zip file containing some XML files which define the structure of the JBoss Module(s) and list the Java "jar" files which will be needed by identifying them via Maven coordinates.
+
+This has some further benefits:
+
+- A feature pack is very small as it's just a zipped file with some lines of XML.
+- In terms of disk space you can build a "thin" server which doesn't actually include a copy of your Maven artifacts but just loads the classes on demand from your local Maven cache.
+- You still have the option to build a "full" server so that it can be re-distributed without needing to copy a local Maven repository.
+- When using the provisioning tool you benefit from a composable approach, so N different packs can be combined to form a custom server.
+- Since the feature pack XML merely lists which artifacts are recommended (rather than including a binary copy) it is easy to override the exact versions; this is ideal to apply micro, urgent fixes.
+- A feature pack can declare transitive dependencies on other feature packs, so you will automatically be provided all non-optional dependencies of Hibernate ORM.
+
+It is also interesting to highlight what it is not: differently than most build systems, the focus of JBoss Modules is not on how a project is built but how it should be run.
+
+An important aspect is that runtime dependencies of a JBoss Module are *not transitive*: so for example if the latest Hibernate ORM requires Byte Buddy version 5 (as an example) while any other module that your application needs depends on Byte Buddy version 6 this will not be a problem.
+
+Upgrading your applications could not be easier, as you won't have to ensure that all your dependencies are aligned to use the same versions.
+
+
+== How to get the latest Hibernate ORM feature pack for WildFly
+
+The feature pack can be downloaded from Maven Central, to facilitate automatic unpacking during your build.
+Such a feature pack is released whenever any new version of Hibernate ORM is released.
+
+.Maven identifier for the WildFly feature pack
 
 ====
 [source, XML]
 [subs="verbatim,attributes"]
 ----
    <groupId>org.hibernate</groupId>
-   <artifactId>hibernate-orm-modules</artifactId>
+   <artifactId>hibernate-orm-jbossmodules</artifactId>
    <version>{fullVersion}</version>
-   <classifier>wildfly-11-dist</classifier>
-   <type>zip</type>
 ----
 ====
 
-Once downloaded, extract the contents of the ZIP file into the _modules_ directory of your WildFly installation.
+Typically you won't download this file directly but you will use either a Maven plugin or a Gradle plugin to build the custom WildFly server.
 
-.Example Maven build step to prepare WildFly with custom Hibernate ORM modules for integration tests
+== Create a Provisioning Configuration File
 
+You will need a small XML file to define which feature packs you want to assemble.
+
+The following example will create a full WildFly server but also include a copy of the latest Hibernate ORM modules:
+
+
+.Example Provisioning Configuration File
 ====
 [source, XML]
 [subs="verbatim,attributes"]
 ----
+<server-provisioning xmlns="urn:wildfly:server-provisioning:1.1" copy-module-artifacts="true">
+	<feature-packs>
+		<feature-pack
+				groupId="org.hibernate"
+				artifactId="hibernate-orm-jbossmodules"
+				version="${hibernate-orm.version}" />
+		<feature-pack
+				groupId="org.wildfly"
+				artifactId="wildfly-feature-pack"
+				version="${wildfly.version}" />
+	</feature-packs>
+</server-provisioning>
+----
+====
+
+Of course should you wish your custom server to have more features you can list additional feature packs.
+
+It is also possible to build a "thin" server by not setting the _copy-module-artifacts_ flag, or you can further customize and filter out things you want removed.
+
+See https://github.com/wildfly/wildfly-build-tools[the README of the WildFly Build Tools project] on Github for more details.
+
+Next you can use either the https://github.com/wildfly/wildfly-build-tools[Maven plugin] or the https://plugins.gradle.org/plugin/org.wildfly.build.featurepack[Gradle plugin] to actually create a fresh copy of your custom server.
+
+== Maven users: invoke the WildFly Provisioning Plugin
+
+Assuming the previous Provisioning Configuration File is saved as `server-provisioning.xml`, you will just have to refer the plugin to it, pick an output directory name and bing the plugin to the build lifecycle.
+
+.Example Maven Provisioning
+====
+[source, XML]
+----
+<build>
+	<plugins>
+		<plugin>
+			<groupId>org.wildfly.build</groupId>
+			<artifactId>wildfly-server-provisioning-maven-plugin</artifactId>
+			<executions>
+				<execution>
+				<id>server-provisioning</id>
+				<goals>
+					<goal>build</goal>
+				</goals>
+				<phase>compile</phase>
+				<configuration>
+					<config-file>server-provisioning.xml</config-file>
+					<server-name>wildfly-custom</server-name>
+				</configuration>
+			</execution>
+----
+====
+
+==== JPA version override
+
+With WildFly 12 being built with JavaEE7 in mind, it ships the JPA 2.1 API.
+
+Hibernate ORM 5.3 requires JPA 2.2, and it is not possible at this time to replace the JPA API using the Maven provisioning plugin so you'll have to apply a "WildFly patch" as well.
+
+A WildFly patch can be applied from the WildFly CLI; here we show how to automate it all with Maven plugins.
+
+.Example Maven script to patch the JPA version in WildFly:
+====
+[source, XML]
+----
 <plugin>
-<artifactId>maven-dependency-plugin</artifactId>
-<executions>
-    <execution>
-        <id>unpack</id>
-        <phase>pre-integration-test</phase>
-        <goals>
-            <goal>unpack</goal>
-        </goals>
-        <configuration>
-            <artifactItems>
-                <artifactItem>
-                    <groupId>org.wildfly</groupId>
-                    <artifactId>wildfly-dist</artifactId>
-                    <version>${wildflyVersion}</version>
-                    <type>zip</type>
-                    <overWrite>true</overWrite>
-                    <outputDirectory>
-                      ${project.build.directory}/wildfly-node1
-                    </outputDirectory>
-                </artifactItem>
-                <artifactItem>
-                    <groupId>org.hibernate</groupId>
-                    <artifactId>hibernate-orm-modules</artifactId>
-                    <version>${hibernateVersion}</version>
-                    <classifier>wildfly-11-dist</classifier>
-                    <type>zip</type>
-                    <overWrite>true</overWrite>
-                    <outputDirectory>
-                      ${project.build.directory}/wildfly-node1/wildfly-${wildflyVersion}/modules
-                    </outputDirectory>
-                </artifactItem>
-            </artifactItems>
-        </configuration>
-    </execution>
-</executions>
+	<artifactId>maven-dependency-plugin</artifactId>
+	<executions>
+		<execution>
+			<id>fetch-jpa-patch</id>
+			<phase>process-test-resources</phase>
+			<goals>
+				<goal>copy</goal>
+			</goals>
+			<configuration>
+				<artifactItems>
+					<artifactItem>
+					   <groupId>org.hibernate.javax.persistence</groupId>
+					   <artifactId>hibernate-jpa-api-2.2-wildflymodules</artifactId>
+					   <classifier>wildfly-12.0.0.Final-patch</classifier>
+					   <version>1.0.0.Beta2</version>
+					   <type>zip</type>
+					   <outputDirectory>${project.build.directory}</outputDirectory>
+					   <overWrite>true</overWrite>
+					   <destFileName>hibernate-jpa-api-2.2-wildflymodules-patch.zip</destFileName>
+					</artifactItem>
+				</artifactItems>
+			</configuration>
+		</execution>
+	</executions>
+</plugin>
+<plugin>
+	<groupId>org.wildfly.plugins</groupId>
+	<artifactId>wildfly-maven-plugin</artifactId>
+	<executions>
+		<execution>
+			<id>apply-wildfly-jpa22-patch-file</id>
+			<phase>pre-integration-test</phase>
+			<goals>
+				<goal>execute-commands</goal>
+			</goals>
+			<configuration>
+				<offline>true</offline>
+				<jbossHome>${jbossHome.provisionedPath}</jbossHome>
+				<!-- The CLI script below will fail if the patch was already applied in a previous build -->
+				<fail-on-error>false</fail-on-error>
+				<commands>
+					<command>patch apply --override-all ${project.build.directory}/hibernate-jpa-api-2.2-wildflymodules-patch.zip</command>
+				</commands>
+			</configuration>
+		</execution>
+	</executions>
 </plugin>
 ----
 ====
+
+== Gradle users: invoke the WildFly Provisioning plugin
+
+A Gradle plugin is also available, and in this case it will take just a couple of lines.
+
+Remember when creating a "thin server": the WildFly classloader will not be able to load jars from the local Gradle cache: this might trigger a second download as it looks into local Maven repositories exclusively.
+Especially if you are developing additional feature packs using Gradle, make sure to publish them into a Maven repository so that WildFly can load them.
+
+Follows a full Gradle build script; in contrast to the previous Maven example which is incomplete to keep it short, is a fully working build script. Also it won't require to apply additional patches to replace the JPA version.
+
+.Example Gradle Provisioning
+====
+[source, Groovy]
+----
+plugins {
+  id "org.wildfly.build.provision" version '0.0.6'
+}
+
+repositories {
+	mavenLocal()
+	mavenCentral()
+	maven {
+		name 'jboss-nexus'
+		url "http://repository.jboss.org/nexus/content/groups/public/"
+	}
+}
+
+provision {
+	//Optional destination directory:
+	destinationDir = file("wildfly-custom")
+
+	//Update the JPA API:
+	override( 'org.hibernate.javax.persistence:hibernate-jpa-2.1-api' ) {
+		groupId = 'javax.persistence'
+		artifactId = 'javax.persistence-api'
+		version = '2.2'
+	}
+	configuration = file( 'wildfly-server-provisioning.xml' )
+	//Define variables which need replacing in the provisioning configuration!
+	variables['wildfly.version'] = '12.0.0.Final'
+	variables['hibernate-orm.version'] = '5.3.0.Final'
+}
+----
+====
+
+you could paste this into a new file named `build.gradle` in an empty directory, then invoke:
+
+    gradle provision
+
+and you'll have a full WildFly 12.0.0.Final server generated in the `wildfly-custom` subdirectory, including a copy of Hibernate ORM version 5.3.0.Final (in addition to the any other version that WildFly normally includes).
+
+
+==== A note on repositories:
+
+ mavenLocal()::
+    strictly not necessary but will make your builds much faster if you run it more than once.
+ jboss-nexus::
+    This additional repository is required. Most components of WildFly are available in Maven Central but there are some occasional exceptions.
+
+==== The JPA version override
+
+The JPA API is a fundamental component of the application server as it is used to integrate with various other standards; at this stage while the feature packs offer some degree of composability it is not yet possible
+to have additional, independent copies of the JPA API: it needs to be replaced.
+
+Hibernate ORM 5.3.0 requires JPA 2.2, yet WildFly 12 ships with JPA version 2.1. Luckily this provisioning tool is also able to override any artifact resolution.
+
+Of course when future versions of WildFly will be based on JPA 2.2, this step might soon no longer be necessary.
+
 
 == WildFly module identifiers: slots and conventions
 
@@ -135,18 +304,21 @@ In order to use a different module other than the default _org.hibernate:main_ s
 Needless to say, this will affect the classpath of your application: if your single application declares multiple
 persistence units, they should all make a consistent choice!
 
-This property is documented in the https://docs.jboss.org/author/display/WFLY10/JPA+Reference+Guide[WildFly JPA Reference Guide];
+This property is documented in the https://docs.jboss.org/author/display/WFLY/JPA+Reference+Guide[WildFly JPA Reference Guide];
 you might want to check it out as it lists several other useful properties.
 
 == Limitations of using the custom WildFly modules
 
-When using these modules you're going to give up on some of the integration which the application server
-normally automates.
+When using the custom modules provided by the feature packs you're going to give up on some of the integration which the application server normally automates.
 
 For example enabling an Infinispan 2nd level cache is straight forward when using the default Hibernate ORM
 module, as WildFly will automatically setup the dependency to the Infinispan and clustering components.
 When using these custom modules such integration will no longer work automatically: you can still
 enable all normally available features but these will require explicit configuration, as if you were
 running Hibernate in a different container, or in no container.
+
+You might be able to get a matching feature pack from the Infinispan or Ehcache projects, you can create a module yourself (after all it's just a simple XML file), or you can just add such additional dependencies in your application as in the old days: modules and feature packs give you some advantages but good old-style jars are also still a viable option.
+
+Needless to say, those users not interested in having the very latest versions can just use the versions integrated in WildFly and benefit from the library combinations carefully tested by the WildFly team.
 
 

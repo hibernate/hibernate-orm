@@ -160,6 +160,20 @@ public class PropertyAuditingData {
 		);
 	}
 
+	public PropertyData resolvePropertyData(Type propertyType, Type virtualType) {
+		return new PropertyData(
+				name,
+				beanName,
+				accessType,
+				store,
+				usingModifiedFlag,
+				modifiedFlagName,
+				syntheic,
+				propertyType,
+				virtualType.getReturnedClass()
+		);
+	}
+
 	public List<AuditOverride> getAuditingOverrides() {
 		return auditJoinTableOverrides;
 	}

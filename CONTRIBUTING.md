@@ -50,7 +50,7 @@ the linked page, this also includes:
     * Clone your fork
 * See the wiki pages for setting up your IDE, whether you use 
 [IntelliJ IDEA](https://community.jboss.org/wiki/ContributingToHibernateUsingIntelliJ)
-or [Eclipse](https://community.jboss.org/wiki/ContributingToHibernateUsingEclipse).
+or [Eclipse](https://community.jboss.org/wiki/ContributingToHibernateUsingEclipse)<sup>(1)</sup>.
 
 
 ## Create the working (topic) branch
@@ -101,3 +101,6 @@ It is important that this topic branch on your fork:
 	a branch rather than specific commits.
 * remain until the PR is closed.  Once the underlying branch is deleted the corresponding
 	PR will be closed, if not already, and the changes will be lost.
+
+# Notes
+<sup>(1)</sup> Gradle `eclipse` plugin is no longer supported, so the recommended way to import the project in your IDE is with the proper IDE tools/plugins. Don't try to run `./gradlew clean eclipse --refresh-dependencies` from the command line as you'll get an error because `eclipse` no longer exists

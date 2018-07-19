@@ -22,7 +22,7 @@ import org.hibernate.pretty.MessageHelper;
 /**
  * Defines the default load event listeners used by hibernate for loading entities
  * in response to generated load events.
- * 
+ *
  * @author Eric Dalquist
  * @author Steve Ebersole
  */
@@ -46,7 +46,7 @@ public class DefaultResolveNaturalIdEventListener
 	 * made to load the entity from the session-level cache. If not found there,
 	 * an attempt is made to locate it in second-level cache. Lastly, an
 	 * attempt is made to load it directly from the datasource.
-	 * 
+	 *
 	 * @param event The load event
 	 *
 	 * @return The loaded entity, or null.
@@ -57,8 +57,9 @@ public class DefaultResolveNaturalIdEventListener
 		final boolean traceEnabled = LOG.isTraceEnabled();
 		if ( traceEnabled ) {
 			LOG.tracev(
-					"Attempting to resolve: {0}",
-					MessageHelper.infoString( persister, event.getNaturalIdValues(), event.getSession().getFactory() )
+					"Attempting to resolve: {0}#{1}",
+					MessageHelper.infoString( persister ),
+					event.getNaturalIdValues()
 			);
 		}
 
@@ -66,8 +67,9 @@ public class DefaultResolveNaturalIdEventListener
 		if ( entityId != null ) {
 			if ( traceEnabled ) {
 				LOG.tracev(
-						"Resolved object in cache: {0}",
-						MessageHelper.infoString( persister, event.getNaturalIdValues(), event.getSession().getFactory() )
+						"Resolved object in cache: {0}#{1}",
+						MessageHelper.infoString( persister ),
+						event.getNaturalIdValues()
 				);
 			}
 			return entityId;
@@ -75,8 +77,9 @@ public class DefaultResolveNaturalIdEventListener
 
 		if ( traceEnabled ) {
 			LOG.tracev(
-					"Object not resolved in any cache: {0}",
-					MessageHelper.infoString( persister, event.getNaturalIdValues(), event.getSession().getFactory() )
+					"Object not resolved in any cache: {0}#{1}",
+					MessageHelper.infoString( persister ),
+					event.getNaturalIdValues()
 			);
 		}
 
@@ -85,7 +88,7 @@ public class DefaultResolveNaturalIdEventListener
 
 	/**
 	 * Attempts to resolve the entity id corresponding to the event's natural id values from the session
-	 * 
+	 *
 	 * @param event The load event
 	 *
 	 * @return The entity from the cache, or null.
@@ -100,7 +103,7 @@ public class DefaultResolveNaturalIdEventListener
 	/**
 	 * Performs the process of loading an entity from the configured
 	 * underlying datasource.
-	 * 
+	 *
 	 * @param event The load event
 	 *
 	 * @return The object loaded from the datasource, or null if not found.
@@ -112,13 +115,13 @@ public class DefaultResolveNaturalIdEventListener
 		if ( stats ) {
 			startTime = System.nanoTime();
 		}
-		
+
 		final Serializable pk = event.getEntityPersister().loadEntityIdByNaturalId(
 				event.getOrderedNaturalIdValues(),
 				event.getLockOptions(),
 				event.getSession()
 		);
-		
+
 		if ( stats ) {
 			final long endTime = System.nanoTime();
 			final long milliseconds = TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
@@ -127,7 +130,7 @@ public class DefaultResolveNaturalIdEventListener
 					milliseconds
 			);
 		}
-		
+
 		//PK can be null if the entity doesn't exist
 		if (pk != null) {
 			event.getSession().getPersistenceContext().getNaturalIdHelper().cacheNaturalIdCrossReferenceFromLoad(
@@ -136,7 +139,7 @@ public class DefaultResolveNaturalIdEventListener
 					event.getOrderedNaturalIdValues()
 			);
 		}
-		
+
 		return pk;
 	}
 }

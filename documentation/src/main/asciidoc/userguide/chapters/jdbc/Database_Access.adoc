@@ -78,20 +78,20 @@ Hibernate also provides support for applications to use http://proxool.sourcefor
 Transaction isolation of the Connections is managed by the `ConnectionProvider` itself. See <<database-connectionprovider-isolation>>.
 
 [[database-connectionprovider-proxool-existing]]
-=== Using existing Proxool pools
+==== Using existing Proxool pools
 
 Controlled by the `hibernate.proxool.existing_pool` setting.
 If set to true, this ConnectionProvider will use an already existing Proxool pool by alias as indicated by the `hibernate.proxool.pool_alias` setting.
 
 [[database-connectionprovider-proxool-jaxp]]
-=== Configuring Proxool via XML
+==== Configuring Proxool via XML
 
 The `hibernate.proxool.xml` setting names a Proxool configuration XML file to be loaded as a classpath resource and loaded by Proxool's JAXPConfigurator.
 See http://proxool.sourceforge.net/configure.html[proxool  configuration].
 `hibernate.proxool.pool_alias` must be set to indicate which pool to use.
 
 [[database-connectionprovider-proxool-properties]]
-=== Configuring Proxool via Properties
+==== Configuring Proxool via Properties
 
 The `hibernate.proxool.properties` setting names a Proxool configuration properties file to be loaded as a classpath resource and loaded by Proxool's `PropertyConfigurator`.
 See http://proxool.sourceforge.net/configure.html[proxool  configuration].

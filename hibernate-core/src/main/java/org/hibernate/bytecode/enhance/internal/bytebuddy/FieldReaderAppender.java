@@ -26,17 +26,20 @@ abstract class FieldReaderAppender implements ByteCodeAppender {
 
 	protected final FieldDescription persistentField;
 
-	private FieldReaderAppender(TypeDescription managedCtClass, FieldDescription.InDefinedShape persistentField) {
+	protected final FieldDescription.InDefinedShape persistentFieldAsDefined;
+
+	private FieldReaderAppender(TypeDescription managedCtClass, FieldDescription persistentField) {
 		this.managedCtClass = managedCtClass;
 		this.persistentField = persistentField;
+		this.persistentFieldAsDefined = persistentField.asDefined();
 	}
 
 	static ByteCodeAppender of(TypeDescription managedCtClass, FieldDescription persistentField) {
 		if ( !persistentField.isVisibleTo( managedCtClass ) ) {
-			return new MethodDispatching( managedCtClass, persistentField.asDefined() );
+			return new MethodDispatching( managedCtClass, persistentField );
 		}
 		else {
-			return new FieldWriting( managedCtClass, persistentField.asDefined() );
+			return new FieldWriting( managedCtClass, persistentField );
 		}
 	}
 
@@ -45,8 +48,8 @@ abstract class FieldReaderAppender implements ByteCodeAppender {
 			MethodVisitor methodVisitor,
 			Implementation.Context implementationContext,
 			MethodDescription instrumentedMethod) {
-		TypeDescription dispatcherType = persistentField.getType().isPrimitive()
-				? persistentField.getType().asErasure()
+		TypeDescription dispatcherType = persistentFieldAsDefined.getType().isPrimitive()
+				? persistentFieldAsDefined.getType().asErasure()
 				: TypeDescription.OBJECT;
 		// if ( this.$$_hibernate_getInterceptor() != null )
 		methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
@@ -72,7 +75,7 @@ abstract class FieldReaderAppender implements ByteCodeAppender {
 		);
 		// .readXXX( self, fieldName, field );
 		methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
-		methodVisitor.visitLdcInsn( persistentField.getName() );
+		methodVisitor.visitLdcInsn( persistentFieldAsDefined.getName() );
 		methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
 		fieldRead( methodVisitor );
 		methodVisitor.visitMethodInsn(
@@ -89,7 +92,7 @@ abstract class FieldReaderAppender implements ByteCodeAppender {
 		);
 		// field = (cast) XXX
 		if ( !dispatcherType.isPrimitive() ) {
-			methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, persistentField.getType().asErasure().getInternalName() );
+			methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, persistentFieldAsDefined.getType().asErasure().getInternalName() );
 		}
 		fieldWrite( methodVisitor );
 		// end if
@@ -100,8 +103,12 @@ abstract class FieldReaderAppender implements ByteCodeAppender {
 		// return field
 		methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
 		fieldRead( methodVisitor );
-		methodVisitor.visitInsn( Type.getType( persistentField.getType().asErasure().getDescriptor() ).getOpcode( Opcodes.IRETURN ) );
-		return new Size( 4 + persistentField.getType().getStackSize().getSize(), instrumentedMethod.getStackSize() );
+		if ( !persistentField.getType().isPrimitive()
+				&& !persistentField.getType().asErasure().getInternalName().equals( persistentFieldAsDefined.getType().asErasure().getInternalName() ) ) {
+			methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, persistentField.getType().asErasure().getInternalName() );
+		}
+		methodVisitor.visitInsn( Type.getType( persistentFieldAsDefined.getType().asErasure().getDescriptor() ).getOpcode( Opcodes.IRETURN ) );
+		return new Size( 4 + persistentFieldAsDefined.getType().getStackSize().getSize(), instrumentedMethod.getStackSize() );
 	}
 
 	protected abstract void fieldRead(MethodVisitor methodVisitor);
@@ -110,17 +117,17 @@ abstract class FieldReaderAppender implements ByteCodeAppender {
 
 	private static class FieldWriting extends FieldReaderAppender {
 
-		private FieldWriting(TypeDescription managedCtClass, FieldDescription.InDefinedShape fieldDescription) {
-			super( managedCtClass, fieldDescription );
+		private FieldWriting(TypeDescription managedCtClass, FieldDescription persistentField) {
+			super( managedCtClass, persistentField );
 		}
 
 		@Override
 		protected void fieldRead(MethodVisitor methodVisitor) {
 			methodVisitor.visitFieldInsn(
 					Opcodes.GETFIELD,
-					persistentField.getDeclaringType().asErasure().getInternalName(),
-					persistentField.getInternalName(),
-					persistentField.getDescriptor()
+					persistentFieldAsDefined.getDeclaringType().asErasure().getInternalName(),
+					persistentFieldAsDefined.getInternalName(),
+					persistentFieldAsDefined.getDescriptor()
 			);
 		}
 
@@ -128,17 +135,17 @@ abstract class FieldReaderAppender implements ByteCodeAppender {
 		protected void fieldWrite(MethodVisitor methodVisitor) {
 			methodVisitor.visitFieldInsn(
 					Opcodes.PUTFIELD,
-					persistentField.getDeclaringType().asErasure().getInternalName(),
-					persistentField.getInternalName(),
-					persistentField.getDescriptor()
+					persistentFieldAsDefined.getDeclaringType().asErasure().getInternalName(),
+					persistentFieldAsDefined.getInternalName(),
+					persistentFieldAsDefined.getDescriptor()
 			);
 		}
 	}
 
 	private static class MethodDispatching extends FieldReaderAppender {
 
-		private MethodDispatching(TypeDescription managedCtClass, FieldDescription.InDefinedShape fieldDescription) {
-			super( managedCtClass, fieldDescription );
+		private MethodDispatching(TypeDescription managedCtClass, FieldDescription persistentField) {
+			super( managedCtClass, persistentField );
 		}
 
 		@Override
@@ -146,8 +153,8 @@ abstract class FieldReaderAppender implements ByteCodeAppender {
 			methodVisitor.visitMethodInsn(
 					Opcodes.INVOKESPECIAL,
 					managedCtClass.getSuperClass().asErasure().getInternalName(),
-					EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + persistentField.getName(),
-					Type.getMethodDescriptor( Type.getType( persistentField.getType().asErasure().getDescriptor() ) ),
+					EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + persistentFieldAsDefined.getName(),
+					Type.getMethodDescriptor( Type.getType( persistentFieldAsDefined.getType().asErasure().getDescriptor() ) ),
 					false
 			);
 		}
@@ -157,8 +164,8 @@ abstract class FieldReaderAppender implements ByteCodeAppender {
 			methodVisitor.visitMethodInsn(
 					Opcodes.INVOKESPECIAL,
 					managedCtClass.getSuperClass().asErasure().getInternalName(),
-					EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + persistentField.getName(),
-					Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( persistentField.getType().asErasure().getDescriptor() ) ),
+					EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + persistentFieldAsDefined.getName(),
+					Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( persistentFieldAsDefined.getType().asErasure().getDescriptor() ) ),
 					false
 			);
 		}

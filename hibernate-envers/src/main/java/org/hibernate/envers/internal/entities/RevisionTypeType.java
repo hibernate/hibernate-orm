@@ -11,11 +11,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Objects;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
-import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.type.IntegerType;
 import org.hibernate.usertype.UserType;
 
@@ -91,6 +91,6 @@ public class RevisionTypeType implements UserType, Serializable {
 
 	@Override
 	public boolean equals(Object x, Object y) throws HibernateException {
-		return EqualsHelper.equals( x, y );
+		return Objects.equals( x, y );
 	}
 }

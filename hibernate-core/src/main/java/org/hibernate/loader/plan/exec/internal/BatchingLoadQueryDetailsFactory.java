@@ -41,7 +41,7 @@ public class BatchingLoadQueryDetailsFactory {
 	 *
 	 * @return The EntityLoadQueryDetails
 	 */
-	public LoadQueryDetails makeEntityLoadQueryDetails(
+	public EntityLoadQueryDetails makeEntityLoadQueryDetails(
 			LoadPlan loadPlan,
 			String[] keyColumnNames,
 			QueryBuildingParameters buildingParameters,
@@ -65,6 +65,23 @@ public class BatchingLoadQueryDetailsFactory {
 				rootReturn,
 				buildingParameters,
 				factory
+		);
+	}
+
+	/**
+	 * Returns a EntityLoadQueryDetails object based on an existing one and additional elements specific to this one.
+	 *
+	 * @param entityLoadQueryDetailsTemplate the template
+	 * @param buildingParameters And influencers that would affect the generated SQL (mostly we are concerned with those
+	 * that add additional joins here)
+	 * @return The EntityLoadQueryDetails
+	 */
+	public EntityLoadQueryDetails makeEntityLoadQueryDetails(
+			EntityLoadQueryDetails entityLoadQueryDetailsTemplate,
+			QueryBuildingParameters buildingParameters) {
+		return new EntityLoadQueryDetails(
+				entityLoadQueryDetailsTemplate,
+				buildingParameters
 		);
 	}
 

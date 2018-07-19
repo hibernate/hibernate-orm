@@ -26,6 +26,19 @@ public class IntegerProperty implements Property<Integer> {
     @Column(name = "`value`")
     private Integer value;
 
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public Integer getValue() {
+        return value;
+    }
+
+    //Getters and setters omitted for brevity
+//end::mapping-column-any-property-example[]
+
     public Long getId() {
         return id;
     }
@@ -34,22 +47,14 @@ public class IntegerProperty implements Property<Integer> {
         this.id = id;
     }
 
-    @Override
-    public String getName() {
-        return name;
-    }
-
     public void setName(String name) {
         this.name = name;
-    }
-
-    public Integer getValue() {
-        return value;
     }
 
     public void setValue(Integer value) {
         this.value = value;
     }
+//tag::mapping-column-any-property-example[]
 }
 //end::mapping-column-any-property-example[]
 

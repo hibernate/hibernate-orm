@@ -6,10 +6,14 @@
  */
 package org.hibernate.annotations;
 
-import org.hibernate.tuple.CreationTimestampGeneration;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+import org.hibernate.tuple.CreationTimestampGeneration;
 
 /**
  * Marks a property as the creation timestamp of the containing entity. The property value will be set to the current
@@ -38,5 +42,6 @@ import java.lang.annotation.RetentionPolicy;
  */
 @ValueGenerationType(generatedBy = CreationTimestampGeneration.class)
 @Retention(RetentionPolicy.RUNTIME)
+@Target({ FIELD, METHOD })
 public @interface CreationTimestamp {
 }

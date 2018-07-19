@@ -8,10 +8,10 @@ package org.hibernate.type.descriptor.java;
 
 import java.io.Serializable;
 import java.util.Comparator;
+import java.util.Objects;
 
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.compare.ComparableComparator;
-import org.hibernate.internal.util.compare.EqualsHelper;
 
 /**
  * Abstract adapter for Java type descriptors.
@@ -80,7 +80,7 @@ public abstract class AbstractTypeDescriptor<T> implements BasicJavaDescriptor<T
 
 	@Override
 	public boolean areEqual(T one, T another) {
-		return EqualsHelper.equals( one, another );
+		return Objects.equals( one, another );
 	}
 
 	@Override

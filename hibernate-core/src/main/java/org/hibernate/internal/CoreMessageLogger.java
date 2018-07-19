@@ -43,6 +43,7 @@ import org.jboss.logging.annotations.Cause;
 import org.jboss.logging.annotations.LogMessage;
 import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
+import org.jboss.logging.annotations.ValidIdRange;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.ERROR;
@@ -56,6 +57,7 @@ import static org.jboss.logging.Logger.Level.WARN;
  * New messages must be added after the last message defined to ensure message codes are unique.
  */
 @MessageLogger(projectCode = "HHH")
+@ValidIdRange( min = 1, max = 10000 )
 public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = WARN)
@@ -1768,7 +1770,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unknownJavaTypeNoEqualsHashCode(Class javaType);
 
 	@LogMessage(level = WARN)
-	@Message(value = "@org.hibernate.annotations.Cache used on a non-root entity: ignored for %s. Please check the Hibernate user guide for correct setup.", id = 482)
+	@Message(value = "@org.hibernate.annotations.Cache used on a non-root entity: ignored for [%s]. Please see the Hibernate documentation for proper usage.", id = 482)
 	void cacheOrCacheableAnnotationOnNonRoot(String className);
 
 	@LogMessage(level = WARN)
@@ -1804,4 +1806,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "The query: [%s] attempts to update an immutable entity: %s",
 			id = 487)
 	void immutableEntityUpdateQuery(String sourceQuery, String querySpaces);
+
+	@Message(value = "Bytecode enhancement failed for class: %1$s. It might be due to the Java module system preventing Hibernate ORM from defining an enhanced class "
+			+ "in the same package as class %1$s. In this case, the class should be opened and exported to Hibernate ORM.", id = 488)
+	String bytecodeEnhancementFailedUnableToGetPrivateLookupFor(String className);
+
 }

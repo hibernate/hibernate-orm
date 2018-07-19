@@ -6,8 +6,9 @@
  */
 package org.hibernate.envers.internal.entities;
 
+import java.util.Objects;
+
 import org.hibernate.envers.ModificationStore;
-import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.type.Type;
 
 /**
@@ -30,6 +31,7 @@ public class PropertyData {
 	// They're properties used for bookkeeping by Hibernate
 	private boolean synthetic;
 	private Type propertyType;
+	private Class<?> virtualReturnClass;
 
 	/**
 	 * Copies the given property data, except the name.
@@ -42,6 +44,12 @@ public class PropertyData {
 		this.beanName = propertyData.beanName;
 		this.accessType = propertyData.accessType;
 		this.store = propertyData.store;
+
+		this.usingModifiedFlag = propertyData.usingModifiedFlag;
+		this.modifiedFlagName = propertyData.modifiedFlagName;
+		this.synthetic = propertyData.synthetic;
+		this.propertyType = propertyData.propertyType;
+		this.virtualReturnClass = propertyData.virtualReturnClass;
 	}
 
 	/**
@@ -92,8 +100,22 @@ public class PropertyData {
 			String modifiedFlagName,
 			boolean synthetic,
 			Type propertyType) {
+		this( name, beanName, accessType, store, usingModifiedFlag, modifiedFlagName, synthetic, propertyType, null );
+	}
+
+	public PropertyData(
+			String name,
+			String beanName,
+			String accessType,
+			ModificationStore store,
+			boolean usingModifiedFlag,
+			String modifiedFlagName,
+			boolean synthetic,
+			Type propertyType,
+			Class<?> virtualReturnClass) {
 		this( name, beanName, accessType, store, usingModifiedFlag, modifiedFlagName, synthetic );
 		this.propertyType = propertyType;
+		this.virtualReturnClass = virtualReturnClass;
 	}
 
 	public String getName() {
@@ -132,6 +154,10 @@ public class PropertyData {
 		return propertyType;
 	}
 
+	public Class<?> getVirtualReturnClass() {
+		return virtualReturnClass;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
@@ -144,10 +170,10 @@ public class PropertyData {
 		final PropertyData that = (PropertyData) o;
 		return usingModifiedFlag == that.usingModifiedFlag
 				&& store == that.store
-				&& EqualsHelper.equals( accessType, that.accessType )
-				&& EqualsHelper.equals( beanName, that.beanName )
-				&& EqualsHelper.equals( name, that.name )
-				&& EqualsHelper.equals( synthetic, that.synthetic );
+				&& Objects.equals( accessType, that.accessType )
+				&& Objects.equals( beanName, that.beanName )
+				&& Objects.equals( name, that.name )
+				&& Objects.equals( synthetic, that.synthetic );
 	}
 
 	@Override

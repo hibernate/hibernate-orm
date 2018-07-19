@@ -97,17 +97,17 @@ public class CustomType
 
 	@Override
 	public Class getReturnedClass() {
-		return userType.returnedClass();
+		return getUserType().returnedClass();
 	}
 
 	@Override
 	public boolean isEqual(Object x, Object y) throws HibernateException {
-		return userType.equals( x, y );
+		return getUserType().equals( x, y );
 	}
 
 	@Override
 	public int getHashCode(Object x) {
-		return userType.hashCode(x);
+		return getUserType().hashCode( x);
 	}
 
 	@Override
@@ -116,7 +116,7 @@ public class CustomType
 			String[] names,
 			SharedSessionContractImplementor session,
 			Object owner) throws SQLException {
-		return userType.nullSafeGet(rs, names, session, owner);
+		return getUserType().nullSafeGet( rs, names, session, owner);
 	}
 
 	@Override
@@ -131,12 +131,12 @@ public class CustomType
 
 	@Override
 	public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) {
-		return userType.assemble(cached, owner);
+		return getUserType().assemble( cached, owner);
 	}
 
 	@Override
 	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) {
-		return userType.disassemble(value);
+		return getUserType().disassemble( value);
 	}
 
 	@Override
@@ -146,7 +146,7 @@ public class CustomType
 			SharedSessionContractImplementor session,
 			Object owner,
 			Map copyCache) throws HibernateException {
-		return userType.replace( original, target, owner );
+		return getUserType().replace( original, target, owner );
 	}
 
 	@Override
@@ -157,7 +157,7 @@ public class CustomType
 			boolean[] settable,
 			SharedSessionContractImplementor session) throws SQLException {
 		if ( settable[0] ) {
-			userType.nullSafeSet( st, value, index, session );
+			getUserType().nullSafeSet( st, value, index, session );
 		}
 	}
 
@@ -167,7 +167,7 @@ public class CustomType
 			Object value,
 			int index,
 			SharedSessionContractImplementor session) throws SQLException {
-		userType.nullSafeSet( st, value, index, session );
+		getUserType().nullSafeSet( st, value, index, session );
 	}
 
 	@SuppressWarnings({ "UnusedDeclaration" })
@@ -187,12 +187,12 @@ public class CustomType
 
 	@Override
 	public Object deepCopy(Object value, SessionFactoryImplementor factory) throws HibernateException {
-		return userType.deepCopy(value);
+		return getUserType().deepCopy( value);
 	}
 
 	@Override
 	public boolean isMutable() {
-		return userType.isMutable();
+		return getUserType().isMutable();
 	}
 
 	@Override
@@ -202,22 +202,22 @@ public class CustomType
 
 	@Override
 	public String objectToSQLString(Object value, Dialect dialect) throws Exception {
-		return ( (EnhancedUserType) userType ).objectToSQLString(value);
+		return ( (EnhancedUserType) getUserType() ).objectToSQLString( value);
 	}
 
 	@Override
 	public Comparator getComparator() {
-		return (Comparator) userType;
+		return (Comparator) getUserType();
 	}
 
 	@Override
 	public Object next(Object current, SharedSessionContractImplementor session) {
-		return ( (UserVersionType) userType ).next( current, session );
+		return ( (UserVersionType) getUserType() ).next( current, session );
 	}
 
 	@Override
 	public Object seed(SharedSessionContractImplementor session) {
-		return ( (UserVersionType) userType ).seed( session );
+		return ( (UserVersionType) getUserType() ).seed( session );
 	}
 
 	@Override
@@ -227,7 +227,7 @@ public class CustomType
 			return "null";
 		}
 		else if ( customLogging ) {
-			return ( ( LoggableUserType ) userType ).toLoggableString( value, factory );
+			return ( ( LoggableUserType ) getUserType() ).toLoggableString( value, factory );
 		}
 		else {
 			return toXMLString( value, factory );
@@ -252,27 +252,27 @@ public class CustomType
 	@Override
 	@SuppressWarnings("unchecked")
 	public String toString(Object value) throws HibernateException {
-		if ( StringRepresentableType.class.isInstance( userType ) ) {
-			return ( (StringRepresentableType) userType ).toString( value );
+		if ( StringRepresentableType.class.isInstance( getUserType() ) ) {
+			return ( (StringRepresentableType) getUserType() ).toString( value );
 		}
 		if ( value == null ) {
 			return null;
 		}
-		if ( EnhancedUserType.class.isInstance( userType ) ) {
+		if ( EnhancedUserType.class.isInstance( getUserType() ) ) {
 			//noinspection deprecation
-			return ( (EnhancedUserType) userType ).toXMLString( value );
+			return ( (EnhancedUserType) getUserType() ).toXMLString( value );
 		}
 		return value.toString();
 	}
 
 	@Override
 	public Object fromStringValue(String string) throws HibernateException {
-		if ( StringRepresentableType.class.isInstance( userType ) ) {
-			return ( (StringRepresentableType) userType ).fromStringValue( string );
+		if ( StringRepresentableType.class.isInstance( getUserType() ) ) {
+			return ( (StringRepresentableType) getUserType() ).fromStringValue( string );
 		}
-		if ( EnhancedUserType.class.isInstance( userType ) ) {
+		if ( EnhancedUserType.class.isInstance( getUserType() ) ) {
 			//noinspection deprecation
-			return ( (EnhancedUserType) userType ).fromXMLString( string );
+			return ( (EnhancedUserType) getUserType() ).fromXMLString( string );
 		}
 		throw new HibernateException(
 				String.format(
@@ -286,8 +286,8 @@ public class CustomType
 
 	@Override
 	public boolean canDoSetting() {
-		if ( ProcedureParameterNamedBinder.class.isInstance( userType ) ) {
-			return ((ProcedureParameterNamedBinder) userType).canDoSetting();
+		if ( ProcedureParameterNamedBinder.class.isInstance( getUserType() ) ) {
+			return ((ProcedureParameterNamedBinder) getUserType() ).canDoSetting();
 		}
 		return false;
 	}
@@ -296,19 +296,19 @@ public class CustomType
 	public void nullSafeSet(
 			CallableStatement statement, Object value, String name, SharedSessionContractImplementor session) throws SQLException {
 		if ( canDoSetting() ) {
-			((ProcedureParameterNamedBinder) userType).nullSafeSet( statement, value, name, session );
+			((ProcedureParameterNamedBinder) getUserType() ).nullSafeSet( statement, value, name, session );
 		}
 		else {
 			throw new UnsupportedOperationException(
-					"Type [" + userType + "] does support parameter binding by name"
+					"Type [" + getUserType() + "] does support parameter binding by name"
 			);
 		}
 	}
 
 	@Override
 	public boolean canDoExtraction() {
-		if ( ProcedureParameterExtractionAware.class.isInstance( userType ) ) {
-			return ((ProcedureParameterExtractionAware) userType).canDoExtraction();
+		if ( ProcedureParameterExtractionAware.class.isInstance( getUserType() ) ) {
+			return ((ProcedureParameterExtractionAware) getUserType() ).canDoExtraction();
 		}
 		return false;
 	}
@@ -316,11 +316,11 @@ public class CustomType
 	@Override
 	public Object extract(CallableStatement statement, int startIndex, SharedSessionContractImplementor session) throws SQLException {
 		if ( canDoExtraction() ) {
-			return ((ProcedureParameterExtractionAware) userType).extract( statement, startIndex, session );
+			return ((ProcedureParameterExtractionAware) getUserType() ).extract( statement, startIndex, session );
 		}
 		else {
 			throw new UnsupportedOperationException(
-					"Type [" + userType + "] does support parameter value extraction"
+					"Type [" + getUserType() + "] does support parameter value extraction"
 			);
 		}
 	}
@@ -329,12 +329,22 @@ public class CustomType
 	public Object extract(CallableStatement statement, String[] paramNames, SharedSessionContractImplementor session)
 			throws SQLException {
 		if ( canDoExtraction() ) {
-			return ((ProcedureParameterExtractionAware) userType).extract( statement, paramNames, session );
+			return ((ProcedureParameterExtractionAware) getUserType() ).extract( statement, paramNames, session );
 		}
 		else {
 			throw new UnsupportedOperationException(
-					"Type [" + userType + "] does support parameter value extraction"
+					"Type [" + getUserType() + "] does support parameter value extraction"
 			);
 		}
+	}
+
+	@Override
+	public int hashCode() {
+		return getUserType().hashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		return ( obj instanceof CustomType ) && getUserType().equals( ( (CustomType) obj ).getUserType() );
 	}
 }

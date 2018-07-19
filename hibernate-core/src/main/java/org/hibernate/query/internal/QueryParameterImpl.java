@@ -25,7 +25,7 @@ public abstract class QueryParameterImpl<T> implements QueryParameter<T> {
 	}
 
 	@Override
-	public Type getType() {
+	public Type getHibernateType() {
 		return expectedType;
 	}
 

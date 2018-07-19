@@ -7,7 +7,7 @@
 package org.hibernate.stat.internal;
 
 import java.io.Serializable;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.EntityStatistics;
@@ -18,14 +18,14 @@ import org.hibernate.stat.EntityStatistics;
  * @author Alex Snaps
  */
 public class EntityStatisticsImpl extends AbstractCacheableDataStatistics implements EntityStatistics, Serializable {
-	private final String rootEntityName;
 
-	private AtomicLong loadCount = new AtomicLong();
-	private AtomicLong updateCount = new AtomicLong();
-	private AtomicLong insertCount = new AtomicLong();
-	private AtomicLong deleteCount = new AtomicLong();
-	private AtomicLong fetchCount = new AtomicLong();
-	private AtomicLong optimisticFailureCount = new AtomicLong();
+	private final String rootEntityName;
+	private final LongAdder loadCount = new LongAdder();
+	private final LongAdder updateCount = new LongAdder();
+	private final LongAdder insertCount = new LongAdder();
+	private final LongAdder deleteCount = new LongAdder();
+	private final LongAdder fetchCount = new LongAdder();
+	private final LongAdder optimisticFailureCount = new LongAdder();
 
 	EntityStatisticsImpl(EntityPersister rootEntityDescriptor) {
 		super(
@@ -37,51 +37,51 @@ public class EntityStatisticsImpl extends AbstractCacheableDataStatistics implem
 	}
 
 	public long getDeleteCount() {
-		return deleteCount.get();
+		return deleteCount.sum();
 	}
 
 	public long getInsertCount() {
-		return insertCount.get();
+		return insertCount.sum();
 	}
 
 	public long getLoadCount() {
-		return loadCount.get();
+		return loadCount.sum();
 	}
 
 	public long getUpdateCount() {
-		return updateCount.get();
+		return updateCount.sum();
 	}
 
 	public long getFetchCount() {
-		return fetchCount.get();
+		return fetchCount.sum();
 	}
 
 	public long getOptimisticFailureCount() {
-		return optimisticFailureCount.get();
+		return optimisticFailureCount.sum();
 	}
 
 	void incrementLoadCount() {
-		loadCount.getAndIncrement();
+		loadCount.increment();
 	}
 
 	void incrementFetchCount() {
-		fetchCount.getAndIncrement();
+		fetchCount.increment();
 	}
 
 	void incrementUpdateCount() {
-		updateCount.getAndIncrement();
+		updateCount.increment();
 	}
 
 	void incrementInsertCount() {
-		insertCount.getAndIncrement();
+		insertCount.increment();
 	}
 
 	void incrementDeleteCount() {
-		deleteCount.getAndIncrement();
+		deleteCount.increment();
 	}
 
 	void incrementOptimisticFailureCount() {
-		optimisticFailureCount.getAndIncrement();
+		optimisticFailureCount.increment();
 	}
 
 	public String toString() {

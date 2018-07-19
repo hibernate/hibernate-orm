@@ -21,7 +21,6 @@ import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.CacheImplementor;
-import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.stat.NaturalIdCacheStatistics;
 import org.hibernate.stat.SecondLevelCacheStatistics;
@@ -82,6 +81,9 @@ public class RegionNameTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		final NaturalIdCacheStatistics naturalIdCacheStatistics = stats.getNaturalIdCacheStatistics( regionName );
 		assert naturalIdCacheStatistics != null;
+
+		final SecondLevelCacheStatistics dne = stats.getSecondLevelCacheStatistics( cachePrefix + ".does.not.exist" );
+		assert dne != null;
 	}
 
 	// todo (5.3) : any other API I can think of that deals with region-name?
@@ -146,7 +148,7 @@ public class RegionNameTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		boolean foundRegion = false;
 		for ( String name : cache.getSecondLevelCacheRegionNames() ) {
-			if ( EqualsHelper.areEqual( name, regionName ) ) {
+			if ( regionName.equals( name ) ) {
 				foundRegion = true;
 				break;
 			}

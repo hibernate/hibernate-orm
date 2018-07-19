@@ -36,6 +36,8 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.build.AllowPrintStacktrace;
+import org.hibernate.internal.build.AllowSysOut;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.Work;
 import org.hibernate.mapping.Collection;
@@ -397,6 +399,8 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 		releaseResources();
 	}
 
+	@AllowSysOut
+	@AllowPrintStacktrace
 	protected void releaseResources() {
 		if ( sessionFactory != null ) {
 			try {
@@ -508,6 +512,7 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	@SuppressWarnings( {"UnnecessaryBoxing", "UnnecessaryUnboxing"})
+	@AllowSysOut
 	protected void assertAllDataRemoved() {
 		if ( !createSchema() ) {
 			return; // no tables were created...

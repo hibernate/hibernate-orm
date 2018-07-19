@@ -39,6 +39,7 @@ public class QueryParameterNamedImpl<T> extends QueryParameterImpl<T> implements
 		return null;
 	}
 
+	@Override
 	public int[] getSourceLocations() {
 		return sourceLocations;
 	}

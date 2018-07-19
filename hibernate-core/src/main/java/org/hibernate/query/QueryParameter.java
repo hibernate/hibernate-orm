@@ -21,7 +21,7 @@ public interface QueryParameter<T> extends javax.persistence.Parameter<T> {
 	 *
 	 * @return The Hibernate Type.
 	 */
-	Type getType();
+	Type getHibernateType();
 
 	int[] getSourceLocations();
 

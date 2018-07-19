@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -62,12 +63,14 @@ public class ResourceRegistryStandardImpl implements ResourceRegistry {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public void register(Statement statement, boolean cancelable) {
 		log.tracef( "Registering statement [%s]", statement );
-		if ( xref.containsKey( statement ) ) {
+
+		Set<ResultSet> previousValue = xref.putIfAbsent( statement, Collections.EMPTY_SET );
+		if ( previousValue != null ) {
 			throw new HibernateException( "JDBC Statement already registered" );
 		}
-		xref.put( statement, null );
 
 		if ( cancelable ) {
 			lastQuery = statement;
@@ -201,13 +204,15 @@ public class ResourceRegistryStandardImpl implements ResourceRegistry {
 			}
 		}
 		if ( statement != null ) {
+			Set<ResultSet> resultSets = xref.get( statement );
+
 			// Keep this at DEBUG level, rather than warn.  Numerous connection pool implementations can return a
 			// proxy/wrapper around the JDBC Statement, causing excessive logging here.  See HHH-8210.
-			if ( log.isDebugEnabled() && !xref.containsKey( statement ) ) {
+			if ( log.isDebugEnabled() && resultSets == null ) {
 				log.debug( "ResultSet statement was not registered (on register)" );
 			}
-			Set<ResultSet> resultSets = xref.get( statement );
-			if ( resultSets == null ) {
+
+			if ( resultSets == null || resultSets == Collections.EMPTY_SET ) {
 				resultSets = new HashSet<ResultSet>();
 				xref.put( statement, resultSets );
 			}

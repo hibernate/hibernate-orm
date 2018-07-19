@@ -4330,7 +4330,10 @@ public class FooBarTest extends LegacyTestCase {
 		);
 		s.refresh(foo);
 		assertEquals( Long.valueOf( -3l ), foo.getLong() );
-		assertEquals( LockMode.READ, s.getCurrentLockMode( foo ) );
+		// NOTE : this test used to test for LockMode.READ here, but that actually highlights a bug
+		//		`foo` has just been inserted and then updated in this same Session - its lock mode
+		//		therefore ought to be WRITE.  See https://hibernate.atlassian.net/browse/HHH-12257
+		assertEquals( LockMode.WRITE, s.getCurrentLockMode( foo ) );
 		s.refresh(foo, LockMode.UPGRADE);
 		if ( getDialect().supportsOuterJoinForUpdate() ) {
 			assertEquals( LockMode.UPGRADE, s.getCurrentLockMode( foo ) );

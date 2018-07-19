@@ -23,80 +23,81 @@ import static org.junit.Assert.assertEquals;
  * @author Vlad Mihalcea
  */
 @SkipForDialect(
-		value = {
-				PostgreSQL81Dialect.class
-		},
-		comment = "@see https://hibernate.atlassian.net/browse/HHH-10693"
+        value = {
+                PostgreSQL81Dialect.class
+        },
+        comment = "@see https://hibernate.atlassian.net/browse/HHH-10693"
 )
 public class NationalizedTest extends BaseEntityManagerFunctionalTestCase {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Product.class
-		};
-	}
+    @Override
+    protected Class<?>[] getAnnotatedClasses() {
+        return new Class<?>[] {
+            Product.class
+        };
+    }
 
-	@Test
-	public void test() {
-		Integer productId = doInJPA( this::entityManagerFactory, entityManager -> {
-			//tag::basic-nationalized-persist-example[]
-			final Product product = new Product();
-			product.setId( 1 );
-			product.setName( "Mobile phone" );
-			product.setWarranty( "My product warranty" );
+    @Test
+    public void test() {
+        Integer productId = doInJPA( this::entityManagerFactory, entityManager -> {
+            //tag::basic-nationalized-persist-example[]
+            final Product product = new Product();
+            product.setId( 1 );
+            product.setName( "Mobile phone" );
+            product.setWarranty( "My product warranty" );
 
-			entityManager.persist( product );
-			//end::basic-nationalized-persist-example[]
+            entityManager.persist( product );
+            //end::basic-nationalized-persist-example[]
 
-			return product.getId();
-		} );
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Product product = entityManager.find( Product.class, productId );
-			assertEquals( "My product warranty", product.getWarranty() );
-		} );
-	}
+            return product.getId();
+        } );
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            Product product = entityManager.find( Product.class, productId );
 
-	//tag::basic-nationalized-example[]
-	@Entity(name = "Product")
-	public static class Product {
+            assertEquals( "My product warranty", product.getWarranty() );
+        } );
+    }
 
-		@Id
-		private Integer id;
+    //tag::basic-nationalized-example[]
+    @Entity(name = "Product")
+    public static class Product {
 
-		private String name;
+        @Id
+        private Integer id;
 
-		@Nationalized
-		private String warranty;
+        private String name;
 
-		//Getters and setters are omitted for brevity
+        @Nationalized
+        private String warranty;
 
-	//end::basic-nationalized-example[]
-		public Integer getId() {
-			return id;
-		}
+        //Getters and setters are omitted for brevity
 
-		public void setId(Integer id) {
-			this.id = id;
-		}
+    //end::basic-nationalized-example[]
+        public Integer getId() {
+            return id;
+        }
 
-		public String getName() {
-			return name;
-		}
+        public void setId(Integer id) {
+            this.id = id;
+        }
 
-		public void setName(String name) {
-			this.name = name;
-		}
+        public String getName() {
+            return name;
+        }
 
-		public String getWarranty() {
-			return warranty;
-		}
+        public void setName(String name) {
+            this.name = name;
+        }
 
-		public void setWarranty(String warranty) {
-			this.warranty = warranty;
-		}
+        public String getWarranty() {
+            return warranty;
+        }
 
-		//tag::basic-nationalized-example[]
-	}
-	//end::basic-nationalized-example[]
+        public void setWarranty(String warranty) {
+            this.warranty = warranty;
+        }
+
+        //tag::basic-nationalized-example[]
+    }
+    //end::basic-nationalized-example[]
 }

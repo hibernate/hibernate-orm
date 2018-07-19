@@ -337,6 +337,15 @@ public interface SQLQuery<T> extends Query<T>, SynchronizeableQuery<T> {
 
 
 	@Override
+	SQLQuery<T> addSynchronizedQuerySpace(String querySpace);
+
+	@Override
+	SQLQuery<T> addSynchronizedEntityName(String entityName) throws MappingException;
+
+	@Override
+	SQLQuery<T> addSynchronizedEntityClass(Class entityClass) throws MappingException;
+
+	@Override
 	NativeQuery<T> setHibernateFlushMode(FlushMode flushMode);
 
 	@Override
@@ -440,15 +449,6 @@ public interface SQLQuery<T> extends Query<T>, SynchronizeableQuery<T> {
 
 	@Override
 	NativeQuery<T> setParameter(int position, Date value, TemporalType temporalType);
-
-	@Override
-	NativeQuery<T> addSynchronizedQuerySpace(String querySpace);
-
-	@Override
-	NativeQuery<T> addSynchronizedEntityName(String entityName) throws MappingException;
-
-	@Override
-	NativeQuery<T> addSynchronizedEntityClass(Class entityClass) throws MappingException;
 
 	@Override
 	NativeQuery<T> setFlushMode(FlushMode flushMode);

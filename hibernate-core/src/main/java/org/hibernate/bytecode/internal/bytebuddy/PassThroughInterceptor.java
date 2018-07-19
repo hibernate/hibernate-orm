@@ -11,57 +11,58 @@ import java.util.HashMap;
 
 import org.hibernate.proxy.ProxyConfiguration;
 
-import net.bytebuddy.implementation.bind.annotation.AllArguments;
-import net.bytebuddy.implementation.bind.annotation.Origin;
-import net.bytebuddy.implementation.bind.annotation.RuntimeType;
-import net.bytebuddy.implementation.bind.annotation.This;
-
 public class PassThroughInterceptor implements ProxyConfiguration.Interceptor {
 
-	private HashMap data = new HashMap();
-	private final Object proxiedObject;
+	private HashMap<Object, Object> data = new HashMap<>();
 	private final String proxiedClassName;
 
-	public PassThroughInterceptor(Object proxiedObject, String proxiedClassName) {
-		this.proxiedObject = proxiedObject;
+	public PassThroughInterceptor(String proxiedClassName) {
 		this.proxiedClassName = proxiedClassName;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public Object intercept(Object instance, Method method, Object[] arguments) throws Exception {
 		final String name = method.getName();
-		if ( "toString".equals( name ) ) {
+
+		if ( "toString".equals( name ) && arguments.length == 0 ) {
 			return proxiedClassName + "@" + System.identityHashCode( instance );
 		}
-		else if ( "equals".equals( name ) ) {
-			return proxiedObject == instance;
+
+		if ( "equals".equals( name ) && arguments.length == 1 ) {
+			return instance == arguments[0];
 		}
-		else if ( "hashCode".equals( name ) ) {
+
+		if ( "hashCode".equals( name ) && arguments.length == 0 ) {
 			return System.identityHashCode( instance );
 		}
 
-		final boolean hasGetterSignature = method.getParameterCount() == 0
-				&& method.getReturnType() != null;
-		final boolean hasSetterSignature = method.getParameterCount() == 1
-				&& ( method.getReturnType() == null || method.getReturnType() == void.class );
-
-		if ( name.startsWith( "get" ) && hasGetterSignature ) {
+		if ( name.startsWith( "get" ) && hasGetterSignature( method ) ) {
 			final String propName = name.substring( 3 );
 			return data.get( propName );
 		}
-		else if ( name.startsWith( "is" ) && hasGetterSignature ) {
+
+		if ( name.startsWith( "is" ) && hasGetterSignature( method ) ) {
 			final String propName = name.substring( 2 );
 			return data.get( propName );
 		}
-		else if ( name.startsWith( "set" ) && hasSetterSignature ) {
+
+		if ( name.startsWith( "set" ) && hasSetterSignature( method ) ) {
 			final String propName = name.substring( 3 );
 			data.put( propName, arguments[0] );
 			return null;
 		}
-		else {
-			// todo : what else to do here?
-			return null;
-		}
+
+		// todo : what else to do here?
+		return null;
+	}
+
+	private boolean hasGetterSignature(Method method) {
+		return method.getParameterCount() == 0
+				&& method.getReturnType() != null;
+	}
+
+	private boolean hasSetterSignature(Method method) {
+		return method.getParameterCount() == 1
+				&& ( method.getReturnType() == null || method.getReturnType() == void.class );
 	}
 }

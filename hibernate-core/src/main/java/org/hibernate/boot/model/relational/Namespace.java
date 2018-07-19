@@ -8,13 +8,13 @@ package org.hibernate.boot.model.relational;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.Table;
 
@@ -145,7 +145,7 @@ public class Namespace {
 		}
 
 		final Namespace that = (Namespace) o;
-		return EqualsHelper.equals( this.name, that.name );
+		return Objects.equals( this.name, that.name );
 	}
 
 	@Override
@@ -190,8 +190,8 @@ public class Namespace {
 
 			final Name that = (Name) o;
 
-			return EqualsHelper.equals( this.catalog, that.catalog )
-					&& EqualsHelper.equals( this.schema, that.schema );
+			return Objects.equals( this.catalog, that.catalog )
+					&& Objects.equals( this.schema, that.schema );
 		}
 
 		@Override

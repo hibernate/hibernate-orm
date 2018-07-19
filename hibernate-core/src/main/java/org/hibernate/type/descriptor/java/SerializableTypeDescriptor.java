@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.SQLException;
+import java.util.Arrays;
 
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.Immutable;
@@ -71,7 +72,7 @@ public class SerializableTypeDescriptor<T extends Serializable> extends Abstract
 			return false;
 		}
 		return one.equals( another )
-				|| PrimitiveByteArrayTypeDescriptor.INSTANCE.areEqual( toBytes( one ), toBytes( another ) );
+				|| Arrays.equals( toBytes( one ), toBytes( another ) );
 	}
 
 	@Override

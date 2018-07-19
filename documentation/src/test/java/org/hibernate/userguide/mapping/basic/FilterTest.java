@@ -8,10 +8,12 @@ package org.hibernate.userguide.mapping.basic;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.NoResultException;
@@ -39,267 +41,301 @@ import static org.junit.Assert.assertNull;
  */
 public class FilterTest extends BaseEntityManagerFunctionalTestCase {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Client.class,
-			Account.class
-		};
-	}
+    @Override
+    protected Class<?>[] getAnnotatedClasses() {
+        return new Class<?>[] {
+            Client.class,
+            Account.class
+        };
+    }
 
-	@Test
-	public void testLifecycle() {
-		//tag::mapping-filter-persistence-example[]
-		doInJPA( this::entityManagerFactory, entityManager -> {
+    @Test
+    public void testLifecycle() {
+        doInJPA( this::entityManagerFactory, entityManager -> {
 
-			Client client = new Client();
-			client.setId( 1L );
-			client.setName( "John Doe" );
-			entityManager.persist( client );
+            //tag::mapping-filter-persistence-example[]
+            Client client = new Client()
+            .setId( 1L )
+            .setName( "John Doe" );
 
-			Account account1 = new Account( );
-			account1.setId( 1L );
-			account1.setType( AccountType.CREDIT );
-			account1.setAmount( 5000d );
-			account1.setRate( 1.25 / 100 );
-			account1.setActive( true );
-			account1.setClient( client );
-			client.getAccounts().add( account1 );
-			entityManager.persist( account1 );
+            client.addAccount(
+                new Account()
+                .setId( 1L )
+                .setType( AccountType.CREDIT )
+                .setAmount( 5000d )
+                .setRate( 1.25 / 100 )
+                .setActive( true )
+            );
 
-			Account account2 = new Account( );
-			account2.setId( 2L );
-			account2.setType( AccountType.DEBIT );
-			account2.setAmount( 0d );
-			account2.setRate( 1.05 / 100 );
-			account2.setActive( false );
-			account2.setClient( client );
-			client.getAccounts().add( account2 );
-			entityManager.persist( account2 );
+            client.addAccount(
+                new Account()
+                .setId( 2L )
+                .setType( AccountType.DEBIT )
+                .setAmount( 0d )
+                .setRate( 1.05 / 100 )
+                .setActive( false )
+            );
 
-			Account account3 = new Account( );
-			account3.setType( AccountType.DEBIT );
-			account3.setId( 3L );
-			account3.setAmount( 250d );
-			account3.setRate( 1.05 / 100 );
-			account3.setActive( true );
-			account3.setClient( client );
-			client.getAccounts().add( account3 );
-			entityManager.persist( account3 );
-		} );
-		//end::mapping-filter-persistence-example[]
+            client.addAccount(
+                new Account()
+                .setType( AccountType.DEBIT )
+                .setId( 3L )
+                .setAmount( 250d )
+                .setRate( 1.05 / 100 )
+                .setActive( true )
+            );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			log.infof( "Activate filter [%s]", "activeAccount");
+            entityManager.persist( client );
+            //end::mapping-filter-persistence-example[]
+        } );
 
-			entityManager
-					.unwrap( Session.class )
-					.enableFilter( "activeAccount" )
-					.setParameter( "active", true);
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            log.infof( "Activate filter [%s]", "activeAccount");
 
-			Account account1 = entityManager.find( Account.class, 1L );
-			Account account2 = entityManager.find( Account.class, 2L );
+            entityManager
+                    .unwrap( Session.class )
+                    .enableFilter( "activeAccount" )
+                    .setParameter( "active", true);
 
-			assertNotNull( account1 );
-			assertNotNull( account2 );
-		} );
+            Account account1 = entityManager.find( Account.class, 1L );
+            Account account2 = entityManager.find( Account.class, 2L );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			log.infof( "Activate filter [%s]", "activeAccount");
+            assertNotNull( account1 );
+            assertNotNull( account2 );
+        } );
 
-			entityManager
-					.unwrap( Session.class )
-					.enableFilter( "activeAccount" )
-					.setParameter( "active", true);
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            log.infof( "Activate filter [%s]", "activeAccount");
 
-			Account account1 = entityManager.createQuery(
-					"select a from Account a where a.id = :id", Account.class)
-					.setParameter( "id", 1L )
-					.getSingleResult();
-			assertNotNull( account1 );
-			try {
-				Account account2 = entityManager.createQuery(
-						"select a from Account a where a.id = :id", Account.class)
-						.setParameter( "id", 2L )
-						.getSingleResult();
-			}
-			catch (NoResultException expected) {
-			}
-		} );
+            entityManager
+                    .unwrap( Session.class )
+                    .enableFilter( "activeAccount" )
+                    .setParameter( "active", true);
 
-		//tag::mapping-filter-entity-example[]
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			log.infof( "Activate filter [%s]", "activeAccount");
+            Account account1 = entityManager.createQuery(
+                    "select a from Account a where a.id = :id", Account.class)
+                    .setParameter( "id", 1L )
+                    .getSingleResult();
+            assertNotNull( account1 );
+            try {
+                Account account2 = entityManager.createQuery(
+                        "select a from Account a where a.id = :id", Account.class)
+                        .setParameter( "id", 2L )
+                        .getSingleResult();
+            }
+            catch (NoResultException expected) {
+            }
+        } );
 
-			entityManager
-				.unwrap( Session.class )
-				.enableFilter( "activeAccount" )
-				.setParameter( "active", true);
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            log.infof( "Activate filter [%s]", "activeAccount");
+            //tag::mapping-filter-entity-example[]
+            entityManager
+                .unwrap( Session.class )
+                .enableFilter( "activeAccount" )
+                .setParameter( "active", true);
 
-			Account account = entityManager.find( Account.class, 2L );
-			assertFalse( account.isActive() );
-		} );
-		//end::mapping-filter-entity-example[]
+            Account account = entityManager.find( Account.class, 2L );
 
-		// tag::mapping-filter-entity-query-example[]
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			List<Account> accounts = entityManager.createQuery(
-				"select a from Account a", Account.class)
-			.getResultList();
-			assertEquals( 3, accounts.size());
-		} );
+            assertFalse( account.isActive() );
+            //end::mapping-filter-entity-example[]
+        } );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			log.infof( "Activate filter [%s]", "activeAccount");
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            //tag::mapping-no-filter-entity-query-example[]
+            List<Account> accounts = entityManager.createQuery(
+                "select a from Account a", Account.class)
+            .getResultList();
 
-			entityManager
-				.unwrap( Session.class )
-				.enableFilter( "activeAccount" )
-				.setParameter( "active", true);
+            assertEquals( 3, accounts.size());
+            //end::mapping-no-filter-entity-query-example[]
+        } );
 
-			List<Account> accounts = entityManager.createQuery(
-				"select a from Account a", Account.class)
-			.getResultList();
-			assertEquals( 2, accounts.size());
-		} );
-		//end::mapping-filter-entity-query-example[]
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            log.infof( "Activate filter [%s]", "activeAccount");
+            //tag::mapping-filter-entity-query-example[]
+            entityManager
+                .unwrap( Session.class )
+                .enableFilter( "activeAccount" )
+                .setParameter( "active", true);
 
-		//tag::mapping-filter-collection-query-example[]
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Client client = entityManager.find( Client.class, 1L );
-			assertEquals( 3, client.getAccounts().size() );
-		} );
+            List<Account> accounts = entityManager.createQuery(
+                "select a from Account a", Account.class)
+            .getResultList();
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			log.infof( "Activate filter [%s]", "activeAccount");
+            assertEquals( 2, accounts.size());
+            //end::mapping-filter-entity-query-example[]
+        } );
 
-			entityManager
-				.unwrap( Session.class )
-				.enableFilter( "activeAccount" )
-				.setParameter( "active", true);
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            //tag::mapping-no-filter-collection-query-example[]
+            Client client = entityManager.find( Client.class, 1L );
 
-			Client client = entityManager.find( Client.class, 1L );
-			assertEquals( 2, client.getAccounts().size() );
-		} );
-		//end::mapping-filter-collection-query-example[]
-	}
+            assertEquals( 3, client.getAccounts().size() );
+            //end::mapping-no-filter-collection-query-example[]
+        } );
 
-	//tag::mapping-filter-example[]
-	public enum AccountType {
-		DEBIT,
-		CREDIT
-	}
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            log.infof( "Activate filter [%s]", "activeAccount");
 
-	@Entity(name = "Client")
-	public static class Client {
+            //tag::mapping-filter-collection-query-example[]
+            entityManager
+                .unwrap( Session.class )
+                .enableFilter( "activeAccount" )
+                .setParameter( "active", true);
 
-		@Id
-		private Long id;
+            Client client = entityManager.find( Client.class, 1L );
 
-		private String name;
+            assertEquals( 2, client.getAccounts().size() );
+            //end::mapping-filter-collection-query-example[]
+        } );
+    }
 
-		@OneToMany(mappedBy = "client")
-		@Filter(name="activeAccount", condition="active = :active")
-		private List<Account> accounts = new ArrayList<>( );
+    public enum AccountType {
+        DEBIT,
+        CREDIT
+    }
 
-		//Getters and setters omitted for brevity
+    //tag::mapping-filter-Client-example[]
+    @Entity(name = "Client")
+    public static class Client {
 
-		//end::mapping-filter-example[]
-		public Long getId() {
-			return id;
-		}
+        @Id
+        private Long id;
 
-		public void setId(Long id) {
-			this.id = id;
-		}
+        private String name;
 
-		public String getName() {
-			return name;
-		}
+        @OneToMany(
+            mappedBy = "client",
+            cascade = CascadeType.ALL
+        )
+        @Filter(
+            name="activeAccount",
+            condition="active_status = :active"
+        )
+        private List<Account> accounts = new ArrayList<>( );
 
-		public void setName(String name) {
-			this.name = name;
-		}
+        //Getters and setters omitted for brevity
+    //end::mapping-filter-Client-example[]
+        public Long getId() {
+            return id;
+        }
 
-		public List<Account> getAccounts() {
-			return accounts;
-		}
-		//tag::mapping-filter-example[]
-	}
+        public Client setId(Long id) {
+            this.id = id;
+            return this;
+        }
 
-	@Entity(name = "Account")
-	@FilterDef(name="activeAccount", parameters=@ParamDef( name="active", type="boolean" ) )
-	@Filter(name="activeAccount", condition="active = :active")
-	public static class Account {
+        public String getName() {
+            return name;
+        }
 
-		@Id
-		private Long id;
+        public Client setName(String name) {
+            this.name = name;
+            return this;
+        }
 
-		@ManyToOne
-		private Client client;
+        public List<Account> getAccounts() {
+            return accounts;
+        }
+    //tag::mapping-filter-Client-example[]
 
-		@Column(name = "account_type")
-		@Enumerated(EnumType.STRING)
-		private AccountType type;
+        public void addAccount(Account account) {
+            account.setClient( this );
+            this.accounts.add( account );
+        }
+    }
+    //end::mapping-filter-Client-example[]
 
-		private Double amount;
+    //tag::mapping-filter-Account-example[]
+    @Entity(name = "Account")
+    @FilterDef(
+        name="activeAccount",
+        parameters = @ParamDef(
+            name="active",
+            type="boolean"
+        )
+    )
+    @Filter(
+        name="activeAccount",
+        condition="active_status = :active"
+    )
+    public static class Account {
 
-		private Double rate;
+        @Id
+        private Long id;
 
-		private boolean active;
+        @ManyToOne(fetch = FetchType.LAZY)
+        private Client client;
 
-		//Getters and setters omitted for brevity
+        @Column(name = "account_type")
+        @Enumerated(EnumType.STRING)
+        private AccountType type;
 
-	//end::mapping-filter-example[]
-		public Long getId() {
-			return id;
-		}
+        private Double amount;
 
-		public void setId(Long id) {
-			this.id = id;
-		}
+        private Double rate;
 
-		public Client getClient() {
-			return client;
-		}
+        @Column(name = "active_status")
+        private boolean active;
 
-		public void setClient(Client client) {
-			this.client = client;
-		}
+        //Getters and setters omitted for brevity
+    //end::mapping-filter-Account-example[]
+        public Long getId() {
+            return id;
+        }
 
-		public AccountType getType() {
-			return type;
-		}
+        public Account setId(Long id) {
+            this.id = id;
+            return this;
+        }
 
-		public void setType(AccountType type) {
-			this.type = type;
-		}
+        public Client getClient() {
+            return client;
+        }
 
-		public Double getAmount() {
-			return amount;
-		}
+        public Account setClient(Client client) {
+            this.client = client;
+            return this;
+        }
 
-		public void setAmount(Double amount) {
-			this.amount = amount;
-		}
+        public AccountType getType() {
+            return type;
+        }
 
-		public Double getRate() {
-			return rate;
-		}
+        public Account setType(AccountType type) {
+            this.type = type;
+            return this;
+        }
 
-		public void setRate(Double rate) {
-			this.rate = rate;
-		}
+        public Double getAmount() {
+            return amount;
+        }
 
-		public boolean isActive() {
-			return active;
-		}
+        public Account setAmount(Double amount) {
+            this.amount = amount;
+            return this;
+        }
 
-		public void setActive(boolean active) {
-			this.active = active;
-		}
+        public Double getRate() {
+            return rate;
+        }
 
-		//tag::mapping-filter-example[]
-	}
-	//end::mapping-filter-example[]
+        public Account setRate(Double rate) {
+            this.rate = rate;
+            return this;
+        }
+
+        public boolean isActive() {
+            return active;
+        }
+
+        public Account setActive(boolean active) {
+            this.active = active;
+            return this;
+        }
+
+    //tag::mapping-filter-Account-example[]
+    }
+    //end::mapping-filter-Account-example[]
 }

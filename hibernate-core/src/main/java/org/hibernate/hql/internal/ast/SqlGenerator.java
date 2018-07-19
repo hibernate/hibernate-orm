@@ -23,6 +23,7 @@ import org.hibernate.hql.internal.ast.tree.Node;
 import org.hibernate.hql.internal.ast.tree.ParameterContainer;
 import org.hibernate.hql.internal.ast.tree.ParameterNode;
 import org.hibernate.hql.internal.ast.util.ASTPrinter;
+import org.hibernate.hql.internal.ast.util.TokenPrinters;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -57,7 +58,6 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 	private ParseErrorHandler parseErrorHandler;
 	private SessionFactoryImplementor sessionFactory;
 	private LinkedList<SqlWriter> outputStack = new LinkedList<SqlWriter>();
-	private final ASTPrinter printer = new ASTPrinter( SqlTokenTypes.class );
 	private List<ParameterSpecification> collectedParameters = new ArrayList<ParameterSpecification>();
 
 
@@ -81,7 +81,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 	private String buildTraceNodeName(AST tree) {
 		return tree == null
 				? "???"
-				: tree.getText() + " [" + printer.getTokenTypeName( tree.getType() ) + "]";
+				: tree.getText() + " [" + TokenPrinters.SQL_TOKEN_PRINTER.getTokenTypeName( tree.getType() ) + "]";
 	}
 
 	@Override

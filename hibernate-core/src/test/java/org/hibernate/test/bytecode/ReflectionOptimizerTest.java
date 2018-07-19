@@ -6,17 +6,16 @@
  */
 package org.hibernate.test.bytecode;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import org.hibernate.bytecode.internal.javassist.BulkAccessor;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.cfg.Environment;
-
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -55,10 +54,48 @@ public class ReflectionOptimizerTest extends BaseUnitTestCase {
 		assertEquivalent( values, BeanReflectionHelper.TEST_VALUES );
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-12584")
+	public void testAbstractClass() {
+		BytecodeProvider provider = Environment.getBytecodeProvider();
+		ReflectionOptimizer reflectionOptimizer = provider.getReflectionOptimizer( AbstractClass.class, new String[]{ "getProperty" },
+				new String[]{ "setProperty" }, new Class[]{ String.class } );
+		assertNotNull( reflectionOptimizer );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12584")
+	public void testInterface() {
+		BytecodeProvider provider = Environment.getBytecodeProvider();
+		ReflectionOptimizer reflectionOptimizer = provider.getReflectionOptimizer( Interface.class, new String[]{ "getProperty" },
+				new String[]{ "setProperty" }, new Class[]{ String.class } );
+		assertNotNull( reflectionOptimizer );
+	}
+
 	private void assertEquivalent(Object[] checkValues, Object[] values) {
 		assertEquals( "Different lengths", checkValues.length, values.length );
 		for ( int i = 0; i < checkValues.length; i++ ) {
 			assertEquals( "different values at index [" + i + "]", checkValues[i], values[i] );
 		}
+	}
+
+	public static abstract class AbstractClass {
+
+		private String property;
+
+		public String getProperty() {
+			return property;
+		}
+
+		public void setProperty(String property) {
+			this.property = property;
+		}
+	}
+
+	public interface Interface {
+
+		String getProperty();
+
+		void setProperty(String property);
 	}
 }

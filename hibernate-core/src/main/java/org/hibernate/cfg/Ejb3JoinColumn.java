@@ -498,7 +498,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		boolean mappedBySide = mappedByTableName != null || mappedByPropertyName != null;
 		boolean ownerSide = getPropertyName() != null;
 
-		Boolean isRefColumnQuoted = StringHelper.isQuoted( logicalReferencedColumn );
+		boolean isRefColumnQuoted = StringHelper.isQuoted( logicalReferencedColumn );
 		final String unquotedLogicalReferenceColumn = isRefColumnQuoted
 				? StringHelper.unquote( logicalReferencedColumn )
 				: logicalReferencedColumn;

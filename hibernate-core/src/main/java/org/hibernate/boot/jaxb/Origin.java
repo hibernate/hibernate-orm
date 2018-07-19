@@ -8,8 +8,8 @@ package org.hibernate.boot.jaxb;
 
 import java.io.Serializable;
 import java.util.Locale;
+import java.util.Objects;
 
-import org.hibernate.internal.util.compare.EqualsHelper;
 
 /**
  * Describes the origin of an xml document
@@ -57,7 +57,7 @@ public class Origin implements Serializable {
 
 		final Origin other = (Origin) o;
 		return type == other.type
-				&& EqualsHelper.equals( name, other.name );
+				&& Objects.equals( name, other.name );
 
 	}
 

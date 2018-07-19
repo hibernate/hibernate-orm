@@ -6,6 +6,9 @@
  */
 package org.hibernate.cache.spi;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -23,6 +26,26 @@ public abstract class AbstractRegionFactory implements RegionFactory {
 
 	private final AtomicBoolean started = new AtomicBoolean( false );
 
+	/**
+	 * Legacy names that used to be the default for the query results region.
+	 */
+	public static final List<String> LEGACY_QUERY_RESULTS_REGION_UNQUALIFIED_NAMES =
+			Collections.unmodifiableList( Arrays.asList(
+					"org.hibernate.cache.spi.QueryResultsRegion",
+					"org.hibernate.cache.internal.StandardQueryCache"
+			) );
+
+	/**
+	 * Legacy names that used to be the default for the update timestamps region.
+	 */
+	public static final List<String> LEGACY_UPDATE_TIMESTAMPS_REGION_UNQUALIFIED_NAMES =
+			Collections.unmodifiableList( Arrays.asList(
+					"org.hibernate.cache.spi.TimestampsRegion",
+					"org.hibernate.cache.spi.UpdateTimestampsCache"
+			) );
+
+	private Exception startingException;
+
 	private SessionFactoryOptions options;
 
 
@@ -33,13 +56,13 @@ public abstract class AbstractRegionFactory implements RegionFactory {
 		}
 		else {
 			assert options == null;
-			throw new IllegalStateException( "Cache provider not started" );
+			throw new IllegalStateException( "Cache provider not started", startingException );
 		}
 	}
 
 	protected void verifyStarted() {
 		if ( ! verifiedStartStatus() ) {
-			throw new IllegalStateException( "Cache provider not started" );
+			throw new IllegalStateException( "Cache provider not started", startingException );
 		}
 	}
 
@@ -66,10 +89,12 @@ public abstract class AbstractRegionFactory implements RegionFactory {
 				this.options = settings;
 				try {
 					prepareForUse( settings, configValues );
+					startingException = null;
 				}
 				catch ( Exception e ) {
 					options = null;
 					started.set( false );
+					startingException = e;
 				}
 			}
 		}
@@ -89,6 +114,7 @@ public abstract class AbstractRegionFactory implements RegionFactory {
 				}
 				finally {
 					options = null;
+					startingException = null;
 				}
 			}
 		}

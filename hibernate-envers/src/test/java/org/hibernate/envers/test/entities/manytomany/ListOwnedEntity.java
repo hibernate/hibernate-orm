@@ -96,6 +96,6 @@ public class ListOwnedEntity {
 	}
 
 	public String toString() {
-		return "SetOwnedEntity(id = " + id + ", data = " + data + ")";
+		return "ListOwnedEntity(id = " + id + ", data = " + data + ")";
 	}
 }

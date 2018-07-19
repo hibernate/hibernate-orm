@@ -159,7 +159,7 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-entity-associations-query-m
 ====
 
 This will allow the `Phone#person` to function properly since the `many-to-one` or `one-to-one`
-association is going to use a Proxy that will be initialized when being navigated for the first time.
+association is going to use a proxy that will be initialized when being navigated for the first time.
 
 It is possible to eagerly join the `Phone` and the `Person` entities to avoid the possible extra roundtrip for initializing the `many-to-one` association.
 

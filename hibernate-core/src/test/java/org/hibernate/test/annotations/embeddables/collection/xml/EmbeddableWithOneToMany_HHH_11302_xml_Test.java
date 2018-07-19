@@ -26,8 +26,6 @@ import static org.junit.Assert.fail;
 public class EmbeddableWithOneToMany_HHH_11302_xml_Test extends
 		BaseEntityManagerFunctionalTestCase {
 
-	PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
-
 	@Override
 	public String[] getEjb3DD() {
 		return new String[] {
@@ -45,15 +43,6 @@ public class EmbeddableWithOneToMany_HHH_11302_xml_Test extends
 					"@OneToMany, @ManyToMany or @ElementCollection cannot be used inside an @Embeddable that is also contained within an @ElementCollection"
 			) );
 		}
-		finally {
-			connectionProvider.stop();
-		}
-	}
-
-	protected Map buildSettings() {
-		Map settings = super.buildSettings();
-		settings.put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
-		return settings;
 	}
 
 	@Test

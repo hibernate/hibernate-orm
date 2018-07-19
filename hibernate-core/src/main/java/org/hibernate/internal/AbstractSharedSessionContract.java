@@ -80,7 +80,6 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
-import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
@@ -107,7 +106,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	private transient SessionFactoryImpl factory;
 	private final String tenantIdentifier;
-	private final UUID sessionIdentifier;
+	private UUID sessionIdentifier;
 
 	private transient JdbcConnectionAccess jdbcConnectionAccess;
 	private transient JdbcSessionContext jdbcSessionContext;
@@ -141,8 +140,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	public AbstractSharedSessionContract(SessionFactoryImpl factory, SessionCreationOptions options) {
 		this.factory = factory;
-		this.sessionIdentifier = StandardRandomStrategy.INSTANCE.generateUUID( null );
-
 		this.cacheTransactionSync = factory.getCache().getRegionFactory().createTransactionContext( this );
 
 		this.flushMode = options.getInitialSessionFlushMode();
@@ -213,6 +210,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	protected void removeSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {
+		transactionCoordinator.invalidate();
 	}
 
 	@Override
@@ -269,6 +267,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public UUID getSessionIdentifier() {
+		if ( this.sessionIdentifier == null ) {
+			//Lazily initialized: otherwise all the UUID generations will cause of significant amount of contention.
+			this.sessionIdentifier = StandardRandomStrategy.INSTANCE.generateUUID( null );
+		}
 		return sessionIdentifier;
 	}
 
@@ -291,6 +293,18 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	public void close() {
 		if ( closed && !waitingForAutoClose ) {
 			return;
+		}
+
+		try {
+			delayedAfterCompletion();
+		}
+		catch ( HibernateException e ) {
+			if ( getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
+				throw this.exceptionConverter.convert( e );
+			}
+			else {
+				throw e;
+			}
 		}
 
 		if ( sessionEventsManager != null ) {
@@ -392,13 +406,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public Transaction accessTransaction() {
-		if ( this.currentHibernateTransaction == null || this.currentHibernateTransaction.getStatus() != TransactionStatus.ACTIVE ) {
+		if ( this.currentHibernateTransaction == null ) {
 			this.currentHibernateTransaction = new TransactionImpl(
 					getTransactionCoordinator(),
 					getExceptionConverter(),
-					getFactory().getSessionFactoryOptions().getJpaCompliance()
+					this
 			);
-
 		}
 		if ( !isClosed() || (waitingForAutoClose && factory.isOpen()) ) {
 			getTransactionCoordinator().pulse();
@@ -1061,7 +1074,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@SuppressWarnings("unused")
 	private void writeObject(ObjectOutputStream oos) throws IOException {
-		log.trace( "Serializing " + getClass().getSimpleName() + " [" );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "Serializing " + getClass().getSimpleName() + " [" );
+		}
+
 
 		if ( !jdbcCoordinator.isReadyForSerialization() ) {
 			// throw a more specific (helpful) exception message when this happens from Session,
@@ -1092,7 +1108,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException, SQLException {
-		log.trace( "Deserializing " + getClass().getSimpleName() );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "Deserializing " + getClass().getSimpleName() );
+		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Step 1 :: read back non-transient state...

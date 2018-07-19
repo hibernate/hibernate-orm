@@ -17,7 +17,7 @@ See the <<chapters/batch/Batching.adoc#batch,Batching chapter>> for more informa
 ====
 
 The flushing strategy is given by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#getFlushMode--[`flushMode`] of the current running Hibernate `Session`.
-Although JPA defines only two flushing strategies (https://docs.oracle.com/javaee/7/api/javax/persistence/FlushModeType.html#AUTO[`AUTO`] and https://docs.oracle.com/javaee/7/api/javax/persistence/FlushModeType.html#COMMIT[`COMMIT`]),
+Although JPA defines only two flushing strategies (https://javaee.github.io/javaee-spec/javadocs/javax/persistence/FlushModeType.html#AUTO[`AUTO`] and https://javaee.github.io/javaee-spec/javadocs/javax/persistence/FlushModeType.html#COMMIT[`COMMIT`]),
 Hibernate has a much broader spectrum of flush types:
 
 ALWAYS:: Flushes the `Session` before every query.
@@ -121,14 +121,15 @@ include::{sourcedir}/AutoFlushTest.java[tags=flushing-auto-flush-sql-example]
 ----
 ====
 
-The `Session` API  doesn't trigger an `AUTO` flush when executing a native query
+If you bootstrap Hibernate natively, and not through JPA, by default,
+the `Session` API will trigger a flush automatically when executing a native query.
 
 [[flushing-auto-flush-sql-native-example]]
 .Automatic flushing on native SQL using `Session`
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/AutoFlushTest.java[tags=flushing-auto-flush-sql-native-example]
+include::{sourcedir}/HibernateAutoFlushTest.java[tags=flushing-auto-flush-sql-native-example]
 ----
 ====
 

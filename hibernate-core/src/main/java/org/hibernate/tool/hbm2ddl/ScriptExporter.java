@@ -6,6 +6,8 @@
  */
 package org.hibernate.tool.hbm2ddl;
 
+import org.hibernate.internal.build.AllowSysOut;
+
 /**
  * @author Steve Ebersole
  *
@@ -20,6 +22,7 @@ class ScriptExporter implements Exporter {
 	}
 
 	@Override
+	@AllowSysOut
 	public void export(String string) throws Exception {
 		System.out.println( string );
 	}

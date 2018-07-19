@@ -19,7 +19,9 @@ import javax.persistence.NamedNativeQuery;
 import javax.persistence.SqlResultSetMapping;
 import javax.persistence.Table;
 
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;
 
 /**
@@ -27,6 +29,7 @@ import org.junit.Test;
  *
  * @author Gunnar Morling
  */
+@RequiresDialect(H2Dialect.class)
 public class ScalarResultNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Entity(name="Person")

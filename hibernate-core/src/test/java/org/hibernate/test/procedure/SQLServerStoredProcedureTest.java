@@ -1,3 +1,9 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
 package org.hibernate.test.procedure;
 
 import java.sql.CallableStatement;
@@ -23,6 +29,7 @@ import org.hibernate.testing.RequiresDialect;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -31,7 +38,7 @@ import static org.junit.Assert.assertTrue;
  * @author Vlad Mihalcea
  */
 @RequiresDialect(SQLServer2012Dialect.class)
-public class SQLServerStoredProcedureTest extends BaseEntityManagerFunctionalTestCase {
+public class SQLServerStoredProcedureTest extends AbstractStoredProcedureTest {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -43,171 +50,102 @@ public class SQLServerStoredProcedureTest extends BaseEntityManagerFunctionalTes
 
 	@Before
 	public void init() {
-		EntityManager entityManager = createEntityManager();
-		entityManager.getTransaction().begin();
-		Session session = entityManager.unwrap( Session.class );
-
-		session.doWork( new Work() {
-			@Override
-			public void execute(Connection connection) throws SQLException {
-				Statement statement = null;
-				try {
-					statement = connection.createStatement();
-					statement.executeUpdate( "DROP PROCEDURE sp_count_phones" );
-				}
-				catch (SQLException ignore) {
-				}
-				finally {
-					if ( statement != null ) {
-						statement.close();
-					}
-				}
+		doInAutoCommit( statement -> {
+			try {
+				statement.executeUpdate( "DROP PROCEDURE sp_count_phones" );
+			}
+			catch (SQLException e) {
+				log.debug( e.getMessage() );
 			}
 		} );
 
-		entityManager.getTransaction().commit();
-		entityManager.close();
-
-		entityManager = createEntityManager();
-		entityManager.getTransaction().begin();
-		session = entityManager.unwrap( Session.class );
-
-		session.doWork( new Work() {
-			@Override
-			public void execute(Connection connection) throws SQLException {
-				Statement statement = null;
-				try {
-					statement = connection.createStatement();
-					statement.executeUpdate( "DROP FUNCTION fn_count_phones" );
-				}
-				catch (SQLException ignore) {
-				}
-				finally {
-					if ( statement != null ) {
-						statement.close();
-					}
-				}
+		doInAutoCommit( statement -> {
+			try {
+				statement.executeUpdate( "DROP FUNCTION fn_count_phones" );
+			}
+			catch (SQLException e) {
+				log.debug( e.getMessage() );
 			}
 		} );
 
-		entityManager.getTransaction().commit();
-		entityManager.close();
-		
-		entityManager = createEntityManager();
-		entityManager.getTransaction().begin();
-		session = entityManager.unwrap( Session.class );
-
-		session.doWork( new Work() {
-			@Override
-			public void execute(Connection connection) throws SQLException {
-				Statement statement = null;
-				try {
-					statement = connection.createStatement();
-					statement.executeUpdate( "DROP PROCEDURE sp_phones" );
-				}
-				catch (SQLException ignore) {
-				}
-				finally {
-					if ( statement != null ) {
-						statement.close();
-					}
-				}
+		doInAutoCommit( statement -> {
+			try {
+				statement.executeUpdate( "DROP PROCEDURE sp_phones" );
+			}
+			catch (SQLException e) {
+				log.debug( e.getMessage() );
 			}
 		} );
 
-		entityManager.getTransaction().commit();
-		entityManager.close();
+		doInAutoCommit( statement -> {
+			try {
+				statement.executeUpdate(
+					"CREATE PROCEDURE sp_count_phones " +
+					"   @personId INT, " +
+					"   @phoneCount INT OUTPUT " +
+					"AS " +
+					"BEGIN " +
+					"   SELECT @phoneCount = COUNT(*)  " +
+					"   FROM Phone  " +
+					"   WHERE person_id = @personId " +
+					"END"
+				);
 
-		entityManager = createEntityManager();
-		entityManager.getTransaction().begin();
-		session = entityManager.unwrap( Session.class );
+				statement.executeUpdate(
+					"CREATE FUNCTION fn_count_phones (@personId INT)  " +
+					"RETURNS INT  " +
+					"AS  " +
+					"BEGIN  " +
+					"    DECLARE @phoneCount int;  " +
+					"    SELECT @phoneCount = COUNT(*) " +
+					"    FROM Phone   " +
+					"    WHERE person_id = @personId;  " +
+					"    RETURN(@phoneCount);  " +
+					"END"
+				);
 
-		session.doWork( new Work() {
-			@Override
-			public void execute(Connection connection) throws SQLException {
-				Statement statement = null;
-				try {
-					statement = connection.createStatement();
-					statement.executeUpdate(
-						"CREATE PROCEDURE sp_count_phones " +
-						"   @personId INT, " +
-						"   @phoneCount INT OUTPUT " +
-						"AS " +
-						"BEGIN " +
-						"   SELECT @phoneCount = COUNT(*)  " +
-						"   FROM Phone  " +
-						"   WHERE person_id = @personId " +
-						"END"
-					);
-
-					statement.executeUpdate(
-						"CREATE FUNCTION fn_count_phones (@personId INT)  " +
-						"RETURNS INT  " +
-						"AS  " +
-						"BEGIN  " +
-						"    DECLARE @phoneCount int;  " +
-						"    SELECT @phoneCount = COUNT(*) " +
-						"    FROM Phone   " +
-						"    WHERE person_id = @personId;  " +
-						"    RETURN(@phoneCount);  " +
-						"END"
-					);
-
-					statement.executeUpdate(
-						"CREATE PROCEDURE sp_phones " +
-						"    @personId INT, " +
-						"    @phones CURSOR VARYING OUTPUT " +
-						"AS " +
-						"    SET NOCOUNT ON; " +
-						"    SET @phones = CURSOR " +
-						"    FORWARD_ONLY STATIC FOR " +
-						"        SELECT *  " +
-						"        FROM Phone   " +
-						"        WHERE person_id = @personId;  " +
-						"    OPEN @phones;"
-					);
-				}
-				finally {
-					if ( statement != null ) {
-						statement.close();
-					}
-				}
+				statement.executeUpdate(
+					"CREATE PROCEDURE sp_phones " +
+					"    @personId INT, " +
+					"    @phones CURSOR VARYING OUTPUT " +
+					"AS " +
+					"    SET NOCOUNT ON; " +
+					"    SET @phones = CURSOR " +
+					"    FORWARD_ONLY STATIC FOR " +
+					"        SELECT *  " +
+					"        FROM Phone   " +
+					"        WHERE person_id = @personId;  " +
+					"    OPEN @phones;"
+				);
+			}
+			catch (SQLException e) {
+				log.debug( e.getMessage() );
 			}
 		} );
 
-		entityManager.getTransaction().commit();
-		entityManager.close();
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Person person1 = new Person( "John Doe" );
+			person1.setNickName( "JD" );
+			person1.setAddress( "Earth" );
+			person1.setCreatedOn( Timestamp.from( LocalDateTime.of( 2000, 1, 1, 0, 0, 0 ).toInstant( ZoneOffset.UTC ) ) );
 
-		entityManager = createEntityManager();
-		entityManager.getTransaction().begin();
+			entityManager.persist( person1 );
 
-		Person person1 = new Person( "John Doe" );
-		person1.setNickName( "JD" );
-		person1.setAddress( "Earth" );
-		person1.setCreatedOn( Timestamp.from( LocalDateTime.of( 2000, 1, 1, 0, 0, 0 ).toInstant( ZoneOffset.UTC ) ) );
+			Phone phone1 = new Phone( "123-456-7890" );
+			phone1.setId( 1L );
 
-		entityManager.persist( person1 );
+			person1.addPhone( phone1 );
 
-		Phone phone1 = new Phone( "123-456-7890" );
-		phone1.setId( 1L );
+			Phone phone2 = new Phone( "098_765-4321" );
+			phone2.setId( 2L );
 
-		person1.addPhone( phone1 );
-
-		Phone phone2 = new Phone( "098_765-4321" );
-		phone2.setId( 2L );
-
-		person1.addPhone( phone2 );
-
-		entityManager.getTransaction().commit();
-		entityManager.close();
+			person1.addPhone( phone2 );
+		} );
 	}
 
 	@Test
 	public void testStoredProcedureOutParameter() {
-		EntityManager entityManager = createEntityManager();
-		entityManager.getTransaction().begin();
-
-		try {
+		doInJPA( this::entityManagerFactory, entityManager -> {
 			StoredProcedureQuery query = entityManager.createStoredProcedureQuery("sp_count_phones");
 			query.registerStoredProcedureParameter("personId", Long.class, ParameterMode.IN);
 			query.registerStoredProcedureParameter("phoneCount", Long.class, ParameterMode.OUT);
@@ -217,67 +155,48 @@ public class SQLServerStoredProcedureTest extends BaseEntityManagerFunctionalTes
 			query.execute();
 			Long phoneCount = (Long) query.getOutputParameterValue("phoneCount");
 			assertEquals(Long.valueOf(2), phoneCount);
-		}
-		finally {
-			entityManager.getTransaction().rollback();
-			entityManager.close();
-		}
+		} );
 	}
 
 	@Test
 	public void testStoredProcedureRefCursor() {
-		EntityManager entityManager = createEntityManager();
-		entityManager.getTransaction().begin();
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			try {
+				StoredProcedureQuery query = entityManager.createStoredProcedureQuery("sp_phones");
+				query.registerStoredProcedureParameter(1, Long.class, ParameterMode.IN);
+				query.registerStoredProcedureParameter(2, Class.class, ParameterMode.REF_CURSOR);
+				query.setParameter(1, 1L);
 
-		try {
-			StoredProcedureQuery query = entityManager.createStoredProcedureQuery("sp_phones");
-			query.registerStoredProcedureParameter(1, Long.class, ParameterMode.IN);
-			query.registerStoredProcedureParameter(2, Class.class, ParameterMode.REF_CURSOR);
-			query.setParameter(1, 1L);
-
-			query.execute();
-			List<Object[]> postComments = query.getResultList();
-			assertNotNull(postComments);
-		}
-		catch (Exception e) {
-			assertTrue( Pattern.compile( "Dialect .*? not known to support REF_CURSOR parameters").matcher( e.getCause().getMessage()).matches());
-		}
-		finally {
-			entityManager.getTransaction().rollback();
-			entityManager.close();
-		}
+				query.execute();
+				List<Object[]> postComments = query.getResultList();
+				assertNotNull(postComments);
+			}
+			catch (Exception e) {
+				assertTrue( Pattern.compile( "Dialect .*? not known to support REF_CURSOR parameters").matcher( e.getCause().getMessage()).matches());
+			}
+		} );
 	}
 
 	@Test
 	public void testStoredProcedureReturnValue() {
-		EntityManager entityManager = createEntityManager();
-		entityManager.getTransaction().begin();
-
-		try {
+		doInJPA( this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap( Session.class );
-			session.doWork( new Work() {
-				@Override
-				public void execute(Connection connection) throws SQLException {
-					CallableStatement function = null;
-					try {
-						function = connection.prepareCall("{ ? = call fn_count_phones(?) }");
-						function.registerOutParameter(1, Types.INTEGER);
-						function.setInt(2, 1);
-						function.execute();
-						int phoneCount = function.getInt(1);
-						assertEquals(2, phoneCount);
-					}
-					finally {
-						if ( function != null ) {
-							function.close();
-						}
+			session.doWork( connection -> {
+				CallableStatement function = null;
+				try {
+					function = connection.prepareCall("{ ? = call fn_count_phones(?) }");
+					function.registerOutParameter(1, Types.INTEGER);
+					function.setInt(2, 1);
+					function.execute();
+					int phoneCount = function.getInt(1);
+					assertEquals(2, phoneCount);
+				}
+				finally {
+					if ( function != null ) {
+						function.close();
 					}
 				}
 			} );
-		}
-		finally {
-			entityManager.getTransaction().rollback();
-			entityManager.close();
-		}
+		} );
 	}
 }

@@ -68,6 +68,7 @@ tokens
      *
      * @param msg The trace message.
      */
+     @org.hibernate.internal.build.AllowSysOut
     protected void trace(String msg) {
         System.out.println( msg );
     }

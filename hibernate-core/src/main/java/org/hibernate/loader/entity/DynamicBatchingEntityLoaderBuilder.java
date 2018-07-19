@@ -434,6 +434,11 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 			return false;
 		}
 
+		@Override
+		protected boolean isSubselectLoadingEnabled() {
+			return persister.hasSubselectLoadableCollections();
+		}
+
 		public List doEntityBatchFetch(
 				SharedSessionContractImplementor session,
 				QueryParameters queryParameters,

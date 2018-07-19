@@ -18,6 +18,13 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 public abstract class DirectAccessRegionTemplate extends AbstractRegion implements DirectAccessRegion {
 	private final StorageAccess storageAccess;
 
+	/**
+	 * Constructs a {@link DirectAccessRegionTemplate}.
+	 *
+	 * @param name - the unqualified region name
+	 * @param regionFactory - the region factory
+	 * @param storageAccess - the cache storage access strategy
+	 */
 	public DirectAccessRegionTemplate(String name, RegionFactory regionFactory, StorageAccess storageAccess) {
 		super( name, regionFactory );
 		this.storageAccess = storageAccess;

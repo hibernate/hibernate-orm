@@ -20,6 +20,13 @@ Just putting the Envers jar on the classpath is enough because listeners will be
 And that's all.
 You can create, modify and delete the entities as always.
 
+[IMPORTANT]
+====
+The use of JPA's `CriteriaUpdate` and `CriteriaDelete` bulk operations are not currently supported by Envers
+due to how an entity's lifecycle events are dispatched.  Such operations should be avoided as they're not
+captured by Envers and leads to incomplete audit history.
+====
+
 If you look at the generated schema for your entities, or at the data persisted by Hibernate, you will notice that there are no changes.
 However, for each audited entity, a new table is introduced - `entity_table_AUD`, which stores the historical data, whenever you commit a transaction.
 

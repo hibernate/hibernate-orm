@@ -220,6 +220,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
+	public SessionFactoryBuilder applyDelayedEntityLoaderCreations(boolean delay) {
+		this.optionsBuilder.applyDelayedEntityLoaderCreations( delay );
+		return this;
+	}
+
+	@Override
 	public SessionFactoryBuilder applyDefaultBatchFetchSize(int size) {
 		this.optionsBuilder.applyDefaultBatchFetchSize( size );
 		return this;

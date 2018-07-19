@@ -2935,6 +2935,15 @@ public abstract class Dialect implements ConversionContext {
 		return false;
 	}
 
+	/**
+	 * Does this dialect/database support NO_WAIT timeout.
+	 *
+	 * @return {@code true} if NO_WAIT is supported
+	 */
+	public boolean supportsNoWait() {
+		return false;
+	}
+
 	public boolean isLegacyLimitHandlerBehaviorEnabled() {
 		return legacyLimitHandlerBehavior;
 	}

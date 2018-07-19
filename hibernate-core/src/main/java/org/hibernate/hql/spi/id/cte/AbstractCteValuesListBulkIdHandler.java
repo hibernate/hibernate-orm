@@ -16,6 +16,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.spi.id.AbstractIdsBulkIdHandler;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.Queryable;
 
 /**
@@ -63,11 +64,16 @@ public abstract class AbstractCteValuesListBulkIdHandler extends
 	}
 
 	protected String determineIdTableName(Queryable persister) {
+
+		String qualifiedTableName = jdbcEnvironment.getIdentifierHelper().applyGlobalQuoting(
+				"HT_" + StringHelper.unquote( persister.getTableName(), jdbcEnvironment.getDialect() )
+		).render();
+
 		return jdbcEnvironment.getQualifiedObjectNameFormatter().format(
 				new QualifiedTableName(
 						Identifier.toIdentifier( catalog ),
 						Identifier.toIdentifier( schema ),
-						Identifier.toIdentifier( "HT_" + persister.getTableName() )
+						Identifier.toIdentifier( qualifiedTableName )
 				),
 				jdbcEnvironment.getDialect()
 		);

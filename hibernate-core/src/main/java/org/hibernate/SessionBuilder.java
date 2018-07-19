@@ -17,6 +17,7 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
  * 
  * @author Steve Ebersole
  */
+@SuppressWarnings("UnusedReturnValue")
 public interface SessionBuilder<T extends SessionBuilder> {
 	/**
 	 * Opens a session with the specified options.
@@ -66,18 +67,6 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	T connection(Connection connection);
 
 	/**
-	 * Use a specific connection release mode for these session options.
-	 *
-	 * @param connectionReleaseMode The connection release mode to use.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #connectionHandlingMode} instead
-	 */
-	@Deprecated
-	T connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode);
-
-	/**
 	 * Signifies that the connection release mode from the original session should be used to create the new session.
 	 *
 	 * @param mode The connection handling mode to use.
@@ -98,17 +87,6 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	T autoJoinTransactions(boolean autoJoinTransactions);
 
 	/**
-	 * Should the session be automatically closed after transaction completion?
-	 *
-	 * @param autoClose Should the session be automatically closed
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @see javax.persistence.PersistenceContextType
-	 */
-	T autoClose(boolean autoClose);
-
-	/**
 	 * Should the session be automatically cleared on a failed transaction?
 	 *
 	 * @param autoClear Whether the Session should be automatically cleared
@@ -127,27 +105,6 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 * @see javax.persistence.PersistenceContextType
 	 */
 	T flushMode(FlushMode flushMode);
-
-	/**
-	 * Should the session be automatically flushed during the "before completion" phase of transaction handling.
-	 *
-	 * @param flushBeforeCompletion Should the session be automatically flushed
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #flushMode(FlushMode)} instead.
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default T flushBeforeCompletion(boolean flushBeforeCompletion) {
-		if ( flushBeforeCompletion ) {
-			flushMode( FlushMode.ALWAYS );
-		}
-		else {
-			flushMode( FlushMode.MANUAL );
-		}
-		return (T) this;
-	}
 
 	/**
 	 * Define the tenant identifier to be associated with the opened session.
@@ -188,6 +145,56 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 * @return {@code this}, for method chaining
 	 */
 	default T setQueryParameterValidation(boolean enabled) {
+		return (T) this;
+	}
+
+
+
+	/**
+	 * Should the session be automatically closed after transaction completion?
+	 *
+	 * @param autoClose Should the session be automatically closed
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see javax.persistence.PersistenceContextType
+	 *
+	 * @deprecated Only integrations can specify autoClosing behavior of individual sessions.  See
+	 * {@link org.hibernate.engine.spi.SessionOwner}
+	 */
+	@Deprecated
+	T autoClose(boolean autoClose);
+
+	/**
+	 * Use a specific connection release mode for these session options.
+	 *
+	 * @param connectionReleaseMode The connection release mode to use.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #connectionHandlingMode} instead
+	 */
+	@Deprecated
+	T connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode);
+
+	/**
+	 * Should the session be automatically flushed during the "before completion" phase of transaction handling.
+	 *
+	 * @param flushBeforeCompletion Should the session be automatically flushed
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #flushMode(FlushMode)} instead.
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default T flushBeforeCompletion(boolean flushBeforeCompletion) {
+		if ( flushBeforeCompletion ) {
+			flushMode( FlushMode.ALWAYS );
+		}
+		else {
+			flushMode( FlushMode.MANUAL );
+		}
 		return (T) this;
 	}
 }

@@ -76,6 +76,11 @@ public class DomainDataRegionConfigImpl implements DomainDataRegionConfig {
 		private List<NaturalIdDataCachingConfig> naturalIdConfigs;
 		private List<CollectionDataCachingConfig> collectionConfigs;
 
+		/**
+		 * Constructs a {@link Builder}
+		 *
+		 * @param regionName - the unqualified region name
+		 */
 		public Builder(String regionName) {
 			this.regionName = regionName;
 		}

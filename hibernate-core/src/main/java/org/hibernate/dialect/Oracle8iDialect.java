@@ -761,4 +761,9 @@ public class Oracle8iDialect extends Dialect {
 
 		throw new IllegalArgumentException( "Can't determine SQL statement type for statement: " + sql );
 	}
+
+	@Override
+	public boolean supportsNoWait() {
+		return true;
+	}
 }

@@ -6,14 +6,17 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.Types;
+
 import org.hibernate.dialect.function.DB2SubstringFunction;
-import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.AfterUseAction;
-import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.sql.CharTypeDescriptor;
+import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 
 /**
  * An SQL dialect for DB2 9.7.
@@ -56,5 +59,38 @@ public class DB297Dialect extends DB2Dialect {
 				},
 				AfterUseAction.CLEAN
 		);
+	}
+
+	@Override
+	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+		// See HHH-12753
+		// It seems that DB2's JDBC 4.0 support as of 9.5 does not support the N-variant methods like
+		// NClob or NString.  Therefore here we overwrite the sql type descriptors to use the non-N variants
+		// which are supported.
+		switch ( sqlCode ) {
+			case Types.NCHAR:
+				return CharTypeDescriptor.INSTANCE;
+
+			case Types.NCLOB:
+				if ( useInputStreamToInsertBlob() ) {
+					return ClobTypeDescriptor.STREAM_BINDING;
+				}
+				else {
+					return ClobTypeDescriptor.CLOB_BINDING;
+				}
+
+			case Types.NVARCHAR:
+				return VarcharTypeDescriptor.INSTANCE;
+
+			default:
+				return super.getSqlTypeDescriptorOverride( sqlCode );
+		}
+	}
+
+	@Override
+	public boolean canCreateSchema() {
+		// this seems to only be a problem in QE where schema management is disabled.
+		// should we keep this?
+		return false;
 	}
 }

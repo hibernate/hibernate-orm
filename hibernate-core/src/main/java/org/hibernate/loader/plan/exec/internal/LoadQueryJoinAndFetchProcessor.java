@@ -213,24 +213,25 @@ public class LoadQueryJoinAndFetchProcessor {
 		final LoadQueryInfluencers queryInfluencers = buildingParameters.getQueryInfluencers();
 
 		final String filter;
-		// If the left hand side
-		if ( associationType.isEntityType() &&
-				join.getLeftHandSide().getDisposition() != QuerySpace.Disposition.COLLECTION ) {
-			// We always need to get the filter (if any) for the following cases:
-			// * composite with entity fetch
-			// * entity with entity fetch
-			// EntityType#getOnCondition doesn't always do the right thing in this case,
-			// so explicitly call Joinable#filterFragment (instead of EntityType#getOnCondition.
-			filter = joinable.filterFragment(
-					rhsTableAlias,
-					queryInfluencers.getEnabledFilters()
-			);
-		}
-		else if ( associationType != null ) {
-			// We leave it up to the assocationType to in these cases:
-			// * entity with (element, one-to-many, or many-to-many) collection fetch
-			// * collection element with entity fetch.
-			filter = associationType.getOnCondition( rhsTableAlias, factory, queryInfluencers.getEnabledFilters() );
+		if ( associationType != null ) {
+			if ( associationType.isEntityType() &&
+					join.getLeftHandSide().getDisposition() != QuerySpace.Disposition.COLLECTION ) {
+				// We always need to get the filter (if any) for the following cases:
+				// * composite with entity fetch
+				// * entity with entity fetch
+				// EntityType#getOnCondition doesn't always do the right thing in this case,
+				// so explicitly call Joinable#filterFragment (instead of EntityType#getOnCondition.
+				filter = joinable.filterFragment(
+						rhsTableAlias,
+						queryInfluencers.getEnabledFilters()
+				);
+			}
+			else  {
+				// We leave it up to the assocationType to in these cases:
+				// * entity with (element, one-to-many, or many-to-many) collection fetch
+				// * collection element with entity fetch.
+				filter = associationType.getOnCondition( rhsTableAlias, factory, queryInfluencers.getEnabledFilters() );
+			}
 		}
 		else {
 			// What falls into this category?

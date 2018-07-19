@@ -18,6 +18,8 @@ package org.hibernate.exception;
 import java.util.Arrays;
 import java.util.Map;
 
+import org.hibernate.cfg.AvailableSettings;
+
 import org.hibernate.testing.junit4.CustomParameterized;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -25,7 +27,8 @@ import org.junit.runners.Parameterized;
 @RunWith(CustomParameterized.class)
 public abstract class BaseExceptionConversionTest extends BaseJpaOrNativeBootstrapFunctionalTestCase {
 	// FIXME use the actual setting
-	private static final String EXCEPTION_CONVERSION_PROPERTY = "FIXME_USE_ACTUAL_SETTING_HERE";
+	private static final String EXCEPTION_CONVERSION_PROPERTY =
+			AvailableSettings.NATIVE_EXCEPTION_HANDLING_51_COMPLIANCE;
 
 	public enum ExceptionConversionSetting {
 		DEFAULT,
@@ -39,10 +42,9 @@ public abstract class BaseExceptionConversionTest extends BaseJpaOrNativeBootstr
 		return Arrays.asList( new Object[][] {
 				{ BootstrapMethod.JPA, ExceptionConversionSetting.DEFAULT, ExceptionExpectations.jpa() },
 				{ BootstrapMethod.JPA, ExceptionConversionSetting.JPA, ExceptionExpectations.jpa() },
-				{ BootstrapMethod.JPA, ExceptionConversionSetting.NATIVE_PRE_52, ExceptionExpectations.nativePre52() },
-				{ BootstrapMethod.JPA, ExceptionConversionSetting.NATIVE_POST_52, ExceptionExpectations.nativePost52() },
+				{ BootstrapMethod.JPA, ExceptionConversionSetting.NATIVE_PRE_52, ExceptionExpectations.jpa() },
+				{ BootstrapMethod.JPA, ExceptionConversionSetting.NATIVE_POST_52, ExceptionExpectations.jpa() },
 				{ BootstrapMethod.NATIVE, ExceptionConversionSetting.DEFAULT, ExceptionExpectations.nativePost52() },
-				{ BootstrapMethod.NATIVE, ExceptionConversionSetting.JPA, ExceptionExpectations.jpa() },
 				{ BootstrapMethod.NATIVE, ExceptionConversionSetting.NATIVE_PRE_52, ExceptionExpectations.nativePre52() },
 				{ BootstrapMethod.NATIVE, ExceptionConversionSetting.NATIVE_POST_52, ExceptionExpectations.nativePost52() }
 		} );
@@ -67,13 +69,13 @@ public abstract class BaseExceptionConversionTest extends BaseJpaOrNativeBootstr
 				// Keep the default
 				break;
 			case JPA:
-				properties.put( EXCEPTION_CONVERSION_PROPERTY, "jpa" );
+				properties.put( EXCEPTION_CONVERSION_PROPERTY, "false" );
 				break;
 			case NATIVE_PRE_52:
-				properties.put( EXCEPTION_CONVERSION_PROPERTY, "native-5.1" );
+				properties.put( EXCEPTION_CONVERSION_PROPERTY, "true" );
 				break;
 			case NATIVE_POST_52:
-				properties.put( EXCEPTION_CONVERSION_PROPERTY, "native-5.2" );
+				properties.put( EXCEPTION_CONVERSION_PROPERTY, "false" );
 				break;
 		}
 	}

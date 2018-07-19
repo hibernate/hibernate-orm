@@ -65,7 +65,7 @@ interface ExceptionExpectations {
 
 			@Override
 			public void onTransientObjectOnPersistAndMergeAndFlush(RuntimeException e) {
-				assertThat( e, instanceOf( TransientPropertyValueException.class ) );
+				assertThat( e, instanceOf( TransientObjectException.class ) );
 			}
 		};
 	}

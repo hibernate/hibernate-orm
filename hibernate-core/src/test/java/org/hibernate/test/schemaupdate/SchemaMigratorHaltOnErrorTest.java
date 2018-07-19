@@ -6,22 +6,25 @@
  */
 package org.hibernate.test.schemaupdate;
 
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.Map;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
-
 import org.junit.Test;
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * @author Vlad Mihalcea
  */
+@SkipForDialect(value = DB2Dialect.class, comment = "DB2 is far more resistant to the reserved keyword usage. See HHH-12832.")
 public class SchemaMigratorHaltOnErrorTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

@@ -18,6 +18,7 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
 
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 
@@ -61,6 +62,7 @@ public class SearchedCaseExpressionTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
+    @SkipForDialect(value = DB2Dialect.class, comment = "We would need casts in the case clauses. See HHH-12822.")
     public void testEqualClause() {
 		doInHibernate( this::sessionFactory, session -> {
 			CriteriaBuilder cb = session.getCriteriaBuilder();

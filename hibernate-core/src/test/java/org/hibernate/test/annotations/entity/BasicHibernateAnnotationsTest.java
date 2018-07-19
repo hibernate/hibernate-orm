@@ -182,8 +182,8 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 
-		Query<Doctor> query = s.createQuery( "from " + Doctor.class.getName(), Doctor.class );
-		List<Doctor> list = query.getResultList();
+		Query query = s.createQuery( "from " + Doctor.class.getName() );
+		List<Doctor> list = query.list();
 
 		assertEquals( 2, list.size() );
 

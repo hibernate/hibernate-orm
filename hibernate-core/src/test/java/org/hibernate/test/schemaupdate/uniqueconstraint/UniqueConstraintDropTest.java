@@ -20,6 +20,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -111,6 +112,9 @@ public class UniqueConstraintDropTest {
 					is( true )
 			);
 		}
+		else if ( getDialect() instanceof DB2Dialect ) {
+			checkDB2DropIndex( "test_entity_item", "item" );
+		}
 		else {
 			assertThat(
 					"The test_entity_item table unique constraint has not been dropped",
@@ -151,6 +155,12 @@ public class UniqueConstraintDropTest {
 			regex += " if exists";
 		}
 
+		return isMatching( matches, regex );
+	}
+
+	private boolean checkDB2DropIndex(String tableName, String columnName) throws IOException {
+		boolean matches = false;
+		String regex = "drop index " + tableName + ".uk_(.)*";
 		return isMatching( matches, regex );
 	}
 

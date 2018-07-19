@@ -86,11 +86,4 @@ public class DB297Dialect extends DB2Dialect {
 				return super.getSqlTypeDescriptorOverride( sqlCode );
 		}
 	}
-
-	@Override
-	public boolean canCreateSchema() {
-		// this seems to only be a problem in QE where schema management is disabled.
-		// should we keep this?
-		return false;
-	}
 }

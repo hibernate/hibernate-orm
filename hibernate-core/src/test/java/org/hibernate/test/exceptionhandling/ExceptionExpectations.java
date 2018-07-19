@@ -1,16 +1,16 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.exception;
+package org.hibernate.test.exceptionhandling;
 
 import java.sql.SQLException;
 import javax.persistence.PersistenceException;
 
 import org.hibernate.TransientObjectException;
-import org.hibernate.TransientPropertyValueException;
+import org.hibernate.exception.ConstraintViolationException;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertThat;

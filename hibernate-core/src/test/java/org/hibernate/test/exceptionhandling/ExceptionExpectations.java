@@ -7,10 +7,14 @@
 package org.hibernate.test.exceptionhandling;
 
 import java.sql.SQLException;
+import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceException;
 
+import org.hibernate.StaleObjectStateException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.hql.internal.ast.QuerySyntaxException;
+import org.hibernate.id.IdentifierGenerationException;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertThat;
@@ -41,6 +45,24 @@ interface ExceptionExpectations {
 				assertThat( e, instanceOf( IllegalStateException.class ) );
 				assertThat( e.getCause(), instanceOf( TransientObjectException.class ) );
 			}
+
+			@Override
+			public void onInvalidQueryExecuted(RuntimeException e) {
+				assertThat( e, instanceOf( IllegalArgumentException.class ) );
+				assertThat( e.getCause(), instanceOf( QuerySyntaxException.class ) );
+			}
+
+			@Override
+			public void onStaleObjectMergeAndUpdateFlush(RuntimeException e) {
+				assertThat( e, instanceOf( OptimisticLockException.class ) );
+				assertThat( e.getCause(), instanceOf( StaleObjectStateException.class ) );
+			}
+
+			@Override
+			public void onIdentifierGeneratorFailure(RuntimeException e) {
+				assertThat( e, instanceOf( PersistenceException.class ) );
+				assertThat( e.getCause(), instanceOf( IdentifierGenerationException.class ) );
+			}
 		};
 	}
 
@@ -66,6 +88,21 @@ interface ExceptionExpectations {
 			@Override
 			public void onTransientObjectOnPersistAndMergeAndFlush(RuntimeException e) {
 				assertThat( e, instanceOf( TransientObjectException.class ) );
+			}
+
+			@Override
+			public void onInvalidQueryExecuted(RuntimeException e) {
+				assertThat( e, instanceOf( QuerySyntaxException.class ) );
+			}
+
+			@Override
+			public void onStaleObjectMergeAndUpdateFlush(RuntimeException e) {
+				assertThat( e, instanceOf( StaleObjectStateException.class ) );
+			}
+
+			@Override
+			public void onIdentifierGeneratorFailure(RuntimeException e) {
+				assertThat( e, instanceOf( IdentifierGenerationException.class ) );
 			}
 		};
 	}
@@ -95,6 +132,24 @@ interface ExceptionExpectations {
 				assertThat( e, instanceOf( IllegalStateException.class ) );
 				assertThat( e.getCause(), instanceOf( TransientObjectException.class ) );
 			}
+
+			@Override
+			public void onInvalidQueryExecuted(RuntimeException e) {
+				assertThat( e, instanceOf( IllegalArgumentException.class ) );
+				assertThat( e.getCause(), instanceOf( QuerySyntaxException.class ) );
+			}
+
+			@Override
+			public void onStaleObjectMergeAndUpdateFlush(RuntimeException e) {
+				assertThat( e, instanceOf( OptimisticLockException.class ) );
+				assertThat( e.getCause(), instanceOf( StaleObjectStateException.class ) );
+			}
+
+			@Override
+			public void onIdentifierGeneratorFailure(RuntimeException e) {
+				assertThat( e, instanceOf( PersistenceException.class ) );
+				assertThat( e.getCause(), instanceOf( IdentifierGenerationException.class ) );
+			}
 		};
 	}
 
@@ -105,4 +160,10 @@ interface ExceptionExpectations {
 	void onTransientObjectOnSaveAndSaveOrUpdate(RuntimeException e);
 
 	void onTransientObjectOnPersistAndMergeAndFlush(RuntimeException e);
+
+	void onInvalidQueryExecuted(RuntimeException e);
+
+	void onStaleObjectMergeAndUpdateFlush(RuntimeException e);
+
+	void onIdentifierGeneratorFailure(RuntimeException e);
 }

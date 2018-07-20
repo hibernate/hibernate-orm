@@ -19,8 +19,10 @@ public class RootEntity implements Serializable {
 
 	@Id
 	@GeneratedValue(strategy= GenerationType.IDENTITY)
-	@Column(name = "universalid")// "uid" is a keywork in Oracle
+	@Column(name = "universalid")// "uid" is a keyword in Oracle
 	private long uid;
+
+	public String description;
 
 	@javax.persistence.OneToMany(mappedBy = "linkedRoot")
 	private java.util.List<RelatedEntity> linkedEntities = new java.util.ArrayList<RelatedEntity>();
@@ -28,6 +30,7 @@ public class RootEntity implements Serializable {
 	public long getUid() {
 		return uid;
 	}
+
 	public void setUid(long uid) {
 		this.uid = uid;
 	}

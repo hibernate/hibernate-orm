@@ -22,18 +22,21 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.junit4.CustomRunner;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * @author Vlad Mihalcea
  * @author Gail Badner
  */
 @SkipForDialect(value = DB2Dialect.class, comment = "DB2 is far more resistant to the reserved keyword usage. See HHH-12832.")
+@RunWith(CustomRunner.class)
 public class SchemaUpdateHaltOnErrorTest {
 
 	private File output;

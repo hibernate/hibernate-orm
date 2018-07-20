@@ -903,9 +903,10 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 
 	/**
 	 * Indicates if exception handling for a SessionFactory built via Hibernate's native bootstrapping
-	 * should behave the same as in Hibernate ORM 5.1.
+	 * should behave the same as native exception handling in Hibernate ORM 5.1, When set to {@code true},
+	 * {@link HibernateException} will not be wrapped or converted according to the JPA specification.
 	 * <p/>
-	 * This setting will be ignored if the SessionFactory was built via JPA bootstrapping.
+	 * This setting will be ignored for a SessionFactory built via JPA bootstrapping.
 	 * <p/>
 	 * Values are {@code true}  or {@code false}.
 	 * Default value is {@code false}

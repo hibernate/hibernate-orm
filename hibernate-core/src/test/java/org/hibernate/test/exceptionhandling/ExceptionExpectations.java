@@ -9,8 +9,10 @@ package org.hibernate.test.exceptionhandling;
 import java.sql.SQLException;
 import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceException;
+import javax.persistence.RollbackException;
 
 import org.hibernate.StaleObjectStateException;
+import org.hibernate.TransactionException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.hql.internal.ast.QuerySyntaxException;
@@ -63,6 +65,24 @@ interface ExceptionExpectations {
 				assertThat( e, instanceOf( PersistenceException.class ) );
 				assertThat( e.getCause(), instanceOf( IdentifierGenerationException.class ) );
 			}
+
+			@Override
+			public void onTransactionExceptionOnSaveAndSaveOrUpdate(RuntimeException e) {
+				assertThat( e, instanceOf( TransactionException.class ) );
+			}
+
+			@Override
+			public void onTransactionExceptionOnPersistAndMergeAndFlush(RuntimeException e) {
+				assertThat( e, instanceOf( PersistenceException.class ) );
+				assertThat( e.getCause(), instanceOf( TransactionException.class ) );
+			}
+
+			@Override
+			public void onTransactionExceptionOnCommit(RuntimeException e) {
+				assertThat( e, instanceOf( RollbackException.class ) );
+				assertThat( e.getCause(), instanceOf( PersistenceException.class ) );
+				assertThat( e.getCause().getCause(), instanceOf( TransactionException.class ) );
+			}
 		};
 	}
 
@@ -103,6 +123,21 @@ interface ExceptionExpectations {
 			@Override
 			public void onIdentifierGeneratorFailure(RuntimeException e) {
 				assertThat( e, instanceOf( IdentifierGenerationException.class ) );
+			}
+
+			@Override
+			public void onTransactionExceptionOnSaveAndSaveOrUpdate(RuntimeException e) {
+				assertThat( e, instanceOf( TransactionException.class ) );
+			}
+
+			@Override
+			public void onTransactionExceptionOnPersistAndMergeAndFlush(RuntimeException e) {
+				assertThat( e, instanceOf( TransactionException.class ) );
+			}
+
+			@Override
+			public void onTransactionExceptionOnCommit(RuntimeException e) {
+				assertThat( e, instanceOf( TransactionException.class ) );
 			}
 		};
 	}
@@ -150,6 +185,23 @@ interface ExceptionExpectations {
 				assertThat( e, instanceOf( PersistenceException.class ) );
 				assertThat( e.getCause(), instanceOf( IdentifierGenerationException.class ) );
 			}
+
+			@Override
+			public void onTransactionExceptionOnSaveAndSaveOrUpdate(RuntimeException e) {
+				assertThat( e, instanceOf( TransactionException.class ) );
+			}
+
+			@Override
+			public void onTransactionExceptionOnPersistAndMergeAndFlush(RuntimeException e) {
+				assertThat( e, instanceOf( PersistenceException.class ) );
+				assertThat( e.getCause(), instanceOf( TransactionException.class ) );
+			}
+
+			@Override
+			public void onTransactionExceptionOnCommit(RuntimeException e) {
+				assertThat( e, instanceOf( PersistenceException.class ) );
+				assertThat( e.getCause(), instanceOf( TransactionException.class ) );
+			}
 		};
 	}
 
@@ -166,4 +218,10 @@ interface ExceptionExpectations {
 	void onStaleObjectMergeAndUpdateFlush(RuntimeException e);
 
 	void onIdentifierGeneratorFailure(RuntimeException e);
+
+	void onTransactionExceptionOnSaveAndSaveOrUpdate(RuntimeException e);
+
+	void onTransactionExceptionOnPersistAndMergeAndFlush(RuntimeException e);
+
+	void onTransactionExceptionOnCommit(RuntimeException e);
 }

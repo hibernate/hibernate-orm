@@ -20,12 +20,13 @@ import org.junit.Test;
 import static org.junit.Assert.fail;
 
 @TestForIssue(jiraKey = "HHH-12666")
-public class TransientObjectExceptionConversionTest extends BaseExceptionConversionTest {
+public class TransientObjectExceptionHandlingTest extends BaseExceptionHandlingTest {
 
-	public TransientObjectExceptionConversionTest(BootstrapMethod bootstrapMethod,
-			ExceptionConversionSetting exceptionConversionSetting,
+	public TransientObjectExceptionHandlingTest(
+			BootstrapMethod bootstrapMethod,
+			ExceptionHandlingSetting exceptionHandlingSetting,
 			ExceptionExpectations exceptionExpectations) {
-		super( bootstrapMethod, exceptionConversionSetting, exceptionExpectations );
+		super( bootstrapMethod, exceptionHandlingSetting, exceptionExpectations );
 	}
 
 	@Override

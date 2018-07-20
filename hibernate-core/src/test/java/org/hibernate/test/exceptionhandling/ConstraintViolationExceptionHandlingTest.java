@@ -22,12 +22,13 @@ import org.junit.Test;
 import static org.junit.Assert.fail;
 
 @TestForIssue(jiraKey = "HHH-12666")
-public class ConstraintViolationExceptionConversionTest extends BaseExceptionConversionTest {
+public class ConstraintViolationExceptionHandlingTest extends BaseExceptionHandlingTest {
 
-	public ConstraintViolationExceptionConversionTest(BootstrapMethod bootstrapMethod,
-			ExceptionConversionSetting exceptionConversionSetting,
+	public ConstraintViolationExceptionHandlingTest(
+			BootstrapMethod bootstrapMethod,
+			ExceptionHandlingSetting exceptionHandlingSetting,
 			ExceptionExpectations exceptionExpectations) {
-		super( bootstrapMethod, exceptionConversionSetting, exceptionExpectations );
+		super( bootstrapMethod, exceptionHandlingSetting, exceptionExpectations );
 	}
 
 	@Override

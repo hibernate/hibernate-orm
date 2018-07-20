@@ -19,13 +19,13 @@ import org.junit.Test;
 import static org.junit.Assert.fail;
 
 @TestForIssue(jiraKey = "HHH-12666")
-public class StateObjectStateConversionTest extends BaseExceptionConversionTest {
+public class StateObjectStateHandlingTest extends BaseExceptionHandlingTest {
 
-	public StateObjectStateConversionTest(
+	public StateObjectStateHandlingTest(
 			BootstrapMethod bootstrapMethod,
-			ExceptionConversionSetting exceptionConversionSetting,
+			ExceptionHandlingSetting exceptionHandlingSetting,
 			ExceptionExpectations exceptionExpectations) {
-		super( bootstrapMethod, exceptionConversionSetting, exceptionExpectations );
+		super( bootstrapMethod, exceptionHandlingSetting, exceptionExpectations );
 	}
 
 	@Override

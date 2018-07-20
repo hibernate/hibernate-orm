@@ -7,9 +7,7 @@
 package org.hibernate.test.exceptionhandling;
 
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.ManyToOne;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -20,13 +18,13 @@ import org.junit.Test;
 import static org.junit.Assert.fail;
 
 @TestForIssue(jiraKey = "HHH-12666")
-public class QuerySyntaxExceptionConversionTest extends BaseExceptionConversionTest {
+public class QuerySyntaxExceptionHandlingTest extends BaseExceptionHandlingTest {
 
-	public QuerySyntaxExceptionConversionTest(
+	public QuerySyntaxExceptionHandlingTest(
 			BootstrapMethod bootstrapMethod,
-			ExceptionConversionSetting exceptionConversionSetting,
+			ExceptionHandlingSetting exceptionHandlingSetting,
 			ExceptionExpectations exceptionExpectations) {
-		super( bootstrapMethod, exceptionConversionSetting, exceptionExpectations );
+		super( bootstrapMethod, exceptionHandlingSetting, exceptionExpectations );
 	}
 
 	@Override

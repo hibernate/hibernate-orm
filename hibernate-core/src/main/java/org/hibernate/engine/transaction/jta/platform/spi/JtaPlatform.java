@@ -26,14 +26,14 @@ public interface JtaPlatform extends Service {
 	 *
 	 * @return The {@link TransactionManager}
 	 */
-	public TransactionManager retrieveTransactionManager();
+	TransactionManager retrieveTransactionManager();
 
 	/**
 	 * Locate the {@link UserTransaction}
 	 *
 	 * @return The {@link UserTransaction}
 	 */
-	public UserTransaction retrieveUserTransaction();
+	UserTransaction retrieveUserTransaction();
 
 	/**
 	 * Determine an identifier for the given transaction appropriate for use in caching/lookup usages.
@@ -44,21 +44,21 @@ public interface JtaPlatform extends Service {
 	 * @param transaction The transaction to be identified.
 	 * @return An appropriate identifier
 	 */
-	public Object getTransactionIdentifier(Transaction transaction);
+	Object getTransactionIdentifier(Transaction transaction);
 
 	/**
 	 * Can we currently register a {@link Synchronization}?
 	 *
 	 * @return True if registering a {@link Synchronization} is currently allowed; false otherwise.
 	 */
-	public boolean canRegisterSynchronization();
+	boolean canRegisterSynchronization();
 
 	/**
 	 * Register a JTA {@link Synchronization} in the means defined by the platform.
 	 *
 	 * @param synchronization The synchronization to register
 	 */
-	public void registerSynchronization(Synchronization synchronization);
+	void registerSynchronization(Synchronization synchronization);
 
 	/**
 	 * Obtain the current transaction status using whatever means is preferred for this platform
@@ -67,5 +67,5 @@ public interface JtaPlatform extends Service {
 	 *
 	 * @throws SystemException Indicates a problem access the underlying status
 	 */
-	public int getCurrentStatus() throws SystemException;
+	int getCurrentStatus() throws SystemException;
 }

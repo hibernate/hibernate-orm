@@ -1814,4 +1814,8 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Setting " + AvailableSettings.NATIVE_EXCEPTION_HANDLING_51_COMPLIANCE + "=true is not valid with JPA bootstrapping; setting will be ignored.", id = 489 )
 	void nativeExceptionHandling51ComplianceJpaBootstrapping();
+
+	@LogMessage(level = INFO)
+	@Message(value = "Using JtaPlatform implementation: [%s]", id = 490)
+	void usingJtaPlatform(String jtaPlatformClassName);
 }

@@ -14,5 +14,6 @@
         <id name="AId" column="aID" type="java.lang.Integer">
             <generator class="identity"/>
         </id>
+        <property name="description" column="description" type="string"/>
     </class>
 </hibernate-mapping>

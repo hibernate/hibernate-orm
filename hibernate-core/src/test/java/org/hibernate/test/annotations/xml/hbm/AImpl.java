@@ -23,6 +23,7 @@ public class AImpl implements A {
 	private static final long serialVersionUID = 1L;
 
 	private Integer aId = 0;
+	private String description;
 
 	public AImpl() {
 	}
@@ -36,5 +37,14 @@ public class AImpl implements A {
 
 	public void setAId(Integer aId) {
 		this.aId = aId;
+	}
+
+	@Column( name = "description" )
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 }

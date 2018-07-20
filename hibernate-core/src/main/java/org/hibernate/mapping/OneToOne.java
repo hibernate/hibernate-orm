@@ -70,6 +70,7 @@ public class OneToOne extends ToOne {
 					referencedPropertyName,
 					isLazy(),
 					isUnwrapProxy(),
+					isNullable(),
 					entityName,
 					propertyName
 			);
@@ -82,6 +83,7 @@ public class OneToOne extends ToOne {
 					referencedPropertyName,
 					isLazy(),
 					isUnwrapProxy(),
+					isNullable(),
 					entityName,
 					propertyName
 			);

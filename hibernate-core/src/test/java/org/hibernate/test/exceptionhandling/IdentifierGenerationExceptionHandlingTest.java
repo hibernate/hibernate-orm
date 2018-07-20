@@ -6,6 +6,8 @@
  */
 package org.hibernate.test.exceptionhandling;
 
+import static org.junit.Assert.fail;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -16,13 +18,13 @@ import javax.persistence.PrimaryKeyJoinColumn;
 import org.hibernate.Session;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
-
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
-import static org.junit.Assert.fail;
-
 @TestForIssue(jiraKey = "HHH-12666")
+@RequiresDialect(H2Dialect.class)
 public class IdentifierGenerationExceptionHandlingTest extends BaseExceptionHandlingTest {
 
 	public IdentifierGenerationExceptionHandlingTest(

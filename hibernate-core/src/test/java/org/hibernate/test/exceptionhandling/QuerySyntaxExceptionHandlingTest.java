@@ -13,10 +13,13 @@ import javax.persistence.Id;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 @TestForIssue(jiraKey = "HHH-12666")
+@RequiresDialect(H2Dialect.class)
 public class QuerySyntaxExceptionHandlingTest extends BaseExceptionHandlingTest {
 
 	public QuerySyntaxExceptionHandlingTest(

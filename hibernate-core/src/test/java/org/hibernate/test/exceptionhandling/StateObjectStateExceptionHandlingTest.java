@@ -14,10 +14,13 @@ import javax.persistence.Id;
 import javax.persistence.Version;
 
 import org.hibernate.Session;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 @TestForIssue(jiraKey = "HHH-12666")
+@RequiresDialect(H2Dialect.class)
 public class StateObjectStateExceptionHandlingTest extends BaseExceptionHandlingTest {
 
 	public StateObjectStateExceptionHandlingTest(

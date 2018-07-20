@@ -13,13 +13,15 @@ import javax.persistence.ManyToOne;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import static org.junit.Assert.fail;
 
 @TestForIssue(jiraKey = "HHH-12666")
+@RequiresDialect(H2Dialect.class)
 public class TransientObjectExceptionHandlingTest extends BaseExceptionHandlingTest {
 
 	public TransientObjectExceptionHandlingTest(BootstrapMethod bootstrapMethod,

@@ -3,6 +3,81 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+
+Changes in 5.3.3.final (July 23, 2018)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31687/tab/release-report-done
+
+** Bug
+    * [HHH-7686] - org.hibernate.proxy.map.MapProxy loses all important state on serialization
+    * [HHH-8805] - [SchemaUpdate] javax.persistence.ForeignKey doesn't respect ConstraintMode.NO_CONSTRAINT
+    * [HHH-12200] - Docs mention outdated APIs
+    * [HHH-12542] - WildFly integration test, HibernateNativeAPINaturalIdTestCase, fails when security manager is enabled
+    * [HHH-12666] - Add an option for restoring 5.1 native exception handling
+    * [HHH-12695] - Incompatibility in return value for org.hibernate.procedure.ParameterRegistration.getType() 5.1 vs 5.3
+    * [HHH-12718] - Entity changes in @PreUpdate callback are not persisted when lazy loading is active for more than one field
+    * [HHH-12720] - LazyInitializationException with hibernate.enable_lazy_load_no_trans
+    * [HHH-12740] - Subselect fetching doesn't work when multiLoad was used
+    * [HHH-12753] - org.hibernate.envers.test.integration.collection.StringMapNationalizedLobTest fails with DB2
+    * [HHH-12768] - TimeAndTimestampTest fails with SQL Server and MYSQL
+    * [HHH-12771] - Caused by: java.lang.UnsupportedOperationException: Cache provider [org.hibernate.cache.ehcache.internal.EhcacheRegionFactory@3271ec2a] does not support `transactional` access
+    * [HHH-12776] - NullPointerException when executing native query on an Audited Entity
+    * [HHH-12779] - Revert HHH-12670 - Allows native SQL queries that take a given resultClass to map the result set to the required type
+    * [HHH-12781] - Update Javassist dependency to 3.23.1
+    * [HHH-12784] - Javassist support broken by HHH-12760
+    * [HHH-12786] - Deleting an entity leads to NullPointerException in ByteBuddy proxy
+    * [HHH-12787] - SessionJdbcBatchTest hangs with DB2
+    * [HHH-12791] - ComponentTuplizer generates a LOT of proxy classes when using Bytebuddy as bytecode provider
+    * [HHH-12795] - Setting FlushMode to manual for a @NamedQuery is ignored
+    * [HHH-12797] - Fix cache modes relationships table layout in the documentation
+    * [HHH-12798] - Nested spatial functions are not rendered correctly on SAP HANA
+    * [HHH-12800] - TuplizerInstantiatesByteBuddySubclassTest uses ByteBuddy operation unsafe with JDK 11
+    * [HHH-12802] - Hibernate does not throw an exception when more than one entity is loaded with the same ID
+    * [HHH-12815] - LocalDateCustomSessionLevelTimeZoneTest fails with mysql 5.5 and 5.7
+    * [HHH-12822] - Skip "case when" tests requiring casts for DB2
+    * [HHH-12823] - CompositeIdTest.testDistinctCountOfEntityWithCompositeId fails on databases that don't support tuple distinct counts because it expects wrong exception
+    * [HHH-12824] - ASTParserLoadingTest.testComponentNullnessChecks fail with DB2 because it uses legacy-style query parameter
+    * [HHH-12825] - CriteriaHQLAlignmentTest.testCountReturnValues fails on databases that don't support tuple distinct counts because it expects wrong exception
+    * [HHH-12826] - Persist cascade of collection fails when orphan removal enabled with flush mode commit.
+    * [HHH-12827] - NUMERIC column type is not handled correctly on DB2
+    * [HHH-12829] - Invalid references to outdated EhCache classes
+    * [HHH-12832] - SchemaUpdateHaltOnErrorTest and SchemaMigratorHaltOnErrorTest fail with DB2
+    * [HHH-12833] - UniqueConstraintDropTest fails with DB2
+    * [HHH-12838] - AndNationalizedTests fails with DB2
+    * [HHH-12839] - EntityProxySerializationTest fails with oracle
+    * [HHH-12843] - CreateDeleteTest and FlushIdGenTest fail with ORA-00936 on oracle
+    * [HHH-12844] - HbmWithIdentityTest fails with ORA-00936 on oracle
+
+** Task
+    * [HHH-12742] - Document the removal of JPAIntegrator SPI
+    * [HHH-12773] - Document org.hibernate.Query.getHibernateFirstResult(), setHibernateFirstResult(), getHibernateMaxResults(), setHibernateMaxResults() in migration guide
+    * [HHH-12774] - JARs missing from the distribution ZIP
+    * [HHH-12785] - Test Javassist support
+    * [HHH-12788] - Enable mockito-inline for the Agroal integration module
+    * [HHH-12789] - Upgrade to Mockito 2.19.0
+    * [HHH-12793] - Upgrade Karaf, pax-exam and reenable the OSGi tests
+    * [HHH-12799] - Enforce version alignment of Mockito and ByteBuddy dependencies
+    * [HHH-12801] - Error message in SqlFunctionMetadataBuilderContributorIllegalClassArgumentTest differs with JDK 11
+    * [HHH-12803] - Upgrade ByteBuddy to 1.8.13
+    * [HHH-12805] - Upgrade Mockito to 2.19.1
+    * [HHH-12807] - Disable the hibernate-orm-modules tests for JDK 11
+    * [HHH-12808] - Upgrade Gradle to 4.8.1
+    * [HHH-12809] - Use an HTTP link for the Javadoc link to our Bean Validation documentation
+    * [HHH-12813] - Disable Asciidoclet in Javadoc generation
+    * [HHH-12816] - Enable the experimental features of ByteBuddy when building with JDK 11
+    * [HHH-12820] - Merge the migration guides in the code base
+    * [HHH-12828] - ScannerTests#testGetBytesFromInputStream() is not stable enough
+
+** Improvement
+    * [HHH-12349] - User Guide documentation for @Filter is too verbose
+    * [HHH-12778] - BasicProxyFactoryImpl.getProxy() swallows exception
+    * [HHH-12804] - No need to mock Map in CollectionBinderTest
+    * [HHH-12811] - @UpdateTimestamp and @CreationTimestamp missing @Target annotation and breaking in Kotlin
+    * [HHH-12830] - Improve error output with transaction issues
+
+
+
 Changes in 5.3.2.final (July 5, 2018)
 ------------------------------------------------------------------------------------------------------------------------
 

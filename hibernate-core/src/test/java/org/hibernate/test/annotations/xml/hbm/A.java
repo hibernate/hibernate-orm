@@ -13,4 +13,8 @@ public interface A extends java.io.Serializable {
 	public Integer getAId();
 
 	public void setAId(Integer aId);
+
+	String getDescription();
+
+	void setDescription(String description);
 }

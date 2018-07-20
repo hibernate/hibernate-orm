@@ -290,7 +290,7 @@ public class EntityProxySerializationTest extends BaseCoreFunctionalTestCase {
 
 	}
 
-	@Entity
+	@Entity(name = "ChildEntity")
 	static class ChildEntity {
 		private Long id;
 

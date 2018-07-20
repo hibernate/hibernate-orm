@@ -19,6 +19,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.mapping.PersistentClass;
 
@@ -45,8 +46,9 @@ public class AndNationalizedTests extends BaseUnitTestCase {
 			( (MetadataImpl) metadata ).validate();
 
 			final PersistentClass entityBinding = metadata.getEntityBinding( TestEntity.class.getName() );
-			if(metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect){
-				// See issue HHH-10693
+			if(metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect
+					|| metadata.getDatabase().getDialect() instanceof DB2Dialect){
+				// See issue HHH-10693 for PostgreSQL, HHH-12753 for DB2
 				assertEquals(
 						Types.VARCHAR,
 						entityBinding.getProperty( "name" ).getType().sqlTypes( metadata )[0]

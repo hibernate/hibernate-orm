@@ -171,6 +171,17 @@ making the `org.hibernate.jpa.event.spi.JpaIntegrator` no longer needed.
 Existing applications migrating to 5.3 with classes extending `org.hibernate.jpa.event.spi.JpaIntegrator` have to change these classes to implement the `org.hibernate.integrator.spi.Integrator` interface.
 ====
 
+=== 5.1 -> 5.3 exception handling changes
+
+In 5.3 (as well as 5.2), exception handling for a `SessionFactory` built via Hibernate's native
+bootstrapping wraps or converts `HibernateException` according to the JPA specification unless the
+operation is Hibernate-specific (e.g., `Session#save`, `Session#saveOrUpdate`).
+
+In 5.3.3, a property was added, `hibernate.native_exception_handling_51_compliance`, which
+indicates if exception handling for a `SessionFactory` built via Hibernate's native bootstrapping
+should behave the same as native exception handling in Hibernate ORM 5.1. When set to `true`,
+`HibernateException` will not be wrapped or converted according to the JPA specification. This
+setting will be ignored for a `SessionFactory` built via JPA bootstrapping.
 
 === 5.3 -> 6.0 compatibility changes
 

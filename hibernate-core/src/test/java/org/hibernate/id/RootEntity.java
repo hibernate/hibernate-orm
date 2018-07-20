@@ -22,6 +22,8 @@ public class RootEntity implements Serializable {
 	@Column(name = "universalid")// "uid" is a keywork in Oracle
 	private long uid;
 
+	public String description;
+
 	@javax.persistence.OneToMany(mappedBy = "linkedRoot")
 	private java.util.List<RelatedEntity> linkedEntities = new java.util.ArrayList<RelatedEntity>();
 

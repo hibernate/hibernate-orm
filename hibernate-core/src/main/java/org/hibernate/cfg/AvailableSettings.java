@@ -902,6 +902,18 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String WRAP_RESULT_SETS = "hibernate.jdbc.wrap_result_sets";
 
 	/**
+	 * Indicates if exception handling for a SessionFactory built via Hibernate's native bootstrapping
+	 * should behave the same as native exception handling in Hibernate ORM 5.1, When set to {@code true},
+	 * {@link HibernateException} will not be wrapped or converted according to the JPA specification.
+	 * <p/>
+	 * This setting will be ignored for a SessionFactory built via JPA bootstrapping.
+	 * <p/>
+	 * Values are {@code true}  or {@code false}.
+	 * Default value is {@code false}
+	 */
+	String NATIVE_EXCEPTION_HANDLING_51_COMPLIANCE = "hibernate.native_exception_handling_51_compliance";
+
+	/**
 	 * Enable ordering of update statements by primary key value
 	 */
 	String ORDER_UPDATES = "hibernate.order_updates";

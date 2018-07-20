@@ -47,6 +47,7 @@ import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.id.uuid.LocalObjectUuidHelper;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
@@ -97,6 +98,7 @@ import static org.hibernate.cfg.AvailableSettings.JTA_TRACK_BY_THREAD;
 import static org.hibernate.cfg.AvailableSettings.LOG_SESSION_METRICS;
 import static org.hibernate.cfg.AvailableSettings.MAX_FETCH_DEPTH;
 import static org.hibernate.cfg.AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER;
+import static org.hibernate.cfg.AvailableSettings.NATIVE_EXCEPTION_HANDLING_51_COMPLIANCE;
 import static org.hibernate.cfg.AvailableSettings.ORDER_INSERTS;
 import static org.hibernate.cfg.AvailableSettings.ORDER_UPDATES;
 import static org.hibernate.cfg.AvailableSettings.PREFER_USER_TRANSACTION;
@@ -123,6 +125,7 @@ import static org.hibernate.cfg.AvailableSettings.USE_STRUCTURED_CACHE;
 import static org.hibernate.cfg.AvailableSettings.VALIDATE_QUERY_PARAMETERS;
 import static org.hibernate.cfg.AvailableSettings.WRAP_RESULT_SETS;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
+import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.jpa.AvailableSettings.DISCARD_PC_ON_CLOSE;
 
 /**
@@ -137,7 +140,7 @@ import static org.hibernate.jpa.AvailableSettings.DISCARD_PC_ON_CLOSE;
  */
 @SuppressWarnings("WeakerAccess")
 public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
-	private static final Logger log = Logger.getLogger( SessionFactoryOptionsBuilder.class );
+	private static final CoreMessageLogger log = messageLogger( SessionFactoryOptionsBuilder.class );
 
 	private final String uuid = LocalObjectUuidHelper.generateLocalObjectUuid();
 	private final StandardServiceRegistry serviceRegistry;
@@ -238,6 +241,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	private boolean failOnPaginationOverCollectionFetchEnabled;
 	private boolean inClauseParameterPaddingEnabled;
+
+	private boolean nativeExceptionHandling51Compliance;
 
 	@SuppressWarnings({"WeakerAccess", "deprecation"})
 	public SessionFactoryOptionsBuilder(StandardServiceRegistry serviceRegistry, BootstrapContext context) {
@@ -490,7 +495,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		);
 
 		this.immutableEntityUpdateQueryHandlingMode = ImmutableEntityUpdateQueryHandlingMode.interpret(
-			configurationSettings.get( IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE )
+				configurationSettings.get( IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE )
 		);
 
 		this.inClauseParameterPaddingEnabled =  ConfigurationHelper.getBoolean(
@@ -498,6 +503,16 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				configurationSettings,
 				false
 		);
+
+		this.nativeExceptionHandling51Compliance = ConfigurationHelper.getBoolean(
+				NATIVE_EXCEPTION_HANDLING_51_COMPLIANCE,
+				configurationSettings,
+				false
+		);
+		if ( context.isJpaBootstrap() && nativeExceptionHandling51Compliance ) {
+			log.nativeExceptionHandling51ComplianceJpaBootstrapping();
+			this.nativeExceptionHandling51Compliance = false;
+		}
 	}
 
 	@SuppressWarnings("deprecation")
@@ -1009,6 +1024,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public JpaCompliance getJpaCompliance() {
 		return jpaCompliance;
+	}
+
+	@Override
+	public boolean nativeExceptionHandling51Compliance() {
+		return nativeExceptionHandling51Compliance;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

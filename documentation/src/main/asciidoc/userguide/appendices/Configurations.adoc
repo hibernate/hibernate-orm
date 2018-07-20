@@ -897,6 +897,12 @@ Whether the schema migration tool should halt on error, therefore terminating th
 `*hibernate.jdbc.sql_exception_converter*` (e.g. Fully-qualified name of class implementing `SQLExceptionConverter`)::
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/exception/spi/SQLExceptionConverter.html[`SQLExceptionConverter`] to use for converting `SQLExceptions` to Hibernate's `JDBCException` hierarchy. The default is to use the configured https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html[`Dialect`]'s preferred `SQLExceptionConverter`.
 
+`*hibernate.native_exception_handling_51_compliance*` (e.g. `true` or `false` (default value))::
+Indicates if exception handling for a `SessionFactory` built via Hibernate's native bootstrapping
+should behave the same as native exception handling in Hibernate ORM 5.1. When set to `true`,
+`HibernateException` will be not wrapped or converted according to the JPA specification. This
+setting will be ignored for a `SessionFactory` built via JPA bootstrapping.
+
 [[configurations-session-events]]
 === Session events
 

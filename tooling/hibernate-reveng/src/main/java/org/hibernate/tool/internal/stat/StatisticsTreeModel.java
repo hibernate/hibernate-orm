@@ -1,11 +1,12 @@
 package org.hibernate.tool.internal.stat;
 
+import java.util.Collections;
 import java.util.Map;
 
-import org.hibernate.stat.SecondLevelCacheStatistics;
+import org.hibernate.internal.util.collections.IdentityMap;
+import org.hibernate.stat.CacheRegionStatistics;
 import org.hibernate.stat.Statistics;
 import org.hibernate.tool.internal.util.AbstractTreeModel;
-import org.hibernate.internal.util.collections.IdentityMap;
 
 public class StatisticsTreeModel extends AbstractTreeModel {
 
@@ -37,10 +38,9 @@ public class StatisticsTreeModel extends AbstractTreeModel {
 		} else if(parent==queries) {
 			return stats.getQueryStatistics(stats.getQueries()[index]);
 		} else if(parent==secondlevelcache) {
-			return stats.getSecondLevelCacheStatistics( stats.getSecondLevelCacheRegionNames()[index]);
-		} else if(parent instanceof SecondLevelCacheStatistics) {
-			SecondLevelCacheStatistics slcs = (SecondLevelCacheStatistics) parent;			
-			return slcs.getEntries();
+			return stats.getCacheRegionStatistics(stats.getSecondLevelCacheRegionNames()[index]);
+		} else if (parent instanceof CacheRegionStatistics) {
+			return Collections.emptyMap();
 		}
 		return null;
 	}
@@ -56,9 +56,8 @@ public class StatisticsTreeModel extends AbstractTreeModel {
 			return stats.getQueries().length;
 		} else if(parent==secondlevelcache) {
 			return stats.getSecondLevelCacheRegionNames().length;
-		} else if(parent instanceof SecondLevelCacheStatistics) {
-			/*SecondLevelCacheStatistics stats = (SecondLevelCacheStatistics) parent;
-			return stats.getEntries().size();*/
+		} else if(parent instanceof CacheRegionStatistics) {
+			return 0;
 		}
 		return 0;
 	}

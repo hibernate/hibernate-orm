@@ -29,10 +29,11 @@ public class OneToOneType extends EntityType {
 	private final ForeignKeyDirection foreignKeyType;
 	private final String propertyName;
 	private final String entityName;
+	private final boolean isNullable;
 
 	/**
-	 * @deprecated Use {@link #OneToOneType(TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, String, String)}
-	 *  instead.
+	 * @deprecated Use {@link #OneToOneType(TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, boolean, String, String)}
+	 * instead.
 	 */
 	@Deprecated
 	public OneToOneType(
@@ -47,6 +48,11 @@ public class OneToOneType extends EntityType {
 		this( scope, referencedEntityName, foreignKeyType, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName );
 	}
 
+	/**
+	 * @deprecated Use {@link #OneToOneType(TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, boolean, String, String)}
+	 * instead.
+	 */
+	@Deprecated
 	public OneToOneType(
 			TypeFactory.TypeScope scope,
 			String referencedEntityName,
@@ -57,10 +63,25 @@ public class OneToOneType extends EntityType {
 			boolean unwrapProxy,
 			String entityName,
 			String propertyName) {
+		this( scope, referencedEntityName, foreignKeyType, referenceToPrimaryKey, uniqueKeyPropertyName, lazy, unwrapProxy, foreignKeyType==ForeignKeyDirection.TO_PARENT, entityName, propertyName );
+	}
+
+	public OneToOneType(
+			TypeFactory.TypeScope scope,
+			String referencedEntityName,
+			ForeignKeyDirection foreignKeyType,
+			boolean referenceToPrimaryKey,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			boolean nullable,
+			String entityName,
+			String propertyName) {
 		super( scope, referencedEntityName, referenceToPrimaryKey, uniqueKeyPropertyName, !lazy, unwrapProxy );
 		this.foreignKeyType = foreignKeyType;
 		this.propertyName = propertyName;
 		this.entityName = entityName;
+		this.isNullable = nullable;
 	}
 
 	public OneToOneType(OneToOneType original, String superTypeEntityName) {
@@ -68,6 +89,7 @@ public class OneToOneType extends EntityType {
 		this.foreignKeyType = original.foreignKeyType;
 		this.propertyName = original.propertyName;
 		this.entityName = original.entityName;
+		this.isNullable = original.isNullable;
 	}
 
 	@Override
@@ -156,7 +178,7 @@ public class OneToOneType extends EntityType {
 
 	@Override
 	protected boolean isNullable() {
-		return foreignKeyType==ForeignKeyDirection.TO_PARENT;
+		return isNullable;
 	}
 
 	@Override

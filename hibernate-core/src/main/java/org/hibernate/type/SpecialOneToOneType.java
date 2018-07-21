@@ -27,7 +27,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 public class SpecialOneToOneType extends OneToOneType {
 	
 	/**
-	 * @deprecated Use {@link #SpecialOneToOneType(org.hibernate.type.TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, String, String)} instead.
+	 * @deprecated Use {@link SpecialOneToOneType#SpecialOneToOneType(TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, boolean, String, String)}
+	 * instead.
 	 */
 	@Deprecated
 	public SpecialOneToOneType(
@@ -41,7 +42,12 @@ public class SpecialOneToOneType extends OneToOneType {
 			String propertyName) {
 		this( scope, referencedEntityName, foreignKeyType, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName );
 	}
-	
+
+	/**
+	 * @deprecated Use {@link SpecialOneToOneType#SpecialOneToOneType(TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, boolean, String, String)}
+	 * instead.
+	 */
+	@Deprecated
 	public SpecialOneToOneType(
 			TypeFactory.TypeScope scope,
 			String referencedEntityName,
@@ -52,7 +58,7 @@ public class SpecialOneToOneType extends OneToOneType {
 			boolean unwrapProxy,
 			String entityName,
 			String propertyName) {
-		super(
+		this(
 				scope,
 				referencedEntityName, 
 				foreignKeyType,
@@ -60,9 +66,35 @@ public class SpecialOneToOneType extends OneToOneType {
 				uniqueKeyPropertyName, 
 				lazy,
 				unwrapProxy,
+				foreignKeyType==ForeignKeyDirection.TO_PARENT,
 				entityName, 
 				propertyName
 			);
+	}
+
+	public SpecialOneToOneType(
+			TypeFactory.TypeScope scope,
+			String referencedEntityName,
+			ForeignKeyDirection foreignKeyType,
+			boolean referenceToPrimaryKey,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			boolean nullable,
+			String entityName,
+			String propertyName) {
+		super(
+				scope,
+				referencedEntityName,
+				foreignKeyType,
+				referenceToPrimaryKey,
+				uniqueKeyPropertyName,
+				lazy,
+				unwrapProxy,
+				nullable,
+				entityName,
+				propertyName
+		);
 	}
 
 	public SpecialOneToOneType(SpecialOneToOneType original, String superTypeEntityName) {

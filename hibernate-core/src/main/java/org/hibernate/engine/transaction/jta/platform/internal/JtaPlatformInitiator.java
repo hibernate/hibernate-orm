@@ -49,7 +49,29 @@ public class JtaPlatformInitiator implements StandardServiceInitiator<JtaPlatfor
 			platform = getFallbackProvider( configurationValues, registry );
 		}
 
+		LOG.info( String.format( "Returning platform [%s]", getPlatformDescription( platform ) ) );
 		return platform;
+	}
+
+	/**
+	 * Retrieves the {@link JtaPlatform} information and transform it to a String description
+	 * 
+	 * @param platform The Platform to be analized
+	 * @return A platform description
+	 */
+	private String getPlatformDescription(JtaPlatform platform) {
+		if ( platform != null ) {
+			StringBuilder descBuilder = new StringBuilder( "JtaPlatform : " );
+			descBuilder.append( " canRegisterSynchronization: " ).append( platform.canRegisterSynchronization() )
+					.append( ", UserTransaction: " )
+					.append( platform.retrieveUserTransaction() != null ? platform.retrieveUserTransaction().getClass().getName() : "null" )
+					.append( ", TransactionManager: " )
+					.append( platform.retrieveTransactionManager() != null ? platform.retrieveTransactionManager().getClass().getName() : "null" );
+
+			return descBuilder.toString();
+		}
+		else
+			return null;
 	}
 
 	@SuppressWarnings({"WeakerAccess", "unused"})

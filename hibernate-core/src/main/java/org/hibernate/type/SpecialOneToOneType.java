@@ -27,7 +27,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 public class SpecialOneToOneType extends OneToOneType {
 	
 	/**
-	 * @deprecated Use {@link #SpecialOneToOneType(org.hibernate.type.TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, String, String)} instead.
+	 * @deprecated Use {@link #SpecialOneToOneType(org.hibernate.type.TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, String, String, boolean)} instead.
 	 */
 	@Deprecated
 	public SpecialOneToOneType(
@@ -38,8 +38,9 @@ public class SpecialOneToOneType extends OneToOneType {
 			boolean lazy,
 			boolean unwrapProxy,
 			String entityName,
-			String propertyName) {
-		this( scope, referencedEntityName, foreignKeyType, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName );
+			String propertyName,
+			boolean constrained) {
+		this( scope, referencedEntityName, foreignKeyType, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName, constrained );
 	}
 	
 	public SpecialOneToOneType(
@@ -51,7 +52,8 @@ public class SpecialOneToOneType extends OneToOneType {
 			boolean lazy,
 			boolean unwrapProxy,
 			String entityName,
-			String propertyName) {
+			String propertyName,
+			boolean constrained) {
 		super(
 				scope,
 				referencedEntityName, 
@@ -61,7 +63,8 @@ public class SpecialOneToOneType extends OneToOneType {
 				lazy,
 				unwrapProxy,
 				entityName, 
-				propertyName
+				propertyName,
+				constrained
 			);
 	}
 

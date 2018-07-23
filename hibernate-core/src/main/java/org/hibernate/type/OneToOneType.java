@@ -29,9 +29,10 @@ public class OneToOneType extends EntityType {
 	private final ForeignKeyDirection foreignKeyType;
 	private final String propertyName;
 	private final String entityName;
+	private final boolean constrained;
 
 	/**
-	 * @deprecated Use {@link #OneToOneType(TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, String, String)}
+	 * @deprecated Use {@link #OneToOneType(TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, String, String, boolean)}
 	 *  instead.
 	 */
 	@Deprecated
@@ -43,8 +44,9 @@ public class OneToOneType extends EntityType {
 			boolean lazy,
 			boolean unwrapProxy,
 			String entityName,
-			String propertyName) {
-		this( scope, referencedEntityName, foreignKeyType, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName );
+			String propertyName,
+			boolean constrained) {
+		this( scope, referencedEntityName, foreignKeyType, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName, constrained );
 	}
 
 	public OneToOneType(
@@ -56,11 +58,13 @@ public class OneToOneType extends EntityType {
 			boolean lazy,
 			boolean unwrapProxy,
 			String entityName,
-			String propertyName) {
+			String propertyName,
+			boolean constrained) {
 		super( scope, referencedEntityName, referenceToPrimaryKey, uniqueKeyPropertyName, !lazy, unwrapProxy );
 		this.foreignKeyType = foreignKeyType;
 		this.propertyName = propertyName;
 		this.entityName = entityName;
+		this.constrained = constrained;
 	}
 
 	public OneToOneType(OneToOneType original, String superTypeEntityName) {
@@ -68,6 +72,7 @@ public class OneToOneType extends EntityType {
 		this.foreignKeyType = original.foreignKeyType;
 		this.propertyName = original.propertyName;
 		this.entityName = original.entityName;
+		this.constrained = original.constrained;
 	}
 
 	@Override
@@ -156,7 +161,7 @@ public class OneToOneType extends EntityType {
 
 	@Override
 	protected boolean isNullable() {
-		return foreignKeyType==ForeignKeyDirection.TO_PARENT;
+		return !constrained;
 	}
 
 	@Override

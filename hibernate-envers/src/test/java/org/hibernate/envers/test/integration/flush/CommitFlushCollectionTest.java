@@ -39,7 +39,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-12826")
+@TestForIssue(jiraKey = "HHH-12826 and HHH-12846")
 public class CommitFlushCollectionTest extends BaseEnversJPAFunctionalTestCase {
 
 	@MappedSuperclass
@@ -184,6 +184,38 @@ public class CommitFlushCollectionTest extends BaseEnversJPAFunctionalTestCase {
 		}
 	}
 
+	private void mergeDocument(FlushModeType flushModeType, Long id) {
+		final EntityManager entityManager = getOrCreateEntityManager();
+		try {
+			entityManager.setFlushMode( flushModeType );
+
+			entityManager.getTransaction().begin();
+			DocumentA doc = entityManager.find( DocumentA.class, id );
+			doc.setDate( new Date() );
+			for ( DocumentLineA line : doc.getLines() ) {
+				line.setText( "Updated" );
+			}
+
+			DocumentLineA line = new DocumentLineA();
+			line.setText( "line2" );
+			doc.addLine( line );
+
+			entityManager.merge( doc );
+			entityManager.getTransaction().commit();
+		}
+		catch ( Exception e ) {
+			if ( entityManager != null && entityManager.getTransaction().isActive() ) {
+				entityManager.getTransaction().rollback();
+			}
+			throw e;
+		}
+		finally {
+			if ( entityManager != null && entityManager.isOpen() ) {
+				entityManager.close();
+			}
+		}
+	}
+
 	private Long entityId1;
 	private Long entityId2;
 
@@ -192,18 +224,25 @@ public class CommitFlushCollectionTest extends BaseEnversJPAFunctionalTestCase {
 	public void initData() {
 		// This failed when using Envers.
 		entityId1 = persistDocument( FlushModeType.COMMIT );
+
 		// This worked
 		entityId2 = persistDocument( FlushModeType.AUTO );
+
+		// This failed
+		mergeDocument( FlushModeType.COMMIT, entityId1 );
+
+		// This worked
+		mergeDocument( FlushModeType.AUTO, entityId2 );
 	}
 
 	@Test
-	public void testPersistWithFlushModeCommit() {
-		assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( DocumentA.class, entityId1 ) );
+	public void testWithFlushModeCommit() {
+		assertEquals( Arrays.asList( 1, 3 ), getAuditReader().getRevisions( DocumentA.class, entityId1 ) );
 	}
 
 	@Test
 	@Priority(1)
-	public void testPersistWithFlushmodeAuto() {
-		assertEquals( Arrays.asList( 2 ), getAuditReader().getRevisions( DocumentA.class, entityId2 ) );
+	public void testWithFlushModeAuto() {
+		assertEquals( Arrays.asList( 2, 4 ), getAuditReader().getRevisions( DocumentA.class, entityId2 ) );
 	}
 }

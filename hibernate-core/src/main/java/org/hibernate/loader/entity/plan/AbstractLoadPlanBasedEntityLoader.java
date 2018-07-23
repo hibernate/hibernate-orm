@@ -65,17 +65,20 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 		final LoadPlanBuildingAssociationVisitationStrategy strategy;
 		if ( buildingParameters.getQueryInfluencers().getFetchGraph() != null ) {
 			strategy = new FetchGraphLoadPlanBuildingStrategy(
-					factory, buildingParameters.getQueryInfluencers(),buildingParameters.getLockMode()
+					factory, buildingParameters.getQueryInfluencers(),
+					buildingParameters.getLockOptions() != null ? buildingParameters.getLockOptions().getLockMode() : buildingParameters.getLockMode()
 			);
 		}
 		else if ( buildingParameters.getQueryInfluencers().getLoadGraph() != null ) {
 			strategy = new LoadGraphLoadPlanBuildingStrategy(
-					factory, buildingParameters.getQueryInfluencers(),buildingParameters.getLockMode()
+					factory, buildingParameters.getQueryInfluencers(),
+					buildingParameters.getLockOptions() != null ? buildingParameters.getLockOptions().getLockMode() : buildingParameters.getLockMode()
 			);
 		}
 		else {
 			strategy = new FetchStyleLoadPlanBuildingAssociationVisitationStrategy(
-					factory, buildingParameters.getQueryInfluencers(),buildingParameters.getLockMode()
+					factory, buildingParameters.getQueryInfluencers(),
+					buildingParameters.getLockOptions() != null ? buildingParameters.getLockOptions().getLockMode() : buildingParameters.getLockMode()
 			);
 		}
 

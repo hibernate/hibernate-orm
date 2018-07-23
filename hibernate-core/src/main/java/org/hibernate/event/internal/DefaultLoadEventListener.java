@@ -14,6 +14,7 @@ import org.hibernate.NonUniqueObjectException;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.WrongClassException;
+import org.hibernate.action.internal.DelayedPostInsertIdentifier;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.entry.CacheEntry;
@@ -30,7 +31,6 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
@@ -83,7 +83,9 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		}
 
 		final Class idClass = persister.getIdentifierType().getReturnedClass();
-		if ( idClass != null && !idClass.isInstance( event.getEntityId() ) ) {
+		if ( idClass != null &&
+				!idClass.isInstance( event.getEntityId() ) &&
+				!DelayedPostInsertIdentifier.class.isInstance( event.getEntityId() ) ) {
 			checkIdClass( persister, event, loadType, idClass );
 		}
 

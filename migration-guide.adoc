@@ -65,6 +65,11 @@ implement JPA methods now in core I decided to implement more of a composition a
 This one can affect implementors of certain extension contracts.
 Specifically those previously accepting a `SessionImplementor` will likely now accept a `SharedSessionContract`.
 
+== Persister and Tuplizer changes
+
+Due to changes to SPIs for persisters (in `org.hibernate.persister` package) and tuplizers (in `org.hibernate.tuple`),
+custom persisters and tuplizers will need to be updated to follow the new SPIs.
+
 == LimitHandler changes
 
 In Hibernate 4.3, dialect implementations that did not support a limit offset would fetch all rows for a query and

@@ -1824,4 +1824,11 @@ public interface CoreMessageLogger extends BasicLogger {
 			"The NotFoundAction.IGNORE @ManyToOne and @OneToOne associations are always fetched eagerly.", id = 491)
 	void ignoreNotFoundWithFetchTypeLazy(String entity, String association);
 
+	@LogMessage(level = INFO)
+	@Message(value = "Query plan cache hits: %s", id = 492)
+	void queryPlanCacheHits(long queryPlanCacheHitCount);
+
+	@LogMessage(level = INFO)
+	@Message(value = "Query plan cache misses: %s", id = 493)
+	void queryPlanCacheMisses(long queryPlanCacheMissCount);
 }

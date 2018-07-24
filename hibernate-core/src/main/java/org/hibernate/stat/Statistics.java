@@ -367,4 +367,20 @@ public interface Statistics {
 	 */
 	@Deprecated
 	NaturalIdCacheStatistics getNaturalIdCacheStatistics(String regionName);
+
+	/**
+	 * Get the global number of query plans successfully retrieved from cache
+	 */
+	default long getQueryPlanCacheHitCount() {
+		//For backward compatibility
+		return 0;
+	}
+
+	/**
+	 * Get the global number of query plans lookups *not* found in cache
+	 */
+	default long getQueryPlanCacheMissCount() {
+		//For backward compatibility
+		return 0;
+	}
 }

@@ -37,6 +37,11 @@ public class QueryStatisticsImpl implements QueryStatistics {
 	private final AtomicLong executionMinTime = new AtomicLong(Long.MAX_VALUE);
 	private final AtomicLong totalExecutionTime = new AtomicLong();
 
+	private final LongAdder planCacheHitCount = new LongAdder();
+	private final LongAdder planCacheMissCount = new LongAdder();
+	private final AtomicLong planCompilationTotalMicroseconds = new AtomicLong();
+
+
 	private final Lock readLock;
 	private final Lock writeLock;
 
@@ -132,6 +137,27 @@ public class QueryStatisticsImpl implements QueryStatistics {
 	}
 
 	/**
+	 * Query plan successfully fetched from the cache
+	 */
+	public long getPlanCacheHitCount() {
+		return planCacheHitCount.sum();
+	}
+
+	/**
+	 * Query plan not fetched from the cache
+	 */
+	public long getPlanCacheMissCount() {
+		return planCacheMissCount.sum();
+	}
+
+	/**
+	 * Query plan overall compiled total
+	 */
+	public long getPlanCompilationTotalMicroseconds() {
+		return planCompilationTotalMicroseconds.get();
+	}
+
+	/**
 	 * add statistics report of a DB query
 	 *
 	 * @param rows rows count returned
@@ -156,6 +182,16 @@ public class QueryStatisticsImpl implements QueryStatistics {
 		}
 	}
 
+	/**
+	 * add plan statistics report of a DB query
+	 *
+	 * @param microseconds time taken
+	 */
+	void compiled(long microseconds) {
+		planCacheMissCount.increment();
+		planCompilationTotalMicroseconds.addAndGet( microseconds );
+	}
+
 	void incrementCacheHitCount() {
 		log.tracef( "QueryStatistics - cache hit : %s", query );
 
@@ -174,12 +210,18 @@ public class QueryStatisticsImpl implements QueryStatistics {
 		cachePutCount.increment();
 	}
 
+	void incrementPlanCacheHitCount() {
+		planCacheHitCount.increment();
+	}
+
 	public String toString() {
 		return "QueryStatistics"
 				+ "[query=" + query
 				+ ",cacheHitCount=" + this.cacheHitCount
 				+ ",cacheMissCount=" + this.cacheMissCount
 				+ ",cachePutCount=" + this.cachePutCount
+				+ ",planCacheHitCount=" + this.planCacheHitCount
+				+ ",planCacheMissCount=" + this.planCacheMissCount
 				+ ",executionCount=" + this.executionCount
 				+ ",executionRowCount=" + this.executionRowCount
 				+ ",executionAvgTime=" + this.getExecutionAvgTime()

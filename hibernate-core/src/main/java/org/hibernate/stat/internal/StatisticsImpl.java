@@ -78,6 +78,9 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	private final LongAdder queryCacheMissCount = new LongAdder();
 	private final LongAdder queryCachePutCount = new LongAdder();
 
+	private final LongAdder queryPlanCacheHitCount = new LongAdder();
+	private final LongAdder queryPlanCacheMissCount = new LongAdder();
+
 	private final LongAdder updateTimestampsCacheHitCount = new LongAdder();
 	private final LongAdder updateTimestampsCacheMissCount = new LongAdder();
 	private final LongAdder updateTimestampsCachePutCount = new LongAdder();
@@ -179,6 +182,9 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		l2CacheStatsMap.clear();
 		queryStatsMap.clear();
 		deprecatedNaturalIdStatsMap.clear();
+
+		queryPlanCacheHitCount.reset();
+		queryPlanCacheMissCount.reset();
 
 		startTime = System.currentTimeMillis();
 	}
@@ -782,13 +788,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		}
 	}
 
-	private CacheRegionStatisticsImpl getQueryRegionStats(String regionName) {
-		return l2CacheStatsMap.computeIfAbsent(
-				regionName,
-				s -> new CacheRegionStatisticsImpl( sessionFactory.getCache().getQueryResultsCache( regionName ).getRegion() )
-		);
-	}
-
 
 	@Override
 	public void queryCacheMiss(String hql, String regionName) {
@@ -816,7 +815,40 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		}
 	}
 
+	@Override
+	public long getQueryPlanCacheHitCount() {
+		return queryPlanCacheHitCount.sum();
+	}
 
+	@Override
+	public long getQueryPlanCacheMissCount() {
+		return queryPlanCacheMissCount.sum();
+	}
+
+	@Override
+	public void queryCompiled(String hql, long microseconds) {
+		queryPlanCacheMissCount.increment();
+
+		if ( hql != null ) {
+			getQueryStatistics( hql ).compiled( microseconds );
+		}
+	}
+
+	@Override
+	public void queryPlanCacheHit(String hql) {
+		queryPlanCacheHitCount.increment();
+
+		if ( hql != null ) {
+			getQueryStatistics( hql ).incrementPlanCacheHitCount();
+		}
+	}
+
+	private CacheRegionStatisticsImpl getQueryRegionStats(String regionName) {
+		return l2CacheStatsMap.computeIfAbsent(
+				regionName,
+				s -> new CacheRegionStatisticsImpl( sessionFactory.getCache().getQueryResultsCache( regionName ).getRegion() )
+		);
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Session/misc stats
@@ -940,6 +972,8 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		LOG.queryCacheHits( queryCacheHitCount.sum() );
 		LOG.queryCacheMisses( queryCacheMissCount.sum() );
 		LOG.maxQueryTime( queryExecutionMaxTime.get() );
+		LOG.queryPlanCacheHits( queryPlanCacheHitCount.sum() );
+		LOG.queryPlanCacheMisses( queryPlanCacheMissCount.sum() );
 	}
 
 	@Override
@@ -982,6 +1016,8 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 				.append(",update timestamps cache hits=").append(updateTimestampsCacheHitCount)
 				.append(",update timestamps cache misses=").append(updateTimestampsCacheMissCount)
 				.append( ",max query time=" ).append( queryExecutionMaxTime )
+				.append( ",query plan cache hits=" ).append( queryPlanCacheHitCount )
+				.append( ",query plan cache misses=" ).append( queryPlanCacheMissCount )
 				.append( ']' )
 				.toString();
 	}

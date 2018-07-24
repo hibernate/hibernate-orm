@@ -100,6 +100,8 @@ https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/
 `getQueryExecutionCount`:: Get the global number of executed queries.
 `getQueryExecutionMaxTime`:: Get the time in milliseconds of the slowest query.
 `getQueryExecutionMaxTimeQueryString`:: Get the query string for the slowest query.
+`getQueryPlanCacheHitCount`:: Get the global number of query plans successfully retrieved from cache.
+`getQueryPlanCacheMissCount`:: Get the global number of query plans lookups *not* found in cache.
 
 [[statistics-natural-id]]
 ==== Natural id statistics methods
@@ -128,7 +130,7 @@ https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/
 ===== Second-level cache query statistics methods
 
 `getQueryCacheHitCount`:: Get the global number of cached queries successfully retrieved from cache.
-`getQueryCacheMissCount`:: Get the global number of cached queries __not__ found in cache.
+`getQueryCacheMissCount`:: Get the global number of cached queries *not* found in cache.
 `getQueryCachePutCount`:: Get the global number of cacheable queries put in cache.
 
 [[statistics-second-level-cache-timestamp]]
@@ -153,7 +155,31 @@ raise the maximum number of queries that are being stored by the `Statistics` in
 If the maximum number of queries has been reached, Hibernate uses a https://en.wikipedia.org/wiki/Cache_replacement_policies#Least_recently_used_(LRU)[Least recently used (LRU)] policy
 to make room for new query entries.
 
+[[statistics-query-plan-cache]]
+=== Query plan cache statistics
 
+Every entity query, be it JPQL/HQL or Criteria API is compiled to an AST (Abstract Syntax Tree),
+and this process is resource-intensive.
+To speed up the entity query executions, Hibernate offers a query plan cache so that compiled plans can be reused.
 
+To monitor the query plan cache you have the following statistics.
 
+[[statistics-query-plan-cache-global-level]]
+==== Query plan cache global statistics
 
+The `Statistics` instance provides two global counters which can give you an overall picture of the query plan cache effectiveness.
+
+- `getQueryPlanCacheHitCount`
+- `getQueryPlanCacheMissCount`
+
+If the hit count is high and the miss count is low, then the query plan cache is effective, and the vast majority of entity queries
+are served from the query plan cache, rather than being compiled over and over again.
+
+[[statistics-query-plan-cache-query-level]]
+==== Query plan cache query-level statistics
+
+The `QueryStatistics` instance, which you can get via the `getQueryStatistics(String queryString)` method of the `Statistics` object, stores the following query plan cache metrics:
+
+`getPlanCacheHitCount`:: The number of query plans successfully fetched from the cache.
+`getQueryPlanCacheMissCount`:: The number of query plans *not* fetched from the cache.
+`getQueryPlanCacheMissCount`:: The overall time spent to compile the plan for this particular query.

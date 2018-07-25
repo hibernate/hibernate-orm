@@ -31,42 +31,34 @@ public final class ByteBuddyState {
 
 	private static final CoreMessageLogger LOG = messageLogger( ByteBuddyProxyFactory.class );
 
-	/**
-	 * Ideally shouldn't be static but it has to until we can remove the
-	 * deprecated static methods.
-	 */
-	private static final ByteBuddy buddy = new ByteBuddy().with( TypeValidation.DISABLED );
+	private final ByteBuddy byteBuddy;
 
 	/**
-	 * This currently needs to be static: the BytecodeProvider is a static field of Environment and
-	 * is being accessed from static methods.
 	 * It will be easier to maintain the cache and its state when it will no longer be static
 	 * in Hibernate ORM 6+.
 	 * Opted for WEAK keys to avoid leaking the classloader in case the SessionFactory isn't closed.
 	 * Avoiding Soft keys as they are prone to cause issues with unstable performance.
 	 */
-	private static final TypeCache<TypeCache.SimpleKey> CACHE = new TypeCache.WithInlineExpunction<TypeCache.SimpleKey>(
-			TypeCache.Sort.WEAK );
+	private final TypeCache<TypeCache.SimpleKey> typeCache;
 
 	private static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
+
+	ByteBuddyState() {
+		this.byteBuddy = new ByteBuddy().with( TypeValidation.DISABLED );
+		this.typeCache = new TypeCache.WithInlineExpunction<TypeCache.SimpleKey>( TypeCache.Sort.WEAK );
+	}
 
 	/**
 	 * Access to ByteBuddy. It's almost equivalent to creating a new ByteBuddy instance,
 	 * yet slightly preferrable so to be able to reuse the same instance.
 	 * @return
 	 */
-	public ByteBuddy getCurrentyByteBuddy() {
-		return buddy;
+	public ByteBuddy getCurrentByteBuddy() {
+		return byteBuddy;
 	}
 
-	/**
-	 * @deprecated as we should not need static access to this state.
-	 * This will be removed with no replacement.
-	 * It's actually likely that this whole class becomes unnecessary in the near future.
-	 */
-	@Deprecated
-	public static TypeCache<TypeCache.SimpleKey> getCacheForProxies() {
-		return CACHE;
+	public TypeCache<TypeCache.SimpleKey> getCacheForProxies() {
+		return typeCache;
 	}
 
 	/**
@@ -78,17 +70,7 @@ public final class ByteBuddyState {
 	 * of re-creating the small helpers should be negligible.
 	 */
 	void clearState() {
-		CACHE.clear();
-	}
-
-	/**
-	 * @deprecated as we should not need static access to this state.
-	 * This will be removed with no replacement.
-	 * It's actually likely that this whole class becomes unnecessary in the near future.
-	 */
-	@Deprecated
-	public static ByteBuddy getStaticByteBuddyInstance() {
-		return buddy;
+		typeCache.clear();
 	}
 
 	public static ClassLoadingStrategy<ClassLoader> resolveClassLoadingStrategy(Class<?> originalClass) {

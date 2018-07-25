@@ -70,15 +70,13 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			// we only provide a fast class instantiator if the class can be instantiated
 			final Constructor<?> constructor = findConstructor( clazz );
 
-			fastClass = byteBuddyState.getCurrentByteBuddy()
+			fastClass = byteBuddyState.load( clazz, byteBuddy -> byteBuddy
 					.with( new NamingStrategy.SuffixingRandom( INSTANTIATOR_PROXY_NAMING_SUFFIX,
 							new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( clazz.getName() ) ) )
 					.subclass( ReflectionOptimizer.InstantiationOptimizer.class )
 					.method( newInstanceMethodName )
 							.intercept( MethodCall.construct( constructor ) )
-					.make()
-					.load( clazz.getClassLoader(), ByteBuddyState.resolveClassLoadingStrategy( clazz ) )
-					.getLoaded();
+			);
 		}
 		else {
 			fastClass = null;
@@ -88,7 +86,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		final Method[] setters = new Method[setterNames.length];
 		findAccessors( clazz, getterNames, setterNames, types, getters, setters );
 
-		final Class bulkAccessor = byteBuddyState.getCurrentByteBuddy()
+		final Class bulkAccessor = byteBuddyState.load( clazz, byteBuddy -> byteBuddy
 				.with( new NamingStrategy.SuffixingRandom( OPTIMIZER_PROXY_NAMING_SUFFIX,
 						new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( clazz.getName() ) ) )
 				.subclass( ReflectionOptimizer.AccessOptimizer.class )
@@ -98,9 +96,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 						.intercept( new Implementation.Simple( new SetPropertyValues( clazz, setters ) ) )
 				.method( getPropertyNamesMethodName )
 						.intercept( MethodCall.call( new CloningPropertyCall( getterNames ) ) )
-				.make()
-				.load( clazz.getClassLoader(), ByteBuddyState.resolveClassLoadingStrategy( clazz ) )
-				.getLoaded();
+		);
 
 		try {
 			return new ReflectionOptimizerImpl(

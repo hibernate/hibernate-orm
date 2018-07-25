@@ -50,11 +50,34 @@ public class PersistentSortedMap extends PersistentMap implements SortedMap {
 	 * Constructs a PersistentSortedMap.
 	 *
 	 * @param session The session
+	 * @deprecated {@link #PersistentSortedMap(SharedSessionContractImplementor)} should be used instead.
+	 */
+	@Deprecated
+	public PersistentSortedMap(SessionImplementor session) {
+		this( (SharedSessionContractImplementor) session );
+	}
+
+	/**
+	 * Constructs a PersistentSortedMap.
+	 *
+	 * @param session The session
 	 * @param map The underlying map data
 	 */
 	public PersistentSortedMap(SharedSessionContractImplementor session, SortedMap map) {
 		super( session, map );
 		comparator = map.comparator();
+	}
+
+	/**
+	 * Constructs a PersistentSortedMap.
+	 *
+	 * @param session The session
+	 * @param map The underlying map data
+	 * @deprecated {@link #PersistentSortedMap(SharedSessionContractImplementor, SortedMap)} should be used instead.
+	 */
+	@Deprecated
+	public PersistentSortedMap(SessionImplementor session, SortedMap map) {
+		this( (SharedSessionContractImplementor) session, map );
 	}
 
 	@SuppressWarnings({"unchecked", "UnusedParameters"})

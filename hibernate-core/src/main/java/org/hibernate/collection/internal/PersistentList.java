@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.ListIterator;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -50,6 +51,17 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	 * Constructs a PersistentList.
 	 *
 	 * @param session The session
+	 * @deprecated {@link #PersistentList(SharedSessionContractImplementor)} should be used instead.
+	 */
+	@Deprecated
+	public PersistentList(SessionImplementor session) {
+		this( (SharedSessionContractImplementor) session );
+	}
+
+	/**
+	 * Constructs a PersistentList.
+	 *
+	 * @param session The session
 	 * @param list The raw list
 	 */
 	public PersistentList(SharedSessionContractImplementor session, List list) {
@@ -57,6 +69,18 @@ public class PersistentList extends AbstractPersistentCollection implements List
 		this.list = list;
 		setInitialized();
 		setDirectlyAccessible( true );
+	}
+
+	/**
+	 * Constructs a PersistentList.
+	 *
+	 * @param session The session
+	 * @param list The raw list
+	 * @deprecated {@link #PersistentList(SharedSessionContractImplementor, List)} should be used instead.
+	 */
+	@Deprecated
+	public PersistentList(SessionImplementor session, List list) {
+		this( (SharedSessionContractImplementor) session, list );
 	}
 
 	@Override

@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -55,6 +56,17 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	}
 
 	/**
+	 *  Instantiates a lazy set (the underlying set is un-initialized).
+	 *
+	 * @param session The session to which this set will belong.
+	 * @deprecated {@link #PersistentSet(SharedSessionContractImplementor)} should be used instead.
+	 */
+	@Deprecated
+	public PersistentSet(SessionImplementor session) {
+		this( (SharedSessionContractImplementor) session );
+	}
+
+	/**
 	 * Instantiates a non-lazy set (the underlying set is constructed
 	 * from the incoming set reference).
 	 *
@@ -70,6 +82,19 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 		this.set = set;
 		setInitialized();
 		setDirectlyAccessible( true );
+	}
+
+	/**
+	 * Instantiates a non-lazy set (the underlying set is constructed
+	 * from the incoming set reference).
+	 *
+	 * @param session The session to which this set will belong.
+	 * @param set The underlying set data.
+	 * @deprecated {@link #PersistentSet(SharedSessionContractImplementor, java.util.Set)} should be used instead.
+	 */
+	@Deprecated
+	public PersistentSet(SessionImplementor session, java.util.Set set) {
+		this( (SharedSessionContractImplementor) session, set );
 	}
 
 	@Override

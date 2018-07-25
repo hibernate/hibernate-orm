@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -55,6 +56,17 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	}
 
 	/**
+	 * Instantiates a lazy map (the underlying map is un-initialized).
+	 *
+	 * @param session The session to which this map will belong.
+	 * @deprecated {@link #PersistentMap(SharedSessionContractImplementor)} should be used instead.
+	 */
+	@Deprecated
+	public PersistentMap(SessionImplementor session) {
+		this( (SharedSessionContractImplementor) session );
+	}
+
+	/**
 	 * Instantiates a non-lazy map (the underlying map is constructed
 	 * from the incoming map reference).
 	 *
@@ -66,6 +78,19 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 		this.map = map;
 		setInitialized();
 		setDirectlyAccessible( true );
+	}
+
+	/**
+	 * Instantiates a non-lazy map (the underlying map is constructed
+	 * from the incoming map reference).
+	 *
+	 * @param session The session to which this map will belong.
+	 * @param map The underlying map data.
+	 * @deprecated {@link #PersistentMap(SharedSessionContractImplementor, Map)} should be used instead.
+	 */
+	@Deprecated
+	public PersistentMap(SessionImplementor session, Map map) {
+		this( (SharedSessionContractImplementor) session, map );
 	}
 
 	@Override

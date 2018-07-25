@@ -58,6 +58,7 @@ public class ByteBuddyProxyHelper implements Serializable {
 		this.byteBuddyState = byteBuddyState;
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public Class buildProxy(
 			final Class persistentClass,
 			final Class[] interfaces) {
@@ -67,24 +68,19 @@ public class ByteBuddyProxyHelper implements Serializable {
 		}
 		key.addAll( Arrays.<Class<?>>asList( interfaces ) );
 
-		final TypeCache<TypeCache.SimpleKey> cacheForProxies = byteBuddyState.getCacheForProxies();
-
-		return cacheForProxies.findOrInsert( persistentClass.getClassLoader(), new TypeCache.SimpleKey(key), () ->
-				byteBuddyState.getCurrentByteBuddy()
-						.ignore( isSynthetic().and( named( "getMetaClass" ).and( returns( td -> "groovy.lang.MetaClass".equals( td.getName() ) ) ) ) )
-						.with( new NamingStrategy.SuffixingRandom( PROXY_NAMING_SUFFIX, new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( persistentClass.getName() ) ) )
-						.subclass( interfaces.length == 1 ? persistentClass : Object.class, ConstructorStrategy.Default.IMITATE_SUPER_CLASS_OPENING )
-						.implement( (Type[]) interfaces )
-						.method( isVirtual().and( not( isFinalizer() ) ) )
-								.intercept( MethodDelegation.to( ProxyConfiguration.InterceptorDispatcher.class ) )
-						.method( nameStartsWith( "$$_hibernate_" ).and( isVirtual() ) )
-								.intercept( SuperMethodCall.INSTANCE )
-						.defineField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE )
-						.implement( ProxyConfiguration.class )
-								.intercept( FieldAccessor.ofField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME ).withAssigner( Assigner.DEFAULT, Assigner.Typing.DYNAMIC ) )
-						.make()
-						.load( persistentClass.getClassLoader(), ByteBuddyState.resolveClassLoadingStrategy( persistentClass ) )
-						.getLoaded(), cacheForProxies );
+		return byteBuddyState.loadProxy( persistentClass, new TypeCache.SimpleKey(key), byteBuddy -> byteBuddy
+				.ignore( isSynthetic().and( named( "getMetaClass" ).and( returns( td -> "groovy.lang.MetaClass".equals( td.getName() ) ) ) ) )
+				.with( new NamingStrategy.SuffixingRandom( PROXY_NAMING_SUFFIX, new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( persistentClass.getName() ) ) )
+				.subclass( interfaces.length == 1 ? persistentClass : Object.class, ConstructorStrategy.Default.IMITATE_SUPER_CLASS_OPENING )
+				.implement( (Type[]) interfaces )
+				.method( isVirtual().and( not( isFinalizer() ) ) )
+						.intercept( MethodDelegation.to( ProxyConfiguration.InterceptorDispatcher.class ) )
+				.method( nameStartsWith( "$$_hibernate_" ).and( isVirtual() ) )
+						.intercept( SuperMethodCall.INSTANCE )
+				.defineField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE )
+				.implement( ProxyConfiguration.class )
+						.intercept( FieldAccessor.ofField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME ).withAssigner( Assigner.DEFAULT, Assigner.Typing.DYNAMIC ) )
+		);
 	}
 
 	public HibernateProxy deserializeProxy(SerializableProxy serializableProxy) {

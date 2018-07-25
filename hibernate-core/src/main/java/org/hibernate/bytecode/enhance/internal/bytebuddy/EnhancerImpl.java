@@ -6,6 +6,9 @@
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
+import static net.bytebuddy.matcher.ElementMatchers.isDefaultFinalizer;
+import static net.bytebuddy.matcher.ElementMatchers.isGetter;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -13,6 +16,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
 import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.Transient;
@@ -26,10 +30,10 @@ import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.bytecode.internal.bytebuddy.ByteBuddyState;
-import org.hibernate.engine.spi.ExtendedSelfDirtinessTracker;
 import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.engine.spi.CompositeTracker;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.ExtendedSelfDirtinessTracker;
 import org.hibernate.engine.spi.Managed;
 import org.hibernate.engine.spi.ManagedComposite;
 import org.hibernate.engine.spi.ManagedEntity;
@@ -40,7 +44,6 @@ import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
-import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.annotation.AnnotationDescription;
 import net.bytebuddy.description.field.FieldDescription;
@@ -53,15 +56,11 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.scaffold.MethodGraph;
-import net.bytebuddy.dynamic.scaffold.TypeValidation;
 import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.implementation.StubMethod;
 import net.bytebuddy.pool.TypePool;
-
-import static net.bytebuddy.matcher.ElementMatchers.isDefaultFinalizer;
-import static net.bytebuddy.matcher.ElementMatchers.isGetter;
 
 public class EnhancerImpl implements Enhancer {
 
@@ -101,17 +100,12 @@ public class EnhancerImpl implements Enhancer {
 		//Classpool#describe does not accept '/' in the description name as it expects a class name. See HHH-12545
 		final String safeClassName = className.replace( '/', '.' );
 		try {
-			final TypeDescription managedCtClass = classPool.describe( safeClassName ).resolve();
-			DynamicType.Builder<?> builder = doEnhance(
-					byteBuddyState.getCurrentByteBuddy().ignore( isDefaultFinalizer() ).redefine( managedCtClass, ClassFileLocator.Simple.of( safeClassName, originalBytes ) ),
-					managedCtClass
-			);
-			if ( builder == null ) {
-				return originalBytes;
-			}
-			else {
-				return builder.make().getBytes();
-			}
+			final TypeDescription typeDescription = classPool.describe( safeClassName ).resolve();
+
+			return byteBuddyState.rewrite( safeClassName, originalBytes, byteBuddy -> doEnhance(
+					byteBuddy.ignore( isDefaultFinalizer() ).redefine( typeDescription, ClassFileLocator.Simple.of( safeClassName, originalBytes ) ),
+					typeDescription
+			) );
 		}
 		catch (RuntimeException e) {
 			throw new EnhancementException( "Failed to enhance class " + className, e );

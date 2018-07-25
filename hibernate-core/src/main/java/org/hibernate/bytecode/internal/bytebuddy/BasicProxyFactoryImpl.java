@@ -36,7 +36,7 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 
 		final Class<?> superClassOrMainInterface = superClass != null ? superClass : interfaces[0];
 
-		this.proxyClass = bytebuddy.getCurrentyByteBuddy()
+		this.proxyClass = bytebuddy.getCurrentByteBuddy()
 			.with( new NamingStrategy.SuffixingRandom( PROXY_NAMING_SUFFIX, new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( superClassOrMainInterface.getName() ) ) )
 			.subclass( superClass == null ? Object.class : superClass, ConstructorStrategy.Default.DEFAULT_CONSTRUCTOR )
 			.implement( interfaces == null ? NO_INTERFACES : interfaces )

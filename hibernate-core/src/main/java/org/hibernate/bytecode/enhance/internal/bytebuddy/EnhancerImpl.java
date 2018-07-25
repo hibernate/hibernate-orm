@@ -68,7 +68,7 @@ public class EnhancerImpl implements Enhancer {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( Enhancer.class );
 
 	protected final ByteBuddyEnhancementContext enhancementContext;
-	private final ByteBuddyState bytebuddy;
+	private final ByteBuddyState byteBuddyState;
 
 	private final TypePool classPool;
 
@@ -77,11 +77,11 @@ public class EnhancerImpl implements Enhancer {
 	 *
 	 * @param enhancementContext Describes the context in which enhancement will occur so as to give access
 	 * to contextual/environmental information.
-	 * @param bytebuddy refers to the ByteBuddy instance to use
+	 * @param byteBuddyState refers to the ByteBuddy instance to use
 	 */
-	public EnhancerImpl(final EnhancementContext enhancementContext, final ByteBuddyState bytebuddy) {
+	public EnhancerImpl(final EnhancementContext enhancementContext, final ByteBuddyState byteBuddyState) {
 		this.enhancementContext = new ByteBuddyEnhancementContext( enhancementContext );
-		this.bytebuddy = bytebuddy;
+		this.byteBuddyState = byteBuddyState;
 		this.classPool = buildClassPool( this.enhancementContext );
 	}
 
@@ -103,7 +103,7 @@ public class EnhancerImpl implements Enhancer {
 		try {
 			final TypeDescription managedCtClass = classPool.describe( safeClassName ).resolve();
 			DynamicType.Builder<?> builder = doEnhance(
-					bytebuddy.getCurrentyByteBuddy().ignore( isDefaultFinalizer() ).redefine( managedCtClass, ClassFileLocator.Simple.of( safeClassName, originalBytes ) ),
+					byteBuddyState.getCurrentByteBuddy().ignore( isDefaultFinalizer() ).redefine( managedCtClass, ClassFileLocator.Simple.of( safeClassName, originalBytes ) ),
 					managedCtClass
 			);
 			if ( builder == null ) {

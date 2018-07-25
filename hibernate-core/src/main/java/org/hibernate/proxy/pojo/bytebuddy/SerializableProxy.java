@@ -9,6 +9,11 @@ package org.hibernate.proxy.pojo.bytebuddy;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
+import org.hibernate.bytecode.internal.bytebuddy.BytecodeProviderImpl;
+import org.hibernate.bytecode.internal.bytebuddy.ProxyFactoryFactoryImpl;
+import org.hibernate.bytecode.spi.BytecodeProvider;
+import org.hibernate.bytecode.spi.ProxyFactoryFactory;
+import org.hibernate.cfg.Environment;
 import org.hibernate.proxy.AbstractSerializableProxy;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.CompositeType;
@@ -125,7 +130,12 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 	}
 
 	private Object readResolve() {
-		HibernateProxy proxy = ByteBuddyProxyFactory.deserializeProxy( this );
+		BytecodeProvider bytecodeProvider = Environment.getBytecodeProvider();
+		if ( !( bytecodeProvider instanceof BytecodeProviderImpl ) ) {
+			throw new IllegalStateException( "The bytecode provider is not ByteBuddy, unable to deserialize a ByteBuddy proxy." );
+		}
+
+		HibernateProxy proxy = ( (BytecodeProviderImpl) bytecodeProvider ).getByteBuddyProxyHelper().deserializeProxy( this );
 		afterDeserialization( (ByteBuddyInterceptor) proxy.getHibernateLazyInitializer() );
 		return proxy;
 	}

@@ -47,11 +47,34 @@ public class PersistentSortedSet extends PersistentSet implements SortedSet {
 	 * Constructs a PersistentSortedSet
 	 *
 	 * @param session The session
+	 * @deprecated {@link #PersistentSortedSet(SharedSessionContractImplementor)} should be used instead.
+	 */
+	@Deprecated
+	public PersistentSortedSet(SessionImplementor session) {
+		this( (SharedSessionContractImplementor) session );
+	}
+
+	/**
+	 * Constructs a PersistentSortedSet
+	 *
+	 * @param session The session
 	 * @param set The underlying set data
 	 */
 	public PersistentSortedSet(SharedSessionContractImplementor session, SortedSet set) {
 		super( session, set );
 		comparator = set.comparator();
+	}
+
+	/**
+	 * Constructs a PersistentSortedSet
+	 *
+	 * @param session The session
+	 * @param set The underlying set data
+	 * @deprecated {@link #PersistentSortedSet(SharedSessionContractImplementor, SortedSet)} should be used instead.
+	 */
+	@Deprecated
+	public PersistentSortedSet(SessionImplementor session, SortedSet set) {
+		this( (SharedSessionContractImplementor) session, set );
 	}
 
 	@SuppressWarnings({"unchecked", "UnusedParameters"})

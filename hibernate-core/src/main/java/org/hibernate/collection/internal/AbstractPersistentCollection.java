@@ -86,6 +86,14 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		this.session = session;
 	}
 
+	/**
+	 *  * @deprecated {@link #AbstractPersistentCollection(SharedSessionContractImplementor)} should be used instead.
+	 */
+	@Deprecated
+	protected AbstractPersistentCollection(SessionImplementor session) {
+		this( (SharedSessionContractImplementor) session );
+	}
+
 	@Override
 	public final String getRole() {
 		return role;

@@ -11,7 +11,6 @@ import org.junit.Test;
 
 import javax.persistence.*;
 import javax.persistence.criteria.CriteriaDelete;
-import java.math.BigInteger;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -49,7 +48,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> result = getTupleResult(entityManager);
             Tuple tuple = result.get(0);
-            assertEquals(BigInteger.ONE, tuple.get(0));
+            assertEquals(1L, tuple.get(0));
             assertEquals("Arnold", tuple.get(1));
         });
     }
@@ -59,7 +58,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> result = getTupleResult(entityManager);
             Tuple tuple = result.get(0);
-            assertEquals(BigInteger.ONE, tuple.get(0, BigInteger.class));
+            assertEquals(Long.valueOf(1L), tuple.get(0, Long.class));
             assertEquals("Arnold", tuple.get(1, String.class));
         });
     }
@@ -130,7 +129,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> result = getTupleResult(entityManager);
             Tuple tuple = result.get(0);
-            assertEquals(BigInteger.ONE, tuple.get("ID"));
+            assertEquals(1L, tuple.get("ID"));
             assertEquals("Arnold", tuple.get("FIRSTNAME"));
         });
     }
@@ -158,7 +157,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> result = getTupleResult(entityManager);
             Tuple tuple = result.get(0);
-            assertEquals(BigInteger.ONE, tuple.get("ID", BigInteger.class));
+            assertEquals(Long.valueOf(1L), tuple.get("ID", Long.class));
             assertEquals("Arnold", tuple.get("FIRSTNAME", String.class));
         });
     }
@@ -169,7 +168,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> result = getTupleAliasedResult(entityManager);
             Tuple tuple = result.get(0);
-            assertEquals(BigInteger.ONE, tuple.get("ALIAS1"));
+            assertEquals(1L, tuple.get("ALIAS1"));
             assertEquals("Arnold", tuple.get("ALIAS2"));
         });
     }
@@ -179,7 +178,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> result = getTupleAliasedResult(entityManager);
             Tuple tuple = result.get(0);
-            assertEquals(BigInteger.ONE, tuple.get("ALIAS1", BigInteger.class));
+            assertEquals(Long.valueOf(1L), tuple.get("ALIAS1", Long.class));
             assertEquals("Arnold", tuple.get("ALIAS2", String.class));
         });
     }
@@ -189,7 +188,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> tuples = getTupleResult(entityManager);
             Object[] result = tuples.get(0).toArray();
-            assertArrayEquals(new Object[]{BigInteger.ONE, "Arnold"}, result);
+            assertArrayEquals(new Object[]{1L, "Arnold"}, result);
         });
     }
 
@@ -199,7 +198,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
             List<Tuple> tuples = getTupleResult(entityManager);
             List<TupleElement<?>> result = tuples.get(0).getElements();
             assertEquals(2, result.size());
-            assertEquals(BigInteger.class, result.get(0).getJavaType());
+            assertEquals(Long.class, result.get(0).getJavaType());
             assertEquals("ID", result.get(0).getAlias());
             assertEquals(String.class, result.get(1).getJavaType());
             assertEquals("FIRSTNAME", result.get(1).getAlias());
@@ -211,7 +210,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> result = getTupleNamedResult(entityManager, "standard");
             Tuple tuple = result.get(0);
-            assertEquals(BigInteger.ONE, tuple.get(0));
+            assertEquals(1L, tuple.get(0));
             assertEquals("Arnold", tuple.get(1));
         });
     }
@@ -221,7 +220,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> result = getTupleNamedResult(entityManager, "standard");
             Tuple tuple = result.get(0);
-            assertEquals(BigInteger.ONE, tuple.get(0, BigInteger.class));
+            assertEquals(Long.valueOf(1L), tuple.get(0, Long.class));
             assertEquals("Arnold", tuple.get(1, String.class));
         });
     }
@@ -292,7 +291,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> result = getTupleNamedResult(entityManager, "standard");
             Tuple tuple = result.get(0);
-            assertEquals(BigInteger.ONE, tuple.get("ID"));
+            assertEquals(1L, tuple.get("ID"));
             assertEquals("Arnold", tuple.get("FIRSTNAME"));
         });
     }
@@ -320,7 +319,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> result = getTupleNamedResult(entityManager, "standard");
             Tuple tuple = result.get(0);
-            assertEquals(BigInteger.ONE, tuple.get("ID", BigInteger.class));
+            assertEquals(Long.valueOf(1L), tuple.get("ID", Long.class));
             assertEquals("Arnold", tuple.get("FIRSTNAME", String.class));
         });
     }
@@ -331,7 +330,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> result = getTupleNamedResult(entityManager, "standard_with_alias");
             Tuple tuple = result.get(0);
-            assertEquals(BigInteger.ONE, tuple.get("ALIAS1"));
+            assertEquals(1L, tuple.get("ALIAS1"));
             assertEquals("Arnold", tuple.get("ALIAS2"));
         });
     }
@@ -341,7 +340,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> result = getTupleNamedResult(entityManager, "standard_with_alias");
             Tuple tuple = result.get(0);
-            assertEquals(BigInteger.ONE, tuple.get("ALIAS1", BigInteger.class));
+            assertEquals(Long.valueOf(1L), tuple.get("ALIAS1", Long.class));
             assertEquals("Arnold", tuple.get("ALIAS2", String.class));
         });
     }
@@ -351,7 +350,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> tuples = getTupleNamedResult(entityManager, "standard");
             Object[] result = tuples.get(0).toArray();
-            assertArrayEquals(new Object[]{BigInteger.ONE, "Arnold"}, result);
+            assertArrayEquals(new Object[]{1L, "Arnold"}, result);
         });
     }
 
@@ -361,7 +360,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
             List<Tuple> tuples = getTupleNamedResult(entityManager, "standard");
             List<TupleElement<?>> result = tuples.get(0).getElements();
             assertEquals(2, result.size());
-            assertEquals(BigInteger.class, result.get(0).getJavaType());
+            assertEquals(Long.class, result.get(0).getJavaType());
             assertEquals("ID", result.get(0).getAlias());
             assertEquals(String.class, result.get(1).getJavaType());
             assertEquals("FIRSTNAME", result.get(1).getAlias());
@@ -373,7 +372,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> result = getStreamedTupleResult(entityManager);
             Tuple tuple = result.get(0);
-            assertEquals(BigInteger.ONE, tuple.get(0));
+            assertEquals(1L, tuple.get(0));
             assertEquals("Arnold", tuple.get(1));
         });
     }
@@ -383,7 +382,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> result = getStreamedTupleResult(entityManager);
             Tuple tuple = result.get(0);
-            assertEquals(BigInteger.ONE, tuple.get(0, BigInteger.class));
+            assertEquals(Long.valueOf(1L), tuple.get(0, Long.class));
             assertEquals("Arnold", tuple.get(1, String.class));
         });
     }
@@ -454,7 +453,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> result = getStreamedTupleResult(entityManager);
             Tuple tuple = result.get(0);
-            assertEquals(BigInteger.ONE, tuple.get("ID"));
+            assertEquals(1L, tuple.get("ID"));
             assertEquals("Arnold", tuple.get("FIRSTNAME"));
         });
     }
@@ -482,7 +481,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> result = getStreamedTupleResult(entityManager);
             Tuple tuple = result.get(0);
-            assertEquals(BigInteger.ONE, tuple.get("ID", BigInteger.class));
+            assertEquals(Long.valueOf(1L), tuple.get("ID", Long.class));
             assertEquals("Arnold", tuple.get("FIRSTNAME", String.class));
         });
     }
@@ -493,7 +492,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> result = getTupleAliasedResult(entityManager);
             Tuple tuple = result.get(0);
-            assertEquals(BigInteger.ONE, tuple.get("ALIAS1"));
+            assertEquals(1L, tuple.get("ALIAS1"));
             assertEquals("Arnold", tuple.get("ALIAS2"));
         });
     }
@@ -503,7 +502,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> result = getTupleAliasedResult(entityManager);
             Tuple tuple = result.get(0);
-            assertEquals(BigInteger.ONE, tuple.get("ALIAS1", BigInteger.class));
+            assertEquals(Long.valueOf(1L), tuple.get("ALIAS1", Long.class));
             assertEquals("Arnold", tuple.get("ALIAS2", String.class));
         });
     }
@@ -513,7 +512,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> tuples = getStreamedTupleResult(entityManager);
             Object[] result = tuples.get(0).toArray();
-            assertArrayEquals(new Object[]{BigInteger.ONE, "Arnold"}, result);
+            assertArrayEquals(new Object[]{1L, "Arnold"}, result);
         });
     }
 
@@ -523,7 +522,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
             List<Tuple> tuples = getStreamedTupleResult(entityManager);
             List<TupleElement<?>> result = tuples.get(0).getElements();
             assertEquals(2, result.size());
-            assertEquals(BigInteger.class, result.get(0).getJavaType());
+            assertEquals(Long.class, result.get(0).getJavaType());
             assertEquals("ID", result.get(0).getAlias());
             assertEquals(String.class, result.get(1).getJavaType());
             assertEquals("FIRSTNAME", result.get(1).getAlias());
@@ -535,7 +534,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> result = getStreamedNamedTupleResult(entityManager, "standard");
             Tuple tuple = result.get(0);
-            assertEquals(BigInteger.ONE, tuple.get(0));
+            assertEquals(1L, tuple.get(0));
             assertEquals("Arnold", tuple.get(1));
         });
     }
@@ -545,7 +544,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> result = getStreamedNamedTupleResult(entityManager, "standard");
             Tuple tuple = result.get(0);
-            assertEquals(BigInteger.ONE, tuple.get(0, BigInteger.class));
+            assertEquals(Long.valueOf(1L), tuple.get(0, Long.class));
             assertEquals("Arnold", tuple.get(1, String.class));
         });
     }
@@ -616,7 +615,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> result = getStreamedNamedTupleResult(entityManager, "standard");
             Tuple tuple = result.get(0);
-            assertEquals(BigInteger.ONE, tuple.get("ID"));
+            assertEquals(1L, tuple.get("ID"));
             assertEquals("Arnold", tuple.get("FIRSTNAME"));
         });
     }
@@ -644,7 +643,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> result = getStreamedNamedTupleResult(entityManager, "standard");
             Tuple tuple = result.get(0);
-            assertEquals(BigInteger.ONE, tuple.get("ID", BigInteger.class));
+            assertEquals(Long.valueOf(1L), tuple.get("ID", Long.class));
             assertEquals("Arnold", tuple.get("FIRSTNAME", String.class));
         });
     }
@@ -655,7 +654,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> result = getStreamedNamedTupleResult(entityManager, "standard_with_alias");
             Tuple tuple = result.get(0);
-            assertEquals(BigInteger.ONE, tuple.get("ALIAS1"));
+            assertEquals(1L, tuple.get("ALIAS1"));
             assertEquals("Arnold", tuple.get("ALIAS2"));
         });
     }
@@ -665,7 +664,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> result = getStreamedNamedTupleResult(entityManager, "standard_with_alias");
             Tuple tuple = result.get(0);
-            assertEquals(BigInteger.ONE, tuple.get("ALIAS1", BigInteger.class));
+            assertEquals(Long.valueOf(1L), tuple.get("ALIAS1", Long.class));
             assertEquals("Arnold", tuple.get("ALIAS2", String.class));
         });
     }
@@ -675,7 +674,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> tuples = getStreamedNamedTupleResult(entityManager, "standard");
             Object[] result = tuples.get(0).toArray();
-            assertArrayEquals(new Object[]{BigInteger.ONE, "Arnold"}, result);
+            assertArrayEquals(new Object[]{1L, "Arnold"}, result);
         });
     }
 
@@ -685,7 +684,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
             List<Tuple> tuples = getStreamedNamedTupleResult(entityManager, "standard");
             List<TupleElement<?>> result = tuples.get(0).getElements();
             assertEquals(2, result.size());
-            assertEquals(BigInteger.class, result.get(0).getJavaType());
+            assertEquals(Long.class, result.get(0).getJavaType());
             assertEquals("ID", result.get(0).getAlias());
             assertEquals(String.class, result.get(1).getJavaType());
             assertEquals("FIRSTNAME", result.get(1).getAlias());
@@ -705,9 +704,9 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
             List<TupleElement<?>> result = tuple.getElements();
             assertEquals(2, result.size());
             final TupleElement<?> firstTupleElement = result.get(0);
-            assertEquals(BigInteger.class, firstTupleElement.getJavaType());
+            assertEquals(Long.class, firstTupleElement.getJavaType());
             assertEquals("ID", firstTupleElement.getAlias());
-            assertEquals(BigInteger.valueOf(1L), tuple.get(firstTupleElement.getAlias()));
+            assertEquals(1L, tuple.get(firstTupleElement.getAlias()));
             final TupleElement<?> secondTupleElement = result.get(1);
             assertEquals(Object.class, secondTupleElement.getJavaType());
             assertEquals("FIRSTNAME", secondTupleElement.getAlias());

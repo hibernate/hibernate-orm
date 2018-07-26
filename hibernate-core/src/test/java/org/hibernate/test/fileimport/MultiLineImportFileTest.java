@@ -56,7 +56,7 @@ public class MultiLineImportFileTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		final Transaction tx = s.beginTransaction();
 
-		BigInteger count = (BigInteger) s.createSQLQuery( "SELECT COUNT(*) FROM test_data" ).uniqueResult();
+		Long count = (Long) s.createSQLQuery( "SELECT COUNT(*) FROM test_data" ).uniqueResult();
 		assertEquals( "Incorrect row number", 3L, count.longValue() );
 
 		final String multiLineText = (String) s.createSQLQuery( "SELECT text FROM test_data WHERE id = 2" )

@@ -499,6 +499,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		for ( DelayedOperation operation : operationQueue ) {
 			operation.operate();
 		}
+		clearOperationQueue();
 	}
 
 	@Override
@@ -510,9 +511,13 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 
 	@Override
 	public void postAction() {
-		operationQueue = null;
+		clearOperationQueue();
 		cachedSize = -1;
 		clearDirty();
+	}
+
+	public final void clearOperationQueue() {
+		operationQueue = null;
 	}
 
 	@Override
@@ -536,9 +541,8 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	public boolean afterInitialize() {
 		setInitialized();
 		//do this bit after setting initialized to true or it will recurse
-		if ( operationQueue != null ) {
+		if ( hasQueuedOperations() ) {
 			performQueuedOperations();
-			operationQueue = null;
 			cachedSize = -1;
 			return false;
 		}
@@ -607,6 +611,9 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		prepareForPossibleLoadingOutsideTransaction();
 		if ( currentSession == this.session ) {
 			if ( !isTempSession ) {
+				if ( hasQueuedOperations() ) {
+					LOG.queuedOperationWhenDetachFromSession( MessageHelper.collectionInfoString( getRole(), getKey() ) );
+				}
 				this.session = null;
 			}
 			return true;
@@ -634,25 +641,22 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		if ( session == this.session ) {
 			return false;
 		}
-		else {
-			if ( this.session != null ) {
-				final String msg = generateUnexpectedSessionStateMessage( session );
-				if ( isConnectedToSession() ) {
-					throw new HibernateException(
-							"Illegal attempt to associate a collection with two open sessions. " + msg
-					);
-				}
-				else {
-					LOG.logUnexpectedSessionInCollectionNotConnected( msg );
-					this.session = session;
-					return true;
-				}
+		else if ( this.session != null ) {
+			final String msg = generateUnexpectedSessionStateMessage( session );
+			if ( isConnectedToSession() ) {
+				throw new HibernateException(
+						"Illegal attempt to associate a collection with two open sessions. " + msg
+				);
 			}
 			else {
-				this.session = session;
-				return true;
+				LOG.logUnexpectedSessionInCollectionNotConnected( msg );
 			}
 		}
+		if ( hasQueuedOperations() ) {
+			LOG.queuedOperationWhenAttachToSession( MessageHelper.collectionInfoString( getRole(), getKey() ) );
+		}
+		this.session = session;
+		return true;
 	}
 
 	private String generateUnexpectedSessionStateMessage(SessionImplementor session) {

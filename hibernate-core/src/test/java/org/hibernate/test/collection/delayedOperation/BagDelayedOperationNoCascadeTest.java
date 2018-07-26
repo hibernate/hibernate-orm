@@ -9,7 +9,6 @@ package org.hibernate.test.collection.delayedOperation;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -37,7 +36,7 @@ import static org.junit.Assert.assertTrue;
  * to be extra-lazy to queue the operations.
  * @author Gail Badner
  */
-public class BagDelayedOperationTest extends BaseCoreFunctionalTestCase {
+public class BagDelayedOperationNoCascadeTest extends BaseCoreFunctionalTestCase {
 	private Long parentId;
 
 	@Override
@@ -63,6 +62,8 @@ public class BagDelayedOperationTest extends BaseCoreFunctionalTestCase {
 
 		Session s = openSession();
 		s.getTransaction().begin();
+		s.persist( child1 );
+		s.persist( child2 );
 		s.persist( parent );
 		s.getTransaction().commit();
 		s.close();
@@ -74,113 +75,12 @@ public class BagDelayedOperationTest extends BaseCoreFunctionalTestCase {
 	public void cleanup() {
 		Session s = openSession();
 		s.getTransaction().begin();
-		Parent parent = s.get( Parent.class, parentId );
-		parent.getChildren().clear();
-		s.delete( parent );
+		s.createQuery( "delete from Child" ).executeUpdate();
+		s.createQuery( "delete from Parent" ).executeUpdate();
 		s.getTransaction().commit();
 		s.close();
 
 		parentId = null;
-	}
-
-	@Test
-	@TestForIssue( jiraKey = "HHH-5855")
-	public void testSimpleAddDetached() {
-		// Create 2 detached Child objects.
-		Session s = openSession();
-		s.getTransaction().begin();
-		Child c1 = new Child( "Darwin" );
-		s.persist( c1 );
-		Child c2 = new Child( "Comet" );
-		s.persist( c2 );
-		s.getTransaction().commit();
-		s.close();
-
-		// Now Child c is detached.
-
-		s = openSession();
-		s.getTransaction().begin();
-		Parent p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		// add detached Child c
-		p.addChild( c1 );
-		// collection should still be uninitialized
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		s.getTransaction().commit();
-		s.close();
-
-		// Add a detached Child and commit
-		s = openSession();
-		s.getTransaction().begin();
-		p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		assertEquals( 3, p.getChildren().size() );
-		s.getTransaction().commit();
-		s.close();
-
-		// Add another detached Child, merge, and commit
-		s = openSession();
-		s.getTransaction().begin();
-		p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		p.addChild( c2 );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		p = (Parent) s.merge( p );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.getTransaction().begin();
-		p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		assertEquals( 4, p.getChildren().size() );
-		s.getTransaction().commit();
-		s.close();
-	}
-
-	@Test
-	@TestForIssue( jiraKey = "HHH-5855")
-	public void testSimpleAddTransient() {
-		// Add a transient Child and commit.
-		Session s = openSession();
-		s.getTransaction().begin();
-		Parent p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		// add transient Child
-		p.addChild( new Child( "Darwin" ) );
-		// collection should still be uninitialized
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.getTransaction().begin();
-		p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		assertEquals( 3, p.getChildren().size() );
-		s.getTransaction().commit();
-		s.close();
-
-		// Add another transient Child and commit again.
-		s = openSession();
-		s.getTransaction().begin();
-		p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		// add transient Child
-		p.addChild( new Child( "Comet" ) );
-		// collection should still be uninitialized
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		s.merge( p );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.getTransaction().begin();
-		p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		assertEquals( 4, p.getChildren().size() );
-		s.getTransaction().commit();
-		s.close();
 	}
 
 	@Test
@@ -254,10 +154,10 @@ public class BagDelayedOperationTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.getTransaction().begin();
 		p = (Parent) s.merge( p );
-		assertTrue( Hibernate.isInitialized( p.getChildren() ) );
 		Child c = new Child( "Zeke" );
 		c.setParent( p );
 		s.persist( c );
+		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 		p.getChildren().size();
 		p.getChildren().add( c );
 		s.getTransaction().commit();
@@ -267,17 +167,18 @@ public class BagDelayedOperationTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.getTransaction().begin();
 		p = (Parent) s.merge( p );
-		// after merging, p#children will be initialized
-		assertTrue( Hibernate.isInitialized( p.getChildren() ) );
-		assertFalse( ( (AbstractPersistentCollection) p.getChildren() ).hasQueuedOperations() );
+		// after merging, p#children will be uninitialized
+		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+		assertTrue( ( (AbstractPersistentCollection) p.getChildren() ).hasQueuedOperations() );
 		s.getTransaction().commit();
+		assertFalse( ( (AbstractPersistentCollection) p.getChildren() ).hasQueuedOperations() );
 		s.close();
 
-		// Merge detached Parent
+		// Merge detached Parent, now with uninitialized children no queued operations
 		s = openSession();
 		s.getTransaction().begin();
 		p = (Parent) s.merge( p );
-		assertTrue( Hibernate.isInitialized( p.getChildren() ) );
+		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 		assertFalse( ( (AbstractPersistentCollection) p.getChildren() ).hasQueuedOperations() );
 		s.getTransaction().commit();
 		s.close();
@@ -291,7 +192,7 @@ public class BagDelayedOperationTest extends BaseCoreFunctionalTestCase {
 		private Long id;
 
 		// Don't need extra-lazy to delay add operations to a bag.
-		@OneToMany(cascade = CascadeType.ALL, mappedBy = "parent", orphanRemoval = true)
+		@OneToMany(mappedBy = "parent")
 		private List<Child> children = new ArrayList<Child>();
 
 		public Parent() {

@@ -6,6 +6,8 @@
  */
 package org.hibernate.bytecode.internal.bytebuddy;
 
+import java.util.regex.Pattern;
+
 import javax.persistence.Basic;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -14,6 +16,8 @@ import javax.persistence.Id;
 
 @Entity(name = "SimpleEntity")
 public class SimpleEntity {
+
+	private static final Pattern PATTERN = Pattern.compile( "whatever" );
 
 	@Id
 	@GeneratedValue

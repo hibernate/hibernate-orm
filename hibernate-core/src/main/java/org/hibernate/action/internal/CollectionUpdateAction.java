@@ -57,8 +57,11 @@ public final class CollectionUpdateAction extends CollectionAction {
 		preUpdate();
 
 		if ( !collection.wasInitialized() ) {
-			if ( !collection.hasQueuedOperations() ) {
-				throw new AssertionFailure( "no queued adds" );
+			// If there were queued operations, they would have been processed
+			// and cleared by now.
+			// The collection should still be dirty.
+			if ( !collection.isDirty() ) {
+				throw new AssertionFailure( "collection is not dirty" );
 			}
 			//do nothing - we only need to notify the cache... 
 		}

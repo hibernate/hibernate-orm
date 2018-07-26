@@ -14,7 +14,6 @@ import java.util.Map;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.Table;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -22,6 +21,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
@@ -50,7 +50,10 @@ public class NumericValidationTest implements ExecutionOptions {
 	@Parameterized.Parameters
 	public static Collection<String> parameters() {
 		return Arrays.asList(
-				new String[] {JdbcMetadaAccessStrategy.GROUPED.toString(), JdbcMetadaAccessStrategy.INDIVIDUALLY.toString()}
+				new String[] {
+						JdbcMetadaAccessStrategy.GROUPED.toString(),
+						JdbcMetadaAccessStrategy.INDIVIDUALLY.toString()
+				}
 		);
 	}
 
@@ -58,16 +61,35 @@ public class NumericValidationTest implements ExecutionOptions {
 	public String jdbcMetadataExtractorStrategy;
 
 	private StandardServiceRegistry ssr;
+	private MetadataImplementor metadata;
 
 	@Before
 	public void beforeTest() {
 		ssr = new StandardServiceRegistryBuilder()
-				.applySetting( AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY, jdbcMetadataExtractorStrategy )
+				.applySetting(
+						AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY,
+						jdbcMetadataExtractorStrategy
+				)
 				.build();
+		metadata = (MetadataImplementor) new MetadataSources( ssr )
+				.addAnnotatedClass( TestEntity.class )
+				.buildMetadata();
+		metadata.validate();
+
+		try {
+			dropSchema();
+			// create the schema
+			createSchema();
+		}
+		catch (Exception e) {
+			tearDown();
+			throw e;
+		}
 	}
 
 	@After
-	public void afterTest() {
+	public void tearDown() {
+		dropSchema();
 		if ( ssr != null ) {
 			StandardServiceRegistryBuilder.destroy( ssr );
 		}
@@ -75,31 +97,15 @@ public class NumericValidationTest implements ExecutionOptions {
 
 	@Test
 	public void testValidation() {
-		MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
-				.addAnnotatedClass( TestEntity.class )
-				.buildMetadata();
-		metadata.validate();
-
-
-		// create the schema
-		createSchema( metadata );
-
-		try {
-			doValidation( metadata );
-		}
-		finally {
-			dropSchema( metadata );
-		}
+		doValidation();
 	}
 
-	private void doValidation(MetadataImplementor metadata) {
-		ssr.getService( SchemaManagementTool.class ).getSchemaValidator( null ).doValidation(
-				metadata,
-				this
-		);
+	private void doValidation() {
+		ssr.getService( SchemaManagementTool.class ).getSchemaValidator( null )
+				.doValidation( metadata, this );
 	}
 
-	private void createSchema(MetadataImplementor metadata) {
+	private void createSchema() {
 		ssr.getService( SchemaManagementTool.class ).getSchemaCreator( null ).doCreation(
 				metadata,
 				this,
@@ -128,43 +134,19 @@ public class NumericValidationTest implements ExecutionOptions {
 		);
 	}
 
-	private void dropSchema(MetadataImplementor metadata) {
-		ssr.getService( SchemaManagementTool.class ).getSchemaDropper( null ).doDrop(
-				metadata,
-				this,
-				new SourceDescriptor() {
-					@Override
-					public SourceType getSourceType() {
-						return SourceType.METADATA;
-					}
-
-					@Override
-					public ScriptSourceInput getScriptSourceInput() {
-						return null;
-					}
-				},
-				new TargetDescriptor() {
-					@Override
-					public EnumSet<TargetType> getTargetTypes() {
-						return EnumSet.of( TargetType.DATABASE );
-					}
-
-					@Override
-					public ScriptTargetOutput getScriptTargetOutput() {
-						return null;
-					}
-				}
-		);
+	private void dropSchema() {
+		new SchemaExport()
+				.drop( EnumSet.of( TargetType.DATABASE ), metadata );
 	}
 
-@Entity(name = "TestEntity")
-public static class TestEntity {
-	@Id
-	public Integer id;
+	@Entity(name = "TestEntity")
+	public static class TestEntity {
+		@Id
+		public Integer id;
 
-	@Column(name = "numberValue")
-	BigDecimal number;
-}
+		@Column(name = "numberValue")
+		BigDecimal number;
+	}
 
 	@Override
 	public Map getConfigurationValues() {

@@ -43,4 +43,9 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	public String getNullColumnString() {
 		return " null";
 	}
+
+	@Override
+	public String getCurrentSchemaCommand() {
+		return "select db_name()";
+	}
 }

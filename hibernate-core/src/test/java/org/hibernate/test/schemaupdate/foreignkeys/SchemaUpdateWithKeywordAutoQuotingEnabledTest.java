@@ -6,16 +6,15 @@
  */
 package org.hibernate.test.schemaupdate.foreignkeys;
 
+import java.util.EnumSet;
+import java.util.Map;
+import java.util.TreeMap;
 import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import java.io.IOException;
-import java.util.EnumSet;
-import java.util.Map;
-import java.util.TreeMap;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -25,12 +24,11 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
  * @author Andrea Boriero
@@ -41,36 +39,36 @@ public class SchemaUpdateWithKeywordAutoQuotingEnabledTest extends BaseUnitTestC
 	private MetadataImplementor metadata;
 
 	@Before
-	public void setUp() throws IOException {
+	public void setUp() {
 		final StandardServiceRegistryBuilder standardServiceRegistryBuilder = new StandardServiceRegistryBuilder();
 		standardServiceRegistryBuilder.applySetting(
 				org.hibernate.cfg.AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED,
 				"true"
 		);
 		ssr = standardServiceRegistryBuilder.build();
-		final MetadataSources metadataSources = new MetadataSources( ssr );
 
+		final MetadataSources metadataSources = new MetadataSources( ssr );
 		metadataSources.addAnnotatedClass( Match.class );
 		metadata = (MetadataImplementor) metadataSources.buildMetadata();
 		metadata.validate();
-
-		new SchemaExport().setHaltOnError( true )
-				.setFormat( false )
-				.createOnly( EnumSet.of( TargetType.DATABASE ), metadata );
+		try {
+			createSchema();
+		}
+		catch (Exception e) {
+			tearDown();
+			throw e;
+		}
 	}
 
 	@After
-	public void tearsDown() {
-		new SchemaExport().setHaltOnError( true )
-				.setFormat( false )
-				.drop( EnumSet.of( TargetType.DATABASE ), metadata );
+	public void tearDown() {
+		dropSchema();
 		StandardServiceRegistryBuilder.destroy( ssr );
 	}
 
 	@Test
 	public void testUpdate() {
 		new SchemaUpdate().setHaltOnError( true )
-				.setFormat( false )
 				.execute( EnumSet.of( TargetType.DATABASE ), metadata );
 	}
 
@@ -83,5 +81,16 @@ public class SchemaUpdateWithKeywordAutoQuotingEnabledTest extends BaseUnitTestC
 		@ElementCollection(fetch = FetchType.EAGER)
 		@CollectionTable
 		private Map<Integer, Integer> timeline = new TreeMap<>();
+	}
+
+	private void createSchema() {
+		dropSchema();
+		new SchemaExport().setHaltOnError( true )
+				.createOnly( EnumSet.of( TargetType.DATABASE ), metadata );
+	}
+
+	private void dropSchema() {
+		new SchemaExport()
+				.drop( EnumSet.of( TargetType.DATABASE ), metadata );
 	}
 }

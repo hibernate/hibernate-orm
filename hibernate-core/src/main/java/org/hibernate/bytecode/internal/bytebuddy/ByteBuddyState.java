@@ -32,6 +32,7 @@ import net.bytebuddy.dynamic.loading.ClassInjector;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.dynamic.scaffold.TypeValidation;
 import net.bytebuddy.matcher.ElementMatchers;
+import net.bytebuddy.pool.TypePool;
 
 /**
  * A utility to hold all ByteBuddy related state, as in the current version of
@@ -118,19 +119,20 @@ public final class ByteBuddyState {
 	/**
 	 * Rewrite a class, used by the enhancer.
 	 *
+	 * @param typePool the ByteBuddy TypePool
 	 * @param className The original class name.
 	 * @param originalBytes The original content of the class.
 	 * @param rewriteClassFunction The function used to rewrite the class.
 	 * @return The rewritten content of the class.
 	 */
-	public byte[] rewrite(String className, byte[] originalBytes,
+	public byte[] rewrite(TypePool typePool, String className, byte[] originalBytes,
 			Function<ByteBuddy, DynamicType.Builder<?>> rewriteClassFunction) {
 		DynamicType.Builder<?> builder = rewriteClassFunction.apply( byteBuddy );
 		if ( builder == null ) {
 			return originalBytes;
 		}
 
-		return make( builder ).getBytes();
+		return make( typePool, builder ).getBytes();
 	}
 
 	/**
@@ -158,12 +160,23 @@ public final class ByteBuddyState {
 	}
 
 	private Unloaded<?> make(DynamicType.Builder<?> builder) {
+		return make( null, builder );
+	}
+
+	private Unloaded<?> make(TypePool typePool, DynamicType.Builder<?> builder) {
 		if ( System.getSecurityManager() != null ) {
 			builder = builder.visit( getDeclaredMethodMemberSubstitution );
 			builder = builder.visit( getMethodMemberSubstitution );
 		}
 
-		Unloaded<?> unloadedClass = builder.make();
+		Unloaded<?> unloadedClass;
+		if ( typePool != null ) {
+			unloadedClass = builder.make( typePool );
+		}
+		else {
+			unloadedClass = builder.make();
+		}
+
 		if ( DEBUG ) {
 			try {
 				unloadedClass.saveIn( new File( System.getProperty( "java.io.tmpdir" ) + "/bytebuddy/" ) );

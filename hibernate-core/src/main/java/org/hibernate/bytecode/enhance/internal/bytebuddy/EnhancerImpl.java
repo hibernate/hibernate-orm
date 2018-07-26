@@ -69,7 +69,7 @@ public class EnhancerImpl implements Enhancer {
 	protected final ByteBuddyEnhancementContext enhancementContext;
 	private final ByteBuddyState byteBuddyState;
 
-	private final TypePool classPool;
+	private final TypePool typePool;
 
 	/**
 	 * Constructs the Enhancer, using the given context.
@@ -81,7 +81,7 @@ public class EnhancerImpl implements Enhancer {
 	public EnhancerImpl(final EnhancementContext enhancementContext, final ByteBuddyState byteBuddyState) {
 		this.enhancementContext = new ByteBuddyEnhancementContext( enhancementContext );
 		this.byteBuddyState = byteBuddyState;
-		this.classPool = buildClassPool( this.enhancementContext );
+		this.typePool = buildTypePool( this.enhancementContext );
 	}
 
 	/**
@@ -100,9 +100,9 @@ public class EnhancerImpl implements Enhancer {
 		//Classpool#describe does not accept '/' in the description name as it expects a class name. See HHH-12545
 		final String safeClassName = className.replace( '/', '.' );
 		try {
-			final TypeDescription typeDescription = classPool.describe( safeClassName ).resolve();
+			final TypeDescription typeDescription = typePool.describe( safeClassName ).resolve();
 
-			return byteBuddyState.rewrite( safeClassName, originalBytes, byteBuddy -> doEnhance(
+			return byteBuddyState.rewrite( typePool, safeClassName, originalBytes, byteBuddy -> doEnhance(
 					byteBuddy.ignore( isDefaultFinalizer() ).redefine( typeDescription, ClassFileLocator.Simple.of( safeClassName, originalBytes ) ),
 					typeDescription
 			) );
@@ -112,7 +112,7 @@ public class EnhancerImpl implements Enhancer {
 		}
 	}
 
-	private TypePool buildClassPool(final ByteBuddyEnhancementContext enhancementContext) {
+	private TypePool buildTypePool(final ByteBuddyEnhancementContext enhancementContext) {
 		return TypePool.Default.WithLazyResolution.of( enhancementContext.getLoadingClassLoader() );
 	}
 
@@ -128,7 +128,7 @@ public class EnhancerImpl implements Enhancer {
 			return null;
 		}
 
-		PersistentAttributeTransformer transformer = PersistentAttributeTransformer.collectPersistentFields( managedCtClass, enhancementContext, classPool );
+		PersistentAttributeTransformer transformer = PersistentAttributeTransformer.collectPersistentFields( managedCtClass, enhancementContext, typePool );
 
 		if ( enhancementContext.isEntityClass( managedCtClass ) ) {
 			log.infof( "Enhancing [%s] as Entity", managedCtClass.getName() );

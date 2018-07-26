@@ -197,6 +197,15 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 
 		String[] columnExpressions = element.getIdentityColumns();
 
+		// TODO Remove this? See HHH-12492
+		// This is legacy code that shouldn't be necessary, because getIdentityColumns is supposed to add the alias
+		if ( ! isFromElementUpdateOrDeleteRoot( element ) ) {
+			if ( StringHelper.isNotEmpty( element.getTableAlias() ) ) {
+				// apparently we also need to check that they are not already qualified.  Ugh!
+				columnExpressions = StringHelper.qualifyIfNot( element.getTableAlias(), columnExpressions );
+			}
+		}
+
 		final Dialect dialect = getWalker().getSessionFactoryHelper().getFactory().getDialect();
 		final boolean isInCount = getWalker().isInCount();
 		final boolean isInDistinctCount = isInCount && getWalker().isInCountDistinct();

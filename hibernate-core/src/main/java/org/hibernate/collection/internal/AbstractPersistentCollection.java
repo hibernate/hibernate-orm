@@ -512,6 +512,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		for ( DelayedOperation operation : operationQueue ) {
 			operation.operate();
 		}
+		clearOperationQueue();
 	}
 
 	@Override
@@ -523,9 +524,13 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 
 	@Override
 	public void postAction() {
-		operationQueue = null;
+		clearOperationQueue();
 		cachedSize = -1;
 		clearDirty();
+	}
+
+	public final void clearOperationQueue() {
+		operationQueue = null;
 	}
 
 	@Override
@@ -549,9 +554,8 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	public boolean afterInitialize() {
 		setInitialized();
 		//do this bit after setting initialized to true or it will recurse
-		if ( operationQueue != null ) {
+		if ( hasQueuedOperations() ) {
 			performQueuedOperations();
-			operationQueue = null;
 			cachedSize = -1;
 			return false;
 		}

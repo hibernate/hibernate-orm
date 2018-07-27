@@ -220,14 +220,14 @@ public class LoadQueryJoinAndFetchProcessor {
 				// * composite with entity fetch
 				// * entity with entity fetch
 				// EntityType#getOnCondition doesn't always do the right thing in this case,
-				// so explicitly call Joinable#filterFragment (instead of EntityType#getOnCondition.
+				// so explicitly call Joinable#filterFragment (instead of EntityType#getOnCondition).
 				filter = joinable.filterFragment(
 						rhsTableAlias,
 						queryInfluencers.getEnabledFilters()
 				);
 			}
 			else  {
-				// We leave it up to the assocationType to in these cases:
+				// We leave it up to the assocationType in these cases:
 				// * entity with (element, one-to-many, or many-to-many) collection fetch
 				// * collection element with entity fetch.
 				filter = associationType.getOnCondition( rhsTableAlias, factory, queryInfluencers.getEnabledFilters() );

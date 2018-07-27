@@ -45,7 +45,6 @@ public class EagerAssociationWhereTest extends BaseNonConfigCoreFunctionalTestCa
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12104" )
-	//@FailureExpected( jiraKey = "HHH-12104" )
 	public void testAssociatedWhereClause() {
 		Product product = new Product();
 		Category category = new Category();

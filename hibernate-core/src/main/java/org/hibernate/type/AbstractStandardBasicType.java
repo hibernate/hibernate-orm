@@ -20,7 +20,6 @@ import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -107,13 +106,13 @@ public abstract class AbstractStandardBasicType<T>
 	protected Size getDictatedSize() {
 		return dictatedSize;
 	}
-	
+
 	// final implementations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public final JavaTypeDescriptor<T> getJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}
-	
+
 	public final void setJavaTypeDescriptor( JavaTypeDescriptor<T> javaTypeDescriptor ) {
 		this.javaTypeDescriptor = javaTypeDescriptor;
 	}
@@ -258,29 +257,12 @@ public abstract class AbstractStandardBasicType<T>
 		return nullSafeGet( rs, name, (WrapperOptions) session );
 	}
 
-	/**
-	 * @deprecated {@link #nullSafeGet(ResultSet, String, SharedSessionContractImplementor)}
-	 *             should be used instead.
-	 */
-	@Deprecated
-	public final T nullSafeGet(ResultSet rs, String name, final SessionImplementor session) throws SQLException {
-		return nullSafeGet( rs, name, (SharedSessionContractImplementor) session );
-	}
-
 	protected final T nullSafeGet(ResultSet rs, String name, WrapperOptions options) throws SQLException {
 		return remapSqlTypeDescriptor( options ).getExtractor( javaTypeDescriptor ).extract( rs, name, options );
 	}
 
 	public Object get(ResultSet rs, String name, SharedSessionContractImplementor session) throws HibernateException, SQLException {
 		return nullSafeGet( rs, name, session );
-	}
-
-	/**
-	 * @deprecated {@link #get(ResultSet, String, SharedSessionContractImplementor)} should be used instead.
-	 */
-	@Deprecated
-	public Object get(ResultSet rs, String name, SessionImplementor session) throws HibernateException, SQLException {
-		return get( rs, name, (SharedSessionContractImplementor) session );
 	}
 
 	@Override
@@ -304,15 +286,6 @@ public abstract class AbstractStandardBasicType<T>
 
 	public void set(PreparedStatement st, T value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
 		nullSafeSet( st, value, index, session );
-	}
-
-	/**
-	 * @deprecated {@link #set(PreparedStatement, Object, int, SharedSessionContractImplementor)}
-	 *             should be used instead.
-	 */
-	@Deprecated
-	public void set(PreparedStatement st, T value, int index, SessionImplementor session) throws HibernateException, SQLException {
-		set( st, value, index, (SharedSessionContractImplementor) session );
 	}
 
 	@Override

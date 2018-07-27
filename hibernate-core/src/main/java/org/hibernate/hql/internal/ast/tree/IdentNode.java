@@ -197,7 +197,8 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 
 		String[] columnExpressions = element.getIdentityColumns();
 
-		// determine whether to apply qualification (table alias) to the column(s)...
+		// TODO Remove this? See HHH-12492
+		// This is legacy code that shouldn't be necessary, because getIdentityColumns is supposed to add the alias
 		if ( ! isFromElementUpdateOrDeleteRoot( element ) ) {
 			if ( StringHelper.isNotEmpty( element.getTableAlias() ) ) {
 				// apparently we also need to check that they are not already qualified.  Ugh!

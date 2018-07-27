@@ -8,9 +8,7 @@ package org.hibernate.type;
 
 import java.util.Comparator;
 
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.SessionImpl;
 
 /**
  * Additional contract for types which may be used to version (and optimistic lock) data.
@@ -28,19 +26,6 @@ public interface VersionType<T> extends Type {
 	T seed(SharedSessionContractImplementor session);
 
 	/**
-	 * Generate an initial version.
-	 *
-	 * @param session The session from which this request originates.
-	 * @return an instance of the type
-	 *
-	 * @deprecated {@link #seed(SharedSessionContractImplementor)} should be used instead.
-	 */
-	@Deprecated
-	default T seed(SessionImplementor session) {
-		return seed( (SharedSessionContractImplementor) session );
-	}
-
-	/**
 	 * Increment the version.
 	 *
 	 * @param session The session from which this request originates.
@@ -48,20 +33,6 @@ public interface VersionType<T> extends Type {
 	 * @return an instance of the type
 	 */
 	T next(T current, SharedSessionContractImplementor session);
-
-	/**
-	 * Increment the version.
-	 *
-	 * @param session The session from which this request originates.
-	 * @param current the current version
-	 * @return an instance of the type
-	 *
-	 * @deprecated {@link #next(Object, SharedSessionContractImplementor)} should be used instead.
-	 */
-	@Deprecated
-	default T next(T current, SessionImplementor session) {
-		return next( current, (SharedSessionContractImplementor) session );
-	}
 
 	/**
 	 * Get a comparator for version values.

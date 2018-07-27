@@ -17,7 +17,6 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -223,7 +222,7 @@ public interface Type extends Serializable {
 	 * @throws HibernateException A problem occurred calculating the hash code
 	 */
 	int getHashCode(Object x, SessionFactoryImplementor factory) throws HibernateException;
-	
+
 	/**
 	 * Perform a {@link java.util.Comparator} style comparison between values
 	 *
@@ -236,7 +235,7 @@ public interface Type extends Serializable {
 
 	/**
 	 * Should the parent be considered dirty, given both the old and current value?
-	 * 
+	 *
 	 * @param old the old value
 	 * @param current the current value
 	 * @param session The session from which the request originated.
@@ -246,26 +245,6 @@ public interface Type extends Serializable {
 	 * @throws HibernateException A problem occurred performing the checking
 	 */
 	boolean isDirty(Object old, Object current, SharedSessionContractImplementor session) throws HibernateException;
-
-	/**
-	 * Should the parent be considered dirty, given both the old and current value?
-	 *
-	 * @param old the old value
-	 * @param current the current value
-	 * @param session The session from which the request originated.
-	 *
-	 * @return true if the field is dirty
-	 *
-	 * @throws HibernateException A problem occurred performing the checking
-	 *
-	 * @deprecated {@link #isDirty(Object, Object, SharedSessionContractImplementor)}
-	 *             should be used instead.
-	 */
-	@Deprecated
-	default boolean isDirty(Object old, Object current, SessionImplementor session) throws HibernateException {
-		return isDirty( old, current, (SharedSessionContractImplementor) session );
-	}
-
 
 	/**
 	 * Should the parent be considered dirty, given both the old and current value?
@@ -281,27 +260,6 @@ public interface Type extends Serializable {
 	 */
 	boolean isDirty(Object oldState, Object currentState, boolean[] checkable, SharedSessionContractImplementor session)
 			throws HibernateException;
-
-	/**
-	 * Should the parent be considered dirty, given both the old and current value?
-	 *
-	 * @param oldState the old value
-	 * @param currentState the current value
-	 * @param checkable An array of booleans indicating which columns making up the value are actually checkable
-	 * @param session The session from which the request originated.
-	 *
-	 * @return true if the field is dirty
-	 *
-	 * @throws HibernateException A problem occurred performing the checking
-	 *
-	 * @deprecated {@link #isDirty(Object, Object, boolean[], SharedSessionContractImplementor)}
-	 *             should be used instead.
-	 */
-	@Deprecated
-	default boolean isDirty(Object oldState, Object currentState, boolean[] checkable, SessionImplementor session)
-			throws HibernateException {
-		return isDirty( oldState, currentState, checkable, (SharedSessionContractImplementor) session );
-	}
 
 	/**
 	 * Has the value been modified compared to the current database state?  The difference between this
@@ -326,34 +284,6 @@ public interface Type extends Serializable {
 			throws HibernateException;
 
 	/**
-	 * Has the value been modified compared to the current database state?  The difference between this
-	 * and the {@link #isDirty} methods is that here we need to account for "partially" built values.  This is really
-	 * only an issue with association types.  For most type implementations it is enough to simply delegate to
-	 * {@link #isDirty} here/
-	 *
-	 * @param dbState the database state, in a "hydrated" form, with identifiers unresolved
-	 * @param currentState the current state of the object
-	 * @param checkable which columns are actually updatable
-	 * @param session The session from which the request originated.
-	 *
-	 * @return true if the field has been modified
-	 *
-	 * @throws HibernateException A problem occurred performing the checking
-	 *
-	 * @deprecated {@link #isModified(Object, Object, boolean[], SharedSessionContractImplementor)}
-	 *             should be used instead.
-	 */
-	@Deprecated
-	default boolean isModified(
-			Object dbState,
-			Object currentState,
-			boolean[] checkable,
-			SessionImplementor session)
-			throws HibernateException {
-		return isModified( dbState, currentState, checkable, (SharedSessionContractImplementor) session );
-	}
-
-	/**
 	 * Extract a value of the {@link #getReturnedClass() mapped class} from the JDBC result set. Implementors
 	 * should handle possibility of null values.
 	 *
@@ -374,31 +304,6 @@ public interface Type extends Serializable {
 
 	/**
 	 * Extract a value of the {@link #getReturnedClass() mapped class} from the JDBC result set. Implementors
-	 * should handle possibility of null values.
-	 *
-	 * @param rs The result set from which to extract value.
-	 * @param names the column names making up this type value (use to read from result set)
-	 * @param session The originating session
-	 * @param owner the parent entity
-	 *
-	 * @return The extracted value
-	 *
-	 * @throws HibernateException An error from Hibernate
-	 * @throws SQLException An error from the JDBC driver
-	 *
-	 * @see Type#hydrate(ResultSet, String[], SharedSessionContractImplementor, Object) alternative, 2-phase property initialization
-	 *
-	 * @deprecated {@link #nullSafeGet(ResultSet, String[], SharedSessionContractImplementor, Object)}
-	 *             should be used instead.
-	 */
-	@Deprecated
-	default Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner)
-			throws HibernateException, SQLException {
-		return nullSafeGet( rs, names, (SharedSessionContractImplementor) session, owner );
-	}
-
-	/**
-	 * Extract a value of the {@link #getReturnedClass() mapped class} from the JDBC result set. Implementors
 	 * should handle possibility of null values.  This form might be called if the type is known to be a
 	 * single-column type.
 	 *
@@ -414,30 +319,6 @@ public interface Type extends Serializable {
 	 */
 	Object nullSafeGet(ResultSet rs, String name, SharedSessionContractImplementor session, Object owner)
 	throws HibernateException, SQLException;
-
-	/**
-	 * Extract a value of the {@link #getReturnedClass() mapped class} from the JDBC result set. Implementors
-	 * should handle possibility of null values.  This form might be called if the type is known to be a
-	 * single-column type.
-	 *
-	 * @param rs The result set from which to extract value.
-	 * @param name the column name making up this type value (use to read from result set)
-	 * @param session The originating session
-	 * @param owner the parent entity
-	 *
-	 * @return The extracted value
-	 *
-	 * @throws HibernateException An error from Hibernate
-	 * @throws SQLException An error from the JDBC driver
-	 *
-	 * @deprecated {@link #nullSafeGet(ResultSet, String, SharedSessionContractImplementor, Object)}
-	 *             should be used instead.
-	 */
-	@Deprecated
-	default Object nullSafeGet(ResultSet rs, String name, SessionImplementor session, Object owner)
-			throws HibernateException, SQLException {
-		return nullSafeGet( rs, name, (SharedSessionContractImplementor) session, owner );
-	}
 
 	/**
 	 * Bind a value represented by an instance of the {@link #getReturnedClass() mapped class} to the JDBC prepared
@@ -463,34 +344,6 @@ public interface Type extends Serializable {
 
 	/**
 	 * Bind a value represented by an instance of the {@link #getReturnedClass() mapped class} to the JDBC prepared
-	 * statement, ignoring some columns as dictated by the 'settable' parameter.  Implementors should handle the
-	 * possibility of null values.  A multi-column type should bind parameters starting from <tt>index</tt>.
-	 *
-	 * @param st The JDBC prepared statement to which to bind
-	 * @param value the object to write
-	 * @param index starting parameter bind index
-	 * @param settable an array indicating which columns to bind/ignore
-	 * @param session The originating session
-	 *
-	 * @throws HibernateException An error from Hibernate
-	 * @throws SQLException An error from the JDBC driver
-	 *
-	 * @deprecated {@link #nullSafeSet(PreparedStatement, Object, int, boolean[], SharedSessionContractImplementor)}
-	 *             should be used instead.
-	 */
-	@Deprecated
-	default void nullSafeSet(
-			PreparedStatement st,
-			Object value,
-			int index,
-			boolean[] settable,
-			SessionImplementor session)
-			throws HibernateException, SQLException {
-		nullSafeSet( st, value, index, settable, (SharedSessionContractImplementor) session );
-	}
-
-	/**
-	 * Bind a value represented by an instance of the {@link #getReturnedClass() mapped class} to the JDBC prepared
 	 * statement.  Implementors should handle possibility of null values.  A multi-column type should bind parameters
 	 * starting from <tt>index</tt>.
 	 *
@@ -504,28 +357,6 @@ public interface Type extends Serializable {
 	 */
 	void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
 	throws HibernateException, SQLException;
-
-	/**
-	 * Bind a value represented by an instance of the {@link #getReturnedClass() mapped class} to the JDBC prepared
-	 * statement.  Implementors should handle possibility of null values.  A multi-column type should bind parameters
-	 * starting from <tt>index</tt>.
-	 *
-	 * @param st The JDBC prepared statement to which to bind
-	 * @param value the object to write
-	 * @param index starting parameter bind index
-	 * @param session The originating session
-	 *
-	 * @throws HibernateException An error from Hibernate
-	 * @throws SQLException An error from the JDBC driver
-	 *
-	 * @deprecated {@link #nullSafeSet(PreparedStatement, Object, int, SharedSessionContractImplementor)}
-	 *             should be used instead.
-	 */
-	@Deprecated
-	default void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session)
-			throws HibernateException, SQLException {
-		nullSafeSet( st, value, index, (SharedSessionContractImplementor) session );
-	}
 
 	/**
 	 * Generate a representation of the value for logging purposes.
@@ -585,27 +416,6 @@ public interface Type extends Serializable {
 	Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException;
 
 	/**
-	 * Return a disassembled representation of the object.  This is the value Hibernate will use in second level
-	 * caching, so care should be taken to break values down to their simplest forms; for entities especially, this
-	 * means breaking them down into their constituent parts.
-	 *
-	 * @param value the value to cache
-	 * @param session the originating session
-	 * @param owner optional parent entity object (needed for collections)
-	 *
-	 * @return the disassembled, deep cloned state
-	 *
-	 * @throws HibernateException An error from Hibernate
-	 *
-	 * @deprecated {@link #disassemble(Object, SharedSessionContractImplementor, Object)}
-	 *             should be used instead.
-	 */
-	@Deprecated
-	default Serializable disassemble(Object value, SessionImplementor session, Object owner) throws HibernateException {
-		return disassemble( value, (SharedSessionContractImplementor) session, owner );
-	}
-
-	/**
 	 * Reconstruct the object from its disassembled state.  This method is the reciprocal of {@link #disassemble}
 	 *
 	 * @param cached the disassembled state from the cache
@@ -619,25 +429,6 @@ public interface Type extends Serializable {
 	Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) throws HibernateException;
 
 	/**
-	 * Reconstruct the object from its disassembled state.  This method is the reciprocal of {@link #disassemble}
-	 *
-	 * @param cached the disassembled state from the cache
-	 * @param session the originating session
-	 * @param owner the parent entity object
-	 *
-	 * @return the (re)assembled object
-	 *
-	 * @throws HibernateException An error from Hibernate
-	 *
-	 * @deprecated {@link #assemble(Serializable, SharedSessionContractImplementor, Object)}
-	 *             should be used instead.
-	 */
-	@Deprecated
-	default Object assemble(Serializable cached, SessionImplementor session, Object owner) throws HibernateException {
-		return assemble( cached, (SharedSessionContractImplementor) session, owner );
-	}
-
-	/**
 	 * Called before assembling a query result set from the query cache, to allow batch fetching
 	 * of entities missing from the second-level cache.
 	 *
@@ -647,28 +438,13 @@ public interface Type extends Serializable {
 	void beforeAssemble(Serializable cached, SharedSessionContractImplementor session);
 
 	/**
-	 * Called before assembling a query result set from the query cache, to allow batch fetching
-	 * of entities missing from the second-level cache.
-	 *
-	 * @param cached The key
-	 * @param session The originating session
-	 *
-	 * @deprecated {@link #beforeAssemble(Serializable, SharedSessionContractImplementor)} should
-	 *             be used instead
-	 */
-	@Deprecated
-	default void beforeAssemble(Serializable cached, SessionImplementor session) {
-		beforeAssemble( cached, (SharedSessionContractImplementor) session );
-	}
-
-	/**
 	 * Extract a value from the JDBC result set.  This is useful for 2-phase property initialization - the second
 	 * phase is a call to {@link #resolve}
 	 * This hydrated value will be either:<ul>
 	 *     <li>in the case of an entity or collection type, the key</li>
 	 *     <li>otherwise, the value itself</li>
 	 * </ul>
-	 * 
+	 *
 	 * @param rs The JDBC result set
 	 * @param names the column names making up this type value (use to read from result set)
 	 * @param session The originating session
@@ -685,51 +461,10 @@ public interface Type extends Serializable {
 	throws HibernateException, SQLException;
 
 	/**
-	 * Extract a value from the JDBC result set.  This is useful for 2-phase property initialization - the second
-	 * phase is a call to {@link #resolve}
-	 * This hydrated value will be either:<ul>
-	 *     <li>in the case of an entity or collection type, the key</li>
-	 *     <li>otherwise, the value itself</li>
-	 * </ul>
-	 *
-	 * @param rs The JDBC result set
-	 * @param names the column names making up this type value (use to read from result set)
-	 * @param session The originating session
-	 * @param owner the parent entity
-	 *
-	 * @return An entity or collection key, or an actual value.
-	 *
-	 * @throws HibernateException An error from Hibernate
-	 * @throws SQLException An error from the JDBC driver
-	 *
-	 * @see #resolve
-	 *
-	 * @deprecated {@link #hydrate(ResultSet, String[], SharedSessionContractImplementor, Object)}
-	 *             should be used instead.
-	 */
-	@Deprecated
-	default Object hydrate(ResultSet rs, String[] names, SessionImplementor session, Object owner)
-			throws HibernateException, SQLException {
-		return hydrate( rs, names, (SharedSessionContractImplementor) session, owner );
-	}
-
-	/**
 	 * @see #resolve(Object, SharedSessionContractImplementor, Object, Boolean)
 	 */
 	Object resolve(Object value, SharedSessionContractImplementor session, Object owner)
 	throws HibernateException;
-
-	/**
-	 * @see #resolve(Object, SharedSessionContractImplementor, Object, Boolean)
-	 *
-	 * @deprecated {@link #resolve(Object, SharedSessionContractImplementor, Object)}
-	 *             should be used instead.
-	 */
-	@Deprecated
-	default Object resolve(Object value, SessionImplementor session, Object owner)
-			throws HibernateException {
-		return resolve( value, (SharedSessionContractImplementor) session, owner );
-	}
 
 	/**
 	 * The second phase of 2-phase loading.  Only really pertinent for entities and collections.  Here we resolve the
@@ -766,27 +501,6 @@ public interface Type extends Serializable {
 	 */
 	Object semiResolve(Object value, SharedSessionContractImplementor session, Object owner)
 	throws HibernateException;
-
-	/**
-	 * Given a hydrated, but unresolved value, return a value that may be used to reconstruct property-ref
-	 * associations.
-	 *
-	 * @param value The unresolved, hydrated value
-	 * @param session THe originating session
-	 * @param owner The value owner
-	 *
-	 * @return The semi-resolved value
-	 *
-	 * @throws HibernateException An error from Hibernate
-	 *
-	 * @deprecated {@link #semiResolve(Object, SharedSessionContractImplementor, Object)}
-	 *             should be used instead.
-	 */
-	@Deprecated
-	default Object semiResolve(Object value, SessionImplementor session, Object owner)
-			throws HibernateException {
-		return semiResolve( value, (SharedSessionContractImplementor) session, owner );
-	}
 
 	/**
 	 * As part of 2-phase loading, when we perform resolving what is the resolved type for this type?  Generally
@@ -835,36 +549,6 @@ public interface Type extends Serializable {
 	 * @param session The originating session
 	 * @param owner The owner of the value
 	 * @param copyCache The cache of already copied/replaced values
-	 *
-	 * @return the value to be merged
-	 *
-	 * @throws HibernateException An error from Hibernate
-	 *
-	 * @deprecated {@link #replace(Object, Object, SharedSessionContractImplementor, Object, Map)}
-	 *             should be used instead.
-	 */
-	@Deprecated
-	default Object replace(
-			Object original,
-			Object target,
-			SessionImplementor session,
-			Object owner,
-			Map copyCache) throws HibernateException {
-		return replace( original, target, (SharedSessionContractImplementor) session, owner, copyCache );
-	}
-
-	/**
-	 * During merge, replace the existing (target) value in the entity we are merging to
-	 * with a new (original) value from the detached entity we are merging. For immutable
-	 * objects, or null values, it is safe to simply return the first parameter. For
-	 * mutable objects, it is safe to return a copy of the first parameter. For objects
-	 * with component values, it might make sense to recursively replace component values.
-	 *
-	 * @param original the value from the detached entity being merged
-	 * @param target the value in the managed entity
-	 * @param session The originating session
-	 * @param owner The owner of the value
-	 * @param copyCache The cache of already copied/replaced values
 	 * @param foreignKeyDirection For associations, which direction does the foreign key point?
 	 *
 	 * @return the value to be merged
@@ -880,46 +564,14 @@ public interface Type extends Serializable {
 			ForeignKeyDirection foreignKeyDirection) throws HibernateException;
 
 	/**
-	 * During merge, replace the existing (target) value in the entity we are merging to
-	 * with a new (original) value from the detached entity we are merging. For immutable
-	 * objects, or null values, it is safe to simply return the first parameter. For
-	 * mutable objects, it is safe to return a copy of the first parameter. For objects
-	 * with component values, it might make sense to recursively replace component values.
-	 *
-	 * @param original the value from the detached entity being merged
-	 * @param target the value in the managed entity
-	 * @param session The originating session
-	 * @param owner The owner of the value
-	 * @param copyCache The cache of already copied/replaced values
-	 * @param foreignKeyDirection For associations, which direction does the foreign key point?
-	 *
-	 * @return the value to be merged
-	 *
-	 * @throws HibernateException An error from Hibernate
-	 *
-	 * @deprecated {@link #replace(Object, Object, SharedSessionContractImplementor, Object, Map, ForeignKeyDirection)}
-	 *             should be used instead.
-	 */
-	@Deprecated
-	default Object replace(
-			Object original,
-			Object target,
-			SessionImplementor session,
-			Object owner,
-			Map copyCache,
-			ForeignKeyDirection foreignKeyDirection) throws HibernateException {
-		return replace( original, target, (SharedSessionContractImplementor) session, owner, copyCache, foreignKeyDirection );
-	}
-
-	/**
 	 * Given an instance of the type, return an array of boolean, indicating
 	 * which mapped columns would be null.
-	 * 
+	 *
 	 * @param value an instance of the type
 	 * @param mapping The mapping abstraction
 	 *
 	 * @return array indicating column nullness for a value instance
 	 */
 	boolean[] toColumnNullness(Object value, Mapping mapping);
-	
+
 }

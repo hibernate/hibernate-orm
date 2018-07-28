@@ -13,34 +13,35 @@ import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.envers.query.criteria.AuditCriterion;
+import org.hibernate.envers.query.criteria.AuditFunction;
 
 /**
- * @author Adam Warski (adam at warski dot org)
+ * @author Felix Feisst (feisst dot felix at gmail dot com)
  */
-public class LogicalAuditExpression implements AuditCriterion {
-	private AuditCriterion lhs;
-	private AuditCriterion rhs;
+public class FunctionFunctionAuditExpression implements AuditCriterion {
+
+	private AuditFunction leftFunction;
+	private AuditFunction rightFunction;
 	private String op;
 
-	public LogicalAuditExpression(AuditCriterion lhs, AuditCriterion rhs, String op) {
-		this.lhs = lhs;
-		this.rhs = rhs;
+	public FunctionFunctionAuditExpression(
+			AuditFunction leftFunction,
+			AuditFunction rightFunction,
+			String op) {
+		this.leftFunction = leftFunction;
+		this.rightFunction = rightFunction;
 		this.op = op;
 	}
 
+	@Override
 	public void addToQuery(
 			EnversService enversService,
-			AuditReaderImplementor versionsReader,
+			AuditReaderImplementor auditReader,
 			Map<String, String> aliasToEntityNameMap,
 			Map<String, String> aliasToComponentPropertyNameMap,
-			String alias,
-			QueryBuilder qb,
+			String baseAlias,
+			QueryBuilder queryBuilder,
 			Parameters parameters) {
-		Parameters opParameters = parameters.addSubParameters( op );
-
-		lhs.addToQuery( enversService, versionsReader, aliasToEntityNameMap, aliasToComponentPropertyNameMap, alias, qb,
-				opParameters.addSubParameters( "and" ) );
-		rhs.addToQuery( enversService, versionsReader, aliasToEntityNameMap, aliasToComponentPropertyNameMap, alias, qb,
-				opParameters.addSubParameters( "and" ) );
+		parameters.addWhereWithFunction( enversService, aliasToEntityNameMap, aliasToComponentPropertyNameMap, leftFunction, op, rightFunction );
 	}
 }

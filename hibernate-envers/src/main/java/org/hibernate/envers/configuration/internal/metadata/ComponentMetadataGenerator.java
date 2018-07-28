@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.hibernate.envers.configuration.internal.metadata.reader.ComponentAuditingData;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
+import org.hibernate.envers.internal.entities.EntityConfiguration;
 import org.hibernate.envers.internal.entities.mapper.CompositeMapperBuilder;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.mapping.Component;
@@ -76,6 +77,11 @@ public final class ComponentMetadataGenerator {
 						componentPropertyAuditingData, property.isInsertable(), firstPass, false
 				);
 			}
+		}
+
+		if ( !firstPass ) {
+			final EntityConfiguration owningEntityConfiguration = mainGenerator.getEntitiesConfigurations().get( entityName );
+			owningEntityConfiguration.addToOneComponent( propertyAuditingData.getName(), componentAuditingData );
 		}
 	}
 }

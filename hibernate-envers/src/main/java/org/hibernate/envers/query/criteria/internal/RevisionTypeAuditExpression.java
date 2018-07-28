@@ -30,6 +30,7 @@ public class RevisionTypeAuditExpression extends AbstractAtomicExpression {
 			AuditReaderImplementor versionsReader,
 			String entityName,
 			String alias,
+			String componentPrefix,
 			QueryBuilder qb,
 			Parameters parameters) {
 		parameters.addWhereWithParam( alias, enversService.getAuditEntitiesConfiguration().getRevisionTypePropName(), op, value );

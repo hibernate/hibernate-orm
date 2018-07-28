@@ -31,15 +31,16 @@ public class InAuditExpression extends AbstractAtomicExpression {
 			AuditReaderImplementor versionsReader,
 			String entityName,
 			String alias,
+			String componentPrefix,
 			QueryBuilder qb,
 			Parameters parameters) {
 		String propertyName = CriteriaTools.determinePropertyName(
 				enversService,
 				versionsReader,
 				entityName,
-				propertyNameGetter
-		);
-		CriteriaTools.checkPropertyNotARelation( enversService, entityName, propertyName );
-		parameters.addWhereWithParams( alias, propertyName, "in (", values, ")" );
+				propertyNameGetter );
+		String prefixedPropertyName = componentPrefix.concat( propertyName );
+		CriteriaTools.checkPropertyNotARelation( enversService, entityName, prefixedPropertyName );
+		parameters.addWhereWithParams( alias, prefixedPropertyName, "in (", values, ")" );
 	}
 }

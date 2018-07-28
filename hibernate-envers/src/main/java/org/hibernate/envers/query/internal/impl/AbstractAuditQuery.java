@@ -134,22 +134,10 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 	// Projection and order
 
 	public AuditQuery addProjection(AuditProjection projection) {
-		AuditProjection.ProjectionData projectionData = projection.getData( enversService );
-		String projectionEntityAlias = projectionData.getAlias( REFERENCED_ENTITY_ALIAS );
+		String projectionEntityAlias = projection.getAlias( REFERENCED_ENTITY_ALIAS );
 		String projectionEntityName = aliasToEntityNameMap.get( projectionEntityAlias );
 		registerProjection( projectionEntityName, projection );
-		String propertyName = CriteriaTools.determinePropertyName(
-				enversService,
-				versionsReader,
-				projectionEntityName,
-				projectionData.getPropertyName()
-		);
-		qb.addProjection(
-				projectionData.getFunction(),
-				projectionEntityAlias,
-				propertyName,
-				projectionData.isDistinct()
-		);
+		projection.addProjectionToQuery( enversService, versionsReader, aliasToEntityNameMap, REFERENCED_ENTITY_ALIAS, qb );
 		return this;
 	}
 

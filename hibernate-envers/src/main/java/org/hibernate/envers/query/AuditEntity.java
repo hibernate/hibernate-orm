@@ -6,10 +6,15 @@
  */
 package org.hibernate.envers.query;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.criteria.AuditConjunction;
 import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.envers.query.criteria.AuditDisjunction;
+import org.hibernate.envers.query.criteria.AuditFunction;
 import org.hibernate.envers.query.criteria.AuditId;
 import org.hibernate.envers.query.criteria.AuditProperty;
 import org.hibernate.envers.query.criteria.AuditRelatedId;
@@ -175,5 +180,31 @@ public class AuditEntity {
 	 */
 	public static AuditProjection selectEntity(boolean distinct) {
 		return new EntityAuditProjection( null, distinct );
+	}
+
+	/**
+	 * Create restrictions or projections using a function.
+	 * <p>
+	 * Examples:
+	 * <ul>
+	 * <li>AuditEntity.function("upper", AuditEntity.property("prop"))</li>
+	 * <li>AuditEntity.function("substring", AuditEntity.property("prop"), 3, 2)</li>
+	 * <li>AuditEntity.function("concat", AuditEntity.function("upper", AuditEntity.property("prop1")),
+	 * AuditEntity.function("substring", AuditEntity.property("prop2"), 1, 2))</li>
+	 * </ul>
+	 * 
+	 * @param function the name of the function
+	 * @param arguments the arguments of the function. A function argument can either be
+	 * <ul>
+	 * <li>a primitive value like a Number or a String</li>
+	 * <li>an AuditProperty (see {@link #property(String)})</li>
+	 * <li>an other AuditFunction</li>
+	 * </ul>
+	 * @return
+	 */
+	public static AuditFunction function(final String function, final Object... arguments) {
+		List<Object> argumentList = new ArrayList<>();
+		Collections.addAll( argumentList, arguments );
+		return new AuditFunction( function, argumentList );
 	}
 }

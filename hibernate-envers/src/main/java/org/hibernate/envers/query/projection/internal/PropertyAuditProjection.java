@@ -6,8 +6,13 @@
  */
 package org.hibernate.envers.query.projection.internal;
 
+import java.util.Map;
+
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
+import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+import org.hibernate.envers.internal.tools.query.QueryBuilder;
+import org.hibernate.envers.query.criteria.internal.CriteriaTools;
 import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 import org.hibernate.envers.query.projection.AuditProjection;
 
@@ -28,10 +33,25 @@ public class PropertyAuditProjection implements AuditProjection {
 	}
 
 	@Override
-	public ProjectionData getData(EnversService enversService) {
-		String propertyName = propertyNameGetter.get( enversService );
-		
-		return new ProjectionData( function, alias, propertyName, distinct );
+	public String getAlias(String baseAlias) {
+		return alias == null ? baseAlias : alias;
+	}
+
+	@Override
+	public void addProjectionToQuery(EnversService enversService, AuditReaderImplementor auditReader,
+			Map<String, String> aliasToEntityNameMap, String baseAlias, QueryBuilder queryBuilder) {
+		String projectionEntityAlias = getAlias( baseAlias );
+		String projectionEntityName = aliasToEntityNameMap.get( projectionEntityAlias );
+		String propertyName = CriteriaTools.determinePropertyName(
+				enversService,
+				auditReader,
+				projectionEntityName,
+				propertyNameGetter );
+		queryBuilder.addProjection(
+				function,
+				projectionEntityAlias,
+				propertyName,
+				distinct );
 	}
 
 	@Override

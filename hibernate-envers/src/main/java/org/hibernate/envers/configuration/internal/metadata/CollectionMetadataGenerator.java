@@ -373,7 +373,7 @@ public final class CollectionMetadataGenerator {
 		// Generating the name of the middle table
 		String auditMiddleTableName;
 		String auditMiddleEntityName;
-		if ( !StringTools.isEmpty( propertyAuditingData.getJoinTable().name() ) ) {
+		if ( propertyAuditingData.getJoinTable() != null && !StringTools.isEmpty( propertyAuditingData.getJoinTable().name() ) ) {
 			auditMiddleTableName = propertyAuditingData.getJoinTable().name();
 			auditMiddleEntityName = propertyAuditingData.getJoinTable().name();
 		}
@@ -398,7 +398,7 @@ public final class CollectionMetadataGenerator {
 			middleEntityXml = createMiddleEntityXml(
 					auditMiddleTableName,
 					auditMiddleEntityName,
-					propertyValue.getWhere()
+					propertyAuditingData.getWhereJoinTable()
 			);
 		}
 		else {
@@ -472,7 +472,7 @@ public final class CollectionMetadataGenerator {
 				middleEntityXml,
 				queryGeneratorBuilder,
 				referencedPrefix,
-				propertyAuditingData.getJoinTable().inverseJoinColumns(),
+				propertyAuditingData.getJoinTable() == null ? new JoinColumn[0] : propertyAuditingData.getJoinTable().inverseJoinColumns(),
 				!isLobMapElementType()
 		);
 
@@ -834,11 +834,11 @@ public final class CollectionMetadataGenerator {
 
 	private Element createMiddleEntityXml(String auditMiddleTableName, String auditMiddleEntityName, String where) {
 		final String schema = mainGenerator.getSchema(
-				propertyAuditingData.getJoinTable().schema(),
+				propertyAuditingData.getJoinTable() == null ? "" : propertyAuditingData.getJoinTable().schema(),
 				propertyValue.getCollectionTable()
 		);
 		final String catalog = mainGenerator.getCatalog(
-				propertyAuditingData.getJoinTable().catalog(),
+				propertyAuditingData.getJoinTable() == null ? "" : propertyAuditingData.getJoinTable().catalog(),
 				propertyValue.getCollectionTable()
 		);
 

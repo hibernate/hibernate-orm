@@ -22,7 +22,6 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -273,7 +272,7 @@ public class JdbcBinder {
     private Property bindOneToOne(PersistentClass rc, Table targetTable,
             ForeignKey fk, Set<Column> processedColumns, boolean constrained, boolean inverseProperty) {
 
-        OneToOne value = new OneToOne((MetadataImplementor)metadata, targetTable, rc);
+        OneToOne value = new OneToOne(mdbc, targetTable, rc);
         value.setReferencedEntityName(revengStrategy
                 .tableToClassName(TableIdentifier.create(targetTable)));
 
@@ -328,7 +327,7 @@ public class JdbcBinder {
      * @param propName
      */
     private Property bindManyToOne(String propertyName, boolean mutable, Table table, ForeignKey fk, Set<Column> processedColumns) {
-        ManyToOne value = new ManyToOne((MetadataImplementor)metadata, table);
+        ManyToOne value = new ManyToOne(mdbc, table);
         value.setReferencedEntityName( fk.getReferencedEntityName() );
 		Iterator<Column> columns = fk.getColumnIterator();
         while ( columns.hasNext() ) {
@@ -448,7 +447,7 @@ public class JdbcBinder {
 
 		Table collectionTable = foreignKey.getTable();
 
-		Collection collection = new org.hibernate.mapping.Set((MetadataImplementor)metadata, rc); // MASTER TODO: allow overriding collection type
+		Collection collection = new org.hibernate.mapping.Set(mdbc, rc); // MASTER TODO: allow overriding collection type
 
 		collection.setCollectionTable(collectionTable); // CHILD+
 
@@ -464,7 +463,7 @@ public class JdbcBinder {
 
         if(manyToMany) {
 
-        	ManyToOne element = new ManyToOne((MetadataImplementor)metadata, collection.getCollectionTable() );
+        	ManyToOne element = new ManyToOne(mdbc, collection.getCollectionTable() );
         	//TODO: find the other foreignkey and choose the other side.
         	Iterator<?> foreignKeyIterator = foreignKey.getTable().getForeignKeyIterator();
         	List<ForeignKey> keys = new ArrayList<ForeignKey>();
@@ -498,7 +497,7 @@ public class JdbcBinder {
         } else {
         	String tableToClassName = bindCollection( rc, foreignKey, null, collection );
 
-        	OneToMany oneToMany = new OneToMany((MetadataImplementor)metadata, collection.getOwner() );
+        	OneToMany oneToMany = new OneToMany(mdbc, collection.getOwner() );
 
 			oneToMany.setReferencedEntityName( tableToClassName ); // Child
         	metadataCollector.addSecondPass( new JdbcCollectionSecondPass(mdbc, collection) );
@@ -517,7 +516,7 @@ public class JdbcBinder {
 				.getValue();
 		}
 
-		SimpleValue keyValue = new DependantValue((MetadataImplementor)metadata, collectionTable, referencedKeyValue );
+		SimpleValue keyValue = new DependantValue(mdbc, collectionTable, referencedKeyValue );
 		//keyValue.setForeignKeyName("none"); // Avoid creating the foreignkey
 		//key.setCascadeDeleteEnabled( "cascade".equals( subnode.attributeValue("on-delete") ) );
 		Iterator<Column> columnIterator = foreignKey.getColumnIterator();
@@ -847,7 +846,7 @@ public class JdbcBinder {
 	}
 
 	private SimpleValue bindColumnToSimpleValue(Table table, Column column, Mapping mapping, boolean generatedIdentifier) {
-		SimpleValue value = new SimpleValue((MetadataImplementor)metadata, table);
+		SimpleValue value = new SimpleValue(mdbc, table);
 		value.addColumn(column);
 		value.setTypeName(guessAndAlignType(table, column, mapping, generatedIdentifier));
 		return value;
@@ -939,7 +938,7 @@ public class JdbcBinder {
 	 * @return
 	 */
 	private SimpleValue handleCompositeKey(RootClass rc, Set<Column> processedColumns, List<Column> keyColumns, Mapping mapping) {
-		Component pkc = new Component((MetadataImplementor)metadata, rc);
+		Component pkc = new Component(mdbc, rc);
         pkc.setMetaAttributes(Collections.EMPTY_MAP);
         pkc.setEmbedded(false);
 

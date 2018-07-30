@@ -31,6 +31,7 @@ public class Author {
     public Set<Book> books = new HashSet<>();
 
     //Getters and setters omitted for brevity
+
     //end::entity-persister-mapping[]
 
     public Integer getId() {

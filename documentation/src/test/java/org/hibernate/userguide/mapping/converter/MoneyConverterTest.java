@@ -54,6 +54,9 @@ public class MoneyConverterTest extends BaseEntityManagerFunctionalTestCase {
 
 		private long cents;
 
+		//Getters and setters are omitted for brevity
+	//end::basic-jpa-convert-money-converter-mapping-example[]
+
 		public Money(long cents) {
 			this.cents = cents;
 		}
@@ -65,23 +68,12 @@ public class MoneyConverterTest extends BaseEntityManagerFunctionalTestCase {
 		public void setCents(long cents) {
 			this.cents = cents;
 		}
+	//tag::basic-jpa-convert-money-converter-mapping-example[]
 	}
-
-	public static class MoneyConverter
-			implements AttributeConverter<Money, Long> {
-
-		@Override
-		public Long convertToDatabaseColumn(Money attribute) {
-			return attribute == null ? null : attribute.getCents();
-		}
-
-		@Override
-		public Money convertToEntityAttribute(Long dbData) {
-			return dbData == null ? null : new Money( dbData );
-		}
-	}
+	//end::basic-jpa-convert-money-converter-mapping-example[]
 
 	//tag::basic-jpa-convert-money-converter-mapping-example[]
+
 	@Entity(name = "Account")
 	public static class Account {
 
@@ -94,8 +86,7 @@ public class MoneyConverterTest extends BaseEntityManagerFunctionalTestCase {
 		private Money balance;
 
 		//Getters and setters are omitted for brevity
-
-	//end::basic-jpa-convert-money-converter-mapping-example[]
+		//end::basic-jpa-convert-money-converter-mapping-example[]
 		public Long getId() {
 			return id;
 		}
@@ -120,6 +111,20 @@ public class MoneyConverterTest extends BaseEntityManagerFunctionalTestCase {
 			this.balance = balance;
 		}
 	//tag::basic-jpa-convert-money-converter-mapping-example[]
+	}
+
+	public static class MoneyConverter
+			implements AttributeConverter<Money, Long> {
+
+		@Override
+		public Long convertToDatabaseColumn(Money attribute) {
+			return attribute == null ? null : attribute.getCents();
+		}
+
+		@Override
+		public Money convertToEntityAttribute(Long dbData) {
+			return dbData == null ? null : new Money( dbData );
+		}
 	}
 	//end::basic-jpa-convert-money-converter-mapping-example[]
 }

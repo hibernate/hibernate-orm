@@ -70,6 +70,10 @@ public class ParentTest extends BaseEntityManagerFunctionalTestCase {
 		@Parent
 		private City city;
 
+		//Getters and setters omitted for brevity
+
+	//end::mapping-Parent-example[]
+
 		private GPS() {
 		}
 
@@ -93,7 +97,11 @@ public class ParentTest extends BaseEntityManagerFunctionalTestCase {
 		public void setCity(City city) {
 			this.city = city;
 		}
+	//tag::mapping-Parent-example[]
 	}
+	//end::mapping-Parent-example[]
+
+	//tag::mapping-Parent-example[]
 
 	@Entity(name = "City")
 	public static class City {

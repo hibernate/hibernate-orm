@@ -74,6 +74,10 @@ public class JoinTablePrimaryKeyJoinColumnTest extends BaseEntityManagerFunction
 
 		private BigDecimal interestRate;
 
+		//Getters and setters are omitted for brevity
+
+	//end::entity-inheritance-joined-table-primary-key-join-column-example[]
+
 		public Long getId() {
 			return id;
 		}
@@ -105,6 +109,7 @@ public class JoinTablePrimaryKeyJoinColumnTest extends BaseEntityManagerFunction
 		public void setInterestRate(BigDecimal interestRate) {
 			this.interestRate = interestRate;
 		}
+	//tag::entity-inheritance-joined-table-primary-key-join-column-example[]
 	}
 
 	@Entity(name = "DebitAccount")
@@ -113,6 +118,10 @@ public class JoinTablePrimaryKeyJoinColumnTest extends BaseEntityManagerFunction
 
 		private BigDecimal overdraftFee;
 
+		//Getters and setters are omitted for brevity
+
+	//end::entity-inheritance-joined-table-primary-key-join-column-example[]
+
 		public BigDecimal getOverdraftFee() {
 			return overdraftFee;
 		}
@@ -120,6 +129,7 @@ public class JoinTablePrimaryKeyJoinColumnTest extends BaseEntityManagerFunction
 		public void setOverdraftFee(BigDecimal overdraftFee) {
 			this.overdraftFee = overdraftFee;
 		}
+	//tag::entity-inheritance-joined-table-primary-key-join-column-example[]
 	}
 
 	@Entity(name = "CreditAccount")
@@ -128,6 +138,10 @@ public class JoinTablePrimaryKeyJoinColumnTest extends BaseEntityManagerFunction
 
 		private BigDecimal creditLimit;
 
+		//Getters and setters are omitted for brevity
+
+	//end::entity-inheritance-joined-table-primary-key-join-column-example[]
+
 		public BigDecimal getCreditLimit() {
 			return creditLimit;
 		}
@@ -135,6 +149,7 @@ public class JoinTablePrimaryKeyJoinColumnTest extends BaseEntityManagerFunction
 		public void setCreditLimit(BigDecimal creditLimit) {
 			this.creditLimit = creditLimit;
 		}
+	//tag::entity-inheritance-joined-table-primary-key-join-column-example[]
 	}
 	//end::entity-inheritance-joined-table-primary-key-join-column-example[]
 }

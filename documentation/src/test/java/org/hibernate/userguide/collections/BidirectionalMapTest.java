@@ -74,6 +74,10 @@ public class BidirectionalMapTest extends BaseEntityManagerFunctionalTestCase {
 		@MapKeyEnumerated
 		private Map<PhoneType, Phone> phoneRegister = new HashMap<>();
 
+		//Getters and setters are omitted for brevity
+
+	//end::collections-map-bidirectional-example[]
+
 		public Person() {
 		}
 
@@ -85,6 +89,7 @@ public class BidirectionalMapTest extends BaseEntityManagerFunctionalTestCase {
 			return phoneRegister;
 		}
 
+	//tag::collections-map-bidirectional-example[]
 		public void addPhone(Phone phone) {
 			phone.setPerson( this );
 			phoneRegister.put( phone.getType(), phone );
@@ -107,6 +112,10 @@ public class BidirectionalMapTest extends BaseEntityManagerFunctionalTestCase {
 
 		@ManyToOne
 		private Person person;
+
+		//Getters and setters are omitted for brevity
+
+	//end::collections-map-bidirectional-example[]
 
 		public Phone() {
 		}
@@ -136,6 +145,7 @@ public class BidirectionalMapTest extends BaseEntityManagerFunctionalTestCase {
 		public void setPerson(Person person) {
 			this.person = person;
 		}
+	//tag::collections-map-bidirectional-example[]
 	}
 	//end::collections-map-bidirectional-example[]
 }

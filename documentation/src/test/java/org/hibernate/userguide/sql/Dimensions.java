@@ -21,6 +21,10 @@ public class Dimensions {
 
     private int width;
 
+    //Getters and setters are omitted for brevity
+
+//end::sql-composite-key-entity-associations_named-query-example[]
+
     public int getLength() {
         return length;
     }
@@ -36,5 +40,6 @@ public class Dimensions {
     public void setWidth(int width) {
         this.width = width;
     }
+//tag::sql-composite-key-entity-associations_named-query-example[]
 }
 //end::sql-composite-key-entity-associations_named-query-example[]

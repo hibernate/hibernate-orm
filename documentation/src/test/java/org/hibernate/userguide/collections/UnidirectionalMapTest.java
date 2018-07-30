@@ -77,12 +77,16 @@ public class UnidirectionalMapTest extends BaseEntityManagerFunctionalTestCase {
 
 		@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
 		@JoinTable(
-				name = "phone_register",
-				joinColumns = @JoinColumn(name = "phone_id"),
-				inverseJoinColumns = @JoinColumn(name = "person_id"))
+			name = "phone_register",
+			joinColumns = @JoinColumn(name = "phone_id"),
+			inverseJoinColumns = @JoinColumn(name = "person_id"))
 		@MapKey(name = "since")
 		@MapKeyTemporal(TemporalType.TIMESTAMP)
 		private Map<Date, Phone> phoneRegister = new HashMap<>();
+
+		//Getters and setters are omitted for brevity
+
+	//end::collections-map-unidirectional-example[]
 
 		public Person() {
 		}
@@ -95,6 +99,7 @@ public class UnidirectionalMapTest extends BaseEntityManagerFunctionalTestCase {
 			return phoneRegister;
 		}
 
+	//tag::collections-map-unidirectional-example[]
 		public void addPhone(Phone phone) {
 			phoneRegister.put( phone.getSince(), phone );
 		}
@@ -113,6 +118,10 @@ public class UnidirectionalMapTest extends BaseEntityManagerFunctionalTestCase {
 		private String number;
 
 		private Date since;
+
+		//Getters and setters are omitted for brevity
+
+	//end::collections-map-unidirectional-example[]
 
 		public Phone() {
 		}
@@ -134,6 +143,7 @@ public class UnidirectionalMapTest extends BaseEntityManagerFunctionalTestCase {
 		public Date getSince() {
 			return since;
 		}
+	//tag::collections-map-unidirectional-example[]
 	}
 	//end::collections-map-unidirectional-example[]
 }

@@ -79,7 +79,6 @@ public class DirectVsQueryFetchingTest extends BaseEntityManagerFunctionalTestCa
 		//Getters and setters omitted for brevity
 	}
 
-	//tag::fetching-direct-vs-query-domain-model-example[]
 	@Entity(name = "Employee")
 	public static class Employee {
 

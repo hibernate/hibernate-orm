@@ -127,6 +127,10 @@ public abstract class AbstractBulkCompositeIdTest extends BaseCoreFunctionalTest
 
 		private boolean employed;
 
+		//Getters and setters are omitted for brevity
+
+	//end::batch-bulk-hql-temp-table-base-class-example[]
+
 		public Integer getId() {
 			return id;
 		}
@@ -176,6 +180,7 @@ public abstract class AbstractBulkCompositeIdTest extends BaseCoreFunctionalTest
 		public int hashCode() {
 			return Objects.hash( getId(), getCompanyName() );
 		}
+	//tag::batch-bulk-hql-temp-table-base-class-example[]
 	}
 	//end::batch-bulk-hql-temp-table-base-class-example[]
 
@@ -189,6 +194,10 @@ public abstract class AbstractBulkCompositeIdTest extends BaseCoreFunctionalTest
 
 		private boolean fellow;
 
+		//Getters and setters are omitted for brevity
+
+	//end::batch-bulk-hql-temp-table-sub-classes-example[]
+
 		public boolean isFellow() {
 			return fellow;
 		}
@@ -196,6 +205,7 @@ public abstract class AbstractBulkCompositeIdTest extends BaseCoreFunctionalTest
 		public void setFellow(boolean fellow) {
 			this.fellow = fellow;
 		}
+	//tag::batch-bulk-hql-temp-table-sub-classes-example[]
 	}
 	//end::batch-bulk-hql-temp-table-sub-classes-example[]
 }

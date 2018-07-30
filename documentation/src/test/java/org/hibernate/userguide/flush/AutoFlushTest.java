@@ -174,6 +174,10 @@ public class AutoFlushTest extends BaseEntityManagerFunctionalTestCase {
 
 		private String name;
 
+		//Getters and setters are omitted for brevity
+
+	//end::flushing-auto-flush-jpql-entity-example[]
+
 		public Person() {}
 
 		public Person(String name) {
@@ -187,7 +191,7 @@ public class AutoFlushTest extends BaseEntityManagerFunctionalTestCase {
 		public String getName() {
 			return name;
 		}
-
+	//tag::flushing-auto-flush-jpql-entity-example[]
 	}
 
 	@Entity(name = "Advertisement")
@@ -198,6 +202,10 @@ public class AutoFlushTest extends BaseEntityManagerFunctionalTestCase {
 		private Long id;
 
 		private String title;
+
+		//Getters and setters are omitted for brevity
+
+	//end::flushing-auto-flush-jpql-entity-example[]
 
 		public Long getId() {
 			return id;
@@ -214,6 +222,7 @@ public class AutoFlushTest extends BaseEntityManagerFunctionalTestCase {
 		public void setTitle(String title) {
 			this.title = title;
 		}
+	//tag::flushing-auto-flush-jpql-entity-example[]
 	}
 	//end::flushing-auto-flush-jpql-entity-example[]
 }

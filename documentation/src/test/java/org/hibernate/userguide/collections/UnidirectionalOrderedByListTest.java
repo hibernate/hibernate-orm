@@ -54,9 +54,14 @@ public class UnidirectionalOrderedByListTest extends BaseEntityManagerFunctional
 
 		@Id
 		private Long id;
+
 		@OneToMany(cascade = CascadeType.ALL)
 		@OrderBy("number")
 		private List<Phone> phones = new ArrayList<>();
+
+		//Getters and setters are omitted for brevity
+
+	//end::collections-unidirectional-ordered-list-order-by-example[]
 
 		public Person() {
 		}
@@ -68,6 +73,7 @@ public class UnidirectionalOrderedByListTest extends BaseEntityManagerFunctional
 		public List<Phone> getPhones() {
 			return phones;
 		}
+	//tag::collections-unidirectional-ordered-list-order-by-example[]
 	}
 
 	@Entity(name = "Phone")
@@ -80,6 +86,10 @@ public class UnidirectionalOrderedByListTest extends BaseEntityManagerFunctional
 
 		@Column(name = "`number`")
 		private String number;
+
+		//Getters and setters are omitted for brevity
+
+	//end::collections-unidirectional-ordered-list-order-by-example[]
 
 		public Phone() {
 		}
@@ -101,6 +111,7 @@ public class UnidirectionalOrderedByListTest extends BaseEntityManagerFunctional
 		public String getNumber() {
 			return number;
 		}
+	//tag::collections-unidirectional-ordered-list-order-by-example[]
 	}
 	//end::collections-unidirectional-ordered-list-order-by-example[]
 }

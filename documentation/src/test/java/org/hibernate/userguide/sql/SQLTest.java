@@ -495,10 +495,10 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 				Session session = entityManager.unwrap( Session.class );
 				//tag::sql-hibernate-multi-entity-query-example[]
 				List<Object> entities = session.createNativeQuery(
-						"SELECT * " +
-								"FROM Person pr, Partner pt " +
-								"WHERE pr.name = pt.name" )
-						.list();
+					"SELECT * " +
+					"FROM Person pr, Partner pt " +
+					"WHERE pr.name = pt.name" )
+				.list();
 				//end::sql-hibernate-multi-entity-query-example[]
 				assertEquals( 2, entities.size() );
 			} );

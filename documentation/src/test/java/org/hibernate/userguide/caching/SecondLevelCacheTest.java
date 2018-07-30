@@ -267,7 +267,11 @@ public class SecondLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
 		@Column(name = "code", unique = true)
 		private String code;
 
-        public Person() {}
+		//Getters and setters are omitted for brevity
+
+	//end::caching-entity-natural-id-mapping-example[]
+
+		public Person() {}
 
         public Person(String name) {
             this.name = name;
@@ -292,6 +296,7 @@ public class SecondLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
 		public void setCode(String code) {
 			this.code = code;
 		}
+	//tag::caching-entity-natural-id-mapping-example[]
 	}
 	//end::caching-entity-natural-id-mapping-example[]
 }

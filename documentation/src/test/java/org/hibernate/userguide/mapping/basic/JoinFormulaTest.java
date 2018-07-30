@@ -143,6 +143,9 @@ public class JoinFormulaTest extends BaseEntityManagerFunctionalTestCase {
 
 	//tag::mapping-JoinFormula-example[]
 	}
+	//end::mapping-JoinFormula-example[]
+
+	//tag::mapping-JoinFormula-example[]
 
 	@Entity(name = "Country")
 	@Table(name = "countries")
@@ -152,6 +155,10 @@ public class JoinFormulaTest extends BaseEntityManagerFunctionalTestCase {
 		private Integer id;
 
 		private String name;
+
+		//Getters and setters, equals and hashCode methods omitted for brevity
+
+	//end::mapping-JoinFormula-example[]
 
 		public int getId() {
 			return id;
@@ -185,6 +192,7 @@ public class JoinFormulaTest extends BaseEntityManagerFunctionalTestCase {
 		public int hashCode() {
 			return Objects.hash( getId() );
 		}
+	//tag::mapping-JoinFormula-example[]
 	}
 	//end::mapping-JoinFormula-example[]
 }

@@ -64,15 +64,16 @@ public class OneToOneBidirectionalLazyTest extends BaseEntityManagerFunctionalTe
 		@LazyToOne( LazyToOneOption.NO_PROXY )
 		private PhoneDetails details;
 
+		//Getters and setters are omitted for brevity
+
+	//end::associations-one-to-one-bidirectional-lazy-example[]
+
 		public Phone() {
 		}
 
 		public Phone(String number) {
 			this.number = number;
 		}
-		//Getters and setters are omitted for brevity
-
-	//end::associations-one-to-one-bidirectional-lazy-example[]
 
 		public Long getId() {
 			return id;
@@ -86,6 +87,7 @@ public class OneToOneBidirectionalLazyTest extends BaseEntityManagerFunctionalTe
 			return details;
 		}
 
+	//tag::associations-one-to-one-bidirectional-lazy-example[]
 		public void addDetails(PhoneDetails details) {
 			details.setPhone( this );
 			this.details = details;
@@ -97,7 +99,6 @@ public class OneToOneBidirectionalLazyTest extends BaseEntityManagerFunctionalTe
 				this.details = null;
 			}
 		}
-	//tag::associations-one-to-one-bidirectional-lazy-example[]
 	}
 
 	@Entity(name = "PhoneDetails")
@@ -115,6 +116,10 @@ public class OneToOneBidirectionalLazyTest extends BaseEntityManagerFunctionalTe
 		@JoinColumn(name = "phone_id")
 		private Phone phone;
 
+		//Getters and setters are omitted for brevity
+
+	//end::associations-one-to-one-bidirectional-lazy-example[]
+
 		public PhoneDetails() {
 		}
 
@@ -123,8 +128,6 @@ public class OneToOneBidirectionalLazyTest extends BaseEntityManagerFunctionalTe
 			this.technology = technology;
 		}
 		//Getters and setters are omitted for brevity
-
-	//end::associations-one-to-one-bidirectional-lazy-example[]
 
 		public String getProvider() {
 			return provider;

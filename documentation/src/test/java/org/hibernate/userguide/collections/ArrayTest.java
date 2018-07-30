@@ -51,7 +51,12 @@ public class ArrayTest extends BaseEntityManagerFunctionalTestCase {
 
 		@Id
 		private Long id;
+
 		private String[] phones;
+
+		//Getters and setters are omitted for brevity
+
+	//end::collections-array-binary-example[]
 
 		public Person() {
 		}
@@ -67,6 +72,7 @@ public class ArrayTest extends BaseEntityManagerFunctionalTestCase {
 		public void setPhones(String[] phones) {
 			this.phones = phones;
 		}
+	//tag::collections-array-binary-example[]
 	}
 	//end::collections-array-binary-example[]
 }

@@ -829,7 +829,12 @@ as illustrated by the following example.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CascadeOnDeleteTest.java[tags=pc-cascade-on-delete-mapping-example]
+include::{sourcedir}/CascadeOnDeleteTest.java[tags=pc-cascade-on-delete-mapping-Person-example]
+----
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeOnDeleteTest.java[tags=pc-cascade-on-delete-mapping-Phone-example]
 ----
 
 [source, SQL, indent=0]

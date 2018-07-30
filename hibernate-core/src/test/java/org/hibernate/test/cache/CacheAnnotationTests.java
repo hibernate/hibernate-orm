@@ -20,12 +20,15 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-12587")
 public class CacheAnnotationTests extends BaseCoreFunctionalTestCase {
+
+	private Integer entityId;
 
 	@Override
 	protected void configure(Configuration configuration) {
@@ -39,12 +42,33 @@ public class CacheAnnotationTests extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testCacheConcurrencyStrategyNone() {
+	@TestForIssue(jiraKey = "HHH-12587")
+	public void testCacheWriteConcurrencyStrategyNone() {
 		doInHibernate( this::sessionFactory, session -> {
 			NoCacheConcurrencyStrategyEntity entity = new NoCacheConcurrencyStrategyEntity();
 			session.save( entity );
 			session.flush();
 			session.clear();
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12868")
+	public void testCacheReadConcurrencyStrategyNone() {
+		doInHibernate( this::sessionFactory, session -> {
+			NoCacheConcurrencyStrategyEntity entity = new NoCacheConcurrencyStrategyEntity();
+			entity.setName( "name" );
+			session.save( entity );
+			session.flush();
+
+			this.entityId = entity.getId();
+
+			session.clear();
+		} );
+
+		doInHibernate( this::sessionFactory, session -> {
+			NoCacheConcurrencyStrategyEntity entity = session.load( NoCacheConcurrencyStrategyEntity.class, this.entityId );
+			assertEquals( "name", entity.getName() );
 		} );
 	}
 
@@ -55,12 +79,22 @@ public class CacheAnnotationTests extends BaseCoreFunctionalTestCase {
 		@GeneratedValue
 		private Integer id;
 
+		private String name;
+
 		public Integer getId() {
 			return id;
 		}
 
 		public void setId(Integer id) {
 			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
 		}
 	}
 }

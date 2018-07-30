@@ -10,12 +10,15 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Locale;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.hibernate.JDBCException;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
@@ -39,6 +42,7 @@ import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.sql.CaseFragment;
@@ -464,12 +468,96 @@ public class Oracle8iDialect extends Dialect {
 
 	@Override
 	public String getForUpdateString(String aliases) {
-		return getForUpdateString() + " of " + aliases;
+		StringBuilder sb = new StringBuilder();
+		sb.append( getForUpdateString() );
+		if ( StringHelper.isNotEmpty( aliases ) ) {
+			sb.append( " of " ).append( aliases );
+		}
+		return sb.toString();
 	}
 
 	@Override
 	public String getForUpdateNowaitString(String aliases) {
-		return getForUpdateString() + " of " + aliases + " nowait";
+		return getForUpdateString( aliases ) + " nowait";
+	}
+
+	/*
+	 * Overwrite because the parent's implementation does not support the `for update of ...` syntax.
+	 *
+	 * Since Oracle 8i (or even prior versions) the syntax of "for update of [table.column]" is already supported.
+	 * Refer to https://docs.oracle.com/cd/A87860_01/doc/server.817/a85397/state21b.htm#2065648
+	 */
+	@Override
+	public String getForUpdateString(String aliases, LockOptions lockOptions) {
+		LockMode lockMode = lockOptions.getLockMode();
+		final Iterator<Map.Entry<String, LockMode>> itr = lockOptions.getAliasLockIterator();
+		while ( itr.hasNext() ) {
+			// seek the highest lock mode
+			final Map.Entry<String, LockMode> entry = itr.next();
+			final LockMode lm = entry.getValue();
+			if ( lm.greaterThan( lockMode ) ) {
+				lockMode = lm;
+			}
+		}
+		lockOptions.setLockMode( lockMode );
+		return getForUpdateString( lockMode, lockOptions.getTimeOut(), aliases );
+	}
+
+	private String getForUpdateString(LockMode lockMode, int timeout, String aliases) {
+		switch ( lockMode ) {
+			case UPGRADE:
+				return getForUpdateString( aliases );
+			case PESSIMISTIC_READ:
+				return getReadLockString( aliases, timeout );
+			case PESSIMISTIC_WRITE:
+				return getWriteLockString( aliases, timeout );
+			case UPGRADE_NOWAIT:
+			case FORCE:
+			case PESSIMISTIC_FORCE_INCREMENT:
+				return getForUpdateNowaitString( aliases );
+			case UPGRADE_SKIPLOCKED:
+				return getForUpdateSkipLockedString( aliases );
+			default:
+				return "";
+		}
+	}
+
+	@Override
+	public String getReadLockString(String aliases, int timeout) {
+		return forUpdateFragment( aliases, timeout );
+	}
+
+	@Override
+	public String getWriteLockString(String aliases, int timeout) {
+		if ( timeout == LockOptions.SKIP_LOCKED ) {
+			return getForUpdateSkipLockedString( aliases );
+		}
+		else {
+			return forUpdateFragment( aliases, timeout );
+		}
+	}
+
+	private String forUpdateFragment(String aliases, int timeout) {
+		StringBuilder forUpdateFragment = new StringBuilder( getForUpdateString() );
+
+		// refer to https://docs.oracle.com/database/121/SQLRF/statements_10002.htm#i2126016
+		if ( StringHelper.isNotEmpty( aliases ) ) {
+			forUpdateFragment.append( " of " ).append( aliases );
+		}
+
+		if ( timeout == LockOptions.NO_WAIT ) {
+			forUpdateFragment.append( " nowait" );
+		}
+		else if ( timeout == LockOptions.SKIP_LOCKED ) {
+			forUpdateFragment.append( " skip locked" );
+		}
+		else if ( timeout > 0 ) {
+			// convert from milliseconds to seconds
+			final float seconds = timeout / 1000.0f;
+			forUpdateFragment.append( " wait " ).append( Math.round( seconds ) );
+		}
+
+		return forUpdateFragment.toString();
 	}
 
 	@Override
@@ -653,7 +741,7 @@ public class Oracle8iDialect extends Dialect {
 	public boolean supportsEmptyInList() {
 		return false;
 	}
-	
+
 	@Override
 	public boolean supportsExistsInSelect() {
 		return false;
@@ -663,7 +751,7 @@ public class Oracle8iDialect extends Dialect {
 	public int getInExpressionCountLimit() {
 		return PARAM_LIST_SIZE_LIMIT;
 	}
-	
+
 	@Override
 	public boolean forceLobAsLastValue() {
 		return true;
@@ -697,12 +785,12 @@ public class Oracle8iDialect extends Dialect {
 			return true;
 		}
 	}
-	
+
 	@Override
 	public String getNotExpression( String expression ) {
 		return "not (" + expression + ")";
 	}
-	
+
 	@Override
 	public String getQueryHintString(String sql, String hints) {
 		String statementType = statementType(sql);
@@ -724,7 +812,7 @@ public class Oracle8iDialect extends Dialect {
 
 		return sql;
 	}
-	
+
 	@Override
 	public int getMaxAliasLength() {
 		// Oracle's max identifier length is 30, but Hibernate needs to add "uniqueing info" so we account for that,

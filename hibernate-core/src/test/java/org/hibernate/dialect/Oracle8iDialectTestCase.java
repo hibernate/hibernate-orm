@@ -6,6 +6,8 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.hql.spi.id.AbstractMultiTableBulkIdStrategyImpl;
 
 import org.junit.Test;
@@ -37,4 +39,19 @@ public class Oracle8iDialectTestCase extends BaseUnitTestCase {
 				temporaryTableName
 		);
 	}
+
+	@Test
+	public void testGetForUpdateStringWithAliasesAndLockOptions() {
+		Oracle8iDialect dialect = new Oracle8iDialect();
+		LockOptions lockOptions = new LockOptions();
+		lockOptions.setAliasSpecificLockMode( "tableAlias1", LockMode.PESSIMISTIC_WRITE );
+
+		String forUpdateClause = dialect.getForUpdateString( "tableAlias1", lockOptions );
+		assertEquals( " for update of tableAlias1", forUpdateClause );
+
+		lockOptions.setAliasSpecificLockMode( "tableAlias2", LockMode.PESSIMISTIC_WRITE );
+		forUpdateClause = dialect.getForUpdateString( "tableAlias1,tableAlias2", lockOptions );
+		assertEquals( " for update of tableAlias1,tableAlias2", forUpdateClause );
+	}
+
 }

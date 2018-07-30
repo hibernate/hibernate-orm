@@ -535,7 +535,7 @@ public abstract class AbstractEntityPersister
 
 		if ( creationContext.getSessionFactory().getSessionFactoryOptions().isSecondLevelCacheEnabled() ) {
 			this.canWriteToCache = determineCanWriteToCache( persistentClass, cacheAccessStrategy );
-			this.canReadFromCache = determineCanReadFromCache( persistentClass );
+			this.canReadFromCache = determineCanReadFromCache( persistentClass, cacheAccessStrategy );
 			this.cacheAccessStrategy = cacheAccessStrategy;
 			this.isLazyPropertiesCacheable = persistentClass.getRootClass().isLazyPropertiesCacheable();
 			this.naturalIdRegionAccessStrategy = naturalIdRegionAccessStrategy;
@@ -916,7 +916,11 @@ public abstract class AbstractEntityPersister
 	}
 
 	@SuppressWarnings("unchecked")
-	private boolean determineCanReadFromCache(PersistentClass persistentClass) {
+	private boolean determineCanReadFromCache(PersistentClass persistentClass, EntityDataAccess cacheAccessStrategy) {
+		if ( cacheAccessStrategy == null ) {
+			return false;
+		}
+
 		if ( persistentClass.isCached() ) {
 			return true;
 		}

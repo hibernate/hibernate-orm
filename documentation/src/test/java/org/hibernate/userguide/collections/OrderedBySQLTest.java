@@ -80,8 +80,13 @@ public class OrderedBySQLTest extends BaseEntityManagerFunctionalTestCase {
 
 		private String name;
 
-		@OneToMany(mappedBy = "person", cascade = CascadeType.ALL)
-		@org.hibernate.annotations.OrderBy(clause = "CHAR_LENGTH(name) DESC")
+		@OneToMany(
+			mappedBy = "person",
+			cascade = CascadeType.ALL
+		)
+		@org.hibernate.annotations.OrderBy(
+			clause = "CHAR_LENGTH(name) DESC"
+		)
 		private List<Article> articles = new ArrayList<>();
 
 		//Getters and setters are omitted for brevity
@@ -128,6 +133,9 @@ public class OrderedBySQLTest extends BaseEntityManagerFunctionalTestCase {
 		@ManyToOne(fetch = FetchType.LAZY)
 		private Person person;
 
+		//Getters and setters are omitted for brevity
+	//end::collections-customizing-ordered-by-sql-clause-mapping-example[]
+
 		private Article() {
 		}
 
@@ -135,9 +143,6 @@ public class OrderedBySQLTest extends BaseEntityManagerFunctionalTestCase {
 			this.name = name;
 			this.content = content;
 		}
-
-		//Getters and setters are omitted for brevity
-	//end::collections-customizing-ordered-by-sql-clause-mapping-example[]
 
 		public Long getId() {
 			return id;

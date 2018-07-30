@@ -119,6 +119,8 @@ public class BitSetUserTypeTest extends BaseCoreFunctionalTestCase {
 
 		@Type( type = "bitset" )
 		private BitSet bitSet;
+
+		//Constructors, getters and setters are omitted for brevity
 	//end::basic-custom-type-BitSetUserType-mapping-example[]
 		public Product() {
 		}
@@ -127,7 +129,6 @@ public class BitSetUserTypeTest extends BaseCoreFunctionalTestCase {
 			this.id = id.intValue();
 			this.bitSet = bitSet;
 		}
-	//tag::basic-custom-type-BitSetUserType-mapping-example[]
 
 		public Integer getId() {
 			return id;
@@ -144,6 +145,7 @@ public class BitSetUserTypeTest extends BaseCoreFunctionalTestCase {
 		public void setBitSet(BitSet bitSet) {
 			this.bitSet = bitSet;
 		}
+	//tag::basic-custom-type-BitSetUserType-mapping-example[]
 	}
 	//end::basic-custom-type-BitSetUserType-mapping-example[]
 }

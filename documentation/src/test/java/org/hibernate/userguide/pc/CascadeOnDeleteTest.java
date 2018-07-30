@@ -50,7 +50,7 @@ public class CascadeOnDeleteTest extends BaseEntityManagerFunctionalTestCase {
 		} );
 	}
 
-	//tag::pc-cascade-on-delete-mapping-example[]
+	//tag::pc-cascade-on-delete-mapping-Person-example[]
 	@Entity(name = "Person")
 	public static class Person {
 
@@ -60,7 +60,8 @@ public class CascadeOnDeleteTest extends BaseEntityManagerFunctionalTestCase {
 		private String name;
 		
 		//Getters and setters are omitted for brevity
-	//end::pc-cascade-on-delete-mapping-example[]
+
+	//end::pc-cascade-on-delete-mapping-Person-example[]
 
 		public Long getId() {
 			return id;
@@ -77,9 +78,11 @@ public class CascadeOnDeleteTest extends BaseEntityManagerFunctionalTestCase {
 		public void setName(String name) {
 			this.name = name;
 		}
-	//tag::pc-cascade-on-delete-mapping-example[]
+	//tag::pc-cascade-on-delete-mapping-Person-example[]
 	}
-	
+	//end::pc-cascade-on-delete-mapping-Person-example[]
+
+	//tag::pc-cascade-on-delete-mapping-Phone-example[]
 	@Entity(name = "Phone")
 	public static class Phone {
 
@@ -94,7 +97,8 @@ public class CascadeOnDeleteTest extends BaseEntityManagerFunctionalTestCase {
 		private Person owner;
 
 		//Getters and setters are omitted for brevity
-	//end::pc-cascade-on-delete-mapping-example[]		
+
+	//end::pc-cascade-on-delete-mapping-Phone-example[]
 		
 		public Long getId() {
 			return id;
@@ -119,7 +123,7 @@ public class CascadeOnDeleteTest extends BaseEntityManagerFunctionalTestCase {
 		public void setOwner(Person owner) {
 			this.owner = owner;
 		}
-	//tag::pc-cascade-on-delete-mapping-example[]
+	//tag::pc-cascade-on-delete-mapping-Phone-example[]
 	}
-	//end::pc-cascade-on-delete-mapping-example[]
+	//end::pc-cascade-on-delete-mapping-Phone-example[]
 }

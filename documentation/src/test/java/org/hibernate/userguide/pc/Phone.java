@@ -22,6 +22,9 @@ public class Phone {
     @ManyToOne(fetch = FetchType.LAZY)
     private Person owner;
 
+    //Getters and setters are omitted for brevity
+//end::pc-cascade-domain-model-example[]
+
     public Long getId() {
         return id;
     }
@@ -45,5 +48,6 @@ public class Phone {
     public void setOwner(Person owner) {
         this.owner = owner;
     }
+//tag::pc-cascade-domain-model-example[]
 }
 //end::pc-cascade-domain-model-example[]

@@ -88,6 +88,10 @@ public class BytecodeEnhancementTest extends BaseEntityManagerFunctionalTestCase
 		@LazyGroup( "lobs" )
 		private Blob image;
 
+		//Getters and setters are omitted for brevity
+
+	//end::BytecodeEnhancement-lazy-loading-example[]
+
 		public Integer getId() {
 			return id;
 		}
@@ -119,6 +123,7 @@ public class BytecodeEnhancementTest extends BaseEntityManagerFunctionalTestCase
 		public void setImage(Blob image) {
 			this.image = image;
 		}
+	//tag::BytecodeEnhancement-lazy-loading-example[]
 	}
 	//end::BytecodeEnhancement-lazy-loading-example[]
 
@@ -132,7 +137,11 @@ public class BytecodeEnhancementTest extends BaseEntityManagerFunctionalTestCase
 		private String name;
 
 		@OneToMany(mappedBy = "author")
-		private List<Book> books = new ArrayList<>(  );
+		private List<Book> books = new ArrayList<>();
+
+		//Getters and setters are omitted for brevity
+
+	//end::BytecodeEnhancement-dirty-tracking-bidirectional-example[]
 
 		public Long getId() {
 			return id;
@@ -153,6 +162,7 @@ public class BytecodeEnhancementTest extends BaseEntityManagerFunctionalTestCase
 		public List<Book> getBooks() {
 			return books;
 		}
+	//tag::BytecodeEnhancement-dirty-tracking-bidirectional-example[]
 	}
 
 	@Entity(name = "Book")
@@ -168,6 +178,10 @@ public class BytecodeEnhancementTest extends BaseEntityManagerFunctionalTestCase
 
 		@ManyToOne
 		private Person author;
+
+		//Getters and setters are omitted for brevity
+
+	//end::BytecodeEnhancement-dirty-tracking-bidirectional-example[]
 
 		public Long getId() {
 			return id;
@@ -200,6 +214,7 @@ public class BytecodeEnhancementTest extends BaseEntityManagerFunctionalTestCase
 		public void setIsbn(String isbn) {
 			this.isbn = isbn;
 		}
+	//tag::BytecodeEnhancement-dirty-tracking-bidirectional-example[]
 	}
 	//end::BytecodeEnhancement-dirty-tracking-bidirectional-example[]
 }

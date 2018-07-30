@@ -71,8 +71,13 @@ public class ManyToManyBidirectionalTest extends BaseEntityManagerFunctionalTest
 
 		@NaturalId
 		private String registrationNumber;
+
 		@ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
 		private List<Address> addresses = new ArrayList<>();
+
+		//Getters and setters are omitted for brevity
+
+	//end::associations-many-to-many-bidirectional-example[]
 
 		public Person() {
 		}
@@ -85,6 +90,7 @@ public class ManyToManyBidirectionalTest extends BaseEntityManagerFunctionalTest
 			return addresses;
 		}
 
+	//tag::associations-many-to-many-bidirectional-example[]
 		public void addAddress(Address address) {
 			addresses.add( address );
 			address.getOwners().add( this );
@@ -130,6 +136,10 @@ public class ManyToManyBidirectionalTest extends BaseEntityManagerFunctionalTest
 		@ManyToMany(mappedBy = "addresses")
 		private List<Person> owners = new ArrayList<>();
 
+		//Getters and setters are omitted for brevity
+
+	//end::associations-many-to-many-bidirectional-example[]
+
 		public Address() {
 		}
 
@@ -159,6 +169,7 @@ public class ManyToManyBidirectionalTest extends BaseEntityManagerFunctionalTest
 			return owners;
 		}
 
+	//tag::associations-many-to-many-bidirectional-example[]
 		@Override
 		public boolean equals(Object o) {
 			if ( this == o ) {

@@ -164,8 +164,11 @@ public class JoinColumnOrFormulaTest extends BaseEntityManagerFunctionalTestCase
 			this.country = country;
 		}
 
-		//tag::mapping-JoinColumnOrFormula-example[]
+	//tag::mapping-JoinColumnOrFormula-example[]
 	}
+	//end::mapping-JoinColumnOrFormula-example[]
+
+	//tag::mapping-JoinColumnOrFormula-example[]
 
 	@Entity(name = "Country")
 	@Table(name = "countries")
@@ -180,6 +183,10 @@ public class JoinColumnOrFormulaTest extends BaseEntityManagerFunctionalTestCase
 
 		@Column(name = "is_default")
 		private boolean _default;
+
+		//Getters and setters, equals and hashCode methods omitted for brevity
+
+	//end::mapping-JoinColumnOrFormula-example[]
 
 		public int getId() {
 			return id;
@@ -229,6 +236,7 @@ public class JoinColumnOrFormulaTest extends BaseEntityManagerFunctionalTestCase
 		public int hashCode() {
 			return Objects.hash( getId() );
 		}
+	//tag::mapping-JoinColumnOrFormula-example[]
 	}
 	//end::mapping-JoinColumnOrFormula-example[]
 }

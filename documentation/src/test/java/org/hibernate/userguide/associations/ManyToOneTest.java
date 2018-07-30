@@ -58,8 +58,8 @@ public class ManyToOneTest extends BaseEntityManagerFunctionalTestCase {
 		@GeneratedValue
 		private Long id;
 
-		public Person() {
-		}
+		//Getters and setters are omitted for brevity
+
 	}
 
 	@Entity(name = "Phone")
@@ -77,6 +77,10 @@ public class ManyToOneTest extends BaseEntityManagerFunctionalTestCase {
 				foreignKey = @ForeignKey(name = "PERSON_ID_FK")
 		)
 		private Person person;
+
+		//Getters and setters are omitted for brevity
+
+	//end::associations-many-to-one-example[]
 
 		public Phone() {
 		}
@@ -100,6 +104,7 @@ public class ManyToOneTest extends BaseEntityManagerFunctionalTestCase {
 		public void setPerson(Person person) {
 			this.person = person;
 		}
+	//tag::associations-many-to-one-example[]
 	}
 	//end::associations-many-to-one-example[]
 }

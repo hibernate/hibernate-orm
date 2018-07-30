@@ -164,6 +164,10 @@ public class NonStrictReadWriteCacheTest extends BaseEntityManagerFunctionalTest
 		@Version
 		private int version;
 
+		//Getters and setters are omitted for brevity
+
+	//end::caching-entity-mapping-example[]
+
 		public Phone() {}
 
 		public Phone(String mobile) {
@@ -185,6 +189,7 @@ public class NonStrictReadWriteCacheTest extends BaseEntityManagerFunctionalTest
 		public void setPerson(Person person) {
 			this.person = person;
 		}
+	//tag::caching-entity-mapping-example[]
 	}
 	//end::caching-entity-mapping-example[]
 }

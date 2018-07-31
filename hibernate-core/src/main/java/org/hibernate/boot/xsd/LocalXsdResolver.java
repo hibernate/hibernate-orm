@@ -32,16 +32,21 @@ import org.xml.sax.SAXException;
  */
 @SuppressWarnings("WeakerAccess")
 public class LocalXsdResolver {
-	private static final Logger log = Logger.getLogger( LocalXsdResolver.class );
-
-	private static final List<String> VALID_JPA_VERSIONS = Arrays.asList( "1.0", "2.0", "2.1", "2.2" );
 
 	public static String latestJpaVerison() {
 		return "2.2";
 	}
 
 	public static boolean isValidJpaVersion(String version) {
-		return VALID_JPA_VERSIONS.contains( version );
+		switch ( version ) {
+			case "1.0":
+			case "2.0":
+			case "2.1":
+			case "2.2":
+				return true;
+			default:
+				return false;
+		}
 	}
 
 	public static URL resolveLocalXsdUrl(String resourceName) {
@@ -98,7 +103,7 @@ public class LocalXsdResolver {
 					schemaStream.close();
 				}
 				catch ( IOException e ) {
-					log.debugf( "Problem closing schema stream [%s]", e.toString() );
+					Logger.getLogger( LocalXsdResolver.class ).debugf( "Problem closing schema stream [%s]", e.toString() );
 				}
 			}
 		}

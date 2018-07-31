@@ -10,8 +10,6 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Oracle12cIdentityColumnSupport;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.SQL2008StandardLimitHandler;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.service.ServiceRegistry;
@@ -53,11 +51,6 @@ public class Oracle12cDialect extends Oracle10gDialect {
 	protected void registerDefaultProperties() {
 		super.registerDefaultProperties();
 		getDefaultProperties().setProperty( Environment.USE_GET_GENERATED_KEYS, "true" );
-	}
-
-	@Override
-	public LimitHandler getLimitHandler() {
-		return SQL2008StandardLimitHandler.INSTANCE;
 	}
 
 	@Override

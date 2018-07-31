@@ -54,11 +54,12 @@ public class BatchFetchQueueHelper {
 		}
 		LOG.debug( "Not all entities were loaded." );
 		Set<Serializable> idSet = new HashSet<>( Arrays.asList( ids ) );
+		int originalIdSetSize = idSet.size();
 		for ( Object result : results ) {
 			// All results should be in the PersistenceContext
 			idSet.remove( session.getContextEntityIdentifier( result ) );
 		}
-		assert idSet.size() == ids.length - results.size();
+		assert idSet.size() == originalIdSetSize - results.size();
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debug( "Entities of type [" + persister.getEntityName() + "] not found; IDs: " + idSet );
 		}

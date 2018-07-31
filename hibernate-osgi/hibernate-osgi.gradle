@@ -37,10 +37,6 @@ configurations {
 		description = 'Feature for easily adding Envers support to hibernate-orm'
 		transitive = false
 	}
-	hibernateInfinispan {
-		description = 'Feature for easily adding Infinispan-based caching support to hibernate-orm'
-		transitive = false
-	}
 }
 
 dependencies {
@@ -138,15 +134,7 @@ karaf {
 				version = project.version
 			}
 		}
-		feature {
-			name = 'hibernate-infinispan'
-			description = 'Feature for easily adding Infinispan-based caching support to hibernate-orm'
-			includeProject = false
-			configurations 'hibernateInfinispan'
-			feature('hibernate-orm') {
-				version = project.version
-			}
-		}
+		// The hibernate-infinispan feature is now provided by the Infinispan project.
 	}
 }
 

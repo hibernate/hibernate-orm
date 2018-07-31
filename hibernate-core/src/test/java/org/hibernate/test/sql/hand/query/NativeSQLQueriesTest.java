@@ -31,6 +31,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.transform.BasicTransformerAdapter;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
 import org.hibernate.transform.Transformers;
@@ -42,6 +43,7 @@ import org.hibernate.type.TimestampType;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.sql.hand.Dimension;
 import org.hibernate.test.sql.hand.Employment;
@@ -53,6 +55,7 @@ import org.hibernate.test.sql.hand.Person;
 import org.hibernate.test.sql.hand.Product;
 import org.hibernate.test.sql.hand.SpaceShip;
 import org.hibernate.test.sql.hand.Speech;
+import org.hibernate.test.sql.hand.SpeechInterface;
 import org.hibernate.test.sql.hand.TextHolder;
 import org.junit.Test;
 
@@ -738,6 +741,48 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		s.delete( jboss );
 		s.delete( me );
 		s.getTransaction().commit();
+		s.close();
+	}
+	
+	@Test
+	@TestForIssue(jiraKey="HHH-12870")
+	public void testExplicitAddEntity() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		Speech speech = new Speech();
+		speech.setLength( new Double( 23d ) );
+		speech.setName( "Mine" );
+		s.persist( speech );
+		s.flush();
+		s.clear();
+
+		NativeQuery<Speech> query = s.createNativeQuery( "select {s.*} from Speech s", Speech.class );
+		query.addEntity("s", Speech.class);
+		List<Speech> l = query.list();
+		assertEquals( l.size(), 1 );
+
+		t.rollback();
+		s.close();
+	}
+	
+	@Test
+	@TestForIssue(jiraKey="HHH-12870")
+	public void testInterfaceReturnType() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		Speech speech = new Speech();
+		speech.setLength( new Double( 23d ) );
+		speech.setName( "Mine" );
+		s.persist( speech );
+		s.flush();
+		s.clear();
+
+		NativeQuery<SpeechInterface> query = s.createNativeQuery( "select {s.*} from Speech s", SpeechInterface.class );
+		query.addEntity("s", Speech.class);
+		List<SpeechInterface> l = query.list();
+		assertEquals( l.size(), 1 );
+
+		t.rollback();
 		s.close();
 	}
 

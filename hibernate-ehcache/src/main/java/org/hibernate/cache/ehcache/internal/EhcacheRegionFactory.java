@@ -283,7 +283,9 @@ public class EhcacheRegionFactory extends RegionFactoryTemplate {
 	 * Load a resource from the classpath.
 	 */
 	protected URL loadResource(String configurationResourceName) {
-		if ( ! isStarted() ) {
+		// we use this method to create the cache manager so we can't check it is non null
+		// calling the super method then
+		if ( ! super.isStarted() ) {
 			throw new IllegalStateException( "Cannot load resource through a non-started EhcacheRegionFactory" );
 		}
 

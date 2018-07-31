@@ -40,12 +40,12 @@ public class ParameterTest extends BaseEntityManagerFunctionalTestCase {
 		CriteriaQuery<MultiTypedBasicAttributesEntity> criteria = em.getCriteriaBuilder()
 				.createQuery( MultiTypedBasicAttributesEntity.class );
 		Root<MultiTypedBasicAttributesEntity> rootEntity = criteria.from( MultiTypedBasicAttributesEntity.class );
-		Path<byte[]> someBytesPath = rootEntity.get( MultiTypedBasicAttributesEntity_.someBytes );
-		ParameterExpression<byte[]> param = em.getCriteriaBuilder().parameter( byte[].class, "theBytes" );
-		criteria.where( em.getCriteriaBuilder().equal( someBytesPath, param ) );
+		Path<int[]> someIntsPath = rootEntity.get( MultiTypedBasicAttributesEntity_.someInts );
+		ParameterExpression<int[]> param = em.getCriteriaBuilder().parameter( int[].class, "theInts" );
+		criteria.where( em.getCriteriaBuilder().equal( someIntsPath, param ) );
 		TypedQuery<MultiTypedBasicAttributesEntity> query = em.createQuery( criteria );
-		query.setParameter( param, new byte[] { 1,1,1 } );
-		assertThat( query.getParameterValue( param.getName() ), instanceOf( byte[].class) );
+		query.setParameter( param, new int[] { 1,1,1 } );
+		assertThat( query.getParameterValue( param.getName() ), instanceOf( int[].class) );
 		query.getResultList();
 		em.getTransaction().commit();
 		em.close();
@@ -58,12 +58,12 @@ public class ParameterTest extends BaseEntityManagerFunctionalTestCase {
 		CriteriaQuery<MultiTypedBasicAttributesEntity> criteria = em.getCriteriaBuilder()
 				.createQuery( MultiTypedBasicAttributesEntity.class );
 		Root<MultiTypedBasicAttributesEntity> rootEntity = criteria.from( MultiTypedBasicAttributesEntity.class );
-		Path<Byte[]> thePath = rootEntity.get( MultiTypedBasicAttributesEntity_.someWrappedBytes );
-		ParameterExpression<Byte[]> param = em.getCriteriaBuilder().parameter( Byte[].class, "theBytes" );
+		Path<Integer[]> thePath = rootEntity.get( MultiTypedBasicAttributesEntity_.someWrappedIntegers );
+		ParameterExpression<Integer[]> param = em.getCriteriaBuilder().parameter( Integer[].class, "theIntegers" );
 		criteria.where( em.getCriteriaBuilder().equal( thePath, param ) );
 		TypedQuery<MultiTypedBasicAttributesEntity> query = em.createQuery( criteria );
-		query.setParameter( param, new Byte[] { Byte.valueOf((byte)1), Byte.valueOf((byte)1), Byte.valueOf((byte)1) } );
-		assertThat( query.getParameterValue( param.getName() ), instanceOf( Byte[].class ) );
+		query.setParameter( param, new Integer[] { Integer.valueOf(1), Integer.valueOf(1), Integer.valueOf(1) } );
+		assertThat( query.getParameterValue( param.getName() ), instanceOf( Integer[].class ) );
 		query.getResultList();
 		em.getTransaction().commit();
 		em.close();

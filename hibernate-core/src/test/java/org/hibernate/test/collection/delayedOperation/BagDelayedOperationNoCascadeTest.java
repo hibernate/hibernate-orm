@@ -24,7 +24,6 @@ import org.junit.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.collection.internal.AbstractPersistentCollection;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -168,19 +167,19 @@ public class BagDelayedOperationNoCascadeTest extends BaseCoreFunctionalTestCase
 		s = openSession();
 		s.getTransaction().begin();
 		p = (Parent) s.merge( p );
-		// after merging, p#children will be initialized
+		// after merging, p#children will be uninitialized
 		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 		assertTrue( ( (AbstractPersistentCollection) p.getChildren() ).hasQueuedOperations() );
 		s.getTransaction().commit();
 		assertFalse( ( (AbstractPersistentCollection) p.getChildren() ).hasQueuedOperations() );
 		s.close();
 
-		// Merge detached Parent, now with uninitialized children and queued operations
+		// Merge detached Parent, now with uninitialized children no queued operations
 		s = openSession();
 		s.getTransaction().begin();
 		p = (Parent) s.merge( p );
 		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		assertFalse( ( ( AbstractPersistentCollection) p.getChildren() ).hasQueuedOperations() );
+		assertFalse( ( (AbstractPersistentCollection) p.getChildren() ).hasQueuedOperations() );
 		s.getTransaction().commit();
 		s.close();
 	}

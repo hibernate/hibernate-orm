@@ -13,18 +13,19 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Root;
 
-import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
-import org.hibernate.jpa.test.metamodel.LineItem;
-import org.hibernate.jpa.test.metamodel.LineItem_;
-import org.hibernate.jpa.test.metamodel.Order;
-import org.hibernate.jpa.test.metamodel.Order_;
-
+import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.junit.Test;
 
 /**
  * @author Steve Ebersole
  */
-public class ImplicitJoinTest extends AbstractMetamodelSpecificTest {
+public class ImplicitJoinTest extends BaseEntityManagerFunctionalTestCase {
+
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] { Order.class, LineItem.class };
+	}
+
 	@Test
 	public void testImplicitJoinFromExplicitCollectionJoin() {
 		EntityManager em = getOrCreateEntityManager();

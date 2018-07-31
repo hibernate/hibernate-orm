@@ -61,6 +61,7 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.InterbaseDialect;
 import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.Oracle12cDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PointbaseDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
@@ -1646,7 +1647,7 @@ public class FooBarTest extends LegacyTestCase {
 			count++;
 		}
 		assertEquals(4, count);
-		iter = s.createQuery("select distinct foo from Foo foo")
+		iter = s.createQuery("select foo from Foo foo")
 			.setMaxResults(2)
 			.setFirstResult(2)
 			.list()
@@ -1657,7 +1658,7 @@ public class FooBarTest extends LegacyTestCase {
 			count++;
 		}
 		assertTrue(count==2);
-		iter = s.createQuery("select distinct foo from Foo foo")
+		iter = s.createQuery("select foo from Foo foo")
 		.setMaxResults(3)
 		.list()
 		.iterator();
@@ -2514,7 +2515,9 @@ public class FooBarTest extends LegacyTestCase {
 			).list();
 			assertTrue( "collection.elements find", list.size()==2 );
 		}
-		if (!(getDialect() instanceof SAPDBDialect) ) { // SAPDB doesn't like distinct with binary type
+		// SAPDB doesn't like distinct with binary type
+		// Oracle12cDialect stores binary types as blobs and do no support distinct on blobs
+		if ( !(getDialect() instanceof SAPDBDialect) && !(getDialect() instanceof Oracle12cDialect) ) {
 			List list = s.createQuery( "select distinct foo from Baz baz join baz.fooArray foo" ).list();
 			assertTrue( "collection.elements find", list.size()==2 );
 		}

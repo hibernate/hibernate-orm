@@ -163,7 +163,7 @@ public class StandardDialectResolverTest extends BaseUnitTestCase {
 			Class<? extends Dialect> expectedDialect) {
 		TestingDialectResolutionInfo info = TestingDialectResolutionInfo.forDatabaseInfo( productName, driverName, majorVersion, minorVersion );
 
-		Dialect dialect = StandardDialectResolver.INSTANCE.resolveDialect( info );
+		Dialect dialect = new StandardDialectResolver().resolveDialect( info );
 
 		StringBuilder builder = new StringBuilder( productName ).append( " " )
 				.append( majorVersion );

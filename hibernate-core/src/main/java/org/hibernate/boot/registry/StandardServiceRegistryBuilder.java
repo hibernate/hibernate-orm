@@ -94,7 +94,7 @@ public class StandardServiceRegistryBuilder {
 	 * @return List of standard initiators
 	 */
 	private static List<StandardServiceInitiator> standardInitiatorList() {
-		final List<StandardServiceInitiator> initiators = new ArrayList<StandardServiceInitiator>();
+		final List<StandardServiceInitiator> initiators = new ArrayList<StandardServiceInitiator>( StandardServiceInitiators.LIST.size() );
 		initiators.addAll( StandardServiceInitiators.LIST );
 		return initiators;
 	}

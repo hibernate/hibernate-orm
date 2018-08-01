@@ -39,7 +39,7 @@ public class DialectResolverInitiator implements StandardServiceInitiator<Dialec
 		final DialectResolverSet resolver = new DialectResolverSet();
 
 		applyCustomerResolvers( resolver, registry, configurationValues );
-		resolver.addResolver(StandardDialectResolver.INSTANCE );
+		resolver.addResolver( new StandardDialectResolver() );
 
 		return resolver;
 	}

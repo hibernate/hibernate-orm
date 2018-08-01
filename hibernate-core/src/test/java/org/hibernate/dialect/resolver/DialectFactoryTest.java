@@ -105,7 +105,7 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 
 	@Test
 	public void testPreregisteredDialects() {
-		DialectResolver resolver = StandardDialectResolver.INSTANCE;
+		DialectResolver resolver = new StandardDialectResolver();
 		testDetermination( "HSQL Database Engine", HSQLDialect.class, resolver );
 		testDetermination( "H2", H2Dialect.class, resolver );
 		testDetermination( "MySQL", MySQLDialect.class, resolver );

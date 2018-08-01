@@ -49,7 +49,7 @@ public final class StandardServiceInitiators {
 	public static List<StandardServiceInitiator> LIST = buildStandardServiceInitiatorList();
 
 	private static List<StandardServiceInitiator> buildStandardServiceInitiatorList() {
-		final List<StandardServiceInitiator> serviceInitiators = new ArrayList<StandardServiceInitiator>();
+		final ArrayList<StandardServiceInitiator> serviceInitiators = new ArrayList<StandardServiceInitiator>();
 
 		serviceInitiators.add( CfgXmlAccessServiceInitiator.INSTANCE );
 		serviceInitiators.add( ConfigurationServiceInitiator.INSTANCE );
@@ -86,6 +86,8 @@ public final class StandardServiceInitiators {
 		serviceInitiators.add( TransactionCoordinatorBuilderInitiator.INSTANCE );
 
 		serviceInitiators.add( ManagedBeanRegistryInitiator.INSTANCE );
+
+		serviceInitiators.trimToSize();
 
 		return Collections.unmodifiableList( serviceInitiators );
 	}

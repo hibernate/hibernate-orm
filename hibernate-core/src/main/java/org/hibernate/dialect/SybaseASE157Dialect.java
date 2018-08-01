@@ -12,6 +12,8 @@ import java.util.Map;
 import org.hibernate.JDBCException;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.SybaseASE157LimitHandler;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -26,6 +28,8 @@ import org.hibernate.type.StandardBasicTypes;
  * @author Junyan Ren
  */
 public class SybaseASE157Dialect extends SybaseASE15Dialect {
+
+	private static final SybaseASE157LimitHandler LIMIT_HANDLER = new SybaseASE157LimitHandler();
 
 	/**
 	 * Constructs a SybaseASE157Dialect
@@ -101,5 +105,20 @@ public class SybaseASE157Dialect extends SybaseASE15Dialect {
 				return null;
 			}
 		};
+	}
+
+	@Override
+	public boolean supportsLimit() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsLimitOffset() {
+		return false;
+	}
+
+	@Override
+	public LimitHandler getLimitHandler() {
+		return LIMIT_HANDLER;
 	}
 }

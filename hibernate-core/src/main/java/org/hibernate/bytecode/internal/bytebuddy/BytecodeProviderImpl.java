@@ -18,6 +18,7 @@ import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
+import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyHelper;
 
 import net.bytebuddy.NamingStrategy;
 import net.bytebuddy.description.method.MethodDescription;
@@ -37,7 +38,6 @@ import net.bytebuddy.matcher.ElementMatchers;
 
 public class BytecodeProviderImpl implements BytecodeProvider {
 
-	private static final ByteBuddyState bytebuddy = new ByteBuddyState();
 	private static final String INSTANTIATOR_PROXY_NAMING_SUFFIX = "HibernateInstantiator";
 	private static final String OPTIMIZER_PROXY_NAMING_SUFFIX = "HibernateAccessOptimizer";
 	private static final ElementMatcher.Junction newInstanceMethodName = ElementMatchers.named( "newInstance" );
@@ -45,9 +45,18 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 	private static final ElementMatcher.Junction setPropertyValuesMethodName = ElementMatchers.named( "setPropertyValues" );
 	private static final ElementMatcher.Junction getPropertyNamesMethodName = ElementMatchers.named( "getPropertyNames" );
 
+	private final ByteBuddyState byteBuddyState;
+
+	private final ByteBuddyProxyHelper byteBuddyProxyHelper;
+
+	public BytecodeProviderImpl() {
+		this.byteBuddyState = new ByteBuddyState();
+		this.byteBuddyProxyHelper = new ByteBuddyProxyHelper( byteBuddyState );
+	}
+
 	@Override
 	public ProxyFactoryFactory getProxyFactoryFactory() {
-		return new ProxyFactoryFactoryImpl( bytebuddy );
+		return new ProxyFactoryFactoryImpl( byteBuddyState, byteBuddyProxyHelper );
 	}
 
 	@Override
@@ -61,15 +70,13 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			// we only provide a fast class instantiator if the class can be instantiated
 			final Constructor<?> constructor = findConstructor( clazz );
 
-			fastClass = bytebuddy.getCurrentyByteBuddy()
+			fastClass = byteBuddyState.load( clazz, byteBuddy -> byteBuddy
 					.with( new NamingStrategy.SuffixingRandom( INSTANTIATOR_PROXY_NAMING_SUFFIX,
 							new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( clazz.getName() ) ) )
 					.subclass( ReflectionOptimizer.InstantiationOptimizer.class )
 					.method( newInstanceMethodName )
 							.intercept( MethodCall.construct( constructor ) )
-					.make()
-					.load( clazz.getClassLoader(), ByteBuddyState.resolveClassLoadingStrategy( clazz ) )
-					.getLoaded();
+			);
 		}
 		else {
 			fastClass = null;
@@ -79,7 +86,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		final Method[] setters = new Method[setterNames.length];
 		findAccessors( clazz, getterNames, setterNames, types, getters, setters );
 
-		final Class bulkAccessor = bytebuddy.getCurrentyByteBuddy()
+		final Class bulkAccessor = byteBuddyState.load( clazz, byteBuddy -> byteBuddy
 				.with( new NamingStrategy.SuffixingRandom( OPTIMIZER_PROXY_NAMING_SUFFIX,
 						new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( clazz.getName() ) ) )
 				.subclass( ReflectionOptimizer.AccessOptimizer.class )
@@ -89,9 +96,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 						.intercept( new Implementation.Simple( new SetPropertyValues( clazz, setters ) ) )
 				.method( getPropertyNamesMethodName )
 						.intercept( MethodCall.call( new CloningPropertyCall( getterNames ) ) )
-				.make()
-				.load( clazz.getClassLoader(), ByteBuddyState.resolveClassLoadingStrategy( clazz ) )
-				.getLoaded();
+		);
 
 		try {
 			return new ReflectionOptimizerImpl(
@@ -102,6 +107,10 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		catch (Exception exception) {
 			throw new HibernateException( exception );
 		}
+	}
+
+	public ByteBuddyProxyHelper getByteBuddyProxyHelper() {
+		return byteBuddyProxyHelper;
 	}
 
 	private static class GetPropertyValues implements ByteCodeAppender {
@@ -271,11 +280,12 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 
 	@Override
 	public Enhancer getEnhancer(EnhancementContext enhancementContext) {
-		return new EnhancerImpl( enhancementContext, bytebuddy );
+		return new EnhancerImpl( enhancementContext, byteBuddyState );
 	}
 
+	@Override
 	public void resetCaches() {
-		bytebuddy.clearState();
+		byteBuddyState.clearState();
 	}
 
 }

@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.Hibernate;
+import org.hibernate.Session;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -17,7 +18,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
@@ -34,8 +34,9 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 
 	@Before
 	public void setup() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 					session.createSQLQuery( "DROP TABLE MAIN_TABLE" ).executeUpdate();
 					session.createSQLQuery( "DROP TABLE ASSOCIATION_TABLE" ).executeUpdate();
 					session.createSQLQuery( "DROP TABLE MATERIAL_RATINGS" ).executeUpdate();
@@ -138,29 +139,33 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 					session.createSQLQuery(
 							"insert into BUILDING_RATINGS(BUILDING_ID, RATING_ID) VALUES( 1, 2 )"
 					).executeUpdate();
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@After
 	public void cleanup() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 					session.createSQLQuery( "delete from MATERIAL_RATINGS" ).executeUpdate();
 					session.createSQLQuery( "delete from BUILDING_RATINGS" ).executeUpdate();
 					session.createSQLQuery( "delete from ASSOCIATION_TABLE" ).executeUpdate();
 					session.createSQLQuery( "delete from MAIN_TABLE" ).executeUpdate();
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12875")
 	public void testInitializeFromUniqueAssociationTable() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 
-					Material material = session.get( Material.class, 1 );
+					Material material = (Material) session.get( Material.class, 1 );
 					assertEquals( "plastic", material.getName() );
 
 					// Material#ratings is mapped with lazy="true"
@@ -171,7 +176,7 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 					final Rating rating = material.getRatings().iterator().next();
 					assertEquals( "high", rating.getName() );
 
-					Building building = session.get( Building.class, 1 );
+					Building building = (Building) session.get( Building.class, 1 );
 					assertEquals( "house", building.getName() );
 
 					// Building#ratings is mapped with lazy="true"
@@ -179,17 +184,18 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 					assertEquals( 1, building.getRatings().size() );
 					assertTrue( Hibernate.isInitialized( building.getRatings() ) );
 					assertSame( rating, building.getRatings().iterator().next() );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12875")
 	public void testInitializeFromNonUniqueAssociationTable() {
-		doInHibernate(
-				this::sessionFactory, session -> {
-
-					Material material = session.get( Material.class, 1 );
+		Session session = openSession();
+		session.beginTransaction();
+		{
+					Material material = (Material) session.get( Material.class, 1 );
 					assertEquals( "plastic", material.getName() );
 
 					// Material#ratingsFromCombined is mapped with lazy="true"
@@ -208,7 +214,7 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 					final Size size = material.getSizesFromCombined().iterator().next();
 					assertEquals( "small", size.getName() );
 
-					Building building = session.get( Building.class, 1 );
+					Building building = (Building) session.get( Building.class, 1 );
 
 					// building.ratingsFromCombined is mapped with lazy="true"
 					assertFalse( Hibernate.isInitialized( building.getRatingsFromCombined() ) );
@@ -221,8 +227,9 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 					assertEquals( 1, building.getSizesFromCombined().size() );
 					assertTrue( Hibernate.isInitialized( building.getSizesFromCombined() ) );
 					assertSame( size, building.getSizesFromCombined().iterator().next() );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	public static class Material {

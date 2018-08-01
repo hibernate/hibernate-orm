@@ -26,8 +26,8 @@ public class MultiTypedBasicAttributesEntity {
 	@GeneratedValue( generator = "increment" )
 	@GenericGenerator( name = "increment", strategy = "increment" )
 	private Long id;
-	private byte[] someBytes;
-	private Byte[] someWrappedBytes;
+	private int[] someInts;
+	private Integer[] someWrappedIntegers;
 
 	public Long getId() {
 		return id;
@@ -37,19 +37,19 @@ public class MultiTypedBasicAttributesEntity {
 		this.id = id;
 	}
 
-	public byte[] getSomeBytes() {
-		return someBytes;
+	public int[] getSomeInts() {
+		return someInts;
 	}
 
-	public void setSomeBytes(byte[] someBytes) {
-		this.someBytes = someBytes;
+	public void setSomeInts(int[] someInts) {
+		this.someInts = someInts;
 	}
 
-	public Byte[] getSomeWrappedBytes() {
-		return someWrappedBytes;
+	public Integer[] getSomeWrappedIntegers() {
+		return someWrappedIntegers;
 	}
 
-	public void setSomeWrappedBytes(Byte[] someWrappedBytes) {
-		this.someWrappedBytes = someWrappedBytes;
+	public void setSomeWrappedIntegers(Integer[] someWrappedIntegers) {
+		this.someWrappedIntegers = someWrappedIntegers;
 	}
 }

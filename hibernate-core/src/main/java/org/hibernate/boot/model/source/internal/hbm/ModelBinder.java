@@ -3588,7 +3588,20 @@ public class ModelBinder {
 
 				getCollectionBinding().setElement( elementBinding );
 
-				getCollectionBinding().setManyToManyWhere( elementSource.getWhere() );
+				final StringBuilder whereBuffer = new StringBuilder();
+				final PersistentClass referencedEntityBinding = mappingDocument.getMetadataCollector()
+						.getEntityBinding( elementSource.getReferencedEntityName() );
+				if ( StringHelper.isNotEmpty( referencedEntityBinding.getWhere() ) ) {
+					whereBuffer.append( referencedEntityBinding.getWhere() );
+				}
+				if ( StringHelper.isNotEmpty( elementSource.getWhere() ) ) {
+					if ( whereBuffer.length() > 0 ) {
+						whereBuffer.append( " and " );
+					}
+					whereBuffer.append( elementSource.getWhere() );
+				}
+				getCollectionBinding().setManyToManyWhere( whereBuffer.toString() );
+
 				getCollectionBinding().setManyToManyOrdering( elementSource.getOrder() );
 
 				if ( !CollectionHelper.isEmpty( elementSource.getFilterSources() )

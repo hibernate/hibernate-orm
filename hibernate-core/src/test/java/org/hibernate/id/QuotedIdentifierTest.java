@@ -13,39 +13,37 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
+import org.hibernate.dialect.Oracle12cDialect;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Vlad Mihalcea
  */
 @RequiresDialectFeature( value = DialectChecks.SupportsIdentityColumns.class, jiraKey = "HHH-9271")
+@SkipForDialect(value = Oracle12cDialect.class, comment = "Oracle and identity column: java.sql.Connection#prepareStatement(String sql, int columnIndexes[]) does not work with quoted table names and/or quoted columnIndexes")
 public class QuotedIdentifierTest extends BaseCoreFunctionalTestCase {
 
 	@Test
-	public void testDirectIdPropertyAccess() throws Exception {
-		Session s = openSession();
-		Transaction transaction = s.beginTransaction();
-		QuotedIdentifier o = new QuotedIdentifier();
-		o.timestamp = System.currentTimeMillis();
-		o.from = "HHH-9271";
-		s.persist( o );
-		transaction.commit();
-		s.close();
+	public void testDirectIdPropertyAccess() {
+		QuotedIdentifier quotedIdentifier = new QuotedIdentifier();
+		doInHibernate( this::sessionFactory, session -> {
+			quotedIdentifier.timestamp = System.currentTimeMillis();
+			quotedIdentifier.from = "HHH-9271";
+			session.persist( quotedIdentifier );
+		} );
 
-		s = openSession();
-		transaction = s.beginTransaction();
-		o = session.get( QuotedIdentifier.class, o.index );
-		assertNotNull(o);
-		transaction.commit();
-		s.close();
+		doInHibernate( this::sessionFactory, session -> {
+			QuotedIdentifier result = session.get( QuotedIdentifier.class, quotedIdentifier.index );
+			assertNotNull( result );
+		} );
 	}
 
 	@Override

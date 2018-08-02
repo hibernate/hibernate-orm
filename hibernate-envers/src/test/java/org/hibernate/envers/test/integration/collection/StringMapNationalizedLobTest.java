@@ -19,6 +19,7 @@ import org.hibernate.annotations.Nationalized;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
@@ -38,6 +39,7 @@ import static org.junit.Assert.assertEquals;
 @SkipForDialect(Oracle8iDialect.class)
 @SkipForDialect(value = PostgreSQL81Dialect.class, jiraKey = "HHH-11477", comment = "@Lob field in HQL predicate fails with error about text = bigint")
 @SkipForDialect(value = AbstractHANADialect.class, comment = "HANA doesn't support comparing LOBs with the = operator")
+@SkipForDialect(value = SybaseDialect.class, comment = "Sybase doesn't support comparing LOBs with the = operator")
 public class StringMapNationalizedLobTest extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

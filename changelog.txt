@@ -4,6 +4,38 @@ Hibernate 5 Changelog
 Note: Please refer to JIRA to learn more about each issue.
 
 
+Changes in 5.3.4.final (August 2nd, 2018)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31688/tab/release-report-done
+
+** Bug
+    * [HHH-10603] - ORA-00932: inconsistent datatypes: expected - got BLOB after HHH-10345 with Oracle12cDialect
+    * [HHH-12492] - JPA delete query generated has missing table alias and thus incorrect semantics 
+    * [HHH-12834] - org.hibernate.envers.test.integration.collection.StringMapNationalizedLobTest fails with Sybase
+    * [HHH-12835] - Wrong assertion in BatchFetchQueueHelper
+    * [HHH-12846] - Merge cascade of collection fails when orphan removal enabled with flush mode commit
+    * [HHH-12847] - NullPointerException in FetchStyleLoadPlanBuildingAssociationVisitationStrategy::adjustJoinFetchIfNeeded
+    * [HHH-12848] - UpgradeSkipLockedTest, PessimisticReadSkipLockedTest and OracleFollowOnLockingTest fail with Oracle12c
+    * [HHH-12849] - QuotedIdentifierTest fails with ORA-04043 on Oracle12c
+    * [HHH-12851] - ConverterTest fails with SQL Server depending on collation
+    * [HHH-12861] - SchemaUpdate doesn't work with Sybase
+    * [HHH-12863] - SchemaUpdateTest should be skipped with Sybase
+    * [HHH-12868] - Using CacheConcurrencyStrategy.NONE leads to a NPE when trying to load an entity
+    * [HHH-12869] - SingletonEhcacheRegionFactory initialization fails
+    * [HHH-12880] - LockModeTest hangs indefinitely with Sybase due to HHH-12847
+
+** New Feature
+    * [HHH-12608] - Add the ST_DWithin() function  in DB2 Spatial Dialect
+    * [HHH-12857] - Support the security manager with ByteBuddy as bytecode provider
+
+** Task
+    * [HHH-12730] - User types built using 5.1 are not binary compatible with 5.3
+    * [HHH-12792] - Document binary incompatibility of persisters and tuplizers
+    * [HHH-12877] - Upgrade ByteBuddy to 1.8.15
+
+
+
 Changes in 5.3.3.final (July 23, 2018)
 ------------------------------------------------------------------------------------------------------------------------
 

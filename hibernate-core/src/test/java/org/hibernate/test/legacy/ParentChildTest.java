@@ -519,11 +519,11 @@ public class ParentChildTest extends LegacyTestCase {
 		s.delete( s.get( Part.class, p1.getId() ));
 		// p2.description does not satisfy the condition on Part mapping, so it's not possible to retrieve it
 		// using Session#get; instead just delete using a native query
-		s.createNativeQuery( "delete from baz_moreParts where baz = :baz AND part = :part" )
+		s.createSQLQuery( "delete from baz_moreParts where baz = :baz AND part = :part" )
 				.setParameter( "baz", baz.getCode() )
 				.setParameter( "part", p2.getId() )
 				.executeUpdate();
-		s.createNativeQuery( "delete from Part where id = :id" ).setParameter( "id", p2.getId() ).executeUpdate();
+		s.createSQLQuery( "delete from Part where id = :id" ).setParameter( "id", p2.getId() ).executeUpdate();
 		s.delete(baz);
 		t.commit();
 		s.close();

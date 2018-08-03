@@ -4,14 +4,15 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.where;
+package org.hibernate.test.where.hbm;
 
 import org.junit.Test;
 
 import org.hibernate.FetchMode;
-import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import org.hibernate.test.where.hbm.File;
 
 import static org.junit.Assert.assertEquals;
 
@@ -20,7 +21,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class WhereTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
-		return new String[] { "where/File.hbm.xml" };
+		return new String[] { "where/hbm/File.hbm.xml" };
 	}
 
 	@Test

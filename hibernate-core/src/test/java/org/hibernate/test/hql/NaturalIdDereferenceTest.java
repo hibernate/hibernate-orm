@@ -246,12 +246,34 @@ public class NaturalIdDereferenceTest extends BaseCoreFunctionalTestCase {
 		int count = 0;
 
 		while ( lastIndex != -1 ) {
-
 			lastIndex = sqlQuery.indexOf( " join ", lastIndex );
 
 			if ( lastIndex != -1 ) {
 				count++;
 				lastIndex += " join ".length();
+			}
+		}
+
+		// we also have to deal with different cross join operators: in the case of Sybase, it's ", "
+		String crossJoinOperator = getDialect().getCrossJoinSeparator();
+
+		if ( !crossJoinOperator.contains( " join " ) ) {
+			int fromIndex = sqlQuery.indexOf( " from " );
+			if ( fromIndex == -1 ) {
+				return count;
+			}
+
+			int whereIndex = sqlQuery.indexOf( " where " );
+			lastIndex = fromIndex + " from ".length();
+			int endIndex = whereIndex > 0 ? whereIndex : sqlQuery.length();
+
+			while ( lastIndex != -1 && lastIndex <= endIndex ) {
+				lastIndex = sqlQuery.indexOf( crossJoinOperator, lastIndex );
+
+				if ( lastIndex != -1 ) {
+					count++;
+					lastIndex += crossJoinOperator.length();
+				}
 			}
 		}
 

@@ -6,7 +6,7 @@
  */
 
 //$Id: File.java 8043 2005-08-30 15:20:42Z oneovthafew $
-package org.hibernate.test.where;
+package org.hibernate.test.where.hbm;
 import java.util.Set;
 
 public class File {

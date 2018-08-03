@@ -945,36 +945,27 @@ public abstract class CollectionBinder {
 			}
 		}
 
-		StringBuilder whereBuffer = new StringBuilder();
+		String whereOnClassClause = null;
 		if ( property.getElementClass() != null ) {
 			Where whereOnClass = property.getElementClass().getAnnotation( Where.class );
 			if ( whereOnClass != null ) {
-				String clause = whereOnClass.clause();
-				if ( StringHelper.isNotEmpty( clause ) ) {
-					whereBuffer.append( clause );
-				}
+				whereOnClassClause = whereOnClass.clause();
 			}
 		}
 		Where whereOnCollection = property.getAnnotation( Where.class );
+		String whereOnCollectionClause = null;
 		if ( whereOnCollection != null ) {
-			String clause = whereOnCollection.clause();
-			if ( StringHelper.isNotEmpty( clause ) ) {
-				if ( whereBuffer.length() > 0 ) {
-					whereBuffer.append( StringHelper.WHITESPACE );
-					whereBuffer.append( Junction.Nature.AND.getOperator() );
-					whereBuffer.append( StringHelper.WHITESPACE );
-				}
-				whereBuffer.append( clause );
-			}
+			whereOnCollectionClause = whereOnCollection.clause();
 		}
-		if ( whereBuffer.length() > 0 ) {
-			String whereClause = whereBuffer.toString();
-			if ( hasAssociationTable ) {
-				collection.setManyToManyWhere( whereClause );
-			}
-			else {
-				collection.setWhere( whereClause );
-			}
+		final String whereClause = StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty(
+				whereOnClassClause,
+				whereOnCollectionClause
+		);
+		if ( hasAssociationTable ) {
+			collection.setManyToManyWhere( whereClause );
+		}
+		else {
+			collection.setWhere( whereClause );
 		}
 
 		WhereJoinTable whereJoinTable = property.getAnnotation( WhereJoinTable.class );

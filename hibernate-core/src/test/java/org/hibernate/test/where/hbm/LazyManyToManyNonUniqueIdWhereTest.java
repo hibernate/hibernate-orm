@@ -4,9 +4,12 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.where;
+package org.hibernate.test.where.hbm;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import org.hibernate.Hibernate;
@@ -20,22 +23,25 @@ import org.junit.Test;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Gail Badner
  */
-public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunctionalTestCase {
+public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCase {
 
 	protected String[] getMappings() {
-		return new String[] { "where/LazyManyToManyNonUniqueIdNotFoundWhereTest.hbm.xml" };
+		return new String[] { "where/hbm/LazyManyToManyNonUniqueIdWhereTest.hbm.xml" };
 	}
 
 	@Before
 	public void setup() {
 		doInHibernate(
 				this::sessionFactory, session -> {
+
 					session.createSQLQuery( "DROP TABLE MAIN_TABLE" ).executeUpdate();
 					session.createSQLQuery( "DROP TABLE ASSOCIATION_TABLE" ).executeUpdate();
 					session.createSQLQuery( "DROP TABLE MATERIAL_RATINGS" ).executeUpdate();
@@ -53,7 +59,13 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 							.executeUpdate();
 					session.createSQLQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'high', 'RATING' )" )
 							.executeUpdate();
+					session.createSQLQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 2, 'medium', 'RATING' )" )
+							.executeUpdate();
+					session.createSQLQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 3, 'low', 'RATING' )" )
+							.executeUpdate();
 					session.createSQLQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'small', 'SIZE' )" )
+							.executeUpdate();
+					session.createSQLQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 2, 'medium', 'SIZE' )" )
 							.executeUpdate();
 
 					session.createSQLQuery(
@@ -67,19 +79,15 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 							"insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
 									"VALUES( 1, 'MATERIAL', 1, 'RATING' )"
 					).executeUpdate();
-
-					// add a collection element that won't be found
 					session.createSQLQuery(
 							"insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
 									"VALUES( 1, 'MATERIAL', 2, 'RATING' )"
 					).executeUpdate();
-
 					session.createSQLQuery(
 							"insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
-									"VALUES( 1, 'MATERIAL', 1, 'SIZE' )"
+									"VALUES( 1, 'MATERIAL', 3, 'RATING' )"
 					).executeUpdate();
 
-					// add a collection element that won't be found
 					session.createSQLQuery(
 							"insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
 									"VALUES( 1, 'MATERIAL', 2, 'SIZE' )"
@@ -90,23 +98,11 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 									"VALUES( 1, 'BUILDING', 1, 'RATING' )"
 					).executeUpdate();
 
-					// add a collection element that won't be found
-					session.createSQLQuery(
-							"insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
-									"VALUES( 1, 'BUILDING', 2, 'RATING' )"
-					).executeUpdate();
-
-
 					session.createSQLQuery(
 							"insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
 									"VALUES( 1, 'BUILDING', 1, 'SIZE' )"
 					).executeUpdate();
 
-					// add a collection element that won't be found
-					session.createSQLQuery(
-							"insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
-									"VALUES( 1, 'BUILDING', 2, 'SIZE' )"
-					).executeUpdate();
 
 					session.createSQLQuery(
 							"create table MATERIAL_RATINGS( " +
@@ -118,12 +114,6 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 							"insert into MATERIAL_RATINGS(MATERIAL_ID, RATING_ID) VALUES( 1, 1 )"
 					).executeUpdate();
 
-					// add a collection element that won't be found
-					session.createSQLQuery(
-							"insert into MATERIAL_RATINGS(MATERIAL_ID, RATING_ID) VALUES( 1, 2 )"
-					).executeUpdate();
-
-
 					session.createSQLQuery(
 							"create table BUILDING_RATINGS( " +
 									"BUILDING_ID integer not null, RATING_ID integer not null," +
@@ -133,10 +123,11 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 					session.createSQLQuery(
 							"insert into BUILDING_RATINGS(BUILDING_ID, RATING_ID) VALUES( 1, 1 )"
 					).executeUpdate();
-
-					// add a collection element that won't be found
 					session.createSQLQuery(
 							"insert into BUILDING_RATINGS(BUILDING_ID, RATING_ID) VALUES( 1, 2 )"
+					).executeUpdate();
+					session.createSQLQuery(
+							"insert into BUILDING_RATINGS(BUILDING_ID, RATING_ID) VALUES( 1, 3 )"
 					).executeUpdate();
 				}
 		);
@@ -175,10 +166,8 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 					assertEquals( "house", building.getName() );
 
 					// Building#ratings is mapped with lazy="true"
-					assertFalse( Hibernate.isInitialized( building.getRatings() ) );
-					assertEquals( 1, building.getRatings().size() );
-					assertTrue( Hibernate.isInitialized( building.getRatings() ) );
-					assertSame( rating, building.getRatings().iterator().next() );
+					assertFalse( Hibernate.isInitialized( building.getMediumOrHighRatings() ) );
+					checkMediumOrHighRatings( building.getMediumOrHighRatings() );
 				}
 		);
 	}
@@ -192,13 +181,16 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 					Material material = session.get( Material.class, 1 );
 					assertEquals( "plastic", material.getName() );
 
-					// Material#ratingsFromCombined is mapped with lazy="true"
-					assertFalse( Hibernate.isInitialized( material.getRatingsFromCombined() ) );
-					assertEquals( 1, material.getRatingsFromCombined().size() );
-					assertTrue( Hibernate.isInitialized( material.getRatingsFromCombined() ) );
-
-					final Rating rating = material.getRatingsFromCombined().iterator().next();
-					assertEquals( "high", rating.getName() );
+					// Material#mediumOrHighRatingsFromCombined is mapped with lazy="true"
+					assertFalse( Hibernate.isInitialized( material.getMediumOrHighRatingsFromCombined() ) );
+					checkMediumOrHighRatings( material.getMediumOrHighRatingsFromCombined() );
+					Rating highRating = null;
+					for ( Rating rating : material.getMediumOrHighRatingsFromCombined() ) {
+						if ( "high".equals( rating.getName() ) ) {
+							highRating = rating;
+						}
+					}
+					assertNotNull( highRating );
 
 					// Material#sizesFromCombined is mapped with lazy="true"
 					assertFalse( Hibernate.isInitialized( material.getSizesFromCombined() ) );
@@ -206,7 +198,7 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 					assertTrue( Hibernate.isInitialized( material.getSizesFromCombined() ) );
 
 					final Size size = material.getSizesFromCombined().iterator().next();
-					assertEquals( "small", size.getName() );
+					assertEquals( "medium", size.getName() );
 
 					Building building = session.get( Building.class, 1 );
 
@@ -214,15 +206,32 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 					assertFalse( Hibernate.isInitialized( building.getRatingsFromCombined() ) );
 					assertEquals( 1, building.getRatingsFromCombined().size() );
 					assertTrue( Hibernate.isInitialized( building.getRatingsFromCombined() ) );
-					assertSame( rating, building.getRatingsFromCombined().iterator().next() );
+					assertSame( highRating, building.getRatingsFromCombined().iterator().next() );
 
 					// Building#sizesFromCombined is mapped with lazy="true"
 					assertFalse( Hibernate.isInitialized( building.getSizesFromCombined() ) );
 					assertEquals( 1, building.getSizesFromCombined().size() );
 					assertTrue( Hibernate.isInitialized( building.getSizesFromCombined() ) );
-					assertSame( size, building.getSizesFromCombined().iterator().next() );
+					assertEquals( "small", building.getSizesFromCombined().iterator().next().getName() );
 				}
 		);
+	}
+
+	private void checkMediumOrHighRatings(List<Rating> mediumOrHighRatings) {
+		assertEquals( 2, mediumOrHighRatings.size() );
+
+		final Iterator<Rating> iterator = mediumOrHighRatings.iterator();
+		final Rating firstRating = iterator.next();
+		final Rating secondRating = iterator.next();
+		if ( "high".equals( firstRating.getName() ) ) {
+			assertEquals( "medium", secondRating.getName() );
+		}
+		else if ( "medium".equals( firstRating.getName() ) ) {
+			assertEquals( "high", secondRating.getName() );
+		}
+		else {
+			fail( "unexpected rating" );
+		}
 	}
 
 	public static class Material {
@@ -230,7 +239,7 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 
 		private String name;
 		private Set<Size> sizesFromCombined = new HashSet<>();
-		private Set<Rating> ratingsFromCombined = new HashSet<>();
+		private List<Rating> mediumOrHighRatingsFromCombined = new ArrayList<>();
 		private Set<Rating> ratings = new HashSet<>();
 
 		public int getId() {
@@ -251,11 +260,11 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 		public void setSizesFromCombined(Set<Size> sizesFromCombined) {
 			this.sizesFromCombined = sizesFromCombined;
 		}
-		public Set<Rating> getRatingsFromCombined() {
-			return ratingsFromCombined;
+		public List<Rating> getMediumOrHighRatingsFromCombined() {
+			return mediumOrHighRatingsFromCombined;
 		}
-		public void setRatingsFromCombined(Set<Rating> ratingsFromCombined) {
-			this.ratingsFromCombined = ratingsFromCombined;
+		public void setMediumOrHighRatingsFromCombined(List<Rating> mediumOrHighRatingsFromCombined) {
+			this.mediumOrHighRatingsFromCombined = mediumOrHighRatingsFromCombined;
 		}
 		public Set<Rating> getRatings() {
 			return ratings;
@@ -270,7 +279,7 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 		private String name;
 		private Set<Size> sizesFromCombined = new HashSet<>();
 		private Set<Rating> ratingsFromCombined = new HashSet<>();
-		private Set<Rating> ratings = new HashSet<>();
+		private List<Rating> mediumOrHighRatings = new ArrayList<>();
 
 		public int getId() {
 			return id;
@@ -296,11 +305,11 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 		public void setRatingsFromCombined(Set<Rating> ratingsFromCombined) {
 			this.ratingsFromCombined = ratingsFromCombined;
 		}
-		public Set<Rating> getRatings() {
-			return ratings;
+		public List<Rating> getMediumOrHighRatings() {
+			return mediumOrHighRatings;
 		}
-		public void setRatings(Set<Rating> ratings) {
-			this.ratings = ratings;
+		public void setMediumOrHighRatings(List<Rating> mediumOrHighRatings) {
+			this.mediumOrHighRatings = mediumOrHighRatings;
 		}
 	}
 

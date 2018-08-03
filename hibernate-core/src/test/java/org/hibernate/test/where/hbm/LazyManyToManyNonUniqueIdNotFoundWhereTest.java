@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.where;
+package org.hibernate.test.where.hbm;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -26,17 +26,16 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gail Badner
  */
-public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCase {
+public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunctionalTestCase {
 
 	protected String[] getMappings() {
-		return new String[] { "where/LazyManyToManyNonUniqueIdWhereTest.hbm.xml" };
+		return new String[] { "where/hbm/LazyManyToManyNonUniqueIdNotFoundWhereTest.hbm.xml" };
 	}
 
 	@Before
 	public void setup() {
 		doInHibernate(
 				this::sessionFactory, session -> {
-
 					session.createSQLQuery( "DROP TABLE MAIN_TABLE" ).executeUpdate();
 					session.createSQLQuery( "DROP TABLE ASSOCIATION_TABLE" ).executeUpdate();
 					session.createSQLQuery( "DROP TABLE MATERIAL_RATINGS" ).executeUpdate();
@@ -69,9 +68,21 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 									"VALUES( 1, 'MATERIAL', 1, 'RATING' )"
 					).executeUpdate();
 
+					// add a collection element that won't be found
+					session.createSQLQuery(
+							"insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
+									"VALUES( 1, 'MATERIAL', 2, 'RATING' )"
+					).executeUpdate();
+
 					session.createSQLQuery(
 							"insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
 									"VALUES( 1, 'MATERIAL', 1, 'SIZE' )"
+					).executeUpdate();
+
+					// add a collection element that won't be found
+					session.createSQLQuery(
+							"insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
+									"VALUES( 1, 'MATERIAL', 2, 'SIZE' )"
 					).executeUpdate();
 
 					session.createSQLQuery(
@@ -79,11 +90,23 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 									"VALUES( 1, 'BUILDING', 1, 'RATING' )"
 					).executeUpdate();
 
+					// add a collection element that won't be found
+					session.createSQLQuery(
+							"insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
+									"VALUES( 1, 'BUILDING', 2, 'RATING' )"
+					).executeUpdate();
+
+
 					session.createSQLQuery(
 							"insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
 									"VALUES( 1, 'BUILDING', 1, 'SIZE' )"
 					).executeUpdate();
 
+					// add a collection element that won't be found
+					session.createSQLQuery(
+							"insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
+									"VALUES( 1, 'BUILDING', 2, 'SIZE' )"
+					).executeUpdate();
 
 					session.createSQLQuery(
 							"create table MATERIAL_RATINGS( " +
@@ -95,6 +118,12 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 							"insert into MATERIAL_RATINGS(MATERIAL_ID, RATING_ID) VALUES( 1, 1 )"
 					).executeUpdate();
 
+					// add a collection element that won't be found
+					session.createSQLQuery(
+							"insert into MATERIAL_RATINGS(MATERIAL_ID, RATING_ID) VALUES( 1, 2 )"
+					).executeUpdate();
+
+
 					session.createSQLQuery(
 							"create table BUILDING_RATINGS( " +
 									"BUILDING_ID integer not null, RATING_ID integer not null," +
@@ -103,6 +132,11 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 
 					session.createSQLQuery(
 							"insert into BUILDING_RATINGS(BUILDING_ID, RATING_ID) VALUES( 1, 1 )"
+					).executeUpdate();
+
+					// add a collection element that won't be found
+					session.createSQLQuery(
+							"insert into BUILDING_RATINGS(BUILDING_ID, RATING_ID) VALUES( 1, 2 )"
 					).executeUpdate();
 				}
 		);

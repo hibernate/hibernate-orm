@@ -12,7 +12,7 @@
 <!--
     Demonstrates use of a class-level where restriction
  -->
-<hibernate-mapping package="org.hibernate.test.where">
+<hibernate-mapping package="org.hibernate.test.where.hbm">
 
     <class name="File" where="deleted=0" table="T_FILE">
     	<id name="id">

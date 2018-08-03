@@ -41,17 +41,44 @@ public class Oracle8iDialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void testGetForUpdateStringWithAliasesAndLockOptions() {
+	public void testGetForUpdateStringWithAllAliasesSpecified() {
 		Oracle8iDialect dialect = new Oracle8iDialect();
 		LockOptions lockOptions = new LockOptions();
 		lockOptions.setAliasSpecificLockMode( "tableAlias1", LockMode.PESSIMISTIC_WRITE );
 
 		String forUpdateClause = dialect.getForUpdateString( "tableAlias1", lockOptions );
-		assertEquals( " for update of tableAlias1", forUpdateClause );
+		assertEquals( " for update", forUpdateClause );
 
 		lockOptions.setAliasSpecificLockMode( "tableAlias2", LockMode.PESSIMISTIC_WRITE );
 		forUpdateClause = dialect.getForUpdateString( "tableAlias1,tableAlias2", lockOptions );
-		assertEquals( " for update of tableAlias1,tableAlias2", forUpdateClause );
+		assertEquals( " for update", forUpdateClause );
+
+	}
+
+	@Test
+	public void testGetForUpdateStringWithoutAliasSpecified() {
+		Oracle8iDialect dialect = new Oracle8iDialect();
+		LockOptions lockOptions = new LockOptions();
+		lockOptions.setAliasSpecificLockMode( "tableAlias1", LockMode.PESSIMISTIC_WRITE );
+
+		String forUpdateClause = dialect.getForUpdateString( "", lockOptions );
+		assertEquals( " for update", forUpdateClause );
+	}
+
+	@Test
+	public void testGetForUpdateStringWithSomeAliasSpecified() {
+		Oracle8iDialect dialect = new Oracle8iDialect();
+		LockOptions lockOptions = new LockOptions();
+		lockOptions.setAliasSpecificLockMode( "tableAlias1", LockMode.PESSIMISTIC_WRITE );
+		lockOptions.setAliasSpecificLockMode( "tableAlias2", LockMode.PESSIMISTIC_WRITE );
+
+		String forUpdateClause = dialect.getForUpdateString( "tableAlias1", lockOptions );
+		assertEquals( " for update of tableAlias1", forUpdateClause );
+
+		lockOptions.setAliasSpecificLockMode( "tableAlias3", LockMode.PESSIMISTIC_WRITE );
+
+		forUpdateClause = dialect.getForUpdateString( "tableAlias1,tableAlias3", lockOptions );
+		assertEquals( " for update of tableAlias1,tableAlias3", forUpdateClause );
 	}
 
 }

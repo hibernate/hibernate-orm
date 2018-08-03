@@ -10,9 +10,11 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -491,16 +493,60 @@ public class Oracle8iDialect extends Dialect {
 	public String getForUpdateString(String aliases, LockOptions lockOptions) {
 		LockMode lockMode = lockOptions.getLockMode();
 		final Iterator<Map.Entry<String, LockMode>> itr = lockOptions.getAliasLockIterator();
+		Set<String> tableAliasSet = new HashSet<>();
 		while ( itr.hasNext() ) {
 			// seek the highest lock mode
 			final Map.Entry<String, LockMode> entry = itr.next();
+			tableAliasSet.add( entry.getKey() );
 			final LockMode lm = entry.getValue();
 			if ( lm.greaterThan( lockMode ) ) {
 				lockMode = lm;
 			}
 		}
 		lockOptions.setLockMode( lockMode );
-		return getForUpdateString( lockMode, lockOptions.getTimeOut(), aliases );
+		if ( needToSpecifyAliasesInForUpdate( tableAliasSet, aliases ) ) {
+			return getForUpdateString( lockMode, lockOptions.getTimeOut(), aliases );
+		}
+		else {
+			return getForUpdateString( lockOptions );
+		}
+	}
+
+	/*
+	 * Avoid using 'update of [table.column]' syntax if the given aliasesToLock are actually all tables.
+	 *
+	 * The reason being, when the user attempts to create a query with both pagination and lock options,
+	 * the Oracle Dialect would simply rely on the `LIMIT_HANDLER` to decorate the original SQL as
+	 * `select .. (sql) where rownum <= ? ..`. Hence the `for update of` syntax will result in ORA-00904
+	 * (invalid identifier) in this kind of query.
+	 *
+	 * The generated for-update clause varies in below scenarios:
+	 *
+	 * 1. createQuery("from A a").setLockMode( "a", LockMode.PESSIMISTIC_WRITE )
+	 *     Result in `for update` only, because there is only one table in the query.
+	 *
+	 * 2. createQuery("from A a").setLockMode( LockMode.PESSIMISTIC_WRITE )
+	 *     Result in `for update` only, because the user did not intent to lock on specific alias at all.
+	 *
+	 * 3. createQuery("from A a join fetch a.b").setLockMode( "b", LockMode.PESSIMISTIC_WRITE )
+	 *     Result in `for update of b0_.id`, to only lock on the alias requested by the user.
+	 */
+	private boolean needToSpecifyAliasesInForUpdate(Set<String> tableAliasSet, String aliasesToLock) {
+		if ( StringHelper.isNotEmpty( aliasesToLock ) ) {
+			String[] tableAliasWithIdColumns = StringHelper.split(",", aliasesToLock);
+			HashSet<String> tableAliasToLock = new HashSet<>(  );
+			for (String tableAliasWithIdColumn : tableAliasWithIdColumns) {
+				int indexOfDot = tableAliasWithIdColumn.indexOf(".");
+				String tableAlias = indexOfDot == -1
+						? tableAliasWithIdColumn
+						: tableAliasWithIdColumn.substring( 0, indexOfDot );
+				tableAliasToLock.add( tableAlias );
+			}
+
+			return !tableAliasSet.equals(tableAliasToLock);
+		}
+
+		return false;
 	}
 
 	private String getForUpdateString(LockMode lockMode, int timeout, String aliases) {

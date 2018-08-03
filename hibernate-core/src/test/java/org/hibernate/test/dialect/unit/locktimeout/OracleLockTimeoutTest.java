@@ -67,7 +67,7 @@ public class OracleLockTimeoutTest extends BaseUnitTestCase {
 	public void testLockTimeoutAliasNoTimeout() {
 		String alias = "a";
 		assertEquals(
-				" for update of a",
+				" for update",
 				dialect.getForUpdateString(
 						alias,
 						new LockOptions( LockMode.PESSIMISTIC_READ ).setAliasSpecificLockMode(
@@ -77,7 +77,7 @@ public class OracleLockTimeoutTest extends BaseUnitTestCase {
 				)
 		);
 		assertEquals(
-				" for update of a",
+				" for update",
 				dialect.getForUpdateString(
 						alias,
 						new LockOptions( LockMode.PESSIMISTIC_WRITE ).setAliasSpecificLockMode(
@@ -92,7 +92,7 @@ public class OracleLockTimeoutTest extends BaseUnitTestCase {
 	public void testLockTimeoutAliasNoWait() {
 		String alias = "a";
 		assertEquals(
-				" for update of a nowait",
+				" for update nowait",
 				dialect.getForUpdateString(
 						alias,
 						new LockOptions( LockMode.PESSIMISTIC_READ ).setAliasSpecificLockMode(
@@ -103,7 +103,7 @@ public class OracleLockTimeoutTest extends BaseUnitTestCase {
 				)
 		);
 		assertEquals(
-				" for update of a nowait",
+				" for update nowait",
 				dialect.getForUpdateString(
 						alias,
 						new LockOptions( LockMode.PESSIMISTIC_WRITE ).setAliasSpecificLockMode(
@@ -119,7 +119,7 @@ public class OracleLockTimeoutTest extends BaseUnitTestCase {
 	public void testLockTimeoutAliasSkipLocked() {
 		String alias = "a";
 		assertEquals(
-				" for update of a skip locked",
+				" for update skip locked",
 				dialect.getForUpdateString(
 						alias,
 						new LockOptions( LockMode.PESSIMISTIC_READ ).setAliasSpecificLockMode(
@@ -130,7 +130,7 @@ public class OracleLockTimeoutTest extends BaseUnitTestCase {
 				)
 		);
 		assertEquals(
-				" for update of a skip locked",
+				" for update skip locked",
 				dialect.getForUpdateString(
 						alias,
 						new LockOptions( LockMode.PESSIMISTIC_WRITE ).setAliasSpecificLockMode(

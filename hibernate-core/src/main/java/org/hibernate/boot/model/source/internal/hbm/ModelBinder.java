@@ -1527,7 +1527,6 @@ public class ModelBinder {
 			binding.getSynchronizedTables().add( name );
 		}
 
-		binding.setWhere( source.getWhere() );
 		binding.setLoaderName( source.getCustomLoaderName() );
 		if ( source.getCustomSqlInsert() != null ) {
 			binding.setCustomSQLInsert(
@@ -3448,9 +3447,15 @@ public class ModelBinder {
 
 				final PersistentClass referencedEntityBinding = mappingDocument.getMetadataCollector()
 						.getEntityBinding( elementSource.getReferencedEntityName() );
+				collectionBinding.setWhere(
+					StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty(
+							referencedEntityBinding.getWhere(),
+							getPluralAttributeSource().getWhere()
+					)
+				);
+
 				elementBinding.setReferencedEntityName( referencedEntityBinding.getEntityName() );
 				elementBinding.setAssociatedClass( referencedEntityBinding );
-
 				elementBinding.setIgnoreNotFound( elementSource.isIgnoreNotFound() );
 			}
 			else if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceManyToMany ) {
@@ -3469,12 +3474,17 @@ public class ModelBinder {
 						new RelationalObjectBinder.ColumnNamingDelegate() {
 							@Override
 							public Identifier determineImplicitName(final LocalMetadataBuildingContext context) {
-								return context.getMetadataCollector().getDatabase().toIdentifier( Collection.DEFAULT_ELEMENT_COLUMN_NAME );
+								return context.getMetadataCollector()
+										.getDatabase()
+										.toIdentifier( Collection.DEFAULT_ELEMENT_COLUMN_NAME );
 							}
 						}
 				);
 
-				elementBinding.setLazy( elementSource.getFetchCharacteristics().getFetchTiming() != FetchTiming.IMMEDIATE );
+				elementBinding.setLazy(
+						elementSource.getFetchCharacteristics()
+								.getFetchTiming() != FetchTiming.IMMEDIATE
+				);
 				elementBinding.setFetchMode(
 						elementSource.getFetchCharacteristics().getFetchStyle() == FetchStyle.SELECT
 								? FetchMode.SELECT
@@ -3494,20 +3504,16 @@ public class ModelBinder {
 
 				getCollectionBinding().setElement( elementBinding );
 
-				final StringBuilder whereBuffer = new StringBuilder();
-				final PersistentClass referencedEntityBinding = mappingDocument.getMetadataCollector()
-						.getEntityBinding( elementSource.getReferencedEntityName() );
-				if ( StringHelper.isNotEmpty( referencedEntityBinding.getWhere() ) ) {
-					whereBuffer.append( referencedEntityBinding.getWhere() );
-				}
-				if ( StringHelper.isNotEmpty( elementSource.getWhere() ) ) {
-					if ( whereBuffer.length() > 0 ) {
-						whereBuffer.append( " and " );
-					}
-					whereBuffer.append( elementSource.getWhere() );
-				}
-				getCollectionBinding().setManyToManyWhere( whereBuffer.toString() );
-
+				final PersistentClass referencedEntityBinding = mappingDocument.getMetadataCollector().getEntityBinding(
+						elementSource.getReferencedEntityName()
+				);
+				getCollectionBinding().setWhere( getPluralAttributeSource().getWhere() );
+				getCollectionBinding().setManyToManyWhere(
+						StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty(
+								referencedEntityBinding.getWhere(),
+								elementSource.getWhere()
+						)
+				);
 				getCollectionBinding().setManyToManyOrdering( elementSource.getOrder() );
 
 				if ( !CollectionHelper.isEmpty( elementSource.getFilterSources() )

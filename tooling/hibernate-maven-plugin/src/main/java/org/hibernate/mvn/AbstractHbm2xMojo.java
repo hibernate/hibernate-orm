@@ -25,6 +25,9 @@ public abstract class AbstractHbm2xMojo extends AbstractMojo {
     private String packageName;
     @Parameter
     private File revengFile;
+    /** The class name of the reverse engineering strategy to use.
+     * Extend the DefaultReverseEngineeringStrategy and override the corresponding methods, e.g.
+     * to adapt the generate class names or to provide custom type mappings. */
     @Parameter(defaultValue = "org.hibernate.cfg.reveng.DefaultReverseEngineeringStrategy")
     private String revengStrategy;
     @Parameter(defaultValue = "true")

@@ -6,6 +6,8 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.unique.DefaultUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 
@@ -15,11 +17,11 @@ import org.hibernate.dialect.unique.UniqueDelegate;
  *
  * @author Pierrick Rouxel (pierrickrouxel)
  */
-public class DB2400V7R1Dialect extends DB2Dialect {
+public class DB2400V7R3Dialect extends DB2400Dialect {
 
 	private final UniqueDelegate uniqueDelegate;
 
-	public DB2400V7R1Dialect() {
+	public DB2400V7R3Dialect() {
 		super();
 
 		uniqueDelegate = new DefaultUniqueDelegate(this);
@@ -31,12 +33,17 @@ public class DB2400V7R1Dialect extends DB2Dialect {
 	}
 
 	@Override
-	public String getForUpdateString() {
-		return " for update with rs";
+	public boolean supportsSequences() {
+		return true;
 	}
 
 	@Override
 	public String getQuerySequencesString() {
 		return "select seqname from qsys2.syssequences";
+	}
+
+	@Override
+	public IdentityColumnSupport getIdentityColumnSupport() {
+		return new DB2IdentityColumnSupport();
 	}
 }

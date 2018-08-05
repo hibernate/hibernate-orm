@@ -47,7 +47,7 @@ public enum Database {
 	DB2 {
 		@Override
 		public Class<? extends Dialect> latestDialect() {
-			return DB2400V7R1Dialect.class;
+			return DB2400Dialect.class;
 		}
 
 		@Override
@@ -55,15 +55,7 @@ public enum Database {
 			final String databaseName = info.getDatabaseName();
 
 			if ( "DB2 UDB for AS/400".equals( databaseName ) ) {
-				final int majorVersion = info.getDatabaseMajorVersion();
-				final int minorVersion = info.getDatabaseMinorVersion();
-
-				if ( majorVersion > 7 || ( majorVersion == 7 && minorVersion >= 1 ) ) {
-					return latestDialectInstance( this );
-				}
-				else {
-					return new DB2400Dialect();
-				}
+				return new DB2400Dialect();
 			}
 
 			if ( databaseName.startsWith( "DB2/" ) ) {

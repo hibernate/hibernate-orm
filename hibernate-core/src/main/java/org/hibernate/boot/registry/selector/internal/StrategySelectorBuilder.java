@@ -28,7 +28,7 @@ import org.hibernate.dialect.Cache71Dialect;
 import org.hibernate.dialect.DB2390Dialect;
 import org.hibernate.dialect.DB2390V8Dialect;
 import org.hibernate.dialect.DB2400Dialect;
-import org.hibernate.dialect.DB2400V7R1Dialect;
+import org.hibernate.dialect.DB2400V7R3Dialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyTenFiveDialect;
 import org.hibernate.dialect.DerbyTenSevenDialect;
@@ -202,7 +202,7 @@ public class StrategySelectorBuilder {
 		addDialect( strategySelector, DB2390Dialect.class );
 		addDialect( strategySelector, DB2390V8Dialect.class );
 		addDialect( strategySelector, DB2400Dialect.class );
-		addDialect( strategySelector, DB2400V7R1Dialect.class );
+		addDialect( strategySelector, DB2400V7R3Dialect.class );
 		addDialect( strategySelector, DerbyTenFiveDialect.class );
 		addDialect( strategySelector, DerbyTenSixDialect.class );
 		addDialect( strategySelector, DerbyTenSevenDialect.class );

@@ -39,7 +39,9 @@ public class DB2400V7R3Dialect extends DB2400Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select seqname from qsys2.syssequences";
+		return "select distinct sequence_name from qsys2.syssequences " +
+				"where ( current_schema = '*LIBL' and sequence_schema in ( select schema_name from qsys2.library_list_info ) ) " +
+				"or sequence_schema = current_schema";
 	}
 
 	@Override

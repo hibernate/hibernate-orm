@@ -15,7 +15,6 @@ import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.reveng.ReverseEngineeringSettings;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
-import org.hibernate.tool.internal.reveng.DefaultReverseEngineeringStrategy;
 import org.hibernate.tool.internal.reveng.OverrideRepository;
 
 public abstract class AbstractHbm2xMojo extends AbstractMojo {
@@ -28,7 +27,7 @@ public abstract class AbstractHbm2xMojo extends AbstractMojo {
     /** The class name of the reverse engineering strategy to use.
      * Extend the DefaultReverseEngineeringStrategy and override the corresponding methods, e.g.
      * to adapt the generate class names or to provide custom type mappings. */
-    @Parameter(defaultValue = "org.hibernate.cfg.reveng.DefaultReverseEngineeringStrategy")
+    @Parameter(defaultValue = "org.hibernate.tool.internal.reveng.DefaultReverseEngineeringStrategy")
     private String revengStrategy;
     @Parameter(defaultValue = "true")
     private boolean detectManyToMany;

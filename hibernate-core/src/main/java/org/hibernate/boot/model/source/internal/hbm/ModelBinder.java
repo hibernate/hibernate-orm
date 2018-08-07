@@ -3465,6 +3465,12 @@ public class ModelBinder {
 
 				final PersistentClass referencedEntityBinding = mappingDocument.getMetadataCollector()
 						.getEntityBinding( elementSource.getReferencedEntityName() );
+				// For a one-to-many association, there are 2 possible sources of "where" clauses that apply
+				// to the associated entity table:
+				// 1) from the associated entity mapping; i.e., <class name="..." ... where="..." .../>
+				// 2) from the collection mapping; e.g., <set name="..." ... where="..." .../>
+				// Collection#setWhere is used to set the "where" clause that applies to the collection table
+				// (which is the associated entity table for a one-to-many association).
 				collectionBinding.setWhere(
 					StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty(
 							referencedEntityBinding.getWhere(),
@@ -3599,7 +3605,17 @@ public class ModelBinder {
 				final PersistentClass referencedEntityBinding = mappingDocument.getMetadataCollector().getEntityBinding(
 						elementSource.getReferencedEntityName()
 				);
+
+				// Collection#setWhere is used to set the "where" clause that applies to the collection table
+				// (which is the join table for a many-to-many association).
+				// This "where" clause comes from the collection mapping; e.g., <set name="..." ... where="..." .../>
 				getCollectionBinding().setWhere( getPluralAttributeSource().getWhere() );
+				// For a many-to-many association, there are 2 possible sources of "where" clauses that apply
+				// to the associated entity table (not the join table):
+				// 1) from the associated entity mapping; i.e., <class name="..." ... where="..." .../>
+				// 2) from the many-to-many mapping; i.e <many-to-many ... where="...".../>
+				// Collection#setManytoManyWhere is used to set the "where" clause that applies to
+				// to the many-to-many associated entity table (not the join table).
 				getCollectionBinding().setManyToManyWhere(
 						StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty(
 								referencedEntityBinding.getWhere(),

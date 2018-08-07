@@ -69,7 +69,7 @@ It was done here only for completeness of an example.
 
 The `Person_.name` reference is an example of the static form of JPA Metamodel reference.
 We will use that form exclusively in this chapter.
-See the documentation for the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/topical/html/metamodelgen/MetamodelGenerator.html[Hibernate JPA Metamodel Generator] for additional details on the JPA static Metamodel.
+See the documentation for the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/topical/html_single/metamodelgen/MetamodelGenerator.html[Hibernate JPA Metamodel Generator] for additional details on the JPA static Metamodel.
 ====
 
 [[criteria-typedquery-expression]]

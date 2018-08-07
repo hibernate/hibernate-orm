@@ -953,6 +953,11 @@ public abstract class CollectionBinder {
 			}
 		}
 
+		// There are 2 possible sources of "where" clauses that apply to the associated entity table:
+		// 1) from the associated entity mapping; i.e., @Entity @Where(clause="...")
+		// 2) from the collection mapping;
+		//    for one-to-many, e.g., @OneToMany @JoinColumn @Where(clause="...") public Set<Rating> getRatings();
+		//    for many-to-many e.g., @ManyToMany @Where(clause="...") public Set<Rating> getRatings();
 		String whereOnClassClause = null;
 		if ( property.getElementClass() != null ) {
 			Where whereOnClass = property.getElementClass().getAnnotation( Where.class );
@@ -970,9 +975,15 @@ public abstract class CollectionBinder {
 				whereOnCollectionClause
 		);
 		if ( hasAssociationTable ) {
+			// A many-to-many association has an association (join) table
+			// Collection#setManytoManyWhere is used to set the "where" clause that applies to
+			// to the many-to-many associated entity table (not the join table).
 			collection.setManyToManyWhere( whereClause );
 		}
 		else {
+			// A one-to-many association does not have an association (join) table.
+			// Collection#setWhere is used to set the "where" clause that applies to the collection table
+			// (which is the associated entity table for a one-to-many association).
 			collection.setWhere( whereClause );
 		}
 
@@ -980,6 +991,9 @@ public abstract class CollectionBinder {
 		String whereJoinTableClause = whereJoinTable == null ? null : whereJoinTable.clause();
 		if ( StringHelper.isNotEmpty( whereJoinTableClause ) ) {
 			if ( hasAssociationTable ) {
+				// This is a many-to-many association.
+				// Collection#setWhere is used to set the "where" clause that applies to the collection table
+				// (which is the join table for a many-to-many association).
 				collection.setWhere( whereJoinTableClause );
 			}
 			else {

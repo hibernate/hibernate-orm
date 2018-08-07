@@ -570,7 +570,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 				jpaEntityTypeMap.size() + jpaMappedSuperclassTypeMap.size() + jpaEmbeddableTypes.size()
 		);
 		final Set<ManagedType<?>> managedTypes = new HashSet<ManagedType<?>>( setSize );
-		managedTypes.addAll( jpaEntityTypeMap.values() );
+		managedTypes.addAll( jpaEntityTypesByEntityName.values() );
 		managedTypes.addAll( jpaMappedSuperclassTypeMap.values() );
 		managedTypes.addAll( jpaEmbeddableTypes );
 		return managedTypes;

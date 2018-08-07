@@ -116,16 +116,23 @@ class MetadataContext {
 	}
 
 	/*package*/ void registerEntityType(PersistentClass persistentClass, EntityTypeImpl<?> entityType) {
+		if ( ignoreUnsupported && entityType.getBindableJavaType() == null ) {
+			return;
+		}
+
 		if ( entityType.getBindableJavaType() != null ) {
 			entityTypes.put( entityType.getBindableJavaType(), entityType );
 		}
+
 		entityTypesByEntityName.put( persistentClass.getEntityName(), entityType );
 		entityTypesByPersistentClass.put( persistentClass, entityType );
 		orderedMappings.add( persistentClass );
 	}
 
 	/*package*/ void registerEmbeddedableType(EmbeddableTypeImpl<?> embeddableType) {
-		embeddables.add( embeddableType );
+		if ( !( ignoreUnsupported && embeddableType.getParent().getJavaType() == null ) ) {
+			embeddables.add( embeddableType );
+		}
 	}
 
 	/*package*/ void registerMappedSuperclassType(

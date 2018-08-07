@@ -19,6 +19,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import org.hibernate.Hibernate;
+import org.hibernate.Session;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Where;
 
@@ -28,7 +29,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -47,9 +47,9 @@ public class LazyOneToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCas
 
 	@Before
 	public void setup() {
-		doInHibernate(
-				this::sessionFactory, session -> {
-
+		Session session = openSession();
+		session.beginTransaction();
+		{
 					session.createSQLQuery( "DROP TABLE MAIN_TABLE" ).executeUpdate();
 
 					session.createSQLQuery(
@@ -78,25 +78,28 @@ public class LazyOneToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCas
 					session.createSQLQuery( "insert into MAIN_TABLE(ID, NAME, CODE, MATERIAL_OWNER_ID, BUILDING_OWNER_ID) " +
 													"VALUES( 2, 'medium', 'SIZE', 1, null )" )
 							.executeUpdate();
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@After
 	public void cleanup() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 					session.createSQLQuery( "delete from MAIN_TABLE" ).executeUpdate();
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12875")
 	public void testInitializeFromNonUniqueAssociationTable() {
-		doInHibernate(
-				this::sessionFactory, session -> {
-
+		Session session = openSession();
+		session.beginTransaction();
+		{
 					Material material = session.get( Material.class, 1 );
 					assertEquals( "plastic", material.getName() );
 
@@ -132,8 +135,9 @@ public class LazyOneToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCas
 					assertEquals( 1, building.getSizesFromCombined().size() );
 					assertTrue( Hibernate.isInitialized( building.getSizesFromCombined() ) );
 					assertEquals( "small", building.getSizesFromCombined().iterator().next().getName() );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	private void checkMediumOrHighRatings(List<Rating> mediumOrHighRatings) {

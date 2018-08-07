@@ -9,6 +9,7 @@ package org.hibernate.test.where.hbm;
 import org.junit.Test;
 
 import org.hibernate.FetchMode;
+import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

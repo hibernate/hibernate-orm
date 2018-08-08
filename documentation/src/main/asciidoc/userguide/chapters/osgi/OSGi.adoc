@@ -53,10 +53,10 @@ In order to utilize container-managed JPA, an Enterprise OSGi JPA container must
 In Karaf, this means Aries JPA, which is included out-of-the-box (simply activate the `jpa` and `transaction` features).
 Originally, we intended to include those dependencies within our own `features.xml`.
 However, after guidance from the Karaf and Aries teams, it was pulled out.
-This allows Hibernate OSGi to be portable and not be directly tied to Aries versions, instead having the user choose which to use.
+This allows Hibernate OSGi to be portable and not be directly tied to Aries versions, instead of having the user choose which to use.
 
 That being said, the QuickStart/Demo projects include a sample https://github.com/hibernate/hibernate-demos/tree/master/hibernate-orm/osgi/managed-jpa/features.xml[features.xml]
-showing which features need activated in Karaf in order to support this environment.
+showing which features need to be activated in Karaf in order to support this environment.
 As mentioned, use this purely as a reference!
 
 === persistence.xml
@@ -186,7 +186,7 @@ include::{sourcedir}/_native/HibernateUtil.java[tag=osgi-discover-SessionFactory
 The https://github.com/hibernate/hibernate-demos/tree/master/hibernate-orm/osgi/unmanaged-native[unmanaged-native] demo project displays the use of optional Hibernate modules.
 Each module adds additional dependency bundles that must first be activated, either manually or through an additional feature.
 As of ORM 4.2, Envers is fully supported.
-Support for C3P0, Proxool, EhCache, and Infinispan were added in 4.3, however none of their 3rd party libraries currently work in OSGi (lots of `ClassLoader` problems, etc.).
+Support for C3P0, Proxool, EhCache, and Infinispan were added in 4.3. However, none of their 3rd party libraries currently work in OSGi (lots of `ClassLoader` problems, etc.).
 We're tracking the issues in JIRA.
 
 === Extension Points
@@ -201,7 +201,7 @@ The specified interface should be used during service registration.
 `org.hibernate.integrator.spi.Integrator`:: (as of 4.2)
 `org.hibernate.boot.registry.selector.StrategyRegistrationProvider`:: (as of 4.3)
 `org.hibernate.boot.model.TypeContributor`:: (as of 4.3)
-JTA's:: `javax.transaction.TransactionManager` and `javax.transaction.UserTransaction` (as of 4.2), however these are typically provided by the OSGi container.
+JTA's:: `javax.transaction.TransactionManager` and `javax.transaction.UserTransaction` (as of 4.2). However, these are typically provided by the OSGi container.
 
 The easiest way to register extension point implementations is through a `blueprint.xml` file.
 Add `OSGI-INF/blueprint/blueprint.xml` to your classpath. Envers' blueprint is a great example:
@@ -225,10 +225,10 @@ Extension points can also be registered programmatically with `BundleContext#reg
 * Scanning is supported to find non-explicitly listed entities and mappings.
   However, they MUST be in the same bundle as your persistence unit (fairly typical anyway).
   Our OSGi `ClassLoader` only considers the "requesting bundle" (hence the requirement on using services to create `EntityManagerFactory`/`SessionFactory`), rather than attempting to scan all available bundles.
-  This is primarily for versioning considerations, collision protections, etc.
+  This is primarily for versioning considerations, collision protection, etc.
 * Some containers (ex: Aries) always return true for `PersistenceUnitInfo#excludeUnlistedClasses`, even if your `persistence.xml` explicitly has `exclude-unlisted-classes` set to `false`.
   They claim it's to protect JPA providers from having to implement scanning ("we handle it for you"), even though we still want to support it in many cases.
-  The work around is to set `hibernate.archive.autodetection` to, for example, `hbm,class`.
+  The workaround is to set `hibernate.archive.autodetection` to, for example, `hbm,class`.
   This tells hibernate to ignore the `excludeUnlistedClasses` value and scan for `*.hbm.xml` and entities regardless.
 * Scanning does not currently support annotated packages on `package-info.java`.
 * Currently, Hibernate OSGi is primarily tested using Apache Karaf and Apache Aries JPA. Additional testing is needed with Equinox, Gemini, and other container providers.

@@ -3,7 +3,7 @@
 [preface]
 == Preface
 
-Working with both Object-Oriented software and Relational Databases can be cumbersome and time consuming.
+Working with both Object-Oriented software and Relational Databases can be cumbersome and time-consuming.
 Development costs are significantly higher due to a paradigm mismatch between how data is represented in objects
 versus relational databases.  Hibernate is an Object/Relational Mapping (ORM) solution for Java environments.  The
 term Object/Relational Mapping refers to the technique of mapping data between an object model representation to

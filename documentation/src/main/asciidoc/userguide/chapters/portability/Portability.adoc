@@ -24,7 +24,7 @@ Originally, Hibernate would always require that users specify which dialect to u
 Generally, this required their users to configure the Hibernate dialect or defining their own method of setting that value.
 
 Starting with version 3.2, Hibernate introduced the notion of automatically detecting the dialect to use based on the `java.sql.DatabaseMetaData` obtained from a `java.sql.Connection` to that database.
-This was much better, expect that this resolution was limited to databases Hibernate know about ahead of time and was in no way configurable or overrideable.
+This was much better, except that this resolution was limited to databases Hibernate know about ahead of time and was in no way configurable or overrideable.
 
 Starting with version 3.3, Hibernate has a fare more powerful way to automatically determine which dialect to should be used by relying on a series of delegates which implement the `org.hibernate.dialect.resolver.DialectResolver` which defines only a single method:
 
@@ -35,7 +35,7 @@ public Dialect resolveDialect(DatabaseMetaData metaData) throws JDBCConnectionEx
 
 The basic contract here is that if the resolver 'understands' the given database metadata then it returns the corresponding Dialect; if not it returns null and the process continues to the next resolver.
 The signature also identifies `org.hibernate.exception.JDBCConnectionException` as possibly being thrown.
-A `JDBCConnectionException` here is interpreted to imply a "non transient" (aka non-recoverable) connection problem and is used to indicate an immediate stop to resolution attempts.
+A `JDBCConnectionException` here is interpreted to imply a __non-transient__ (aka non-recoverable) connection problem and is used to indicate an immediate stop to resolution attempts.
 All other exceptions result in a warning and continuing on to the next resolver.
 
 The cool part about these resolvers is that users can also register their own custom resolvers which will be processed ahead of the built-in Hibernate ones.
@@ -50,14 +50,14 @@ To register one or more resolvers, simply specify them (separated by commas, tab
 === Identifier generation
 
 When considering portability between databases, another important decision is selecting the identifier generation strategy you want to use.
-Originally Hibernate provided the _native_ generator for this purpose, which was intended to select between a __sequence__, __identity__, or _table_ strategy depending on the capability of the underlying database.
+Originally, Hibernate provided the _native_ generator for this purpose, which was intended to select between a __sequence__, __identity__, or _table_ strategy depending on the capability of the underlying database.
 
 However, an insidious implication of this approach comes about when targeting some databases which support _identity_ generation and some which do not.
 _identity_ generation relies on the SQL definition of an IDENTITY (or auto-increment) column to manage the identifier value.
 It is what is known as a _post-insert_ generation strategy because the insert must actually happen before we can know the identifier value.
 
 Because Hibernate relies on this identifier value to uniquely reference entities within a persistence context,
-it must then issue the insert immediately when the users requests that the entity be associated with the session (e.g. like via `save()` or `persist()`) , regardless of current transactional semantics.
+it must then issue the insert immediately when the user requests that the entity be associated with the session (e.g. like via `save()` or `persist()`), regardless of current transactional semantics.
 
 [NOTE]
 ====

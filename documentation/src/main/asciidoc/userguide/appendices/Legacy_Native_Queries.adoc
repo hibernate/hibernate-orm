@@ -102,7 +102,7 @@ You can externalize the resultset mapping information in a `<resultset>` element
 ----
 ====
 
-You can, alternatively, use the resultset mapping information in your hbm files directly in java code.
+You can, alternatively, use the resultset mapping information in your hbm files directly in Java code.
 
 .Programmatically specifying the result mapping information
 ====

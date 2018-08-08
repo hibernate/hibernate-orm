@@ -119,7 +119,7 @@ include::{extrasdir}/schema-generation-database-checks-persist-example.sql[]
 ====
 
 [[schema-generation-column-default-value]]
-=== Default value for database column
+=== Default value for a database column
 
 With Hibernate, you can specify a default value for a given database column using the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ColumnDefault.html[`@ColumnDefault`] annotation.
 

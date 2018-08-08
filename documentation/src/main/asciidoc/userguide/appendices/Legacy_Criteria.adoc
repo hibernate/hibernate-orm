@@ -26,7 +26,7 @@ List cats = crit.list();
 ----
 
 [[criteria-entity-name]]
-=== JPA vs Hibernate entity name
+=== JPA vs. Hibernate entity name
 
 When using the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/SharedSessionContract.html#createCriteria-java.lang.String-[`Session#createCriteria(String entityName)` or `StatelessSession#createCriteria(String entityName)`],
 the *entityName* means the fully-qualified name of the underlying entity and not the name denoted by the `name` attribute of the JPA `@Entity` annotation.
@@ -228,7 +228,7 @@ List cats = session.createCriteria( Cat.class )
 
 This will return all of the `Cat`s with a mate whose name starts with "good" ordered by their mate's age, and all cats who do not have a mate.
 This is useful when there is a need to order or limit in the database prior to returning complex/large result sets,
-and removes many instances where multiple queries would have to be performed and the results unioned by java in memory.
+and removes many instances where multiple queries would have to be performed and the results unioned by Java in memory.
 
 Without this feature, first all of the cats without a mate would need to be loaded in one query.
 
@@ -275,7 +275,7 @@ When using criteria against collections, there are two distinct cases.
 One is if the collection contains entities (eg. `<one-to-many/>` or `<many-to-many/>`) or components (`<composite-element/>` ),
 and the second is if the collection contains scalar values (`<element/>`).
 In the first case, the syntax is as given above in the section <<criteria-associations>> where we restrict the `kittens` collection.
-Essentially we create a `Criteria` object against the collection property and restrict the entity or component properties using that instance.
+Essentially, we create a `Criteria` object against the collection property and restrict the entity or component properties using that instance.
 
 For querying a collection of basic values, we still create the `Criteria` object against the collection,
 but to reference the value, we use the special property "elements".

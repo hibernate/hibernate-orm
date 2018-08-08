@@ -266,9 +266,9 @@ By convention all modules included with WildFly use the "main" slot, while the m
 will use a slot name which matches the version, and also provide an alias to match its "major.minor" version.
 
 Our suggestion is to depend on the module using the "major.minor" representation, as this simplifies rolling out bugfix
-releases (micro version updates) of Hibernate ORM without changing application configuration (micro versions are always expected to be backwards compatible and released as bugfix only).
+releases (micro version updates) of Hibernate ORM without changing application configuration (micro versions are always expected to be backward compatible and released as bugfix only).
 
-For example if your application wants to use the latest version of Hibernate ORM version {majorMinorVersion}.x it should declare to use the module _org.hibernate:{majorMinorVersion}_. You can of course decide to use the full version instead for more precise control, in case an application requires a very specific version.
+For example, if your application wants to use the latest version of Hibernate ORM version {majorMinorVersion}.x it should declare to use the module _org.hibernate:{majorMinorVersion}_. You can of course decide to use the full version instead for more precise control, in case an application requires a very specific version.
 
 == Switch to a different Hibernate ORM slot
 
@@ -311,7 +311,7 @@ you might want to check it out as it lists several other useful properties.
 
 When using the custom modules provided by the feature packs you're going to give up on some of the integration which the application server normally automates.
 
-For example enabling an Infinispan 2nd level cache is straight forward when using the default Hibernate ORM
+For example, enabling an Infinispan 2nd level cache is straight forward when using the default Hibernate ORM
 module, as WildFly will automatically setup the dependency to the Infinispan and clustering components.
 When using these custom modules such integration will no longer work automatically: you can still
 enable all normally available features but these will require explicit configuration, as if you were

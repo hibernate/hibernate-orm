@@ -5,17 +5,17 @@
 
 Historically Hibernate called these components.
 JPA calls them embeddables.
-Either way the concept is the same: a composition of values.
+Either way, the concept is the same: a composition of values.
 
-For example we might have a `Publisher` class that is a composition of `name` and `country`,
+For example, we might have a `Publisher` class that is a composition of `name` and `country`,
 or a `Location` class that is a composition of `country` and `city`.
 
 .Usage of the word _embeddable_
 [NOTE]
 ====
-To avoid any confusion with the annotation that marks a given embeddable type, the annotation will be further referred as `@Embeddable`.
+To avoid any confusion with the annotation that marks a given embeddable type, the annotation will be further referred to as `@Embeddable`.
 
-Throughout this chapter and thereafter, for brevity sake, embeddable types may also be referred as _embeddable_.
+Throughout this chapter and thereafter, for brevity sake, embeddable types may also be referred to as _embeddable_.
 ====
 
 [[embeddable-type-mapping-example]]
@@ -27,7 +27,7 @@ include::{sourcedir}/NestedEmbeddableTest.java[tag=embeddable-type-mapping-examp
 ----
 ====
 
-An embeddable type is another form of value type, and its lifecycle is bound to a parent entity type, therefore inheriting the attribute access from its parent (for details on attribute access, see <<chapters/domain/entity.adoc#access-embeddable-types,Access strategies>>).
+An embeddable type is another form of a value type, and its lifecycle is bound to a parent entity type, therefore inheriting the attribute access from its parent (for details on attribute access, see <<chapters/domain/entity.adoc#access-embeddable-types,Access strategies>>).
 
 Embeddable types can be made up of basic values as well as associations, with the caveat that, when used as collection elements, they cannot define collections themselves.
 
@@ -36,7 +36,7 @@ Embeddable types can be made up of basic values as well as associations, with th
 Most often, embeddable types are used to group multiple basic type mappings and reuse them across several entities.
 
 [[simple-embeddable-type-mapping-example]]
-.Simple Embeddedable
+.Simple Embeddable
 ====
 [source,java]
 ----
@@ -62,7 +62,7 @@ So, the embeddable type is represented by the `Publisher` class and
 the parent entity makes use of it through the `book#publisher` object composition.
 
 The composed values are mapped to the same table as the parent table.
-Composition is part of good Object-oriented data modeling (idiomatic Java).
+Composition is part of good object-oriented data modeling (idiomatic Java).
 In fact, that table could also be mapped by the following entity type instead.
 
 [[alternative-to-embeddable-type-mapping-example]]
@@ -74,13 +74,13 @@ include::{sourcedir}/SimpleEmbeddableEquivalentTest.java[tag=embeddable-type-map
 ----
 ====
 
-The composition form is certainly more Object-oriented, and that becomes more evident as we work with multiple embeddable types.
+The composition form is certainly more object-oriented, and that becomes more evident as we work with multiple embeddable types.
 
 [[embeddable-multiple]]
 ==== Multiple embeddable types
 
 Although from an object-oriented perspective, it's much more convenient to work with embeddable types, this example doesn't work as-is.
-When the same embeddable type is included multiple times in the same parent entity type, the JPA specification demands setting the associated column names explicitly.
+When the same embeddable type is included multiple times in the same parent entity type, the JPA specification demands to set the associated column names explicitly.
 
 This requirement is due to how object properties are mapped to database columns.
 By default, JPA expects a database column having the same name with its associated object property.
@@ -94,10 +94,10 @@ We have a few options to handle this issue.
 JPA defines the `@AttributeOverride` annotation to handle this scenario.
 This way, the mapping conflict is resolved by setting up explicit name-based property-column type mappings.
 
-If an Embeddabe type is used multiple times in some entity, you need to use the
+If an Embeddable type is used multiple times in some entity, you need to use the
 http://docs.oracle.com/javaee/7/api/javax/persistence/AttributeOverride.html[`@AttributeOverride`] and
 http://docs.oracle.com/javaee/7/api/javax/persistence/AssociationOverride.html[`@AssociationOverride`] annotations
-to override the default column names definied by the Embeddable.
+to override the default column names defined by the Embeddable.
 
 Considering you have the following `Publisher` embeddable type
 which defines a `@ManyToOne` association with the `Country` entity:
@@ -179,17 +179,17 @@ You could even develop your own naming strategy to do other types of implicit na
 [[embeddable-collections]]
 ==== Collections of embeddable types
 
-Collections of embeddable types are specifically value collections (as embeddable types are a value type).
+Collections of embeddable types are specifically valued collections (as embeddable types are a value type).
 Value collections are covered in detail in <<chapters/domain/collections.adoc#collections-value,Collections of value types>>.
 
 [[embeddable-mapkey]]
-==== Embeddable types as Map key
+==== Embeddable type as a Map key
 
 Embeddable types can also be used as `Map` keys.
 This topic is converted in detail in <<chapters/domain/collections.adoc#collections-map,Map - key>>.
 
 [[embeddable-identifier]]
-==== Embeddable types as identifiers
+==== Embeddable type as identifier
 
 Embeddable types can also be used as entity type identifiers.
 This usage is covered in detail in <<chapters/domain/identifiers.adoc#identifiers-composite,Composite identifiers>>.

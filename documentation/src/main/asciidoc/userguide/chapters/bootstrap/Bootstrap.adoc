@@ -26,7 +26,7 @@ During the bootstrap process, you might want to customize Hibernate behavior so 
 === Native Bootstrapping
 
 This section discusses the process of bootstrapping a Hibernate `SessionFactory`.
-Specifically it discusses the bootstrapping APIs as redesigned in 5.0.
+Specifically, it addresses the bootstrapping APIs as redesigned in 5.0.
 For a discussion of the legacy bootstrapping API, see <<appendices/Legacy_Bootstrap.adoc#appendix-legacy-bootstrap,Legacy Bootstrapping>>
 
 [[bootstrap-native-registry]]
@@ -110,7 +110,7 @@ include::{sourcedir}/BootstrapTest.java[tags=bootstrap-event-listener-registrati
 [[bootstrap-native-metadata]]
 ==== Building the Metadata
 
-The second step in native bootstrapping is the building of a `org.hibernate.boot.Metadata` object containing the parsed representations of an application domain model and its mapping to a database.
+The second step in native bootstrapping is the building of an `org.hibernate.boot.Metadata` object containing the parsed representations of an application domain model and its mapping to a database.
 The first thing we obviously need to build a parsed representation is the source information to be parsed (annotated classes, `hbm.xml` files, `orm.xml` files).
 This is the purpose of `org.hibernate.boot.MetadataSources`:
 
@@ -133,7 +133,7 @@ If you are ok with the default behavior in building the Metadata then you can si
 ====
 Notice that a `ServiceRegistry` can be passed at a number of points in this bootstrapping process.
 The suggested approach is to build a `StandardServiceRegistry` yourself and pass that along to the `MetadataSources` constructor.
-From there, `MetadataBuilder`, `Metadata`, `SessionFactoryBuilder` and `SessionFactory` will all pick up that same `StandardServiceRegistry`.
+From there, `MetadataBuilder`, `Metadata`, `SessionFactoryBuilder`, and `SessionFactory` will all pick up that same `StandardServiceRegistry`.
 ====
 
 However, if you wish to adjust the process of building `Metadata` from `MetadataSources`,
@@ -156,7 +156,7 @@ include::{sourcedir}/BootstrapTest.java[tags=bootstrap-native-metadata-builder-e
 The final step in native bootstrapping is to build the `SessionFactory` itself.
 Much like discussed above, if you are ok with the default behavior of building a `SessionFactory` from a `Metadata` reference, you can simply call the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/Metadata.html#buildSessionFactory--[`buildSessionFactory`] method on the `Metadata` object.
 
-However, if you would like to adjust that building process you will need to use `SessionFactoryBuilder` as obtained via [`Metadata#getSessionFactoryBuilder`. Again, see its https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/Metadata.html#getSessionFactoryBuilder--[Javadocs] for more details.
+However, if you would like to adjust that building process, you will need to use `SessionFactoryBuilder` as obtained via [`Metadata#getSessionFactoryBuilder`. Again, see its https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/Metadata.html#getSessionFactoryBuilder--[Javadocs] for more details.
 
 [[bootstrap-native-SessionFactory-example]]
 .Native Bootstrapping - Putting it all together
@@ -291,22 +291,22 @@ JPA offers two mapping options:
 - annotations
 - XML mappings
 
-Although annotations are much more common, there are projects were XML mappings are preferred.
+Although annotations are much more common, there are projects where XML mappings are preferred.
 You can even mix annotations and XML mappings so that you can override annotation mappings with XML configurations that can be easily changed without recompiling the project source code.
-This is possible because if there are two conflicting mappings, the XML mappings takes precedence over its annotation counterpart.
+This is possible because if there are two conflicting mappings, the XML mappings take precedence over its annotation counterpart.
 
-The JPA specifications requires the XML mappings to be located on the class path:
+The JPA specification requires the XML mappings to be located on the classpath:
 
 [quote, Section 8.2.1.6.2 of the JPA 2.1 Specification]
 ____
 An object/relational mapping XML file named `orm.xml` may be specified in the `META-INF` directory in the root of the persistence unit or in the `META-INF` directory of any jar file referenced by the `persistence.xml`.
 
-Alternatively, or in addition, one or more mapping files may be referenced by the mapping-file elements of the persistence-unit element. These mapping files may be present anywhere on the class path.
+Alternatively, or in addition, one or more mapping files may be referenced by the mapping-file elements of the persistence-unit element. These mapping files may be present anywhere on the classpath.
 ____
 
-Therefore, the mapping files can reside in the application jar artifacts, or they can be stored in an external folder location with the cogitation that that location be included in the class path.
+Therefore, the mapping files can reside in the application jar artifacts, or they can be stored in an external folder location with the cogitation that that location be included in the classpath.
 
-Hibernate is more lenient in this regard so you can use any external location even outside of the application configured class path.
+Hibernate is more lenient in this regard so you can use any external location even outside of the application configured classpath.
 
 [[bootstrap-jpa-compliant-persistence-xml-external-mappings-example]]
 .META-INF/persistence.xml configuration file for external XML mappings

@@ -123,7 +123,7 @@ include::{extrasdir}/associations-one-to-many-bidirectional-example.sql[]
 [IMPORTANT]
 ====
 Whenever a bidirectional association is formed, the application developer must make sure both sides are in-sync at all times.
-The `addPhone()` and `removePhone()` are utilities methods that synchronize both ends whenever a child element is added or removed.
+The `addPhone()` and `removePhone()` are utility methods that synchronize both ends whenever a child element is added or removed.
 ====
 
 Because the `Phone` class has a `@NaturalId` column (the phone number being unique),
@@ -146,7 +146,7 @@ include::{extrasdir}/associations-one-to-many-bidirectional-lifecycle-example.sq
 Unlike the unidirectional `@OneToMany`, the bidirectional association is much more efficient when managing the collection persistence state.
 Every element removal only requires a single update (in which the foreign key column is set to `NULL`), and,
 if the child entity lifecycle is bound to its owning parent so that the child cannot exist without its parent,
-then we can annotate the association with the `orphan-removal` attribute and disassociating the child will trigger a delete statement on the actual child table row as well.
+then we can annotate the association with the `orphan-removal` attribute and dissociate the child will trigger a delete statement on the actual child table row as well.
 
 [[associations-one-to-one]]
 ==== `@OneToOne`
@@ -254,7 +254,7 @@ see the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement, BytecodeEnha
 ==== `@ManyToMany`
 
 The `@ManyToMany` association requires a link table that joins two entities.
-Like the `@OneToMany` association, `@ManyToMany` can be a either unidirectional or bidirectional.
+Like the `@OneToMany` association, `@ManyToMany` can be either unidirectional or bidirectional.
 
 [[associations-many-to-many-unidirectional]]
 ===== Unidirectional `@ManyToMany`

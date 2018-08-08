@@ -11,8 +11,8 @@ Since 5.0, Hibernate Spatial is now part of the Hibernate ORM project,
 and it allows you to deal with geographic data in a standardized way.
 
 Hibernate Spatial provides a standardized, cross-database interface to geographic data storage and query functions.
-It supports most of the functions described by the OGC Simple Feature Specification. Supported databases are: Oracle 10g/11g,
-PostgreSql/PostGIS, MySQL, Microsoft SQL Server and H2/GeoDB.
+It supports most of the functions described by the OGC Simple Feature Specification. Supported databases are Oracle 10g/11g,
+PostgreSQL/PostGIS, MySQL, Microsoft SQL Server and H2/GeoDB.
 
 Spatial data types are not part of the Java standard library, and they are absent from the JDBC specification.
 Over the years http://tsusiatsoftware.net/jts/main.html[JTS] has emerged the _de facto_ standard to fill this gap. JTS is
@@ -148,10 +148,10 @@ There are several dialects for MySQL:
 MySQL versions before 5.6.1 had only limited support for spatial operators.
 Most operators only took account of the minimum bounding rectangles (MBR) of the geometries, and not the geometries themselves.
 
-This changed in version 5.6.1 were MySQL introduced `ST_*` spatial operators.
+This changed in version 5.6.1, when MySQL introduced `ST_*` spatial operators.
 The dialect `MySQLSpatial56Dialect` uses these newer, more precise operators.
 
-These dialects may therefore produce results that differ from that of the other spatial dialects.
+These dialects may, therefore, produce results that differ from that of the other spatial dialects.
 
 For more information, see this page in the MySQL reference guide (esp. the section https://dev.mysql.com/doc/refman/5.7/en/spatial-relation-functions.html[Functions That Test Spatial Relations Between Geometry Objects])
 ====
@@ -164,21 +164,22 @@ This dialect has been tested on both Oracle 10g and Oracle 11g with the `SDO_GEO
 This dialect can be configured using the Hibernate property:
 +
 `hibernate.spatial.connection_finder`:::
-the fully-qualified classname for the implementation of the `ConnectionFinder` to use (see below).
+the fully-qualified class name for the implementation of the `ConnectionFinder` to use (see below).
 
 .The `ConnectionFinder` interface
 [NOTE]
 ====
-The `SDOGeometryType` requires access to an `OracleConnection` object wehen converting a geometry to SDO_GEOMETRY.
+The `SDOGeometryType` requires access to an `OracleConnection` object when converting a geometry to SDO_GEOMETRY.
 In some environments, however, the `OracleConnection` is not available (e.g. because a Java EE container or connection pool proxy wraps the connection object in its own `Connection` implementation).
 A `ConnectionFinder` knows how to retrieve the `OracleConnection` from the wrapper or proxy Connection object that is passed into prepared statements.
 
-The default implementation will, when the passed object is not already an `OracleConnection`, attempt to retrieve the `OracleConnection` by recursive reflection.
+When the passed object is not already an `OracleConnection`, the default implementation will attempt to retrieve the `OracleConnection` by recursive reflection.
 It will search for methods that return `Connection` objects, execute these methods and check the result.
-If the result is of type `OracleConnection` the object is returned, otherwise it recurses on it.
+If the result is of type `OracleConnection` the object is returned.
+Otherwise, it recurses on it.
 
-In may cases this strategy will suffice.
-If not, you can provide your own implementation of this interface on the class path, and configure it in the `hibernate.spatial.connection_finder` property.
+In may cases, this strategy will suffice.
+If not, you can provide your own implementation of this interface on the classpath, and configure it in the `hibernate.spatial.connection_finder` property.
 Note that implementations must be thread-safe and have a default no-args constructor.
 ====
 

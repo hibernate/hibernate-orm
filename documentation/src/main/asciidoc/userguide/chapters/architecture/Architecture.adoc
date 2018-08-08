@@ -16,7 +16,7 @@ As a JPA provider, Hibernate implements the Java Persistence API specifications 
 image:images/architecture/JPA_Hibernate.svg[image]
 
 SessionFactory (`org.hibernate.SessionFactory`):: A thread-safe (and immutable) representation of the mapping of the application domain model to a database.
-Acts as a factory for `org.hibernate.Session` instances. The `EntityManagerFactory` is the JPA equivalent of a `SessionFactory` and basically those two converge into the same `SessionFactory` implementation.
+Acts as a factory for `org.hibernate.Session` instances. The `EntityManagerFactory` is the JPA equivalent of a `SessionFactory` and basically, those two converge into the same `SessionFactory` implementation.
 +
 A `SessionFactory` is very expensive to create, so, for any given database, the application should have only one associated `SessionFactory`.
 The `SessionFactory` maintains services that Hibernate uses across all `Session(s)` such as second level caches, connection pools, transaction system integrations, etc.

@@ -120,7 +120,7 @@ public class BitSetUserTypeTest extends BaseCoreFunctionalTestCase {
 		@Type( type = "bitset" )
 		private BitSet bitSet;
 
-		//Constructors, getters and setters are omitted for brevity
+		//Constructors, getters, and setters are omitted for brevity
 	//end::basic-custom-type-BitSetUserType-mapping-example[]
 		public Product() {
 		}

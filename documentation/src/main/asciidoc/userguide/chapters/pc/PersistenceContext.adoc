@@ -12,8 +12,8 @@ Persistent data has a state in relation to both a persistence context and the un
 It has no persistent representation in the database and typically no identifier value has been assigned (unless the _assigned_ generator was used).
 `managed`, or `persistent`:: the entity has an associated identifier and is associated with a persistence context.
 It may or may not physically exist in the database yet.
-`detached`:: the entity has an associated identifier, but is no longer associated with a persistence context (usually because the persistence context was closed or the instance was evicted from the context)
-`removed`:: the entity has an associated identifier and is associated with a persistence context, however it is scheduled for removal from the database.
+`detached`:: the entity has an associated identifier but is no longer associated with a persistence context (usually because the persistence context was closed or the instance was evicted from the context)
+`removed`:: the entity has an associated identifier and is associated with a persistence context, however, it is scheduled for removal from the database.
 
 Much of the `org.hibernate.Session` and `javax.persistence.EntityManager` methods deal with moving entities between these states.
 
@@ -78,7 +78,7 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-remove-jpa-example]
 ====
 
 [[pc-remove-native-example]]
-.Deleting an entity with Hibernate API
+.Deleting an entity with the Hibernate API
 ====
 [source, JAVA, indent=0]
 ----
@@ -91,7 +91,7 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-remove-native-example]
 Hibernate itself can handle deleting detached state.
 JPA, however, disallows it.
 The implication here is that the entity instance passed to the `org.hibernate.Session` delete method can be either in managed or detached state,
-while the entity instance passed to remove on `javax.persistence.EntityManager` must be in managed state.
+while the entity instance passed to remove on `javax.persistence.EntityManager` must be in the managed state.
 ====
 
 [[pc-get-reference]]
@@ -177,7 +177,7 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-optional-by-id-nat
 [[pc-find-natural-id]]
 === Obtain an entity by natural-id
 
-In addition to allowing to load by identifier, Hibernate allows applications to load by declared natural identifier.
+In addition to allowing to load the entity by its identifier, Hibernate allows applications to load entities by the declared natural identifier.
 
 [[pc-find-by-natural-id-entity-example]]
 .Natural-id mapping
@@ -219,23 +219,23 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-optional-by-simple
 ----
 ====
 
-Hibernate offer a consistent API for accessing persistent data by identifier or by the natural-id. Each of these defines the same two data access methods:
+Hibernate offers a consistent API for accessing persistent data by identifier or by the natural-id. Each of these defines the same two data access methods:
 
 getReference::
 	Should be used in cases where the identifier is assumed to exist, where non-existence would be an actual error.
 	Should never be used to test existence.
 	That is because this method will prefer to create and return a proxy if the data is not already associated with the Session rather than hit the database.
-	The quintessential use-case for using this method is to create foreign-key based associations.
+	The quintessential use-case for using this method is to create foreign key based associations.
 load::
 	Will return the persistent data associated with the given identifier value or null if that identifier does not exist.
 
-Each of these two methods define an overloading variant accepting a `org.hibernate.LockOptions` argument.
+Each of these two methods defines an overloading variant accepting a `org.hibernate.LockOptions` argument.
 Locking is discussed in a separate <<chapters/locking/Locking.adoc#locking,chapter>>.
 
 [[pc-managed-state]]
 === Modifying managed/persistent state
 
-Entities in managed/persistent state may be manipulated by the application and any changes will be automatically detected and persisted when the persistence context is flushed.
+Entities in managed/persistent state may be manipulated by the application, and any changes will be automatically detected and persisted when the persistence context is flushed.
 There is no need to call a particular method to make your modifications persistent.
 
 [[pc-managed-state-jpa-example]]
@@ -320,7 +320,7 @@ include::{sourcedir}/DynamicUpdateTest.java[tags=pc-managed-state-dynamic-update
 ----
 ====
 
-This time, when reruning the previous test case, Hibernate generates the following SQL UPDATE statement:
+This time, when rerunning the previous test case, Hibernate generates the following SQL UPDATE statement:
 
 [[pc-managed-state-dynamic-update-example]]
 .Modifying the `Product` entity with a dynamic update
@@ -416,12 +416,12 @@ Clearing the persistence context has the same effect.
 Evicting a particular entity from the persistence context makes it detached.
 And finally, serialization will make the deserialized form be detached (the original instance is still managed).
 
-Detached data can still be manipulated, however the persistence context will no longer automatically know about these modification and the application will need to intervene to make the changes persistent again.
+Detached data can still be manipulated, however, the persistence context will no longer automatically know about these modifications, and the application will need to intervene to make the changes persistent again.
 
 [[pc-detach-reattach]]
 ==== Reattaching detached data
 
-Reattachment is the process of taking an incoming entity instance that is in detached state and re-associating it with the current persistence context.
+Reattachment is the process of taking an incoming entity instance that is in the detached state and re-associating it with the current persistence context.
 
 [IMPORTANT]
 ====
@@ -459,7 +459,7 @@ Provided the entity is detached, `update` and `saveOrUpdate` operate exactly the
 [[pc-merge]]
 ==== Merging detached data
 
-Merging is the process of taking an incoming entity instance that is in detached state and copying its data over onto a new managed instance.
+Merging is the process of taking an incoming entity instance that is in the detached state and copying its data over onto a new managed instance.
 
 Although not exactly per se, the following example is a good visualization of the `merge` operation internals.
 

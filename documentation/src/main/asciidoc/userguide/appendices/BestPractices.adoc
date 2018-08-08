@@ -215,12 +215,12 @@ If you need to fetch multiple collections, to avoid a Cartesian Product, you sho
 
 Hibernate has two caching layers:
 
-- the first-level cache (Persistence Context) which is a application-level repeatable reads.
+- the first-level cache (Persistence Context) which provides application-level repeatable reads.
 - the second-level cache which, unlike application-level caches, it doesn't store entity aggregates but normalized dehydrated entity entries.
 
 The first-level cache is not a caching solution "per se", being more useful for ensuring `READ COMMITTED` isolation level.
 
-While the first-level cache is short lived, being cleared when the underlying `EntityManager` is closed, the second-level cache is tied to an `EntityManagerFactory`.
+While the first-level cache is short-lived, being cleared when the underlying `EntityManager` is closed, the second-level cache is tied to an `EntityManagerFactory`.
 Some second-level caching providers offer support for clusters. Therefore, a node needs only to store a subset of the whole cached data.
 
 Although the second-level cache can reduce transaction response time since entities are retrieved from the cache rather than from the database,
@@ -233,8 +233,8 @@ and you should consider these alternatives prior to jumping to a second-level ca
 
 After properly tuning the database, to further reduce the average response time and increase the system throughput, application-level caching becomes inevitable.
 
-Topically, a key-value application-level cache like https://memcached.org/[Memcached] or http://redis.io/[Redis] is a common choice to store data aggregates.
-If you can duplicate all data in the key-value store, you have the option of taking down the database system for maintenance without completely loosing availability since read-only traffic can still be served from the cache.
+Typically, a key-value application-level cache like https://memcached.org/[Memcached] or http://redis.io/[Redis] is a common choice to store data aggregates.
+If you can duplicate all data in the key-value store, you have the option of taking down the database system for maintenance without completely losing availability since read-only traffic can still be served from the cache.
 
 One of the main challenges of using an application-level cache is ensuring data consistency across entity aggregates.
 That's where the second-level cache comes to the rescue.

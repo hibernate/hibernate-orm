@@ -18,9 +18,9 @@ They are type-safe in terms of using interfaces and classes to represent various
 They can also be type-safe in terms of referencing attributes as we will see in a bit.
 Users of the older Hibernate `org.hibernate.Criteria` query API will recognize the general approach, though we believe the JPA API to be superior as it represents a clean look at the lessons learned from that API.
 
-Criteria queries are essentially an object graph, where each part of the graph represents an increasing (as we navigate down this graph) more atomic part of query.
+Criteria queries are essentially an object graph, where each part of the graph represents an increasing (as we navigate down this graph) more atomic part of the query.
 The first step in performing a criteria query is building this graph.
-The `javax.persistence.criteria.CriteriaBuilder` interface is the first thing with which you need to become acquainted to begin using criteria queries.
+The `javax.persistence.criteria.CriteriaBuilder` interface is the first thing with which you need to become acquainted with begin using criteria queries.
 Its role is that of a factory for all the individual pieces of the criteria.
 You obtain a `javax.persistence.criteria.CriteriaBuilder` instance by calling the `getCriteriaBuilder()` method of either `javax.persistence.EntityManagerFactory` or `javax.persistence.EntityManager`.
 
@@ -148,7 +148,7 @@ Specifically, notice the constructor and its argument types.
 Since we will be returning `PersonWrapper` objects, we use `PersonWrapper` as the type of our criteria query.
 
 This example illustrates the use of the `javax.persistence.criteria.CriteriaBuilder` method construct which is used to build a wrapper expression.
-For every row in the result we are saying we would like a `PersonWrapper` instantiated with the remaining arguments by the matching constructor.
+For every row in the result, we are saying we would like a `PersonWrapper` instantiated with the remaining arguments by the matching constructor.
 This wrapper expression is then passed as the select.
 
 [[criteria-tuple]]
@@ -273,7 +273,7 @@ include::{sourcedir}/CriteriaTest.java[tags=criteria-from-fetch-example]
 [NOTE]
 ====
 Technically speaking, embedded attributes are always fetched with their owner.
-However in order to define the fetching of _Phone#addresses_ we needed a `javax.persistence.criteria.Fetch` because element collections are `LAZY` by default.
+However, in order to define the fetching of _Phone#addresses_ we needed a `javax.persistence.criteria.Fetch` because element collections are `LAZY` by default.
 ====
 
 [[criteria-path]]

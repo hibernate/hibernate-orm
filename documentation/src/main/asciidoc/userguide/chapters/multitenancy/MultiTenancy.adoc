@@ -75,7 +75,7 @@ include::{sourcedir}/AbstractMultiTenancyTest.java[tags=multitenacy-hibernate-se
 
 Additionally, when specifying the configuration, an `org.hibernate.MultiTenancyStrategy` should be named using the `hibernate.multiTenancy` setting.
 Hibernate will perform validations based on the type of strategy you specify.
-The strategy here correlates to the isolation approach discussed above.
+The strategy here correlates with the isolation approach discussed above.
 
 NONE::
   (the default) No multitenancy is expected.
@@ -111,7 +111,7 @@ The `MultiTenantConnectionProvider` to use can be specified in a number of ways:
 * Use the `hibernate.multi_tenant_connection_provider` setting.
 It could name a `MultiTenantConnectionProvider` instance, a `MultiTenantConnectionProvider` implementation class reference or a `MultiTenantConnectionProvider` implementation class name.
 * Passed directly to the `org.hibernate.boot.registry.StandardServiceRegistryBuilder`.
-* If none of the above options match, but the settings do specify a `hibernate.connection.datasource` value,
+* If none of the above options matches, but the settings do specify a `hibernate.connection.datasource` value,
 Hibernate will assume it should use the specific `DataSourceBasedMultiTenantConnectionProviderImpl` implementation which works on a number of pretty reasonable assumptions when running inside of an app server and using one `javax.sql.DataSource` per tenant.
 See its https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/connections/spi/DataSourceBasedMultiTenantConnectionProviderImpl.html[Javadocs] for more details.
 

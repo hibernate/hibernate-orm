@@ -59,7 +59,7 @@ Any settings prefixed with `hibernate.connection.` (other than the "special ones
 `hibernate.c3p0.max_size` or `c3p0.maxPoolSize`:: The maximum size of the c3p0 pool. See http://www.mchange.com/projects/c3p0/#maxPoolSize[c3p0 maxPoolSize]
 `hibernate.c3p0.timeout` or `c3p0.maxIdleTime`:: The Connection idle time. See http://www.mchange.com/projects/c3p0/#maxIdleTime[c3p0 maxIdleTime]
 `hibernate.c3p0.max_statements` or `c3p0.maxStatements`:: Controls the c3p0 PreparedStatement cache size (if using). See http://www.mchange.com/projects/c3p0/#maxStatements[c3p0 maxStatements]
-`hibernate.c3p0.acquire_increment` or `c3p0.acquireIncrement`:: Number of connections c3p0 should acquire at a time when pool is exhausted. See http://www.mchange.com/projects/c3p0/#acquireIncrement[c3p0 acquireIncrement]
+`hibernate.c3p0.acquire_increment` or `c3p0.acquireIncrement`:: Number of connections c3p0 should acquire at a time when the pool is exhausted. See http://www.mchange.com/projects/c3p0/#acquireIncrement[c3p0 acquireIncrement]
 `hibernate.c3p0.idle_test_period` or `c3p0.idleConnectionTestPeriod`:: Idle time before a c3p0 pooled connection is validated. See http://www.mchange.com/projects/c3p0/#idleConnectionTestPeriod[c3p0 idleConnectionTestPeriod]
 `hibernate.c3p0.initialPoolSize`:: The initial c3p0 pool size. If not specified, default is to use the min pool size. See http://www.mchange.com/projects/c3p0/#initialPoolSize[c3p0 initialPoolSize]
 Any other settings prefixed with `hibernate.c3p0.`:: Will have the `hibernate.` portion stripped and be passed to c3p0.
@@ -194,7 +194,7 @@ Although SQL is relatively standardized, each database vendor uses a subset and 
 This is referred to as the database's dialect.
 Hibernate handles variations across these dialects through its `org.hibernate.dialect.Dialect` class and the various subclasses for each database vendor.
 
-In most cases Hibernate will be able to determine the proper Dialect to use by asking some questions of the JDBC Connection during bootstrap.
+In most cases, Hibernate will be able to determine the proper Dialect to use by asking some questions of the JDBC Connection during bootstrap.
 For information on Hibernate's ability to determine the proper Dialect to use (and your ability to influence that resolution), see <<chapters/portability/Portability.adoc#portability-dialectresolver,Dialect resolution>>.
 
 If for some reason it is not able to determine the proper one or you want to use a custom Dialect, you will need to set the `hibernate.dialect` setting.
@@ -229,8 +229,8 @@ If for some reason it is not able to determine the proper one or you want to use
 |MySQL5 |Support for the MySQL database, version 5.x
 |MySQL5InnoDB |Support for the MySQL database, version 5.x preferring the InnoDB storage engine when exporting tables.
 |MySQL57InnoDB |Support for the MySQL database, version 5.7 preferring the InnoDB storage engine when exporting tables. May work with newer versions
-|MariaDB |Support for the MariadB database. May work with newer versions
-|MariaDB53 |Support for the MariadB database, version 5.3 and newer.
+|MariaDB |Support for the MariaDB database. May work with newer versions
+|MariaDB53 |Support for the MariaDB database, version 5.3 and newer.
 |Oracle8i |Support for the Oracle database, version 8i
 |Oracle9i |Support for the Oracle database, version 9i
 |Oracle10g |Support for the Oracle database, version 10g

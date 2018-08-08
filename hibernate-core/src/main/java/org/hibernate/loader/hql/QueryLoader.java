@@ -32,7 +32,6 @@ import org.hibernate.hql.internal.ast.tree.AggregatedSelectExpression;
 import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.hql.internal.ast.tree.QueryNode;
 import org.hibernate.hql.internal.ast.tree.SelectClause;
-import org.hibernate.hql.spi.NamedParameterInformation;
 import org.hibernate.hql.spi.ParameterInformation;
 import org.hibernate.internal.IteratorImpl;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -182,7 +181,7 @@ public class QueryLoader extends BasicLoader {
 			}
 		}
 
-		//NONE, because its the requested lock mode, not the actual! 
+		//NONE, because its the requested lock mode, not the actual!
 		defaultLockModes = ArrayHelper.fillArray( LockMode.NONE, size );
 	}
 
@@ -450,9 +449,24 @@ public class QueryLoader extends BasicLoader {
 		if ( hasScalars ) {
 			String[][] scalarColumns = scalarColumnNames;
 			int queryCols = queryReturnTypes.length;
+			int managedTypeIndex = 0;
+			SessionFactoryImplementor factory = session.getFactory();
 			resultRow = new Object[queryCols];
 			for ( int i = 0; i < queryCols; i++ ) {
-				resultRow[i] = queryReturnTypes[i].nullSafeGet( rs, scalarColumns[i], session, null );
+				// Types for inverse relationships have a zero column span in which case we have to get the
+				// result from the row array.
+				Type queryReturnType = queryReturnTypes[i];
+				if ( queryReturnType.getColumnSpan( factory ) == 0 ) {
+					resultRow[i] = row[managedTypeIndex];
+				}
+				else {
+					resultRow[i] = queryReturnType.nullSafeGet( rs, scalarColumns[i], session, null );
+				}
+				// The row array contains entity objects, we have to count up the index to access inverse relationship
+				// entities from the row array
+				if ( queryReturnType.isEntityType() ) {
+					managedTypeIndex++;
+				}
 			}
 		}
 		else {

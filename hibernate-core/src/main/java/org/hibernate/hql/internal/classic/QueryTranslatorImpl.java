@@ -268,10 +268,12 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		return sqlString;
 	}
 
+	@Override
 	public List<String> collectSqlStrings() {
-		return ArrayHelper.toList( new String[] {sqlString} );
+		return Collections.singletonList( sqlString );
 	}
 
+	@Override
 	public String getQueryString() {
 		return queryString;
 	}
@@ -291,15 +293,18 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	 *
 	 * @return an array of <tt>Type</tt>s.
 	 */
+	@Override
 	public Type[] getReturnTypes() {
 		return actualReturnTypes;
 	}
 
+	@Override
 	public String[] getReturnAliases() {
 		// return aliases not supported in classic translator!
 		return NO_RETURN_ALIASES;
 	}
 
+	@Override
 	public String[][] getColumnNames() {
 		return scalarColumnNames;
 	}

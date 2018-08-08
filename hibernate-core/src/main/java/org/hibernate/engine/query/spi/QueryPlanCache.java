@@ -220,7 +220,13 @@ public class QueryPlanCache implements Serializable {
 	}
 
 	/**
-	 * clean up QueryPlanCache when SessionFactory is closed
+	 * Clean up the caches when the SessionFactory is closed.
+	 * <p>
+	 * Note that depending on the cache strategy implementation chosen, clearing the cache might not reclaim all the
+	 * memory.
+	 * <p>
+	 * Typically, when using LIRS, clearing the cache only invalidates the entries but the outdated entries are kept in
+	 * memory until they are replaced by others. It is not considered a memory leak as the cache is bounded.
 	 */
 	public void cleanup() {
 		LOG.trace( "Cleaning QueryPlan Cache" );

@@ -17,10 +17,10 @@ This documentation largely treats the physical and logic notions of a transactio
 [[transactions-physical]]
 === Physical Transactions
 
-Hibernate uses the JDBC API for persistence. In the world of Java there are two well-defined mechanism for dealing with transactions in JDBC: JDBC itself and JTA.
+Hibernate uses the JDBC API for persistence. In the world of Java, there are two well-defined mechanisms for dealing with transactions in JDBC: JDBC itself and JTA.
 Hibernate supports both mechanisms for integrating with transactions and allowing applications to manage physical transactions.
 
-Transaction handling per `Session` is handled by the `org.hibernate.resource.transaction.spi.TransactionCoordinator` contract,
+The transaction handling per `Session` is handled by the `org.hibernate.resource.transaction.spi.TransactionCoordinator` contract,
 which are built by the `org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder` service.
 `TransactionCoordinatorBuilder` represents a strategy for dealing with transactions whereas TransactionCoordinator represents one instance of that strategy related to a Session.
 Which `TransactionCoordinatorBuilder` implementation to use is defined by the `hibernate.transaction.coordinator_class` setting.
@@ -50,9 +50,9 @@ The Hibernate `Session` acts as a transaction-scoped cache providing repeatable 
 [IMPORTANT]
 ====
 To reduce lock contention in the database, the physical database transaction needs to be as short as possible.
-Long database transactions prevent your application from scaling to a highly-concurrent load.
+Long-running database transactions prevent your application from scaling to a highly-concurrent load.
 Do not hold a database transaction open during end-user-level work, but open it after the end-user-level work is finished.
-This is concept is referred to as `transactional write-behind`.
+This concept is referred to as `transactional write-behind`.
 ====
 
 [[transactions-physical-jtaplatform]]
@@ -99,11 +99,11 @@ To use this API, you would obtain the `org.hibernate.Transaction` from the Sessi
 `markRollbackOnly`:: that works in both JTA and JDBC
 `getTimeout` and `setTimeout`:: that again work in both JTA and JDBC
 `registerSynchronization`:: that allows you to register JTA Synchronizations even in non-JTA environments.
-In fact in both JTA and JDBC environments, these `Synchronizations` are kept locally by Hibernate.
+In fact, in both JTA and JDBC environments, these `Synchronizations` are kept locally by Hibernate.
 In JTA environments, Hibernate will only ever register one single `Synchronization` with the `TransactionManager` to avoid ordering problems.
 
 Additionally, it exposes a getStatus method that returns an `org.hibernate.resource.transaction.spi.TransactionStatus` enum.
-This method checks with the underlying transaction system if needed, so care should be taken to minimize its use; it can have a big performance impact in certain JTA set ups.
+This method checks with the underlying transaction system if needed, so care should be taken to minimize its use; it can have a big performance impact in certain JTA setups.
 
 Let's take a look at using the Transaction API in the various environments.
 
@@ -134,7 +134,7 @@ include::{sourcedir}/TransactionsTest.java[tags=transactions-api-bmt-example]
 ----
 ====
 
-In the CMT case we really could have omitted all of the Transaction calls.
+In the CMT case, we really could have omitted all of the Transaction calls.
 But the point of the examples was to show that the Transaction API really does insulate your code from the underlying transaction mechanism.
 In fact, if you strip away the comments and the single configuration setting supplied at bootstrap, the code is exactly the same in all 3 examples.
 In other words, we could develop that code and drop it, as-is, in any of the 3 transaction environments.
@@ -184,7 +184,7 @@ If you use JTA, you can utilize the JTA interfaces to demarcate transactions.
 If you execute in an EJB container that supports CMT, transaction boundaries are defined declaratively and you do not need any transaction or session demarcation operations in your code. Refer to <<transactions>> for more information and code examples.
 
 The `hibernate.current_session_context_class` configuration parameter defines which `org.hibernate.context.spi.CurrentSessionContext` implementation should be used.
-For backwards compatibility, if this configuration parameter is not set but a `org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform` is configured, Hibernate will use the `org.hibernate.context.internal.JTASessionContext`.
+For backward compatibility, if this configuration parameter is not set but a `org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform` is configured, Hibernate will use the `org.hibernate.context.internal.JTASessionContext`.
 
 === Transactional patterns (and anti-patterns)
 
@@ -195,7 +195,7 @@ This is an anti-pattern of opening and closing a `Session` for each database cal
 It is also an anti-pattern in terms of database transactions.
 Group your database calls into a planned sequence.
 In the same way, do not auto-commit after every SQL statement in your application.
-Hibernate disables, or expects the application server to disable, auto-commit mode immediately.
+Hibernate disables or expects the application server to disable, auto-commit mode immediately.
 Database transactions are never optional.
 All communication with a database must be encapsulated by a transaction.
 Avoid auto-commit behavior for reading data because many small transactions are unlikely to perform better than one clearly-defined unit of work, and are more difficult to maintain and extend.
@@ -216,7 +216,7 @@ Web applications are a prime example of this type of system, though certainly no
 At the beginning of handling such a request, the application opens a Hibernate Session, starts a transaction, performs all data related work, ends the transaction and closes the Session.
 The crux of the pattern is the one-to-one relationship between the transaction and the Session.
 
-Within this pattern there is a common technique of defining a current session to simplify the need of passing this `Session` around to all the application components that may need access to it.
+Within this pattern, there is a common technique of defining a current session to simplify the need of passing this `Session` around to all the application components that may need access to it.
 Hibernate provides support for this technique through the `getCurrentSession` method of the `SessionFactory`.
 The concept of a _current_ session has to have a scope that defines the bounds in which the notion of _current_ is valid.
 This is the purpose of the `org.hibernate.context.spi.CurrentSessionContext` contract.
@@ -230,7 +230,7 @@ Using this implementation, a `Session` will be opened the first time `getCurrent
 This is best represented with the `org.hibernate.context.internal.ManagedSessionContext` implementation of the `org.hibernate.context.spi.CurrentSessionContext` contract.
 Here an external component is responsible for managing the lifecycle and scoping of a _current_ session.
 At the start of such a scope, `ManagedSessionContext#bind()` method is called passing in the `Session`.
-At the end, its `unbind()` method is called.
+In the end, its `unbind()` method is called.
 Some common examples of such _external components_ include:
 ** `javax.servlet.Filter` implementation
 ** AOP interceptor with a pointcut on the service methods
@@ -285,7 +285,7 @@ Automatic versioning is used to isolate concurrent modifications.
 
 |Extended `Session` |The Hibernate `Session` can be disconnected from the underlying JDBC connection after the database transaction has been committed and reconnected when a new client request occurs.
 This pattern is known as session-per-conversation and makes even reattachment unnecessary.
-Automatic versioning is used to isolate concurrent modifications and the `Session` will not be allowed to flush automatically, only explicitly.
+Automatic versioning is used to isolate concurrent modifications, and the `Session` will not be allowed to flush automatically, only explicitly.
 |=======================================================================
 
 Session-per-request-with-detached-objects and session-per-conversation each have advantages and disadvantages.
@@ -295,7 +295,7 @@ Session-per-request-with-detached-objects and session-per-conversation each have
 
 The _session-per-application_ is also considered an anti-pattern.
 The Hibernate `Session`, like the JPA `EntityManager`, is not a thread-safe object and it is intended to be confined to a single thread at once.
-If the `Session` is shared among multiple threads, there will be race conditions as well as visibility issues , so beware of this.
+If the `Session` is shared among multiple threads, there will be race conditions as well as visibility issues, so beware of this.
 
 An exception thrown by Hibernate means you have to rollback your database transaction and close the `Session` immediately. 
 If your `Session` is bound to the application, you have to stop the application. 

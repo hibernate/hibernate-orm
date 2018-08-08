@@ -8,7 +8,7 @@ Tuning how an application does fetching is one of the biggest factors in determi
 Fetching too much data, in terms of width (values/columns) and/or depth (results/rows),
 adds unnecessary overhead in terms of both JDBC communication and ResultSet processing.
 Fetching too little data might cause additional fetching to be needed.
-Tuning how an application fetches data presents a great opportunity to influence the application overall performance.
+Tuning how an application fetches data presents a great opportunity to influence the overall application performance.
 
 [[fetching-basics]]
 === The basics
@@ -27,7 +27,7 @@ There are a number of scopes for defining fetching:
 
 _static_::
 	Static definition of fetching strategies is done in the mappings.
-	The statically-defined fetch strategies is used in the absence of any dynamically defined strategies
+	The statically-defined fetch strategies are used in the absence of any dynamically defined strategies
     SELECT:::
 		Performs a separate SQL select to load the data. This can either be EAGER (the second select is issued immediately) or LAZY (the second select is delayed until the data is needed).
 		This is the strategy generally termed N+1.
@@ -40,13 +40,13 @@ _static_::
       	Performs a separate SQL select to load associated data based on the SQL restriction used to load the owner.
       	Again, this can either be EAGER (the second select is issued immediately) or LAZY (the second select is delayed until the data is needed).
 _dynamic_ (sometimes referred to as runtime)::
-	Dynamic definition is really use-case centric. There are multiple ways to define dynamic fetching:
+	The dynamic definition is really use-case centric. There are multiple ways to define dynamic fetching:
     _fetch profiles_::: defined in mappings, but can be enabled/disabled on the `Session`.
     HQL/JPQL::: and both Hibernate and JPA Criteria queries have the ability to specify fetching, specific to said query.
     entity graphs::: Starting in Hibernate 4.2 (JPA 2.1) this is also an option.
 
 [[fetching-direct-vs-query]]
-=== Direct fetching vs entity queries
+=== Direct fetching vs. entity queries
 
 To see the difference between direct fetching and entity queries in regard to eagerly fetched associations, consider the following entities:
 
@@ -308,7 +308,7 @@ include::{extrasdir}/fetching-batch-fetching-example.sql[]
 ----
 ====
 
-As you can see in the example above, there are only two SQL statements used to fetch the `Employee` entities associated to multiple `Department` entities.
+As you can see in the example above, there are only two SQL statements used to fetch the `Employee` entities associated with multiple `Department` entities.
 
 [TIP]
 ====
@@ -388,7 +388,7 @@ include::{sourcedir}/FetchModeSubselectTest.java[tags=fetching-strategies-fetch-
 ----
 ====
 
-Now, we are going to fetch all `Department` entities that match a given filtering criteria
+Now, we are going to fetch all `Department` entities that match a given filtering predicate
 and then navigate their `employees` collections.
 
 Hibernate is going to avoid the N+1 query issue by generating a single SQL statement to initialize all `employees` collections

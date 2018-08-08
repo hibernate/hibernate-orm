@@ -187,7 +187,7 @@ http://sourceforge.net/projects/hibernate/files/hibernate4[SourceForge].
 In most cases the annotation processor will automatically run provided
 the processor jar is added to the build classpath and a JDK >6 is used.
 This happens due to Java's Service Provider contract and the fact
-the the Hibernate Static Metamodel Generator jar files contains the
+the Hibernate Static Metamodel Generator jar files contains the
 file _javax.annotation.processing.Processor_ in the _META-INF/services_ directory. 
 
 The fully qualified name of the processor itself is: 

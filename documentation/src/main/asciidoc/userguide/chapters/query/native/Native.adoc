@@ -5,7 +5,7 @@
 :extrasdir: extras
 
 You may also express queries in the native SQL dialect of your database.
-This is useful if you want to utilize database specific features such as window functions, Common Table Expressions (CTE) or the `CONNECT BY` option in Oracle.
+This is useful if you want to utilize database-specific features such as window functions, Common Table Expressions (CTE) or the `CONNECT BY` option in Oracle.
 It also provides a clean migration path from a direct SQL/JDBC based application to Hibernate/JPA.
 Hibernate also allows you to specify handwritten SQL (including stored procedures) for all create, update, delete, and retrieve operations.
 
@@ -84,7 +84,7 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-scalar-query-partial-explic
 ----
 ====
 
-This is essentially the same query as before, but now `ResultSetMetaData` is used to determine the type of `name`, where as the type of `id` is explicitly specified.
+This is essentially the same query as before, but now `ResultSetMetaData` is used to determine the type of `name`, whereas the type of `id` is explicitly specified.
 
 How the `java.sql.Types` returned from `ResultSetMetaData` is mapped to Hibernate types is controlled by the `Dialect`.
 If a specific type is not mapped, or does not result in the expected type, it is possible to customize it via calls to `registerHibernateType` in the Dialect.
@@ -112,7 +112,7 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-entity-query-example]
 ----
 ====
 
-Assuming that `Person` is mapped as a class with the columns `id`, `name`, `nickName`, `address`, `createdOn` and `version`,
+Assuming that `Person` is mapped as a class with the columns `id`, `name`, `nickName`, `address`, `createdOn`, and `version`,
 the following query will also return a `List` where each element is a `Person` entity.
 
 [[sql-jpa-entity-query-explicit-result-set-example]]
@@ -138,7 +138,7 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-entity-query-explicit-resul
 
 If the entity is mapped with a `many-to-one` or a child-side `one-to-one` to another entity,
 it is required to also return this when performing the native query,
-otherwise a database specific _column not found_ error will occur.
+otherwise, a database-specific _column not found_ error will occur.
 
 [[sql-jpa-entity-associations-query-many-to-one-example]]
 .JPA native query selecting entities with many-to-one association
@@ -230,7 +230,7 @@ include::{extrasdir}/sql-hibernate-entity-associations-query-one-to-many-join-ex
 ----
 ====
 
-At this stage you are reaching the limits of what is possible with native queries, without starting to enhance the sql queries to make them usable in Hibernate.
+At this stage, you are reaching the limits of what is possible with native queries, without starting to enhance the sql queries to make them usable in Hibernate.
 Problems can arise when returning multiple entities of the same type or when the default alias/column names are not enough.
 
 [[sql-multi-entity-query]]
@@ -261,7 +261,7 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-multi-entity-query-example]
 
 The query was intended to return all `Person` and `Partner` instances with the same name.
 The query fails because there is a conflict of names since the two entities are mapped to the same column names (e.g. `id`, `name`, `version`).
-Also, on some databases the returned column aliases will most likely be on the form `pr.id`, `pr.name`, etc.
+Also, on some databases, the returned column aliases will most likely be on the form `pr.id`, `pr.name`, etc.
 which are not equal to the columns specified in the mappings (`id` and `name`).
 
 The following form is not vulnerable to column name duplication:
@@ -281,13 +281,13 @@ There's no such equivalent in JPA because the `Query` interface doesn't define a
 ====
 
 The `{pr.*}` and `{pt.*}` notation used above is shorthand for "all properties".
-Alternatively, you can list the columns explicitly, but even in this case Hibernate injects the SQL column aliases for each property.
+Alternatively, you can list the columns explicitly, but even in this case, Hibernate injects the SQL column aliases for each property.
 The placeholder for a column alias is just the property name qualified by the table alias.
 
 [[sql-alias-references]]
 === Alias and property references
 
-In most cases the above alias injection is needed.
+In most cases, the above alias injection is needed.
 For queries relating to more complex mappings, like composite properties, inheritance discriminators, collections etc., you can use specific aliases that allow Hibernate to inject the proper aliases.
 
 The following table shows the different ways you can use the alias injection.
@@ -409,7 +409,7 @@ and the Hibernate `org.hibernate.annotations.NamedNativeQuery` annotation extend
 `timeout()`::
 	The query timeout (in seconds). By default, there's no timeout.
 `callable()`::
-	Does the SQL query represent a call to a procedure/function? Default is false.
+	Does the SQL query represent a call to a procedure/function? The default is false.
 `comment()`::
 	A comment added to the SQL query for tuning the execution plan.
 `cacheMode()`::
@@ -670,7 +670,7 @@ Fortunately, Hibernate allows you to resolve the current global catalog and sche
 {h-schema}:: resolves the current `hibernate.default_schema` configuration property value.
 {h-domain}:: resolves the current `hibernate.default_catalog` and `hibernate.default_schema` configuration property values (e.g. catalog.schema).
 
-Withe these placeholders, you can imply the catalog, schema, or both catalog and schema for every native query.
+With these placeholders, you can imply the catalog, schema, or both catalog and schema for every native query.
 
 So, when running the following native query:
 
@@ -863,15 +863,15 @@ include::{sourcedir}/OracleStoredProcedureTest.java[tags=sql-jpa-call-sp-ref-cur
 ====
 
 [[sql-crud]]
-=== Custom SQL for create, update, and delete
+=== Custom SQL for CRUD (Create, Read, Update and Delete)
 
-Hibernate can use custom SQL for create, update, and delete operations.
+Hibernate can use custom SQL for CRUD operations.
 The SQL can be overridden at the statement level or individual column level.
 This section describes statement overrides.
 For columns, see <<chapters/domain/basic_types.adoc#mapping-column-read-and-write,Column transformers: read and write expressions>>.
 
 The following example shows how to define custom SQL operations using annotations.
-`@SQLInsert`, `@SQLUpdate` and `@SQLDelete` override the INSERT, UPDATE, DELETE statements of a given entity.
+`@SQLInsert`, `@SQLUpdate`, and `@SQLDelete` override the INSERT, UPDATE, DELETE statements of a given entity.
 For the SELECT clause, a `@Loader` must be defined along with a `@NamedNativeQuery` used for loading the underlying table record.
 
 For collections, Hibernate allows defining a custom `@SQLDeleteAll` which is used for removing all child records associated with a given parent entity.
@@ -894,7 +894,8 @@ The same is done for the `phones` collection. The `@SQLDeleteAll` and the `SQLIn
 
 [NOTE]
 ====
-You also call a store procedure using the custom CRUD statements; the only requirement is to set the `callable` attribute to `true`.
+You can also call a store procedure using the custom CRUD statements.
+The only requirement is to set the `callable` attribute to `true`.
 ====
 
 To check that the execution happens correctly, Hibernate allows you to define one of those three strategies:
@@ -927,7 +928,7 @@ include::{sourcedir}/CustomSQLSecondaryTableTest.java[tags=sql-custom-crud-secon
 [TIP]
 ====
 The SQL is directly executed in your database, so you can use any dialect you like.
-This will, however, reduce the portability of your mapping if you use database specific SQL.
+This will, however, reduce the portability of your mapping if you use database-specific SQL.
 ====
 
 You can also use stored procedures for customizing the CRUD statements.

@@ -53,7 +53,7 @@ public class CreationTimestampTest extends BaseEntityManagerFunctionalTestCase {
 		@CreationTimestamp
 		private Date timestamp;
 
-		//Constructors, getters and setters are omitted for brevity
+		//Constructors, getters, and setters are omitted for brevity
 	//end::mapping-generated-CreationTimestamp-example[]
 
 		public Event() {}

@@ -4,7 +4,7 @@
 This guide discusses the process of bootstrapping a Hibernate `org.hibernate.SessionFactory`.  It also
 discusses the ways in which applications and integrators can hook-in to and affect that process.  This
 bootstrapping process is defined in 2 distinct steps.  The first step is the building of a ServiceRegistry
-holding the services Hibernate will need at bootstrap- and run-time.  The second step is the building of
+holding the services Hibernate will need at bootstrap- and runtime.  The second step is the building of
 a Metadata object representing the mapping information for the application's model and its mapping to
 the database.
 

@@ -56,7 +56,7 @@ public class InMemoryValueGenerationTest extends BaseEntityManagerFunctionalTest
 		@FunctionCreationTimestamp
 		private Date timestamp;
 
-		//Constructors, getters and setters are omitted for brevity
+		//Constructors, getters, and setters are omitted for brevity
 	//end::mapping-in-memory-generated-value-example[]
 		public Event() {}
 

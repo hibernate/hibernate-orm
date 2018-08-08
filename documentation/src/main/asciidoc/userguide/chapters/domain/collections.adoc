@@ -3,11 +3,11 @@
 :sourcedir: ../../../../../test/java/org/hibernate/userguide/collections
 :extrasdir: extras/collections
 
-Naturally Hibernate also allows to persist collections. 
-These persistent collections can contain almost any other Hibernate type, including: basic types, custom types, embeddables and references to other entities.
+Naturally Hibernate also allows persisting collections.
+These persistent collections can contain almost any other Hibernate type, including basic types, custom types, embeddables, and references to other entities.
 In this context, the distinction between value and reference semantics is very important. 
-An object in a collection might be handled with _value_ semantics (its life cycle being fully depends on the collection owner), 
-or it might be a reference to another entity with its own life cycle. 
+An object in a collection might be handled with _value_ semantics (its lifecycle being fully dependant on the collection owner),
+or it might be a reference to another entity with its own lifecycle.
 In the latter case, only the _link_ between the two objects is considered to be a state held by the collection.
 
 The owner of the collection is always an entity, even if the collection is defined by an embeddable type.
@@ -46,7 +46,7 @@ The persistent collections injected by Hibernate behave like `ArrayList`, `HashS
 [[collections-synopsis]]
 ==== Collections as a value type
 
-Value and embeddable type collections have a similar behavior as simple value types because they are automatically persisted when referenced by a persistent object and automatically deleted when unreferenced.
+Value and embeddable type collections have similar behavior as simple value types because they are automatically persisted when referenced by a persistent object and automatically deleted when unreferenced.
 If a collection is passed from one persistent object to another, its elements might be moved from one table to another.
 
 [IMPORTANT]
@@ -170,7 +170,7 @@ In the following sections, we will go through all these collection types and dis
 [[collections-bag]]
 ==== Bags
 
-Bags are unordered lists and we can have unidirectional bags or bidirectional ones.
+Bags are unordered lists, and we can have unidirectional bags or bidirectional ones.
 
 [[collections-unidirectional-bag]]
 ===== Unidirectional bags
@@ -270,7 +270,7 @@ include::{extrasdir}/collections-bidirectional-bag-orphan-removal-example.sql[]
 ----
 ====
 
-When rerunning the previous example, the child will get removed because the parent-side propagates the removal upon disassociating the child entity reference.
+When rerunning the previous example, the child will get removed because the parent-side propagates the removal upon dissociating the child entity reference.
 
 [[collections-list]]
 ==== Ordered Lists
@@ -418,7 +418,7 @@ http://docs.oracle.com/javaee/7/api/javax/persistence/OrderBy.html[`@OrderBy`] a
 when fetching the current annotated collection, the Hibernate specific
 https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OrderBy.html[`@OrderBy`] annotation is used to specify a *SQL* clause instead.
 
-In the following example, the `@OrderBy` annotations uses the `CHAR_LENGTH` SQL function to order the `Article` entities
+In the following example, the `@OrderBy` annotation uses the `CHAR_LENGTH` SQL function to order the `Article` entities
 by the number of characters of the `name` attribute.
 
 [[collections-customizing-ordered-by-sql-clause-mapping-example]]
@@ -541,7 +541,7 @@ include::{sourcedir}/UnidirectionalComparatorSortedSetTest.java[lines=75..77,ind
 [[collections-map]]
 ==== Maps
 
-A `java.util.Map` is a ternary association because it requires a parent entity, a map key and a value.
+A `java.util.Map` is a ternary association because it requires a parent entity, a map key, and a value.
 An entity can either be a map key or a map value, depending on the mapping.
 Hibernate allows using the following map keys:
 
@@ -601,7 +601,7 @@ include::{extrasdir}/collections-map-custom-key-type-sql-example.sql[]
 ----
 
 The `call_register` records the call history for every `person`.
-The `call_timestamp_epoch` column stores the phone call timestamp as a Unix timestamp since epoch.
+The `call_timestamp_epoch` column stores the phone call timestamp as a Unix timestamp since the Unix epoch.
 
 [NOTE]
 ====
@@ -700,7 +700,7 @@ include::{extrasdir}/collections-map-key-class-fetch-example.sql[]
 A unidirectional map exposes a parent-child association from the parent-side only.
 
 The following example shows a unidirectional map which also uses a `@MapKeyTemporal` annotation.
-The map key is a timestamp and it's taken from the child entity table.
+The map key is a timestamp, and it's taken from the child entity table.
 
 [NOTE]
 ====
@@ -851,7 +851,7 @@ The reason why the `Queue` interface is not used for the entity attribute is bec
 - `java.util.SortedSet`
 - `java.util.SortedMap`
 
-However, the custom collection type can still be customized as long as the base type is one of the aformentioned persistent types.
+However, the custom collection type can still be customized as long as the base type is one of the aforementioned persistent types.
 ====
 
 This way, the `Phone` collection can be used as a `java.util.Queue`:

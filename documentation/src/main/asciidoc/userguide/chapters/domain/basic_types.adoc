@@ -84,8 +84,8 @@ Internally Hibernate uses a registry of basic types when it needs to resolve a s
 [cols=",,,",options="header",]
 |=================================================================================================
 |Hibernate type (org.hibernate.spatial package) |JDBC type |Java type |BasicTypeRegistry key(s)
-|JTSGeometryType |depends on the dialect | com.vividsolutions.jts.geom.Geometry |jts_geometry, or the classname of Geometry or any of its subclasses
-|GeolatteGeometryType |depends on the dialect | org.geolatte.geom.Geometry |geolatte_geometry, or the classname of Geometry or any of its subclasses
+|JTSGeometryType |depends on the dialect | com.vividsolutions.jts.geom.Geometry |jts_geometry, or the class name of Geometry or any of its subclasses
+|GeolatteGeometryType |depends on the dialect | org.geolatte.geom.Geometry |geolatte_geometry, or the class name of Geometry or any of its subclasses
 |=================================================================================================
 
 [NOTE]
@@ -151,7 +151,7 @@ The `@Basic` annotation defines 2 attributes.
 JPA defines this as "a hint", which essentially means that it effect is specifically required.
 As long as the type is not primitive, Hibernate takes this to mean that the underlying column should be `NULLABLE`.
 `fetch` - FetchType (defaults to EAGER):: Defines whether this attribute should be fetched eagerly or lazily.
-JPA says that EAGER is a requirement to the provider (Hibernate) that the value should be fetched when the owner is fetched, while LAZY is merely a hint that the value be fetched when the attribute is accessed.
+JPA says that EAGER is a requirement to the provider (Hibernate) that the value should be fetched when the owner is fetched, while LAZY is merely a hint that the value is fetched when the attribute is accessed.
 Hibernate ignores this setting for basic types unless you are using bytecode enhancement.
 See the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,BytecodeEnhancement>> for additional information on fetching and on bytecode enhancement.
 
@@ -188,7 +188,7 @@ or its `org.hibernate.type.IntegerType` for mapping `java.lang.Integer` attribut
 The answer lies in a service inside Hibernate called the `org.hibernate.type.BasicTypeRegistry`, which essentially maintains a map of `org.hibernate.type.BasicType` (a `org.hibernate.type.Type` specialization) instances keyed by a name.
 
 We will see later, in the <<basic-type-annotation>> section, that we can explicitly tell Hibernate which BasicType to use for a particular attribute.
-But first let's explore how implicit resolution works and how applications can adjust implicit resolution.
+But first, let's explore how implicit resolution works and how applications can adjust the implicit resolution.
 
 [NOTE]
 ====
@@ -214,7 +214,7 @@ For more details, see <<basic-custom-type>> section.
 Sometimes you want a particular attribute to be handled differently.
 Occasionally Hibernate will implicitly pick a `BasicType` that you do not want (and for some reason you do not want to adjust the `BasicTypeRegistry`).
 
-In these cases you must explicitly tell Hibernate the `BasicType` to use, via the `org.hibernate.annotations.Type` annotation.
+In these cases, you must explicitly tell Hibernate the `BasicType` to use, via the `org.hibernate.annotations.Type` annotation.
 
 [[basic-type-annotation-example]]
 .Using `@org.hibernate.annotations.Type`
@@ -315,7 +315,7 @@ include::{sourcedir}/basic/BitSetTypeTest.java[tags=basic-custom-type-BitSetType
 ----
 ====
 
-Alternatively, use can use a `@TypeDef` ans skip the registration phase:
+Alternatively, you can use the `@TypeDef` and skip the registration phase:
 
 [[basic-custom-type-BitSetTypeDef-mapping-example]]
 .Using `@TypeDef` to register a custom Type
@@ -424,7 +424,7 @@ Hibernate supports the mapping of Java enums as basic value types in a number of
 [[basic-enums-Enumerated]]
 ===== `@Enumerated`
 
-The original JPA-compliant way to map enums was via the `@Enumerated` and `@MapKeyEnumerated` for map keys annotations which works on the principle that the enum values are stored according to one of 2 strategies indicated by `javax.persistence.EnumType`:
+The original JPA-compliant way to map enums was via the `@Enumerated` or `@MapKeyEnumerated` for map keys annotations, working on the principle that the enum values are stored according to one of 2 strategies indicated by `javax.persistence.EnumType`:
 
 `ORDINAL`::
 	stored according to the enum value's ordinal position within the enum class, as indicated by `java.lang.Enum#ordinal`
@@ -487,7 +487,7 @@ include::{sourcedir}/basic/PhoneTypeEnumeratedStringTest.java[tags=basic-enums-E
 ----
 ====
 
-Persisting the same entity like in the `@Enumerated(ORDINAL)` example, Hibernate generates the following SQL statement:
+Persisting the same entity as in the `@Enumerated(ORDINAL)` example, Hibernate generates the following SQL statement:
 
 [[basic-enums-Enumerated-string-persistence-example]]
 .Persisting an entity with an `@Enumerated(STRING)` mapping
@@ -504,7 +504,7 @@ include::{extrasdir}/basic/basic-enums-Enumerated-string-persistence-example.sql
 Let's consider the following `Gender` enum which stores its values using the `'M'` and `'F'` codes.
 
 [[basic-enums-converter-example]]
-.Enum with custom constructor
+.Enum with a custom constructor
 ====
 [source, JAVA, indent=0]
 ----
@@ -684,7 +684,7 @@ Mapping LOBs (database Large Objects) come in 2 forms, those using the JDBC loca
 
 JDBC LOB locators exist to allow efficient access to the LOB data.
 They allow the JDBC driver to stream parts of the LOB data as needed, potentially freeing up memory space.
-However they can be unnatural to deal with and have certain limitations.
+However, they can be unnatural to deal with and have certain limitations.
 For example, a LOB locator is only portably valid during the duration of the transaction in which it was obtained.
 
 The idea of materialized LOBs is to trade-off the potential efficiency (not all drivers handle LOB data efficiently) for a more natural programming paradigm using familiar Java types such as `String` or `byte[]`, etc for these LOBs.
@@ -698,7 +698,7 @@ The JDBC LOB locator types include:
 * `java.sql.NClob`
 
 Mapping materialized forms of these LOB values would use more familiar Java types such as `String`, `char[]`, `byte[]`, etc.
-The trade off for _more familiar_ is usually performance.
+The trade-off for _more familiar_ is usually performance.
 
 [[basic-clob]]
 ===== Mapping CLOB
@@ -843,7 +843,7 @@ include::{sourcedir}/basic/BlobByteArrayTest.java[tags=basic-blob-byte-array-exa
 ==== Mapping Nationalized Character Data
 
 JDBC 4 added the ability to explicitly handle nationalized character data.
-To this end it added specific nationalized character data types.
+To this end, it added specific nationalized character data types:
 
 * `NCHAR`
 * `NVARCHAR`
@@ -894,7 +894,7 @@ include::{sourcedir}/basic/NClobTest.java[tags=basic-nclob-example]
 ----
 ====
 
-To persist such an entity, you have to create a `NClob` using the `NClobProxy` Hibernate utility:
+To persist such an entity, you have to create an `NClob` using the `NClobProxy` Hibernate utility:
 
 [[basic-nclob-persist-example]]
 .Persisting a `java.sql.NClob` entity
@@ -952,7 +952,7 @@ Hibernate also allows you to map UUID values, again in a number of ways.
 [NOTE]
 ====
 The default UUID mapping is as binary because it represents more efficient storage.
-However many applications prefer the readability of character storage.
+However, many applications prefer the readability of character storage.
 To switch the default mapping, simply call `MetadataBuilder.applyBasicType( UUIDCharType.INSTANCE, UUID.class.getName() )`.
 ====
 
@@ -961,7 +961,7 @@ To switch the default mapping, simply call `MetadataBuilder.applyBasicType( UUID
 As mentioned, the default mapping for UUID attributes.
 Maps the UUID to a `byte[]` using `java.util.UUID#getMostSignificantBits` and `java.util.UUID#getLeastSignificantBits` and stores that as `BINARY` data.
 
-Chosen as the default simply because it is generally more efficient from storage perspective.
+Chosen as the default simply because it is generally more efficient from a storage perspective.
 
 ==== UUID as (var)char
 
@@ -980,7 +980,7 @@ Note that this can cause difficulty as the driver chooses to map many different 
 
 ==== UUID as identifier
 
-Hibernate supports using UUID values as identifiers, and they can even be generated on user's behalf.
+Hibernate supports using UUID values as identifiers, and they can even be generated on the user's behalf.
 For details, see the discussion of generators in <<chapters/domain/identifiers.adoc#identifiers,_Identifier generators_>>.
 
 [[basic-datetime]]
@@ -1127,7 +1127,7 @@ Programmatically::
 TimeZone.setDefault( TimeZone.getTimeZone( "UTC" ) );
 ----
 
-However, as explained in http://in.relation.to/2016/09/12/jdbc-time-zone-configuration-property/[this article], this is not always practical especially for front-end nodes.
+However, as explained in http://in.relation.to/2016/09/12/jdbc-time-zone-configuration-property/[this article], this is not always practical, especially for front-end nodes.
 For this reason, Hibernate offers the `hibernate.jdbc.time_zone` configuration property which can be configured:
 
 Declaratively, at the `SessionFactory` level::
@@ -1200,7 +1200,7 @@ include::{extrasdir}/basic/basic-jpa-convert-period-string-converter-sql-example
 In cases when the Java type specified for the "database side" of the conversion (the second `AttributeConverter` bind parameter) is not known,
 Hibernate will fallback to a `java.io.Serializable` type.
 
-If the Java type is not know to Hibernate, you will encounter the following message:
+If the Java type is not known to Hibernate, you will encounter the following message:
 
 > HHH000481: Encountered Java type for which we could not locate a JavaTypeDescriptor and which does not appear to implement equals and/or hashCode.
 > This can lead to significant performance problems when performing equality/dirty checking involving this Java type.
@@ -1291,7 +1291,7 @@ include::{sourcedir}/basic/JpaQuotingTest.java[tags=basic-jpa-quoting-example]
 ----
 ====
 
-Because `name` and `number` are reserved words, the `Product` entity mapping uses backtricks to quote these column names.
+Because `name` and `number` are reserved words, the `Product` entity mapping uses backticks to quote these column names.
 
 When saving the following `Product entity`, Hibernate generates the following SQL insert statement:
 
@@ -1360,8 +1360,8 @@ Properties marked as generated must additionally be _non-insertable_ and _non-up
 Only `@Version` and `@Basic` types can be marked as generated.
 
 `NEVER` (the default):: the given property value is not generated within the database.
-`INSERT`:: the given property value is generated on insert, but is not regenerated on subsequent updates. Properties like _creationTimestamp_ fall into this category.
-`ALWAYS`:: the property value is generated both on insert and on update.
+`INSERT`:: the given property value is generated on insert but is not regenerated on subsequent updates. Properties like _creationTimestamp_ fall into this category.
+`ALWAYS`:: the property value is generated both on insert and update.
 
 To mark a property as generated, use The Hibernate specific `@Generated` annotation.
 
@@ -1682,7 +1682,7 @@ include::{extrasdir}/basic/mapping-column-read-and-write-composite-type-persiste
 ==== `@Formula`
 
 Sometimes, you want the Database to do some computation for you rather than in the JVM, you might also create some kind of virtual column.
-You can use a SQL fragment (aka formula) instead of mapping a property into a column. This kind of property is read only (its value is calculated by your formula fragment)
+You can use a SQL fragment (aka formula) instead of mapping a property into a column. This kind of property is read-only (its value is calculated by your formula fragment)
 
 [NOTE]
 ====
@@ -1847,7 +1847,7 @@ include::{sourcedir}/basic/FilterTest.java[tags=mapping-filter-Account-example]
 ====
 Notice that the `active` property is mapped to the `active_status` column.
 
-This mapping was done to show you that the `@Filter` condition uses a SQL condition, and not a JPQL filtering criteria.
+This mapping was done to show you that the `@Filter` condition uses a SQL condition and not a JPQL filtering predicate.
 ====
 
 As already explained, we can also apply the `@Filter` annotation for collections as illustrated by the `Client` entity:
@@ -2033,7 +2033,7 @@ include::{extrasdir}/basic/mapping-no-filter-join-table-collection-query-example
 ----
 ====
 
-If we enable the filter and set the `maxOrderId` to `1`, when fetching the `accounts` collections, Hibernate is going to apply the `@FilterJoinTable` clause filtering criteria, and we will get just
+If we enable the filter and set the `maxOrderId` to `1` when fetching the `accounts` collections, Hibernate is going to apply the `@FilterJoinTable` clause filtering criteria, and we will get just
 `2` `Account` entities, with the `order_id` values of `0` and `1`.
 
 [[mapping-filter-join-table-collection-query-example]]
@@ -2366,7 +2366,7 @@ http://docs.oracle.com/javaee/7/api/javax/persistence/ManyToOne.html[`@ManyToOne
 http://docs.oracle.com/javaee/7/api/javax/persistence/OneToOne.html[`@OneToOne`],
 http://docs.oracle.com/javaee/7/api/javax/persistence/OneToMany.html[`@OneToMany`], and
 http://docs.oracle.com/javaee/7/api/javax/persistence/ManyToMany.html[`@ManyToMany`]
-feature a http://docs.oracle.com/javaee/7/api/javax/persistence/ManyToOne.html#targetEntity--[`targetEntity`] attribute to specify the actual class of the entiity association when an interface is used for the mapping.
+feature a http://docs.oracle.com/javaee/7/api/javax/persistence/ManyToOne.html#targetEntity--[`targetEntity`] attribute to specify the actual class of the entity association when an interface is used for the mapping.
 
 The http://docs.oracle.com/javaee/7/api/javax/persistence/ElementCollection.html[`@ElementCollection`] association has a http://docs.oracle.com/javaee/7/api/javax/persistence/ElementCollection.html#targetClass--[`targetClass`] attribute for the same purpose.
 

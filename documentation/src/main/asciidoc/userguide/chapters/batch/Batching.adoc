@@ -67,7 +67,7 @@ include::{sourcedir}/BatchTest.java[tags=batch-session-batch-example]
 There are several problems associated with this example:
 
 . Hibernate caches all the newly inserted `Customer` instances in the session-level c1ache, so, when the transaction ends, 100 000 entities are managed by the persistence context.
-  If the maximum memory allocated to the JVM is rather low, this example could fails with an `OutOfMemoryException`.
+  If the maximum memory allocated to the JVM is rather low, this example could fail with an `OutOfMemoryException`.
   The Java 1.8 JVM allocated either 1/4 of available RAM or 1Gb, which can easily accommodate 100 000 objects on the heap.
 . long-running transactions can deplete a connection pool so other transactions don't get a chance to proceed.
 . JDBC batching is not enabled by default, so every insert statement requires a database roundtrip.
@@ -118,7 +118,7 @@ However, it is good practice to close the `ScrollableResults` explicitly.
 
 `StatelessSession` is a command-oriented API provided by Hibernate.
 Use it to stream data to and from the database in the form of detached objects.
-A `StatelessSession` has no persistence context associated with it and does not provide many of the higher-level life cycle semantics.
+A `StatelessSession` has no persistence context associated with it and does not provide many of the higher-level lifecycle semantics.
 
 Some of the things not provided by a `StatelessSession` include:
 
@@ -243,8 +243,8 @@ include::{sourcedir}/BatchTest.java[tags=batch-bulk-hql-delete-example]
 ----
 ====
 
-Method `Query.executeUpdate()` returns an `int` value, which indicates the number of entities effected by the operation.
-This may or may not correlate to the number of rows effected in the database.
+Method `Query.executeUpdate()` returns an `int` value, which indicates the number of entities affected by the operation.
+This may or may not correlate to the number of rows affected in the database.
 A JPQL/HQL bulk operation might result in multiple SQL statements being executed, such as for joined-subclass.
 In the example of joined-subclass, a `DELETE` against one of the subclasses may actually result in deletes in the tables underlying the join, or further down the inheritance hierarchy.
 
@@ -282,7 +282,7 @@ Otherwise, Hibernate throws an exception during parsing.
 Available in-database generators are `org.hibernate.id.SequenceGenerator` and its subclasses, and objects which implement `org.hibernate.id.PostInsertIdentifierGenerator`.
 
 For properties mapped as either version or timestamp, the insert statement gives you two options.
-You can either specify the property in the properties_list, in which case its value is taken from the corresponding select expressions, or omit it from the properties_list,
+You can either specify the property in the properties_list, in which case its value is taken from the corresponding select expressions or omit it from the properties_list,
 in which case the seed value defined by the org.hibernate.type.VersionType is used.
 
 [[batch-bulk-hql-insert-example]]

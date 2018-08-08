@@ -41,7 +41,7 @@ There are other ways to specify Configuration information, including:
 * Place a file named hibernate.properties in a root directory of the classpath
 * Pass an instance of java.util.Properties to `Configuration#setProperties`
 * Via a `hibernate.cfg.xml` file
-* System properties using java `-Dproperty=value`
+* System properties using Java `-Dproperty=value`
 
 == Migration
 

@@ -42,7 +42,7 @@ include::{sourcedir}/InterceptorTest.java[tags=events-interceptors-session-scope
 
 A `SessionFactory`-scoped interceptor is registered with the `Configuration` object prior to building the `SessionFactory`.
 Unless a session is opened explicitly specifying the interceptor to use, the `SessionFactory`-scoped interceptor will be applied to all sessions opened from that `SessionFactory`.
-`SessionFactory`-scoped interceptors must be thread safe.
+`SessionFactory`-scoped interceptors must be thread-safe.
 Ensure that you do not store session-specific states since multiple sessions will use this interceptor potentially concurrently.
 
 [[events-interceptors-session-factory-scope-example]]
@@ -63,8 +63,8 @@ Many methods of the `Session` interface correlate to an event type.
 The full range of defined event types is declared as enum values on `org.hibernate.event.spi.EventType`.
 When a request is made of one of these methods, the Session generates an appropriate event and passes it to the configured event listener(s) for that type.
 
-Applications are free to implement a customization of one of the listener interfaces (i.e., the `LoadEvent` is processed by the registered implementation of the `LoadEventListener` interface), in which case their implementation would
-be responsible for processing any `load()` requests made of the `Session`.
+Applications can customize the listener interfaces (i.e., the `LoadEvent` is processed by the registered implementation of the `LoadEventListener` interface), in which case their implementations would
+be responsible for processing the `load()` requests made of the `Session`.
 
 [NOTE]
 ====
@@ -94,7 +94,7 @@ When you want to customize the entity state transition behavior, you have to opt
 For example, the `Interceptor#onSave()` method is invoked by Hibernate `AbstractSaveEventListener`.
 Or, the `Interceptor#onLoad()` is called by the `DefaultPreLoadEventListener`.
 . you can replace any given default event listener with your own implementation.
-When doing this, you should probably extend the default listeners because otherwise you'd have to take care of all the low-level entity state transition logic.
+When doing this, you should probably extend the default listeners because otherwise, you'd have to take care of all the low-level entity state transition logic.
 For example, if you replace the `DefaultPreLoadEventListener` with your own implementation, then, only if you call the `Interceptor#onLoad()` method explicitly, you can mix the custom load event listener with a custom Hibernate interceptor.
 
 [[events-declarative-security]]
@@ -140,7 +140,7 @@ JPA also defines a more limited set of callbacks through annotations.
 
 There are two available approaches defined for specifying callback handling:
 
-* The first approach is to annotate methods on the entity itself to receive notification of particular entity life cycle event(s).
+* The first approach is to annotate methods on the entity itself to receive notifications of a particular entity lifecycle event(s).
 * The second is to use a separate entity listener class.
 An entity listener is a stateless class with a no-arg constructor.
 The callback annotations are placed on a method of this class instead of the entity class.

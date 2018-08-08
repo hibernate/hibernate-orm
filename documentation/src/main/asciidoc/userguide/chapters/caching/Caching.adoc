@@ -35,9 +35,9 @@ Detailed information is provided later in this chapter.
 Besides specific provider configuration, there are a number of configurations options on the Hibernate side of the integration that control various caching behaviors:
 
 `hibernate.cache.use_second_level_cache`::
-	Enable or disable second level caching overall. Default is true, although the default region factory is `NoCachingRegionFactory`.
+	Enable or disable second level caching overall. The default is true, although the default region factory is `NoCachingRegionFactory`.
 `hibernate.cache.use_query_cache`::
-	Enable or disable second level caching of query results. Default is false.
+	Enable or disable second level caching of query results. The default is false.
 `hibernate.cache.query_cache_factory`::
 	Query result caching is handled by a special contract that deals with staleness-based invalidation of the results.
 	The default implementation does not allow stale results at all. Use this for applications that would like to relax that.
@@ -48,7 +48,7 @@ Besides specific provider configuration, there are a number of configurations op
 	Defines a name to be used as a prefix to all second-level cache region names.
 `hibernate.cache.default_cache_concurrency_strategy`::
 	In Hibernate second-level caching, all regions can be configured differently including the concurrency strategy to use when accessing that particular region.
-	This setting allows to define a default strategy to be used.
+	This setting allows defining a default strategy to be used.
 	This setting is very rarely required as the pluggable providers do specify the default strategy to use.
 	Valid values include:
 * read-only,
@@ -61,12 +61,12 @@ Besides specific provider configuration, there are a number of configurations op
 `hibernate.cache.auto_evict_collection_cache`::
 	Enables or disables the automatic eviction of a bidirectional association's collection cache entry when the association is changed just from the owning side.
 	This is disabled by default, as it has a performance impact to track this state.
-	However if your application does not manage both sides of bidirectional association where the collection side is cached,
+	However, if your application does not manage both sides of bidirectional association where the collection side is cached,
 	the alternative is to have stale data in that collection cache.
 `hibernate.cache.use_reference_entries`::
 	Enable direct storage of entity references into the second level cache for read-only or immutable entities.
 `hibernate.cache.keys_factory`::
-    When storing entries into second-level cache as key-value pair, the identifiers can be wrapped into tuples
+    When storing entries into the second-level cache as a key-value pair, the identifiers can be wrapped into tuples
     <entity type, tenant, identifier> to guarantee uniqueness in case that second-level cache stores all entities
     in single space. These tuples are then used as keys in the cache. When the second-level cache implementation
     (incl. its configuration) guarantees that different entity types are stored separately and multi-tenancy is not
@@ -380,7 +380,7 @@ When using http://docs.oracle.com/javaee/7/api/javax/persistence/CacheStoreMode.
 Hibernate will selectively force the results cached in that particular region to be refreshed.
 
 This is particularly useful in cases where underlying data may have been updated via a separate process
-and is a far more efficient alternative to bulk eviction of the region via `SessionFactory` eviction which looks as follows:
+and is a far more efficient alternative to the bulk eviction of the region via `SessionFactory` eviction which looks as follows:
 
 [source, JAVA, indent=0]
 ----
@@ -402,11 +402,11 @@ The relationship between Hibernate and JPA cache modes can be seen in the follow
 [cols=",,",options="header",]
 |======================================
 |Hibernate 			 | JPA | Description
-|`CacheMode.NORMAL`  |`CacheStoreMode.USE` and `CacheRetrieveMode.USE` | Default. Reads/writes data from/into cache
+|`CacheMode.NORMAL`  |`CacheStoreMode.USE` and `CacheRetrieveMode.USE` | Default. Reads/writes data from/into the cache
 |`CacheMode.REFRESH` |`CacheStoreMode.REFRESH` and `CacheRetrieveMode.BYPASS` | Doesn't read from cache, but writes to the cache upon loading from the database
 |`CacheMode.PUT`     |`CacheStoreMode.USE` and `CacheRetrieveMode.BYPASS` | Doesn't read from cache, but writes to the cache as it reads from the database
 |`CacheMode.GET`     |`CacheStoreMode.BYPASS` and `CacheRetrieveMode.USE` | Read from the cache, but doesn't write to cache
-|`CacheMode.IGNORE`  |`CacheStoreMode.BYPASS` and `CacheRetrieveMode.BYPASS` | Doesn't read/write data from/into cache
+|`CacheMode.IGNORE`  |`CacheStoreMode.BYPASS` and `CacheRetrieveMode.BYPASS` | Doesn't read/write data from/into the cache
 |======================================
 
 Setting the cache mode can be done either when loading entities directly or when executing a query.
@@ -507,7 +507,7 @@ include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-statistics-example]
 
 [NOTE]
 ====
-Use of the build-in integration for https://jcp.org/en/jsr/detail?id=107[JCache] requires that the `hibernate-jcache` module jar (and all of its dependencies) are on the classpath.
+Use of the built-in integration for https://jcp.org/en/jsr/detail?id=107[JCache] requires that the `hibernate-jcache` module jar (and all of its dependencies) are on the classpath.
 In addition a JCache implementation needs to be added as well.
 A list of compatible implementations can be found https://jcp.org/aboutJava/communityprocess/implementations/jsr107/index.html[on the JCP website].
 An alternative source of compatible implementations can be found through https://github.com/cruftex/jsr107-test-zoo[the JSR-107 test zoo].
@@ -585,7 +585,7 @@ and also log a warning about the missing cache.
 Note that caches created this way may be very badly configured (unlimited size and no eviction in particular)
 unless the cache provider was explicitly configured to use a specific configuration for default caches.
 
-Ehcache in particular allows to set such default configuration using cache templates,
+Ehcache, in particular, allows to set such default configuration using cache templates,
 see http://www.ehcache.org/documentation/3.0/107.html#supplement-jsr-107-configurations
 ====
 
@@ -596,7 +596,7 @@ This integration covers Ehcache 2.x, in order to use Ehcache 3.x as second level
 
 [NOTE]
 ====
-Use of the build-in integration for http://www.ehcache.org/[Ehcache] requires that the `hibernate-ehcache` module jar (and all of its dependencies) are on the classpath.
+Use of the built-in integration for http://www.ehcache.org/[Ehcache] requires that the `hibernate-ehcache` module jar (and all of its dependencies) are on the classpath.
 ====
 
 [[caching-provider-ehcache-region-factory]]

@@ -17,11 +17,11 @@ Hibernate supports the enhancement of an application Java domain model for the p
 ===== Lazy attribute loading
 
 Think of this as partial loading support.
-Essentially you can tell Hibernate that only part(s) of an entity should be loaded upon fetching from the database and when the other part(s) should be loaded as well.
-Note that this is very much different from proxy-based idea of lazy loading which is entity-centric where the entity's state is loaded at once as needed.
+Essentially, you can tell Hibernate that only part(s) of an entity should be loaded upon fetching from the database and when the other part(s) should be loaded as well.
+Note that this is very much different from the proxy-based idea of lazy loading which is entity-centric where the entity's state is loaded at once as needed.
 With bytecode enhancement, individual attributes or groups of attributes are loaded as needed.
 
-Lazy attributes can be designated to be loaded together and this is called a "lazy group".
+Lazy attributes can be designated to be loaded together, and this is called a "lazy group".
 By default, all singular attributes are part of a single group, meaning that when one lazy singular attribute is accessed all lazy singular attributes are loaded.
 Lazy plural attributes, by default, are each a lazy group by themselves.
 This behavior is explicitly controllable through the `@org.hibernate.annotations.LazyGroup` annotation.
@@ -35,9 +35,9 @@ include::{sourcedir}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-lazy-
 ----
 ====
 
-In the above example we have 2 lazy attributes: `accountsPayableXrefId` and `image`.
+In the above example, we have 2 lazy attributes: `accountsPayableXrefId` and `image`.
 Each is part of a different fetch group (accountsPayableXrefId is part of the default fetch group),
-which means that accessing `accountsPayableXrefId` will not force the loading of image, and vice-versa.
+which means that accessing `accountsPayableXrefId` will not force the loading of the `image` attribute, and vice-versa.
 
 [NOTE]
 ====
@@ -52,11 +52,11 @@ Historically Hibernate only supported diff-based dirty calculation for determini
 This essentially means that Hibernate would keep track of the last known state of an entity in regards to the database (typically the last read or write).
 Then, as part of flushing the persistence context, Hibernate would walk every entity associated with the persistence context and check its current state against that "last known database state".
 This is by far the most thorough approach to dirty checking because it accounts for data-types that can change their internal state (`java.util.Date` is the prime example of this).
-However, in a persistence context with a large number of associated entities it can also be a performance-inhibiting approach.
+However, in a persistence context with a large number of associated entities, it can also be a performance-inhibiting approach.
 
 If your application does not need to care about "internal state changing data-type" use cases, bytecode-enhanced dirty tracking might be a worthwhile alternative to consider, especially in terms of performance.
 In this approach Hibernate will manipulate the bytecode of your classes to add "dirty tracking" directly to the entity, allowing the entity itself to keep track of which of its attributes have changed.
-During flush time, Hibernate simply asks your entity what has changed rather that having to perform the state-diff calculations.
+During the flush time, Hibernate asks your entity what has changed rather than having to perform the state-diff calculations.
 
 [[BytecodeEnhancement-dirty-tracking-bidirectional]]
 ===== Bidirectional association management
@@ -105,11 +105,11 @@ These are hard to discuss without diving into a discussion of Hibernate internal
 ==== Performing enhancement
 
 [[BytecodeEnhancement-enhancement-runtime]]
-===== Run-time enhancement
+===== Runtime enhancement
 
-Currently, run-time enhancement of the domain model is only supported in managed JPA environments following the JPA-defined SPI for performing class transformations.
+Currently, runtime enhancement of the domain model is only supported in managed JPA environments following the JPA-defined SPI for performing class transformations.
 
-Even then, this support is disabled by default. To enable run-time enhancement, specify one of the following configuration properties:
+Even then, this support is disabled by default. To enable runtime enhancement, specify one of the following configuration properties:
 
 `*hibernate.enhancer.enableDirtyTracking*` (e.g. `true` or `false` (default value))::
 Enable dirty tracking feature in runtime bytecode enhancement.
@@ -122,14 +122,14 @@ Enable association management feature in runtime bytecode enhancement which auto
 
 [NOTE]
 ====
-Also, at the moment, only annotated classes are supported for run-time enhancement.
+Also, at the moment, only annotated classes are supported for runtime enhancement.
 ====
 
 [[BytecodeEnhancement-enhancement-gradle]]
 ===== Gradle plugin
 
 Hibernate provides a Gradle plugin that is capable of providing build-time enhancement of the domain model as they are compiled as part of a Gradle build.
-To use the plugin a project would first need to apply it:
+To use the plugin, a project would first need to apply it:
 
 .Apply the Gradle plugin
 ====
@@ -157,7 +157,7 @@ Hibernate provides a Maven plugin capable of providing build-time enhancement of
 See the section on the <<BytecodeEnhancement-enhancement-gradle>> for details on the configuration settings. Again, the default for those 3 is `false`.
 
 The Maven plugin supports one additional configuration settings: failOnError, which controls what happens in case of error.
-Default behavior is to fail the build, but it can be set so that only a warning is issued.
+The default behavior is to fail the build, but it can be set so that only a warning is issued.
 
 .Apply the Maven plugin
 ====

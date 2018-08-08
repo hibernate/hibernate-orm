@@ -19,7 +19,7 @@ With this approach, you do not write persistent classes, only mapping files.
 
 A given entity has just one entity mode within a given SessionFactory.
 This is a change from previous versions which allowed to define multiple entity modes for an entity and to select which to load.
-Entity modes can now be mixed within a domain model; a dynamic entity might reference a POJO entity, and vice versa.
+Entity modes can now be mixed within a domain model; a dynamic entity might reference a POJO entity and vice versa.
 
 [[mapping-model-dynamic-example]]
 .Dynamic domain model Hibernate mapping
@@ -60,8 +60,8 @@ include::{extrasdir}/dynamic/mapping-model-dynamic-example.sql[indent=0]
 
 [NOTE]
 ====
-The main advantage of dynamic models is quick turnaround time for prototyping without the need for entity class implementation.
-The main down-fall is that you lose compile-time type checking and will likely deal with many exceptions at runtime.
+The main advantage of dynamic models is the quick turnaround time for prototyping without the need for entity class implementation.
+The main downfall is that you lose compile-time type checking and will likely deal with many exceptions at runtime.
 However, as a result of the Hibernate mapping, the database schema can easily be normalized and sound, allowing to add a proper domain model implementation on top later on.
 
 It is also interesting to note that dynamic models are great for certain integration use cases as well.

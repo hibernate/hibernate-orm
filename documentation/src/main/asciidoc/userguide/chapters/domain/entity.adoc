@@ -10,9 +10,9 @@
 [NOTE]
 ====
 The entity type describes the mapping between the actual persistable domain model object and a database table row.
-To avoid any confusion with the annotation that marks a given entity type, the annotation will be further referred as `@Entity`.
+To avoid any confusion with the annotation that marks a given entity type, the annotation will be further referred to as `@Entity`.
 
-Throughout this chapter and thereafter, entity types will be simply referred as _entity_.
+Throughout this chapter and thereafter, entity types will be simply referred to as _entity_.
 ====
 
 [[entity-pojo]]
@@ -71,17 +71,17 @@ That said, the constructor should be defined with at least package visibility if
 [[entity-pojo-accessors]]
 ==== Declare getters and setters for persistent attributes
 
-The JPA specification requires this, otherwise the model would prevent accessing the entity persistent state fields directly from outside the entity itself.
+The JPA specification requires this, otherwise, the model would prevent accessing the entity persistent state fields directly from outside the entity itself.
 
 Although Hibernate does not require it, it is recommended to follow the JavaBean conventions and define getters and setters for entity persistent attributes.
 Nevertheless, you can still tell Hibernate to directly access the entity fields.
 
 Attributes (whether fields or getters/setters) need not be declared public.
-Hibernate can deal with attributes declared with public, protected, package or private visibility.
+Hibernate can deal with attributes declared with the public, protected, package or private visibility.
 Again, if wanting to use runtime proxy generation for lazy loading, the getter/setter should grant access to at least package visibility.
 
 [[entity-pojo-identifier]]
-==== Provide identifier attribute(s)
+==== Providing identifier attribute(s)
 
 [IMPORTANT]
 ====
@@ -210,11 +210,11 @@ include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-mu
 ----
 ====
 
-Specifically the outcome in this last example will depend on whether the `Book` class
+Specifically, the outcome in this last example will depend on whether the `Book` class
 implemented equals/hashCode, and, if so, how.
 
 If the `Book` class did not override the default equals/hashCode,
-then the two `Book` object reference are not going to be equal since their references are different.
+then the two `Book` object references are not going to be equal since their references are different.
 
 Consider yet another case:
 
@@ -253,7 +253,7 @@ include::{sourcedir-mapping}/identifier/NaiveEqualsHashCodeEntityTest.java[tag=e
 ----
 ====
 
-The issue here is a conflict between the use of generated identifier, the contract of `Set` and the equals/hashCode implementations.
+The issue here is a conflict between the use of the generated identifier, the contract of `Set`, and the equals/hashCode implementations.
 `Set` says that the equals/hashCode value for an object should not change while the object is part of the `Set`.
 But that is exactly what happened here because the equals/hasCode are based on the (generated) id, which was not set until the JPA transaction is committed.
 
@@ -328,7 +328,7 @@ To find the `Account` balance, we need to query the `AccountSummary` which share
 
 However, the `AccountSummary` is not mapped to a physical table, but to an SQL query.
 
-So, if we have the following `AccountTransaction` record, the `AccountSummary` balance will mach the proper amount of money in this `Account`.
+So, if we have the following `AccountTransaction` record, the `AccountSummary` balance will match the proper amount of money in this `Account`.
 
 [[mapping-Subselect-entity-find-example]]
 .Finding a `@Subselect` entity
@@ -356,7 +356,7 @@ The goal of the `@Synchronize` annotation in the `AccountSummary` entity mapping
 underlying `@Subselect` SQL query. This is because, unlike JPQL and HQL queries, Hibernate cannot parse the underlying native SQL query.
 
 With the `@Synchronize` annotation in place,
-when executing a HQL or JPQL which selects from the `AccountSummary` entity,
+when executing an HQL or JPQL which selects from the `AccountSummary` entity,
 Hibernate will trigger a Persistence Context flush if there are pending `Account`, `Client` or `AccountTransaction` entity state transitions.
 ====
 

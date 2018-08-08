@@ -10,8 +10,7 @@ As we will see later, Hibernate provides a dedicated, efficient API for loading 
 [[naturalid-mapping]]
 ==== Natural Id Mapping
 
-Natural ids are defined in terms of on
-e or more persistent attributes.
+Natural ids are defined in terms of one or more persistent attributes.
 
 [[naturalid-simple-basic-attribute-mapping-example]]
 .Natural id using single basic attribute

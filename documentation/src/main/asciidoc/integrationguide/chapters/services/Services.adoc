@@ -11,7 +11,7 @@ It will also delve into the ways third-party integrators and applications can le
 === What is a Service?
 
 A services provides a certain types of functionality, in a pluggable manner.
-Specifically they are interfaces defining certain functionality and then implementations of those `Service` contract interfaces.
+Specifically, they are interfaces defining certain functionality and then implementations of those `Service` contract interfaces.
 The interface is known as the `Service` role; the implementation class is known as the `Service` implementation.
 The pluggability comes from the fact that the `Service` implementation adheres to contract defined by the interface of the `Service` role and that consumers of the `Service` program to the `Service` role, not the implementation.
 

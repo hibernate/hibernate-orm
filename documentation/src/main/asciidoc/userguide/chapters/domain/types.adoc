@@ -6,7 +6,7 @@
 Hibernate understands both the Java and JDBC representations of application data.
 The ability to read/write this data from/to the database is the function of a Hibernate _type_.
 A type, in this usage, is an implementation of the `org.hibernate.type.Type` interface.
-This Hibernate type also describes various aspects of behavior of the Java type such as how to check for equality, how to clone values, etc.
+This Hibernate type also describes various behavioral aspects of the Java type such as how to check for equality, how to clone values, etc.
 
 .Usage of the word _type_
 [NOTE]
@@ -20,7 +20,7 @@ When you encounter the term type in discussions of Hibernate, it may refer to th
 To help understand the type categorizations, let's look at a simple table and domain model that we wish to map.
 
 [[mapping-types-basic-example]]
-.Simple table and domain model
+.A simple table and domain model
 ====
 [source, SQL, indent=0]
 ----

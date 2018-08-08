@@ -46,7 +46,8 @@ public class BiDirectionalOneToOneFetchTest extends BaseCoreFunctionalTestCase {
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {
 				EntityA.class,
-				EntityB.class
+				EntityB.class,
+				EntityC.class
 		};
 	}
 
@@ -55,6 +56,7 @@ public class BiDirectionalOneToOneFetchTest extends BaseCoreFunctionalTestCase {
 		inTransaction( s -> {
 			s.createQuery( "delete from EntityA" ).executeUpdate();
 			s.createQuery( "delete from EntityB" ).executeUpdate();
+			s.createQuery( "delete from EntityC" ).executeUpdate();
 		} );
 	}
 
@@ -62,7 +64,7 @@ public class BiDirectionalOneToOneFetchTest extends BaseCoreFunctionalTestCase {
 	@TestForIssue( jiraKey = "HHH-3930" )
 	public void testEagerFetchBidirectionalOneToOneWithDirectFetching() {
 		inTransaction( session -> {
-			EntityA a = new EntityA( 1L, new EntityB( 2L ) );
+			EntityA a = new EntityA( 1L, new EntityB( 2L ), new EntityC( 3L ) );
 
 			session.persist( a );
 			session.flush();
@@ -93,7 +95,7 @@ public class BiDirectionalOneToOneFetchTest extends BaseCoreFunctionalTestCase {
 	@TestForIssue( jiraKey = "HHH-3930" )
 	public void testFetchBidirectionalOneToOneWithOneJoinFetch() {
 		inTransaction( session -> {
-			EntityA a = new EntityA( 1L, new EntityB( 2L ) );
+			EntityA a = new EntityA( 1L, new EntityB( 2L ), new EntityC( 3L ) );
 
 			session.persist( a );
 			session.flush();
@@ -126,7 +128,7 @@ public class BiDirectionalOneToOneFetchTest extends BaseCoreFunctionalTestCase {
 	@TestForIssue( jiraKey = "HHH-3930" )
 	public void testFetchBidirectionalOneToOneWithCircularJoinFetch() {
 		inTransaction( session -> {
-			EntityA a = new EntityA( 1L, new EntityB( 2L ) );
+			EntityA a = new EntityA( 1L, new EntityB( 2L ), new EntityC( 3L ) );
 
 			session.persist( a );
 			session.flush();
@@ -158,20 +160,76 @@ public class BiDirectionalOneToOneFetchTest extends BaseCoreFunctionalTestCase {
 	@TestForIssue( jiraKey = "HHH-12885" )
 	public void testSelectInverseOneToOne() {
 		inTransaction( session -> {
-			EntityA a = new EntityA( 1L, new EntityB( 2L ) );
+			EntityA a = new EntityA( 1L, new EntityB( 2L ), new EntityC( 3L ) );
 
 			session.persist( a );
 			session.flush();
 			session.clear();
+
+			List<Object[]> tupleList = session.createQuery(
+					"select b, b.id, a from EntityB b left join b.a a",
+					Object[].class
+			).list();
 
 			List<EntityA> list = session.createQuery(
 					"select a from EntityB b left join b.a a",
 					EntityA.class
 			).list();
 
+			assertEquals(
+					"Selecting inverse one-to-one didn't construct the object properly from the result set!",
+					list.get(0),
+					tupleList.get(0)[2]
+			);
+		} );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12885" )
+	public void testSelectInverseOneToOne2() {
+		inTransaction( session -> {
+			EntityA a = new EntityA( 1L, new EntityB( 2L ), new EntityC( 3L ) );
+
+			session.persist( a );
+			session.flush();
+			session.clear();
+
 			List<Object[]> tupleList = session.createQuery(
-					"select b, b.id, a from EntityB b left join b.a a",
+					"select b, b.id, a, a.id from EntityB b left join b.a a",
 					Object[].class
+			).list();
+
+			List<EntityA> list = session.createQuery(
+					"select a from EntityB b left join b.a a",
+					EntityA.class
+			).list();
+
+			assertEquals(
+					"Selecting inverse one-to-one didn't construct the object properly from the result set!",
+					list.get(0),
+					tupleList.get(0)[2]
+			);
+		} );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12885" )
+	public void testSelectInverseOneToOne3() {
+		inTransaction( session -> {
+			EntityA a = new EntityA( 1L, new EntityB( 2L ), new EntityC( 3L ) );
+
+			session.persist( a );
+			session.flush();
+			session.clear();
+
+			List<Object[]> tupleList = session.createQuery(
+					"select b, b.id, a, a.id from EntityB b left join b.a a left join fetch a.c",
+					Object[].class
+			).list();
+
+			List<EntityA> list = session.createQuery(
+					"select a from EntityB b left join b.a a left join fetch a.c",
+					EntityA.class
 			).list();
 
 			assertEquals(
@@ -192,13 +250,18 @@ public class BiDirectionalOneToOneFetchTest extends BaseCoreFunctionalTestCase {
 		@JoinColumn(name = "b_id")
 		private EntityB b;
 
+		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+		@JoinColumn(name = "c_id")
+		private EntityC c;
+
 		public EntityA() {
 		}
 
-		public EntityA(Long id, EntityB b) {
+		public EntityA(Long id, EntityB b, EntityC c) {
 			this.id = id;
 			this.b = b;
 			this.b.a = this;
+			this.c = c;
 		}
 	}
 
@@ -215,6 +278,20 @@ public class BiDirectionalOneToOneFetchTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public EntityB(Long id) {
+			this.id = id;
+		}
+	}
+
+	@Entity(name = "EntityC")
+	public static class EntityC {
+
+		@Id
+		private Long id;
+
+		public EntityC() {
+		}
+
+		public EntityC(Long id) {
 			this.id = id;
 		}
 	}

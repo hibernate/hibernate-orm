@@ -22,19 +22,17 @@ import org.hibernate.stat.internal.StatisticsInitiator;
  *
  * @author Steve Ebersole
  */
-public class StandardSessionFactoryServiceInitiators {
-	public static List<SessionFactoryServiceInitiator> LIST = buildStandardServiceInitiatorList();
+public final class StandardSessionFactoryServiceInitiators {
 
-	private static List<SessionFactoryServiceInitiator> buildStandardServiceInitiatorList() {
-		final List<SessionFactoryServiceInitiator> serviceInitiators = new ArrayList<>();
+	public static List<SessionFactoryServiceInitiator> buildStandardServiceInitiatorList() {
+		final ArrayList<SessionFactoryServiceInitiator> serviceInitiators = new ArrayList<>();
 
 		serviceInitiators.add( EventListenerServiceInitiator.INSTANCE );
 		serviceInitiators.add( StatisticsInitiator.INSTANCE );
 		serviceInitiators.add( CacheInitiator.INSTANCE );
-
 		serviceInitiators.add( NativeQueryInterpreterInitiator.INSTANCE );
 
-		return Collections.unmodifiableList( serviceInitiators );
+		return serviceInitiators;
 	}
 
 	private StandardSessionFactoryServiceInitiators() {

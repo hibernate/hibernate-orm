@@ -24,22 +24,11 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistryBuilder;
 public class SessionFactoryServiceRegistryBuilderImpl implements SessionFactoryServiceRegistryBuilder {
 	private final ServiceRegistryImplementor parent;
 
-	private final List<SessionFactoryServiceInitiator> initiators = standardInitiatorList();
+	private final List<SessionFactoryServiceInitiator> initiators = StandardSessionFactoryServiceInitiators.buildStandardServiceInitiatorList();
 	private final List<ProvidedService> providedServices = new ArrayList<>();
 
 	public SessionFactoryServiceRegistryBuilderImpl(ServiceRegistryImplementor parent) {
 		this.parent = parent;
-	}
-
-	/**
-	 * Used from the {@link #initiators} variable initializer
-	 *
-	 * @return List of standard initiators
-	 */
-	private static List<SessionFactoryServiceInitiator> standardInitiatorList() {
-		final List<SessionFactoryServiceInitiator> initiators = new ArrayList<>();
-		initiators.addAll( StandardSessionFactoryServiceInitiators.LIST );
-		return initiators;
 	}
 
 	/**

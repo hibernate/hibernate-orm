@@ -48,11 +48,10 @@ import org.hibernate.type.Type;
 public class HQLQueryPlan implements Serializable {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( HQLQueryPlan.class );
 
-    // TODO : keep separate notions of QT[] here for shallow/non-shallow queries...
+	// TODO : keep separate notions of QT[] here for shallow/non-shallow queries...
 
 	private final String sourceQuery;
 	private final QueryTranslator[] translators;
-	private final String[] sqlStrings;
 
 	private final ParameterMetadataImpl parameterMetadata;
 	private final ReturnMetadata returnMetadata;
@@ -60,7 +59,6 @@ public class HQLQueryPlan implements Serializable {
 
 	private final Set<String> enabledFilterNames;
 	private final boolean shallow;
-	private final SessionFactoryImplementor factory;
 
 	/**
 	* We'll check the trace level only once per instance
@@ -79,7 +77,7 @@ public class HQLQueryPlan implements Serializable {
 			SessionFactoryImplementor factory) {
 		this( hql, null, shallow, enabledFilters, factory, null );
 	}
-	
+
 	public HQLQueryPlan(String hql, boolean shallow, Map<String,Filter> enabledFilters,
 			SessionFactoryImplementor factory, EntityGraphQueryHint entityGraphQueryHint) {
 		this( hql, null, shallow, enabledFilters, factory, entityGraphQueryHint );
@@ -95,17 +93,18 @@ public class HQLQueryPlan implements Serializable {
 			EntityGraphQueryHint entityGraphQueryHint) {
 		this.sourceQuery = hql;
 		this.shallow = shallow;
-		this.factory = factory;
 
-		final Set<String> copy = new HashSet<>();
-		copy.addAll( enabledFilters.keySet() );
-		this.enabledFilterNames = java.util.Collections.unmodifiableSet( copy );
+		if ( enabledFilters.isEmpty() ) {
+			this.enabledFilterNames = Collections.emptySet();
+		}
+		else {
+			this.enabledFilterNames = Collections.unmodifiableSet( new HashSet<>( enabledFilters.keySet() ) );
+		}
 
 		final String[] concreteQueryStrings = QuerySplitter.concreteQueries( hql, factory );
 		final int length = concreteQueryStrings.length;
 		this.translators = new QueryTranslator[length];
 
-		final List<String> sqlStringList = new ArrayList<>();
 		final Set<Serializable> combinedQuerySpaces = new HashSet<>();
 
 		final Map querySubstitutions = factory.getSessionFactoryOptions().getQuerySubstitutions();
@@ -124,10 +123,8 @@ public class HQLQueryPlan implements Serializable {
 				( (FilterTranslator) translators[i] ).compile( collectionRole, querySubstitutions, shallow );
 			}
 			combinedQuerySpaces.addAll( translators[i].getQuerySpaces() );
-			sqlStringList.addAll( translators[i].collectSqlStrings() );
 		}
 
-		this.sqlStrings = ArrayHelper.toStringArray( sqlStringList );
 		this.querySpaces = combinedQuerySpaces;
 
 		if ( length == 0 ) {
@@ -166,8 +163,15 @@ public class HQLQueryPlan implements Serializable {
 		return enabledFilterNames;
 	}
 
+	/**
+	 * This method should only be called for debugging purposes as it regenerates a new array every time.
+	 */
 	public String[] getSqlStrings() {
-		return sqlStrings;
+		List<String> sqlStrings = new ArrayList<>();
+		for ( int i = 0; i < translators.length; i++ ) {
+			sqlStrings.addAll( translators[i].collectSqlStrings() );
+		}
+		return ArrayHelper.toStringArray( sqlStrings );
 	}
 
 	public Set getUtilizedFilterNames() {

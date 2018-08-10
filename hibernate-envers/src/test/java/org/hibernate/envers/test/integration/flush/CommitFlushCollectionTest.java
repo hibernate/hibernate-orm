@@ -71,6 +71,7 @@ public class CommitFlushCollectionTest extends BaseEnversJPAFunctionalTestCase {
 	@Audited
 	@MappedSuperclass
 	public static class BaseDocument extends AbstractEntity {
+		@Column(name = "numberValue")
 		private String number;
 		private Date date;
 
@@ -119,6 +120,7 @@ public class CommitFlushCollectionTest extends BaseEnversJPAFunctionalTestCase {
 
 	@MappedSuperclass
 	public abstract static class BaseDocumentLine extends AbstractEntity {
+		@Column(name = "textValue")
 		private String text;
 
 		@Column(nullable = false)

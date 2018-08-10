@@ -26,7 +26,6 @@ https://hibernate.atlassian.net/projects/HHH/versions/31688/tab/release-report-d
     * [HHH-12880] - LockModeTest hangs indefinitely with Sybase due to HHH-12847
 
 ** New Feature
-    * [HHH-12608] - Add the ST_DWithin() function  in DB2 Spatial Dialect
     * [HHH-12857] - Support the security manager with ByteBuddy as bytecode provider
 
 ** Task

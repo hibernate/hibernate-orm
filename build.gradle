@@ -40,7 +40,7 @@ allprojects {
 			name "jboss-snapshots"
 			url "http://snapshots.jboss.org/maven2/"
 		}
-		//Allow loading additional dependencis from a local path;
+		//Allow loading additional dependencies from a local path;
 		//useful to load JDBC drivers which can not be distributed in public.
 		if (System.env['ADDITIONAL_REPO'] != null) {
 			flatDir {

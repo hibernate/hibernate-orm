@@ -48,7 +48,7 @@ public class CommitFlushCollectionTest extends BaseEnversJPAFunctionalTestCase {
 		private Long version;
 
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue
 		public Long getId() {
 			return id;
 		}

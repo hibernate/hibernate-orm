@@ -28,14 +28,19 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
+import org.hibernate.type.StringType;
 
 import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.TestForIssue;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Vlad Mihalcea
@@ -96,6 +101,18 @@ public class MySQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCas
 						"    FROM Phone p " +
 						"    WHERE p.person_id = personId; " +
 						"    RETURN phoneCount; " +
+						"END"
+					);
+
+					statement.executeUpdate(
+						"CREATE PROCEDURE sp_is_null (" +
+						"   IN param varchar(255), " +
+						"   OUT result BIT(1) " +
+						") " +
+						"BEGIN " +
+						"    IF (param IS NULL) THEN SET result = 1; " +
+						"    ELSE SET result = 0; " +
+						"    END IF; " +
 						"END"
 					);
 				} finally {
@@ -184,6 +201,24 @@ public class MySQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCas
 			session.doWork( connection -> {
 				try (Statement statement = connection.createStatement()) {
 					statement.executeUpdate( "DROP FUNCTION IF EXISTS fn_count_phones" );
+				}
+				catch (SQLException ignore) {
+				}
+			} );
+		}
+		finally {
+			entityManager.getTransaction().rollback();
+			entityManager.close();
+		}
+
+		entityManager = createEntityManager();
+		entityManager.getTransaction().begin();
+
+		try {
+			Session session = entityManager.unwrap( Session.class );
+			session.doWork( connection -> {
+				try (Statement statement = connection.createStatement()) {
+					statement.executeUpdate( "DROP PROCEDURE IF EXISTS sp_is_null" );
 				}
 				catch (SQLException ignore) {
 				}
@@ -331,5 +366,53 @@ public class MySQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCas
 			entityManager.getTransaction().rollback();
 			entityManager.close();
 		}
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12905")
+	public void testStoredProcedureNullParameter() {
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			ProcedureCall procedureCall = entityManager.unwrap( Session.class ).createStoredProcedureCall("sp_is_null");
+			procedureCall.registerParameter( 1, StringType.class, ParameterMode.IN).enablePassingNulls( true);
+			procedureCall.registerParameter( 2, Boolean.class, ParameterMode.OUT);
+			procedureCall.setParameter(1, null);
+
+			Boolean result = (Boolean) procedureCall.getOutputParameterValue( 2 );
+
+			assertTrue( result );
+		});
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			ProcedureCall procedureCall = entityManager.unwrap( Session.class ).createStoredProcedureCall("sp_is_null");
+			procedureCall.registerParameter( 1, StringType.class, ParameterMode.IN).enablePassingNulls( true);
+			procedureCall.registerParameter( 2, Boolean.class, ParameterMode.OUT);
+			procedureCall.setParameter(1, "test");
+
+			Boolean result = (Boolean) procedureCall.getOutputParameterValue( 2 );
+
+			assertFalse( result );
+		});
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12905")
+	public void testStoredProcedureNullParameterHibernateWithoutEnablePassingNulls() {
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			try {
+				ProcedureCall procedureCall = entityManager.unwrap( Session.class ).createStoredProcedureCall("sp_is_null");
+				procedureCall.registerParameter( 1, StringType.class, ParameterMode.IN);
+				procedureCall.registerParameter( 2, Boolean.class, ParameterMode.OUT);
+				procedureCall.setParameter(1, null);
+
+				procedureCall.getOutputParameterValue( 2 );
+
+				fail("Should have thrown exception");
+			}
+			catch (IllegalArgumentException e) {
+				assertEquals( "The parameter on the [1] position was null. You need to call ParameterRegistration#enablePassingNulls in order to pass null parameters.", e.getMessage() );
+			}
+		});
 	}
 }

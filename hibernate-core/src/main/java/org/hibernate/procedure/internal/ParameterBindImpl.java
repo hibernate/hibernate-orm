@@ -79,8 +79,19 @@ public class ParameterBindImpl<T> implements ParameterBind<T> {
 		}
 
 		if ( procedureParameter.getParameterType() != null ) {
-			if ( !procedureParameter.getParameterType().isInstance( value ) && !procedureParameter.getHibernateType().getReturnedClass().isInstance( value ) ) {
-				throw new IllegalArgumentException( "Bind value [" + value + "] was not of specified type [" + procedureParameter.getParameterType() );
+			if ( value == null ) {
+				if ( !procedureParameter.isPassNullsEnabled() ) {
+					throw new IllegalArgumentException( "The parameter with the [" +
+							( procedureParameter.getName() != null
+									? procedureParameter.getName() + "] name"
+									: procedureParameter.getPosition() + "] position" )
+							+ " was null. You need to call ParameterRegistration#enablePassingNulls(true) in order to pass null parameters." );
+				}
+			}
+			else if ( !procedureParameter.getParameterType().isInstance( value ) &&
+					!procedureParameter.getHibernateType().getReturnedClass().isInstance( value ) ) {
+				throw new IllegalArgumentException( "Bind value [" + value + "] was not of specified type [" + procedureParameter
+						.getParameterType() );
 			}
 		}
 

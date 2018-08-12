@@ -6,6 +6,8 @@
  */
 package org.hibernate.envers.test.integration.flush;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
@@ -18,7 +20,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.FetchType;
 import javax.persistence.FlushModeType;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -30,11 +31,8 @@ import org.hibernate.envers.AuditMappedBy;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
-import org.junit.Test;
-
 import org.hibernate.testing.TestForIssue;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 /**
  * @author Chris Cranford
@@ -71,11 +69,10 @@ public class CommitFlushCollectionTest extends BaseEnversJPAFunctionalTestCase {
 	@Audited
 	@MappedSuperclass
 	public static class BaseDocument extends AbstractEntity {
-		@Column(name = "numberValue")
 		private String number;
 		private Date date;
 
-		@Column(nullable = false)
+		@Column(name = "numberValue", nullable = false)
 		public String getNumber() {
 			return number;
 		}
@@ -84,7 +81,7 @@ public class CommitFlushCollectionTest extends BaseEnversJPAFunctionalTestCase {
 			this.number = number;
 		}
 
-		@Column(nullable = false)
+		@Column(name = "dateValue", nullable = false)
 		public Date getDate() {
 			return date;
 		}
@@ -120,10 +117,9 @@ public class CommitFlushCollectionTest extends BaseEnversJPAFunctionalTestCase {
 
 	@MappedSuperclass
 	public abstract static class BaseDocumentLine extends AbstractEntity {
-		@Column(name = "textValue")
 		private String text;
 
-		@Column(nullable = false)
+		@Column(name = "textValue", nullable = false)
 		public String getText() {
 			return text;
 		}

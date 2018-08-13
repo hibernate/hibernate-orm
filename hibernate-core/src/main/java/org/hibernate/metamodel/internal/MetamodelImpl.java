@@ -711,7 +711,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 	@Override
 	public String[] getAllCollectionRoles() {
-		return ArrayHelper.toStringArray( entityPersisterMap.keySet() );
+		return ArrayHelper.toStringArray( collectionPersisterMap.keySet() );
 	}
 
 	@Override

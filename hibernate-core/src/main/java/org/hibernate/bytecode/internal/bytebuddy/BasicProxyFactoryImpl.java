@@ -20,10 +20,6 @@ import net.bytebuddy.NamingStrategy;
 import net.bytebuddy.TypeCache;
 import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
-import net.bytebuddy.implementation.FieldAccessor;
-import net.bytebuddy.implementation.MethodDelegation;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
-import net.bytebuddy.matcher.ElementMatchers;
 
 public class BasicProxyFactoryImpl implements BasicProxyFactory {
 
@@ -47,10 +43,10 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 				.subclass( superClass == null ? Object.class : superClass, ConstructorStrategy.Default.DEFAULT_CONSTRUCTOR )
 				.implement( interfaces == null ? NO_INTERFACES : interfaces )
 				.defineField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE )
-				.method( ElementMatchers.isVirtual().and( ElementMatchers.not( ElementMatchers.isFinalizer() ) ) )
-						.intercept( MethodDelegation.to( ProxyConfiguration.InterceptorDispatcher.class ) )
+				.method( byteBuddyState.getProxyDefinitionHelpers().getVirtualNotFinalizerFilter() )
+						.intercept( byteBuddyState.getProxyDefinitionHelpers().getDelegateToInterceptorDispatcherMethodDelegation() )
 				.implement( ProxyConfiguration.class )
-						.intercept( FieldAccessor.ofField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME ).withAssigner( Assigner.DEFAULT, Assigner.Typing.DYNAMIC ) )
+						.intercept( byteBuddyState.getProxyDefinitionHelpers().getInterceptorFieldAccessor() )
 		);
 		this.interceptor = new PassThroughInterceptor( proxyClass.getName() );
 	}

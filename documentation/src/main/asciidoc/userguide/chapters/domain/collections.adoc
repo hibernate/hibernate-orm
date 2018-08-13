@@ -46,7 +46,7 @@ The persistent collections injected by Hibernate behave like `ArrayList`, `HashS
 [[collections-synopsis]]
 ==== Collections as a value type
 
-Value and embeddable type collections have similar behavior as simple value types because they are automatically persisted when referenced by a persistent object and automatically deleted when unreferenced.
+Value and embeddable type collections have a similar behavior to basic types since they are automatically persisted when referenced by a persistent object and automatically deleted when unreferenced.
 If a collection is passed from one persistent object to another, its elements might be moved from one table to another.
 
 [IMPORTANT]

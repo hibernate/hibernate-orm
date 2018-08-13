@@ -56,7 +56,7 @@ See the <<chapters/caching/Caching.adoc#caching,Caching>> chapter for more info.
 [[annotations-jpa-collectiontable]]
 ==== `@CollectionTable`
 
-The http://docs.oracle.com/javaee/7/api/javax/persistence/CollectionTable.html[`@CollectionTable`] annotation is used to specify the database table that stores the values of basic or an embeddable type collection.
+The http://docs.oracle.com/javaee/7/api/javax/persistence/CollectionTable.html[`@CollectionTable`] annotation is used to specify the database table that stores the values of a basic or an embeddable type collection.
 
 See the <<chapters/domain/embeddables.adoc#embeddable-collections,Collections of embeddable types>> section for more info.
 

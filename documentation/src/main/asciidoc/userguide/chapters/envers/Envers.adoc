@@ -459,7 +459,7 @@ If your `RevisionListener` class is inaccessible from `@RevisionEntity` (e.g. it
 set `org.hibernate.envers.revision_listener` property to its fully qualified class name.
 Class name defined by the configuration parameter overrides the revision entity's value attribute.
 
-Considering we have a `CurrentUser` utility which stores the currenty logged user:
+Considering we have a `CurrentUser` utility which stores the currently logged user:
 
 [[envers-revisionlog-CurrentUser-example]]
 .`CurrentUser` utility

@@ -411,7 +411,7 @@ public class MySQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCas
 				fail("Should have thrown exception");
 			}
 			catch (IllegalArgumentException e) {
-				assertEquals( "The parameter on the [1] position was null. You need to call ParameterRegistration#enablePassingNulls in order to pass null parameters.", e.getMessage() );
+				assertEquals( "The parameter on the [1] position was null. You need to call ParameterRegistration#enablePassingNulls(true) in order to pass null parameters.", e.getMessage() );
 			}
 		});
 	}

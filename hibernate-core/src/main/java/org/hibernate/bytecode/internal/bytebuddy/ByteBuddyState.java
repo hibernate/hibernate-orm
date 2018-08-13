@@ -6,6 +6,13 @@
  */
 package org.hibernate.bytecode.internal.bytebuddy;
 
+import static net.bytebuddy.matcher.ElementMatchers.isFinalizer;
+import static net.bytebuddy.matcher.ElementMatchers.isSynthetic;
+import static net.bytebuddy.matcher.ElementMatchers.isVirtual;
+import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 import java.io.File;
@@ -20,17 +27,23 @@ import java.util.function.Function;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.spi.BasicProxyFactory;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.proxy.ProxyConfiguration;
 import org.hibernate.proxy.ProxyFactory;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.TypeCache;
 import net.bytebuddy.asm.AsmVisitorWrapper.ForDeclaredMethods;
 import net.bytebuddy.asm.MemberSubstitution;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.DynamicType.Unloaded;
 import net.bytebuddy.dynamic.loading.ClassInjector;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.dynamic.scaffold.TypeValidation;
+import net.bytebuddy.implementation.FieldAccessor;
+import net.bytebuddy.implementation.MethodDelegation;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
+import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
 import net.bytebuddy.pool.TypePool;
 
@@ -51,6 +64,8 @@ public final class ByteBuddyState {
 
 	private final ForDeclaredMethods getDeclaredMethodMemberSubstitution;
 	private final ForDeclaredMethods getMethodMemberSubstitution;
+
+	private final ProxyDefinitionHelpers proxyDefinitionHelpers;
 
 	/**
 	 * It will be easier to maintain the cache and its state when it will no longer be static
@@ -75,6 +90,8 @@ public final class ByteBuddyState {
 			this.getDeclaredMethodMemberSubstitution = null;
 			this.getMethodMemberSubstitution = null;
 		}
+
+		this.proxyDefinitionHelpers = new ProxyDefinitionHelpers();
 	}
 
 	/**
@@ -133,6 +150,17 @@ public final class ByteBuddyState {
 		}
 
 		return make( typePool, builder ).getBytes();
+	}
+
+	/**
+	 * Returns the proxy definition helpers to reuse when defining proxies.
+	 * <p>
+	 * These elements are shared as they are immutable.
+	 *
+	 * @return The proxy definition helpers.
+	 */
+	public ProxyDefinitionHelpers getProxyDefinitionHelpers() {
+		return proxyDefinitionHelpers;
 	}
 
 	/**
@@ -274,6 +302,49 @@ public final class ByteBuddyState {
 			catch (NoSuchMethodException e) {
 				throw new HibernateException( "Unable to prepare getDeclaredMethod()/getMethod() substitution", e );
 			}
+		}
+	}
+
+	/**
+	 * Shared proxy definition helpers. They are immutable so we can safely share them.
+	 */
+	public static class ProxyDefinitionHelpers {
+
+		private final ElementMatcher<? super MethodDescription> groovyGetMetaClassFilter;
+		private final ElementMatcher<? super MethodDescription> virtualNotFinalizerFilter;
+		private final ElementMatcher<? super MethodDescription> hibernateGeneratedMethodFilter;
+		private final MethodDelegation delegateToInterceptorDispatcherMethodDelegation;
+		private final FieldAccessor.PropertyConfigurable interceptorFieldAccessor;
+
+		private ProxyDefinitionHelpers() {
+			this.groovyGetMetaClassFilter = isSynthetic().and( named( "getMetaClass" )
+					.and( returns( td -> "groovy.lang.MetaClass".equals( td.getName() ) ) ) );
+			this.virtualNotFinalizerFilter = isVirtual().and( not( isFinalizer() ) );
+			this.hibernateGeneratedMethodFilter = nameStartsWith( "$$_hibernate_" ).and( isVirtual() );
+			this.delegateToInterceptorDispatcherMethodDelegation = MethodDelegation
+					.to( ProxyConfiguration.InterceptorDispatcher.class );
+			this.interceptorFieldAccessor = FieldAccessor.ofField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME )
+					.withAssigner( Assigner.DEFAULT, Assigner.Typing.DYNAMIC );
+		}
+
+		public ElementMatcher<? super MethodDescription> getGroovyGetMetaClassFilter() {
+			return groovyGetMetaClassFilter;
+		}
+
+		public ElementMatcher<? super MethodDescription> getVirtualNotFinalizerFilter() {
+			return virtualNotFinalizerFilter;
+		}
+
+		public ElementMatcher<? super MethodDescription> getHibernateGeneratedMethodFilter() {
+			return hibernateGeneratedMethodFilter;
+		}
+
+		public MethodDelegation getDelegateToInterceptorDispatcherMethodDelegation() {
+			return delegateToInterceptorDispatcherMethodDelegation;
+		}
+
+		public FieldAccessor.PropertyConfigurable getInterceptorFieldAccessor() {
+			return interceptorFieldAccessor;
 		}
 	}
 }

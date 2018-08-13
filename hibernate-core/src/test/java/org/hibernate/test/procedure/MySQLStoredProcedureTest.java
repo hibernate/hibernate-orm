@@ -107,11 +107,11 @@ public class MySQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCas
 					statement.executeUpdate(
 						"CREATE PROCEDURE sp_is_null (" +
 						"   IN param varchar(255), " +
-						"   OUT result BIT(1) " +
+						"   OUT result tinyint(1) " +
 						") " +
 						"BEGIN " +
-						"    IF (param IS NULL) THEN SET result = 1; " +
-						"    ELSE SET result = 0; " +
+						"    IF (param IS NULL) THEN SET result = true; " +
+						"    ELSE SET result = false; " +
 						"    END IF; " +
 						"END"
 					);
@@ -411,7 +411,7 @@ public class MySQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCas
 				fail("Should have thrown exception");
 			}
 			catch (IllegalArgumentException e) {
-				assertEquals( "The parameter on the [1] position was null. You need to call ParameterRegistration#enablePassingNulls(true) in order to pass null parameters.", e.getMessage() );
+				assertEquals( "The parameter at position [1] was null. You need to call ParameterRegistration#enablePassingNulls(true) in order to pass null parameters.", e.getMessage() );
 			}
 		});
 	}

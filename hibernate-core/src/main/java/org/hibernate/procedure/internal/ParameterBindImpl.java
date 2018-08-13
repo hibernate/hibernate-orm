@@ -81,10 +81,10 @@ public class ParameterBindImpl<T> implements ParameterBind<T> {
 		if ( procedureParameter.getParameterType() != null ) {
 			if ( value == null ) {
 				if ( !procedureParameter.isPassNullsEnabled() ) {
-					throw new IllegalArgumentException( "The parameter with the [" +
+					throw new IllegalArgumentException( "The parameter " +
 							( procedureParameter.getName() != null
-									? procedureParameter.getName() + "] name"
-									: procedureParameter.getPosition() + "] position" )
+									? "named [" + procedureParameter.getName() + "]"
+									: "at position [" + procedureParameter.getPosition() + "]" )
 							+ " was null. You need to call ParameterRegistration#enablePassingNulls(true) in order to pass null parameters." );
 				}
 			}

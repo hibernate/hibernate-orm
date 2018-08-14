@@ -39,7 +39,6 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	public static final String DEFAULT_KEY_COLUMN_NAME = "id";
 
 	private final MetadataImplementor metadata;
-	private MetadataBuildingContext buildingContext;
 	private PersistentClass owner;
 
 	private KeyValue key;
@@ -91,7 +90,6 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 	protected Collection(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		this(buildingContext.getMetadataCollector(), owner);
-		this.buildingContext = buildingContext;
 	}
 
 	/**

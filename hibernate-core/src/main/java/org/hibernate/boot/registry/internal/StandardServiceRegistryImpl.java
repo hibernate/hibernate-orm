@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.registry.internal;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +26,9 @@ import org.hibernate.service.spi.ServiceInitiator;
  * @author Steve Ebersole
  */
 public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl implements StandardServiceRegistry {
-	private final Map configurationValues;
+
+	//Access to this field requires synchronization on -this-
+	private Map configurationValues;
 
 	/**
 	 * Constructs a StandardServiceRegistryImpl.  Should not be instantiated directly; use
@@ -71,6 +74,10 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 
 		this.configurationValues = configurationValues;
 
+		applyServiceRegistrations( serviceInitiators, providedServices );
+	}
+
+	private void applyServiceRegistrations(List<StandardServiceInitiator> serviceInitiators, List<ProvidedService> providedServices) {
 		try {
 			// process initiators
 			for ( ServiceInitiator initiator : serviceInitiators ) {
@@ -89,15 +96,37 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 	}
 
 	@Override
-	public <R extends Service> R initiateService(ServiceInitiator<R> serviceInitiator) {
+	public synchronized <R extends Service> R initiateService(ServiceInitiator<R> serviceInitiator) {
 		// todo : add check/error for unexpected initiator types?
 		return ( (StandardServiceInitiator<R>) serviceInitiator ).initiateService( configurationValues, this );
 	}
 
 	@Override
-	public <R extends Service> void configureService(ServiceBinding<R> serviceBinding) {
+	public synchronized <R extends Service> void configureService(ServiceBinding<R> serviceBinding) {
 		if ( Configurable.class.isInstance( serviceBinding.getService() ) ) {
 			( (Configurable) serviceBinding.getService() ).configure( configurationValues );
 		}
+	}
+
+	/**
+	 * Very advanced and tricky to handle: not designed for this. Intended for experiments only!
+	 */
+	public synchronized void resetAndReactivate(BootstrapServiceRegistry bootstrapServiceRegistry,
+									List<StandardServiceInitiator> serviceInitiators,
+									List<ProvidedService> providedServices,
+									Map<?, ?> configurationValues) {
+		if ( super.isActive() ) {
+			throw new IllegalStateException( "Can't reactivate an active registry!" );
+		}
+		super.resetParent( bootstrapServiceRegistry );
+		this.configurationValues = new HashMap( configurationValues );
+		super.reactivate();
+		applyServiceRegistrations( serviceInitiators, providedServices );
+	}
+
+	@Override
+	public synchronized void destroy() {
+		super.destroy();
+		this.configurationValues = null;
 	}
 }

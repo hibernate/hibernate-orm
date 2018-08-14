@@ -49,7 +49,7 @@ public abstract class AbstractServiceRegistryImpl
 
 	public static final String ALLOW_CRAWLING = "hibernate.service.allow_crawling";
 
-	private final ServiceRegistryImplementor parent;
+	private volatile ServiceRegistryImplementor parent;
 	private final boolean allowCrawling;
 
 	private final ConcurrentMap<Class,ServiceBinding> serviceBindingMap = new ConcurrentHashMap<>();
@@ -429,4 +429,33 @@ public abstract class AbstractServiceRegistryImpl
 			}
 		}
 	}
+
+	/**
+	 * Very advanced and tricky to handle: not designed for this. Intended for experiments only!
+	 */
+	public void resetParent(BootstrapServiceRegistry newParent) {
+		if ( this.parent != null ) {
+			this.parent.deRegisterChild( this );
+		}
+		if ( newParent != null ) {
+			if ( ! ServiceRegistryImplementor.class.isInstance( newParent ) ) {
+				throw new IllegalArgumentException( "ServiceRegistry parent needs to implement ServiceRegistryImplementor" );
+			}
+			this.parent = (ServiceRegistryImplementor) newParent;
+			this.parent.registerChild( this );
+		}
+		else {
+			this.parent = null;
+		}
+	}
+
+	public synchronized void reactivate() {
+		if ( active.compareAndSet( false, true ) ) {
+			//ok
+		}
+		else {
+			throw new IllegalStateException( "Was not inactive, could not reactivate!" );
+		}
+	}
+
 }

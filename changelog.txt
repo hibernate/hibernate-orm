@@ -4,6 +4,34 @@ Hibernate 5 Changelog
 Note: Please refer to JIRA to learn more about each issue.
 
 
+Changes in 5.3.5.final (August 14th, 2018)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31695/tab/release-report-done
+
+** Bug
+    * [HHH-12871] - Metamodel contains managed types related to dynamic-map entities that have been excluded.
+    * [HHH-12875] - Class level where="..." clause in hbm.xml mappings is not enforced on collections of that class
+    * [HHH-12882] - Where clauses mapped on collections and entities need parentheses when used in conjunction
+    * [HHH-12890] - Fix link to JPA Metamodel generator documentation
+    * [HHH-12903] - CommitFlushCollectionTest fails when running on Oracle.
+    * [HHH-12905] - Passing null as parameter is not allowed even when enablePassingNulls() has been called
+    * [HHH-12906] - Statistics.getCollectionRoleNames() reports incorrect value
+
+** Task
+    * [HHH-10782] - Add a comment about what you can expect from a query plan cache cleanup
+    * [HHH-12898] - Enable integration tests for Oracle Standard Edition Two 12.1.0.2.v12 on the AWS build slaves
+    * [HHH-12899] - Enable integration tests for MS SQL Server on the AWS build slaves
+    * [HHH-12901] - Enable loading of additional JDBC drivers from a local path
+    * [HHH-12909] - Upgrade ByteBuddy to 1.8.17
+
+** Improvement
+    * [HHH-12196] - Sybase Dialect not supporting max result - paging
+    * [HHH-12361] - In the User Guide, omit constructors and equals/hashCode for brevity
+    * [HHH-12608] - Add the ST_DWithin() function  in DB2 Spatial Dialect
+    * [HHH-12892] - Fix spelling issues in the User Guide
+    * [HHH-12907] - Avoid garbage collection pressure when creating proxies with ByteBuddy
+
 Changes in 5.3.4.final (August 2nd, 2018)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -135,7 +135,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @see #setMaxResults(int) (int)
 	 * @see #setHibernateMaxResults(int) (int)
 	 *
-	 * @deprecated {@link #getMaxResults(int)} should be used instead.
+	 * @deprecated {@link #getMaxResults()} should be used instead.
 	 */
 	@Deprecated
 	default Integer getHibernateMaxResults() {

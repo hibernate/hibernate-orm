@@ -15,8 +15,7 @@
     	table="rootclass" 
     	dynamic-insert="true" 
     	dynamic-update="true"
-    	select-before-update="true"
-    	where="id1_ is not null">
+    	select-before-update="true">
         <!--cache-->
         <id name="id" type="long" column="id1_" unsaved-value="0">
             <generator class="native"/>

@@ -7,6 +7,7 @@
 package org.hibernate.service.internal;
 
 import java.util.List;
+import java.util.ListIterator;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -95,6 +96,12 @@ public class SessionFactoryServiceRegistryImpl
 		}
 
 		return super.getService( serviceRole );
+	}
+
+	@Override
+	public synchronized void destroy() {
+		super.destroy();
+		this.cachedEventListenerRegistry = null;
 	}
 
 }

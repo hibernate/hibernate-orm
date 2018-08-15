@@ -375,12 +375,12 @@ public class CascadingActions {
 						&& !isInManagedState( child, session )
 						&& !(child instanceof HibernateProxy) //a proxy cannot be transient and it breaks ForeignKeys.isTransient
 						&& ForeignKeys.isTransient( childEntityName, child, null, session ) ) {
-					String parentEntiytName = persister.getEntityName();
+					String parentEntityName = persister.getEntityName();
 					String propertyName = persister.getPropertyNames()[propertyIndex];
 					throw new TransientPropertyValueException(
 							"object references an unsaved transient instance - save the transient instance before flushing",
 							childEntityName,
-							parentEntiytName,
+							parentEntityName,
 							propertyName
 					);
 

@@ -8,9 +8,7 @@ package org.hibernate.engine.jdbc;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
+import java.io.OutputStream;
 import java.sql.Blob;
 import java.sql.SQLException;
 
@@ -18,17 +16,21 @@ import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
 import org.hibernate.type.descriptor.java.DataHelper;
 
 /**
- * Manages aspects of proxying {@link Blob} references for non-contextual creation, including proxy creation and
- * handling proxy invocations.  We use proxies here solely to avoid JDBC version incompatibilities.
+ * Manages aspects of representing {@link Blob} objects.
+ *
+ * In previous versions this used to be implemented by using a java.lang.reflect.Proxy to deal with
+ * incompatibilities across various JDBC versions, hence the class name, but using a real Proxy is no longer necessary.
+ *
+ * The class name could be updated to reflect this but that would break APIs, so this operation is deferred.
  *
  * @author Gavin King
  * @author Steve Ebersole
  * @author Gail Badner
+ * @author Sanne Grinovero
  */
-public class BlobProxy implements InvocationHandler {
-	private static final Class[] PROXY_INTERFACES = new Class[] { Blob.class, BlobImplementer.class };
+public final class BlobProxy implements Blob, BlobImplementer {
 
-	private BinaryStream binaryStream;
+	private final BinaryStream binaryStream;
 	private boolean needsReset;
 
 	/**
@@ -52,15 +54,12 @@ public class BlobProxy implements InvocationHandler {
 		this.binaryStream = new StreamBackedBinaryStream( stream, length );
 	}
 
-	private long getLength() {
-		return binaryStream.getLength();
-	}
 
 	private InputStream getStream() throws SQLException {
 		return getUnderlyingStream().getInputStream();
 	}
 
-	private BinaryStream getUnderlyingStream() throws SQLException {
+	public BinaryStream getUnderlyingStream() throws SQLException {
 		resetIfNeeded();
 		return binaryStream;
 	}
@@ -78,84 +77,14 @@ public class BlobProxy implements InvocationHandler {
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
-	 * @throws UnsupportedOperationException if any methods other than
-	 * {@link Blob#length}, {@link BlobImplementer#getUnderlyingStream},
-	 * {@link Blob#getBinaryStream}, {@link Blob#getBytes}, {@link Blob#free},
-	 * or toString/equals/hashCode are invoked.
-	 */
-	@Override
-	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-		final String methodName = method.getName();
-		final int argCount = method.getParameterCount();
-
-		if ( "length".equals( methodName ) && argCount == 0 ) {
-			return getLength();
-		}
-		if ( "getUnderlyingStream".equals( methodName ) ) {
-			return getUnderlyingStream(); // Reset stream if needed.
-		}
-		if ( "getBinaryStream".equals( methodName ) ) {
-			if ( argCount == 0 ) {
-				return getStream();
-			}
-			else if ( argCount == 2 ) {
-				final long start = (Long) args[0];
-				if ( start < 1 ) {
-					throw new SQLException( "Start position 1-based; must be 1 or more." );
-				}
-				if ( start > getLength() ) {
-					throw new SQLException( "Start position [" + start + "] cannot exceed overall CLOB length [" + getLength() + "]" );
-				}
-				final int length = (Integer) args[1];
-				if ( length < 0 ) {
-					// java docs specifically say for getBinaryStream(long,int) that the start+length must not exceed the
-					// total length, however that is at odds with the getBytes(long,int) behavior.
-					throw new SQLException( "Length must be great-than-or-equal to zero." );
-				}
-				return DataHelper.subStream( getStream(), start-1, length );
-			}
-		}
-		if ( "getBytes".equals( methodName ) ) {
-			if ( argCount == 2 ) {
-				final long start = (Long) args[0];
-				if ( start < 1 ) {
-					throw new SQLException( "Start position 1-based; must be 1 or more." );
-				}
-				final int length = (Integer) args[1];
-				if ( length < 0 ) {
-					throw new SQLException( "Length must be great-than-or-equal to zero." );
-				}
-				return DataHelper.extractBytes( getStream(), start-1, length );
-			}
-		}
-		if ( "free".equals( methodName ) && argCount == 0 ) {
-			binaryStream.release();
-			return null;
-		}
-		if ( "toString".equals( methodName ) && argCount == 0 ) {
-			return this.toString();
-		}
-		if ( "equals".equals( methodName ) && argCount == 1 ) {
-			return proxy == args[0];
-		}
-		if ( "hashCode".equals( methodName ) && argCount == 0 ) {
-			return this.hashCode();
-		}
-
-		throw new UnsupportedOperationException( "Blob may not be manipulated from creating session" );
-	}
-
-	/**
-	 * Generates a BlobImpl proxy using byte data.
+	 * Generates a BlobImpl using byte data.
 	 *
 	 * @param bytes The data to be created as a Blob.
 	 *
-	 * @return The generated proxy.
+	 * @return The BlobProxy instance to represent this data.
 	 */
 	public static Blob generateProxy(byte[] bytes) {
-		return (Blob) Proxy.newProxyInstance( getProxyClassLoader(), PROXY_INTERFACES, new BlobProxy( bytes ) );
+		return new BlobProxy( bytes );
 	}
 
 	/**
@@ -164,26 +93,92 @@ public class BlobProxy implements InvocationHandler {
 	 * @param stream The input stream of bytes to be created as a Blob.
 	 * @param length The number of bytes from stream to be written to the Blob.
 	 *
-	 * @return The generated proxy.
+	 * @return The BlobProxy instance to represent this data.
 	 */
 	public static Blob generateProxy(InputStream stream, long length) {
-		return (Blob) Proxy.newProxyInstance( getProxyClassLoader(), PROXY_INTERFACES, new BlobProxy( stream, length ) );
+		return new BlobProxy( stream, length );
 	}
 
-	/**
-	 * Determines the appropriate class loader to which the generated proxy
-	 * should be scoped.
-	 *
-	 * @return The class loader appropriate for proxy construction.
-	 */
-	private static ClassLoader getProxyClassLoader() {
-		return BlobImplementer.class.getClassLoader();
+	@Override
+	public long length() throws SQLException {
+		return binaryStream.getLength();
+	}
+
+	@Override
+	public byte[] getBytes(final long start, final int length) throws SQLException {
+		if ( start < 1 ) {
+			throw new SQLException( "Start position 1-based; must be 1 or more." );
+		}
+		if ( length < 0 ) {
+			throw new SQLException( "Length must be great-than-or-equal to zero." );
+		}
+		return DataHelper.extractBytes( getStream(), start-1, length );
+	}
+
+	@Override
+	public InputStream getBinaryStream() throws SQLException {
+		return getStream();
+	}
+
+	@Override
+	public long position(byte[] pattern, long start) {
+		throw notSupported();
+	}
+
+	@Override
+	public long position(Blob pattern, long start) {
+		throw notSupported();
+	}
+
+	@Override
+	public int setBytes(long pos, byte[] bytes) {
+		throw notSupported();
+	}
+
+	@Override
+	public int setBytes(long pos, byte[] bytes, int offset, int len) {
+		throw notSupported();
+	}
+
+	@Override
+	public OutputStream setBinaryStream(long pos) {
+		throw notSupported();
+	}
+
+	@Override
+	public void truncate(long len) {
+		throw notSupported();
+	}
+
+	@Override
+	public void free() {
+		binaryStream.release();
+	}
+
+	@Override
+	public InputStream getBinaryStream(final long start, final long length) throws SQLException {
+		if ( start < 1 ) {
+			throw new SQLException( "Start position 1-based; must be 1 or more." );
+		}
+		if ( start > length() ) {
+			throw new SQLException( "Start position [" + start + "] cannot exceed overall CLOB length [" + length() + "]" );
+		}
+		if ( length > Integer.MAX_VALUE ) {
+			throw new SQLException( "Can't deal with Blobs larger than Integer.MAX_VALUE" );
+		}
+		final int intLength = (int)length;
+		if ( intLength < 0 ) {
+			// java docs specifically say for getBinaryStream(long,int) that the start+length must not exceed the
+			// total length, however that is at odds with the getBytes(long,int) behavior.
+			throw new SQLException( "Length must be great-than-or-equal to zero." );
+		}
+		return DataHelper.subStream( getStream(), start-1, intLength );
 	}
 
 	private static class StreamBackedBinaryStream implements BinaryStream {
+
 		private final InputStream stream;
 		private final long length;
-
 		private byte[] bytes;
 
 		private StreamBackedBinaryStream(InputStream stream, long length) {
@@ -218,4 +213,9 @@ public class BlobProxy implements InvocationHandler {
 			}
 		}
 	}
+
+	private static UnsupportedOperationException notSupported() {
+		return new UnsupportedOperationException( "Blob may not be manipulated from creating session" );
+	}
+
 }

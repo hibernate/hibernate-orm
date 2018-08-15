@@ -74,7 +74,7 @@ public class BlobDescriptorTest extends AbstractDescriptorTest<Blob> {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-8193" )
-	public void testStreamResetOnAccess() throws IOException {
+	public void testStreamResetOnAccess() throws IOException, SQLException {
 		byte[] bytes = new byte[] { 1, 2, 3, 4 };
 		BlobImplementer blob = (BlobImplementer) BlobProxy.generateProxy( bytes );
 		int value = blob.getUnderlyingStream().getInputStream().read();

@@ -139,6 +139,8 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 import org.hibernate.type.VersionType;
 
+import static org.hibernate.internal.util.StringHelper.safeInterning;
+
 /**
  * Basic functionality for persisting an entity via JDBC
  * through either generated or custom SQL

@@ -92,15 +92,19 @@ public class Column implements Selectable, Serializable, Cloneable {
 	 * returns quoted name as it would be in the mapping file.
 	 */
 	public String getQuotedName() {
-		return quoted ?
+		return safeInterning(
+				quoted ?
 				"`" + name + "`" :
-				name;
+				name
+		);
 	}
 
 	public String getQuotedName(Dialect d) {
-		return quoted ?
+		return safeInterning(
+				quoted ?
 				d.openQuote() + name + d.closeQuote() :
-				name;
+				name
+		);
 	}
 
 	@Override
@@ -139,7 +143,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	 */
 	@Override
 	public String getAlias(Dialect dialect, Table table) {
-		return getAlias( dialect ) + table.getUniqueInteger() + '_';
+		return safeInterning( getAlias( dialect ) + table.getUniqueInteger() + '_' );
 	}
 
 	public boolean isNullable() {
@@ -342,7 +346,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	}
 
 	public void setCustomWrite(String customWrite) {
-		this.customWrite = customWrite;
+		this.customWrite = safeInterning( customWrite );
 	}
 
 	public String getCustomRead() {
@@ -350,7 +354,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	}
 
 	public void setCustomRead(String customRead) {
-		this.customRead = StringHelper.nullIfEmpty( customRead );
+		this.customRead = safeInterning( StringHelper.nullIfEmpty( customRead ) );
 	}
 
 	public String getCanonicalName() {

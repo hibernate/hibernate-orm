@@ -63,7 +63,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final MetadataBuildingOptions metadataBuildingOptions;
 	private final BootstrapContext bootstrapContext;
 
-	private final IdentifierGeneratorFactory identifierGeneratorFactory;
+	private final MutableIdentifierGeneratorFactory identifierGeneratorFactory;
 
 	private final Map<String,PersistentClass> entityBindingMap;
 	private final Map<Class, MappedSuperclass> mappedSuperclassMap;
@@ -81,7 +81,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String, SQLFunction> sqlFunctionMap;
 	private final Database database;
 
-	MetadataImpl(
+	public MetadataImpl(
 			UUID uuid,
 			MetadataBuildingOptions metadataBuildingOptions,
 			MutableIdentifierGeneratorFactory identifierGeneratorFactory,
@@ -195,7 +195,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
+	public MutableIdentifierGeneratorFactory getIdentifierGeneratorFactory() {
 		return identifierGeneratorFactory;
 	}
 
@@ -391,4 +391,55 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		}
 		return prop.getType();
 	}
+
+	//Specific for copies only:
+
+	public Map<String,PersistentClass> getEntityBindingMap() {
+		return entityBindingMap;
+	}
+
+	public Map<String, Collection> getCollectionBindingMap() {
+		return collectionBindingMap;
+	}
+
+	public Map<String, TypeDefinition> getTypeDefinitionMap() {
+		return typeDefinitionMap;
+	}
+
+	public Map<String, FetchProfile> getFetchProfileMap() {
+		return fetchProfileMap;
+	}
+
+	public Map<Class, MappedSuperclass> getMappedSuperclassMap() {
+		return mappedSuperclassMap;
+	}
+
+	public Map<String, IdentifierGeneratorDefinition> getIdGeneratorDefinitionMap() {
+		return idGeneratorDefinitionMap;
+	}
+
+	public Map<String, NamedQueryDefinition> getNamedQueryMap() {
+		return namedQueryMap;
+	}
+
+	public Map<String, NamedSQLQueryDefinition> getNamedNativeQueryMap() {
+		return namedNativeQueryMap;
+	}
+
+	public Map<String, NamedProcedureCallDefinition> getNamedProcedureCallMap() {
+		return namedProcedureCallMap;
+	}
+
+	public Map<String, ResultSetMappingDefinition> getSqlResultSetMappingMap() {
+		return sqlResultSetMappingMap;
+	}
+
+	public Map<String, NamedEntityGraphDefinition> getNamedEntityGraphMap() {
+		return namedEntityGraphMap;
+	}
+
+	public BootstrapContext getBootstrapContext() {
+		return bootstrapContext;
+	}
+
 }

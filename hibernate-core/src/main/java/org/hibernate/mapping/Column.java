@@ -17,6 +17,8 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.Template;
 
+import static org.hibernate.internal.util.StringHelper.safeInterning;
+
 /**
  * A column of a relational database table
  *
@@ -268,10 +270,12 @@ public class Column implements Selectable, Serializable, Cloneable {
 
 	@Override
 	public String getTemplate(Dialect dialect, SQLFunctionRegistry functionRegistry) {
-		return hasCustomRead()
+		return safeInterning(
+				hasCustomRead()
 				// see note in renderTransformerReadFragment wrt access to SessionFactory
 				? Template.renderTransformerReadFragment( customRead, getQuotedName( dialect ) )
-				: Template.TEMPLATE + '.' + getQuotedName( dialect );
+				: Template.TEMPLATE + '.' + getQuotedName( dialect )
+		);
 	}
 
 	public boolean hasCustomRead() {

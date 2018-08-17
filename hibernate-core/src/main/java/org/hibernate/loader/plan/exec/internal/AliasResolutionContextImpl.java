@@ -34,6 +34,8 @@ import org.hibernate.type.EntityType;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.internal.util.StringHelper.safeInterning;
+
 /**
  * Provides aliases that are used by load queries and ResultSet processors.
  *
@@ -237,7 +239,7 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 		if ( querySpaceUidToSqlTableAliasMap == null ) {
 			querySpaceUidToSqlTableAliasMap = new HashMap<String, String>();
 		}
-		String old = querySpaceUidToSqlTableAliasMap.put( querySpaceUid, sqlTableAlias );
+		String old = querySpaceUidToSqlTableAliasMap.put( safeInterning( querySpaceUid ), safeInterning( sqlTableAlias ) );
 		if ( old != null ) {
 			if ( old.equals( sqlTableAlias ) ) {
 				// silently ignore...

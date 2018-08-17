@@ -13,6 +13,8 @@ import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.Template;
 
+import static org.hibernate.internal.util.StringHelper.safeInterning;
+
 /**
  * A formula is a derived column value
  * @author Gavin King
@@ -35,7 +37,7 @@ public class Formula implements Selectable, Serializable {
 	@Override
 	public String getTemplate(Dialect dialect, SQLFunctionRegistry functionRegistry) {
 		String template = Template.renderWhereStringTemplate(formula, dialect, functionRegistry);
-		return StringHelper.replace( template, "{alias}", Template.TEMPLATE );
+		return safeInterning( StringHelper.replace( template, "{alias}", Template.TEMPLATE ) );
 	}
 
 	@Override

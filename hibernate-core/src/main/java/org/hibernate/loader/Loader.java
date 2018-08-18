@@ -103,7 +103,7 @@ public abstract class Loader {
 	protected static final CoreMessageLogger LOG = CoreLogging.messageLogger( Loader.class );
 	protected static final boolean DEBUG_ENABLED = LOG.isDebugEnabled();
 
-	private final SessionFactoryImplementor factory;
+	protected final SessionFactoryImplementor factory;
 	private volatile ColumnNameCache columnNameCache;
 
 	private final boolean referenceCachingEnabled;
@@ -1889,7 +1889,12 @@ public abstract class Loader {
 			final boolean scroll,
 			List<AfterLoadAction> afterLoadActions,
 			final SharedSessionContractImplementor session) throws SQLException {
+		modifyQueryParameters(queryParameters);
 		return executeQueryStatement( getSQLString(), queryParameters, scroll, afterLoadActions, session );
+	}
+
+	protected void modifyQueryParameters(QueryParameters queryParameters) {
+		// defult implementation does nothing
 	}
 
 	protected SqlStatementWrapper executeQueryStatement(

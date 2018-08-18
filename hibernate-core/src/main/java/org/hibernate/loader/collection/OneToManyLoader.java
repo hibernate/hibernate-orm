@@ -8,11 +8,15 @@ package org.hibernate.loader.collection;
 
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.JoinWalker;
 import org.hibernate.persister.collection.QueryableCollection;
-
+import org.hibernate.type.AbstractStandardBasicType;
+import org.hibernate.type.ArrayType;
+import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.jboss.logging.Logger;
 
 /**
@@ -63,6 +67,23 @@ public class OneToManyLoader extends CollectionLoader {
 		postInstantiate();
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Static select for one-to-many %s: %s", oneToManyPersister.getRole(), getSQLString() );
+		}
+	}
+
+	@Override
+	protected void modifyQueryParameters(QueryParameters qp) {
+		if (arrayRestriction != null) {
+			Type elementType = qp.getPositionalParameterTypes()[0];
+			if (elementType instanceof AbstractStandardBasicType<?>) {
+				SqlTypeDescriptor sqlType = ((AbstractStandardBasicType<?>)elementType).getSqlTypeDescriptor();
+				Object[] elementValues = qp.getPositionalParameterValues();
+
+				Type arrayType = new ArrayType(sqlType, factory.getDialect(), elementType.getReturnedClass());
+				Type[] arrayTypes = { arrayType };
+				Object[] arrayValues = { elementValues };
+				qp.setPositionalParameterTypes(arrayTypes);
+				qp.setPositionalParameterValues(arrayValues);
+			}
 		}
 	}
 }

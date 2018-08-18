@@ -35,6 +35,7 @@ public abstract class OuterJoinLoader extends BasicLoader {
 	protected String sql;
 	protected String[] suffixes;
 	protected String[] collectionSuffixes;
+	protected String arrayRestriction;
 
 	private LoadQueryInfluencers loadQueryInfluencers;
 
@@ -110,6 +111,7 @@ public abstract class OuterJoinLoader extends BasicLoader {
 		collectionOwners = walker.getCollectionOwners();
 		sql = walker.getSQLString();
 		aliases = walker.getAliases();
+		arrayRestriction = walker.getArrayRestriction();
 	}
 
 }

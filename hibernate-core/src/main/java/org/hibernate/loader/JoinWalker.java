@@ -67,6 +67,7 @@ public class JoinWalker {
 	protected LockOptions lockOptions;
 	protected LockMode[] lockModeArray;
 	protected String sql;
+	protected String arrayRestriction;
 
 	protected JoinWalker(
 			SessionFactoryImplementor factory,
@@ -170,6 +171,10 @@ public class JoinWalker {
 
 	public LoadQueryInfluencers getLoadQueryInfluencers() {
 		return loadQueryInfluencers;
+	}
+
+	public String getArrayRestriction() {
+		return arrayRestriction;
 	}
 
 	/**
@@ -971,11 +976,16 @@ public class JoinWalker {
 		if ( columnNames.length == 1 ) {
 			// if not a composite key, use "foo in (?, ?, ?)" for batching
 			// if no batch, and not a composite key, use "foo = ?"
-			InFragment in = new InFragment().setColumn( alias, columnNames[0] );
-			for ( int i = 0; i < batchSize; i++ ) {
-				in.addValue( "?" );
+			arrayRestriction = factory.getDialect().getArrayRestriction(alias, columnNames[0], batchSize);
+			if (arrayRestriction != null) {
+				return new StringBuilder(arrayRestriction);
+			} else {
+				InFragment in = new InFragment().setColumn( alias, columnNames[0] );
+				for ( int i = 0; i < batchSize; i++ ) {
+					in.addValue( "?" );
+				}
+				return new StringBuilder( in.toFragmentString() );
 			}
-			return new StringBuilder( in.toFragmentString() );
 		}
 		else {
 			//a composite key

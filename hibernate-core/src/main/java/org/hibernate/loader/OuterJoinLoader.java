@@ -10,10 +10,15 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.Loadable;
+import org.hibernate.type.AbstractStandardBasicType;
+import org.hibernate.type.ArrayType;
 import org.hibernate.type.EntityType;
+import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * Implements logic for walking a tree of associated classes.
@@ -114,4 +119,20 @@ public abstract class OuterJoinLoader extends BasicLoader {
 		arrayRestriction = walker.getArrayRestriction();
 	}
 
+	@Override
+	protected void modifyQueryParameters(QueryParameters qp) {
+		if (arrayRestriction != null) {
+			Type elementType = qp.getPositionalParameterTypes()[0];
+			if (elementType instanceof AbstractStandardBasicType<?>) {
+				SqlTypeDescriptor sqlType = ((AbstractStandardBasicType<?>)elementType).getSqlTypeDescriptor();
+				Object[] elementValues = qp.getPositionalParameterValues();
+
+				Type arrayType = new ArrayType(sqlType, factory.getDialect(), elementType.getReturnedClass());
+				Type[] arrayTypes = { arrayType };
+				Object[] arrayValues = { elementValues };
+				qp.setPositionalParameterTypes(arrayTypes);
+				qp.setPositionalParameterValues(arrayValues);
+			}
+		}
+	}
 }

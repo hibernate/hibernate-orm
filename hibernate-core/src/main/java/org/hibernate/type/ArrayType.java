@@ -169,7 +169,8 @@ public class ArrayType extends CollectionType {
 		}
 		if (value != null) {
 			Object[] arrayValue = (Object[])value;
-			java.sql.Array array = session.connection().createArrayOf(dialect.getTypeName(sqlType.getSqlType()), arrayValue);
+			String arrayTypeName = dialect.getTypeName(sqlType.getSqlType()).replaceAll("\\(.*\\)", "");
+			java.sql.Array array = session.connection().createArrayOf(arrayTypeName, arrayValue);
 			st.setArray(index, array);
 		}
 		else {

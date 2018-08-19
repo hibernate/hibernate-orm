@@ -243,17 +243,17 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 	protected abstract void applyRootReturnOrderByFragments(SelectStatementBuilder selectStatementBuilder);
 
 
-	private static void applyKeyRestriction( SelectStatementBuilder select, String alias, String[] keyColumnNames, int batchSize) {
+		private static void applyKeyRestriction(SelectStatementBuilder select, String alias, String[] keyColumnNames, int batchSize) {
 		if ( keyColumnNames.length==1 ) {
-				// NOT A COMPOSITE KEY
-				//	 	for batching, use "foo in (?, ?, ?)" for batching
-				//		for no batching, use "foo = ?"
-				// (that distinction is handled inside InFragment)
-			final InFragment in = new InFragment().setColumn(alias, keyColumnNames[0]);
-			for (int i = 0; i < batchSize; i++) {
-				in.addValue("?");
+			// NOT A COMPOSITE KEY
+			// 		for batching, use "foo in (?, ?, ?)" for batching
+			//		for no batching, use "foo = ?"
+			// (that distinction is handled inside InFragment)
+			final InFragment in = new InFragment().setColumn( alias, keyColumnNames[0] );
+			for ( int i = 0; i < batchSize; i++ ) {
+				in.addValue( "?" );
 			}
-			select.appendRestrictions(in.toFragmentString());
+			select.appendRestrictions( in.toFragmentString() );
 		}
 		else {
 			// A COMPOSITE KEY...

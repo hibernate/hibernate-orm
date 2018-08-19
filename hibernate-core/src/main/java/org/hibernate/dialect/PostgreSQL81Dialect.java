@@ -641,7 +641,10 @@ public class PostgreSQL81Dialect extends Dialect {
 
 	@Override
 	public String getArrayRestriction(String alias, String columnName, int batchSize) {
-		columnName = StringHelper.qualify( alias, columnName );
-		return batchSize > 1 ? columnName + " = ANY(?)" : null;
+		if (batchSize == 1) {
+			// If the batch size is 1, don't use array restrictions
+			return null;
+		}
+		return StringHelper.qualify( alias, columnName ) + " = ANY(?)";
 	}
 }

@@ -29,7 +29,10 @@ import org.hibernate.loader.Loader;
 import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.type.AbstractStandardBasicType;
+import org.hibernate.type.ArrayType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * A BatchingCollectionInitializerBuilder that builds CollectionInitializer instances capable of dynamically building
@@ -115,6 +118,7 @@ public class DynamicBatchingCollectionInitializerBuilder extends BatchingCollect
 
 		private final String sqlTemplate;
 		private final String alias;
+		private String arrayRestriction;
 
 		public DynamicBatchingCollectionLoader(
 				QueryableCollection collectionPersister,
@@ -122,10 +126,10 @@ public class DynamicBatchingCollectionInitializerBuilder extends BatchingCollect
 				LoadQueryInfluencers influencers) {
 			super( collectionPersister, factory, influencers );
 
+			this.alias = StringHelper.generateAlias( collectionPersister.getRole(), 0 );
 			JoinWalker walker = buildJoinWalker( collectionPersister, factory, influencers );
 			initFromWalker( walker );
 			this.sqlTemplate = walker.getSQLString();
-			this.alias = StringHelper.generateAlias( collectionPersister.getRole(), 0 );
 			postInstantiate();
 
 			if ( LOG.isDebugEnabled() ) {
@@ -150,7 +154,12 @@ public class DynamicBatchingCollectionInitializerBuilder extends BatchingCollect
 							return super.whereString( alias, columnNames, subselect, batchSize );
 						}
 
-						return StringHelper.buildBatchFetchRestrictionFragment( alias, columnNames, getFactory().getDialect() );
+						arrayRestriction = factory.getDialect().getArrayRestriction(alias, columnNames[0], batchSize);
+						if (arrayRestriction != null) {
+							return new StringBuilder(arrayRestriction);
+						} else {
+							return StringHelper.buildBatchFetchRestrictionFragment( alias, columnNames, getFactory().getDialect() );
+						}
 					}
 				};
 			}
@@ -180,9 +189,18 @@ public class DynamicBatchingCollectionInitializerBuilder extends BatchingCollect
 				);
 			}
 
-			final Type[] idTypes = new Type[ids.length];
-			Arrays.fill( idTypes, type );
-			final QueryParameters queryParameters = new QueryParameters( idTypes, ids, ids );
+			final QueryParameters queryParameters;
+			if (arrayRestriction != null && type instanceof AbstractStandardBasicType<?>) {
+				SqlTypeDescriptor sqlType = ((AbstractStandardBasicType<?>)type).getSqlTypeDescriptor();
+				Type arrayType = new ArrayType(sqlType, getFactory().getDialect(), type.getReturnedClass());
+				Type[] arrayTypes = { arrayType };
+				Serializable[] arrayValues = { ids };
+			    queryParameters = new QueryParameters( arrayTypes, arrayValues, arrayValues );
+			} else {
+				final Type[] idTypes = new Type[ids.length];
+				Arrays.fill( idTypes, type );
+				queryParameters = new QueryParameters( idTypes, ids, ids );
+			}
 
 			final String sql = StringHelper.expandBatchIdPlaceholder(
 					sqlTemplate,

@@ -17,6 +17,7 @@ import java.util.List;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.internal.BatchFetchQueueHelper;
 import org.hibernate.engine.spi.EntityEntry;
@@ -35,8 +36,10 @@ import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.persister.entity.MultiLoadOptions;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.type.AbstractStandardBasicType;
+import org.hibernate.type.ArrayType;
 import org.hibernate.type.Type;
-
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.jboss.logging.Logger;
 
 /**
@@ -308,6 +311,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 		private final int maxBatchSize;
 		private final UniqueEntityLoader singleKeyLoader;
 		private final DynamicEntityLoader dynamicLoader;
+		private final Dialect dialect;
 
 		public DynamicBatchingEntityLoader(
 				OuterJoinLoadable persister,
@@ -319,6 +323,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 			this.maxBatchSize = maxBatchSize;
 			this.singleKeyLoader = new EntityLoader( persister, 1, lockMode, factory, loadQueryInfluencers );
 			this.dynamicLoader = new DynamicEntityLoader( persister, maxBatchSize, lockMode, factory, loadQueryInfluencers );
+			this.dialect = factory.getDialect();
 		}
 
 		public DynamicBatchingEntityLoader(
@@ -331,6 +336,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 			this.maxBatchSize = maxBatchSize;
 			this.singleKeyLoader = new EntityLoader( persister, 1, lockOptions, factory, loadQueryInfluencers );
 			this.dynamicLoader = new DynamicEntityLoader( persister, maxBatchSize, lockOptions, factory, loadQueryInfluencers );
+			this.dialect = factory.getDialect();
 		}
 
 		@Override
@@ -361,7 +367,14 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 				log.debugf( "Batch loading entity: %s", MessageHelper.infoString( persister(), idsToLoad, session.getFactory() ) );
 			}
 
-			QueryParameters qp = buildQueryParameters( id, idsToLoad, optionalObject, lockOptions );
+			QueryParameters qp;
+			Type type = persister().getIdentifierType();
+			if (dynamicLoader.arrayRestriction != null && type instanceof AbstractStandardBasicType<?>) {
+				SqlTypeDescriptor sqlType = ((AbstractStandardBasicType<?>) type).getSqlTypeDescriptor();
+				qp = buildQueryParameters( id, idsToLoad, optionalObject, lockOptions, type, sqlType);
+			} else {
+				qp = buildQueryParameters( id, idsToLoad, optionalObject, lockOptions );
+			}
 			List results = dynamicLoader.doEntityBatchFetch( session, qp, idsToLoad );
 
 			// The EntityKey for any entity that is not found will remain in the batch.
@@ -371,6 +384,28 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 
 			return getObjectFromList( results, id, session );
 		}
+
+
+		private QueryParameters buildQueryParameters(
+				Serializable id,
+				Serializable[] idsToLoad,
+				Object optionalObject,
+				LockOptions lockOptions,
+				Type type,
+				SqlTypeDescriptor sqlType) {
+			Type arrayType = new ArrayType(sqlType, dialect, type.getReturnedClass());
+			Type[] arrayTypes = { arrayType };
+			Serializable[] arrayValues = { idsToLoad };
+
+			QueryParameters qp = new QueryParameters();
+			qp.setPositionalParameterTypes( arrayTypes );
+			qp.setPositionalParameterValues( arrayValues );
+			qp.setOptionalObject( optionalObject );
+			qp.setOptionalEntityName( persister().getEntityName() );
+			qp.setOptionalId( id );
+			qp.setLockOptions( lockOptions );
+			return qp;
+		}
 	}
 
 
@@ -379,6 +414,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 
 		private final String sqlTemplate;
 		private final String alias;
+		private String arrayRestriction;
 
 		public DynamicEntityLoader(
 				OuterJoinLoadable persister,
@@ -406,11 +442,16 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 					loadQueryInfluencers) {
 				@Override
 				protected StringBuilder whereString(String alias, String[] columnNames, int batchSize) {
-					return StringHelper.buildBatchFetchRestrictionFragment(
-							alias,
-							columnNames,
-							getFactory().getDialect()
-					);
+					arrayRestriction = factory.getDialect().getArrayRestriction(alias, columnNames[0], batchSize);
+					if (arrayRestriction != null) {
+						return new StringBuilder(arrayRestriction);
+					} else {
+						return StringHelper.buildBatchFetchRestrictionFragment(
+								alias,
+								columnNames,
+								getFactory().getDialect()
+								);
+					}
 				}
 			};
 

@@ -443,17 +443,17 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 					loadQueryInfluencers) {
 				@Override
 				protected StringBuilder whereString(String alias, String[] columnNames, int batchSize) {
-					arrayRestriction = factory.getDialect().getArrayRestriction(alias, columnNames[0], batchSize);
-					if (arrayRestriction != null) {
-						return new StringBuilder(arrayRestriction);
+					if ( columnNames.length == 1 ) {
+						arrayRestriction = factory.getDialect().getArrayRestriction(alias, columnNames[0], batchSize);
+						if (arrayRestriction != null) {
+							return new StringBuilder(arrayRestriction);
+						}
 					}
-					else {
-						return StringHelper.buildBatchFetchRestrictionFragment(
-								alias,
-								columnNames,
-								getFactory().getDialect()
-								);
-					}
+					return StringHelper.buildBatchFetchRestrictionFragment(
+							alias,
+							columnNames,
+							getFactory().getDialect()
+							);
 				}
 			};
 

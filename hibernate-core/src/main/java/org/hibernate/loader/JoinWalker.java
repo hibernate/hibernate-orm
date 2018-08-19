@@ -976,7 +976,8 @@ public class JoinWalker {
 				in.addValue("?");
 			}
 			return new StringBuilder(in.toFragmentString());
-		}		else {
+		}
+		else {
 			//a composite key
 			ConditionFragment byId = new ConditionFragment()
 					.setTableAlias( alias )

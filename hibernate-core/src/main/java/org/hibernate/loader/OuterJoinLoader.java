@@ -111,4 +111,5 @@ public abstract class OuterJoinLoader extends BasicLoader {
 		sql = walker.getSQLString();
 		aliases = walker.getAliases();
 	}
+
 }

@@ -15,4 +15,5 @@ public interface LoadQueryDetails {
 	public String getSqlStatement();
 
 	public ResultSetProcessor getResultSetProcessor();
+
 }

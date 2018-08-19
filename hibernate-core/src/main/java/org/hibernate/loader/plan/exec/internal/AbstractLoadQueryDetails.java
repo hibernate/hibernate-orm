@@ -9,7 +9,6 @@ package org.hibernate.loader.plan.exec.internal;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.loader.plan.build.spi.LoadPlanTreePrinter;
@@ -137,8 +136,7 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 		//		(the SQL aliases).  ReaderCollector and friends are where this work happens, ultimately
 		//		producing a ResultSetProcessor
 
-		final Dialect dialect = queryProcessor.getSessionFactory().getDialect();
-		final SelectStatementBuilder select = new SelectStatementBuilder( dialect );
+		final SelectStatementBuilder select = new SelectStatementBuilder( queryProcessor.getSessionFactory().getDialect() );
 
 		// LoadPlan is broken down into 2 high-level pieces that we need to process here.
 		//
@@ -245,11 +243,7 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 	protected abstract void applyRootReturnOrderByFragments(SelectStatementBuilder selectStatementBuilder);
 
 
-	private static void applyKeyRestriction(
-			SelectStatementBuilder select,
-			String alias,
-			String[] keyColumnNames,
-			int batchSize) {
+	private static void applyKeyRestriction( SelectStatementBuilder select, String alias, String[] keyColumnNames, int batchSize) {
 		if ( keyColumnNames.length==1 ) {
 				// NOT A COMPOSITE KEY
 				//	 	for batching, use "foo in (?, ?, ?)" for batching

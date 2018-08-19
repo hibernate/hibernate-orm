@@ -116,7 +116,6 @@ public abstract class AbstractLoadPlanBasedLoader {
 		try {
 			List results = null;
 			final String sql = loadQueryDetails.getSqlStatement();
-			loadQueryDetails.modifyQueryParameters(queryParameters);
 			SqlStatementWrapper wrapper = null;
 			try {
 				wrapper = executeQueryStatement( sql, queryParameters, false, afterLoadActions, session );

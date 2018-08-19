@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.loader.plan.build.spi.LoadPlanTreePrinter;
@@ -32,10 +31,6 @@ import org.hibernate.loader.plan.spi.Return;
 import org.hibernate.sql.ConditionFragment;
 import org.hibernate.sql.DisjunctionFragment;
 import org.hibernate.sql.InFragment;
-import org.hibernate.type.AbstractStandardBasicType;
-import org.hibernate.type.ArrayType;
-import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * @author Gail Badner
@@ -49,7 +44,6 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 	private final QueryBuildingParameters buildingParameters;
 	private String sqlStatement;
 	private ResultSetProcessor resultSetProcessor;
-	private boolean hasArrayRestriction;
 
 	/**
 	 * @param rootReturn The root return reference we are processing
@@ -155,8 +149,6 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 
 		applyRootReturnTableFragments( select );
 
-		String arrayRestriction = dialect.getArrayRestriction(getRootTableAlias(), keyColumnNames[0], getQueryBuildingParameters().getBatchSize());
-		hasArrayRestriction = arrayRestriction != null;
 		if ( shouldApplyRootReturnFilterBeforeKeyRestriction() ) {
 			applyRootReturnFilterRestrictions( select );
 			// add restrictions...
@@ -165,8 +157,7 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 					select,
 					getRootTableAlias(),
 					keyColumnNames,
-					getQueryBuildingParameters().getBatchSize(),
-					arrayRestriction
+					getQueryBuildingParameters().getBatchSize()
 			);
 		}
 		else {
@@ -176,8 +167,7 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 					select,
 					getRootTableAlias(),
 					keyColumnNames,
-					getQueryBuildingParameters().getBatchSize(),
-					arrayRestriction
+					getQueryBuildingParameters().getBatchSize()
 			);
 			applyRootReturnFilterRestrictions( select );
 		}
@@ -235,23 +225,6 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 		);
 	}
 
-	@Override
-	public void modifyQueryParameters(QueryParameters qp) {
-		if (hasArrayRestriction) {
-			Type elementType = qp.getPositionalParameterTypes()[0];
-			if (elementType instanceof AbstractStandardBasicType<?>) {
-				SqlTypeDescriptor sqlType = ((AbstractStandardBasicType<?>)elementType).getSqlTypeDescriptor();
-				Object[] elementValues = qp.getPositionalParameterValues();
-
-				Type arrayType = new ArrayType(sqlType, queryProcessor.getSessionFactory().getDialect(), elementType.getReturnedClass());
-				Type[] arrayTypes = { arrayType };
-				Object[] arrayValues = { elementValues };
-				qp.setPositionalParameterTypes(arrayTypes);
-				qp.setPositionalParameterValues(arrayValues);
-			}
-		}
-	}
-
 	/**
 	 * Is subselect loading enabled?
 	 *
@@ -276,23 +249,17 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 			SelectStatementBuilder select,
 			String alias,
 			String[] keyColumnNames,
-			int batchSize,
-			String arrayRestriction) {
+			int batchSize) {
 		if ( keyColumnNames.length==1 ) {
 				// NOT A COMPOSITE KEY
 				//	 	for batching, use "foo in (?, ?, ?)" for batching
 				//		for no batching, use "foo = ?"
 				// (that distinction is handled inside InFragment)
-				if (arrayRestriction != null) {
-					select.appendRestrictions(arrayRestriction);
-				}
-				else {
-					final InFragment in = new InFragment().setColumn( alias, keyColumnNames[0] );
-					for ( int i = 0; i < batchSize; i++ ) {
-						in.addValue( "?" );
-					}
-					select.appendRestrictions( in.toFragmentString() );
-				}
+			final InFragment in = new InFragment().setColumn(alias, keyColumnNames[0]);
+			for (int i = 0; i < batchSize; i++) {
+				in.addValue("?");
+			}
+			select.appendRestrictions(in.toFragmentString());
 		}
 		else {
 			// A COMPOSITE KEY...

@@ -126,7 +126,7 @@ public class PostgresArrayBatchTest extends BaseNonConfigCoreFunctionalTestCase 
 		}
 		s.close();
 
-		// Expecting 3 SELECTs, 1 on Model, 2 identical on ProductLinel
+		// Expecting 3 SELECTs, 1 on Model, 2 identical on ProductLine
 		List<String> selects = sqlStatementInterceptor.getSqlQueries();
 		assertEquals( 3, selects.size() );
 		assertTrue ( selects.get(0).contains("model") );

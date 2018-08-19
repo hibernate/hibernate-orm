@@ -50,6 +50,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 	protected String versionsEntityName;
 	protected QueryBuilder qb;
 	protected final Map<String, String> aliasToEntityNameMap = new HashMap<>();
+	protected final Map<String, String> aliasToComponentPropertyNameMap = new HashMap<>();
 
 	protected boolean hasOrder;
 
@@ -57,7 +58,6 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 	protected final AuditReaderImplementor versionsReader;
 
 	protected final List<AuditAssociationQueryImpl<?>> associationQueries = new ArrayList<>();
-	protected final Map<String, AuditAssociationQueryImpl<AuditQueryImplementor>> associationQueryMap = new HashMap<>();
 	protected final List<Pair<String, AuditProjection>> projections = new ArrayList<>();
 
 	protected AbstractAuditQuery(
@@ -134,22 +134,10 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 	// Projection and order
 
 	public AuditQuery addProjection(AuditProjection projection) {
-		AuditProjection.ProjectionData projectionData = projection.getData( enversService );
-		String projectionEntityAlias = projectionData.getAlias( REFERENCED_ENTITY_ALIAS );
+		String projectionEntityAlias = projection.getAlias( REFERENCED_ENTITY_ALIAS );
 		String projectionEntityName = aliasToEntityNameMap.get( projectionEntityAlias );
 		registerProjection( projectionEntityName, projection );
-		String propertyName = CriteriaTools.determinePropertyName(
-				enversService,
-				versionsReader,
-				projectionEntityName,
-				projectionData.getPropertyName()
-		);
-		qb.addProjection(
-				projectionData.getFunction(),
-				projectionEntityAlias,
-				propertyName,
-				projectionData.isDistinct()
-		);
+		projection.addProjectionToQuery( enversService, versionsReader, aliasToEntityNameMap, aliasToComponentPropertyNameMap, REFERENCED_ENTITY_ALIAS, qb );
 		return this;
 	}
 
@@ -173,7 +161,9 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 				orderEntityName,
 				orderData.getPropertyName()
 		);
-		qb.addOrder( orderEntityAlias, propertyName, orderData.isAscending() );
+		String componentPrefix = CriteriaTools.determineComponentPropertyPrefix( enversService, aliasToEntityNameMap, aliasToComponentPropertyNameMap,
+				orderEntityAlias );
+		qb.addOrder( orderEntityAlias, componentPrefix.concat( propertyName ), orderData.isAscending() );
 		return this;
 	}
 
@@ -188,22 +178,29 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 
 	@Override
 	public AuditAssociationQuery<? extends AuditQuery> traverseRelation(String associationName, JoinType joinType, String alias) {
-		AuditAssociationQueryImpl<AuditQueryImplementor> result = associationQueryMap.get( associationName );
-		if (result == null) {
-			result = new AuditAssociationQueryImpl<>(
-					enversService,
-					versionsReader,
-					this,
-					qb,
-					associationName,
-					joinType,
-					aliasToEntityNameMap,
-					REFERENCED_ENTITY_ALIAS,
-					alias
-			);
-			associationQueries.add( result );
-			associationQueryMap.put( associationName, result );
-		}
+		return traverseRelation(
+				associationName,
+				joinType,
+				alias,
+				null );
+	}
+
+	@Override
+	public AuditAssociationQuery<? extends AuditQuery> traverseRelation(String associationName, JoinType joinType, String alias, AuditCriterion onClause) {
+		AuditAssociationQueryImpl<AbstractAuditQuery> result = new AuditAssociationQueryImpl<>(
+				enversService,
+				versionsReader,
+				this,
+				qb,
+				associationName,
+				joinType,
+				aliasToEntityNameMap,
+				aliasToComponentPropertyNameMap,
+				REFERENCED_ENTITY_ALIAS,
+				alias,
+				onClause
+		);
+		associationQueries.add( result );
 		return result;
 	}
 

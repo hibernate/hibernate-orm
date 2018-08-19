@@ -503,7 +503,7 @@ public final class CollectionMetadataGenerator {
 		// ******
 		// Storing information about this relation.
 		// ******
-		storeMiddleEntityRelationInformation( mappedBy );
+		storeMiddleEntityRelationInformation( mappedBy, referencingIdData, referencedPrefix, auditMiddleEntityName );
 	}
 
 	private MiddleComponentData addIndex(Element middleEntityXml, QueryGeneratorBuilder queryGeneratorBuilder) {
@@ -816,19 +816,39 @@ public final class CollectionMetadataGenerator {
 		}
 	}
 
-	private void storeMiddleEntityRelationInformation(String mappedBy) {
-		// Only if this is a relation (when there is a referenced entity).
+	private void storeMiddleEntityRelationInformation(String mappedBy, MiddleIdData referencingIdData, String referencedPrefix, String auditMiddleEntityName) {
+		// Only if this is a relation (when there is a referenced entity or a component).
 		if ( referencedEntityName != null ) {
+			final IdMappingData referencedIdMapping = mainGenerator.getReferencedIdMappingData(
+					referencingEntityName,
+					referencedEntityName,
+					propertyAuditingData,
+					true );
+			final MiddleIdData referencedIdData = createMiddleIdData(
+					referencedIdMapping,
+					referencedPrefix + "_",
+					referencedEntityName );
 			if ( propertyValue.isInverse() ) {
 				referencingEntityConfiguration.addToManyMiddleNotOwningRelation(
 						propertyName,
 						mappedBy,
-						referencedEntityName
+						referencedEntityName,
+						referencingIdData,
+						referencedIdData,
+						auditMiddleEntityName
 				);
 			}
 			else {
-				referencingEntityConfiguration.addToManyMiddleRelation( propertyName, referencedEntityName );
+				referencingEntityConfiguration.addToManyMiddleRelation(
+						propertyName,
+						referencedEntityName,
+						referencingIdData,
+						referencedIdData,
+						auditMiddleEntityName );
 			}
+		}
+		else {
+			referencingEntityConfiguration.addToManyComponent( propertyName, auditMiddleEntityName, referencingIdData );
 		}
 	}
 

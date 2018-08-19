@@ -111,6 +111,7 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 					enversService,
 					versionsReader,
 					aliasToEntityNameMap,
+					aliasToComponentPropertyNameMap,
 					QueryConstants.REFERENCED_ENTITY_ALIAS,
 					qb,
 					qb.getRootParameters()

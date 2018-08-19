@@ -33,6 +33,7 @@ public class BetweenAuditExpression extends AbstractAtomicExpression {
 			AuditReaderImplementor versionsReader,
 			String entityName,
 			String alias,
+			String componentPrefix,
 			QueryBuilder qb,
 			Parameters parameters) {
 		String propertyName = CriteriaTools.determinePropertyName(
@@ -41,10 +42,11 @@ public class BetweenAuditExpression extends AbstractAtomicExpression {
 				entityName,
 				propertyNameGetter
 		);
-		CriteriaTools.checkPropertyNotARelation( enversService, entityName, propertyName );
+		String prefixedPropertyName = componentPrefix.concat( propertyName );
+		CriteriaTools.checkPropertyNotARelation( enversService, entityName, prefixedPropertyName );
 
 		Parameters subParams = parameters.addSubParameters( Parameters.AND );
-		subParams.addWhereWithParam( alias, propertyName, ">=", lo );
-		subParams.addWhereWithParam( alias, propertyName, "<=", hi );
+		subParams.addWhereWithParam( alias, prefixedPropertyName, ">=", lo );
+		subParams.addWhereWithParam( alias, prefixedPropertyName, "<=", hi );
 	}
 }

@@ -28,17 +28,17 @@ public class IlikeAuditExpression extends AbstractAtomicExpression {
 	protected void addToQuery(
 			EnversService enversService,
 			AuditReaderImplementor versionsReader, String entityName,
-			String alias, QueryBuilder qb, Parameters parameters) {
+			String alias, String componentPrefix, QueryBuilder qb, Parameters parameters) {
 
 		String propertyName = CriteriaTools.determinePropertyName(
 				enversService,
 				versionsReader,
 				entityName,
-				propertyNameGetter
-		);
-		CriteriaTools.checkPropertyNotARelation( enversService, entityName, propertyName );
+				propertyNameGetter );
+		String prefixedPropertyName = componentPrefix.concat( propertyName );
+		CriteriaTools.checkPropertyNotARelation( enversService, entityName, prefixedPropertyName );
 
-		parameters.addWhereWithFunction( alias, propertyName, " lower ", " like ", value.toLowerCase( Locale.ROOT ) );
+		parameters.addWhereWithFunction( alias, prefixedPropertyName, " lower ", " like ", value.toLowerCase( Locale.ROOT ) );
 	}
 
 }

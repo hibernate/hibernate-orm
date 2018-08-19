@@ -195,7 +195,7 @@ public class DynamicBatchingCollectionInitializerBuilder extends BatchingCollect
 				Type arrayType = new ArrayType(sqlType, getFactory().getDialect(), type.getReturnedClass());
 				Type[] arrayTypes = { arrayType };
 				Serializable[] arrayValues = { ids };
-			    queryParameters = new QueryParameters( arrayTypes, arrayValues, arrayValues );
+				queryParameters = new QueryParameters( arrayTypes, arrayValues, arrayValues );
 			} else {
 				final Type[] idTypes = new Type[ids.length];
 				Arrays.fill( idTypes, type );

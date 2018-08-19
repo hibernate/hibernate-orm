@@ -372,7 +372,8 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 			if (dynamicLoader.arrayRestriction != null && type instanceof AbstractStandardBasicType<?>) {
 				SqlTypeDescriptor sqlType = ((AbstractStandardBasicType<?>) type).getSqlTypeDescriptor();
 				qp = buildQueryParameters( id, idsToLoad, optionalObject, lockOptions, type, sqlType);
-			} else {
+			}
+			else {
 				qp = buildQueryParameters( id, idsToLoad, optionalObject, lockOptions );
 			}
 			List results = dynamicLoader.doEntityBatchFetch( session, qp, idsToLoad );
@@ -445,7 +446,8 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 					arrayRestriction = factory.getDialect().getArrayRestriction(alias, columnNames[0], batchSize);
 					if (arrayRestriction != null) {
 						return new StringBuilder(arrayRestriction);
-					} else {
+					}
+					else {
 						return StringHelper.buildBatchFetchRestrictionFragment(
 								alias,
 								columnNames,

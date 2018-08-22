@@ -455,7 +455,7 @@ public class DriverManagerConnectionProviderImpl
 		}
 	}
 
-	private class ValidationThreadFactory implements ThreadFactory {
+	private static class ValidationThreadFactory implements ThreadFactory {
 		public Thread newThread(Runnable r) {
 			Thread thread = new Thread(r);
 			thread.setDaemon(true);

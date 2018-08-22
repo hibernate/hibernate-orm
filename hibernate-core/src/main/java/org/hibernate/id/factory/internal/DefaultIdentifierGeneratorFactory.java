@@ -24,6 +24,7 @@
 package org.hibernate.id.factory.internal;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -48,11 +49,11 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.ClassLoaderHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.type.Type;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -62,8 +63,8 @@ import org.jboss.logging.Logger;
  */
 public class DefaultIdentifierGeneratorFactory implements MutableIdentifierGeneratorFactory, Serializable, ServiceRegistryAwareService {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       DefaultIdentifierGeneratorFactory.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
+																	   DefaultIdentifierGeneratorFactory.class.getName());
 
 	private transient Dialect dialect;
 	private ConcurrentHashMap<String, Class> generatorStrategyToClassNameMap = new ConcurrentHashMap<String, Class>();
@@ -137,7 +138,28 @@ public class DefaultIdentifierGeneratorFactory implements MutableIdentifierGener
 			}
 		}
 		catch ( ClassNotFoundException e ) {
-			throw new MappingException( String.format( "Could not interpret id generator strategy [%s]", strategy ) );
+			final ClassLoader contextClassLoader = ClassLoaderHelper.getContextClassLoader();
+			final Class<? extends ClassLoader> clClass = contextClassLoader.getClass();
+			final String clName = clClass.getName();
+			LOG.error( "ReflectHelper failed to load " + strategy + " using " + clName, e );
+			if ( clName.equals( "org.hibernate.osgi.OsgiClassLoader" ) ) {
+				try {
+					Field clField = clClass.getDeclaredField( "classLoaders" );
+					Field bField = clClass.getDeclaredField( "bundles" );
+					clField.setAccessible(true);
+					bField.setAccessible(true);
+					Object classLoaders = clField.get( contextClassLoader );
+					Object bundles = bField.get( contextClassLoader );
+					LOG.error("OsgiClassLoader has the following:\n"
+							+ "classloaders: " + classLoaders.toString() + "\n"
+							+ " and bundles: " + bundles.toString());
+				}
+				catch ( NoSuchFieldException | SecurityException |
+						IllegalArgumentException | IllegalAccessException e2 ) {
+					LOG.error( "Exception occured during evaluation of the state of OsgiClassLoader", e2);
+				}
+			}
+			throw new MappingException( String.format( "Could not interpret id generator strategy [%s]",strategy ) );
 		}
 		return generatorClass;
 	}

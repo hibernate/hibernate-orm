@@ -384,7 +384,8 @@ public class DriverManagerConnectionProviderImpl
 				if ( active ) {
 					return;
 				}
-				executorService = Executors.newSingleThreadScheduledExecutor();
+				ValidationThreadFactory vtf = new ValidationThreadFactory()
+				executorService = Executors.newSingleThreadScheduledExecutor(vtf);
 				executorService.scheduleWithFixedDelay(
 						new Runnable() {
 							@Override
@@ -450,6 +451,15 @@ public class DriverManagerConnectionProviderImpl
 			finally {
 				statelock.readLock().unlock();
 			}
+		}
+	}
+
+	private class ValidationThreadFactory implements ThreadFactory {
+		public Thread newThread(Runnable r) {
+			Thread thread = new Thread(r);
+			thread.setDaemon(true);
+			thread.setName("Hibernate Connection Pool Validation Thread");
+			return thread;
 		}
 	}
 

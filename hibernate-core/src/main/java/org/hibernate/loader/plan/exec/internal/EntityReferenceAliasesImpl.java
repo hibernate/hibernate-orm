@@ -9,6 +9,8 @@ package org.hibernate.loader.plan.exec.internal;
 import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.plan.exec.spi.EntityReferenceAliases;
 
+import static org.hibernate.internal.util.StringHelper.safeInterning;
+
 /**
  * @author Gail Badner
  * @author Steve Ebersole
@@ -18,7 +20,7 @@ public class EntityReferenceAliasesImpl implements EntityReferenceAliases {
 	private final EntityAliases columnAliases;
 
 	public EntityReferenceAliasesImpl(String tableAlias, EntityAliases columnAliases) {
-		this.tableAlias = tableAlias;
+		this.tableAlias = safeInterning( tableAlias );
 		this.columnAliases = columnAliases;
 	}
 

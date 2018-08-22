@@ -886,4 +886,24 @@ public final class StringHelper {
 			return null;
 		}
 	}
+
+	/**
+	 * Return the interned form of a String, or null if the parameter is null.
+	 * Use with caution: excessive interning is known to cause issues.
+	 * Best to use only with string which are known to be long lived constants,
+	 * and for which the chances of being actual duplicates is proven.
+	 * (Even better: avoid needing interning by design changes such as reusing
+	 * the known reference)
+	 * @param name
+	 * @return
+	 */
+	public static String safeInterning(final String name) {
+		if ( name == null ) {
+			return null;
+		}
+		else {
+			return name.intern();
+		}
+	}
+
 }

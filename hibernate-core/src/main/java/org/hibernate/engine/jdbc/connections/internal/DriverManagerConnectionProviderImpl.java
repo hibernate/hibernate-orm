@@ -14,6 +14,7 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -384,7 +385,8 @@ public class DriverManagerConnectionProviderImpl
 				if ( active ) {
 					return;
 				}
-				executorService = Executors.newSingleThreadScheduledExecutor();
+				ValidationThreadFactory vtf = new ValidationThreadFactory();
+				executorService = Executors.newSingleThreadScheduledExecutor(vtf);
 				executorService.scheduleWithFixedDelay(
 						new Runnable() {
 							@Override
@@ -450,6 +452,15 @@ public class DriverManagerConnectionProviderImpl
 			finally {
 				statelock.readLock().unlock();
 			}
+		}
+	}
+
+	private static class ValidationThreadFactory implements ThreadFactory {
+		public Thread newThread(Runnable r) {
+			Thread thread = new Thread(r);
+			thread.setDaemon(true);
+			thread.setName("Hibernate Connection Pool Validation Thread");
+			return thread;
 		}
 	}
 

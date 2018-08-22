@@ -384,7 +384,7 @@ public class DriverManagerConnectionProviderImpl
 				if ( active ) {
 					return;
 				}
-				ValidationThreadFactory vtf = new ValidationThreadFactory()
+				ValidationThreadFactory vtf = new ValidationThreadFactory();
 				executorService = Executors.newSingleThreadScheduledExecutor(vtf);
 				executorService.scheduleWithFixedDelay(
 						new Runnable() {

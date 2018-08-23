@@ -21,6 +21,7 @@ import org.hibernate.test.collection.custom.basic.MyList;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -38,18 +39,13 @@ public class ArrayTypeContributorTest extends BaseCoreFunctionalTestCase {
 	protected Configuration constructAndConfigureConfiguration() {
 		Configuration configuration = super.constructAndConfigureConfiguration();
 		configuration.registerTypeContributor( (typeContributions, serviceRegistry) -> {
-			typeContributions.contributeType( ArrayType.INSTANCE,
-				new String[] {
-					  MyList.class.getName(),
-					  ArrayType.INSTANCE.getName()
-				}
-			);
+			typeContributions.contributeType( ArrayType.INSTANCE );
 		} );
 		return configuration;
 	}
 
-	@Test
-	public void test() {
+	@Override
+	protected void prepareTest() throws Exception {
 		doInHibernate( this::sessionFactory, session -> {
 			CorporateUser user = new CorporateUser();
 			user.setUserName( "Vlad" );
@@ -58,6 +54,15 @@ public class ArrayTypeContributorTest extends BaseCoreFunctionalTestCase {
 			user.getEmailAddresses().add( "vlad@hibernate.info" );
 			user.getEmailAddresses().add( "vlad@hibernate.net" );
 		} );
+	}
+
+	@Override
+	protected boolean isCleanupTestDataRequired() {
+		return true;
+	}
+
+	@Test
+	public void test() {
 		doInHibernate( this::sessionFactory, session -> {
 			List<CorporateUser> users = session.createQuery(
 				"select u from CorporateUser u where u.emailAddresses = :address", CorporateUser.class )
@@ -65,6 +70,18 @@ public class ArrayTypeContributorTest extends BaseCoreFunctionalTestCase {
 			.getResultList();
 
 			assertTrue( users.isEmpty() );
+		} );
+	}
+
+	@Test
+	public void testNativeSQL() {
+		doInHibernate( this::sessionFactory, session -> {
+			List<Array> emails = session.createNativeQuery(
+				"select u.emailAddresses from CorporateUser u where u.userName = :name" )
+			.setParameter( "name", "Vlad" )
+			.getResultList();
+
+			assertEquals( 1, emails.size() );
 		} );
 	}
 

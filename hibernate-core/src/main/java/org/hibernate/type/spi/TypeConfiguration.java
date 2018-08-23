@@ -9,7 +9,11 @@ package org.hibernate.type.spi;
 import java.io.InvalidObjectException;
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.HibernateException;
@@ -17,6 +21,7 @@ import org.hibernate.Incubating;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
+import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.uuid.LocalObjectUuidHelper;
@@ -25,6 +30,7 @@ import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.metamodel.internal.MetamodelImpl;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
@@ -69,6 +75,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	private final transient Map<String,String> importMap = new ConcurrentHashMap<>();
 
+	private final transient Map<Integer, Set<String>> jdbcToHibernateTypeContributionMap = new HashMap<>();
 
 	// temporarily needed to support deprecations
 	private final transient TypeResolver typeResolver;
@@ -118,6 +125,10 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	public Map<String, String> getImportMap() {
 		return Collections.unmodifiableMap( importMap );
+	}
+
+	public Map<Integer, Set<String>> getJdbcToHibernateTypeContributionMap() {
+		return jdbcToHibernateTypeContributionMap;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -206,6 +217,34 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		// todo (6.0) : finish this
 		//		release Database, descriptor Maps, etc... things that are only
 		// 		valid while the TypeConfiguration is scoped to SessionFactory
+	}
+
+	public void addBasicTypeRegistrationContributions(List<BasicTypeRegistration> contributions) {
+		for ( BasicTypeRegistration basicTypeRegistration : contributions ) {
+			BasicType basicType = basicTypeRegistration.getBasicType();
+
+			basicTypeRegistry.register(
+					basicType,
+					basicTypeRegistration.getRegistrationKeys()
+			);
+
+			try {
+				int[] jdbcTypes = basicType.sqlTypes( null );
+
+				if ( jdbcTypes.length == 1 ) {
+					int jdbcType = jdbcTypes[0];
+					Set<String> hibernateTypes = jdbcToHibernateTypeContributionMap.computeIfAbsent(
+						jdbcType,
+						k -> new HashSet<>()
+					);
+					hibernateTypes.add( basicType.getName() );
+				}
+			}
+			catch (Exception e) {
+				log.errorf( e, "Cannot register [%s] Hibernate Type contribution", basicType.getName() );
+			}
+
+		}
 	}
 
 	/**

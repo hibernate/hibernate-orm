@@ -7,20 +7,26 @@
 package org.hibernate.test.type.contributor;
 
 import java.util.List;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.Table;
 
 import org.hibernate.annotations.Type;
+import org.hibernate.annotations.TypeDef;
+import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.query.Query;
+import org.hibernate.dialect.H2Dialect;
 
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.collection.custom.basic.MyList;
+import org.hibernate.test.type.array.StringArrayType;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -28,7 +34,8 @@ import static org.junit.Assert.assertTrue;
  * @author Vlad Mihalcea
  */
 @TestForIssue( jiraKey = "HHH-11409" )
-public class ArrayTypeContributorTest extends BaseCoreFunctionalTestCase {
+@RequiresDialect(H2Dialect.class)
+public class StringArrayTypeContributorTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -36,17 +43,15 @@ public class ArrayTypeContributorTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected Configuration constructAndConfigureConfiguration() {
-		Configuration configuration = super.constructAndConfigureConfiguration();
-		configuration.registerTypeContributor( (typeContributions, serviceRegistry) -> {
-			typeContributions.contributeType( ArrayType.INSTANCE,
-				new String[] {
-					  MyList.class.getName(),
-					  ArrayType.INSTANCE.getName()
-				}
-			);
-		} );
-		return configuration;
+	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
+		metadataBuilder.applyBasicType(
+			StringArrayType.INSTANCE
+		);
+	}
+
+	@Override
+	protected boolean isCleanupTestDataRequired() {
+		return true;
 	}
 
 	@Override
@@ -56,32 +61,36 @@ public class ArrayTypeContributorTest extends BaseCoreFunctionalTestCase {
 			user.setUserName( "Vlad" );
 			session.persist( user );
 
-			user.getEmailAddresses().add( "vlad@hibernate.info" );
-			user.getEmailAddresses().add( "vlad@hibernate.net" );
+			user.setEmailAddresses( new String[] {
+				"vlad@hibernate.info",
+				"vlad@hibernate.net",
+			} );
 		} );
 	}
 
-	@Override
-	protected boolean isCleanupTestDataRequired() {
-		return true;
-	}
-
 	@Test
-	public void test() {
+	public void testJPQL() {
 		doInHibernate( this::sessionFactory, session -> {
-			List<CorporateUser> users = session.createQuery(
-				"select u from CorporateUser u where u.emailAddresses = :address", CorporateUser.class )
-			.setParameter( "address", new Array(), ArrayType.INSTANCE )
+			List<String[]> emails = session.createQuery(
+				"select u.emailAddresses from CorporateUser u where u.userName = :name" )
+			.setParameter( "name", "Vlad" )
 			.getResultList();
 
-			assertTrue( users.isEmpty() );
+			assertEquals( 1, emails.size() );
+			assertArrayEquals(
+					new String[] {
+						"vlad@hibernate.info",
+						"vlad@hibernate.net",
+					},
+					emails.get( 0 )
+			);
 		} );
 	}
 
 	@Test
 	public void testNativeSQL() {
 		doInHibernate( this::sessionFactory, session -> {
-			List<Array> emails = session.createNativeQuery(
+			List<String[]> emails = session.createNativeQuery(
 				"select u.emailAddresses from CorporateUser u where u.userName = :name" )
 			.setParameter( "name", "Vlad" )
 			.getResultList();
@@ -91,13 +100,15 @@ public class ArrayTypeContributorTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity(name = "CorporateUser")
+	@TypeDef( name = "string-array", typeClass = StringArrayType.class)
 	public static class CorporateUser {
 
 		@Id
 		private String userName;
 
-		@Type(type = "comma-separated-array")
-		private Array emailAddresses = new Array();
+		@Type(type = "string-array")
+		@Column(columnDefinition = "ARRAY(2)")
+		private String[] emailAddresses;
 
 		public String getUserName() {
 			return userName;
@@ -107,8 +118,12 @@ public class ArrayTypeContributorTest extends BaseCoreFunctionalTestCase {
 			this.userName = userName;
 		}
 
-		public Array getEmailAddresses() {
+		public String[] getEmailAddresses() {
 			return emailAddresses;
+		}
+
+		public void setEmailAddresses(String[] emailAddresses) {
+			this.emailAddresses = emailAddresses;
 		}
 	}
 

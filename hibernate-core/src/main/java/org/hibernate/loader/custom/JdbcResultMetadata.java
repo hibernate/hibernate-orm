@@ -73,13 +73,24 @@ class JdbcResultMetadata {
 			length = resultSetMetaData.getColumnDisplaySize( columnPos );
 		}
 
+		//Get the contributed Hibernate Type first
+		String hibernateTypeName = factory.getMetamodel()
+				.getTypeConfiguration()
+				.getJdbcToHibernateTypeContributionMap()
+				.get( columnType );
+
+		//If the user has not supplied any JDBC Type to Hibernate Type mapping, use the Dialect-based mapping
+		if ( hibernateTypeName == null ) {
+			hibernateTypeName = factory.getDialect().getHibernateTypeName(
+					columnType,
+					length,
+					precision,
+					scale
+			);
+		}
+
 		return factory.getTypeResolver().heuristicType(
-				factory.getDialect().getHibernateTypeName(
-						columnType,
-						length,
-						precision,
-						scale
-				)
+				hibernateTypeName
 		);
 	}
 }

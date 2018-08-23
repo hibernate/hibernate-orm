@@ -382,11 +382,7 @@ public class MetadataBuildingProcess {
 		}
 
 		// add explicit application registered types
-		for ( BasicTypeRegistration basicTypeRegistration : options.getBasicTypeRegistrations() ) {
-			bootstrapContext.getTypeConfiguration().getBasicTypeRegistry().register(
-					basicTypeRegistration.getBasicType(),
-					basicTypeRegistration.getRegistrationKeys()
-			);
-		}
+		bootstrapContext.getTypeConfiguration()
+				.addBasicTypeRegistrationContributions( options.getBasicTypeRegistrations() );
 	}
 }

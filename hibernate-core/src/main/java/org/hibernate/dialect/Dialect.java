@@ -710,10 +710,10 @@ public abstract class Dialect implements ConversionContext {
 	 * Registers a Hibernate {@link org.hibernate.type.Type} name for the given
 	 * {@link java.sql.Types} type code.
 	 *
-	 * @param code The {@link java.sql.Types} typecode
+	 * @param code The {@link java.sql.Types} type code
 	 * @param name The Hibernate {@link org.hibernate.type.Type} name
 	 */
-	protected void registerHibernateType(int code, String name) {
+	public void registerHibernateType(int code, String name) {
 		hibernateTypeNames.put( code, name );
 	}
 

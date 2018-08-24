@@ -136,6 +136,7 @@ import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.event.spi.SaveOrUpdateEvent;
 import org.hibernate.event.spi.SaveOrUpdateEventListener;
 import org.hibernate.graph.spi.EntityGraphImplementor;
+import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.internal.CriteriaImpl.CriterionEntry;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jdbc.ReturningWork;
@@ -1541,14 +1542,24 @@ public final class SessionImpl
 
 	private void verifyImmutableEntityUpdate(HQLQueryPlan plan) {
 		if ( plan.isUpdate() ) {
+			List<String> primaryFromClauseTables = new ArrayList<>();
+			for ( QueryTranslator queryTranslator : plan.getTranslators() ) {
+				primaryFromClauseTables.addAll( queryTranslator.getPrimaryFromClauseTables() );
+			}
 			for ( EntityPersister entityPersister : getSessionFactory().getMetamodel().entityPersisters().values() ) {
 				if ( !entityPersister.isMutable() ) {
 					List<Serializable> entityQuerySpaces = new ArrayList<>(
 							Arrays.asList( entityPersister.getQuerySpaces() )
 					);
-					entityQuerySpaces.retainAll( plan.getQuerySpaces() );
+					boolean matching = false;
+					for ( Serializable entityQuerySpace : entityQuerySpaces ) {
+						if ( primaryFromClauseTables.contains( entityQuerySpace ) ) {
+							matching = true;
+							break;
+						}
+					}
 
-					if ( !entityQuerySpaces.isEmpty() ) {
+					if ( matching ) {
 						ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode = getSessionFactory()
 								.getSessionFactoryOptions()
 								.getImmutableEntityUpdateQueryHandlingMode();
@@ -1557,15 +1568,15 @@ public final class SessionImpl
 
 						switch ( immutableEntityUpdateQueryHandlingMode ) {
 							case WARNING:
-								log.immutableEntityUpdateQuery(plan.getSourceQuery(), querySpaces);
+								log.immutableEntityUpdateQuery( plan.getSourceQuery(), querySpaces );
 								break;
 							case EXCEPTION:
 								throw new HibernateException(
-									"The query: [" + plan.getSourceQuery() + "] attempts to update an immutable entity: " + querySpaces
+										"The query: [" + plan.getSourceQuery() + "] attempts to update an immutable entity: " + querySpaces
 								);
 							default:
 								throw new UnsupportedOperationException(
-									"The "+ immutableEntityUpdateQueryHandlingMode + " is not supported!"
+										"The " + immutableEntityUpdateQueryHandlingMode + " is not supported!"
 								);
 
 						}

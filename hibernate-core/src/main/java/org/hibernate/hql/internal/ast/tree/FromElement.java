@@ -172,7 +172,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		//return classAlias == null ? className : classAlias;
 	}
 
-	private String getTableName() {
+	public String getTableName() {
 		Queryable queryable = getQueryable();
 		return ( queryable != null ) ? queryable.getTableName() : "{none}";
 	}

@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -504,6 +505,16 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	public boolean isUpdateStatement() {
 		return SqlTokenTypes.UPDATE == sqlAst.getStatementType();
 	}
+	@Override
+	public List<String> getPrimaryFromClauseTables() {
+		return (List<String>) sqlAst.getWalker()
+				.getFinalFromClause()
+				.getFromElements()
+				.stream()
+				.map( elem -> ((FromElement) elem).getTableName() ).
+				collect( Collectors.toList() );
+	}
+
 	@Override
 	public void validateScrollability() throws HibernateException {
 		// Impl Note: allows multiple collection fetches as long as the

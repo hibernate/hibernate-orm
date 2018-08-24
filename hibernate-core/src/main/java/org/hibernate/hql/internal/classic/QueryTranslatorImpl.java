@@ -23,6 +23,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -37,6 +38,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.hql.internal.HolderInstantiator;
 import org.hibernate.hql.internal.NameGenerator;
+import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.hql.spi.FilterTranslator;
 import org.hibernate.hql.spi.NamedParameterInformation;
 import org.hibernate.hql.spi.ParameterTranslations;
@@ -1314,6 +1316,11 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	@Override
 	protected boolean isSubselectLoadingEnabled() {
 		return hasSubselectLoadableCollections();
+	}
+
+	@Override
+	public List<String> getPrimaryFromClauseTables() {
+		throw new UnsupportedOperationException( "The classic mode does not support UPDATE statements via createQuery!" );
 	}
 
 	@Override

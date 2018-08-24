@@ -11,9 +11,9 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
 
+import org.hibernate.query.Query;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.testing.logger.Triggerable;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -28,7 +28,8 @@ public class ImmutableEntityUpdateQueryHandlingModeExceptionTest extends BaseNon
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Country.class, State.class, Photo.class };
+		return new Class[] { Country.class, State.class, Photo.class,
+		ImmutableEntity.class, MutableEntity.class};
 	}
 
 	@Override
@@ -64,5 +65,33 @@ public class ImmutableEntityUpdateQueryHandlingModeExceptionTest extends BaseNon
 			Country country = session.find(Country.class, _country.getId());
 			assertEquals( "Germany", country.getName() );
 		} );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12927" )
+	public void testImmutableSubselect() {
+		doInHibernate(this::sessionFactory, session -> {
+			String selector = "foo";
+			ImmutableEntity trouble = new ImmutableEntity(selector);
+			session.persist(trouble);
+
+			MutableEntity entity = new MutableEntity(trouble, "start");
+			session.persist(entity);
+
+			// Change a muteable value via selection based on an immutable property
+			String statement = "Update MutableEntity e set e.changeable = :changeable where e.trouble.id in " +
+					"(select i.id from ImmutableEntity i where i.selector = :selector)";
+
+			Query query = session.createQuery(statement);
+			query.setParameter("changeable", "end");
+			query.setParameter("selector", "foo");
+			query.executeUpdate();
+
+			session.refresh(entity);
+
+			// Assert that the value was changed. If HHH-12927 has not been fixed an exception will be thrown
+			// before we get here.
+			assertEquals("end", entity.getChangeable());
+		});
 	}
 }

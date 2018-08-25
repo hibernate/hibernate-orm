@@ -81,21 +81,20 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		// then the Hibernate class loader
 		orderedClassLoaderSet.add( ClassLoaderServiceImpl.class.getClassLoader() );
 
-		// then the TCCL, if one...
-		final ClassLoader tccl = locateTCCL();
-		if ( tccl != null ) {
-			orderedClassLoaderSet.add( tccl );
-		}
-		// finally the system classloader
-		final ClassLoader sysClassLoader = locateSystemClassLoader();
-		if ( sysClassLoader != null ) {
-			orderedClassLoaderSet.add( sysClassLoader );
-		}
-
 		// now build the aggregated class loader...
 		final PrivilegedAction<AggregatedClassLoader> action = new PrivilegedAction<AggregatedClassLoader>() {
 			@Override
 			public AggregatedClassLoader run() {
+				// then the TCCL, if one...
+				final ClassLoader tccl = locateTCCL();
+				if ( tccl != null ) {
+					orderedClassLoaderSet.add( tccl );
+				}
+				// finally the system classloader
+				final ClassLoader sysClassLoader = locateSystemClassLoader();
+				if ( sysClassLoader != null ) {
+					orderedClassLoaderSet.add( sysClassLoader );
+				}
 				return new AggregatedClassLoader( orderedClassLoaderSet );
 			}
 		};

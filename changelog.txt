@@ -3,6 +3,17 @@ Hibernate 5.1 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changed in 5.1.16.Final (August 26, 2018)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/31689
+https://hibernate.atlassian.net/issues/?jql=project%20%3D%2010031%20AND%20fixVersion%20%3D%2031689%20ORDER%20BY%20priority%20DESC%2C%20key%20ASC
+
+** Bug
+    * [HHH-3930] - one-to-one causes redundant select query
+    * [HHH-10603] - ORA-00932: inconsistent datatypes: expected - got BLOB after HHH-10345 with Oracle12cDialect
+    * [HHH-12740] - Subselect fetching doesn't work when multiLoad was used
+    * [HHH-12845] - Test DiscriminatorJoinedInheritanceTest fails on Oracle databases
+
 Changed in 5.1.15.Final (July 4, 2018)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/31670

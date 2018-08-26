@@ -8,6 +8,8 @@ package org.hibernate.tuple.entity;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -90,7 +92,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	}
 
 	@Override
-	protected ProxyFactory buildProxyFactory(PersistentClass persistentClass, Getter idGetter, Setter idSetter) {
+	protected ProxyFactory buildProxyFactory(final PersistentClass persistentClass, final Getter idGetter, final Setter idSetter) {
 		// determine the id getter and setter methods from the proxy interface (if any)
 		// determine all interfaces needed by the resulting proxy
 		
@@ -100,9 +102,9 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		 * should be the last one in the order (on JBossAS7 its class-loader will be org.hibernate module's class-
 		 * loader, which will not see the classes inside deployed apps.  See HHH-3078
 		 */
-		Set<Class> proxyInterfaces = new java.util.LinkedHashSet<Class>();
+		final Set<Class> proxyInterfaces = new java.util.LinkedHashSet<Class>();
 
-		Class mappedClass = persistentClass.getMappedClass();
+		final Class mappedClass = persistentClass.getMappedClass();
 		Class proxyInterface = persistentClass.getProxyInterface();
 
 		if ( proxyInterface != null && !mappedClass.equals( proxyInterface ) ) {
@@ -152,31 +154,38 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		Method idGetterMethod = idGetter == null ? null : idGetter.getMethod();
 		Method idSetterMethod = idSetter == null ? null : idSetter.getMethod();
 
-		Method proxyGetIdentifierMethod = idGetterMethod == null || proxyInterface == null ?
+		final Method proxyGetIdentifierMethod = idGetterMethod == null || proxyInterface == null ?
 				null :
 				ReflectHelper.getMethod( proxyInterface, idGetterMethod );
-		Method proxySetIdentifierMethod = idSetterMethod == null || proxyInterface == null ?
+		final Method proxySetIdentifierMethod = idSetterMethod == null || proxyInterface == null ?
 				null :
 				ReflectHelper.getMethod( proxyInterface, idSetterMethod );
 
-		ProxyFactory pf = buildProxyFactoryInternal( persistentClass, idGetter, idSetter );
-		try {
-			pf.postInstantiate(
-					getEntityName(),
-					mappedClass,
-					proxyInterfaces,
-					proxyGetIdentifierMethod,
-					proxySetIdentifierMethod,
-					persistentClass.hasEmbeddedIdentifier() ?
-							(CompositeType) persistentClass.getIdentifier().getType() :
-							null
-			);
-		}
-		catch (HibernateException he) {
-			LOG.unableToCreateProxyFactory( getEntityName(), he );
-			pf = null;
-		}
-		return pf;
+		final PrivilegedAction<ProxyFactory> action = new PrivilegedAction<ProxyFactory>() {
+			@Override
+			public ProxyFactory run() {
+				ProxyFactory pf = buildProxyFactoryInternal( persistentClass, idGetter, idSetter );
+				try {
+					pf.postInstantiate(
+							getEntityName(),
+							mappedClass,
+							proxyInterfaces,
+							proxyGetIdentifierMethod,
+							proxySetIdentifierMethod,
+							persistentClass.hasEmbeddedIdentifier() ?
+									(CompositeType) persistentClass.getIdentifier().getType() :
+									null
+					);
+				}
+				catch (HibernateException he) {
+					LOG.unableToCreateProxyFactory( getEntityName(), he );
+					pf = null;
+				}
+				return pf;
+			}
+		};
+
+		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
 	}
 
 	protected ProxyFactory buildProxyFactoryInternal(

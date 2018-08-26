@@ -7,6 +7,8 @@
 package org.hibernate.jpa.internal.metamodel;
 
 import java.lang.reflect.Field;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -23,6 +25,7 @@ import javax.persistence.metamodel.Type;
 
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.internal.EntityManagerMessageLogger;
 import org.hibernate.mapping.Component;
@@ -348,20 +351,33 @@ class MetadataContext {
 		return attributes;
 	}
 
-	private <X> void populateStaticMetamodel(AbstractManagedType<X> managedType) {
+	private <X> void populateStaticMetamodel(final AbstractManagedType<X> managedType) {
 		final Class<X> managedTypeClass = managedType.getJavaType();
 		if ( managedTypeClass == null ) {
 			// should indicate MAP entity mode, skip...
 			return;
 		}
 		final String metamodelClassName = managedTypeClass.getName() + "_";
-		try {
-			final Class metamodelClass = Class.forName( metamodelClassName, true, managedTypeClass.getClassLoader() );
-			// we found the class; so populate it...
-			registerAttributes( metamodelClass, managedType );
+
+		final PrivilegedAction<Object> action = new PrivilegedAction<Object>() {
+			@Override
+			public Object run() {
+				try {
+					final Class metamodelClass = Class.forName( metamodelClassName, true, managedTypeClass.getClassLoader() );
+					// we found the class; so populate it...
+					registerAttributes( metamodelClass, managedType );
+				}
+				catch (ClassNotFoundException ignore) {
+					// nothing to do...
+				}
+				return null;
+			}
+		};
+		if ( System.getSecurityManager() != null ) {
+			AccessController.doPrivileged( action );
 		}
-		catch (ClassNotFoundException ignore) {
-			// nothing to do...
+		else {
+			action.run();
 		}
 
 		// todo : this does not account for @MappeSuperclass, mainly because this is not being tracked in our
@@ -424,7 +440,7 @@ class MetadataContext {
 					: metamodelClass.getDeclaredField( name );
 			try {
 				// should be public anyway, but to be sure...
-				field.setAccessible( true );
+				ReflectHelper.ensureAccessibility( field );
 				field.set( null, attribute );
 			}
 			catch (IllegalAccessException e) {

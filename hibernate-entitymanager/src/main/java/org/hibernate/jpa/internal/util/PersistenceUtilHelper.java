@@ -23,6 +23,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
@@ -242,7 +243,7 @@ public final class PersistenceUtilHelper {
 		public FieldAttributeAccess(Field field) {
 			this.name = field.getName();
 			try {
-				field.setAccessible( true );
+				ReflectHelper.ensureAccessibility( field );
 			}
 			catch (Exception e) {
 				this.field = null;
@@ -276,7 +277,7 @@ public final class PersistenceUtilHelper {
 		public MethodAttributeAccess(String attributeName, Method method) {
 			this.name = attributeName;
 			try {
-				method.setAccessible( true );
+				ReflectHelper.ensureAccessibility( method );
 			}
 			catch (Exception e) {
 				this.method = null;

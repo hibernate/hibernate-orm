@@ -10,8 +10,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
@@ -115,32 +113,27 @@ public final class ConfigHelper {
 	}
 
 	public static InputStream getResourceAsStream(String resource) {
-		final PrivilegedAction<InputStream> action = new PrivilegedAction<InputStream>() {
-			@Override
-			public InputStream run() {
-				String stripped = resource.startsWith( "/" )
-						? resource.substring( 1 )
-						: resource;
+		String stripped = resource.startsWith( "/" )
+				? resource.substring( 1 )
+				: resource;
 
-				InputStream stream = null;
-				ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-				if ( classLoader != null ) {
-					stream = classLoader.getResourceAsStream( stripped );
-				}
-				if ( stream == null ) {
-					stream = Environment.class.getResourceAsStream( resource );
-				}
-				if ( stream == null ) {
-					stream = Environment.class.getClassLoader().getResourceAsStream( stripped );
-				}
-				if ( stream == null ) {
-					throw new HibernateException( resource + " not found" );
-				}
-				return stream;
-			}
-		};
-		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
+		InputStream stream = null;
+		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+		if ( classLoader != null ) {
+			stream = classLoader.getResourceAsStream( stripped );
+		}
+		if ( stream == null ) {
+			stream = Environment.class.getResourceAsStream( resource );
+		}
+		if ( stream == null ) {
+			stream = Environment.class.getClassLoader().getResourceAsStream( stripped );
+		}
+		if ( stream == null ) {
+			throw new HibernateException( resource + " not found" );
+		}
+		return stream;
 	}
+
 
 	public static InputStream getUserResourceAsStream(String resource) {
 		boolean hasLeadingSlash = resource.startsWith( "/" );

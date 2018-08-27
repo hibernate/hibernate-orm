@@ -10,8 +10,6 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.Entity;
@@ -74,7 +72,6 @@ public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 					}
 					continue;
 				}
-
 				final Callback[] callbacks = resolveEntityCallbacks( entityXClass, callbackType, reflectionManager );
 				callbackRegistrar.registerCallbacks( entityClass, callbacks );
 			}
@@ -122,7 +119,7 @@ public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 		final boolean debugEnabled = log.isDebugEnabled();
 		do {
 			Callback callback = null;
-			List<XMethod> methods = getDeclaredMethods( currentClazz );
+			List<XMethod> methods = currentClazz.getDeclaredMethods();
 			for ( final XMethod xMethod : methods ) {
 				if ( xMethod.isAnnotationPresent( callbackType.getCallbackAnnotation() ) ) {
 					Method method = reflectionManager.toMethod( xMethod );
@@ -193,7 +190,7 @@ public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 			if ( listener != null ) {
 				XClass xListener = reflectionManager.toXClass( listener );
 				callbacksMethodNames = new ArrayList<>();
-				List<XMethod> methods = getDeclaredMethods( xListener );
+				List<XMethod> methods = xListener.getDeclaredMethods();
 				for ( final XMethod xMethod : methods ) {
 					if ( xMethod.isAnnotationPresent( callbackType.getCallbackAnnotation() ) ) {
 						final Method method = reflectionManager.toMethod( xMethod );
@@ -340,15 +337,5 @@ public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 				}
 			}
 		}
-	}
-
-	private static List<XMethod> getDeclaredMethods(XClass clazz) {
-		final PrivilegedAction<List<XMethod>> action = new PrivilegedAction<List<XMethod>>() {
-			@Override
-			public List<XMethod> run() {
-				return clazz.getDeclaredMethods();
-			}
-		};
-		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
 	}
 }

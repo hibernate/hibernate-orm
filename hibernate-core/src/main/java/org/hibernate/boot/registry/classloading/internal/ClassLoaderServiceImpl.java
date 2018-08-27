@@ -83,16 +83,11 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		orderedClassLoaderSet.add( ClassLoaderServiceImpl.class.getClassLoader() );
 
 		// now build the aggregated class loader...
-		final PrivilegedAction<AggregatedClassLoader> action = new PrivilegedAction<AggregatedClassLoader>() {
-			@Override
+		this.aggregatedClassLoader = AccessController.doPrivileged( new PrivilegedAction<AggregatedClassLoader>() {
 			public AggregatedClassLoader run() {
 				return new AggregatedClassLoader( orderedClassLoaderSet, lookupPrecedence );
 			}
-		};
-
-		this.aggregatedClassLoader = System.getSecurityManager() != null
-				? AccessController.doPrivileged( action )
-				: action.run();
+		} );
 	}
 
 	/**
@@ -352,62 +347,49 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	@Override
 	@SuppressWarnings({"unchecked"})
 	public <T> Class<T> classForName(String className) {
-		final PrivilegedAction<Class<T>> action = new PrivilegedAction<Class<T>>() {
-			@Override
-			public Class<T> run() {
-				try {
-					return (Class<T>) Class.forName( className, true, getAggregatedClassLoader() );
-				}
-				catch (Exception e) {
-					throw new ClassLoadingException( "Unable to load class [" + className + "]", e );
-				}
-				catch (LinkageError e) {
-					throw new ClassLoadingException( "Unable to load class [" + className + "]", e );
-				}
-			}
-		};
-
-		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
+		try {
+			return (Class<T>) Class.forName( className, true, getAggregatedClassLoader() );
+		}
+		catch (Exception e) {
+			throw new ClassLoadingException( "Unable to load class [" + className + "]", e );
+		}
+		catch (LinkageError e) {
+			throw new ClassLoadingException( "Unable to load class [" + className + "]", e );
+		}
 	}
 
 	@Override
-	public URL locateResource(final String name) {
-		final PrivilegedAction<URL> action = new PrivilegedAction<URL>() {
-			@Override
-			public URL run() {
-				try {
-					return new URL( name );
-				}
-				catch (Exception ignore) {
-				}
+	public URL locateResource(String name) {
+		// first we try name as a URL
+		try {
+			return new URL( name );
+		}
+		catch (Exception ignore) {
+		}
 
-				try {
-					final URL url = getAggregatedClassLoader().getResource( name );
-					if ( url != null ) {
-						return url;
-					}
-				}
-				catch (Exception ignore) {
-				}
-
-				if ( name.startsWith( "/" ) ) {
-					final String resourceName = name.substring( 1 );
-
-					try {
-						final URL url = getAggregatedClassLoader().getResource( resourceName );
-						if ( url != null ) {
-							return url;
-						}
-					}
-					catch (Exception ignore) {
-					}
-				}
-
-				return null;
+		try {
+			final URL url = getAggregatedClassLoader().getResource( name );
+			if ( url != null ) {
+				return url;
 			}
-		};
+		}
+		catch (Exception ignore) {
+		}
 
-		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
+		if ( name.startsWith( "/" ) ) {
+			name = name.substring( 1 );
+
+			try {
+				final URL url = getAggregatedClassLoader().getResource( name );
+				if ( url != null ) {
+					return url;
+				}
+			}
+			catch (Exception ignore) {
+			}
+		}
+
+		return null;
 	}
 
 	@Override
@@ -474,22 +456,16 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <S> Collection<S> loadJavaServices(Class<S> serviceContract) {
-		final PrivilegedAction<Collection<S>> action = new PrivilegedAction<Collection<S>>() {
-			@Override
-			public Collection<S> run() {
-				ServiceLoader<S> serviceLoader = serviceLoaders.get( serviceContract );
-				if ( serviceLoader == null ) {
-					serviceLoader = ServiceLoader.load( serviceContract, getAggregatedClassLoader() );
-					serviceLoaders.put( serviceContract, serviceLoader );
-				}
-				final LinkedHashSet<S> services = new LinkedHashSet<S>();
-				for ( S service : serviceLoader ) {
-					services.add( service );
-				}
-				return services;
-			}
-		};
-		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
+		ServiceLoader<S> serviceLoader = serviceLoaders.get( serviceContract );
+		if ( serviceLoader == null ) {
+			serviceLoader = ServiceLoader.load( serviceContract, getAggregatedClassLoader() );
+			serviceLoaders.put( serviceContract, serviceLoader );
+		}
+		final LinkedHashSet<S> services = new LinkedHashSet<S>();
+		for ( S service : serviceLoader ) {
+			services.add( service );
+		}
+		return services;
 	}
 
 	@Override
@@ -504,13 +480,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	@Override
 	public <T> T workWithClassLoader(Work<T> work) {
-		final PrivilegedAction<T> action = new PrivilegedAction<T>() {
-			@Override
-			public T run() {
-				return work.doWork( getAggregatedClassLoader() );
-			}
-		};
-		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
+		return work.doWork( getAggregatedClassLoader() );
 	}
 
 	private ClassLoader getAggregatedClassLoader() {

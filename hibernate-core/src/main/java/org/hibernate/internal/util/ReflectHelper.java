@@ -13,8 +13,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Locale;
 import java.util.regex.Pattern;
 import javax.persistence.Transient;
@@ -237,14 +235,7 @@ public final class ReflectHelper {
 	}
 
 	private static Getter getter(Class clazz, String name) throws MappingException {
-		final PrivilegedAction<Getter> action = new PrivilegedAction<Getter>() {
-			@Override
-			public Getter run() {
-				return PropertyAccessStrategyMixedImpl.INSTANCE.buildPropertyAccess( clazz, name ).getGetter();
-			}
-		};
-
-		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
+		return PropertyAccessStrategyMixedImpl.INSTANCE.buildPropertyAccess( clazz, name ).getGetter();
 	}
 
 	public static Object getConstantValue(String name, SessionFactoryImplementor factory) {
@@ -281,23 +272,16 @@ public final class ReflectHelper {
 			return null;
 		}
 
-		final PrivilegedAction<Constructor> action = new PrivilegedAction<Constructor>() {
-			@Override
-			public Constructor run() {
-				try {
-					Constructor<T> constructor = clazz.getDeclaredConstructor( NO_PARAM_SIGNATURE );
-					ensureAccessibility( constructor );
-					return constructor;
-				}
-				catch (NoSuchMethodException e) {
-					throw new PropertyNotFoundException(
-							"Object class [" + clazz.getName() + "] must declare a default (no-argument) constructor"
-					);
-				}
-			}
-		};
-
-		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
+		try {
+			Constructor<T> constructor = clazz.getDeclaredConstructor( NO_PARAM_SIGNATURE );
+			ensureAccessibility( constructor );
+			return constructor;
+		}
+		catch ( NoSuchMethodException nme ) {
+			throw new PropertyNotFoundException(
+					"Object class [" + clazz.getName() + "] must declare a default (no-argument) constructor"
+			);
+		}
 	}
 
 	/**
@@ -364,19 +348,12 @@ public final class ReflectHelper {
 	}
 
 	public static Method getMethod(Class clazz, Method method) {
-		final PrivilegedAction<Method> action = new PrivilegedAction<Method>() {
-			@Override
-			public Method run() {
-				try {
-					return clazz.getMethod( method.getName(), method.getParameterTypes() );
-				}
-				catch (Exception e){
-					return null;
-				}
-			}
-		};
-
-		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
+		try {
+			return clazz.getMethod( method.getName(), method.getParameterTypes() );
+		}
+		catch (Exception e) {
+			return null;
+		}
 	}
 
 	public static Field findField(Class containerClass, String propertyName) {
@@ -387,14 +364,8 @@ public final class ReflectHelper {
 			throw new IllegalArgumentException( "Illegal attempt to locate field [" + propertyName + "] on Object.class" );
 		}
 
-		final PrivilegedAction<Field> action = new PrivilegedAction<Field>() {
-			@Override
-			public Field run() {
-				return locateField( containerClass, propertyName );
-			}
-		};
+		Field field = locateField( containerClass, propertyName );
 
-		final Field field = System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
 		if ( field == null ) {
 			throw new PropertyNotFoundException(
 					String.format(
@@ -412,22 +383,11 @@ public final class ReflectHelper {
 	}
 
 	public static void ensureAccessibility(AccessibleObject accessibleObject) {
-		final PrivilegedAction<Object> action = new PrivilegedAction<Object>() {
-			@Override
-			public Object run() {
-				if ( !accessibleObject.isAccessible() ) {
-					accessibleObject.setAccessible( true );
-				}
-				return null;
-			}
-		};
+		if ( accessibleObject.isAccessible() ) {
+			return;
+		}
 
-		if ( System.getSecurityManager() != null ) {
-			AccessController.doPrivileged( action );
-		}
-		else {
-			action.run();
-		}
+		accessibleObject.setAccessible( true );
 	}
 
 	private static Field locateField(Class clazz, String propertyName) {
@@ -502,7 +462,7 @@ public final class ReflectHelper {
 	}
 
 	private static Method getGetterOrNull(Class containerClass, String propertyName) {
-		for ( Method method : getDeclaredMethods( containerClass ) ) {
+		for ( Method method : containerClass.getDeclaredMethods() ) {
 			// if the method has parameters, skip it
 			if ( method.getParameterCount() != 0 ) {
 				continue;
@@ -553,39 +513,17 @@ public final class ReflectHelper {
 			String propertyName,
 			Method getMethod,
 			String stemName) {
-		final Method isMethod = getDeclaredMethod( containerClass, "is" + stemName );
-		if ( isMethod != null ) {
+		// verify that the Class does not also define a method with the same stem name with 'is'
+		try {
+			final Method isMethod = containerClass.getDeclaredMethod( "is" + stemName );
 			if ( !Modifier.isStatic( isMethod.getModifiers() ) && isMethod.getAnnotation( Transient.class ) == null ) {
 				// No such method should throw the caught exception.  So if we get here, there was
 				// such a method.
 				checkGetAndIsVariants( containerClass, propertyName, getMethod, isMethod );
 			}
 		}
-	}
-
-	private static Method getDeclaredMethod(Class containerClass, String methodName) {
-		final PrivilegedAction<Method> action = new PrivilegedAction<Method>() {
-			@Override
-			public Method run() {
-				try {
-					return containerClass.getDeclaredMethod( methodName );
-				}
-				catch (NoSuchMethodException ignore) {
-					return null;
-				}
-			}
-		};
-		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
-	}
-
-	private static Method[] getDeclaredMethods(Class containerClass) {
-		final PrivilegedAction<Method[]> action = new PrivilegedAction<Method[]>() {
-			@Override
-			public Method[] run() {
-				return containerClass.getDeclaredMethods();
-			}
-		};
-		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
+		catch (NoSuchMethodException ignore) {
+		}
 	}
 
 	private static void checkGetAndIsVariants(
@@ -616,13 +554,15 @@ public final class ReflectHelper {
 			Method isMethod,
 			String stemName) {
 		// verify that the Class does not also define a method with the same stem name with 'is'
-		final Method getMethod = getDeclaredMethod( containerClass, "get" + stemName );
-		if ( getMethod != null ) {
+		try {
+			final Method getMethod = containerClass.getDeclaredMethod( "get" + stemName );
 			// No such method should throw the caught exception.  So if we get here, there was
 			// such a method.
 			if ( !Modifier.isStatic( getMethod.getModifiers() ) && getMethod.getAnnotation( Transient.class ) == null ) {
 				checkGetAndIsVariants( containerClass, propertyName, getMethod, isMethod );
 			}
+		}
+		catch (NoSuchMethodException ignore) {
 		}
 	}
 
@@ -691,7 +631,7 @@ public final class ReflectHelper {
 	private static Method setterOrNull(Class theClass, String propertyName, Class propertyType) {
 		Method potentialSetter = null;
 
-		for ( Method method : getDeclaredMethods( theClass ) ) {
+		for ( Method method : theClass.getDeclaredMethods() ) {
 			final String methodName = method.getName();
 			if ( method.getParameterCount() == 1 && methodName.startsWith( "set" ) ) {
 				final String testOldMethod = methodName.substring( 3 );
@@ -716,7 +656,7 @@ public final class ReflectHelper {
 	 * as an abstract - but again, that is such an edge case...
 	 */
 	public static Method findGetterMethodForFieldAccess(Field field, String propertyName) {
-		for ( Method method : getDeclaredMethods( field.getDeclaringClass() ) ) {
+		for ( Method method : field.getDeclaringClass().getDeclaredMethods() ) {
 			// if the method has parameters, skip it
 			if ( method.getParameterCount() != 0 ) {
 				continue;

@@ -7,8 +7,6 @@
 package org.hibernate.metamodel.internal;
 
 import java.lang.reflect.Field;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -378,26 +376,13 @@ class MetadataContext {
 			return;
 		}
 		final String metamodelClassName = managedTypeClass.getName() + '_';
-
-		final PrivilegedAction<Object> action = new PrivilegedAction<Object>() {
-			@Override
-			public Object run() {
-				try {
-					final Class metamodelClass = Class.forName( metamodelClassName, true, managedTypeClass.getClassLoader() );
-					// we found the class; so populate it...
-					registerAttributes( metamodelClass, managedType );
-				}
-				catch (ClassNotFoundException ignore) {
-					// nothing to do...
-				}
-				return null;
-			}
-		};
-		if ( System.getSecurityManager() != null ) {
-			AccessController.doPrivileged( action );
+		try {
+			final Class metamodelClass = Class.forName( metamodelClassName, true, managedTypeClass.getClassLoader() );
+			// we found the class; so populate it...
+			registerAttributes( metamodelClass, managedType );
 		}
-		else {
-			action.run();
+		catch (ClassNotFoundException ignore) {
+			// nothing to do...
 		}
 
 		// todo : this does not account for @MappeSuperclass, mainly because this is not being tracked in our

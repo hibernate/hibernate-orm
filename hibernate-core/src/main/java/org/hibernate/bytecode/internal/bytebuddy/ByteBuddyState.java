@@ -262,6 +262,7 @@ public final class ByteBuddyState {
 	}
 
 	private static ForDeclaredMethods getDeclaredMethodMemberSubstitution() {
+		// this should only be called if the security manager is enabled, thus the privileged calls
 		return MemberSubstitution.relaxed()
 				.method( ElementMatchers.is( AccessController.doPrivileged( new GetDeclaredMethodAction( Class.class,
 						"getDeclaredMethod", String.class, Class[].class ) ) ) )
@@ -272,6 +273,7 @@ public final class ByteBuddyState {
 	}
 
 	private static ForDeclaredMethods getMethodMemberSubstitution() {
+		// this should only be called if the security manager is enabled, thus the privileged calls
 		return MemberSubstitution.relaxed()
 				.method( ElementMatchers.is( AccessController.doPrivileged( new GetDeclaredMethodAction( Class.class,
 						"getMethod", String.class, Class[].class ) ) ) )
@@ -321,10 +323,33 @@ public final class ByteBuddyState {
 					.and( returns( td -> "groovy.lang.MetaClass".equals( td.getName() ) ) ) );
 			this.virtualNotFinalizerFilter = isVirtual().and( not( isFinalizer() ) );
 			this.hibernateGeneratedMethodFilter = nameStartsWith( "$$_hibernate_" ).and( isVirtual() );
-			this.delegateToInterceptorDispatcherMethodDelegation = MethodDelegation
-					.to( ProxyConfiguration.InterceptorDispatcher.class );
-			this.interceptorFieldAccessor = FieldAccessor.ofField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME )
-					.withAssigner( Assigner.DEFAULT, Assigner.Typing.DYNAMIC );
+
+			PrivilegedAction<MethodDelegation> delegateToInterceptorDispatcherMethodDelegationPrivilegedAction =
+					new PrivilegedAction<MethodDelegation>() {
+
+				@Override
+				public MethodDelegation run() {
+					return MethodDelegation.to( ProxyConfiguration.InterceptorDispatcher.class );
+				}
+			};
+
+			this.delegateToInterceptorDispatcherMethodDelegation = System.getSecurityManager() != null
+					? AccessController.doPrivileged( delegateToInterceptorDispatcherMethodDelegationPrivilegedAction )
+					: delegateToInterceptorDispatcherMethodDelegationPrivilegedAction.run();
+
+			PrivilegedAction<FieldAccessor.PropertyConfigurable> interceptorFieldAccessorPrivilegedAction =
+					new PrivilegedAction<FieldAccessor.PropertyConfigurable>() {
+
+				@Override
+				public FieldAccessor.PropertyConfigurable run() {
+					return FieldAccessor.ofField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME )
+							.withAssigner( Assigner.DEFAULT, Assigner.Typing.DYNAMIC );
+				}
+			};
+
+			this.interceptorFieldAccessor = System.getSecurityManager() != null
+					? AccessController.doPrivileged( interceptorFieldAccessorPrivilegedAction )
+					: interceptorFieldAccessorPrivilegedAction.run();
 		}
 
 		public ElementMatcher<? super MethodDescription> getGroovyGetMetaClassFilter() {

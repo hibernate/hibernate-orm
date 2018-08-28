@@ -1951,4 +1951,14 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 */
 	String IN_CLAUSE_PARAMETER_PADDING = "hibernate.query.in_clause_parameter_padding";
 
+	/**
+	 * This setting controls the number of {@link org.hibernate.stat.QueryStatistics} entries
+	 * that will be stored by the Hibernate {@link org.hibernate.stat.Statistics} object.
+	 * </p>
+	 * The default value is given by the {@link org.hibernate.stat.Statistics#DEFAULT_QUERY_STATISTICS_MAX_SIZE} constant value.
+	 *
+	 * @since 5.4
+	 */
+	String QUERY_STATISTICS_MAX_SIZE = "hibernate.statistics.query_max_size";
+
 }

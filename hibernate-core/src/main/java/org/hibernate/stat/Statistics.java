@@ -15,6 +15,8 @@ package org.hibernate.stat;
  */
 public interface Statistics {
 
+	int DEFAULT_QUERY_STATISTICS_MAX_SIZE = 5000;
+
 	/**
 	 * Are statistics enabled
 	 */

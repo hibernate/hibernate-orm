@@ -17,9 +17,11 @@ import org.hibernate.cache.spi.Region;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.Service;
+import org.hibernate.stat.Statistics;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
@@ -92,7 +94,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	/**
 	 * Keyed by query string
 	 */
-	private final ConcurrentMap<String, QueryStatisticsImpl> queryStatsMap = new ConcurrentHashMap();
+	private final BoundedConcurrentHashMap<String, QueryStatisticsImpl> queryStatsMap;
 
 	/**
 	 * Keyed by region name
@@ -108,8 +110,15 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	}
 
 	public StatisticsImpl(SessionFactoryImplementor sessionFactory) {
-		clear();
 		this.sessionFactory = sessionFactory;
+		this.queryStatsMap = new BoundedConcurrentHashMap(
+				sessionFactory != null ?
+					sessionFactory.getSessionFactoryOptions().getQueryStatisticsMaxSize() :
+					Statistics.DEFAULT_QUERY_STATISTICS_MAX_SIZE,
+				20,
+				BoundedConcurrentHashMap.Eviction.LRU
+		);
+		clear();
 	}
 
 	/**

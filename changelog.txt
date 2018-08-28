@@ -4,6 +4,17 @@ Hibernate 5 Changelog
 Note: Please refer to JIRA to learn more about each issue.
 
 
+Changes in 5.3.6.final (August 28th, 2018)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31704/tab/release-report-done
+
+** Bug
+    * [HHH-12931] - Revert HHH-12542 as it introduces some issues with the security manager
+    * [HHH-12932] - Add privileged blocks in ByteBuddyState initialization
+
+
+
 Changes in 5.3.5.final (August 14th, 2018)
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -31,6 +42,8 @@ https://hibernate.atlassian.net/projects/HHH/versions/31695/tab/release-report-d
     * [HHH-12608] - Add the ST_DWithin() function  in DB2 Spatial Dialect
     * [HHH-12892] - Fix spelling issues in the User Guide
     * [HHH-12907] - Avoid garbage collection pressure when creating proxies with ByteBuddy
+
+
 
 Changes in 5.3.4.final (August 2nd, 2018)
 ------------------------------------------------------------------------------------------------------------------------

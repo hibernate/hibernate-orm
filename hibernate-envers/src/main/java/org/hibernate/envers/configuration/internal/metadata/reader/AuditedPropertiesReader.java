@@ -7,8 +7,6 @@
 package org.hibernate.envers.configuration.internal.metadata.reader;
 
 import java.lang.annotation.Annotation;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -49,7 +47,6 @@ import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
-
 import org.jboss.logging.Logger;
 
 import static org.hibernate.envers.internal.tools.Tools.newHashMap;
@@ -357,45 +354,24 @@ public class AuditedPropertiesReader {
 
 		//look in the class
 		addFromProperties(
-				getPropertiesFromClassByType( clazz, AccessType.FIELD ),
+				clazz.getDeclaredProperties( "field" ),
 				it -> "field",
 				fieldAccessedPersistentProperties,
 				allClassAudited
 		);
-
 		addFromProperties(
-				getPropertiesFromClassByType( clazz, AccessType.PROPERTY ),
+				clazz.getDeclaredProperties( "property" ),
 				propertyAccessedPersistentProperties::get,
 				propertyAccessedPersistentProperties.keySet(),
 				allClassAudited
 		);
 
 		if ( allClassAudited != null || !auditedPropertiesHolder.isEmpty() ) {
-			final PrivilegedAction<XClass> action = new PrivilegedAction<XClass>() {
-				@Override
-				public XClass run() {
-					return clazz.getSuperclass();
-				}
-			};
-
-			final XClass superclazz = System.getSecurityManager() != null
-					? AccessController.doPrivileged( action )
-					: action.run();
-
+			final XClass superclazz = clazz.getSuperclass();
 			if ( !clazz.isInterface() && !"java.lang.Object".equals( superclazz.getName() ) ) {
 				addPropertiesFromClass( superclazz );
 			}
 		}
-	}
-
-	private Iterable<XProperty> getPropertiesFromClassByType(XClass clazz, AccessType accessType) {
-		final PrivilegedAction<Iterable<XProperty>> action = new PrivilegedAction<Iterable<XProperty>>() {
-			@Override
-			public Iterable<XProperty> run() {
-				return clazz.getDeclaredProperties( accessType.getType() );
-			}
-		};
-		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
 	}
 
 	private void addFromProperties(

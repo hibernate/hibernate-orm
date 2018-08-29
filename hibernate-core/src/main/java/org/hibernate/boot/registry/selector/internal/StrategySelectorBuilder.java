@@ -70,6 +70,7 @@ import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.dialect.TimesTenDialect;
+import org.hibernate.engine.transaction.jta.platform.internal.AtomikosJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.BitronixJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.BorlandEnterpriseServerJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossAppServerJtaPlatform;
@@ -252,6 +253,13 @@ public class StrategySelectorBuilder {
 	}
 
 	private void addJtaPlatforms(StrategySelectorImpl strategySelector) {
+		addJtaPlatforms(
+				strategySelector,
+				AtomikosJtaPlatform.class,
+				"Atomikos",
+				"org.hibernate.service.jta.platform.internal.AtomikosJtaPlatform"
+		);
+
 		addJtaPlatforms(
 				strategySelector,
 				BorlandEnterpriseServerJtaPlatform.class,

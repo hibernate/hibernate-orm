@@ -71,6 +71,7 @@ Hibernate tries to discover the `JtaPlatform` it should use through the use of a
 If that resolution does not work, or if you wish to provide a custom implementation you will need to specify the `hibernate.transaction.jta.platform` setting.
 Hibernate provides many implementations of the `JtaPlatform` contract, all with short names:
 
+`Atomikos`:: `JtaPlatform` for Atomikos.
 `Borland`:: `JtaPlatform` for the Borland Enterprise Server.
 `Bitronix`:: `JtaPlatform` for Bitronix.
 `JBossAS`:: `JtaPlatform` for Arjuna/JBossTransactions/Narayana when used within the JBoss/WildFly Application Server.

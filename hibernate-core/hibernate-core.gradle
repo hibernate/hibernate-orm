@@ -90,6 +90,8 @@ dependencies {
     testRuntime( libraries.javassist )
     testRuntime( libraries.byteBuddy )
     testRuntime( libraries.weld )
+    testRuntime( libraries.atomikos )
+    testRuntime( libraries.atomikos_jta )
     testRuntime(libraries.wildfly_transaction_client)
 
 	testCompile( project( ':hibernate-jpamodelgen' ) )

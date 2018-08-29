@@ -136,6 +136,9 @@ ext {
             agroal_api:      "io.agroal:agroal-api:0.4",
             agroal_pool:     "io.agroal:agroal-pool:0.4",
 
+            atomikos:         "com.atomikos:transactions:4.0.6",
+            atomikos_jta:     "com.atomikos:transactions-jta:4.0.6",
+
             cdi: "javax.enterprise:cdi-api:${cdiVersion}",
             weld: "org.jboss.weld.se:weld-se-shaded:${weldVersion}",
 

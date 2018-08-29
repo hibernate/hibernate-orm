@@ -303,6 +303,8 @@ Rolling back the database transaction does not put your business objects back in
 This means that the database state and the business objects will be out of sync. 
 Usually, this is not a problem because exceptions are not recoverable and you will have to start over after rollback anyway.
 
+For more details, check out the <<chapters/pc/PersistenceContext.adoc#pc-exception-handling, _exception handling_>> chapter.
+
 The `Session` caches every object that is in a persistent state (watched and checked for dirty state by Hibernate).
 If you keep it open for a long time or simply load too much data, it will grow endlessly until you get an `OutOfMemoryException`.
 One solution is to call `clear()` and `evict()` to manage the `Session` cache, but you should consider a Stored Procedure if you need mass data operations.

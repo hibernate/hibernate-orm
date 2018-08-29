@@ -1,5 +1,5 @@
 [[pc]]
-== Persistence Contexts
+== Persistence Context
 :sourcedir: ../../../../../test/java/org/hibernate/userguide/pc
 :sourcedir-caching: ../../../../../test/java/org/hibernate/userguide/caching
 :extrasdir: extras
@@ -857,4 +857,65 @@ include::{sourcedir}/CascadeOnDeleteTest.java[tags=pc-cascade-on-delete-example]
 ----
 include::{extrasdir}/pc-cascade-on-delete-example.sql[]
 ----
+====
+
+[[pc-exception-handling]]
+=== Exception handling
+
+If the JPA `EntityManager` or the Hibernate-specific `Session` throws an exception, including any JDBC https://docs.oracle.com/javase/8/docs/api/java/sql/SQLException.html[`SQLException`], you have to immediately rollback the database transaction and close the current `EntityManager` or `Session`.
+
+Certain methods of the JPA `EntityManager` or the Hibernate `Session` will not leave the Persistence Context in a consistent state. As a rule of thumb, no exception thrown by Hibernate can be treated as recoverable. Ensure that the Session will be closed by calling the `close()` method in a finally block.
+
+Rolling back the database transaction does not put your business objects back into the state they were at the start of the transaction. This means that the database state and the business objects will be out of sync. Usually, this is not a problem because exceptions are not recoverable and you will have to start over after rollback anyway.
+
+The JPA https://docs.oracle.com/javaee/7/api/javax/persistence/PersistenceException.html[`PersistenceException`] or the
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/HibernateException.html[`HibernateException`] wraps most of the errors that can occur in a Hibernate persistence layer.
+
+Both the `PersistenceException` and the `HibernateException` are runtime exceptions because, in our opinion, we should not force the application developer to catch an unrecoverable exception at a low layer. In most systems, unchecked and fatal exceptions are handled in one of the first frames of the method call stack (i.e., in higher layers) and either an error message is presented to the application user or some other appropriate action is taken. Note that Hibernate might also throw other unchecked exceptions that are not a `HibernateException`. These are not recoverable either, and appropriate action should be taken.
+
+Hibernate wraps the JDBC `SQLException`, thrown while interacting with the database, in a
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/JDBCException.html[`JDBCException`].
+In fact, Hibernate will attempt to convert the exception into a more meaningful subclass of `JDBCException`. The underlying `SQLException` is always available via https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/JDBCException.html#getSQLException--[`JDBCException.getSQLException()`]. Hibernate converts the `SQLException` into an appropriate JDBCException subclass using the
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/exception/spi/SQLExceptionConverter.html[`SQLExceptionConverter`]
+attached to the current `SessionFactory`.
+
+By default, the `SQLExceptionConverter` is defined by the configured Hibernate `Dialect` via the
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#buildSQLExceptionConversionDelegate--[`buildSQLExceptionConversionDelegate`] method
+which is overridden by several database-specific `Dialects`.
+
+However, it is also possible to plug in a custom implementation. See the
+<<appendices/Configurations.adoc#configurations-exception-handling,`hibernate.jdbc.sql_exception_converter`>> configuration property for more details.
+
+The standard `JDBCException` subtypes are:
+
+ConstraintViolationException::
+	indicates some form of integrity constraint violation.
+DataException::
+	indicates that evaluation of the valid SQL statement against the given data
+	resulted in some illegal operation, mismatched types, truncation or incorrect cardinality.
+GenericJDBCException::
+	a generic exception which did not fall into any of the other categories.
+JDBCConnectionException::
+	indicates an error with the underlying JDBC communication.
+LockAcquisitionException::
+	indicates an error acquiring a lock level necessary to perform the requested operation.
+LockTimeoutException::
+	indicates that the lock acquisition request has timed out.
+PessimisticLockException::
+	indicates that a lock acquisition request has failed.
+QueryTimeoutException::
+	indicates that the current executing query has timed out.
+SQLGrammarException::
+	indicates a grammar or syntax problem with the issued SQL.
+
+[NOTE]
+====
+Starting with Hibernate 5.2, the Hibernate `Session` extends the JPA `EntityManager`. For this reason, when a `SessionFactory` is built via Hibernate's native bootstrapping,
+the `HibernateException` or `SQLException` can be wrapped in a JPA https://docs.oracle.com/javaee/7/api/javax/persistence/PersistenceException.html[`PersistenceException`] when thrown
+by `Session` methods that implement `EntityManager` methods (e.g., https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#merge-java.lang.Object-[Session.merge(Object object)],
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#flush--[Session.flush()]).
+
+If your `SessionFactory` is built via Hibernate's native bootstrapping, and you don't want the Hibernate exceptions to be wrapped in the JPA `PersistenceException`, you need to set the
+`hibernate.native_exception_handling_51_compliance` configuration property to `true`. See the
+<<appendices/Configurations.adoc#configurations-exception-handling,`hibernate.native_exception_handling_51_compliance`>> configuration property for more details.
 ====

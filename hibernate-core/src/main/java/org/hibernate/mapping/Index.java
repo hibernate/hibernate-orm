@@ -238,6 +238,6 @@ public class Index implements RelationalModel, Exportable, Serializable {
 
 	@Override
 	public String getExportIdentifier() {
-		return StringHelper.qualify( getTable().getName(), "IDX-" + getName() );
+		return StringHelper.qualify( getTable().getExportIdentifier(), "IDX-" + getName() );
 	}
 }

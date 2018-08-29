@@ -72,6 +72,6 @@ public class UniqueKey extends Constraint {
 
 	@Override
 	public String getExportIdentifier() {
-		return StringHelper.qualify( getTable().getName(), "UK-" + getName() );
+		return StringHelper.qualify( getTable().getExportIdentifier(), "UK-" + getName() );
 	}
 }

@@ -3712,7 +3712,6 @@ public class ModelBinder {
 				// (which is the join table for a many-to-any association).
 				// This "where" clause comes from the collection mapping; e.g., <set name="..." ... where="..." .../>
 				getCollectionBinding().setWhere( getPluralAttributeSource().getWhere() );
-				getCollectionBinding().setWhere( getPluralAttributeSource().getWhere() );
 			}
 		}
 	}

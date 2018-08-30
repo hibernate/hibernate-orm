@@ -24,6 +24,7 @@ import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
 import org.hibernate.engine.spi.Mapping;
@@ -446,17 +447,9 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		
 		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
 
-		Identifier quotedCatalog = catalog != null && catalog.isQuoted() ?
-				new Identifier( tableInfo.getName().getCatalogName().getText(), true ) :
-				tableInfo.getName().getCatalogName();
-
-		Identifier quotedSchema = schema != null && schema.isQuoted() ?
-				new Identifier( tableInfo.getName().getSchemaName().getText(), true ) :
-				tableInfo.getName().getSchemaName();
-
-		Identifier quotedTable = name != null &&  name.isQuoted() ?
-				new Identifier( tableInfo.getName().getObjectName().getText(), true ) :
-				tableInfo.getName().getObjectName();
+		final Identifier quotedCatalog = quoteIfNeeded(tableInfo.getName().getCatalogName(), jdbcEnvironment.getIdentifierHelper(), catalog);
+		final Identifier quotedSchema = quoteIfNeeded(tableInfo.getName().getSchemaName(), jdbcEnvironment.getIdentifierHelper(), schema);
+		final Identifier quotedTable = quoteIfNeeded(tableInfo.getName().getObjectName(), jdbcEnvironment.getIdentifierHelper(), name);
 
 		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
 				new QualifiedTableName(
@@ -529,6 +522,18 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		}
 
 		return results.iterator();
+	}
+
+	private static Identifier quoteIfNeeded(final Identifier identifierFromDb, final IdentifierHelper identifierHelper, final Identifier identifierFromDefinition) {
+		if (identifierFromDb==null) {
+			return null;
+		}
+		if (identifierFromDefinition == null) {
+			return identifierHelper.toIdentifier(identifierFromDb.getText());
+		}
+		return identifierFromDefinition.isQuoted() ?
+				new Identifier(identifierFromDb.getText(), true) :
+				identifierFromDb;
 	}
 
 	public boolean hasPrimaryKey() {

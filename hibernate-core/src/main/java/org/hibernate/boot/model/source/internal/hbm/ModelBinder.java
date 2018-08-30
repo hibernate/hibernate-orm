@@ -3401,6 +3401,11 @@ public class ModelBinder {
 		}
 
 		protected void bindCollectionElement() {
+			log.debugf(
+					"Binding [%s] element type for a [%s]",
+					getPluralAttributeSource().getElementSource().getNature(),
+					getPluralAttributeSource().getNature()
+			);
 			if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceBasic ) {
 				final PluralAttributeElementSourceBasic elementSource =
 						(PluralAttributeElementSourceBasic) getPluralAttributeSource().getElementSource();
@@ -3432,6 +3437,10 @@ public class ModelBinder {
 				);
 
 				getCollectionBinding().setElement( elementBinding );
+				// Collection#setWhere is used to set the "where" clause that applies to the collection table
+				// (the table containing the basic elements)
+				// This "where" clause comes from the collection mapping; e.g., <set name="..." ... where="..." .../>
+				getCollectionBinding().setWhere( getPluralAttributeSource().getWhere() );
 			}
 			else if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceEmbedded ) {
 				final PluralAttributeElementSourceEmbedded elementSource =
@@ -3453,6 +3462,10 @@ public class ModelBinder {
 				);
 
 				getCollectionBinding().setElement( elementBinding );
+				// Collection#setWhere is used to set the "where" clause that applies to the collection table
+				// (the table containing the embeddable elements)
+				// This "where" clause comes from the collection mapping; e.g., <set name="..." ... where="..." .../>
+				getCollectionBinding().setWhere( getPluralAttributeSource().getWhere() );
 			}
 			else if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceOneToMany ) {
 				final PluralAttributeElementSourceOneToMany elementSource =
@@ -3695,6 +3708,11 @@ public class ModelBinder {
 
 				);
 				getCollectionBinding().setElement( elementBinding );
+				// Collection#setWhere is used to set the "where" clause that applies to the collection table
+				// (which is the join table for a many-to-any association).
+				// This "where" clause comes from the collection mapping; e.g., <set name="..." ... where="..." .../>
+				getCollectionBinding().setWhere( getPluralAttributeSource().getWhere() );
+				getCollectionBinding().setWhere( getPluralAttributeSource().getWhere() );
 			}
 		}
 	}

@@ -357,7 +357,7 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 				joinColumns = { @JoinColumn( name = "MAIN_ID" ) },
 				inverseJoinColumns = { @JoinColumn( name = "ASSOCIATION_ID" ) }
 		)
-		@WhereJoinTable( clause = "MAIN_CODE='BUILDING' AND ASSOCIATION_CODE='RATING'")
+		@WhereJoinTable( clause = "MAIN_CODE='BUILDING' AND ASSOCIATION_CODE='SIZE'")
 		@Immutable
 		public Set<Size> getSizesFromCombined() {
 			return sizesFromCombined;

@@ -3004,4 +3004,8 @@ public abstract class Dialect implements ConversionContext {
 	protected String prependComment(String sql, String comment) {
 		return  "/* " + comment + " */ " + sql;
 	}
+
+	public String getArrayRestriction(String alias, String columnName, int batchSize) {
+		return null;
+	}
 }

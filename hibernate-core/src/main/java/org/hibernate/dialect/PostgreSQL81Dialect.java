@@ -38,6 +38,7 @@ import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.procedure.internal.PostgresCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.type.StandardBasicTypes;
@@ -636,5 +637,14 @@ public class PostgreSQL81Dialect extends Dialect {
 	@Override
 	public boolean supportsNoWait() {
 		return true;
+	}
+
+	@Override
+	public String getArrayRestriction(String alias, String columnName, int batchSize) {
+		if (batchSize == 1) {
+			// If the batch size is 1, don't use array restrictions
+			return null;
+		}
+		return StringHelper.qualify( alias, columnName ) + " = ANY(?)";
 	}
 }

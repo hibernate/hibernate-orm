@@ -98,4 +98,14 @@ public class PostgreSQL81DialectTestCase extends BaseUnitTestCase {
 			assertEquals( "PostgreSQL only supports accessing REF_CURSOR parameters by position", e.getMessage() );
 		}
 	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12647")
+	public void testGetArrayRestriction() {
+		PostgreSQL81Dialect dialect = new PostgreSQL81Dialect();
+		String restriction = dialect.getArrayRestriction("public", "pkey", 1);
+		assertEquals( null, restriction);
+		restriction = dialect.getArrayRestriction("public", "pkey", 2);
+		assertEquals( "public.pkey = ANY(?)", restriction);
+	}
 }

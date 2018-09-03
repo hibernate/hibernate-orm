@@ -1510,6 +1510,18 @@ public final class AnnotationBinder {
 		// and if so, skip it..
 		for ( PropertyData propertyData : inFlightPropertyDataList ) {
 			if ( propertyData.getPropertyName().equals( property.getName() ) ) {
+				Id incomingIdProperty = property.getAnnotation( Id.class );
+				Id existingIdProperty = propertyData.getProperty().getAnnotation( Id.class );
+				if ( incomingIdProperty != null && existingIdProperty == null ) {
+					throw new MappingException(
+							String.format(
+									"You cannot override the [%s] non-identifier property from the [%s] base class or @MappedSuperclass and make it an identifier in the [%s] subclass!",
+									propertyData.getProperty().getName(),
+									propertyData.getProperty().getDeclaringClass().getName(),
+									property.getDeclaringClass().getName()
+							)
+					);
+				}
 				// EARLY EXIT!!!
 				return 0;
 			}

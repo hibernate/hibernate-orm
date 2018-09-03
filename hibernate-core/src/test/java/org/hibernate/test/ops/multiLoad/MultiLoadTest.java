@@ -23,6 +23,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionImplementor;
 
+import org.hibernate.stat.Statistics;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
@@ -50,6 +51,7 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
 		super.configureStandardServiceRegistryBuilder( ssrb );
 		ssrb.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, true );
+		ssrb.applySetting(AvailableSettings.GENERATE_STATISTICS, Boolean.TRUE.toString());
 	}
 
 	@Override
@@ -175,6 +177,42 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertSame( first, list.get( 0 ) );
 		session.getTransaction().commit();
 		session.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12944" )
+	public void testMultiLoadFrom2ndLevelCache() {
+		Session session = openSession();
+		Statistics statistics = session.getSessionFactory().getStatistics();
+		session.getTransaction().begin();
+		session.getSessionFactory().getCache().evictAll();
+		statistics.clear();
+		// Load 1 of the items directly
+		SimpleEntity first = session.get(SimpleEntity.class,  2);
+		assertEquals(1, statistics.getSecondLevelCacheMissCount());
+		assertEquals(0, statistics.getSecondLevelCacheHitCount());
+		assertEquals(1, statistics.getSecondLevelCachePutCount());
+		assertTrue(session.getSessionFactory().getCache().containsEntity(SimpleEntity.class, 2));
+
+		// Close the session so we aren't using the L1 cache
+		session.getTransaction().commit();
+		session.close();
+
+		statistics.clear();
+		session = openSession();
+		session.getTransaction().begin();
+
+		// Validate that the entity is still in the Level 2 cache
+		assertTrue(session.getSessionFactory().getCache().containsEntity(SimpleEntity.class, 2));
+
+		// Multiload 3 items and ensure that multiload pulls 2 from the database & 1 from the cache.
+		List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).with(CacheMode.NORMAL).enableSessionCheck( true ).multiLoad( ids(3) );
+		assertEquals( 3, list.size() );
+		assertEquals(1, statistics.getSecondLevelCacheHitCount());
+
+		session.getTransaction().commit();
+		session.close();
+
 	}
 
 	@Test

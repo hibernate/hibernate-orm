@@ -59,7 +59,7 @@ public interface MultiIdentifierLoadAccess<T> {
 	MultiIdentifierLoadAccess<T> withBatchSize(int batchSize);
 
 	/**
-	 * Specify whether we should check the Session to see whether it already contains any of the
+	 * Specify whether we should check the {@link Session} to see whether the first-level cache already contains any of the
 	 * entities to be loaded in a managed state <b>for the purpose of not including those
 	 * ids to the batch-load SQL</b>.
 	 *

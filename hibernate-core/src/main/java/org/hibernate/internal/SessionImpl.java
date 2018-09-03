@@ -2970,6 +2970,11 @@ public final class SessionImpl
 		}
 
 		@Override
+		public boolean isSecondLevelCacheCheckingEnabled() {
+			return cacheMode == CacheMode.NORMAL || cacheMode == CacheMode.GET;
+		}
+
+		@Override
 		public MultiIdentifierLoadAccess<T> enableSessionCheck(boolean enabled) {
 			this.sessionCheckingEnabled = enabled;
 			return this;

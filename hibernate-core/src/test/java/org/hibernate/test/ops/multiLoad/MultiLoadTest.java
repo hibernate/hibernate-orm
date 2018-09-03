@@ -7,6 +7,7 @@
 package org.hibernate.test.ops.multiLoad;
 
 import java.util.List;
+import java.util.Objects;
 import javax.persistence.Cacheable;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -17,13 +18,19 @@ import org.hibernate.CacheMode;
 import org.hibernate.Session;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.Status;
+import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -41,6 +48,14 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  */
 public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
+
+	private SQLStatementInterceptor sqlStatementInterceptor;
+
+	@Override
+	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
+		sqlStatementInterceptor = new SQLStatementInterceptor( sfb );
+	}
+
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] { SimpleEntity.class };
@@ -50,6 +65,7 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
 		super.configureStandardServiceRegistryBuilder( ssrb );
 		ssrb.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, true );
+		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, Boolean.TRUE.toString() );
 	}
 
 	@Override
@@ -85,8 +101,13 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 	public void testBasicMultiLoad() {
 		doInHibernate(
 				this::sessionFactory, session -> {
-					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids(56) );
-					assertEquals( 56, list.size() );
+					sqlStatementInterceptor.getSqlQueries().clear();
+
+					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids( 5 ) );
+					assertEquals( 5, list.size() );
+
+					assertTrue( sqlStatementInterceptor.getSqlQueries().getFirst().endsWith( "id in (?,?,?,?,?)" ) );
+
 				}
 		);
 	}
@@ -175,6 +196,193 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertSame( first, list.get( 0 ) );
 		session.getTransaction().commit();
 		session.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12944")
+	public void testMultiLoadFrom2ndLevelCache() {
+		Statistics statistics = sessionFactory().getStatistics();
+		sessionFactory().getCache().evictAll();
+		statistics.clear();
+
+		doInHibernate( this::sessionFactory, session -> {
+			// Load 1 of the items directly
+			SimpleEntity entity = session.get( SimpleEntity.class, 2 );
+			assertNotNull( entity );
+
+			assertEquals( 1, statistics.getSecondLevelCacheMissCount() );
+			assertEquals( 0, statistics.getSecondLevelCacheHitCount() );
+			assertEquals( 1, statistics.getSecondLevelCachePutCount() );
+			assertTrue( session.getSessionFactory().getCache().containsEntity( SimpleEntity.class, 2 ) );
+		} );
+
+		statistics.clear();
+
+		doInHibernate( this::sessionFactory, session -> {
+			// Validate that the entity is still in the Level 2 cache
+			assertTrue( session.getSessionFactory().getCache().containsEntity( SimpleEntity.class, 2 ) );
+
+			sqlStatementInterceptor.getSqlQueries().clear();
+
+			// Multiload 3 items and ensure that multiload pulls 2 from the database & 1 from the cache.
+			List<SimpleEntity> entities = session.byMultipleIds( SimpleEntity.class )
+					.with( CacheMode.NORMAL )
+					.enableSessionCheck( true )
+					.multiLoad( ids( 3 ) );
+			assertEquals( 3, entities.size() );
+			assertEquals( 1, statistics.getSecondLevelCacheHitCount() );
+
+			for(SimpleEntity entity: entities) {
+				assertTrue( session.contains( entity ) );
+			}
+
+			assertTrue( sqlStatementInterceptor.getSqlQueries().getFirst().endsWith( "id in (?,?)" ) );
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12944")
+	public void testUnorderedMultiLoadFrom2ndLevelCache() {
+		Statistics statistics = sessionFactory().getStatistics();
+		sessionFactory().getCache().evictAll();
+		statistics.clear();
+
+		doInHibernate( this::sessionFactory, session -> {
+			// Load 1 of the items directly
+			SimpleEntity entity = session.get( SimpleEntity.class, 2 );
+			assertNotNull( entity );
+
+			assertEquals( 1, statistics.getSecondLevelCacheMissCount() );
+			assertEquals( 0, statistics.getSecondLevelCacheHitCount() );
+			assertEquals( 1, statistics.getSecondLevelCachePutCount() );
+			assertTrue( session.getSessionFactory().getCache().containsEntity( SimpleEntity.class, 2 ) );
+		} );
+
+		statistics.clear();
+
+		doInHibernate( this::sessionFactory, session -> {
+			// Validate that the entity is still in the Level 2 cache
+			assertTrue( session.getSessionFactory().getCache().containsEntity( SimpleEntity.class, 2 ) );
+
+			sqlStatementInterceptor.getSqlQueries().clear();
+
+			// Multiload 3 items and ensure that multiload pulls 2 from the database & 1 from the cache.
+			List<SimpleEntity> entities = session.byMultipleIds( SimpleEntity.class )
+					.with( CacheMode.NORMAL )
+					.enableSessionCheck( true )
+					.enableOrderedReturn( false )
+					.multiLoad( ids( 3 ) );
+			assertEquals( 3, entities.size() );
+			assertEquals( 1, statistics.getSecondLevelCacheHitCount() );
+
+			for(SimpleEntity entity: entities) {
+				assertTrue( session.contains( entity ) );
+			}
+
+			assertTrue( sqlStatementInterceptor.getSqlQueries().getFirst().endsWith( "id in (?,?)" ) );
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12944")
+	public void testOrderedMultiLoadFrom2ndLevelCachePendingDelete() {
+
+		doInHibernate( this::sessionFactory, session -> {
+			session.remove( session.find( SimpleEntity.class, 2 ) );
+
+			sqlStatementInterceptor.getSqlQueries().clear();
+
+			// Multiload 3 items and ensure that multiload pulls 2 from the database & 1 from the cache.
+			List<SimpleEntity> entities = session.byMultipleIds( SimpleEntity.class )
+					.with( CacheMode.NORMAL )
+					.enableSessionCheck( true )
+					.enableOrderedReturn( true )
+					.multiLoad( ids( 3 ) );
+			assertEquals( 3, entities.size() );
+
+			assertNull( entities.get(1) );
+
+			assertTrue( sqlStatementInterceptor.getSqlQueries().getFirst().endsWith( "id in (?,?)" ) );
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12944")
+	public void testOrderedMultiLoadFrom2ndLevelCachePendingDeleteReturnRemoved() {
+
+		doInHibernate( this::sessionFactory, session -> {
+			session.remove( session.find( SimpleEntity.class, 2 ) );
+
+			sqlStatementInterceptor.getSqlQueries().clear();
+
+			// Multiload 3 items and ensure that multiload pulls 2 from the database & 1 from the cache.
+			List<SimpleEntity> entities = session.byMultipleIds( SimpleEntity.class )
+					.with( CacheMode.NORMAL )
+					.enableSessionCheck( true )
+					.enableOrderedReturn( true )
+					.enableReturnOfDeletedEntities( true )
+					.multiLoad( ids( 3 ) );
+			assertEquals( 3, entities.size() );
+
+			SimpleEntity deletedEntity = entities.get(1);
+			assertNotNull( deletedEntity );
+
+			final EntityEntry entry = ((SharedSessionContractImplementor) session).getPersistenceContext().getEntry( deletedEntity );
+			assertTrue( entry.getStatus() == Status.DELETED || entry.getStatus() == Status.GONE );
+
+			assertTrue( sqlStatementInterceptor.getSqlQueries().getFirst().endsWith( "id in (?,?)" ) );
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12944")
+	public void testUnorderedMultiLoadFrom2ndLevelCachePendingDelete() {
+
+		doInHibernate( this::sessionFactory, session -> {
+			session.remove( session.find( SimpleEntity.class, 2 ) );
+
+			sqlStatementInterceptor.getSqlQueries().clear();
+
+			// Multiload 3 items and ensure that multiload pulls 2 from the database & 1 from the cache.
+			List<SimpleEntity> entities = session.byMultipleIds( SimpleEntity.class )
+					.with( CacheMode.NORMAL )
+					.enableSessionCheck( true )
+					.enableOrderedReturn( false )
+					.multiLoad( ids( 3 ) );
+			assertEquals( 3, entities.size() );
+
+			assertTrue( entities.stream().anyMatch( Objects::isNull ) );
+
+			assertTrue( sqlStatementInterceptor.getSqlQueries().getFirst().endsWith( "id in (?,?)" ) );
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12944")
+	public void testUnorderedMultiLoadFrom2ndLevelCachePendingDeleteReturnRemoved() {
+
+		doInHibernate( this::sessionFactory, session -> {
+			session.remove( session.find( SimpleEntity.class, 2 ) );
+
+			sqlStatementInterceptor.getSqlQueries().clear();
+
+			// Multiload 3 items and ensure that multiload pulls 2 from the database & 1 from the cache.
+			List<SimpleEntity> entities = session.byMultipleIds( SimpleEntity.class )
+					.with( CacheMode.NORMAL )
+					.enableSessionCheck( true )
+					.enableOrderedReturn( false )
+					.enableReturnOfDeletedEntities( true )
+					.multiLoad( ids( 3 ) );
+			assertEquals( 3, entities.size() );
+
+			SimpleEntity deletedEntity = entities.stream().filter( simpleEntity -> simpleEntity.getId().equals( 2 ) ).findAny().orElse( null );
+			assertNotNull( deletedEntity );
+
+			final EntityEntry entry = ((SharedSessionContractImplementor) session).getPersistenceContext().getEntry( deletedEntity );
+			assertTrue( entry.getStatus() == Status.DELETED || entry.getStatus() == Status.GONE );
+
+			assertTrue( sqlStatementInterceptor.getSqlQueries().getFirst().endsWith( "id in (?,?)" ) );
+		} );
 	}
 
 	@Test

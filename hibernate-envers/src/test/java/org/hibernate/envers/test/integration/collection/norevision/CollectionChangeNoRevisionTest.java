@@ -18,4 +18,14 @@ public class CollectionChangeNoRevisionTest extends AbstractCollectionChangeTest
 	protected List<Integer> getExpectedPersonRevisions() {
 		return Arrays.asList( 1 );
 	}
+
+	@Override
+	protected List<Integer> getExpectedParentRevisions() {
+		return Arrays.asList( 4 );
+	}
+
+	@Override
+	protected List<Integer> getExpectedHouseRevisions() {
+		return Arrays.asList( 6, 7 );
+	}
 }

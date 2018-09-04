@@ -43,12 +43,12 @@ import org.hibernate.event.service.spi.DuplicationStrategy;
 import org.hibernate.event.service.spi.EventListenerRegistrationException;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
-import org.hibernate.jpa.event.internal.CallbackBuilderLegacyImpl;
-import org.hibernate.jpa.event.internal.CallbackRegistryImpl;
+import org.hibernate.jpa.event.internal.CallbackRegistryImplementor;
+import org.hibernate.jpa.event.internal.CallbacksFactory;
 import org.hibernate.jpa.event.spi.CallbackBuilder;
+import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
 
@@ -96,7 +96,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 	private Map<Class,Object> listenerClassToInstanceMap = new HashMap<>();
 
 	private final SessionFactoryImplementor sessionFactory;
-	private final CallbackRegistryImpl callbackRegistry;
+	private final CallbackRegistryImplementor callbackRegistry;
 	private final EventListenerGroupImpl[] registeredEventListeners;
 	private CallbackBuilder callbackBuilder;
 
@@ -110,20 +110,16 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 			ServiceRegistryImplementor registry) {
 		this.sessionFactory = sessionFactory;
 
-		this.callbackRegistry = new CallbackRegistryImpl();
+		this.callbackRegistry = CallbacksFactory.buildCallbackRegistry( sessionFactory );
 
 		this.registeredEventListeners = buildListenerGroups();
 	}
 
 	EventListenerRegistryImpl(BootstrapContext bootstrapContext, SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
-
-		this.callbackRegistry = new CallbackRegistryImpl();
-		this.callbackBuilder = new CallbackBuilderLegacyImpl(
-				bootstrapContext.getServiceRegistry().getService( ManagedBeanRegistry.class ),
-				bootstrapContext.getReflectionManager()
-		);
-
+		this.callbackRegistry = CallbacksFactory.buildCallbackRegistry( sessionFactory );
+		this.callbackBuilder = CallbacksFactory.buildCallbackBuilder(
+				sessionFactory, bootstrapContext.getReflectionManager() );
 		this.registeredEventListeners = buildListenerGroups();
 	}
 
@@ -131,7 +127,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 		return sessionFactory;
 	}
 
-	CallbackRegistryImpl getCallbackRegistry() {
+	CallbackRegistry getCallbackRegistry() {
 		return callbackRegistry;
 	}
 
@@ -139,9 +135,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 	public void prepare(MetadataImplementor metadata) {
 		if ( callbackBuilder == null ) {
 			// TODO : not needed anymore when the deprecate constructor will be removed
-			this.callbackBuilder = new CallbackBuilderLegacyImpl(
-					sessionFactory.getServiceRegistry().getService( ManagedBeanRegistry.class ),
-					metadata.getMetadataBuildingOptions().getReflectionManager()
+			this.callbackBuilder = CallbacksFactory.buildCallbackBuilder( sessionFactory, metadata.getMetadataBuildingOptions().getReflectionManager()
 			);
 		}
 		for ( PersistentClass persistentClass : metadata.getEntityBindings() ) {

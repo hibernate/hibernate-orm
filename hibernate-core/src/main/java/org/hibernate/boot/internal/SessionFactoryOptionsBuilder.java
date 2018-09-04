@@ -100,6 +100,7 @@ import static org.hibernate.cfg.AvailableSettings.MAX_FETCH_DEPTH;
 import static org.hibernate.cfg.AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER;
 import static org.hibernate.cfg.AvailableSettings.NATIVE_EXCEPTION_HANDLING_51_COMPLIANCE;
 import static org.hibernate.cfg.AvailableSettings.ORDER_INSERTS;
+import static org.hibernate.cfg.AvailableSettings.JPA_CALLBACKS_ENABLED;
 import static org.hibernate.cfg.AvailableSettings.ORDER_UPDATES;
 import static org.hibernate.cfg.AvailableSettings.PREFER_USER_TRANSACTION;
 import static org.hibernate.cfg.AvailableSettings.PROCEDURE_NULL_PARAM_PASSING;
@@ -195,6 +196,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean orderUpdatesEnabled;
 	private boolean orderInsertsEnabled;
 	private boolean postInsertIdentifierDelayed;
+
+	// JPA callbacks
+	private boolean callbacksEnabled;
 
 	// multi-tenancy
 	private MultiTenancyStrategy multiTenancyStrategy;
@@ -345,6 +349,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.postInsertIdentifierDelayed = !ConfigurationHelper.getBoolean(
 				DISABLE_DELAYED_IDENTIFIER_POST_INSERTS, configurationSettings, false
 		);
+
+		this.callbacksEnabled = ConfigurationHelper.getBoolean( JPA_CALLBACKS_ENABLED, configurationSettings, true );
 
 		this.jtaTrackByThread = cfgService.getSetting( JTA_TRACK_BY_THREAD, BOOLEAN, true );
 
@@ -1051,6 +1057,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean isPostInsertIdentifierDelayableEnabled() {
 		return postInsertIdentifierDelayed;
+	}
+
+	@Override
+	public boolean areJPACallbacksEnabled() {
+		return callbacksEnabled;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

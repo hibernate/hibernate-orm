@@ -924,6 +924,14 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String ORDER_INSERTS = "hibernate.order_inserts";
 
 	/**
+	 * JPA Callbacks are enabled by default. Set this to {@code false} to disable them.
+	 * Mostly useful to save a bit of memory when they are not used.
+	 * Experimental and will likely be removed as soon as the memory overhead is resolved.
+	 * @since 5.4
+	 */
+	String JPA_CALLBACKS_ENABLED = "hibernate.jpa_callbacks.enabled";
+
+	/**
 	 * Default precedence of null values in {@code ORDER BY} clause.  Supported options: {@code none} (default),
 	 * {@code first}, {@code last}.
 	 */

@@ -299,4 +299,9 @@ public interface SessionFactoryOptions {
 	default boolean isPostInsertIdentifierDelayableEnabled() {
 		return true;
 	}
+
+	default boolean areJPACallbacksEnabled() {
+		return true;
+	}
+
 }

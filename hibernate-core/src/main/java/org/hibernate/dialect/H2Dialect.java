@@ -447,4 +447,14 @@ public class H2Dialect extends Dialect {
 	public String getQueryHintString(String query, String hints) {
 		return IndexQueryHintHandler.INSTANCE.addQueryHints( query, hints );
 	}
+	
+	@Override
+	public char openQuote() {
+		return '`';
+	}
+	
+	@Override
+	public char closeQuote() {
+		return '`';
+	}
 }

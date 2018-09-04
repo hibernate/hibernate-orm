@@ -45,12 +45,15 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	private final SessionFactoryOptionsBuilder optionsBuilder;
 
 	public SessionFactoryBuilderImpl(MetadataImplementor metadata, BootstrapContext bootstrapContext) {
-		this.metadata = metadata;
-		this.optionsBuilder = new SessionFactoryOptionsBuilder(
+		this( metadata, new SessionFactoryOptionsBuilder(
 				metadata.getMetadataBuildingOptions().getServiceRegistry(),
 				bootstrapContext
-		);
+		) );
+	}
 
+	public SessionFactoryBuilderImpl(MetadataImplementor metadata, SessionFactoryOptionsBuilder optionsBuilder) {
+		this.metadata = metadata;
+		this.optionsBuilder = optionsBuilder;
 		if ( metadata.getSqlFunctionMap() != null ) {
 			for ( Map.Entry<String, SQLFunction> sqlFunctionEntry : metadata.getSqlFunctionMap().entrySet() ) {
 				applySqlFunction( sqlFunctionEntry.getKey(), sqlFunctionEntry.getValue() );

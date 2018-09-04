@@ -26,6 +26,7 @@ import org.hibernate.envers.internal.synchronization.work.FakeBidirectionalRelat
 import org.hibernate.envers.internal.synchronization.work.PersistentCollectionChangeWorkUnit;
 import org.hibernate.event.spi.AbstractCollectionEvent;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
+import org.hibernate.persister.collection.OneToManyPersister;
 
 /**
  * Base class for Envers' collection event related listeners
@@ -146,8 +147,17 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 	 */
 	protected boolean shouldGenerateRevision(AbstractCollectionEvent event) {
 		final String entityName = event.getAffectedOwnerEntityName();
-		return getEnversService().getGlobalConfiguration().isGenerateRevisionsForCollections()
-				&& getEnversService().getEntitiesConfigurations().isVersioned( entityName );
+		if ( getEnversService().getEntitiesConfigurations().isVersioned( entityName ) ) {
+			final CollectionEntry collectionEntry = getCollectionEntry( event );
+			final boolean isInverse = collectionEntry.getLoadedPersister().isInverse();
+			final boolean isOneToMany = collectionEntry.getLoadedPersister() instanceof OneToManyPersister;
+			if ( isInverse || isOneToMany ) {
+				return getEnversService().getGlobalConfiguration().isGenerateRevisionsForCollections();
+			}
+			return true;
+		}
+		// if the entity is not audited, we dont generate a revision.
+		return false;
 	}
 
 	/**

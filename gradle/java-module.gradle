@@ -56,9 +56,6 @@ configurations {
 	provided {
 		description = 'Non-exported compile-time dependencies.'
 	}
-	jbossLoggingTool {
-		description = 'Dependencies for running the jboss-logging tooling.'
-	}
 	asciidoclet {
 		description = "Dependencies for Asciidoctor Javadoc taglet"
 	}
@@ -72,7 +69,9 @@ dependencies {
 
 	provided libraries.logging_annotations
 
-	jbossLoggingTool( libraries.logging_processor )
+	annotationProcessor( libraries.logging_processor )
+	annotationProcessor( libraries.logging )
+	annotationProcessor( libraries.logging_annotations )
 
 	testCompile( libraries.junit )
 	testCompile( libraries.byteman )
@@ -153,7 +152,6 @@ task compile(dependsOn: [compileJava, processResources, compileTestJava, process
 
 sourceSets.main {
 	compileClasspath += configurations.provided
-	compileClasspath += configurations.jbossLoggingTool
 }
 
 convention.findPlugin( JavaPluginConvention.class ).sourceSets.each { sourceSet ->

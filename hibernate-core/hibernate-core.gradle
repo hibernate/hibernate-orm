@@ -14,9 +14,6 @@ apply plugin: 'org.hibernate.build.gradle.xjc'
 description = 'Hibernate\'s core ORM functionality'
 
 configurations {
-    hibernateJpaModelGenTool {
-        description = "Dependencies for running the Hibernate JPA Metamodel Generator AnnotationProcessor tool"
-    }
     tests {
         description = 'Configuration for the produced test jar'
     }
@@ -94,7 +91,7 @@ dependencies {
     testRuntime( libraries.atomikos_jta )
     testRuntime(libraries.wildfly_transaction_client)
 
-	testCompile( project( ':hibernate-jpamodelgen' ) )
+    testAnnotationProcessor( project( ':hibernate-jpamodelgen' ) )
 
     testCompile libraries.arquillian_junit_container
     testCompile libraries.arquillian_protocol_servlet

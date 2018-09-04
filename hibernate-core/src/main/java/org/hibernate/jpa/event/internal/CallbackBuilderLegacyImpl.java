@@ -40,13 +40,13 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class CallbackBuilderLegacyImpl implements CallbackBuilder {
+final class CallbackBuilderLegacyImpl implements CallbackBuilder {
 	private static final Logger log = Logger.getLogger( CallbackBuilderLegacyImpl.class );
 
 	private final ManagedBeanRegistry managedBeanRegistry;
 	private final ReflectionManager reflectionManager;
 
-	public CallbackBuilderLegacyImpl(ManagedBeanRegistry managedBeanRegistry, ReflectionManager reflectionManager) {
+	CallbackBuilderLegacyImpl(ManagedBeanRegistry managedBeanRegistry, ReflectionManager reflectionManager) {
 		this.managedBeanRegistry = managedBeanRegistry;
 		this.reflectionManager = reflectionManager;
 	}

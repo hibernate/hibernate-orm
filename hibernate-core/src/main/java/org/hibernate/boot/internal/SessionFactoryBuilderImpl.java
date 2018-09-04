@@ -42,13 +42,10 @@ import org.hibernate.tuple.entity.EntityTuplizerFactory;
  */
 public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplementor {
 	private final MetadataImplementor metadata;
-	private final BootstrapContext bootstrapContext;
 	private final SessionFactoryOptionsBuilder optionsBuilder;
 
 	public SessionFactoryBuilderImpl(MetadataImplementor metadata, BootstrapContext bootstrapContext) {
 		this.metadata = metadata;
-		this.bootstrapContext = bootstrapContext;
-
 		this.optionsBuilder = new SessionFactoryOptionsBuilder(
 				metadata.getMetadataBuildingOptions().getServiceRegistry(),
 				bootstrapContext
@@ -437,11 +434,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public void markAsJpaBootstrap() {
-		this.bootstrapContext.markAsJpaBootstrap();
-	}
-
-	@Override
 	public void disableRefreshDetachedEntity() {
 		this.optionsBuilder.disableRefreshDetachedEntity();
 	}
@@ -464,7 +456,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactory build() {
 		metadata.validate();
-		return new SessionFactoryImpl( bootstrapContext, metadata, buildSessionFactoryOptions() );
+		return new SessionFactoryImpl( metadata, buildSessionFactoryOptions() );
 	}
 
 	@Override

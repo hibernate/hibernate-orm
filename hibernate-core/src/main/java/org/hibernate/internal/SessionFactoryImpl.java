@@ -50,7 +50,6 @@ import org.hibernate.TypeHelper;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.CacheImplementor;
@@ -191,7 +190,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient TypeHelper typeHelper;
 
 	public SessionFactoryImpl(
-			final BootstrapContext bootstrapContext,
 			final MetadataImplementor metadata,
 			SessionFactoryOptions options) {
 		LOG.debug( "Building session factory" );
@@ -202,7 +200,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		this.serviceRegistry = options
 				.getServiceRegistry()
 				.getService( SessionFactoryServiceRegistryFactory.class )
-				.buildServiceRegistry( this, bootstrapContext, options );
+				.buildServiceRegistry( this, options );
 
 		prepareEventListeners( metadata );
 
@@ -291,7 +289,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			LOG.debug( "Instantiated session factory" );
 
-			this.metamodel = metadata.getTypeConfiguration().scope( this , bootstrapContext);
+			this.metamodel = metadata.getTypeConfiguration().scope( this );
 			( (MetamodelImpl) this.metamodel ).initialize(
 					metadata,
 					determineJpaMetaModelPopulationSetting( properties )

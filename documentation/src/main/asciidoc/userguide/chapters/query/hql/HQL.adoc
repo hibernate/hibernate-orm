@@ -1341,8 +1341,8 @@ include::{sourcedir}/HQLTest.java[tags=hql-str-function-example]
 ----
 ====
 
-[[hql-non-standard-functions]]
-=== Non-standardized functions
+[[hql-user-defined-functions]]
+=== User-defined functions
 
 Hibernate Dialects can register additional functions known to be available for that particular database product.
 These functions are also available in HQL (and JPQL, though only when using Hibernate as the JPA provider obviously).
@@ -1350,8 +1350,84 @@ However, they would only be available when using that database Dialect.
 Applications that aim for database portability should avoid using functions in this category.
 
 Application developers can also supply their own set of functions.
-This would usually represent either custom SQL functions or aliases for snippets of SQL.
-Such function declarations are made by using the `addSqlFunction()` method of `org.hibernate.cfg.Configuration`.
+This would usually represent either user-defined SQL functions or aliases for snippets of SQL.
+Such function declarations are made by using the `addSqlFunction()` method of
+the `org.hibernate.boot.MetadataBuilder` or the legacy `org.hibernate.cfg.Configuration`.
+
+Now, let's assume we have the following `apply_vat` PostgreSQL user-defined function:
+
+[[hql-user-defined-function-postgresql-example]]
+.PostgreSQL user-defined function
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/PostgreSQLFunctionWhereClauseTest.java[tags=hql-user-defined-function-postgresql-example]
+----
+====
+
+Let's consider we have persisted the following entity in our database:
+
+[[hql-user-defined-function-postgresql-entity-example]]
+.Book entity
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/PostgreSQLFunctionWhereClauseTest.java[tags=hql-user-defined-function-postgresql-entity-example]
+----
+====
+
+[[hql-user-defined-functions-where-clause]]
+==== User-defined functions referenced in the WHERE clause
+
+By default, Hibernate can pass through any user-defined function that's being used in the WHERE clause
+of a JPQL/HQL entity query.
+
+[[hql-user-defined-function-postgresql-where-clause-example]]
+.User-defined function passing through the WHERE clause
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/PostgreSQLFunctionWhereClauseTest.java[tags=hql-user-defined-function-postgresql-where-clause-example]
+----
+====
+
+While this works just fine with Hibernate, it might be a problem with other JPA providers.
+For this purpose, JPA offers the `function` JPQL keyword which works as follows.
+
+[[hql-user-defined-function-postgresql-jpql-example]]
+.Using the JPQL `function` keyword
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/PostgreSQLFunctionWhereClauseTest.java[tags=hql-user-defined-function-postgresql-jpql-example]
+----
+====
+
+[[hql-user-defined-functions-select-clause]]
+==== User-defined functions referenced in the SELECT clause
+
+When the user-defined function is referenced in the SELECT clause of a JPQL/HQL entity query,
+Hibernate can no longer pass it through unless the function is registered.
+
+[[hql-user-defined-functions-register-metadata-builder-example]]
+.Registering a user-defined function using the `MetadataBuilderContributor`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/PostgreSQLFunctionSelectClauseTest.java[tags=hql-user-defined-functions-register-metadata-builder-example]
+----
+====
+
+Now that that `apply_vat` is registered, we can reference it in the JPQL SELECT clause.
+
+[[hql-user-defined-function-postgresql-select-clause-example]]
+.User-defined function in the SELECT clause
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/PostgreSQLFunctionSelectClauseTest.java[tags=hql-user-defined-function-postgresql-select-clause-example]
+----
+====
 
 [[hql-collection-expressions]]
 === Collection-related expressions

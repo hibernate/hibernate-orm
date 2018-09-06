@@ -79,10 +79,16 @@ public class QueryNode extends AbstractRestrictableStatement implements SelectEx
 				LOG.debug( "getOrderByClause() : Creating a new ORDER BY clause" );
 				orderByClause = (OrderByClause) getWalker().getASTFactory().create( SqlTokenTypes.ORDER, "ORDER" );
 
-				// Find the WHERE; if there is no WHERE, find the FROM...
-				AST prevSibling = ASTUtil.findTypeInChildren( this, SqlTokenTypes.WHERE );
+				// Find the HAVING, or the GROUP BY, or the WHERE, or the FROM...
+				AST prevSibling = ASTUtil.findTypeInChildren( this, SqlTokenTypes.HAVING );
 				if ( prevSibling == null ) {
-					prevSibling = ASTUtil.findTypeInChildren( this, SqlTokenTypes.FROM );
+					prevSibling = ASTUtil.findTypeInChildren( this, SqlTokenTypes.GROUP );
+					if ( prevSibling == null ) {
+						prevSibling = ASTUtil.findTypeInChildren( this, SqlTokenTypes.WHERE );
+						if ( prevSibling == null ) {
+							prevSibling = ASTUtil.findTypeInChildren( this, SqlTokenTypes.FROM );
+						}
+					}
 				}
 
 				// Now, inject the newly built ORDER BY into the tree

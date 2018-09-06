@@ -19,6 +19,8 @@ import javax.persistence.OneToOne;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import static org.junit.Assert.assertEquals;
+
 public class CascadeContextCleanupTest extends BaseEntityManagerFunctionalTestCase {
 
   @Override
@@ -43,6 +45,7 @@ public class CascadeContextCleanupTest extends BaseEntityManagerFunctionalTestCa
     // and it does remove them from DB, but they stay in Persistence Context
     entityManager.getTransaction().begin();
     final TableEntity table = entityManager.find( TableEntity.class, "1" );
+    assertEquals(1, table.getColumns().size());
     entityManager.remove( table );
     entityManager.getTransaction().commit();
 
@@ -71,11 +74,14 @@ public class CascadeContextCleanupTest extends BaseEntityManagerFunctionalTestCa
     final ColumnEntity column = new ColumnEntity();
     column.setId( "1" );
     column.setTable( parentTable );
+    parentTable.getColumns().add( column );
     entityManager.persist( column );
 
     final RelationEntity relation = new RelationEntity();
     relation.setForeignTable( parentTable );
+    parentTable.getRelationsToThisTable().add( relation );
     relation.setColumn( column );
+    column.setRelationEntity( relation );
     entityManager.persist( relation );
 
     entityManager.getTransaction().commit();
@@ -98,7 +104,7 @@ public class CascadeContextCleanupTest extends BaseEntityManagerFunctionalTestCa
     }
 
     @OneToMany( mappedBy = "table", cascade = CascadeType.ALL, orphanRemoval = true )
-    @OnDelete( action = OnDeleteAction.CASCADE )
+    //@OnDelete( action = OnDeleteAction.CASCADE )
     public Collection<ColumnEntity> getColumns() {
       return columns;
     }
@@ -108,7 +114,7 @@ public class CascadeContextCleanupTest extends BaseEntityManagerFunctionalTestCa
     }
 
     @OneToMany( mappedBy = "foreignTable", cascade = CascadeType.ALL, orphanRemoval = true )
-    @OnDelete( action = OnDeleteAction.CASCADE )
+    //@OnDelete( action = OnDeleteAction.CASCADE )
     public Collection<RelationEntity> getRelationsToThisTable() {
       return relationsToThisTable;
     }
@@ -125,6 +131,7 @@ public class CascadeContextCleanupTest extends BaseEntityManagerFunctionalTestCa
     private String tableId;
 
     private TableEntity table;
+    private RelationEntity relationEntity;
 
     @Id
     public String getId()
@@ -154,6 +161,15 @@ public class CascadeContextCleanupTest extends BaseEntityManagerFunctionalTestCa
     public void setTable( TableEntity table ) {
       this.setTableId( table.getId() );
       this.table = table;
+    }
+
+    @OneToOne(mappedBy = "column", cascade = CascadeType.ALL)
+    public RelationEntity getRelationEntity() {
+      return relationEntity;
+    }
+
+    public void setRelationEntity(RelationEntity relationEntity) {
+      this.relationEntity = relationEntity;
     }
   }
 
@@ -198,7 +214,7 @@ public class CascadeContextCleanupTest extends BaseEntityManagerFunctionalTestCa
     @OneToOne( fetch = FetchType.LAZY )
     @MapsId
     @JoinColumn( name = "columnId" )
-    @OnDelete( action = OnDeleteAction.CASCADE )
+    //@OnDelete( action = OnDeleteAction.CASCADE )
     public ColumnEntity getColumn() {
       return column;
     }

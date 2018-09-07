@@ -24,7 +24,6 @@ import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
 import org.hibernate.engine.spi.Mapping;
@@ -32,7 +31,6 @@ import org.hibernate.tool.hbm2ddl.ColumnMetadata;
 import org.hibernate.tool.hbm2ddl.TableMetadata;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -409,7 +407,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 				&& Identifier.areEqual( schema, table.schema )
 				&& Identifier.areEqual( catalog, table.catalog );
 	}
-	
+
 	public void validateColumns(Dialect dialect, Mapping mapping, TableMetadata tableInfo) {
 		Iterator iter = getColumnIterator();
 		while ( iter.hasNext() ) {
@@ -444,18 +442,14 @@ public class Table implements RelationalModel, Serializable, Exportable {
 			TableInformation tableInfo,
 			String defaultCatalog,
 			String defaultSchema) throws HibernateException {
-		
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
 
-		final Identifier quotedCatalog = quoteIfNeeded(tableInfo.getName().getCatalogName(), jdbcEnvironment.getIdentifierHelper(), catalog);
-		final Identifier quotedSchema = quoteIfNeeded(tableInfo.getName().getSchemaName(), jdbcEnvironment.getIdentifierHelper(), schema);
-		final Identifier quotedTable = quoteIfNeeded(tableInfo.getName().getObjectName(), jdbcEnvironment.getIdentifierHelper(), name);
+		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
 
 		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
 				new QualifiedTableName(
-					quotedCatalog,
-					quotedSchema,
-					quotedTable
+					catalog,
+					schema,
+					name
 				),
 				dialect
 		);
@@ -466,7 +460,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 
 		Iterator iter = getColumnIterator();
 		List results = new ArrayList();
-		
+
 		while ( iter.hasNext() ) {
 			final Column column = (Column) iter.next();
 			final ColumnInformation columnInfo = tableInfo.getColumn( Identifier.toIdentifier( column.getName(), column.isQuoted() ) );
@@ -524,18 +518,6 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		return results.iterator();
 	}
 
-	private static Identifier quoteIfNeeded(final Identifier identifierFromDb, final IdentifierHelper identifierHelper, final Identifier identifierFromDefinition) {
-		if (identifierFromDb==null) {
-			return null;
-		}
-		if (identifierFromDefinition == null) {
-			return identifierHelper.toIdentifier(identifierFromDb.getText());
-		}
-		return identifierFromDefinition.isQuoted() ?
-				new Identifier(identifierFromDb.getText(), true) :
-				identifierFromDb;
-	}
-
 	public boolean hasPrimaryKey() {
 		return getPrimaryKey() != null;
 	}
@@ -586,7 +568,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 				}
 
 			}
-			
+
 			if ( col.isUnique() ) {
 				String keyName = Constraint.generateName( "UK_", this, col );
 				UniqueKey uk = getOrCreateUniqueKey( keyName );
@@ -594,7 +576,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 				buf.append( dialect.getUniqueDelegate()
 						.getColumnDefinitionUniquenessFragment( col ) );
 			}
-				
+
 			if ( col.hasCheckConstraint() && dialect.supportsColumnCheck() ) {
 				buf.append( " check (" )
 						.append( col.getCheckConstraint() )

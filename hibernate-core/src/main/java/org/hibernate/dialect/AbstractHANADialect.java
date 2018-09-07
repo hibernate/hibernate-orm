@@ -704,7 +704,7 @@ public abstract class AbstractHANADialect extends Dialect {
 	private HANABlobTypeDescriptor blobTypeDescriptor = new HANABlobTypeDescriptor( MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE );
 
 	private HANAClobTypeDescriptor clobTypeDescriptor = new HANAClobTypeDescriptor( MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE,
-			USE_UNICODE_STRING_TYPES_DEFAULT_VALUE.booleanValue() );
+			USE_UNICODE_STRING_TYPES_DEFAULT_VALUE );
 
 	private boolean useLegacyBooleanType = USE_LEGACY_BOOLEAN_TYPE_DEFAULT_VALUE.booleanValue();
 	private boolean useUnicodeStringTypes = USE_UNICODE_STRING_TYPES_DEFAULT_VALUE.booleanValue();
@@ -1540,10 +1540,10 @@ public abstract class AbstractHANADialect extends Dialect {
 			this.blobTypeDescriptor = new HANABlobTypeDescriptor( maxLobPrefetchSize );
 		}
 
-		this.useUnicodeStringTypes = configurationService.getSetting( USE_UNICODE_STRING_TYPES_PARAMETER_NAME, StandardConverters.BOOLEAN,
+		boolean useUnicodeStringTypes = configurationService.getSetting( USE_UNICODE_STRING_TYPES_PARAMETER_NAME, StandardConverters.BOOLEAN,
 				USE_UNICODE_STRING_TYPES_DEFAULT_VALUE ).booleanValue();
 
-		if ( this.useUnicodeStringTypes ) {
+		if ( useUnicodeStringTypes ) {
 			registerColumnType( Types.CHAR, "nvarchar(1)" );
 			registerColumnType( Types.VARCHAR, 5000, "nvarchar($l)" );
 			registerColumnType( Types.LONGVARCHAR, 5000, "nvarchar($l)" );
@@ -1555,8 +1555,8 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		if ( this.clobTypeDescriptor.getMaxLobPrefetchSize() != maxLobPrefetchSize
-				|| this.clobTypeDescriptor.isUseUnicodeStringTypes() != this.useUnicodeStringTypes ) {
-			this.clobTypeDescriptor = new HANAClobTypeDescriptor( maxLobPrefetchSize, this.useUnicodeStringTypes );
+				|| this.clobTypeDescriptor.isUseUnicodeStringTypes() != useUnicodeStringTypes ) {
+			this.clobTypeDescriptor = new HANAClobTypeDescriptor( maxLobPrefetchSize, useUnicodeStringTypes );
 		}
 
 		this.useLegacyBooleanType = configurationService.getSetting( USE_LEGACY_BOOLEAN_TYPE_PARAMETER_NAME, StandardConverters.BOOLEAN,

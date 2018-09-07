@@ -31,7 +31,6 @@ import org.hibernate.tool.hbm2ddl.ColumnMetadata;
 import org.hibernate.tool.hbm2ddl.TableMetadata;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -408,7 +407,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 				&& Identifier.areEqual( schema, table.schema )
 				&& Identifier.areEqual( catalog, table.catalog );
 	}
-	
+
 	public void validateColumns(Dialect dialect, Mapping mapping, TableMetadata tableInfo) {
 		Iterator iter = getColumnIterator();
 		while ( iter.hasNext() ) {
@@ -443,26 +442,14 @@ public class Table implements RelationalModel, Serializable, Exportable {
 			TableInformation tableInfo,
 			String defaultCatalog,
 			String defaultSchema) throws HibernateException {
-		
+
 		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
-
-		Identifier quotedCatalog = catalog != null && catalog.isQuoted() ?
-				new Identifier( tableInfo.getName().getCatalogName().getText(), true ) :
-				tableInfo.getName().getCatalogName();
-
-		Identifier quotedSchema = schema != null && schema.isQuoted() ?
-				new Identifier( tableInfo.getName().getSchemaName().getText(), true ) :
-				tableInfo.getName().getSchemaName();
-
-		Identifier quotedTable = name != null &&  name.isQuoted() ?
-				new Identifier( tableInfo.getName().getObjectName().getText(), true ) :
-				tableInfo.getName().getObjectName();
 
 		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
 				new QualifiedTableName(
-					quotedCatalog,
-					quotedSchema,
-					quotedTable
+					catalog,
+					schema,
+					name
 				),
 				dialect
 		);
@@ -473,7 +460,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 
 		Iterator iter = getColumnIterator();
 		List results = new ArrayList();
-		
+
 		while ( iter.hasNext() ) {
 			final Column column = (Column) iter.next();
 			final ColumnInformation columnInfo = tableInfo.getColumn( Identifier.toIdentifier( column.getName(), column.isQuoted() ) );
@@ -581,7 +568,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 				}
 
 			}
-			
+
 			if ( col.isUnique() ) {
 				String keyName = Constraint.generateName( "UK_", this, col );
 				UniqueKey uk = getOrCreateUniqueKey( keyName );
@@ -589,7 +576,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 				buf.append( dialect.getUniqueDelegate()
 						.getColumnDefinitionUniquenessFragment( col ) );
 			}
-				
+
 			if ( col.hasCheckConstraint() && dialect.supportsColumnCheck() ) {
 				buf.append( " check (" )
 						.append( col.getCheckConstraint() )

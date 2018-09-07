@@ -12,14 +12,10 @@ import java.util.function.Supplier;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.stat.CacheableDataStatistics;
 
-import org.jboss.logging.Logger;
-
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractCacheableDataStatistics implements CacheableDataStatistics {
-	private static final Logger log = Logger.getLogger( AbstractCacheableDataStatistics.class );
-
 	private final String cacheRegionName;
 	private final LongAdder cacheHitCount;
 	private final LongAdder cacheMissCount;

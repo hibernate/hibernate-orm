@@ -14,8 +14,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hibernate.stat.QueryStatistics;
 
-import org.jboss.logging.Logger;
-
 /**
  * Query statistics (HQL and SQL)
  * <p/>
@@ -24,8 +22,9 @@ import org.jboss.logging.Logger;
  * @author Alex Snaps
  */
 public class QueryStatisticsImpl implements QueryStatistics {
-	private static final Logger log = Logger.getLogger( QueryStatisticsImpl.class );
-
+	// This magic number allow pre-5.3.7 releases RMI compatibility (which includes a JBoss Logger instance)	
+	private static final long serialVersionUID = 8569182022705792772L;
+	
 	private final String query;
 
 	private final LongAdder cacheHitCount = new LongAdder();
@@ -138,8 +137,6 @@ public class QueryStatisticsImpl implements QueryStatistics {
 	 * @param time time taken
 	 */
 	void executed(long rows, long time) {
-		log.tracef( "QueryStatistics - query executed : %s", query );
-
 		// read lock is enough, concurrent updates are supported by the underlying type AtomicLong
 		// this only guards executed(long, long) to be called, when another thread is executing getExecutionAvgTime()
 		readLock.lock();
@@ -157,20 +154,14 @@ public class QueryStatisticsImpl implements QueryStatistics {
 	}
 
 	void incrementCacheHitCount() {
-		log.tracef( "QueryStatistics - cache hit : %s", query );
-
 		cacheHitCount.increment();
 	}
 
 	void incrementCacheMissCount() {
-		log.tracef( "QueryStatistics - cache miss : %s", query );
-
 		cacheMissCount.increment();
 	}
 
 	void incrementCachePutCount() {
-		log.tracef( "QueryStatistics - cache put : %s", query );
-
 		cachePutCount.increment();
 	}
 

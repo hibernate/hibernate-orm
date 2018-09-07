@@ -12,14 +12,13 @@ import java.util.function.Supplier;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.stat.CacheableDataStatistics;
 
-import org.jboss.logging.Logger;
-
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractCacheableDataStatistics implements CacheableDataStatistics {
-	private static final Logger log = Logger.getLogger( AbstractCacheableDataStatistics.class );
-
+	// This magic number allow pre-5.3.7 releases RMI compatibility (which includes a JBoss Logger instance)	
+	private static final long serialVersionUID = 1417304055641145372L;
+	
 	private final String cacheRegionName;
 	private final LongAdder cacheHitCount;
 	private final LongAdder cacheMissCount;

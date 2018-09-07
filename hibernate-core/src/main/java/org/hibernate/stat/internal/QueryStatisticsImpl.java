@@ -22,9 +22,6 @@ import org.hibernate.stat.QueryStatistics;
  * @author Alex Snaps
  */
 public class QueryStatisticsImpl implements QueryStatistics {
-	// This magic number allow pre-5.3.7 releases RMI compatibility (which includes a JBoss Logger instance)	
-	private static final long serialVersionUID = 8569182022705792772L;
-	
 	private final String query;
 
 	private final LongAdder cacheHitCount = new LongAdder();

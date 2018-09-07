@@ -102,11 +102,18 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 
 /**
- * An abstract base class for HANA dialects. <br/>
- * <a href="http://help.sap.com/hana/html/sqlmain.html">SAP HANA Reference</a> <br/>
- * NOTE: This dialect is currently configured to create foreign keys with <code>on update cascade</code>.
+ * An abstract base class for SAP HANA dialects.
+ * <p>
+ * For more information on interacting with the SAP HANA database, refer to the
+ * <a href="https://help.sap.com/viewer/4fe29514fd584807ac9f2a04f6754767/">SAP HANA SQL and System Views Reference</a>
+ * and the <a href=
+ * "https://help.sap.com/viewer/0eec0d68141541d1b07893a39944924e/latest/en-US/434e2962074540e18c802fd478de86d6.html">SAP
+ * HANA Client Interface Programming Reference</a>.
+ * <p>
+ * Note: This dialect is configured to create foreign keys with {@code on update cascade}.
  *
  * @author Andrew Clemons <andrew.clemons@sap.com>
+ * @author Jonathan Bregler <jonathan.bregler@sap.com>
  */
 public abstract class AbstractHANADialect extends Dialect {
 

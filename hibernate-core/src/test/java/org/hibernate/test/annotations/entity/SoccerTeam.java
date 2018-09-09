@@ -6,7 +6,9 @@
  */
 
 package org.hibernate.test.annotations.entity;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -15,6 +17,8 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
+import org.hibernate.annotations.Where;
+
 @Entity
 public class SoccerTeam {
 	@Id
@@ -22,6 +26,10 @@ public class SoccerTeam {
 	private int id;
 
 	String name;
+	
+	@OneToMany
+	@Where(clause = "activeLicense = true")
+	private List<Doctor> physiologists = new ArrayList<Doctor>();
 
 	@OneToMany(mappedBy="team",
 		orphanRemoval=true,
@@ -65,5 +73,15 @@ public class SoccerTeam {
 	public void setOneVonePlayer(Player oneVonePlayer) {
 		this.oneVonePlayer = oneVonePlayer;
 	}
+
+	public List<Doctor> getPhysiologists() {
+		return physiologists;
+	}
+
+	public void setPhysiologists(List<Doctor> physiologists) {
+		this.physiologists = physiologists;
+	}
+	
+	
 	
 }

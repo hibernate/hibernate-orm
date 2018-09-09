@@ -1518,7 +1518,6 @@ public class ModelBinder {
 			binding.getSynchronizedTables().add( name );
 		}
 
-		binding.setWhere( source.getWhere() );
 		binding.setLoaderName( source.getCustomLoaderName() );
 		if ( source.getCustomSqlInsert() != null ) {
 			binding.setCustomSQLInsert(
@@ -3402,6 +3401,11 @@ public class ModelBinder {
 		}
 
 		protected void bindCollectionElement() {
+			log.debugf(
+					"Binding [%s] element type for a [%s]",
+					getPluralAttributeSource().getElementSource().getNature(),
+					getPluralAttributeSource().getNature()
+			);
 			if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceBasic ) {
 				final PluralAttributeElementSourceBasic elementSource =
 						(PluralAttributeElementSourceBasic) getPluralAttributeSource().getElementSource();
@@ -3433,6 +3437,10 @@ public class ModelBinder {
 				);
 
 				getCollectionBinding().setElement( elementBinding );
+				// Collection#setWhere is used to set the "where" clause that applies to the collection table
+				// (the table containing the basic elements)
+				// This "where" clause comes from the collection mapping; e.g., <set name="..." ... where="..." .../>
+				getCollectionBinding().setWhere( getPluralAttributeSource().getWhere() );
 			}
 			else if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceEmbedded ) {
 				final PluralAttributeElementSourceEmbedded elementSource =
@@ -3454,6 +3462,10 @@ public class ModelBinder {
 				);
 
 				getCollectionBinding().setElement( elementBinding );
+				// Collection#setWhere is used to set the "where" clause that applies to the collection table
+				// (the table containing the embeddable elements)
+				// This "where" clause comes from the collection mapping; e.g., <set name="..." ... where="..." .../>
+				getCollectionBinding().setWhere( getPluralAttributeSource().getWhere() );
 			}
 			else if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceOneToMany ) {
 				final PluralAttributeElementSourceOneToMany elementSource =
@@ -3466,9 +3478,21 @@ public class ModelBinder {
 
 				final PersistentClass referencedEntityBinding = mappingDocument.getMetadataCollector()
 						.getEntityBinding( elementSource.getReferencedEntityName() );
+				// For a one-to-many association, there are 2 possible sources of "where" clauses that apply
+				// to the associated entity table:
+				// 1) from the associated entity mapping; i.e., <class name="..." ... where="..." .../>
+				// 2) from the collection mapping; e.g., <set name="..." ... where="..." .../>
+				// Collection#setWhere is used to set the "where" clause that applies to the collection table
+				// (which is the associated entity table for a one-to-many association).
+				collectionBinding.setWhere(
+					StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty(
+							referencedEntityBinding.getWhere(),
+							getPluralAttributeSource().getWhere()
+					)
+				);
+
 				elementBinding.setReferencedEntityName( referencedEntityBinding.getEntityName() );
 				elementBinding.setAssociatedClass( referencedEntityBinding );
-
 				elementBinding.setIgnoreNotFound( elementSource.isIgnoreNotFound() );
 			}
 			else if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceManyToMany ) {
@@ -3568,7 +3592,10 @@ public class ModelBinder {
 						}
 				);
 
-				elementBinding.setLazy( elementSource.getFetchCharacteristics().getFetchTiming() != FetchTiming.IMMEDIATE );
+				elementBinding.setLazy(
+						elementSource.getFetchCharacteristics()
+								.getFetchTiming() != FetchTiming.IMMEDIATE
+				);
 				elementBinding.setFetchMode(
 						elementSource.getFetchCharacteristics().getFetchStyle() == FetchStyle.SELECT
 								? FetchMode.SELECT
@@ -3588,7 +3615,26 @@ public class ModelBinder {
 
 				getCollectionBinding().setElement( elementBinding );
 
-				getCollectionBinding().setManyToManyWhere( elementSource.getWhere() );
+				final PersistentClass referencedEntityBinding = mappingDocument.getMetadataCollector().getEntityBinding(
+						elementSource.getReferencedEntityName()
+				);
+
+				// Collection#setWhere is used to set the "where" clause that applies to the collection table
+				// (which is the join table for a many-to-many association).
+				// This "where" clause comes from the collection mapping; e.g., <set name="..." ... where="..." .../>
+				getCollectionBinding().setWhere( getPluralAttributeSource().getWhere() );
+				// For a many-to-many association, there are 2 possible sources of "where" clauses that apply
+				// to the associated entity table (not the join table):
+				// 1) from the associated entity mapping; i.e., <class name="..." ... where="..." .../>
+				// 2) from the many-to-many mapping; i.e <many-to-many ... where="...".../>
+				// Collection#setManytoManyWhere is used to set the "where" clause that applies to
+				// to the many-to-many associated entity table (not the join table).
+				getCollectionBinding().setManyToManyWhere(
+						StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty(
+								referencedEntityBinding.getWhere(),
+								elementSource.getWhere()
+						)
+				);
 				getCollectionBinding().setManyToManyOrdering( elementSource.getOrder() );
 
 				if ( !CollectionHelper.isEmpty( elementSource.getFilterSources() )
@@ -3662,6 +3708,10 @@ public class ModelBinder {
 
 				);
 				getCollectionBinding().setElement( elementBinding );
+				// Collection#setWhere is used to set the "where" clause that applies to the collection table
+				// (which is the join table for a many-to-any association).
+				// This "where" clause comes from the collection mapping; e.g., <set name="..." ... where="..." .../>
+				getCollectionBinding().setWhere( getPluralAttributeSource().getWhere() );
 			}
 		}
 	}

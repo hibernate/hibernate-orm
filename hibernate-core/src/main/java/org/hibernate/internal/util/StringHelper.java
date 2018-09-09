@@ -856,4 +856,38 @@ public final class StringHelper {
 	public interface Renderer<T> {
 		String render(T value);
 	}
+
+	/**
+	 * @param firstExpression the first expression
+	 * @param secondExpression the second expression
+	 * @return if {@code firstExpression} and {@code secondExpression} are both non-empty,
+	 * then "( " + {@code firstExpression} + " ) and ( " + {@code secondExpression} + " )" is returned;
+	 * if {@code firstExpression} is non-empty and {@code secondExpression} is empty,
+	 * then {@code firstExpression} is returned;
+	 * if {@code firstExpression} is empty and {@code secondExpression} is non-empty,
+	 * then {@code secondExpression} is returned;
+	 * if both {@code firstExpression} and {@code secondExpression} are empty, then null is returned.
+	 */
+	public static String getNonEmptyOrConjunctionIfBothNonEmpty( String firstExpression, String secondExpression ) {
+		final boolean isFirstExpressionNonEmpty = StringHelper.isNotEmpty( firstExpression );
+		final boolean isSecondExpressionNonEmpty = StringHelper.isNotEmpty( secondExpression );
+		if ( isFirstExpressionNonEmpty && isSecondExpressionNonEmpty ) {
+			final StringBuilder buffer = new StringBuilder();
+			buffer.append( "( " )
+					.append( firstExpression )
+					.append( " ) and ( ")
+					.append( secondExpression )
+					.append( " )" );
+			return buffer.toString();
+		}
+		else if ( isFirstExpressionNonEmpty ) {
+			return firstExpression;
+		}
+		else if ( isSecondExpressionNonEmpty ) {
+			return secondExpression;
+		}
+		else {
+			return null;
+		}
+	}
 }

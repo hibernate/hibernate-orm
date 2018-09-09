@@ -12,7 +12,6 @@ import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
-
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
 import javax.persistence.CollectionTable;
@@ -83,6 +82,7 @@ import org.hibernate.cfg.PropertyHolderBuilder;
 import org.hibernate.cfg.PropertyInferredData;
 import org.hibernate.cfg.PropertyPreloadedData;
 import org.hibernate.cfg.SecondPass;
+import org.hibernate.criterion.Junction;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -99,6 +99,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
+
 import org.jboss.logging.Logger;
 
 import static org.hibernate.cfg.BinderHelper.toAliasEntityMap;
@@ -944,21 +945,47 @@ public abstract class CollectionBinder {
 			}
 		}
 
-		Where where = property.getAnnotation( Where.class );
-		String whereClause = where == null ? null : where.clause();
-		if ( StringHelper.isNotEmpty( whereClause ) ) {
-			if ( hasAssociationTable ) {
-				collection.setManyToManyWhere( whereClause );
+		// There are 2 possible sources of "where" clauses that apply to the associated entity table:
+		// 1) from the associated entity mapping; i.e., @Entity @Where(clause="...")
+		// 2) from the collection mapping;
+		//    for one-to-many, e.g., @OneToMany @JoinColumn @Where(clause="...") public Set<Rating> getRatings();
+		//    for many-to-many e.g., @ManyToMany @Where(clause="...") public Set<Rating> getRatings();
+		String whereOnClassClause = null;
+		if ( property.getElementClass() != null ) {
+			Where whereOnClass = property.getElementClass().getAnnotation( Where.class );
+			if ( whereOnClass != null ) {
+				whereOnClassClause = whereOnClass.clause();
 			}
-			else {
-				collection.setWhere( whereClause );
-			}
+		}
+		Where whereOnCollection = property.getAnnotation( Where.class );
+		String whereOnCollectionClause = null;
+		if ( whereOnCollection != null ) {
+			whereOnCollectionClause = whereOnCollection.clause();
+		}
+		final String whereClause = StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty(
+				whereOnClassClause,
+				whereOnCollectionClause
+		);
+		if ( hasAssociationTable ) {
+			// A many-to-many association has an association (join) table
+			// Collection#setManytoManyWhere is used to set the "where" clause that applies to
+			// to the many-to-many associated entity table (not the join table).
+			collection.setManyToManyWhere( whereClause );
+		}
+		else {
+			// A one-to-many association does not have an association (join) table.
+			// Collection#setWhere is used to set the "where" clause that applies to the collection table
+			// (which is the associated entity table for a one-to-many association).
+			collection.setWhere( whereClause );
 		}
 
 		WhereJoinTable whereJoinTable = property.getAnnotation( WhereJoinTable.class );
 		String whereJoinTableClause = whereJoinTable == null ? null : whereJoinTable.clause();
 		if ( StringHelper.isNotEmpty( whereJoinTableClause ) ) {
 			if ( hasAssociationTable ) {
+				// This is a many-to-many association.
+				// Collection#setWhere is used to set the "where" clause that applies to the collection table
+				// (which is the join table for a many-to-many association).
 				collection.setWhere( whereJoinTableClause );
 			}
 			else {

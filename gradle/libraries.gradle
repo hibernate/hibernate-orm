@@ -111,7 +111,7 @@ ext {
             mariadb:         'org.mariadb.jdbc:mariadb-java-client:2.2.3',
 
             oracle:          'com.oracle.jdbc:ojdbc8:12.2.0.1',
-            mssql:           'com.microsoft.sqlserver:mssql-jdbc:6.4.0.jre8',
+            mssql:           'com.microsoft.sqlserver:mssql-jdbc:7.0.0.jre8',
             db2:             'com.ibm.db2:db2jcc:10.5',
             hana:            'com.sap.cloud.db.jdbc:ngdbc:2.2.16', // for HANA 1 the minimum required client version is 1.120.20
 

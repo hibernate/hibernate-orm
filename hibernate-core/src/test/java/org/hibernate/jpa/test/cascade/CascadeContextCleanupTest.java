@@ -104,7 +104,7 @@ public class CascadeContextCleanupTest extends BaseEntityManagerFunctionalTestCa
     }
 
     @OneToMany( mappedBy = "table", cascade = CascadeType.ALL, orphanRemoval = true )
-    //@OnDelete( action = OnDeleteAction.CASCADE )
+    @OnDelete( action = OnDeleteAction.CASCADE )
     public Collection<ColumnEntity> getColumns() {
       return columns;
     }
@@ -114,7 +114,7 @@ public class CascadeContextCleanupTest extends BaseEntityManagerFunctionalTestCa
     }
 
     @OneToMany( mappedBy = "foreignTable", cascade = CascadeType.ALL, orphanRemoval = true )
-    //@OnDelete( action = OnDeleteAction.CASCADE )
+    @OnDelete( action = OnDeleteAction.CASCADE )
     public Collection<RelationEntity> getRelationsToThisTable() {
       return relationsToThisTable;
     }
@@ -214,7 +214,7 @@ public class CascadeContextCleanupTest extends BaseEntityManagerFunctionalTestCa
     @OneToOne( fetch = FetchType.LAZY )
     @MapsId
     @JoinColumn( name = "columnId" )
-    //@OnDelete( action = OnDeleteAction.CASCADE )
+    @OnDelete( action = OnDeleteAction.CASCADE )
     public ColumnEntity getColumn() {
       return column;
     }

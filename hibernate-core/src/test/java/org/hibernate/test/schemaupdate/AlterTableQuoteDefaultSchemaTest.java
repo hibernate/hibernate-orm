@@ -6,87 +6,78 @@
  */
 package org.hibernate.test.schemaupdate;
 
+import static org.hamcrest.core.Is.is;
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.EnumSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.TestForIssue;
+
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
-
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-import static org.hamcrest.core.Is.is;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-
 /**
- * @author Vlad Mihalcea
+ * @author Guillaume Smet
  */
-@TestForIssue( jiraKey = "HHH-12106" )
-@RequiresDialect( SQLServerDialect.class )
-public class SqlServerQuoteSchemaTest extends BaseCoreFunctionalTestCase {
-
-	private File output;
+@TestForIssue(jiraKey = "HHH-12939")
+@RequiresDialectFeature(DialectChecks.SupportSchemaCreation.class)
+public class AlterTableQuoteDefaultSchemaTest extends AbstractAlterTableQuoteSchemaTest {
 
 	@Override
 	protected void afterSessionFactoryBuilt() {
 		try {
-			output = File.createTempFile( "update_script", ".sql" );
-			output.deleteOnExit();
-		}
-		catch (IOException ignore) {
-		}
-		try {
 			doInHibernate( this::sessionFactory, session -> {
-				session.createNativeQuery(
-					"DROP TABLE [my-schema].my_entity" )
-				.executeUpdate();
-			});
+				session.createNativeQuery( "DROP TABLE " + quote( "default-schema", "my_entity" ) )
+						.executeUpdate();
+			} );
 		}
 		catch (Exception ignore) {
 		}
 		try {
 			doInHibernate( this::sessionFactory, session -> {
-				session.createNativeQuery(
-					"DROP SCHEMA [my-schema]" )
-				.executeUpdate();
-			});
+				session.createNativeQuery( "DROP SCHEMA " + quote( "default-schema" ) )
+						.executeUpdate();
+			} );
 		}
 		catch (Exception ignore) {
 		}
-		try {
-			doInHibernate( this::sessionFactory, session -> {
-				session.createNativeQuery(
-					"CREATE SCHEMA [my-schema]" )
-				.executeUpdate();
-			});
-		}
-		catch (Exception ignore) {
-		}
+		doInHibernate( this::sessionFactory, session -> {
+			session.createNativeQuery( "CREATE SCHEMA " + quote( "default-schema" ) )
+					.executeUpdate();
+		} );
 	}
 
 	@Override
 	protected void cleanupTest() {
 		try {
 			doInHibernate( this::sessionFactory, session -> {
-				session.createNativeQuery(
-						"DROP SCHEMA [my-schema]" )
+				session.createNativeQuery( "DROP SCHEMA " + quote( "default-schema" ) )
 						.executeUpdate();
 			} );
 		}
@@ -95,17 +86,26 @@ public class SqlServerQuoteSchemaTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void test() {
+	public void testDefaultSchema() throws IOException {
+		File output = File.createTempFile( "update_script", ".sql" );
+		output.deleteOnExit();
+
 		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, Boolean.TRUE.toString() )
 				.build();
 
 		try {
-			output.deleteOnExit();
+			final MetadataSources metadataSources = new MetadataSources( ssr ) {
+				@Override
+				public MetadataBuilder getMetadataBuilder() {
+					MetadataBuilder metadataBuilder = super.getMetadataBuilder();
+					metadataBuilder.applyImplicitSchemaName( "default-schema" );
+					return metadataBuilder;
+				}
+			};
+			metadataSources.addAnnotatedClass( MyEntity.class );
 
-			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
-					.addAnnotatedClass( MyEntity.class )
-					.buildMetadata();
+			final MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
 			metadata.validate();
 
 			new SchemaUpdate()
@@ -120,22 +120,34 @@ public class SqlServerQuoteSchemaTest extends BaseCoreFunctionalTestCase {
 		}
 
 		try {
+
+
 			String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-			Pattern fileContentPattern = Pattern.compile( "create table \\[my\\-schema\\]\\.\\[my_entity\\]" );
+
+			Pattern fileContentPattern = Pattern
+					.compile( "create table " + regexpQuote( "default-schema", "my_entity" ) );
 			Matcher fileContentMatcher = fileContentPattern.matcher( fileContent.toLowerCase() );
 			assertThat( fileContentMatcher.find(), is( true ) );
 		}
 		catch (IOException e) {
-			fail(e.getMessage());
+			fail( e.getMessage() );
 		}
 
 		ssr = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, Boolean.TRUE.toString() )
 				.build();
 		try {
-			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
-					.addAnnotatedClass( MyEntityUpdated.class )
-					.buildMetadata();
+			final MetadataSources metadataSources = new MetadataSources( ssr ) {
+				@Override
+				public MetadataBuilder getMetadataBuilder() {
+					MetadataBuilder metadataBuilder = super.getMetadataBuilder();
+					metadataBuilder.applyImplicitSchemaName( "default-schema" );
+					return metadataBuilder;
+				}
+			};
+			metadataSources.addAnnotatedClass( MyEntityUpdated.class );
+
+			final MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
 			metadata.validate();
 
 			new SchemaUpdate()
@@ -150,31 +162,33 @@ public class SqlServerQuoteSchemaTest extends BaseCoreFunctionalTestCase {
 		}
 
 		try {
+
 			String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-			Pattern fileContentPattern = Pattern.compile( "alter table \\[my\\-schema\\]\\.\\[my_entity\\]" );
+			Pattern fileContentPattern = Pattern
+					.compile( "alter table.* " + regexpQuote( "default-schema", "my_entity" ) );
 			Matcher fileContentMatcher = fileContentPattern.matcher( fileContent.toLowerCase() );
 			assertThat( fileContentMatcher.find(), is( true ) );
 		}
 		catch (IOException e) {
-			fail(e.getMessage());
+			fail( e.getMessage() );
 		}
 	}
 
-
 	@Entity(name = "MyEntity")
-	@Table(name = "my_entity", schema = "my-schema")
+	@Table(name = "my_entity")
 	public static class MyEntity {
+
 		@Id
 		public Integer id;
 	}
 
 	@Entity(name = "MyEntity")
-	@Table(name = "my_entity", schema = "my-schema")
+	@Table(name = "my_entity")
 	public static class MyEntityUpdated {
+
 		@Id
 		public Integer id;
 
 		private String title;
 	}
-
 }

@@ -300,8 +300,8 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 						dialect,
 						metadata,
 						tableInformation,
-						getDefaultCatalogName( database, dialect ),
-						getDefaultSchemaName( database, dialect )
+						database.getDefaultNamespace().getPhysicalName().getCatalog(),
+						database.getDefaultNamespace().getPhysicalName().getSchema()
 				),
 				formatter,
 				options,
@@ -446,7 +446,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 	/**
 	 * Check if the ForeignKey already exists. First check based on definition and if that is not matched check if a key
 	 * with the exact same name exists. Keys with the same name are presumed to be functional equal.
-	 * 
+	 *
 	 * @param foreignKey - ForeignKey, new key to be created
 	 * @param tableInformation - TableInformation, information of existing keys
 	 * @return boolean, true if key already exists
@@ -580,15 +580,5 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 				applySqlString( quiet, sqlString, formatter, options, targets );
 			}
 		}
-	}
-
-	private String getDefaultCatalogName(Database database, Dialect dialect) {
-		final Identifier identifier = database.getDefaultNamespace().getPhysicalName().getCatalog();
-		return identifier == null ? null : identifier.render( dialect );
-	}
-
-	private String getDefaultSchemaName(Database database, Dialect dialect) {
-		final Identifier identifier = database.getDefaultNamespace().getPhysicalName().getSchema();
-		return identifier == null ? null : identifier.render( dialect );
 	}
 }

@@ -21,13 +21,12 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.hamcrest.core.Is.is;
@@ -36,73 +35,60 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 /**
- * @author Vlad Mihalcea
+ * @author Guillaume Smet
  */
-@TestForIssue( jiraKey = "HHH-12106" )
-@RequiresDialect( SQLServerDialect.class )
-public class SqlServerQuoteSchemaTest extends BaseCoreFunctionalTestCase {
-
-	private File output;
+@TestForIssue(jiraKey = "HHH-12939")
+@RequiresDialectFeature(DialectChecks.SupportSchemaCreation.class)
+public class AlterTableQuoteSpecifiedSchemaTest extends AbstractAlterTableQuoteSchemaTest {
 
 	@Override
 	protected void afterSessionFactoryBuilt() {
-		try {
-			output = File.createTempFile( "update_script", ".sql" );
-			output.deleteOnExit();
-		}
-		catch (IOException ignore) {
-		}
+
 		try {
 			doInHibernate( this::sessionFactory, session -> {
-				session.createNativeQuery(
-					"DROP TABLE [my-schema].my_entity" )
-				.executeUpdate();
-			});
+				session.createNativeQuery( "DROP TABLE " + quote( "my-schema", "my_entity" ) )
+						.executeUpdate();
+			} );
 		}
 		catch (Exception ignore) {
 		}
 		try {
 			doInHibernate( this::sessionFactory, session -> {
-				session.createNativeQuery(
-					"DROP SCHEMA [my-schema]" )
-				.executeUpdate();
-			});
+				session.createNativeQuery( "DROP SCHEMA " + quote( "my-schema" ) )
+						.executeUpdate();
+			} );
 		}
 		catch (Exception ignore) {
 		}
-		try {
-			doInHibernate( this::sessionFactory, session -> {
-				session.createNativeQuery(
-					"CREATE SCHEMA [my-schema]" )
-				.executeUpdate();
-			});
-		}
-		catch (Exception ignore) {
-		}
+		doInHibernate( this::sessionFactory, session -> {
+			session.createNativeQuery( "CREATE SCHEMA " + quote( "my-schema" ) )
+					.executeUpdate();
+		} );
 	}
 
 	@Override
 	protected void cleanupTest() {
 		try {
 			doInHibernate( this::sessionFactory, session -> {
-				session.createNativeQuery(
-						"DROP SCHEMA [my-schema]" )
+				session.createNativeQuery( "DROP SCHEMA " + quote( "my-schema" ) )
 						.executeUpdate();
 			} );
+
 		}
 		catch (Exception ignore) {
 		}
 	}
 
 	@Test
-	public void test() {
+	public void testSpecifiedSchema() throws IOException {
+		File output = File.createTempFile( "update_script", ".sql" );
+		output.deleteOnExit();
+
 		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, Boolean.TRUE.toString() )
 				.build();
 
 		try {
-			output.deleteOnExit();
-
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( MyEntity.class )
 					.buildMetadata();
@@ -121,12 +107,12 @@ public class SqlServerQuoteSchemaTest extends BaseCoreFunctionalTestCase {
 
 		try {
 			String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-			Pattern fileContentPattern = Pattern.compile( "create table \\[my\\-schema\\]\\.\\[my_entity\\]" );
+			Pattern fileContentPattern = Pattern.compile( "create table " + regexpQuote( "my-schema", "my_entity" ) );
 			Matcher fileContentMatcher = fileContentPattern.matcher( fileContent.toLowerCase() );
 			assertThat( fileContentMatcher.find(), is( true ) );
 		}
 		catch (IOException e) {
-			fail(e.getMessage());
+			fail( e.getMessage() );
 		}
 
 		ssr = new StandardServiceRegistryBuilder()
@@ -151,19 +137,19 @@ public class SqlServerQuoteSchemaTest extends BaseCoreFunctionalTestCase {
 
 		try {
 			String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-			Pattern fileContentPattern = Pattern.compile( "alter table \\[my\\-schema\\]\\.\\[my_entity\\]" );
+			Pattern fileContentPattern = Pattern.compile( "alter table.* " + regexpQuote( "my-schema", "my_entity" ) );
 			Matcher fileContentMatcher = fileContentPattern.matcher( fileContent.toLowerCase() );
 			assertThat( fileContentMatcher.find(), is( true ) );
 		}
 		catch (IOException e) {
-			fail(e.getMessage());
+			fail( e.getMessage() );
 		}
 	}
-
 
 	@Entity(name = "MyEntity")
 	@Table(name = "my_entity", schema = "my-schema")
 	public static class MyEntity {
+
 		@Id
 		public Integer id;
 	}
@@ -171,10 +157,10 @@ public class SqlServerQuoteSchemaTest extends BaseCoreFunctionalTestCase {
 	@Entity(name = "MyEntity")
 	@Table(name = "my_entity", schema = "my-schema")
 	public static class MyEntityUpdated {
+
 		@Id
 		public Integer id;
 
 		private String title;
 	}
-
 }

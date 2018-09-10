@@ -78,8 +78,8 @@ public class CascadeContextCleanupTest extends BaseEntityManagerFunctionalTestCa
     entityManager.persist( column );
 
     final RelationEntity relation = new RelationEntity();
-    relation.setForeignTable( parentTable );
-    parentTable.getRelationsToThisTable().add( relation );
+    relation.setForeignTable( childTable );
+    childTable.getRelationsToThisTable().add( relation );
     relation.setColumn( column );
     column.setRelationEntity( relation );
     entityManager.persist( relation );

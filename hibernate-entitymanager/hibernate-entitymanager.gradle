@@ -49,6 +49,8 @@ public String osgiDescription() {
 
 jar {
     manifest {
+        symbolicName = 'org.hibernate.entitymanager'
+
         // A cdi-api OSGi bundle does not currently exist.  For now, explicitly
         // ignore its packages.  This will only cause issues if an app tries
         // to use the BeanManagerListenerFactory functionality.

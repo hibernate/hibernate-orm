@@ -50,6 +50,8 @@ addMetaGenProcessor( sourceSets.main )
 
 jar {
     manifest {
+        symbolicName = 'org.hibernate.envers'
+
         instructionFirst 'Import-Package',
             // TODO: Shouldn't have to explicitly list the JPA packages, but
             // the plugin generates them with [1.0,2) versions.

@@ -19,7 +19,7 @@ dependencies {
 	// http://blog.osgi.org/2012/10/43-companion-code-for-java-7.html
 	compile( "org.osgi:org.osgi.core:4.3.1" )
 	compile( "org.osgi:org.osgi.compendium:4.3.1" )
-	
+
 	testCompile( libraries.shrinkwrap_api )
 	testCompile( libraries.shrinkwrap )
 	testCompile( "org.jboss.arquillian.junit:arquillian-junit-container:1.0.3.Final" )
@@ -28,7 +28,7 @@ dependencies {
 	testRuntime( "org.apache.felix:org.apache.felix.framework:4.0.3" )
 	testRuntime( "org.apache.felix:org.apache.felix.main:4.0.3" )
 	testRuntime( "org.jboss.logmanager:jboss-logmanager:1.4.1.Final" )
-	
+
 	// Local copies of all jars needed fur the OSGi runtime.  Ignore the transitive dependencies.
 	// ORDER DEPENDENT!!!
 	osgiRuntime( "org.jboss.arquillian.osgi:arquillian-osgi-bundle:1.0.3.Final" ) { transitive = false }
@@ -43,12 +43,12 @@ dependencies {
 	osgiRuntime( libraries.commons_annotations ) { transitive = false }
 	osgiRuntime( libraries.classmate ) { transitive = false }
 	osgiRuntime( libraries.logging ) { transitive = false }
-	
+
 	// needed for BND
 	osgiRuntimeBnd( libraries.jandex ) { transitive = false }
 	osgiRuntimeBnd( "javax.enterprise:cdi-api:1.1" ) { transitive = false }
 	osgiRuntimeBnd( "javax.el:el-api:2.2" ) { transitive = false }
-	
+
 	testClientBundleCompile( project( ':hibernate-core' ) )
 	testClientBundleCompile( project( ':hibernate-entitymanager' ) )
 	// MUST use 4.3.1!  4.3.0 was compiled with "-target jsr14".
@@ -71,6 +71,8 @@ def osgiDescription() {
 jar {
 	manifest {
 		instruction 'Bundle-Activator', 'org.hibernate.osgi.HibernateBundleActivator'
+
+		symbolicName = 'org.hibernate.osgi'
 
 		instructionFirst 'Import-Package',
 			// TODO: Shouldn't have to explicitly list this, but the plugin
@@ -104,21 +106,21 @@ task felixProperties << {
 			fileName.replace("-ORIGINAL", "")
 		}
 	}
-	
+
 	propertiesFile = file("$buildDir/osgi-lib/felix-framework.properties")
-	
+
 	// append jars wrapped using BND
 	FileTree tree = fileTree(dir: "$buildDir/osgi-lib/bnd")
 	tree.exclude "*bnd*"
 	tree.each {File file ->
 		propertiesFile << " \\\nfile:target/osgi-lib/bnd/" + file.name
 	}
-	
+
 	// append all jars in osgiRuntime configuration
 	configurations.osgiRuntime.each { File file ->
 		propertiesFile << " \\\nfile:target/osgi-lib/" + file.name
 	}
-	
+
 	// append ORM jars
 	// TODO: Is there a better, dynamic way of doing this?
 	propertiesFile << " \\\nfile:../hibernate-core/target/libs/hibernate-core-" + hibernateTargetVersion + ".jar"
@@ -130,7 +132,7 @@ task testClientBundleJar(type: Jar) {
 	from sourceSets.testClientBundle.output
 	destinationDir new File("$buildDir/osgi-lib")
 	archiveName "testClientBundle.jar"
-	
+
 	// The OSGi plugin acts up when we need to export multiple source sets.  Just do it manually.
 	manifest {
 		attributes("Export-Package" : "org.hibernate.osgi.test.client,org.hibernate.osgi.test.result",

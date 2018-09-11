@@ -56,6 +56,8 @@ jar {
     manifest {
         mainAttributes( 'Main-Class': 'org.hibernate.Version' )
 
+        symbolicName = 'org.hibernate.core'
+
         instructionFirst 'Import-Package',
             'javax.security.auth;resolution:=optional',
             'javax.security.jacc;resolution:=optional',

@@ -173,6 +173,8 @@ public class PrivateConstructorEnhancerTest extends BaseNonConfigCoreFunctionalT
 		@Basic(fetch = FetchType.LAZY)
 		private String name;
 
+		private Country() {}
+
 		private Country(String name) {
 			this.name = name;
 		}

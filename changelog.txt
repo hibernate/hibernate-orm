@@ -97,7 +97,6 @@ https://hibernate.atlassian.net/projects/HHH/versions/31687/tab/release-report-d
     * [HHH-12776] - NullPointerException when executing native query on an Audited Entity
     * [HHH-12779] - Revert HHH-12670 - Allows native SQL queries that take a given resultClass to map the result set to the required type
     * [HHH-12781] - Update Javassist dependency to 3.23.1
-    * [HHH-12784] - Javassist support broken by HHH-12760
     * [HHH-12786] - Deleting an entity leads to NullPointerException in ByteBuddy proxy
     * [HHH-12787] - SessionJdbcBatchTest hangs with DB2
     * [HHH-12791] - ComponentTuplizer generates a LOT of proxy classes when using Bytebuddy as bytecode provider

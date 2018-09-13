@@ -9,63 +9,60 @@
 
 package org.hibernate.test.ast.tree;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.Assert.assertEquals;
+
 import java.util.List;
 
 import javax.persistence.EntityGraph;
-import javax.persistence.EntityManager;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author zoller27osu
  */
 public class QueryNodeTest extends BaseEntityManagerFunctionalTestCase {
+
 	@Override
 	public Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-			Order.class,
-			OrderItem.class,
-			Shipment.class
+		return new Class[]{
+				ShipmentOrder.class,
+				ShipmentOrderItem.class,
+				Shipment.class
 		};
 	}
 
-    @Test
-    @TestForIssue( jiraKey = "HHH-12960" )
-    public void hhh12960Test() throws Exception {
-        EntityManager entityManager = getOrCreateEntityManager();
-        entityManager.getTransaction().begin();
-        
-        Shipment shipment = new Shipment( 4 );
-        entityManager.persist( shipment );
-        
-        Order order1 = new Order( 1, shipment );
-        Order order2 = new Order( 2, shipment );
-        entityManager.persist( order1 );
-        entityManager.persist( order2 );
-        
-        OrderItem orderItem1_5 = new OrderItem( 5, order1 );
-        OrderItem orderItem1_3 = new OrderItem( 3, order1 );
-        entityManager.persist( orderItem1_5 );
-        entityManager.persist( orderItem1_3 );
-        
-        OrderItem orderItem2_7 = new OrderItem( 7, order2 );
-        entityManager.persist( orderItem2_7 );
+	@Test
+	@TestForIssue(jiraKey = "HHH-12960")
+	public void hhh12960Test() throws Exception {
+		doInJPA( this::entityManagerFactory, em -> {
+			Shipment shipment = new Shipment( 4 );
+			em.persist( shipment );
 
-        EntityGraph<Order> graph = entityManager.createEntityGraph( Order.class );
-        graph.addSubgraph( "orderItems", OrderItem.class );
+			ShipmentOrder order1 = new ShipmentOrder( 1, shipment );
+			ShipmentOrder order2 = new ShipmentOrder( 2, shipment );
+			em.persist( order1 );
+			em.persist( order2 );
 
-        entityManager.getTransaction().commit();
-        
-        String q = "SELECT o FROM Order o GROUP BY o.shipment.id";
-        entityManager.getTransaction().begin();
-        List<Order> orders = entityManager.createQuery(q, Order.class).getResultList();
-        entityManager.getTransaction().commit();
-        assertEquals(1, orders.size());
+			ShipmentOrderItem orderItem1_5 = new ShipmentOrderItem( 5, order1 );
+			ShipmentOrderItem orderItem1_3 = new ShipmentOrderItem( 3, order1 );
+			em.persist( orderItem1_5 );
+			em.persist( orderItem1_3 );
 
-        entityManager.getTransaction().commit();
-        entityManager.close();
-    }
+			ShipmentOrderItem orderItem2_7 = new ShipmentOrderItem( 7, order2 );
+			em.persist( orderItem2_7 );
+		});
+
+		doInJPA( this::entityManagerFactory, em -> {
+			EntityGraph<ShipmentOrder> graph = em.createEntityGraph( ShipmentOrder.class );
+			graph.addSubgraph( "orderItems", ShipmentOrderItem.class );
+
+			String q = "SELECT o FROM ShipmentOrder o GROUP BY o.shipment.id";
+			List<ShipmentOrder> orders = em.createQuery( q, ShipmentOrder.class ).getResultList();
+
+			assertEquals( 1, orders.size() );
+		});
+	}
 }

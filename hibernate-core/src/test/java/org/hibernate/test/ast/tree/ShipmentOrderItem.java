@@ -4,29 +4,25 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
 package org.hibernate.test.ast.tree;
-
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import javax.persistence.ManyToOne;
 
 @Entity
-public class Shipment {
+public class ShipmentOrderItem {
 
 	@Id
 	private Integer id;
 
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "shipment")
-	private Set<ShipmentOrder> orders;
+	@ManyToOne(fetch = FetchType.LAZY)
+	private ShipmentOrder order;
 
-	public Shipment(Integer id) {
+	public ShipmentOrderItem(Integer id, ShipmentOrder order) {
 		this.id = id;
-		this.orders = new HashSet<>();
+		this.order = order;
 	}
 
 	public Integer getId() {
@@ -37,11 +33,11 @@ public class Shipment {
 		this.id = id;
 	}
 
-	public Set<ShipmentOrder> getOrders() {
-		return this.orders;
+	public ShipmentOrder getOrder() {
+		return this.order;
 	}
 
-	public void setOrderItems(Set<ShipmentOrder> orders) {
-		this.orders = orders;
+	public void setOrder(ShipmentOrder order) {
+		this.order = order;
 	}
 }

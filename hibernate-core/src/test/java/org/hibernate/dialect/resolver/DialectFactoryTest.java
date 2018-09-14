@@ -113,7 +113,7 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 		testDetermination( "MySQL", 5, 5, MySQL55Dialect.class, resolver );
 		testDetermination( "MySQL", 5, 6, MySQL55Dialect.class, resolver );
 		testDetermination( "MySQL", 5, 7, MySQL57Dialect.class, resolver );
-		testDetermination( "MySQL", 8, 0, MySQL57Dialect.class, resolver );
+		testDetermination( "MySQL", 8, 0, MySQL8Dialect.class, resolver );
 		testDetermination( "MariaDB", "MariaDB connector/J", 10, 3, MariaDB103Dialect.class, resolver );
 		testDetermination( "MariaDB", "MariaDB connector/J", 10, 2, MariaDB102Dialect.class, resolver );
 		testDetermination( "MariaDB", "MariaDB connector/J", 10, 1, MariaDB10Dialect.class, resolver );

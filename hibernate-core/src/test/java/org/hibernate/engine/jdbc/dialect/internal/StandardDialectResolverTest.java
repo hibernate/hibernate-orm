@@ -126,12 +126,27 @@ public class StandardDialectResolverTest extends BaseUnitTestCase {
 		runMariaDBDialectTest( 5, 2, MariaDBDialect.class );
 	}
 
+	@Test
+	public void testResolveDialectInternalForMySQL57() throws SQLException {
+		runMySQLDialectTest( 5, 7, MySQL57Dialect.class );
+	}
+
+	@Test
+	public void testResolveDialectInternalForMySQL8() throws SQLException {
+		runMySQLDialectTest( 8, 0, MySQL8Dialect.class );
+	}
+
 	private static void runMariaDBDialectTest(
 			int majorVersion, int minorVersion, Class<? extends MariaDBDialect> expectedDialect)
 			throws SQLException {
 		runDialectTest( "MariaDB", "MariaDB connector/J", majorVersion, minorVersion, expectedDialect );
 	}
 
+	private static void runMySQLDialectTest(
+			int majorVersion, int minorVersion, Class<? extends MySQLDialect> expectedDialect)
+			throws SQLException {
+		runDialectTest( "MySQL", "MySQL connector/J", majorVersion, minorVersion, expectedDialect );
+	}
 
 	private static void runSQLServerDialectTest(
 			int version, Class<? extends SQLServerDialect> expectedDialect)

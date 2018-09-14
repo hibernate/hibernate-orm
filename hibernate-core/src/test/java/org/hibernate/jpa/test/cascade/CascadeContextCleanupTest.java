@@ -35,23 +35,16 @@ public class CascadeContextCleanupTest extends BaseEntityManagerFunctionalTestCa
   @Test
   public void testCascadeContextCleanup() {
 
+    // create test data: Table1 -> Column -> Relation -> Table2
+    createTablesData();
+
     final EntityManager entityManager = getOrCreateEntityManager();
 
-    // create test data: Table1 -> Column -> Relation -> Table2
-    createTablesData( entityManager );
-
-    // remove table 1
-    // expected to remove Table, Column and Relation
-    // and it does remove them from DB, but they stay in Persistence Context
     entityManager.getTransaction().begin();
     final TableEntity table = entityManager.find( TableEntity.class, "1" );
     assertEquals(1, table.getColumns().size());
     entityManager.remove( table );
-    entityManager.getTransaction().commit();
 
-    // remove table 2
-    // throws org.hibernate.TransientPropertyValueException
-    entityManager.getTransaction().begin();
     final TableEntity table2 = entityManager.find( TableEntity.class, "2" );
     entityManager.remove( table2 );
     entityManager.getTransaction().commit();
@@ -59,8 +52,9 @@ public class CascadeContextCleanupTest extends BaseEntityManagerFunctionalTestCa
     entityManager.close();
   }
 
-  private void createTablesData( EntityManager entityManager ) {
+  private void createTablesData() {
 
+    final EntityManager entityManager = getOrCreateEntityManager();
     entityManager.getTransaction().begin();
 
     final TableEntity parentTable = new TableEntity();
@@ -85,6 +79,7 @@ public class CascadeContextCleanupTest extends BaseEntityManagerFunctionalTestCa
     entityManager.persist( relation );
 
     entityManager.getTransaction().commit();
+    entityManager.close();
   }
 
   @Entity

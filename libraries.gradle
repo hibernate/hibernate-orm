@@ -39,7 +39,7 @@ ext {
             woodstox:           "org.codehaus.woodstox:woodstox-core-asl:4.3.0",
 
             // Dom4J
-            dom4j:          'dom4j:dom4j:1.6.1@jar',
+            dom4j:          'org.dom4j:dom4j:2.1.1@jar',
 
             // Javassist
             javassist:      'org.javassist:javassist:3.20.0-GA',

@@ -49,6 +49,7 @@ import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MimerSQLDialect;
 import org.hibernate.dialect.MySQL57Dialect;
 import org.hibernate.dialect.MySQL57InnoDBDialect;
+import org.hibernate.dialect.MySQL8Dialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.MySQL5InnoDBDialect;
 import org.hibernate.dialect.Oracle10gDialect;
@@ -223,6 +224,7 @@ public class StrategySelectorBuilder {
 		addDialect( strategySelector, MySQL5InnoDBDialect.class );
 		addDialect( strategySelector, MySQL57InnoDBDialect.class );
 		addDialect( strategySelector, MySQL57Dialect.class );
+		addDialect( strategySelector, MySQL8Dialect.class );
 		addDialect( strategySelector, Oracle8iDialect.class );
 		addDialect( strategySelector, Oracle9iDialect.class );
 		addDialect( strategySelector, Oracle10gDialect.class );

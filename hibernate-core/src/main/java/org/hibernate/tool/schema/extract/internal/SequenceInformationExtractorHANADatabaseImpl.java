@@ -10,17 +10,27 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
- * @author Steve Ebersole
+ * @author Vlad Mihalcea
  */
-public class SequenceInformationExtractorH2DatabaseImpl extends SequenceInformationExtractorLegacyImpl {
+public class SequenceInformationExtractorHANADatabaseImpl extends SequenceInformationExtractorLegacyImpl {
 	/**
 	 * Singleton access
 	 */
-	public static final SequenceInformationExtractorH2DatabaseImpl INSTANCE = new SequenceInformationExtractorH2DatabaseImpl();
+	public static final SequenceInformationExtractorHANADatabaseImpl INSTANCE = new SequenceInformationExtractorHANADatabaseImpl();
+
+	@Override
+	protected String sequenceCatalogColumn() {
+		return null;
+	}
+
+	@Override
+	protected String sequenceSchemaColumn() {
+		return "schema_name";
+	}
 
 	@Override
 	protected String sequenceStartValueColumn() {
-		return null;
+		return "start_number";
 	}
 
 	@Override
@@ -31,5 +41,10 @@ public class SequenceInformationExtractorH2DatabaseImpl extends SequenceInformat
 	@Override
 	protected String sequenceMaxValueColumn() {
 		return "max_value";
+	}
+
+	@Override
+	protected String sequenceIncrementColumn() {
+		return "increment_by";
 	}
 }

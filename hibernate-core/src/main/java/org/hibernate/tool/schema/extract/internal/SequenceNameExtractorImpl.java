@@ -10,13 +10,27 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
- * @author Steve Ebersole
+ * @author Vlad Mihalcea
  */
-public class SequenceInformationExtractorH2DatabaseImpl extends SequenceInformationExtractorLegacyImpl {
+public class SequenceNameExtractorImpl extends SequenceInformationExtractorLegacyImpl {
 	/**
 	 * Singleton access
 	 */
-	public static final SequenceInformationExtractorH2DatabaseImpl INSTANCE = new SequenceInformationExtractorH2DatabaseImpl();
+	public static final SequenceNameExtractorImpl INSTANCE = new SequenceNameExtractorImpl();
+
+	protected String resultSetSequenceName(ResultSet resultSet) throws SQLException {
+		return resultSet.getString( 1 );
+	}
+
+	@Override
+	protected String sequenceCatalogColumn() {
+		return null;
+	}
+
+	@Override
+	protected String sequenceSchemaColumn() {
+		return null;
+	}
 
 	@Override
 	protected String sequenceStartValueColumn() {
@@ -25,11 +39,16 @@ public class SequenceInformationExtractorH2DatabaseImpl extends SequenceInformat
 
 	@Override
 	protected String sequenceMinValueColumn() {
-		return "min_value";
+		return null;
 	}
 
 	@Override
 	protected String sequenceMaxValueColumn() {
-		return "max_value";
+		return null;
+	}
+
+	@Override
+	protected String sequenceIncrementColumn() {
+		return null;
 	}
 }

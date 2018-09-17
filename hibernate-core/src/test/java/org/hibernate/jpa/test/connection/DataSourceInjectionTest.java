@@ -15,6 +15,7 @@ import javax.persistence.PersistenceException;
 
 import org.hibernate.jpa.HibernatePersistenceProvider;
 
+import org.hibernate.testing.util.ExceptionUtil;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -49,7 +50,7 @@ public class DataSourceInjectionTest {
 			if(emf != null){
 				emf.close();
 			}
-			Assert.assertTrue( pe.getCause() instanceof FakeDataSourceException );
+			Assert.assertTrue( ExceptionUtil.rootCause( pe ) instanceof FakeDataSourceException );
 		}
 		catch (FakeDataSourceException fde) {
 			//success

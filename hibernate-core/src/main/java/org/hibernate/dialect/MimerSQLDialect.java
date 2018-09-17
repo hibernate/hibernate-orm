@@ -12,6 +12,8 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MimerSQLIdentityColumnSupport;
+import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMimerSQLDatabaseImpl;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -166,7 +168,12 @@ public class MimerSQLDialect extends Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select sequence_schema || '.' || sequence_name from information_schema.ext_sequences";
+		return "select * from information_schema.ext_sequences";
+	}
+
+	@Override
+	public SequenceInformationExtractor getSequenceInformationExtractor() {
+		return SequenceInformationExtractorMimerSQLDatabaseImpl.INSTANCE;
 	}
 
 	@Override

@@ -37,7 +37,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
+import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -81,18 +81,15 @@ public class H2Dialect extends Dialect {
 	public H2Dialect() {
 		super();
 
-		String querySequenceString = "select sequence_name from information_schema.sequences";
-		SequenceInformationExtractor sequenceInformationExtractor = SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
+		int buildId = Integer.MIN_VALUE;
+
 		try {
 			// HHH-2300
 			final Class h2ConstantsClass = ReflectHelper.classForName( "org.h2.engine.Constants" );
 			final int majorVersion = (Integer) h2ConstantsClass.getDeclaredField( "VERSION_MAJOR" ).get( null );
 			final int minorVersion = (Integer) h2ConstantsClass.getDeclaredField( "VERSION_MINOR" ).get( null );
-			final int buildId = (Integer) h2ConstantsClass.getDeclaredField( "BUILD_ID" ).get( null );
-			if ( buildId < 32 ) {
-				querySequenceString = "select name from information_schema.sequences";
-				sequenceInformationExtractor = SequenceInformationExtractorLegacyImpl.INSTANCE;
-			}
+			buildId = (Integer) h2ConstantsClass.getDeclaredField( "BUILD_ID" ).get( null );
+
 			if ( ! ( majorVersion > 1 || minorVersion > 2 || buildId >= 139 ) ) {
 				LOG.unsupportedMultiTableBulkHqlJpaql( majorVersion, minorVersion, buildId );
 			}
@@ -103,8 +100,14 @@ public class H2Dialect extends Dialect {
 			LOG.undeterminedH2Version();
 		}
 
-		this.querySequenceString = querySequenceString;
-		this.sequenceInformationExtractor = sequenceInformationExtractor;
+		if ( buildId >= 32 ) {
+			this.sequenceInformationExtractor = SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
+			this.querySequenceString = "select * from information_schema.sequences";
+		}
+		else {
+			this.sequenceInformationExtractor = SequenceInformationExtractorNoOpImpl.INSTANCE;
+			this.querySequenceString = null;
+		}
 
 		registerColumnType( Types.BOOLEAN, "boolean" );
 		registerColumnType( Types.BIGINT, "bigint" );

@@ -19,6 +19,8 @@ import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
+import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorSAPDBDatabaseImpl;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -198,7 +200,12 @@ public class SAPDBDialect extends Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select sequence_name from domain.sequences";
+		return "select * from domain.sequences";
+	}
+
+	@Override
+	public SequenceInformationExtractor getSequenceInformationExtractor() {
+		return SequenceInformationExtractorSAPDBDatabaseImpl.INSTANCE;
 	}
 
 	@Override

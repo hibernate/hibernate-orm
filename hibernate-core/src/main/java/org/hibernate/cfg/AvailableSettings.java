@@ -1961,4 +1961,19 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 */
 	String QUERY_STATISTICS_MAX_SIZE = "hibernate.statistics.query_max_size";
 
+	/**
+	 * This setting defines the {@link org.hibernate.id.SequenceMismatchStrategy} used when
+	 * Hibernate detects a mismatch between a sequence configuration in an entity mapping
+	 * and its database sequence object counterpart.
+	 * </p>
+	 * Possible values are {@link org.hibernate.id.SequenceMismatchStrategy#EXCEPTION},
+	 * {@link org.hibernate.id.SequenceMismatchStrategy#LOG}, and
+	 * {@link org.hibernate.id.SequenceMismatchStrategy#FIX}.
+	 * </p>
+	 * The default value is given by the {@link org.hibernate.id.SequenceMismatchStrategy#EXCEPTION},
+	 * meaning that an Exception is thrown when detecting such a conflict.
+	 *
+	 * @since 5.4
+	 */
+	String SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY = "hibernate.id.sequence.increment_size_mismatch_strategy";
 }

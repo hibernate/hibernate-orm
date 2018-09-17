@@ -41,18 +41,25 @@ public class SequenceInformationExtractorLegacyImpl implements SequenceInformati
 		try {
 			final ResultSet resultSet = statement.executeQuery( lookupSql );
 			try {
-				final List<SequenceInformation> sequenceInformationList = new ArrayList<SequenceInformation>();
+				final List<SequenceInformation> sequenceInformationList = new ArrayList<>();
 				while ( resultSet.next() ) {
 					sequenceInformationList.add(
 							new SequenceInformationImpl(
 									new QualifiedSequenceName(
-											null,
-											null,
 											identifierHelper.toIdentifier(
-													resultSet.getString( 1 )
+												resultSetCatalogName( resultSet )
+											),
+											identifierHelper.toIdentifier(
+													resultSetSchemaName( resultSet )
+											),
+											identifierHelper.toIdentifier(
+													resultSetSequenceName( resultSet )
 											)
 									),
-									-1
+									resultSetStartValueSize( resultSet ),
+									resultSetMinValue( resultSet ),
+									resultSetMaxValue( resultSet ),
+									resultSetIncrementValue( resultSet )
 							)
 					);
 				}
@@ -73,5 +80,67 @@ public class SequenceInformationExtractorLegacyImpl implements SequenceInformati
 			catch (SQLException ignore) {
 			}
 		}
+	}
+
+	protected String sequenceNameColumn() {
+		return "sequence_name";
+	}
+
+	protected String sequenceCatalogColumn() {
+		return "sequence_catalog";
+	}
+
+	protected String sequenceSchemaColumn() {
+		return "sequence_schema";
+	}
+
+	protected String sequenceStartValueColumn() {
+		return "start_value";
+	}
+
+	protected String sequenceMinValueColumn() {
+		return "minimum_value";
+	}
+
+	protected String sequenceMaxValueColumn() {
+		return "maximum_value";
+	}
+
+	protected String sequenceIncrementColumn() {
+		return "increment";
+	}
+
+	protected String resultSetSequenceName(ResultSet resultSet) throws SQLException {
+		return resultSet.getString( sequenceNameColumn() );
+	}
+
+	protected String resultSetCatalogName(ResultSet resultSet) throws SQLException {
+		String column = sequenceCatalogColumn();
+		return column != null ? resultSet.getString( column ) : null;
+	}
+
+	protected String resultSetSchemaName(ResultSet resultSet) throws SQLException {
+		String column = sequenceSchemaColumn();
+		return column != null ? resultSet.getString( column ) : null;
+	}
+
+	protected Long resultSetStartValueSize(ResultSet resultSet) throws SQLException {
+		String column = sequenceStartValueColumn();
+		return column != null ? resultSet.getLong( column ) : null;
+	}
+
+	protected Long resultSetMinValue(ResultSet resultSet) throws SQLException {
+		String column = sequenceMinValueColumn();
+		return column != null ? resultSet.getLong( column ) : null;
+	}
+
+	protected Long resultSetMaxValue(ResultSet resultSet) throws SQLException {
+		String column = sequenceMaxValueColumn();
+		return column != null ? resultSet.getLong( column ) : null;
+	}
+
+	protected Long resultSetIncrementValue(ResultSet resultSet) throws SQLException {
+		String column = sequenceIncrementColumn();
+		return column != null ? resultSet.getLong( column ) : null;
 	}
 }

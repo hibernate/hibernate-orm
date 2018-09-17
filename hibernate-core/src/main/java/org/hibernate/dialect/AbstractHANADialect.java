@@ -79,6 +79,8 @@ import org.hibernate.mapping.Table;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHANADatabaseImpl;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
@@ -1108,7 +1110,12 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select sequence_name from sys.sequences";
+		return "select * from sys.sequences";
+	}
+
+	@Override
+	public SequenceInformationExtractor getSequenceInformationExtractor() {
+		return SequenceInformationExtractorHANADatabaseImpl.INSTANCE;
 	}
 
 	@Override
@@ -1636,5 +1643,4 @@ public abstract class AbstractHANADialect extends Dialect {
 	public boolean supportsNoWait() {
 		return true;
 	}
-
 }

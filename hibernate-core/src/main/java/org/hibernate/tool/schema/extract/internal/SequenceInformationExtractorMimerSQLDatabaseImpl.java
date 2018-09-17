@@ -6,30 +6,22 @@
  */
 package org.hibernate.tool.schema.extract.internal;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
 /**
- * @author Steve Ebersole
+ * @author Vlad Mihalcea
  */
-public class SequenceInformationExtractorH2DatabaseImpl extends SequenceInformationExtractorLegacyImpl {
+public class SequenceInformationExtractorMimerSQLDatabaseImpl extends SequenceInformationExtractorLegacyImpl {
 	/**
 	 * Singleton access
 	 */
-	public static final SequenceInformationExtractorH2DatabaseImpl INSTANCE = new SequenceInformationExtractorH2DatabaseImpl();
+	public static final SequenceInformationExtractorMimerSQLDatabaseImpl INSTANCE = new SequenceInformationExtractorMimerSQLDatabaseImpl();
 
 	@Override
 	protected String sequenceStartValueColumn() {
-		return null;
+		return "initial_value";
 	}
 
 	@Override
 	protected String sequenceMinValueColumn() {
-		return "min_value";
-	}
-
-	@Override
-	protected String sequenceMaxValueColumn() {
-		return "max_value";
+		return null;
 	}
 }

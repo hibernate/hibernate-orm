@@ -16,13 +16,13 @@ import org.hibernate.spatial.dialect.postgis.PostgisPG95Dialect;
 import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;
 
-import com.vividsolutions.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Coordinate;
 //tag::spatial-types-mapping-example[]
-import com.vividsolutions.jts.geom.Point;
+import org.locationtech.jts.geom.Point;
 
 //end::spatial-types-mapping-example[]
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Polygon;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Polygon;
 
 import static org.junit.Assert.assertEquals;
 

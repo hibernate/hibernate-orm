@@ -9,7 +9,7 @@ package org.hibernate.spatial.testing.dialects.mysql;
 import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.NativeSQLStatement;
 
-import com.vividsolutions.jts.geom.Geometry;
+import org.locationtech.jts.geom.Geometry;
 
 /**
  * @author Karel Maesen, Geovise BVBA

@@ -63,7 +63,7 @@ public class GeolatteGeometryJavaTypeDescriptor extends AbstractTypeDescriptor<G
 			return (X) value;
 		}
 
-		if ( com.vividsolutions.jts.geom.Geometry.class.isAssignableFrom( type ) ) {
+		if ( org.locationtech.jts.geom.Geometry.class.isAssignableFrom( type ) ) {
 			return (X) JTS.to( value );
 		}
 
@@ -85,8 +85,8 @@ public class GeolatteGeometryJavaTypeDescriptor extends AbstractTypeDescriptor<G
 			return fromString( (String) value );
 		}
 
-		if ( com.vividsolutions.jts.geom.Geometry.class.isInstance( value ) ) {
-			return JTS.from( (com.vividsolutions.jts.geom.Geometry) value );
+		if ( org.locationtech.jts.geom.Geometry.class.isInstance( value ) ) {
+			return JTS.from( (org.locationtech.jts.geom.Geometry) value );
 		}
 
 		throw unknownWrap( value.getClass() );

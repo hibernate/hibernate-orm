@@ -15,8 +15,8 @@ import org.hibernate.spatial.testing.NativeSQLStatement;
 
 import org.jboss.logging.Logger;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.Point;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.Point;
 import org.geolatte.geom.jts.JTS;
 
 /**

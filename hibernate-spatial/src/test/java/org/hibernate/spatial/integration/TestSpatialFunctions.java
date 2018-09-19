@@ -28,7 +28,7 @@ import org.junit.Test;
 
 import org.jboss.logging.Logger;
 
-import com.vividsolutions.jts.geom.Geometry;
+import org.locationtech.jts.geom.Geometry;
 
 import static java.lang.String.format;
 

@@ -1,40 +1,22 @@
-/*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
- */
-
 package org.hibernate.spatial.dialect.sqlserver;
-
 
 import java.util.Map;
 
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.dialect.SQLServer2008Dialect;
+import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
-import org.hibernate.spatial.GeolatteGeometryType;
-import org.hibernate.spatial.JTSGeometryJavaTypeDescriptor;
-import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
-import org.hibernate.spatial.SpatialRelation;
-import org.hibernate.type.StandardBasicTypes;
 
 /**
- * The <code>SpatialDialect</code> for Microsoft SQL Server (2008).
- *
- * @author Karel Maesen, Martin Steinwender.
+ * Created by Karel Maesen, Geovise BVBA on 19/09/2018.
  */
-public class SqlServer2008SpatialDialect extends SQLServer2008Dialect implements SpatialDialect {
-
+public class SqlServer2012SpatialDialect extends SQLServer2012Dialect implements SpatialDialect {
 
 	final private SqlServerSupport support = new SqlServerSupport();
 
-	public SqlServer2008SpatialDialect() {
+	public SqlServer2012SpatialDialect() {
 		super();
 		registerColumnType(
 				SqlServer2008GeometryTypeDescriptor.INSTANCE.getSqlType(),
@@ -95,6 +77,4 @@ public class SqlServer2008SpatialDialect extends SQLServer2008Dialect implements
 	public boolean supports(SpatialFunction function) {
 		return support.supports( function );
 	}
-
-
 }

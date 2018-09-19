@@ -13,10 +13,13 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Locale;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
+import org.hibernate.type.descriptor.ValueBinder;
+import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
-
-import org.jboss.logging.Logger;
+import org.hibernate.type.descriptor.java.StringTypeDescriptor;
+import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 
 /**
  * BasicValueConverter handling the conversion of an enum based on
@@ -25,12 +28,17 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class NamedEnumValueConverter<E extends Enum> implements EnumValueConverter<E,String>, Serializable {
-	private static final Logger log = Logger.getLogger( NamedEnumValueConverter.class );
 
 	private final EnumJavaTypeDescriptor<E> enumJavaDescriptor;
 
+	private final transient ValueExtractor<E> valueExtractor;
+
+	private final transient ValueBinder<String> valueBinder;
+
 	public NamedEnumValueConverter(EnumJavaTypeDescriptor<E> enumJavaDescriptor) {
 		this.enumJavaDescriptor = enumJavaDescriptor;
+		this.valueExtractor = VarcharTypeDescriptor.INSTANCE.getExtractor( enumJavaDescriptor );
+		this.valueBinder = VarcharTypeDescriptor.INSTANCE.getBinder( StringTypeDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -55,43 +63,15 @@ public class NamedEnumValueConverter<E extends Enum> implements EnumValueConvert
 	}
 
 	@Override
-	public E readValue(ResultSet resultSet, String name) throws SQLException {
-		final String value = resultSet.getString( name );
-
-		final boolean traceEnabled = log.isTraceEnabled();
-		if ( resultSet.wasNull() ) {
-			if ( traceEnabled ) {
-				log.trace( String.format( "Returning null as column [%s]", name ) );
-			}
-			return null;
-		}
-
-		final E enumValue = toDomainValue( value );
-		if ( traceEnabled ) {
-			log.trace( String.format( "Returning [%s] as column [%s]", enumValue, name ) );
-		}
-
-		return enumValue;
+	public E readValue(ResultSet resultSet, String name, SharedSessionContractImplementor session) throws SQLException {
+		return valueExtractor.extract( resultSet, name, session );
 	}
 
 	@Override
-	public void writeValue(PreparedStatement statement, E value, int position) throws SQLException {
+	public void writeValue(PreparedStatement statement, E value, int position, SharedSessionContractImplementor session) throws SQLException {
 		final String jdbcValue = value == null ? null : toRelationalValue( value );
 
-		final boolean traceEnabled = log.isTraceEnabled();
-		if ( jdbcValue == null ) {
-			if ( traceEnabled ) {
-				log.tracef( "Binding null to parameter: [%s]", position );
-			}
-			statement.setNull( position, getJdbcTypeCode() );
-			return;
-		}
-
-		if ( traceEnabled ) {
-			log.tracef( "Binding [%s] to parameter: [%s]", jdbcValue, position );
-		}
-
-		statement.setString( position, jdbcValue );
+		valueBinder.bind( statement, jdbcValue, position, session );
 	}
 
 	@Override

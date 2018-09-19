@@ -6,6 +6,12 @@
  */
 package org.hibernate.test.enums;
 
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.descriptor.sql.BasicBinder;
@@ -25,9 +31,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
- * @author Brett Meyer
+ * @author Vlad Mihacea
  */
-public class EnumTypeTest extends BaseCoreFunctionalTestCase {
+public class OrdinalEnumTypeTest extends BaseCoreFunctionalTestCase {
 
 	@Rule
 	public LoggerInspectionRule binderLogInspection = new LoggerInspectionRule( Logger.getMessageLogger(
@@ -47,8 +53,11 @@ public class EnumTypeTest extends BaseCoreFunctionalTestCase {
 
 	private Triggerable extractorTriggerable;
 
-	protected String[] getMappings() {
-		return new String[] { "enums/Person.hbm.xml" };
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] {
+				Person.class
+		};
 	}
 
 	@Override
@@ -68,27 +77,6 @@ public class EnumTypeTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected boolean isCleanupTestDataRequired() {
 		return true;
-	}
-
-	@Test
-	@TestForIssue(jiraKey = "HHH-8153")
-	public void hbmEnumTypeTest() {
-		doInHibernate( this::sessionFactory, s -> {
-			assertEquals( s.createCriteria( Person.class )
-								  .add( Restrictions.eq( "gender", Gender.MALE ) )
-								  .list().size(), 2 );
-			assertEquals( s.createCriteria( Person.class )
-								  .add( Restrictions.eq( "gender", Gender.MALE ) )
-								  .add( Restrictions.eq( "hairColor", HairColor.BROWN ) )
-								  .list().size(), 1 );
-			assertEquals( s.createCriteria( Person.class )
-								  .add( Restrictions.eq( "gender", Gender.FEMALE ) )
-								  .list().size(), 2 );
-			assertEquals( s.createCriteria( Person.class )
-								  .add( Restrictions.eq( "gender", Gender.FEMALE ) )
-								  .add( Restrictions.eq( "hairColor", HairColor.BROWN ) )
-								  .list().size(), 1 );
-		} );
 	}
 
 	@Test
@@ -121,5 +109,61 @@ public class EnumTypeTest extends BaseCoreFunctionalTestCase {
 			assertTrue( binderTriggerable.wasTriggered() );
 			assertTrue( extractorTriggerable.wasTriggered() );
 		} );
+	}
+
+	@Entity(name = "Person")
+	public static class Person {
+
+		@Id
+		@GeneratedValue
+		private Long id;
+
+		@Enumerated(EnumType.ORDINAL)
+		private Gender gender;
+
+		@Enumerated(EnumType.ORDINAL)
+		private HairColor hairColor;
+
+		@Enumerated(EnumType.ORDINAL)
+		private HairColor originalHairColor;
+
+		public static Person person(Gender gender, HairColor hairColor) {
+			Person person = new Person();
+			person.setGender( gender );
+			person.setHairColor( hairColor );
+			return person;
+		}
+
+		public long getId() {
+			return id;
+		}
+
+		public void setId(long id) {
+			this.id = id;
+		}
+
+		public Gender getGender() {
+			return gender;
+		}
+
+		public void setGender(Gender gender) {
+			this.gender = gender;
+		}
+
+		public HairColor getHairColor() {
+			return hairColor;
+		}
+
+		public void setHairColor(HairColor hairColor) {
+			this.hairColor = hairColor;
+		}
+
+		public HairColor getOriginalHairColor() {
+			return originalHairColor;
+		}
+
+		public void setOriginalHairColor(HairColor originalHairColor) {
+			this.originalHairColor = originalHairColor;
+		}
 	}
 }

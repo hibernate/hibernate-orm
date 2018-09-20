@@ -1950,3 +1950,21 @@ The Hibernate native API offers a `Query#setReadOnly` method, as an alternative 
 include::{sourcedir}/HQLTest.java[tags=hql-read-only-entities-native-example]
 ----
 ====
+
+[[hql-query-plan-cache]]
+=== Entity query plan cache
+
+Any entity query, be it JPQL or Criteria API, has to be parsed into an AST (Abstract Syntax Tree) so that Hibernate can generate the proper SQL statement. The entity query compilation takes time, and for this reason, Hibernate offers a query plan cache.
+
+When executing an entity query, Hibernate first checks the plan cache, and only if there's no plan available, a new one will be computed right away.
+
+The query plan cache can be configured via the following configuration properties:
+
+`hibernate.query.plan_cache_max_size`::
+This setting gives the maximum number of entries pf the plan cache. The default value is 2048.
+`hibernate.query.plan_parameter_metadata_max_size`::
+The setting gives the maximum number of `ParameterMetadataImpl` instances maintained by the query plan cache. The `ParameterMetadataImpl` object encapsulates metadata about parameters encountered within a query. The default is 128.
+
+Now, if you have many JPQL or Criteria API queries, it's a good idea to increase the query plan cache size so that the vast majority of executing entity queries can skip the compilation phase, therefore reducing execution time.
+
+To get a better understanding of the query plan cache effectiveness, Hibernate offers several statistics you can use. For more details, check out the <<chapters/statistics/Statistics.adoc#statistics-query-plan-cache,Query plan cache statistics>> section.

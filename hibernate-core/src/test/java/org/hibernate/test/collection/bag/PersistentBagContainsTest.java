@@ -21,7 +21,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.wildfly.common.Assert.assertTrue;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests related to contains operations on a PersistentBag.

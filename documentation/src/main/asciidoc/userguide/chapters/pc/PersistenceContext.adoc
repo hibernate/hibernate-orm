@@ -825,7 +825,7 @@ the automatic schema generator will apply the ON DELETE CASCADE SQL directive to
 as illustrated by the following example.
 
 [[pc-cascade-on-delete-mapping-example]]
-.`@OnDelete` mapping
+.`@OnDelete` `@ManyToOne` mapping
 ====
 [source, JAVA, indent=0]
 ----
@@ -843,10 +843,10 @@ include::{extrasdir}/pc-cascade-on-delete-mapping-example.sql[]
 ----
 ====
 
-Now, you can just remove the `Person` entity, and the associated `Phone` is going to be removed automatically.
+Now, you can just remove the `Person` entity, and the associated `Phone` entities are going to be deleted automatically via the Foreign Key cascade.
 
 [[pc-cascade-on-delete-example]]
-.`@OnDelete` example
+.`@OnDelete` `@ManyToOne` delete example
 ====
 [source, JAVA, indent=0]
 ----
@@ -857,4 +857,45 @@ include::{sourcedir}/CascadeOnDeleteTest.java[tags=pc-cascade-on-delete-example]
 ----
 include::{extrasdir}/pc-cascade-on-delete-example.sql[]
 ----
+====
+
+The `@OnDelete` annotation can also be placed on a collection, as
+illustrated in the following example.
+
+[[pc-cascade-on-delete-collection-mapping-example]]
+.`@OnDelete` `One@ToMany` mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeOnDeleteCollectionTest.java[tags=pc-cascade-on-delete-collection-mapping-Person-example]
+----
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeOnDeleteCollectionTest.java[tags=pc-cascade-on-delete-collection-mapping-Phone-example]
+----
+====
+
+Now, when removing the `Person` entity, all the associated `Phone` child entities are deleted via the Foreign Key cascade even if the `@OneToMany` collection was using the `CascadeType.ALL` attribute.
+
+[[pc-cascade-on-delete-collection-example]]
+.`@OnDelete` `@ManyToOne` delete example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeOnDeleteCollectionTest.java[tags=pc-cascade-on-delete-collection-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-cascade-on-delete-example.sql[]
+----
+====
+
+[NOTE]
+====
+Without the `@OnDelete` annotation, the `@OneToMany` association relies on the `cascade` attribute to propagate the `remove` entity state transition from the parent entity to its children.
+However, when the `@OnDelete` annotation is in place, Hibernate prevents the child entity `DELETE` statement from being executed while flushing the Persistence Context.
+
+This way, only the parent entity gets deleted, and all the associated child records are removed by the database engine, instead of being deleted explicitly via `DELETE` statements.
 ====

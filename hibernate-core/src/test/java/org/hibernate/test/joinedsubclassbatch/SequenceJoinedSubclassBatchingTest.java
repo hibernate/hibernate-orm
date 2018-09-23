@@ -19,9 +19,11 @@ import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.ManyToOne;
+import javax.persistence.SequenceGenerator;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
@@ -35,13 +37,13 @@ import org.junit.Test;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 /**
- * Test batching of insert,update,delete on joined subclasses
+ * Test batching of insert,update,delete on joined subclasses using SEQUENCE
  *
- * @author dcebotarenco
+ * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-2558")
-@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-public class IdentityJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCase {
+@TestForIssue(jiraKey = "HHH-12968\n")
+@RequiresDialectFeature(DialectChecks.SupportsSequences.class)
+public class SequenceJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -113,8 +115,8 @@ public class IdentityJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCa
 		doInHibernate( this::sessionFactory, s -> {
 			int i = 0;
 			ScrollableResults sr = s.createQuery(
-					"select e from Employee e" )
-					.scroll( ScrollMode.FORWARD_ONLY );
+				"select e from Employee e" )
+			.scroll( ScrollMode.FORWARD_ONLY );
 
 			while ( sr.next() ) {
 				Employee e = (Employee) sr.get( 0 );
@@ -125,50 +127,14 @@ public class IdentityJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCa
 		doInHibernate( this::sessionFactory, s -> {
 			int i = 0;
 			ScrollableResults sr = s.createQuery(
-					"select e from Employee e" )
-					.scroll( ScrollMode.FORWARD_ONLY );
+				"select e from Employee e" )
+			.scroll( ScrollMode.FORWARD_ONLY );
 
 			while ( sr.next() ) {
 				Employee e = (Employee) sr.get( 0 );
 				s.delete( e );
 			}
 		} );
-	}
-
-	@Test
-	public void testAssertSubclassInsertedSuccessfullyAfterCommit() {
-		final int nEntities = 10;
-
-		doInHibernate( this::sessionFactory, s -> {
-			for ( int i = 0; i < nEntities; i++ ) {
-				Employee e = new Employee();
-				e.setName( "Mark" );
-				e.setTitle( "internal sales" );
-				e.setSex( 'M' );
-				e.setAddress( "buckhead" );
-				e.setZip( "30305" );
-				e.setCountry( "USA" );
-				s.save( e );
-			}
-		} );
-
-		doInHibernate( this::sessionFactory, s -> {
-			long numberOfInsertedEmployee = (long) s.createQuery( "select count(e) from Employee e" ).uniqueResult();
-			Assert.assertEquals( nEntities, numberOfInsertedEmployee );
-		} );
-
-		doInHibernate( this::sessionFactory, s -> {
-			int i = 0;
-			ScrollableResults sr = s.createQuery(
-					"select e from Employee e" )
-					.scroll( ScrollMode.FORWARD_ONLY );
-
-			while ( sr.next() ) {
-				Employee e = (Employee) sr.get( 0 );
-				s.delete( e );
-			}
-		} );
-
 	}
 
 	@Test
@@ -203,7 +169,6 @@ public class IdentityJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCa
 		} );
 
 	}
-
 
 	@Embeddable
 	public static class Address implements Serializable {
@@ -315,8 +280,8 @@ public class IdentityJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCa
 	public static class Person {
 
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
-		private Integer id;
+		@GeneratedValue(strategy = GenerationType.SEQUENCE)
+		private Long id;
 
 		@Column(nullable = false, length = 80)
 		private String name;
@@ -356,11 +321,11 @@ public class IdentityJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCa
 			this.sex = sex;
 		}
 
-		public Integer getId() {
+		public Long getId() {
 			return id;
 		}
 
-		public void setId(Integer id) {
+		public void setId(Long id) {
 			this.id = id;
 		}
 

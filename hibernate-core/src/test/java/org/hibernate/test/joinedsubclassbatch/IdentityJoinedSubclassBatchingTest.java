@@ -22,7 +22,6 @@ import javax.persistence.ManyToOne;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
@@ -30,6 +29,7 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Assert;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -113,8 +113,8 @@ public class IdentityJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCa
 		doInHibernate( this::sessionFactory, s -> {
 			int i = 0;
 			ScrollableResults sr = s.createQuery(
-				"select e from Employee e" )
-			.scroll( ScrollMode.FORWARD_ONLY );
+					"select e from Employee e" )
+					.scroll( ScrollMode.FORWARD_ONLY );
 
 			while ( sr.next() ) {
 				Employee e = (Employee) sr.get( 0 );
@@ -125,8 +125,8 @@ public class IdentityJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCa
 		doInHibernate( this::sessionFactory, s -> {
 			int i = 0;
 			ScrollableResults sr = s.createQuery(
-				"select e from Employee e" )
-			.scroll( ScrollMode.FORWARD_ONLY );
+					"select e from Employee e" )
+					.scroll( ScrollMode.FORWARD_ONLY );
 
 			while ( sr.next() ) {
 				Employee e = (Employee) sr.get( 0 );
@@ -134,6 +134,76 @@ public class IdentityJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCa
 			}
 		} );
 	}
+
+	@Test
+	public void testAssertSubclassInsertedSuccessfullyAfterCommit() {
+		final int nEntities = 10;
+
+		doInHibernate( this::sessionFactory, s -> {
+			for ( int i = 0; i < nEntities; i++ ) {
+				Employee e = new Employee();
+				e.setName( "Mark" );
+				e.setTitle( "internal sales" );
+				e.setSex( 'M' );
+				e.setAddress( "buckhead" );
+				e.setZip( "30305" );
+				e.setCountry( "USA" );
+				s.save( e );
+			}
+		} );
+
+		doInHibernate( this::sessionFactory, s -> {
+			long numberOfInsertedEmployee = (long) s.createQuery( "select count(e) from Employee e" ).uniqueResult();
+			Assert.assertEquals( nEntities, numberOfInsertedEmployee );
+		} );
+
+		doInHibernate( this::sessionFactory, s -> {
+			int i = 0;
+			ScrollableResults sr = s.createQuery(
+					"select e from Employee e" )
+					.scroll( ScrollMode.FORWARD_ONLY );
+
+			while ( sr.next() ) {
+				Employee e = (Employee) sr.get( 0 );
+				s.delete( e );
+			}
+		} );
+
+	}
+
+	@Test
+	public void testAssertSubclassInsertedSuccessfullyAfterFlush() {
+
+		doInHibernate( this::sessionFactory, s -> {
+			Employee e = new Employee();
+			e.setName( "Mark" );
+			e.setTitle( "internal sales" );
+			e.setSex( 'M' );
+			e.setAddress( "buckhead" );
+			e.setZip( "30305" );
+			e.setCountry( "USA" );
+			s.save( e );
+			s.flush();
+
+			long numberOfInsertedEmployee = (long) s.createQuery( "select count(e) from Employee e" ).uniqueResult();
+			Assert.assertEquals( 1L, numberOfInsertedEmployee );
+		} );
+
+
+		doInHibernate( this::sessionFactory, s -> {
+			int i = 0;
+			ScrollableResults sr = s.createQuery(
+					"select e from Employee e" )
+					.scroll( ScrollMode.FORWARD_ONLY );
+
+			while ( sr.next() ) {
+				Employee e = (Employee) sr.get( 0 );
+				s.delete( e );
+			}
+		} );
+
+	}
+
 
 	@Embeddable
 	public static class Address implements Serializable {

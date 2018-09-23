@@ -83,6 +83,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.id.insert.Binder;
@@ -144,8 +145,6 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 import org.hibernate.type.VersionType;
 
-import static org.hibernate.internal.util.StringHelper.safeInterning;
-
 /**
  * Basic functionality for persisting an entity via JDBC
  * through either generated or custom SQL
@@ -154,7 +153,7 @@ import static org.hibernate.internal.util.StringHelper.safeInterning;
  */
 public abstract class AbstractEntityPersister
 		implements OuterJoinLoadable, Queryable, ClassMetadata, UniqueKeyLoadable,
-				SQLLoadable, LazyPropertyInitializer, PostInsertIdentityPersister, Lockable {
+		SQLLoadable, LazyPropertyInitializer, PostInsertIdentityPersister, Lockable {
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractEntityPersister.class );
 
@@ -3147,8 +3146,9 @@ public abstract class AbstractEntityPersister
 		// TODO : shouldn't inserts be Expectations.NONE?
 		final Expectation expectation = Expectations.appropriateExpectation( insertResultCheckStyles[j] );
 		final int jdbcBatchSizeToUse = session.getConfiguredJdbcBatchSize();
-		final boolean useBatch = expectation.canBeBatched() && jdbcBatchSizeToUse > 1;
-		if ( useBatch && inserBatchKey == null) {
+		final boolean useBatch = expectation.canBeBatched() && jdbcBatchSizeToUse > 1 && !( getIdentifierGenerator() instanceof IdentityGenerator );
+
+		if ( useBatch && inserBatchKey == null ) {
 			inserBatchKey = new BasicBatchKey(
 					getEntityName() + "#INSERT",
 					expectation

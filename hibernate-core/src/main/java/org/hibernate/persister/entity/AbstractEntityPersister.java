@@ -83,7 +83,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.id.insert.Binder;
@@ -3160,7 +3159,9 @@ public abstract class AbstractEntityPersister
 		// TODO : shouldn't inserts be Expectations.NONE?
 		final Expectation expectation = Expectations.appropriateExpectation( insertResultCheckStyles[j] );
 		final int jdbcBatchSizeToUse = session.getConfiguredJdbcBatchSize();
-		final boolean useBatch = expectation.canBeBatched() && jdbcBatchSizeToUse > 1 && !( getIdentifierGenerator() instanceof IdentityGenerator );
+		final boolean useBatch = expectation.canBeBatched() &&
+						jdbcBatchSizeToUse > 1 &&
+						getIdentifierGenerator().supportsJdbcBatchInserts();
 
 		if ( useBatch && inserBatchKey == null ) {
 			inserBatchKey = new BasicBatchKey(

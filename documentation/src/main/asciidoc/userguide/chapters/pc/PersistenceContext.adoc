@@ -863,7 +863,7 @@ The `@OnDelete` annotation can also be placed on a collection, as
 illustrated in the following example.
 
 [[pc-cascade-on-delete-collection-mapping-example]]
-.`@OnDelete` `One@ToMany` mapping
+.`@OnDelete` `@OneToMany` mapping
 ====
 [source, JAVA, indent=0]
 ----

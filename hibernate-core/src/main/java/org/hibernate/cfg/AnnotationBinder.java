@@ -37,6 +37,7 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
+import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
@@ -530,6 +531,12 @@ public final class AnnotationBinder {
 				&&  clazzToProcess.isAnnotationPresent( MappedSuperclass.class ) ) {
 			throw new AnnotationException( "An entity cannot be annotated with both @Entity and @MappedSuperclass: "
 					+ clazzToProcess.getName() );
+		}
+
+		if ( clazzToProcess.isAnnotationPresent( Inheritance.class )
+				&&  clazzToProcess.isAnnotationPresent( MappedSuperclass.class ) ) {
+			throw new AnnotationException( "An entity cannot be annotated with both @Inheritance and @MappedSuperclass: "
+												   + clazzToProcess.getName() );
 		}
 
 		//TODO: be more strict with secondarytable allowance (not for ids, not for secondary table join columns etc)

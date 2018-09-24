@@ -1961,7 +1961,7 @@ When executing an entity query, Hibernate first checks the plan cache, and only 
 The query plan cache can be configured via the following configuration properties:
 
 `hibernate.query.plan_cache_max_size`::
-This setting gives the maximum number of entries pf the plan cache. The default value is 2048.
+This setting gives the maximum number of entries of the plan cache. The default value is 2048.
 `hibernate.query.plan_parameter_metadata_max_size`::
 The setting gives the maximum number of `ParameterMetadataImpl` instances maintained by the query plan cache. The `ParameterMetadataImpl` object encapsulates metadata about parameters encountered within a query. The default is 128.
 

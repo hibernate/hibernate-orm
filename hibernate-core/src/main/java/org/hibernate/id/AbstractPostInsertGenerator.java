@@ -32,4 +32,9 @@ public abstract class AbstractPostInsertGenerator
 	public String determineBulkInsertionIdentifierGenerationSelectFragment(Dialect dialect) {
 		return null;
 	}
+
+	@Override
+	public boolean supportsJdbcBatchInserts() {
+		return false;
+	}
 }

@@ -25,9 +25,10 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @author Gavin King
  */
 public class SpecialOneToOneType extends OneToOneType {
-	
+
 	/**
-	 * @deprecated Use {@link #SpecialOneToOneType(org.hibernate.type.TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, String, String)} instead.
+	 * @deprecated Use {@link SpecialOneToOneType#SpecialOneToOneType(TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, String, String, boolean)}
+	 *  instead.
 	 */
 	@Deprecated
 	public SpecialOneToOneType(
@@ -41,7 +42,36 @@ public class SpecialOneToOneType extends OneToOneType {
 			String propertyName) {
 		this( scope, referencedEntityName, foreignKeyType, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName );
 	}
-	
+
+	/**
+	 * @deprecated Use {@link SpecialOneToOneType#SpecialOneToOneType(TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, String, String, boolean)}
+	 *  instead.
+	 */
+	@Deprecated
+	public SpecialOneToOneType(
+			TypeFactory.TypeScope scope,
+			String referencedEntityName,
+			ForeignKeyDirection foreignKeyType,
+			boolean referenceToPrimaryKey,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			String entityName,
+			String propertyName) {
+		this (
+				scope,
+				referencedEntityName,
+				foreignKeyType,
+				referenceToPrimaryKey,
+				uniqueKeyPropertyName,
+				lazy,
+				unwrapProxy,
+				entityName,
+				propertyName,
+				foreignKeyType != ForeignKeyDirection.TO_PARENT
+		);
+	}
+
 	public SpecialOneToOneType(
 			TypeFactory.TypeScope scope,
 			String referencedEntityName,
@@ -51,7 +81,8 @@ public class SpecialOneToOneType extends OneToOneType {
 			boolean lazy,
 			boolean unwrapProxy,
 			String entityName,
-			String propertyName) {
+			String propertyName,
+			boolean constrained) {
 		super(
 				scope,
 				referencedEntityName, 
@@ -61,7 +92,8 @@ public class SpecialOneToOneType extends OneToOneType {
 				lazy,
 				unwrapProxy,
 				entityName, 
-				propertyName
+				propertyName,
+				constrained
 			);
 	}
 

@@ -71,7 +71,8 @@ public class OneToOne extends ToOne {
 					isLazy(),
 					isUnwrapProxy(),
 					entityName,
-					propertyName
+					propertyName,
+					constrained
 			);
 		}
 		else {
@@ -83,7 +84,8 @@ public class OneToOne extends ToOne {
 					isLazy(),
 					isUnwrapProxy(),
 					entityName,
-					propertyName
+					propertyName,
+					constrained
 			);
 		}
 	}

@@ -5465,7 +5465,7 @@ public abstract class AbstractEntityPersister
 
 	protected String determineTableName(Table table, JdbcEnvironment jdbcEnvironment) {
 		if ( table.getSubselect() != null ) {
-			return "( " + table.getSubselect() + " )";
+			return "( " + substituteBrackets( table.getSubselect() ) + " )";
 		}
 
 		return jdbcEnvironment.getQualifiedObjectNameFormatter().format(

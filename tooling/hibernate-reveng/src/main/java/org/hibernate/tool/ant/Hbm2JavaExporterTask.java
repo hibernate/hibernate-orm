@@ -5,6 +5,8 @@
 package org.hibernate.tool.ant;
 
 import org.hibernate.tool.api.export.Exporter;
+import org.hibernate.tool.api.export.ExporterFactory;
+import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.internal.export.pojo.POJOExporter;
 
 /**
@@ -30,15 +32,14 @@ public class Hbm2JavaExporterTask extends ExporterTask {
 	}
 
 	protected Exporter configureExporter(Exporter exp) {
-		POJOExporter exporter = (POJOExporter) exp;
 		super.configureExporter( exp );
-        exporter.getProperties().setProperty("ejb3", ""+ejb3);
-        exporter.getProperties().setProperty("jdk5", ""+jdk5);
-		return exporter;
+        exp.getProperties().setProperty("ejb3", ""+ejb3);
+        exp.getProperties().setProperty("jdk5", ""+jdk5);
+		return exp;
 	}
 
 	protected Exporter createExporter() {
-		return new POJOExporter();
+		return ExporterFactory.createExporter(ExporterType.POJO);
 	}
 
 	public String getName() {

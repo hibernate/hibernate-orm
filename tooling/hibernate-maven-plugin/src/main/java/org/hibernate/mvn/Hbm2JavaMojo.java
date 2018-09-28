@@ -6,8 +6,10 @@ import java.io.File;
 
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.hibernate.tool.api.export.Exporter;
+import org.hibernate.tool.api.export.ExporterFactory;
+import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.internal.export.pojo.POJOExporter;
 
 /**
  * Mojo to generate Java JPA Entities from an existing database.
@@ -27,7 +29,7 @@ public class Hbm2JavaMojo extends AbstractHbm2xMojo {
     private String templatePath;
 
     protected void executeExporter(MetadataDescriptor metadataDescriptor) {
-        POJOExporter pojoExporter = new POJOExporter();
+        Exporter pojoExporter = ExporterFactory.createExporter(ExporterType.POJO);
         pojoExporter.setMetadataDescriptor(metadataDescriptor);
         pojoExporter.setOutputDirectory(outputDirectory);
         if (templatePath != null) {

@@ -13,7 +13,6 @@ import org.hibernate.mapping.Property;
 import org.hibernate.tool.internal.export.pojo.Cfg2JavaTool;
 import org.hibernate.tool.internal.export.pojo.ComponentPOJOClass;
 import org.hibernate.tool.internal.export.pojo.POJOClass;
-import org.hibernate.tool.internal.export.pojo.POJOExporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +21,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ConfigurationNavigator {
 
-	private static final Logger log = LoggerFactory.getLogger(POJOExporter.class);
+	private static final Logger log = LoggerFactory.getLogger(ConfigurationNavigator.class);
 	
 	/**
 	 * @param clazz

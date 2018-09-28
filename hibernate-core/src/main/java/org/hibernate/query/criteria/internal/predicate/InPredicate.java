@@ -98,6 +98,7 @@ public class InPredicate<T>
 	 * @param expression The expression.
 	 * @param values The value list.
 	 */
+	@SuppressWarnings("unchecked")
 	public InPredicate(
 			CriteriaBuilderImpl criteriaBuilder,
 			Expression<? extends T> expression,
@@ -110,9 +111,13 @@ public class InPredicate<T>
 				? ValueHandlerFactory.determineAppropriateHandler((Class<? extends T>) javaType)
 				: new ValueHandlerFactory.NoOpValueHandler<T>();
 		for ( T value : values ) {
-			this.values.add(
-					new LiteralExpression<T>( criteriaBuilder, valueHandler.convert( value ) )
-			);
+			if ( value instanceof Expression ) {
+				this.values.add( (Expression<T>) value );
+			}
+			else {
+				this.values.add(
+						new LiteralExpression<T>( criteriaBuilder, valueHandler.convert( value ) ) );
+			}
 		}
 	}
 

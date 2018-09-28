@@ -18,6 +18,11 @@ public class ExporterFactoryTest {
 				"org.hibernate.tool.api.export.ExporterFactoryTest$TestExporter");
 		Assert.assertNotNull(exporter);
 		Assert.assertTrue(exporter instanceof TestExporter);
+		exporter = ExporterFactory.createExporter(ExporterType.POJO);
+		Assert.assertNotNull(exporter);
+		Assert.assertEquals(
+				ExporterType.POJO.className(), 
+				exporter.getClass().getName());
 	}
 	
 	public static class TestExporter extends AbstractExporter {

@@ -14,5 +14,9 @@ public class ExporterFactory {
 		}
 		return result;
 	}
+	
+	public static Exporter createExporter(ExporterType exporterType) {
+		return createExporter(exporterType.className());
+	}
 
 }

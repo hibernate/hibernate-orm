@@ -183,7 +183,9 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				// the requested lock-mode is less restrictive than the current one
 				//		- pass along the current lock-mode (after accounting for WRITE)
 				lockOptionsToUse = LockOptions.copy( event.getLockOptions(), new LockOptions() );
-				if ( currentLockMode == LockMode.WRITE ) {
+				if ( currentLockMode == LockMode.WRITE ||
+						currentLockMode == LockMode.PESSIMISTIC_WRITE ||
+						currentLockMode == LockMode.PESSIMISTIC_READ ) {
 					// our transaction should already hold the exclusive lock on
 					// the underlying row - so READ should be sufficient.
 					//
@@ -194,7 +196,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 					lockOptionsToUse.setLockMode( LockMode.READ );
 
 					// and prepare to reset the entry lock-mode to WRITE after the refresh completes
-					postRefreshLockMode = LockMode.WRITE;
+					postRefreshLockMode = currentLockMode;
 				}
 				else {
 					lockOptionsToUse.setLockMode( currentLockMode );

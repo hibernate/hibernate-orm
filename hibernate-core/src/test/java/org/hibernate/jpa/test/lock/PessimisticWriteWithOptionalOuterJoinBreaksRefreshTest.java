@@ -18,7 +18,6 @@ import javax.persistence.ManyToOne;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,7 +62,6 @@ public class PessimisticWriteWithOptionalOuterJoinBreaksRefreshTest extends Base
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-13000", message = "Fails due to regression in HHH-12257" )
 	public void pessimisticWriteWithOptionalOuterJoinBreaksRefreshTest() {
 		doInJPA( this::entityManagerFactory, em -> {
 			b = em.find( B.class, b.id );

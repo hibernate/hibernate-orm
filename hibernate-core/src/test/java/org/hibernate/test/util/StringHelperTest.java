@@ -6,10 +6,11 @@
  */
 package org.hibernate.test.util;
 
-import org.junit.Test;
-
 import org.hibernate.internal.util.StringHelper;
+
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -53,5 +54,14 @@ public class StringHelperTest extends BaseUnitTestCase {
 		assertEquals( StringHelper.indexOfIdentifierWord( "?1", "?1" ), 0 );
 		assertEquals( StringHelper.indexOfIdentifierWord( "no identifier here", "?1" ), -1 );
 		assertEquals( StringHelper.indexOfIdentifierWord( "some text ?", "?" ), 10 );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12647")
+	public void testBatchFetchArrayRestrictionFragment() {
+		assertEquals(
+				"public.pkey = ANY(?)",
+				StringHelper.buildBatchFetchArrayRestrictionFragment( "public", "pkey" ).toString()
+		);
 	}
 }

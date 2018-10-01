@@ -23,7 +23,8 @@ public abstract class BatchingCollectionInitializerBuilder {
 			case PADDED: {
 				return PaddedBatchingCollectionInitializerBuilder.INSTANCE;
 			}
-			case DYNAMIC: {
+			case DYNAMIC:
+			case ANY_ARRAY: {
 				return DynamicBatchingCollectionInitializerBuilder.INSTANCE;
 			}
 			default: {

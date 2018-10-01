@@ -15,7 +15,7 @@ import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.reveng.ReverseEngineeringSettings;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
-import org.hibernate.tool.internal.reveng.OverrideRepository;
+import org.hibernate.tool.api.reveng.ReverseEngineeringStrategyFactory;
 
 public abstract class AbstractHbm2xMojo extends AbstractMojo {
 
@@ -57,19 +57,14 @@ public abstract class AbstractHbm2xMojo extends AbstractMojo {
     }
 
     private ReverseEngineeringStrategy setupReverseEngineeringStrategy() {
-        ReverseEngineeringStrategy strategy;
-        try {
-            strategy = ReverseEngineeringStrategy.class.cast(Class.forName(revengStrategy).newInstance());
-        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException | ClassCastException e) {
-            throw new BuildException(revengStrategy + " not instanced.", e);
-        }
-
-        if (revengFile != null) {
-            OverrideRepository override = new OverrideRepository();
-            override.addFile(revengFile);
-            strategy = override.getReverseEngineeringStrategy(strategy);
-        }
-
+    	File[] revengFiles = null;
+    	if (revengFile != null) {
+    		revengFiles = new File[] { revengFile };
+    	}
+        ReverseEngineeringStrategy strategy = 
+        		ReverseEngineeringStrategyFactory.createReverseEngineeringStrategy(
+        				revengStrategy, 
+        				revengFiles);
         ReverseEngineeringSettings settings =
                 new ReverseEngineeringSettings(strategy)
                         .setDefaultPackageName(packageName)
@@ -78,7 +73,6 @@ public abstract class AbstractHbm2xMojo extends AbstractMojo {
                         .setDetectOptimisticLock(detectOptimisticLock)
                         .setCreateCollectionForForeignKey(createCollectionForForeignKey)
                         .setCreateManyToOneForForeignKey(createManyToOneForForeignKey);
-
         strategy.setSettings(settings);
         return strategy;
     }

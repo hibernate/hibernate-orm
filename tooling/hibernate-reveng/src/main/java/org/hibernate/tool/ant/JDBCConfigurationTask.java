@@ -15,8 +15,7 @@ import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.reveng.ReverseEngineeringSettings;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
-import org.hibernate.tool.internal.reveng.DefaultReverseEngineeringStrategy;
-import org.hibernate.tool.internal.reveng.OverrideRepository;
+import org.hibernate.tool.api.reveng.ReverseEngineeringStrategyFactory;
 import org.hibernate.tool.internal.util.ReflectHelper;
 
 
@@ -50,19 +49,18 @@ public class JDBCConfigurationTask extends ConfigurationTask {
 	}
 	
 	private ReverseEngineeringStrategy createReverseEngineeringStrategy() {
-		DefaultReverseEngineeringStrategy defaultStrategy = new DefaultReverseEngineeringStrategy();
-		
-		ReverseEngineeringStrategy strategy = defaultStrategy;
-				
-		if(revengFiles!=null) {
-			OverrideRepository or = new OverrideRepository();
-			
+		File[] revengFileList = null;
+		if (revengFiles != null ) {
 			String[] fileNames = revengFiles.list();
+			revengFileList = new File[fileNames.length];
 			for (int i = 0; i < fileNames.length; i++) {
-				or.addFile(new File(fileNames[i]) );
+				revengFileList[i] = new File(fileNames[i]);
 			}
-			strategy = or.getReverseEngineeringStrategy(defaultStrategy);			
 		}
+
+		ReverseEngineeringStrategy strategy = 
+				ReverseEngineeringStrategyFactory.createReverseEngineeringStrategy(
+						null, revengFileList);
 		
 		if(reverseEngineeringStrategyClass!=null) {
 			strategy = loadreverseEngineeringStrategy(reverseEngineeringStrategyClass, strategy);			
@@ -74,7 +72,6 @@ public class JDBCConfigurationTask extends ConfigurationTask {
 			.setDetectOneToOne( detectOneToOne )
 			.setDetectOptimisticLock( detectOptimisticLock );
 	
-		defaultStrategy.setSettings(qqsettings);
 		strategy.setSettings(qqsettings);
 		
 		return strategy;

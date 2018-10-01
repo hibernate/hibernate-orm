@@ -44,9 +44,6 @@ public final class ConfigurationHelper {
 		if ( value == null ) {
 			return null;
 		}
-		if ( String.class.isInstance( value ) ) {
-			return (String) value;
-		}
 		return value.toString();
 	}
 

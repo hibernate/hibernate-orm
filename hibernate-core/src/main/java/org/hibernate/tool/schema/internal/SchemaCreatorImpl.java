@@ -483,6 +483,10 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 		for ( String currentFile : importFiles.split( "," ) ) {
 			final String resourceName = currentFile.trim();
+			if ( "".equals( resourceName ) ) {
+				//skip empty resource names
+				continue;
+			}
 			final ScriptSourceInput importScriptInput = interpretLegacyImportScriptSetting( resourceName, classLoaderService, charsetName );
 			importScriptInput.prepare();
 			try {

@@ -2,10 +2,10 @@ package org.hibernate.tool.internal.export.dao;
 
 import java.util.Map;
 
+import org.hibernate.tool.api.export.PojoExporter;
 import org.hibernate.tool.internal.export.pojo.POJOClass;
-import org.hibernate.tool.internal.export.pojo.POJOExporter;
 
-public class DAOExporter extends POJOExporter {
+public class DAOExporter extends PojoExporter {
 
     private static final String DAO_DAOHOME_FTL = "dao/daohome.ftl";
 

@@ -2,14 +2,14 @@
  * Created on 2004-12-01
  *
  */
-package org.hibernate.tool.internal.export.pojo;
+package org.hibernate.tool.api.export;
 
 import org.hibernate.tool.internal.export.common.GenericExporter;
 
 /**
  * @author max
  */
-public class POJOExporter extends GenericExporter {
+public class PojoExporter extends GenericExporter {
 
 	private static final String POJO_JAVACLASS_FTL = "pojo/Pojo.ftl";
 
@@ -18,7 +18,7 @@ public class POJOExporter extends GenericExporter {
     	setFilePattern("{package-name}/{class-name}.java");    	
 	}
 
-	public POJOExporter() {
+	public PojoExporter() {
 		init();		
 	}
     

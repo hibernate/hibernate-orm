@@ -2,7 +2,8 @@ package org.hibernate.tool.api.export;
 
 public enum ExporterType {
 	
-	POJO ("org.hibernate.tool.internal.export.pojo.POJOExporter");
+	GENERIC ("org.hibernate.tool.internal.export.common.GenericExporter"),
+	POJO ("org.hibernate.tool.api.export.PojoExporter");
 	
 	private String className;
 	

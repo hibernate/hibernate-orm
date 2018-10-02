@@ -107,7 +107,7 @@ public class AlterTableQuoteSpecifiedSchemaTest extends AbstractAlterTableQuoteS
 
 		try {
 			String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-			Pattern fileContentPattern = Pattern.compile( "create table " + regexpQuote( "my-schema", "my_entity" ) );
+			Pattern fileContentPattern = Pattern.compile( "create ((column|row) )?table " + regexpQuote( "my-schema", "my_entity" ) );
 			Matcher fileContentMatcher = fileContentPattern.matcher( fileContent.toLowerCase() );
 			assertThat( fileContentMatcher.find(), is( true ) );
 		}

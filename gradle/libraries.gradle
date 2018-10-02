@@ -23,7 +23,7 @@ ext {
     weldVersion = '3.0.0.Final'
 
     javassistVersion = '3.23.1-GA'
-    byteBuddyVersion = '1.8.17' // Now with JDK10 compatibility and preliminary support for JDK11
+    byteBuddyVersion = '1.9.0'
 
     geolatteVersion = '1.4.0'
 

@@ -231,14 +231,6 @@ processTestResources {
 	}
 }
 
-// Enable the experimental features of ByteBuddy with JDK 11
-test {
-	if ( JavaVersion.current().isJava11Compatible() ) {
-		systemProperty 'net.bytebuddy.experimental', true
-	}
-}
-
-
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // IDE
 

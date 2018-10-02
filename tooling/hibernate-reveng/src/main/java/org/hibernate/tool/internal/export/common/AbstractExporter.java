@@ -13,6 +13,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.tool.api.export.ArtifactCollector;
 import org.hibernate.tool.api.export.Exporter;
+import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.internal.export.hbm.Cfg2HbmTool;
 import org.hibernate.tool.internal.export.pojo.Cfg2JavaTool;
@@ -26,7 +27,7 @@ import org.slf4j.LoggerFactory;
  * @author max and david
  * @author koen
  */
-public abstract class AbstractExporter implements Exporter {
+public abstract class AbstractExporter implements Exporter, ExporterConstants {
 
 	protected Logger log = LoggerFactory.getLogger(this.getClass());
 	
@@ -36,7 +37,7 @@ public abstract class AbstractExporter implements Exporter {
 	private Properties properties = new Properties();
 	private ArtifactCollector collector = new DefaultArtifactCollector();
 	private Metadata metadata = null;
-	private MetadataDescriptor metadataDescriptor = null;
+//	private MetadataDescriptor metadataDescriptor = null;
 
 	private Iterator<Entry<Object, Object>> iterator;
 
@@ -49,11 +50,11 @@ public abstract class AbstractExporter implements Exporter {
 	}
 	
 	public void setMetadataDescriptor(MetadataDescriptor metadataDescriptor) {
-		this.metadataDescriptor = metadataDescriptor;
+		getProperties().put(METADATA_DESCRIPTOR, metadataDescriptor);
 	}
 	
 	protected MetadataDescriptor getMetadataDescriptor() {
-		return metadataDescriptor;
+		return (MetadataDescriptor)getProperties().get(METADATA_DESCRIPTOR);
 	}
 	
 	public Metadata getMetadata() {
@@ -208,7 +209,7 @@ public abstract class AbstractExporter implements Exporter {
     }
 	
 	protected Metadata buildMetadata() {
-		return metadataDescriptor.createMetadata();
+		return getMetadataDescriptor().createMetadata();
 	}
 
     private File getDirForPackage(File baseDir, String packageName) {

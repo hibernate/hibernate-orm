@@ -168,7 +168,7 @@ class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDeclaredMet
 	DynamicType.Builder<?> applyTo(DynamicType.Builder<?> builder, boolean accessor) {
 		boolean compositeOwner = false;
 
-		builder = builder.visit( new AsmVisitorWrapper.ForDeclaredMethods().method( not( nameStartsWith( "$$_hibernate_" ) ), this ) );
+		builder = builder.visit( new AsmVisitorWrapper.ForDeclaredMethods().invokable( not( nameStartsWith( "$$_hibernate_" ) ), this ) );
 		for ( FieldDescription enhancedField : enhancedFields ) {
 			builder = builder
 					.defineMethod(
@@ -250,7 +250,7 @@ class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDeclaredMet
 
 	DynamicType.Builder<?> applyExtended(DynamicType.Builder<?> builder) {
 		AsmVisitorWrapper.ForDeclaredMethods.MethodVisitorWrapper enhancer = new FieldAccessEnhancer( managedCtClass, enhancementContext, classPool );
-		return builder.visit( new AsmVisitorWrapper.ForDeclaredMethods().method( not( nameStartsWith( "$$_hibernate_" ) ), enhancer ) );
+		return builder.visit( new AsmVisitorWrapper.ForDeclaredMethods().invokable( not( nameStartsWith( "$$_hibernate_" ) ), enhancer ) );
 	}
 
 	private static class FieldMethodReader implements ByteCodeAppender {

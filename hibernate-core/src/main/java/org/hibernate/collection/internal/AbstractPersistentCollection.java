@@ -624,6 +624,9 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		prepareForPossibleLoadingOutsideTransaction();
 		if ( currentSession == this.session ) {
 			if ( !isTempSession ) {
+				if ( hasQueuedOperations() ) {
+					LOG.queuedOperationWhenDetachFromSession( MessageHelper.collectionInfoString( getRole(), getKey() ) );
+				}
 				this.session = null;
 			}
 			return true;
@@ -651,25 +654,22 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		if ( session == this.session ) {
 			return false;
 		}
-		else {
-			if ( this.session != null ) {
-				final String msg = generateUnexpectedSessionStateMessage( session );
-				if ( isConnectedToSession() ) {
-					throw new HibernateException(
-							"Illegal attempt to associate a collection with two open sessions. " + msg
-					);
-				}
-				else {
-					LOG.logUnexpectedSessionInCollectionNotConnected( msg );
-					this.session = session;
-					return true;
-				}
+		else if ( this.session != null ) {
+			final String msg = generateUnexpectedSessionStateMessage( session );
+			if ( isConnectedToSession() ) {
+				throw new HibernateException(
+						"Illegal attempt to associate a collection with two open sessions. " + msg
+				);
 			}
 			else {
-				this.session = session;
-				return true;
+				LOG.logUnexpectedSessionInCollectionNotConnected( msg );
 			}
 		}
+		if ( hasQueuedOperations() ) {
+			LOG.queuedOperationWhenAttachToSession( MessageHelper.collectionInfoString( getRole(), getKey() ) );
+		}
+		this.session = session;
+		return true;
 	}
 
 	private String generateUnexpectedSessionStateMessage(SharedSessionContractImplementor session) {

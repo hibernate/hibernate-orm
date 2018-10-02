@@ -689,8 +689,13 @@ public abstract class CollectionType extends AbstractType implements Association
 					pc.replaceQueuedOperationValues( getPersister( session ), copyCache );
 				}
 				else {
-					throw new UnsupportedOperationException(
-							"A detached collection with queued operations cannot be merged."
+					// original is a detached copy of the collection;
+					// it contains queued operations, which will be ignored
+					LOG.ignoreQueuedOperationsOnMerge(
+							MessageHelper.collectionInfoString(
+									getRole(),
+									( (PersistentCollection) original ).getKey()
+							)
 					);
 				}
 			}

@@ -37,7 +37,6 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 	private Properties properties = new Properties();
 	private ArtifactCollector collector = new DefaultArtifactCollector();
 	private Metadata metadata = null;
-//	private MetadataDescriptor metadataDescriptor = null;
 
 	private Iterator<Entry<Object, Object>> iterator;
 
@@ -47,10 +46,6 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 	public AbstractExporter() {
 		c2h = new Cfg2HbmTool();
 		c2j = new Cfg2JavaTool();		
-	}
-	
-	public void setMetadataDescriptor(MetadataDescriptor metadataDescriptor) {
-		getProperties().put(METADATA_DESCRIPTOR, metadataDescriptor);
 	}
 	
 	protected MetadataDescriptor getMetadataDescriptor() {

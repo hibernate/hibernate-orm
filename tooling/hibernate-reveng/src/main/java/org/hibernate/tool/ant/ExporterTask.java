@@ -12,6 +12,7 @@ import org.apache.tools.ant.types.Environment;
 import org.apache.tools.ant.types.Path;
 import org.apache.tools.ant.types.PropertySet;
 import org.hibernate.tool.api.export.Exporter;
+import org.hibernate.tool.api.export.ExporterConstants;
 
 /**
  * @author max
@@ -92,7 +93,7 @@ public abstract class ExporterTask {
 		prop.putAll(parent.getProperties());
 		prop.putAll(properties);
 		exporter.getProperties().putAll(prop);
-		exporter.setMetadataDescriptor(parent.getMetadataDescriptor());
+		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, parent.getMetadataDescriptor());
 		exporter.setOutputDirectory( getDestdir() );
 		exporter.setTemplatePath( getTemplatePath().list() );			
 		return exporter;

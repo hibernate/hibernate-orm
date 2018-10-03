@@ -14,6 +14,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Table;
+import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.internal.export.common.AbstractExporter;
 import org.hibernate.tool.internal.export.common.GenericExporter;
 import org.hibernate.tool.internal.export.common.TemplateProducer;
@@ -161,7 +162,7 @@ public class DocExporter extends AbstractExporter {
 				GenericExporter exporter = new GenericExporter();
 				exporter.getProperties().putAll( getProperties() );
 				exporter.setArtifactCollector( getArtifactCollector() );
-				exporter.setMetadataDescriptor(getMetadataDescriptor());
+				exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, getMetadataDescriptor());
 				exporter.setOutputDirectory(getOutputDirectory());
 				exporter.setTemplatePath( getTemplatePath() );
 

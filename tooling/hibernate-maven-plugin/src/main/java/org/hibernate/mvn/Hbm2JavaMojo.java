@@ -7,6 +7,7 @@ import java.io.File;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.hibernate.tool.api.export.Exporter;
+import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.export.ExporterFactory;
 import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
@@ -30,7 +31,7 @@ public class Hbm2JavaMojo extends AbstractHbm2xMojo {
 
     protected void executeExporter(MetadataDescriptor metadataDescriptor) {
         Exporter pojoExporter = ExporterFactory.createExporter(ExporterType.POJO);
-        pojoExporter.setMetadataDescriptor(metadataDescriptor);
+        pojoExporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
         pojoExporter.setOutputDirectory(outputDirectory);
         if (templatePath != null) {
             getLog().info("Setting template path to: " + templatePath);

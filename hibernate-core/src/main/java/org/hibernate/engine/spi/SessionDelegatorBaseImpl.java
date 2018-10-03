@@ -55,6 +55,7 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.loader.custom.CustomQuery;
@@ -526,17 +527,17 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <T> EntityGraph<T> createEntityGraph(Class<T> rootType) {
+	public <T> RootGraphImplementor<T> createEntityGraph(Class<T> rootType) {
 		return delegate.createEntityGraph( rootType );
 	}
 
 	@Override
-	public EntityGraph<?> createEntityGraph(String graphName) {
+	public RootGraphImplementor<?> createEntityGraph(String graphName) {
 		return delegate.createEntityGraph( graphName );
 	}
 
 	@Override
-	public EntityGraph<?> getEntityGraph(String graphName) {
+	public RootGraphImplementor<?> getEntityGraph(String graphName) {
 		return delegate.getEntityGraph( graphName );
 	}
 

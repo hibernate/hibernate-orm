@@ -13,10 +13,9 @@ import javax.persistence.Id;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.metamodel.model.domain.spi.MetamodelImplementor;
 import org.hibernate.query.Query;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;

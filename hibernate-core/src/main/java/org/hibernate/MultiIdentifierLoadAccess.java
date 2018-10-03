@@ -9,6 +9,9 @@ package org.hibernate;
 import java.io.Serializable;
 import java.util.List;
 
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.RootGraph;
+
 /**
  * Loads multiple entities at once by identifiers, ultimately via one of the
  * {@link #multiLoad} methods, using the various options specified (if any)
@@ -33,6 +36,12 @@ public interface MultiIdentifierLoadAccess<T> {
 	 * @return {@code this}, for method chaining
 	 */
 	MultiIdentifierLoadAccess<T> with(CacheMode cacheMode);
+
+	default MultiIdentifierLoadAccess<T> with(RootGraph<T> graph) {
+		return with( graph, GraphSemantic.LOAD );
+	}
+
+	MultiIdentifierLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic);
 
 	/**
 	 * Specify a batch size for loading the entities (how many at a time).  The default is

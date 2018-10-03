@@ -9,6 +9,9 @@ package org.hibernate;
 import java.io.Serializable;
 import java.util.Optional;
 
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.RootGraph;
+
 /**
  * Loads an entity by its primary identifier.
  * 
@@ -33,6 +36,12 @@ public interface IdentifierLoadAccess<T> {
 	 * @return {@code this}, for method chaining
 	 */
 	IdentifierLoadAccess<T> with(CacheMode cacheMode);
+
+	default IdentifierLoadAccess<T> with(RootGraph<T> graph) {
+		return with( graph, GraphSemantic.LOAD );
+	}
+
+	IdentifierLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic);
 
 	/**
 	 * Return the persistent instance with the given identifier, assuming that the instance exists. This method

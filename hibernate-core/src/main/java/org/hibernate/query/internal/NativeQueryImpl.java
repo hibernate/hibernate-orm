@@ -41,9 +41,12 @@ import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.RootGraph;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.ParameterMetadata;
+import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -825,9 +828,12 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 	}
 
 	@Override
+	public Query<T> applyGraph(RootGraph graph, GraphSemantic semantic) {
+		throw new HibernateException( "A native SQL query cannot use EntityGraphs" );
+	}
+
+	@Override
 	protected void applyEntityGraphQueryHint(EntityGraphQueryHint hint) {
-		throw new HibernateException(
-			"A native SQL query cannot use EntityGraphs"
-		);
+		throw new HibernateException( "A native SQL query cannot use EntityGraphs" );
 	}
 }

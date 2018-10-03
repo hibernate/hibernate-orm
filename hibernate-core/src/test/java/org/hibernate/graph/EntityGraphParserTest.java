@@ -14,12 +14,19 @@ import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
 import javax.persistence.Subgraph;
 
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.graph.spi.AttributeNodeImplementor;
+import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.graph.spi.SubGraphImplementor;
+
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 /**
- * A unit test of {@link EntityGraphParser}.
+ * A unit test of {@link GraphParser}.
  * 
  * @author asusnjar
  */
@@ -46,13 +53,13 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 	@Test
 	public void testLinkParsing() {
 		EntityGraph<GraphParsingTestEntity> graph = parseGraph( "linkToOne(name, description)" );
-		Assert.assertNotNull( graph );
+		assertNotNull( graph );
 		List<AttributeNode<?>> attrs = graph.getAttributeNodes();
-		Assert.assertNotNull( attrs );
-		Assert.assertEquals( 1, attrs.size() );
+		assertNotNull( attrs );
+		assertEquals( 1, attrs.size() );
 		AttributeNode<?> node = attrs.get( 0 );
-		Assert.assertNotNull( node );
-		Assert.assertEquals( "linkToOne", node.getAttributeName() );
+		assertNotNull( node );
+		assertEquals( "linkToOne", node.getAttributeName() );
 		assertNullOrEmpty( node.getKeySubgraphs() );
 		@SuppressWarnings("rawtypes")
 		Map<Class, Subgraph> sub = node.getSubgraphs();
@@ -62,13 +69,13 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 	@Test
 	public void testMapKeyParsing() {
 		EntityGraph<GraphParsingTestEntity> graph = parseGraph( "map.key(name, description)" );
-		Assert.assertNotNull( graph );
+		assertNotNull( graph );
 		List<AttributeNode<?>> attrs = graph.getAttributeNodes();
-		Assert.assertNotNull( attrs );
-		Assert.assertEquals( 1, attrs.size() );
+		assertNotNull( attrs );
+		assertEquals( 1, attrs.size() );
 		AttributeNode<?> node = attrs.get( 0 );
-		Assert.assertNotNull( node );
-		Assert.assertEquals( "map", node.getAttributeName() );
+		assertNotNull( node );
+		assertEquals( "map", node.getAttributeName() );
 		assertNullOrEmpty( node.getSubgraphs() );
 		@SuppressWarnings("rawtypes")
 		Map<Class, Subgraph> sub = node.getKeySubgraphs();
@@ -78,13 +85,13 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 	@Test
 	public void testMapValueParsing() {
 		EntityGraph<GraphParsingTestEntity> graph = parseGraph( "map.value(name, description)" );
-		Assert.assertNotNull( graph );
+		assertNotNull( graph );
 		List<AttributeNode<?>> attrs = graph.getAttributeNodes();
-		Assert.assertNotNull( attrs );
-		Assert.assertEquals( 1, attrs.size() );
+		assertNotNull( attrs );
+		assertEquals( 1, attrs.size() );
 		AttributeNode<?> node = attrs.get( 0 );
-		Assert.assertNotNull( node );
-		Assert.assertEquals( "map", node.getAttributeName() );
+		assertNotNull( node );
+		assertEquals( "map", node.getAttributeName() );
 		assertNullOrEmpty( node.getKeySubgraphs() );
 		@SuppressWarnings("rawtypes")
 		Map<Class, Subgraph> sub = node.getSubgraphs();
@@ -92,7 +99,7 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 	}
 
 	@Test
-	@Ignore
+//	@Ignore
 	public void testMixParsingWithMaps() {
 		// Fails due to: https://hibernate.atlassian.net/browse/HHH-12696
 		String g = " name , linkToOne ( description, map . key ( name ) , map . value ( description ) , name ) , description , map . key ( name , description ) , map . value ( description ) ";
@@ -168,7 +175,7 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 	}
 
 	@Test
-	@Ignore("Cannot run due to Hibernate bug: https://hibernate.atlassian.net/browse/HHH-10378")
+//	@Ignore("Cannot run due to Hibernate bug: https://hibernate.atlassian.net/browse/HHH-10378")
 	// TODO Re-enable when Hibernate bug HHH-10378 is fixed
 	public void testLinkSubtypeParsing() {
 		// https://hibernate.atlassian.net/browse/HHH-10378
@@ -184,41 +191,43 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 		//
 		// return type.isAssignableFrom( entityPersister.getMappedClass() );
 
-		EntityGraph<GraphParsingTestEntity> graph = parseGraph( "linkToOne(name, description), linkToOne:MockSubentity(sub)" );
-		Assert.assertNotNull( graph );
-		List<AttributeNode<?>> attrs = graph.getAttributeNodes();
-		Assert.assertNotNull( attrs );
-		Assert.assertEquals( 1, attrs.size() );
-		AttributeNode<?> node = attrs.get( 0 );
-		Assert.assertNotNull( node );
-		Assert.assertEquals( "linkToOne", node.getAttributeName() );
-		assertNullOrEmpty( node.getKeySubgraphs() );
-		@SuppressWarnings("rawtypes")
-		Map<Class, Subgraph> sub = node.getSubgraphs();
-		assertBasicAttributes( sub.get( GraphParsingTestSubentity.class ), "sub" );
+		RootGraphImplementor<GraphParsingTestEntity> graph = parseGraph( "linkToOne(name, description), linkToOne(GraphParsingTestSubentity: sub)" );
+		assertNotNull( graph );
+
+		List<AttributeNodeImplementor<?>> attrs = graph.getAttributeNodeImplementors();
+		assertNotNull( attrs );
+		assertEquals( 1, attrs.size() );
+
+		AttributeNodeImplementor<?> linkToOneNode = attrs.get( 0 );
+		assertNotNull( linkToOneNode );
+		assertEquals( "linkToOne", linkToOneNode.getAttributeName() );
+
+		assertNullOrEmpty( linkToOneNode.getKeySubgraphs() );
+
+		final SubGraphImplementor subGraph = linkToOneNode.getSubGraphMap().get( GraphParsingTestSubentity.class );
+		assertNotNull( subGraph );
+
+		assertBasicAttributes( subGraph, "sub" );
 	}
 
 	@Test
 	public void testHHH10378IsNotFixedYet() {
 		EntityManager entityManager = getOrCreateEntityManager();
-		try {
-			EntityGraph<GraphParsingTestEntity> graph = entityManager.createEntityGraph( GraphParsingTestEntity.class );
-			graph.addSubgraph( "linkToOne", GraphParsingTestSubentity.class );
-			Assert.fail( "https://hibernate.atlassian.net/browse/HHH-10378 appears to have been fixed. Please check and update the tests here." );
-		}
-		catch (IllegalArgumentException iax) {
-			if ( iax.getMessage().startsWith( "Attribute [linkToOne] cannot be treated as requested type" ) ) {
-				// This is, unfortunately, expected.
-				System.err.println( "*Sigh*, https://hibernate.atlassian.net/browse/HHH-10378 appears to not have been fixed yet." );
-			}
-			else {
-				Assert.fail( "https://hibernate.atlassian.net/browse/HHH-10378 may have been fixed. Please check and update the tests here." );
-			}
-		}
+		RootGraphImplementor<GraphParsingTestEntity> graph = ( (SessionImplementor) entityManager ).createEntityGraph(
+				GraphParsingTestEntity.class );
+		final SubGraphImplementor<GraphParsingTestSubentity> subGraph = graph.addSubGraph(
+				"linkToOne",
+				GraphParsingTestSubentity.class
+		);
+
+		assertEquals( subGraph.getGraphedType().getJavaType(), GraphParsingTestSubentity.class );
+
+		final AttributeNodeImplementor<Object> subTypeAttrNode = subGraph.addAttributeNode( "sub" );
+		assert subTypeAttrNode != null;
 	}
 
 	@Test
-	@Ignore("Cannot run due to Hibernate bug: https://hibernate.atlassian.net/browse/HHH-12696")
+//	@Ignore("Cannot run due to Hibernate bug: https://hibernate.atlassian.net/browse/HHH-12696")
 	public void testHHH12696MapSubgraphsKeyFirst() {
 
 		EntityManager entityManager = getOrCreateEntityManager();
@@ -248,11 +257,11 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 				Assert.assertSame( valueSubgraph, valueSubgraphs.get( GraphParsingTestEntity.class ) );
 			}
 		}
-		Assert.assertEquals( 1, count );
+		assertEquals( 1, count );
 	}
 
 	@Test
-	@Ignore("Cannot run due to Hibernate bug: https://hibernate.atlassian.net/browse/HHH-12696")
+//	@Ignore("Cannot run due to Hibernate bug: https://hibernate.atlassian.net/browse/HHH-12696")
 	public void testHHH12696MapSubgraphsValueFirst() {
 		EntityManager entityManager = getOrCreateEntityManager();
 		EntityGraph<GraphParsingTestEntity> graph = entityManager.createEntityGraph( GraphParsingTestEntity.class );

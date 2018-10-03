@@ -18,7 +18,7 @@ public class EntityGraphsTest extends AbstractEntityGraphTest {
 	private final <T> void checkMerge(Class<T> rootType, EntityGraph<T> expected, @SuppressWarnings("unchecked") EntityGraph<T>... graphs) {
 		EntityManager entityManager = getOrCreateEntityManager();
 		EntityGraph<T> actual = EntityGraphs.merge( entityManager, rootType, graphs );
-		Assert.assertTrue( EntityGraphs.equal( expected, actual ) );
+		Assert.assertTrue( EntityGraphs.areEqual( expected, actual ) );
 	}
 
 	@SafeVarargs
@@ -29,35 +29,35 @@ public class EntityGraphsTest extends AbstractEntityGraphTest {
 	@Test
 	public void testSameBasicsEqual() {
 		EntityGraph<GraphParsingTestEntity> g = parseGraph( "name, description " );
-		Assert.assertTrue( EntityGraphs.equal( g, g ) );
+		Assert.assertTrue( EntityGraphs.areEqual( g, g ) );
 	}
 
 	@Test
 	public void testEqualBasicsEqual() {
 		EntityGraph<GraphParsingTestEntity> a = parseGraph( "name, description " );
 		EntityGraph<GraphParsingTestEntity> b = parseGraph( "description, name " );
-		Assert.assertTrue( EntityGraphs.equal( a, b ) );
+		Assert.assertTrue( EntityGraphs.areEqual( a, b ) );
 	}
 
 	@Test
 	public void testDifferentBasicsEqual1() {
 		EntityGraph<GraphParsingTestEntity> a = parseGraph( "name, description " );
 		EntityGraph<GraphParsingTestEntity> b = parseGraph( "description " );
-		Assert.assertFalse( EntityGraphs.equal( a, b ) );
+		Assert.assertFalse( EntityGraphs.areEqual( a, b ) );
 	}
 
 	@Test
 	public void testDifferentBasicsEqual2() {
 		EntityGraph<GraphParsingTestEntity> a = parseGraph( "name " );
 		EntityGraph<GraphParsingTestEntity> b = parseGraph( "description " );
-		Assert.assertFalse( EntityGraphs.equal( a, b ) );
+		Assert.assertFalse( EntityGraphs.areEqual( a, b ) );
 	}
 
 	@Test
 	public void testEqualLinksEqual1() {
 		EntityGraph<GraphParsingTestEntity> a = parseGraph( "linkToOne(name, description)" );
 		EntityGraph<GraphParsingTestEntity> b = parseGraph( "linkToOne(description, name)" );
-		Assert.assertTrue( EntityGraphs.equal( a, b ) );
+		Assert.assertTrue( EntityGraphs.areEqual( a, b ) );
 	}
 
 	@Test
@@ -65,21 +65,21 @@ public class EntityGraphsTest extends AbstractEntityGraphTest {
 	public void testEqualLinksWithSubclassesEqual() {
 		EntityGraph<GraphParsingTestEntity> a = parseGraph( "linkToOne(name), linkToOne:MockSubentity(description)" );
 		EntityGraph<GraphParsingTestEntity> b = parseGraph( "linkToOne:MockSubentity(description), linkToOne(name)" );
-		Assert.assertTrue( EntityGraphs.equal( a, b ) );
+		Assert.assertTrue( EntityGraphs.areEqual( a, b ) );
 	}
 
 	@Test
 	public void testDifferentLinksEqual1() {
 		EntityGraph<GraphParsingTestEntity> a = parseGraph( "linkToOne(name, description)" );
 		EntityGraph<GraphParsingTestEntity> b = parseGraph( "linkToOne(description)" );
-		Assert.assertFalse( EntityGraphs.equal( a, b ) );
+		Assert.assertFalse( EntityGraphs.areEqual( a, b ) );
 	}
 
 	@Test
 	public void testDifferentLinksEqual2() {
 		EntityGraph<GraphParsingTestEntity> a = parseGraph( "linkToOne(name)" );
 		EntityGraph<GraphParsingTestEntity> b = parseGraph( "linkToOne(description)" );
-		Assert.assertFalse( EntityGraphs.equal( a, b ) );
+		Assert.assertFalse( EntityGraphs.areEqual( a, b ) );
 	}
 
 	@Test
@@ -87,75 +87,75 @@ public class EntityGraphsTest extends AbstractEntityGraphTest {
 	public void testDifferentLinksEqual3() {
 		EntityGraph<GraphParsingTestEntity> a = parseGraph( "linkToOne(name), linkToOne:MockSubentity(description)" );
 		EntityGraph<GraphParsingTestEntity> b = parseGraph( "linkToOne(name, description)" );
-		Assert.assertFalse( EntityGraphs.equal( a, b ) );
+		Assert.assertFalse( EntityGraphs.areEqual( a, b ) );
 	}
 
 	@Test
 	public void testEqualMapKeysEqual() {
 		EntityGraph<GraphParsingTestEntity> a = parseGraph( "map.key(name, description)" );
 		EntityGraph<GraphParsingTestEntity> b = parseGraph( "map.key(description, name)" );
-		Assert.assertTrue( EntityGraphs.equal( a, b ) );
+		Assert.assertTrue( EntityGraphs.areEqual( a, b ) );
 	}
 
 	@Test
 	public void testDifferentMapKeysEqual1() {
 		EntityGraph<GraphParsingTestEntity> a = parseGraph( "map.key(name, description)" );
 		EntityGraph<GraphParsingTestEntity> b = parseGraph( "map.key(description)" );
-		Assert.assertFalse( EntityGraphs.equal( a, b ) );
+		Assert.assertFalse( EntityGraphs.areEqual( a, b ) );
 	}
 
 	@Test
 	public void testDifferentMapKeysEqual2() {
 		EntityGraph<GraphParsingTestEntity> a = parseGraph( "map.key(name)" );
 		EntityGraph<GraphParsingTestEntity> b = parseGraph( "map.key(description)" );
-		Assert.assertFalse( EntityGraphs.equal( a, b ) );
+		Assert.assertFalse( EntityGraphs.areEqual( a, b ) );
 	}
 
 	@Test
 	public void testEqualMapValuesEqual() {
 		EntityGraph<GraphParsingTestEntity> a = parseGraph( "map.value(name, description)" );
 		EntityGraph<GraphParsingTestEntity> b = parseGraph( "map.value(description, name)" );
-		Assert.assertTrue( EntityGraphs.equal( a, b ) );
+		Assert.assertTrue( EntityGraphs.areEqual( a, b ) );
 	}
 
 	@Test
 	public void testDifferentMapValuesEqual1() {
 		EntityGraph<GraphParsingTestEntity> a = parseGraph( "map.value(name, description)" );
 		EntityGraph<GraphParsingTestEntity> b = parseGraph( "map.value(description)" );
-		Assert.assertFalse( EntityGraphs.equal( a, b ) );
+		Assert.assertFalse( EntityGraphs.areEqual( a, b ) );
 	}
 
 	@Test
 	public void testDifferentMapValuesEqual2() {
 		EntityGraph<GraphParsingTestEntity> a = parseGraph( "map.value(name)" );
 		EntityGraph<GraphParsingTestEntity> b = parseGraph( "map.value(description)" );
-		Assert.assertFalse( EntityGraphs.equal( a, b ) );
+		Assert.assertFalse( EntityGraphs.areEqual( a, b ) );
 	}
 
 	@Test
 	public void testEqualComplexGraphsEqual() {
 		EntityGraph<GraphParsingTestEntity> a = parseGraph( "map.key(name, description), name, linkToOne(description), description" );
 		EntityGraph<GraphParsingTestEntity> b = parseGraph( "description, map.key(description, name), name, linkToOne(description)" );
-		Assert.assertTrue( EntityGraphs.equal( a, b ) );
+		Assert.assertTrue( EntityGraphs.areEqual( a, b ) );
 	}
 
 	@Test
 	public void testDifferentComplexGraphsEqual() {
 		EntityGraph<GraphParsingTestEntity> a = parseGraph( "map.key(name, description), name, linkToOne(description), description" );
 		EntityGraph<GraphParsingTestEntity> b = parseGraph( "description, map.value(description, name), name, linkToOne(description)" );
-		Assert.assertFalse( EntityGraphs.equal( a, b ) );
+		Assert.assertFalse( EntityGraphs.areEqual( a, b ) );
 	}
 
 	@Test
 	public void testNullsEqual() {
-		Assert.assertTrue( EntityGraphs.equal( (EntityGraph<GraphParsingTestEntity>) null, (EntityGraph<GraphParsingTestEntity>) null ) );
+		Assert.assertTrue( EntityGraphs.areEqual( (EntityGraph<GraphParsingTestEntity>) null, (EntityGraph<GraphParsingTestEntity>) null ) );
 	}
 
 	@Test
 	public void testNullAndNonNullEqual() {
 		EntityGraph<GraphParsingTestEntity> graph = parseGraph( "name " );
-		Assert.assertFalse( EntityGraphs.equal( graph, (EntityGraph<GraphParsingTestEntity>) null ) );
-		Assert.assertFalse( EntityGraphs.equal( (EntityGraph<GraphParsingTestEntity>) null, graph ) );
+		Assert.assertFalse( EntityGraphs.areEqual( graph, (EntityGraph<GraphParsingTestEntity>) null ) );
+		Assert.assertFalse( EntityGraphs.areEqual( (EntityGraph<GraphParsingTestEntity>) null, graph ) );
 	}
 
 	@Test

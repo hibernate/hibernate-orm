@@ -13,7 +13,8 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.graph.spi.GraphNodeImplementor;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 
 /**
@@ -22,16 +23,27 @@ import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
  * @author Strong Liu <stliu@hibernate.org>
  */
 public class LoadGraphLoadPlanBuildingStrategy extends AbstractEntityGraphVisitationStrategy {
-	private final GraphNodeImplementor rootEntityGraph;
+	private final RootGraphImplementor<?> rootEntityGraph;
 
 	public LoadGraphLoadPlanBuildingStrategy(
-			final SessionFactoryImplementor sessionFactory, final LoadQueryInfluencers loadQueryInfluencers,final LockMode lockMode) {
-		super( sessionFactory, loadQueryInfluencers , lockMode);
-		this.rootEntityGraph = (GraphNodeImplementor) loadQueryInfluencers.getLoadGraph();
+			final SessionFactoryImplementor sessionFactory,
+			final LoadQueryInfluencers loadQueryInfluencers,
+			final LockMode lockMode) {
+		this( sessionFactory, loadQueryInfluencers.getEffectiveEntityGraph().getGraph(), loadQueryInfluencers, lockMode);
+		assert loadQueryInfluencers.getEffectiveEntityGraph().getSemantic() == GraphSemantic.LOAD;
+	}
+
+	public LoadGraphLoadPlanBuildingStrategy(
+			SessionFactoryImplementor factory,
+			RootGraphImplementor<?> graph,
+			LoadQueryInfluencers queryInfluencers,
+			LockMode lockMode) {
+		super( factory, queryInfluencers, lockMode );
+		this.rootEntityGraph = graph;
 	}
 
 	@Override
-	protected GraphNodeImplementor getRootEntityGraph() {
+	protected RootGraphImplementor getRootEntityGraph() {
 		return rootEntityGraph;
 	}
 

@@ -11,10 +11,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
 import javax.persistence.EntityGraph;
 
 import org.hibernate.Filter;
 import org.hibernate.UnknownProfileException;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.type.Type;
 
@@ -37,18 +40,20 @@ public class LoadQueryInfluencers implements Serializable {
 	public static final LoadQueryInfluencers NONE = new LoadQueryInfluencers();
 
 	private final SessionFactoryImplementor sessionFactory;
+
 	private String internalFetchProfile;
-	private final Map<String,Filter> enabledFilters;
 	private final Set<String> enabledFetchProfileNames;
-	private EntityGraph fetchGraph;
-	private EntityGraph loadGraph;
+
+	private final Map<String,Filter> enabledFilters;
+
+	private final EffectiveEntityGraph effectiveEntityGraph = new EffectiveEntityGraph();
 
 	public LoadQueryInfluencers() {
 		this( null );
 	}
 
 	public LoadQueryInfluencers(SessionFactoryImplementor sessionFactory) {
-		this( sessionFactory, new HashMap<String,Filter>(), new HashSet<String>() );
+		this( sessionFactory, new HashMap<>(), new HashSet<>() );
 	}
 
 	private LoadQueryInfluencers(SessionFactoryImplementor sessionFactory, Map<String,Filter> enabledFilters, Set<String> enabledFetchProfileNames) {
@@ -182,19 +187,68 @@ public class LoadQueryInfluencers implements Serializable {
 		enabledFetchProfileNames.remove( name );
 	}
 
+	public EffectiveEntityGraph getEffectiveEntityGraph() {
+		return effectiveEntityGraph;
+	}
+
+	/**
+	 * @deprecated (since 5.4) {@link #getFetchGraph}, {@link #getLoadGraph}, {@link #setFetchGraph}
+	 * and {@link #setLoadGraph} (as well as JPA itself honestly) all make it very unclear that
+	 * there can be only one graph applied at any one time and that graph is *either* a load or
+	 * a fetch graph.  These have all been replaced with {@link #getEffectiveEntityGraph()}.
+	 *
+	 * @see EffectiveEntityGraph
+	 */
+	@Deprecated
 	public EntityGraph getFetchGraph() {
-		return fetchGraph;
+		if ( effectiveEntityGraph.getSemantic() != GraphSemantic.FETCH ) {
+			return null;
+		}
+
+		return effectiveEntityGraph.getGraph();
 	}
 
-	public void setFetchGraph(final EntityGraph fetchGraph) {
-		this.fetchGraph = fetchGraph;
+	/**
+	 * @deprecated (since 5.4) {@link #getFetchGraph}, {@link #getLoadGraph}, {@link #setFetchGraph}
+	 * and {@link #setLoadGraph} (as well as JPA itself honestly) all make it very unclear that
+	 * there can be only one graph applied at any one time and that graph is *either* a load or
+	 * a fetch graph.  These have all been replaced with {@link #getEffectiveEntityGraph()}.
+	 *
+	 * @see EffectiveEntityGraph
+	 */
+	@Deprecated
+	public void setFetchGraph(EntityGraph fetchGraph) {
+		effectiveEntityGraph.applyGraph( (RootGraphImplementor<?>) fetchGraph, GraphSemantic.FETCH );
 	}
 
+	/**
+	 * @deprecated (since 5.4) {@link #getFetchGraph}, {@link #getLoadGraph}, {@link #setFetchGraph}
+	 * and {@link #setLoadGraph} (as well as JPA itself honestly) all make it very unclear that
+	 * there can be only one graph applied at any one time and that graph is *either* a load or
+	 * a fetch graph.  These have all been replaced with {@link #getEffectiveEntityGraph()}.
+	 *
+	 * @see EffectiveEntityGraph
+	 */
+	@Deprecated
 	public EntityGraph getLoadGraph() {
-		return loadGraph;
+		if ( effectiveEntityGraph.getSemantic() != GraphSemantic.LOAD ) {
+			return null;
+		}
+
+		return effectiveEntityGraph.getGraph();
 	}
 
+	/**
+	 * @deprecated (since 5.4) {@link #getFetchGraph}, {@link #getLoadGraph}, {@link #setFetchGraph}
+	 * and {@link #setLoadGraph} (as well as JPA itself honestly) all make it very unclear that
+	 * there can be only one graph applied at any one time and that that graph is *either* a load or
+	 * a fetch graph.  These have all been replaced with {@link #getEffectiveEntityGraph()}.
+	 *
+	 * @see EffectiveEntityGraph
+	 */
+	@Deprecated
 	public void setLoadGraph(final EntityGraph loadGraph) {
-		this.loadGraph = loadGraph;
+		effectiveEntityGraph.applyGraph( (RootGraphImplementor<?>) loadGraph, GraphSemantic.LOAD );
 	}
+
 }

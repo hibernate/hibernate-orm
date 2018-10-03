@@ -4287,8 +4287,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	private boolean isAffectedByEntityGraph(SharedSessionContractImplementor session) {
-		return session.getLoadQueryInfluencers().getFetchGraph() != null || session.getLoadQueryInfluencers()
-				.getLoadGraph() != null;
+		return session.getLoadQueryInfluencers().getEffectiveEntityGraph().getGraph() != null;
 	}
 
 	private boolean isAffectedByEnabledFetchProfiles(SharedSessionContractImplementor session) {

@@ -15,9 +15,11 @@ import java.util.List;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
+import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.graph.GraphSemantic;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.entity.UniqueEntityLoader;
@@ -63,21 +65,28 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 		this.entityName = entityPersister.getEntityName();
 
 		final LoadPlanBuildingAssociationVisitationStrategy strategy;
-		if ( buildingParameters.getQueryInfluencers().getFetchGraph() != null ) {
+
+		final EffectiveEntityGraph effectiveEntityGraph = buildingParameters.getQueryInfluencers().getEffectiveEntityGraph();
+		if ( effectiveEntityGraph.getSemantic() == GraphSemantic.FETCH ) {
 			strategy = new FetchGraphLoadPlanBuildingStrategy(
-					factory, buildingParameters.getQueryInfluencers(),
+					factory,
+					effectiveEntityGraph.getGraph(),
+					buildingParameters.getQueryInfluencers(),
 					buildingParameters.getLockOptions() != null ? buildingParameters.getLockOptions().getLockMode() : buildingParameters.getLockMode()
 			);
 		}
-		else if ( buildingParameters.getQueryInfluencers().getLoadGraph() != null ) {
+		else if ( effectiveEntityGraph.getSemantic() == GraphSemantic.LOAD ) {
 			strategy = new LoadGraphLoadPlanBuildingStrategy(
-					factory, buildingParameters.getQueryInfluencers(),
+					factory,
+					effectiveEntityGraph.getGraph(),
+					buildingParameters.getQueryInfluencers(),
 					buildingParameters.getLockOptions() != null ? buildingParameters.getLockOptions().getLockMode() : buildingParameters.getLockMode()
 			);
 		}
 		else {
 			strategy = new FetchStyleLoadPlanBuildingAssociationVisitationStrategy(
-					factory, buildingParameters.getQueryInfluencers(),
+					factory,
+					buildingParameters.getQueryInfluencers(),
 					buildingParameters.getLockOptions() != null ? buildingParameters.getLockOptions().getLockMode() : buildingParameters.getLockMode()
 			);
 		}

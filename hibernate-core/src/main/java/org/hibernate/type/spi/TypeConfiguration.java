@@ -23,7 +23,7 @@ import org.hibernate.id.uuid.LocalObjectUuidHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.metamodel.internal.MetamodelImpl;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.metamodel.model.domain.spi.MetamodelImplementor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.Type;

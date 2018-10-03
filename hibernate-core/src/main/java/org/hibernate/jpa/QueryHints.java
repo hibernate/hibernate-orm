@@ -9,15 +9,15 @@ package org.hibernate.jpa;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.graph.GraphSemantic;
+
 import static org.hibernate.annotations.QueryHints.CACHEABLE;
 import static org.hibernate.annotations.QueryHints.CACHE_MODE;
 import static org.hibernate.annotations.QueryHints.CACHE_REGION;
 import static org.hibernate.annotations.QueryHints.COMMENT;
-import static org.hibernate.annotations.QueryHints.FETCHGRAPH;
 import static org.hibernate.annotations.QueryHints.FETCH_SIZE;
 import static org.hibernate.annotations.QueryHints.FLUSH_MODE;
 import static org.hibernate.annotations.QueryHints.FOLLOW_ON_LOCKING;
-import static org.hibernate.annotations.QueryHints.LOADGRAPH;
 import static org.hibernate.annotations.QueryHints.NATIVE_LOCKMODE;
 import static org.hibernate.annotations.QueryHints.PASS_DISTINCT_THROUGH;
 import static org.hibernate.annotations.QueryHints.READ_ONLY;
@@ -91,15 +91,21 @@ public class QueryHints {
 	 * 
 	 * Note: Currently, attributes that are not specified are treated as FetchType.LAZY or FetchType.EAGER depending
 	 * on the attribute's definition in metadata, rather than forcing FetchType.LAZY.
+	 *
+	 * @deprecated (since 5.4) Use {@link GraphSemantic#FETCH}'s {@link GraphSemantic#getJpaHintName()} instead
 	 */
-	public static final String HINT_FETCHGRAPH = FETCHGRAPH;
+	@Deprecated
+	public static final String HINT_FETCHGRAPH = GraphSemantic.FETCH.getJpaHintName();
 	
 	/**
 	 * Hint providing a "loadgraph" EntityGraph.  Attributes explicitly specified as AttributeNodes are treated as
 	 * FetchType.EAGER (via join fetch or subsequent select).  Attributes that are not specified are treated as
 	 * FetchType.LAZY or FetchType.EAGER depending on the attribute's definition in metadata
+	 *
+	 * @deprecated (since 5.4) Use {@link GraphSemantic#LOAD}'s {@link GraphSemantic#getJpaHintName()} instead
 	 */
-	public static final String HINT_LOADGRAPH = LOADGRAPH;
+	@Deprecated
+	public static final String HINT_LOADGRAPH = GraphSemantic.LOAD.getJpaHintName();
 
 	public static final String HINT_FOLLOW_ON_LOCKING = FOLLOW_ON_LOCKING;
 

@@ -28,9 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
-import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.FlushModeType;
@@ -135,7 +135,10 @@ import org.hibernate.event.spi.ResolveNaturalIdEvent;
 import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.event.spi.SaveOrUpdateEvent;
 import org.hibernate.event.spi.SaveOrUpdateEventListener;
-import org.hibernate.graph.spi.EntityGraphImplementor;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.RootGraph;
+import org.hibernate.graph.internal.RootGraphImpl;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.internal.CriteriaImpl.CriterionEntry;
 import org.hibernate.internal.log.DeprecationLogger;
@@ -145,7 +148,6 @@ import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.QueryHints;
-import org.hibernate.jpa.graph.internal.EntityGraphImpl;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
@@ -155,7 +157,7 @@ import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.loader.criteria.CriteriaLoader;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.metamodel.model.domain.spi.MetamodelImplementor;
 import org.hibernate.param.CollectionFilterKeyParameterSpecification;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -2765,8 +2767,11 @@ public final class SessionImpl
 
 	private class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
 		private final EntityPersister entityPersister;
+
 		private LockOptions lockOptions;
 		private CacheMode cacheMode;
+		private RootGraphImplementor<T> rootGraph;
+		private GraphSemantic graphSemantic;
 
 		private IdentifierLoadAccessImpl(EntityPersister entityPersister) {
 			this.entityPersister = entityPersister;
@@ -2793,7 +2798,18 @@ public final class SessionImpl
 		}
 
 		@Override
+		public IdentifierLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic) {
+			this.rootGraph = (RootGraphImplementor<T>) graph;
+			this.graphSemantic = semantic;
+			return this;
+		}
+
+		@Override
 		public final T getReference(Serializable id) {
+			return perform( () -> doGetReference( id ) );
+		}
+
+		protected T perform(Supplier<T> executor) {
 			CacheMode sessionCacheMode = getCacheMode();
 			boolean cacheModeChanged = false;
 			if ( cacheMode != null ) {
@@ -2806,7 +2822,21 @@ public final class SessionImpl
 			}
 
 			try {
-				return doGetReference( id );
+				if ( graphSemantic != null ) {
+					if ( rootGraph != null ) {
+						throw new IllegalArgumentException( "Graph semantic specified, but no RootGraph was supplied" );
+					}
+					loadQueryInfluencers.getEffectiveEntityGraph().applyGraph( rootGraph, graphSemantic );
+				}
+
+				try {
+					return executor.get();
+				}
+				finally {
+					if ( graphSemantic != null ) {
+						loadQueryInfluencers.getEffectiveEntityGraph().clear();
+					}
+				}
 			}
 			finally {
 				if ( cacheModeChanged ) {
@@ -2844,31 +2874,12 @@ public final class SessionImpl
 
 		@Override
 		public final T load(Serializable id) {
-			CacheMode sessionCacheMode = getCacheMode();
-			boolean cacheModeChanged = false;
-			if ( cacheMode != null ) {
-				// naive check for now...
-				// todo : account for "conceptually equal"
-				if ( cacheMode != sessionCacheMode ) {
-					setCacheMode( cacheMode );
-					cacheModeChanged = true;
-				}
-			}
-
-			try {
-				return doLoad( id );
-			}
-			finally {
-				if ( cacheModeChanged ) {
-					// change it back
-					setCacheMode( sessionCacheMode );
-				}
-			}
+			return perform( () -> doLoad( id ) );
 		}
 
 		@Override
 		public Optional<T> loadOptional(Serializable id) {
-			return Optional.ofNullable( load( id ) );
+			return Optional.ofNullable( perform( () -> doLoad( id ) ) );
 		}
 
 		@SuppressWarnings("unchecked")
@@ -2897,8 +2908,13 @@ public final class SessionImpl
 
 	private class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, MultiLoadOptions {
 		private final EntityPersister entityPersister;
+
 		private LockOptions lockOptions;
 		private CacheMode cacheMode;
+
+		private RootGraphImplementor<T> rootGraph;
+		private GraphSemantic graphSemantic;
+
 		private Integer batchSize;
 		private boolean sessionCheckingEnabled;
 		private boolean returnOfDeletedEntitiesEnabled;
@@ -2914,14 +2930,21 @@ public final class SessionImpl
 		}
 
 		@Override
-		public final MultiIdentifierLoadAccessImpl<T> with(LockOptions lockOptions) {
+		public final MultiIdentifierLoadAccess<T> with(LockOptions lockOptions) {
 			this.lockOptions = lockOptions;
 			return this;
 		}
 
 		@Override
-		public MultiIdentifierLoadAccessImpl<T> with(CacheMode cacheMode) {
+		public MultiIdentifierLoadAccess<T> with(CacheMode cacheMode) {
 			this.cacheMode = cacheMode;
+			return this;
+		}
+
+		@Override
+		public MultiIdentifierLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic) {
+			this.rootGraph = (RootGraphImplementor<T>) graph;
+			this.graphSemantic = semantic;
 			return this;
 		}
 
@@ -2977,6 +3000,10 @@ public final class SessionImpl
 		@Override
 		@SuppressWarnings("unchecked")
 		public <K extends Serializable> List<T> multiLoad(K... ids) {
+			return perform( () -> entityPersister.multiLoad( ids, SessionImpl.this, this ) );
+		}
+
+		public List<T> perform(Supplier<List<T>> executor) {
 			CacheMode sessionCacheMode = getCacheMode();
 			boolean cacheModeChanged = false;
 			if ( cacheMode != null ) {
@@ -2989,7 +3016,21 @@ public final class SessionImpl
 			}
 
 			try {
-				return entityPersister.multiLoad( ids, SessionImpl.this, this );
+				if ( graphSemantic != null ) {
+					if ( rootGraph != null ) {
+						throw new IllegalArgumentException( "Graph semantic specified, but no RootGraph was supplied" );
+					}
+					loadQueryInfluencers.getEffectiveEntityGraph().applyGraph( rootGraph, graphSemantic );
+				}
+
+				try {
+					return executor.get();
+				}
+				finally {
+					if ( graphSemantic != null ) {
+						loadQueryInfluencers.getEffectiveEntityGraph().clear();
+					}
+				}
 			}
 			finally {
 				if ( cacheModeChanged ) {
@@ -3002,26 +3043,7 @@ public final class SessionImpl
 		@Override
 		@SuppressWarnings("unchecked")
 		public <K extends Serializable> List<T> multiLoad(List<K> ids) {
-			CacheMode sessionCacheMode = getCacheMode();
-			boolean cacheModeChanged = false;
-			if ( cacheMode != null ) {
-				// naive check for now...
-				// todo : account for "conceptually equal"
-				if ( cacheMode != sessionCacheMode ) {
-					setCacheMode( cacheMode );
-					cacheModeChanged = true;
-				}
-			}
-
-			try {
-				return entityPersister.multiLoad( ids.toArray( new Serializable[ ids.size() ] ), SessionImpl.this, this );
-			}
-			finally {
-				if ( cacheModeChanged ) {
-					// change it back
-					setCacheMode( sessionCacheMode );
-				}
-			}
+			return perform( () -> entityPersister.multiLoad( ids.toArray( new Serializable[ ids.size() ] ), SessionImpl.this, this ) );
 		}
 	}
 
@@ -3475,10 +3497,7 @@ public final class SessionImpl
 		LockOptions lockOptions = null;
 
 		try {
-			if ( properties != null && !properties.isEmpty() ) {
-				getLoadQueryInfluencers().setFetchGraph( (EntityGraph) properties.get( QueryHints.HINT_FETCHGRAPH ) );
-				getLoadQueryInfluencers().setLoadGraph( (EntityGraph) properties.get( QueryHints.HINT_LOADGRAPH ) );
-			}
+			getLoadQueryInfluencers().getEffectiveEntityGraph().applyConfiguredGraph( properties );
 
 			final IdentifierLoadAccess<T> loadAccess = byId( entityClass );
 			loadAccess.with( determineAppropriateLocalCacheMode( properties ) );
@@ -3527,8 +3546,7 @@ public final class SessionImpl
 			throw exceptionConverter.convert( e, lockOptions );
 		}
 		finally {
-			getLoadQueryInfluencers().setFetchGraph( null );
-			getLoadQueryInfluencers().setLoadGraph( null );
+			getLoadQueryInfluencers().getEffectiveEntityGraph().clear();
 		}
 	}
 
@@ -3880,32 +3898,26 @@ public final class SessionImpl
 	}
 
 	@Override
-	public <T> EntityGraph<T> createEntityGraph(Class<T> rootType) {
+	public <T> RootGraphImplementor<T> createEntityGraph(Class<T> rootType) {
 		checkOpen();
-		return new EntityGraphImpl<T>( null, getMetamodel().entity( rootType ), getEntityManagerFactory() );
+		return new RootGraphImpl<T>( null, getMetamodel().entity( rootType ), getEntityManagerFactory() );
 	}
 
 	@Override
-	public EntityGraph<?> createEntityGraph(String graphName) {
+	public RootGraphImplementor<?> createEntityGraph(String graphName) {
 		checkOpen();
-		final EntityGraph named = getEntityManagerFactory().findEntityGraphByName( graphName );
-		if ( named == null ) {
-			return null;
+		final RootGraphImplementor named = getEntityManagerFactory().findEntityGraphByName( graphName );
+		if ( named != null ) {
+			return named.makeRootGraph( graphName, true );
 		}
-
-		if ( EntityGraphImplementor.class.isInstance( named ) ) {
-			return ( (EntityGraphImplementor) named ).makeMutableCopy();
-		}
-		else {
-			return named;
-		}
+		return named;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public EntityGraph<?> getEntityGraph(String graphName) {
+	public RootGraphImplementor<?> getEntityGraph(String graphName) {
 		checkOpen();
-		final EntityGraph named = getEntityManagerFactory().findEntityGraphByName( graphName );
+		final RootGraphImplementor named = getEntityManagerFactory().findEntityGraphByName( graphName );
 		if ( named == null ) {
 			throw new IllegalArgumentException( "Could not locate EntityGraph with given name : " + graphName );
 		}
@@ -3913,11 +3925,10 @@ public final class SessionImpl
 	}
 
 	@Override
-	public <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) {
+	public List getEntityGraphs(Class entityClass) {
 		checkOpen();
 		return getEntityManagerFactory().findEntityGraphsByType( entityClass );
 	}
-
 
 	/**
 	 * Used by JDK serialization...

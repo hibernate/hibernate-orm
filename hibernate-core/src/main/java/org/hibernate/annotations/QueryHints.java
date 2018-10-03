@@ -7,6 +7,7 @@
 package org.hibernate.annotations;
 
 import org.hibernate.engine.spi.QueryParameters;
+import org.hibernate.graph.GraphSemantic;
 
 /**
  * Consolidation of hints available to Hibernate JPA queries.  Mainly used to define features available on
@@ -109,15 +110,21 @@ public class QueryHints {
 	 * 
 	 * Note: Currently, attributes that are not specified are treated as FetchType.LAZY or FetchType.EAGER depending
 	 * on the attribute's definition in metadata, rather than forcing FetchType.LAZY.
+	 *
+	 * @deprecated (since 5.4) Use {@link GraphSemantic#FETCH}'s {@link GraphSemantic#getJpaHintName()} instead
 	 */
-	public static final String FETCHGRAPH = "javax.persistence.fetchgraph";
+	@Deprecated
+	public static final String FETCHGRAPH = GraphSemantic.FETCH.getJpaHintName();
 	
 	/**
 	 * Hint providing a "loadgraph" EntityGraph.  Attributes explicitly specified as AttributeNodes are treated as
 	 * FetchType.EAGER (via join fetch or subsequent select).  Attributes that are not specified are treated as
 	 * FetchType.LAZY or FetchType.EAGER depending on the attribute's definition in metadata
+	 *
+	 * @deprecated (since 5.4) Use {@link GraphSemantic#LOAD}'s {@link GraphSemantic#getJpaHintName()} instead
 	 */
-	public static final String LOADGRAPH = "javax.persistence.loadgraph";
+	@Deprecated
+	public static final String LOADGRAPH = GraphSemantic.LOAD.getJpaHintName();
 
 	/**
 	 * Hint to enable/disable the follow-on-locking mechanism provided by {@link org.hibernate.dialect.Dialect#useFollowOnLocking(QueryParameters)}.

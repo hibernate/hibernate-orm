@@ -15,6 +15,7 @@ import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
 import javax.persistence.Subgraph;
 
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Assert;
@@ -30,12 +31,12 @@ public abstract class AbstractEntityGraphTest extends BaseEntityManagerFunctiona
 		return new Class[]{ GraphParsingTestEntity.class, GraphParsingTestSubentity.class };
 	}
 
-	protected <T> EntityGraph<T> parseGraph(Class<T> entityType, String graphString) {
+	protected <T> RootGraphImplementor<T> parseGraph(Class<T> entityType, String graphString) {
 		EntityManager entityManager = getOrCreateEntityManager();
-		return EntityGraphParser.parse( entityManager, entityType, graphString );
+		return (RootGraphImplementor<T>) GraphParser.parse( entityType, graphString, entityManager );
 	}
 
-	protected <T> EntityGraph<GraphParsingTestEntity> parseGraph(String graphString) {
+	protected <T> RootGraphImplementor<GraphParsingTestEntity> parseGraph(String graphString) {
 		return parseGraph( GraphParsingTestEntity.class, graphString );
 	}
 

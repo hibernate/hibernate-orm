@@ -6,12 +6,9 @@
  */
 package org.hibernate.graph;
 
-import java.text.ParseException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.persistence.AttributeNode;
 import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
@@ -19,174 +16,19 @@ import javax.persistence.Query;
 import javax.persistence.Subgraph;
 import javax.persistence.TypedQuery;
 
+import org.hibernate.Session;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.graph.spi.GraphImplementor;
+import org.hibernate.graph.spi.RootGraphImplementor;
+
 /**
  * A collection of {@link EntityGraph} utilities.
  * These methods really belong inside other classes that we cannot modify, hence here.
  * 
  * @author asusnjar
  */
+@SuppressWarnings("WeakerAccess")
 public final class EntityGraphs {
-
-	public static String HINT_FETCHGRAPH = "javax.persistence.fetchgraph";
-	public static String HINT_LOADGRAPH = "javax.persistence.loadgraph";
-
-	/**
-	 * Configures the query hints so that ONLY the attributes specified by the graph are eagerly fetched, regardless of
-	 * what the mapping defaults indicate (even if they specify more properties to be loaded eagerly).
-	 * 
-	 * @param <T>   Root entity type of the query and graph.
-	 * 
-	 * @param query Query to configure.
-	 * @param graph Graph of properties/attributes to eagerly load.
-	 * 
-	 * @return The same (input) query.
-	 * 
-	 * @see #setFetchGraph(Query, EntityManager, Class, CharSequence)
-	 * @see #setLoadGraph(Query, EntityGraph)
-	 */
-	public static <T> Query setFetchGraph(final Query query, EntityGraph<T> graph) {
-		return query.setHint( HINT_FETCHGRAPH, graph );
-	}
-
-	/**
-	 * Configures the query hints so that ONLY the attributes specified by the graph are eagerly fetched, regardless of
-	 * what the mapping defaults indicate (even if they specify more properties to be loaded eagerly).
-	 * 
-	 * @param <T>   Root entity type of the query and graph.
-	 * 
-	 * @param query Query to configure.
-	 * @param graph Graph of properties/attributes to eagerly load.
-	 * 
-	 * @return The same (input) query.
-	 * 
-	 * @see #setFetchGraph(Query, EntityGraph)
-	 * @see #setLoadGraph(Query, EntityGraph)
-	 */
-	public static <T> Query setFetchGraph(final Query query, EntityManager em, Class<T> rootType, CharSequence graph) {
-		return setFetchGraph( query, EntityGraphParser.parse( em, rootType, graph ) );
-	}
-
-	/**
-	 * Configures the query hints so that the attributes specified by the graph are eagerly fetched IN ADDITION to those
-	 * specified to be loaded eagerly in the mapping.
-	 * 
-	 * @param <T>   Root entity type of the query and graph.
-	 * 
-	 * @param query Query to configure.
-	 * @param graph Graph of properties/attributes to eagerly load.
-	 * 
-	 * @return The same (input) query.
-	 * 
-	 * @see #setFetchGraph(Query, EntityGraph)
-	 * @see #setLoadGraph(Query, EntityManager, Class, CharSequence)
-	 */
-	public static <T> Query setLoadGraph(final Query query, EntityGraph<T> graph) {
-		return query.setHint( HINT_LOADGRAPH, graph );
-	}
-
-	/**
-	 * Configures the query hints so that the attributes specified by the graph are eagerly fetched IN ADDITION to those
-	 * specified to be loaded eagerly in the mapping.
-	 * 
-	 * @param <T>   Root entity type of the query and graph.
-	 * 
-	 * @param query Query to configure.
-	 * @param graph Graph of properties/attributes to eagerly load.
-	 * 
-	 * @return The same (input) query.
-	 * 
-	 * @see #setFetchGraph(Query, EntityGraph)
-	 * @see #setLoadGraph(Query, EntityGraph)
-	 */
-	public static <T> Query setLoadGraph(final Query query, EntityManager em, Class<T> rootType, CharSequence graph) {
-		return setLoadGraph( query, EntityGraphParser.parse( em, rootType, graph ) );
-	}
-
-	/**
-	 * Creates a query just like {@link EntityManager#createQuery(String, Class)} does but allows the query string to
-	 * begin with the "fetch" and/or "load" entity graph specifications (see {@link EntityGraphParser}) that will
-	 * internally converted to correct hints (see {@link #setFetchGraph(Query, EntityManager, Class, CharSequence)} and
-	 * {@link #setLoadGraph(Query, EntityManager, Class, CharSequence)}.
-	 * 
-	 * @param <T>      Root entity type of the query and graph.
-	 * 
-	 * @param em       EntityManager to use to create the query and entity graphs (if found).
-	 * @param rootType The root type of results.
-	 * @param qlString The query language string that can begin with fetch/load specification (see
-	 *                 {@link EntityGraphParser}).
-	 *                 
-	 * @return The typed query preconfigured as per any fetch/load specifications in the {@code qlString}.
-	 * 
-	 * @throws InvalidGraphException if a specified fetch or load graph is invalid.
-	 */
-	public static <T> TypedQuery<T> createQuery(final EntityManager em, Class<T> rootType, CharSequence qlString) {
-		ParseBuffer buffer = new ParseBuffer( qlString );
-		FetchAndLoadEntityGraphs<T> graphs = EntityGraphParser.parsePreQueryGraphDescriptors( em, rootType, buffer );
-		
-		TypedQuery<T> query = em.createQuery( buffer.toString(), rootType );
-		if ( graphs.fetchGraph != null ) {
-			setFetchGraph( query, graphs.fetchGraph );
-		}
-		if ( graphs.loadGraph != null ) {
-			setLoadGraph( query, graphs.loadGraph );
-		}
-
-		return query;
-	}
-
-	/**
-	 * Creates a query just like {@link EntityManager#createNamedQuery(String, Class)} does but allows the query string
-	 * to begin with the "fetch" and/or "load" entity graph specifications (see {@link EntityGraphParser}) that will
-	 * internally converted to correct hints (see {@link #setFetchGraph(Query, EntityManager, Class, CharSequence)} and
-	 * {@link #setLoadGraph(Query, EntityManager, Class, CharSequence)}.
-	 * 
-	 * @param <T>      Root entity type of the query and graph.
-	 * 
-	 * @param em       EntityManager to use to create the query and entity graphs (if found).
-	 * @param rootType The root type of results.
-	 * @param qlString The query language string that can begin with fetch/load specification (see
-	 *                 {@link EntityGraphParser}).
-	 *                 
-	 * @return The typed query preconfigured as per any fetch/load specifications in the {@code qlString}.
-	 * 
-	 * @throws InvalidGraphException if a specified fetch or load graph is invalid.
-	 */
-	public static <T> TypedQuery<T> createNamedQuery(final EntityManager em, Class<T> rootType, String queryName, CharSequence graphString) {
-		final EntityGraph<T> graph = EntityGraphParser.parse( em, rootType, graphString );
-
-		final TypedQuery<T> query = em.createNamedQuery( queryName, rootType );
-		setFetchGraph( query, graph );
-
-		return query;
-	}
-
-	/**
-	 * Finds an entity by its class and primary key just like
-	 * {@link EntityManager#find(Class, Object, javax.persistence.LockModeType, Map)} does but includes the fetch entity
-	 * graph hint as specified in the {@code graphString}.
-	 * 
-	 * @param <T>         Root entity type of the query and graph.
-	 * 
-	 * @param em          EntityManager to use.
-	 * @param entityClass The type of the entity to find.
-	 * @param primaryKey  The primary key of the entity to find.
-	 * @param graphString The specification of attributes to fetch (see {@link EntityGraphParser}).
-	 * 
-	 * @return The entity if found, same as
-	 * {@link EntityManager#find(Class, Object, javax.persistence.LockModeType, Map)}.
-	 * 
-	 * @throws InvalidGraphException if a specified fetch or load graph is invalid.
-	 */
-	public static <T> T find(final EntityManager em, Class<T> entityClass, Object primaryKey, CharSequence graphString) {
-		em.find( entityClass, primaryKey );
-		EntityGraph<T> graph = EntityGraphParser.parse( em, entityClass, graphString );
-
-		Map<String, Object> props = new HashMap<String, Object>();
-		props.put( HINT_FETCHGRAPH, graph );
-
-		return em.find( entityClass, primaryKey, props );
-	}
-
 	/**
 	 * Merges multiple entity graphs into a single graph that specifies the fetching/loading of all attributes the input
 	 * graphs specify.
@@ -199,26 +41,138 @@ public final class EntityGraphs {
 	 * 
 	 * @return         The merged graph.
 	 */
-	@SafeVarargs
+	@SuppressWarnings("unchecked")
 	public static <T> EntityGraph<T> merge(EntityManager em, Class<T> rootType, EntityGraph<T>... graphs) {
-		Map<String, EntityGraphAttribute> resultMap = null;
-		for ( EntityGraph<T> graph : graphs ) {
-			if ( graph != null ) {
-				Subgraph<T> pretendSubgraph = new GraphAsSubgraph<T>( graph, rootType );
+		return merge( (SessionImplementor) em, rootType, (Object[]) graphs );
+	}
 
-				if ( resultMap == null ) {
-					resultMap = EntityGraphAttribute.mapOf( pretendSubgraph );
-				}
-				else {
-					EntityGraphAttribute.merge( resultMap, pretendSubgraph );
-				}
+	@SafeVarargs
+	public static <T> EntityGraph<T> merge(Session session, Class<T> rootType, Graph<T>... graphs) {
+		return merge( (SessionImplementor) session, rootType, (Object[]) graphs );
+	}
+
+	@SafeVarargs
+	public static <T> EntityGraph<T> merge(SessionImplementor session, Class<T> rootType, GraphImplementor<T>... graphs) {
+		return merge( session, rootType, (Object[]) graphs );
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T> EntityGraph<T> merge(SessionImplementor session, Class<T> rootType, Object... graphs) {
+		RootGraphImplementor<T> merged = session.createEntityGraph( rootType );
+
+		if ( graphs != null ) {
+			for ( Object graph : graphs ) {
+				merged.merge( (GraphImplementor<T>) graph );
 			}
+
 		}
 
-		EntityGraph<T> merged = em.createEntityGraph( rootType );
-		EntityGraphAttribute.configure( merged, rootType, resultMap );
 		return merged;
 	}
+
+	/**
+	 * Convenience method for {@linkplain Query#getResultList() executing} the Query, applying the
+	 * given EntityGraph using the specified semantic
+	 *
+	 * @param query The JPA Query
+	 * @param graph The graph to apply
+	 * @param semantic The semantic to use when applying the graph
+	 */
+	@SuppressWarnings("unchecked")
+	public static List executeList(Query query, EntityGraph graph, GraphSemantic semantic) {
+		return query.unwrap( org.hibernate.query.Query.class )
+				.applyGraph( (RootGraph) graph, semantic )
+				.list();
+	}
+
+	/**
+	 * Form of {@link #executeList(Query, EntityGraph, GraphSemantic)} accepting a TypedQuery.
+	 *
+	 * @param query The JPA Query
+	 * @param graph The graph to apply
+	 * @param semantic The semantic to use when applying the graph
+	 *
+	 * @apiNote This signature assumes that the Query's return is an entity and that the graph
+	 * applies to that entity's type.  JPA does not necessarily require that, but it is by
+	 * far the most common usage.
+	 */
+	@SuppressWarnings({"unused", "unchecked"})
+	public static <R> List<R> executeList(TypedQuery<R> query, EntityGraph<R> graph, GraphSemantic semantic) {
+		return executeList( (Query) query, graph, semantic );
+	}
+
+	/**
+	 * Convenience method for {@linkplain Query#getResultList() executing} the Query, applying the
+	 * given EntityGraph using the named semantic using JPA's "hint name" - see
+	 * {@link GraphSemantic#fromJpaHintName}
+	 *
+	 * @param query The JPA Query
+	 * @param graph The graph to apply
+	 * @param semanticJpaHintName See {@link GraphSemantic#fromJpaHintName}
+	 *
+	 * @return The result list
+	 */
+	@SuppressWarnings({"unused", "unchecked"})
+	public static List executeList(Query query, EntityGraph graph, String semanticJpaHintName) {
+		return query.unwrap( org.hibernate.query.Query.class )
+				.applyGraph( (RootGraph) graph, GraphSemantic.fromJpaHintName( semanticJpaHintName ) )
+				.list();
+	}
+
+	/**
+	 * Form of {@link #executeList(Query, EntityGraph, String)} accepting a TypedQuery
+	 *
+	 * @param query The JPA Query
+	 * @param graph The graph to apply
+	 * @param semanticJpaHintName See {@link GraphSemantic#fromJpaHintName}
+	 *
+	 * @apiNote This signature assumes that the Query's return is an entity and that the graph
+	 * applies to that entity's type.  JPA does not necessarily require that, but it is by
+	 * far the most common usage.
+	 */
+	@SuppressWarnings({"unused", "unchecked"})
+	public static <R> List<R> executeList(TypedQuery<R> query, EntityGraph<R> graph, String semanticJpaHintName) {
+		return executeList( (Query) query, graph, semanticJpaHintName );
+	}
+
+	/**
+	 * Convenience method for {@linkplain Query#getResultList() executing} the Query using the
+	 * given EntityGraph
+	 *
+	 * @param query The JPA Query
+	 * @param graph The graph to apply
+	 *
+	 * @apiNote operates on the assumption that the "default" semantic for an
+	 * entity graph applied to a Query is {@link GraphSemantic#FETCH}.  This is simply
+	 * knowledge from JPA EG discussions, nothing that is specifically mentioned or
+	 * discussed in the spec.
+	 */
+	@SuppressWarnings({"unused", "unchecked"})
+	public static List executeList(Query query, EntityGraph graph) {
+		return query.unwrap( org.hibernate.query.Query.class )
+				.applyFetchGraph( (RootGraph) graph )
+				.list();
+	}
+
+	/**
+	 * Form of {@link #executeList(Query, EntityGraph, String)} accepting a TypedQuery
+	 *
+	 * @param query The JPA Query
+	 * @param graph The graph to apply
+	 *
+	 * @apiNote This signature assumes that the Query's return is an entity and that the graph
+	 * applies to that entity's type.  JPA does not necessarily require that, but it is by
+	 * far the most common usage.
+	 */
+	@SuppressWarnings("unused")
+	public static <R> List<R> executeList(TypedQuery<R> query, EntityGraph<R> graph) {
+		return executeList( query, graph, GraphSemantic.FETCH );
+	}
+
+	// todo : ? - we could add JPA's other Query execution methods
+	//		but really, I think unwrapping as Hibernate's Query and using our
+	//		"proprietary" methods is better (this class is "proprietary" too).
+
 
 	/**
 	 * Compares two entity graphs and returns {@code true} if they are equal, ignoring attribute order.
@@ -228,7 +182,7 @@ public final class EntityGraphs {
 	 * @param b    Graph to compare.
 	 * 
 	 */
-	public static <T> boolean equal(EntityGraph<T> a, EntityGraph<T> b) {
+	public static <T> boolean areEqual(EntityGraph<T> a, EntityGraph<T> b) {
 		if ( a == b ) {
 			return true;
 		}
@@ -251,7 +205,7 @@ public final class EntityGraphs {
 					break;
 				}
 			}
-			if ( !equal( aNode, bNode ) ) {
+			if ( !areEqual( aNode, bNode ) ) {
 				return false;
 			}
 		}
@@ -263,7 +217,7 @@ public final class EntityGraphs {
 	 * Compares two entity graph attribute node and returns {@code true} if they are equal, ignoring subgraph attribute
 	 * order.
 	 */
-	public static boolean equal(AttributeNode<?> a, AttributeNode<?> b) {
+	public static boolean areEqual(AttributeNode<?> a, AttributeNode<?> b) {
 		if ( a == b ) {
 			return true;
 		}
@@ -271,7 +225,7 @@ public final class EntityGraphs {
 			return false;
 		}
 		if ( a.getAttributeName().equals( b.getAttributeName() ) ) {
-			return equal( a.getSubgraphs(), b.getSubgraphs() ) && equal( a.getKeySubgraphs(), b.getKeySubgraphs() );
+			return areEqual( a.getSubgraphs(), b.getSubgraphs() ) && areEqual( a.getKeySubgraphs(), b.getKeySubgraphs() );
 		}
 		else {
 			return false;
@@ -281,7 +235,7 @@ public final class EntityGraphs {
 	/**
 	 * Compares two entity subgraph maps and returns {@code true} if they are equal, ignoring order.
 	 */
-	public static boolean equal(@SuppressWarnings("rawtypes") Map<Class, Subgraph> a, @SuppressWarnings("rawtypes") Map<Class, Subgraph> b) {
+	public static boolean areEqual(@SuppressWarnings("rawtypes") Map<Class, Subgraph> a, @SuppressWarnings("rawtypes") Map<Class, Subgraph> b) {
 		if ( a == b ) {
 			return true;
 		}
@@ -299,7 +253,7 @@ public final class EntityGraphs {
 				if ( !bKeys.contains( clazz ) ) {
 					return false;
 				}
-				if ( !equal( a.get( clazz ), b.get( clazz ) ) ) {
+				if ( !areEqual( a.get( clazz ), b.get( clazz ) ) ) {
 					return false;
 				}
 			}
@@ -313,7 +267,7 @@ public final class EntityGraphs {
 	/**
 	 * Compares two entity subgraphs and returns {@code true} if they are equal, ignoring attribute order.
 	 */
-	public static boolean equal(@SuppressWarnings("rawtypes") Subgraph a, @SuppressWarnings("rawtypes") Subgraph b) {
+	public static boolean areEqual(@SuppressWarnings("rawtypes") Subgraph a, @SuppressWarnings("rawtypes") Subgraph b) {
 		if ( a == b ) {
 			return true;
 		}
@@ -342,7 +296,7 @@ public final class EntityGraphs {
 					break;
 				}
 			}
-			if ( !equal( aNode, bNode ) ) {
+			if ( !areEqual( aNode, bNode ) ) {
 				return false;
 			}
 		}

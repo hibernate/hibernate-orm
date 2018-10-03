@@ -15,11 +15,6 @@ import org.hibernate.tool.api.metadata.MetadataDescriptor;
  */
 public interface Exporter {
 	
-	/** 
-	 * @param metadataDescriptor An Hibernate {@link org.hibernate.tool.api.metadata.MetadataDescriptor} or subclass instance that defines the hibernate meta model to be exported.
-	 */
-	public void setMetadataDescriptor(MetadataDescriptor metadataDescriptor);
-		
 
 	public Metadata getMetadata();
 	

@@ -454,7 +454,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	public Object resolve(Object value, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
 
-		return resolve(value, session, owner, null);
+		return resolve( value, session, owner, null );
 	}
 
 	@Override
@@ -681,8 +681,23 @@ public abstract class CollectionType extends AbstractType implements Association
 		}
 		if ( !Hibernate.isInitialized( original ) ) {
 			if ( ( (PersistentCollection) original ).hasQueuedOperations() ) {
-				final AbstractPersistentCollection pc = (AbstractPersistentCollection) original;
-				pc.replaceQueuedOperationValues( getPersister( session ), copyCache );
+				if ( original == target ) {
+					// A managed entity with an uninitialized collection is being merged,
+					// We need to replace any detached entities in the queued operations
+					// with managed copies.
+					final AbstractPersistentCollection pc = (AbstractPersistentCollection) original;
+					pc.replaceQueuedOperationValues( getPersister( session ), copyCache );
+				}
+				else {
+					// original is a detached copy of the collection;
+					// it contains queued operations, which will be ignored
+					LOG.ignoreQueuedOperationsOnMerge(
+							MessageHelper.collectionInfoString(
+									getRole(),
+									( (PersistentCollection) original ).getKey()
+							)
+					);
+				}
 			}
 			return target;
 		}

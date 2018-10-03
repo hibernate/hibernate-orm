@@ -382,7 +382,7 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	@Override
-	public <R extends Service> void stopService(ServiceBinding<R> binding) {
+	public synchronized <R extends Service> void stopService(ServiceBinding<R> binding) {
 		final Service service = binding.getService();
 		if ( Stoppable.class.isInstance( service ) ) {
 			try {
@@ -433,7 +433,7 @@ public abstract class AbstractServiceRegistryImpl
 	/**
 	 * Very advanced and tricky to handle: not designed for this. Intended for experiments only!
 	 */
-	public void resetParent(BootstrapServiceRegistry newParent) {
+	public synchronized void resetParent(BootstrapServiceRegistry newParent) {
 		if ( this.parent != null ) {
 			this.parent.deRegisterChild( this );
 		}

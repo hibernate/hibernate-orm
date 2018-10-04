@@ -6,6 +6,7 @@
  */
 package org.hibernate.envers.internal.entities.mapper.relation.query;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.configuration.internal.GlobalConfiguration;
 import org.hibernate.envers.internal.entities.mapper.id.AbstractCompositeIdMapper;
@@ -14,6 +15,7 @@ import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.envers.strategy.AuditStrategy;
+import org.hibernate.internal.util.StringHelper;
 
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.DEL_REVISION_TYPE_PARAMETER;
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REFERENCED_ENTITY_ALIAS;
@@ -28,10 +30,9 @@ import static org.hibernate.envers.internal.entities.mapper.relation.query.Query
  * @author Chris Cranford
  */
 public final class OneAuditEntityQueryGenerator extends AbstractRelationQueryGenerator {
-	private final String queryString;
-	private final String queryRemovedString;
 	private final String mappedBy;
 	private final boolean multipleIdMapperKey;
+	private final MiddleIdData referencedIdData;
 
 	public OneAuditEntityQueryGenerator(
 			GlobalConfiguration globalCfg,
@@ -42,10 +43,20 @@ public final class OneAuditEntityQueryGenerator extends AbstractRelationQueryGen
 			MiddleIdData referencedIdData,
 			boolean revisionTypeInId,
 			String mappedBy,
-			boolean mappedByKey) {
-		super( verEntCfg, referencingIdData, revisionTypeInId );
+			boolean mappedByKey,
+			String orderBy) {
+		super(
+				globalCfg,
+				verEntCfg,
+				auditStrategy,
+				verEntCfg.getAuditEntityName( referencedEntityName ),
+				referencingIdData,
+				revisionTypeInId,
+				orderBy
+		);
 
 		this.mappedBy = mappedBy;
+		this.referencedIdData = referencedIdData;
 
 		// HHH-11770 We use AbstractCompositeIdMapper here to handle EmbeddedIdMapper and MultipleIdMappper support
 		// so that OneAuditEntityQueryGenerator supports mappings to both @IdClass and @EmbeddedId components.
@@ -74,24 +85,12 @@ public final class OneAuditEntityQueryGenerator extends AbstractRelationQueryGen
 		 * (only non-deleted entities)
 		 *     e.revision_type != DEL
 		 */
-		final QueryBuilder commonPart = commonQueryPart( verEntCfg.getAuditEntityName( referencedEntityName ) );
-		final QueryBuilder validQuery = commonPart.deepCopy();
-		final QueryBuilder removedQuery = commonPart.deepCopy();
-		createValidDataRestrictions(
-				globalCfg, auditStrategy, referencedIdData, validQuery, validQuery.getRootParameters()
-		);
-		createValidAndRemovedDataRestrictions( globalCfg, auditStrategy, referencedIdData, removedQuery );
-
-		queryString = queryToString( validQuery );
-		queryRemovedString = queryToString( removedQuery );
 	}
 
-	/**
-	 * Compute common part for both queries.
-	 */
-	private QueryBuilder commonQueryPart(String versionsReferencedEntityName) {
+	@Override
+	protected QueryBuilder buildQueryBuilderCommon(SessionFactoryImplementor sessionFactory) {
 		// SELECT e FROM versionsEntity e
-		final QueryBuilder qb = new QueryBuilder( versionsReferencedEntityName, REFERENCED_ENTITY_ALIAS );
+		final QueryBuilder qb = new QueryBuilder( entityName, REFERENCED_ENTITY_ALIAS, sessionFactory );
 		qb.addProjection( null, REFERENCED_ENTITY_ALIAS, null, false );
 		// WHERE
 		if ( multipleIdMapperKey ) {
@@ -105,55 +104,51 @@ public final class OneAuditEntityQueryGenerator extends AbstractRelationQueryGen
 			// e.id_ref_ed = :id_ref_ed
 			referencingIdData.getPrefixedMapper().addNamedIdEqualsToQuery( qb.getRootParameters(), null, true );
 		}
+
+		// ORDER BY
+		if ( !StringHelper.isEmpty( orderBy ) ) {
+			qb.addOrderFragment( REFERENCED_ENTITY_ALIAS, orderBy );
+		}
+
 		return qb;
 	}
 
-	/**
-	 * Creates query restrictions used to retrieve only actual data.
-	 */
-	private void createValidDataRestrictions(
-			GlobalConfiguration globalCfg, AuditStrategy auditStrategy,
-			MiddleIdData referencedIdData, QueryBuilder qb, Parameters rootParameters) {
+	@Override
+	protected void applyValidPredicates(QueryBuilder qb, Parameters rootParameters, boolean inclusive) {
 		final String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
 		// (selecting e entities at revision :revision)
 		// --> based on auditStrategy (see above)
 		auditStrategy.addEntityAtRevisionRestriction(
-				globalCfg, qb, rootParameters, revisionPropertyPath,
-				verEntCfg.getRevisionEndFieldName(), true, referencedIdData, revisionPropertyPath,
-				verEntCfg.getOriginalIdPropName(), REFERENCED_ENTITY_ALIAS, REFERENCED_ENTITY_ALIAS_DEF_AUD_STR,
+				globalCfg,
+				qb,
+				rootParameters,
+				revisionPropertyPath,
+				verEntCfg.getRevisionEndFieldName(),
+				true,
+				referencedIdData,
+				revisionPropertyPath,
+				verEntCfg.getOriginalIdPropName(),
+				REFERENCED_ENTITY_ALIAS,
+				REFERENCED_ENTITY_ALIAS_DEF_AUD_STR,
 				true
 		);
 		// e.revision_type != DEL
 		rootParameters.addWhereWithNamedParam( getRevisionTypePath(), false, "!=", DEL_REVISION_TYPE_PARAMETER );
 	}
 
-	/**
-	 * Create query restrictions used to retrieve actual data and deletions that took place at exactly given revision.
-	 */
-	private void createValidAndRemovedDataRestrictions(
-			GlobalConfiguration globalCfg, AuditStrategy auditStrategy,
-			MiddleIdData referencedIdData, QueryBuilder remQb) {
+	@Override
+	protected void applyValidAndRemovePredicates(QueryBuilder remQb) {
 		final Parameters disjoint = remQb.getRootParameters().addSubParameters( "or" );
 		// Restrictions to match all valid rows.
 		final Parameters valid = disjoint.addSubParameters( "and" );
 		// Restrictions to match all rows deleted at exactly given revision.
 		final Parameters removed = disjoint.addSubParameters( "and" );
 		// Excluding current revision, because we need to match data valid at the previous one.
-		createValidDataRestrictions( globalCfg, auditStrategy, referencedIdData, remQb, valid );
+		applyValidPredicates( remQb, valid, false );
 		// e.revision = :revision
 		removed.addWhereWithNamedParam( verEntCfg.getRevisionNumberPath(), false, "=", REVISION_PARAMETER );
 		// e.revision_type = DEL
 		removed.addWhereWithNamedParam( getRevisionTypePath(), false, "=", DEL_REVISION_TYPE_PARAMETER );
-	}
-
-	@Override
-	protected String getQueryString() {
-		return queryString;
-	}
-
-	@Override
-	protected String getQueryRemovedString() {
-		return queryRemovedString;
 	}
 
 	private IdMapper getMultipleIdPrefixedMapper() {

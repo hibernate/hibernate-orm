@@ -17,8 +17,8 @@ import java.util.Map;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.configuration.internal.GlobalConfiguration;
@@ -241,7 +241,11 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			String propertyName,
 			AuditEntitiesConfiguration auditEntitiesConfiguration,
 			PersistentCollectionChangeData persistentCollectionChangeData, Object revision) {
-		final QueryBuilder qb = new QueryBuilder( persistentCollectionChangeData.getEntityName(), MIDDLE_ENTITY_ALIAS );
+		final QueryBuilder qb = new QueryBuilder(
+				persistentCollectionChangeData.getEntityName(),
+				MIDDLE_ENTITY_ALIAS,
+				( (SharedSessionContractImplementor) session ).getFactory()
+		);
 
 		final String originalIdPropName = auditEntitiesConfiguration.getOriginalIdPropName();
 		final Map<String, Object> originalId = (Map<String, Object>) persistentCollectionChangeData.getData().get(

@@ -6,9 +6,6 @@ package org.hibernate.tool.api.export;
 import java.io.File;
 import java.util.Properties;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.tool.api.metadata.MetadataDescriptor;
-
 /**
  * @author max and david
  * @author koen
@@ -16,8 +13,6 @@ import org.hibernate.tool.api.metadata.MetadataDescriptor;
 public interface Exporter {
 	
 
-	public Metadata getMetadata();
-	
 	/**
 	 * @param file basedirectory to be used for generated files.
 	 */

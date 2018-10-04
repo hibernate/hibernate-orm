@@ -67,7 +67,8 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 			+ "from all_ind_columns a left join all_indexes b on "
 			+ "(a.table_name = b.table_name "
 			+ " AND a.table_owner = b.table_owner "
-			+ " AND a.index_name  = b.index_name) ";
+			+ " AND a.index_name  = b.index_name) "
+			+ "where b.index_type not like 'FUNCTION-BASED%' ";
 
 	private static final String SQL_INDEX_ORDER = " order by a.table_name, a.column_position";
 
@@ -75,13 +76,13 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 			+ SQL_INDEX_ORDER;
 
 	private static final String SQL_INDEX_SCHEMA = SQL_INDEX_BASE
-			+ "where a.table_owner like ? " + SQL_INDEX_ORDER;
+			+ "and a.table_owner like ? " + SQL_INDEX_ORDER;
 
 	private static final String SQL_INDEX_TABLE = SQL_INDEX_BASE
-			+ "where a.table_name like ? " + SQL_INDEX_ORDER;
+			+ "and a.table_name like ? " + SQL_INDEX_ORDER;
 
 	private static final String SQL_INDEX_SCHEMA_AND_TABLE = SQL_INDEX_BASE
-			+ "where a.table_owner like ? and a.table_name like ? " + SQL_INDEX_ORDER;
+			+ "and a.table_owner like ? and a.table_name like ? " + SQL_INDEX_ORDER;
 
 	private PreparedStatement prepIndexNone;
 

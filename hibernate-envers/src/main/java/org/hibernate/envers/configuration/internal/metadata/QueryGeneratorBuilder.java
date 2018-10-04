@@ -36,6 +36,7 @@ public final class QueryGeneratorBuilder {
 	private final String auditMiddleEntityName;
 	private final List<MiddleIdData> idDatas;
 	private final boolean revisionTypeInId;
+	private final String orderBy;
 
 	QueryGeneratorBuilder(
 			GlobalConfiguration globalCfg,
@@ -43,12 +44,14 @@ public final class QueryGeneratorBuilder {
 			AuditStrategy auditStrategy,
 			MiddleIdData referencingIdData,
 			String auditMiddleEntityName,
-			boolean revisionTypeInId) {
+			boolean revisionTypeInId,
+			String orderBy) {
 		this.globalCfg = globalCfg;
 		this.verEntCfg = verEntCfg;
 		this.auditStrategy = auditStrategy;
 		this.referencingIdData = referencingIdData;
 		this.auditMiddleEntityName = auditMiddleEntityName;
+		this.orderBy = orderBy;
 		this.revisionTypeInId = revisionTypeInId;
 
 		idDatas = new ArrayList<>();
@@ -61,7 +64,7 @@ public final class QueryGeneratorBuilder {
 	RelationQueryGenerator build(MiddleComponentData... componentDatas) {
 		if ( idDatas.size() == 0 ) {
 			return new OneEntityQueryGenerator(
-					verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
+					globalCfg, verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
 					revisionTypeInId, componentDatas
 			);
 		}
@@ -69,13 +72,13 @@ public final class QueryGeneratorBuilder {
 			if ( idDatas.get( 0 ).isAudited() ) {
 				return new TwoEntityQueryGenerator(
 						globalCfg, verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
-						idDatas.get( 0 ), revisionTypeInId, componentDatas
+						idDatas.get( 0 ), revisionTypeInId, orderBy, componentDatas
 				);
 			}
 			else {
 				return new TwoEntityOneAuditedQueryGenerator(
-						verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
-						idDatas.get( 0 ), revisionTypeInId, componentDatas
+						globalCfg, verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
+						idDatas.get( 0 ), revisionTypeInId, orderBy, componentDatas
 				);
 			}
 		}
@@ -86,10 +89,9 @@ public final class QueryGeneratorBuilder {
 						"Ternary relations using @Audited(targetAuditMode = NOT_AUDITED) are not supported."
 				);
 			}
-
 			return new ThreeEntityQueryGenerator(
 					globalCfg, verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
-					idDatas.get( 0 ), idDatas.get( 1 ), revisionTypeInId, componentDatas
+					idDatas.get( 0 ), idDatas.get( 1 ), revisionTypeInId, orderBy, componentDatas
 			);
 		}
 		else {

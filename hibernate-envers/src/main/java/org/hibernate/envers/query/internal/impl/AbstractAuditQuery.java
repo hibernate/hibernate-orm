@@ -86,7 +86,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 		}
 		aliasToEntityNameMap.put( REFERENCED_ENTITY_ALIAS, entityName );
 
-		qb = new QueryBuilder( versionsEntityName, REFERENCED_ENTITY_ALIAS );
+		qb = new QueryBuilder( versionsEntityName, REFERENCED_ENTITY_ALIAS, versionsReader.getSessionImplementor().getFactory() );
 	}
 
 	@Override
@@ -95,7 +95,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 	}
 	
 	protected Query buildQuery() {
-		Query query = qb.toQuery( versionsReader.getSession() );
+		Query query = qb.toQuery( versionsReader.getSessionImplementor() );
 		setQueryProperties( query );
 		return query;
 	}

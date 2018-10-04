@@ -8,19 +8,33 @@ package org.hibernate.envers.internal.tools.query;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 import javax.persistence.criteria.JoinType;
 
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.hibernate.SharedSessionContract;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.internal.entities.RevisionTypeType;
 import org.hibernate.envers.internal.tools.MutableInteger;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.internal.tools.Triple;
+import org.hibernate.envers.tools.Pair;
 import org.hibernate.query.Query;
+import org.hibernate.sql.Template;
+import org.hibernate.sql.ordering.antlr.ColumnMapper;
+import org.hibernate.sql.ordering.antlr.ColumnReference;
+import org.hibernate.sql.ordering.antlr.FormulaReference;
+import org.hibernate.sql.ordering.antlr.OrderByAliasResolver;
+import org.hibernate.sql.ordering.antlr.OrderByTranslation;
+import org.hibernate.sql.ordering.antlr.SqlValueReference;
 import org.hibernate.type.CustomType;
 
 /**
@@ -59,19 +73,30 @@ public class QueryBuilder {
 	 */
 	private final List<String> projections;
 
+	private final List<Pair<String, String>> orderFragments;
+
+	private final SessionFactoryImplementor sessionFactory;
+
 	/**
 	 * @param entityName Main entity which should be selected.
 	 * @param alias Alias of the entity
+	 * @param sessionFactory Session factory
 	 */
-	public QueryBuilder(String entityName, String alias) {
-		this( entityName, alias, new MutableInteger(), new MutableInteger() );
+	public QueryBuilder(String entityName, String alias, SessionFactoryImplementor sessionFactory) {
+		this( entityName, alias, new MutableInteger(), new MutableInteger(), sessionFactory );
 	}
 
-	private QueryBuilder(String entityName, String alias, MutableInteger aliasCounter, MutableInteger paramCounter) {
+	private QueryBuilder(
+			String entityName,
+			String alias,
+			MutableInteger aliasCounter,
+			MutableInteger paramCounter,
+			SessionFactoryImplementor sessionFactory) {
 		this.entityName = entityName;
 		this.alias = alias;
 		this.aliasCounter = aliasCounter;
 		this.paramCounter = paramCounter;
+		this.sessionFactory = sessionFactory;
 
 		final Parameters rootParameters = new Parameters( alias, "and", paramCounter );
 		parameters.add( rootParameters );
@@ -79,6 +104,7 @@ public class QueryBuilder {
 		froms = new ArrayList<>();
 		orders = new ArrayList<>();
 		projections = new ArrayList<>();
+		orderFragments = new ArrayList<>();
 
 		addFrom( entityName, alias, true );
 	}
@@ -87,6 +113,7 @@ public class QueryBuilder {
 	private QueryBuilder(QueryBuilder other) {
 		this.entityName = other.entityName;
 		this.alias = other.alias;
+		this.sessionFactory = other.sessionFactory;
 		this.aliasCounter = other.aliasCounter.deepCopy();
 		this.paramCounter = other.paramCounter.deepCopy();
 		for (final Parameters params : other.parameters) {
@@ -96,6 +123,7 @@ public class QueryBuilder {
 		froms = new ArrayList<>( other.froms );
 		orders = new ArrayList<>( other.orders );
 		projections = new ArrayList<>( other.projections );
+		orderFragments = new ArrayList<>( other.orderFragments );
 	}
 
 	public QueryBuilder deepCopy() {
@@ -123,7 +151,13 @@ public class QueryBuilder {
 
 	public Parameters addJoin(JoinType joinType, String entityName, String alias, boolean select) {
 		Parameters joinConditionParameters = new Parameters( alias, Parameters.AND, paramCounter );
-		InnerOuterJoinParameter joinParameter = new InnerOuterJoinParameter( joinType, entityName, alias, select, joinConditionParameters );
+		InnerOuterJoinParameter joinParameter = new InnerOuterJoinParameter(
+				joinType,
+				entityName,
+				alias,
+				select,
+				joinConditionParameters
+		);
 		froms.add( joinParameter );
 		return joinConditionParameters;
 	}
@@ -140,7 +174,7 @@ public class QueryBuilder {
 	 *         be later used as a value of a parameter.
 	 */
 	public QueryBuilder newSubQueryBuilder(String entityName, String alias) {
-		return new QueryBuilder( entityName, alias, aliasCounter, paramCounter );
+		return new QueryBuilder( entityName, alias, aliasCounter, paramCounter, sessionFactory );
 	}
 
 	public Parameters getRootParameters() {
@@ -155,6 +189,10 @@ public class QueryBuilder {
 
 	public void addOrder(String alias, String propertyName, boolean ascending) {
 		orders.add( Triple.make( alias, propertyName, ascending ) );
+	}
+
+	public void addOrderFragment(String alias, String fragment) {
+		orderFragments.add( Pair.make( alias, fragment ) );
 	}
 
 	public void addProjection(String function, String alias, String propertyName, boolean distinct) {
@@ -209,9 +247,46 @@ public class QueryBuilder {
 			}
 		}
 		// orders
-		if ( orders.size() > 0 ) {
+		if ( !orders.isEmpty() ) {
 			sb.append( " order by " );
 			StringTools.append( sb, getOrderList().iterator(), ", " );
+		}
+		else if ( !orderFragments.isEmpty() ) {
+			sb.append( " order by " );
+
+			final Iterator<Pair<String, String>> fragmentIterator = orderFragments.iterator();
+			while( fragmentIterator.hasNext() ) {
+				final Pair<String, String> fragment = fragmentIterator.next();
+				final OrderByTranslation orderByFragmentTranslation = Template.translateOrderBy(
+						fragment.getSecond(),
+						new ColumnMapper() {
+							@Override
+							public SqlValueReference[] map(String reference) throws HibernateException {
+								return new SqlValueReference[ 0 ];
+							}
+						},
+						sessionFactory,
+						sessionFactory.getJdbcServices().getDialect(),
+						sessionFactory.getSqlFunctionRegistry()
+				);
+
+				sb.append( orderByFragmentTranslation.injectAliases( new QueryOrderByAliasResolver( fragment.getFirst() ) ) );
+				if ( fragmentIterator.hasNext() ) {
+					sb.append( ", " );
+				}
+			}
+		}
+	}
+
+	private class QueryOrderByAliasResolver implements OrderByAliasResolver {
+		private String alias;
+		public QueryOrderByAliasResolver(String alias) {
+			this.alias = alias;
+		}
+
+		@Override
+		public String resolveTableAlias(String columnReference) {
+			return alias;
 		}
 	}
 
@@ -294,8 +369,8 @@ public class QueryBuilder {
 		}
 
 		@Override
-		public void appendJoin(final boolean firstFromElement, final StringBuilder builder, final Map<String, Object> queryParamValues) {
-			if (!firstFromElement) {
+		public void appendJoin(boolean firstFromElement, StringBuilder builder, Map<String, Object> queryParamValues) {
+			if ( !firstFromElement ) {
 				builder.append( ", " );
 			}
 			builder.append( entityName ).append( ' ' ).append( getAlias() );
@@ -309,7 +384,12 @@ public class QueryBuilder {
 		private final String entityName;
 		private final Parameters joinConditionParameters;
 
-		public InnerOuterJoinParameter(JoinType joinType, String entityName, String alias, boolean select, Parameters joinConditionParameters) {
+		public InnerOuterJoinParameter(
+				JoinType joinType,
+				String entityName,
+				String alias,
+				boolean select,
+				Parameters joinConditionParameters) {
 			super(alias, select);
 			this.joinType = joinType;
 			this.entityName = entityName;

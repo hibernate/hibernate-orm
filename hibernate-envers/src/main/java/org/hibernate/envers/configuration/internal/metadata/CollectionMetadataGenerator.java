@@ -64,6 +64,7 @@ import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.internal.tools.Tools;
+import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IndexedCollection;
@@ -237,7 +238,8 @@ public final class CollectionMetadataGenerator {
 				referencedIdData,
 				isEmbeddableElementType(),
 				mappedBy,
-				isMappedByKey( propertyValue, mappedBy )
+				isMappedByKey( propertyValue, mappedBy ),
+				propertyValue.getOrderBy()
 		);
 
 		// Creating common mapper data.
@@ -290,7 +292,15 @@ public final class CollectionMetadataGenerator {
 
 			// Checking if there's an index defined. If so, adding a mapper for it.
 			if ( positionMappedBy != null ) {
-				final Type indexType = ( (IndexedCollection) propertyValue ).getIndex().getType();
+				final Type indexType;
+				if ( IndexedCollection.class.isInstance( propertyValue ) ) {
+					indexType = ( (IndexedCollection) propertyValue ).getIndex().getType();
+				}
+				else {
+					// todo - do we need to reverse lookup the type anyway?
+					indexType = null;
+				}
+
 				fakeBidirectionalRelationIndexMapper = new SinglePropertyMapper(
 						PropertyData.forProperty( positionMappedBy, indexType )
 				);
@@ -451,7 +461,10 @@ public final class CollectionMetadataGenerator {
 				mainGenerator.getAuditStrategy(),
 				referencingIdData,
 				auditMiddleEntityName,
-				isRevisionTypeInId()
+				isRevisionTypeInId(),
+				propertyValue.getOrderBy() == null
+						? propertyValue.getManyToManyOrdering()
+						: propertyValue.getOrderBy()
 		);
 
 		// Adding the XML mapping for the referencing entity, if the relation isn't inverse.

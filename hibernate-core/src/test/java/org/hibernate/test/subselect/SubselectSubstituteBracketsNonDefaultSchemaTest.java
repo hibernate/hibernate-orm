@@ -37,7 +37,7 @@ public class SubselectSubstituteBracketsNonDefaultSchemaTest extends BaseCoreFun
 	@After
 	public void deleteTestData() {
 		doInHibernate( this::sessionFactory, session -> {
-			session.createQuery( "DELETE SubselectSubstituteBracketsTest$Foo" ).executeUpdate();
+			session.createQuery( "DELETE SubselectSubstituteBracketsNonDefaultSchemaTest$Foo" ).executeUpdate();
 		} );
 	}
 
@@ -48,7 +48,7 @@ public class SubselectSubstituteBracketsNonDefaultSchemaTest extends BaseCoreFun
 			assertEquals( "name2", session.get( ViewFoo.class, 2 ).name );
 			assertEquals( "name3", session.get( ViewFoo.class, 3 ).name );
 
-			long count = (long) session.createQuery( "SELECT COUNT(*) FROM SubselectSubstituteBracketsTest$ViewFoo" )
+			long count = (long) session.createQuery( "SELECT COUNT(*) FROM SubselectSubstituteBracketsNonDefaultSchemaTest$ViewFoo" )
 					.uniqueResult();
 			assertEquals( 3L, count );
 		} );
@@ -61,7 +61,7 @@ public class SubselectSubstituteBracketsNonDefaultSchemaTest extends BaseCoreFun
 			assertEquals( "name2", session.get( XmlViewFoo.class, 2 ).name );
 			assertEquals( "name3", session.get( XmlViewFoo.class, 3 ).name );
 
-			long count = (long) session.createQuery( "SELECT COUNT(*) FROM SubselectSubstituteBracketsTest$XmlViewFoo" )
+			long count = (long) session.createQuery( "SELECT COUNT(*) FROM SubselectSubstituteBracketsNonDefaultSchemaTest$XmlViewFoo" )
 					.uniqueResult();
 			assertEquals( 3L, count );
 		} );

@@ -74,6 +74,10 @@ public class SQLQueryParser {
 		return processedSql;
 	}
 
+	protected String resolveSchemaName() {
+		return factory.getSettings().getDefaultSchemaName();
+	}
+
 	// TODO: should "record" how many properties we have reffered to - and if we 
 	//       don't get'em'all we throw an exception! Way better than trial and error ;)
 	protected String substituteBrackets(String sqlQuery) throws QueryException {
@@ -112,7 +116,7 @@ public class SQLQueryParser {
 						result.append( catalogName );
 						result.append( "." );
 					}
-					final String schemaName = factory.getSettings().getDefaultSchemaName();
+					final String schemaName = resolveSchemaName();
 					if ( schemaName != null ) {
 						result.append( schemaName );
 						result.append( "." );
@@ -120,7 +124,7 @@ public class SQLQueryParser {
 				}
 				// Schema replacement
 				else if ( SCHEMA_PLACEHOLDER.equals( aliasPath ) ) {
-					final String schemaName = factory.getSettings().getDefaultSchemaName();
+					final String schemaName = resolveSchemaName();
 					if ( schemaName != null ) {
 						result.append(schemaName);
 						result.append(".");

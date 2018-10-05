@@ -35,7 +35,6 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 	private String[] templatePaths = new String[0];
 	private TemplateHelper vh;
 	private Properties properties = new Properties();
-	private ArtifactCollector collector = new DefaultArtifactCollector();
 	private Metadata metadata = null;
 
 	private Iterator<Entry<Object, Object>> iterator;
@@ -45,7 +44,8 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 
 	public AbstractExporter() {
 		c2h = new Cfg2HbmTool();
-		c2j = new Cfg2JavaTool();		
+		c2j = new Cfg2JavaTool();
+		getProperties().put(ARTIFACT_COLLECTOR, new DefaultArtifactCollector());
 	}
 	
 	protected MetadataDescriptor getMetadataDescriptor() {
@@ -80,11 +80,11 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 	}
 	
 	public void setArtifactCollector(ArtifactCollector collector) {
-		this.collector = collector;
+		getProperties().put(ARTIFACT_COLLECTOR, collector);
 	}
 	
 	public ArtifactCollector getArtifactCollector() {
-		return collector;
+		return (ArtifactCollector)getProperties().get(ARTIFACT_COLLECTOR);
 	}
 	
 	public String getName() {
@@ -131,7 +131,7 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 			getTemplateHelper().removeFromContext("template_path", getTemplatePath());			
 		}
 		getTemplateHelper().removeFromContext("exporter", this);
-		getTemplateHelper().removeFromContext("artifacts", collector);
+		getTemplateHelper().removeFromContext("artifacts", getArtifactCollector());
         if(getMetadata() != null) {
         		getTemplateHelper().removeFromContext("md", metadata);
         		getTemplateHelper().removeFromContext("props", getProperties());
@@ -174,7 +174,7 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 				}								
 			}
 		}
-		getTemplateHelper().putInContext("artifacts", collector);
+		getTemplateHelper().putInContext("artifacts", getArtifactCollector());
         if(getMetadata() != null) {
         		getTemplateHelper().putInContext("md", metadata);
         		getTemplateHelper().putInContext("props", getProperties());

@@ -25,6 +25,7 @@ import org.hibernate.engine.jdbc.internal.JdbcServicesInitiator;
 import org.hibernate.engine.jndi.internal.JndiServiceInitiator;
 import org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformResolverInitiator;
+import org.hibernate.event.internal.EntityCopyObserverFactoryInitiator;
 import org.hibernate.hql.internal.QueryTranslatorFactoryInitiator;
 import org.hibernate.id.factory.internal.MutableIdentifierGeneratorFactoryInitiator;
 import org.hibernate.jmx.internal.JmxServiceInitiator;
@@ -86,6 +87,7 @@ public final class StandardServiceInitiators {
 		serviceInitiators.add( TransactionCoordinatorBuilderInitiator.INSTANCE );
 
 		serviceInitiators.add( ManagedBeanRegistryInitiator.INSTANCE );
+		serviceInitiators.add( EntityCopyObserverFactoryInitiator.INSTANCE );
 
 		serviceInitiators.trimToSize();
 

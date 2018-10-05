@@ -23,4 +23,15 @@
         <id name="id" column="ID"/>
         <property name="name" column="NAME"/>
     </class>
+
+    <class name="org.hibernate.test.subselect.SubselectSubstituteBracketsTest$CatalogXmlViewFoo" mutable="false">
+
+        <subselect>
+            SELECT ID,NAME FROM {h-catalog}FOO
+        </subselect>
+        <synchronize table="FOO"/>
+
+        <id name="id" column="ID"/>
+        <property name="name" column="NAME"/>
+    </class>
 </hibernate-mapping>

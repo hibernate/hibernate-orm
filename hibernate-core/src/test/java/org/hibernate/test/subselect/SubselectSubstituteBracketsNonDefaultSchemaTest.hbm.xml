@@ -13,10 +13,23 @@
         package="org.hibernate.persister.entity"
         default-access="field">
 
-    <class name="org.hibernate.test.subselect.SubselectSubstituteBracketsNonDefaultSchemaTest$XmlViewFoo" mutable="false" schema="abc">
+    <class name="org.hibernate.test.subselect.SubselectSubstituteBracketsNonDefaultSchemaTest$XmlViewFoo"
+           mutable="false" schema="SubselectSubstituteBracketsNonDefaultSchemaTest">
 
         <subselect>
             SELECT ID,NAME FROM {h-schema}FOO
+        </subselect>
+        <synchronize table="FOO"/>
+
+        <id name="id" column="ID"/>
+        <property name="name" column="NAME"/>
+    </class>
+
+    <class name="org.hibernate.test.subselect.SubselectSubstituteBracketsNonDefaultSchemaTest$CatalogXmlViewFoo"
+           mutable="false" catalog="SubselectSubstituteBracketsNonDefaultSchemaTest">
+
+        <subselect>
+            SELECT ID,NAME FROM {h-catalog}FOO
         </subselect>
         <synchronize table="FOO"/>
 

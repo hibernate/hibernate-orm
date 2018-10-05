@@ -4144,11 +4144,11 @@ public abstract class AbstractEntityPersister
 	}
 
 	private String substituteBrackets(String sql) {
-		return substituteBrackets( sql, null );
+		return new SubstituteBracketSQLQueryParser( sql, getFactory() ).process();
 	}
 
-	private String substituteBrackets(String sql, String schemaName) {
-		return new SubstituteBracketSQLQueryParser( sql, getFactory(), schemaName ).process();
+	private String substituteBrackets(String sql, String schemaName, String catalogName) {
+		return new SubstituteBracketSQLQueryParser( sql, schemaName, catalogName ).process();
 	}
 
 	public final void postInstantiate() throws MappingException {
@@ -5469,7 +5469,7 @@ public abstract class AbstractEntityPersister
 
 	protected String determineTableName(Table table, JdbcEnvironment jdbcEnvironment) {
 		if ( table.getSubselect() != null ) {
-			return "( " + substituteBrackets( table.getSubselect(), table.getSchema() ) + " )";
+			return "( " + substituteBrackets( table.getSubselect(), table.getSchema(), table.getCatalog() ) + " )";
 		}
 
 		return jdbcEnvironment.getQualifiedObjectNameFormatter().format(
@@ -5792,21 +5792,17 @@ public abstract class AbstractEntityPersister
 
 	private static class SubstituteBracketSQLQueryParser extends SQLQueryParser {
 
-		private final String schemaName;
-
-		SubstituteBracketSQLQueryParser(String queryString, SessionFactoryImplementor factory, String schemaName) {
+		SubstituteBracketSQLQueryParser(String queryString, SessionFactoryImplementor factory) {
 			super( queryString, null, factory );
-			this.schemaName = schemaName;
+		}
+
+		SubstituteBracketSQLQueryParser(String queryString, String schemaName, String catalogName) {
+			super( queryString, null, schemaName, catalogName, true /*ignored*/ );
 		}
 
 		@Override
 		public String process() {
 			return substituteBrackets( getOriginalQueryString() );
-		}
-
-		@Override
-		protected String resolveSchemaName() {
-			return schemaName != null ? schemaName : super.resolveSchemaName();
 		}
 	}
 }

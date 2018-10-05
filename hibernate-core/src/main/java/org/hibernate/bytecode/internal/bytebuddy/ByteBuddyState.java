@@ -13,12 +13,11 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
+import static org.hibernate.bytecode.spi.ClassLoadingStrategyHelper.resolveClassLoadingStrategy;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.invoke.MethodHandles;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -37,8 +36,6 @@ import net.bytebuddy.asm.MemberSubstitution;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.DynamicType.Unloaded;
-import net.bytebuddy.dynamic.loading.ClassInjector;
-import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.dynamic.scaffold.TypeValidation;
 import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.implementation.MethodDelegation;
@@ -55,8 +52,6 @@ import net.bytebuddy.pool.TypePool;
 public final class ByteBuddyState {
 
 	private static final CoreMessageLogger LOG = messageLogger( ByteBuddyState.class );
-
-	private static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
 
 	private static final boolean DEBUG = false;
 
@@ -220,45 +215,6 @@ public final class ByteBuddyState {
 		}
 
 		return unloadedClass;
-	}
-
-	// This method is kept public static as it is also required by a test.
-	public static ClassLoadingStrategy<ClassLoader> resolveClassLoadingStrategy(Class<?> originalClass) {
-		if ( ClassInjector.UsingLookup.isAvailable() ) {
-			// This is only enabled for JDK 9+
-
-			Method privateLookupIn;
-			try {
-				privateLookupIn = MethodHandles.class.getMethod( "privateLookupIn", Class.class, MethodHandles.Lookup.class );
-			}
-			catch (Exception e) {
-				throw new HibernateException( LOG.bytecodeEnhancementFailed( originalClass.getName() ), e );
-			}
-
-			try {
-				Object privateLookup;
-
-				try {
-					privateLookup = privateLookupIn.invoke( null, originalClass, LOOKUP );
-				}
-				catch (InvocationTargetException exception) {
-					if ( exception.getCause() instanceof IllegalAccessException ) {
-						return new ClassLoadingStrategy.ForUnsafeInjection( originalClass.getProtectionDomain() );
-					}
-					else {
-						throw new HibernateException( LOG.bytecodeEnhancementFailed( originalClass.getName() ), exception.getCause() );
-					}
-				}
-
-				return ClassLoadingStrategy.UsingLookup.of( privateLookup );
-			}
-			catch (Throwable e) {
-				throw new HibernateException( LOG.bytecodeEnhancementFailedUnableToGetPrivateLookupFor( originalClass.getName() ), e );
-			}
-		}
-		else {
-			return new ClassLoadingStrategy.ForUnsafeInjection( originalClass.getProtectionDomain() );
-		}
 	}
 
 	private static ForDeclaredMethods getDeclaredMethodMemberSubstitution() {

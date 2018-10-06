@@ -46,6 +46,26 @@ public class BasicSimpleCaseTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-13016")
+	public void testCaseEnumResult() {
+		EntityManager em = getOrCreateEntityManager();
+		CriteriaBuilder builder = em.getCriteriaBuilder();
+
+		CriteriaQuery<Tuple> query = builder.createTupleQuery();
+		Root<Customer> root = query.from( Customer.class );
+
+		Path<String> emailPath = root.get( "email" );
+		CriteriaBuilder.Case<EmailType> selectCase = builder.selectCase();
+		selectCase.when( builder.greaterThan( builder.length( emailPath ), 13 ), EmailType.LONG );
+		selectCase.when( builder.greaterThan( builder.length( emailPath ), 12 ), EmailType.NORMAL );
+		Expression<EmailType> emailType = selectCase.otherwise( EmailType.UNKNOWN );
+
+		query.multiselect( emailPath, emailType );
+
+		em.createQuery( query ).getResultList();
+	}
+	
+	@Test
 	@TestForIssue(jiraKey = "HHH-9343")
 	public void testCaseStringResult() {
 		EntityManager em = getOrCreateEntityManager();

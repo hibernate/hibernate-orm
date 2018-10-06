@@ -161,8 +161,8 @@ public class DocExporter extends AbstractExporter {
 			try {
 				GenericExporter exporter = new GenericExporter();
 				exporter.getProperties().putAll( getProperties() );
-				exporter.setArtifactCollector( getArtifactCollector() );
-				exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, getMetadataDescriptor());
+				exporter.getProperties().put(ARTIFACT_COLLECTOR, getArtifactCollector());
+				exporter.getProperties().put(METADATA_DESCRIPTOR, getMetadataDescriptor());
 				exporter.setOutputDirectory(getOutputDirectory());
 				exporter.setTemplatePath( getTemplatePath() );
 

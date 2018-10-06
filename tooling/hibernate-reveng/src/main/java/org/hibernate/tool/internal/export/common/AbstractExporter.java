@@ -79,10 +79,6 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 		return templatePaths;
 	}
 	
-	public void setArtifactCollector(ArtifactCollector collector) {
-		getProperties().put(ARTIFACT_COLLECTOR, collector);
-	}
-	
 	public ArtifactCollector getArtifactCollector() {
 		return (ArtifactCollector)getProperties().get(ARTIFACT_COLLECTOR);
 	}

@@ -31,12 +31,6 @@ public interface Exporter {
 	
 	/**
 	 * 
-	 * @param collector Instance to be consulted when adding a new file.
-	 */
-	public void setArtifactCollector(org.hibernate.tool.api.export.ArtifactCollector collector);
-	
-	/**
-	 * 
 	 * @return artifact collector
 	 */
 	public ArtifactCollector getArtifactCollector();

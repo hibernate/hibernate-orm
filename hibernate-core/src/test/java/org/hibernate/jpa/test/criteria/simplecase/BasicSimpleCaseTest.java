@@ -8,6 +8,7 @@ package org.hibernate.jpa.test.criteria.simplecase;
 
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Tuple;
@@ -24,6 +25,10 @@ import org.junit.Test;
 import org.hibernate.testing.TestForIssue;
 
 import static javax.persistence.criteria.CriteriaBuilder.SimpleCase;
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.Assert.assertEquals;
+
+import java.util.List;
 
 /**
  * Mote that these are simply performing syntax checking (can the criteria query
@@ -164,6 +169,46 @@ public class BasicSimpleCaseTest extends BaseEntityManagerFunctionalTestCase {
 
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-13016")
+	public void testCaseEnumResult() {
+		doInJPA( this::entityManagerFactory, em -> {
+			// create entities
+			Customer customer1 = new Customer();
+			customer1.setEmail( "LONG5678901234" );
+			em.persist( customer1 );
+			Customer customer2 = new Customer();
+			customer2.setEmail( "NORMAL7890123" );
+			em.persist( customer2 );
+			Customer customer3 = new Customer();
+			customer3.setEmail( "UNKNOWN" );
+			em.persist( customer3 );
+		});
+		EntityManager em = getOrCreateEntityManager();
+		CriteriaBuilder builder = em.getCriteriaBuilder();
+
+		CriteriaQuery<Tuple> query = builder.createTupleQuery();
+		Root<Customer> root = query.from( Customer.class );
+
+		Path<String> emailPath = root.get( "email" );
+		CriteriaBuilder.Case<EmailType> selectCase = builder.selectCase();
+		selectCase.when( builder.greaterThan( builder.length( emailPath ), 13 ), EmailType.LONG );
+		selectCase.when( builder.greaterThan( builder.length( emailPath ), 12 ), EmailType.NORMAL );
+		Expression<EmailType> emailType = selectCase.otherwise( EmailType.UNKNOWN );
+
+		query.multiselect( emailPath, emailType );
+		query.orderBy( builder.asc( emailPath ) );
+
+		List<Tuple> results = em.createQuery( query ).getResultList();
+		assertEquals( 3, results.size() );
+		assertEquals( "LONG5678901234", results.get( 0 ).get( 0 ) );
+		assertEquals( EmailType.LONG, results.get( 0 ).get( 1 ) );
+		assertEquals( "NORMAL7890123", results.get( 1 ).get( 0 ) );
+		assertEquals( EmailType.NORMAL, results.get( 1 ).get( 1 )  );
+		assertEquals( "UNKNOWN", results.get( 2 ).get( 0 ) );
+		assertEquals( EmailType.UNKNOWN, results.get( 2 ).get( 1 )  );
+	}
+
 	@Entity(name = "Customer")
 	@Table(name = "customer")
 	public static class Customer {
@@ -171,6 +216,7 @@ public class BasicSimpleCaseTest extends BaseEntityManagerFunctionalTestCase {
 		private String email;
 
 		@Id
+		@GeneratedValue
 		public Integer getId() {
 			return id;
 		}
@@ -186,5 +232,9 @@ public class BasicSimpleCaseTest extends BaseEntityManagerFunctionalTestCase {
 		public void setEmail(String email) {
 			this.email = email;
 		}
+	}
+
+	public enum EmailType {
+		LONG, NORMAL, UNKNOWN
 	}
 }

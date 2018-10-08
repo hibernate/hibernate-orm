@@ -30,12 +30,6 @@ public interface Exporter {
 	public Properties getProperties();
 	
 	/**
-	 * 
-	 * @return artifact collector
-	 */
-	public ArtifactCollector getArtifactCollector();
-	
-	/**
 	 * Called when exporter should start generating its output
 	 */
 	public void start();

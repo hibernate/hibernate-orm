@@ -1279,10 +1279,10 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToStopHibernateService(@Cause Exception e);
 
 	@LogMessage(level = INFO)
-	@Message(value = "Error stopping service [%s] : %s", id = 369)
+	@Message(value = "Error stopping service [%s]", id = 369)
 	void unableToStopService(
 			Class class1,
-			String string);
+			@Cause Exception e);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Exception switching from method: [%s] to a method using the column index. Reverting to using: [%<s]",

@@ -389,7 +389,7 @@ public abstract class AbstractServiceRegistryImpl
 				( (Stoppable) service ).stop();
 			}
 			catch ( Exception e ) {
-				log.unableToStopService( service.getClass(), e.toString() );
+				log.unableToStopService( service.getClass(), e );
 			}
 		}
 	}

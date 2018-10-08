@@ -266,7 +266,7 @@ public class BootstrapServiceRegistryImpl
 				( (Stoppable) service ).stop();
 			}
 			catch ( Exception e ) {
-				LOG.unableToStopService( service.getClass(), e.toString() );
+				LOG.unableToStopService( service.getClass(), e );
 			}
 		}
 	}

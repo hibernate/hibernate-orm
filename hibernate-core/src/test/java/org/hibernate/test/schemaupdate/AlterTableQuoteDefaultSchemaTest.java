@@ -77,6 +77,14 @@ public class AlterTableQuoteDefaultSchemaTest extends AbstractAlterTableQuoteSch
 	protected void cleanupTest() {
 		try {
 			doInHibernate( this::sessionFactory, session -> {
+				session.createNativeQuery( "DROP TABLE " + quote( "default-schema", "my_entity" ) )
+						.executeUpdate();
+			} );
+		}
+		catch (Exception ignore) {
+		}
+		try {
+			doInHibernate( this::sessionFactory, session -> {
 				session.createNativeQuery( "DROP SCHEMA " + quote( "default-schema" ) )
 						.executeUpdate();
 			} );

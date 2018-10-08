@@ -70,6 +70,14 @@ public class AlterTableQuoteSpecifiedSchemaTest extends AbstractAlterTableQuoteS
 	protected void cleanupTest() {
 		try {
 			doInHibernate( this::sessionFactory, session -> {
+				session.createNativeQuery( "DROP TABLE " + quote( "my-schema", "my_entity" ) )
+						.executeUpdate();
+			} );
+		}
+		catch (Exception ignore) {
+		}
+		try {
+			doInHibernate( this::sessionFactory, session -> {
 				session.createNativeQuery( "DROP SCHEMA " + quote( "my-schema" ) )
 						.executeUpdate();
 			} );

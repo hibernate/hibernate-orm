@@ -15,7 +15,7 @@ ext {
     jnpVersion = '5.0.6.CR1'
 
     hibernateValidatorVersion = '6.0.7.Final'
-    hibernateCommonsVersion = '5.0.4.Final'
+    hibernateCommonsVersion = '5.0.5.Final'
     validationApiVersion = '2.0.1.Final'
     elVersion = '3.0.1-b08'
 

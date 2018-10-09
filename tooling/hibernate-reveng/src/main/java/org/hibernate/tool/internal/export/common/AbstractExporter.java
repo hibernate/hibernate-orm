@@ -31,7 +31,6 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 
 	protected Logger log = LoggerFactory.getLogger(this.getClass());
 	
-	private File outputdir;
 	private String[] templatePaths = new String[0];
 	private TemplateHelper vh;
 	private Properties properties = new Properties();
@@ -60,11 +59,11 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 	}
 	
 	public File getOutputDirectory() {
-		return outputdir;
+		return (File)getProperties().get(OUTPUT_FOLDER);
 	}
 
 	public void setOutputDirectory(File outputdir) {
-		this.outputdir = outputdir;		
+		getProperties().put(OUTPUT_FOLDER, outputdir);
 	}
 
 	public Properties getProperties() {

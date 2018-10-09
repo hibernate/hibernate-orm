@@ -77,6 +77,14 @@ public class AlterTableQuoteDefaultSchemaTest extends AbstractAlterTableQuoteSch
 	protected void cleanupTest() {
 		try {
 			doInHibernate( this::sessionFactory, session -> {
+				session.createNativeQuery( "DROP TABLE " + quote( "default-schema", "my_entity" ) )
+						.executeUpdate();
+			} );
+		}
+		catch (Exception ignore) {
+		}
+		try {
+			doInHibernate( this::sessionFactory, session -> {
 				session.createNativeQuery( "DROP SCHEMA " + quote( "default-schema" ) )
 						.executeUpdate();
 			} );
@@ -125,7 +133,7 @@ public class AlterTableQuoteDefaultSchemaTest extends AbstractAlterTableQuoteSch
 			String fileContent = new String( Files.readAllBytes( output.toPath() ) );
 
 			Pattern fileContentPattern = Pattern
-					.compile( "create table " + regexpQuote( "default-schema", "my_entity" ) );
+					.compile( "create ((column|row) )?table " + regexpQuote( "default-schema", "my_entity" ) );
 			Matcher fileContentMatcher = fileContentPattern.matcher( fileContent.toLowerCase() );
 			assertThat( fileContentMatcher.find(), is( true ) );
 		}

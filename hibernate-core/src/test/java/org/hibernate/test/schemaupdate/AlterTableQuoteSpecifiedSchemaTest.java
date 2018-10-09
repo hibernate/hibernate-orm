@@ -70,6 +70,14 @@ public class AlterTableQuoteSpecifiedSchemaTest extends AbstractAlterTableQuoteS
 	protected void cleanupTest() {
 		try {
 			doInHibernate( this::sessionFactory, session -> {
+				session.createNativeQuery( "DROP TABLE " + quote( "my-schema", "my_entity" ) )
+						.executeUpdate();
+			} );
+		}
+		catch (Exception ignore) {
+		}
+		try {
+			doInHibernate( this::sessionFactory, session -> {
 				session.createNativeQuery( "DROP SCHEMA " + quote( "my-schema" ) )
 						.executeUpdate();
 			} );
@@ -107,7 +115,7 @@ public class AlterTableQuoteSpecifiedSchemaTest extends AbstractAlterTableQuoteS
 
 		try {
 			String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-			Pattern fileContentPattern = Pattern.compile( "create table " + regexpQuote( "my-schema", "my_entity" ) );
+			Pattern fileContentPattern = Pattern.compile( "create ((column|row) )?table " + regexpQuote( "my-schema", "my_entity" ) );
 			Matcher fileContentMatcher = fileContentPattern.matcher( fileContent.toLowerCase() );
 			assertThat( fileContentMatcher.find(), is( true ) );
 		}

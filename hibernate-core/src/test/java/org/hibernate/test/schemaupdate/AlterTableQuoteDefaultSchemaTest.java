@@ -6,18 +6,12 @@
  */
 package org.hibernate.test.schemaupdate;
 
-import static org.hamcrest.core.Is.is;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.EnumSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -28,25 +22,31 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
-
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
-import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
+
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
+
+import static org.hamcrest.core.Is.is;
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 /**
  * @author Guillaume Smet
  */
 @TestForIssue(jiraKey = "HHH-12939")
-@RequiresDialectFeature(DialectChecks.SupportSchemaCreation.class)
+@RequiresDialect(value = {
+		H2Dialect.class,
+		PostgreSQL82Dialect.class,
+		SQLServer2012Dialect.class,
+})
 public class AlterTableQuoteDefaultSchemaTest extends AbstractAlterTableQuoteSchemaTest {
 
 	@Override

@@ -21,11 +21,13 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.PostgreSQL82Dialect;
+import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
@@ -38,7 +40,11 @@ import static org.junit.Assert.fail;
  * @author Guillaume Smet
  */
 @TestForIssue(jiraKey = "HHH-12939")
-@RequiresDialectFeature(DialectChecks.SupportSchemaCreation.class)
+@RequiresDialect(value = {
+		H2Dialect.class,
+		PostgreSQL82Dialect.class,
+		SQLServer2012Dialect.class,
+})
 public class AlterTableQuoteSpecifiedSchemaTest extends AbstractAlterTableQuoteSchemaTest {
 
 	@Override

@@ -6,10 +6,14 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.function.SQLFunctionTemplate;
+import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.AfterUseAction;
+import org.hibernate.type.StandardBasicTypes;
 
 /**
  * An SQL dialect for the SAP HANA column store.
@@ -29,6 +33,14 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 
 	public HANAColumnStoreDialect() {
 		super();
+
+		// full-text search functions
+		registerFunction( "score", new StandardSQLFunction( "score", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "snippets", new StandardSQLFunction( "snippets" ) );
+		registerFunction( "highlighted", new StandardSQLFunction( "highlighted" ) );
+		registerFunction( "contains", new VarArgsSQLFunction( StandardBasicTypes.BOOLEAN, "contains(", ",", ") /*" ) );
+		registerFunction( "contains_rhs", new SQLFunctionTemplate( StandardBasicTypes.BOOLEAN, "*/" ) );
+		registerFunction( "not_contains", new VarArgsSQLFunction( StandardBasicTypes.BOOLEAN, "not contains(", ",", ") /*" ) );
 	}
 
 	@Override

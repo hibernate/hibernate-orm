@@ -36,8 +36,8 @@ public class HANASearchTest extends BaseCoreFunctionalTestCase {
 	protected void prepareTest() throws Exception {
 		doInHibernate( this::sessionFactory, session -> {
 			session.doWork( connection -> {
-				try ( PreparedStatement ps = connection
-						.prepareStatement( "CREATE COLUMN TABLE " + ENTITY_NAME + " (key INTEGER, t TEXT, c NVARCHAR(255), PRIMARY KEY (key))" ) ) {
+				try ( PreparedStatement ps = connection.prepareStatement( "CREATE COLUMN TABLE " + ENTITY_NAME
+						+ " (key INTEGER, t TEXT, c NVARCHAR(255), PRIMARY KEY (key))" ) ) {
 					ps.execute();
 				}
 				try ( PreparedStatement ps = connection
@@ -65,181 +65,170 @@ public class HANASearchTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-13021")
 	public void testTextType() throws Exception {
-		Session s = openSession();
-		s.beginTransaction();
+		doInHibernate( this::sessionFactory, s -> {
+			SearchEntity entity = new SearchEntity();
+			entity.key = Integer.valueOf( 1 );
+			entity.t = "TEST TEXT";
+			entity.c = "TEST STRING";
 
-		SearchEntity entity = new SearchEntity();
-		entity.key = Integer.valueOf( 1 );
-		entity.t = "TEST TEXT";
-		entity.c = "TEST STRING";
+			s.persist( entity );
 
-		s.persist( entity );
+			s.flush();
 
-		s.flush();
+			Query<Object[]> legacyQuery = s.createQuery( "select b, snippets(t), highlighted(t), score() from "
+					+ ENTITY_NAME + " b where contains(b.t, 'text') = contains_rhs()", Object[].class );
 
-		s.getTransaction().commit();
+			Object[] result = legacyQuery.getSingleResult();
 
-		s.clear();
+			SearchEntity retrievedEntity = (SearchEntity) result[0];
 
-		Query<Object[]> legacyQuery = s.createQuery( "select b, snippets(t), highlighted(t), score() from " + ENTITY_NAME + " b where contains(b.t, 'text') = contains_rhs()", Object[].class);
+			assertEquals( 4, result.length );
 
-		Object[] result = legacyQuery.getSingleResult();
-		
-		SearchEntity retrievedEntity = (SearchEntity) result[0];
-		
-		assertEquals(4, result.length);
+			assertEquals( Integer.valueOf( 1 ), retrievedEntity.key );
+			assertEquals( "TEST TEXT", retrievedEntity.t );
+			assertEquals( "TEST STRING", retrievedEntity.c );
 
-		assertEquals( Integer.valueOf( 1 ), retrievedEntity.key );
-		assertEquals( "TEST TEXT", retrievedEntity.t );
-		assertEquals( "TEST STRING", retrievedEntity.c );
-		
-		assertEquals("TEST <b>TEXT</b>", result[1]);
-		assertEquals("TEST <b>TEXT</b>", result[2]);
-		assertEquals(0.75d, result[3]);
+			assertEquals( "TEST <b>TEXT</b>", result[1] );
+			assertEquals( "TEST <b>TEXT</b>", result[2] );
+			assertEquals( 0.75d, result[3] );
+		} );
 	}
-	
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-13021")
 	public void testTextTypeFalse() throws Exception {
-		Session s = openSession();
-		s.beginTransaction();
+		doInHibernate( this::sessionFactory, s -> {
+			SearchEntity entity = new SearchEntity();
+			entity.key = Integer.valueOf( 1 );
+			entity.t = "TEST TEXT";
+			entity.c = "TEST STRING";
 
-		SearchEntity entity = new SearchEntity();
-		entity.key = Integer.valueOf( 1 );
-		entity.t = "TEST TEXT";
-		entity.c = "TEST STRING";
+			s.persist( entity );
 
-		s.persist( entity );
+			s.flush();
 
-		s.flush();
+			Query<Object[]> legacyQuery = s.createQuery( "select b, snippets(t), highlighted(t), score() from " + ENTITY_NAME
+					+ " b where not_contains(b.t, 'string') = contains_rhs()", Object[].class );
 
-		s.getTransaction().commit();
+			Object[] result = legacyQuery.getSingleResult();
 
-		s.clear();
+			SearchEntity retrievedEntity = (SearchEntity) result[0];
 
-		Query<Object[]> legacyQuery = s.createQuery( "select b, snippets(t), highlighted(t), score() from " + ENTITY_NAME + " b where not_contains(b.t, 'string') = contains_rhs()", Object[].class);
+			assertEquals( 4, result.length );
 
-		Object[] result = legacyQuery.getSingleResult();
-		
-		SearchEntity retrievedEntity = (SearchEntity) result[0];
-		
-		assertEquals(4, result.length);
+			assertEquals( Integer.valueOf( 1 ), retrievedEntity.key );
+			assertEquals( "TEST TEXT", retrievedEntity.t );
+			assertEquals( "TEST STRING", retrievedEntity.c );
 
-		assertEquals( Integer.valueOf( 1 ), retrievedEntity.key );
-		assertEquals( "TEST TEXT", retrievedEntity.t );
-		assertEquals( "TEST STRING", retrievedEntity.c );
-		
-		assertEquals("TEST TEXT", result[1]);
-		assertEquals("TEST TEXT", result[2]);
-		assertEquals(1d, result[3]);
+			assertEquals( "TEST TEXT", result[1] );
+			assertEquals( "TEST TEXT", result[2] );
+			assertEquals( 1d, result[3] );
+		} );
 	}
-	
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-13021")
 	public void testCharType() throws Exception {
-		Session s = openSession();
-		s.beginTransaction();
+		doInHibernate( this::sessionFactory, s -> {
+			SearchEntity entity = new SearchEntity();
+			entity.key = Integer.valueOf( 1 );
+			entity.t = "TEST TEXT";
+			entity.c = "TEST STRING";
 
-		SearchEntity entity = new SearchEntity();
-		entity.key = Integer.valueOf( 1 );
-		entity.t = "TEST TEXT";
-		entity.c = "TEST STRING";
+			s.persist( entity );
+			
+			s.getTransaction().commit();
+			s.beginTransaction();
 
-		s.persist( entity );
+			Query<Object[]> legacyQuery = s.createQuery( "select b, snippets(c), highlighted(c), score() from " + ENTITY_NAME
+					+ " b where contains(b.c, 'string') = contains_rhs()", Object[].class );
 
-		s.flush();
+			Object[] result = legacyQuery.getSingleResult();
 
-		s.getTransaction().commit();
+			SearchEntity retrievedEntity = (SearchEntity) result[0];
 
-		s.clear();
+			assertEquals( 4, result.length );
 
-		Query<Object[]> legacyQuery = s.createQuery( "select b, snippets(c), highlighted(c), score() from " + ENTITY_NAME + " b where contains(b.c, 'string') = contains_rhs()", Object[].class);
+			assertEquals( Integer.valueOf( 1 ), retrievedEntity.key );
+			assertEquals( "TEST TEXT", retrievedEntity.t );
+			assertEquals( "TEST STRING", retrievedEntity.c );
 
-		Object[] result = legacyQuery.getSingleResult();
-		
-		SearchEntity retrievedEntity = (SearchEntity) result[0];
-		
-		assertEquals(4, result.length);
-
-		assertEquals( Integer.valueOf( 1 ), retrievedEntity.key );
-		assertEquals( "TEST TEXT", retrievedEntity.t );
-		assertEquals( "TEST STRING", retrievedEntity.c );
-		
-		assertEquals("TEST <b>STRING</b>", result[1]);
-		assertEquals("TEST <b>STRING</b>", result[2]);
-		assertEquals(0.75d, result[3]);
+			assertEquals( "TEST <b>STRING</b>", result[1] );
+			assertEquals( "TEST <b>STRING</b>", result[2] );
+			assertEquals( 0.75d, result[3] );
+		} );
 	}
-	
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-13021")
 	public void testCharTypeComplexQuery() throws Exception {
-		Session s = openSession();
-		s.beginTransaction();
+		doInHibernate( this::sessionFactory, s -> {
+			SearchEntity entity = new SearchEntity();
+			entity.key = Integer.valueOf( 1 );
+			entity.t = "TEST TEXT";
+			entity.c = "TEST STRING";
 
-		SearchEntity entity = new SearchEntity();
-		entity.key = Integer.valueOf( 1 );
-		entity.t = "TEST TEXT";
-		entity.c = "TEST STRING";
+			s.persist( entity );
 
-		s.persist( entity );
+			s.flush();
+			
+			s.getTransaction().commit();
+			s.beginTransaction();
 
-		s.flush();
+			Query<Object[]> legacyQuery = s.createQuery(
+					"select b, snippets(c), highlighted(c), score() from " + ENTITY_NAME
+							+ " b where contains(b.c, 'string') = contains_rhs() and key=1 and score() > 0.5",
+					Object[].class );
 
-		s.getTransaction().commit();
+			Object[] result = legacyQuery.getSingleResult();
 
-		s.clear();
+			SearchEntity retrievedEntity = (SearchEntity) result[0];
 
-		Query<Object[]> legacyQuery = s.createQuery( "select b, snippets(c), highlighted(c), score() from " + ENTITY_NAME + " b where contains(b.c, 'string') = contains_rhs() and key=1 and score() > 0.5", Object[].class);
+			assertEquals( 4, result.length );
 
-		Object[] result = legacyQuery.getSingleResult();
-		
-		SearchEntity retrievedEntity = (SearchEntity) result[0];
-		
-		assertEquals(4, result.length);
+			assertEquals( Integer.valueOf( 1 ), retrievedEntity.key );
+			assertEquals( "TEST TEXT", retrievedEntity.t );
+			assertEquals( "TEST STRING", retrievedEntity.c );
 
-		assertEquals( Integer.valueOf( 1 ), retrievedEntity.key );
-		assertEquals( "TEST TEXT", retrievedEntity.t );
-		assertEquals( "TEST STRING", retrievedEntity.c );
-		
-		assertEquals("TEST <b>STRING</b>", result[1]);
-		assertEquals("TEST <b>STRING</b>", result[2]);
-		assertEquals(0.75d, result[3]);
+			assertEquals( "TEST <b>STRING</b>", result[1] );
+			assertEquals( "TEST <b>STRING</b>", result[2] );
+			assertEquals( 0.75d, result[3] );
+		} );
 	}
-	
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-13021")
 	public void testFuzzy() throws Exception {
-		Session s = openSession();
-		s.beginTransaction();
+		doInHibernate( this::sessionFactory, s -> {
+			SearchEntity entity = new SearchEntity();
+			entity.key = Integer.valueOf( 1 );
+			entity.t = "TEST TEXT";
+			entity.c = "TEST STRING";
 
-		SearchEntity entity = new SearchEntity();
-		entity.key = Integer.valueOf( 1 );
-		entity.t = "TEST TEXT";
-		entity.c = "TEST STRING";
+			s.persist( entity );
 
-		s.persist( entity );
+			s.flush();
+			
+			s.getTransaction().commit();
+			s.beginTransaction();
 
-		s.flush();
+			Query<Object[]> legacyQuery = s.createQuery( "select b, snippets(c), highlighted(c), score() from " + ENTITY_NAME
+					+ " b where contains(b.c, 'string', FUZZY(0.7)) = contains_rhs()", Object[].class );
 
-		s.getTransaction().commit();
+			Object[] result = legacyQuery.getSingleResult();
 
-		s.clear();
+			SearchEntity retrievedEntity = (SearchEntity) result[0];
 
-		Query<Object[]> legacyQuery = s.createQuery( "select b, snippets(c), highlighted(c), score() from " + ENTITY_NAME + " b where contains(b.c, 'string', FUZZY(0.7)) = contains_rhs()", Object[].class);
+			assertEquals( 4, result.length );
 
-		Object[] result = legacyQuery.getSingleResult();
-		
-		SearchEntity retrievedEntity = (SearchEntity) result[0];
-		
-		assertEquals(4, result.length);
+			assertEquals( Integer.valueOf( 1 ), retrievedEntity.key );
+			assertEquals( "TEST TEXT", retrievedEntity.t );
+			assertEquals( "TEST STRING", retrievedEntity.c );
 
-		assertEquals( Integer.valueOf( 1 ), retrievedEntity.key );
-		assertEquals( "TEST TEXT", retrievedEntity.t );
-		assertEquals( "TEST STRING", retrievedEntity.c );
-		
-		assertEquals("TEST <b>STRING</b>", result[1]);
-		assertEquals("TEST <b>STRING</b>", result[2]);
-		assertEquals(0.75d, result[3]);
+			assertEquals( "TEST <b>STRING</b>", result[1] );
+			assertEquals( "TEST <b>STRING</b>", result[2] );
+			assertEquals( 0.75d, result[3] );
+		} );
 	}
 
 	@Override
@@ -249,9 +238,7 @@ public class HANASearchTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected java.lang.Class<?>[] getAnnotatedClasses() {
-		return new java.lang.Class[]{
-				SearchEntity.class
-		};
+		return new java.lang.Class[]{ SearchEntity.class };
 	}
 
 	@Entity(name = ENTITY_NAME)

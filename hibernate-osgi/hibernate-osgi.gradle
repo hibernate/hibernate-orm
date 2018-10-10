@@ -13,7 +13,7 @@ description = 'Support for running Hibernate O/RM in OSGi environments'
 ext {
 	osgiCoreVersion = '6.0.0'
 	osgiCompediumVersion = '5.0.0'
-	karafVersion = '4.1.0'
+	karafVersion = '4.2.1'
 	paxExamVersion = '4.12.0'
 }
 
@@ -131,6 +131,8 @@ karaf {
 				prerequisite = true
 			}
 			feature 'transaction-api'
+			// Most Hibernate modules declare OSGi metadata through blueprints, so we need this feature
+			feature 'aries-blueprint'
 		}
 		// NOTE : would like to include spatial as well, but we need to wait for
 		//		it to not define dependency on postgresql driver

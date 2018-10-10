@@ -122,15 +122,21 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 		);
 
 		try {
-			final HibernateProxy proxy = (HibernateProxy) proxyClass.newInstance();
+			final HibernateProxy proxy = (HibernateProxy) proxyClass.getConstructor().newInstance();
 			( (Proxy) proxy ).setHandler( initializer );
 			initializer.constructed();
 
 			return proxy;
 		}
+		catch (NoSuchMethodException e) {
+			String logMessage = LOG.bytecodeEnhancementFailedBecauseOfDefaultConstructor( entityName );
+			LOG.error( logMessage, e );
+			throw new HibernateException( logMessage, e );
+		}
 		catch (Throwable t) {
-			LOG.error( LOG.bytecodeEnhancementFailed( entityName ), t );
-			throw new HibernateException( LOG.bytecodeEnhancementFailed( entityName ), t );
+			String logMessage = LOG.bytecodeEnhancementFailed( entityName );
+			LOG.error( logMessage, t );
+			throw new HibernateException( logMessage, t );
 		}
 	}
 

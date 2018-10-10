@@ -476,6 +476,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Bytecode enhancement failed: %s", id = 142)
 	String bytecodeEnhancementFailed(String entityName);
 
+	@Message(value = "Bytecode enhancement failed because no public, protected or package-private default constructor was found for entity: %s. Private constructors don't work with runtime proxies!", id = 143)
+	String bytecodeEnhancementFailedBecauseOfDefaultConstructor(String entityName);
+
 	@LogMessage(level = WARN)
 	@Message(value = "%s = false breaks the EJB3 specification", id = 144)
 	void jdbcAutoCommitFalseBreaksEjb3Spec(String autocommit);

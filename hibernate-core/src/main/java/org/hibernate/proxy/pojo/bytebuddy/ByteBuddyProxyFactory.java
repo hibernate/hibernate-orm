@@ -6,14 +6,11 @@
  */
 package org.hibernate.proxy.pojo.bytebuddy;
 
-import static org.hibernate.internal.CoreLogging.messageLogger;
-
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
-import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
@@ -22,6 +19,8 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyConfiguration;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.type.CompositeType;
+
+import static org.hibernate.internal.CoreLogging.messageLogger;
 
 public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 
@@ -87,14 +86,20 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 		);
 
 		try {
-			final HibernateProxy proxy = (HibernateProxy) proxyClass.newInstance();
+			final HibernateProxy proxy = (HibernateProxy) proxyClass.getConstructor().newInstance();
 			( (ProxyConfiguration) proxy ).$$_hibernate_set_interceptor( interceptor );
 
 			return proxy;
 		}
+		catch (NoSuchMethodException e) {
+			String logMessage = LOG.bytecodeEnhancementFailedBecauseOfDefaultConstructor( entityName );
+			LOG.error( logMessage, e );
+			throw new HibernateException( logMessage, e );
+		}
 		catch (Throwable t) {
-			LOG.error( LOG.bytecodeEnhancementFailed( entityName ), t );
-			throw new HibernateException( LOG.bytecodeEnhancementFailed( entityName ), t );
+			String logMessage = LOG.bytecodeEnhancementFailed( entityName );
+			LOG.error( logMessage, t );
+			throw new HibernateException( logMessage, t );
 		}
 	}
 }

@@ -17,10 +17,13 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Environment;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.SessionImpl;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyFactory;
+import org.hibernate.proxy.pojo.javassist.JavassistProxyFactory;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.logger.LoggerInspectionRule;
@@ -34,11 +37,15 @@ import org.jboss.logging.Logger;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-@TestForIssue( jiraKey = "HHH-13020" )
+@TestForIssue(jiraKey = "HHH-13020")
 public class PrivateConstructorTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule( Logger.getMessageLogger( CoreMessageLogger.class, ByteBuddyProxyFactory.class.getName() ) );
+	public LoggerInspectionRule logInspection = new LoggerInspectionRule( Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			proxyFactoryClass()
+					.getName()
+	) );
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -74,7 +81,7 @@ public class PrivateConstructorTest extends BaseEntityManagerFunctionalTestCase 
 			catch (Exception expected) {
 				assertEquals( NoSuchMethodException.class, ExceptionUtil.rootCause( expected ).getClass() );
 				assertTrue( expected.getMessage().contains(
-					"Bytecode enhancement failed because no public, protected or package-private default constructor was found for entity"
+						"Bytecode enhancement failed because no public, protected or package-private default constructor was found for entity"
 				) );
 			}
 			assertTrue( triggerable.wasTriggered() );
@@ -89,6 +96,19 @@ public class PrivateConstructorTest extends BaseEntityManagerFunctionalTestCase 
 			if ( entityManager != null ) {
 				entityManager.close();
 			}
+		}
+	}
+
+	private static Class<? extends ProxyFactory> proxyFactoryClass() {
+		String byteCodeProvider = Environment.getProperties().getProperty( AvailableSettings.BYTECODE_PROVIDER );
+		if ( byteCodeProvider == null || Environment.BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals( byteCodeProvider ) ) {
+			return ByteBuddyProxyFactory.class;
+		}
+		else if ( Environment.BYTECODE_PROVIDER_NAME_JAVASSIST.equals( byteCodeProvider ) ) {
+			return JavassistProxyFactory.class;
+		}
+		else {
+			throw new UnsupportedOperationException( "Unknown bytecode provider:" + byteCodeProvider );
 		}
 	}
 

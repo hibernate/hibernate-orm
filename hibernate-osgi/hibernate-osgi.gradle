@@ -131,7 +131,7 @@ karaf {
 				prerequisite = true
 			}
 			feature 'transaction-api'
-	}
+		}
 		// NOTE : would like to include spatial as well, but we need to wait for
 		//		it to not define dependency on postgresql driver
 		feature {

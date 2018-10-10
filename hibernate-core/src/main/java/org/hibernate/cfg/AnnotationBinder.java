@@ -3056,37 +3056,13 @@ public final class AnnotationBinder {
 		final String propertyName = inferredData.getPropertyName();
 		value.setTypeUsingReflection( propertyHolder.getClassName(), propertyName );
 
-		if ( ( joinColumn != null && joinColumn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT )
-				|| ( joinColumns != null && joinColumns.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) ) {
-			// not ideal...
-			value.setForeignKeyName( "none" );
-		}
-		else {
-			final ForeignKey fk = property.getAnnotation( ForeignKey.class );
-			if ( fk != null && StringHelper.isNotEmpty( fk.name() ) ) {
-				value.setForeignKeyName( fk.name() );
-			}
-			else {
-				final javax.persistence.ForeignKey fkOverride = propertyHolder.getOverriddenForeignKey(
-						StringHelper.qualify( propertyHolder.getPath(), propertyName )
-				);
-				if ( fkOverride != null && fkOverride.value() == ConstraintMode.NO_CONSTRAINT ) {
-					value.setForeignKeyName( "none" );
-				}
-				else if ( fkOverride != null ) {
-					value.setForeignKeyName( StringHelper.nullIfEmpty( fkOverride.name() ) );
-					value.setForeignKeyDefinition( StringHelper.nullIfEmpty( fkOverride.foreignKeyDefinition() ) );
-				}
-				else if ( joinColumns != null ) {
-					value.setForeignKeyName( StringHelper.nullIfEmpty( joinColumns.foreignKey().name() ) );
-					value.setForeignKeyDefinition( StringHelper.nullIfEmpty( joinColumns.foreignKey().foreignKeyDefinition() ) );
-				}
-				else if ( joinColumn != null ) {
-					value.setForeignKeyName( StringHelper.nullIfEmpty( joinColumn.foreignKey().name() ) );
-					value.setForeignKeyDefinition( StringHelper.nullIfEmpty( joinColumn.foreignKey().foreignKeyDefinition() ) );
-				}
-			}
-		}
+		bindForeignKeyNameAndDefinition(
+				value,
+				property,
+				propertyHolder.getOverriddenForeignKey( StringHelper.qualify( propertyHolder.getPath(), propertyName ) ),
+				joinColumn,
+				joinColumns
+		);
 
 		String path = propertyHolder.getPath() + "." + propertyName;
 		FkSecondPass secondPass = new ToOneFkSecondPass(
@@ -3414,6 +3390,41 @@ public final class AnnotationBinder {
 		}
 		else {
 			return FetchMode.SELECT;
+		}
+	}
+
+	public static void bindForeignKeyNameAndDefinition(
+			SimpleValue value,
+			XProperty property,
+			javax.persistence.ForeignKey fkOverride,
+			JoinColumn joinColumn,
+			JoinColumns joinColumns) {
+		if ( ( joinColumn != null && joinColumn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT )
+				|| ( joinColumns != null && joinColumns.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) ) {
+			value.setForeignKeyName( "none" );
+		}
+		else {
+			final ForeignKey fk = property.getAnnotation( ForeignKey.class );
+			if ( fk != null && StringHelper.isNotEmpty( fk.name() ) ) {
+				value.setForeignKeyName( fk.name() );
+			}
+			else {
+				if ( fkOverride != null && fkOverride.value() == ConstraintMode.NO_CONSTRAINT ) {
+					value.setForeignKeyName( "none" );
+				}
+				else if ( fkOverride != null ) {
+					value.setForeignKeyName( StringHelper.nullIfEmpty( fkOverride.name() ) );
+					value.setForeignKeyDefinition( StringHelper.nullIfEmpty( fkOverride.foreignKeyDefinition() ) );
+				}
+				else if ( joinColumns != null ) {
+					value.setForeignKeyName( StringHelper.nullIfEmpty( joinColumns.foreignKey().name() ) );
+					value.setForeignKeyDefinition( StringHelper.nullIfEmpty( joinColumns.foreignKey().foreignKeyDefinition() ) );
+				}
+				else if ( joinColumn != null ) {
+					value.setForeignKeyName( StringHelper.nullIfEmpty( joinColumn.foreignKey().name() ) );
+					value.setForeignKeyDefinition( StringHelper.nullIfEmpty( joinColumn.foreignKey().foreignKeyDefinition() ) );
+				}
+			}
 		}
 	}
 

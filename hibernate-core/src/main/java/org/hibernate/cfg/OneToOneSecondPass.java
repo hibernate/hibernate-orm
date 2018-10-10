@@ -8,11 +8,12 @@ package org.hibernate.cfg;
 
 import java.util.Iterator;
 import java.util.Map;
-import javax.persistence.ConstraintMode;
+
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinColumns;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -104,6 +105,15 @@ public class OneToOneSecondPass implements SecondPass {
 							: ForeignKeyDirection.TO_PARENT
 			);
 		}
+
+		AnnotationBinder.bindForeignKeyNameAndDefinition(
+				value,
+				inferredData.getProperty(),
+				inferredData.getProperty().getAnnotation( javax.persistence.ForeignKey.class ),
+				inferredData.getProperty().getAnnotation( JoinColumn.class ),
+				inferredData.getProperty().getAnnotation( JoinColumns.class )
+		);
+
 		PropertyBinder binder = new PropertyBinder();
 		binder.setName( propertyName );
 		binder.setValue( value );
@@ -257,23 +267,6 @@ public class OneToOneSecondPass implements SecondPass {
 								+ " in mappedBy of "
 								+ StringHelper.qualify( ownerEntity, ownerProperty )
 				);
-			}
-		}
-
-		final ForeignKey fk = inferredData.getProperty().getAnnotation( ForeignKey.class );
-		if ( fk != null && !BinderHelper.isEmptyAnnotationValue( fk.name() ) ) {
-			value.setForeignKeyName( fk.name() );
-		}
-		else {
-			final javax.persistence.ForeignKey jpaFk = inferredData.getProperty().getAnnotation( javax.persistence.ForeignKey.class );
-			if ( jpaFk != null ) {
-				if ( jpaFk.value() == ConstraintMode.NO_CONSTRAINT ) {
-					value.setForeignKeyName( "none" );
-				}
-				else {
-					value.setForeignKeyName( StringHelper.nullIfEmpty( jpaFk.name() ) );
-					value.setForeignKeyDefinition( StringHelper.nullIfEmpty( jpaFk.foreignKeyDefinition() ) );
-				}
 			}
 		}
 	}

@@ -32,7 +32,7 @@ public class Hbm2JavaMojo extends AbstractHbm2xMojo {
     protected void executeExporter(MetadataDescriptor metadataDescriptor) {
         Exporter pojoExporter = ExporterFactory.createExporter(ExporterType.POJO);
         pojoExporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
-        pojoExporter.setOutputDirectory(outputDirectory);
+        pojoExporter.getProperties().put(ExporterConstants.OUTPUT_FOLDER, outputDirectory);
         if (templatePath != null) {
             getLog().info("Setting template path to: " + templatePath);
             pojoExporter.setTemplatePath(new String[]{templatePath});

@@ -14,6 +14,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Table;
+import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.internal.export.common.AbstractExporter;
 import org.hibernate.tool.internal.export.common.GenericExporter;
 import org.hibernate.tool.internal.export.common.TemplateProducer;
@@ -162,7 +163,7 @@ public class DocExporter extends AbstractExporter {
 				exporter.getProperties().putAll( getProperties() );
 				exporter.getProperties().put(ARTIFACT_COLLECTOR, getArtifactCollector());
 				exporter.getProperties().put(METADATA_DESCRIPTOR, getMetadataDescriptor());
-				exporter.setOutputDirectory(getOutputDirectory());
+				exporter.getProperties().put(ExporterConstants.OUTPUT_FOLDER, getOutputDirectory());
 				exporter.setTemplatePath( getTemplatePath() );
 
 				exporter.setTemplateName( "dot/entitygraph.dot.ftl" );

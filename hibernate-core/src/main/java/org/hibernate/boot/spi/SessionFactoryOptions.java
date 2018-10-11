@@ -295,4 +295,6 @@ public interface SessionFactoryOptions {
 	default int getQueryStatisticsMaxSize() {
 		return Statistics.DEFAULT_QUERY_STATISTICS_MAX_SIZE;
 	}
+
+	boolean isOmitJoinOfSuperclassTablesEnabled();
 }

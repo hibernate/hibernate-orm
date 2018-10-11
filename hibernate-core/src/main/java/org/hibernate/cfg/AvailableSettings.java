@@ -1992,4 +1992,19 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * @since 5.4
 	 */
 	String SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY = "hibernate.id.sequence.increment_size_mismatch_strategy";
+
+	/**
+	 * <p>
+	 * When you use {@link javax.persistence.InheritanceType#JOINED} strategy for inheritance mapping and query
+	 * a value from an entity, all superclass tables are joined in the query regardless you need them. With
+	 * this setting set to true only superclass tables which are really needed are joined.
+	 * </p>
+	 * <p>
+	 * The default value is true.
+	 * </p>
+	 *
+	 * @since 5.4
+	 */
+	String OMIT_JOIN_OF_SUPERCLASS_TABLES = "hibernate.query.omit_join_of_superclass_tables";
+
 }

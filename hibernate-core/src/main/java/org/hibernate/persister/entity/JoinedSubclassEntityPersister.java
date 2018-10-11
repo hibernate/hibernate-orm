@@ -1102,6 +1102,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return subclassNamesBySubclassTable[index];
 	}
 
+	@Override
 	public String getPropertyTableName(String propertyName) {
 		Integer index = getEntityMetamodel().getPropertyIndexOrNull( propertyName );
 		if ( index == null ) {
@@ -1166,5 +1167,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	@Override
 	public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
 		return new DynamicFilterAliasGenerator(subclassTableNameClosure, rootAlias);
+	}
+
+	@Override
+	public boolean canOmitSuperclassTableJoin() {
+		return true;
 	}
 }

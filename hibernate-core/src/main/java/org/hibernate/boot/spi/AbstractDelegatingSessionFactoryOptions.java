@@ -437,4 +437,9 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	public int getQueryStatisticsMaxSize() {
 		return delegate.getQueryStatisticsMaxSize();
 	}
+
+	@Override
+	public boolean isOmitJoinOfSuperclassTablesEnabled() {
+		return delegate.isOmitJoinOfSuperclassTablesEnabled();
+	}
 }

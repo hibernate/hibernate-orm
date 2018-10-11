@@ -39,7 +39,7 @@ import org.hibernate.mapping.Property;
  * This contextual information includes data needing to be processed in a second pass as well as
  * cross-references into the built metamodel classes.
  * <p/>
- * At the end of the day, clients are interested in the {@link #getEntityTypeMap} and {@link #getEmbeddableTypeMap}
+ * At the end of the day, clients are interested in the {@link #getEntityTypeMap} and {@link #getEmbeddableTypeSet}
  * results, which represent all the registered {@linkplain #registerEntityType entities} and
  * {@linkplain #registerEmbeddedableType embeddables} respectively.
  *
@@ -93,7 +93,7 @@ class MetadataContext {
 		return Collections.unmodifiableMap( entityTypes );
 	}
 
-	public Set<EmbeddableTypeImpl<?>> getEmbeddableTypeMap() {
+	public Set<EmbeddableTypeImpl<?>> getEmbeddableTypeSet() {
 		return Collections.unmodifiableSet( embeddables );
 	}
 

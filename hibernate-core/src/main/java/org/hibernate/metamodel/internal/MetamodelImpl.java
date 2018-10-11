@@ -247,7 +247,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 			context.wrapUp();
 
 			this.jpaEntityTypeMap.putAll( context.getEntityTypeMap() );
-			this.jpaEmbeddableTypes.addAll( context.getEmbeddableTypeMap() );
+			this.jpaEmbeddableTypes.addAll( context.getEmbeddableTypeSet() );
 			for ( EmbeddableTypeImpl<?> embeddable: jpaEmbeddableTypes ) {
 				this.jpaEmbeddableTypeMap.put( embeddable.getJavaType(), embeddable );
 			}

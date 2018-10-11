@@ -99,6 +99,7 @@ import static org.hibernate.cfg.AvailableSettings.LOG_SESSION_METRICS;
 import static org.hibernate.cfg.AvailableSettings.MAX_FETCH_DEPTH;
 import static org.hibernate.cfg.AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER;
 import static org.hibernate.cfg.AvailableSettings.NATIVE_EXCEPTION_HANDLING_51_COMPLIANCE;
+import static org.hibernate.cfg.AvailableSettings.OMIT_JOIN_OF_SUPERCLASS_TABLES;
 import static org.hibernate.cfg.AvailableSettings.ORDER_INSERTS;
 import static org.hibernate.cfg.AvailableSettings.JPA_CALLBACKS_ENABLED;
 import static org.hibernate.cfg.AvailableSettings.ORDER_UPDATES;
@@ -212,6 +213,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private final boolean procedureParameterNullPassingEnabled;
 	private final boolean collectionJoinSubqueryRewriteEnabled;
 	private boolean jdbcStyleParamsZeroBased;
+	private final boolean omitJoinOfSuperclassTablesEnabled;
 
 	// Caching
 	private boolean secondLevelCacheEnabled;
@@ -360,6 +362,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				CONVENTIONAL_JAVA_CONSTANTS, BOOLEAN, true );
 		this.procedureParameterNullPassingEnabled = cfgService.getSetting( PROCEDURE_NULL_PARAM_PASSING, BOOLEAN, false );
 		this.collectionJoinSubqueryRewriteEnabled = cfgService.getSetting( COLLECTION_JOIN_SUBQUERY, BOOLEAN, true );
+		this.omitJoinOfSuperclassTablesEnabled = cfgService.getSetting( OMIT_JOIN_OF_SUPERCLASS_TABLES, BOOLEAN, true );
 
 		final RegionFactory regionFactory = serviceRegistry.getService( RegionFactory.class );
 		if ( !NoCachingRegionFactory.class.isInstance( regionFactory ) ) {
@@ -1063,6 +1066,12 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	public boolean isEnhancementAsProxyEnabled() {
 		return enhancementAsProxyEnabled;
 	}
+
+	@Override
+	public boolean isOmitJoinOfSuperclassTablesEnabled() {
+		return omitJoinOfSuperclassTablesEnabled;
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// In-flight mutation access

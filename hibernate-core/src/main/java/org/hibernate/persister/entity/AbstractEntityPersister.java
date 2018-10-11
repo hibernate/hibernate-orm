@@ -533,6 +533,14 @@ public abstract class AbstractEntityPersister
 		return propertySelectable;
 	}
 
+	public String[] getTableNames() {
+		String[] tableNames = new String[getTableSpan()];
+		for ( int i = 0; i < tableNames.length; i++ ) {
+			tableNames[i] = getTableName( i );
+		}
+		return tableNames;
+	}
+
 	@SuppressWarnings("UnnecessaryBoxing")
 	public AbstractEntityPersister(
 			final PersistentClass persistentClass,
@@ -3890,7 +3898,8 @@ public abstract class AbstractEntityPersister
 				alias,
 				innerJoin,
 				includeSubclasses,
-				Collections.emptySet()
+				Collections.emptySet(),
+				null
 		).toFromFragmentString();
 	}
 
@@ -3903,7 +3912,19 @@ public abstract class AbstractEntityPersister
 		// NOTE : Not calling createJoin here is just a performance optimization
 		return getSubclassTableSpan() == 1
 				? ""
-				: createJoin( alias, innerJoin, includeSubclasses, treatAsDeclarations ).toFromFragmentString();
+				: createJoin( alias, innerJoin, includeSubclasses, treatAsDeclarations, null ).toFromFragmentString();
+	}
+
+	@Override
+	public String fromJoinFragment(
+			String alias,
+			boolean innerJoin,
+			boolean includeSubclasses,
+			Set<String> treatAsDeclarations,
+			Set<String> referencedTables) {
+		return getSubclassTableSpan() == 1
+				? ""
+				: createJoin( alias, innerJoin, includeSubclasses, treatAsDeclarations, referencedTables ).toFromFragmentString();
 	}
 
 	@Override
@@ -3915,7 +3936,8 @@ public abstract class AbstractEntityPersister
 				alias,
 				innerJoin,
 				includeSubclasses,
-				Collections.emptySet()
+				Collections.emptySet(),
+				null
 		).toWhereFragmentString();
 	}
 
@@ -3928,7 +3950,7 @@ public abstract class AbstractEntityPersister
 		// NOTE : Not calling createJoin here is just a performance optimization
 		return getSubclassTableSpan() == 1
 				? ""
-				: createJoin( alias, innerJoin, includeSubclasses, treatAsDeclarations ).toWhereFragmentString();
+				: createJoin( alias, innerJoin, includeSubclasses, treatAsDeclarations, null ).toWhereFragmentString();
 	}
 
 	protected boolean isSubclassTableLazy(int j) {
@@ -3940,6 +3962,15 @@ public abstract class AbstractEntityPersister
 			boolean innerJoin,
 			boolean includeSubclasses,
 			Set<String> treatAsDeclarations) {
+		return createJoin(name, innerJoin, includeSubclasses, treatAsDeclarations, null);
+	}
+
+	protected JoinFragment createJoin(
+			String name,
+			boolean innerJoin,
+			boolean includeSubclasses,
+			Set<String> treatAsDeclarations,
+			Set<String> referencedTables) {
 		// IMPL NOTE : all joins join to the pk of the driving table
 		final String[] idCols = StringHelper.qualify( name, getIdentifierColumnNames() );
 		final JoinFragment join = getFactory().getDialect().createOuterJoinFragment();
@@ -3950,7 +3981,8 @@ public abstract class AbstractEntityPersister
 					j,
 					innerJoin,
 					includeSubclasses,
-					treatAsDeclarations
+					treatAsDeclarations,
+					referencedTables
 			);
 
 			if ( joinType != null && joinType != JoinType.NONE ) {
@@ -3971,8 +4003,28 @@ public abstract class AbstractEntityPersister
 			boolean canInnerJoin,
 			boolean includeSubclasses,
 			Set<String> treatAsDeclarations) {
+		return determineSubclassTableJoinType(
+				subclassTableNumber,
+				canInnerJoin,
+				includeSubclasses,
+				treatAsDeclarations,
+				null
+		);
+	}
+
+	protected JoinType determineSubclassTableJoinType(
+			int subclassTableNumber,
+			boolean canInnerJoin,
+			boolean includeSubclasses,
+			Set<String> treatAsDeclarations,
+			Set<String> referencedTables) {
 
 		if ( isClassOrSuperclassTable( subclassTableNumber ) ) {
+			String superclassTableName = getSubclassTableName( subclassTableNumber );
+			if ( referencedTables != null && canOmitSuperclassTableJoin() && !referencedTables.contains(
+					superclassTableName ) ) {
+				return JoinType.NONE;
+			}
 			final boolean shouldInnerJoin = canInnerJoin
 					&& !isInverseTable( subclassTableNumber )
 					&& !isNullableTable( subclassTableNumber );
@@ -5733,6 +5785,15 @@ public abstract class AbstractEntityPersister
 		}
 
 		return ArrayHelper.to2DStringArray( polymorphicJoinColumns );
+	}
+
+	/**
+	 * If true, persister can omit superclass tables during joining if they are not needed in the query.
+	 *
+	 * @return true if the persister can do it
+	 */
+	public boolean canOmitSuperclassTableJoin() {
+		return false;
 	}
 
 	private void prepareEntityIdentifierDefinition() {

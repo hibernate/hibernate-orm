@@ -809,6 +809,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return isNullableSubclassTable[j];
 	}
 
+	@Override
 	public String getPropertyTableName(String propertyName) {
 		Integer index = getEntityMetamodel().getPropertyIndexOrNull( propertyName );
 		if ( index == null ) {

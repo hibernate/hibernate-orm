@@ -517,6 +517,10 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		return elementType.getPropertyType( propertyName, propertyPath );
 	}
 
+	public String getPropertyTableName(String propertyName) {
+		return elementType.getPropertyTableName( propertyName );
+	}
+
 	public String[] toColumns(String tableAlias, String path, boolean inSelect) {
 		return elementType.toColumns( tableAlias, path, inSelect );
 	}

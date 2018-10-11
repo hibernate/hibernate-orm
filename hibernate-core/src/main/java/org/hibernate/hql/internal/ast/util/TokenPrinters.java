@@ -21,4 +21,6 @@ public interface TokenPrinters {
 
 	ASTPrinter ORDERBY_FRAGMENT_PRINTER = new ASTPrinter( GeneratedOrderByFragmentRendererTokenTypes.class );
 
+	ASTPrinter REFERENCED_TABLES_PRINTER = new ASTReferencedTablesPrinter( SqlTokenTypes.class );
+
 }

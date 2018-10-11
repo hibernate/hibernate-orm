@@ -19,13 +19,12 @@ import javax.persistence.ManyToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 /**
  * @author Andrea Boriero
@@ -46,7 +45,9 @@ public class InsertOrderingHasParentTest extends BaseNonConfigCoreFunctionalTest
 	@Test
 	public void testInsert() {
 
-		doInHibernate( this::sessionFactory, session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 			Book book = new Book();
 			book.setComment( new Comment( "first comment" ) );
 			book.setComments( Arrays.asList( new Comment( "second comment" ) ) );
@@ -55,8 +56,9 @@ public class InsertOrderingHasParentTest extends BaseNonConfigCoreFunctionalTest
 			author.setBook( book );
 
 			session.persist( author );
-		} );
-
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Entity(name = "Author")

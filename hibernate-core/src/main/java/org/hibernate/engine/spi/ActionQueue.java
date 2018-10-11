@@ -1093,7 +1093,7 @@ public class ActionQueue {
 				return (
 					parent == batchIdentifier
 					|| ( parentEntityNames.contains( batchIdentifier.getEntityName() ) )
-					|| parent != null && parent.hasParent( batchIdentifier, new ArrayList<>() )
+					|| parent != null && parent.hasParent( batchIdentifier, new ArrayList<BatchIdentifier>() )
 				);
 			}
 

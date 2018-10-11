@@ -9,3 +9,11 @@ earlier versions, see any other pertinent migration guides as well.
 
 == Known changes
 
+=== Hibernate Spatial depends on JTS 1.6
+
+Hibernate Spatial depends on the https://github.com/locationtech/jts[Java Topology Suite (JTS)]. In 5.4 this
+ dependency has been upgraded to version 1.6. This implies a change in package naming:
+ all `com.vividsolutions.jts.\*` packages have been renamed to `org.locationtech.jts.*`.
+
+See https://github.com/locationtech/jts/blob/master/MIGRATION.md[the JTS Migration guide] for more information.
+

@@ -129,6 +129,39 @@ from the provider do not, in fact, have auto-commit disabled.
 Doing so will lead to Hibernate executing SQL operations outside of any JDBC/SQL transaction.
 ====
 
+`*hibernate.connection.handling_mode*`::
+Specifies how Hibernate should manage JDBC connections in terms of acquiring and releasing.
+This configuration property supersedes `*hibernate.connection.acquisition_mode*` and
+`*hibernate.connection.release_mode*`.
++
+The connection handling mode strategies are defined by the
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/resource/jdbc/spi/PhysicalConnectionHandlingMode.html[`PhysicalConnectionHandlingMode`] enumeration.
++
+The configuration can be either a `PhysicalConnectionHandlingMode` reference or its case-insensitive `String` representation.
++
+For more details about the `PhysicalConnectionHandlingMode` and Hibernate connection handling, check out the
+<<chapters/jdbc/Database_Access.adoc#database-connection-handling,Connection handling>> section.
+
+[line-through]#`*hibernate.connection.acquisition_mode*`# (e.g. `immediate`)::
+[NOTE]
+====
+This setting is deprecated. You should use the `*hibernate.connection.handling_mode*` instead.
+====
++
+Specifies how Hibernate should acquire JDBC connections. The possible values are given by `org.hibernate.ConnectionAcquisitionMode`.
++
+Should generally only configure this or `hibernate.connection.release_mode`, not both.
+
+[line-through]#`*hibernate.connection.release_mode*`# (e.g. `auto` (default value))::
+[NOTE]
+====
+This setting is deprecated. You should use the `*hibernate.connection.handling_mode*` instead.
+====
++
+Specifies how Hibernate should release JDBC connections. The possible values are given by the current transaction mode (`after_transaction` for JDBC transactions and `after_statement` for JTA transactions).
++
+Should generally only configure this or `hibernate.connection.acquisition_mode`, not both.
+
 `*hibernate.connection.datasource*`::
 Either a `javax.sql.DataSource` instance or a JNDI name under which to locate the `DataSource`.
 +
@@ -158,16 +191,6 @@ Names the JNDI provider/connection url.
 Names a prefix used to define arbitrary JNDI `javax.naming.InitialContext` properties.
 +
 These properties are passed along to `javax.naming.InitialContext#InitialContext(java.util.Hashtable)`
-
-`*hibernate.connection.acquisition_mode*` (e.g. `immediate`)::
-Specifies how Hibernate should acquire JDBC connections. The possible values are given by `org.hibernate.ConnectionAcquisitionMode`.
-+
-Should generally only configure this or `hibernate.connection.release_mode`, not both.
-
-`*hibernate.connection.release_mode*` (e.g. `auto` (default value))::
-Specifies how Hibernate should release JDBC connections. The possible values are given by the current transaction mode (`after_transaction` for JDBC transactions and `after_statement` for JTA transactions).
-+
-Should generally only configure this or `hibernate.connection.acquisition_mode`, not both.
 
 ==== Hibernate internal connection pool options
 

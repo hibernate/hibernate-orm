@@ -9,6 +9,8 @@ package org.hibernate.jpa.boot.spi;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.internal.EntityManagerMessageLogger;
+import org.hibernate.internal.HEMLogging;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 
 import org.jboss.logging.Logger;
@@ -21,6 +23,7 @@ import org.jboss.logging.Logger;
  */
 public final class ProviderChecker {
 	private static final Logger log = Logger.getLogger( ProviderChecker.class );
+	private static final EntityManagerMessageLogger hemLog = HEMLogging.messageLogger( ProviderChecker.class );
 
 	/**
 	 * Does the descriptor and/or integration request Hibernate as the
@@ -49,6 +52,14 @@ public final class ProviderChecker {
 				"Checking requested PersistenceProvider name [%s] against Hibernate provider names",
 				requestedProviderName
 		);
+		final String deprecatedPersistenceProvider = "org.hibernate.ejb.HibernatePersistence";
+		if ( deprecatedPersistenceProvider.equals( requestedProviderName) ) {
+			hemLog.deprecatedPersistenceProvider(
+					deprecatedPersistenceProvider,
+					HibernatePersistenceProvider.class.getName()
+			);
+			return true;
+		}
 		return HibernatePersistenceProvider.class.getName().equals( requestedProviderName );
 	}
 

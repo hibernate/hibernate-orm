@@ -13,11 +13,6 @@ import java.util.Properties;
 public interface Exporter {
 	
 
-	/**
-	 * @param file basedirectory to be used for generated files.
-	 */
-	public void setOutputDirectory(File file);
-
 	public File getOutputDirectory();
 	
 	/**

@@ -62,10 +62,6 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 		return (File)getProperties().get(OUTPUT_FOLDER);
 	}
 
-	public void setOutputDirectory(File outputdir) {
-		getProperties().put(OUTPUT_FOLDER, outputdir);
-	}
-
 	public Properties getProperties() {
 		return properties;
 	}

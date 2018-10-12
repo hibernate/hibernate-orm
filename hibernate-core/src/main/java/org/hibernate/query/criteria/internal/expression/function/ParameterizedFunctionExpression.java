@@ -9,6 +9,7 @@ package org.hibernate.query.criteria.internal.expression.function;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.BiFunction;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
@@ -93,25 +94,38 @@ public class ParameterizedFunctionExpression<X>
 
 	@Override
 	public String render(RenderingContext renderingContext) {
-		StringBuilder buffer = new StringBuilder();
-		if ( isStandardJpaFunction() ) {
-			buffer.append( getFunctionName() )
-					.append( "(" );
-		}
-		else {
-			buffer.append( "function('" )
-					.append( getFunctionName() )
-					.append( "', " );
-		}
-		renderArguments( buffer, renderingContext );
-		buffer.append( ')' );
-		return buffer.toString();
+		return render(renderingContext, (Renderable expression, RenderingContext context) -> expression.render( context ) );
+	}
+
+	@Override
+	public String renderProjection(RenderingContext renderingContext) {
+		return render(renderingContext, (Renderable expression, RenderingContext context) -> expression.renderProjection( context ) );
 	}
 
 	protected void renderArguments(StringBuilder buffer, RenderingContext renderingContext) {
+		renderArguments( buffer, renderingContext, (Renderable expression, RenderingContext context) -> expression.render( context ) );
+	}
+
+	private String render(RenderingContext renderingContext, BiFunction<Renderable, RenderingContext, String> formatter) {
+		StringBuilder builder = new StringBuilder();
+		if ( isStandardJpaFunction() ) {
+			builder.append( getFunctionName() )
+					.append( "(" );
+		}
+		else {
+			builder.append( "function('" )
+					.append( getFunctionName() )
+					.append( "', " );
+		}
+		renderArguments( builder, renderingContext, formatter );
+		builder.append( ')' );
+		return builder.toString();
+	}
+
+	private void renderArguments(StringBuilder buffer, RenderingContext renderingContext, BiFunction<Renderable, RenderingContext, String> formatter) {
 		String sep = "";
 		for ( Expression argument : argumentExpressions ) {
-			buffer.append( sep ).append( ( (Renderable) argument ).render( renderingContext ) );
+			buffer.append( sep ).append( formatter.apply( (Renderable) argument, renderingContext ) );
 			sep = ", ";
 		}
 	}

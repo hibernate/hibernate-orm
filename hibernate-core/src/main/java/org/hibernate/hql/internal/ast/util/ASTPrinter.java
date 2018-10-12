@@ -25,9 +25,11 @@ import antlr.collections.AST;
  * @author Joshua Davis
  * @author Steve Ebersole
  */
-public class ASTPrinter {
+public final class ASTPrinter {
 
-	private final Map<Integer,String> tokenTypeNameCache;
+	// This is a map: array index is the ANTLR Token ID, array value is the name of that token.
+	// There might be gaps in the array (null values) but it's generally quite compact.
+	private final String[] tokenTypeNameCache;
 
 	/**
 	 * Constructs a printer. Package protected: use the constants from {TokenPrinters}
@@ -88,10 +90,9 @@ public class ASTPrinter {
 	 *         or just the integer as a string if none exists.
 	 */
 	public String getTokenTypeName(int type) {
-		final Integer typeInteger = type;
-		String value = tokenTypeNameCache.get( typeInteger );
+		String value = tokenTypeNameCache[type];
 		if ( value == null ) {
-			value = typeInteger.toString();
+			value = Integer.toString( type );
 		}
 		return value;
 	}

@@ -10,6 +10,7 @@ import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.util.Map;
 
 import org.hibernate.cfg.Environment;
@@ -121,7 +122,10 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 					return true;
 				}
 				catch ( Throwable t ) {
-					LOG.disablingContextualLOBCreationSinceCreateClobFailed( t );
+					// log exception only if the driver does not explicitly say that it does not support this function
+					if ( !( t instanceof SQLFeatureNotSupportedException ) ) {
+						LOG.disablingContextualLOBCreationSinceCreateClobFailed(t);
+					}
 				}
 			}
 		}

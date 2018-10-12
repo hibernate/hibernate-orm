@@ -7,6 +7,7 @@
 package org.hibernate.dialect;
 
 import java.sql.CallableStatement;
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -636,5 +637,10 @@ public class PostgreSQL81Dialect extends Dialect {
 	@Override
 	public boolean supportsNoWait() {
 		return true;
+	}
+
+	@Override
+	public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
+		return false;
 	}
 }

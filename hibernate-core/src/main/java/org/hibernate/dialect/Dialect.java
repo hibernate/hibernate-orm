@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Clob;
+import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.NClob;
 import java.sql.ResultSet;
@@ -2955,6 +2956,18 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public String inlineLiteral(String literal) {
 		return String.format( "\'%s\'", escapeLiteral( literal ) );
+	}
+
+	/**
+	 * Check whether the JDBC {@link java.sql.Connection} supports creating LOBs via {@link Connection#createBlob()},
+	 * {@link Connection#createNClob()} or {@link Connection#createClob()}.
+	 *
+	 * @param databaseMetaData JDBC {@link DatabaseMetaData} which can be used if LOB creation is supported only starting from a given Driver version
+	 *
+	 * @return {@code true} if LOBs can be created via the JDBC Connection.
+	 */
+	public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
+		return true;
 	}
 
 	/**

@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.DatabaseMetaData;
 import java.sql.Types;
 
 import org.hibernate.cfg.Environment;
@@ -235,5 +236,10 @@ public class SAPDBDialect extends Dialect {
 				AfterUseAction.DROP,
 				null
 		);
+	}
+
+	@Override
+	public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
+		return false;
 	}
 }

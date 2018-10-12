@@ -1643,4 +1643,9 @@ public abstract class AbstractHANADialect extends Dialect {
 	public boolean supportsNoWait() {
 		return true;
 	}
+
+	@Override
+	public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
+		return false;
+	}
 }

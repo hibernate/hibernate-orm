@@ -280,6 +280,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		this.typeInfoSet.addAll( TypeInfo.extractTypeInfo( databaseMetaData ) );
 
 		this.lobCreatorBuilder = LobCreatorBuilderImpl.makeLobCreatorBuilder(
+				dialect,
 				cfgService.getSettings(),
 				databaseMetaData.getConnection()
 		);

@@ -24,7 +24,7 @@ public class TestStrategyRegistrationProvider implements StrategyRegistrationPro
 	@SuppressWarnings("unchecked")
 	public Iterable<StrategyRegistration> getStrategyRegistrations() {
 		return Collections.singletonList(
-				(StrategyRegistration) new SimpleStrategyRegistrationImpl(
+				new SimpleStrategyRegistrationImpl(
 						Calendar.class,
 						GregorianCalendar.class,
 						GREGORIAN

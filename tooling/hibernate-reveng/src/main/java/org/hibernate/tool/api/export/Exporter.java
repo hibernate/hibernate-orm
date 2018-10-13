@@ -13,8 +13,6 @@ import java.util.Properties;
 public interface Exporter {
 	
 
-	public File getOutputDirectory();
-	
 	/**
 	 * @param templatePath array of directories used sequentially to lookup templates
 	 */

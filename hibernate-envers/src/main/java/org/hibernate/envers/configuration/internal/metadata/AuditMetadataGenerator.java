@@ -28,7 +28,6 @@ import org.hibernate.envers.internal.entities.mapper.SubclassPropertyMapper;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.internal.tools.Triple;
 import org.hibernate.envers.strategy.AuditStrategy;
-import org.hibernate.envers.strategy.ValidityAuditStrategy;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.OneToOne;
@@ -172,44 +171,10 @@ public final class AuditMetadataGenerator {
 				isKey
 		);
 		revTypeProperty.addAttribute( "type", "org.hibernate.envers.internal.entities.RevisionTypeType" );
-
-		// Adding the end revision, if appropriate
-		addEndRevision( anyMappingEnd );
 	}
 
-	private void addEndRevision(Element anyMapping) {
-		// Add the end-revision field, if the appropriate strategy is used.
-		if ( auditStrategy instanceof ValidityAuditStrategy ) {
-			final Element endRevMapping = (Element) revisionInfoRelationMapping.clone();
-			endRevMapping.setName( "many-to-one" );
-			endRevMapping.addAttribute( "name", verEntCfg.getRevisionEndFieldName() );
-			MetadataTools.addOrModifyColumn( endRevMapping, verEntCfg.getRevisionEndFieldName() );
-
-			anyMapping.add( endRevMapping );
-
-			if ( verEntCfg.isRevisionEndTimestampEnabled() ) {
-				// add a column for the timestamp of the end revision
-				final String revisionInfoTimestampSqlType = TimestampType.INSTANCE.getName();
-				final Element timestampProperty = MetadataTools.addProperty(
-						anyMapping,
-						verEntCfg.getRevisionEndTimestampFieldName(),
-						revisionInfoTimestampSqlType,
-						true,
-						true,
-						false
-				);
-				MetadataTools.addColumn(
-						timestampProperty,
-						verEntCfg.getRevisionEndTimestampFieldName(),
-						null,
-						null,
-						null,
-						null,
-						null,
-						null
-				);
-			}
-		}
+	void addAdditionalColumns(Element anyMapping) {
+		auditStrategy.addAdditionalColumns(anyMapping, revisionInfoRelationMapping, verEntCfg);
 	}
 
 	private void addValueInFirstPass(
@@ -552,6 +517,8 @@ public final class AuditMetadataGenerator {
 
 		// Adding the "revision type" property
 		addRevisionType( classMapping, classMapping );
+
+		addAdditionalColumns( classMapping );
 
 		return Triple.make( classMapping, propertyMapper, null );
 	}

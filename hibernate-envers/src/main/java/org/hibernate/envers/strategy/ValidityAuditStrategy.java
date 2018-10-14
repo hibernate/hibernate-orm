@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import org.dom4j.Element;
 
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
@@ -22,10 +23,13 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.configuration.internal.metadata.MetadataTools;
+import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.internal.synchronization.SessionCacheCleaner;
+import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.event.spi.EventSource;
@@ -40,6 +44,8 @@ import org.hibernate.type.MapType;
 import org.hibernate.type.MaterializedClobType;
 import org.hibernate.type.MaterializedNClobType;
 import org.hibernate.type.Type;
+import org.hibernate.type.TimestampType;
+import org.hibernate.service.ServiceRegistry;
 
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.MIDDLE_ENTITY_ALIAS;
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REVISION_PARAMETER;
@@ -393,6 +399,53 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		else {
 			throw new RuntimeException( "Cannot find previous revision for entity " + auditedEntityName + " and id " + id );
 		}
+	}
+
+	@Override
+	public void addAdditionalColumns(Element anyMapping, Element revMapping, AuditEntitiesConfiguration auditEntitiesConfiguration) {
+		// Add the end-revision field, if the appropriate strategy is used.
+
+		Element endRevMapping = (Element) revMapping.clone();
+
+		endRevMapping.setName( "many-to-one" );
+		endRevMapping.addAttribute( "name", auditEntitiesConfiguration.getRevisionEndFieldName() );
+		MetadataTools.addOrModifyColumn( endRevMapping, auditEntitiesConfiguration.getRevisionEndFieldName() );
+
+		anyMapping.add( endRevMapping );
+
+		if ( auditEntitiesConfiguration.isRevisionEndTimestampEnabled() ) {
+			// add a column for the timestamp of the end revision
+			final String revisionInfoTimestampSqlType = TimestampType.INSTANCE.getName();
+			final Element timestampProperty = MetadataTools.addProperty(
+					anyMapping,
+					auditEntitiesConfiguration.getRevisionEndTimestampFieldName(),
+					revisionInfoTimestampSqlType,
+					true,
+					true,
+					false
+			);
+			MetadataTools.addColumn(
+					timestampProperty,
+					auditEntitiesConfiguration.getRevisionEndTimestampFieldName(),
+					null,
+					null,
+					null,
+					null,
+					null,
+					null
+			);
+		}
+	}
+
+	@Override
+	public void initialize(Class<?> revisionInfoClass, PropertyData revisionInfoTimestampData, ServiceRegistry serviceRegistry) {
+		// further initialization required
+		final Getter revisionTimestampGetter = ReflectionTools.getGetter(
+				revisionInfoClass,
+				revisionInfoTimestampData,
+				serviceRegistry
+		);
+		setRevisionTimestampGetter( revisionTimestampGetter );
 	}
 
 	private Date convertRevEndTimestampToDate(Object revEndTimestampObj) {

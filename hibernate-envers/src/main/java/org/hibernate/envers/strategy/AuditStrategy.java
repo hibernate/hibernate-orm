@@ -9,14 +9,17 @@ package org.hibernate.envers.strategy;
 import java.io.Serializable;
 
 import org.hibernate.Session;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
+import org.dom4j.Element;
 
 /**
  * Behaviours of different audit strategy for populating audit data.
@@ -199,4 +202,32 @@ public interface AuditStrategy {
 			String alias1,
 			boolean inclusive,
 			MiddleComponentData... componentDatas);
+
+	/**
+	 * Method to add additional Columns to the aud-tables.
+	 *
+	 * @param anyMapping the class mapping
+	 * @param revMapping the mapping of the revInfo-relation
+	 * @param auditEntitiesConfiguration the configuration of the audit entities
+	 */
+	default void addAdditionalColumns(
+			Element anyMapping,
+			Element revMapping,
+			AuditEntitiesConfiguration auditEntitiesConfiguration) {
+		//For backward compatibility
+	}
+
+	/**
+	 * Method do add additional initialization behavior
+	 *
+	 * @param revisionInfoClass the class of the revision info
+	 * @param revisionInfoTimestampData the timestamp of the revision info
+	 * @param serviceRegistry the service registry
+	 */
+	default void initialize(
+			Class<?> revisionInfoClass,
+			PropertyData revisionInfoTimestampData,
+			ServiceRegistry serviceRegistry) {
+		//For backward compatibility
+	}
 }

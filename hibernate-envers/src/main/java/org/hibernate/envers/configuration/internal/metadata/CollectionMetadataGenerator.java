@@ -879,6 +879,8 @@ public final class CollectionMetadataGenerator {
 				isRevisionTypeInId()
 		);
 
+		mainGenerator.addAdditionalColumns( middleEntityXml );
+
 		// All other properties should also be part of the primary key of the middle entity.
 		return middleEntityXmlId;
 	}

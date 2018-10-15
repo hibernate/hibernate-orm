@@ -76,7 +76,7 @@ ext {
             logging_processor:  'org.jboss.logging:jboss-logging-processor:2.1.0.Final',
 
             // jaxb task
-            jaxb: 'com.sun.xml.bind:jaxb-impl:2.2.11',
+            jaxb: 'org.glassfish.jaxb:jaxb-runtime:2.2.11',
             jaxb_xjc: 'org.glassfish.jaxb:jaxb-xjc:2.2.11',
             // Note that jaxb2_basics is a set of tools on *top* of JAXB.
             // See https://github.com/highsource/jaxb2-basics

@@ -58,7 +58,7 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 		return metadata;
 	}
 	
-	public File getOutputDirectory() {
+	protected File getOutputDirectory() {
 		return (File)getProperties().get(OUTPUT_FOLDER);
 	}
 

@@ -113,22 +113,22 @@ dependencies {
 	if ( JavaVersion.current().isJava9Compatible() ) {
 		// The JDK used to run Gradle is Java 9+, and we assume that that is the same
 		//		JDK for executing tasks
-		compile( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
-		compile( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
-		compile( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
-		compile( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
-		compile( 'javax.annotation:jsr250-api:1.0' )
+		compile( libraries.jaxb )
+		compile( libraries.jaxb_xjc )
+		compile( libraries.jaxb2_basics )
+		compile( libraries.jaxb2_basics_ant )
+		compile( libraries.jsr250_api )
 
-		testCompile( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
-		testCompile( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
-		testCompile( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
-		testCompile( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
-		testCompile( 'javax.annotation:jsr250-api:1.0' )
+		testCompile( libraries.jaxb )
+		testCompile( libraries.jaxb_xjc )
+		testCompile( libraries.jaxb2_basics )
+		testCompile( libraries.jaxb2_basics_ant )
+		testCompile( libraries.jsr250_api )
 
-		testRuntime( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
-		testRuntime( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
-		testRuntime( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
-		testRuntime( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
+		testRuntime( libraries.jaxb )
+		testRuntime( libraries.jaxb_xjc )
+		testRuntime( libraries.jaxb2_basics )
+		testRuntime( libraries.jaxb2_basics_ant )
 	}
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -36,6 +36,10 @@ ext {
 
     jodaTimeVersion = '2.3'
 
+    jaxbVersion = '2.2.11'
+    // Strangely, jaxb-runtime 2.2.11 depends on jaxb-api 2.2.12-b140109.1041
+    jaxbApiVersion = '2.2.12-b140109.1041'
+
     libraries = [
             // Ant
             ant:            'org.apache.ant:ant:1.8.2',
@@ -75,10 +79,9 @@ ext {
             logging_processor:  'org.jboss.logging:jboss-logging-processor:2.1.0.Final',
 
             // jaxb task
-            // Strangely, jaxb-runtime 2.2.11 depends on jaxb-api 2.2.12-b140109.1041
-            jaxb_api: 'javax.xml.bind:jaxb-api:2.2.12-b140109.1041',
-            jaxb_runtime: 'org.glassfish.jaxb:jaxb-runtime:2.2.11',
-            jaxb_xjc: 'org.glassfish.jaxb:jaxb-xjc:2.2.11',
+            jaxb_api: "javax.xml.bind:jaxb-api:${jaxbApiVersion}",
+            jaxb_runtime: "org.glassfish.jaxb:jaxb-runtime:${jaxbVersion}",
+            jaxb_xjc: "org.glassfish.jaxb:jaxb-xjc:${jaxbVersion}",
             // Note that jaxb2_basics is a set of tools on *top* of JAXB.
             // See https://github.com/highsource/jaxb2-basics
             jaxb2_basics: 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0',

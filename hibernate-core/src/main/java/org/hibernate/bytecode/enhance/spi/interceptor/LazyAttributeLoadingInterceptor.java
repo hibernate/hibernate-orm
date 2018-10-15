@@ -171,7 +171,7 @@ public class LazyAttributeLoadingInterceptor
 
 	@Override
 	public String toString() {
-		return "LazyAttributeLoader(entityName=" + entityName + " ,lazyFields=" + lazyFields + ')';
+		return getClass().getSimpleName() + "(entityName=" + entityName + " ,lazyFields=" + lazyFields + ')';
 	}
 
 	//

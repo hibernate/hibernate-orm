@@ -284,8 +284,6 @@ public final class TwoPhaseLoad {
 			persistenceContext.setEntryStatus( entityEntry, Status.MANAGED );
 		}
 
-		persister.afterInitialize( entity, session );
-
 		if ( debugEnabled ) {
 			LOG.debugf(
 					"Done materializing entity %s",
@@ -296,6 +294,22 @@ public final class TwoPhaseLoad {
 		if ( factory.getStatistics().isStatisticsEnabled() ) {
 			factory.getStatistics().loadEntity( persister.getEntityName() );
 		}
+	}
+
+	/**
+	 * Perform the afterInitialize() step. This needs to be done after the collections have been properly initialized
+	 * thus a separate step.
+	 *
+	 * @param entity The entity being loaded
+	 * @param session The Session
+	 */
+	public static void afterInitialize(
+			final Object entity,
+			final SharedSessionContractImplementor session) {
+		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final EntityEntry entityEntry = persistenceContext.getEntry( entity );
+
+		entityEntry.getPersister().afterInitialize( entity, session );
 	}
 
 	/**
@@ -341,7 +355,7 @@ public final class TwoPhaseLoad {
 				return true;
 			}
 		}
-		
+
 		return null;
 	}
 

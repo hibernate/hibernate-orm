@@ -35,7 +35,7 @@ apply plugin: 'project-report'
 ext {
 	java9ModuleNameBase = project.name.startsWith( 'hibernate-' ) ? name.drop( 'hibernate-'.length() ): name
 	java9ModuleName = "org.hibernate.orm.$project.java9ModuleNameBase"
-	forbiddenAPITargetJDKCompatibility = '10'
+	forbiddenAPITargetJDKCompatibility = '11'
 }
 
 

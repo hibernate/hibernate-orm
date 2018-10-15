@@ -63,6 +63,7 @@ import static org.ops4j.pax.exam.CoreOptions.when;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.configureConsole;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.debugConfiguration;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFileExtend;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.karafDistributionConfiguration;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.keepRuntimeFolder;
@@ -115,6 +116,13 @@ public class OsgiIntegrationTest {
 				configureConsole().ignoreLocalConsole().ignoreRemoteShell(),
 				when( debug ).useOptions( keepRuntimeFolder() ),
 				logLevel( LogLevelOption.LogLevel.INFO ),
+				// also log to the console, so that the logs are writtten to the test output file
+				editConfigurationFilePut(
+						"etc/org.ops4j.pax.logging.cfg",
+						"log4j2.rootLogger.appenderRef.Console.filter.threshold.level",
+						"TRACE" // Means "whatever the root logger level is"
+				),
+
 				features( featureXmlUrl( paxExamEnvironment ), "hibernate-orm" ),
 				features( featureXmlUrl( paxExamEnvironment ), "hibernate-envers" ),
 				features( testingFeatureXmlUrl(), "hibernate-osgi-testing" )

@@ -21,6 +21,7 @@ import org.hibernate.bytecode.enhance.spi.CollectionTracker;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.engine.spi.ExtendedSelfDirtinessTracker;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.engine.spi.CompositeTracker;
 
@@ -230,7 +231,7 @@ class CodeTemplates {
 		static void $$_hibernate_clearDirtyCollectionNames(
 				@FieldName String fieldName,
 				@FieldValue Collection<?> collection,
-				@Advice.Argument(0) LazyAttributeLoadingInterceptor lazyInterceptor,
+				@Advice.Argument(value = 0, readOnly = false) LazyAttributeLoadingInterceptor lazyInterceptor,
 				@Advice.FieldValue(EnhancerConstants.TRACKER_COLLECTION_NAME) CollectionTracker $$_hibernate_collectionTracker) {
 			if ( lazyInterceptor == null || lazyInterceptor.isAttributeLoaded( fieldName ) ) {
 				if ( collection == null ) {
@@ -248,7 +249,7 @@ class CodeTemplates {
 		static void $$_hibernate_clearDirtyCollectionNames(
 				@FieldName String fieldName,
 				@FieldValue Map<?, ?> map,
-				@Advice.Argument(0) LazyAttributeLoadingInterceptor lazyInterceptor,
+				@Advice.Argument(value = 0, readOnly = false) LazyAttributeLoadingInterceptor lazyInterceptor,
 				@Advice.FieldValue(EnhancerConstants.TRACKER_COLLECTION_NAME) CollectionTracker $$_hibernate_collectionTracker) {
 			if ( lazyInterceptor == null || lazyInterceptor.isAttributeLoaded( fieldName ) ) {
 				if ( map == null ) {
@@ -277,7 +278,7 @@ class CodeTemplates {
 		@Advice.OnMethodEnter
 		static void $$_hibernate_removeDirtyFields(
 				@Advice.Argument(value = 0, readOnly = false) LazyAttributeLoadingInterceptor lazyInterceptor,
-				@Advice.FieldValue(EnhancerConstants.TRACKER_COLLECTION_NAME) Object $$_hibernate_attributeInterceptor) {
+				@Advice.FieldValue(value = EnhancerConstants.INTERCEPTOR_FIELD_NAME) PersistentAttributeInterceptor $$_hibernate_attributeInterceptor) {
 			if ( $$_hibernate_attributeInterceptor instanceof LazyAttributeLoadingInterceptor ) {
 				lazyInterceptor = (LazyAttributeLoadingInterceptor) $$_hibernate_attributeInterceptor;
 			}

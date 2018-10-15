@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.model.convert.internal;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -29,18 +31,17 @@ public class OrdinalEnumValueConverter<E extends Enum> implements EnumValueConve
 
 	private final EnumJavaTypeDescriptor<E> enumJavaDescriptor;
 
-	private final transient ValueExtractor<E> valueExtractor;
+	private transient ValueExtractor<E> valueExtractor;
 
-	private final transient ValueBinder<Integer> valueBinder;
+	private transient ValueBinder<Integer> valueBinder;
 
 	public OrdinalEnumValueConverter(EnumJavaTypeDescriptor<E> enumJavaDescriptor) {
 		this.enumJavaDescriptor = enumJavaDescriptor;
-		this.valueExtractor = IntegerTypeDescriptor.INSTANCE.getExtractor( enumJavaDescriptor );
-		this.valueBinder = IntegerTypeDescriptor.INSTANCE.getBinder( org.hibernate.type.descriptor.java.IntegerTypeDescriptor.INSTANCE );
+		this.valueExtractor = createValueExtractor( enumJavaDescriptor );
+		this.valueBinder = createValueBinder();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public E toDomainValue(Integer relationalForm) {
 		return enumJavaDescriptor.fromOrdinal( relationalForm );
 	}
@@ -76,5 +77,20 @@ public class OrdinalEnumValueConverter<E extends Enum> implements EnumValueConve
 	@SuppressWarnings("unchecked")
 	public String toSqlLiteral(Object value) {
 		return Integer.toString( ( (E) value ).ordinal() );
+	}
+
+	private static <T extends Enum> ValueExtractor<T> createValueExtractor(EnumJavaTypeDescriptor<T> enumJavaDescriptor) {
+		return IntegerTypeDescriptor.INSTANCE.getExtractor( enumJavaDescriptor );
+	}
+
+	private static ValueBinder<Integer> createValueBinder() {
+		return IntegerTypeDescriptor.INSTANCE.getBinder( org.hibernate.type.descriptor.java.IntegerTypeDescriptor.INSTANCE );
+	}
+
+	private void readObject(ObjectInputStream stream) throws ClassNotFoundException, IOException {
+		stream.defaultReadObject();
+
+		this.valueExtractor = createValueExtractor( enumJavaDescriptor );
+		this.valueBinder = createValueBinder();
 	}
 }

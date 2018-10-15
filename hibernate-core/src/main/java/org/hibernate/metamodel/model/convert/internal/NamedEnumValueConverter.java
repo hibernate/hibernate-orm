@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.model.convert.internal;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -31,18 +33,17 @@ public class NamedEnumValueConverter<E extends Enum> implements EnumValueConvert
 
 	private final EnumJavaTypeDescriptor<E> enumJavaDescriptor;
 
-	private final transient ValueExtractor<E> valueExtractor;
+	private transient ValueExtractor<E> valueExtractor;
 
-	private final transient ValueBinder<String> valueBinder;
+	private transient ValueBinder<String> valueBinder;
 
 	public NamedEnumValueConverter(EnumJavaTypeDescriptor<E> enumJavaDescriptor) {
 		this.enumJavaDescriptor = enumJavaDescriptor;
-		this.valueExtractor = VarcharTypeDescriptor.INSTANCE.getExtractor( enumJavaDescriptor );
-		this.valueBinder = VarcharTypeDescriptor.INSTANCE.getBinder( StringTypeDescriptor.INSTANCE );
+		this.valueExtractor = createValueExtractor( enumJavaDescriptor );
+		this.valueBinder = createValueBinder();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public E toDomainValue(String relationalForm) {
 		return enumJavaDescriptor.fromName( relationalForm );
 	}
@@ -78,5 +79,20 @@ public class NamedEnumValueConverter<E extends Enum> implements EnumValueConvert
 	@SuppressWarnings("unchecked")
 	public String toSqlLiteral(Object value) {
 		return String.format( Locale.ROOT, "'%s'", ( (E) value ).name() );
+	}
+
+	private static <T extends Enum> ValueExtractor<T> createValueExtractor(EnumJavaTypeDescriptor<T> enumJavaDescriptor) {
+		return VarcharTypeDescriptor.INSTANCE.getExtractor( enumJavaDescriptor );
+	}
+
+	private static ValueBinder<String> createValueBinder() {
+		return VarcharTypeDescriptor.INSTANCE.getBinder( StringTypeDescriptor.INSTANCE );
+	}
+
+	private void readObject(ObjectInputStream stream) throws ClassNotFoundException, IOException {
+		stream.defaultReadObject();
+
+		this.valueExtractor = createValueExtractor( enumJavaDescriptor );
+		this.valueBinder = createValueBinder();
 	}
 }

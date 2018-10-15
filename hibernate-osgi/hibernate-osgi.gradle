@@ -56,6 +56,9 @@ dependencies {
 		// this dependency wasn't there in the 5.2.x bundles so ignoring it for now
 		// we might reintroduce it at some point if users complain about it
 		exclude module: 'javax.activation-api'
+		// TODO HHH-13022 Find a way to include JAXB in the OSGi feature
+		exclude module: 'jaxb-api'
+		exclude module: 'jaxb-runtime'
 	}
 	testCompile( project( ':hibernate-envers' ) )
 

@@ -24,6 +24,9 @@ dependencies {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Java 9 ftw!
     if ( JavaVersion.current().isJava9Compatible() ) {
+        compile( libraries.jaxb_api )
+        compile( libraries.jaxb_runtime )
+
         xjc( libraries.jaxb_runtime )
         xjc( libraries.jaxb_xjc )
         xjc( libraries.jaxb2_basics )

@@ -211,6 +211,9 @@ public abstract class AbstractRowReader implements RowReader {
 		// now we can finalize loading collections
 		finishLoadingCollections( context );
 
+		// and trigger the afterInitialize() hooks
+		afterInitialize( context, hydratedEntityRegistrations );
+
 		// finally, perform post-load operations
 		postLoad( postLoadEvent, context, hydratedEntityRegistrations, afterLoadActionList );
 	}
@@ -247,6 +250,17 @@ public abstract class AbstractRowReader implements RowReader {
 	private void finishLoadingCollections(ResultSetProcessingContextImpl context) {
 		for ( CollectionReferenceInitializer collectionReferenceInitializer : collectionReferenceInitializers ) {
 			collectionReferenceInitializer.endLoading( context );
+		}
+	}
+
+	private void afterInitialize(ResultSetProcessingContextImpl context,
+			List<HydratedEntityRegistration> hydratedEntityRegistrations) {
+		if ( hydratedEntityRegistrations == null ) {
+			return;
+		}
+
+		for ( HydratedEntityRegistration registration : hydratedEntityRegistrations ) {
+			TwoPhaseLoad.afterInitialize( registration.getInstance(), context.getSession() );
 		}
 	}
 

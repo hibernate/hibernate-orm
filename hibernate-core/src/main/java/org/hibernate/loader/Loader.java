@@ -1164,6 +1164,12 @@ public abstract class Loader {
 			}
 		}
 
+		if ( hydratedObjects != null ) {
+			for ( Object hydratedObject : hydratedObjects ) {
+				TwoPhaseLoad.afterInitialize( hydratedObject, session );
+			}
+		}
+
 		// Until this entire method is refactored w/ polymorphism, postLoad was
 		// split off from initializeEntity.  It *must* occur after
 		// endCollectionLoad to ensure the collection is in the

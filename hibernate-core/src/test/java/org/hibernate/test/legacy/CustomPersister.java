@@ -356,6 +356,7 @@ public class CustomPersister implements EntityPersister {
 					session,
 					new PreLoadEvent( (EventSource) session )
 			);
+			TwoPhaseLoad.afterInitialize( clone, session );
 			TwoPhaseLoad.postLoad( clone, session, new PostLoadEvent( (EventSource) session ) );
 		}
 		return clone;
@@ -481,7 +482,7 @@ public class CustomPersister implements EntityPersister {
 	public EntityDataAccess getCacheAccessStrategy() {
 		return null;
 	}
-	
+
 	public boolean hasNaturalIdCache() {
 		return false;
 	}

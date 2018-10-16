@@ -267,7 +267,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	protected StandardServiceRegistryImpl buildServiceRegistry(BootstrapServiceRegistry bootRegistry, Configuration configuration) {
 		Properties properties = new Properties();
 		properties.putAll( configuration.getProperties() );
-		Environment.verifyProperties( properties );
 		ConfigurationHelper.resolvePlaceHolders( properties );
 
 		StandardServiceRegistryBuilder cfgRegistryBuilder = configuration.getStandardServiceRegistryBuilder();

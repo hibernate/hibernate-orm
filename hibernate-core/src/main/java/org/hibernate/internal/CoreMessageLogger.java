@@ -1397,12 +1397,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Oracle 11g is not yet fully supported; using Oracle 10g dialect", id = 394)
 	void unsupportedOracleVersion();
 
-	@LogMessage(level = WARN)
-	@Message(value = "Usage of obsolete property: %s no longer supported, use: %s", id = 395)
-	void unsupportedProperty(
-			Object propertyName,
-			Object newPropertyName);
-
 	@LogMessage(level = INFO)
 	@Message(value = "Updating schema", id = 396)
 	void updatingSchema();

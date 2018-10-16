@@ -91,10 +91,12 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.InFlightMetadataCollector.EntityTableXref;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.NaturalIdUniqueKeyBinder;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.FkSecondPass;
 import org.hibernate.cfg.SecondPass;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.id.PersistentIdentifierGenerator;
@@ -104,6 +106,7 @@ import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.compare.EqualsHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Array;
@@ -3478,18 +3481,25 @@ public class ModelBinder {
 
 				final PersistentClass referencedEntityBinding = mappingDocument.getMetadataCollector()
 						.getEntityBinding( elementSource.getReferencedEntityName() );
-				// For a one-to-many association, there are 2 possible sources of "where" clauses that apply
-				// to the associated entity table:
-				// 1) from the associated entity mapping; i.e., <class name="..." ... where="..." .../>
-				// 2) from the collection mapping; e.g., <set name="..." ... where="..." .../>
-				// Collection#setWhere is used to set the "where" clause that applies to the collection table
-				// (which is the associated entity table for a one-to-many association).
-				collectionBinding.setWhere(
-					StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty(
-							referencedEntityBinding.getWhere(),
-							getPluralAttributeSource().getWhere()
-					)
-				);
+
+				if ( useEntityWhereClauseForCollections() ) {
+					// For a one-to-many association, there are 2 possible sources of "where" clauses that apply
+					// to the associated entity table:
+					// 1) from the associated entity mapping; i.e., <class name="..." ... where="..." .../>
+					// 2) from the collection mapping; e.g., <set name="..." ... where="..." .../>
+					// Collection#setWhere is used to set the "where" clause that applies to the collection table
+					// (which is the associated entity table for a one-to-many association).
+					collectionBinding.setWhere(
+							StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty(
+									referencedEntityBinding.getWhere(),
+									getPluralAttributeSource().getWhere()
+							)
+					);
+				}
+				else {
+					// ignore entity's where clause
+					collectionBinding.setWhere( getPluralAttributeSource().getWhere() );
+				}
 
 				elementBinding.setReferencedEntityName( referencedEntityBinding.getEntityName() );
 				elementBinding.setAssociatedClass( referencedEntityBinding );
@@ -3623,18 +3633,26 @@ public class ModelBinder {
 				// (which is the join table for a many-to-many association).
 				// This "where" clause comes from the collection mapping; e.g., <set name="..." ... where="..." .../>
 				getCollectionBinding().setWhere( getPluralAttributeSource().getWhere() );
-				// For a many-to-many association, there are 2 possible sources of "where" clauses that apply
-				// to the associated entity table (not the join table):
-				// 1) from the associated entity mapping; i.e., <class name="..." ... where="..." .../>
-				// 2) from the many-to-many mapping; i.e <many-to-many ... where="...".../>
-				// Collection#setManytoManyWhere is used to set the "where" clause that applies to
-				// to the many-to-many associated entity table (not the join table).
-				getCollectionBinding().setManyToManyWhere(
-						StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty(
-								referencedEntityBinding.getWhere(),
-								elementSource.getWhere()
-						)
-				);
+
+				if ( useEntityWhereClauseForCollections() ) {
+					// For a many-to-many association, there are 2 possible sources of "where" clauses that apply
+					// to the associated entity table (not the join table):
+					// 1) from the associated entity mapping; i.e., <class name="..." ... where="..." .../>
+					// 2) from the many-to-many mapping; i.e <many-to-many ... where="...".../>
+					// Collection#setManytoManyWhere is used to set the "where" clause that applies to
+					// to the many-to-many associated entity table (not the join table).
+					getCollectionBinding().setManyToManyWhere(
+							StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty(
+									referencedEntityBinding.getWhere(),
+									elementSource.getWhere()
+							)
+					);
+				}
+				else {
+					// ignore entity's where clause
+					getCollectionBinding().setManyToManyWhere( elementSource.getWhere() );
+				}
+
 				getCollectionBinding().setManyToManyOrdering( elementSource.getOrder() );
 
 				if ( !CollectionHelper.isEmpty( elementSource.getFilterSources() )
@@ -3714,6 +3732,18 @@ public class ModelBinder {
 				getCollectionBinding().setWhere( getPluralAttributeSource().getWhere() );
 			}
 		}
+	}
+
+	private boolean useEntityWhereClauseForCollections() {
+		return ConfigurationHelper.getBoolean(
+				AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS,
+				metadataBuildingContext
+						.getBuildingOptions()
+						.getServiceRegistry()
+						.getService( ConfigurationService.class )
+						.getSettings(),
+				false
+		);
 	}
 
 	private class PluralAttributeListSecondPass extends AbstractPluralAttributeSecondPass {

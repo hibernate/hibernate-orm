@@ -52,9 +52,9 @@ public class LazyElementCollectionWithLazyManyToOneNonUniqueIdWhereTest extends 
 		Session session = openSession();
 		session.beginTransaction();
 		{
-					session.createSQLQuery( "DROP TABLE MAIN_TABLE" ).executeUpdate();
-					session.createSQLQuery( "DROP TABLE COLLECTION_TABLE" ).executeUpdate();
-					session.createSQLQuery( "DROP TABLE MATERIAL_RATINGS" ).executeUpdate();
+					session.createSQLQuery( getDialect().getDropTableString("MAIN_TABLE") ).executeUpdate();
+					session.createSQLQuery( getDialect().getDropTableString("COLLECTION_TABLE") ).executeUpdate();
+					session.createSQLQuery( getDialect().getDropTableString("MATERIAL_RATINGS") ).executeUpdate();
 
 					session.createSQLQuery(
 							"create table MAIN_TABLE( " +

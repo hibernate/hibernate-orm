@@ -70,6 +70,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotatedClassType;
 import org.hibernate.cfg.AnnotationBinder;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.CollectionPropertyHolder;
 import org.hibernate.cfg.CollectionSecondPass;
@@ -84,9 +85,11 @@ import org.hibernate.cfg.PropertyInferredData;
 import org.hibernate.cfg.PropertyPreloadedData;
 import org.hibernate.cfg.SecondPass;
 import org.hibernate.criterion.Junction;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.Collection;
@@ -953,13 +956,24 @@ public abstract class CollectionBinder {
 			}
 		}
 
+		final boolean useEntityWhereClauseForCollections = ConfigurationHelper.getBoolean(
+				AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS,
+				buildingContext
+						.getBuildingOptions()
+						.getServiceRegistry()
+						.getService( ConfigurationService.class )
+						.getSettings(),
+				true
+		);
+
 		// There are 2 possible sources of "where" clauses that apply to the associated entity table:
 		// 1) from the associated entity mapping; i.e., @Entity @Where(clause="...")
+		//    (ignored if useEntityWhereClauseForCollections == false)
 		// 2) from the collection mapping;
 		//    for one-to-many, e.g., @OneToMany @JoinColumn @Where(clause="...") public Set<Rating> getRatings();
 		//    for many-to-many e.g., @ManyToMany @Where(clause="...") public Set<Rating> getRatings();
 		String whereOnClassClause = null;
-		if ( property.getElementClass() != null ) {
+		if ( useEntityWhereClauseForCollections && property.getElementClass() != null ) {
 			Where whereOnClass = property.getElementClass().getAnnotation( Where.class );
 			if ( whereOnClass != null ) {
 				whereOnClassClause = whereOnClass.clause();

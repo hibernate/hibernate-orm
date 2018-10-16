@@ -1481,6 +1481,22 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String CUSTOM_ENTITY_DIRTINESS_STRATEGY = "hibernate.entity_dirtiness_strategy";
 
 	/**
+	 * Controls whether an entity's "where" clause, mapped using <code>@Where(clause="....")</code>
+	 * or <code>&lt;entity ... where="..."&gt;</code>, is taken into account when loading one-to-many
+	 * or many-to-many collections of that type of entity.
+	 * <p/>
+	 * This setting has no affect on collections of embeddable values containing an association to
+	 * that type of entity.
+	 * <p/>
+	 * When `true` (the default), the entity's "where" clause will be taken into account when loading
+	 * one-to-many or many-to-many collections of that type of entity.
+	 * <p/>
+	 * `false` indicates that the entity's "where" clause will be ignored when loading one-to-many or
+	 * many-to-many collections of that type of entity.
+	 */
+	String USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS = "hibernate.use_entity_where_clause_for_collections";
+
+	/**
 	 * Strategy for multi-tenancy.
 
 	 * @see org.hibernate.MultiTenancyStrategy

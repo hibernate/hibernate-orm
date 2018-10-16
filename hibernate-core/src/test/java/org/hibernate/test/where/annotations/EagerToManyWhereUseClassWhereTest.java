@@ -127,7 +127,7 @@ public class EagerToManyWhereUseClassWhereTest extends BaseNonConfigCoreFunction
 				session -> {
 					Category c = session.get( Category.class, flowers.id );
 					assertNotNull( c );
-					c.inactive = true;
+					c.inactive = 1;
 				}
 		);
 
@@ -186,7 +186,7 @@ public class EagerToManyWhereUseClassWhereTest extends BaseNonConfigCoreFunction
 		private Set<Category> categoriesManyToMany = new HashSet<>();
 
 		@ManyToMany(fetch = FetchType.EAGER)
-		@JoinTable(name = "categoriesWithDescManyToMany")
+		@JoinTable(name = "categoriesWithDescManyToMany", inverseJoinColumns = { @JoinColumn( name = "categoryId" )})
 		@Where( clause = "description is not null" )
 		private Set<Category> categoriesWithDescManyToMany = new HashSet<>();
 
@@ -199,7 +199,7 @@ public class EagerToManyWhereUseClassWhereTest extends BaseNonConfigCoreFunction
 
 	@Entity(name = "Category")
 	@Table(name = "CATEGORY")
-	@Where(clause = "not inactive")
+	@Where(clause = "inactive = 0")
 	public static class Category {
 		@Id
 		private int id;
@@ -208,6 +208,6 @@ public class EagerToManyWhereUseClassWhereTest extends BaseNonConfigCoreFunction
 
 		private String description;
 
-		private boolean inactive;
+		private int inactive;
 	}
 }

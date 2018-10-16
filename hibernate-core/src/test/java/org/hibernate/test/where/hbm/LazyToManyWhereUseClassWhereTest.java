@@ -116,7 +116,7 @@ public class LazyToManyWhereUseClassWhereTest extends BaseNonConfigCoreFunctiona
 				session -> {
 					Category c = session.get( Category.class, flowers.getId() );
 					assertNotNull( c );
-					c.setInactive( true );
+					c.setInactive( 1 );
 				}
 		);
 

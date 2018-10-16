@@ -329,6 +329,7 @@ public final class Environment implements AvailableSettings {
 
 	public static final String BYTECODE_PROVIDER_NAME_JAVASSIST = "javassist";
 	public static final String BYTECODE_PROVIDER_NAME_BYTEBUDDY = "bytebuddy";
+	public static final String BYTECODE_PROVIDER_NAME_NONE = "none";
 	public static final String BYTECODE_PROVIDER_NAME_DEFAULT = BYTECODE_PROVIDER_NAME_BYTEBUDDY;
 
 	public static BytecodeProvider buildBytecodeProvider(Properties properties) {
@@ -337,6 +338,9 @@ public final class Environment implements AvailableSettings {
 	}
 
 	private static BytecodeProvider buildBytecodeProvider(String providerName) {
+		if ( BYTECODE_PROVIDER_NAME_NONE.equals( providerName ) ) {
+			return new org.hibernate.bytecode.internal.none.BytecodeProviderImpl();
+		}
 		if ( BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals( providerName ) ) {
 			return new org.hibernate.bytecode.internal.bytebuddy.BytecodeProviderImpl();
 		}

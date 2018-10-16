@@ -200,7 +200,7 @@ public class LazyToManyWhereDontUseClassWhereTest extends BaseNonConfigCoreFunct
 
 	@Entity(name = "Category")
 	@Table(name = "CATEGORY")
-	@Where(clause = "inactive = 0")
+	@Where(clause = "not inactive")
 	public static class Category {
 		@Id
 		private int id;

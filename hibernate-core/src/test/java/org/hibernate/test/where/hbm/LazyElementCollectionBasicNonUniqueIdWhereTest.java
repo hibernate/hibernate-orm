@@ -13,7 +13,8 @@ import java.util.Set;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
-
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
@@ -27,8 +28,10 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gail Badner
  */
+@RequiresDialect(H2Dialect.class)
 public class LazyElementCollectionBasicNonUniqueIdWhereTest extends BaseCoreFunctionalTestCase {
 
+	@Override
 	protected String[] getMappings() {
 		return new String[] { "where/hbm/LazyElementCollectionBasicNonUniqueIdWhereTest.hbm.xml" };
 	}

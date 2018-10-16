@@ -33,6 +33,7 @@ import org.hibernate.query.criteria.internal.compile.ImplicitParameterBinding;
 import org.hibernate.query.criteria.internal.compile.InterpretedParameterMetadata;
 import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -291,16 +292,7 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 
 		queryStructure.render( jpaqlBuffer, renderingContext );
 
-		if ( ! getOrderList().isEmpty() ) {
-			jpaqlBuffer.append( " order by " );
-			String sep = "";
-			for ( Order orderSpec : getOrderList() ) {
-				jpaqlBuffer.append( sep )
-						.append( ( ( Renderable ) orderSpec.getExpression() ).render( renderingContext ) )
-						.append( orderSpec.isAscending() ? " asc" : " desc" );
-				sep = ", ";
-			}
-		}
+		renderOrderByClause( renderingContext, jpaqlBuffer );
 
 		final String jpaqlString = jpaqlBuffer.toString();
 
@@ -384,5 +376,26 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 				return map;
 			}
 		};
+	}
+
+	protected void renderOrderByClause(RenderingContext renderingContext, StringBuilder jpaqlBuffer) {
+		if ( getOrderList().isEmpty() ) {
+			return;
+		}
+
+		renderingContext.getClauseStack().push( Clause.ORDER );
+		try {
+			jpaqlBuffer.append( " order by " );
+			String sep = "";
+			for ( Order orderSpec : getOrderList() ) {
+				jpaqlBuffer.append( sep )
+						.append( ( (Renderable) orderSpec.getExpression() ).render( renderingContext ) )
+						.append( orderSpec.isAscending() ? " asc" : " desc" );
+				sep = ", ";
+			}
+		}
+		finally {
+			renderingContext.getClauseStack().pop();
+		}
 	}
 }

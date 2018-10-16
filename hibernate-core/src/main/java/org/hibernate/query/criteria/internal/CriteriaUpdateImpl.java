@@ -16,6 +16,7 @@ import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.path.SingularAttributePath;
+import org.hibernate.sql.ast.Clause;
 
 /**
  * Hibernate implementation of the JPA 2.1 {@link CriteriaUpdate} contract.
@@ -122,16 +123,23 @@ public class CriteriaUpdateImpl<T> extends AbstractManipulationCriteriaQuery<T> 
 	}
 
 	private void renderAssignments(StringBuilder jpaql, RenderingContext renderingContext) {
-		jpaql.append( " set " );
-		boolean first = true;
-		for ( Assignment assignment : assignments ) {
-			if ( ! first ) {
-				jpaql.append( ", " );
+		renderingContext.getClauseStack().push( Clause.UPDATE );
+
+		try {
+			jpaql.append( " set " );
+			boolean first = true;
+			for ( Assignment assignment : assignments ) {
+				if ( !first ) {
+					jpaql.append( ", " );
+				}
+				jpaql.append( assignment.attributePath.render( renderingContext ) )
+						.append( " = " )
+						.append( assignment.value.render( renderingContext ) );
+				first = false;
 			}
-			jpaql.append( assignment.attributePath.render( renderingContext ) )
-					.append( " = " )
-					.append( assignment.value.render( renderingContext ) );
-			first = false;
+		}
+		finally {
+			renderingContext.getClauseStack().pop();
 		}
 	}
 

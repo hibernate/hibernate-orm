@@ -47,37 +47,54 @@ public class LiteralExpression<T> extends ExpressionImpl<T> implements Serializa
 
 	@SuppressWarnings({ "unchecked" })
 	public String render(RenderingContext renderingContext) {
+		switch ( renderingContext.getClauseStack().getCurrent() ) {
+			case SELECT: {
+				return renderProjection();
+			}
+			case GROUP: {
+				// technically a literal in the group-by clause
+				// would be a reference to the position of a selection
+				//
+				// but this is what the code used to do...
+				return renderProjection();
+			}
+			default: {
+				return normalRender( renderingContext );
+			}
+		}
+	}
 
+	@SuppressWarnings("unchecked")
+	private String normalRender(RenderingContext renderingContext) {
 		LiteralHandlingMode literalHandlingMode = renderingContext.getCriteriaLiteralHandlingMode();
 
 		switch ( literalHandlingMode ) {
-			case AUTO:
+			case AUTO: {
 				if ( ValueHandlerFactory.isNumeric( literal ) ) {
 					return ValueHandlerFactory.determineAppropriateHandler( (Class) literal.getClass() ).render( literal );
 				}
 				else {
 					return bindLiteral( renderingContext );
 				}
-			case BIND:
+			}
+			case BIND: {
 				return bindLiteral( renderingContext );
-			case INLINE:
+			}
+			case INLINE: {
 				Object literalValue = literal;
 				if ( String.class.equals( literal.getClass() ) ) {
 					literalValue = renderingContext.getDialect().inlineLiteral( (String) literal );
 				}
+
 				return ValueHandlerFactory.determineAppropriateHandler( (Class) literal.getClass() ).render( literalValue );
-			default:
+			}
+			default: {
 				throw new IllegalArgumentException( "Unexpected LiteralHandlingMode: " + literalHandlingMode );
+			}
 		}
 	}
 
-	private String bindLiteral(RenderingContext renderingContext) {
-		final String parameterName = renderingContext.registerLiteralParameterBinding( getLiteral(), getJavaType() );
-		return ':' + parameterName;
-	}
-
-	@SuppressWarnings({ "unchecked" })
-	public String renderProjection(RenderingContext renderingContext) {
+	private String renderProjection() {
 		// some drivers/servers do not like parameters in the select clause
 		final ValueHandlerFactory.ValueHandler handler =
 				ValueHandlerFactory.determineAppropriateHandler( literal.getClass() );
@@ -89,9 +106,9 @@ public class LiteralExpression<T> extends ExpressionImpl<T> implements Serializa
 		}
 	}
 
-	@Override
-	public String renderGroupBy(RenderingContext renderingContext) {
-		return renderProjection( renderingContext );
+	private String bindLiteral(RenderingContext renderingContext) {
+		final String parameterName = renderingContext.registerLiteralParameterBinding( getLiteral(), getJavaType() );
+		return ':' + parameterName;
 	}
 
 	@Override

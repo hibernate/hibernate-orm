@@ -106,41 +106,18 @@ public class SearchedCaseExpression<R>
 	}
 
 	public String render(RenderingContext renderingContext) {
-		return render(
-				renderingContext,
-				(Renderable expression, RenderingContext context) -> expression.render( context )
-		);
-	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render(
-				renderingContext,
-				(Renderable expression, RenderingContext context) -> expression.renderProjection( context )
-		);
-	}
-
-	@Override
-	public String renderGroupBy(RenderingContext renderingContext) {
-		return render(
-				renderingContext,
-				(Renderable expression, RenderingContext context) -> expression.renderGroupBy( context )
-		);
-	}
-
-	private String render(
-			RenderingContext renderingContext,
-			BiFunction<Renderable, RenderingContext, String> formatter) {
 		StringBuilder caseStatement = new StringBuilder( "case" );
 		for ( WhenClause whenClause : getWhenClauses() ) {
 			caseStatement.append( " when " )
-					.append( formatter.apply( (Renderable) whenClause.getCondition(), renderingContext ) )
+					.append( ( (Renderable) whenClause.getCondition() ).render( renderingContext ) )
 					.append( " then " )
-					.append( formatter.apply( ((Renderable) whenClause.getResult()), renderingContext ) );
+					.append( ( (Renderable) whenClause.getResult() ).render( renderingContext ) );
 		}
+
 		caseStatement.append( " else " )
-				.append( formatter.apply( (Renderable) getOtherwiseResult(), renderingContext ) )
+				.append( ( (Renderable) getOtherwiseResult() ).render( renderingContext ) )
 				.append( " end" );
+
 		return caseStatement.toString();
 	}
-
 }

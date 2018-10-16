@@ -27,6 +27,7 @@ import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.expression.DelegatedExpressionImpl;
 import org.hibernate.query.criteria.internal.expression.ExpressionImpl;
 import org.hibernate.query.criteria.internal.path.RootImpl;
+import org.hibernate.sql.ast.Clause;
 
 /**
  * The Hibernate implementation of the JPA {@link Subquery} contract.  Mostlty a set of delegation to its internal
@@ -257,14 +258,13 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 
 	@Override
 	public String render(RenderingContext renderingContext) {
+		if ( renderingContext.getClauseStack().getCurrent() == Clause.SELECT ) {
+			throw new IllegalStateException( "Subquery cannot occur in select clause" );
+		}
+
 		StringBuilder subqueryBuffer = new StringBuilder( "(" );
 		queryStructure.render( subqueryBuffer, renderingContext );
 		subqueryBuffer.append( ')' );
 		return subqueryBuffer.toString();
-	}
-
-	@Override
-	public String renderProjection(RenderingContext renderingContext) {
-		throw new IllegalStateException( "Subquery cannot occur in select clause" );
 	}
 }

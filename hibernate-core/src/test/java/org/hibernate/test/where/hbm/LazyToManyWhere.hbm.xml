@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.where.hbm" default-access="property">
+    <class name="Product" table="PRODUCT">
+        <id name="id" column="ID">
+            <generator class="increment" />
+        </id>
+
+        <set name="categoriesOneToMany" lazy="true">
+            <key column="productOneToManyId"/>
+            <one-to-many class="Category"/>
+        </set>
+
+        <set name="categoriesWithDescOneToMany" lazy="true" where="description is not null">
+            <key column="productWithDescOneToManyId"/>
+            <one-to-many class="Category"/>
+        </set>
+
+        <set name="categoriesManyToMany" table="categoriesManyToMany" lazy="true">
+            <key column="productId"/>
+            <many-to-many class="Category" column="categoryId"/>
+        </set>
+
+
+        <set name="categoriesWithDescManyToMany" table="categoriesWithDescManyToMany" lazy="true">
+            <key column="productId"/>
+            <many-to-many class="Category" column="categoryId" where="description is not null"/>
+        </set>
+
+        <set name="categoriesWithDescIdLt4ManyToMany" table = "categoriesWithDescIdLt4MToM" lazy="true"
+             where="categoryId != 4">
+            <key column="productId"/>
+            <many-to-many class="Category" column="categoryId" where="description is not null"/>
+        </set>
+
+    </class>
+
+    <class name="Category" table="CATEGORY" where="inactive = 0">
+        <id name="id" column="ID"/>
+
+        <property name="name"/>
+
+        <property name="description"/>
+
+        <property name="inactive"/>
+
+    </class>
+
+</hibernate-mapping>

@@ -4,6 +4,26 @@ Hibernate 5 Changelog
 Note: Please refer to JIRA to learn more about each issue.
 
 
+Changes in 5.3.7.final (October 16th, 2018)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31714/tab/release-report-done
+
+** Bug
+    * [HHH-12784] - Javassist support broken by HHH-12760
+    * [HHH-12920] - AbstractCachedDomainDataAccess.clearCache() throws MissingFormatArgumentException at DEBUG level
+    * [HHH-12934] - Exception handling documentation does not apply only to "Session-per-application anti-pattern"
+    * [HHH-12935] - Constraint and AuxiliaryDatabaseObject export identifiers are not qualified by schema or catalog
+    * [HHH-12937] - Where clause for collections  of basic, embeddable and "any" elements is ignored when mapped using hbm.xml
+    * [HHH-12964] - Upgrade to dom4j 2.1.1
+    * [HHH-13027] - org.hibernate.ejb.HibernatePersistence can no longer be used as a persistence provider name
+
+** Improvement
+    * [HHH-12961] - The links in the Javadoc of the SAP HANA dialects don't work
+    * [HHH-13011] - Add option enabling/disabling use of an entity's mapped where-clause when loading collections of that entity
+
+
+
 Changes in 5.3.6.final (August 28th, 2018)
 ------------------------------------------------------------------------------------------------------------------------
 

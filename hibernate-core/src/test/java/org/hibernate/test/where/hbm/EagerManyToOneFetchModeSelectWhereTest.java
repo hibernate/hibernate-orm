@@ -64,7 +64,7 @@ public class EagerManyToOneFetchModeSelectWhereTest extends BaseNonConfigCoreFun
 				session -> {
 					Category c = session.get( Category.class, category.id );
 					assertNotNull( c );
-					c.inactive = true;
+					c.inactive = 1;
 				}
 		);
 
@@ -139,7 +139,7 @@ public class EagerManyToOneFetchModeSelectWhereTest extends BaseNonConfigCoreFun
 
 		private String name;
 
-		private boolean inactive;
+		private int inactive;
 
 		public int getId() {
 			return id;
@@ -157,11 +157,11 @@ public class EagerManyToOneFetchModeSelectWhereTest extends BaseNonConfigCoreFun
 			this.name = name;
 		}
 
-		public boolean isInactive() {
+		public int getInactive() {
 			return inactive;
 		}
 
-		public void setInactive(boolean inactive) {
+		public void setInactive(int inactive) {
 			this.inactive = inactive;
 		}
 	}

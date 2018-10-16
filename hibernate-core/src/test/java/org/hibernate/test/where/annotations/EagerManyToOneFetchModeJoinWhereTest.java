@@ -83,7 +83,7 @@ public class EagerManyToOneFetchModeJoinWhereTest extends BaseNonConfigCoreFunct
 				session -> {
 					Category c = session.get( Category.class, category.id );
 					assertNotNull( c );
-					c.inactive = true;
+					c.inactive = 1;
 				}
 		);
 
@@ -131,7 +131,7 @@ public class EagerManyToOneFetchModeJoinWhereTest extends BaseNonConfigCoreFunct
 
 	@Entity(name = "Category")
 	@Table(name = "CATEGORY")
-	@Where(clause = "not inactive")
+	@Where(clause = "inactive = 0")
 	public static class Category {
 		@Id
 		@GeneratedValue
@@ -139,7 +139,7 @@ public class EagerManyToOneFetchModeJoinWhereTest extends BaseNonConfigCoreFunct
 
 		private String name;
 
-		private boolean inactive;
+		private int inactive;
 	}
 
 	@Embeddable

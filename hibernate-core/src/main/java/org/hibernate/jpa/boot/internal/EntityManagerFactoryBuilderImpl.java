@@ -218,6 +218,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		this.metamodelBuilder = (MetadataBuilderImplementor) metadataSources.getMetadataBuilder( standardServiceRegistry );
 		populate( metamodelBuilder, mergedSettings, standardServiceRegistry, attributeConverterDefinitions );
 
+		applyMetadataBuilderContributor();
+
 		// todo : would be nice to have MetadataBuilder still do the handling of CfgXmlAccessService here
 		//		another option is to immediately handle them here (probably in mergeSettings?) as we encounter them...
 		final CfgXmlAccessService cfgXmlAccessService = standardServiceRegistry.getService( CfgXmlAccessService.class );
@@ -233,9 +235,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				metadataSources,
 				metamodelBuilder.getBootstrapContext()
 		);
-
-		applyMetadataBuilderContributor();
-
 
 		withValidatorFactory( configurationValues.get( org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY ) );
 

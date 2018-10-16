@@ -1098,6 +1098,9 @@ Setting which indicates whether or not the new JOINS over collection tables shou
 `*hibernate.allow_refresh_detached_entity*` (e.g. `true` (default value when using Hibernate native bootstrapping) or `false` (default value when using JPA bootstrapping))::
 Setting that allows to call `javax.persistence.EntityManager#refresh(entity)` or `Session#refresh(entity)` on a detached instance even when the `org.hibernate.Session` is obtained from a JPA `javax.persistence.EntityManager`.
 
+`*hibernate.use_entity_where_clause_for_collections*` (e.g., `true` (default) or `false`)::
+Setting controls whether an entity's "where" clause, mapped using `@Where(clause="...")` or `<entity ... where="...">, is taken into account when loading one-to-many or many-to-many collections of that type of entity.
+
 `*hibernate.event.merge.entity_copy_observer*` (e.g. `disallow` (default value), `allow`, `log` (testing purpose only) or fully-qualified class name)::
 Setting that specifies how Hibernate will respond when multiple representations of the same persistent entity ("entity copy") is detected while merging.
 +

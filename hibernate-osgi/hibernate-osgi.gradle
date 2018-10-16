@@ -139,14 +139,18 @@ karaf {
 			description = 'Feature for easily adding Envers support to hibernate-orm'
 			includeProject = false
 			configurations 'hibernateEnvers'
-			feature 'hibernate-orm'
+			feature('hibernate-orm') {
+				version = project.version
+			}
 		}
 		feature {
 			name = 'hibernate-infinispan'
 			description = 'Feature for easily adding Infinispan-based caching support to hibernate-orm'
 			includeProject = false
 			configurations 'hibernateInfinispan'
-			feature 'hibernate-orm'
+			feature('hibernate-orm') {
+				version = project.version
+			}
 		}
 	}
 }

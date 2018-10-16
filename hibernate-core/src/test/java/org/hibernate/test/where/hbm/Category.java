@@ -13,7 +13,7 @@ public class Category {
 
 	private String description;
 
-	private boolean inactive;
+	private int inactive;
 
 	public int getId() {
 		return id;
@@ -39,11 +39,11 @@ public class Category {
 		this.description = description;
 	}
 
-	public boolean isInactive() {
+	public int getInactive() {
 		return inactive;
 	}
 
-	public void setInactive(boolean inactive) {
+	public void setInactive(int inactive) {
 		this.inactive = inactive;
 	}
 }

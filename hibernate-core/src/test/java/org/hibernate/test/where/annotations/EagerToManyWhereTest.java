@@ -27,7 +27,6 @@ import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -130,7 +129,7 @@ public class EagerToManyWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 		{
 					Category c = session.get( Category.class, flowers.id );
 					assertNotNull( c );
-					c.inactive = true;
+					c.inactive = 1;
 		}
 		session.getTransaction().commit();
 		session.close();
@@ -192,7 +191,7 @@ public class EagerToManyWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 		private Set<Category> categoriesManyToMany = new HashSet<>();
 
 		@ManyToMany(fetch = FetchType.EAGER)
-		@JoinTable(name = "categoriesWithDescManyToMany")
+		@JoinTable(name = "categoriesWithDescManyToMany", inverseJoinColumns = { @JoinColumn( name = "categoryId" )})
 		@Where( clause = "description is not null" )
 		private Set<Category> categoriesWithDescManyToMany = new HashSet<>();
 
@@ -205,7 +204,7 @@ public class EagerToManyWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Entity(name = "Category")
 	@Table(name = "CATEGORY")
-	@Where(clause = "not inactive")
+	@Where(clause = "inactive = 0")
 	public static class Category {
 		@Id
 		private int id;
@@ -214,6 +213,6 @@ public class EagerToManyWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		private String description;
 
-		private boolean inactive;
+		private int inactive;
 	}
 }

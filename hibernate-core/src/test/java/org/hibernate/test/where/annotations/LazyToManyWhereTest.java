@@ -129,7 +129,7 @@ public class LazyToManyWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 		{
 					Category c = session.get( Category.class, flowers.id );
 					assertNotNull( c );
-					c.inactive = true;
+					c.inactive = 1;
 		}
 		session.getTransaction().commit();
 		session.close();
@@ -191,7 +191,7 @@ public class LazyToManyWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 		private Set<Category> categoriesManyToMany = new HashSet<>();
 
 		@ManyToMany(fetch = FetchType.LAZY)
-		@JoinTable(name = "categoriesWithDescManyToMany")
+		@JoinTable(name = "categoriesWithDescManyToMany", inverseJoinColumns = { @JoinColumn( name = "categoryId" )})
 		@Where( clause = "description is not null" )
 		private Set<Category> categoriesWithDescManyToMany = new HashSet<>();
 
@@ -204,7 +204,7 @@ public class LazyToManyWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Entity(name = "Category")
 	@Table(name = "CATEGORY")
-	@Where(clause = "not inactive")
+	@Where(clause = "inactive = 0")
 	public static class Category {
 		@Id
 		private int id;
@@ -213,6 +213,6 @@ public class LazyToManyWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		private String description;
 
-		private boolean inactive;
+		private int inactive;
 	}
 }

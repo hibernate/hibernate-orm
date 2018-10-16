@@ -114,7 +114,7 @@ public class EagerToManyWhereDontUseClassWhereTest extends BaseNonConfigCoreFunc
 		{
 					Category c = session.get( Category.class, flowers.getId() );
 					assertNotNull( c );
-					c.setInactive( true );
+					c.setInactive( 1 );
 		}
 		session.getTransaction().commit();
 		session.close();

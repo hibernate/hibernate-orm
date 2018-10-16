@@ -188,6 +188,20 @@ should behave the same as native exception handling in Hibernate ORM 5.1. When s
 `HibernateException` will not be wrapped or converted according to the JPA specification. This
 setting will be ignored for a `SessionFactory` built via JPA bootstrapping.
 
+== 5.1 -> 5.3 entity class "where" mapping changes
+
+Starting in 5.2.0, when an entity class uses annotations to map a "where" clause (i.e., `@Where(clause="...")`),
+that "where" clause is taken into account when loading one-to-many and many-to-many associations.
+
+Starting in 5.3.5, the same functionality applies to an entity's where clause mapped using hbm.xml
+(e.g., `<entity ... where="..."/>)
+
+In 5.3.7, a new property was added, `hibernate.use_entity_where_clause_for_collections`, that provides
+control over whether the entity's "where" clause is taken into account when loading one-to-many or
+many-to-many collections of that type of entity. The property is set to `true` by default. You can go
+back to the previous behavior (ignoring the entity's mapped where clause) by setting
+`hibernate.use_entity_where_clause_for_collections` to false.
+
 === 5.3 -> 6.0 compatibility changes
 
 The original driving force behind these series of changes is an effort to be as proactive as possible

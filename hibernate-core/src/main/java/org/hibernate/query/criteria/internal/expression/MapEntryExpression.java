@@ -16,6 +16,7 @@ import org.hibernate.query.criteria.internal.ParameterRegistry;
 import org.hibernate.query.criteria.internal.PathImplementor;
 import org.hibernate.query.criteria.internal.Renderable;
 import org.hibernate.query.criteria.internal.compile.RenderingContext;
+import org.hibernate.sql.ast.Clause;
 
 /**
  * TODO : javadoc
@@ -48,17 +49,17 @@ public class MapEntryExpression<K,V>
 	}
 
 	public String render(RenderingContext renderingContext) {
+		if ( renderingContext.getClauseStack().getCurrent() == Clause.SELECT ) {
+			return "entry(" + path( renderingContext ) + ")";
+		}
+
 		// don't think this is valid outside of select clause...
 		throw new IllegalStateException( "illegal reference to map entry outside of select clause." );
-	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return "entry(" + path( renderingContext ) + ")";
 	}
 
 	private String path(RenderingContext renderingContext) {
 		return origin.getPathIdentifier()
 				+ '.'
-				+ ( (Renderable) getAttribute() ).renderProjection( renderingContext );
+				+ ( (Renderable) getAttribute() ).render( renderingContext );
 	}
 }

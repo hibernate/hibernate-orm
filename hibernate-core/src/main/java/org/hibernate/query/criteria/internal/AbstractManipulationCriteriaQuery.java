@@ -25,6 +25,7 @@ import org.hibernate.query.criteria.internal.compile.InterpretedParameterMetadat
 import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.path.RootImpl;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.sql.ast.Clause;
 
 /**
  * Base class for commonality between {@link javax.persistence.criteria.CriteriaUpdate} and
@@ -155,9 +156,17 @@ public abstract class AbstractManipulationCriteriaQuery<T> implements Compilable
 	}
 
 	protected void renderRestrictions(StringBuilder jpaql, RenderingContext renderingContext) {
-		if ( getRestriction() != null) {
+		if ( getRestriction() == null ) {
+			return;
+		}
+
+		renderingContext.getClauseStack().push( Clause.WHERE );
+		try {
 			jpaql.append( " where " )
 					.append( ( (Renderable) getRestriction() ).render( renderingContext ) );
+		}
+		finally {
+			renderingContext.getClauseStack().pop();
 		}
 	}
 }

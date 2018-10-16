@@ -20,8 +20,12 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.query.criteria.LiteralHandlingMode;
+import org.hibernate.query.criteria.internal.expression.function.FunctionExpression;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.type.Type;
 
 /**
@@ -63,12 +67,25 @@ public class CriteriaCompiler implements Serializable {
 			private int aliasCount;
 			private int explicitParameterCount;
 
+			private final Stack<Clause> clauseStack = new StandardStack<>();
+			private final Stack<FunctionExpression> functionContextStack = new StandardStack<>();
+
 			public String generateAlias() {
 				return "generatedAlias" + aliasCount++;
 			}
 
 			public String generateParameterName() {
 				return "param" + explicitParameterCount++;
+			}
+
+			@Override
+			public Stack<Clause> getClauseStack() {
+				return clauseStack;
+			}
+
+			@Override
+			public Stack<FunctionExpression> getFunctionStack() {
+				return functionContextStack;
 			}
 
 			@Override

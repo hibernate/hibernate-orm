@@ -28,7 +28,7 @@
 
     </class>
 
-    <class name="EagerManyToOneFetchModeSelectWhereTest$Category" table="CATEGORY" where="inactive = 0">
+    <class name="EagerManyToOneFetchModeSelectWhereTest$Category" table="CATEGORY" where="not inactive">
         <id name="id" column="ID">
             <generator class="increment" />
         </id>

@@ -22,12 +22,13 @@ import org.hibernate.id.enhanced.SequenceStructure;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
 @RequiresDialectFeature(DialectChecks.SupportsSequences.class)
-public class ExportIdentifierTest {
+public class ExportIdentifierTest extends BaseUnitTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12935" )

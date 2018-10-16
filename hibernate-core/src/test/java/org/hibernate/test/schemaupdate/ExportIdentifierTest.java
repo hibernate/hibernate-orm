@@ -28,13 +28,14 @@ import org.hibernate.mapping.Index;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
-
-
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
+@RequiresDialectFeature(DialectChecks.SupportsSequences.class)
 public class ExportIdentifierTest {
 
 	@Test

@@ -19,12 +19,14 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.enhanced.SequenceStructure;
-
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
+@RequiresDialectFeature(DialectChecks.SupportsSequences.class)
 public class ExportIdentifierTest {
 
 	@Test

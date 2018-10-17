@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.userguide.mapping.basic.any;
+package org.hibernate.userguide.associations.any;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +18,7 @@ import javax.persistence.Table;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ManyToAny;
 
-//tag::mapping-column-many-to-any-example[]
+//tag::associations-many-to-any-example[]
 @Entity
 @Table( name = "property_repository" )
 public class PropertyRepository {
@@ -39,7 +39,7 @@ public class PropertyRepository {
 
     //Getters and setters are omitted for brevity
 
-//end::mapping-column-many-to-any-example[]
+//end::associations-many-to-any-example[]
     public Long getId() {
         return id;
     }
@@ -52,6 +52,6 @@ public class PropertyRepository {
         return properties;
     }
 
-    //tag::mapping-column-many-to-any-example[]
+    //tag::associations-many-to-any-example[]
 }
-//end::mapping-column-many-to-any-example[]
+//end::associations-many-to-any-example[]

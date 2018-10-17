@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.userguide.mapping.basic;
+package org.hibernate.userguide.pc;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -81,7 +81,7 @@ public class FilterSqlFragementAliasTest extends BaseEntityManagerFunctionalTest
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			log.infof( "Activate filter [%s]", "activeAccount");
 
-			//tag::mapping-filter-sql-fragment-alias-query-example[]
+			//tag::pc-filter-sql-fragment-alias-query-example[]
 			entityManager
 				.unwrap( Session.class )
 				.enableFilter( "activeAccount" )
@@ -90,12 +90,12 @@ public class FilterSqlFragementAliasTest extends BaseEntityManagerFunctionalTest
 			List<Account> accounts = entityManager.createQuery(
 				"select a from Account a", Account.class)
 			.getResultList();
-			//end::mapping-filter-sql-fragment-alias-query-example[]
+			//end::pc-filter-sql-fragment-alias-query-example[]
 			assertEquals( 2, accounts.size());
 		} );
 	}
 
-	//tag::mapping-filter-sql-fragment-alias-example[]
+	//tag::pc-filter-sql-fragment-alias-example[]
 	@Entity(name = "Account")
 	@Table(name = "account")
 	@SecondaryTable(
@@ -135,7 +135,7 @@ public class FilterSqlFragementAliasTest extends BaseEntityManagerFunctionalTest
 
 		//Getters and setters omitted for brevity
 
-	//end::mapping-filter-sql-fragment-alias-example[]
+	//end::pc-filter-sql-fragment-alias-example[]
 		public Long getId() {
 			return id;
 		}
@@ -168,7 +168,7 @@ public class FilterSqlFragementAliasTest extends BaseEntityManagerFunctionalTest
 			this.active = active;
 		}
 
-		//tag::mapping-filter-sql-fragment-alias-example[]
+		//tag::pc-filter-sql-fragment-alias-example[]
 	}
-	//end::mapping-filter-sql-fragment-alias-example[]
+	//end::pc-filter-sql-fragment-alias-example[]
 }

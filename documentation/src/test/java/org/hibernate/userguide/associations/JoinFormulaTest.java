@@ -4,21 +4,19 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.userguide.mapping.basic;
+package org.hibernate.userguide.associations;
 
-import java.io.Serializable;
 import java.util.Objects;
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinFormula;
+import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;
 
 import org.jboss.logging.Logger;
@@ -29,7 +27,8 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
-public class JoinColumnOrFormulaTest extends BaseEntityManagerFunctionalTestCase {
+@RequiresDialect(PostgreSQL82Dialect.class)
+public class JoinFormulaTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -41,18 +40,14 @@ public class JoinColumnOrFormulaTest extends BaseEntityManagerFunctionalTestCase
 
 	@Test
 	public void testLifecycle() {
-		//tag::mapping-JoinColumnOrFormula-persistence-example[]
+		//tag::associations-JoinFormula-persistence-example[]
 		Country US = new Country();
 		US.setId( 1 );
-		US.setDefault( true );
-		US.setPrimaryLanguage( "English" );
 		US.setName( "United States" );
 
 		Country Romania = new Country();
 		Romania.setId( 40 );
-		Romania.setDefault( true );
 		Romania.setName( "Romania" );
-		Romania.setPrimaryLanguage( "Romanian" );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			entityManager.persist( US );
@@ -64,20 +59,19 @@ public class JoinColumnOrFormulaTest extends BaseEntityManagerFunctionalTestCase
 			user1.setId( 1L );
 			user1.setFirstName( "John" );
 			user1.setLastName( "Doe" );
-			user1.setLanguage( "English" );
+			user1.setPhoneNumber( "+1-234-5678" );
 			entityManager.persist( user1 );
 
 			User user2 = new User( );
 			user2.setId( 2L );
 			user2.setFirstName( "Vlad" );
 			user2.setLastName( "Mihalcea" );
-			user2.setLanguage( "Romanian" );
+			user2.setPhoneNumber( "+40-123-4567" );
 			entityManager.persist( user2 );
-
 		} );
-		//end::mapping-JoinColumnOrFormula-persistence-example[]
+		//end::associations-JoinFormula-persistence-example[]
 
-		//tag::mapping-JoinColumnOrFormula-fetching-example[]
+		//tag::associations-JoinFormula-fetching-example[]
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			log.info( "Fetch User entities" );
 
@@ -87,10 +81,10 @@ public class JoinColumnOrFormulaTest extends BaseEntityManagerFunctionalTestCase
 			User vlad = entityManager.find( User.class, 2L );
 			assertEquals( Romania, vlad.getCountry());
 		} );
-		//end::mapping-JoinColumnOrFormula-fetching-example[]
+		//end::associations-JoinFormula-fetching-example[]
 	}
 
-	//tag::mapping-JoinColumnOrFormula-example[]
+	//tag::associations-JoinFormula-example[]
 	@Entity(name = "User")
 	@Table(name = "users")
 	public static class User {
@@ -102,28 +96,15 @@ public class JoinColumnOrFormulaTest extends BaseEntityManagerFunctionalTestCase
 
 		private String lastName;
 
-		private String language;
+		private String phoneNumber;
 
 		@ManyToOne
-		@JoinColumnOrFormula( column =
-			@JoinColumn(
-				name = "language",
-				referencedColumnName = "primaryLanguage",
-				insertable = false,
-				updatable = false
-			)
-		)
-		@JoinColumnOrFormula( formula =
-			@JoinFormula(
-				value = "true",
-				referencedColumnName = "is_default"
-			)
-		)
+		@JoinFormula( "REGEXP_REPLACE(phoneNumber, '\\+(\\d+)-.*', '\\1')::int" )
 		private Country country;
 
 		//Getters and setters omitted for brevity
 
-	//end::mapping-JoinColumnOrFormula-example[]
+	//end::associations-JoinFormula-example[]
 		public Long getId() {
 			return id;
 		}
@@ -148,45 +129,36 @@ public class JoinColumnOrFormulaTest extends BaseEntityManagerFunctionalTestCase
 			this.lastName = lastName;
 		}
 
-		public String getLanguage() {
-			return language;
+		public String getPhoneNumber() {
+			return phoneNumber;
 		}
 
-		public void setLanguage(String language) {
-			this.language = language;
+		public void setPhoneNumber(String phoneNumber) {
+			this.phoneNumber = phoneNumber;
 		}
 
 		public Country getCountry() {
 			return country;
 		}
 
-		public void setCountry(Country country) {
-			this.country = country;
-		}
-
-	//tag::mapping-JoinColumnOrFormula-example[]
+	//tag::associations-JoinFormula-example[]
 	}
-	//end::mapping-JoinColumnOrFormula-example[]
+	//end::associations-JoinFormula-example[]
 
-	//tag::mapping-JoinColumnOrFormula-example[]
+	//tag::associations-JoinFormula-example[]
 
 	@Entity(name = "Country")
 	@Table(name = "countries")
-	public static class Country implements Serializable {
+	public static class Country {
 
 		@Id
 		private Integer id;
 
 		private String name;
 
-		private String primaryLanguage;
-
-		@Column(name = "is_default")
-		private boolean _default;
-
 		//Getters and setters, equals and hashCode methods omitted for brevity
 
-	//end::mapping-JoinColumnOrFormula-example[]
+	//end::associations-JoinFormula-example[]
 
 		public int getId() {
 			return id;
@@ -202,22 +174,6 @@ public class JoinColumnOrFormulaTest extends BaseEntityManagerFunctionalTestCase
 
 		public void setName(String name) {
 			this.name = name;
-		}
-
-		public String getPrimaryLanguage() {
-			return primaryLanguage;
-		}
-
-		public void setPrimaryLanguage(String primaryLanguage) {
-			this.primaryLanguage = primaryLanguage;
-		}
-
-		public boolean isDefault() {
-			return _default;
-		}
-
-		public void setDefault(boolean _default) {
-			this._default = _default;
 		}
 
 		@Override
@@ -236,7 +192,7 @@ public class JoinColumnOrFormulaTest extends BaseEntityManagerFunctionalTestCase
 		public int hashCode() {
 			return Objects.hash( getId() );
 		}
-	//tag::mapping-JoinColumnOrFormula-example[]
+	//tag::associations-JoinFormula-example[]
 	}
-	//end::mapping-JoinColumnOrFormula-example[]
+	//end::associations-JoinFormula-example[]
 }

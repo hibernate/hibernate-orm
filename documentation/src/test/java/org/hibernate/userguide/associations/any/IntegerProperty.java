@@ -4,14 +4,14 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.userguide.mapping.basic.any;
+package org.hibernate.userguide.associations.any;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-//tag::mapping-column-any-property-example[]
+//tag::associations-any-property-example[]
 
 @Entity
 @Table(name="integer_property")
@@ -37,7 +37,7 @@ public class IntegerProperty implements Property<Integer> {
     }
 
     //Getters and setters omitted for brevity
-//end::mapping-column-any-property-example[]
+//end::associations-any-property-example[]
 
     public Long getId() {
         return id;
@@ -54,7 +54,7 @@ public class IntegerProperty implements Property<Integer> {
     public void setValue(Integer value) {
         this.value = value;
     }
-//tag::mapping-column-any-property-example[]
+//tag::associations-any-property-example[]
 }
-//end::mapping-column-any-property-example[]
+//end::associations-any-property-example[]
 

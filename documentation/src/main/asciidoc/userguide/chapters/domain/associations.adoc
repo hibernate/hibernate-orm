@@ -485,3 +485,276 @@ Hibernate is not going to throw any exception, and it will assign a value of `nu
 include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-non-existing-find-example,indent=0]
 ----
 ====
+
+[[associations-any]]
+==== `@Any` mapping
+
+The `@Any` mapping is useful to emulate a unidirectional `@ManyToOne` association when there can be multiple target entities.
+
+Because the `@Any` mapping defines a polymorphic association to classes from multiple tables,
+this association type requires the FK column which provides the associated parent identifier and
+a metadata information for the associated entity type.
+
+[NOTE]
+====
+It is impossible to specify a foreign key constraint for this kind of association.
+This is not the usual way of mapping polymorphic associations and you should use this only in special cases (e.g. audit logs, user session data, etc).
+====
+
+The `@Any` annotation describes the column holding the metadata information.
+To link the value of the metadata information and an actual entity type, the `@AnyDef` and `@AnyDefs` annotations are used.
+The `metaType` attribute allows the application to specify a custom type that maps database column values to persistent classes that have identifier properties of the type specified by `idType`.
+You must specify the mapping from values of the `metaType` to class names.
+
+For the next examples, consider the following `Property` class hierarchy:
+
+[[associations-any-property-example]]
+.`Property` class hierarchy
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/any/Property.java[tags=associations-any-property-example]
+
+include::{sourcedir}/any/IntegerProperty.java[tags=associations-any-property-example]
+
+include::{sourcedir}/any/StringProperty.java[tags=associations-any-property-example]
+----
+====
+
+A `PropertyHolder` can reference any such property, and, because each `Property` belongs to a separate table, the `@Any` annotation is, therefore, required.
+
+[[associations-any-example]]
+.`@Any` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/any/PropertyHolder.java[tags=associations-any-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/associations-any-example.sql[]
+----
+====
+
+As you can see, there are two columns used to reference a `Property` instance: `property_id` and `property_type`.
+The `property_id` is used to match the `id` column of either the `string_property` or `integer_property` tables,
+while the `property_type` is used to match the `string_property` or the `integer_property` table.
+
+The table resolving mapping is defined by the `metaDef` attribute which references an `@AnyMetaDef` mapping.
+Although the `@AnyMetaDef` mapping could be set right next to the `@Any` annotation,
+it's good practice to reuse it, therefore it makes sense to configure it on a class or package-level basis.
+
+The `package-info.java` contains the `@AnyMetaDef` mapping:
+
+[[associations-any-meta-def-example]]
+.`@Any` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/any/package-info.java[tags=associations-any-meta-def-example]
+----
+====
+
+[NOTE]
+====
+It is recommended to place the `@AnyMetaDef` mapping as a package metadata.
+====
+
+To see the `@Any` annotation in action, consider the next examples.
+
+If we persist an `IntegerProperty` as well as a `StringProperty` entity, and associate
+the `StringProperty` entity with a `PropertyHolder`,
+Hibernate will generate the following SQL queries:
+
+[[associations-any-persist-example]]
+.`@Any` mapping persist example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/any/AnyTest.java[tags=associations-any-persist-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/associations-any-persist-example.sql[]
+----
+====
+
+When fetching the `PropertyHolder` entity and navigating its `property` association,
+Hibernate will fetch the associated `StringProperty` entity like this:
+
+[[associations-any-query-example]]
+.`@Any` mapping query example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/any/AnyTest.java[tags=associations-any-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/associations-any-query-example.sql[]
+----
+====
+
+[[associations-many-to-any]]
+===== `@ManyToAny` mapping
+
+While the `@Any` mapping is useful to emulate a `@ManyToOne` association when there can be multiple target entities,
+to emulate a `@OneToMany` association, the `@ManyToAny` annotation must be used.
+
+In the following example, the `PropertyRepository` entity has a collection of `Property` entities.
+
+The `repository_properties` link table holds the associations between `PropertyRepository` and `Property` entities.
+
+[[associations-many-to-any-example]]
+.`@ManyToAny` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/any/PropertyRepository.java[tags=associations-many-to-any-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/associations-many-to-any-example.sql[]
+----
+====
+
+To see the `@ManyToAny` annotation in action, consider the next examples.
+
+If we persist an `IntegerProperty` as well as a `StringProperty` entity,
+and associate both of them with a `PropertyRepository` parent entity,
+Hibernate will generate the following SQL queries:
+
+[[associations-many-to-any-persist-example]]
+.`@ManyToAny` mapping persist example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/any/ManyToAnyTest.java[tags=associations-many-to-any-persist-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/associations-many-to-any-persist-example.sql[]
+----
+====
+
+When fetching the `PropertyRepository` entity and navigating its `properties` association,
+Hibernate will fetch the associated `IntegerProperty` and `StringProperty` entities like this:
+
+[[associations-many-to-any-query-example]]
+.`@ManyToAny` mapping query example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/any/ManyToAnyTest.java[tags=associations-many-to-any-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/associations-many-to-any-query-example.sql[]
+----
+====
+
+[[associations-JoinFormula]]
+==== `@JoinFormula` mapping
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinFormula.html[`@JoinFormula`] annotation is used to customize the join between a child Foreign Key and a parent row Primary Key.
+
+[[associations-JoinFormula-example]]
+.`@JoinFormula` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/JoinFormulaTest.java[tags=associations-JoinFormula-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/associations-JoinFormula-example.sql[]
+----
+====
+
+The `country` association in the `User` entity is mapped by the country identifier provided by the `phoneNumber` property.
+
+Considering we have the following entities:
+
+[[associations-JoinFormula-persistence-example]]
+.`@JoinFormula` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/JoinFormulaTest.java[tags=associations-JoinFormula-persistence-example]
+----
+====
+
+When fetching the `User` entities, the `country` property is mapped by the `@JoinFormula` expression:
+
+[[associations-JoinFormula-fetching-example]]
+.`@JoinFormula` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/JoinFormulaTest.java[tags=associations-JoinFormula-fetching-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/associations-JoinFormula-fetching-example.sql[]
+----
+====
+
+Therefore, the `@JoinFormula` annotation is used to define a custom join association between the parent-child association.
+
+[[associations-JoinColumnOrFormula]]
+==== `@JoinColumnOrFormula` mapping
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinColumnOrFormula.html[`@JoinColumnOrFormula`] annotation is used to customize the join between a child Foreign Key and a parent row Primary Key when we need to take into consideration a column value as well as a `@JoinFormula`.
+
+[[associations-JoinColumnOrFormula-example]]
+.`@JoinColumnOrFormula` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/JoinColumnOrFormulaTest.java[tags=associations-JoinColumnOrFormula-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/associations-JoinColumnOrFormula-example.sql[]
+----
+====
+
+The `country` association in the `User` entity is mapped by the `language` property value and the associated `Country` `is_default` column value.
+
+Considering we have the following entities:
+
+[[associations-JoinColumnOrFormula-persistence-example]]
+.`@JoinColumnOrFormula` persist example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/JoinColumnOrFormulaTest.java[tags=associations-JoinColumnOrFormula-persistence-example]
+----
+====
+
+When fetching the `User` entities, the `country` property is mapped by the `@JoinColumnOrFormula` expression:
+
+[[associations-JoinColumnOrFormula-fetching-example]]
+.`@JoinColumnOrFormula` fetching example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/JoinColumnOrFormulaTest.java[tags=associations-JoinColumnOrFormula-fetching-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/associations-JoinColumnOrFormula-fetching-example.sql[]
+----
+====
+
+Therefore, the `@JoinColumnOrFormula` annotation is used to define a custom join association between the parent-child association.

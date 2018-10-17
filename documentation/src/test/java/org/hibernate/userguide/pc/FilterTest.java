@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.userguide.mapping.basic;
+package org.hibernate.userguide.pc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,7 +53,7 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
     public void testLifecycle() {
         doInJPA( this::entityManagerFactory, entityManager -> {
 
-            //tag::mapping-filter-persistence-example[]
+            //tag::pc-filter-persistence-example[]
             Client client = new Client()
             .setId( 1L )
             .setName( "John Doe" );
@@ -86,7 +86,7 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
             );
 
             entityManager.persist( client );
-            //end::mapping-filter-persistence-example[]
+            //end::pc-filter-persistence-example[]
         } );
 
         doInJPA( this::entityManagerFactory, entityManager -> {
@@ -129,7 +129,7 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
 
         doInJPA( this::entityManagerFactory, entityManager -> {
             log.infof( "Activate filter [%s]", "activeAccount");
-            //tag::mapping-filter-entity-example[]
+            //tag::pc-filter-entity-example[]
             entityManager
                 .unwrap( Session.class )
                 .enableFilter( "activeAccount" )
@@ -138,22 +138,22 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
             Account account = entityManager.find( Account.class, 2L );
 
             assertFalse( account.isActive() );
-            //end::mapping-filter-entity-example[]
+            //end::pc-filter-entity-example[]
         } );
 
         doInJPA( this::entityManagerFactory, entityManager -> {
-            //tag::mapping-no-filter-entity-query-example[]
+            //tag::pc-no-filter-entity-query-example[]
             List<Account> accounts = entityManager.createQuery(
                 "select a from Account a", Account.class)
             .getResultList();
 
             assertEquals( 3, accounts.size());
-            //end::mapping-no-filter-entity-query-example[]
+            //end::pc-no-filter-entity-query-example[]
         } );
 
         doInJPA( this::entityManagerFactory, entityManager -> {
             log.infof( "Activate filter [%s]", "activeAccount");
-            //tag::mapping-filter-entity-query-example[]
+            //tag::pc-filter-entity-query-example[]
             entityManager
                 .unwrap( Session.class )
                 .enableFilter( "activeAccount" )
@@ -164,21 +164,21 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
             .getResultList();
 
             assertEquals( 2, accounts.size());
-            //end::mapping-filter-entity-query-example[]
+            //end::pc-filter-entity-query-example[]
         } );
 
         doInJPA( this::entityManagerFactory, entityManager -> {
-            //tag::mapping-no-filter-collection-query-example[]
+            //tag::pc-no-filter-collection-query-example[]
             Client client = entityManager.find( Client.class, 1L );
 
             assertEquals( 3, client.getAccounts().size() );
-            //end::mapping-no-filter-collection-query-example[]
+            //end::pc-no-filter-collection-query-example[]
         } );
 
         doInJPA( this::entityManagerFactory, entityManager -> {
             log.infof( "Activate filter [%s]", "activeAccount");
 
-            //tag::mapping-filter-collection-query-example[]
+            //tag::pc-filter-collection-query-example[]
             entityManager
                 .unwrap( Session.class )
                 .enableFilter( "activeAccount" )
@@ -187,7 +187,7 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
             Client client = entityManager.find( Client.class, 1L );
 
             assertEquals( 2, client.getAccounts().size() );
-            //end::mapping-filter-collection-query-example[]
+            //end::pc-filter-collection-query-example[]
         } );
     }
 
@@ -196,7 +196,7 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
         CREDIT
     }
 
-    //tag::mapping-filter-Client-example[]
+    //tag::pc-filter-Client-example[]
     @Entity(name = "Client")
     public static class Client {
 
@@ -216,7 +216,7 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
         private List<Account> accounts = new ArrayList<>( );
 
         //Getters and setters omitted for brevity
-    //end::mapping-filter-Client-example[]
+    //end::pc-filter-Client-example[]
         public Long getId() {
             return id;
         }
@@ -238,16 +238,16 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
         public List<Account> getAccounts() {
             return accounts;
         }
-    //tag::mapping-filter-Client-example[]
+    //tag::pc-filter-Client-example[]
 
         public void addAccount(Account account) {
             account.setClient( this );
             this.accounts.add( account );
         }
     }
-    //end::mapping-filter-Client-example[]
+    //end::pc-filter-Client-example[]
 
-    //tag::mapping-filter-Account-example[]
+    //tag::pc-filter-Account-example[]
     @Entity(name = "Account")
     @FilterDef(
         name="activeAccount",
@@ -280,7 +280,7 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
         private boolean active;
 
         //Getters and setters omitted for brevity
-    //end::mapping-filter-Account-example[]
+    //end::pc-filter-Account-example[]
         public Long getId() {
             return id;
         }
@@ -335,7 +335,7 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
             return this;
         }
 
-    //tag::mapping-filter-Account-example[]
+    //tag::pc-filter-Account-example[]
     }
-    //end::mapping-filter-Account-example[]
+    //end::pc-filter-Account-example[]
 }

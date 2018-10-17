@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.userguide.mapping.basic.any;
+package org.hibernate.userguide.associations.any;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -14,7 +14,7 @@ import javax.persistence.Table;
 
 import org.hibernate.annotations.Any;
 
-//tag::mapping-column-any-example[]
+//tag::associations-any-example[]
 @Entity
 @Table( name = "property_holder" )
 public class PropertyHolder {
@@ -31,7 +31,7 @@ public class PropertyHolder {
 
     //Getters and setters are omitted for brevity
 
-//end::mapping-column-any-example[]
+//end::associations-any-example[]
     public Long getId() {
         return id;
     }
@@ -47,6 +47,6 @@ public class PropertyHolder {
     public void setProperty(Property property) {
         this.property = property;
     }
-//tag::mapping-column-any-example[]
+//tag::associations-any-example[]
 }
-//end::mapping-column-any-example[]
+//end::associations-any-example[]

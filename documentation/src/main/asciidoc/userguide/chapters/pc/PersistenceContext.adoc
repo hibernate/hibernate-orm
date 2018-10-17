@@ -232,6 +232,380 @@ load::
 Each of these two methods defines an overloading variant accepting a `org.hibernate.LockOptions` argument.
 Locking is discussed in a separate <<chapters/locking/Locking.adoc#locking,chapter>>.
 
+[[pc-filtering]]
+=== Filtering entities and associations
+
+Hibernate offers two options if you want to filter entities or entity associations:
+
+static (e.g. `@Where` and `@WhereJoinTable`):: which are defined at mapping time and
+cannot change at runtime.
+dynamic (e.g. `@Filter` and `@FilterJoinTable`):: which are applied and configured at runtime.
+
+[[pc-where]]
+==== `@Where`
+
+Sometimes, you want to filter out entities or collections using custom SQL criteria.
+This can be achieved using the `@Where` annotation, which can be applied to entities and collections.
+
+[[pc-where-example]]
+.`@Where` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/WhereTest.java[tags=pc-where-example]
+----
+====
+
+If the database contains the following entities:
+
+[[pc-where-persistence-example]]
+.Persisting and fetching entities with a `@Where` mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/WhereTest.java[tags=pc-where-persistence-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-where-persistence-example.sql[]
+----
+====
+
+When executing an `Account` entity query, Hibernate is going to filter out all records that are not active.
+
+[[pc-where-entity-query-example]]
+.Query entities mapped with `@Where`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/WhereTest.java[tags=pc-where-entity-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-where-entity-query-example.sql[]
+----
+====
+
+When fetching the `debitAccounts` or the `creditAccounts` collections, Hibernate is going to apply the `@Where` clause filtering criteria to the associated child entities.
+
+[[pc-where-collection-query-example]]
+.Traversing collections mapped with `@Where`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/WhereTest.java[tags=pc-where-collection-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-where-collection-query-example.sql[]
+----
+====
+
+[[pc-where-join-table]]
+==== `@WhereJoinTable`
+
+Just like `@Where` annotation, `@WhereJoinTable` is used to filter out collections using a joined table (e.g. @ManyToMany association).
+
+[[pc-where-join-table-example]]
+.`@WhereJoinTable` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/WhereJoinTableTest.java[tags=pc-where-join-table-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-where-join-table-example.sql[]
+----
+====
+
+In the example above, the current week `Reader` entities are included in the `currentWeekReaders` collection
+which uses the `@WhereJoinTable` annotation to filter the joined table rows according to the provided SQL clause.
+
+Considering that the following two `Book_Reader` entries are added into our system:
+
+[[pc-where-join-table-persist-example]]
+.`@WhereJoinTable` test data
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/WhereJoinTableTest.java[tags=pc-where-join-table-persist-example]
+----
+====
+
+When fetching the `currentWeekReaders` collection, Hibernate is going to find one one entry:
+
+[[pc-where-join-table-fetch-example]]
+.`@WhereJoinTable` fetch example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/WhereJoinTableTest.java[tags=pc-where-join-table-fetch-example]
+----
+====
+
+[[pc-filter]]
+==== `@Filter`
+
+The `@Filter` annotation is another way to filter out entities or collections using custom SQL criteria.
+Unlike the `@Where` annotation, `@Filter` allows you to parameterize the filter clause at runtime.
+
+Now, considering we have the following `Account` entity:
+
+[[pc-filter-account-example]]
+.`@Filter` mapping entity-level usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/FilterTest.java[tags=pc-filter-Account-example]
+----
+====
+
+[NOTE]
+====
+Notice that the `active` property is mapped to the `active_status` column.
+
+This mapping was done to show you that the `@Filter` condition uses a SQL condition and not a JPQL filtering predicate.
+====
+
+As already explained, we can also apply the `@Filter` annotation for collections as illustrated by the `Client` entity:
+
+[[pc-filter-client-example]]
+.`@Filter` mapping collection-level usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/FilterTest.java[tags=pc-filter-Client-example]
+----
+====
+
+If we persist a `Client` with three associated `Account` entities,
+Hibernate will execute the following SQL statements:
+
+[[pc-filter-persistence-example]]
+.Persisting and fetching entities with a `@Filter` mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/FilterTest.java[tags=pc-filter-persistence-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-filter-persistence-example.sql[]
+----
+====
+
+By default, without explicitly enabling the filter, Hibernate is going to fetch all `Account` entities.
+
+[[pc-no-filter-entity-query-example]]
+.Query entities mapped without activating the `@Filter`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/FilterTest.java[tags=pc-no-filter-entity-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-no-filter-entity-query-example.sql[]
+----
+====
+
+If the filter is enabled and the filter parameter value is provided,
+then Hibernate is going to apply the filtering criteria to the associated `Account` entities.
+
+[[pc-filter-entity-query-example]]
+.Query entities mapped with `@Filter`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/FilterTest.java[tags=pc-filter-entity-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-filter-entity-query-example.sql[]
+----
+====
+
+[IMPORTANT]
+====
+Filters apply to entity queries, but not to direct fetching.
+
+Therefore, in the following example, the filter is not taken into consideration when fetching an entity from the Persistence Context.
+
+[[pc-filter-entity-example]]
+.Fetching entities mapped with `@Filter`
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/FilterTest.java[tags=pc-filter-entity-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-filter-entity-example.sql[]
+----
+
+As you can see from the example above, contrary to an entity query, the filter does not prevent the entity from being loaded.
+====
+
+Just like with entity queries, collections can be filtered as well, but only if the filter is explicitly enabled on the currently running Hibernate `Session`.
+
+[[pc-no-filter-collection-query-example]]
+.Traversing collections without activating the `@Filter`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/FilterTest.java[tags=pc-no-filter-collection-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-no-filter-collection-query-example.sql[]
+----
+====
+
+When activating the `@Filter` and fetching the `accounts` collections, Hibernate is going to apply the filter condition to the associated collection entries.
+
+[[pc-filter-collection-query-example]]
+.Traversing collections mapped with `@Filter`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/FilterTest.java[tags=pc-filter-collection-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-filter-collection-query-example.sql[]
+----
+====
+
+[NOTE]
+====
+The main advantage of `@Filter` over the `@Where` clause is that the filtering criteria can be customized at runtime.
+====
+
+[WARNING]
+====
+It's not possible to combine the `@Filter` and `@Cache` collection annotations.
+This limitation is due to ensuring consistency and because the filtering information is not stored in the second-level cache.
+
+If caching were allowed for a currently filtered collection, then the second-level cache would store only a subset of the whole collection.
+Afterward, every other Session will get the filtered collection from the cache, even if the Session-level filters have not been explicitly activated.
+
+For this reason, the second-level collection cache is limited to storing whole collections, and not subsets.
+====
+
+[[pc-filter-sql-fragment-alias]]
+==== `@Filter` with `@SqlFragmentAlias`
+
+When using the `@Filter` annotation and working with entities that are mapped onto multiple database tables,
+you will need to use the
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SqlFragmentAlias.html[`@SqlFragmentAlias`] annotation
+if the `@Filter` defines a condition that uses predicates across multiple tables.
+
+[[pc-filter-sql-fragment-alias-example]]
+.`@SqlFragmentAlias` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/FilterSqlFragementAliasTest.java[tags=pc-filter-sql-fragment-alias-example]
+----
+====
+
+Now, when fetching the `Account` entities and activating the filter,
+Hibernate is going to apply the right table aliases to the filter predicates:
+
+[[pc-filter-sql-fragment-alias-query-example]]
+.Fetching a collection filtered with `@SqlFragmentAlias`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/FilterSqlFragementAliasTest.java[tags=pc-filter-sql-fragment-alias-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-filter-sql-fragment-alias-query-example.sql[]
+----
+====
+
+[[pc-filter-join-table]]
+==== `@FilterJoinTable`
+
+When using the `@Filter` annotation with collections, the filtering is done against the child entries (entities or embeddables).
+However, if you have a link table between the parent entity and the child table, then you need to use the `@FilterJoinTable` to filter child entries according to some column contained in the join table.
+
+The `@FilterJoinTable` annotation can be, therefore, applied to a unidirectional `@OneToMany` collection as illustrated in the following mapping:
+
+[[pc-filter-join-table-example]]
+.`@FilterJoinTable` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/FilterJoinTableTest.java[tags=pc-filter-join-table-example]
+----
+====
+
+The `firstAccounts` filter will allow us to get only the `Account` entities that have the `order_id`
+(which tells the position of every entry inside the `accounts` collection)
+less than a given number (e.g. `maxOrderId`).
+
+Let's assume our database contains the following entities:
+
+[[pc-filter-join-table-persistence-example]]
+.Persisting and fetching entities with a `@FilterJoinTable` mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/FilterJoinTableTest.java[tags=pc-filter-join-table-persistence-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-filter-join-table-persistence-example.sql[]
+----
+====
+
+The collections can be filtered only if the associated filter is enabled on the currently running Hibernate `Session`.
+
+[[pc-no-filter-join-table-collection-query-example]]
+.Traversing collections mapped with `@FilterJoinTable` without enabling the filter
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/FilterJoinTableTest.java[tags=pc-no-filter-join-table-collection-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-no-filter-join-table-collection-query-example.sql[]
+----
+====
+
+If we enable the filter and set the `maxOrderId` to `1` when fetching the `accounts` collections, Hibernate is going to apply the `@FilterJoinTable` clause filtering criteria, and we will get just
+`2` `Account` entities, with the `order_id` values of `0` and `1`.
+
+[[pc-filter-join-table-collection-query-example]]
+.Traversing collections mapped with `@FilterJoinTable`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/FilterJoinTableTest.java[tags=pc-filter-join-table-collection-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-filter-join-table-collection-query-example.sql[]
+----
+====
+
 [[pc-managed-state]]
 === Modifying managed/persistent state
 

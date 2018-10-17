@@ -6,16 +6,16 @@
  */
 
 // $Id$
-//tag::mapping-column-any-meta-def-example[]
+//tag::associations-any-meta-def-example[]
 @AnyMetaDef( name= "PropertyMetaDef", metaType = "string", idType = "long",
     metaValues = {
             @MetaValue(value = "S", targetEntity = StringProperty.class),
             @MetaValue(value = "I", targetEntity = IntegerProperty.class)
         }
     )
-package org.hibernate.userguide.mapping.basic.any;
+package org.hibernate.userguide.associations.any;
 
 import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.MetaValue;
-//end::mapping-column-any-meta-def-example[]
+//end::associations-any-meta-def-example[]
 

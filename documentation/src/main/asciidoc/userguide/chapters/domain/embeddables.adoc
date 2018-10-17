@@ -198,3 +198,98 @@ This usage is covered in detail in <<chapters/domain/identifiers.adoc#identifier
 ====
 Embeddable types that are used as collection entries, map keys or entity type identifiers cannot include their own collection mappings.
 ====
+
+[[embeddable-Target]]
+==== `@Target` mapping
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Target.html[`@Target`] annotation is used to specify the implementation class of a given association that is mapped via an interface.
+The
+http://docs.oracle.com/javaee/7/api/javax/persistence/ManyToOne.html[`@ManyToOne`],
+http://docs.oracle.com/javaee/7/api/javax/persistence/OneToOne.html[`@OneToOne`],
+http://docs.oracle.com/javaee/7/api/javax/persistence/OneToMany.html[`@OneToMany`], and
+http://docs.oracle.com/javaee/7/api/javax/persistence/ManyToMany.html[`@ManyToMany`]
+feature a http://docs.oracle.com/javaee/7/api/javax/persistence/ManyToOne.html#targetEntity--[`targetEntity`] attribute to specify the actual class of the entity association when an interface is used for the mapping.
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/ElementCollection.html[`@ElementCollection`] association has a http://docs.oracle.com/javaee/7/api/javax/persistence/ElementCollection.html#targetClass--[`targetClass`] attribute for the same purpose.
+
+However, for simple embeddable types, there is no such construct and so you need to use the Hibernate-specific `@Target` annotation instead.
+
+[[embeddable-Target-example]]
+.`@Target` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/TargetTest.java[tags=embeddable-Target-example]
+----
+====
+
+The `coordinates` embeddable type is mapped as the `Coordinates` interface.
+However, Hibernate needs to know the actual implementation tye, which is `GPS` in this case,
+hence the `@Target` annotation is used to provide this information.
+
+Assuming we have persisted the following `City` entity:
+
+[[embeddable-Target-persist-example]]
+.`@Target` persist example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/TargetTest.java[tags=embeddable-Target-persist-example]
+----
+====
+
+When fetching the `City` entity, the `coordinates` property is mapped by the `@Target` expression:
+
+[[embeddable-Target-fetching-example]]
+.`@Target` fetching example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/TargetTest.java[tags=embeddable-Target-fetching-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/embeddable/embeddable-Target-fetching-example.sql[]
+----
+====
+
+Therefore, the `@Target` annotation is used to define a custom join association between the parent-child association.
+
+[[embeddable-Parent]]
+==== `@Parent` mapping
+
+The Hibernate-specific `@Parent` annotation allows you to reference the owner entity from within an embeddable.
+
+[[embeddable-Parent-example]]
+.`@Parent` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/ParentTest.java[tags=embeddable-Parent-example]
+----
+====
+
+Assuming we have persisted the following `City` entity:
+
+[[embeddable-Parent-persist-example]]
+.`@Parent` persist example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/ParentTest.java[tags=embeddable-Parent-persist-example]
+----
+====
+
+When fetching the `City` entity, the `city` property of the embeddable type acts as a back reference to the owning parent entity:
+
+[[embeddable-Parent-fetching-example]]
+.`@Parent` fetching example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/ParentTest.java[tags=embeddable-Parent-fetching-example]
+----
+====
+
+Therefore, the `@Parent` annotation is used to define the association between an embeddable type and the owning entity.

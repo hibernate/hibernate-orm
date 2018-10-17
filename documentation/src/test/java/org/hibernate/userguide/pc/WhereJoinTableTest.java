@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.userguide.mapping.basic;
+package org.hibernate.userguide.pc;
 
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -42,7 +42,7 @@ public class WhereJoinTableTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void testLifecycle() {
-		//tag::mapping-where-persistence-example[]
+		//tag::pc-where-persistence-example[]
 		doInJPA( this::entityManagerFactory, entityManager -> {
 
 			entityManager.unwrap( Session.class ).doWork( connection -> {
@@ -53,7 +53,7 @@ public class WhereJoinTableTest extends BaseEntityManagerFunctionalTestCase {
 				}
 			} );
 
-			//tag::mapping-where-join-table-persist-example[]
+			//tag::pc-where-join-table-persist-example[]
 			Book book = new Book();
 			book.setId( 1L );
 			book.setTitle( "High-Performance Java Persistence" );
@@ -69,13 +69,13 @@ public class WhereJoinTableTest extends BaseEntityManagerFunctionalTestCase {
 			reader2.setId( 2L );
 			reader2.setName( "John Doe Jr." );
 			entityManager.persist( reader2 );
-			//end::mapping-where-join-table-persist-example[]
+			//end::pc-where-join-table-persist-example[]
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			entityManager.unwrap( Session.class ).doWork( connection -> {
 				try(Statement statement = connection.createStatement()) {
-			//tag::mapping-where-join-table-persist-example[]
+			//tag::pc-where-join-table-persist-example[]
 
 			statement.executeUpdate(
 				"INSERT INTO Book_Reader " +
@@ -89,18 +89,18 @@ public class WhereJoinTableTest extends BaseEntityManagerFunctionalTestCase {
 				"VALUES " +
 				"	(1, 2, DATEADD( 'DAY', -10, CURRENT_TIMESTAMP() )) "
 			);
-				//end::mapping-where-join-table-persist-example[]
+				//end::pc-where-join-table-persist-example[]
 				}}
 			);
 
-			//tag::mapping-where-join-table-fetch-example[]
+			//tag::pc-where-join-table-fetch-example[]
 			Book book = entityManager.find( Book.class, 1L );
 			assertEquals( 1, book.getCurrentWeekReaders().size() );
-			//end::mapping-where-join-table-fetch-example[]
+			//end::pc-where-join-table-fetch-example[]
 		} );
 	}
 
-	//tag::mapping-where-join-table-example[]
+	//tag::pc-where-join-table-example[]
 	@Entity(name = "Book")
 	public static class Book {
 
@@ -122,7 +122,7 @@ public class WhereJoinTableTest extends BaseEntityManagerFunctionalTestCase {
 
 		//Getters and setters omitted for brevity
 
-		//end::mapping-where-join-table-example[]
+		//end::pc-where-join-table-example[]
 		public Long getId() {
 			return id;
 		}
@@ -151,7 +151,7 @@ public class WhereJoinTableTest extends BaseEntityManagerFunctionalTestCase {
 			return currentWeekReaders;
 		}
 
-		//tag::mapping-where-join-table-example[]
+		//tag::pc-where-join-table-example[]
 	}
 
 	@Entity(name = "Reader")
@@ -164,7 +164,7 @@ public class WhereJoinTableTest extends BaseEntityManagerFunctionalTestCase {
 
 		//Getters and setters omitted for brevity
 
-		//end::mapping-where-join-table-example[]
+		//end::pc-where-join-table-example[]
 
 		public Long getId() {
 			return id;
@@ -181,7 +181,7 @@ public class WhereJoinTableTest extends BaseEntityManagerFunctionalTestCase {
 		public void setName(String name) {
 			this.name = name;
 		}
-		//tag::mapping-where-join-table-example[]
+		//tag::pc-where-join-table-example[]
 	}
-		//end::mapping-where-join-table-example[]
+		//end::pc-where-join-table-example[]
 }

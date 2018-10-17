@@ -633,14 +633,14 @@ You should use either the JPA <<annotations-jpa-access>> or the Hibernate native
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Any.html[`@Any`] annotation is used to define the *any-to-one* association
 which can point to one one of several entity types.
 
-See the <<chapters/domain/basic_types.adoc#mapping-column-any,`@Any` mapping>> section for more info.
+See the <<chapters/domain/associations.adoc#associations-any,`@Any` mapping>> section for more info.
 
 [[annotations-hibernate-anymetadef]]
 ==== `@AnyMetaDef`
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/AnyMetaDef.html[`@AnyMetaDef`] annotation is used to provide metadata about an `@Any` or `@ManyToAny` mapping.
 
-See the <<chapters/domain/basic_types.adoc#mapping-column-any,`@Any` mapping>> section for more info.
+See the <<chapters/domain/associations.adoc#associations-any,`@Any` mapping>> section for more info.
 
 [[annotations-hibernate-anymetadefs]]
 ==== `@AnyMetaDefs`
@@ -816,14 +816,14 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Filter.html[`@Filter`] annotation is used to add filters to an entity or the target entity of a collection.
 
-See the <<chapters/domain/basic_types.adoc#mapping-filter-example,Filter mapping>> section for more info.
+See the <<chapters/pc/PersistenceContext.adoc#pc-filter,Filter mapping>> section for more info.
 
 [[annotations-hibernate-filterdef]]
 ==== `@FilterDef`
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FilterDef.html[`@FilterDef`] annotation is used to specify a `@Filter` definition (name, default condition and parameter types, if any).
 
-See the <<chapters/domain/basic_types.adoc#mapping-filter-example,Filter mapping>> section for more info.
+See the <<chapters/pc/PersistenceContext.adoc#pc-filter,Filter mapping>> section for more info.
 
 [[annotations-hibernate-filterdefs]]
 ==== `@FilterDefs`
@@ -835,7 +835,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FilterJoinTable.html[`@FilterJoinTable`] annotation is used to add `@Filter` capabilities to a join table collection.
 
-See the <<chapters/domain/basic_types.adoc#mapping-column-filter-join-table,FilterJoinTable mapping>> section for more info.
+See the <<chapters/pc/PersistenceContext.adoc#pc-filter-join-table,FilterJoinTable mapping>> section for more info.
 
 [[annotations-hibernate-filterjointables]]
 ==== `@FilterJoinTables`
@@ -907,7 +907,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinColumnOrFormula.html[`@JoinColumnOrFormula`] annotation is used to specify that the entity association is resolved either through a FOREIGN KEY join (e.g. <<annotations-jpa-joincolumn>>) or using the result of a given SQL formula (e.g. <<annotations-hibernate-joinformula>>).
 
-See the <<chapters/domain/basic_types.adoc#mapping-JoinColumnOrFormula,`@JoinColumnOrFormula` mapping>> section for more info.
+See the <<chapters/domain/associations.adoc#associations-JoinColumnOrFormula,`@JoinColumnOrFormula` mapping>> section for more info.
 
 [[annotations-hibernate-joincolumnsorformulas]]
 ==== `@JoinColumnsOrFormulas`
@@ -918,7 +918,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinFormula.html[`@JoinFormula`] annotation is used as a replacement for <<annotations-jpa-joincolumn>> when the association does not have a dedicated FOREIGN KEY column.
 
-See the <<chapters/domain/basic_types.adoc#mapping-JoinFormula,`@JoinFormula` mapping>> section for more info.
+See the <<chapters/domain/associations.adoc#associations-JoinFormula,`@JoinFormula` mapping>> section for more info.
 
 [[annotations-hibernate-lazycollection]]
 ==== `@LazyCollection`
@@ -983,7 +983,7 @@ See the <<chapters/query/native/Native.adoc#sql-custom-crud-example, Custom CRUD
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ManyToAny.html[`@ManyToAny`] annotation is used to specify a many-to-one association when the target type is dynamically resolved.
 
-See the <<chapters/domain/basic_types.adoc#mapping-column-many-to-any, `@ManyToAny` mapping>> section for more info.
+See the <<chapters/domain/associations.adoc#associations-many-to-any, `@ManyToAny` mapping>> section for more info.
 
 [[annotations-hibernate-mapkeytype]]
 ==== `@MapKeyType`
@@ -997,7 +997,7 @@ See the <<chapters/domain/collections.adoc#collections-map-custom-key-type, `@Ma
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/MetaValue.html[`@MetaValue`] annotation is used by the <<annotations-hibernate-anymetadef>> annotation to specify the association between a given discriminator value and an entity type.
 
-See the <<chapters/domain/basic_types.adoc#mapping-column-any,`@Any` mapping>> section for more info.
+See the <<chapters/domain/associations.adoc#associations-any,`@Any` mapping>> section for more info.
 
 [[annotations-hibernate-namednativequeries]]
 ==== `@NamedNativeQueries`
@@ -1122,7 +1122,7 @@ See the <<chapters/domain/collections.adoc#collections-customizing-ordered-by-sq
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ParamDef.html[`@ParamDef`] annotation is used in conjunction with <<annotations-hibernate-filterdef>> so that the Hibernate Filter can be customized with runtime-provided parameter values.
 
-See the <<chapters/domain/basic_types.adoc#mapping-filter-example,Filter mapping>> section for more info.
+See the <<chapters/pc/PersistenceContext.adoc#pc-filter-example,Filter mapping>> section for more info.
 
 [[annotations-hibernate-parameter]]
 ==== `@Parameter`
@@ -1135,7 +1135,7 @@ like <<annotations-hibernate-collectiontype>>, <<annotations-hibernate-genericge
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Parent.html[`@Parent`] annotation is used to specify that the currently annotated embeddable attribute references back the owning entity.
 
-See the <<chapters/domain/basic_types.adoc#mapping-Parent,`@Parent` mapping>> section for more info.
+See the <<chapters/domain/embeddables.adoc#embeddable-Parent,`@Parent` mapping>> section for more info.
 
 [[annotations-hibernate-persister]]
 ==== `@Persister`
@@ -1237,7 +1237,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 The alias (e.g. `myAlias`) can then be used in the `@Filter` `condition` clause using the `{alias}` (e.g. `{myAlias}`) placeholder.
 
-See the <<chapters/domain/basic_types.adoc#mapping-column-filter-sql-fragment-alias,`@SqlFragmentAlias` mapping>> section for more info.
+See the <<chapters/pc/PersistenceContext.adoc#pc-filter-sql-fragment-alias,`@SqlFragmentAlias` mapping>> section for more info.
 
 [[annotations-hibernate-sqlinsert]]
 ==== `@SQLInsert`
@@ -1287,7 +1287,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 ==== `@Target`
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Target.html[`@Target`] annotation is used to specify an explicit target implementation when the currently annotated association is using an interface type.
 
-See the <<chapters/domain/basic_types.adoc#mapping-Target,`@Target` mapping>> section for more info.
+See the <<chapters/domain/embeddables.adoc#embeddable-Target,`@Target` mapping>> section for more info.
 
 [[annotations-hibernate-tuplizer]]
 ==== `@Tuplizer`
@@ -1349,11 +1349,11 @@ See the <<chapters/domain/basic_types.adoc#mapping-database-generated-value-exam
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Where.html[`@Where`] annotation is used to specify a custom SQL `WHERE` clause used when fetching an entity or a collection.
 
-See the <<chapters/domain/basic_types.adoc#mapping-where-example,`@Where` mapping>> section for more info.
+See the <<chapters/pc/PersistenceContext.adoc#pc-where-example,`@Where` mapping>> section for more info.
 
 [[annotations-hibernate-wherejointable]]
 ==== `@WhereJoinTable`
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/WhereJoinTable.html[`@WhereJoinTable`] annotation is used to specify a custom SQL `WHERE` clause used when fetching a join collection table.
 
-See the <<chapters/domain/basic_types.adoc#mapping-where-join-table, `@WhereJoinTable` mapping>> section for more info.
+See the <<chapters/pc/PersistenceContext.adoc#pc-where-join-table, `@WhereJoinTable` mapping>> section for more info.

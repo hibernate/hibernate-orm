@@ -4,25 +4,26 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.userguide.mapping.basic.any;
+package org.hibernate.userguide.associations.any;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Vlad Mihalcea
  */
-public class AnyTest extends BaseCoreFunctionalTestCase {
+public class ManyToAnyTest extends BaseCoreFunctionalTestCase {
 
     @Override
     protected Class<?>[] getAnnotatedClasses() {
         return new Class<?>[] {
             IntegerProperty.class,
             StringProperty.class,
-            PropertyHolder.class
+            PropertyRepository.class
         };
     }
 
@@ -37,7 +38,7 @@ public class AnyTest extends BaseCoreFunctionalTestCase {
     public void test() {
 
         doInHibernate( this::sessionFactory, session -> {
-            //tag::mapping-column-any-persist-example[]
+            //tag::associations-many-to-any-persist-example[]
             IntegerProperty ageProperty = new IntegerProperty();
             ageProperty.setId( 1L );
             ageProperty.setName( "age" );
@@ -52,21 +53,26 @@ public class AnyTest extends BaseCoreFunctionalTestCase {
 
             session.persist( nameProperty );
 
-            PropertyHolder namePropertyHolder = new PropertyHolder();
-            namePropertyHolder.setId( 1L );
-            namePropertyHolder.setProperty( nameProperty );
+            PropertyRepository propertyRepository = new PropertyRepository();
+            propertyRepository.setId( 1L );
 
-            session.persist( namePropertyHolder );
-            //end::mapping-column-any-persist-example[]
+            propertyRepository.getProperties().add( ageProperty );
+            propertyRepository.getProperties().add( nameProperty );
+
+            session.persist( propertyRepository );
+            //end::associations-many-to-any-persist-example[]
         } );
 
         doInHibernate( this::sessionFactory, session -> {
-            //tag::mapping-column-any-query-example[]
-            PropertyHolder propertyHolder = session.get( PropertyHolder.class, 1L );
+            //tag::associations-many-to-any-query-example[]
+            PropertyRepository propertyRepository = session.get( PropertyRepository.class, 1L );
 
-            assertEquals("name", propertyHolder.getProperty().getName());
-            assertEquals("John Doe", propertyHolder.getProperty().getValue());
-            //end::mapping-column-any-query-example[]
+            assertEquals(2, propertyRepository.getProperties().size());
+
+            for(Property property : propertyRepository.getProperties()) {
+                assertNotNull( property.getValue() );
+            }
+            //end::associations-many-to-any-query-example[]
         } );
     }
 

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.userguide.mapping.basic;
+package org.hibernate.userguide.pc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,7 +47,7 @@ public class FilterJoinTableTest extends BaseEntityManagerFunctionalTestCase {
     @Test
     public void testLifecycle() {
         doInJPA( this::entityManagerFactory, entityManager -> {
-            //tag::mapping-filter-join-table-persistence-example[]
+            //tag::pc-filter-join-table-persistence-example[]
             Client client = new Client()
             .setId( 1L )
             .setName( "John Doe" );
@@ -77,21 +77,21 @@ public class FilterJoinTableTest extends BaseEntityManagerFunctionalTestCase {
             );
 
             entityManager.persist( client );
-            //end::mapping-filter-join-table-persistence-example[]
+            //end::pc-filter-join-table-persistence-example[]
         } );
 
         doInJPA( this::entityManagerFactory, entityManager -> {
-            //tag::mapping-no-filter-join-table-collection-query-example[]
+            //tag::pc-no-filter-join-table-collection-query-example[]
             Client client = entityManager.find( Client.class, 1L );
 
             assertEquals( 3, client.getAccounts().size());
-            //end::mapping-no-filter-join-table-collection-query-example[]
+            //end::pc-no-filter-join-table-collection-query-example[]
         } );
 
         doInJPA( this::entityManagerFactory, entityManager -> {
             log.infof( "Activate filter [%s]", "firstAccounts");
 
-            //tag::mapping-filter-join-table-collection-query-example[]
+            //tag::pc-filter-join-table-collection-query-example[]
             Client client = entityManager.find( Client.class, 1L );
 
             entityManager
@@ -100,7 +100,7 @@ public class FilterJoinTableTest extends BaseEntityManagerFunctionalTestCase {
                 .setParameter( "maxOrderId", 1);
 
             assertEquals( 2, client.getAccounts().size());
-            //end::mapping-filter-join-table-collection-query-example[]
+            //end::pc-filter-join-table-collection-query-example[]
         } );
     }
 
@@ -109,7 +109,7 @@ public class FilterJoinTableTest extends BaseEntityManagerFunctionalTestCase {
         CREDIT
     }
 
-    //tag::mapping-filter-join-table-example[]
+    //tag::pc-filter-join-table-example[]
     @Entity(name = "Client")
     @FilterDef(
         name="firstAccounts",
@@ -138,7 +138,7 @@ public class FilterJoinTableTest extends BaseEntityManagerFunctionalTestCase {
         private List<Account> accounts = new ArrayList<>( );
 
         //Getters and setters omitted for brevity
-        //end::mapping-filter-join-table-example[]
+        //end::pc-filter-join-table-example[]
         public Long getId() {
             return id;
         }
@@ -160,7 +160,7 @@ public class FilterJoinTableTest extends BaseEntityManagerFunctionalTestCase {
         public List<Account> getAccounts() {
             return accounts;
         }
-        //tag::mapping-filter-join-table-example[]
+        //tag::pc-filter-join-table-example[]
 
         public void addAccount(Account account) {
             this.accounts.add( account );
@@ -182,7 +182,7 @@ public class FilterJoinTableTest extends BaseEntityManagerFunctionalTestCase {
         private Double rate;
 
         //Getters and setters omitted for brevity
-    //end::mapping-filter-join-table-example[]
+    //end::pc-filter-join-table-example[]
         public Long getId() {
             return id;
         }
@@ -219,7 +219,7 @@ public class FilterJoinTableTest extends BaseEntityManagerFunctionalTestCase {
             return this;
         }
 
-        //tag::mapping-filter-join-table-example[]
+        //tag::pc-filter-join-table-example[]
     }
-    //end::mapping-filter-join-table-example[]
+    //end::pc-filter-join-table-example[]
 }

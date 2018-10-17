@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.userguide.mapping.basic;
+package org.hibernate.userguide.pc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +39,7 @@ public class WhereTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void testLifecycle() {
-		//tag::mapping-where-persistence-example[]
+		//tag::pc-where-persistence-example[]
 		doInJPA( this::entityManagerFactory, entityManager -> {
 
 			Client client = new Client();
@@ -77,28 +77,28 @@ public class WhereTest extends BaseEntityManagerFunctionalTestCase {
 			client.getDebitAccounts().add( account3 );
 			entityManager.persist( account3 );
 		} );
-		//end::mapping-where-persistence-example[]
+		//end::pc-where-persistence-example[]
 
 
-		//tag::mapping-where-entity-query-example[]
+		//tag::pc-where-entity-query-example[]
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			List<Account> accounts = entityManager.createQuery(
 				"select a from Account a", Account.class)
 			.getResultList();
 			assertEquals( 2, accounts.size());
 		} );
-		//end::mapping-where-entity-query-example[]
+		//end::pc-where-entity-query-example[]
 
-		//tag::mapping-where-collection-query-example[]
+		//tag::pc-where-collection-query-example[]
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Client client = entityManager.find( Client.class, 1L );
 			assertEquals( 1, client.getCreditAccounts().size() );
 			assertEquals( 1, client.getDebitAccounts().size() );
 		} );
-		//end::mapping-where-collection-query-example[]
+		//end::pc-where-collection-query-example[]
 	}
 
-	//tag::mapping-where-example[]
+	//tag::pc-where-example[]
 	public enum AccountType {
 		DEBIT,
 		CREDIT
@@ -122,7 +122,7 @@ public class WhereTest extends BaseEntityManagerFunctionalTestCase {
 
 		//Getters and setters omitted for brevity
 
-		//end::mapping-where-example[]
+		//end::pc-where-example[]
 		public Long getId() {
 			return id;
 		}
@@ -146,7 +146,7 @@ public class WhereTest extends BaseEntityManagerFunctionalTestCase {
 		public List<Account> getCreditAccounts() {
 			return creditAccounts;
 		}
-		//tag::mapping-where-example[]
+		//tag::pc-where-example[]
 	}
 
 	@Entity(name = "Account")
@@ -171,7 +171,7 @@ public class WhereTest extends BaseEntityManagerFunctionalTestCase {
 
 		//Getters and setters omitted for brevity
 
-	//end::mapping-where-example[]
+	//end::pc-where-example[]
 		public Long getId() {
 			return id;
 		}
@@ -220,7 +220,7 @@ public class WhereTest extends BaseEntityManagerFunctionalTestCase {
 			this.active = active;
 		}
 
-		//tag::mapping-where-example[]
+		//tag::pc-where-example[]
 	}
-	//end::mapping-where-example[]
+	//end::pc-where-example[]
 }

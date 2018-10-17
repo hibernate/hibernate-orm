@@ -41,10 +41,6 @@ configurations {
 		description = 'Feature for easily adding Infinispan-based caching support to hibernate-orm'
 		transitive = false
 	}
-	jaxb {
-		description = 'Jaxb dependencies'
-		transitive = true
-	}
 }
 
 dependencies {
@@ -53,7 +49,7 @@ dependencies {
 		// this dependency wasn't there in the 5.2.x bundles so ignoring it for now
 		// we might reintroduce it at some point if users complain about it
 		exclude module: 'javax.activation-api'
-		// JAXB is included conditionally in the OSGi feature, see below
+		// JAXB is included in the Karaf distribution
 		exclude module: 'jaxb-api'
 		exclude module: 'jaxb-runtime'
 	}
@@ -81,9 +77,6 @@ dependencies {
 	karafDistro "org.apache.karaf:apache-karaf:${project.karafVersion}@tar.gz"
 
 	hibernateEnvers( project( ':hibernate-envers' ) )
-
-	jaxb(libraries.jaxb_api)
-	jaxb(libraries.jaxb_runtime)
 }
 
 jar {
@@ -124,34 +117,6 @@ karaf {
 	features {
 		xsdVersion  = '1.4.0'
 		feature {
-			name = 'hibernate-jaxb'
-			description = 'JAXB as required by Hibernate ORM'
-			includeProject = false
-			configurations 'jaxb'
-			/*
-			 * This is a hack to make the JAXB runtime available to Hibernate ORM through the application classpath.
-			 * We cannot rely on the JAXB runtime being provided by the JDK, because the JAXB runtime was removed in JDK11.
-			 * We cannot rely on the JAXB runtime being provided by Karaf, because Karaf only provides the JAXB API (strangely).
-			 * So we must add the bundle ourselves, and more importantly, make it visible to Hibernate ORM somehow.
-			 *
-			 * To make the bundle visible to Hibernate ORM, we declare the "META-INF.services" "package" as exported
-			 * by the bundle; this is enough to make the JAXB API find the service file pointing to the JAXBContext class.
-			 * This will work as long as the test bundle imports the "META-INF.services" "package", or just "*".
-			 *
-			 * There are probably better ways to do this, but all the solutions I found were worse or didn't work:
-			 * - using the mvn:com.sun.xml.bind/jaxb-osgi/${version.org.glassfish.jaxb} bundle would require us to
-			 * add a gazillion extra system packages to the Karaf configuration:
-			 * https://github.com/eclipse-ee4j/jaxb-ri/blob/afa88da958e1cfb953fb4c38f0b4a1cfec608162/jaxb-ri/bundles/osgi/tests/pom.xml#L85
-			 * - using the mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jaxb-impl/2.2.11_1 bundle from
-			 * Apache ServiceMix does not seem to work: the runtime is not found.
-			 */
-			bundle(libraries.jaxb_runtime) {
-				wrap = true
-				instruction 'Bundle-SymbolicName', 'org.hibernate.org.glassfish.jaxb.runtime'
-				instruction 'Export-Package', "com.sun.xml.bind.v2;version=\"${jaxbVersion}\",META-INF.services;version=\"${jaxbVersion}\""
-			}
-		}
-		feature {
 			name        = 'hibernate-orm'
 			description = 'Combines all Hibernate core dependencies and required modules into a single feature'
 			includeProject = true
@@ -161,10 +126,6 @@ karaf {
 			feature 'transaction-api'
 			// Most Hibernate modules declare OSGi metadata through blueprints, so we need this feature
 			feature 'aries-blueprint'
-
-			feature('hibernate-jaxb') {
-				version = project.version
-			}
 		}
 		// NOTE : would like to include spatial as well, but we need to wait for
 		//		it to not define dependency on postgresql driver

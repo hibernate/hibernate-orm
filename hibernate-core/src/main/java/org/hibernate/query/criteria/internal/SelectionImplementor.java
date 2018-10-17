@@ -15,4 +15,8 @@ import javax.persistence.criteria.Selection;
  */
 public interface SelectionImplementor<X> extends TupleElementImplementor<X>, Selection<X>  {
 	public List<ValueHandlerFactory.ValueHandler> getValueHandlers();
+
+	default int getSelectionSpan() {
+		return 1;
+	}
 }

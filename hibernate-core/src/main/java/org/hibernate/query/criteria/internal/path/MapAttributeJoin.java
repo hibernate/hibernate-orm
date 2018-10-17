@@ -77,7 +77,7 @@ public class MapAttributeJoin<O,K,V>
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public Expression<Map.Entry<K, V>> entry() {
-		return new MapEntryExpression( criteriaBuilder(), Map.Entry.class, this, getAttribute() );
+		return new MapEntryExpression( criteriaBuilder(), Map.Entry.class, this );
 	}
 
 	@Override

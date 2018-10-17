@@ -8,14 +8,13 @@ package org.hibernate.query.criteria.internal.expression;
 
 import java.io.Serializable;
 import java.util.Map;
+
 import javax.persistence.criteria.Expression;
-import javax.persistence.metamodel.MapAttribute;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.PathImplementor;
-import org.hibernate.query.criteria.internal.Renderable;
 import org.hibernate.query.criteria.internal.compile.RenderingContext;
+import org.hibernate.query.criteria.internal.path.MapAttributeJoin;
 import org.hibernate.sql.ast.Clause;
 
 /**
@@ -27,39 +26,33 @@ public class MapEntryExpression<K,V>
 		extends ExpressionImpl<Map.Entry<K,V>>
 		implements Expression<Map.Entry<K,V>>, Serializable {
 
-	private final PathImplementor origin;
-	private final MapAttribute<?, K, V> attribute;
+	private final MapAttributeJoin<?, K, V> original;
 
 	public MapEntryExpression(
 			CriteriaBuilderImpl criteriaBuilder,
 			Class<Map.Entry<K, V>> javaType,
-			PathImplementor origin,
-			MapAttribute<?, K, V> attribute) {
+			MapAttributeJoin<?, K, V> original) {
 		super( criteriaBuilder, javaType);
-		this.origin = origin;
-		this.attribute = attribute;
+		this.original = original;
 	}
 
-	public MapAttribute<?, K, V> getAttribute() {
-		return attribute;
-	}
-
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		// none to register
 	}
 
+	@Override
 	public String render(RenderingContext renderingContext) {
 		if ( renderingContext.getClauseStack().getCurrent() == Clause.SELECT ) {
-			return "entry(" + path( renderingContext ) + ")";
+			return "entry(" + original.render( renderingContext ) + ")";
 		}
 
 		// don't think this is valid outside of select clause...
 		throw new IllegalStateException( "illegal reference to map entry outside of select clause." );
 	}
 
-	private String path(RenderingContext renderingContext) {
-		return origin.getPathIdentifier()
-				+ '.'
-				+ ( (Renderable) getAttribute() ).render( renderingContext );
+	@Override
+	public int getSelectionSpan() {
+		return 2;
 	}
 }

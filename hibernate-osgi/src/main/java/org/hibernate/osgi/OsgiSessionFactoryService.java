@@ -74,17 +74,7 @@ public class OsgiSessionFactoryService implements ServiceFactory {
 		// contained in the core jar.
 		osgiClassLoader.addBundle( FrameworkUtil.getBundle(SessionFactory.class) );
 
-		// Some "boot time" code does still rely on TCCL.  "run time" code should all be using
-		// ClassLoaderService now.
-
-		final ClassLoader originalTccl = Thread.currentThread().getContextClassLoader();
-		Thread.currentThread().setContextClassLoader( osgiClassLoader );
-		try {
-			return buildSessionFactory( requestingBundle, osgiClassLoader );
-		}
-		finally {
-			Thread.currentThread().setContextClassLoader( originalTccl );
-		}
+		return buildSessionFactory( requestingBundle, osgiClassLoader );
 	}
 
 	private Object buildSessionFactory(

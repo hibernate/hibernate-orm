@@ -68,7 +68,6 @@ ext {
             interceptor:    'javax.interceptor:javax.interceptor-api:1.2',
             // required by JAXB from JDK 9 as it is not available anymore in JDK 9
             activation:     'javax.activation:javax.activation-api:1.2.0',
-            jsr250_api:     'javax.annotation:jsr250-api:1.0',
 
             // logging
             logging:        'org.jboss.logging:jboss-logging:3.3.2.Final',

@@ -24,7 +24,6 @@ dependencies {
     xjc( libraries.jaxb2_basics )
     xjc( libraries.jaxb2_basics_ant )
     xjc( libraries.activation )
-    xjc( libraries.jsr250_api )
 
     testCompile libraries.junit
     testCompile libraries.jpa

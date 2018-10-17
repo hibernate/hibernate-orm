@@ -48,17 +48,7 @@ public class OsgiPersistenceProviderService implements ServiceFactory {
 		osgiClassLoader.addBundle( FrameworkUtil.getBundle( SessionFactory.class ) );
 		osgiClassLoader.addBundle( FrameworkUtil.getBundle( HibernateEntityManagerFactory.class ) );
 
-		// Some "boot time" code does still rely on TCCL.  "run time" code should all be using
-		// ClassLoaderService now.
-
-		final ClassLoader originalTccl = Thread.currentThread().getContextClassLoader();
-		Thread.currentThread().setContextClassLoader( osgiClassLoader );
-		try {
-			return new OsgiPersistenceProvider( osgiClassLoader, osgiJtaPlatform, osgiServiceUtil, requestingBundle );
-		}
-		finally {
-			Thread.currentThread().setContextClassLoader( originalTccl );
-		}
+		return new OsgiPersistenceProvider( osgiClassLoader, osgiJtaPlatform, osgiServiceUtil, requestingBundle );
 	}
 
 	@Override

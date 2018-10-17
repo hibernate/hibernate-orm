@@ -2104,6 +2104,12 @@ To link the value of the metadata information and an actual entity type, the `@A
 The `metaType` attribute allows the application to specify a custom type that maps database column values to persistent classes that have identifier properties of the type specified by `idType`.
 You must specify the mapping from values of the `metaType` to class names.
 
+[NOTE]
+====
+`@Any` mapping can only be unidirectional.
+That is, the management can only be done on the entity that holds the relational data.
+====
+
 For the next examples, consider the following `Property` class hierarchy:
 
 [[mapping-column-any-property-example]]

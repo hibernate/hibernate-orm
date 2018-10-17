@@ -31,7 +31,6 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 
 	protected Logger log = LoggerFactory.getLogger(this.getClass());
 	
-	private String[] templatePaths = new String[0];
 	private TemplateHelper vh;
 	private Properties properties = new Properties();
 	private Metadata metadata = null;
@@ -45,6 +44,7 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 		c2h = new Cfg2HbmTool();
 		c2j = new Cfg2JavaTool();
 		getProperties().put(ARTIFACT_COLLECTOR, new DefaultArtifactCollector());
+		getProperties().put(TEMPLATE_PATH, new String[0]);
 	}
 	
 	protected MetadataDescriptor getMetadataDescriptor() {
@@ -67,11 +67,11 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 	}
 	
 	public void setTemplatePath(String[] templatePaths) {
-		this.templatePaths = templatePaths;
+		getProperties().put(TEMPLATE_PATH, templatePaths);
 	}
 
 	public String[] getTemplatePath() {
-		return templatePaths;
+		return (String[])getProperties().get(TEMPLATE_PATH);
 	}
 	
 	public ArtifactCollector getArtifactCollector() {
@@ -175,9 +175,9 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 
 	protected void setupTemplates() {
 		if(log.isDebugEnabled()) {
-			log.debug(getClass().getName() + " outputdir:" + getOutputDirectory() + " path: " + toString(templatePaths) );
+			log.debug(getClass().getName() + " outputdir:" + getOutputDirectory() + " path: " + toString(getTemplatePath()) );
 		}
-		getTemplateHelper().init(getOutputDirectory(), templatePaths);		
+		getTemplateHelper().init(getOutputDirectory(), getTemplatePath());		
 	}
 	
 	protected void setTemplateHelper(TemplateHelper vh) {

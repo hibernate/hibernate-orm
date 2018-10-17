@@ -187,6 +187,62 @@ Not that this is only supported for JDBC standard isolation levels, not for isol
 * a short-name version of the java.sql.Connection constant field without the `TRANSACTION_` prefix. For example, `REPEATABLE_READ` for https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html#TRANSACTION_REPEATABLE_READ[`java.sql.Connection#TRANSACTION_REPEATABLE_READ`].
 Again, this is only supported for JDBC standard isolation levels, not for isolation levels specific to a particular JDBC driver.
 
+[[database-connection-handling]]
+=== Connection handling
+
+The connection handling mode is defined by the
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/resource/jdbc/spi/PhysicalConnectionHandlingMode.html[`PhysicalConnectionHandlingMode`] enumeration which provides the following strategies:
+
+`IMMEDIATE_ACQUISITION_AND_HOLD`::
+The `Connection` will be acquired as soon as the `Session` is opened and held until the `Session` is closed.
+`DELAYED_ACQUISITION_AND_HOLD`::
+The `Connection` will be acquired as soon as it is needed and then held until the `Session` is closed.
+`DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT`::
+The `Connection` will be acquired as soon as it is needed and will be released after each statement is executed.
+`DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION`::
+The Connection will be acquired as soon as it is needed and will be released after each transaction is completed.
+
+If you don't want to use the default connection handling mode, you can specify a connection handling mode via the `hibernate.connection.handling_mode` configuration property. For more details, check out the
+<<appendices/Configurations.adoc#configurations-database-connection,Database connection properties>> section.
+
+==== Transaction type and connection handling
+
+By default, the connection handling mode is given by the underlying transaction coordinator. There are two types of transactions: `RESOURCE_LOCAL` (which involves a single database `Connection` and the transaction is controlled via the `commit` and `rollback` `Connection` methods) and `JTA` (which may involve multiple resources either database connections, JMS queues, etc).
+
+===== RESOURCE_LOCAL transaction connection handling
+
+For `RESOURCE_LOCAL` transactions, the connection handling mode is `DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION` meaning that the database connection is acquired when needed and released after the current running transaction is either committed or rolled back.
+
+However, because Hibernate needs to make sure that the default autocommit mode is disabled on the JDBC `Connection`
+when starting a new transaction, the `Connection` is acquired and the autocommit mode is set to `false`.
+
+[NOTE]
+====
+If you are using a connection pool `DataSource` that already disabled the autocommit mode for every pooled `Connection`, you can set the `hibernate.connection.provider_disables_autocommit` to `true` and the database connection acquisition will be, indeed, delayed until Hibernate needs to execute an SQL statement.
+====
+
+===== JTA transaction connection handling
+
+For `JTA` transactions, the connection handling mode is `DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT` meaning that the database connection is acquired when needed and released after each statement execution.
+
+The reason for releasing the database connection after statement execution is because some Java EE application servers
+report a connection leak when a method call goes from one EJB to another. However, even if the JDBC `Connection` is released to the pool, the `Connection` is still allocated to the current executing `Thread`, hence when executing a subsequent statement in the current running transaction, the same `Connection` object reference will be obtained from the pool.
+
+[NOTE]
+====
+If the Java EE appliction server or JTA transcation manager supports switching from one EJB to another while the transaction gets propagated from the outer EJB to the inner one,
+and no connection leak false positive is being reported, then you should consider switching to `DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION` via the `hibernate.connection.handling_mode` configuration property.
+====
+
+==== User-provided connections
+
+If the current `Session` was crated using the
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/SessionBuilder.html[`SessionBuilder`] and a JDBC `Connection` was provided via the
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/SessionBuilder.html#connection-java.sql.Connection-[`SessionBuilder#connection`] method, then the user-provided `Connection` is going to be used, and
+the connection handling mode will be `IMMEDIATE_ACQUISITION_AND_HOLD`.
+
+Therefore for user-provided connection, the connection is acquired right away and held until the current `Session` is closed, without being influenced by the JPA or Hibernate transaction context.
+
 [[database-dialect]]
 === Database Dialect
 

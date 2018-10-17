@@ -198,7 +198,7 @@ public final class ClassWriter {
 	private static String writeGeneratedAnnotation(MetaEntity entity, Context context) {
 		StringBuilder generatedAnnotation = new StringBuilder();
 		generatedAnnotation.append( "@" )
-				.append( entity.importType( "javax.annotation.Generated" ) )
+				.append( entity.importType( context.getGeneratedAnnotation().getQualifiedName().toString() ) )
 				.append( "(value = \"" )
 				.append( JPAMetaModelEntityProcessor.class.getName() );
 		if ( context.addGeneratedDate() ) {

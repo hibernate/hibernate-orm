@@ -128,6 +128,31 @@ public class EmbeddableCollectionElementWithLazyManyToOneTest extends BaseCoreFu
 		);
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-13045")
+	public void testAccessIdOfManyToOneInEmbeddable() {
+		Parent p = new Parent();
+		p.containedChildren.add( new ContainedChild( new Child() ) );
+
+		doInHibernate(
+				this::sessionFactory, session -> {
+					session.persist( p );
+				}
+		);
+
+		doInHibernate(
+				this::sessionFactory, session -> {
+					assertFalse( session.createQuery( "from Parent p join p.containedChildren c where c.child.id is not null" ).getResultList().isEmpty() );
+				}
+		);
+
+		doInHibernate(
+				this::sessionFactory, session -> {
+					session.delete( p );
+				}
+		);
+	}
+
 	@Entity(name = "Parent")
 	public static class Parent {
 		@Id

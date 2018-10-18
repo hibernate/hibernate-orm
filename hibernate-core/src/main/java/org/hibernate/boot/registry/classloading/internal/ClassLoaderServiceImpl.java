@@ -39,6 +39,8 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( ClassLoaderServiceImpl.class );
 
+	private static final String CLASS_PATH_SCHEME = "classpath://";
+
 	private final ConcurrentMap<Class, ServiceLoader> serviceLoaders = new ConcurrentHashMap<Class, ServiceLoader>();
 	private volatile AggregatedClassLoader aggregatedClassLoader;
 
@@ -147,6 +149,10 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		catch (Exception ignore) {
 		}
 
+		// if we couldn't find the resource containing a classpath:// prefix above, that means we don't have a URL
+		// handler for it. So let's remove the prefix and resolve against our class loader.
+		name = stripClasspathScheme( name );
+
 		try {
 			final URL url = getAggregatedClassLoader().getResource( name );
 			if ( url != null ) {
@@ -181,6 +187,10 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		}
 		catch (Exception ignore) {
 		}
+
+		// if we couldn't find the resource containing a classpath:// prefix above, that means we don't have a URL
+		// handler for it. So let's remove the prefix and resolve against our class loader.
+		name = stripClasspathScheme( name );
 
 		try {
 			log.tracef( "trying via [ClassLoader.getResourceAsStream(\"%s\")]", name );
@@ -269,6 +279,18 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 			throw log.usingStoppedClassLoaderService();
 		}
 		return aggregated;
+	}
+
+	private String stripClasspathScheme(String name) {
+		if ( name == null ) {
+			return null;
+		}
+
+		if ( name.startsWith( CLASS_PATH_SCHEME ) ) {
+			return name.substring( CLASS_PATH_SCHEME.length() );
+		}
+
+		return name;
 	}
 
 	@Override

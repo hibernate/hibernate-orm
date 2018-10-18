@@ -8,8 +8,10 @@ package org.hibernate.cache.jcache.internal;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
+
 import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
@@ -31,7 +33,6 @@ import org.hibernate.cache.spi.support.DomainDataStorageAccess;
 import org.hibernate.cache.spi.support.RegionFactoryTemplate;
 import org.hibernate.cache.spi.support.RegionNameQualifier;
 import org.hibernate.cache.spi.support.StorageAccess;
-import org.hibernate.cache.spi.support.DomainDataRegionImpl;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
@@ -203,7 +204,7 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 
 		final CachingProvider cachingProvider = getCachingProvider( properties );
 		final CacheManager cacheManager;
-		final URI cacheManagerUri = getUri( properties );
+		final URI cacheManagerUri = getUri( settings, properties );
 		if ( cacheManagerUri != null ) {
 			cacheManager = cachingProvider.getCacheManager( cacheManagerUri, getClassLoader( cachingProvider ));
 		}
@@ -219,18 +220,25 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 		return cachingProvider.getDefaultClassLoader();
 	}
 
-	@SuppressWarnings("WeakerAccess")
-	protected URI getUri(Map properties) {
+	protected URI getUri(SessionFactoryOptions settings, Map properties) {
 		String cacheManagerUri = getProp( properties, ConfigSettings.CONFIG_URI );
 		if ( cacheManagerUri == null ) {
 			return null;
 		}
 
-		try {
-			return new URI( cacheManagerUri );
+		URL url = settings.getServiceRegistry()
+				.getService( ClassLoaderService.class )
+				.locateResource( cacheManagerUri );
+
+		if ( url == null ) {
+			throw new CacheException( "Couldn't load URI from " + cacheManagerUri );
 		}
-		catch ( URISyntaxException e ) {
-			throw new CacheException( "Couldn't create URI from " + cacheManagerUri, e );
+
+		try {
+			return url.toURI();
+		}
+		catch (URISyntaxException e) {
+			throw new CacheException( "Couldn't load URI from " + cacheManagerUri, e );
 		}
 	}
 

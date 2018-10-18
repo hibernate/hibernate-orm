@@ -683,7 +683,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 				return null;
 			}
 			// If the lhs is a collection, use CollectionPropertyMapping
-			Type propertyType = fromElement.getPropertyType( propertyName, propertyPath );
+			Type propertyType = fromElement.getPropertyType( propertyPath, propertyPath );
 			LOG.debugf( "getDataType() : %s -> %s", propertyPath, propertyType );
 			super.setDataType( propertyType );
 		}

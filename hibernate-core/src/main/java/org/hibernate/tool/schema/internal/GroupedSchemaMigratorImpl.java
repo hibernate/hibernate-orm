@@ -62,11 +62,12 @@ public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 					namespace,
 					targets
 			);
-			final NameSpaceTablesInformation tables = existingDatabase.getTablesInformation( namespace );
+
 			for ( Table table : namespace.getTables() ) {
 				if ( schemaFilter.includeTable( table ) && table.isPhysicalTable() ) {
 					checkExportIdentifier( table, exportIdentifiers );
-					final TableInformation tableInformation = tables.getTableInformation( table );
+					final TableInformation tableInformation = existingDatabase.getTableInformation(namespace.getName(),
+													table.getNameIdentifier());
 					if ( tableInformation == null ) {
 						createTable( table, dialect, metadata, formatter, options, targets );
 					}

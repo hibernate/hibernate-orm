@@ -18,6 +18,10 @@ public interface Enhancer {
 	/**
 	 * Performs the enhancement.
 	 *
+	 * It is possible to invoke this method concurrently, but when doing so make sure
+	 * no two enhancement tasks are invoked on the same class in parallel: the
+	 * Enhancer implementations are not required to guard against this.
+	 *
 	 * @param className The name of the class whose bytecode is being enhanced.
 	 * @param originalBytes The class's original (pre-enhancement) byte code
 	 *

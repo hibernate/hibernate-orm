@@ -15,6 +15,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.TypedQuery;
 
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.graph.AbstractEntityGraphTest;
 import org.hibernate.graph.GraphParser;
 import org.hibernate.graph.EntityGraphs;
@@ -23,11 +24,13 @@ import org.hibernate.userguide.fetching.GraphFetchingTest.Department;
 import org.hibernate.userguide.fetching.GraphFetchingTest.Employee;
 import org.hibernate.userguide.fetching.GraphFetchingTest.Project;
 
+import org.hibernate.testing.RequiresDialect;
 import org.junit.Assert;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
+@RequiresDialect(H2Dialect.class)
 public class GraphParsingTest extends AbstractEntityGraphTest {
 
 	@Override

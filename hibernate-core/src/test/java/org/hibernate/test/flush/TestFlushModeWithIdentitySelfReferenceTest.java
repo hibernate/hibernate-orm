@@ -1,18 +1,14 @@
 /*
- * Copyright 2014 JBoss Inc
+ * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.flush;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Embeddable;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -40,7 +36,7 @@ public class TestFlushModeWithIdentitySelfReferenceTest extends BaseCoreFunction
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { SelfRefEntity.class };
+		return new Class<?>[] { SelfRefEntity.class, SelfRefEntityWithEmbeddable.class };
 	}
 
 	@Test
@@ -49,6 +45,7 @@ public class TestFlushModeWithIdentitySelfReferenceTest extends BaseCoreFunction
 		try {
 			session.setHibernateFlushMode( FlushMode.COMMIT );
 			loadAndAssert( session, createAndInsertEntity( session ) );
+			loadAndInsert( session, createAndInsertEntityEmbeddable( session ) );
 		}
 		finally {
 			session.close();
@@ -61,6 +58,7 @@ public class TestFlushModeWithIdentitySelfReferenceTest extends BaseCoreFunction
 		try {
 			session.setHibernateFlushMode( FlushMode.MANUAL );
 			loadAndAssert( session, createAndInsertEntity( session ) );
+			loadAndInsert( session, createAndInsertEntityEmbeddable( session ) );
 		}
 		finally {
 			session.close();
@@ -73,6 +71,7 @@ public class TestFlushModeWithIdentitySelfReferenceTest extends BaseCoreFunction
 		try {
 			session.setHibernateFlushMode( FlushMode.AUTO );
 			loadAndAssert( session, createAndInsertEntity( session ) );
+			loadAndInsert( session, createAndInsertEntityEmbeddable( session ) );
 		}
 		finally {
 			session.close();
@@ -86,7 +85,39 @@ public class TestFlushModeWithIdentitySelfReferenceTest extends BaseCoreFunction
 			SelfRefEntity entity = new SelfRefEntity();
 			entity.setSelfRefEntity( entity );
 			entity.setData( "test" );
+
 			entity = (SelfRefEntity) session.merge( entity );
+
+			// only during manual flush do we want to force a flush prior to commit
+			if ( session.getHibernateFlushMode().equals( FlushMode.MANUAL ) ) {
+				session.flush();
+			}
+
+			session.getTransaction().commit();
+
+			return entity;
+		}
+		catch ( Exception e ) {
+			if ( session.getTransaction().isActive() ) {
+				session.getTransaction().rollback();
+			}
+			throw e;
+		}
+	}
+
+	private SelfRefEntityWithEmbeddable createAndInsertEntityEmbeddable(Session session) {
+		try {
+			session.getTransaction().begin();
+
+			SelfRefEntityWithEmbeddable entity = new SelfRefEntityWithEmbeddable();
+			entity.setData( "test" );
+
+			SelfRefEntityInfo info = new SelfRefEntityInfo();
+			info.setSeflRefEntityEmbedded( entity );
+
+			entity.setInfo( info );
+
+			entity = (SelfRefEntityWithEmbeddable) session.merge( entity );
 
 			// only during manual flush do we want to force a flush prior to commit
 			if ( session.getHibernateFlushMode().equals( FlushMode.MANUAL ) ) {
@@ -110,6 +141,13 @@ public class TestFlushModeWithIdentitySelfReferenceTest extends BaseCoreFunction
 		assertNotNull( "Expected to find the merged entity but did not.", loadedEntity );
 		assertEquals( "test", loadedEntity.getData() );
 		assertNotNull( "Expected a non-null self reference", loadedEntity.getSelfRefEntity() );
+	}
+
+	private void loadAndInsert(Session session, SelfRefEntityWithEmbeddable mergedEntity) {
+		final SelfRefEntityWithEmbeddable loadedEntity = session.get( SelfRefEntityWithEmbeddable.class, mergedEntity.getId() );
+		assertNotNull( "Expected to find the merged entity but did not.", loadedEntity );
+		assertEquals( "test", loadedEntity.getData() );
+		assertNotNull( "Expected a non-null self reference in embeddable", loadedEntity.getInfo().getSeflRefEntityEmbedded() );
 	}
 
 	@Entity(name = "SelfRefEntity")
@@ -143,6 +181,54 @@ public class TestFlushModeWithIdentitySelfReferenceTest extends BaseCoreFunction
 
 		public void setData(String data) {
 			this.data = data;
+		}
+	}
+
+	@Entity(name = "SelfRefEntityWithEmbeddable")
+	public static class SelfRefEntityWithEmbeddable {
+		@Id
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		private Integer id;
+		@Embedded
+		private SelfRefEntityInfo info;
+		private String data;
+
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public SelfRefEntityInfo getInfo() {
+			return info;
+		}
+
+		public void setInfo(SelfRefEntityInfo info) {
+			this.info = info;
+		}
+
+		public String getData() {
+			return data;
+		}
+
+		public void setData(String data) {
+			this.data = data;
+		}
+	}
+
+	@Embeddable
+	public static class SelfRefEntityInfo {
+		@OneToOne(cascade = CascadeType.ALL, optional = true)
+		private SelfRefEntityWithEmbeddable seflRefEntityEmbedded;
+
+		public SelfRefEntityWithEmbeddable getSeflRefEntityEmbedded() {
+			return seflRefEntityEmbedded;
+		}
+
+		public void setSeflRefEntityEmbedded(SelfRefEntityWithEmbeddable seflRefEntityEmbedded) {
+			this.seflRefEntityEmbedded = seflRefEntityEmbedded;
 		}
 	}
 }

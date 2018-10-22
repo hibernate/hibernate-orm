@@ -248,7 +248,7 @@ public abstract class AbstractSaveEventListener
 
 		Serializable id = key == null ? null : key.getIdentifier();
 
-		boolean shouldDelayIdentityInserts = shouldDelayIdentityInserts( requiresImmediateIdAccess, source );
+		boolean shouldDelayIdentityInserts = shouldDelayIdentityInserts( requiresImmediateIdAccess, source, persister );
 
 		// Put a placeholder in entries, so we don't recurse back and try to save() the
 		// same object again. QUESTION: should this be done before onSave() is called?
@@ -320,14 +320,19 @@ public abstract class AbstractSaveEventListener
 		return id;
 	}
 
-	private static boolean shouldDelayIdentityInserts(boolean requiresImmediateIdAccess, EventSource source) {
-		return shouldDelayIdentityInserts( requiresImmediateIdAccess, isPartOfTransaction( source ), source.getHibernateFlushMode() );
+	private static boolean shouldDelayIdentityInserts(boolean requiresImmediateIdAccess, EventSource source, EntityPersister persister) {
+		return shouldDelayIdentityInserts( requiresImmediateIdAccess, isPartOfTransaction( source ), source.getHibernateFlushMode(), persister );
 	}
 
 	private static boolean shouldDelayIdentityInserts(
 			boolean requiresImmediateIdAccess,
 			boolean partOfTransaction,
-			FlushMode flushMode) {
+			FlushMode flushMode,
+			EntityPersister persister) {
+		if ( !persister.getFactory().getSessionFactoryOptions().isPostInsertIdentifierDelayableEnabled() ) {
+			return false;
+		}
+
 		if ( requiresImmediateIdAccess ) {
 			// todo : make this configurable?  as a way to support this behavior with Session#save etc
 			return false;
@@ -336,8 +341,19 @@ public abstract class AbstractSaveEventListener
 		// otherwise we should delay the IDENTITY insertions if either:
 		//		1) we are not part of a transaction
 		//		2) we are in FlushMode MANUAL or COMMIT (not AUTO nor ALWAYS)
-		return !partOfTransaction || flushMode == MANUAL || flushMode == COMMIT;
-
+		if ( !partOfTransaction || flushMode == MANUAL || flushMode == COMMIT ) {
+			if ( persister.canIdentityInsertBeDelayed() ) {
+				return true;
+			}
+			LOG.debugf(
+					"Identity insert for entity [%s] should be delayed; however the persister requested early insert.",
+					persister.getEntityName()
+			);
+			return false;
+		}
+		else {
+			return false;
+		}
 	}
 
 	private static boolean isPartOfTransaction(EventSource source) {

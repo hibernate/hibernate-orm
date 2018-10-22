@@ -76,9 +76,11 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
+import org.hibernate.id.ForeignGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.PostInsertIdentityPersister;
+import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.insert.Binder;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.internal.CoreLogging;
@@ -106,6 +108,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.internal.EntityIdentifierDefinitionHelper;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
@@ -293,6 +296,8 @@ public abstract class AbstractEntityPersister
 	protected final BasicEntityPropertyMapping propertyMapping;
 
 	private final boolean useReferenceCacheEntries;
+
+	private boolean canIdentityInsertBeDelayed;
 
 	protected void addDiscriminatorToInsert(Insert insert) {
 	}
@@ -954,6 +959,11 @@ public abstract class AbstractEntityPersister
 
 	public boolean canUseReferenceCacheEntries() {
 		return useReferenceCacheEntries;
+	}
+
+	@Override
+	public boolean canIdentityInsertBeDelayed() {
+		return canIdentityInsertBeDelayed;
 	}
 
 	protected static String getTemplateFromString(String string, SessionFactoryImplementor factory) {
@@ -4148,12 +4158,66 @@ public abstract class AbstractEntityPersister
 		return new SubstituteBracketSQLQueryParser( sql, getFactory() ).process();
 	}
 
+	private void resolveIdentityInsertDelayable() {
+		// By default they can
+		// The remainder of this method checks use cases where we shouldn't permit it.
+		canIdentityInsertBeDelayed = true;
+
+		if ( getEntityMetamodel().getIdentifierProperty().isIdentifierAssignedByInsert() ) {
+			// if the persister's identifier is assigned by insert, we need to see if we must force non-delay mode.
+			for ( NonIdentifierAttribute attribute : getEntityMetamodel().getProperties() ) {
+				if ( isTypeSelfReferencing( attribute.getType() ) ) {
+					canIdentityInsertBeDelayed = false;
+				}
+			}
+		}
+	}
+
+	private boolean isTypeSelfReferencing(Type propertyType) {
+		if ( propertyType.isAssociationType() ) {
+			if ( propertyType.isEntityType() ) {
+				Class<?> entityClass = propertyType.getReturnedClass();
+				if ( getMappedClass().equals( propertyType.getReturnedClass() ) ) {
+					return true;
+				}
+			}
+			else if ( propertyType.isCollectionType() ) {
+				// Association is a collection where owner needs identifier up-front
+				final CollectionType collection = (CollectionType) propertyType;
+				final CollectionPersister collectionPersister = getFactory().getMetamodel().collectionPersister( collection.getRole() );
+				if ( collectionPersister.isInverse() ) {
+					final EntityPersister entityPersister = collectionPersister.getOwnerEntityPersister();
+					if ( collectionPersister.getOwnerEntityPersister().equals( this ) ) {
+						final QueryableCollection queryableCollection = (QueryableCollection) collectionPersister;
+						final IdentifierGenerator identifierGenerator = queryableCollection.getElementPersister().getIdentifierGenerator();
+						// todo - perhaps this can be simplified
+						if ( ( identifierGenerator instanceof ForeignGenerator ) || ( identifierGenerator instanceof SequenceStyleGenerator ) ) {
+							return true;
+						}
+					}
+				}
+			}
+		}
+		else if ( propertyType.isComponentType() ) {
+			final CompositeType componentType = (CompositeType) propertyType;
+			for ( Type componentSubType : componentType.getSubtypes() ) {
+				if ( isTypeSelfReferencing( componentSubType ) ) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
 	public final void postInstantiate() throws MappingException {
 		doLateInit();
 
 		createLoaders();
 		createUniqueKeyLoaders();
 		createQueryLoader();
+
+		resolveIdentityInsertDelayable();
 
 		doPostInstantiate();
 	}

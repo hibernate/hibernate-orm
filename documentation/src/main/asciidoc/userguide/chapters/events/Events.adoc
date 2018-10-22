@@ -185,7 +185,7 @@ The JPA specification allows you to define a default entity listener which is go
 Default entity listeners can only be defined in XML mapping files.
 
 [[events-default-listener-mapping-example]]
-.Default event listner mapping
+.Default event listener mapping
 ====
 [source, JAVA, indent=0]
 ----
@@ -213,7 +213,7 @@ include::{sourcedir}/DefaultEntityListenerTest.java[tags=events-default-listener
 When persisting a `Person` or `Book` entity, the `createdOn` is going to be set by the `onPersist` method of the `DefaultEntityListener`.
 
 [[events-default-listener-persist-example]]
-.Default event listner persist event
+.Default event listener persist event
 ====
 [source, JAVA, indent=0]
 ----
@@ -229,7 +229,7 @@ include::{extrasdir}/events-default-listener-persist-example.sql[]
 When updating a `Person` or `Book` entity, the `updatedOn` is going to be set by the `onUpdate` method of the `DefaultEntityListener`.
 
 [[events-default-listener-update-example]]
-.Default event listner update event
+.Default event listener update event
 ====
 [source, JAVA, indent=0]
 ----
@@ -254,7 +254,7 @@ http://docs.oracle.com/javaee/7/api/javax/persistence/ExcludeSuperclassListeners
 while `@ExcludeSuperclassListeners` is used to ignore the default entity listeners propagated to the `BaseEntity` super-class.
 
 [[events-exclude-default-listener-mapping-example]]
-.Exclude default event listner mapping
+.Exclude default event listener mapping
 ====
 [source, JAVA, indent=0]
 ----
@@ -267,7 +267,7 @@ the `createdOn` is not going to be set by the `onPersist` method of the `Default
 because the `Publisher` entity was marked with the `@ExcludeDefaultListeners` and `@ExcludeSuperclassListeners` annotations.
 
 [[events-exclude-default-listener-persist-example]]
-.Excluding default event listner events
+.Excluding default event listener events
 ====
 [source, JAVA, indent=0]
 ----

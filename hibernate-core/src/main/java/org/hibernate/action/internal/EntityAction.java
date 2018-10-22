@@ -12,7 +12,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.action.spi.Executable;
-import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -101,19 +100,7 @@ public abstract class EntityAction
 	 */
 	public final Serializable getId() {
 		if ( id instanceof DelayedPostInsertIdentifier ) {
-			final EntityEntry entry = session.getPersistenceContext().getEntry( instance );
-			if ( entry == null ) {
-				if ( LOG.isDebugEnabled() ) {
-					LOG.debugf(
-							"Skipping action - the persistence context does not contain any entry for the entity [%s]. This may occur if an entity is created and then deleted in the same transaction/flush.",
-							instance
-					);
-				}
-				// If an Entity is created and then deleted in the same Transaction, when Action#postDelete() calls this method the persistence context
-				// does not contain anymore an entry.
-				return null;
-			}
-			final Serializable eeId = entry.getId();
+			final Serializable eeId = session.getPersistenceContext().getEntry( instance ).getId();
 			return eeId instanceof DelayedPostInsertIdentifier ? null : eeId;
 		}
 		return id;

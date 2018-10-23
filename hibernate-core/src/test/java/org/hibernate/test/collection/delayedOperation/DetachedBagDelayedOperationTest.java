@@ -22,6 +22,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
 import org.hibernate.Hibernate;
+import org.hibernate.Session;
 import org.hibernate.collection.internal.AbstractPersistentCollection;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.CollectionType;
@@ -37,7 +38,6 @@ import org.junit.Test;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -80,14 +80,16 @@ public class DetachedBagDelayedOperationTest extends BaseCoreFunctionalTestCase 
 		parent.addChild( child1 );
 		parent.addChild( child2 );
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 
 					session.persist( child1 );
 					session.persist( child2 );
 					session.persist( parent );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 
 		triggerableIgnoreQueuedOperationsOnMerge = logInspectionCollectionType.watchForLogMessages( "HHH000494" );
 		triggerableQueuedOperationWhenAttachToSession = logInspectionAbstractPersistentCollection.watchForLogMessages( "HHH000495" );
@@ -98,29 +100,37 @@ public class DetachedBagDelayedOperationTest extends BaseCoreFunctionalTestCase 
 
 	@After
 	public void cleanup() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 					session.createQuery( "delete from Child" ).executeUpdate();
 					session.createQuery( "delete from Parent" ).executeUpdate();
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-11209" )
 	public void testMergeDetachedCollectionWithQueuedOperations() {
-		final Parent pOriginal = doInHibernate(
-				this::sessionFactory, session -> {
+		final Parent pOriginal;
+		Session session = openSession();
+		session.beginTransaction();
+		{
 					Parent p = session.get( Parent.class, 1L );
 					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 					// initialize
 					Hibernate.initialize( p.getChildren() );
 					assertTrue( Hibernate.isInitialized( p.getChildren() ) );
-					return p;
-				}
-		);
-		final Parent pWithQueuedOperations = doInHibernate(
-				this::sessionFactory, session -> {
+					pOriginal = p;
+		}
+		session.getTransaction().commit();
+		session.close();
+
+		final Parent pWithQueuedOperations;
+		session = openSession();
+		session.beginTransaction();
+		{
 					Parent p = (Parent) session.merge( pOriginal );
 					Child c = new Child( "Zeke" );
 					c.setParent( p );
@@ -131,7 +141,7 @@ public class DetachedBagDelayedOperationTest extends BaseCoreFunctionalTestCase 
 					assertTrue( ( (AbstractPersistentCollection) p.getChildren() ).hasQueuedOperations() );
 
 					checkTriggerablesNotTriggered();
-					session.detach( p );
+					session.evict( p );
 					assertTrue( triggerableQueuedOperationWhenDetachFromSession.wasTriggered() );
 					assertEquals(
 							"HHH000496: Detaching an uninitialized collection with queued operations from a session: [org.hibernate.test.collection.delayedOperation.DetachedBagDelayedOperationTest$Parent.children#1]",
@@ -142,17 +152,19 @@ public class DetachedBagDelayedOperationTest extends BaseCoreFunctionalTestCase 
 					// Make sure nothing else got triggered
 					checkTriggerablesNotTriggered();
 
-					return p;
-				}
-		);
+					pWithQueuedOperations = p;
+		}
+		session.getTransaction().commit();
+		session.close();
 
 		checkTriggerablesNotTriggered();
 
 		assertTrue( ( (AbstractPersistentCollection) pWithQueuedOperations.getChildren() ).hasQueuedOperations() );
 
 		// Merge detached Parent with uninitialized collection with queued operations
-		doInHibernate(
-				this::sessionFactory, session -> {
+		session = openSession();
+		session.beginTransaction();
+		{
 
 					checkTriggerablesNotTriggered();
 
@@ -180,8 +192,9 @@ public class DetachedBagDelayedOperationTest extends BaseCoreFunctionalTestCase 
 						childNames.remove( child.getName() );
 					}
 					assertEquals( 0, childNames.size() );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 
 		checkTriggerablesNotTriggered();
 	}
@@ -189,18 +202,24 @@ public class DetachedBagDelayedOperationTest extends BaseCoreFunctionalTestCase 
 	@Test
 	@TestForIssue( jiraKey = "HHH-11209" )
 	public void testSaveOrUpdateDetachedCollectionWithQueuedOperations() {
-		final Parent pOriginal = doInHibernate(
-				this::sessionFactory, session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		final Parent pOriginal;
+		{
 					Parent p = session.get( Parent.class, 1L );
 					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 					// initialize
 					Hibernate.initialize( p.getChildren() );
 					assertTrue( Hibernate.isInitialized( p.getChildren() ) );
-					return p;
-				}
-		);
-		final Parent pAfterDetachWithQueuedOperations = doInHibernate(
-				this::sessionFactory, session -> {
+					pOriginal = p;
+		}
+		session.getTransaction().commit();
+		session.close();
+
+		session = openSession();
+		session.beginTransaction();
+		final Parent pAfterDetachWithQueuedOperations;
+		{
 					Parent p = (Parent) session.merge( pOriginal );
 					Child c = new Child( "Zeke" );
 					c.setParent( p );
@@ -211,7 +230,7 @@ public class DetachedBagDelayedOperationTest extends BaseCoreFunctionalTestCase 
 					assertTrue( ( (AbstractPersistentCollection) p.getChildren() ).hasQueuedOperations() );
 
 					checkTriggerablesNotTriggered();
-					session.detach( p );
+					session.evict( p );
 					assertTrue( triggerableQueuedOperationWhenDetachFromSession.wasTriggered() );
 					assertEquals(
 							"HHH000496: Detaching an uninitialized collection with queued operations from a session: [org.hibernate.test.collection.delayedOperation.DetachedBagDelayedOperationTest$Parent.children#1]",
@@ -222,18 +241,19 @@ public class DetachedBagDelayedOperationTest extends BaseCoreFunctionalTestCase 
 					// Make sure nothing else got triggered
 					checkTriggerablesNotTriggered();
 
-					return p;
-				}
-		);
+					pAfterDetachWithQueuedOperations = p;
+		}
+		session.getTransaction().commit();
+		session.close();
 
 		checkTriggerablesNotTriggered();
 
 		assertTrue( ( (AbstractPersistentCollection) pAfterDetachWithQueuedOperations.getChildren() ).hasQueuedOperations() );
 
 		// Save detached Parent with uninitialized collection with queued operations
-		doInHibernate(
-				this::sessionFactory, session -> {
-
+		session = openSession();
+		session.beginTransaction();
+		{
 					checkTriggerablesNotTriggered();
 
 					assertFalse( triggerableQueuedOperationWhenAttachToSession.wasTriggered() );
@@ -263,8 +283,9 @@ public class DetachedBagDelayedOperationTest extends BaseCoreFunctionalTestCase 
 						childNames.remove( child.getName() );
 					}
 					assertEquals( 0, childNames.size() );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 
 		checkTriggerablesNotTriggered();
 	}

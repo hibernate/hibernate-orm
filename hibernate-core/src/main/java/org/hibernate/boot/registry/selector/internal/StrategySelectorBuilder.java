@@ -49,6 +49,7 @@ import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MimerSQLDialect;
 import org.hibernate.dialect.MySQL57Dialect;
 import org.hibernate.dialect.MySQL57InnoDBDialect;
+import org.hibernate.dialect.MySQL8Dialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.MySQL5InnoDBDialect;
 import org.hibernate.dialect.Oracle10gDialect;
@@ -70,6 +71,7 @@ import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.dialect.TimesTenDialect;
+import org.hibernate.engine.transaction.jta.platform.internal.AtomikosJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.BitronixJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.BorlandEnterpriseServerJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossAppServerJtaPlatform;
@@ -164,7 +166,6 @@ public class StrategySelectorBuilder {
 		addJtaPlatforms( strategySelector );
 		addTransactionCoordinatorBuilders( strategySelector );
 		addMultiTableBulkIdStrategies( strategySelector );
-		addEntityCopyObserverStrategies( strategySelector );
 		addImplicitNamingStrategies( strategySelector );
 		addCacheKeysFactories( strategySelector );
 
@@ -222,6 +223,7 @@ public class StrategySelectorBuilder {
 		addDialect( strategySelector, MySQL5InnoDBDialect.class );
 		addDialect( strategySelector, MySQL57InnoDBDialect.class );
 		addDialect( strategySelector, MySQL57Dialect.class );
+		addDialect( strategySelector, MySQL8Dialect.class );
 		addDialect( strategySelector, Oracle8iDialect.class );
 		addDialect( strategySelector, Oracle9iDialect.class );
 		addDialect( strategySelector, Oracle10gDialect.class );
@@ -252,6 +254,13 @@ public class StrategySelectorBuilder {
 	}
 
 	private void addJtaPlatforms(StrategySelectorImpl strategySelector) {
+		addJtaPlatforms(
+				strategySelector,
+				AtomikosJtaPlatform.class,
+				"Atomikos",
+				"org.hibernate.service.jta.platform.internal.AtomikosJtaPlatform"
+		);
+
 		addJtaPlatforms(
 				strategySelector,
 				BorlandEnterpriseServerJtaPlatform.class,
@@ -416,24 +425,6 @@ public class StrategySelectorBuilder {
 				MultiTableBulkIdStrategy.class,
 				LocalTemporaryTableBulkIdStrategy.SHORT_NAME,
 				LocalTemporaryTableBulkIdStrategy.class
-		);
-	}
-
-	private void addEntityCopyObserverStrategies(StrategySelectorImpl strategySelector) {
-		strategySelector.registerStrategyImplementor(
-				EntityCopyObserver.class,
-				EntityCopyNotAllowedObserver.SHORT_NAME,
-				EntityCopyNotAllowedObserver.class
-		);
-		strategySelector.registerStrategyImplementor(
-				EntityCopyObserver.class,
-				EntityCopyAllowedObserver.SHORT_NAME,
-				EntityCopyAllowedObserver.class
-		);
-		strategySelector.registerStrategyImplementor(
-				EntityCopyObserver.class,
-				EntityCopyAllowedLoggedObserver.SHORT_NAME,
-				EntityCopyAllowedLoggedObserver.class
 		);
 	}
 

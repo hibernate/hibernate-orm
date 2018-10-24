@@ -7,6 +7,7 @@
 package org.hibernate.engine.spi;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.EntityGraph;
@@ -32,8 +33,9 @@ import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.exception.spi.SQLExceptionConverter;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.metamodel.model.domain.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.EntityNotFoundDelegate;
@@ -330,6 +332,16 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 	@Override
 	MetamodelImplementor getMetamodel();
 
+	@Override
+	@SuppressWarnings("unchecked")
+	default <T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass) {
+		return (List) findEntityGraphsByJavaType( entityClass );
+	}
+
+	<T> List<RootGraphImplementor<? super T>> findEntityGraphsByJavaType(Class<T> entityClass);
+
+	RootGraphImplementor<?> findEntityGraphByName(String name);
+
 	/**
 	 * @deprecated (since 5.2) Use {@link MetamodelImplementor#entityPersister(Class)} instead.
 	 */
@@ -410,8 +422,4 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 	default String getImportedClassName(String name) {
 		return getMetamodel().getImportedClassName( name );
 	}
-
-	EntityGraph findEntityGraphByName(String name);
-
-
 }

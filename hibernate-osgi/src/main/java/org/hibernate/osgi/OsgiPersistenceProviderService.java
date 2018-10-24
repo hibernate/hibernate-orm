@@ -6,7 +6,11 @@
  */
 package org.hibernate.osgi;
 
+import java.util.LinkedHashSet;
+
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.classloading.internal.AggregatedClassLoader;
+import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
@@ -52,7 +56,13 @@ public class OsgiPersistenceProviderService implements ServiceFactory {
 		// ClassLoaderService now.
 
 		final ClassLoader originalTccl = Thread.currentThread().getContextClassLoader();
-		Thread.currentThread().setContextClassLoader( osgiClassLoader );
+		LinkedHashSet<ClassLoader> newTcclDelegates = new LinkedHashSet<>();
+		newTcclDelegates.add( osgiClassLoader );
+		newTcclDelegates.add( originalTccl );
+		final ClassLoader newTccl = new AggregatedClassLoader(
+				newTcclDelegates, TcclLookupPrecedence.NEVER
+		);
+		Thread.currentThread().setContextClassLoader( newTccl );
 		try {
 			return new OsgiPersistenceProvider( osgiClassLoader, osgiJtaPlatform, osgiServiceUtil, requestingBundle );
 		}

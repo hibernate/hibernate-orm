@@ -14,9 +14,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
-import org.hibernate.boot.registry.selector.spi.StrategySelector;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingAction;
@@ -27,6 +24,7 @@ import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EntityCopyObserver;
+import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.MergeEvent;
 import org.hibernate.event.spi.MergeEventListener;
@@ -47,8 +45,6 @@ import org.hibernate.type.TypeHelper;
  */
 public class DefaultMergeEventListener extends AbstractSaveEventListener implements MergeEventListener {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultMergeEventListener.class );
-
-	private String entityCopyObserverStrategy;
 
 	@Override
 	protected Map getMergeMap(Object anything) {
@@ -77,23 +73,8 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 
 	private EntityCopyObserver createEntityCopyObserver(SessionFactoryImplementor sessionFactory) {
 		final ServiceRegistry serviceRegistry = sessionFactory.getServiceRegistry();
-		if ( entityCopyObserverStrategy == null ) {
-			final ConfigurationService configurationService
-					= serviceRegistry.getService( ConfigurationService.class );
-			entityCopyObserverStrategy = configurationService.getSetting(
-					AvailableSettings.MERGE_ENTITY_COPY_OBSERVER,
-					new ConfigurationService.Converter<String>() {
-						@Override
-						public String convert(Object value) {
-							return value.toString();
-						}
-					},
-					EntityCopyNotAllowedObserver.SHORT_NAME
-			);
-			LOG.debugf( "EntityCopyObserver strategy: %s", entityCopyObserverStrategy );
-		}
-		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
-		return strategySelector.resolveStrategy( EntityCopyObserver.class, entityCopyObserverStrategy );
+		final EntityCopyObserverFactory configurationService = serviceRegistry.getService( EntityCopyObserverFactory.class );
+		return configurationService.createEntityCopyObserver();
 	}
 
 	/**

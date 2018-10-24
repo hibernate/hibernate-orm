@@ -9,3 +9,14 @@ earlier versions, see any other pertinent migration guides as well.
 
 == Known changes
 
+=== Hibernate Spatial depends on JTS 1.6
+
+Hibernate Spatial depends on the https://github.com/locationtech/jts[Java Topology Suite (JTS)]. In 5.4 this
+ dependency has been upgraded to version 1.6. This implies a change in package naming:
+ all `com.vividsolutions.jts.\*` packages have been renamed to `org.locationtech.jts.*`.
+
+See https://github.com/locationtech/jts/blob/master/MIGRATION.md[the JTS Migration guide] for more information.
+
+=== SQL Server JDBC Driver version upgrade to at least 6.1.2
+
+Due to fixing https://hibernate.atlassian.net/browse/HHH-12973[HHH-12973], you need to upgrade the JDBC Driver version to at least 6.1.2. Due to https://github.com/Microsoft/mssql-jdbc/issues/91[this bug], the older versions of the SQL Server JDBC Driver cannot introspect the `INFORMATION_SCHEMA.SEQUENCES` without closing the database connection.

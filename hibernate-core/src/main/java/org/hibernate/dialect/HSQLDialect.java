@@ -7,6 +7,7 @@
 package org.hibernate.dialect;
 
 import java.io.Serializable;
+import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Locale;
@@ -48,10 +49,12 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.persister.entity.Lockable;
+import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHANADatabaseImpl;
+import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHSQLDBDatabaseImpl;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.jboss.logging.Logger;
-import java.sql.DatabaseMetaData;
 
 /**
  * An SQL dialect compatible with HSQLDB (HyperSQL).
@@ -310,8 +313,16 @@ public class HSQLDialect extends Dialect {
 		return hsqldbVersion < 200;
 	}
 
+	// Note : HSQLDB actually supports [IF EXISTS] before AND after the <tablename>
+	// But as CASCADE has to be AFTER IF EXISTS in case it's after the tablename, 
+	// We put the IF EXISTS before the tablename to be able to add CASCADE after.
 	@Override
 	public boolean supportsIfExistsAfterTableName() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeTableName() {
 		return true;
 	}
 
@@ -369,7 +380,12 @@ public class HSQLDialect extends Dialect {
 	@Override
 	public String getQuerySequencesString() {
 		// this assumes schema support, which is present in 1.8.0 and later...
-		return "select sequence_name from information_schema.system_sequences";
+		return "select * from information_schema.sequences";
+	}
+
+	@Override
+	public SequenceInformationExtractor getSequenceInformationExtractor() {
+		return SequenceInformationExtractorHSQLDBDatabaseImpl.INSTANCE;
 	}
 
 	@Override
@@ -675,5 +691,16 @@ public class HSQLDialect extends Dialect {
 	@Override
 	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) throws SQLException {
 		return false;
+	}
+
+	// Do not drop constraints explicitly, just do this by cascading instead.
+	@Override
+	public boolean dropConstraints() {
+		return false;
+	}
+
+	@Override
+	public String getCascadeConstraintsString() {
+		return " CASCADE ";
 	}
 }

@@ -254,7 +254,8 @@ public final class Settings {
 
 	public boolean isAutoCreateSchema() {
 		return sessionFactoryOptions.getSchemaAutoTooling() == SchemaAutoTooling.CREATE
-				|| sessionFactoryOptions.getSchemaAutoTooling() == SchemaAutoTooling.CREATE_DROP;
+				|| sessionFactoryOptions.getSchemaAutoTooling() == SchemaAutoTooling.CREATE_DROP
+				|| sessionFactoryOptions.getSchemaAutoTooling() == SchemaAutoTooling.CREATE_ONLY;
 	}
 
 	public boolean isAutoDropSchema() {

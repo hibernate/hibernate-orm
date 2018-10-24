@@ -96,7 +96,7 @@ public class EnhancerImpl implements Enhancer {
 	 * @throws EnhancementException Indicates a problem performing the enhancement
 	 */
 	@Override
-	public synchronized byte[] enhance(String className, byte[] originalBytes) throws EnhancementException {
+	public byte[] enhance(String className, byte[] originalBytes) throws EnhancementException {
 		//Classpool#describe does not accept '/' in the description name as it expects a class name. See HHH-12545
 		final String safeClassName = className.replace( '/', '.' );
 		try {

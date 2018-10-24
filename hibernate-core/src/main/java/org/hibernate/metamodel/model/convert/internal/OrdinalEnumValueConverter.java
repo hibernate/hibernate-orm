@@ -6,16 +6,20 @@
  */
 package org.hibernate.metamodel.model.convert.internal;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
+import org.hibernate.type.descriptor.ValueBinder;
+import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
-
-import org.jboss.logging.Logger;
+import org.hibernate.type.descriptor.sql.IntegerTypeDescriptor;
 
 /**
  * BasicValueConverter handling the conversion of an enum based on
@@ -24,16 +28,20 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class OrdinalEnumValueConverter<E extends Enum> implements EnumValueConverter<E,Integer>, Serializable {
-	private static final Logger log = Logger.getLogger( OrdinalEnumValueConverter.class );
 
 	private final EnumJavaTypeDescriptor<E> enumJavaDescriptor;
 
+	private transient ValueExtractor<E> valueExtractor;
+
+	private transient ValueBinder<Integer> valueBinder;
+
 	public OrdinalEnumValueConverter(EnumJavaTypeDescriptor<E> enumJavaDescriptor) {
 		this.enumJavaDescriptor = enumJavaDescriptor;
+		this.valueExtractor = createValueExtractor( enumJavaDescriptor );
+		this.valueBinder = createValueBinder();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public E toDomainValue(Integer relationalForm) {
 		return enumJavaDescriptor.fromOrdinal( relationalForm );
 	}
@@ -54,47 +62,35 @@ public class OrdinalEnumValueConverter<E extends Enum> implements EnumValueConve
 	}
 
 	@Override
-	public E readValue(ResultSet resultSet, String name) throws SQLException {
-		final int ordinal = resultSet.getInt( name );
-		final boolean traceEnabled = log.isTraceEnabled();
-		if ( resultSet.wasNull() ) {
-			if ( traceEnabled ) {
-				log.trace(String.format("Returning null as column [%s]", name));
-			}
-			return null;
-		}
-
-		final E enumValue = toDomainValue( ordinal );
-		if ( traceEnabled ) {
-			log.trace(String.format("Returning [%s] as column [%s]", enumValue, name));
-		}
-
-		return enumValue;
+	public E readValue(ResultSet resultSet, String name, SharedSessionContractImplementor session) throws SQLException {
+		return valueExtractor.extract( resultSet, name, session );
 	}
 
 	@Override
-	public void writeValue(PreparedStatement statement, E value, int position) throws SQLException {
+	public void writeValue(PreparedStatement statement, E value, int position, SharedSessionContractImplementor session) throws SQLException {
 		final Integer jdbcValue = value == null ? null : toRelationalValue( value );
 
-		final boolean traceEnabled = log.isTraceEnabled();
-		if ( jdbcValue == null ) {
-			if ( traceEnabled ) {
-				log.tracef( "Binding null to parameter: [%s]", position );
-			}
-			statement.setNull( position, getJdbcTypeCode() );
-			return;
-		}
-
-		if ( traceEnabled ) {
-			log.tracef( "Binding [%s] to parameter: [%s]", jdbcValue.intValue(), position );
-		}
-
-		statement.setInt( position, jdbcValue );
+		valueBinder.bind( statement, jdbcValue, position, session );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public String toSqlLiteral(Object value) {
 		return Integer.toString( ( (E) value ).ordinal() );
+	}
+
+	private static <T extends Enum> ValueExtractor<T> createValueExtractor(EnumJavaTypeDescriptor<T> enumJavaDescriptor) {
+		return IntegerTypeDescriptor.INSTANCE.getExtractor( enumJavaDescriptor );
+	}
+
+	private static ValueBinder<Integer> createValueBinder() {
+		return IntegerTypeDescriptor.INSTANCE.getBinder( org.hibernate.type.descriptor.java.IntegerTypeDescriptor.INSTANCE );
+	}
+
+	private void readObject(ObjectInputStream stream) throws ClassNotFoundException, IOException {
+		stream.defaultReadObject();
+
+		this.valueExtractor = createValueExtractor( enumJavaDescriptor );
+		this.valueBinder = createValueBinder();
 	}
 }

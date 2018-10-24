@@ -17,22 +17,17 @@ ext {
 }
 
 dependencies {
-	testCompile libraries.junit
+    compile( libraries.jaxb_api )
+
+    xjc( libraries.jaxb_runtime )
+    xjc( libraries.jaxb_xjc )
+    xjc( libraries.jaxb2_basics )
+    xjc( libraries.jaxb2_basics_ant )
+    xjc( libraries.activation )
+
+    testCompile libraries.junit
     testCompile libraries.jpa
     testCompile project( ':hibernate-core' )
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Java 9 ftw!
-	if ( JavaVersion.current().isJava9Compatible() ) {
-		xjc( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
-		xjc( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
-		xjc( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
-		xjc( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
-		xjc( 'javax.activation:javax.activation-api:1.2.0' )
-		xjc( 'javax.annotation:jsr250-api:1.0' )
-	}
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 }
 
 sourceSets.main {

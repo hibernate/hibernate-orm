@@ -25,7 +25,7 @@ public class DerbyTenSixDialectSequenceInformationExtractorTest extends Abstract
 
 	@Override
 	public String expectedQuerySequencesString() {
-		return "select SEQUENCENAME from SYS.SYSSEQUENCES";
+		return "select sys.sysschemas.schemaname as sequence_schema, sys.syssequences.* from sys.syssequences left join sys.sysschemas on sys.syssequences.schemaid = sys.sysschemas.schemaid";
 	}
 
 	@Override

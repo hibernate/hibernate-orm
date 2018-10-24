@@ -13,18 +13,11 @@ description = 'Support for running Hibernate O/RM in OSGi environments'
 ext {
 	osgiCoreVersion = '6.0.0'
 	osgiCompediumVersion = '5.0.0'
-	karafVersion = '4.1.0'
+	karafVersion = '4.2.1'
 	paxExamVersion = '4.12.0'
 }
 
 test.enabled = true
-
-if ( JavaVersion.current().isJava9Compatible() ) {
-	logger.warn( '[WARN] Skipping all tests for hibernate-osgi due to Karaf issues with JDK 9' )
-	// Hikari CP relies on Javassist which we know has issues with Java 9
-	test.enabled = false
-}
-
 
 sourceSets {
 	test {
@@ -56,6 +49,9 @@ dependencies {
 		// this dependency wasn't there in the 5.2.x bundles so ignoring it for now
 		// we might reintroduce it at some point if users complain about it
 		exclude module: 'javax.activation-api'
+		// JAXB is included in the Karaf distribution
+		exclude module: 'jaxb-api'
+		exclude module: 'jaxb-runtime'
 	}
 	testCompile( project( ':hibernate-envers' ) )
 
@@ -128,7 +124,9 @@ karaf {
 				prerequisite = true
 			}
 			feature 'transaction-api'
-	}
+			// Most Hibernate modules declare OSGi metadata through blueprints, so we need this feature
+			feature 'aries-blueprint'
+		}
 		// NOTE : would like to include spatial as well, but we need to wait for
 		//		it to not define dependency on postgresql driver
 		feature {
@@ -136,14 +134,18 @@ karaf {
 			description = 'Feature for easily adding Envers support to hibernate-orm'
 			includeProject = false
 			configurations 'hibernateEnvers'
-			feature 'hibernate-orm'
+			feature('hibernate-orm') {
+				version = project.version
+			}
 		}
 		feature {
 			name = 'hibernate-infinispan'
 			description = 'Feature for easily adding Infinispan-based caching support to hibernate-orm'
 			includeProject = false
 			configurations 'hibernateInfinispan'
-			feature 'hibernate-orm'
+			feature('hibernate-orm') {
+				version = project.version
+			}
 		}
 	}
 }

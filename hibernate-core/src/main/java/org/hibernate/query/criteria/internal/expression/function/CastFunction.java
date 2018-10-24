@@ -7,6 +7,7 @@
 package org.hibernate.query.criteria.internal.expression.function;
 
 import java.io.Serializable;
+import java.util.Locale;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
@@ -47,10 +48,17 @@ public class CastFunction<T,Y>
 
 	@Override
 	public String render(RenderingContext renderingContext) {
-		return CAST_NAME + '(' +
-				castSource.render( renderingContext ) +
-				" as " +
-				renderingContext.getCastType( getJavaType() ) +
-				')';
+		renderingContext.getFunctionStack().push( this );
+		try {
+			return String.format(
+					Locale.ROOT,
+					"cast(%s as %s)",
+					castSource.render( renderingContext ),
+					renderingContext.getCastType( getJavaType() )
+			);
+		}
+		finally {
+			renderingContext.getFunctionStack().pop();
+		}
 	}
 }

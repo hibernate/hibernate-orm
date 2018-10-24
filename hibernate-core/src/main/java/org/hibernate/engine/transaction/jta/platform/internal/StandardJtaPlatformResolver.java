@@ -82,6 +82,14 @@ public class StandardJtaPlatformResolver implements JtaPlatformResolver {
 		catch (ClassLoadingException ignore) {
 		}
 
+		// Atomikos ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		try {
+			classLoaderService.classForName( AtomikosJtaPlatform.TM_CLASS_NAME );
+			return new AtomikosJtaPlatform();
+		}
+		catch (ClassLoadingException ignore) {
+		}
+
 		// Bitronix ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		try {
 			classLoaderService.classForName( BitronixJtaPlatform.TM_CLASS_NAME );

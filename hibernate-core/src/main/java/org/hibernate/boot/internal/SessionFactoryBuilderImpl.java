@@ -42,18 +42,18 @@ import org.hibernate.tuple.entity.EntityTuplizerFactory;
  */
 public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplementor {
 	private final MetadataImplementor metadata;
-	private final BootstrapContext bootstrapContext;
 	private final SessionFactoryOptionsBuilder optionsBuilder;
 
 	public SessionFactoryBuilderImpl(MetadataImplementor metadata, BootstrapContext bootstrapContext) {
-		this.metadata = metadata;
-		this.bootstrapContext = bootstrapContext;
-
-		this.optionsBuilder = new SessionFactoryOptionsBuilder(
+		this( metadata, new SessionFactoryOptionsBuilder(
 				metadata.getMetadataBuildingOptions().getServiceRegistry(),
 				bootstrapContext
-		);
+		) );
+	}
 
+	public SessionFactoryBuilderImpl(MetadataImplementor metadata, SessionFactoryOptionsBuilder optionsBuilder) {
+		this.metadata = metadata;
+		this.optionsBuilder = optionsBuilder;
 		if ( metadata.getSqlFunctionMap() != null ) {
 			for ( Map.Entry<String, SQLFunction> sqlFunctionEntry : metadata.getSqlFunctionMap().entrySet() ) {
 				applySqlFunction( sqlFunctionEntry.getKey(), sqlFunctionEntry.getValue() );
@@ -437,11 +437,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public void markAsJpaBootstrap() {
-		this.bootstrapContext.markAsJpaBootstrap();
-	}
-
-	@Override
 	public void disableRefreshDetachedEntity() {
 		this.optionsBuilder.disableRefreshDetachedEntity();
 	}
@@ -464,7 +459,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactory build() {
 		metadata.validate();
-		return new SessionFactoryImpl( bootstrapContext, metadata, buildSessionFactoryOptions() );
+		return new SessionFactoryImpl( metadata, buildSessionFactoryOptions() );
 	}
 
 	@Override

@@ -25,8 +25,11 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 import org.hibernate.LockMode;
+import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.loader.plan.build.internal.FetchGraphLoadPlanBuildingStrategy;
 import org.hibernate.loader.plan.build.internal.LoadGraphLoadPlanBuildingStrategy;
@@ -121,7 +124,7 @@ public class EntityGraphLoadPlanBuilderTest extends BaseEntityManagerFunctionalT
 	public void testBasicFetchLoadPlanBuilding() {
 		EntityManager em = getOrCreateEntityManager();
 		EntityGraph eg = em.createEntityGraph( Cat.class );
-		LoadPlan plan = buildLoadPlan( eg, Mode.FETCH, Cat.class );
+		LoadPlan plan = buildLoadPlan( eg, GraphSemantic.FETCH, Cat.class );
 		LoadPlanTreePrinter.INSTANCE.logTree( plan, new AliasResolutionContextImpl( sfi() ) );
 		QuerySpace rootQuerySpace = plan.getQuerySpaces().getRootQuerySpaces().get( 0 );
 		assertFalse(
@@ -131,7 +134,7 @@ public class EntityGraphLoadPlanBuilderTest extends BaseEntityManagerFunctionalT
 		// -------------------------------------------------- another a little more complicated case
 		eg = em.createEntityGraph( Cat.class );
 		eg.addSubgraph( "owner", Person.class );
-		plan = buildLoadPlan( eg, Mode.FETCH, Cat.class );
+		plan = buildLoadPlan( eg, GraphSemantic.FETCH, Cat.class );
 		LoadPlanTreePrinter.INSTANCE.logTree( plan, new AliasResolutionContextImpl( sfi() ) );
 		rootQuerySpace = plan.getQuerySpaces().getRootQuerySpaces().get( 0 );
 		Iterator<Join> iterator = rootQuerySpace.getJoins().iterator();
@@ -186,7 +189,7 @@ public class EntityGraphLoadPlanBuilderTest extends BaseEntityManagerFunctionalT
 	public void testBasicLoadLoadPlanBuilding() {
 		EntityManager em = getOrCreateEntityManager();
 		EntityGraph eg = em.createEntityGraph( Cat.class );
-		LoadPlan plan = buildLoadPlan( eg, Mode.LOAD, Cat.class );
+		LoadPlan plan = buildLoadPlan( eg, GraphSemantic.LOAD, Cat.class );
 		LoadPlanTreePrinter.INSTANCE.logTree( plan, new AliasResolutionContextImpl( sfi() ) );
 		QuerySpace rootQuerySpace = plan.getQuerySpaces().getRootQuerySpaces().get( 0 );
 		assertFalse(
@@ -196,7 +199,7 @@ public class EntityGraphLoadPlanBuilderTest extends BaseEntityManagerFunctionalT
 		// -------------------------------------------------- another a little more complicated case
 		eg = em.createEntityGraph( Cat.class );
 		eg.addSubgraph( "owner", Person.class );
-		plan = buildLoadPlan( eg, Mode.LOAD, Cat.class );
+		plan = buildLoadPlan( eg, GraphSemantic.LOAD, Cat.class );
 		LoadPlanTreePrinter.INSTANCE.logTree( plan, new AliasResolutionContextImpl( sfi() ) );
 		rootQuerySpace = plan.getQuerySpaces().getRootQuerySpaces().get( 0 );
 		Iterator<Join> iterator = rootQuerySpace.getJoins().iterator();
@@ -235,7 +238,7 @@ public class EntityGraphLoadPlanBuilderTest extends BaseEntityManagerFunctionalT
 		EntityManager em = getOrCreateEntityManager();
 		EntityGraph eg = em.createEntityGraph( Dog.class );
 		eg.addAttributeNodes( "favorites" );
-		LoadPlan loadLoadPlan = buildLoadPlan( eg, Mode.LOAD, Dog.class ); //WTF name!!!
+		LoadPlan loadLoadPlan = buildLoadPlan( eg, GraphSemantic.LOAD, Dog.class ); //WTF name!!!
 		LoadPlanTreePrinter.INSTANCE.logTree( loadLoadPlan, new AliasResolutionContextImpl( sfi() ) );
 		QuerySpace querySpace = loadLoadPlan.getQuerySpaces().getRootQuerySpaces().iterator().next();
 		Iterator<Join> iterator = querySpace.getJoins().iterator();
@@ -244,7 +247,7 @@ public class EntityGraphLoadPlanBuilderTest extends BaseEntityManagerFunctionalT
 		assertEquals( QuerySpace.Disposition.COLLECTION, collectionJoin.getRightHandSide().getDisposition() );
 		assertFalse( iterator.hasNext() );
 		//----------------------------------------------------------------
-		LoadPlan fetchLoadPlan = buildLoadPlan( eg, Mode.FETCH, Dog.class );
+		LoadPlan fetchLoadPlan = buildLoadPlan( eg, GraphSemantic.FETCH, Dog.class );
 		LoadPlanTreePrinter.INSTANCE.logTree( fetchLoadPlan, new AliasResolutionContextImpl( sfi() ) );
 		querySpace = fetchLoadPlan.getQuerySpaces().getRootQuerySpaces().iterator().next();
 		iterator = querySpace.getJoins().iterator();
@@ -262,7 +265,7 @@ public class EntityGraphLoadPlanBuilderTest extends BaseEntityManagerFunctionalT
 		EntityGraph eg = em.createEntityGraph( ExpressCompany.class );
 		eg.addAttributeNodes( "shipAddresses" );
 
-		LoadPlan loadLoadPlan = buildLoadPlan( eg, Mode.LOAD, ExpressCompany.class ); //WTF name!!!
+		LoadPlan loadLoadPlan = buildLoadPlan( eg, GraphSemantic.LOAD, ExpressCompany.class ); //WTF name!!!
 		LoadPlanTreePrinter.INSTANCE.logTree( loadLoadPlan, new AliasResolutionContextImpl( sfi() ) );
 
 		QuerySpace querySpace = loadLoadPlan.getQuerySpaces().getRootQuerySpaces().iterator().next();
@@ -285,7 +288,7 @@ public class EntityGraphLoadPlanBuilderTest extends BaseEntityManagerFunctionalT
 		assertEquals( QuerySpace.Disposition.ENTITY, countryJoin.getRightHandSide().getDisposition() );
 
 		//----------------------------------------------------------------
-		LoadPlan fetchLoadPlan = buildLoadPlan( eg, Mode.FETCH, ExpressCompany.class );
+		LoadPlan fetchLoadPlan = buildLoadPlan( eg, GraphSemantic.FETCH, ExpressCompany.class );
 		LoadPlanTreePrinter.INSTANCE.logTree( fetchLoadPlan, new AliasResolutionContextImpl( sfi() ) );
 
 
@@ -313,21 +316,20 @@ public class EntityGraphLoadPlanBuilderTest extends BaseEntityManagerFunctionalT
 		return entityManagerFactory().unwrap( SessionFactoryImplementor.class );
 	}
 
-	private LoadPlan buildLoadPlan(EntityGraph entityGraph, Mode mode, Class clazz) {
+	private LoadPlan buildLoadPlan(EntityGraph entityGraph, GraphSemantic mode, Class clazz) {
+		final LoadQueryInfluencers loadQueryInfluencers = new LoadQueryInfluencers( sfi() );
+		final EffectiveEntityGraph effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
+		effectiveEntityGraph.applyGraph( ( RootGraphImplementor) entityGraph, mode );
 
-		LoadQueryInfluencers loadQueryInfluencers = new LoadQueryInfluencers( sfi() );
-		if ( Mode.FETCH == mode ) {
-			loadQueryInfluencers.setFetchGraph( entityGraph );
-		}
-		else {
-			loadQueryInfluencers.setLoadGraph( entityGraph );
-		}
-		EntityPersister ep = (EntityPersister) sfi().getClassMetadata( clazz );
-		AbstractLoadPlanBuildingAssociationVisitationStrategy strategy = Mode.FETCH == mode ? new FetchGraphLoadPlanBuildingStrategy(
-				sfi(), loadQueryInfluencers, LockMode.NONE
+		final EntityPersister ep = (EntityPersister) sfi().getClassMetadata( clazz );
+		AbstractLoadPlanBuildingAssociationVisitationStrategy strategy = GraphSemantic.FETCH == mode
+				? new FetchGraphLoadPlanBuildingStrategy(
+						sfi(),
+						effectiveEntityGraph.getGraph(),
+						loadQueryInfluencers,
+						LockMode.NONE
 		) : new LoadGraphLoadPlanBuildingStrategy( sfi(), loadQueryInfluencers, LockMode.NONE );
 		return MetamodelDrivenLoadPlanBuilder.buildRootEntityLoadPlan( strategy, ep );
 	}
 
-	public static enum Mode {FETCH, LOAD}
 }

@@ -44,7 +44,7 @@ public class NamespaceTest {
 
 	@Test
 	public void testPhysicalNameSchemaAndCatalog() {
-		Namespace namespace = new Namespace( mockDatabase, name );
+		Namespace namespace = new Namespace( mockDatabase.getPhysicalNamingStrategy(), mockDatabase.getJdbcEnvironment(), name );
 
 		final Namespace.Name physicalName = namespace.getPhysicalName();
 

@@ -18,8 +18,8 @@ import org.hibernate.testing.Skip;
 
 import org.jboss.logging.Logger;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.io.ParseException;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.io.ParseException;
 
 /**
  * This testsuite-suite class verifies whether the <code>Geometry</code>s retrieved

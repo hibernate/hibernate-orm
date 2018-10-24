@@ -71,6 +71,7 @@ Hibernate tries to discover the `JtaPlatform` it should use through the use of a
 If that resolution does not work, or if you wish to provide a custom implementation you will need to specify the `hibernate.transaction.jta.platform` setting.
 Hibernate provides many implementations of the `JtaPlatform` contract, all with short names:
 
+`Atomikos`:: `JtaPlatform` for Atomikos.
 `Borland`:: `JtaPlatform` for the Borland Enterprise Server.
 `Bitronix`:: `JtaPlatform` for Bitronix.
 `JBossAS`:: `JtaPlatform` for Arjuna/JBossTransactions/Narayana when used within the JBoss/WildFly Application Server.
@@ -302,6 +303,8 @@ If your `Session` is bound to the application, you have to stop the application.
 Rolling back the database transaction does not put your business objects back into the state they were at the start of the transaction. 
 This means that the database state and the business objects will be out of sync. 
 Usually, this is not a problem because exceptions are not recoverable and you will have to start over after rollback anyway.
+
+For more details, check out the <<chapters/pc/PersistenceContext.adoc#pc-exception-handling, _exception handling_>> chapter.
 
 The `Session` caches every object that is in a persistent state (watched and checked for dirty state by Hibernate).
 If you keep it open for a long time or simply load too much data, it will grow endlessly until you get an `OutOfMemoryException`.

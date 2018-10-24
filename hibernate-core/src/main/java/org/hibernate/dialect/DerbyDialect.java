@@ -29,6 +29,9 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DerbyCaseFragment;
+import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDerbyDatabaseImpl;
+import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
 import org.jboss.logging.Logger;
 
@@ -130,10 +133,20 @@ public class DerbyDialect extends DB2Dialect {
 	@Override
 	public String getQuerySequencesString() {
 		if ( supportsSequences() ) {
-			return "select SEQUENCENAME from SYS.SYSSEQUENCES";
+			return "select sys.sysschemas.schemaname as sequence_schema, sys.syssequences.* from sys.syssequences left join sys.sysschemas on sys.syssequences.schemaid = sys.sysschemas.schemaid";
 		}
 		else {
 			return null;
+		}
+	}
+
+	@Override
+	public SequenceInformationExtractor getSequenceInformationExtractor() {
+		if ( getQuerySequencesString() == null ) {
+			return SequenceInformationExtractorNoOpImpl.INSTANCE;
+		}
+		else {
+			return SequenceInformationExtractorDerbyDatabaseImpl.INSTANCE;
 		}
 	}
 

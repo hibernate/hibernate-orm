@@ -20,6 +20,8 @@ import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOracleDatabaseImpl;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
 import org.jboss.logging.Logger;
 
@@ -284,7 +286,11 @@ public class Oracle9Dialect extends Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select sequence_name from user_sequences";
+		return "select * from all_sequences";
+	}
+
+	public SequenceInformationExtractor getSequenceInformationExtractor() {
+		return SequenceInformationExtractorOracleDatabaseImpl.INSTANCE;
 	}
 
 	@Override

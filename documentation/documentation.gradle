@@ -40,7 +40,7 @@ dependencies {
 
 	compile( libraries.jpa )
 	compile( project( ':hibernate-core' ) )
-	compile( project( ':hibernate-jpamodelgen' ) )
+	annotationProcessor( project( ':hibernate-jpamodelgen' ) )
 
 	testCompile( 'org.apache.commons:commons-lang3:3.4' )
 

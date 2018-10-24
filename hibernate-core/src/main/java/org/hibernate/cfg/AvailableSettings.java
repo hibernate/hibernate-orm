@@ -1481,6 +1481,22 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String CUSTOM_ENTITY_DIRTINESS_STRATEGY = "hibernate.entity_dirtiness_strategy";
 
 	/**
+	 * Controls whether an entity's "where" clause, mapped using <code>@Where(clause="....")</code>
+	 * or <code>&lt;entity ... where="..."&gt;</code>, is taken into account when loading one-to-many
+	 * or many-to-many collections of that type of entity.
+	 * <p/>
+	 * This setting has no affect on collections of embeddable values containing an association to
+	 * that type of entity.
+	 * <p/>
+	 * When `true` (the default), the entity's "where" clause will be taken into account when loading
+	 * one-to-many or many-to-many collections of that type of entity.
+	 * <p/>
+	 * `false` indicates that the entity's "where" clause will be ignored when loading one-to-many or
+	 * many-to-many collections of that type of entity.
+	 */
+	String USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS = "hibernate.use_entity_where_clause_for_collections";
+
+	/**
 	 * Strategy for multi-tenancy.
 
 	 * @see org.hibernate.MultiTenancyStrategy
@@ -1951,4 +1967,29 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 */
 	String IN_CLAUSE_PARAMETER_PADDING = "hibernate.query.in_clause_parameter_padding";
 
+	/**
+	 * This setting controls the number of {@link org.hibernate.stat.QueryStatistics} entries
+	 * that will be stored by the Hibernate {@link org.hibernate.stat.Statistics} object.
+	 * </p>
+	 * The default value is given by the {@link org.hibernate.stat.Statistics#DEFAULT_QUERY_STATISTICS_MAX_SIZE} constant value.
+	 *
+	 * @since 5.4
+	 */
+	String QUERY_STATISTICS_MAX_SIZE = "hibernate.statistics.query_max_size";
+
+	/**
+	 * This setting defines the {@link org.hibernate.id.SequenceMismatchStrategy} used when
+	 * Hibernate detects a mismatch between a sequence configuration in an entity mapping
+	 * and its database sequence object counterpart.
+	 * </p>
+	 * Possible values are {@link org.hibernate.id.SequenceMismatchStrategy#EXCEPTION},
+	 * {@link org.hibernate.id.SequenceMismatchStrategy#LOG}, and
+	 * {@link org.hibernate.id.SequenceMismatchStrategy#FIX}.
+	 * </p>
+	 * The default value is given by the {@link org.hibernate.id.SequenceMismatchStrategy#EXCEPTION},
+	 * meaning that an Exception is thrown when detecting such a conflict.
+	 *
+	 * @since 5.4
+	 */
+	String SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY = "hibernate.id.sequence.increment_size_mismatch_strategy";
 }

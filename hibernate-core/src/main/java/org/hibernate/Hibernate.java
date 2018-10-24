@@ -212,4 +212,16 @@ public final class Hibernate {
 			return proxy;
 		}
 	}
+
+	/**
+	 * Unproxies a {@link HibernateProxy}. If the proxy is uninitialized, it automatically triggers an initialization.
+	 * In case the supplied object is null or not a proxy, the object will be returned as-is.
+	 *
+	 * @param proxy the {@link HibernateProxy} to be unproxied
+	 * @param entityClass the entity type
+	 * @return the proxy's underlying implementation object, or the supplied object otherwise
+	 */
+	public static <T> T unproxy(T proxy, Class<T> entityClass) {
+		return entityClass.cast( unproxy( proxy ) );
+	}
 }

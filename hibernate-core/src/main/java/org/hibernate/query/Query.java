@@ -34,7 +34,9 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.engine.spi.RowSelection;
+import org.hibernate.graph.Graph;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.RootGraph;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.BigDecimalType;
 import org.hibernate.type.BigIntegerType;
@@ -93,6 +95,37 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 * @since 5.2
 	 */
 	Stream<R> stream();
+
+	/**
+	 * Apply the given graph using the given semantic
+	 *
+	 * @param graph The graph the apply.
+	 * @param semantic The semantic to use when applying the graph
+	 *
+	 * @return this - for method chaining
+	 */
+	Query<R> applyGraph(RootGraph graph, GraphSemantic semantic);
+
+	/**
+	 * Apply the given graph using {@linkplain GraphSemantic#FETCH fetch semantics}
+	 *
+	 * @apiNote This method calls {@link #applyGraph(RootGraph, GraphSemantic)} using
+	 * {@link GraphSemantic#FETCH} as the semantic
+	 */
+	default Query<R> applyFetchGraph(RootGraph graph) {
+		return applyGraph( graph, GraphSemantic.FETCH );
+	}
+
+	/**
+	 * Apply the given graph using {@linkplain GraphSemantic#LOAD load semantics}
+	 *
+	 * @apiNote This method calls {@link #applyGraph(RootGraph, GraphSemantic)} using
+	 * {@link GraphSemantic#LOAD} as the semantic
+	 */
+	default Query<R> applyLoadGraph(RootGraph graph) {
+		return applyGraph( graph, GraphSemantic.LOAD );
+	}
+
 
 	Query<R> setParameter(Parameter<Instant> param, Instant value, TemporalType temporalType);
 

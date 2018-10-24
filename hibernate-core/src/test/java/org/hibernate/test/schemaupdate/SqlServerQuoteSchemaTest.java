@@ -151,7 +151,7 @@ public class SqlServerQuoteSchemaTest extends BaseCoreFunctionalTestCase {
 
 		try {
 			String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-			Pattern fileContentPattern = Pattern.compile( "alter table .*?\\.\\[my\\-schema\\]\\.\\[my_entity\\]" );
+			Pattern fileContentPattern = Pattern.compile( "alter table \\[my\\-schema\\]\\.\\[my_entity\\]" );
 			Matcher fileContentMatcher = fileContentPattern.matcher( fileContent.toLowerCase() );
 			assertThat( fileContentMatcher.find(), is( true ) );
 		}

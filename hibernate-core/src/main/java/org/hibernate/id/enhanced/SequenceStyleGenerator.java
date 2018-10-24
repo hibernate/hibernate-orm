@@ -25,10 +25,12 @@ import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.Configurable;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
+import org.hibernate.id.SequenceMismatchStrategy;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -218,12 +220,13 @@ public class SequenceStyleGenerator
 	}
 
 
-
 	// Configurable implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
 	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
+		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
+
 		final Dialect dialect = jdbcEnvironment.getDialect();
 
 		this.identifierType = type;
@@ -233,6 +236,37 @@ public class SequenceStyleGenerator
 
 		final int initialValue = determineInitialValue( params );
 		int incrementSize = determineIncrementSize( params );
+
+		if ( isPhysicalSequence( jdbcEnvironment, forceTableUse ) ) {
+			String databaseSequenceName = sequenceName.getObjectName().getText();
+			Long databaseIncrementValue = getSequenceIncrementValue( jdbcEnvironment, databaseSequenceName );
+
+			if ( databaseIncrementValue != null && !databaseIncrementValue.equals( (long) incrementSize ) ) {
+				int dbIncrementValue = databaseIncrementValue.intValue();
+
+				SequenceMismatchStrategy sequenceMismatchStrategy = configurationService.getSetting(
+						AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY,
+						SequenceMismatchStrategy::interpret,
+						SequenceMismatchStrategy.EXCEPTION
+				);
+
+				switch ( sequenceMismatchStrategy ) {
+					case EXCEPTION:
+						throw new MappingException(
+								String.format(
+										"The increment size of the [%s] sequence is set to [%d] in the entity mapping " +
+												"while the associated database sequence increment size is [%d].",
+										databaseSequenceName, incrementSize, dbIncrementValue
+								)
+						);
+					case FIX:
+						incrementSize = dbIncrementValue;
+					case LOG:
+						LOG.sequenceIncrementSizeMismatch( databaseSequenceName, incrementSize, dbIncrementValue );
+						break;
+				}
+			}
+		}
 
 		final String optimizationStrategy = determineOptimizationStrategy( params, incrementSize );
 		incrementSize = determineAdjustedIncrementSize( optimizationStrategy, incrementSize );
@@ -443,13 +477,16 @@ public class SequenceStyleGenerator
 			QualifiedName sequenceName,
 			int initialValue,
 			int incrementSize) {
-		final boolean useSequence = jdbcEnvironment.getDialect().supportsSequences() && !forceTableUse;
-		if ( useSequence ) {
+		if ( isPhysicalSequence( jdbcEnvironment, forceTableUse ) ) {
 			return buildSequenceStructure( type, params, jdbcEnvironment, sequenceName, initialValue, incrementSize );
 		}
 		else {
 			return buildTableStructure( type, params, jdbcEnvironment, sequenceName, initialValue, incrementSize );
 		}
+	}
+
+	protected boolean isPhysicalSequence(JdbcEnvironment jdbcEnvironment, boolean forceTableUse) {
+		return jdbcEnvironment.getDialect().supportsSequences() && !forceTableUse;
 	}
 
 	protected DatabaseStructure buildSequenceStructure(
@@ -520,5 +557,25 @@ public class SequenceStyleGenerator
 	@Override
 	public void registerExportables(Database database) {
 		databaseStructure.registerExportables( database );
+	}
+
+	/**
+	 * Get the database sequence increment value from the associated {@link SequenceInformation} object.
+	 *
+	 * @param jdbcEnvironment the current JdbcEnvironment
+	 * @param sequenceName sequence name
+	 *
+	 * @return sequence increment value
+	 */
+	private Long getSequenceIncrementValue(JdbcEnvironment jdbcEnvironment, String sequenceName) {
+		return jdbcEnvironment.getExtractedDatabaseMetaData().getSequenceInformationList().stream().filter(
+				sequenceInformation -> {
+					Identifier catalog = sequenceInformation.getSequenceName().getCatalogName();
+					Identifier schema = sequenceInformation.getSequenceName().getSchemaName();
+					return sequenceName.equalsIgnoreCase( sequenceInformation.getSequenceName().getSequenceName().getText() ) &&
+							( catalog == null || catalog.equals( jdbcEnvironment.getCurrentCatalog() ) ) &&
+							( schema == null || schema.equals( jdbcEnvironment.getCurrentSchema() ) );
+				}
+		).map( SequenceInformation::getIncrementValue ).findFirst().orElse( null );
 	}
 }

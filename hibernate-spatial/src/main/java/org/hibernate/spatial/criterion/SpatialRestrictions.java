@@ -9,8 +9,8 @@ package org.hibernate.spatial.criterion;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.spatial.SpatialRelation;
 
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
+import org.locationtech.jts.geom.Envelope;
+import org.locationtech.jts.geom.Geometry;
 
 /**
  * A factory for spatial criteria.

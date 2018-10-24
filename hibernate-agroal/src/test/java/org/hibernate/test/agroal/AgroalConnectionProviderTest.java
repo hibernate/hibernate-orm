@@ -72,7 +72,8 @@ public class AgroalConnectionProviderTest extends BaseCoreFunctionalTestCase {
 		}
 		catch (Exception e) {
 			// expected
-			assertTrue( e.getMessage().contains( "closed" ) );
+			assertTrue( e.getMessage() + " does not contain 'closed' or 'shutting down'",
+					e.getMessage().contains( "closed" ) || e.getMessage().contains( "shutting down" ) );
 		}
 	}
 }

@@ -138,8 +138,6 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 import org.hibernate.type.VersionType;
 
-import static org.hibernate.internal.util.StringHelper.safeInterning;
-
 /**
  * Basic functionality for persisting an entity via JDBC
  * through either generated or custom SQL
@@ -148,7 +146,7 @@ import static org.hibernate.internal.util.StringHelper.safeInterning;
  */
 public abstract class AbstractEntityPersister
 		implements OuterJoinLoadable, Queryable, ClassMetadata, UniqueKeyLoadable,
-				SQLLoadable, LazyPropertyInitializer, PostInsertIdentityPersister, Lockable {
+		SQLLoadable, LazyPropertyInitializer, PostInsertIdentityPersister, Lockable {
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractEntityPersister.class );
 
@@ -3129,8 +3127,11 @@ public abstract class AbstractEntityPersister
 		// TODO : shouldn't inserts be Expectations.NONE?
 		final Expectation expectation = Expectations.appropriateExpectation( insertResultCheckStyles[j] );
 		final int jdbcBatchSizeToUse = session.getConfiguredJdbcBatchSize();
-		final boolean useBatch = expectation.canBeBatched() && jdbcBatchSizeToUse > 1;
-		if ( useBatch && inserBatchKey == null) {
+		final boolean useBatch = expectation.canBeBatched() &&
+						jdbcBatchSizeToUse > 1 &&
+						getIdentifierGenerator().supportsJdbcBatchInserts();
+
+		if ( useBatch && inserBatchKey == null ) {
 			inserBatchKey = new BasicBatchKey(
 					getEntityName() + "#INSERT",
 					expectation
@@ -4286,8 +4287,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	private boolean isAffectedByEntityGraph(SharedSessionContractImplementor session) {
-		return session.getLoadQueryInfluencers().getFetchGraph() != null || session.getLoadQueryInfluencers()
-				.getLoadGraph() != null;
+		return session.getLoadQueryInfluencers().getEffectiveEntityGraph().getGraph() != null;
 	}
 
 	private boolean isAffectedByEnabledFetchProfiles(SharedSessionContractImplementor session) {

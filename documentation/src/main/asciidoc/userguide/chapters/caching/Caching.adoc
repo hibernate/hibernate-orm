@@ -559,6 +559,30 @@ In order to control which provider to use and specify configuration for the `Cac
 
 Only by specifying the second property `hibernate.javax.cache.uri` will you be able to have a `CacheManager` per `SessionFactory`.
 
+===== Using a non-default JCache `CacheManager`
+
+If you don't want to use the default `CacheManager`, you need to set the `hibernate.javax.cache.cache_manager` configuration property
+to one of the following values:
+
+Object reference:: If the value is an Object instance implementing the `CacheManager` interface,
+the provided `CacheManager` instance will be used.
+`Class`:: If the value is a Java `Class` object that implements the `CacheManager` interface,
+Hibernate will create a new instance for that `Class` and use it instead of the default one.
++
+[NOTE]
+====
+The default no-arg constructor is going to be used, so make sure that the `CacheManager`
+implementation class provides it.
+====
+`String`:: If the value is a Java `String`, Hibernate expects it to be the fully-qualified `Class` name
+of the `CacheManager` implementation which will be used to instantiate the non-default `CacheManager`.
++
+[NOTE]
+====
+The default no-arg constructor is going to be used, so make sure that the `CacheManager`
+implementation class provides it.
+====
+
 [[caching-provider-jcache-missing-cache-strategy]]
 ==== JCache missing cache strategy
 
@@ -682,4 +706,4 @@ Infinispan is a distributed in-memory key/value data store, available as a cache
 It supports advanced functionality such as transactions, events, querying, distributed processing, off-heap and geographical failover.
 
 For more details, check out the
-http://infinispan.org/docs/stable/user_guide/user_guide.html#jpa_hibernate_2l_cache[Infinispan User Guide].
+http://infinispan.org/docs/stable/user_guide/user_guide.html#integrations_jpa_hibernate[Infinispan User Guide].

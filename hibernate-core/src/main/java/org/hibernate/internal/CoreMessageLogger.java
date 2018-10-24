@@ -476,6 +476,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Bytecode enhancement failed: %s", id = 142)
 	String bytecodeEnhancementFailed(String entityName);
 
+	@Message(value = "Bytecode enhancement failed because no public, protected or package-private default constructor was found for entity: %s. Private constructors don't work with runtime proxies!", id = 143)
+	String bytecodeEnhancementFailedBecauseOfDefaultConstructor(String entityName);
+
 	@LogMessage(level = WARN)
 	@Message(value = "%s = false breaks the EJB3 specification", id = 144)
 	void jdbcAutoCommitFalseBreaksEjb3Spec(String autocommit);
@@ -1279,10 +1282,10 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToStopHibernateService(@Cause Exception e);
 
 	@LogMessage(level = INFO)
-	@Message(value = "Error stopping service [%s] : %s", id = 369)
+	@Message(value = "Error stopping service [%s]", id = 369)
 	void unableToStopService(
 			Class class1,
-			String string);
+			@Cause Exception e);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Exception switching from method: [%s] to a method using the column index. Reverting to using: [%<s]",
@@ -1393,12 +1396,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Oracle 11g is not yet fully supported; using Oracle 10g dialect", id = 394)
 	void unsupportedOracleVersion();
-
-	@LogMessage(level = WARN)
-	@Message(value = "Usage of obsolete property: %s no longer supported, use: %s", id = 395)
-	void unsupportedProperty(
-			Object propertyName,
-			Object newPropertyName);
 
 	@LogMessage(level = INFO)
 	@Message(value = "Updating schema", id = 396)
@@ -1824,4 +1821,27 @@ public interface CoreMessageLogger extends BasicLogger {
 			"The NotFoundAction.IGNORE @ManyToOne and @OneToOne associations are always fetched eagerly.", id = 491)
 	void ignoreNotFoundWithFetchTypeLazy(String entity, String association);
 
+	@LogMessage(level = INFO)
+	@Message(value = "Query plan cache hits: %s", id = 492)
+	void queryPlanCacheHits(long queryPlanCacheHitCount);
+
+	@LogMessage(level = INFO)
+	@Message(value = "Query plan cache misses: %s", id = 493)
+	void queryPlanCacheMisses(long queryPlanCacheMissCount);
+
+	@LogMessage(level = WARN)
+	@Message(value = "Attempt to merge an uninitialized collection with queued operations; queued operations will be ignored: %s", id = 494)
+	void ignoreQueuedOperationsOnMerge(String collectionInfoString);
+
+	@LogMessage(level = WARN)
+	@Message(value = "Attaching an uninitialized collection with queued operations to a session: %s", id = 495)
+	void queuedOperationWhenAttachToSession(String collectionInfoString);
+
+	@LogMessage(level = WARN)
+	@Message(value = "Detaching an uninitialized collection with queued operations from a session: %s", id = 496)
+	void queuedOperationWhenDetachFromSession(String collectionInfoString);
+
+	@LogMessage(level = WARN)
+	@Message(value = "The increment size of the [%s] sequence is set to [%d] in the entity mapping while the associated database sequence increment size is [%d]. The database sequence increment size will take precedence to avoid identifier allocation conflicts.", id = 497)
+	void sequenceIncrementSizeMismatch(String sequenceName, int incrementSize, int databaseIncrementSize);
 }

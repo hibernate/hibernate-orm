@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.HibernateError;
+
 import antlr.ASTFactory;
 import antlr.collections.AST;
 import antlr.collections.impl.ASTArray;
@@ -387,21 +389,28 @@ public final class ASTUtil {
 	 *
 	 * @param tokenTypeInterface The *TokenTypes interface (or implementor of said interface).
 	 *
-	 * @return The generated map.
+	 * @return A compact map int -> tokenName in array format
 	 */
-	public static Map<Integer,String> generateTokenNameCache(Class tokenTypeInterface) {
+	public static String[] generateTokenNameCache(Class tokenTypeInterface) {
 		final Field[] fields = tokenTypeInterface.getFields();
-		Map cache = new HashMap( (int) ( fields.length * .75 ) + 1 );
+		//We try to guess the right size from what we know ANTLR will do;
+		//"guessing" is safe as the three interfaces this is used on are static,
+		//and this is all run at boot so at worst would fail fast.
+		final String[] names = new String[ fields.length + 2 ];
 		for ( final Field field : fields ) {
 			if ( Modifier.isStatic( field.getModifiers() ) ) {
+				int idx = 0;
 				try {
-					cache.put( Integer.valueOf( field.getInt( null ) ), field.getName() );
+					idx = field.getInt( null );
 				}
-				catch (Throwable ignore) {
+				catch (IllegalAccessException e) {
+					throw new HibernateError( "Initialization error", e );
 				}
+				String fieldName = field.getName();
+				names[idx] = fieldName;
 			}
 		}
-		return cache;
+		return names;
 	}
 
 	/**

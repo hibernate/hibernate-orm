@@ -209,16 +209,19 @@ currently, Hibernate does not implement this feature, so EAGER associations cann
 For more info, check out the https://hibernate.atlassian.net/browse/HHH-8776[HHH-8776] Jira issue.
 
 When executing a JPQL query, if an EAGER association is omitted, Hibernate will issue a secondary select for every association needed to be fetched eagerly,
-which can lead dto N+1 query issues.
+which can lead to N+1 query issues.
 
 For this reason, it's better to use LAZY associations, and only fetch them eagerly on a per-query basis.
 ====
 
-[[fetching-strategies-dynamic-fetching-entity-subgraph]]
-==== JPA entity subgraphs
+An EntityGraph is the root of a "load plan" and must correspond to an EntityType.
 
-An entity graph specifies which attributes to be fetched, but it limited to a single entity only.
-To fetch associations from a child entity, you need to use the http://docs.oracle.com/javaee/7/api/javax/persistence/NamedSubgraph.html[`@NamedSubgraph`] annotation.
+
+[[fetching-strategies-dynamic-fetching-entity-subgraph]]
+==== JPA (key) subgraphs
+
+A sub-graph is used to control the fetching of sub-attributes of the AttributeNode it is applied to.
+It is generally defined via the http://docs.oracle.com/javaee/7/api/javax/persistence/NamedSubgraph.html[`@NamedSubgraph`] annotation.
 
 If we have a `Project` parent entity which has an `employees` child associations,
 and we'd like to fetch the `department` for the `Employee` child association.
@@ -247,6 +250,125 @@ include::{sourcedir}/GraphFetchingTest.java[tags=fetching-strategies-dynamic-fet
 include::{extrasdir}/fetching-strategies-dynamic-fetching-entity-subgraph-example.sql[]
 ----
 ====
+
+Specifying a sub-graph is only valid for an attribute (or its "key") whose type is a ManagedType.  So
+while an EntityGraph must correspond to an EntityType, a Subgraph is legal for any ManagedType.  An
+attribute's key is defined as either:
+
+* For a singular attribute, the attribute's type must be an IdentifiableType and that IdentifiableType must
+	have a composite identifier.  The "key sub-graph" is applied to the identifier type.  The
+	non-key sub-graph applies to the attribute's value, which must be a ManagedType.
+* For a plural attribute, the attribute must be a Map and the Map's key value must be a ManagedType.
+	The "key sub-graph" is applied to the Map's key type.  In this case, the non-key sub-graph applies
+	to the plural attribute's value/element.
+
+
+[[fetching-strategies-dynamic-fetching-entity-subgraph-subtype]]
+==== JPA SubGraph sub-typing
+
+SubGraphs can also be sub-type specific.  Given an attribute whose value is an inheritance hierarchy,
+we can refer to attributes of a specific sub-type using the forms of sub-graph definition that accept
+the sub-type Class.
+
+
+[[fetching-strategies-dynamic-fetching-entity-graph-parsing]]
+==== Creating and applying JPA graphs from text representations
+
+Hibernate allows the creation of JPA fetch/load graphs by parsing a textual representation
+of the graph.  Generally speaking, the textual representation of a graph is a comma-separated
+list of attribute names, optionally including any sub-graph specifications.
+`org.hibernate.graph.EntityGraphParser` is the starting point for such parsing operations.
+
+[NOTE]
+====
+Parsing a textual representation of a graph is not (yet) a part of the JPA specification.  So the
+syntax described here is specific to Hibernate.  We do hope to eventually make this syntax part of
+the JPA specification proper.
+====
+
+
+.Parsing a simple graph
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-parsing-example-1]
+----
+====
+
+This example actually functions exactly as <<fetching-strategies-dynamic-fetching-entity-subgraph-example>>,
+just using a parsed graph rather than a named graph.
+
+
+The syntax also supports defining "key sub-graphs".  To specify a key sub-graph, `.key` is added
+to the end of the attribute name.
+
+.Parsing an entity key graph
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-parsing-key-example-1]
+----
+====
+
+.Parsing a map key graph
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-parsing-key-example-2]
+----
+====
+
+Parsing can also handle sub-type specific sub-graphs.  For example, given an entity hierarchy of
+`LegalEntity` <- (`Corporation` | `Person` | `NonProfit`) and an attribute named `responsibleParty` whose
+type is the `LegalEntity` base type we might have:
+
+====
+[source, JAVA, indent=0]
+----
+responsibleParty(Corporation: ceo)
+----
+====
+
+We can even duplicate the attribute names to apply different sub-type sub-graphs:
+
+====
+[source, JAVA, indent=0]
+----
+responsibleParty(taxIdNumber), responsibleParty(Corporation: ceo), responsibleParty(NonProfit: sector)
+----
+====
+
+The duplicated attribute names are handled according to the JPA specification which says that duplicate
+specification of the attribute node results in the originally registered AttributeNode to be re-used
+effectively merging the 2 AttributeNode specifications together.  In other words, the above specification
+creates a single AttributeNode with 3 distinct SubGraphs.  It is functionally the same as calling:
+
+====
+[source, JAVA, indent=0]
+----
+Class<Invoice> invoiceClass = ...;
+javax.persistence.EntityGraph<Invoice> invoiceGraph = entityManager.createEntityGraph( invoiceClass );
+invoiceGraph.addAttributeNode( "responsibleParty" );
+invoiceGraph.addSubgraph( "responsibleParty" ).addAttributeNode( "taxIdNumber" );
+invoiceGraph.addSubgraph( "responsibleParty", Corporation.class ).addAttributeNode( "ceo" );
+invoiceGraph.addSubgraph( "responsibleParty", NonProfit.class ).addAttributeNode( "sector" );
+----
+====
+
+[[fetching-strategies-dynamic-fetching-entity-graph-merging]]
+==== Combining multiple JPA entity graphs into one
+
+Multiple entity graphs can be combined into a single "super graph" that acts as a union. Graph from
+the previous example can also be built by combining separate aspect graphs into one, such as:
+
+.Combining multiple graphs into one
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-merging-example]
+----
+====
+
 
 [[fetching-strategies-dynamic-fetching-profile]]
 === Dynamic fetching via Hibernate profiles

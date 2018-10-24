@@ -121,3 +121,4 @@ JPA portability
 * generated id types
 * composite ids and many-to-one
 * "embedded composite identifiers"
+

@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 
 /**
@@ -21,8 +22,8 @@ public interface EnumValueConverter<O extends Enum, R> extends BasicValueConvert
 	EnumJavaTypeDescriptor<O> getJavaDescriptor();
 	int getJdbcTypeCode();
 
-	O readValue(ResultSet resultSet, String name) throws SQLException;
-	void writeValue(PreparedStatement statement, O value, int position) throws SQLException;
+	O readValue(ResultSet resultSet, String name, SharedSessionContractImplementor session) throws SQLException;
+	void writeValue(PreparedStatement statement, O value, int position, SharedSessionContractImplementor session) throws SQLException;
 
 	String toSqlLiteral(Object value);
 }

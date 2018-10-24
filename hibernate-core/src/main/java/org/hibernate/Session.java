@@ -9,12 +9,15 @@ package org.hibernate;
 import java.io.Closeable;
 import java.io.Serializable;
 import java.sql.Connection;
+import java.util.List;
+import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
 import javax.persistence.FlushModeType;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 
+import org.hibernate.graph.RootGraph;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.jpa.HibernateEntityManager;
@@ -977,6 +980,21 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 * @throws HibernateException Generally indicates wrapped {@link java.sql.SQLException}
 	 */
 	<T> T doReturningWork(ReturningWork<T> work) throws HibernateException;
+
+	@Override
+	<T> RootGraph<T> createEntityGraph(Class<T> rootType);
+
+	@Override
+	RootGraph<?> createEntityGraph(String graphName);
+
+	@Override
+	RootGraph<?> getEntityGraph(String graphName);
+
+	@Override
+	@SuppressWarnings({"unchecked", "RedundantCast"})
+	default <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) {
+		return (List) getSessionFactory().findEntityGraphsByType( entityClass );
+	}
 
 	/**
 	 * Disconnect the session from its underlying JDBC connection.  This is intended for use in cases where the

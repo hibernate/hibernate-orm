@@ -54,6 +54,8 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TypedValue;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.RootGraph;
 import org.hibernate.hql.internal.QueryExecutionRequestException;
 import org.hibernate.internal.EmptyScrollableResults;
 import org.hibernate.internal.EntityManagerMessageLogger;
@@ -61,7 +63,7 @@ import org.hibernate.internal.HEMLogging;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.TypedParameterValue;
-import org.hibernate.jpa.graph.internal.EntityGraphImpl;
+import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
@@ -70,6 +72,7 @@ import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.ParameterMetadata;
+import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
@@ -1079,8 +1082,9 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 				}
 			}
 			else if ( HINT_FETCHGRAPH.equals( hintName ) || HINT_LOADGRAPH.equals( hintName ) ) {
-				if (value instanceof EntityGraphImpl ) {
-					applyEntityGraphQueryHint( new EntityGraphQueryHint( hintName, (EntityGraphImpl) value ) );
+				if ( value instanceof RootGraph ) {
+					applyGraph( (RootGraph) value, GraphSemantic.fromJpaHintName( hintName ) );
+					applyEntityGraphQueryHint( new EntityGraphQueryHint( hintName, (RootGraphImpl) value ) );
 				}
 				else {
 					MSG_LOGGER.warnf( "The %s hint was set, but the value was not an EntityGraph!", hintName );
@@ -1271,12 +1275,31 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		getLockOptions().setAliasSpecificLockMode( alias, lockMode );
 	}
 
+	@Override
+	public Query<R> applyGraph(RootGraph graph, GraphSemantic semantic) {
+		if ( semantic == null ) {
+			this.entityGraphQueryHint = null;
+		}
+		else {
+			if ( graph == null ) {
+				throw new IllegalStateException( "Semantic was non-null, but graph was null" );
+			}
+
+			applyEntityGraphQueryHint( new EntityGraphQueryHint( graph, semantic ) );
+		}
+
+		return this;
+	}
+
 	/**
 	 * Used from HEM code as a (hopefully temporary) means to apply a custom query plan
 	 * in regards to a JPA entity graph.
 	 *
 	 * @param hint The entity graph hint object
+	 *
+	 * @deprecated (5.4) Use {@link #applyGraph} instead
 	 */
+	@Deprecated
 	protected void applyEntityGraphQueryHint(EntityGraphQueryHint hint) {
 		this.entityGraphQueryHint = hint;
 	}

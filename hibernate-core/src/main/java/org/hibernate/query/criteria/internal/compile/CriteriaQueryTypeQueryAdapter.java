@@ -37,6 +37,8 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.RootGraph;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryImplementor;
@@ -143,6 +145,12 @@ public class CriteriaQueryTypeQueryAdapter<X> implements QueryImplementor<X> {
 
 	public QueryImplementor<X> setHint(String name, Object value) {
 		jpqlQuery.setHint( name, value );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<X> applyGraph(RootGraph graph, GraphSemantic semantic) {
+		jpqlQuery.applyGraph( graph, semantic );
 		return this;
 	}
 

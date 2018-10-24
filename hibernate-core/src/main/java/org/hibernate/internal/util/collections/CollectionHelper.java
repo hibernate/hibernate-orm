@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 /**
  * Various help for handling collections.
@@ -55,7 +56,7 @@ public final class CollectionHelper {
 	 * @return The sized map.
 	 */
 	public static <K, V> Map<K, V> mapOfSize(int size) {
-		return new HashMap<K, V>( determineProperSizing( size ), LOAD_FACTOR );
+		return new HashMap<>( determineProperSizing( size ), LOAD_FACTOR );
 	}
 
 	/**
@@ -68,6 +69,58 @@ public final class CollectionHelper {
 	 */
 	public static int determineProperSizing(Map original) {
 		return determineProperSizing( original.size() );
+	}
+
+	public static <X, Y> Map<X, Y> makeCopy(Map<X, Y> map) {
+		final Map<X, Y> copy = mapOfSize( map.size() + 1 );
+		copy.putAll( map );
+		return copy;
+	}
+
+	public static <K, V> HashMap<K, V> makeCopy(
+			Map<K, V> original,
+			Function<K, K> keyTransformer,
+			Function<V, V> valueTransformer) {
+		if ( original == null ) {
+			return null;
+		}
+
+		final HashMap<K, V> copy = new HashMap<>( determineProperSizing( original ) );
+
+		original.forEach(
+				(key, value) -> copy.put(
+						keyTransformer.apply( key ),
+						valueTransformer.apply( value )
+				)
+		);
+
+		return copy;
+	}
+
+	public static <K, V> Map<K, V> makeMap(
+			Collection<V> collection,
+			Function<V,K> keyProducer) {
+		return makeMap( collection, keyProducer, v -> v );
+	}
+
+	public static <K, V, E> Map<K, V> makeMap(
+			Collection<E> collection,
+			Function<E,K> keyProducer,
+			Function<E,V> valueProducer) {
+		if ( isEmpty( collection ) ) {
+			return Collections.emptyMap();
+		}
+
+		final Map<K, V> map = new HashMap<>();
+
+		for ( E element : collection ) {
+			map.put(
+					keyProducer.apply( element ),
+					valueProducer.apply( element )
+			);
+		}
+
+		return map;
 	}
 
 	/**
@@ -157,11 +210,5 @@ public final class CollectionHelper {
 
 	public static boolean isEmpty(Object[] objects) {
 		return objects == null || objects.length == 0;
-	}
-
-	public static <X, Y> Map<X, Y> makeCopy(Map<X, Y> map) {
-		final Map<X, Y> copy = mapOfSize( map.size() + 1 );
-		copy.putAll( map );
-		return copy;
 	}
 }

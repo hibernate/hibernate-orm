@@ -8,7 +8,6 @@ package org.hibernate.service.internal;
 
 import java.util.List;
 
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -33,21 +32,17 @@ public class SessionFactoryServiceRegistryImpl
 	private final SessionFactoryImplementor sessionFactory;
 	private EventListenerRegistry cachedEventListenerRegistry;
 
-	private final BootstrapContext bootstrapContext;
-
 	@SuppressWarnings( {"unchecked"})
 	public SessionFactoryServiceRegistryImpl(
 			ServiceRegistryImplementor parent,
 			List<SessionFactoryServiceInitiator> initiators,
 			List<ProvidedService> providedServices,
 			SessionFactoryImplementor sessionFactory,
-			BootstrapContext bootstrapContext,
 			SessionFactoryOptions sessionFactoryOptions) {
 		super( parent );
 
 		this.sessionFactory = sessionFactory;
 		this.sessionFactoryOptions = sessionFactoryOptions;
-		this.bootstrapContext = bootstrapContext;
 
 		// for now, just use the standard initiator list
 		for ( SessionFactoryServiceInitiator initiator : initiators ) {
@@ -58,8 +53,6 @@ public class SessionFactoryServiceRegistryImpl
 		for ( ProvidedService providedService : providedServices ) {
 			createServiceBinding( providedService );
 		}
-
-		bootstrapContext = null;
 	}
 
 	@Override
@@ -73,11 +66,6 @@ public class SessionFactoryServiceRegistryImpl
 		if ( Configurable.class.isInstance( serviceBinding.getService() ) ) {
 			( (Configurable) serviceBinding.getService() ).configure( getService( ConfigurationService.class ).getSettings() );
 		}
-	}
-
-	@Override
-	public BootstrapContext getBootstrapContext() {
-		return bootstrapContext;
 	}
 
 	@Override

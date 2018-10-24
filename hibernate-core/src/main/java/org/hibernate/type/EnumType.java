@@ -247,7 +247,7 @@ public class EnumType<T extends Enum>
 	@Override
 	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws SQLException {
 		verifyConfigured();
-		return enumValueConverter.readValue( rs, names[0] );
+		return enumValueConverter.readValue( rs, names[0], session );
 	}
 
 	private void verifyConfigured() {
@@ -259,7 +259,7 @@ public class EnumType<T extends Enum>
 	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
 		verifyConfigured();
-		enumValueConverter.writeValue( st, (Enum) value, index );
+		enumValueConverter.writeValue( st, (Enum) value, index, session );
 	}
 
 	@Override

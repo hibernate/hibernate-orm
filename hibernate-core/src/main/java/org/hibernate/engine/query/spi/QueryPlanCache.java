@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.hibernate.Filter;
 import org.hibernate.MappingException;
@@ -144,17 +145,32 @@ public class QueryPlanCache implements Serializable {
 	 * @throws MappingException Indicates a problem translating the query
 	 */
 	@SuppressWarnings("unchecked")
-	public HQLQueryPlan getHQLQueryPlan(String queryString, boolean shallow, Map<String,Filter> enabledFilters)
+	public HQLQueryPlan getHQLQueryPlan(String queryString, boolean shallow, Map<String, Filter> enabledFilters)
 			throws QueryException, MappingException {
 		final HQLQueryPlanKey key = new HQLQueryPlanKey( queryString, shallow, enabledFilters );
 		HQLQueryPlan value = (HQLQueryPlan) queryPlanCache.get( key );
+		boolean stats = factory.getStatistics().isStatisticsEnabled();
+
 		if ( value == null ) {
+			final long startTime = ( stats ) ? System.nanoTime() : 0L;
+
 			LOG.tracev( "Unable to locate HQL query plan in cache; generating ({0})", queryString );
 			value = new HQLQueryPlan( queryString, shallow, enabledFilters, factory );
+
+			if ( stats ) {
+				final long endTime = System.nanoTime();
+				final long microseconds = TimeUnit.MICROSECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
+				factory.getStatistics().queryCompiled( queryString, microseconds );
+			}
+
 			queryPlanCache.putIfAbsent( key, value );
 		}
 		else {
 			LOG.tracev( "Located HQL query plan in cache ({0})", queryString );
+
+			if ( stats ) {
+				factory.getStatistics().queryPlanCacheHit( queryString );
+			}
 		}
 		return value;
 	}

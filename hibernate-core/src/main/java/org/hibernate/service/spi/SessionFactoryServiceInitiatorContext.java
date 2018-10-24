@@ -6,7 +6,6 @@
  */
 package org.hibernate.service.spi;
 
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
@@ -14,7 +13,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  * @author Steve Ebersole
  */
 public interface SessionFactoryServiceInitiatorContext {
-	BootstrapContext getBootstrapContext();
 	SessionFactoryImplementor getSessionFactory();
 	SessionFactoryOptions getSessionFactoryOptions();
 	ServiceRegistryImplementor getServiceRegistry();

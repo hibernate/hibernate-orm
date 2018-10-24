@@ -29,8 +29,8 @@ buildscript {
 }
 
 plugins {
-	id 'com.gradle.build-scan' version '1.9'
-	id 'me.champeau.buildscan-recipes' version '0.1.7'
+	id 'com.gradle.build-scan' version '1.16'
+	id 'me.champeau.buildscan-recipes' version '0.2.3'
 }
 
 allprojects {
@@ -94,7 +94,7 @@ task ciBuild {
 
 
 wrapper {
-	gradleVersion = '4.9'
+	gradleVersion = '4.10.2'
 	distributionType = Wrapper.DistributionType.ALL
 }
 
@@ -102,16 +102,11 @@ wrapper {
 buildScan {
 	licenseAgreementUrl = 'https://gradle.com/terms-of-service'
 	licenseAgree = 'yes'
-
-	recipe 'git-commit', baseUrl: 'https://github.com/hibernate/hibernate-orm/tree'
 }
 
-
-
-
-
-
-
+buildScanRecipes {
+	recipe 'git-commit', baseUrl: 'https://github.com/hibernate/hibernate-orm/tree'
+}
 
 //idea {
 //    project {

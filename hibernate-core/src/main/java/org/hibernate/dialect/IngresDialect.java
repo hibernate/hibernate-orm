@@ -20,6 +20,8 @@ import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.AfterUseAction;
+import org.hibernate.tool.schema.extract.internal.SequenceNameExtractorImpl;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -213,6 +215,11 @@ public class IngresDialect extends Dialect {
 	@Override
 	public String getQuerySequencesString() {
 		return "select seq_name from iisequence";
+	}
+
+	@Override
+	public SequenceInformationExtractor getSequenceInformationExtractor() {
+		return SequenceNameExtractorImpl.INSTANCE;
 	}
 
 	@Override

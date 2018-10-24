@@ -43,12 +43,6 @@ public class AgroalSkipAutoCommitTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	public void releaseSessionFactory() {
-		super.releaseSessionFactory();
-		connectionProvider.stop();
-	}
-
-	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[]{ City.class };
 	}

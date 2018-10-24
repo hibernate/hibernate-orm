@@ -60,10 +60,9 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.stat.Statistics;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
-
-import org.jboss.logging.Logger;
 
 import static org.hibernate.cfg.AvailableSettings.ACQUIRE_CONNECTIONS;
 import static org.hibernate.cfg.AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS;
@@ -113,6 +112,7 @@ import static org.hibernate.cfg.AvailableSettings.SESSION_SCOPED_INTERCEPTOR;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_FETCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_INSPECTOR;
+import static org.hibernate.cfg.AvailableSettings.QUERY_STATISTICS_MAX_SIZE;
 import static org.hibernate.cfg.AvailableSettings.USE_DIRECT_REFERENCE_CACHE_ENTRIES;
 import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
 import static org.hibernate.cfg.AvailableSettings.USE_IDENTIFIER_ROLLBACK;
@@ -243,6 +243,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean inClauseParameterPaddingEnabled;
 
 	private boolean nativeExceptionHandling51Compliance;
+	private int queryStatisticsMaxSize;
 
 	@SuppressWarnings({"WeakerAccess", "deprecation"})
 	public SessionFactoryOptionsBuilder(StandardServiceRegistry serviceRegistry, BootstrapContext context) {
@@ -509,6 +510,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				configurationSettings,
 				false
 		);
+
+		this.queryStatisticsMaxSize = ConfigurationHelper.getInt(
+				QUERY_STATISTICS_MAX_SIZE,
+				configurationSettings,
+				Statistics.DEFAULT_QUERY_STATISTICS_MAX_SIZE
+		);
+
 		if ( context.isJpaBootstrap() && nativeExceptionHandling51Compliance ) {
 			log.nativeExceptionHandling51ComplianceJpaBootstrapping();
 			this.nativeExceptionHandling51Compliance = false;
@@ -1029,6 +1037,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean nativeExceptionHandling51Compliance() {
 		return nativeExceptionHandling51Compliance;
+	}
+
+	@Override
+	public int getQueryStatisticsMaxSize() {
+		return queryStatisticsMaxSize;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

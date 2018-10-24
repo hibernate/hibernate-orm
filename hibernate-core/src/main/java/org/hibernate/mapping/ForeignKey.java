@@ -33,7 +33,7 @@ public class ForeignKey extends Constraint {
 	@Override
 	public String getExportIdentifier() {
 		// NOt sure name is always set.  Might need some implicit naming
-		return StringHelper.qualify( getTable().getName(), "FK-" + getName() );
+		return StringHelper.qualify( getTable().getExportIdentifier(), "FK-" + getName() );
 	}
 
 	public void disableCreation() {

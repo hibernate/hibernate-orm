@@ -14,27 +14,12 @@ apply plugin: 'org.hibernate.build.gradle.xjc'
 description = 'Hibernate\'s core ORM functionality'
 
 configurations {
-    hibernateJpaModelGenTool {
-        description = "Dependencies for running the Hibernate JPA Metamodel Generator AnnotationProcessor tool"
-    }
     tests {
         description = 'Configuration for the produced test jar'
     }
 }
 
 dependencies {
-
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    // Java 9 ftw!
-    if ( JavaVersion.current().isJava9Compatible() ) {
-        xjc( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
-        xjc( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
-        xjc( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
-        xjc( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
-        xjc( 'javax.activation:javax.activation-api:1.2.0' )
-        xjc( 'javax.annotation:jsr250-api:1.0' )
-    }
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     compile( libraries.jpa )
     // Javassist is no longer the default enhancer but still required for other purposes, e.g. Scanning
@@ -54,6 +39,15 @@ dependencies {
     compile( libraries.dom4j )
     compile( libraries.commons_annotations )
     antlr( libraries.antlr )
+
+    // JAXB
+    compile( libraries.jaxb_api )
+    compile( libraries.jaxb_runtime )
+    xjc( libraries.jaxb_runtime )
+    xjc( libraries.jaxb_xjc )
+    xjc( libraries.jaxb2_basics )
+    xjc( libraries.jaxb2_basics_ant )
+    xjc( libraries.activation )
 
     provided( libraries.jacc )
     provided( libraries.validation )
@@ -90,9 +84,11 @@ dependencies {
     testRuntime( libraries.javassist )
     testRuntime( libraries.byteBuddy )
     testRuntime( libraries.weld )
+    testRuntime( libraries.atomikos )
+    testRuntime( libraries.atomikos_jta )
     testRuntime(libraries.wildfly_transaction_client)
 
-	testCompile( project( ':hibernate-jpamodelgen' ) )
+    testAnnotationProcessor( project( ':hibernate-jpamodelgen' ) )
 
     testCompile libraries.arquillian_junit_container
     testCompile libraries.arquillian_protocol_servlet
@@ -129,7 +125,8 @@ jar {
             'javax.enterprise.context.spi;resolution:=optional',
             'javax.enterprise.inject.spi;resolution:=optional',
             'javax.inject;resolution:=optional',
-            'net.bytebuddy.*;resolution:=optional'
+            'net.bytebuddy.*;resolution:=optional',
+            'javax.xml.bind.*'
 
 //        // TODO: Uncomment once EntityManagerFactoryBuilderImpl no longer
 //        // uses ClassLoaderServiceImpl.
@@ -223,8 +220,6 @@ test.dependsOn ':hibernate-orm-modules:prepareWildFlyForTests'
 
 test {
     systemProperty 'file.encoding', 'utf-8'
-    //Set the port-offset to match the offset in arquillian.xml
-    systemProperty 'jboss.socket.binding.port-offset', '137'
     beforeTest { descriptor ->
         //println "Starting test: " + descriptor
     }

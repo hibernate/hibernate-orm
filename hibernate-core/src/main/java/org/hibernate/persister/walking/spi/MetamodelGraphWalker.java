@@ -91,37 +91,44 @@ public class MetamodelGraphWalker {
 	private void visitEntityDefinition(EntityDefinition entityDefinition) {
 		strategy.startingEntity( entityDefinition );
 
-		AbstractEntityPersister persister = (AbstractEntityPersister) entityDefinition.getEntityPersister();
-		visitIdentifierDefinition( entityDefinition.getEntityKeyDefinition() );
-		visitAttributes( entityDefinition, persister);
-
-		strategy.finishingEntity( entityDefinition );
+		try {
+			AbstractEntityPersister persister = (AbstractEntityPersister) entityDefinition.getEntityPersister();
+			visitIdentifierDefinition( entityDefinition.getEntityKeyDefinition() );
+			visitAttributes( entityDefinition, persister );
+		}
+		finally {
+			strategy.finishingEntity( entityDefinition );
+		}
 	}
 
 	private void visitIdentifierDefinition(EntityIdentifierDefinition identifierDefinition) {
 		strategy.startingEntityIdentifier( identifierDefinition );
 
-		// to make encapsulated and non-encapsulated composite identifiers work the same here, we "cheat" here a
-		// little bit and simply walk the attributes of the composite id in both cases.
+		try {
+			// to make encapsulated and non-encapsulated composite identifiers work the same here, we "cheat" here a
+			// little bit and simply walk the attributes of the composite id in both cases.
 
-		// this works because the LoadPlans already build the top-level composite for composite ids
+			// this works because the LoadPlans already build the top-level composite for composite ids
 
-		if ( identifierDefinition.isEncapsulated() ) {
-			// in the encapsulated composite id case that means we have a little bit of duplication between here and
-			// visitCompositeDefinition, but in the spirit of consistently handling composite ids, that is much better
-			// solution...
-			final EncapsulatedEntityIdentifierDefinition idAsEncapsulated = (EncapsulatedEntityIdentifierDefinition) identifierDefinition;
-			final AttributeDefinition idAttr = idAsEncapsulated.getAttributeDefinition();
-			if ( CompositionDefinition.class.isInstance( idAttr ) ) {
-				visitCompositeDefinition( (CompositionDefinition) idAttr );
+			if ( identifierDefinition.isEncapsulated() ) {
+				// in the encapsulated composite id case that means we have a little bit of duplication between here and
+				// visitCompositeDefinition, but in the spirit of consistently handling composite ids, that is much better
+				// solution...
+				final EncapsulatedEntityIdentifierDefinition idAsEncapsulated = (EncapsulatedEntityIdentifierDefinition) identifierDefinition;
+				final AttributeDefinition idAttr = idAsEncapsulated.getAttributeDefinition();
+				if ( CompositionDefinition.class.isInstance( idAttr ) ) {
+					visitCompositeDefinition( (CompositionDefinition) idAttr );
+				}
 			}
-		}
-		else {
-			// NonEncapsulatedEntityIdentifierDefinition itself is defined as a CompositionDefinition
-			visitCompositeDefinition( (NonEncapsulatedEntityIdentifierDefinition) identifierDefinition );
-		}
+			else {
+				// NonEncapsulatedEntityIdentifierDefinition itself is defined as a CompositionDefinition
+				visitCompositeDefinition( (NonEncapsulatedEntityIdentifierDefinition) identifierDefinition );
+			}
 
-		strategy.finishingEntityIdentifier( identifierDefinition );
+		}
+		finally {
+			strategy.finishingEntityIdentifier( identifierDefinition );
+		}
 	}
 
 	private void visitAttributes(AttributeSource attributeSource, AbstractEntityPersister sourcePersister) {
@@ -161,23 +168,27 @@ public class MetamodelGraphWalker {
 
 
 		boolean continueWalk = strategy.startingAttribute( attributeDefinition );
-		if ( continueWalk ) {
-			final PropertyPath old = currentPropertyPath;
-			currentPropertyPath = subPath;
-			try {
-				final Type attributeType = attributeDefinition.getType();
-				if ( attributeType.isAssociationType() ) {
-					visitAssociation( (AssociationAttributeDefinition) attributeDefinition );
+		try {
+			if ( continueWalk ) {
+				final PropertyPath old = currentPropertyPath;
+				currentPropertyPath = subPath;
+				try {
+					final Type attributeType = attributeDefinition.getType();
+					if ( attributeType.isAssociationType() ) {
+						visitAssociation( (AssociationAttributeDefinition) attributeDefinition );
+					}
+					else if ( attributeType.isComponentType() ) {
+						visitCompositeDefinition( (CompositionDefinition) attributeDefinition );
+					}
 				}
-				else if ( attributeType.isComponentType() ) {
-					visitCompositeDefinition( (CompositionDefinition) attributeDefinition );
+				finally {
+					currentPropertyPath = old;
 				}
-			}
-			finally {
-				currentPropertyPath = old;
 			}
 		}
-		strategy.finishingAttribute( attributeDefinition );
+		finally {
+			strategy.finishingAttribute( attributeDefinition );
+		}
 	}
 
 	private void visitAssociation(AssociationAttributeDefinition attribute) {
@@ -206,18 +217,23 @@ public class MetamodelGraphWalker {
 	private void visitCompositeDefinition(CompositionDefinition compositionDefinition) {
 		strategy.startingComposite( compositionDefinition );
 
-		visitAttributes( compositionDefinition, null );
-
-		strategy.finishingComposite( compositionDefinition );
+		try {
+			visitAttributes( compositionDefinition, null );
+		}
+		finally {
+			strategy.finishingComposite( compositionDefinition );
+		}
 	}
 
 	private void visitCollectionDefinition(CollectionDefinition collectionDefinition) {
 		strategy.startingCollection( collectionDefinition );
-
-		visitCollectionIndex( collectionDefinition );
-		visitCollectionElements( collectionDefinition );
-
-		strategy.finishingCollection( collectionDefinition );
+		try {
+			visitCollectionIndex( collectionDefinition );
+			visitCollectionElements( collectionDefinition );
+		}
+		finally {
+			strategy.finishingCollection( collectionDefinition );
+		}
 	}
 
 	private void visitCollectionIndex(CollectionDefinition collectionDefinition) {
@@ -228,53 +244,60 @@ public class MetamodelGraphWalker {
 
 		strategy.startingCollectionIndex( collectionIndexDefinition );
 
-		log.debug( "Visiting index for collection :  " + currentPropertyPath.getFullPath() );
-		currentPropertyPath = currentPropertyPath.append( "<index>" );
-
 		try {
-			final Type collectionIndexType = collectionIndexDefinition.getType();
-			if ( collectionIndexType.isAnyType() ) {
-				visitAnyDefinition( collectionIndexDefinition.toAnyMappingDefinition() );
+
+			log.debug( "Visiting index for collection :  " + currentPropertyPath.getFullPath() );
+			currentPropertyPath = currentPropertyPath.append( "<index>" );
+
+			try {
+				final Type collectionIndexType = collectionIndexDefinition.getType();
+				if ( collectionIndexType.isAnyType() ) {
+					visitAnyDefinition( collectionIndexDefinition.toAnyMappingDefinition() );
+				}
+				else if ( collectionIndexType.isComponentType() ) {
+					visitCompositeDefinition( collectionIndexDefinition.toCompositeDefinition() );
+				}
+				else if ( collectionIndexType.isAssociationType() ) {
+					visitEntityDefinition( collectionIndexDefinition.toEntityDefinition() );
+				}
 			}
-			else if ( collectionIndexType.isComponentType() ) {
-				visitCompositeDefinition( collectionIndexDefinition.toCompositeDefinition() );
-			}
-			else if ( collectionIndexType.isAssociationType() ) {
-				visitEntityDefinition( collectionIndexDefinition.toEntityDefinition() );
+			finally {
+				currentPropertyPath = currentPropertyPath.getParent();
 			}
 		}
 		finally {
-			currentPropertyPath = currentPropertyPath.getParent();
+			strategy.finishingCollectionIndex( collectionIndexDefinition );
 		}
-
-		strategy.finishingCollectionIndex( collectionIndexDefinition );
 	}
 
 	private void visitCollectionElements(CollectionDefinition collectionDefinition) {
 		final CollectionElementDefinition elementDefinition = collectionDefinition.getElementDefinition();
+
 		strategy.startingCollectionElements( elementDefinition );
-
-		final Type collectionElementType = elementDefinition.getType();
-		if ( collectionElementType.isAnyType() ) {
-			visitAnyDefinition( elementDefinition.toAnyMappingDefinition() );
-		}
-		else if ( collectionElementType.isComponentType() ) {
-			visitCompositeDefinition( elementDefinition.toCompositeElementDefinition() );
-		}
-		else if ( collectionElementType.isEntityType() ) {
-			if ( ! collectionDefinition.getCollectionPersister().isOneToMany() ) {
-				final QueryableCollection queryableCollection = (QueryableCollection) collectionDefinition.getCollectionPersister();
-				addAssociationKey(
-						new AssociationKey(
-								queryableCollection.getTableName(),
-								queryableCollection.getElementColumnNames()
-						)
-				);
+		try {
+			final Type collectionElementType = elementDefinition.getType();
+			if ( collectionElementType.isAnyType() ) {
+				visitAnyDefinition( elementDefinition.toAnyMappingDefinition() );
 			}
-			visitEntityDefinition( elementDefinition.toEntityDefinition() );
+			else if ( collectionElementType.isComponentType() ) {
+				visitCompositeDefinition( elementDefinition.toCompositeElementDefinition() );
+			}
+			else if ( collectionElementType.isEntityType() ) {
+				if ( !collectionDefinition.getCollectionPersister().isOneToMany() ) {
+					final QueryableCollection queryableCollection = (QueryableCollection) collectionDefinition.getCollectionPersister();
+					addAssociationKey(
+							new AssociationKey(
+									queryableCollection.getTableName(),
+									queryableCollection.getElementColumnNames()
+							)
+					);
+				}
+				visitEntityDefinition( elementDefinition.toEntityDefinition() );
+			}
 		}
-
-		strategy.finishingCollectionElements( elementDefinition );
+		finally {
+			strategy.finishingCollectionElements( elementDefinition );
+		}
 	}
 
 	private final Set<AssociationKey> visitedAssociationKeys = new HashSet<AssociationKey>();

@@ -35,6 +35,7 @@ import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.hibernate.stat.Statistics;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 /**
@@ -289,5 +290,9 @@ public interface SessionFactoryOptions {
 
 	default boolean nativeExceptionHandling51Compliance() {
 		return false;
+	}
+
+	default int getQueryStatisticsMaxSize() {
+		return Statistics.DEFAULT_QUERY_STATISTICS_MAX_SIZE;
 	}
 }

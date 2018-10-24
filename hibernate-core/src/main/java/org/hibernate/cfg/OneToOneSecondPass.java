@@ -13,6 +13,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -244,10 +245,15 @@ public class OneToOneSecondPass implements SecondPass {
 				boolean referenceToPrimaryKey  = referencesDerivedId || mappedBy == null;
 				value.setReferenceToPrimaryKey( referenceToPrimaryKey );
 				
-				// If the other side is a derived ID, prevent an infinite
-				// loop of attempts to resolve identifiers.
-				if ( referencesDerivedId ) {
-					( (ManyToOne) otherSideProperty.getValue() ).setReferenceToPrimaryKey( false );
+				// If the other side is a derived ID, and both sides are eager using FetchMode.JOIN,
+				// prevent an infinite loop of attempts to resolve identifiers by making
+				// this side use FetchMode.SELECT.
+				if ( referencesDerivedId &&
+						!value.isLazy() &&
+						value.getFetchMode() == FetchMode.JOIN &&
+						!otherSideProperty.isLazy() &&
+						otherSideProperty.getValue().getFetchMode() == FetchMode.JOIN ) {
+					value.setFetchMode( FetchMode.SELECT );
 				}
 
 				String propertyRef = value.getReferencedPropertyName();

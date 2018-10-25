@@ -19,38 +19,6 @@ import org.hibernate.annotations.AccessType;
  */
 @Entity
 @AccessType("field")
-public class Furniture extends Woody {
-	@Id
-	@GeneratedValue
-	private Integer id;
+public class Furniture extends BaseFurniture {
 
-	private String brand;
-
-	@Transient
-	public String getBrand() {
-		return brand;
-	}
-
-	public void setBrand(String brand) {
-		this.brand = brand;
-	}
-
-	public Integer getId() {
-		return id;
-	}
-
-	public void setId(Integer id) {
-		this.id = id;
-	}
-
-	@AccessType("property")
-	public long weight;
-
-	public long getWeight() {
-		return weight + 1;
-	}
-
-	public void setWeight(long weight) {
-		this.weight = weight + 1;
-	}
 }

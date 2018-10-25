@@ -113,12 +113,34 @@ Hibernate offers multiple identifier generation strategies, see the <<chapters/d
 [[entity-pojo-mapping]]
 ==== Mapping the entity
 
-The main piece in mapping the entity is the `javax.persistence.Entity` annotation.
-The `@Entity` annotation defines just one attribute `name` which is used to give a specific entity name for use in JPQL queries.
-By default, the entity name represents the unqualified name of the entity class itself.
+The main piece in mapping the entity is the http://docs.oracle.com/javaee/7/api/javax/persistence/Entity.html[`javax.persistence.Entity`] annotation.
+
+The `@Entity` annotation defines just the https://docs.oracle.com/javaee/7/api/javax/persistence/Entity.html#name--[`name`] attribute which is used to give a specific entity name for use in JPQL queries.
+
+By default, if the name attribute the `@Entity` annotation is missing, the unqualified name of the entity class itself will be used as the entity name
+
+[IMPORTANT]
+====
+Because the entity name is given by the unqualified name of the class, Hibernate does not allow registering multiple entities with the same name even if the entity classes reside in different packages.
+
+Without imposing this restriction, Hibernate would not know which entity class is referenced in a JPQL query if the unqualified entity name is associated with more then one entity classes.
+====
+
+In the following example, the entity name (e.g. `Book`) is given by the unqualified name of the entity class name.
+
+[[entity-pojo-mapping-implicit-name-example]]
+.`@Entity` mapping with an implicit name
+====
+[source,java]
+----
+include::{sourcedir-mapping}/identifier/Book.java[tag=entity-pojo-mapping-implicit-name-example, indent=0]
+----
+====
+
+However, the entity name can also be set explicitly as illustrated by the following example.
 
 [[entity-pojo-mapping-example]]
-.Simple `@Entity` mapping
+.`@Entity` mapping with an explicit name
 ====
 [source,java]
 ----

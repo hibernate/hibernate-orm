@@ -1028,7 +1028,12 @@ This basic query allows retrieving entity names and corresponding Java classes c
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/EntityTypeChangeAuditTest.java[tags=envers-tracking-modified-entities-queries-example]
+include::{sourcedir}/EntityTypeChangeAuditTest.java[tags=envers-tracking-modified-entities-queries-example1]
+----
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/EntityTypeChangeAuditTest.java[tags=envers-tracking-modified-entities-queries-example2]
 ----
 ====
 

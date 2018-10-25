@@ -140,7 +140,7 @@ public class JoinedInheritanceForeignKeyTest extends BaseUnitTestCase {
 	public static class User extends Role {
 	}
 
-	@Entity(name = "User")
+	@Entity(name = "Person")
 	@DiscriminatorValue("8")
 	@PrimaryKeyJoinColumn(name = "USER_ID")
 	public static class Person extends Role {

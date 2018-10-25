@@ -289,9 +289,30 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	@Override
 	public void addEntityBinding(PersistentClass persistentClass) throws DuplicateMappingException {
 		final String entityName = persistentClass.getEntityName();
+		final String jpaEntityName = persistentClass.getJpaEntityName();
 		if ( entityBindingMap.containsKey( entityName ) ) {
 			throw new DuplicateMappingException( DuplicateMappingException.Type.ENTITY, entityName );
 		}
+
+		PersistentClass matchingPersistentClass = entityBindingMap.values()
+				.stream()
+				.filter( existingPersistentClass -> existingPersistentClass.getJpaEntityName().equals( jpaEntityName ) )
+				.findFirst()
+				.orElse( null );
+
+		if ( matchingPersistentClass != null ) {
+			throw new DuplicateMappingException(
+					String.format(
+							"The [%s] and [%s] entities share the same JPA entity name: [%s] which is not allowed!",
+							matchingPersistentClass.getClassName(),
+							persistentClass.getClassName(),
+							jpaEntityName
+					),
+					DuplicateMappingException.Type.ENTITY,
+					jpaEntityName
+			);
+		}
+
 		entityBindingMap.put( entityName, persistentClass );
 	}
 

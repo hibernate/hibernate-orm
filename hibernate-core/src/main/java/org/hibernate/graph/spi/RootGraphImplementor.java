@@ -7,8 +7,8 @@
 package org.hibernate.graph.spi;
 
 import org.hibernate.graph.RootGraph;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 
 /**
  * Integration version of the RootGraph contract
@@ -16,13 +16,13 @@ import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
  * @author Steve Ebersole
  */
 public interface RootGraphImplementor<J> extends RootGraph<J>, GraphImplementor<J> {
-	boolean appliesTo(EntityTypeImplementor<? super J> entityType);
+	boolean appliesTo(EntityTypeDescriptor<? super J> entityType);
 
 	@Override
 	@SuppressWarnings("unchecked")
-	default boolean appliesTo(ManagedTypeImplementor<? super J> managedType) {
-		assert managedType instanceof EntityTypeImplementor;
-		return appliesTo( (EntityTypeImplementor) managedType );
+	default boolean appliesTo(ManagedTypeDescriptor<? super J> managedType) {
+		assert managedType instanceof EntityTypeDescriptor;
+		return appliesTo( (EntityTypeDescriptor) managedType );
 	}
 
 	@Override

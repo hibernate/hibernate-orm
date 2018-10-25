@@ -14,11 +14,11 @@ import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.model.domain.spi.AttributeImplementor;
-import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.SimpleTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.SingularAttributeImplementor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 
 /**
  * Defines commonality for the JPA {@link IdentifiableType} types.  JPA defines
@@ -33,20 +33,20 @@ import org.hibernate.metamodel.model.domain.spi.SingularAttributeImplementor;
  */
 public abstract class AbstractIdentifiableType<J>
 		extends AbstractManagedType<J>
-		implements IdentifiableTypeImplementor<J>, Serializable {
+		implements IdentifiableTypeDescriptor<J>, Serializable {
 
 	private final boolean hasIdentifierProperty;
 	private final boolean hasIdClass;
-	private SingularAttributeImplementor<J, ?> id;
-	private Set<SingularAttributeImplementor<? super J,?>> idClassAttributes;
+	private SingularPersistentAttribute<J, ?> id;
+	private Set<SingularPersistentAttribute<? super J,?>> idClassAttributes;
 
 	private final boolean isVersioned;
-	private SingularAttributeImplementor<J, ?> versionAttribute;
+	private SingularPersistentAttribute<J, ?> versionAttribute;
 
 	public AbstractIdentifiableType(
 			Class<J> javaType,
 			String typeName,
-			IdentifiableTypeImplementor<? super J> superType,
+			IdentifiableTypeDescriptor<? super J> superType,
 			boolean hasIdClass,
 			boolean hasIdentifierProperty,
 			boolean versioned,
@@ -59,13 +59,13 @@ public abstract class AbstractIdentifiableType<J>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	protected IdentifiableTypeImplementor.InFlightAccess createInFlightAccess() {
+	protected IdentifiableTypeDescriptor.InFlightAccess createInFlightAccess() {
 		return new InFlightAccessImpl( super.createInFlightAccess() );
 	}
 
 	@Override
-	public IdentifiableTypeImplementor.InFlightAccess<J> getInFlightAccess() {
-		return (IdentifiableTypeImplementor.InFlightAccess<J>) super.getInFlightAccess();
+	public IdentifiableTypeDescriptor.InFlightAccess<J> getInFlightAccess() {
+		return (IdentifiableTypeDescriptor.InFlightAccess<J>) super.getInFlightAccess();
 	}
 
 	public boolean hasIdClass() {
@@ -79,20 +79,20 @@ public abstract class AbstractIdentifiableType<J>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public IdentifiableTypeImplementor<? super J> getSuperType() {
+	public IdentifiableTypeDescriptor<? super J> getSuperType() {
 		// overridden simply to perform the cast
-		return (IdentifiableTypeImplementor) super.getSuperType();
+		return (IdentifiableTypeDescriptor) super.getSuperType();
 	}
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public <Y> SingularAttributeImplementor<? super J, Y> getId(Class<Y> javaType) {
+	public <Y> SingularPersistentAttribute<? super J, Y> getId(Class<Y> javaType) {
 		ensureNoIdClass();
-		SingularAttributeImplementor id = locateIdAttribute();
+		SingularPersistentAttribute id = locateIdAttribute();
 		if ( id != null ) {
 			checkType( id, javaType );
 		}
-		return (SingularAttributeImplementor) id;
+		return (SingularPersistentAttribute) id;
 	}
 
 	private void ensureNoIdClass() {
@@ -106,13 +106,13 @@ public abstract class AbstractIdentifiableType<J>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public SingularAttributeImplementor locateIdAttribute() {
+	public SingularPersistentAttribute locateIdAttribute() {
 		if ( id != null ) {
 			return id;
 		}
 		else {
 			if ( getSuperType() != null ) {
-				SingularAttributeImplementor id = getSuperType().locateIdAttribute();
+				SingularPersistentAttribute id = getSuperType().locateIdAttribute();
 				if ( id != null ) {
 					return id;
 				}
@@ -123,7 +123,7 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@SuppressWarnings("unchecked")
-	private void checkType(SingularAttributeImplementor attribute, Class javaType) {
+	private void checkType(SingularPersistentAttribute attribute, Class javaType) {
 		if ( ! javaType.isAssignableFrom( attribute.getType().getJavaType() ) ) {
 			throw new IllegalArgumentException(
 					String.format(
@@ -139,24 +139,24 @@ public abstract class AbstractIdentifiableType<J>
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public <Y> SingularAttributeImplementor<J, Y> getDeclaredId(Class<Y> javaType) {
+	public <Y> SingularPersistentAttribute<J, Y> getDeclaredId(Class<Y> javaType) {
 		ensureNoIdClass();
 		if ( id == null ) {
 			throw new IllegalArgumentException( "The id attribute is not declared on this type [" + getTypeName() + "]" );
 		}
 		checkType( id, javaType );
-		return (SingularAttributeImplementor<J, Y>) id;
+		return (SingularPersistentAttribute<J, Y>) id;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public SimpleTypeImplementor<?> getIdType() {
-		final SingularAttributeImplementor id = locateIdAttribute();
+	public SimpleTypeDescriptor<?> getIdType() {
+		final SingularPersistentAttribute id = locateIdAttribute();
 		if ( id != null ) {
 			return id.getType();
 		}
 
-		Set<SingularAttributeImplementor<? super J, ?>> idClassAttributes = getIdClassAttributesSafely();
+		Set<SingularPersistentAttribute<? super J, ?>> idClassAttributes = getIdClassAttributesSafely();
 		if ( idClassAttributes != null ) {
 			if ( idClassAttributes.size() == 1 ) {
 				return idClassAttributes.iterator().next().getType();
@@ -172,11 +172,11 @@ public abstract class AbstractIdentifiableType<J>
 	 * @return IdClass attributes or {@code null}
 	 */
 	@SuppressWarnings("unchecked")
-	public Set<SingularAttributeImplementor<? super J, ?>> getIdClassAttributesSafely() {
+	public Set<SingularPersistentAttribute<? super J, ?>> getIdClassAttributesSafely() {
 		if ( !hasIdClass() ) {
 			return null;
 		}
-		final Set<SingularAttributeImplementor<? super J,?>> attributes = new HashSet<>();
+		final Set<SingularPersistentAttribute<? super J,?>> attributes = new HashSet<>();
 		collectIdClassAttributes( attributes );
 
 		if ( attributes.isEmpty() ) {
@@ -193,7 +193,7 @@ public abstract class AbstractIdentifiableType<J>
 			throw new IllegalArgumentException( "This class [" + getJavaType() + "] does not define an IdClass" );
 		}
 
-		final Set<SingularAttributeImplementor<? super J,?>> attributes = new HashSet<>();
+		final Set<SingularPersistentAttribute<? super J,?>> attributes = new HashSet<>();
 		collectIdClassAttributes( attributes );
 
 		if ( attributes.isEmpty() ) {
@@ -205,7 +205,7 @@ public abstract class AbstractIdentifiableType<J>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void collectIdClassAttributes(Set<SingularAttributeImplementor<? super J,?>> attributes) {
+	public void collectIdClassAttributes(Set<SingularPersistentAttribute<? super J,?>> attributes) {
 		if ( idClassAttributes != null ) {
 			attributes.addAll( idClassAttributes );
 		}
@@ -216,7 +216,7 @@ public abstract class AbstractIdentifiableType<J>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void visitIdClassAttributes(Consumer<SingularAttributeImplementor<? super J, ?>> attributeConsumer) {
+	public void visitIdClassAttributes(Consumer<SingularPersistentAttribute<? super J, ?>> attributeConsumer) {
 		if ( idClassAttributes != null ) {
 			idClassAttributes.forEach( attributeConsumer );
 		}
@@ -236,21 +236,21 @@ public abstract class AbstractIdentifiableType<J>
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public <Y> SingularAttributeImplementor<? super J, Y> getVersion(Class<Y> javaType) {
+	public <Y> SingularPersistentAttribute<? super J, Y> getVersion(Class<Y> javaType) {
 		if ( ! hasVersionAttribute() ) {
 			return null;
 		}
 
-		SingularAttributeImplementor version = locateVersionAttribute();
+		SingularPersistentAttribute version = locateVersionAttribute();
 		if ( version != null ) {
 			checkType( version, javaType );
 		}
-		return (SingularAttributeImplementor) version;
+		return (SingularPersistentAttribute) version;
 	}
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public SingularAttributeImplementor locateVersionAttribute() {
+	public SingularPersistentAttribute locateVersionAttribute() {
 		if ( versionAttribute != null ) {
 			return versionAttribute;
 		}
@@ -264,10 +264,10 @@ public abstract class AbstractIdentifiableType<J>
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public <Y> SingularAttributeImplementor<J, Y> getDeclaredVersion(Class<Y> javaType) {
+	public <Y> SingularPersistentAttribute<J, Y> getDeclaredVersion(Class<Y> javaType) {
 		checkDeclaredVersion();
 		checkType( versionAttribute, javaType );
-		return ( SingularAttributeImplementor<J, Y> ) versionAttribute;
+		return (SingularPersistentAttribute<J, Y>) versionAttribute;
 	}
 
 	private void checkDeclaredVersion() {
@@ -289,26 +289,26 @@ public abstract class AbstractIdentifiableType<J>
 		return versionAttribute;
 	}
 
-	private class InFlightAccessImpl implements IdentifiableTypeImplementor.InFlightAccess<J> {
+	private class InFlightAccessImpl implements IdentifiableTypeDescriptor.InFlightAccess<J> {
 		private final AbstractManagedType.InFlightAccess managedTypeAccess;
 
-		private InFlightAccessImpl(ManagedTypeImplementor.InFlightAccess managedTypeAccess) {
+		private InFlightAccessImpl(ManagedTypeDescriptor.InFlightAccess managedTypeAccess) {
 			this.managedTypeAccess = managedTypeAccess;
 		}
 
 		@Override
 		@SuppressWarnings("unchecked")
-		public void applyIdAttribute(SingularAttributeImplementor<J, ?> idAttribute) {
+		public void applyIdAttribute(SingularPersistentAttribute<J, ?> idAttribute) {
 			AbstractIdentifiableType.this.id = idAttribute;
 			managedTypeAccess.addAttribute( idAttribute );
 		}
 
 		@Override
-		public void applyIdClassAttributes(Set<SingularAttributeImplementor<? super J,?>> idClassAttributes) {
+		public void applyIdClassAttributes(Set<SingularPersistentAttribute<? super J,?>> idClassAttributes) {
 			for ( SingularAttribute<? super J,?> idClassAttribute : idClassAttributes ) {
 				if ( AbstractIdentifiableType.this == idClassAttribute.getDeclaringType() ) {
 					@SuppressWarnings({ "unchecked" })
-					SingularAttributeImplementor<J,?> declaredAttribute = (SingularAttributeImplementor) idClassAttribute;
+					SingularPersistentAttribute<J,?> declaredAttribute = (SingularPersistentAttribute) idClassAttribute;
 					addAttribute( declaredAttribute );
 				}
 			}
@@ -317,14 +317,14 @@ public abstract class AbstractIdentifiableType<J>
 
 		@Override
 		@SuppressWarnings("unchecked")
-		public void applyVersionAttribute(SingularAttributeImplementor<J, ?> versionAttribute) {
+		public void applyVersionAttribute(SingularPersistentAttribute<J, ?> versionAttribute) {
 			AbstractIdentifiableType.this.versionAttribute = versionAttribute;
 			managedTypeAccess.addAttribute( versionAttribute );
 		}
 
 		@Override
 		@SuppressWarnings("unchecked")
-		public void addAttribute(AttributeImplementor attribute) {
+		public void addAttribute(PersistentAttributeDescriptor attribute) {
 			managedTypeAccess.addAttribute( attribute );
 		}
 

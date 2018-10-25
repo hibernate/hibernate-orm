@@ -6,12 +6,10 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import javax.persistence.metamodel.MappedSuperclassType;
+import org.hibernate.metamodel.model.domain.DomainType;
 
 /**
- * Hibernate extension to the JPA {@link MappedSuperclassType} descriptor
- *
  * @author Steve Ebersole
  */
-public interface MappedSuperclassTypeImplementor<J> extends MappedSuperclassType<J>, IdentifiableTypeImplementor<J> {
+public interface DomainTypeDescriptor<J> extends DomainType<J> {
 }

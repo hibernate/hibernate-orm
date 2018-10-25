@@ -11,7 +11,7 @@ import javax.persistence.metamodel.Attribute;
 import org.hibernate.graph.CannotBecomeEntityGraphException;
 import org.hibernate.graph.CannotContainSubGraphException;
 import org.hibernate.graph.SubGraph;
-import org.hibernate.metamodel.model.domain.spi.AttributeImplementor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
 
 /**
  * Integration version of the SubGraph contract
@@ -42,7 +42,7 @@ public interface SubGraphImplementor<J> extends SubGraph<J>, GraphImplementor<J>
 
 	@Override
 	default <AJ> SubGraphImplementor<? extends AJ> addKeySubGraph(
-			AttributeImplementor<? extends J, AJ> attribute, Class<? extends AJ> subType)
+			PersistentAttributeDescriptor<? extends J, AJ> attribute, Class<? extends AJ> subType)
 			throws CannotContainSubGraphException {
 		return null;
 	}

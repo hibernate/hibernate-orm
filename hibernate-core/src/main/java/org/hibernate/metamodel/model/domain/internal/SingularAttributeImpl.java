@@ -11,9 +11,9 @@ import java.lang.reflect.Member;
 import java.util.function.Supplier;
 
 import org.hibernate.graph.spi.GraphHelper;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.SimpleTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.SingularAttributeImplementor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 
 /**
  * @author Emmanuel Bernard
@@ -21,21 +21,21 @@ import org.hibernate.metamodel.model.domain.spi.SingularAttributeImplementor;
  */
 public class SingularAttributeImpl<D, J>
 		extends AbstractAttribute<D, J>
-		implements SingularAttributeImplementor<D, J>, Serializable {
+		implements SingularPersistentAttribute<D, J>, Serializable {
 	private final boolean isIdentifier;
 	private final boolean isVersion;
 	private final boolean isOptional;
 
-	private final SimpleTypeImplementor<J> attributeType;
+	private final SimpleTypeDescriptor<J> attributeType;
 
 	// NOTE : delay access for timing reasons
 	private final DelayedKeyTypeAccess graphKeyTypeAccess = new DelayedKeyTypeAccess();
 
 	public SingularAttributeImpl(
-			ManagedTypeImplementor<D> declaringType,
+			ManagedTypeDescriptor<D> declaringType,
 			String name,
 			PersistentAttributeType attributeNature,
-			SimpleTypeImplementor<J> attributeType,
+			SimpleTypeDescriptor<J> attributeType,
 			Member member,
 			boolean isIdentifier,
 			boolean isVersion,
@@ -49,12 +49,12 @@ public class SingularAttributeImpl<D, J>
 	}
 
 	@Override
-	public SimpleTypeImplementor<J> getValueGraphType() {
+	public SimpleTypeDescriptor<J> getValueGraphType() {
 		return attributeType;
 	}
 
 	@Override
-	public SimpleTypeImplementor<J> getKeyGraphType() {
+	public SimpleTypeDescriptor<J> getKeyGraphType() {
 		return graphKeyTypeAccess.get();
 	}
 
@@ -66,9 +66,9 @@ public class SingularAttributeImpl<D, J>
 	 */
 	public static class Identifier<D, J> extends SingularAttributeImpl<D, J> {
 		public Identifier(
-				ManagedTypeImplementor<D> declaringType,
+				ManagedTypeDescriptor<D> declaringType,
 				String name,
-				SimpleTypeImplementor<J> attributeType,
+				SimpleTypeDescriptor<J> attributeType,
 				Member member,
 				PersistentAttributeType attributeNature) {
 			super( declaringType, name, attributeNature, attributeType, member, true, false, false );
@@ -81,10 +81,10 @@ public class SingularAttributeImpl<D, J>
 	 */
 	public static class Version<X,Y> extends SingularAttributeImpl<X,Y> {
 		public Version(
-				ManagedTypeImplementor<X> declaringType,
+				ManagedTypeDescriptor<X> declaringType,
 				String name,
 				PersistentAttributeType attributeNature,
-				SimpleTypeImplementor<Y> attributeType,
+				SimpleTypeDescriptor<Y> attributeType,
 				Member member) {
 			super( declaringType, name, attributeNature, attributeType, member, false, true, false );
 		}
@@ -106,7 +106,7 @@ public class SingularAttributeImpl<D, J>
 	}
 
 	@Override
-	public SimpleTypeImplementor<J> getType() {
+	public SimpleTypeDescriptor<J> getType() {
 		return attributeType;
 	}
 
@@ -131,12 +131,12 @@ public class SingularAttributeImpl<D, J>
 		return attributeType.getJavaType();
 	}
 
-	private class DelayedKeyTypeAccess implements Supplier<SimpleTypeImplementor<J>>, Serializable {
+	private class DelayedKeyTypeAccess implements Supplier<SimpleTypeDescriptor<J>>, Serializable {
 		private boolean resolved;
-		private SimpleTypeImplementor<J> type;
+		private SimpleTypeDescriptor<J> type;
 
 		@Override
-		public SimpleTypeImplementor<J> get() {
+		public SimpleTypeDescriptor<J> get() {
 			if ( ! resolved ) {
 				type = GraphHelper.resolveKeyTypeDescriptor( SingularAttributeImpl.this );
 				resolved = true;

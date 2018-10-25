@@ -8,13 +8,12 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.Serializable;
 
-import org.hibernate.metamodel.model.domain.spi.BasicTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.SimpleTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.BasicTypeDescriptor;
 
 /**
  * @author Emmanuel Bernard
  */
-public class BasicTypeImpl<J> implements BasicTypeImplementor<J>, SimpleTypeImplementor<J>, Serializable {
+public class BasicTypeImpl<J> implements BasicTypeDescriptor<J>, Serializable {
 	private final Class<J> clazz;
 	private PersistenceType persistenceType;
 
@@ -29,5 +28,10 @@ public class BasicTypeImpl<J> implements BasicTypeImplementor<J>, SimpleTypeImpl
 	public BasicTypeImpl(Class<J> clazz, PersistenceType persistenceType) {
 		this.clazz = clazz;
 		this.persistenceType = persistenceType;
+	}
+
+	@Override
+	public String getTypeName() {
+		return clazz.getName();
 	}
 }

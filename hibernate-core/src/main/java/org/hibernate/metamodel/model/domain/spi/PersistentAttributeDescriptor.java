@@ -8,15 +8,17 @@ package org.hibernate.metamodel.model.domain.spi;
 
 import javax.persistence.metamodel.Attribute;
 
+import org.hibernate.metamodel.model.domain.PersistentAttribute;
+
 /**
  * Hibernate extension to the JPA {@link Attribute} descriptor
  *
  * @author Steve Ebersole
  */
-public interface AttributeImplementor<D, J> extends Attribute<D, J> {
+public interface PersistentAttributeDescriptor<D, J> extends PersistentAttribute<D, J> {
 	@Override
-	ManagedTypeImplementor<D> getDeclaringType();
+	ManagedTypeDescriptor<D> getDeclaringType();
 
-	SimpleTypeImplementor<?> getValueGraphType();
-	SimpleTypeImplementor<?> getKeyGraphType();
+	SimpleTypeDescriptor<?> getValueGraphType();
+	SimpleTypeDescriptor<?> getKeyGraphType();
 }

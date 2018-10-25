@@ -6,15 +6,13 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import java.util.Map;
-import javax.persistence.metamodel.MapAttribute;
+import java.util.List;
+import javax.persistence.metamodel.ListAttribute;
 
 /**
- * Hibernate extension to the JPA {@link MapAttribute} descriptor
+ * Hibernate extension to the JPA {@link ListAttribute} descriptor
  *
  * @author Steve Ebersole
  */
-public interface MapAttributeImplementor<D,K,V> extends MapAttribute<D, K, V>, PluralAttributeImplementor<D,Map<K,V>,V> {
-	@Override
-	SimpleTypeImplementor<K> getKeyType();
+public interface ListPersistentAttribute<D,E> extends ListAttribute<D,E>, PluralPersistentAttribute<D,List<E>,E> {
 }

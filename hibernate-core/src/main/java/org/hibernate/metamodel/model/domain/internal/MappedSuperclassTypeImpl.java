@@ -10,18 +10,18 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.mapping.MappedSuperclass;
-import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.MappedSuperclassTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.MappedSuperclassTypeDescriptor;
 
 /**
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
-public class MappedSuperclassTypeImpl<X> extends AbstractIdentifiableType<X> implements MappedSuperclassTypeImplementor<X> {
+public class MappedSuperclassTypeImpl<X> extends AbstractIdentifiableType<X> implements MappedSuperclassTypeDescriptor<X> {
 	public MappedSuperclassTypeImpl(
 			Class<X> javaType,
 			MappedSuperclass mappedSuperclass,
-			IdentifiableTypeImplementor<? super X> superType,
+			IdentifiableTypeDescriptor<? super X> superType,
 			SessionFactoryImplementor sessionFactory) {
 		super(
 				javaType,

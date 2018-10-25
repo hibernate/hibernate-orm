@@ -17,9 +17,9 @@ import org.hibernate.graph.SubGraph;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.model.domain.spi.AttributeImplementor;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.SimpleTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -31,7 +31,7 @@ import org.jboss.logging.Logger;
 public class AttributeNodeImpl<J>
 		extends AbstractGraphNode<J>
 		implements AttributeNodeImplementor<J> {
-	private final AttributeImplementor<?, J> attribute;
+	private final PersistentAttributeDescriptor<?, J> attribute;
 
 	private Map<Class<? extends J>, SubGraphImplementor<? extends J>> subGraphMap;
 	private Map<Class<? extends J>, SubGraphImplementor<? extends J>> keySubGraphMap;
@@ -39,7 +39,7 @@ public class AttributeNodeImpl<J>
 	@SuppressWarnings("WeakerAccess")
 	public <X> AttributeNodeImpl(
 			boolean mutable,
-			AttributeImplementor<X, J> attribute,
+			PersistentAttributeDescriptor<X, J> attribute,
 			SessionFactoryImplementor sessionFactory) {
 		this( mutable, attribute, null, null, sessionFactory );
 	}
@@ -49,7 +49,7 @@ public class AttributeNodeImpl<J>
 	 */
 	private AttributeNodeImpl(
 			boolean mutable,
-			AttributeImplementor<?, J> attribute,
+			PersistentAttributeDescriptor<?, J> attribute,
 			Map<Class<? extends J>, SubGraphImplementor<? extends J>> subGraphMap,
 			Map<Class<? extends J>, SubGraphImplementor<? extends J>> keySubGraphMap,
 			SessionFactoryImplementor sessionFactory) {
@@ -65,7 +65,7 @@ public class AttributeNodeImpl<J>
 	}
 
 	@Override
-	public AttributeImplementor<?, J> getAttributeDescriptor() {
+	public PersistentAttributeDescriptor<?, J> getAttributeDescriptor() {
 		return attribute;
 	}
 
@@ -102,11 +102,11 @@ public class AttributeNodeImpl<J>
 	}
 
 	@Override
-	public <S extends J> SubGraphImplementor<S> makeSubGraph(ManagedTypeImplementor<S> subtype) {
+	public <S extends J> SubGraphImplementor<S> makeSubGraph(ManagedTypeDescriptor<S> subtype) {
 		return internalMakeSubgraph( subtype );
 	}
 
-	private <S extends J> SubGraphImplementor<S> internalMakeSubgraph(ManagedTypeImplementor<S> type) {
+	private <S extends J> SubGraphImplementor<S> internalMakeSubgraph(ManagedTypeDescriptor<S> type) {
 		assert type != null;
 
 		log.debugf( "Making sub-graph : ( (%s) %s )", type.getName(), getAttributeName() );
@@ -118,11 +118,11 @@ public class AttributeNodeImpl<J>
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T extends J> ManagedTypeImplementor<T> valueGraphTypeAsManaged() {
-		final SimpleTypeImplementor<J> valueGraphType = (SimpleTypeImplementor) getAttributeDescriptor().getValueGraphType();
+	private <T extends J> ManagedTypeDescriptor<T> valueGraphTypeAsManaged() {
+		final SimpleTypeDescriptor<J> valueGraphType = (SimpleTypeDescriptor) getAttributeDescriptor().getValueGraphType();
 
-		if ( valueGraphType instanceof ManagedTypeImplementor ) {
-			return (ManagedTypeImplementor) valueGraphType;
+		if ( valueGraphType instanceof ManagedTypeDescriptor ) {
+			return (ManagedTypeDescriptor) valueGraphType;
 		}
 
 		throw new CannotContainSubGraphException(
@@ -141,7 +141,7 @@ public class AttributeNodeImpl<J>
 	private <S extends J> SubGraphImplementor<S> internalMakeSubgraph(Class<S> subType) {
 		verifyMutability();
 
-		final ManagedTypeImplementor<S> managedType = valueGraphTypeAsManaged();
+		final ManagedTypeDescriptor<S> managedType = valueGraphTypeAsManaged();
 
 		if ( subType == null ) {
 			subType = managedType.getJavaType();
@@ -183,11 +183,11 @@ public class AttributeNodeImpl<J>
 	}
 
 	@Override
-	public <S extends J> SubGraphImplementor<S> makeKeySubGraph(ManagedTypeImplementor<S> subtype) {
+	public <S extends J> SubGraphImplementor<S> makeKeySubGraph(ManagedTypeDescriptor<S> subtype) {
 		return internalMakeKeySubgraph( subtype );
 	}
 
-	private <S extends J> SubGraphImplementor<S> internalMakeKeySubgraph(ManagedTypeImplementor<S> type) {
+	private <S extends J> SubGraphImplementor<S> internalMakeKeySubgraph(ManagedTypeDescriptor<S> type) {
 
 		log.debugf( "Making key sub-graph : ( (%s) %s )", type.getName(), getAttributeName() );
 
@@ -201,9 +201,9 @@ public class AttributeNodeImpl<J>
 	private <S extends J> SubGraphImplementor<S> internalMakeKeySubgraph(Class<S> type) {
 		verifyMutability();
 
-		final ManagedTypeImplementor<S> managedType = keyGraphTypeAsManaged();
+		final ManagedTypeDescriptor<S> managedType = keyGraphTypeAsManaged();
 
-		final ManagedTypeImplementor<S> subType;
+		final ManagedTypeDescriptor<S> subType;
 
 		if ( type == null ) {
 			subType = managedType;
@@ -232,11 +232,11 @@ public class AttributeNodeImpl<J>
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T extends J> ManagedTypeImplementor<T> keyGraphTypeAsManaged() {
-		final SimpleTypeImplementor<J> keyGraphType = (SimpleTypeImplementor) getAttributeDescriptor().getKeyGraphType();
+	private <T extends J> ManagedTypeDescriptor<T> keyGraphTypeAsManaged() {
+		final SimpleTypeDescriptor<J> keyGraphType = (SimpleTypeDescriptor) getAttributeDescriptor().getKeyGraphType();
 
-		if ( keyGraphType instanceof ManagedTypeImplementor ) {
-			return (ManagedTypeImplementor) keyGraphType;
+		if ( keyGraphType instanceof ManagedTypeDescriptor ) {
+			return (ManagedTypeDescriptor) keyGraphType;
 		}
 
 		throw new CannotContainSubGraphException(

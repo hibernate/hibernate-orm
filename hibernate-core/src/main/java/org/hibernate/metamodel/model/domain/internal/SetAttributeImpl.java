@@ -8,12 +8,12 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.Set;
 
-import org.hibernate.metamodel.model.domain.spi.SetAttributeImplementor;
+import org.hibernate.metamodel.model.domain.spi.SetPersistentAttribute;
 
 /**
  * @author Steve Ebersole
  */
-public class SetAttributeImpl<X, E> extends AbstractPluralAttribute<X, Set<E>, E> implements SetAttributeImplementor<X, E> {
+public class SetAttributeImpl<X, E> extends AbstractPluralAttribute<X, Set<E>, E> implements SetPersistentAttribute<X, E> {
 	public SetAttributeImpl(PluralAttributeBuilder<X, Set<E>, E, ?> xceBuilder) {
 		super( xceBuilder );
 	}

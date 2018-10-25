@@ -10,7 +10,7 @@ package org.hibernate.metamodel.model.domain;
  * Base contract for Hibernate's extension of the JPA type system.
  *
  * @apiNote The "real" JPA type system is more akin to
- * {@link SimpleType}.  We begin our JPA type system extension
+ * {@link SimpleDomainType}.  We begin our JPA type system extension
  * a "level above" that.  This is to allow for:
  * 		1) JPA does not define a Type for collections.  It's
  * 			understandable why, but leads to limitations in
@@ -23,8 +23,15 @@ package org.hibernate.metamodel.model.domain;
  *
  * @param <J> The Java type for this JPA Type
  *
+ * @apiNote The `*DomainType` naming pattern is used to more easily (visually)
+ * differentiate these extensions from the JPA ones in application use.
+ *
  * @author Steve Ebersole
  */
-public interface JpaType<J> extends javax.persistence.metamodel.Type<J> {
-
+public interface DomainType<J> extends javax.persistence.metamodel.Type<J> {
+	/**
+	 * The name of the type - this is Hibernate notion of the type name including
+	 * non-pojo mappings, etc.
+	 */
+	String getTypeName();
 }

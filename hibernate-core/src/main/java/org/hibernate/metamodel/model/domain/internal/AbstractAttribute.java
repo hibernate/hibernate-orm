@@ -15,9 +15,9 @@ import java.lang.reflect.Method;
 import javax.persistence.metamodel.Attribute;
 
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.metamodel.model.domain.spi.AttributeImplementor;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.SimpleTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
 
 /**
  * Models the commonality of the JPA {@link Attribute} hierarchy.
@@ -27,22 +27,23 @@ import org.hibernate.metamodel.model.domain.spi.SimpleTypeImplementor;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractAttribute<D, J> implements Attribute<D, J>, AttributeImplementor<D, J>, Serializable {
-	private final ManagedTypeImplementor <D> declaringType;
+public abstract class AbstractAttribute<D, J>
+		implements PersistentAttributeDescriptor<D, J>, Serializable {
+	private final ManagedTypeDescriptor<D> declaringType;
 	private final String name;
 
 	private final PersistentAttributeType attributeNature;
 
-	private final SimpleTypeImplementor<?> valueType;
+	private final SimpleTypeDescriptor<?> valueType;
 	private transient Member member;
 
 
 	@SuppressWarnings("WeakerAccess")
 	protected AbstractAttribute(
-			ManagedTypeImplementor<D> declaringType,
+			ManagedTypeDescriptor<D> declaringType,
 			String name,
 			PersistentAttributeType attributeNature,
-			SimpleTypeImplementor<?> valueType,
+			SimpleTypeDescriptor<?> valueType,
 			Member member) {
 		this.declaringType = declaringType;
 		this.name = name;
@@ -57,7 +58,7 @@ public abstract class AbstractAttribute<D, J> implements Attribute<D, J>, Attrib
 	}
 
 	@Override
-	public ManagedTypeImplementor<D> getDeclaringType() {
+	public ManagedTypeDescriptor<D> getDeclaringType() {
 		return declaringType;
 	}
 
@@ -72,7 +73,7 @@ public abstract class AbstractAttribute<D, J> implements Attribute<D, J>, Attrib
 	}
 
 	@Override
-	public SimpleTypeImplementor<?> getValueGraphType() {
+	public SimpleTypeDescriptor<?> getValueGraphType() {
 		return valueType;
 	}
 

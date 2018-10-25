@@ -6,13 +6,13 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import java.util.Set;
-import javax.persistence.metamodel.SetAttribute;
+import javax.persistence.metamodel.EntityType;
 
 /**
- * Hibernate extension to the JPA {@link SetAttribute} descriptor
+ * Hibernate extension to the JPA {@link EntityType} descriptor
  *
  * @author Steve Ebersole
  */
-public interface SetAttributeImplementor<D,E> extends SetAttribute<D,E>, PluralAttributeImplementor<D,Set<E>,E> {
+public interface EntityTypeDescriptor<J> extends EntityType<J>, IdentifiableTypeDescriptor<J> {
+
 }

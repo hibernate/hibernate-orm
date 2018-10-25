@@ -17,7 +17,7 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public class DomainModelHelper {
 	public static EntityPersister resolveEntityPersister(
-			EntityTypeImplementor<?> entityType,
+			EntityTypeDescriptor<?> entityType,
 			SessionFactoryImplementor sessionFactory) {
 		// Our EntityTypeImpl#getType impl returns the Hibernate entity-name
 		// which is exactly what we want
@@ -26,21 +26,21 @@ public class DomainModelHelper {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T, S extends T> ManagedTypeImplementor<S> resolveSubType(
-			ManagedTypeImplementor<T> baseType,
+	public static <T, S extends T> ManagedTypeDescriptor<S> resolveSubType(
+			ManagedTypeDescriptor<T> baseType,
 			String subTypeName,
 			SessionFactoryImplementor sessionFactory) {
 		final MetamodelImplementor metamodel = sessionFactory.getMetamodel();
 
-		if ( baseType instanceof EmbeddableTypeImplementor<?> ) {
+		if ( baseType instanceof EmbeddedTypeDescriptor<?> ) {
 			// todo : at least validate the string is a valid sub-type of the embeddable class?
-			return (ManagedTypeImplementor) baseType;
+			return (ManagedTypeDescriptor) baseType;
 		}
 
 		final String importedClassName = metamodel.getImportedClassName( subTypeName );
 		if ( importedClassName != null ) {
 			// first, try to find it by name directly..
-			ManagedTypeImplementor<S> subManagedType = metamodel.entity( importedClassName );
+			ManagedTypeDescriptor<S> subManagedType = metamodel.entity( importedClassName );
 			if ( subManagedType != null ) {
 				return subManagedType;
 			}
@@ -60,8 +60,8 @@ public class DomainModelHelper {
 		throw new IllegalArgumentException( "Unknown sub-type name (" + baseType.getName() + ") : " + subTypeName );
 	}
 
-	public static <S> ManagedTypeImplementor<S> resolveSubType(
-			ManagedTypeImplementor<? super S> baseType,
+	public static <S> ManagedTypeDescriptor<S> resolveSubType(
+			ManagedTypeDescriptor<? super S> baseType,
 			Class<S> subTypeClass,
 			SessionFactoryImplementor sessionFactory) {
 		// todo : validate the hierarchy-ness...

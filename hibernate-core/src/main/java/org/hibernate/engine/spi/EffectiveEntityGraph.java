@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.hibernate.Incubating;
 import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 
 import org.jboss.logging.Logger;
@@ -27,7 +28,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class EffectiveEntityGraph implements Serializable {
+public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 	private static final Logger log = Logger.getLogger( EffectiveEntityGraph.class );
 
 	private final boolean allowOverwrite;
@@ -58,10 +59,12 @@ public class EffectiveEntityGraph implements Serializable {
 		this.allowOverwrite = allowOverwrite;
 	}
 
+	@Override
 	public GraphSemantic getSemantic() {
 		return semantic;
 	}
 
+	@Override
 	public RootGraphImplementor<?> getGraph() {
 		return graph;
 	}

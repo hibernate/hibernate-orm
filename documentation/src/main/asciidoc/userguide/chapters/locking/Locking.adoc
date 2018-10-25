@@ -314,7 +314,7 @@ Hibernate always uses the locking mechanism of the database, and never lock obje
 Long before JPA 1.0, Hibernate already defined various explicit locking strategies through its `LockMode` enumeration.
 JPA comes with its own http://docs.oracle.com/javaee/7/api/javax/persistence/LockModeType.html[`LockModeType`] enumeration which defines similar strategies as the Hibernate-native `LockMode`.
 
-[cols=",",, options="header"]
+[cols=",,",, options="header"]
 |=======================================================================
 |`LockModeType`|`LockMode`|Description
 

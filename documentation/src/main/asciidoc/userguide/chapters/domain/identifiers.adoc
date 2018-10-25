@@ -351,7 +351,7 @@ If no table name is given Hibernate assumes an implicit name of `hibernate_seque
 Additionally, because no `javax.persistence.TableGenerator#pkColumnValue` is specified,
 Hibernate will use the default segment (`sequence_name='default'`) from the hibernate_sequences table.
 
-However, you can configure the table identifier generator using the http://docs.oracle.com/javaee/7/api/javax/persistence/TableGenerator.html[`@TableGenerator`] annotation.
+However, you can configure the table identifier generator using the https://javaee.github.io/javaee-spec/javadocs/javax/persistence/TableGenerator.html[`@TableGenerator`] annotation.
 
 [[identifiers-generators-table-configured-mapping-example]]
 .Configured table generator

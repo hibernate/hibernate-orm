@@ -95,8 +95,8 @@ JPA defines the `@AttributeOverride` annotation to handle this scenario.
 This way, the mapping conflict is resolved by setting up explicit name-based property-column type mappings.
 
 If an Embeddable type is used multiple times in some entity, you need to use the
-http://docs.oracle.com/javaee/7/api/javax/persistence/AttributeOverride.html[`@AttributeOverride`] and
-http://docs.oracle.com/javaee/7/api/javax/persistence/AssociationOverride.html[`@AssociationOverride`] annotations
+https://javaee.github.io/javaee-spec/javadocs/javax/persistence/AttributeOverride.html[`@AttributeOverride`] and
+https://javaee.github.io/javaee-spec/javadocs/javax/persistence/AssociationOverride.html[`@AssociationOverride`] annotations
 to override the default column names defined by the Embeddable.
 
 Considering you have the following `Publisher` embeddable type
@@ -204,13 +204,13 @@ Embeddable types that are used as collection entries, map keys or entity type id
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Target.html[`@Target`] annotation is used to specify the implementation class of a given association that is mapped via an interface.
 The
-http://docs.oracle.com/javaee/7/api/javax/persistence/ManyToOne.html[`@ManyToOne`],
-http://docs.oracle.com/javaee/7/api/javax/persistence/OneToOne.html[`@OneToOne`],
-http://docs.oracle.com/javaee/7/api/javax/persistence/OneToMany.html[`@OneToMany`], and
-http://docs.oracle.com/javaee/7/api/javax/persistence/ManyToMany.html[`@ManyToMany`]
-feature a http://docs.oracle.com/javaee/7/api/javax/persistence/ManyToOne.html#targetEntity--[`targetEntity`] attribute to specify the actual class of the entity association when an interface is used for the mapping.
+https://javaee.github.io/javaee-spec/javadocs/javax/persistence/ManyToOne.html[`@ManyToOne`],
+https://javaee.github.io/javaee-spec/javadocs/javax/persistence/OneToOne.html[`@OneToOne`],
+https://javaee.github.io/javaee-spec/javadocs/javax/persistence/OneToMany.html[`@OneToMany`], and
+https://javaee.github.io/javaee-spec/javadocs/javax/persistence/ManyToMany.html[`@ManyToMany`]
+feature a https://javaee.github.io/javaee-spec/javadocs/javax/persistence/ManyToOne.html#targetEntity--[`targetEntity`] attribute to specify the actual class of the entity association when an interface is used for the mapping.
 
-The http://docs.oracle.com/javaee/7/api/javax/persistence/ElementCollection.html[`@ElementCollection`] association has a http://docs.oracle.com/javaee/7/api/javax/persistence/ElementCollection.html#targetClass--[`targetClass`] attribute for the same purpose.
+The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/ElementCollection.html[`@ElementCollection`] association has a https://javaee.github.io/javaee-spec/javadocs/javax/persistence/ElementCollection.html#targetClass--[`targetClass`] attribute for the same purpose.
 
 However, for simple embeddable types, there is no such construct and so you need to use the Hibernate-specific `@Target` annotation instead.
 

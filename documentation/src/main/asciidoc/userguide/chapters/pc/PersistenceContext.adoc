@@ -1283,7 +1283,7 @@ Certain methods of the JPA `EntityManager` or the Hibernate `Session` will not l
 
 Rolling back the database transaction does not put your business objects back into the state they were at the start of the transaction. This means that the database state and the business objects will be out of sync. Usually, this is not a problem because exceptions are not recoverable and you will have to start over after rollback anyway.
 
-The JPA https://docs.oracle.com/javaee/7/api/javax/persistence/PersistenceException.html[`PersistenceException`] or the
+The JPA https://javaee.github.io/javaee-spec/javadocs/javax/persistence/PersistenceException.html[`PersistenceException`] or the
 https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/HibernateException.html[`HibernateException`] wraps most of the errors that can occur in a Hibernate persistence layer.
 
 Both the `PersistenceException` and the `HibernateException` are runtime exceptions because, in our opinion, we should not force the application developer to catch an unrecoverable exception at a low layer. In most systems, unchecked and fatal exceptions are handled in one of the first frames of the method call stack (i.e., in higher layers) and either an error message is presented to the application user or some other appropriate action is taken. Note that Hibernate might also throw other unchecked exceptions that are not a `HibernateException`. These are not recoverable either, and appropriate action should be taken.
@@ -1326,7 +1326,7 @@ SQLGrammarException::
 [NOTE]
 ====
 Starting with Hibernate 5.2, the Hibernate `Session` extends the JPA `EntityManager`. For this reason, when a `SessionFactory` is built via Hibernate's native bootstrapping,
-the `HibernateException` or `SQLException` can be wrapped in a JPA https://docs.oracle.com/javaee/7/api/javax/persistence/PersistenceException.html[`PersistenceException`] when thrown
+the `HibernateException` or `SQLException` can be wrapped in a JPA https://javaee.github.io/javaee-spec/javadocs/javax/persistence/PersistenceException.html[`PersistenceException`] when thrown
 by `Session` methods that implement `EntityManager` methods (e.g., https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#merge-java.lang.Object-[Session.merge(Object object)],
 https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#flush--[Session.flush()]).
 

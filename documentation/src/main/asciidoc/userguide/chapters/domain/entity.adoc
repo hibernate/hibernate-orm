@@ -113,9 +113,9 @@ Hibernate offers multiple identifier generation strategies, see the <<chapters/d
 [[entity-pojo-mapping]]
 ==== Mapping the entity
 
-The main piece in mapping the entity is the http://docs.oracle.com/javaee/7/api/javax/persistence/Entity.html[`javax.persistence.Entity`] annotation.
+The main piece in mapping the entity is the https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Entity.html[`javax.persistence.Entity`] annotation.
 
-The `@Entity` annotation defines just the https://docs.oracle.com/javaee/7/api/javax/persistence/Entity.html#name--[`name`] attribute which is used to give a specific entity name for use in JPQL queries.
+The `@Entity` annotation defines just the https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Entity.html#name--[`name`] attribute which is used to give a specific entity name for use in JPQL queries.
 
 By default, if the name attribute the `@Entity` annotation is missing, the unqualified name of the entity class itself will be used as the entity name
 

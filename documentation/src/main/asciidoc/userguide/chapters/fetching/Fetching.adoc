@@ -221,7 +221,7 @@ An EntityGraph is the root of a "load plan" and must correspond to an EntityType
 ==== JPA (key) subgraphs
 
 A sub-graph is used to control the fetching of sub-attributes of the AttributeNode it is applied to.
-It is generally defined via the http://docs.oracle.com/javaee/7/api/javax/persistence/NamedSubgraph.html[`@NamedSubgraph`] annotation.
+It is generally defined via the https://javaee.github.io/javaee-spec/javadocs/javax/persistence/NamedSubgraph.html[`@NamedSubgraph`] annotation.
 
 If we have a `Project` parent entity which has an `employees` child associations,
 and we'd like to fetch the `department` for the `Employee` child association.
@@ -589,7 +589,7 @@ The possible values are given by the `https://docs.jboss.org/hibernate/orm/{majo
 `FALSE`:: Eagerly load it.
 `EXTRA`:: Prefer extra queries over full collection loading.
 
-The `TRUE` and `FALSE` values are deprecated since you should be using the JPA http://docs.oracle.com/javaee/7/api/javax/persistence/FetchType.html[`FetchType`] attribute of the <<annotations-jpa-elementcollection>>, <<annotations-jpa-onetomany>>, or <<annotations-jpa-manytomany>> collection.
+The `TRUE` and `FALSE` values are deprecated since you should be using the JPA https://javaee.github.io/javaee-spec/javadocs/javax/persistence/FetchType.html[`FetchType`] attribute of the <<annotations-jpa-elementcollection>>, <<annotations-jpa-onetomany>>, or <<annotations-jpa-manytomany>> collection.
 
 The `EXTRA` value has no equivalent in the JPA specification, and it's used to avoid loading the entire collection even when the collection is accessed for the first time.
 Each element is fetched individually using a secondary query.

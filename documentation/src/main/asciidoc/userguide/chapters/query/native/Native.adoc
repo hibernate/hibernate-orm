@@ -840,7 +840,7 @@ For SQL Server, if you can enable `SET NOCOUNT ON` in your procedure it will pro
 === Using named queries to call stored procedures
 
 Just like with SQL statements, you can also use named queries to call stored procedures.
-For this purpose, JPA defines the http://docs.oracle.com/javaee/7/api/javax/persistence/NamedStoredProcedureQuery.html[`@NamedStoredProcedureQuery`] annotation.
+For this purpose, JPA defines the https://javaee.github.io/javaee-spec/javadocs/javax/persistence/NamedStoredProcedureQuery.html[`@NamedStoredProcedureQuery`] annotation.
 
 [[sql-sp-ref-cursor-oracle-named-query-example]]
 .Oracle `REF_CURSOR` named query stored procedure

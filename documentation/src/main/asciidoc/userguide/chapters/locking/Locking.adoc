@@ -312,7 +312,7 @@ Hibernate always uses the locking mechanism of the database, and never lock obje
 === `LockMode` and `LockModeType`
 
 Long before JPA 1.0, Hibernate already defined various explicit locking strategies through its `LockMode` enumeration.
-JPA comes with its own http://docs.oracle.com/javaee/7/api/javax/persistence/LockModeType.html[`LockModeType`] enumeration which defines similar strategies as the Hibernate-native `LockMode`.
+JPA comes with its own https://javaee.github.io/javaee-spec/javadocs/javax/persistence/LockModeType.html[`LockModeType`] enumeration which defines similar strategies as the Hibernate-native `LockMode`.
 
 [cols=",,",, options="header"]
 |=======================================================================
@@ -351,7 +351,7 @@ This ensures that applications are portable.
 JPA 2.0 introduced two query hints:
 
 javax.persistence.lock.timeout:: it gives the number of milliseconds a lock acquisition request will wait before throwing an exception
-javax.persistence.lock.scope:: defines the http://docs.oracle.com/javaee/7/api/javax/persistence/PessimisticLockScope.html[_scope_] of the lock acquisition request.
+javax.persistence.lock.scope:: defines the https://javaee.github.io/javaee-spec/javadocs/javax/persistence/PessimisticLockScope.html[_scope_] of the lock acquisition request.
 The scope can either be `NORMAL` (default value) or `EXTENDED`. The `EXTENDED` scope will cause a lock acquisition request to be passed to other owned table structured (e.g. `@Inheritance(strategy=InheritanceType.JOINED)`, `@ElementCollection`)
 
 [[locking-jpa-query-hints-timeout-example]]

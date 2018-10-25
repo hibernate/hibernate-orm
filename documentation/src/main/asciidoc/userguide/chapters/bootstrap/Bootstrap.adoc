@@ -248,11 +248,11 @@ include::{sourcedir}/BootstrapTest.java[tags=bootstrap-jpa-compliant-EntityManag
 [NOTE]
 ====
 If you don't want to provide a `persistence.xml` configuration file, JPA allows you to provide all the configuration options in a
-http://docs.oracle.com/javaee/7/api/javax/persistence/spi/PersistenceUnitInfo.html[`PersistenceUnitInfo`] implementation and call
+https://javaee.github.io/javaee-spec/javadocs/javax/persistence/spi/PersistenceUnitInfo.html[`PersistenceUnitInfo`] implementation and call
 https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/HibernatePersistenceProvider.html#createContainerEntityManagerFactory-javax.persistence.spi.PersistenceUnitInfo-java.util.Map-[`HibernatePersistenceProvider.html#createContainerEntityManagerFactory`].
 ====
 
-To inject the default Persistence Context, you can use the http://docs.oracle.com/javaee/7/api/javax/persistence/PersistenceContext.html[`@PersistenceContext`] annotation.
+To inject the default Persistence Context, you can use the https://javaee.github.io/javaee-spec/javadocs/javax/persistence/PersistenceContext.html[`@PersistenceContext`] annotation.
 
 [[bootstrap-jpa-compliant-PersistenceContext-example]]
 .Inject the default `EntityManager`
@@ -264,9 +264,9 @@ include::{sourcedir}/BootstrapTest.java[tags=bootstrap-jpa-compliant-Persistence
 ====
 
 To inject a specific Persistence Context,
-you can use the http://docs.oracle.com/javaee/7/api/javax/persistence/PersistenceContext.html[`@PersistenceContext`] annotation,
+you can use the https://javaee.github.io/javaee-spec/javadocs/javax/persistence/PersistenceContext.html[`@PersistenceContext`] annotation,
 and you can even pass `EntityManager`-specific properties using the
-http://docs.oracle.com/javaee/7/api/javax/persistence/PersistenceProperty.html[`@PersistenceProperty`] annotation.
+https://javaee.github.io/javaee-spec/javadocs/javax/persistence/PersistenceProperty.html[`@PersistenceProperty`] annotation.
 
 
 [[bootstrap-jpa-compliant-PersistenceContext-configurable-example]]

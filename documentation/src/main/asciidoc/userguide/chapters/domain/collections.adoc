@@ -414,7 +414,7 @@ include::{extrasdir}/collections-customizing-ordered-list-ordinal-persist-exampl
 ===== Customizing ORDER BY SQL clause
 
 While the JPA
-http://docs.oracle.com/javaee/7/api/javax/persistence/OrderBy.html[`@OrderBy`] annotation allows you to specify the entity attributes used for sorting
+https://javaee.github.io/javaee-spec/javadocs/javax/persistence/OrderBy.html[`@OrderBy`] annotation allows you to specify the entity attributes used for sorting
 when fetching the current annotated collection, the Hibernate specific
 https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OrderBy.html[`@OrderBy`] annotation is used to specify a *SQL* clause instead.
 
@@ -644,7 +644,7 @@ include::{sourcedir}/MapKeyClassTest.java[tags=collections-map-key-class-type-ma
 ====
 
 If you want to use the `PhoneNumber` interface as a `java.util.Map` key, then you need to supply the
-http://docs.oracle.com/javaee/7/api/javax/persistence/MapKeyClass.html[`@MapKeyClass`] annotation as well.
+https://javaee.github.io/javaee-spec/javadocs/javax/persistence/MapKeyClass.html[`@MapKeyClass`] annotation as well.
 
 [[collections-map-key-class-mapping-example]]
 .`@MapKeyClass` mapping example

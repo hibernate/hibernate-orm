@@ -8,15 +8,15 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.Map;
 
-import org.hibernate.metamodel.model.domain.spi.MapAttributeImplementor;
-import org.hibernate.metamodel.model.domain.spi.SimpleTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.MapPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K, V>, V>
-		implements MapAttributeImplementor<X, K, V> {
-	private final SimpleTypeImplementor<K> keyType;
+		implements MapPersistentAttribute<X, K, V> {
+	private final SimpleTypeDescriptor<K> keyType;
 
 	MapAttributeImpl(PluralAttributeBuilder<X, Map<K, V>, V, K> xceBuilder) {
 		super( xceBuilder );
@@ -34,12 +34,12 @@ class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K, V>, V>
 	}
 
 	@Override
-	public SimpleTypeImplementor<K> getKeyType() {
+	public SimpleTypeDescriptor<K> getKeyType() {
 		return keyType;
 	}
 
 	@Override
-	public SimpleTypeImplementor<K> getKeyGraphType() {
+	public SimpleTypeDescriptor<K> getKeyGraphType() {
 		return getKeyType();
 	}
 }

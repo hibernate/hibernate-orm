@@ -13,16 +13,19 @@ import javax.persistence.metamodel.SingularAttribute;
  *
  * @author Steve Ebersole
  */
-public interface SingularAttributeImplementor<D,J> extends SingularAttribute<D,J>, AttributeImplementor<D,J> {
+public interface SingularPersistentAttribute<D,J> extends SingularAttribute<D,J>, PersistentAttributeDescriptor<D,J> {
 	@Override
-	SimpleTypeImplementor<J> getType();
+	SimpleTypeDescriptor<J> getType();
+
+	@Override
+	ManagedTypeDescriptor<D> getDeclaringType();
 
 	/**
 	 * For a singular attribute, the value type is defined as the
 	 * attribute type
 	 */
 	@Override
-	default SimpleTypeImplementor<?> getValueGraphType() {
+	default SimpleTypeDescriptor<?> getValueGraphType() {
 		return getType();
 	}
 

@@ -14,13 +14,14 @@ import javax.persistence.metamodel.CollectionAttribute;
  *
  * @author Steve Ebersole
  */
-public interface CollectionAttributeImplementor<D,E> extends CollectionAttribute<D,E>, PluralAttributeImplementor<D, Collection<E>,E> {
+public interface BagPersistentAttribute<D,E> extends CollectionAttribute<D,E>,
+		PluralPersistentAttribute<D, Collection<E>,E> {
 	@Override
-	SimpleTypeImplementor<E> getValueGraphType();
+	SimpleTypeDescriptor<E> getValueGraphType();
 
 	@Override
-	SimpleTypeImplementor<E> getElementType();
+	SimpleTypeDescriptor<E> getElementType();
 
 	@Override
-	ManagedTypeImplementor<D> getDeclaringType();
+	ManagedTypeDescriptor<D> getDeclaringType();
 }

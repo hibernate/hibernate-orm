@@ -19,6 +19,8 @@ import org.hibernate.QueryException;
 import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
+import org.hibernate.graph.spi.AppliedGraph;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.tree.FromClause;
 import org.hibernate.hql.internal.ast.tree.FromElement;
@@ -37,28 +39,30 @@ import org.hibernate.type.Type;
  *
  * @author Brett Meyer
  */
-public class EntityGraphQueryHint {
-	private final RootGraph<?> graph;
+public class EntityGraphQueryHint implements AppliedGraph {
+	private final RootGraphImplementor<?> graph;
 	private final GraphSemantic semantic;
 
 	public EntityGraphQueryHint(String hintName, EntityGraph<?> graph) {
 		assert hintName != null;
 
 		this.semantic = GraphSemantic.fromJpaHintName( hintName );
-		this.graph = (RootGraph<?>) graph;
+		this.graph = (RootGraphImplementor<?>) graph;
 	}
 
-	public EntityGraphQueryHint(RootGraph<?> graph, GraphSemantic semantic	) {
+	public EntityGraphQueryHint(RootGraphImplementor<?> graph, GraphSemantic semantic	) {
 		this.semantic = semantic;
 		this.graph = graph;
 	}
 
-	public RootGraph<?> getGraph() {
-		return graph;
-	}
-
+	@Override
 	public GraphSemantic getSemantic() {
 		return semantic;
+	}
+
+	@Override
+	public RootGraphImplementor<?> getGraph() {
+		return graph;
 	}
 
 	public List<FromElement> toFromElements(FromClause fromClause, HqlSqlWalker walker) {

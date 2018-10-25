@@ -9,7 +9,7 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.io.Serializable;
 import javax.persistence.metamodel.Type;
 
-import org.hibernate.metamodel.model.domain.spi.JpaTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.DomainTypeDescriptor;
 
 /**
  * Defines commonality for the JPA {@link Type} hierarchy of interfaces.
@@ -17,7 +17,7 @@ import org.hibernate.metamodel.model.domain.spi.JpaTypeImplementor;
  * @author Steve Ebersole
  * @author Brad Koehn
  */
-public abstract class AbstractType<X> implements JpaTypeImplementor<X>, Serializable {
+public abstract class AbstractType<X> implements DomainTypeDescriptor<X>, Serializable {
 	private final Class<X> javaType;
 	private final String typeName;
 

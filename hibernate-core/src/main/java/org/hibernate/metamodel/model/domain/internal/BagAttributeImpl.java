@@ -8,14 +8,14 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.Collection;
 
-import org.hibernate.metamodel.model.domain.spi.CollectionAttributeImplementor;
+import org.hibernate.metamodel.model.domain.spi.BagPersistentAttribute;
 
 /**
  * @author Steve Ebersole
  */
-class CollectionAttributeImpl<X, E> extends AbstractPluralAttribute<X, Collection<E>, E>
-		implements CollectionAttributeImplementor<X, E> {
-	CollectionAttributeImpl(PluralAttributeBuilder<X, Collection<E>, E, ?> xceBuilder) {
+class BagAttributeImpl<X, E> extends AbstractPluralAttribute<X, Collection<E>, E>
+		implements BagPersistentAttribute<X, E> {
+	BagAttributeImpl(PluralAttributeBuilder<X, Collection<E>, E, ?> xceBuilder) {
 		super( xceBuilder );
 	}
 

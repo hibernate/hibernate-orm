@@ -9,8 +9,8 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.io.Serializable;
 import java.util.Collection;
 
-import org.hibernate.metamodel.model.domain.spi.PluralAttributeImplementor;
-import org.hibernate.metamodel.model.domain.spi.SimpleTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
 
 /**
  * @param <D> The (D)eclaring type
@@ -22,7 +22,7 @@ import org.hibernate.metamodel.model.domain.spi.SimpleTypeImplementor;
  */
 public abstract class AbstractPluralAttribute<D, C, E>
 		extends AbstractAttribute<D,C>
-		implements PluralAttributeImplementor<D,C,E>, Serializable {
+		implements PluralPersistentAttribute<D,C,E>, Serializable {
 
 	private final Class<C> collectionClass;
 
@@ -40,25 +40,25 @@ public abstract class AbstractPluralAttribute<D, C, E>
 
 	public static <X,C,E,K> PluralAttributeBuilder<X,C,E,K> create(
 			AbstractManagedType<X> ownerType,
-			SimpleTypeImplementor<E> attrType,
+			SimpleTypeDescriptor<E> attrType,
 			Class<C> collectionClass,
-			SimpleTypeImplementor<K> keyType) {
+			SimpleTypeDescriptor<K> keyType) {
 		return new PluralAttributeBuilder<>( ownerType, attrType, collectionClass, keyType );
 	}
 
 	@Override
-	public SimpleTypeImplementor<E> getElementType() {
+	public SimpleTypeDescriptor<E> getElementType() {
 		return getValueGraphType();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public SimpleTypeImplementor<E> getValueGraphType() {
-		return (SimpleTypeImplementor<E>) super.getValueGraphType();
+	public SimpleTypeDescriptor<E> getValueGraphType() {
+		return (SimpleTypeDescriptor<E>) super.getValueGraphType();
 	}
 
 	@Override
-	public SimpleTypeImplementor<?> getKeyGraphType() {
+	public SimpleTypeDescriptor<?> getKeyGraphType() {
 		return null;
 	}
 

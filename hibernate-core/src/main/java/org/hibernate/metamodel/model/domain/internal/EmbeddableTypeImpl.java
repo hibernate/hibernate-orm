@@ -11,8 +11,8 @@ import java.io.Serializable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
-import org.hibernate.metamodel.model.domain.spi.EmbeddableTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.type.ComponentType;
 
 /**
@@ -24,14 +24,14 @@ import org.hibernate.type.ComponentType;
  */
 public class EmbeddableTypeImpl<J>
 		extends AbstractManagedType<J>
-		implements EmbeddableTypeImplementor<J>, Serializable {
+		implements EmbeddedTypeDescriptor<J>, Serializable {
 
-	private final ManagedTypeImplementor<?> parent;
+	private final ManagedTypeDescriptor<?> parent;
 	private final ComponentType hibernateType;
 
 	public EmbeddableTypeImpl(
 			Class<J> javaType,
-			ManagedTypeImplementor<?> parent,
+			ManagedTypeDescriptor<?> parent,
 			ComponentType hibernateType,
 			SessionFactoryImplementor sessionFactory) {
 		super( javaType, null, null, sessionFactory );
@@ -44,7 +44,7 @@ public class EmbeddableTypeImpl<J>
 		return PersistenceType.EMBEDDABLE;
 	}
 
-	public ManagedTypeImplementor<?> getParent() {
+	public ManagedTypeDescriptor<?> getParent() {
 		return parent;
 	}
 

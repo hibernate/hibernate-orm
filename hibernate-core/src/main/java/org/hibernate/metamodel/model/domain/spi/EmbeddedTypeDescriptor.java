@@ -15,8 +15,8 @@ import org.hibernate.type.ComponentType;
  *
  * @author Steve Ebersole
  */
-public interface EmbeddableTypeImplementor<J> extends EmbeddableType<J>, ManagedTypeImplementor<J> {
+public interface EmbeddedTypeDescriptor<J> extends EmbeddableType<J>, ManagedTypeDescriptor<J> {
 	ComponentType getHibernateType();
 
-	ManagedTypeImplementor<?> getParent();
+	ManagedTypeDescriptor<?> getParent();
 }

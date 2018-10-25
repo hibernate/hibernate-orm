@@ -56,6 +56,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.hql.internal.QueryExecutionRequestException;
 import org.hibernate.internal.EmptyScrollableResults;
 import org.hibernate.internal.EntityManagerMessageLogger;
@@ -1285,7 +1286,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 				throw new IllegalStateException( "Semantic was non-null, but graph was null" );
 			}
 
-			applyEntityGraphQueryHint( new EntityGraphQueryHint( graph, semantic ) );
+			applyEntityGraphQueryHint( new EntityGraphQueryHint( (RootGraphImplementor<?>) graph, semantic ) );
 		}
 
 		return this;

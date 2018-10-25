@@ -13,8 +13,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 
 /**
  * Defines the Hibernate implementation of the JPA {@link EntityType} contract.
@@ -24,13 +24,13 @@ import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeImplementor;
  */
 public class EntityTypeImpl<J>
 		extends AbstractIdentifiableType<J>
-		implements EntityTypeImplementor<J>, Serializable {
+		implements EntityTypeDescriptor<J>, Serializable {
 	private final String jpaEntityName;
 
 	@SuppressWarnings("unchecked")
 	public EntityTypeImpl(
 			Class javaType,
-			IdentifiableTypeImplementor<? super J> superType,
+			IdentifiableTypeDescriptor<? super J> superType,
 			PersistentClass persistentClass,
 			SessionFactoryImplementor sessionFactory) {
 		super(
@@ -66,7 +66,7 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
-	public IdentifiableTypeImplementor<? super J> getSuperType() {
+	public IdentifiableTypeDescriptor<? super J> getSuperType() {
 		return super.getSuperType();
 	}
 

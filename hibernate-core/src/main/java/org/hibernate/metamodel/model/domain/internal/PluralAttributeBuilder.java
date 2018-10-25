@@ -14,15 +14,15 @@ import java.util.Set;
 import javax.persistence.metamodel.Attribute;
 
 import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.SimpleTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
 
 /**
  * A "parameter object" for creating a plural attribute
  */
 public class PluralAttributeBuilder<D, C, E, K> {
-	private final ManagedTypeImplementor<D> declaringType;
-	private final SimpleTypeImplementor<E> valueType;
+	private final ManagedTypeDescriptor<D> declaringType;
+	private final SimpleTypeDescriptor<E> valueType;
 
 	private Attribute.PersistentAttributeType attributeNature;
 
@@ -30,21 +30,21 @@ public class PluralAttributeBuilder<D, C, E, K> {
 	private Member member;
 	private Class<C> collectionClass;
 
-	private SimpleTypeImplementor<K> keyType;
+	private SimpleTypeDescriptor<K> keyType;
 
 
 	public PluralAttributeBuilder(
-			ManagedTypeImplementor<D> ownerType,
-			SimpleTypeImplementor<E> attrType,
+			ManagedTypeDescriptor<D> ownerType,
+			SimpleTypeDescriptor<E> elementType,
 			Class<C> collectionClass,
-			SimpleTypeImplementor<K> keyType) {
+			SimpleTypeDescriptor<K> keyType) {
 		this.declaringType = ownerType;
-		this.valueType = attrType;
+		this.valueType = elementType;
 		this.collectionClass = collectionClass;
 		this.keyType = keyType;
 	}
 
-	public ManagedTypeImplementor<D> getDeclaringType() {
+	public ManagedTypeDescriptor<D> getDeclaringType() {
 		return declaringType;
 	}
 
@@ -52,7 +52,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 		return attributeNature;
 	}
 
-	public SimpleTypeImplementor<K> getKeyType() {
+	public SimpleTypeDescriptor<K> getKeyType() {
 		return keyType;
 	}
 
@@ -60,7 +60,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 		return collectionClass;
 	}
 
-	public SimpleTypeImplementor<E> getValueType() {
+	public SimpleTypeDescriptor<E> getValueType() {
 		return valueType;
 	}
 
@@ -110,7 +110,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 		}
 		else if ( Collection.class.equals( collectionClass ) ) {
 			final PluralAttributeBuilder<D, Collection<E>,E,?> builder = (PluralAttributeBuilder<D, Collection<E>, E,?>) this;
-			return (AbstractPluralAttribute<D, C, E>) new CollectionAttributeImpl<>(
+			return (AbstractPluralAttribute<D, C, E>) new BagAttributeImpl<>(
 					builder
 			);
 		}
@@ -143,7 +143,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 		}
 		else if ( Collection.class.isAssignableFrom( collectionClass ) ) {
 			final PluralAttributeBuilder<D, Collection<E>,E,?> builder = (PluralAttributeBuilder<D, Collection<E>, E,?>) this;
-			return (AbstractPluralAttribute<D, C, E>) new CollectionAttributeImpl<>(
+			return (AbstractPluralAttribute<D, C, E>) new BagAttributeImpl<>(
 					builder
 			);
 		}

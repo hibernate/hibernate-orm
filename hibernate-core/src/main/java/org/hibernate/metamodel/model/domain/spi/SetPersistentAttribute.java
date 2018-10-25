@@ -6,13 +6,13 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import java.util.List;
-import javax.persistence.metamodel.ListAttribute;
+import java.util.Set;
+import javax.persistence.metamodel.SetAttribute;
 
 /**
- * Hibernate extension to the JPA {@link ListAttribute} descriptor
+ * Hibernate extension to the JPA {@link SetAttribute} descriptor
  *
  * @author Steve Ebersole
  */
-public interface ListAttributeImplementor<D,E> extends ListAttribute<D,E>, PluralAttributeImplementor<D,List<E>,E> {
+public interface SetPersistentAttribute<D,E> extends SetAttribute<D,E>, PluralPersistentAttribute<D,Set<E>,E> {
 }

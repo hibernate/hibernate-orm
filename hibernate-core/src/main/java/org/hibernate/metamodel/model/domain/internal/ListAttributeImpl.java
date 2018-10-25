@@ -8,12 +8,12 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.List;
 
-import org.hibernate.metamodel.model.domain.spi.ListAttributeImplementor;
+import org.hibernate.metamodel.model.domain.spi.ListPersistentAttribute;
 
 /**
  * @author Steve Ebersole
  */
-class ListAttributeImpl<X, E> extends AbstractPluralAttribute<X, List<E>, E> implements ListAttributeImplementor<X, E> {
+class ListAttributeImpl<X, E> extends AbstractPluralAttribute<X, List<E>, E> implements ListPersistentAttribute<X, E> {
 	ListAttributeImpl(PluralAttributeBuilder<X, List<E>, E, ?> xceBuilder) {
 		super( xceBuilder );
 	}

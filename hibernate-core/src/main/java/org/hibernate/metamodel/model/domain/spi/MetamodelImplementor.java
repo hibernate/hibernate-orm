@@ -151,19 +151,19 @@ public interface MetamodelImplementor extends Metamodel {
 
 
 	@Override
-	<X> EntityTypeImplementor<X> entity(String entityName);
+	<X> EntityTypeDescriptor<X> entity(String entityName);
 
 	@Override
-	<X> EntityTypeImplementor<X> entity(Class<X> cls);
+	<X> EntityTypeDescriptor<X> entity(Class<X> cls);
 
 	@Override
-	<X> ManagedTypeImplementor<X> managedType(Class<X> cls);
+	<X> ManagedTypeDescriptor<X> managedType(Class<X> cls);
 
 	@Override
-	<X> EmbeddableTypeImplementor<X> embeddable(Class<X> cls);
+	<X> EmbeddedTypeDescriptor<X> embeddable(Class<X> cls);
 
 	@Override
-	default EntityTypeImplementor getEntityTypeByName(String entityName) {
+	default EntityTypeDescriptor getEntityTypeByName(String entityName) {
 		return entity( entityName );
 	}
 }

@@ -8,18 +8,17 @@ package org.hibernate.graph.internal;
 
 import javax.persistence.metamodel.Attribute;
 
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class SubGraphImpl<J> extends AbstractGraph<J> implements SubGraphImplementor<J> {
 	public SubGraphImpl(
-			ManagedTypeImplementor<J> managedType,
+			ManagedTypeDescriptor<J> managedType,
 			boolean mutable,
 			SessionFactoryImplementor sessionFactory) {
 		super( managedType, mutable, sessionFactory );
@@ -54,12 +53,12 @@ public class SubGraphImpl<J> extends AbstractGraph<J> implements SubGraphImpleme
 	}
 
 	@Override
-	public boolean appliesTo(ManagedTypeImplementor<? super J> managedType) {
+	public boolean appliesTo(ManagedTypeDescriptor<? super J> managedType) {
 		if ( this.getGraphedType().equals( managedType ) ) {
 			return true;
 		}
 
-		ManagedTypeImplementor superType = managedType.getSuperType();
+		ManagedTypeDescriptor superType = managedType.getSuperType();
 		while ( superType != null ) {
 			if ( superType.equals( managedType ) ) {
 				return true;

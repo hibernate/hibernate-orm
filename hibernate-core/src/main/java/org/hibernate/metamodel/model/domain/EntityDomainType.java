@@ -6,10 +6,12 @@
  */
 package org.hibernate.metamodel.model.domain;
 
+import javax.persistence.metamodel.EntityType;
+
 /**
- * Describes any non-collection type
+ * Extension to the JPA {@link EntityType} contract
  *
  * @author Steve Ebersole
  */
-public interface SimpleType<J> extends JpaType<J> {
+public interface EntityDomainType<J> extends IdentifiableDomainType<J>, EntityType<J> {
 }

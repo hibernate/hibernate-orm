@@ -13,13 +13,13 @@ import javax.persistence.metamodel.PluralAttribute;
  *
  * @author Steve Ebersole
  */
-public interface PluralAttributeImplementor<D,C,E> extends PluralAttribute<D,C,E>, AttributeImplementor<D,C> {
+public interface PluralPersistentAttribute<D,C,E> extends PluralAttribute<D,C,E>, PersistentAttributeDescriptor<D,C> {
 	@Override
-	ManagedTypeImplementor<D> getDeclaringType();
+	ManagedTypeDescriptor<D> getDeclaringType();
 
 	@Override
-	SimpleTypeImplementor<E> getElementType();
+	SimpleTypeDescriptor<E> getElementType();
 
 	@Override
-	SimpleTypeImplementor<E> getValueGraphType();
+	SimpleTypeDescriptor<E> getValueGraphType();
 }

@@ -6,11 +6,11 @@
  */
 package org.hibernate.graph.spi;
 
-import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.MapAttributeImplementor;
-import org.hibernate.metamodel.model.domain.spi.PluralAttributeImplementor;
-import org.hibernate.metamodel.model.domain.spi.SimpleTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.SingularAttributeImplementor;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.MapPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 
 /**
  * Helper containing utilities useful for graph handling
@@ -19,32 +19,32 @@ import org.hibernate.metamodel.model.domain.spi.SingularAttributeImplementor;
  */
 public class GraphHelper {
 	@SuppressWarnings("unchecked")
-	public static <J> SimpleTypeImplementor<J> resolveKeyTypeDescriptor(SingularAttributeImplementor attribute) {
+	public static <J> SimpleTypeDescriptor<J> resolveKeyTypeDescriptor(SingularPersistentAttribute attribute) {
 		// only valid for entity-valued attributes where the entity has a
 		// composite id
-		final SimpleTypeImplementor attributeType = attribute.getType();
-		if ( attributeType instanceof IdentifiableTypeImplementor  ) {
-			return ( (IdentifiableTypeImplementor) attributeType ).getIdType();
+		final SimpleTypeDescriptor attributeType = attribute.getType();
+		if ( attributeType instanceof IdentifiableTypeDescriptor ) {
+			return ( (IdentifiableTypeDescriptor) attributeType ).getIdType();
 		}
 
 		return null;
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <J> SimpleTypeImplementor<J> resolveKeyTypeDescriptor(PluralAttributeImplementor attribute) {
-		if ( attribute instanceof SingularAttributeImplementor ) {
+	public static <J> SimpleTypeDescriptor<J> resolveKeyTypeDescriptor(PluralPersistentAttribute attribute) {
+		if ( attribute instanceof SingularPersistentAttribute ) {
 			// only valid for entity-valued attributes where the entity has a
 			// composite id
-			final SimpleTypeImplementor attributeType = ( (SingularAttributeImplementor) attribute ).getType();
-			if ( attributeType instanceof IdentifiableTypeImplementor  ) {
-				return ( (IdentifiableTypeImplementor) attributeType ).getIdType();
+			final SimpleTypeDescriptor attributeType = ( (SingularPersistentAttribute) attribute ).getType();
+			if ( attributeType instanceof IdentifiableTypeDescriptor ) {
+				return ( (IdentifiableTypeDescriptor) attributeType ).getIdType();
 			}
 
 			return null;
 		}
-		else if ( attribute instanceof PluralAttributeImplementor ) {
-			if ( attribute instanceof MapAttributeImplementor ) {
-				return ( (MapAttributeImplementor) attribute ).getKeyType();
+		else if ( attribute instanceof PluralPersistentAttribute ) {
+			if ( attribute instanceof MapPersistentAttribute ) {
+				return ( (MapPersistentAttribute) attribute ).getKeyType();
 			}
 
 			return null;

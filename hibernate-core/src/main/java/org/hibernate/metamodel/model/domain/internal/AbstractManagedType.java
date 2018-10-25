@@ -25,15 +25,15 @@ import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
-import org.hibernate.metamodel.model.domain.spi.AttributeImplementor;
-import org.hibernate.metamodel.model.domain.spi.CollectionAttributeImplementor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.BagPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.DomainModelHelper;
-import org.hibernate.metamodel.model.domain.spi.ListAttributeImplementor;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.MapAttributeImplementor;
-import org.hibernate.metamodel.model.domain.spi.PluralAttributeImplementor;
-import org.hibernate.metamodel.model.domain.spi.SetAttributeImplementor;
-import org.hibernate.metamodel.model.domain.spi.SingularAttributeImplementor;
+import org.hibernate.metamodel.model.domain.spi.ListPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.MapPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.SetPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 
 /**
  * Defines commonality for the JPA {@link ManagedType} hierarchy of interfaces.
@@ -42,22 +42,22 @@ import org.hibernate.metamodel.model.domain.spi.SingularAttributeImplementor;
  */
 public abstract class AbstractManagedType<J>
 		extends AbstractType<J>
-		implements ManagedTypeImplementor<J>, Serializable {
+		implements ManagedTypeDescriptor<J>, Serializable {
 
 	private final SessionFactoryImplementor sessionFactory;
 
-	private final ManagedTypeImplementor<? super J> superType;
+	private final ManagedTypeDescriptor<? super J> superType;
 
-	private final Map<String,AttributeImplementor<J, ?>> declaredAttributes = new HashMap<>();
-	private final Map<String, SingularAttributeImplementor<J, ?>> declaredSingularAttributes = new HashMap<>();
-	private final Map<String, PluralAttributeImplementor<J, ?, ?>> declaredPluralAttributes = new HashMap<>();
+	private final Map<String, PersistentAttributeDescriptor<J, ?>> declaredAttributes = new HashMap<>();
+	private final Map<String, SingularPersistentAttribute<J, ?>> declaredSingularAttributes = new HashMap<>();
+	private final Map<String, PluralPersistentAttribute<J, ?, ?>> declaredPluralAttributes = new HashMap<>();
 
 	private transient InFlightAccess<J> inFlightAccess;
 
 	protected AbstractManagedType(
 			Class<J> javaType,
 			String typeName,
-			ManagedTypeImplementor<? super J> superType,
+			ManagedTypeDescriptor<? super J> superType,
 			SessionFactoryImplementor sessionFactory) {
 		super( javaType, typeName );
 		this.superType = superType;
@@ -76,7 +76,7 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
-	public ManagedTypeImplementor<? super J> getSuperType() {
+	public ManagedTypeDescriptor<? super J> getSuperType() {
 		return superType;
 	}
 
@@ -110,8 +110,8 @@ public abstract class AbstractManagedType<J>
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public AttributeImplementor<? super J, ?> getAttribute(String name) {
-		AttributeImplementor<? super J, ?> attribute = declaredAttributes.get( name );
+	public PersistentAttributeDescriptor<? super J, ?> getAttribute(String name) {
+		PersistentAttributeDescriptor<? super J, ?> attribute = declaredAttributes.get( name );
 		if ( attribute == null && getSuperType() != null ) {
 			attribute = getSuperType().getAttribute( name );
 		}
@@ -120,8 +120,8 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
-	public AttributeImplementor<J, ?> getDeclaredAttribute(String name) {
-		AttributeImplementor<J, ?> attr = declaredAttributes.get( name );
+	public PersistentAttributeDescriptor<J, ?> getDeclaredAttribute(String name) {
+		PersistentAttributeDescriptor<J, ?> attr = declaredAttributes.get( name );
 		checkNotNull( "Attribute ", attr, name );
 		return attr;
 	}
@@ -175,21 +175,21 @@ public abstract class AbstractManagedType<J>
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public <Y> SingularAttributeImplementor<? super J, Y> getSingularAttribute(String name, Class<Y> type) {
+	public <Y> SingularPersistentAttribute<? super J, Y> getSingularAttribute(String name, Class<Y> type) {
 		SingularAttribute<? super J, ?> attribute = declaredSingularAttributes.get( name );
 		if ( attribute == null && getSuperType() != null ) {
 			attribute = getSuperType().getSingularAttribute( name );
 		}
 		checkTypeForSingleAttribute( "SingularAttribute ", attribute, name, type );
-		return (SingularAttributeImplementor) attribute;
+		return (SingularPersistentAttribute) attribute;
 	}
 
 	@Override
 	@SuppressWarnings( "unchecked")
-	public <Y> SingularAttributeImplementor<J, Y> getDeclaredSingularAttribute(String name, Class<Y> javaType) {
+	public <Y> SingularPersistentAttribute<J, Y> getDeclaredSingularAttribute(String name, Class<Y> javaType) {
 		final SingularAttribute<J, ?> attr = declaredSingularAttributes.get( name );
 		checkTypeForSingleAttribute( "SingularAttribute ", attr, name, javaType );
-		return (SingularAttributeImplementor) attr;
+		return (SingularPersistentAttribute) attr;
 	}
 
 	private <Y> void checkTypeForSingleAttribute(
@@ -259,7 +259,7 @@ public abstract class AbstractManagedType<J>
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public CollectionAttribute<? super J, ?> getCollection(String name) {
-		PluralAttributeImplementor attribute = getPluralAttribute( name );
+		PluralPersistentAttribute attribute = getPluralAttribute( name );
 		if ( attribute == null && getSuperType() != null ) {
 			attribute = getSuperType().getPluralAttribute( name );
 		}
@@ -269,7 +269,7 @@ public abstract class AbstractManagedType<J>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public PluralAttributeImplementor<? super J, ?, ?> getPluralAttribute(String name) {
+	public PluralPersistentAttribute<? super J, ?, ?> getPluralAttribute(String name) {
 		return declaredPluralAttributes.get( name );
 	}
 
@@ -290,13 +290,13 @@ public abstract class AbstractManagedType<J>
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public SetAttributeImplementor<? super J, ?> getSet(String name) {
+	public SetPersistentAttribute<? super J, ?> getSet(String name) {
 		PluralAttribute<? super J, ?, ?> attribute = getPluralAttribute( name );
 		if ( attribute == null && getSuperType() != null ) {
 			attribute = getSuperType().getPluralAttribute( name );
 		}
 		basicSetCheck( attribute, name );
-		return (SetAttributeImplementor) attribute;
+		return (SetPersistentAttribute) attribute;
 	}
 
 	private void basicSetCheck(PluralAttribute<? super J, ?, ?> attribute, String name) {
@@ -308,21 +308,21 @@ public abstract class AbstractManagedType<J>
 
 	@Override
 	@SuppressWarnings( "unchecked")
-	public SetAttributeImplementor<J, ?> getDeclaredSet(String name) {
+	public SetPersistentAttribute<J, ?> getDeclaredSet(String name) {
 		final PluralAttribute<J,?,?> attribute = declaredPluralAttributes.get( name );
 		basicSetCheck( attribute, name );
-		return (SetAttributeImplementor) attribute;
+		return (SetPersistentAttribute) attribute;
 	}
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public ListAttributeImplementor<? super J, ?> getList(String name) {
+	public ListPersistentAttribute<? super J, ?> getList(String name) {
 		PluralAttribute<? super J, ?, ?> attribute = getPluralAttribute( name );
 		if ( attribute == null && getSuperType() != null ) {
 			attribute = getSuperType().getPluralAttribute( name );
 		}
 		basicListCheck( attribute, name );
-		return (ListAttributeImplementor) attribute;
+		return (ListPersistentAttribute) attribute;
 	}
 
 	private void basicListCheck(PluralAttribute<? super J, ?, ?> attribute, String name) {
@@ -334,21 +334,21 @@ public abstract class AbstractManagedType<J>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public ListAttributeImplementor<J, ?> getDeclaredList(String name) {
+	public ListPersistentAttribute<J, ?> getDeclaredList(String name) {
 		final PluralAttribute<J,?,?> attribute = declaredPluralAttributes.get( name );
 		basicListCheck( attribute, name );
-		return (ListAttributeImplementor) attribute;
+		return (ListPersistentAttribute) attribute;
 	}
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public MapAttributeImplementor<? super J, ?, ?> getMap(String name) {
+	public MapPersistentAttribute<? super J, ?, ?> getMap(String name) {
 		PluralAttribute<? super J, ?, ?> attribute = getPluralAttribute( name );
 		if ( attribute == null && getSuperType() != null ) {
 			attribute = getSuperType().getPluralAttribute( name );
 		}
 		basicMapCheck( attribute, name );
-		return (MapAttributeImplementor) attribute;
+		return (MapPersistentAttribute) attribute;
 	}
 
 	private void basicMapCheck(PluralAttribute<? super J, ?, ?> attribute, String name) {
@@ -360,21 +360,21 @@ public abstract class AbstractManagedType<J>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public MapAttributeImplementor<J, ?, ?> getDeclaredMap(String name) {
+	public MapPersistentAttribute<J, ?, ?> getDeclaredMap(String name) {
 		final PluralAttribute<J,?,?> attribute = declaredPluralAttributes.get( name );
 		basicMapCheck( attribute, name );
-		return (MapAttributeImplementor) attribute;
+		return (MapPersistentAttribute) attribute;
 	}
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public <E> CollectionAttributeImplementor<? super J, E> getCollection(String name, Class<E> elementType) {
+	public <E> BagPersistentAttribute<? super J, E> getCollection(String name, Class<E> elementType) {
 		PluralAttribute<? super J, ?, ?> attribute = declaredPluralAttributes.get( name );
 		if ( attribute == null && getSuperType() != null ) {
 			attribute = getSuperType().getPluralAttribute( name );
 		}
 		checkCollectionElementType( attribute, name, elementType );
-		return (CollectionAttributeImplementor) attribute;
+		return (BagPersistentAttribute) attribute;
 	}
 
 	@Override
@@ -491,10 +491,20 @@ public abstract class AbstractManagedType<J>
 		return new SubGraphImpl<>( this, true, sessionFactory );
 	}
 
+	@Override
+	public <S extends J> ManagedTypeDescriptor<S> findSubType(String subTypeName) {
+		return DomainModelHelper.resolveSubType( this, subTypeName, sessionFactory() );
+	}
+
+	@Override
+	public <S extends J> ManagedTypeDescriptor<S> findSubType(Class<S> subType) {
+		return DomainModelHelper.resolveSubType( this, subType, sessionFactory() );
+	}
+
 	protected class InFlightAccessImpl implements InFlightAccess<J> {
 		@Override
 		@SuppressWarnings("unchecked")
-		public void addAttribute(AttributeImplementor<J, ?> attribute) {
+		public void addAttribute(PersistentAttributeDescriptor<J, ?> attribute) {
 			// put it in the collective group of attributes
 			declaredAttributes.put( attribute.getName(), attribute );
 
@@ -502,11 +512,11 @@ public abstract class AbstractManagedType<J>
 			final Bindable.BindableType bindableType = ( ( Bindable ) attribute ).getBindableType();
 			switch ( bindableType ) {
 				case SINGULAR_ATTRIBUTE : {
-					declaredSingularAttributes.put( attribute.getName(), (SingularAttributeImplementor<J,?>) attribute );
+					declaredSingularAttributes.put( attribute.getName(), (SingularPersistentAttribute<J,?>) attribute );
 					break;
 				}
 				case PLURAL_ATTRIBUTE : {
-					declaredPluralAttributes.put(attribute.getName(), (PluralAttributeImplementor<J,?,?>) attribute );
+					declaredPluralAttributes.put(attribute.getName(), (PluralPersistentAttribute<J,?,?>) attribute );
 					break;
 				}
 				default : {
@@ -519,15 +529,5 @@ public abstract class AbstractManagedType<J>
 		public void finishUp() {
 			inFlightAccess = null;
 		}
-	}
-
-	@Override
-	public <S extends J> ManagedTypeImplementor<S> findSubType(String subTypeName) {
-		return DomainModelHelper.resolveSubType( this, subTypeName, sessionFactory() );
-	}
-
-	@Override
-	public <S extends J> ManagedTypeImplementor<S> findSubType(Class<S> subType) {
-		return DomainModelHelper.resolveSubType( this, subType, sessionFactory() );
 	}
 }

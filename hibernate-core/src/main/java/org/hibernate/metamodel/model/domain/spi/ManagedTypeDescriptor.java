@@ -15,18 +15,19 @@ import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.graph.Graph;
 import org.hibernate.graph.spi.SubGraphImplementor;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
 
 /**
  * Hibernate extension to the JPA {@link ManagedType} descriptor
  *
  * @author Steve Ebersole
  */
-public interface ManagedTypeImplementor<J> extends SimpleTypeImplementor<J>, ManagedType<J> {
+public interface ManagedTypeDescriptor<J> extends SimpleTypeDescriptor<J>, ManagedDomainType<J> {
 	/**
 	 * Get this ManagedType's super type descriptor.  ATM only supported for the
-	 * {@link IdentifiableTypeImplementor} branch of the ManagedType tree
+	 * {@link IdentifiableTypeDescriptor} branch of the ManagedType tree
 	 */
-	ManagedTypeImplementor<? super J> getSuperType();
+	ManagedTypeDescriptor<? super J> getSuperType();
 
 	/**
 	 * The Hibernate "type name" ("entity name" - for non-POJO representations)
@@ -57,21 +58,21 @@ public interface ManagedTypeImplementor<J> extends SimpleTypeImplementor<J>, Man
 	 */
 	<S extends J> SubGraphImplementor<S> makeSubGraph(Class<S> subType);
 
+	<S extends J> ManagedTypeDescriptor<S> findSubType(String subTypeName);
+
+	<S extends J> ManagedTypeDescriptor<S> findSubType(Class<S> type);
+
 	/**
 	 * In-flight access to the managed type.  Used to add attributes, etc.
 	 * Valid only during boot.
 	 */
 	InFlightAccess<J> getInFlightAccess();
 
-	<S extends J> ManagedTypeImplementor<S> findSubType(String subTypeName);
-
-	<S extends J> ManagedTypeImplementor<S> findSubType(Class<S> type);
-
 	/**
 	 * Used during creation of the managed type object to add its attributes
 	 */
 	interface InFlightAccess<J> {
-		void addAttribute(AttributeImplementor<J, ?> attribute);
+		void addAttribute(PersistentAttributeDescriptor<J, ?> attribute);
 
 		/**
 		 * Called when configuration of the managed-type is complete
@@ -81,21 +82,21 @@ public interface ManagedTypeImplementor<J> extends SimpleTypeImplementor<J>, Man
 
 
 	@Override
-	AttributeImplementor<J, ?> getDeclaredAttribute(String name);
+	PersistentAttributeDescriptor<J, ?> getDeclaredAttribute(String name);
 
 	@Override
-	AttributeImplementor<? super J, ?> getAttribute(String name);
+	PersistentAttributeDescriptor<? super J, ?> getAttribute(String name);
 
 	@Override
-	<Y> SingularAttributeImplementor<? super J, Y> getSingularAttribute(String name, Class<Y> type);
+	<Y> SingularPersistentAttribute<? super J, Y> getSingularAttribute(String name, Class<Y> type);
 
 	@Override
-	<Y> SingularAttributeImplementor<J,Y> getDeclaredSingularAttribute(String name, Class<Y> type);
+	<Y> SingularPersistentAttribute<J,Y> getDeclaredSingularAttribute(String name, Class<Y> type);
 
-	<C,E> PluralAttributeImplementor<J,C,E> getPluralAttribute(String name);
+	<C,E> PluralPersistentAttribute<J,C,E> getPluralAttribute(String name);
 
 	@Override
-	<E> CollectionAttributeImplementor<? super J, E> getCollection(String name, Class<E> elementType);
+	<E> BagPersistentAttribute<? super J, E> getCollection(String name, Class<E> elementType);
 
 	@Override
 	default <E> CollectionAttribute<J, E> getDeclaredCollection(
@@ -156,32 +157,32 @@ public interface ManagedTypeImplementor<J> extends SimpleTypeImplementor<J>, Man
 	}
 
 	@Override
-	default SetAttributeImplementor<? super J, ?> getSet(String name) {
+	default SetPersistentAttribute<? super J, ?> getSet(String name) {
 		return null;
 	}
 
 	@Override
-	default SetAttributeImplementor<J, ?> getDeclaredSet(String name) {
+	default SetPersistentAttribute<J, ?> getDeclaredSet(String name) {
 		return null;
 	}
 
 	@Override
-	default ListAttributeImplementor<? super J, ?> getList(String name) {
+	default ListPersistentAttribute<? super J, ?> getList(String name) {
 		return null;
 	}
 
 	@Override
-	default ListAttributeImplementor<J, ?> getDeclaredList(String name) {
+	default ListPersistentAttribute<J, ?> getDeclaredList(String name) {
 		return null;
 	}
 
 	@Override
-	default MapAttributeImplementor<? super J, ?, ?> getMap(String name) {
+	default MapPersistentAttribute<? super J, ?, ?> getMap(String name) {
 		return null;
 	}
 
 	@Override
-	default MapAttributeImplementor<J, ?, ?> getDeclaredMap(String name) {
+	default MapPersistentAttribute<J, ?, ?> getDeclaredMap(String name) {
 		return null;
 	}
 }

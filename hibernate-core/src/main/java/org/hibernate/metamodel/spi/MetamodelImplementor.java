@@ -2,20 +2,24 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>
  */
-package org.hibernate.metamodel.model.domain.spi;
+package org.hibernate.metamodel.spi;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.persistence.EntityGraph;
 
 import org.hibernate.EntityNameResolver;
 import org.hibernate.MappingException;
 import org.hibernate.Metamodel;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -135,12 +139,22 @@ public interface MetamodelImplementor extends Metamodel {
 
 	<T> void addNamedEntityGraph(String graphName, RootGraphImplementor<T> entityGraph);
 
+	/**
+	 * @deprecated Use {@link #addNamedEntityGraph(String, RootGraphImplementor)} instead.
+	 */
+	@Deprecated
+	<T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph);
+
 	<T> RootGraphImplementor<T> findEntityGraphByName(String name);
 
 	<T> List<RootGraphImplementor<? super T>> findEntityGraphsByJavaType(Class<T> entityClass);
 
-	default <T> List<RootGraphImplementor<? super T>> findEntityGraphsByType(Class<T> entityClass) {
-		return findEntityGraphsByJavaType( entityClass );
+	/**
+	 * @deprecated Use {@link #findEntityGraphsByJavaType(Class)} instead.
+	 */
+	@Deprecated
+	default <T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass) {
+		return (List) findEntityGraphsByJavaType( entityClass );
 	}
 
 	void close();

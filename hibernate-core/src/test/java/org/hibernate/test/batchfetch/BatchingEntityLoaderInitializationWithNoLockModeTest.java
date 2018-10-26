@@ -18,7 +18,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.loader.BatchFetchStyle;
-import org.hibernate.metamodel.model.domain.spi.MetamodelImplementor;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.junit.Test;
 

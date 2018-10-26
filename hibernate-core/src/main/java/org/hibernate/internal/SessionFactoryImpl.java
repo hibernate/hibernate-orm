@@ -100,7 +100,7 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.internal.MetamodelImpl;
-import org.hibernate.metamodel.model.domain.spi.MetamodelImplementor;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.procedure.ProcedureCall;
@@ -590,7 +590,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public <T> List<RootGraphImplementor<? super T>> findEntityGraphsByJavaType(Class<T> entityClass) {
-		return getMetamodel().findEntityGraphsByType( entityClass );
+		return getMetamodel().findEntityGraphsByJavaType( entityClass );
 	}
 
 

@@ -157,7 +157,7 @@ import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.loader.criteria.CriteriaLoader;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
-import org.hibernate.metamodel.model.domain.spi.MetamodelImplementor;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.param.CollectionFilterKeyParameterSpecification;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;

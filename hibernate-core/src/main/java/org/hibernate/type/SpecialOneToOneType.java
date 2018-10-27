@@ -27,7 +27,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 public class SpecialOneToOneType extends OneToOneType {
 	
 	/**
-	 * @deprecated Use {@link #SpecialOneToOneType(org.hibernate.type.TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, boolean, String, String)} instead.
+	 * @deprecated Use {@link #SpecialOneToOneType(org.hibernate.type.TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, boolean, String, String, boolean)} instead.
 	 */
 	@Deprecated
 	public SpecialOneToOneType(
@@ -39,11 +39,11 @@ public class SpecialOneToOneType extends OneToOneType {
 			boolean unwrapProxy,
 			String entityName,
 			String propertyName) {
-		this( scope, referencedEntityName, foreignKeyType, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, false, entityName, propertyName );
+		this( scope, referencedEntityName, foreignKeyType, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, false, entityName, propertyName, foreignKeyType != ForeignKeyDirection.TO_PARENT );
 	}
 
 	/**
-	 * @deprecated Use {@link #SpecialOneToOneType(org.hibernate.type.TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, boolean, String, String)} instead.
+	 * @deprecated Use {@link #SpecialOneToOneType(org.hibernate.type.TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, boolean, String, String, boolean)} instead.
 	 */
 	@Deprecated
 	public SpecialOneToOneType(
@@ -66,7 +66,39 @@ public class SpecialOneToOneType extends OneToOneType {
 				unwrapProxy,
 				false,
 				entityName,
-				propertyName
+				propertyName,
+				foreignKeyType != ForeignKeyDirection.TO_PARENT
+		);
+	}
+
+
+	/**
+	 * @deprecated Use {@link #SpecialOneToOneType(org.hibernate.type.TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, boolean, String, String, boolean)} instead.
+	 */
+	@Deprecated
+	public SpecialOneToOneType(
+			TypeFactory.TypeScope scope,
+			String referencedEntityName,
+			ForeignKeyDirection foreignKeyType,
+			boolean referenceToPrimaryKey,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			boolean ignoreNotFound,
+			String entityName,
+			String propertyName) {
+		this(
+				scope,
+				referencedEntityName,
+				foreignKeyType,
+				referenceToPrimaryKey,
+				uniqueKeyPropertyName,
+				lazy,
+				unwrapProxy,
+				ignoreNotFound,
+				entityName,
+				propertyName,
+				foreignKeyType != ForeignKeyDirection.TO_PARENT
 		);
 	}
 
@@ -80,7 +112,8 @@ public class SpecialOneToOneType extends OneToOneType {
 			boolean unwrapProxy,
 			boolean ignoreNotFound,
 			String entityName,
-			String propertyName) {
+			String propertyName,
+			boolean constrained) {
 		super(
 				scope,
 				referencedEntityName,
@@ -91,7 +124,8 @@ public class SpecialOneToOneType extends OneToOneType {
 				unwrapProxy,
 				ignoreNotFound,
 				entityName,
-				propertyName
+				propertyName,
+				constrained
 			);
 	}
 

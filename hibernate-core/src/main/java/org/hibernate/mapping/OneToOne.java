@@ -72,7 +72,8 @@ public class OneToOne extends ToOne {
 					isUnwrapProxy(),
 					isIgnoreNotFound(),
 					entityName,
-					propertyName
+					propertyName,
+					constrained
 			);
 		}
 		else {
@@ -85,7 +86,8 @@ public class OneToOne extends ToOne {
 					isUnwrapProxy(),
 					isIgnoreNotFound(),
 					entityName,
-					propertyName
+					propertyName,
+					constrained
 			);
 		}
 	}

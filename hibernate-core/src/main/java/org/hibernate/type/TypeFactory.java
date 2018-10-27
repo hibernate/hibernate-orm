@@ -201,7 +201,7 @@ public final class TypeFactory implements Serializable {
 	// one-to-one type builders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * @deprecated {@link #oneToOne(String, ForeignKeyDirection, boolean, String, boolean, boolean, boolean, String, String)}
+	 * @deprecated {@link #oneToOne(String, ForeignKeyDirection, boolean, String, boolean, boolean, boolean, String, String, boolean)}
 	 *             should be used instead.
 	 */
 	@Deprecated
@@ -216,7 +216,30 @@ public final class TypeFactory implements Serializable {
 			String propertyName) {
 		return oneToOne(
 				persistentClass, foreignKeyType, referenceToPrimaryKey,
-				uniqueKeyPropertyName, lazy, unwrapProxy, false, entityName, propertyName
+				uniqueKeyPropertyName, lazy, unwrapProxy, false, entityName, propertyName,
+				foreignKeyType != ForeignKeyDirection.TO_PARENT
+		);
+	}
+
+	/**
+	 * @deprecated {@link #oneToOne(String, ForeignKeyDirection, boolean, String, boolean, boolean, boolean, String, String, boolean)}
+	 *             should be used instead.
+	 */
+	@Deprecated
+	public EntityType oneToOne(
+			String persistentClass,
+			ForeignKeyDirection foreignKeyType,
+			boolean referenceToPrimaryKey,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			boolean ignoreNotFound,
+			String entityName,
+			String propertyName) {
+		return oneToOne(
+				persistentClass, foreignKeyType, referenceToPrimaryKey,
+				uniqueKeyPropertyName, lazy, unwrapProxy, ignoreNotFound, entityName, propertyName,
+				foreignKeyType != ForeignKeyDirection.TO_PARENT
 		);
 	}
 
@@ -229,15 +252,16 @@ public final class TypeFactory implements Serializable {
 			boolean unwrapProxy,
 			boolean ignoreNotFound,
 			String entityName,
-			String propertyName) {
+			String propertyName,
+			boolean constrained) {
 		return new OneToOneType(
 				typeScope, persistentClass, foreignKeyType, referenceToPrimaryKey,
-				uniqueKeyPropertyName, lazy, unwrapProxy, ignoreNotFound, entityName, propertyName
+				uniqueKeyPropertyName, lazy, unwrapProxy, ignoreNotFound, entityName, propertyName, constrained
 		);
 	}
 
 	/**
-	 * @deprecated {@link #specialOneToOne(String, ForeignKeyDirection, boolean, String, boolean, boolean, boolean, String, String)}
+	 * @deprecated {@link #specialOneToOne(String, ForeignKeyDirection, boolean, String, boolean, boolean, boolean, String, String, boolean)}
 	 *             should be used instead.
 	 */
 	@Deprecated
@@ -252,7 +276,30 @@ public final class TypeFactory implements Serializable {
 			String propertyName) {
 		return specialOneToOne(
 				persistentClass, foreignKeyType, referenceToPrimaryKey,
-				uniqueKeyPropertyName, lazy, unwrapProxy, false, entityName, propertyName
+				uniqueKeyPropertyName, lazy, unwrapProxy, false, entityName, propertyName,
+				foreignKeyType != ForeignKeyDirection.TO_PARENT
+		);
+	}
+
+	/**
+	 * @deprecated {@link #specialOneToOne(String, ForeignKeyDirection, boolean, String, boolean, boolean, boolean, String, String, boolean)}
+	 *             should be used instead.
+	 */
+	@Deprecated
+	public EntityType specialOneToOne(
+			String persistentClass,
+			ForeignKeyDirection foreignKeyType,
+			boolean referenceToPrimaryKey,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			boolean ignoreNotFound,
+			String entityName,
+			String propertyName) {
+		return specialOneToOne(
+				persistentClass, foreignKeyType, referenceToPrimaryKey,
+				uniqueKeyPropertyName, lazy, unwrapProxy, ignoreNotFound, entityName, propertyName,
+				foreignKeyType != ForeignKeyDirection.TO_PARENT
 		);
 	}
 
@@ -265,10 +312,12 @@ public final class TypeFactory implements Serializable {
 			boolean unwrapProxy,
 			boolean ignoreNotFound,
 			String entityName,
-			String propertyName) {
+			String propertyName,
+			boolean constrained) {
 		return new SpecialOneToOneType(
 				typeScope, persistentClass, foreignKeyType, referenceToPrimaryKey,
-				uniqueKeyPropertyName, lazy, unwrapProxy, ignoreNotFound, entityName, propertyName
+				uniqueKeyPropertyName, lazy, unwrapProxy, ignoreNotFound, entityName, propertyName,
+				constrained
 		);
 	}
 

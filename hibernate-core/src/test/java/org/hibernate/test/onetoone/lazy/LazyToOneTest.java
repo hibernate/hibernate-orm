@@ -49,7 +49,6 @@ public class LazyToOneTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    @FailureExpected( jiraKey = "HHH-12842" )
     public void testOneToOneLazyLoading() {
         doInHibernate( this::sessionFactory, s -> {
             PostDetails post = (PostDetails) s.createQuery("select a from PostDetails a").getResultList().get(0);

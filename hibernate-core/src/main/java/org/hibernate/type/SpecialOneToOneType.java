@@ -27,7 +27,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 public class SpecialOneToOneType extends OneToOneType {
 	
 	/**
-	 * @deprecated Use {@link #SpecialOneToOneType(org.hibernate.type.TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, String, String)} instead.
+	 * @deprecated Use {@link #SpecialOneToOneType(org.hibernate.type.TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, boolean, String, String)} instead.
 	 */
 	@Deprecated
 	public SpecialOneToOneType(
@@ -39,9 +39,13 @@ public class SpecialOneToOneType extends OneToOneType {
 			boolean unwrapProxy,
 			String entityName,
 			String propertyName) {
-		this( scope, referencedEntityName, foreignKeyType, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName );
+		this( scope, referencedEntityName, foreignKeyType, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, false, entityName, propertyName );
 	}
-	
+
+	/**
+	 * @deprecated Use {@link #SpecialOneToOneType(org.hibernate.type.TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, boolean, String, String)} instead.
+	 */
+	@Deprecated
 	public SpecialOneToOneType(
 			TypeFactory.TypeScope scope,
 			String referencedEntityName,
@@ -52,15 +56,41 @@ public class SpecialOneToOneType extends OneToOneType {
 			boolean unwrapProxy,
 			String entityName,
 			String propertyName) {
-		super(
+		this(
 				scope,
-				referencedEntityName, 
+				referencedEntityName,
 				foreignKeyType,
-				referenceToPrimaryKey, 
-				uniqueKeyPropertyName, 
+				referenceToPrimaryKey,
+				uniqueKeyPropertyName,
 				lazy,
 				unwrapProxy,
-				entityName, 
+				false,
+				entityName,
+				propertyName
+		);
+	}
+
+	public SpecialOneToOneType(
+			TypeFactory.TypeScope scope,
+			String referencedEntityName,
+			ForeignKeyDirection foreignKeyType,
+			boolean referenceToPrimaryKey,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			boolean ignoreNotFound,
+			String entityName,
+			String propertyName) {
+		super(
+				scope,
+				referencedEntityName,
+				foreignKeyType,
+				referenceToPrimaryKey,
+				uniqueKeyPropertyName,
+				lazy,
+				unwrapProxy,
+				ignoreNotFound,
+				entityName,
 				propertyName
 			);
 	}

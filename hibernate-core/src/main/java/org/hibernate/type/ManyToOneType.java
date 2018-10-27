@@ -27,7 +27,6 @@ import org.hibernate.persister.entity.Loadable;
  */
 public class ManyToOneType extends EntityType {
 	private final String propertyName;
-	private final boolean ignoreNotFound;
 	private boolean isLogicalOneToOne;
 
 	/**
@@ -95,22 +94,20 @@ public class ManyToOneType extends EntityType {
 			boolean unwrapProxy,
 			boolean ignoreNotFound,
 			boolean isLogicalOneToOne) {
-		super( scope, referencedEntityName, referenceToPrimaryKey, uniqueKeyPropertyName, !lazy, unwrapProxy );
+		super( scope, referencedEntityName, referenceToPrimaryKey, uniqueKeyPropertyName, !lazy, unwrapProxy, ignoreNotFound );
 		this.propertyName = propertyName;
-		this.ignoreNotFound = ignoreNotFound;
 		this.isLogicalOneToOne = isLogicalOneToOne;
 	}
 
 	public ManyToOneType(ManyToOneType original, String superTypeEntityName) {
 		super( original, superTypeEntityName );
 		this.propertyName = original.propertyName;
-		this.ignoreNotFound = original.ignoreNotFound;
 		this.isLogicalOneToOne = original.isLogicalOneToOne;
 	}
 
 	@Override
 	public boolean isNullable() {
-		return ignoreNotFound;
+		return isIgnoreNotFound();
 	}
 
 	@Override

@@ -31,7 +31,7 @@ public class OneToOneType extends EntityType {
 	private final String entityName;
 
 	/**
-	 * @deprecated Use {@link #OneToOneType(TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, String, String)}
+	 * @deprecated Use {@link #OneToOneType(TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, boolean, String, String)}
 	 *  instead.
 	 */
 	@Deprecated
@@ -44,9 +44,24 @@ public class OneToOneType extends EntityType {
 			boolean unwrapProxy,
 			String entityName,
 			String propertyName) {
-		this( scope, referencedEntityName, foreignKeyType, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName );
+		this(
+				scope,
+				referencedEntityName,
+				foreignKeyType,
+				uniqueKeyPropertyName == null,
+				uniqueKeyPropertyName,
+				lazy,
+				unwrapProxy,
+				false,
+				entityName,
+				propertyName );
 	}
 
+	/**
+	 * @deprecated Use {@link #OneToOneType(TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, boolean, String, String)}
+	 *  instead.
+	 */
+	@Deprecated
 	public OneToOneType(
 			TypeFactory.TypeScope scope,
 			String referencedEntityName,
@@ -57,7 +72,31 @@ public class OneToOneType extends EntityType {
 			boolean unwrapProxy,
 			String entityName,
 			String propertyName) {
-		super( scope, referencedEntityName, referenceToPrimaryKey, uniqueKeyPropertyName, !lazy, unwrapProxy );
+		this(
+				scope,
+				referencedEntityName,
+				foreignKeyType,
+				referenceToPrimaryKey,
+				uniqueKeyPropertyName,
+				lazy,
+				unwrapProxy,
+				false,
+				entityName,
+				propertyName);
+	}
+
+	public OneToOneType(
+			TypeFactory.TypeScope scope,
+			String referencedEntityName,
+			ForeignKeyDirection foreignKeyType,
+			boolean referenceToPrimaryKey,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			boolean ignoreNotFound,
+			String entityName,
+			String propertyName) {
+		super( scope, referencedEntityName, referenceToPrimaryKey, uniqueKeyPropertyName, !lazy, unwrapProxy, ignoreNotFound );
 		this.foreignKeyType = foreignKeyType;
 		this.propertyName = propertyName;
 		this.entityName = entityName;
@@ -156,7 +195,7 @@ public class OneToOneType extends EntityType {
 
 	@Override
 	public boolean isNullable() {
-		return foreignKeyType==ForeignKeyDirection.TO_PARENT;
+		return isIgnoreNotFound() || foreignKeyType == ForeignKeyDirection.TO_PARENT;
 	}
 
 	@Override

@@ -21,7 +21,6 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public class ManyToOne extends ToOne {
-	private boolean ignoreNotFound;
 	private boolean isLogicalOneToOne;
 
 	/**
@@ -95,14 +94,6 @@ public class ManyToOne extends ToOne {
 	
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
-	}
-
-	public boolean isIgnoreNotFound() {
-		return ignoreNotFound;
-	}
-
-	public void setIgnoreNotFound(boolean ignoreNotFound) {
-		this.ignoreNotFound = ignoreNotFound;
 	}
 
 	public void markAsLogicalOneToOne() {

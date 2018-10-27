@@ -200,6 +200,11 @@ public final class TypeFactory implements Serializable {
 
 	// one-to-one type builders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	/**
+	 * @deprecated {@link #oneToOne(String, ForeignKeyDirection, boolean, String, boolean, boolean, boolean, String, String)}
+	 *             should be used instead.
+	 */
+	@Deprecated
 	public EntityType oneToOne(
 			String persistentClass,
 			ForeignKeyDirection foreignKeyType,
@@ -209,9 +214,45 @@ public final class TypeFactory implements Serializable {
 			boolean unwrapProxy,
 			String entityName,
 			String propertyName) {
+		return oneToOne(
+				persistentClass, foreignKeyType, referenceToPrimaryKey,
+				uniqueKeyPropertyName, lazy, unwrapProxy, false, entityName, propertyName
+		);
+	}
+
+	public EntityType oneToOne(
+			String persistentClass,
+			ForeignKeyDirection foreignKeyType,
+			boolean referenceToPrimaryKey,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			boolean ignoreNotFound,
+			String entityName,
+			String propertyName) {
 		return new OneToOneType(
 				typeScope, persistentClass, foreignKeyType, referenceToPrimaryKey,
-				uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName
+				uniqueKeyPropertyName, lazy, unwrapProxy, ignoreNotFound, entityName, propertyName
+		);
+	}
+
+	/**
+	 * @deprecated {@link #specialOneToOne(String, ForeignKeyDirection, boolean, String, boolean, boolean, boolean, String, String)}
+	 *             should be used instead.
+	 */
+	@Deprecated
+	public EntityType specialOneToOne(
+			String persistentClass,
+			ForeignKeyDirection foreignKeyType,
+			boolean referenceToPrimaryKey,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			String entityName,
+			String propertyName) {
+		return specialOneToOne(
+				persistentClass, foreignKeyType, referenceToPrimaryKey,
+				uniqueKeyPropertyName, lazy, unwrapProxy, false, entityName, propertyName
 		);
 	}
 
@@ -222,11 +263,12 @@ public final class TypeFactory implements Serializable {
 			String uniqueKeyPropertyName,
 			boolean lazy,
 			boolean unwrapProxy,
+			boolean ignoreNotFound,
 			String entityName,
 			String propertyName) {
 		return new SpecialOneToOneType(
 				typeScope, persistentClass, foreignKeyType, referenceToPrimaryKey,
-				uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName
+				uniqueKeyPropertyName, lazy, unwrapProxy, ignoreNotFound, entityName, propertyName
 		);
 	}
 

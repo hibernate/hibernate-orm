@@ -41,6 +41,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	private final boolean eager;
 	private final boolean unwrapProxy;
 	private final boolean referenceToPrimaryKey;
+	private final boolean ignoreNotFound;
 
 	/**
 	 * Cached because of performance
@@ -71,7 +72,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * says to return the "implementation target" of lazy prooxies; typically only possible
 	 * with lazy="no-proxy".
 	 *
-	 * @deprecated Use {@link #EntityType(org.hibernate.type.TypeFactory.TypeScope, String, boolean, String, boolean, boolean)} instead.
+	 * @deprecated Use {@link #EntityType(org.hibernate.type.TypeFactory.TypeScope, String, boolean, String, boolean, boolean, boolean)} instead.
 	 */
 	@Deprecated
 	protected EntityType(
@@ -80,7 +81,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			String uniqueKeyPropertyName,
 			boolean eager,
 			boolean unwrapProxy) {
-		this( scope, entityName, uniqueKeyPropertyName == null, uniqueKeyPropertyName, eager, unwrapProxy );
+		this( scope, entityName, uniqueKeyPropertyName == null, uniqueKeyPropertyName, eager, unwrapProxy, false );
 	}
 
 	/**
@@ -95,7 +96,11 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @param unwrapProxy Is unwrapping of proxies allowed for this association; unwrapping
 	 * says to return the "implementation target" of lazy prooxies; typically only possible
 	 * with lazy="no-proxy".
+	 *
+	 * @deprecated {@link #EntityType(TypeFactory.TypeScope, String, boolean, String, boolean, boolean, boolean)}
+	 * should be used instead.
 	 */
+	@Deprecated
 	protected EntityType(
 			TypeFactory.TypeScope scope,
 			String entityName,
@@ -103,12 +108,39 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			String uniqueKeyPropertyName,
 			boolean eager,
 			boolean unwrapProxy) {
+		this( scope, entityName, referenceToPrimaryKey, uniqueKeyPropertyName, eager, unwrapProxy, false );
+	}
+
+	/**
+	 * Constructs the requested entity type mapping.
+	 *
+	 * @param scope The type scope
+	 * @param entityName The name of the associated entity.
+	 * @param referenceToPrimaryKey True if association references a primary key.
+	 * @param uniqueKeyPropertyName The property-ref name, or null if we
+	 * reference the PK of the associated entity.
+	 * @param eager Is eager fetching enabled.
+	 * @param unwrapProxy Is unwrapping of proxies allowed for this association; unwrapping
+	 * says to return the "implementation target" of lazy prooxies; typically only possible
+	 * with lazy="no-proxy".
+	 * @param ignoreNotFound Should the association be ignored (null) if there is no associated
+	 *                       entity corresponding to the referenced value?
+	 */
+	protected EntityType(
+			TypeFactory.TypeScope scope,
+			String entityName,
+			boolean referenceToPrimaryKey,
+			String uniqueKeyPropertyName,
+			boolean eager,
+			boolean unwrapProxy,
+			boolean ignoreNotFound) {
 		this.scope = scope;
 		this.associatedEntityName = entityName;
 		this.uniqueKeyPropertyName = uniqueKeyPropertyName;
 		this.eager = eager;
 		this.unwrapProxy = unwrapProxy;
 		this.referenceToPrimaryKey = referenceToPrimaryKey;
+		this.ignoreNotFound = ignoreNotFound;
 	}
 
 	protected EntityType(EntityType original, String superTypeEntityName) {
@@ -118,6 +150,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		this.eager = original.eager;
 		this.unwrapProxy = original.unwrapProxy;
 		this.referenceToPrimaryKey = original.referenceToPrimaryKey;
+		this.ignoreNotFound = original.ignoreNotFound;
 	}
 
 	protected TypeFactory.TypeScope scope() {
@@ -474,6 +507,10 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	@Override
 	public Type getSemiResolvedType(SessionFactoryImplementor factory) {
 		return getAssociatedEntityPersister( factory ).getIdentifierType();
+	}
+
+	protected final boolean isIgnoreNotFound() {
+		return ignoreNotFound;
 	}
 
 	protected EntityPersister getAssociatedEntityPersister(final SessionFactoryImplementor factory) {

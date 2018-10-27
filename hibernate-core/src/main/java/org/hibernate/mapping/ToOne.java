@@ -22,6 +22,7 @@ import java.util.Objects;
  * @author Gavin King
  */
 public abstract class ToOne extends SimpleValue implements Fetchable {
+	private boolean ignoreNotFound;
 	private FetchMode fetchMode;
 	protected String referencedPropertyName;
 	private String referencedEntityName;
@@ -98,6 +99,14 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 		return visitor.accept(this);
 	}
 
+	public boolean isIgnoreNotFound() {
+		return ignoreNotFound;
+	}
+
+	public void setIgnoreNotFound(boolean ignoreNotFound) {
+		this.ignoreNotFound = ignoreNotFound;
+	}
+
 	@Override
 	public boolean isSame(SimpleValue other) {
 		return other instanceof ToOne && isSame( (ToOne) other );
@@ -140,5 +149,5 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 	public void setReferenceToPrimaryKey(boolean referenceToPrimaryKey) {
 		this.referenceToPrimaryKey = referenceToPrimaryKey;
 	}
-	
+
 }

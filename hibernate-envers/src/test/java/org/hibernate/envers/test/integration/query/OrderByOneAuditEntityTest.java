@@ -54,8 +54,8 @@ public class OrderByOneAuditEntityTest extends BaseEnversJPAFunctionalTestCase {
 		private Integer id;
 
 		@OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-		@OrderBy("index, index2 desc")
-		@AuditMappedBy(mappedBy = "parent", positionMappedBy = "index")
+		@OrderBy("index1, index2 desc")
+		@AuditMappedBy(mappedBy = "parent", positionMappedBy = "index1")
 		@Fetch(FetchMode.SELECT)
 		@BatchSize(size = 100)
 		private List<Child> children = new ArrayList<>();
@@ -83,7 +83,7 @@ public class OrderByOneAuditEntityTest extends BaseEnversJPAFunctionalTestCase {
 		@Id
 		private Integer id;
 
-		private Integer index;
+		private Integer index1;
 		private Integer index2;
 
 		@ManyToOne
@@ -93,9 +93,9 @@ public class OrderByOneAuditEntityTest extends BaseEnversJPAFunctionalTestCase {
 
 		}
 
-		public Child(Integer id, Integer index) {
+		public Child(Integer id, Integer index1) {
 			this.id = id;
-			this.index = index;
+			this.index1 = index1;
 		}
 
 		public Integer getId() {
@@ -106,12 +106,12 @@ public class OrderByOneAuditEntityTest extends BaseEnversJPAFunctionalTestCase {
 			this.id = id;
 		}
 
-		public Integer getIndex() {
-			return index;
+		public Integer getIndex1() {
+			return index1;
 		}
 
-		public void setIndex(Integer index) {
-			this.index = index;
+		public void setIndex1(Integer index1) {
+			this.index1 = index1;
 		}
 
 		public Integer getIndex2() {
@@ -140,19 +140,19 @@ public class OrderByOneAuditEntityTest extends BaseEnversJPAFunctionalTestCase {
 			}
 			Child child = (Child) o;
 			return Objects.equals( id, child.id ) &&
-					Objects.equals( index, child.index );
+					Objects.equals( index1, child.index1 );
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash( id, index );
+			return Objects.hash( id, index1 );
 		}
 
 		@Override
 		public String toString() {
 			return "Child{" +
 					"id=" + id +
-					", index=" + index +
+					", index1=" + index1 +
 					'}';
 		}
 	}
@@ -172,14 +172,14 @@ public class OrderByOneAuditEntityTest extends BaseEnversJPAFunctionalTestCase {
 
 			final Child child1 = new Child();
 			child1.setId( 1 );
-			child1.setIndex( 1 );
+			child1.setIndex1( 1 );
 			child1.setIndex2( 1 );
 			child1.setParent( parent );
 			parent.getChildren().add( child1 );
 
 			final Child child2 = new Child();
 			child2.setId( 2 );
-			child2.setIndex( 2 );
+			child2.setIndex1( 2 );
 			child2.setIndex2( 2 );
 			child2.setParent( parent );
 			parent.getChildren().add( child2 );
@@ -195,7 +195,7 @@ public class OrderByOneAuditEntityTest extends BaseEnversJPAFunctionalTestCase {
 
 			final Child child = new Child();
 			child.setId( 3 );
-			child.setIndex( 3 );
+			child.setIndex1( 3 );
 			child.setIndex2( 3 );
 			child.setParent( parent );
 			parent.getChildren().add( child );
@@ -206,7 +206,7 @@ public class OrderByOneAuditEntityTest extends BaseEnversJPAFunctionalTestCase {
 		// Rev 3
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			final Parent parent = entityManager.find( Parent.class, parentId );
-			parent.getChildren().removeIf( c -> c.getIndex() == 2 );
+			parent.getChildren().removeIf( c -> c.getIndex1() == 2 );
 			entityManager.merge( parent );
 		} );
 

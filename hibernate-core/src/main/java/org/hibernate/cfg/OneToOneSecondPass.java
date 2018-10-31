@@ -92,20 +92,11 @@ public class OneToOneSecondPass implements SecondPass {
 		value.setCascadeDeleteEnabled( cascadeOnDelete );
 		//value.setLazy( fetchMode != FetchMode.JOIN );
 
-		if ( !optional ) {
-			value.setConstrained( true );
-		}
-		if ( value.isReferenceToPrimaryKey() ) {
-			value.setForeignKeyType( ForeignKeyDirection.TO_PARENT );
-		}
-		else {
-			value.setForeignKeyType(
-					value.isConstrained()
-							? ForeignKeyDirection.FROM_PARENT
-							: ForeignKeyDirection.TO_PARENT
-			);
-		}
-
+		value.setConstrained( !optional );
+		final ForeignKeyDirection foreignKeyDirection = !BinderHelper.isEmptyAnnotationValue( mappedBy )
+				? ForeignKeyDirection.TO_PARENT
+				: ForeignKeyDirection.FROM_PARENT;
+		value.setForeignKeyType(foreignKeyDirection);
 		AnnotationBinder.bindForeignKeyNameAndDefinition(
 				value,
 				inferredData.getProperty(),

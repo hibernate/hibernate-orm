@@ -1764,7 +1764,16 @@ public final class AnnotationBinder {
 						joinColumn.setExplicitTableName( join.getTable().getName() );
 					}
 				}
-				final boolean mandatory = !ann.optional() || forcePersist;
+				// MapsId means the columns belong to the pk;
+				// A @MapsId association (obviously) must be non-null when the entity is first persisted.
+				// If a @MapsId association is not mapped with @NotFound(IGNORE), then the association
+				// is mandatory (even if the association has optional=true).
+				// If a @MapsId association has optional=true and is mapped with @NotFound(IGNORE) then
+				// the association is optional.
+				final boolean mandatory =
+						!ann.optional() ||
+								property.isAnnotationPresent( Id.class ) ||
+								( property.isAnnotationPresent( MapsId.class ) && !ignoreNotFound );
 				bindManyToOne(
 						getCascadeStrategy( ann.cascade(), hibernateCascade, false, forcePersist ),
 						joinColumns,
@@ -1794,11 +1803,23 @@ public final class AnnotationBinder {
 				}
 
 				//FIXME support a proper PKJCs
-				boolean trueOneToOne = property.isAnnotationPresent( PrimaryKeyJoinColumn.class )
+				final boolean hasPkjc = property.isAnnotationPresent( PrimaryKeyJoinColumn.class )
 						|| property.isAnnotationPresent( PrimaryKeyJoinColumns.class );
+				boolean trueOneToOne = hasPkjc;
 				Cascade hibernateCascade = property.getAnnotation( Cascade.class );
 				NotFound notFound = property.getAnnotation( NotFound.class );
 				boolean ignoreNotFound = notFound != null && notFound.action().equals( NotFoundAction.IGNORE );
+				// MapsId means the columns belong to the pk;
+				// A @MapsId association (obviously) must be non-null when the entity is first persisted.
+				// If a @MapsId association is not mapped with @NotFound(IGNORE), then the association
+				// is mandatory (even if the association has optional=true).
+				// If a @MapsId association has optional=true and is mapped with @NotFound(IGNORE) then
+				// the association is optional.
+				// @OneToOne(optional = true) with @PKJC makes the association optional.
+				final boolean mandatory =
+						!ann.optional() ||
+								property.isAnnotationPresent( Id.class ) ||
+								( property.isAnnotationPresent( MapsId.class ) && !ignoreNotFound );
 				OnDelete onDeleteAnn = property.getAnnotation( OnDelete.class );
 				boolean onDeleteCascade = onDeleteAnn != null && OnDeleteAction.CASCADE.equals( onDeleteAnn.action() );
 				JoinTable assocTable = propertyHolder.getJoinTable( property );
@@ -1808,9 +1829,6 @@ public final class AnnotationBinder {
 						joinColumn.setExplicitTableName( join.getTable().getName() );
 					}
 				}
-				//MapsId means the columns belong to the pk => not null
-				//@OneToOne with @PKJC can still be optional
-				final boolean mandatory = !ann.optional() || forcePersist;
 				bindOneToOne(
 						getCascadeStrategy( ann.cascade(), hibernateCascade, ann.orphanRemoval(), forcePersist ),
 						joinColumns,

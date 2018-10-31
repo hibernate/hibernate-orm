@@ -87,7 +87,6 @@ public abstract class AbstractCompositionAttribute
 							// we build the association-key here because of the "goofiness" with 'currentColumnPosition'
 							final AssociationKey associationKey;
 							final AssociationType aType = (AssociationType) type;
-							final Joinable joinable = aType.getAssociatedJoinable( sessionFactory() );
 
 							if ( aType.isAnyType() ) {
 								associationKey = new AssociationKey(
@@ -106,6 +105,8 @@ public abstract class AbstractCompositionAttribute
 								);
 							}
 							else if ( aType.getForeignKeyDirection() == ForeignKeyDirection.FROM_PARENT ) {
+								final Joinable joinable = aType.getAssociatedJoinable( sessionFactory() );
+
 								final String lhsTableName;
 								final String[] lhsColumnNames;
 
@@ -128,6 +129,8 @@ public abstract class AbstractCompositionAttribute
 								associationKey = new AssociationKey( lhsTableName, lhsColumnNames );
 							}
 							else {
+								final Joinable joinable = aType.getAssociatedJoinable( sessionFactory() );
+
 								associationKey = new AssociationKey(
 										joinable.getTableName(),
 										getRHSColumnNames( aType, sessionFactory() )

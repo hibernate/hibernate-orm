@@ -7,14 +7,13 @@
 repositories {
 	mavenCentral()
 	jcenter()
-
 	maven {
-		name 'jboss-nexus'
-		url "http://repository.jboss.org/nexus/content/groups/public/"
+		name 'jboss-releases'
+		url 'https://repository.jboss.org/nexus/content/repositories/releases/'
 	}
 	maven {
-		name "jboss-snapshots"
-		url "http://snapshots.jboss.org/maven2/"
+		name 'jboss-snapshots'
+		url 'https://repository.jboss.org/nexus/content/repositories/snapshots/'
 	}
 }
 

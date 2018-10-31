@@ -12,8 +12,8 @@ buildscript {
 		jcenter()
 		mavenCentral()
 		maven {
-			name "jboss-snapshots"
-			url "http://snapshots.jboss.org/maven2/"
+			name 'jboss-snapshots'
+			url 'https://repository.jboss.org/nexus/content/repositories/snapshots/'
 		}
 	}
 	dependencies {

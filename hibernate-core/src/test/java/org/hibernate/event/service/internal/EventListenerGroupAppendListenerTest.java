@@ -37,13 +37,13 @@ public class EventListenerGroupAppendListenerTest extends BaseCoreFunctionalTest
 		runAppendListenerTest( null, mergeEventListener );
 	}
 
-    @Test
+	@Test
 	@TestForIssue(jiraKey = "HHH-13070")
 	public void testAppendListenerWithReplaceOriginalStrategy() {
 		DefaultMergeEventListener mergeEventListener = new DefaultMergeEventListener() {
 		};
 		runAppendListenerTest( DUPLICATION_STRATEGY_REPLACE_ORIGINAL, mergeEventListener );
-    }
+	}
 
 	private static final DuplicationStrategy DUPLICATION_STRATEGY_REPLACE_ORIGINAL = new DuplicationStrategy() {
 
@@ -69,13 +69,13 @@ public class EventListenerGroupAppendListenerTest extends BaseCoreFunctionalTest
 	}
 
 	private void assertCallbackRegistry(
-    		MergeEventListener listener) {
-        try {
-            assertNotNull( "callbackRegistry should not be null", getCallbackRegistry( listener ) );
-        } catch ( ClassNotFoundException | NoSuchFieldException | IllegalAccessException e ) {
-            fail("Unable to get callbackRegistry field on listener");
-        }
-    }
+			MergeEventListener listener) {
+		try {
+			assertNotNull( "callbackRegistry should not be null", getCallbackRegistry( listener ) );
+		} catch ( ClassNotFoundException | NoSuchFieldException | IllegalAccessException e ) {
+			fail("Unable to get callbackRegistry field on listener");
+		}
+	}
 
 	private void runAppendListenerTest(
 			DuplicationStrategy duplicationStrategy, DefaultMergeEventListener mergeEventListener) {

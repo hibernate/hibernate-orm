@@ -137,6 +137,8 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 							break strategy_loop;
 						}
 						case REPLACE_ORIGINAL: {
+							checkAgainstBaseInterface( listener );
+							performInjections( listener );
 							itr.set( listener );
 							doAdd = false;
 							break strategy_loop;

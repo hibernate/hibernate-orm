@@ -70,7 +70,7 @@ public class OrderByThreeEntityTest extends BaseEnversJPAFunctionalTestCase {
 		}
 	}
 
-	@Entity(name = "Key")
+	@Entity(name = "MapKey")
 	@Audited
 	public static class Key {
 		@Id

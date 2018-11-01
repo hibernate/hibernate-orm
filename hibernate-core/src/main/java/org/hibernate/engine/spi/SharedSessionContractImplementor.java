@@ -161,7 +161,7 @@ public interface SharedSessionContractImplementor
 	long getTransactionStartTimestamp();
 
 	/**
-	 * @deprecated (since 5.3) Use
+	 * @deprecated (since 5.3) Use {@link #getTransactionStartTimestamp()} instead.
 	 */
 	@Deprecated
 	default long getTimestamp() {

@@ -122,19 +122,21 @@ public class HibernatePlugin implements Plugin<Project> {
 
 							final Enhancer enhancer = Environment.getBytecodeProvider().getEnhancer( enhancementContext );
 
-							final FileTree fileTree = project.fileTree( sourceSet.getOutput().getClassesDir() );
-							for ( File file : fileTree ) {
-								if ( !file.getName().endsWith( ".class" ) ) {
-									continue;
-								}
+							for ( File classesDir: sourceSet.getOutput().getClassesDirs() ) {
+								final FileTree fileTree = project.fileTree( classesDir );
+								for ( File file : fileTree ) {
+									if ( !file.getName().endsWith( ".class" ) ) {
+										continue;
+									}
 
-								final byte[] enhancedBytecode = doEnhancement( sourceSet.getOutput().getClassesDir(), file, enhancer );
-								if ( enhancedBytecode != null ) {
-									writeOutEnhancedClass( enhancedBytecode, file );
-									logger.info( "Successfully enhanced class [" + file + "]" );
-								}
-								else {
-									logger.info( "Skipping class [" + file.getAbsolutePath() + "], not an entity nor embeddable" );
+									final byte[] enhancedBytecode = doEnhancement( classesDir, file, enhancer );
+									if ( enhancedBytecode != null ) {
+										writeOutEnhancedClass( enhancedBytecode, file );
+										logger.info( "Successfully enhanced class [" + file + "]" );
+									}
+									else {
+										logger.info( "Skipping class [" + file.getAbsolutePath() + "], not an entity nor embeddable" );
+									}
 								}
 							}
 						}

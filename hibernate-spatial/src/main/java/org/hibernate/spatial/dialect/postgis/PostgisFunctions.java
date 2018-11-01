@@ -46,6 +46,11 @@ class PostgisFunctions extends SpatialFunctionsRegistry {
 				)
 		);
 		put(
+				"makeenvelope", new StandardSQLFunction(
+						"st_makeenvelope"
+				)
+		);
+		put(
 				"astext", new StandardSQLFunction(
 						"st_astext",
 						StandardBasicTypes.STRING

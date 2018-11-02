@@ -8,7 +8,7 @@ repositories {
 	mavenCentral()
 	jcenter()
 	maven {
-		name 'jboss-nexus'
+		name 'jboss-releases'
 		url 'https://repository.jboss.org/nexus/content/repositories/releases/'
 	}
 	maven {

@@ -59,8 +59,8 @@ repositories {
 	mavenLocal()
 	mavenCentral()
 	maven {
-		name 'jboss-nexus'
-		url 'https://repository.jboss.org/nexus/content/repositories/releases/'
+		name 'jboss-public'
+		url 'https://repository.jboss.org/nexus/content/groups/public/'
 	}
 }
 

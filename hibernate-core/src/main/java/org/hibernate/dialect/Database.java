@@ -511,7 +511,7 @@ public enum Database {
 				return latestDialectInstance( this );
 			}
 
-			if ( databaseName.startsWith( "Adaptive Server Anywhere" ) ) {
+			if ( databaseName.startsWith( "Adaptive Server Anywhere" ) || "SQL Anywhere".equals( databaseName ) ) {
 				return new SybaseAnywhereDialect();
 			}
 

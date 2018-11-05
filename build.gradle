@@ -13,7 +13,7 @@ buildscript {
 		mavenCentral()
 		maven {
 			name 'jboss-snapshots'
-			url 'https://repository.jboss.org/nexus/content/repositories/snapshots/'
+			url 'http://repository.jboss.org/nexus/content/repositories/snapshots/'
 		}
 	}
 	dependencies {
@@ -38,7 +38,7 @@ allprojects {
 		mavenCentral()
 		maven {
 			name "jboss-snapshots"
-			url "http://snapshots.jboss.org/maven2/"
+			url "http://repository.jboss.org/nexus/content/repositories/snapshots/"
 		}
 		//Allow loading additional dependencies from a local path;
 		//useful to load JDBC drivers which can not be distributed in public.

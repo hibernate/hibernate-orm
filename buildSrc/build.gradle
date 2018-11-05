@@ -9,11 +9,11 @@ repositories {
 	jcenter()
 	maven {
 		name 'jboss-releases'
-		url 'https://repository.jboss.org/nexus/content/repositories/releases/'
+		url 'http://repository.jboss.org/nexus/content/repositories/releases/'
 	}
 	maven {
 		name 'jboss-snapshots'
-		url 'https://repository.jboss.org/nexus/content/repositories/snapshots/'
+		url 'http://repository.jboss.org/nexus/content/repositories/snapshots/'
 	}
 }
 

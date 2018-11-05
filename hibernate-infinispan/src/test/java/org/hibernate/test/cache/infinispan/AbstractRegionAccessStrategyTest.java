@@ -30,6 +30,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
+import org.hibernate.internal.AbstractSharedSessionContract;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
@@ -339,7 +340,9 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 							.buildTransactionCoordinator(txOwner, null);
 			when(session.getTransactionCoordinator()).thenReturn(txCoord);
 			when(session.beginTransaction()).then(invocation -> {
-				Transaction tx = new TransactionImpl(txCoord, session.getExceptionConverter());
+				Transaction tx = new TransactionImpl( txCoord, session.getExceptionConverter(),
+													  session
+				);
 				tx.begin();
 				return tx;
 			});

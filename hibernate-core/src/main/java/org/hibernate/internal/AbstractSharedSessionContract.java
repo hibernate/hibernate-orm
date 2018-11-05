@@ -391,7 +391,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		if ( this.currentHibernateTransaction == null || this.currentHibernateTransaction.getStatus() != TransactionStatus.ACTIVE ) {
 			this.currentHibernateTransaction = new TransactionImpl(
 					getTransactionCoordinator(),
-					getExceptionConverter()
+					getExceptionConverter(),
+					this
 			);
 
 		}

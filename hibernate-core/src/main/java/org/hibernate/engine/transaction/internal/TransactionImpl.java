@@ -11,7 +11,9 @@ import javax.transaction.Synchronization;
 import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.spi.ExceptionConverter;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
+import org.hibernate.internal.AbstractSharedSessionContract;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
@@ -30,11 +32,16 @@ public class TransactionImpl implements TransactionImplementor {
 	private final TransactionCoordinator transactionCoordinator;
 	private final ExceptionConverter exceptionConverter;
 	private TransactionDriver transactionDriverControl;
+	private final SharedSessionContractImplementor session;
 
-	public TransactionImpl(TransactionCoordinator transactionCoordinator, ExceptionConverter exceptionConverter) {
+	public TransactionImpl(
+			TransactionCoordinator transactionCoordinator,
+			ExceptionConverter exceptionConverter,
+			SharedSessionContractImplementor session) {
 		this.transactionCoordinator = transactionCoordinator;
 		this.exceptionConverter = exceptionConverter;
 		transactionDriverControl = transactionCoordinator.getTransactionDriverControl();
+		this.session = session;
 	}
 
 	@Override
@@ -49,7 +56,14 @@ public class TransactionImpl implements TransactionImplementor {
 
 		// per-JPA
 		if ( isActive() ) {
-			throw new IllegalStateException( "Transaction already active" );
+			if ( session.getFactory()
+					.getSessionFactoryOptions()
+					.isJpaBootstrap() || !transactionCoordinator.getTransactionCoordinatorBuilder().isJta() ) {
+				throw new IllegalStateException( "Transaction already active" );
+			}
+			else {
+				return;
+			}
 		}
 
 		LOG.debug( "begin" );

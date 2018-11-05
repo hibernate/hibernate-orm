@@ -22,19 +22,18 @@ import javax.persistence.Table;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
-@TestForIssue( jiraKey = "HHH-12993")
-public class OmitAncestorJoinWithSecondaryTableTest extends BaseCoreFunctionalTestCase {
+@TestForIssue(jiraKey = "HHH-12993")
+public class OmitAncestorJoinWhenCommonSecondaryTablePresentTest extends OmitAncestorTestCase {
 
 	private static final String SECONDARY_TABLE_NAME = "secondary_table";
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
-		return new Class[] {A.class, SubA.class, B.class, SubB.class, C.class };
+		return new Class[] { A.class, SubA.class, B.class, SubB.class, C.class };
 	}
 
 	@Override

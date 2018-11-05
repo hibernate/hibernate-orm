@@ -16,19 +16,11 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
-import org.hibernate.Session;
-import org.hibernate.engine.query.spi.HQLQueryPlan;
-import org.hibernate.engine.query.spi.QueryPlanCache;
-import org.hibernate.hql.spi.QueryTranslator;
-import org.hibernate.internal.SessionImpl;
-
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
 
 @TestForIssue( jiraKey = "HHH-12993")
-public class OmitAncestorJoinTest extends BaseCoreFunctionalTestCase {
+public class OmitAncestorJoinTest extends OmitAncestorTestCase {
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
@@ -46,6 +38,9 @@ public class OmitAncestorJoinTest extends BaseCoreFunctionalTestCase {
 		// Should omit middle table from inheritance hierarchy
 		assertFromTables("select ssa.valA from SubSubA ssa", SubSubA.TABLE, A.TABLE);
 
+		// Should omit middle table from inheritance hierarchy
+		assertFromTables( "select ssa.valA, ssa.valSubSubA from SubSubA ssa", SubSubA.TABLE, A.TABLE );
+
 		// Should join parent table, because it is used in "where" part
 		assertFromTables("select valSubA from SubA where valA = 'foo'", SubA.TABLE, A.TABLE);
 
@@ -59,34 +54,6 @@ public class OmitAncestorJoinTest extends BaseCoreFunctionalTestCase {
 		// Should join A table, because it has the reference to B table
 		assertFromTables( "select suba.b from SubA suba", SubA.TABLE, A.TABLE, B.TABLE );
 		assertFromTables( "select suba.b.id from SubA suba", SubA.TABLE, A.TABLE );
-	}
-
-	private void assertFromTables(String query, String... tables) {
-		try {
-			TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-				String sql = getSql( session, query );
-				SqlAsserts.assertFromTables( sql, tables );
-				session.createQuery( query ).getResultList();
-			} );
-		} catch (AssertionError e) {
-			throw e;
-		}
-	}
-
-	private String getSql(Session session, String hql) {
-		// Create query
-		session.createQuery( hql );
-
-		// Get plan from cache
-		QueryPlanCache queryPlanCache = sessionFactory().getQueryPlanCache();
-		HQLQueryPlan hqlQueryPlan = queryPlanCache.getHQLQueryPlan(
-				hql,
-				false,
-				( (SessionImpl) session ).getLoadQueryInfluencers().getEnabledFilters()
-		);
-		QueryTranslator queryTranslator = hqlQueryPlan.getTranslators()[0];
-		String sql = queryTranslator.getSQLString();
-		return sql;
 	}
 
 	@Entity(name = "A")

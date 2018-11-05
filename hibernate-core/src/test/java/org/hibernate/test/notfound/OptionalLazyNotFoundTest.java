@@ -637,7 +637,7 @@ public class OptionalLazyNotFoundTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity
-	@Table( name = "PersonMapsIdColumnSelectException" )
+	@Table( name = "PersonMapsIdColumnSelectExcept" )
 	public static class PersonMapsIdColumnSelectException extends Person {
 		@Id
 		private Long id;

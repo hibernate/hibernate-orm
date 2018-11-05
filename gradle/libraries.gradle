@@ -23,7 +23,7 @@ ext {
     weldVersion = '3.0.0.Final'
 
     javassistVersion = '3.23.1-GA'
-    byteBuddyVersion = '1.9.2'
+    byteBuddyVersion = '1.9.3'
 
     geolatteVersion = '1.4.0'
 

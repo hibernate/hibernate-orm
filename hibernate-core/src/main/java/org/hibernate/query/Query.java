@@ -34,6 +34,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.graph.Graph;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;

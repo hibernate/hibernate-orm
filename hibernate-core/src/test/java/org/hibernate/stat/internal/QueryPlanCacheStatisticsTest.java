@@ -6,22 +6,28 @@
  */
 package org.hibernate.stat.internal;
 
+import java.util.List;
 import java.util.Map;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.LockModeType;
+import javax.persistence.NamedQuery;
+import javax.persistence.Tuple;
+import javax.persistence.TypedQuery;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.Statistics;
-
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -39,6 +45,7 @@ public class QueryPlanCacheStatisticsTest extends BaseEntityManagerFunctionalTes
 		};
 	}
 
+	@Override
 	protected void addConfigOptions(Map options) {
 		options.put( Environment.GENERATE_STATISTICS, "true" );
 	}
@@ -63,6 +70,7 @@ public class QueryPlanCacheStatisticsTest extends BaseEntityManagerFunctionalTes
 	@Test
 	public void test() {
 
+		statistics.clear();
 		assertEquals( 0, statistics.getQueryPlanCacheHitCount() );
 		assertEquals( 0, statistics.getQueryPlanCacheMissCount() );
 
@@ -115,6 +123,165 @@ public class QueryPlanCacheStatisticsTest extends BaseEntityManagerFunctionalTes
 		} );
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-13077" )
+	public void testCreateQueryHitCount() {
+		statistics.clear();
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+
+			List<Employee> employees = entityManager.createQuery(
+				"select e from Employee e", Employee.class )
+			.getResultList();
+
+			assertEquals( 5, employees.size() );
+
+			//First time, we get a cache miss, so the query is compiled
+			assertEquals( 1, statistics.getQueryPlanCacheMissCount() );
+			//The hit count should be 0 as we don't need to go to the cache after we already compiled the query
+			assertEquals( 0, statistics.getQueryPlanCacheHitCount() );
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+
+			List<Employee> employees = entityManager.createQuery(
+				"select e from Employee e", Employee.class )
+			.getResultList();
+
+			assertEquals( 5, employees.size() );
+
+			//The miss count is still 1, as no we got the query plan from the cache
+			assertEquals( 1, statistics.getQueryPlanCacheMissCount() );
+			//And the cache hit count increases.
+			assertEquals( 1, statistics.getQueryPlanCacheHitCount() );
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+
+			List<Employee> employees = entityManager.createQuery(
+				"select e from Employee e", Employee.class )
+			.getResultList();
+
+			assertEquals( 5, employees.size() );
+
+			//The miss count is still 1, as no we got the query plan from the cache
+			assertEquals( 1, statistics.getQueryPlanCacheMissCount() );
+			//And the cache hit count increases.
+			assertEquals( 2, statistics.getQueryPlanCacheHitCount() );
+		} );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-13077" )
+	public void testCreateNamedQueryHitCount() {
+		//This is for the NamedQuery that gets compiled
+		assertEquals( 1, statistics.getQueryPlanCacheMissCount() );
+		statistics.clear();
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+
+			Employee employees = entityManager.createNamedQuery(
+				"find_employee_by_name", Employee.class )
+			.setParameter( "name", "Employee: 1" )
+			.getSingleResult();
+
+			//The miss count is 0 because the plan was compiled when the EMF was built, and we cleared the Statistics
+			assertEquals( 0, statistics.getQueryPlanCacheMissCount() );
+			//The hit count is 1 since we got the plan from the cache
+			assertEquals( 1, statistics.getQueryPlanCacheHitCount() );
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+
+			Employee employees = entityManager.createNamedQuery(
+				"find_employee_by_name", Employee.class )
+			.setParameter( "name", "Employee: 1" )
+			.getSingleResult();
+
+			//The miss count is still 0 because the plan was compiled when the EMF was built, and we cleared the Statistics
+			assertEquals( 0, statistics.getQueryPlanCacheMissCount() );
+			//The hit count is 2 since we got the plan from the cache twice
+			assertEquals( 2, statistics.getQueryPlanCacheHitCount() );
+		} );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-13077" )
+	public void testCreateQueryTupleHitCount() {
+		statistics.clear();
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+
+			List<Tuple> employees = entityManager.createQuery(
+				"select e.id, e.name from Employee e", Tuple.class )
+			.getResultList();
+
+			assertEquals( 5, employees.size() );
+
+			//First time, we get a cache miss, so the query is compiled
+			assertEquals( 1, statistics.getQueryPlanCacheMissCount() );
+			//The hit count should be 0 as we don't need to go to the cache after we already compiled the query
+			assertEquals( 0, statistics.getQueryPlanCacheHitCount() );
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+
+			List<Tuple> employees = entityManager.createQuery(
+				"select e.id, e.name from Employee e", Tuple.class )
+			.getResultList();
+
+			assertEquals( 5, employees.size() );
+
+			//The miss count is still 1, as no we got the query plan from the cache
+			assertEquals( 1, statistics.getQueryPlanCacheMissCount() );
+			//And the cache hit count increases.
+			assertEquals( 1, statistics.getQueryPlanCacheHitCount() );
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+
+			List<Tuple> employees = entityManager.createQuery(
+				"select e.id, e.name from Employee e", Tuple.class )
+			.getResultList();
+
+			assertEquals( 5, employees.size() );
+
+			//The miss count is still 1, as no we got the query plan from the cache
+			assertEquals( 1, statistics.getQueryPlanCacheMissCount() );
+			//And the cache hit count increases.
+			assertEquals( 2, statistics.getQueryPlanCacheHitCount() );
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-13077")
+	public void testLockModeHitCount() {
+		statistics.clear();
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			TypedQuery<Employee> typedQuery = entityManager.createQuery( "select e from Employee e", Employee.class );
+
+			List<Employee> employees = typedQuery.getResultList();
+
+			assertEquals( 5, employees.size() );
+
+			//First time, we get a cache miss, so the query is compiled
+			assertEquals( 1, statistics.getQueryPlanCacheMissCount() );
+			//The hit count should be 0 as we don't need to go to the cache after we already compiled the query
+			assertEquals( 0, statistics.getQueryPlanCacheHitCount() );
+
+			typedQuery.setLockMode( LockModeType.READ );
+
+			//The hit count should still be 0 as setLockMode() shouldn't trigger a cache hit
+			assertEquals( 0, statistics.getQueryPlanCacheHitCount() );
+
+			assertNotNull( typedQuery.getLockMode() );
+
+			//The hit count should still be 0 as getLockMode() shouldn't trigger a cache hit
+			assertEquals( 0, statistics.getQueryPlanCacheHitCount() );
+		} );
+	}
+
 	private void assertQueryStatistics(String hql, int hitCount) {
 		QueryStatistics queryStatistics = statistics.getQueryStatistics( hql );
 
@@ -125,6 +292,10 @@ public class QueryPlanCacheStatisticsTest extends BaseEntityManagerFunctionalTes
 	}
 
 	@Entity(name = "Employee")
+	@NamedQuery(
+		name = "find_employee_by_name",
+		query = "select e from Employee e where e.name = :name"
+	)
 	public static class Employee {
 
 		@Id

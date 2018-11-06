@@ -148,4 +148,9 @@ public class BatchingBatch extends AbstractBatchImpl {
 			getKey().getExpectation().verifyOutcome( rowCounts[i], ps, i );
 		}
 	}
+
+	@Override
+	protected int getBatchPosition(){
+		return batchPosition;
+	}
 }

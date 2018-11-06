@@ -187,12 +187,17 @@ public abstract class AbstractBatchImpl implements Batch {
 		}
 	}
 
+	protected int getBatchPosition(){
+		return 0;
+	}
+
+
 	@Override
 	public void release() {
-		if ( getStatements() != null && !getStatements().isEmpty() ) {
+		if ( getStatements() != null && !getStatements().isEmpty() && getBatchPosition() != 0 ) {
 			LOG.batchContainedStatementsOnRelease();
+			releaseStatements();
 		}
-		releaseStatements();
 		observers.clear();
 	}
 }

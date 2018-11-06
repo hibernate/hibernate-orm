@@ -40,8 +40,8 @@ public abstract class AbstractBatchImpl implements Batch {
 	private final SqlStatementLogger sqlStatementLogger;
 	private final SqlExceptionHelper sqlExceptionHelper;
 
-	private LinkedHashMap<String,PreparedStatement> statements = new LinkedHashMap<String,PreparedStatement>();
-	private LinkedHashSet<BatchObserver> observers = new LinkedHashSet<BatchObserver>();
+	private LinkedHashMap<String, PreparedStatement> statements = new LinkedHashMap<>();
+	private LinkedHashSet<BatchObserver> observers = new LinkedHashSet<>();
 
 	protected AbstractBatchImpl(BatchKey key, JdbcCoordinator jdbcCoordinator) {
 		if ( key == null ) {
@@ -153,9 +153,16 @@ public abstract class AbstractBatchImpl implements Batch {
 
 	protected void releaseStatements() {
 		for ( PreparedStatement statement : getStatements().values() ) {
-			clearBatch( statement );
-			jdbcCoordinator.getResourceRegistry().release( statement );
-			jdbcCoordinator.afterStatementExecution();
+			try {
+				if ( !statement.isClosed() ) {
+					clearBatch( statement );
+					jdbcCoordinator.getResourceRegistry().release( statement );
+					jdbcCoordinator.afterStatementExecution();
+				}
+			}
+			catch (SQLException e) {
+				LOG.unableToReleaseBatchStatement();
+			}
 		}
 		getStatements().clear();
 	}
@@ -164,7 +171,7 @@ public abstract class AbstractBatchImpl implements Batch {
 		try {
 			statement.clearBatch();
 		}
-		catch ( SQLException e ) {
+		catch (SQLException e) {
 			LOG.unableToReleaseBatchStatement();
 		}
 	}

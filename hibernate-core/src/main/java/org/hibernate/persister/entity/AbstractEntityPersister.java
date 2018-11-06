@@ -29,6 +29,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
+import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
@@ -3184,9 +3185,8 @@ public abstract class AbstractEntityPersister
 									.executeUpdate( insert ), insert, -1
 					);
 				}
-
 			}
-			catch (SQLException e) {
+			catch (SQLException | JDBCException e) {
 				if ( useBatch ) {
 					session.getJdbcCoordinator().abortBatch();
 				}

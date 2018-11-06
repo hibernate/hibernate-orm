@@ -25,6 +25,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.loader.PropertyPath;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.CollectionPropertyMapping;
 import org.hibernate.persister.collection.CollectionPropertyNames;
@@ -33,6 +34,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
@@ -681,7 +683,27 @@ class FromElementType {
 	public String getIdentifierPropertyName() {
 		if ( getEntityPersister() != null && getEntityPersister().getEntityMetamodel() != null
 				&& getEntityPersister().getEntityMetamodel().hasNonIdentifierPropertyNamedId() ) {
-			return getEntityPersister().getIdentifierPropertyName();
+			if ( getEntityPersister().hasIdentifierProperty() ) {
+				return getEntityPersister().getIdentifierPropertyName();
+			}
+			else {
+				final IdentifierProperty identifierProperty =
+						getEntityPersister().getEntityMetamodel().getIdentifierProperty();
+				if ( identifierProperty.hasIdentifierMapper() && !identifierProperty.isEmbedded() ) {
+					return PropertyPath.IDENTIFIER_MAPPER_PROPERTY;
+				}
+				else {
+					throw new UnsupportedOperationException(
+							String.format(
+									"[%s] has a composite key and a non-ID property named 'id'; " +
+											"Hibernate only supports this use case when " +
+											"the composite ID is mapped using a primary key class.",
+									getEntityPersister().getEntityName()
+							)
+
+					);
+				}
+			}
 		}
 		else {
 			return EntityPersister.ENTITY_ID;

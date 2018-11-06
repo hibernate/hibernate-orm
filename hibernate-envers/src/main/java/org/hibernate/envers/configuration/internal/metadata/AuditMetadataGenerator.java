@@ -28,6 +28,7 @@ import org.hibernate.envers.internal.entities.mapper.SubclassPropertyMapper;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.internal.tools.Triple;
 import org.hibernate.envers.strategy.AuditStrategy;
+import org.hibernate.envers.strategy.spi.MappingContext;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.OneToOne;
@@ -44,7 +45,6 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.OneToOneType;
-import org.hibernate.type.TimestampType;
 import org.hibernate.type.Type;
 
 import org.dom4j.Element;
@@ -174,7 +174,7 @@ public final class AuditMetadataGenerator {
 	}
 
 	void addAdditionalColumns(Element anyMapping) {
-		auditStrategy.addAdditionalColumns(anyMapping, revisionInfoRelationMapping, verEntCfg);
+		auditStrategy.addAdditionalColumns( new MappingContext( anyMapping, revisionInfoRelationMapping, verEntCfg ) );
 	}
 
 	private void addValueInFirstPass(

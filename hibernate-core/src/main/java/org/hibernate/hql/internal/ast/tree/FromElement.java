@@ -339,12 +339,18 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 			throw new IllegalStateException( "No table alias for node " + this );
 		}
 
-		final String propertyName = getIdentifierPropertyName();
-
-		return toColumns(
-				table, propertyName,
-				getWalker().getStatementType() == HqlSqlTokenTypes.SELECT
-		);
+		final String[] propertyNames = getIdentifierPropertyNames();
+		List<String> columns = new ArrayList<>();
+		for ( int i = 0; i < propertyNames.length; i++ ) {
+			String[] propertyNameColumns = toColumns(
+					table, propertyNames[i],
+					getWalker().getStatementType() == HqlSqlTokenTypes.SELECT
+			);
+			for ( int j = 0; j < propertyNameColumns.length; j++ ) {
+				columns.add( propertyNameColumns[j] );
+			}
+		}
+		return columns.toArray( new String[columns.size()] );
 	}
 
 	public void setCollectionJoin(boolean collectionJoin) {
@@ -525,8 +531,8 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		return elementType.getCollectionPropertyReference( propertyName );
 	}
 
-	public String getIdentifierPropertyName() {
-		return elementType.getIdentifierPropertyName();
+	public String[] getIdentifierPropertyNames() {
+		return elementType.getIdentifierPropertyNames();
 	}
 
 	public void setFetch(boolean fetch) {

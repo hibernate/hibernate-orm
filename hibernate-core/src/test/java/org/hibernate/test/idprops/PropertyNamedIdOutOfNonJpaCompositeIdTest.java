@@ -16,6 +16,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 /**
@@ -39,13 +40,9 @@ public class PropertyNamedIdOutOfNonJpaCompositeIdTest extends BaseCoreFunctiona
 	@Test
 	public void testHql() {
 		doInHibernate( this::sessionFactory, session -> {
-			try {
-				session.createQuery( "from Person p where p.id is null", Person.class ).list();
-				fail( "should have thrown UnsupportedOperationException" );
-			}
-			catch (UnsupportedOperationException ex) {
-				//expected
-			}
+			assertEquals( 1, session.createQuery( "from Person p where p.id = 1", Person.class ).list().size() );
+
+			assertEquals( 3L, session.createQuery( "select count( p ) from Person p" ).uniqueResult() );
 		} );
 	}
 

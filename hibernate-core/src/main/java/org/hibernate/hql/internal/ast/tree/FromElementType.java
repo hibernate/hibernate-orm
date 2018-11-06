@@ -14,17 +14,14 @@ import java.util.Set;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.internal.JoinSequence;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.CollectionProperties;
 import org.hibernate.hql.internal.CollectionSubqueryFactory;
 import org.hibernate.hql.internal.NameGenerator;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
-import org.hibernate.hql.internal.ast.HqlSqlWalker;
-import org.hibernate.hql.internal.ast.util.SessionFactoryHelper;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.loader.PropertyPath;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.CollectionPropertyMapping;
 import org.hibernate.persister.collection.CollectionPropertyNames;
@@ -33,6 +30,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.tuple.IdentifierProperty;
+import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
@@ -130,18 +129,22 @@ class FromElementType {
 	String renderScalarIdentifierSelect(int i) {
 		checkInitialized();
 
-		final String idPropertyName = getIdentifierPropertyName();
-		String[] cols = getPropertyMapping( idPropertyName ).toColumns( getTableAlias(), idPropertyName );
-
+		final String[] idPropertyName = getIdentifierPropertyNames();
 		StringBuilder buf = new StringBuilder();
-		// For property references generate <tablealias>.<columnname> as <projectionalias>
-		for ( int j = 0; j < cols.length; j++ ) {
-			String column = cols[j];
-			if ( j > 0 ) {
-				buf.append( ", " );
+		int counter = 0;
+		for ( int j = 0; j < idPropertyName.length; j++ ) {
+			String propertyName = idPropertyName[j];
+			String[] toColumns = getPropertyMapping( propertyName ).toColumns( getTableAlias(), propertyName );
+			for ( int h = 0; h < toColumns.length; h++, counter++ ) {
+				String column = toColumns[h];
+				if ( j + h > 0 ) {
+					buf.append( ", " );
+				}
+				buf.append( column ).append( " as " ).append( NameGenerator.scalarName( i, counter ) );
 			}
-			buf.append( column ).append( " as " ).append( NameGenerator.scalarName( i, j ) );
 		}
+
+		LOG.debug( "Rendered scalar ID select column(s): " + buf );
 		return buf.toString();
 	}
 
@@ -682,13 +685,25 @@ class FromElementType {
 		}
 	}
 
-	public String getIdentifierPropertyName() {
-		if ( getEntityPersister() != null && getEntityPersister().getEntityMetamodel() != null
-				&& getEntityPersister().getEntityMetamodel().hasNonIdentifierPropertyNamedId() ) {
-			return getEntityPersister().getIdentifierPropertyName();
+	public String[] getIdentifierPropertyNames() {
+		if ( getEntityPersister() != null ) {
+			String identifierPropertyName = getEntityPersister().getIdentifierPropertyName();
+			if ( identifierPropertyName != null ) {
+				return new String[] { identifierPropertyName };
+			}
+			else {
+				final IdentifierProperty identifierProperty = getEntityPersister().getEntityMetamodel()
+						.getIdentifierProperty();
+				if ( identifierProperty.hasIdentifierMapper() && !identifierProperty.isEmbedded() ) {
+					return new String[] { PropertyPath.IDENTIFIER_MAPPER_PROPERTY };
+				}
+				else {
+					if ( EmbeddedComponentType.class.isInstance( identifierProperty.getType() ) ) {
+						return ( (EmbeddedComponentType) identifierProperty.getType() ).getPropertyNames();
+					}
+				}
+			}
 		}
-		else {
-			return EntityPersister.ENTITY_ID;
-		}
+		return new String[] { EntityPersister.ENTITY_ID };
 	}
 }

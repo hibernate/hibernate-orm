@@ -40,8 +40,8 @@ public abstract class AbstractBatchImpl implements Batch {
 	private final SqlStatementLogger sqlStatementLogger;
 	private final SqlExceptionHelper sqlExceptionHelper;
 
-	private LinkedHashMap<String,PreparedStatement> statements = new LinkedHashMap<String,PreparedStatement>();
-	private LinkedHashSet<BatchObserver> observers = new LinkedHashSet<BatchObserver>();
+	private LinkedHashMap<String, PreparedStatement> statements = new LinkedHashMap<>();
+	private LinkedHashSet<BatchObserver> observers = new LinkedHashSet<>();
 
 	protected AbstractBatchImpl(BatchKey key, JdbcCoordinator jdbcCoordinator) {
 		if ( key == null ) {
@@ -162,7 +162,15 @@ public abstract class AbstractBatchImpl implements Batch {
 
 	protected void clearBatch(PreparedStatement statement) {
 		try {
-			statement.clearBatch();
+			// This code can be called after the connection is released
+			// and the statement is closed. If the statement is closed,
+			// then SQLException will be thrown when PreparedStatement#clearBatch
+			// is called.
+			// Ensure the statement is not closed before
+			// calling PreparedStatement#clearBatch.
+			if ( !statement.isClosed() ) {
+				statement.clearBatch();
+			}
 		}
 		catch ( SQLException e ) {
 			LOG.unableToReleaseBatchStatement();

@@ -181,7 +181,7 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 		}
 
 		// Strategy-specific initialization
-		strategy.initialize( revisionInfoClass, revisionInfoTimestampData, serviceRegistry );
+		strategy.postInitialize( revisionInfoClass, revisionInfoTimestampData, serviceRegistry );
 
 		return strategy;
 	}

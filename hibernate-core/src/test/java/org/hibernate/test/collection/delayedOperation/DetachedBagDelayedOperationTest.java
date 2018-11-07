@@ -15,6 +15,7 @@ import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityExistsException;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -41,6 +42,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Tests merge of detached PersistentBag
@@ -70,6 +72,7 @@ public class DetachedBagDelayedOperationTest extends BaseCoreFunctionalTestCase 
 	private Triggerable triggerableIgnoreQueuedOperationsOnMerge;
 	private Triggerable triggerableQueuedOperationWhenAttachToSession;
 	private Triggerable triggerableQueuedOperationWhenDetachFromSession;
+	private Triggerable triggerableQueuedOperationOnRollback;
 
 	@Before
 	public void setup() {
@@ -92,6 +95,7 @@ public class DetachedBagDelayedOperationTest extends BaseCoreFunctionalTestCase 
 		triggerableIgnoreQueuedOperationsOnMerge = logInspectionCollectionType.watchForLogMessages( "HHH000494" );
 		triggerableQueuedOperationWhenAttachToSession = logInspectionAbstractPersistentCollection.watchForLogMessages( "HHH000495" );
 		triggerableQueuedOperationWhenDetachFromSession = logInspectionAbstractPersistentCollection.watchForLogMessages( "HHH000496" );
+		triggerableQueuedOperationOnRollback = logInspectionAbstractPersistentCollection.watchForLogMessages( "HHH000498" );
 
 		resetTriggerables();
 	}
@@ -265,6 +269,51 @@ public class DetachedBagDelayedOperationTest extends BaseCoreFunctionalTestCase 
 					assertEquals( 0, childNames.size() );
 				}
 		);
+
+		checkTriggerablesNotTriggered();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11209" )
+	public void testCollectionWithQueuedOperationsOnRollback() {
+		final Parent pOriginal = doInHibernate(
+				this::sessionFactory, session -> {
+					Parent p = session.get( Parent.class, 1L );
+					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					// initialize
+					Hibernate.initialize( p.getChildren() );
+					assertTrue( Hibernate.isInitialized( p.getChildren() ) );
+					return p;
+				}
+		);
+		try {
+			doInHibernate(
+					this::sessionFactory, session -> {
+						Parent p = (Parent) session.merge( pOriginal );
+						Child c = new Child( "Zeke" );
+						c.setParent( p );
+						session.persist( c );
+						assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+						p.getChildren().add( c );
+						assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+						assertTrue( ( (AbstractPersistentCollection) p.getChildren() ).hasQueuedOperations() );
+
+						checkTriggerablesNotTriggered();
+
+						// save a new Parent with the same ID to throw an exception.
+
+						Parent pDup = new Parent();
+						pDup.id = 1L;
+						session.persist( pDup );
+					}
+			);
+			fail( "should have thrown EntityExistsException" );
+		}
+		catch (EntityExistsException expected) {
+		}
+
+		assertTrue( triggerableQueuedOperationOnRollback.wasTriggered() );
+		triggerableQueuedOperationOnRollback.reset();
 
 		checkTriggerablesNotTriggered();
 	}

@@ -38,6 +38,7 @@ import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.IntegerType;
 import org.hibernate.type.LongType;
@@ -610,7 +611,20 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		if ( currentSession == this.session ) {
 			if ( !isTempSession ) {
 				if ( hasQueuedOperations() ) {
-					LOG.queuedOperationWhenDetachFromSession( MessageHelper.collectionInfoString( getRole(), getKey() ) );
+					final String collectionInfoString = MessageHelper.collectionInfoString( getRole(), getKey() );
+					final TransactionStatus transactionStatus =
+							session.getTransactionCoordinator().getTransactionDriverControl().getStatus();
+					if ( transactionStatus.isOneOf(
+							TransactionStatus.ROLLED_BACK,
+							TransactionStatus.MARKED_ROLLBACK,
+							TransactionStatus.FAILED_COMMIT,
+							TransactionStatus.FAILED_ROLLBACK,
+							TransactionStatus.ROLLING_BACK
+					) )
+						LOG.queuedOperationWhenDetachFromSessionOnRollback( collectionInfoString );
+					else {
+						LOG.queuedOperationWhenDetachFromSession( collectionInfoString );
+					}
 				}
 				this.session = null;
 			}

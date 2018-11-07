@@ -1826,4 +1826,8 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Detaching an uninitialized collection with queued operations from a session: %s", id = 496)
 	void queuedOperationWhenDetachFromSession(String collectionInfoString);
+
+	@LogMessage(level = DEBUG)
+	@Message(value = "Detaching an uninitialized collection with queued operations from a session due to rollback: %s", id = 498)
+	void queuedOperationWhenDetachFromSessionOnRollback(String collectionInfoString);
 }

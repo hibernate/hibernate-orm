@@ -22,6 +22,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
 import org.hibernate.Hibernate;
+import org.hibernate.NonUniqueObjectException;
 import org.hibernate.Session;
 import org.hibernate.collection.internal.AbstractPersistentCollection;
 import org.hibernate.internal.CoreMessageLogger;
@@ -41,6 +42,7 @@ import org.jboss.logging.Logger;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Tests merge of detached PersistentBag
@@ -70,6 +72,7 @@ public class DetachedBagDelayedOperationTest extends BaseCoreFunctionalTestCase 
 	private Triggerable triggerableIgnoreQueuedOperationsOnMerge;
 	private Triggerable triggerableQueuedOperationWhenAttachToSession;
 	private Triggerable triggerableQueuedOperationWhenDetachFromSession;
+	private Triggerable triggerableQueuedOperationOnRollback;
 
 	@Before
 	public void setup() {
@@ -94,6 +97,7 @@ public class DetachedBagDelayedOperationTest extends BaseCoreFunctionalTestCase 
 		triggerableIgnoreQueuedOperationsOnMerge = logInspectionCollectionType.watchForLogMessages( "HHH000494" );
 		triggerableQueuedOperationWhenAttachToSession = logInspectionAbstractPersistentCollection.watchForLogMessages( "HHH000495" );
 		triggerableQueuedOperationWhenDetachFromSession = logInspectionAbstractPersistentCollection.watchForLogMessages( "HHH000496" );
+		triggerableQueuedOperationOnRollback = logInspectionAbstractPersistentCollection.watchForLogMessages( "HHH000498" );
 
 		resetTriggerables();
 	}
@@ -286,6 +290,58 @@ public class DetachedBagDelayedOperationTest extends BaseCoreFunctionalTestCase 
 		}
 		session.getTransaction().commit();
 		session.close();
+
+		checkTriggerablesNotTriggered();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11209" )
+	public void testCollectionWithQueuedOperationsOnRollback() {
+		Session session = openSession();
+		session.beginTransaction();
+		final Parent pOriginal;
+		{
+					Parent p = session.get( Parent.class, 1L );
+					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					// initialize
+					Hibernate.initialize( p.getChildren() );
+					assertTrue( Hibernate.isInitialized( p.getChildren() ) );
+					pOriginal = p;
+		}
+		session.getTransaction().commit();
+		session.close();
+
+		session = openSession();
+		session.beginTransaction();
+
+		try {
+					Parent p = (Parent) session.merge( pOriginal );
+					Child c = new Child( "Zeke" );
+					c.setParent( p );
+					session.persist( c );
+					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					p.getChildren().add( c );
+					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					assertTrue( ( (AbstractPersistentCollection) p.getChildren() ).hasQueuedOperations() );
+
+					checkTriggerablesNotTriggered();
+
+					// save a new Parent with the same ID to throw an exception.
+
+					Parent pDup = new Parent();
+					pDup.id = 1L;
+					session.persist( pDup );
+					fail( "should have thrown NonUniqueObjectException" );
+		}
+		catch (NonUniqueObjectException expected) {
+		}
+		finally {
+			session.getTransaction().rollback();
+			session.close();
+		}
+
+		assertTrue( triggerableQueuedOperationOnRollback.wasTriggered() );
+		triggerableQueuedOperationOnRollback.reset();
 
 		checkTriggerablesNotTriggered();
 	}

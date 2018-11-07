@@ -28,7 +28,6 @@ import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.cfg.AccessType;
 import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.AuditMappedBy;
 import org.hibernate.envers.AuditOverride;
@@ -62,6 +61,7 @@ import static org.hibernate.envers.internal.tools.Tools.newHashSet;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  * @author Michal Skowronek (mskowr at o2 dot pl)
  * @author Lukasz Zuchowski (author at zuchos dot com)
+ * @author Chris Cranford
  */
 public class AuditedPropertiesReader {
 	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
@@ -83,6 +83,7 @@ public class AuditedPropertiesReader {
 
 	private final Set<XProperty> overriddenAuditedProperties;
 	private final Set<XProperty> overriddenNotAuditedProperties;
+	private final Map<XProperty, AuditJoinTable> overriddenAuditedPropertiesJoinTables;
 
 	private final Set<XClass> overriddenAuditedClasses;
 	private final Set<XClass> overriddenNotAuditedClasses;
@@ -107,6 +108,7 @@ public class AuditedPropertiesReader {
 
 		overriddenAuditedProperties = newHashSet();
 		overriddenNotAuditedProperties = newHashSet();
+		overriddenAuditedPropertiesJoinTables = newHashMap();
 
 		overriddenAuditedClasses = newHashSet();
 		overriddenNotAuditedClasses = newHashSet();
@@ -163,6 +165,7 @@ public class AuditedPropertiesReader {
 						if ( !overriddenNotAuditedProperties.contains( property ) ) {
 							// If the property has not been marked as not audited by the subclass.
 							overriddenAuditedProperties.add( property );
+							overriddenAuditedPropertiesJoinTables.put( property, auditOverride.auditJoinTable() );
 						}
 					}
 					else {
@@ -640,13 +643,27 @@ public class AuditedPropertiesReader {
 	}
 
 	private void addPropertyJoinTables(XProperty property, PropertyAuditingData propertyData) {
-		// first set the join table based on the AuditJoinTable annotation
-		final AuditJoinTable joinTable = property.getAnnotation( AuditJoinTable.class );
-		if ( joinTable != null ) {
-			propertyData.setJoinTable( joinTable );
+		// The AuditJoinTable annotation source will follow the following priority rules
+		//		1. Use the override if one is specified
+		//		2. Use the site annotation if one is specified
+		//		3. Use the default if neither are specified
+		//
+		// The prime directive for (1) is so that when users in a subclass use @AuditOverride(s)
+		// the join-table specified there should have a higher priority in the event the
+		// super-class defines an equivalent @AuditJoinTable at the site/property level.
+
+		final AuditJoinTable overrideJoinTable = overriddenAuditedPropertiesJoinTables.get( property );
+		if ( overrideJoinTable != null ) {
+			propertyData.setJoinTable( overrideJoinTable );
 		}
 		else {
-			propertyData.setJoinTable( DEFAULT_AUDIT_JOIN_TABLE );
+			final AuditJoinTable propertyJoinTable = property.getAnnotation( AuditJoinTable.class );
+			if ( propertyJoinTable != null ) {
+				propertyData.setJoinTable( propertyJoinTable );
+			}
+			else {
+				propertyData.setJoinTable( DEFAULT_AUDIT_JOIN_TABLE );
+			}
 		}
 	}
 
@@ -693,7 +710,6 @@ public class AuditedPropertiesReader {
 					}
 				}
 			}
-
 		}
 		return true;
 	}

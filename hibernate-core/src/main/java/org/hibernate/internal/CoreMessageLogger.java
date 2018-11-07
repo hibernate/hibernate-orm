@@ -1844,4 +1844,8 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "The increment size of the [%s] sequence is set to [%d] in the entity mapping while the associated database sequence increment size is [%d]. The database sequence increment size will take precedence to avoid identifier allocation conflicts.", id = 497)
 	void sequenceIncrementSizeMismatch(String sequenceName, int incrementSize, int databaseIncrementSize);
+
+	@LogMessage(level = DEBUG)
+	@Message(value = "Detaching an uninitialized collection with queued operations from a session due to rollback: %s", id = 498)
+	void queuedOperationWhenDetachFromSessionOnRollback(String collectionInfoString);
 }

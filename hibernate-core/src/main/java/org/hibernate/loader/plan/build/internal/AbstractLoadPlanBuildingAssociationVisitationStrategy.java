@@ -12,8 +12,6 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.FetchStrategy;
-import org.hibernate.engine.FetchStyle;
-import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.PropertyPath;
@@ -38,6 +36,7 @@ import org.hibernate.loader.plan.spi.EntityReference;
 import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.FetchSource;
 import org.hibernate.loader.plan.spi.Return;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.walking.internal.FetchStrategyHelper;
 import org.hibernate.persister.walking.spi.AnyMappingDefinition;
@@ -148,6 +147,8 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 
 
 	protected abstract void addRootReturn(Return rootReturn);
+
+	protected abstract Return getRootReturn();
 
 
 	// Entity-level AssociationVisitationStrategy hooks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -637,7 +638,61 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 
 	@Override
 	public boolean isDuplicateAssociationKey(AssociationKey associationKey) {
-		return fetchedAssociationKeySourceMap.containsKey( associationKey );
+		// If a LoadPlan is being built for a collection initialization, then the AssociationKey
+		// for the CollectionReturn will have a null FetchSource value in fetchedAssociationKeySourceMap
+		// (since CollectionReturn (correctly) does not implement FetchSource).
+		// In this case, fetchedAssociationKeySourceMap.get( associationKey ) will return null,
+		// so use fetchedAssociationKeySourceMap.containsKey( associationKey ) here instead.
+		if ( !fetchedAssociationKeySourceMap.containsKey( associationKey ) ) {
+			return false;
+		}
+		// fetchedAssociationKeySourceMap already contains the associationKey.
+
+		// We are looking for a particular case here, where:
+		// 1) associationKey is for an entity association that is the same as the AssociationKey for the
+		//    association's parent entity;
+		// 2) the associationKey was not already added for the opposite side of the association
+		//    (if it was, then this should be considered a duplicate AssociationKey).
+		// Some examples of 1):
+		// * @OneToOne @MapsId Person person
+		//   (the association's parent entity ID will use ForeignGenerator)
+		// * @OneToOne @JoinColumn(name = "id", insertable=false, updatable=false) Person person;
+		//   (the associationentity's parent entity ID may not use ForeignGenerator)
+
+		final FetchSource registeredFetchSource = fetchedAssociationKeySourceMap.get( associationKey );
+		final FetchSource currentFetchSource = currentSource();
+
+		// IMPLEMENTATION DETAIL: currently, we will not get here if the registeredFetchSource is a EntityFetch
+		// because the caller (MetamodelGraphWalker#isDuplicateAssociationKey) would return true before
+		// calling this method.
+
+		// For our special case, registeredFetchSource will be an instance of EntityReturn. and
+		// currentFetchSource.resolveEntityReference() will refer to the same EntityReturn.
+		if ( EntityReturn.class.isInstance( registeredFetchSource ) &&
+				registeredFetchSource == currentFetchSource.resolveEntityReference() ) {
+			final EntityPersister entityReturnPersister = ( (EntityReturn) registeredFetchSource ).getEntityPersister();
+			final AssociationKey entityReturnAssociationKey = new AssociationKey(
+					( (Joinable) entityReturnPersister ).getTableName(),
+					( (Joinable) entityReturnPersister ).getKeyColumnNames()
+			);
+			if ( associationKey.equals( entityReturnAssociationKey ) ) {
+				// The entity owner has the same associationKey, which is, in a sense, just
+				// a placeholder for the real association, so return false.
+				log.tracef(
+						"entity owner [%s] has the same associationKey [%s] as an association.",
+						entityReturnPersister.getEntityName(),
+						associationKey
+				);
+				log.tracef(
+						"registeredFetchSource for [%s]; currentFetchSource for [%s] of type [%s]",
+						registeredFetchSource.getPropertyPath(),
+						currentFetchSource.getPropertyPath(),
+						currentFetchSource.getClass().getSimpleName()
+				);
+				return false;
+			}
+		}
+		return true;
 	}
 
 	@Override
@@ -651,7 +706,16 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 				associationKey,
 				currentSource()
 		);
-		fetchedAssociationKeySourceMap.put( associationKey, currentSource() );
+		final FetchSource previousFetchSource = fetchedAssociationKeySourceMap.put( associationKey, currentSource() );
+		if ( previousFetchSource != null ) {
+			// This should only happen in the special case mentioned in isDuplicateAssociationKey()
+			log.tracef(
+					"Added FetchSource[%s] for AssociationKey [%s] displaced an existing FetchSource [%s]",
+					currentSource().getPropertyPath(),
+					associationKey,
+					previousFetchSource.getPropertyPath()
+			);
+		}
 	}
 
 	@Override
@@ -664,7 +728,6 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		final FetchStrategy fetchStrategy = determineFetchStrategy( attributeDefinition );
 		final AssociationKey associationKey = attributeDefinition.getAssociationKey();
 
-		// go ahead and build the bidirectional fetch
 		if ( attributeDefinition.getAssociationNature() == AssociationAttributeDefinition.AssociationNature.ENTITY ) {
 			final Joinable currentEntityPersister = (Joinable) currentSource().resolveEntityReference().getEntityPersister();
 			final AssociationKey currentEntityReferenceAssociationKey =
@@ -677,16 +740,61 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 			// it must be loaded when the ID for the dependent entity is resolved. Is there some other way to
 			// deal with this???
 			final FetchSource registeredFetchSource = registeredFetchSource( associationKey );
-			if ( registeredFetchSource != null && ! associationKey.equals( currentEntityReferenceAssociationKey ) ) {
-				currentSource().buildBidirectionalEntityReference(
-						attributeDefinition,
-						fetchStrategy,
-						registeredFetchSource( associationKey ).resolveEntityReference()
-				);
+			if ( registeredFetchSource != null ) {
+				if ( !associationKey.equals( currentEntityReferenceAssociationKey ) ) {
+					log.tracef(
+							"building a BidirectionalEntityReference from [%s.%s] to [%s] with the same AssociationKey [%s]",
+							currentSource().getPropertyPath().getFullPath(),
+							attributeDefinition.getName(),
+							registeredFetchSource.getPropertyPath(),
+							associationKey
+					);
+					currentSource().buildBidirectionalEntityReference(
+							attributeDefinition,
+							fetchStrategy,
+							registeredFetchSource.resolveEntityReference()
+					);
+				}
+				else if ( EntityFetch.class.isInstance( registeredFetchSource ) ) {
+					final EntityFetch registeredEntityFetch = (EntityFetch) registeredFetchSource;
+					if ( !registeredEntityFetch.getFetchedAttributeDefinition().equals( attributeDefinition ) ) {
+						log.tracef(
+								"building a BidirectionalEntityReference from [%s] to [%s] with the same AssociationKey [%s]",
+								currentSource().getPropertyPath().getFullPath(),
+								registeredFetchSource.getPropertyPath(),
+								associationKey
+						);
+						currentSource().buildBidirectionalEntityReference(
+								attributeDefinition,
+								fetchStrategy,
+								registeredEntityFetch.getSource().resolveEntityReference()
+						);
+					}
+				}
 			}
 		}
-		else {
-			// Do nothing for collection
+		else if ( attributeDefinition.getAssociationNature() == AssociationAttributeDefinition.AssociationNature.COLLECTION ) {
+			// Do nothing but log for collection
+			if ( log.isTraceEnabled() ) {
+				final FetchSource registeredFetchSource = registeredFetchSource( associationKey );
+				final String existingPath;
+				if ( registeredFetchSource != null ) {
+					existingPath = registeredFetchSource.getPropertyPath().getFullPath();
+				}
+				else if ( CollectionReturn.class.isInstance( getRootReturn() ) ) {
+					existingPath = ( (CollectionReturn) getRootReturn() ).getCollectionPersister().getRole();
+				}
+				else {
+					// can this happen?
+					existingPath = "unknown";
+				}
+				log.tracef(
+						"found circular association between collection [%s] and [%s] with same AssociationKey [%s]",
+						attributeDefinition.toCollectionDefinition().getCollectionPersister().getRole(),
+						existingPath,
+						associationKey
+				);
+			}
 		}
 	}
 

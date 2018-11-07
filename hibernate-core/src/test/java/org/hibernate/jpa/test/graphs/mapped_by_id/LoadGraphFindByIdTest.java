@@ -61,7 +61,6 @@ public class LoadGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-10842")
-	@FailureExpected( jiraKey = "HHH-10842" )
 	public void findByPrimaryKeyWithId() {
 		doInJPA( this::entityManagerFactory, em -> {
 			User result = em.find( User.class, 1L, createProperties( em ) );

@@ -217,6 +217,11 @@ public abstract class AbstractEntityGraphVisitationStrategy
 	}
 
 	@Override
+	protected Return getRootReturn() {
+		return rootEntityReturn;
+	}
+
+	@Override
 	protected FetchStrategy determineFetchStrategy(
 			final AssociationAttributeDefinition attributeDefinition) {
 		final AttributeNodeImplementor currentAttrNode = attributeStack.getCurrent();

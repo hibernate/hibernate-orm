@@ -79,6 +79,11 @@ public class FetchStyleLoadPlanBuildingAssociationVisitationStrategy
 	}
 
 	@Override
+	protected Return getRootReturn() {
+		return rootReturn;
+	}
+
+	@Override
 	public void startingEntityIdentifier(EntityIdentifierDefinition identifierDefinition ) {
 		if ( vetoHandleAssociationAttribute ) {
 			throw new WalkingException( "vetoHandleAssociationAttribute is true when starting startingEntityIdentifier()" );

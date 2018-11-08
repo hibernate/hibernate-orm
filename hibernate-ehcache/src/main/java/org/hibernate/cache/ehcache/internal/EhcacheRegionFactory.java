@@ -11,7 +11,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.ehcache.Cache;
+import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.config.Configuration;
 import net.sf.ehcache.config.ConfigurationFactory;
@@ -131,7 +131,7 @@ public class EhcacheRegionFactory extends RegionFactoryTemplate {
 		return regionName;
 	}
 
-	protected Cache getOrCreateCache(String unqualifiedRegionName, SessionFactoryImplementor sessionFactory) {
+	protected Ehcache getOrCreateCache(String unqualifiedRegionName, SessionFactoryImplementor sessionFactory) {
 		verifyStarted();
 		assert !RegionNameQualifier.INSTANCE.isQualified( unqualifiedRegionName, sessionFactory.getSessionFactoryOptions() );
 
@@ -140,14 +140,14 @@ public class EhcacheRegionFactory extends RegionFactoryTemplate {
 				sessionFactory.getSessionFactoryOptions()
 		);
 
-		final Cache cache = cacheManager.getCache( qualifiedRegionName );
+		final Ehcache cache = cacheManager.getEhcache( qualifiedRegionName );
 		if ( cache == null ) {
 			return createCache( qualifiedRegionName );
 		}
 		return cache;
 	}
 
-	protected Cache createCache(String regionName) {
+	protected Ehcache createCache(String regionName) {
 		switch ( missingCacheStrategy ) {
 			case CREATE_WARN:
 				SecondLevelCacheLogger.INSTANCE.missingCacheCreated(
@@ -155,10 +155,10 @@ public class EhcacheRegionFactory extends RegionFactoryTemplate {
 						ConfigSettings.MISSING_CACHE_STRATEGY, MissingCacheStrategy.CREATE.getExternalRepresentation()
 				);
 				cacheManager.addCache( regionName );
-				return cacheManager.getCache( regionName );
+                return cacheManager.getEhcache( regionName );
 			case CREATE:
 				cacheManager.addCache( regionName );
-				return cacheManager.getCache( regionName );
+                return cacheManager.getEhcache( regionName );
 			case FAIL:
 				throw new CacheException( "On-the-fly creation of Ehcache Cache objects is not supported [" + regionName + "]" );
 			default:
@@ -171,7 +171,7 @@ public class EhcacheRegionFactory extends RegionFactoryTemplate {
 				unqualifiedRegionName,
 				sessionFactory.getSessionFactoryOptions()
 		);
-		return cacheManager.getCache( qualifiedRegionName ) != null;
+        return cacheManager.getEhcache( qualifiedRegionName ) != null;
 	}
 
 

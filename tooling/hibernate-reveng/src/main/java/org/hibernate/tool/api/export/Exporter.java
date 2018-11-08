@@ -3,7 +3,6 @@
  */
 package org.hibernate.tool.api.export;
 
-import java.io.File;
 import java.util.Properties;
 
 /**
@@ -13,12 +12,6 @@ import java.util.Properties;
 public interface Exporter {
 	
 
-	/**
-	 * @param templatePath array of directories used sequentially to lookup templates
-	 */
-	public void setTemplatePath(String[] templatePath);
-	
-		
 	public Properties getProperties();
 	
 	/**

@@ -165,7 +165,7 @@ public class DocExporter extends AbstractExporter {
 				exporter.getProperties().put(OUTPUT_FOLDER, getOutputDirectory());
 				String[] tp = (String[])exporter.getProperties().get(TEMPLATE_PATH);
 				if (tp != null) {
-					exporter.setTemplatePath(tp);
+					exporter.getProperties().put(TEMPLATE_PATH, tp);
 				}
  
 				exporter.setTemplateName( "dot/entitygraph.dot.ftl" );

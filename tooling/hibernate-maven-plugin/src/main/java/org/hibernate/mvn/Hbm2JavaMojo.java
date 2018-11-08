@@ -35,7 +35,7 @@ public class Hbm2JavaMojo extends AbstractHbm2xMojo {
         pojoExporter.getProperties().put(ExporterConstants.OUTPUT_FOLDER, outputDirectory);
         if (templatePath != null) {
             getLog().info("Setting template path to: " + templatePath);
-            pojoExporter.setTemplatePath(new String[]{templatePath});
+            pojoExporter.getProperties().put(ExporterConstants.TEMPLATE_PATH, new String[] {templatePath});
         }
         pojoExporter.getProperties().setProperty("ejb3", String.valueOf(ejb3));
         pojoExporter.getProperties().setProperty("jdk5", String.valueOf(jdk5));

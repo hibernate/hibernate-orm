@@ -132,7 +132,7 @@ public class AuditOverrideAuditJoinTableTest extends BaseEnversJPAFunctionalTest
 		try {
 			entityManagerFactory().unwrap( SessionFactoryImplementor.class )
 					.getMetamodel()
-					.locateEntityPersister( "OtherOverrideAuditedEntity_StringList" );
+					.locateEntityPersister( "OOAE_StringList" );
 		}
 		catch ( UnknownEntityTypeException e ) {
 			fail( "Expected to find an entity-persister for the string-list in the super audit type" );
@@ -144,7 +144,7 @@ public class AuditOverrideAuditJoinTableTest extends BaseEnversJPAFunctionalTest
 		try {
 			entityManagerFactory().unwrap( SessionFactoryImplementor.class )
 					.getMetamodel()
-					.locateEntityPersister( "OtherAuditParentsAuditEntity_StringList" );
+					.locateEntityPersister( "OAPAE_StringList" );
 		}
 		catch ( UnknownEntityTypeException e ) {
 			fail( "Expected to find an entity-persister for the string-list in the super audit type" );
@@ -256,7 +256,7 @@ public class AuditOverrideAuditJoinTableTest extends BaseEnversJPAFunctionalTest
 		private Timestamp version;
 		private String superValue;
 		@ElementCollection
-		@AuditJoinTable(name = "NonAuditedSuperClass_StringList")
+		@AuditJoinTable(name = "NASC_StringList")
 		private List<String> superStringList;
 
 		public long getId() {
@@ -298,7 +298,7 @@ public class AuditOverrideAuditJoinTableTest extends BaseEnversJPAFunctionalTest
 			@AuditOverride(
 					forClass = NonAuditedSuperClass.class,
 					name = "superStringList",
-					auditJoinTable = @AuditJoinTable(name = "OtherOverrideAuditedEntity_StringList")
+					auditJoinTable = @AuditJoinTable(name = "OOAE_StringList")
 			)
 	})
 	public static class OtherOverrideAuditedEntity extends NonAuditedSuperClass {
@@ -329,7 +329,7 @@ public class AuditOverrideAuditJoinTableTest extends BaseEnversJPAFunctionalTest
 			@AuditOverride(
 					forClass = NonAuditedSuperClass.class,
 					name = "superStringList",
-					auditJoinTable = @AuditJoinTable(name = "OtherAuditParentsAuditEntity_StringList")
+					auditJoinTable = @AuditJoinTable(name = "OAPAE_StringList")
 			)
 	})
 	public static class OtherAuditParentsAuditEntity extends NonAuditedSuperClass {

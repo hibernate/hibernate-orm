@@ -18,7 +18,6 @@ public interface Exporter {
 	 */
 	public void setTemplatePath(String[] templatePath);
 	
-	public String[] getTemplatePath();
 		
 	public Properties getProperties();
 	

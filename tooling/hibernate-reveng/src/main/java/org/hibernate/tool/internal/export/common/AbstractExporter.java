@@ -70,10 +70,6 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 		getProperties().put(TEMPLATE_PATH, templatePaths);
 	}
 
-	public String[] getTemplatePath() {
-		return (String[])getProperties().get(TEMPLATE_PATH);
-	}
-	
 	public ArtifactCollector getArtifactCollector() {
 		return (ArtifactCollector)getProperties().get(ARTIFACT_COLLECTOR);
 	}
@@ -118,8 +114,9 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 		if(getOutputDirectory()!=null) {
 			getTemplateHelper().removeFromContext("outputdir", getOutputDirectory());
 		}
-		if(getTemplatePath()!=null) {
-			getTemplateHelper().removeFromContext("template_path", getTemplatePath());			
+		String[] templatePath = (String[])getProperties().get(TEMPLATE_PATH);
+		if(templatePath!=null) {
+			getTemplateHelper().removeFromContext("template_path", templatePath);			
 		}
 		getTemplateHelper().removeFromContext("exporter", this);
 		getTemplateHelper().removeFromContext("artifacts", getArtifactCollector());
@@ -140,8 +137,9 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 		if(getOutputDirectory()!=null) {
 			getTemplateHelper().putInContext("outputdir", getOutputDirectory());
 		}
-		if(getTemplatePath()!=null) {
-			getTemplateHelper().putInContext("template_path", getTemplatePath());		
+		String[] templatePath = (String[])getProperties().get(TEMPLATE_PATH);
+		if(templatePath!=null) {
+			getTemplateHelper().putInContext("template_path", templatePath);		
 		}
 		if(getProperties()!=null) {
 			iterator = getProperties().entrySet().iterator();
@@ -174,10 +172,11 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 	}
 
 	protected void setupTemplates() {
+		String[] templatePath = (String[])getProperties().get(TEMPLATE_PATH);
 		if(log.isDebugEnabled()) {
-			log.debug(getClass().getName() + " outputdir:" + getOutputDirectory() + " path: " + toString(getTemplatePath()) );
+			log.debug(getClass().getName() + " outputdir:" + getOutputDirectory() + " path: " + toString(templatePath) );
 		}
-		getTemplateHelper().init(getOutputDirectory(), getTemplatePath());		
+		getTemplateHelper().init(getOutputDirectory(), templatePath);		
 	}
 	
 	protected void setTemplateHelper(TemplateHelper vh) {

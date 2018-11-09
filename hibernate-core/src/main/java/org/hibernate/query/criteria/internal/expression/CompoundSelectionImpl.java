@@ -9,7 +9,6 @@ package org.hibernate.query.criteria.internal.expression;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CompoundSelection;
 import javax.persistence.criteria.Selection;
@@ -17,7 +16,6 @@ import javax.persistence.criteria.Selection;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
 import org.hibernate.query.criteria.internal.Renderable;
-import org.hibernate.query.criteria.internal.SelectionImplementor;
 import org.hibernate.query.criteria.internal.TupleElementImplementor;
 import org.hibernate.query.criteria.internal.ValueHandlerFactory;
 import org.hibernate.query.criteria.internal.compile.RenderingContext;
@@ -51,15 +49,6 @@ public class CompoundSelectionImpl<X>
 	@Override
 	public List<Selection<?>> getCompoundSelectionItems() {
 		return selectionItems;
-	}
-
-	@Override
-	public int getSelectionSpan() {
-		int selectionSpan = 0;
-		for ( Selection<?> selectionItem : selectionItems ) {
-			selectionSpan += ( (SelectionImplementor<?>) selectionItem ).getSelectionSpan();
-		}
-		return selectionSpan;
 	}
 
 	@Override

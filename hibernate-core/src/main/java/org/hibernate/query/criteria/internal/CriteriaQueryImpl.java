@@ -332,12 +332,22 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 									public void validate(Type[] returnTypes) {
 										SelectionImplementor selection = (SelectionImplementor) queryStructure.getSelection();
 										if ( selection != null ) {
-											if ( returnTypes.length != selection.getSelectionSpan() ) {
-												throw new IllegalStateException(
-														"Number of return values [" + returnTypes.length +
-																"] did not match expected [" +
-																selection.getSelectionSpan() + "]"
-												);
+											if ( selection.isCompoundSelection() ) {
+												if ( returnTypes.length != selection.getCompoundSelectionItems().size() ) {
+													throw new IllegalStateException(
+															"Number of return values [" + returnTypes.length +
+																	"] did not match expected [" +
+																	selection.getCompoundSelectionItems().size() + "]"
+													);
+												}
+											}
+											else {
+												if ( returnTypes.length > 1 ) {
+													throw new IllegalStateException(
+															"Number of return values [" + returnTypes.length +
+																	"] did not match expected [1]"
+													);
+												}
 											}
 										}
 									}

@@ -7,9 +7,12 @@
 package org.hibernate.query.criteria.internal.expression;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
-import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.CompoundSelection;
+import javax.persistence.criteria.Selection;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
@@ -24,7 +27,7 @@ import org.hibernate.sql.ast.Clause;
  */
 public class MapEntryExpression<K,V>
 		extends ExpressionImpl<Map.Entry<K,V>>
-		implements Expression<Map.Entry<K,V>>, Serializable {
+		implements CompoundSelection<Map.Entry<K,V>>, Serializable {
 
 	private final MapAttributeJoin<?, K, V> original;
 
@@ -32,7 +35,7 @@ public class MapEntryExpression<K,V>
 			CriteriaBuilderImpl criteriaBuilder,
 			Class<Map.Entry<K, V>> javaType,
 			MapAttributeJoin<?, K, V> original) {
-		super( criteriaBuilder, javaType);
+		super( criteriaBuilder, javaType );
 		this.original = original;
 	}
 
@@ -52,7 +55,13 @@ public class MapEntryExpression<K,V>
 	}
 
 	@Override
-	public int getSelectionSpan() {
-		return 2;
+	public boolean isCompoundSelection() {
+		return true;
 	}
+
+	@Override
+	public List<Selection<?>> getCompoundSelectionItems() {
+		return Arrays.asList( original.key(), original.value() );
+	}
+
 }

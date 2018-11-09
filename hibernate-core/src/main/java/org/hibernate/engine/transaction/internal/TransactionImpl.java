@@ -72,7 +72,13 @@ public class TransactionImpl implements TransactionImplementor {
 
 		// per-JPA
 		if ( isActive() ) {
-			throw new IllegalStateException( "Transaction already active" );
+			if ( jpaCompliance.isJpaTransactionComplianceEnabled()
+					|| !transactionCoordinator.getTransactionCoordinatorBuilder().isJta() ) {
+				throw new IllegalStateException( "Transaction already active" );
+			}
+			else {
+				return;
+			}
 		}
 
 		LOG.debug( "begin" );

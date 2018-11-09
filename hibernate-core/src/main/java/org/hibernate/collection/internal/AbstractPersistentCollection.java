@@ -620,8 +620,9 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 							TransactionStatus.FAILED_COMMIT,
 							TransactionStatus.FAILED_ROLLBACK,
 							TransactionStatus.ROLLING_BACK
-					) )
+					) ) {
 						LOG.queuedOperationWhenDetachFromSessionOnRollback( collectionInfoString );
+					}
 					else {
 						LOG.queuedOperationWhenDetachFromSession( collectionInfoString );
 					}

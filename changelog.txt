@@ -1249,6 +1249,7 @@ https://hibernate.atlassian.net/projects/HHH/versions/23950
     * [HHH-10863] - Improve consistency of how we call implicitNamingStrategy.determineBasicColumnName with element collections
     * [HHH-10865] - Join table of lazy loading many-to-many relation not saved when lazy initialization bytecode enhancement is active
     * [HHH-10870] - Parameter lookup for Iterable fails on Criteria API
+    * [HHH-10874] - @Where annotation is not processed with "Extra-lazy" loading for bidirectional collections
     * [HHH-10876] - DefaultIdentifierGeneratorFactory does not consider the hibernate.id.new_generator_mappings setting
     * [HHH-10885] - JPA Native Queries with ordinal parameter are zero based
     * [HHH-10886] - The follow-on-locking Oracle mechanism should consider UNION as well

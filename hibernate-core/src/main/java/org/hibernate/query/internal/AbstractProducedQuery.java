@@ -56,7 +56,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
-import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.hql.internal.QueryExecutionRequestException;
 import org.hibernate.internal.EmptyScrollableResults;
@@ -65,6 +64,7 @@ import org.hibernate.internal.HEMLogging;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.TypedParameterValue;
+import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
@@ -1376,8 +1376,8 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			);
 		}
 
-		QueryParameters queryParameters = new QueryParameters(
-				getQueryParameterBindings(),
+	QueryParameters queryParameters = new QueryParameters(
+			getQueryParameterBindings(),
 				getLockOptions(),
 				queryOptions,
 				true,
@@ -1392,22 +1392,11 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 				optionalId,
 				resultTransformer
 		);
-
-		appendQueryPlanToQueryParameters( hql, queryParameters, entityGraphHintedQueryPlan );
-
+		queryParameters.setQueryPlan( entityGraphHintedQueryPlan );
 		if ( passDistinctThrough != null ) {
 			queryParameters.setPassDistinctThrough( passDistinctThrough );
 		}
 		return queryParameters;
-	}
-
-	protected void appendQueryPlanToQueryParameters(
-			String hql,
-			QueryParameters queryParameters,
-			HQLQueryPlan queryPlan) {
-		if ( queryPlan != null ) {
-			queryParameters.setQueryPlan( queryPlan );
-		}
 	}
 
 	public QueryParameters getQueryParameters() {
@@ -1694,7 +1683,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 				: defaultType;
 	}
 
-	protected boolean isSelect() {
+	private boolean isSelect() {
 		return getProducer().getFactory().getQueryPlanCache()
 				.getHQLQueryPlan( getQueryString(), false, Collections.<String, Filter>emptyMap() )
 				.isSelect();

@@ -1620,7 +1620,7 @@ public final class SessionImpl
 		queryParameters.validateParameters();
 
 		HQLQueryPlan plan = queryParameters.getQueryPlan();
-		if ( plan == null || !plan.isShallow() ) {
+		if ( plan == null ) {
 			plan = getQueryPlan( query, true );
 		}
 

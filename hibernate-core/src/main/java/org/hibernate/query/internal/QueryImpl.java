@@ -6,8 +6,10 @@
  */
 package org.hibernate.query.internal;
 
+import org.hibernate.engine.query.spi.HQLQueryPlan;
+import org.hibernate.engine.query.spi.ReturnMetadata;
+import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.type.Type;
@@ -18,16 +20,19 @@ import org.hibernate.type.Type;
 public class QueryImpl<R> extends AbstractProducedQuery<R> implements Query<R> {
 	private final String queryString;
 
+	private final HQLQueryPlan hqlQueryPlan;
+
 	private final QueryParameterBindingsImpl queryParameterBindings;
 
 	public QueryImpl(
 			SharedSessionContractImplementor producer,
-			ParameterMetadata parameterMetadata,
+			HQLQueryPlan hqlQueryPlan,
 			String queryString) {
-		super( producer, parameterMetadata );
+		super( producer, hqlQueryPlan.getParameterMetadata() );
+		this.hqlQueryPlan = hqlQueryPlan;
 		this.queryString = queryString;
 		this.queryParameterBindings = QueryParameterBindingsImpl.from(
-				parameterMetadata,
+				hqlQueryPlan.getParameterMetadata(),
 				producer.getFactory(),
 				producer.isQueryParametersValidationEnabled()
 		);
@@ -43,6 +48,10 @@ public class QueryImpl<R> extends AbstractProducedQuery<R> implements Query<R> {
 		return queryString;
 	}
 
+	public HQLQueryPlan getQueryPlan() {
+		return hqlQueryPlan;
+	}
+
 	@Override
 	protected boolean isNativeQuery() {
 		return false;
@@ -50,12 +59,14 @@ public class QueryImpl<R> extends AbstractProducedQuery<R> implements Query<R> {
 
 	@Override
 	public Type[] getReturnTypes() {
-		return getProducer().getFactory().getReturnTypes( queryString );
+		final ReturnMetadata metadata = hqlQueryPlan.getReturnMetadata();
+		return metadata == null ? null : metadata.getReturnTypes();
 	}
 
 	@Override
 	public String[] getReturnAliases() {
-		return getProducer().getFactory().getReturnAliases( queryString );
+		final ReturnMetadata metadata = hqlQueryPlan.getReturnMetadata();
+		return metadata == null ? null : metadata.getReturnAliases();
 	}
 
 	@Override
@@ -66,5 +77,23 @@ public class QueryImpl<R> extends AbstractProducedQuery<R> implements Query<R> {
 	@Override
 	public Query setEntity(String name, Object val) {
 		return setParameter( name, val, getProducer().getFactory().getTypeHelper().entity( resolveEntityName( val ) ) );
+	}
+
+	@Override
+	protected boolean isSelect() {
+		return hqlQueryPlan.isSelect();
+	}
+
+	@Override
+	protected void appendQueryPlanToQueryParameters(
+			String hql,
+			QueryParameters queryParameters,
+			HQLQueryPlan queryPlan) {
+		if ( queryPlan != null ) {
+			queryParameters.setQueryPlan( queryPlan );
+		}
+		else if ( hql.equals( getQueryString() ) ) {
+			queryParameters.setQueryPlan( getQueryPlan() );
+		}
 	}
 }

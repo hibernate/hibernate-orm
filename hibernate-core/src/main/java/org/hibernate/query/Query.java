@@ -67,7 +67,7 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  * @author Gavin King
  */
-@SuppressWarnings("UnusedDeclaration")
+@SuppressWarnings("UnusedDeclaratiqon")
 public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQueryContract {
 	/**
 	 * Get the QueryProducer this Query originates from.

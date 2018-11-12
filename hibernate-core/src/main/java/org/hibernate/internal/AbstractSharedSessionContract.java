@@ -647,11 +647,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
 	}
 
-	protected QueryImplementor createQuery(NamedQueryDefinition queryDefinition) {
+	protected QueryImpl createQuery(NamedQueryDefinition queryDefinition) {
 		String queryString = queryDefinition.getQueryString();
 		final QueryImpl query = new QueryImpl(
 				this,
-				getQueryPlan( queryString, false ).getParameterMetadata(),
+				getQueryPlan( queryString, false ),
 				queryString
 		);
 		applyQuerySettingsAndHints( query );
@@ -723,7 +723,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public QueryImplementor createQuery(String queryString) {
+	public QueryImpl createQuery(String queryString) {
 		checkOpen();
 		pulseTransactionCoordinator();
 		delayedAfterCompletion();
@@ -731,7 +731,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		try {
 			final QueryImpl query = new QueryImpl(
 					this,
-					getQueryPlan( queryString, false ).getParameterMetadata(),
+					getQueryPlan( queryString, false ),
 					queryString
 			);
 			applyQuerySettingsAndHints( query );
@@ -831,7 +831,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		try {
 			// do the translation
-			final QueryImplementor<T> query = createQuery( queryString );
+			final QueryImpl<T> query = createQuery( queryString );
 			resultClassChecking( resultClass, query );
 			return query;
 		}
@@ -841,13 +841,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@SuppressWarnings({"unchecked", "WeakerAccess", "StatementWithEmptyBody"})
-	protected void resultClassChecking(Class resultClass, org.hibernate.Query hqlQuery) {
+	protected void resultClassChecking(Class resultClass, QueryImpl hqlQuery) {
 		// make sure the query is a select -> HHH-7192
-		final HQLQueryPlan queryPlan = getFactory().getQueryPlanCache().getHQLQueryPlan(
-				hqlQuery.getQueryString(),
-				false,
-				getLoadQueryInfluencers().getEnabledFilters()
-		);
+		HQLQueryPlan queryPlan = hqlQuery.getQueryPlan();
+
 		if ( queryPlan.getTranslators()[0].isManipulationStatement() ) {
 			throw new IllegalArgumentException( "Update/delete queries cannot be typed" );
 		}
@@ -923,7 +920,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@SuppressWarnings({"WeakerAccess", "unchecked"})
 	protected <T> QueryImplementor<T> createQuery(NamedQueryDefinition namedQueryDefinition, Class<T> resultType) {
-		final QueryImplementor query = createQuery( namedQueryDefinition );
+		final QueryImpl query = createQuery( namedQueryDefinition );
 		if ( resultType != null ) {
 			resultClassChecking( resultType, query );
 		}

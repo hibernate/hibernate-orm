@@ -26,13 +26,13 @@ public class AnyTest extends BaseCoreFunctionalTestCase {
 		PropertySet set1 = new PropertySet( "string" );
 		Property property = new StringProperty( "name", "Alex" );
 		set1.setSomeProperty( property );
-		set1.addGeneratedProperty( property );
+		set1.addGeneralProperty( property );
 		s.save( set1 );
 
 		PropertySet set2 = new PropertySet( "integer" );
 		property = new IntegerProperty( "age", 33 );
 		set2.setSomeProperty( property );
-		set2.addGeneratedProperty( property );
+		set2.addGeneralProperty( property );
 		s.save( set2 );
 
 		s.flush();
@@ -116,10 +116,10 @@ public class AnyTest extends BaseCoreFunctionalTestCase {
 
 		list.setSomeProperty( longProperty );
 
-		list.addGeneratedProperty( stringProperty );
-		list.addGeneratedProperty( integerProperty );
-		list.addGeneratedProperty( longProperty );
-		list.addGeneratedProperty( charProp );
+		list.addGeneralProperty( stringProperty );
+		list.addGeneralProperty( integerProperty );
+		list.addGeneralProperty( longProperty );
+		list.addGeneralProperty( charProp );
 
 		s.save( list );
 

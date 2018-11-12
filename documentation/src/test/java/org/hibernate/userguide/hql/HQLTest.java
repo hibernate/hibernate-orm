@@ -1739,6 +1739,28 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	public void test_case_arithmetic_expressions_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-case-arithmetic-expressions-example[]
+			List<Long> values = entityManager.createQuery(
+				"select " +
+				"	case when p.nickName is null " +
+				"		 then (p.id * 1000) " +
+				"		 else p.id " +
+				"	end " +
+				"from Person p " +
+				"order by p.id", Long.class)
+			.getResultList();
+
+			assertEquals(3, values.size());
+			assertEquals( 1L, (long) values.get( 0 ) );
+			assertEquals( 2000, (long) values.get( 1 ) );
+			assertEquals( 3000, (long) values.get( 2 ) );
+			//end::hql-case-arithmetic-expressions-example[]
+		});
+	}
+
+	@Test
 	public void test_hql_null_if_example_1() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-nullif-example[]

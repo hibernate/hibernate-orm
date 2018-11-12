@@ -1547,6 +1547,27 @@ include::{sourcedir}/HQLTest.java[tags=hql-searched-case-expressions-example]
 ----
 ====
 
+[[hql-case-arithmetic-expressions]]
+=== CASE expressions with arithmetic operations
+
+If you want to use arithmetic operations in the CASE expressions, you need to wrap the arithmetic operation in parentheses
+as illustrated by the following example:
+
+[[hql-case-arithmetic-expressions-example]]
+.Case expression with arithmetic operation example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-case-arithmetic-expressions-example]
+----
+====
+
+[IMPORTANT]
+====
+Without wrapping the arithmetic expression in `(` and `)`, the entity query parser will not be able to
+parse the arithmetic operators.
+====
+
 [[hql-nullif]]
 === NULLIF expressions
 

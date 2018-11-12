@@ -1110,7 +1110,7 @@
                 <!-- include the columns spanned by this association in an index -->
                 <xs:attribute name="insert" default="true" type="xs:boolean"/>
                 <xs:attribute name="lazy" default="false" type="xs:boolean"/>
-                <xs:attribute name="meta-type" type="xs:string"/>
+                <xs:attribute name="meta-type" default="string" type="xs:string"/>
                 <!--- default: Hibernate.STRING -->
                 <xs:attribute name="name" use="required" type="xs:string"/>
                 <xs:attribute name="node" type="xs:string"/>

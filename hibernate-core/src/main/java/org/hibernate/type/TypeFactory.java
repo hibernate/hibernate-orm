@@ -401,7 +401,28 @@ public final class TypeFactory implements Serializable {
 
 	// any type builder ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	/**
+	 * Get the AnyType with the specified parameters.
+	 *
+	 * @param metaType meta type
+	 * @param identifierType identifier type
+	 * @return AnyType
+	 * @deprecated use {@link TypeFactory#any(Type, Type, boolean)} instead
+	 */
+	@Deprecated
 	public Type any(Type metaType, Type identifierType) {
-		return new AnyType( typeScope, metaType, identifierType );
+		return any( metaType, identifierType, true );
+	}
+
+	/**
+	 * Get the AnyType with the specified parameters.
+	 *
+	 * @param metaType meta type
+	 * @param identifierType identifier type
+	 * @param lazy is teh underlying proeprty lazy
+	 * @return AnyType
+	 */
+	public Type any(Type metaType, Type identifierType, boolean lazy) {
+		return new AnyType( typeScope, metaType, identifierType, lazy );
 	}
 }

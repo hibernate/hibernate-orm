@@ -268,4 +268,9 @@ public class SingularAttributeSourceAnyImpl
 	public String getCascadeStyleName() {
 		return jaxbAnyMapping.getCascade();
 	}
+
+	@Override
+	public boolean isLazy() {
+		return isBytecodeLazy();
+	}
 }

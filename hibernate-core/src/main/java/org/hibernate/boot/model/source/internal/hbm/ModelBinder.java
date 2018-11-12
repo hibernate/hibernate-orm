@@ -2343,6 +2343,9 @@ public class ModelBinder {
 			Any anyBinding,
 			final AttributeRole attributeRole,
 			AttributePath attributePath) {
+
+		anyBinding.setLazy( anyMapping.isLazy() );
+
 		final TypeResolution keyTypeResolution = resolveType(
 				sourceDocument,
 				anyMapping.getKeySource().getTypeSource()

@@ -5,55 +5,34 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.annotations.any;
-import java.util.ArrayList;
-import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
-import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.MetaValue;
 
 @Entity
-@Table( name = "property_set" )
-public class PropertySet {
+@Table( name = "lazy_property_set" )
+public class LazyPropertySet {
 	private Integer id;
 	private String name;
 	private Property someProperty;
 
-	private List<Property> generalProperties = new ArrayList<Property>();
-
-	public PropertySet() {
+	public LazyPropertySet() {
 		super();
 	}
 
-	public PropertySet(String name) {
+	public LazyPropertySet(String name) {
 		this.name = name;
-	}
-
-	@ManyToAny(
-			metaColumn = @Column( name = "property_type" ) )
-	@AnyMetaDef( idType = "integer", metaType = "string",
-			metaValues = {
-			@MetaValue( value = "S", targetEntity = StringProperty.class ),
-			@MetaValue( value = "I", targetEntity = IntegerProperty.class ) } )
-	@Cascade( { org.hibernate.annotations.CascadeType.ALL } )
-	@JoinTable( name = "obj_properties", joinColumns = @JoinColumn( name = "obj_id" ),
-			inverseJoinColumns = @JoinColumn( name = "property_id" ) )
-	public List<Property> getGeneralProperties() {
-		return generalProperties;
-	}
-
-	public void setGeneralProperties(List<Property> generalProperties) {
-		this.generalProperties = generalProperties;
 	}
 
 	@Id
@@ -74,7 +53,7 @@ public class PropertySet {
 		this.name = name;
 	}
 
-	@Any( metaColumn = @Column( name = "property_type" ) )
+	@Any( metaColumn = @Column( name = "property_type" ), fetch = FetchType.LAZY )
 	@Cascade( value = { CascadeType.ALL } )
 	@AnyMetaDef( idType = "integer", metaType = "string", metaValues = {
 	@MetaValue( value = "S", targetEntity = StringProperty.class ),
@@ -87,9 +66,5 @@ public class PropertySet {
 
 	public void setSomeProperty(Property someProperty) {
 		this.someProperty = someProperty;
-	}
-
-	public void addGeneralProperty(Property property) {
-		this.generalProperties.add( property );
 	}
 }

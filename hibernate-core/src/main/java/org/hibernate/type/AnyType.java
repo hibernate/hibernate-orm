@@ -47,18 +47,20 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	private final TypeFactory.TypeScope scope;
 	private final Type identifierType;
 	private final Type discriminatorType;
+	private final boolean eager;
 
 	/**
 	 * Intended for use only from legacy {@link ObjectType} type definition
 	 */
 	protected AnyType(Type discriminatorType, Type identifierType) {
-		this( null, discriminatorType, identifierType );
+		this( null, discriminatorType, identifierType, true );
 	}
 
-	public AnyType(TypeFactory.TypeScope scope, Type discriminatorType, Type identifierType) {
+	public AnyType(TypeFactory.TypeScope scope, Type discriminatorType, Type identifierType, boolean lazy) {
 		this.scope = scope;
 		this.discriminatorType = discriminatorType;
 		this.identifierType = identifierType;
+		this.eager = !lazy;
 	}
 
 	public Type getIdentifierType() {
@@ -266,7 +268,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 			throws HibernateException {
 		return entityName==null || id==null
 				? null
-				: session.internalLoad( entityName, id, false, false );
+				: session.internalLoad( entityName, id, eager, false );
 	}
 
 	@Override
@@ -319,7 +321,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	@Override
 	public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) throws HibernateException {
 		final ObjectTypeCacheEntry e = (ObjectTypeCacheEntry) cached;
-		return e == null ? null : session.internalLoad( e.entityName, e.id, false, false );
+		return e == null ? null : session.internalLoad( e.entityName, e.id, eager, false );
 	}
 
 	@Override
@@ -348,7 +350,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		else {
 			final String entityName = session.bestGuessEntityName( original );
 			final Serializable id = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, original, session );
-			return session.internalLoad( entityName, id, false, false );
+			return session.internalLoad( entityName, id, eager, false );
 		}
 	}
 

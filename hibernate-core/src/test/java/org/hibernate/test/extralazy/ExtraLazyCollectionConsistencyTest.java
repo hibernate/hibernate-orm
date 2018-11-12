@@ -6,11 +6,12 @@
  */
 package org.hibernate.test.extralazy;
 
+import org.hibernate.Session;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -29,10 +30,14 @@ public class ExtraLazyCollectionConsistencyTest extends BaseCoreFunctionalTestCa
 
 	@Override
 	protected void prepareTest()  {
-		doInHibernate( this::sessionFactory, session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 			user = new User("victor", "hugo");
 			session.persist(user);
-		});
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Override
@@ -43,47 +48,65 @@ public class ExtraLazyCollectionConsistencyTest extends BaseCoreFunctionalTestCa
 	@Test
 	@TestForIssue(jiraKey = "HHH-9933")
 	public void testSetSize() {
-		doInHibernate( this::sessionFactory, session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 			User _user = session.get(User.class, user.getName());
 			Document document = new Document("Les Miserables", "sad", _user);
 			assertEquals(1, _user.getDocuments().size());
-		});
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9933")
 	public void testSetIterator() {
-		doInHibernate( this::sessionFactory, session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 			User _user = session.get(User.class, user.getName());
 			Document document = new Document("Les Miserables", "sad", _user);
 			assertTrue(_user.getDocuments().iterator().hasNext());
-		});
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9933")
 	public void testSetIsEmpty() {
-		doInHibernate( this::sessionFactory, session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 			User _user = session.get(User.class, user.getName());
 			Document document = new Document("Les Miserables", "sad", _user);
 			assertFalse(_user.getDocuments().isEmpty());
-		});
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9933")
 	public void testSetContains() {
-		doInHibernate( this::sessionFactory, session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 			User _user = session.get(User.class, user.getName());
 			Document document = new Document("Les Miserables", "sad", _user);
 			assertTrue(_user.getDocuments().contains(document));
-		});
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9933")
 	public void testSetAdd() {
-		doInHibernate( this::sessionFactory, session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 			User _user = session.get(User.class, user.getName());
 			Document document = new Document();
 			document.setTitle("Les Miserables");
@@ -91,40 +114,54 @@ public class ExtraLazyCollectionConsistencyTest extends BaseCoreFunctionalTestCa
 			document.setOwner(_user);
 			assertTrue("not added", _user.getDocuments().add(document));
 			assertFalse("added", _user.getDocuments().add(document));
-		});
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9933")
 	public void testSetRemove() {
-		doInHibernate( this::sessionFactory, session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 			User _user = session.get(User.class, user.getName());
 
 			Document document = new Document("Les Miserables", "sad", _user);
 			assertTrue("not removed", _user.getDocuments().remove(document));
-		});
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9933")
 	public void testSetToArray() {
-		doInHibernate( this::sessionFactory, session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 			User _user = session.get(User.class, user.getName());
 
 			Document document = new Document("Les Miserables", "sad", _user);
 			assertEquals(1, _user.getDocuments().toArray().length);
-		});
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9933")
 	public void testSetToArrayTyped() {
-		doInHibernate( this::sessionFactory, session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 			User _user = session.get(User.class, user.getName());
 
 			Document document = new Document("Les Miserables", "sad", _user);
 			assertEquals(1, _user.getDocuments().toArray(new Document[0]).length);
-		});
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 }
 

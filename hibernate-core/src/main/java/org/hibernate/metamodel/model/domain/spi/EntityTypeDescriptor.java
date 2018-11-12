@@ -8,11 +8,13 @@ package org.hibernate.metamodel.model.domain.spi;
 
 import javax.persistence.metamodel.EntityType;
 
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+
 /**
  * Hibernate extension to the JPA {@link EntityType} descriptor
  *
  * @author Steve Ebersole
  */
-public interface EntityTypeDescriptor<J> extends EntityType<J>, IdentifiableTypeDescriptor<J> {
+public interface EntityTypeDescriptor<J> extends EntityDomainType<J>, IdentifiableTypeDescriptor<J> {
 
 }

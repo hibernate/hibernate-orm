@@ -10,12 +10,14 @@ import java.util.Set;
 import java.util.function.Consumer;
 import javax.persistence.metamodel.IdentifiableType;
 
+import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
+
 /**
  * Hibernate extension to the JPA {@link IdentifiableType} descriptor
  *
  * @author Steve Ebersole
  */
-public interface IdentifiableTypeDescriptor<J> extends IdentifiableType<J>, ManagedTypeDescriptor<J> {
+public interface IdentifiableTypeDescriptor<J> extends IdentifiableDomainType<J>, ManagedTypeDescriptor<J> {
 	boolean hasIdClass();
 
 	SingularPersistentAttribute<? super J,?> locateIdAttribute();

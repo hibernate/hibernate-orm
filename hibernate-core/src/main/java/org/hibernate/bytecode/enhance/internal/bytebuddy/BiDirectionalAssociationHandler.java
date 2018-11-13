@@ -8,6 +8,8 @@ package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
+
 import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.ManyToMany;
@@ -34,7 +36,7 @@ import net.bytebuddy.jar.asm.MethodVisitor;
 import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
 
-class BiDirectionalAssociationHandler implements Implementation {
+final class BiDirectionalAssociationHandler implements Implementation {
 
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( BiDirectionalAssociationHandler.class );
 
@@ -326,5 +328,25 @@ class BiDirectionalAssociationHandler implements Implementation {
 				}
 			}, implementationContext, instrumentedMethod );
 		}
+	}
+
+	@Override
+	public boolean equals(final Object o) {
+		if (this == o) {
+			return true;
+		}
+		if ( o == null || BiDirectionalAssociationHandler.class != o.getClass() ) {
+			return false;
+		}
+		final BiDirectionalAssociationHandler that = (BiDirectionalAssociationHandler) o;
+		return Objects.equals( delegate, that.delegate ) &&
+			Objects.equals( targetEntity, that.targetEntity ) &&
+			Objects.equals( targetType, that.targetType ) &&
+			Objects.equals( mappedBy, that.mappedBy );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( delegate, targetEntity, targetType, mappedBy );
 	}
 }

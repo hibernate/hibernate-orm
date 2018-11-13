@@ -27,7 +27,7 @@ import net.bytebuddy.jar.asm.MethodVisitor;
 import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
 
-class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppender {
+final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppender {
 
 	private final Implementation delegate;
 
@@ -150,5 +150,24 @@ class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppender {
 			methodVisitor.visitFrame( Opcodes.F_SAME, 0, null, 0, null );
 		}
 		return new Size( 1 + 2 * persistentField.getType().asErasure().getStackSize().getSize(), instrumentedMethod.getStackSize() );
+	}
+
+	@Override
+	public boolean equals(final Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || InlineDirtyCheckingHandler.class != o.getClass() ) {
+			return false;
+		}
+		final InlineDirtyCheckingHandler that = (InlineDirtyCheckingHandler) o;
+		return Objects.equals( delegate, that.delegate ) &&
+			Objects.equals( managedCtClass, that.managedCtClass ) &&
+			Objects.equals( persistentField, that.persistentField );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( delegate, managedCtClass, persistentField );
 	}
 }

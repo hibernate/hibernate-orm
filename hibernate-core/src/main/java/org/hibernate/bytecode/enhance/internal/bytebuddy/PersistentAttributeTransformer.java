@@ -11,6 +11,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+
 import javax.persistence.Embedded;
 
 import net.bytebuddy.description.field.FieldList;
@@ -41,7 +43,7 @@ import net.bytebuddy.pool.TypePool;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
-class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDeclaredMethods.MethodVisitorWrapper {
+final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDeclaredMethods.MethodVisitorWrapper {
 
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( PersistentAttributeTransformer.class );
 
@@ -312,5 +314,27 @@ class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDeclaredMet
 			methodVisitor.visitInsn( Opcodes.RETURN );
 			return new Size( 1 + persistentField.getType().getStackSize().getSize(), instrumentedMethod.getStackSize() );
 		}
+	}
+
+	@Override
+	public boolean equals(final Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || PersistentAttributeTransformer.class != o.getClass() ) {
+			return false;
+		}
+		final PersistentAttributeTransformer that = (PersistentAttributeTransformer) o;
+		return Objects.equals( managedCtClass, that.managedCtClass ) &&
+			Objects.equals( enhancementContext, that.enhancementContext ) &&
+			Objects.equals( classPool, that.classPool ) &&
+			Arrays.equals( enhancedFields, that.enhancedFields );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = Objects.hash( managedCtClass, enhancementContext, classPool );
+		result = 31 * result + Arrays.hashCode( enhancedFields );
+		return result;
 	}
 }

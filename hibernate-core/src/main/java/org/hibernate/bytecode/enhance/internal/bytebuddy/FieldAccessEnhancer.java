@@ -28,7 +28,9 @@ import net.bytebuddy.pool.TypePool;
 import static net.bytebuddy.matcher.ElementMatchers.hasDescriptor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.MethodVisitorWrapper {
+import java.util.Objects;
+
+final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.MethodVisitorWrapper {
 
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( FieldAccessEnhancer.class );
 
@@ -130,4 +132,24 @@ class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.Method
 		}
 		return fields.getOnly();
 	}
+
+	@Override
+	public boolean equals(final Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || FieldAccessEnhancer.class != o.getClass() ) {
+			return false;
+		}
+		final FieldAccessEnhancer that = (FieldAccessEnhancer) o;
+		return Objects.equals( managedCtClass, that.managedCtClass ) &&
+			Objects.equals( enhancementContext, that.enhancementContext ) &&
+			Objects.equals( classPool, that.classPool );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( managedCtClass, enhancementContext, classPool );
+	}
+
 }

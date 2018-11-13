@@ -25,6 +25,7 @@ import org.hibernate.internal.CoreMessageLogger;
 
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.AsmVisitorWrapper;
+import net.bytebuddy.description.NamedElement;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.modifier.Visibility;
@@ -38,11 +39,14 @@ import net.bytebuddy.implementation.bytecode.ByteCodeAppender;
 import net.bytebuddy.jar.asm.MethodVisitor;
 import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
+import net.bytebuddy.matcher.ElementMatcher.Junction;
 import net.bytebuddy.pool.TypePool;
 
 class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDeclaredMethods.MethodVisitorWrapper {
 
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( PersistentAttributeTransformer.class );
+
+	private static final Junction<MethodDescription> NOT_HIBERNATE_GENERATED = not( nameStartsWith( "$$_hibernate_" ) );
 
 	private final TypeDescription managedCtClass;
 
@@ -171,7 +175,7 @@ class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDeclaredMet
 	DynamicType.Builder<?> applyTo(DynamicType.Builder<?> builder, boolean accessor) {
 		boolean compositeOwner = false;
 
-		builder = builder.visit( new AsmVisitorWrapper.ForDeclaredMethods().invokable( not( nameStartsWith( "$$_hibernate_" ) ), this ) );
+		builder = builder.visit( new AsmVisitorWrapper.ForDeclaredMethods().invokable( NOT_HIBERNATE_GENERATED, this ) );
 		for ( AnnotatedFieldDescription enhancedField : enhancedFields ) {
 			builder = builder
 					.defineMethod(
@@ -253,7 +257,7 @@ class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDeclaredMet
 
 	DynamicType.Builder<?> applyExtended(DynamicType.Builder<?> builder) {
 		AsmVisitorWrapper.ForDeclaredMethods.MethodVisitorWrapper enhancer = new FieldAccessEnhancer( managedCtClass, enhancementContext, classPool );
-		return builder.visit( new AsmVisitorWrapper.ForDeclaredMethods().invokable( not( nameStartsWith( "$$_hibernate_" ) ), enhancer ) );
+		return builder.visit( new AsmVisitorWrapper.ForDeclaredMethods().invokable( NOT_HIBERNATE_GENERATED, enhancer ) );
 	}
 
 	private static class FieldMethodReader implements ByteCodeAppender {

@@ -8,6 +8,7 @@ package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
 import java.util.Collection;
 import java.util.Map;
+
 import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.ManyToMany;
@@ -15,6 +16,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
+import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.internal.CoreLogging;
@@ -41,7 +43,7 @@ class BiDirectionalAssociationHandler implements Implementation {
 	static Implementation wrap(
 			TypeDescription managedCtClass,
 			ByteBuddyEnhancementContext enhancementContext,
-			FieldDescription persistentField,
+			AnnotatedFieldDescription persistentField,
 			Implementation implementation) {
 		if ( !enhancementContext.doBiDirectionalAssociationManagement( persistentField ) ) {
 			return implementation;
@@ -67,17 +69,17 @@ class BiDirectionalAssociationHandler implements Implementation {
 				.getType()
 				.asErasure();
 
-		if ( EnhancerImpl.isAnnotationPresent( persistentField, OneToOne.class ) ) {
+		if ( persistentField.hasAnnotation( OneToOne.class ) ) {
 			implementation = Advice.withCustomMapping()
-					.bind( CodeTemplates.FieldValue.class, persistentField )
+					.bind( CodeTemplates.FieldValue.class, persistentField.getFieldDescription() )
 					.bind( CodeTemplates.MappedBy.class, mappedBy )
 					.to( CodeTemplates.OneToOneHandler.class )
 					.wrap( implementation );
 		}
 
-		if ( EnhancerImpl.isAnnotationPresent( persistentField, OneToMany.class ) ) {
+		if ( persistentField.hasAnnotation( OneToMany.class ) ) {
 			implementation = Advice.withCustomMapping()
-					.bind( CodeTemplates.FieldValue.class, persistentField )
+					.bind( CodeTemplates.FieldValue.class, persistentField.getFieldDescription() )
 					.bind( CodeTemplates.MappedBy.class, mappedBy )
 					.to( persistentField.getType().asErasure().isAssignableTo( Map.class )
 								? CodeTemplates.OneToManyOnMapHandler.class
@@ -85,15 +87,15 @@ class BiDirectionalAssociationHandler implements Implementation {
 					.wrap( implementation );
 		}
 
-		if ( EnhancerImpl.isAnnotationPresent( persistentField, ManyToOne.class ) ) {
+		if ( persistentField.hasAnnotation( ManyToOne.class ) ) {
 			implementation = Advice.withCustomMapping()
-					.bind( CodeTemplates.FieldValue.class, persistentField )
+					.bind( CodeTemplates.FieldValue.class, persistentField.getFieldDescription() )
 					.bind( CodeTemplates.MappedBy.class, mappedBy )
 					.to( CodeTemplates.ManyToOneHandler.class )
 					.wrap( implementation );
 		}
 
-		if ( EnhancerImpl.isAnnotationPresent( persistentField, ManyToMany.class ) ) {
+		if ( persistentField.hasAnnotation( ManyToMany.class ) ) {
 
 			if ( persistentField.getType().asErasure().isAssignableTo( Map.class ) || targetType.isAssignableTo( Map.class ) ) {
 				log.infof(
@@ -105,7 +107,7 @@ class BiDirectionalAssociationHandler implements Implementation {
 			}
 
 			implementation = Advice.withCustomMapping()
-					.bind( CodeTemplates.FieldValue.class, persistentField )
+					.bind( CodeTemplates.FieldValue.class, persistentField.getFieldDescription() )
 					.bind( CodeTemplates.MappedBy.class, mappedBy )
 					.to( CodeTemplates.ManyToManyHandler.class )
 					.wrap( implementation );
@@ -114,12 +116,12 @@ class BiDirectionalAssociationHandler implements Implementation {
 		return new BiDirectionalAssociationHandler( implementation, targetEntity, targetType, mappedBy );
 	}
 
-	public static TypeDescription getTargetEntityClass(TypeDescription managedCtClass, FieldDescription persistentField) {
+	public static TypeDescription getTargetEntityClass(TypeDescription managedCtClass, AnnotatedFieldDescription persistentField) {
 		try {
-			AnnotationDescription.Loadable<OneToOne> oto = EnhancerImpl.getAnnotation( persistentField, OneToOne.class );
-			AnnotationDescription.Loadable<OneToMany> otm = EnhancerImpl.getAnnotation( persistentField, OneToMany.class );
-			AnnotationDescription.Loadable<ManyToOne> mto = EnhancerImpl.getAnnotation( persistentField, ManyToOne.class );
-			AnnotationDescription.Loadable<ManyToMany> mtm = EnhancerImpl.getAnnotation( persistentField, ManyToMany.class );
+			AnnotationDescription.Loadable<OneToOne> oto = persistentField.getAnnotation( OneToOne.class );
+			AnnotationDescription.Loadable<OneToMany> otm = persistentField.getAnnotation( OneToMany.class );
+			AnnotationDescription.Loadable<ManyToOne> mto = persistentField.getAnnotation( ManyToOne.class );
+			AnnotationDescription.Loadable<ManyToMany> mtm = persistentField.getAnnotation( ManyToMany.class );
 
 			if ( oto == null && otm == null && mto == null && mtm == null ) {
 				return null;
@@ -157,7 +159,7 @@ class BiDirectionalAssociationHandler implements Implementation {
 		return entityType( target( persistentField ) );
 	}
 
-	private static TypeDescription.Generic target(FieldDescription persistentField) {
+	private static TypeDescription.Generic target(AnnotatedFieldDescription persistentField) {
 		AnnotationDescription.Loadable<Access> access = persistentField.getDeclaringType().asErasure().getDeclaredAnnotations().ofType( Access.class );
 		if ( access != null && access.loadSilent().value() == AccessType.FIELD ) {
 			return persistentField.getType();
@@ -173,7 +175,7 @@ class BiDirectionalAssociationHandler implements Implementation {
 		}
 	}
 
-	private static String getMappedBy(FieldDescription target, TypeDescription targetEntity, ByteBuddyEnhancementContext context) {
+	private static String getMappedBy(AnnotatedFieldDescription target, TypeDescription targetEntity, ByteBuddyEnhancementContext context) {
 		String mappedBy = getMappedByNotManyToMany( target );
 		if ( mappedBy == null || mappedBy.isEmpty() ) {
 			return getMappedByManyToMany( target, targetEntity, context );
@@ -183,19 +185,19 @@ class BiDirectionalAssociationHandler implements Implementation {
 		}
 	}
 
-	private static String getMappedByNotManyToMany(FieldDescription target) {
+	private static String getMappedByNotManyToMany(AnnotatedFieldDescription target) {
 		try {
-			AnnotationDescription.Loadable<OneToOne> oto = EnhancerImpl.getAnnotation( target, OneToOne.class );
+			AnnotationDescription.Loadable<OneToOne> oto = target.getAnnotation( OneToOne.class );
 			if ( oto != null ) {
 				return oto.getValue( new MethodDescription.ForLoadedMethod( OneToOne.class.getDeclaredMethod( "mappedBy" ) ) ).resolve( String.class );
 			}
 
-			AnnotationDescription.Loadable<OneToMany> otm = EnhancerImpl.getAnnotation( target, OneToMany.class );
+			AnnotationDescription.Loadable<OneToMany> otm = target.getAnnotation( OneToMany.class );
 			if ( otm != null ) {
 				return otm.getValue( new MethodDescription.ForLoadedMethod( OneToMany.class.getDeclaredMethod( "mappedBy" ) ) ).resolve( String.class );
 			}
 
-			AnnotationDescription.Loadable<ManyToMany> mtm = EnhancerImpl.getAnnotation( target, ManyToMany.class );
+			AnnotationDescription.Loadable<ManyToMany> mtm = target.getAnnotation( ManyToMany.class );
 			if ( mtm != null ) {
 				return mtm.getValue( new MethodDescription.ForLoadedMethod( ManyToMany.class.getDeclaredMethod( "mappedBy" ) ) ).resolve( String.class );
 			}
@@ -206,11 +208,12 @@ class BiDirectionalAssociationHandler implements Implementation {
 		return null;
 	}
 
-	private static String getMappedByManyToMany(FieldDescription target, TypeDescription targetEntity, ByteBuddyEnhancementContext context) {
+	private static String getMappedByManyToMany(AnnotatedFieldDescription target, TypeDescription targetEntity, ByteBuddyEnhancementContext context) {
 		for ( FieldDescription f : targetEntity.getDeclaredFields() ) {
-			if ( context.isPersistentField( f )
-					&& target.getName().equals( getMappedByNotManyToMany( f ) )
-					&& target.getDeclaringType().asErasure().isAssignableTo( entityType( f.getType() ) ) ) {
+			AnnotatedFieldDescription annotatedF = new AnnotatedFieldDescription( f );
+			if ( context.isPersistentField( annotatedF )
+					&& target.getName().equals( getMappedByNotManyToMany( annotatedF ) )
+					&& target.getDeclaringType().asErasure().isAssignableTo( entityType( annotatedF.getType() ) ) ) {
 				log.debugf(
 						"mappedBy association for field [%s#%s] is [%s#%s]",
 						target.getDeclaringType().asErasure().getName(),

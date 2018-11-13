@@ -8,10 +8,12 @@ package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
 import java.util.Collection;
 import java.util.Objects;
+
 import javax.persistence.Embedded;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Id;
 
+import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 
 import net.bytebuddy.ClassFileVersion;
@@ -44,25 +46,26 @@ class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppender {
 	static Implementation wrap(
 			TypeDescription managedCtClass,
 			ByteBuddyEnhancementContext enhancementContext,
-			FieldDescription persistentField,
+			AnnotatedFieldDescription persistentField,
 			Implementation implementation) {
 		if ( enhancementContext.doDirtyCheckingInline( managedCtClass ) ) {
 
 			if ( enhancementContext.isCompositeClass( managedCtClass ) ) {
 				implementation = Advice.to( CodeTemplates.CompositeDirtyCheckingHandler.class ).wrap( implementation );
 			}
-			else if ( !EnhancerImpl.isAnnotationPresent( persistentField, Id.class )
-					&& !EnhancerImpl.isAnnotationPresent( persistentField, EmbeddedId.class )
+			else if ( !persistentField.hasAnnotation( Id.class )
+					&& !persistentField.hasAnnotation( EmbeddedId.class )
 					&& !( persistentField.getType().asErasure().isAssignableTo( Collection.class )
 					&& enhancementContext.isMappedCollection( persistentField ) ) ) {
-				implementation = new InlineDirtyCheckingHandler( implementation, managedCtClass, persistentField.asDefined() );
+				implementation = new InlineDirtyCheckingHandler( implementation, managedCtClass,
+						persistentField.asDefined() );
 			}
 
 			if ( enhancementContext.isCompositeClass( persistentField.getType().asErasure() )
-					&& EnhancerImpl.isAnnotationPresent( persistentField, Embedded.class ) ) {
+					&& persistentField.hasAnnotation( Embedded.class ) ) {
 
 				implementation = Advice.withCustomMapping()
-						.bind( CodeTemplates.FieldValue.class, persistentField )
+						.bind( CodeTemplates.FieldValue.class, persistentField.getFieldDescription() )
 						.bind( CodeTemplates.FieldName.class, persistentField.getName() )
 						.to( CodeTemplates.CompositeFieldDirtyCheckingHandler.class )
 						.wrap( implementation );

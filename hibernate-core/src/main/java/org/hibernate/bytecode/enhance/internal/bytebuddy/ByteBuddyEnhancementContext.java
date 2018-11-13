@@ -104,15 +104,10 @@ class ByteBuddyEnhancementContext {
 
 		if ( getCandidate != null ) {
 			if ( isCandidate != null ) {
-				throw new MappingException(
-						String.format(
-								Locale.ROOT,
-								"In trying to locate getter for property [%s], Class [%s] defined " +
-										"both a `get` [%s] and `is` [%s] variant",
-								fieldDescription.getName(),
-								fieldDescription.getDeclaringType().getActualName(),
-								getCandidate.getActualName(),
-								isCandidate.getActualName() ) );
+				// if there are two candidates, the existing code considered there was no getter.
+				// not sure it's such a good idea but throwing an exception apparently throws exception
+				// in cases where Hibernate does not usually throw a mapping error.
+				return Optional.empty();
 			}
 
 			return Optional.of( getCandidate );

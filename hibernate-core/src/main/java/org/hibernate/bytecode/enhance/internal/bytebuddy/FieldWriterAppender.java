@@ -6,6 +6,7 @@
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
+import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 
@@ -31,7 +32,7 @@ abstract class FieldWriterAppender implements ByteCodeAppender {
 		this.persistentFieldAsDefined = persistentFieldAsDefined;
 	}
 
-	static ByteCodeAppender of(TypeDescription managedCtClass, FieldDescription persistentField) {
+	static ByteCodeAppender of(TypeDescription managedCtClass, AnnotatedFieldDescription persistentField) {
 		if ( !persistentField.isVisibleTo( managedCtClass ) ) {
 			return new MethodDispatching( managedCtClass, persistentField.asDefined() );
 		}

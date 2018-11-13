@@ -24,6 +24,7 @@ public class Any extends SimpleValue {
 	private String identifierTypeName;
 	private String metaTypeName = "string";
 	private Map metaValues;
+	private boolean lazy = false;
 
 	/**
 	 * @deprecated Use {@link Any#Any(MetadataBuildingContext, Table)} instead.
@@ -50,7 +51,8 @@ public class Any extends SimpleValue {
 
 		return getMetadata().getTypeResolver().getTypeFactory().any(
 				metaValues == null ? metaType : new MetaType( metaValues, metaType ),
-				getMetadata().getTypeResolver().heuristicType( identifierTypeName )
+				getMetadata().getTypeResolver().heuristicType( identifierTypeName ),
+				isLazy()
 		);
 	}
 
@@ -72,6 +74,14 @@ public class Any extends SimpleValue {
 		this.metaValues = metaValues;
 	}
 
+	public boolean isLazy() {
+		return lazy;
+	}
+
+	public void setLazy(boolean lazy) {
+		this.lazy = lazy;
+	}
+
 	public void setTypeUsingReflection(String className, String propertyName)
 		throws MappingException {
 	}
@@ -89,6 +99,7 @@ public class Any extends SimpleValue {
 		return super.isSame( other )
 				&& Objects.equals( identifierTypeName, other.identifierTypeName )
 				&& Objects.equals( metaTypeName, other.metaTypeName )
-				&& Objects.equals( metaValues, other.metaValues );
+				&& Objects.equals( metaValues, other.metaValues )
+				&& lazy == other.lazy;
 	}
 }

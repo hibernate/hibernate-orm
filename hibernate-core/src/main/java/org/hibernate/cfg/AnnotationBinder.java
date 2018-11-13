@@ -3272,12 +3272,14 @@ public final class AnnotationBinder {
 							+ BinderHelper.getPath( propertyHolder, inferredData )
 			);
 		}
+		boolean lazy = ( anyAnn.fetch() == FetchType.LAZY );
 		Any value = BinderHelper.buildAnyValue(
 				anyAnn.metaDef(),
 				columns,
 				anyAnn.metaColumn(),
 				inferredData,
 				cascadeOnDelete,
+				lazy,
 				nullability,
 				propertyHolder,
 				entityBinder,
@@ -3289,7 +3291,7 @@ public final class AnnotationBinder {
 		binder.setName( inferredData.getPropertyName() );
 		binder.setValue( value );
 
-		binder.setLazy( anyAnn.fetch() == FetchType.LAZY );
+		binder.setLazy( lazy );
 		//binder.setCascade(cascadeStrategy);
 		if ( isIdentifierMapper ) {
 			binder.setInsertable( false );

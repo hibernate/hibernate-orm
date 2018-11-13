@@ -146,7 +146,7 @@ public class TypeLocatorImpl implements TypeHelper, Serializable {
 	}
 
 	@Override
-	public Type any(Type metaType, Type identifierType) {
-		return typeResolver.getTypeFactory().any( metaType, identifierType );
+	public Type any(Type metaType, Type identifierType, boolean lazy) {
+		return typeResolver.getTypeFactory().any( metaType, identifierType, lazy );
 	}
 }

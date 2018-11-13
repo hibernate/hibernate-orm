@@ -8,6 +8,7 @@ package org.hibernate.test.annotations.any;
 
 import org.junit.Test;
 
+import org.hibernate.LazyInitializationException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -16,6 +17,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class AnyTest extends BaseCoreFunctionalTestCase {
 	@Test
@@ -151,6 +153,67 @@ public class AnyTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	public void testFetchEager() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+
+		PropertySet set = new PropertySet( "string" );
+		Property property = new StringProperty( "name", "Alex" );
+		set.setSomeProperty( property );
+		s.save( set );
+
+		s.flush();
+		s.clear();
+
+		Query q = s
+				.createQuery( "select s from PropertySet s where name = :name" );
+		q.setString( "name", "string" );
+		PropertySet result = (PropertySet) q.uniqueResult();
+
+		t.rollback();
+		s.close();
+
+		assertNotNull( result );
+		assertNotNull( result.getSomeProperty() );
+		assertTrue( result.getSomeProperty() instanceof StringProperty );
+		assertEquals( "Alex", result.getSomeProperty().asString() );
+	}
+
+	@Test
+	public void testFetchLazy() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+
+		LazyPropertySet set = new LazyPropertySet( "string" );
+		Property property = new StringProperty( "name", "Alex" );
+		set.setSomeProperty( property );
+		s.save( set );
+
+		s.flush();
+		s.clear();
+
+		Query q = s
+				.createQuery( "select s from LazyPropertySet s where name = :name" );
+		q.setString( "name", "string" );
+		LazyPropertySet result = (LazyPropertySet) q.uniqueResult();
+
+		t.rollback();
+		s.close();
+
+		assertNotNull( result );
+		assertNotNull( result.getSomeProperty() );
+
+		try {
+			result.getSomeProperty().asString();
+			fail("should not get the property string after session closed.");
+		} catch (LazyInitializationException e) {
+			// expected
+		} catch (Exception e) {
+			fail("should not throw exception other than LazyInitializationException.");
+		}
+	}
+
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
@@ -158,6 +221,7 @@ public class AnyTest extends BaseCoreFunctionalTestCase {
 				IntegerProperty.class,
 				LongProperty.class,
 				PropertySet.class,
+				LazyPropertySet.class,
 				PropertyMap.class,
 				PropertyList.class,
 				CharProperty.class

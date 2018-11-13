@@ -401,7 +401,7 @@ public final class TypeFactory implements Serializable {
 
 	// any type builder ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	public Type any(Type metaType, Type identifierType) {
-		return new AnyType( typeScope, metaType, identifierType );
+	public Type any(Type metaType, Type identifierType, boolean lazy) {
+		return new AnyType( typeScope, metaType, identifierType, lazy );
 	}
 }

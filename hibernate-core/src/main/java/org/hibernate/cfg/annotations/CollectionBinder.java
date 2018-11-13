@@ -1494,6 +1494,7 @@ public abstract class CollectionBinder {
 					anyAnn.metaColumn(),
 					inferredData,
 					cascadeDeleteEnabled,
+					anyAnn.fetch() == FetchType.LAZY,
 					Nullability.NO_CONSTRAINT,
 					propertyHolder,
 					new EntityBinder(),

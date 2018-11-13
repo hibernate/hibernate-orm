@@ -105,5 +105,5 @@ public interface TypeHelper {
 	 *
 	 * @return The type, or null
 	 */
-	public Type any(Type metaType, Type identifierType);
+	public Type any(Type metaType, Type identifierType, boolean lazy);
 }

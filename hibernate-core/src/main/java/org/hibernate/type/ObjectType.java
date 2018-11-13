@@ -20,7 +20,7 @@ public class ObjectType extends AnyType implements BasicType {
 	public static final ObjectType INSTANCE = new ObjectType();
 
 	private ObjectType() {
-		super( StringType.INSTANCE, SerializableType.INSTANCE );
+		super( StringType.INSTANCE, SerializableType.INSTANCE, false );
 	}
 
 	@Override

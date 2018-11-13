@@ -31,7 +31,7 @@ public class EnhancerWildFlyNamesTest {
 	@TestForIssue( jiraKey = "HHH-12545" )
 	public void test() {
 		Enhancer enhancer = createByteBuddyEnhancer();
-		String internalName = Bean.class.getName().replace( '.', '/' );
+		String internalName = SimpleEntity.class.getName().replace( '.', '/' );
 		String resourceName = internalName + ".class";
 		byte[] buffer = new byte[0];
 		try {

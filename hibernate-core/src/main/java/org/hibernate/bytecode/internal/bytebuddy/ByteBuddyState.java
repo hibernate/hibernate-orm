@@ -130,18 +130,20 @@ public final class ByteBuddyState {
 
 	/**
 	 * Rewrite a class, used by the enhancer.
+	 * <p>
+	 * WARNING: Returns null if rewriteClassFunction returns a null builder. Do not use if you expect the original
+	 * content.
 	 *
 	 * @param typePool the ByteBuddy TypePool
 	 * @param className The original class name.
-	 * @param originalBytes The original content of the class.
 	 * @param rewriteClassFunction The function used to rewrite the class.
-	 * @return The rewritten content of the class.
+	 * @return The rewritten content of the class or null if rewriteClassFunction returns a null builder.
 	 */
-	public byte[] rewrite(TypePool typePool, String className, byte[] originalBytes,
+	public byte[] rewrite(TypePool typePool, String className,
 			Function<ByteBuddy, DynamicType.Builder<?>> rewriteClassFunction) {
 		DynamicType.Builder<?> builder = rewriteClassFunction.apply( byteBuddy );
 		if ( builder == null ) {
-			return originalBytes;
+			return null;
 		}
 
 		return make( typePool, builder ).getBytes();

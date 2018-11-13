@@ -128,6 +128,6 @@ class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.Method
 			);
 			throw new EnhancementException( msg );
 		}
-		return new AnnotatedFieldDescription( fields.getOnly() );
+		return new AnnotatedFieldDescription( enhancementContext, fields.getOnly() );
 	}
 }

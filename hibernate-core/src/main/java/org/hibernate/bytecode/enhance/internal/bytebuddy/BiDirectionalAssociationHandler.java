@@ -8,6 +8,7 @@ package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.persistence.Access;
 import javax.persistence.AccessType;
@@ -165,12 +166,12 @@ class BiDirectionalAssociationHandler implements Implementation {
 			return persistentField.getType();
 		}
 		else {
-			MethodDescription getter = EnhancerImpl.getterOf( persistentField );
-			if ( getter == null ) {
-				return persistentField.getType();
+			Optional<MethodDescription> getter = persistentField.getGetter();
+			if ( getter.isPresent() ) {
+				return getter.get().getReturnType();
 			}
 			else {
-				return getter.getReturnType();
+				return persistentField.getType();
 			}
 		}
 	}
@@ -210,7 +211,7 @@ class BiDirectionalAssociationHandler implements Implementation {
 
 	private static String getMappedByManyToMany(AnnotatedFieldDescription target, TypeDescription targetEntity, ByteBuddyEnhancementContext context) {
 		for ( FieldDescription f : targetEntity.getDeclaredFields() ) {
-			AnnotatedFieldDescription annotatedF = new AnnotatedFieldDescription( f );
+			AnnotatedFieldDescription annotatedF = new AnnotatedFieldDescription( context, f );
 			if ( context.isPersistentField( annotatedF )
 					&& target.getName().equals( getMappedByNotManyToMany( annotatedF ) )
 					&& target.getDeclaringType().asErasure().isAssignableTo( entityType( annotatedF.getType() ) ) ) {

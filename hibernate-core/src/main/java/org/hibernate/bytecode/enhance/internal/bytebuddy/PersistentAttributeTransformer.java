@@ -73,7 +73,7 @@ class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDeclaredMet
 			if ( ctField.getName().startsWith( "$$_hibernate_" ) || "this$0".equals( ctField.getName() ) ) {
 				continue;
 			}
-			AnnotatedFieldDescription annotatedField = new AnnotatedFieldDescription( ctField );
+			AnnotatedFieldDescription annotatedField = new AnnotatedFieldDescription( enhancementContext, ctField );
 			if ( !ctField.isStatic() && enhancementContext.isPersistentField( annotatedField ) ) {
 				persistentFieldList.add( annotatedField );
 			}
@@ -109,7 +109,7 @@ class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDeclaredMet
 			if ( ctField.getName().startsWith( "$$_hibernate_" ) || "this$0".equals( ctField.getName() ) ) {
 				continue;
 			}
-			AnnotatedFieldDescription annotatedField = new AnnotatedFieldDescription( ctField );
+			AnnotatedFieldDescription annotatedField = new AnnotatedFieldDescription( enhancementContext, ctField );
 			if ( !ctField.isStatic() && enhancementContext.isPersistentField( annotatedField ) ) {
 				persistentFieldList.add( annotatedField );
 			}

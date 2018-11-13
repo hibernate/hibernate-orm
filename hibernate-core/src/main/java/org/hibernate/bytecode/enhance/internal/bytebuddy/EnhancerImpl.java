@@ -15,12 +15,18 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.Transient;
 
+import org.hibernate.MappingException;
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
 import org.hibernate.bytecode.enhance.internal.tracker.DirtyTracker;
 import org.hibernate.bytecode.enhance.spi.CollectionTracker;
@@ -51,7 +57,6 @@ import net.bytebuddy.description.annotation.AnnotationList;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.field.FieldDescription.InDefinedShape;
 import net.bytebuddy.description.method.MethodDescription;
-import net.bytebuddy.description.method.MethodList;
 import net.bytebuddy.description.modifier.FieldPersistence;
 import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.description.type.TypeDefinition;
@@ -390,7 +395,7 @@ public class EnhancerImpl implements Enhancer {
 			if ( Modifier.isStatic( ctField.getModifiers() ) || ctField.getName().startsWith( "$$_hibernate_" ) ) {
 				continue;
 			}
-			AnnotatedFieldDescription annotatedField = new AnnotatedFieldDescription( ctField );
+			AnnotatedFieldDescription annotatedField = new AnnotatedFieldDescription( enhancementContext, ctField );
 			if ( enhancementContext.isPersistentField( annotatedField ) && !enhancementContext.isMappedCollection( annotatedField ) ) {
 				if ( ctField.getType().asErasure().isAssignableTo( Collection.class ) || ctField.getType().asErasure().isAssignableTo( Map.class ) ) {
 					collectionList.add( annotatedField );
@@ -420,7 +425,7 @@ public class EnhancerImpl implements Enhancer {
 
 		for ( FieldDescription ctField : managedCtSuperclass.getDeclaredFields() ) {
 			if ( !Modifier.isStatic( ctField.getModifiers() ) ) {
-				AnnotatedFieldDescription annotatedField = new AnnotatedFieldDescription( ctField );
+				AnnotatedFieldDescription annotatedField = new AnnotatedFieldDescription( enhancementContext, ctField );
 				if ( enhancementContext.isPersistentField( annotatedField ) && !enhancementContext.isMappedCollection( annotatedField ) ) {
 					if ( ctField.getType().asErasure().isAssignableTo( Collection.class ) || ctField.getType().asErasure().isAssignableTo( Map.class ) ) {
 						collectionList.add( annotatedField );
@@ -436,30 +441,18 @@ public class EnhancerImpl implements Enhancer {
 		return Character.toUpperCase( value.charAt( 0 ) ) + value.substring( 1 );
 	}
 
-	static MethodDescription getterOf(AnnotatedFieldDescription persistentField) {
-		return getterOf( persistentField.fieldDescription );
-	}
-
-	static MethodDescription getterOf(FieldDescription persistentField) {
-		MethodList<?> methodList = MethodGraph.Compiler.DEFAULT.compile( persistentField.getDeclaringType().asErasure() )
-				.listNodes()
-				.asMethodList()
-				.filter( isGetter( persistentField.getName() ) );
-		if ( methodList.size() == 1 ) {
-			return methodList.getOnly();
-		}
-		else {
-			return null;
-		}
-	}
-
 	static class AnnotatedFieldDescription implements UnloadedField {
+
+		private final ByteBuddyEnhancementContext context;
 
 		private final FieldDescription fieldDescription;
 
 		private AnnotationList annotations;
 
-		AnnotatedFieldDescription(FieldDescription fieldDescription) {
+		private Optional<MethodDescription> getter;
+
+		AnnotatedFieldDescription(ByteBuddyEnhancementContext context, FieldDescription fieldDescription) {
+			this.context = context;
 			this.fieldDescription = fieldDescription;
 		}
 
@@ -500,35 +493,43 @@ public class EnhancerImpl implements Enhancer {
 			return fieldDescription;
 		}
 
+		Optional<MethodDescription> getGetter() {
+			if ( getter == null ) {
+				getter = context.resolveGetter( fieldDescription );
+			}
+
+			return getter;
+		}
+
 		private AnnotationList getAnnotations() {
 			if ( annotations == null ) {
-				annotations = doGetAnnotations( fieldDescription );
+				annotations = doGetAnnotations();
 			}
 			return annotations;
 		}
 
-		private static AnnotationList doGetAnnotations(FieldDescription fieldDescription) {
+		private AnnotationList doGetAnnotations() {
 			AnnotationDescription.Loadable<Access> access = fieldDescription.getDeclaringType().asErasure()
 					.getDeclaredAnnotations().ofType( Access.class );
 			if ( access != null && access.loadSilent().value() == AccessType.PROPERTY ) {
-				MethodDescription getter = getterOf( fieldDescription );
-				if ( getter == null ) {
-					return fieldDescription.getDeclaredAnnotations();
+				Optional<MethodDescription> getter = getGetter();
+				if ( getter.isPresent() ) {
+					return getter.get().getDeclaredAnnotations();
 				}
 				else {
-					return getter.getDeclaredAnnotations();
+					return fieldDescription.getDeclaredAnnotations();
 				}
 			}
 			else if ( access != null && access.loadSilent().value() == AccessType.FIELD ) {
 				return fieldDescription.getDeclaredAnnotations();
 			}
 			else {
-				MethodDescription getter = getterOf( fieldDescription );
+				Optional<MethodDescription> getter = getGetter();
 
 				// Note that the order here is important
 				List<AnnotationDescription> annotationDescriptions = new ArrayList<>();
-				if ( getter != null ) {
-					annotationDescriptions.addAll( getter.getDeclaredAnnotations() );
+				if ( getter.isPresent() ) {
+					annotationDescriptions.addAll( getter.get().getDeclaredAnnotations() );
 				}
 				annotationDescriptions.addAll( fieldDescription.getDeclaredAnnotations() );
 

@@ -123,7 +123,7 @@ public class EnhancerImpl implements Enhancer {
 		try {
 			final TypeDescription typeDescription = typePool.describe( safeClassName ).resolve();
 
-			return byteBuddyState.rewrite( typePool, safeClassName, originalBytes, byteBuddy -> doEnhance(
+			return byteBuddyState.rewrite( typePool, safeClassName, byteBuddy -> doEnhance(
 					byteBuddy.ignore( isDefaultFinalizer() ).redefine( typeDescription, ClassFileLocator.Simple.of( safeClassName, originalBytes ) ),
 					typeDescription
 			) );

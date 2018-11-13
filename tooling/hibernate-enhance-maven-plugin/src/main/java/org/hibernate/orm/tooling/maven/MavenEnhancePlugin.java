@@ -83,6 +83,7 @@ public class MavenEnhancePlugin extends AbstractMojo {
 		return enableLazyInitialization || enableDirtyTracking || enableAssociationManagement || enableExtendedEnhancement;
 	}
 
+	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		if ( !shouldApply() ) {
 			getLog().warn( "Skipping Hibernate bytecode enhancement plugin execution since no feature is enabled" );

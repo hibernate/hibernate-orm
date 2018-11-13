@@ -225,7 +225,7 @@ public class AuditOverrideAuditJoinTableTest extends BaseEnversJPAFunctionalTest
 		}
 	}
 
-	@Entity(name = "OtherAuditedEntity")
+	@Entity(name = "OOE")
 	@Audited
 	public static class OtherAuditedEntity extends SuperClass {
 		private String value;
@@ -292,7 +292,7 @@ public class AuditOverrideAuditJoinTableTest extends BaseEnversJPAFunctionalTest
 		}
 	}
 
-	@Entity(name = "OtherOverrideAuditedEntity")
+	@Entity(name = "OOAE")
 	@Audited
 	@AuditOverrides({
 			@AuditOverride(
@@ -323,7 +323,7 @@ public class AuditOverrideAuditJoinTableTest extends BaseEnversJPAFunctionalTest
 		}
 	}
 
-	@Entity(name = "OtherAuditParentsAuditEntity")
+	@Entity(name = "OAPAE")
 	@Audited(auditParents = NonAuditedSuperClass.class)
 	@AuditOverrides({
 			@AuditOverride(

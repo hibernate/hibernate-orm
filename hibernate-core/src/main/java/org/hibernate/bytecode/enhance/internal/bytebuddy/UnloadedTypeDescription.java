@@ -9,7 +9,6 @@ package org.hibernate.bytecode.enhance.internal.bytebuddy;
 import java.lang.annotation.Annotation;
 
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
-import org.hibernate.bytecode.enhance.spi.UnloadedField;
 
 import net.bytebuddy.description.type.TypeDescription;
 

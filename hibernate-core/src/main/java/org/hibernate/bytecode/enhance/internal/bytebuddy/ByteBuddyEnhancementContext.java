@@ -6,10 +6,9 @@
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
+import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
-import org.hibernate.bytecode.enhance.spi.UnloadedField;
 
-import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.type.TypeDescription;
 
 class ByteBuddyEnhancementContext {
@@ -36,10 +35,6 @@ class ByteBuddyEnhancementContext {
 		return enhancementContext.isMappedSuperclassClass( new UnloadedTypeDescription( classDescriptor ) );
 	}
 
-	public boolean doBiDirectionalAssociationManagement(FieldDescription field) {
-		return enhancementContext.doBiDirectionalAssociationManagement( new UnloadedFieldDescription( field ) );
-	}
-
 	public boolean doDirtyCheckingInline(TypeDescription classDescriptor) {
 		return enhancementContext.doDirtyCheckingInline( new UnloadedTypeDescription( classDescriptor ) );
 	}
@@ -52,28 +47,23 @@ class ByteBuddyEnhancementContext {
 		return enhancementContext.hasLazyLoadableAttributes( new UnloadedTypeDescription( classDescriptor ) );
 	}
 
-	public boolean isPersistentField(FieldDescription ctField) {
-		return enhancementContext.isPersistentField( new UnloadedFieldDescription( ctField ) );
+	public boolean isPersistentField(AnnotatedFieldDescription field) {
+		return enhancementContext.isPersistentField( field );
 	}
 
-	public FieldDescription[] order(FieldDescription[] persistentFields) {
-		UnloadedField[] unloadedFields = new UnloadedField[persistentFields.length];
-		for ( int i = 0; i < unloadedFields.length; i++ ) {
-			unloadedFields[i] = new UnloadedFieldDescription( persistentFields[i] );
-		}
-		UnloadedField[] ordered = enhancementContext.order( unloadedFields );
-		FieldDescription[] orderedFields = new FieldDescription[persistentFields.length];
-		for ( int i = 0; i < orderedFields.length; i++ ) {
-			orderedFields[i] = ( (UnloadedFieldDescription) ordered[i] ).fieldDescription;
-		}
-		return orderedFields;
+	public AnnotatedFieldDescription[] order(AnnotatedFieldDescription[] persistentFields) {
+		return (AnnotatedFieldDescription[]) enhancementContext.order( persistentFields );
 	}
 
-	public boolean isLazyLoadable(FieldDescription field) {
-		return enhancementContext.isLazyLoadable( new UnloadedFieldDescription( field ) );
+	public boolean isLazyLoadable(AnnotatedFieldDescription field) {
+		return enhancementContext.isLazyLoadable( field );
 	}
 
-	public boolean isMappedCollection(FieldDescription field) {
-		return enhancementContext.isMappedCollection( new UnloadedFieldDescription( field ) );
+	public boolean isMappedCollection(AnnotatedFieldDescription field) {
+		return enhancementContext.isMappedCollection( field );
+	}
+
+	public boolean doBiDirectionalAssociationManagement(AnnotatedFieldDescription field) {
+		return enhancementContext.doBiDirectionalAssociationManagement( field );
 	}
 }

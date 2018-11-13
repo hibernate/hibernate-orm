@@ -6,6 +6,8 @@
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
+import java.util.Objects;
+
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 
@@ -170,4 +172,24 @@ abstract class FieldReaderAppender implements ByteCodeAppender {
 			);
 		}
 	}
+
+	@Override
+	public boolean equals(final Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+		final FieldReaderAppender that = (FieldReaderAppender) o;
+		return Objects.equals( managedCtClass, that.managedCtClass ) &&
+			Objects.equals( persistentField, that.persistentField ) &&
+			Objects.equals( persistentFieldAsDefined, that.persistentFieldAsDefined );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( managedCtClass, persistentField, persistentFieldAsDefined );
+	}
+
 }

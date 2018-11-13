@@ -129,7 +129,7 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 			);
 			throw new EnhancementException( msg );
 		}
-		return new AnnotatedFieldDescription( fields.getOnly() );
+		return new AnnotatedFieldDescription( enhancementContext, fields.getOnly() );
 	}
 
 	@Override

@@ -301,6 +301,10 @@ public class BasicValue
 		return sqlTypeDescriptor;
 	}
 
+	public BasicJavaDescriptor getExplicitJavaTypeDescriptor(){
+		return javaTypeDescriptor;
+	}
+
 	public void setJpaAttributeConverterDescriptor(ConverterDescriptor attributeConverterDescriptor) {
 		this.attributeConverterDescriptor = attributeConverterDescriptor;
 	}
@@ -327,7 +331,7 @@ public class BasicValue
 
 	@Override
 	public void addColumn(Column column) {
-		if ( getMappedColumns().size() > 0 ) {
+		if ( getMappedColumns().size() > 0 && !getMappedColumn().equals( column ) ) {
 			throw new MappingException( "Attempt to add additional MappedColumn to BasicValueMapping " + column.getName() );
 		}
 		super.addColumn( column );

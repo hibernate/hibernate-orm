@@ -173,6 +173,7 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 		final BasicValue referencedValue = (BasicValue) referencedProperty.getValueMapping();
 		value.setExplicitTypeName( referencedValue.getTypeName() );
 		value.setTypeParameters( referencedValue.getTypeParameters() );
+		value.setJavaTypeDescriptor( referencedValue.getExplicitJavaTypeDescriptor() );
 		final List<MappedColumn> mappedColumns = referencedValue.getMappedColumns();
 		if ( joinColumns[0].isNameDeferred() ) {
 			joinColumns[0].copyReferencedStructureAndCreateDefaultJoinColumns(
@@ -184,35 +185,40 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 			mappedColumns.forEach(
 					selectable -> {//FIXME take care of Formula
 
-				if (  Column.class.isInstance( selectable ) ) {
+						if ( Column.class.isInstance( selectable ) ) {
+							final Column column = (Column) selectable;
+							final Ejb3JoinColumn joinColumn;
+							String logicalColumnName = null;
+							if ( isExplicitReference ) {
+								final String columnName = column.getText();
+								//JPA 2 requires referencedColumnNames to be case insensitive
+								joinColumn = columnByReferencedName.get( columnName.toLowerCase( Locale.ROOT ) );
+							}
+							else {
+								joinColumn = columnByReferencedName.get( "" + index.get() );
+								index.getAndIncrement();
+							}
+							if ( joinColumn == null && !joinColumns[0].isNameDeferred() ) {
+								throw new AnnotationException(
+										isExplicitReference ?
+												"Unable to find column reference in the @MapsId mapping: " + logicalColumnName :
+												"Implicit column reference in the @MapsId mapping fails, try to use explicit referenceColumnNames: " + referencedEntityName
+								);
+							}
+							final String columnName = joinColumn == null
+									|| joinColumn.isNameDeferred() ? "tata_" + column.getName() : joinColumn.getName();
 
-				final Column column = (Column) selectable;
-				final Ejb3JoinColumn joinColumn;
-				String logicalColumnName = null;
-				if ( isExplicitReference ) {
-					final String columnName = column.getText(
-					);
-					//JPA 2 requires referencedColumnNames to be case insensitive
-					joinColumn = columnByReferencedName.get( columnName.toLowerCase(Locale.ROOT ) );
-				}
-				else {
-					joinColumn = columnByReferencedName.get( "" + index.get() );
-					index.getAndIncrement();
-				}
-				if ( joinColumn == null && ! joinColumns[0].isNameDeferred() ) {
-					throw new AnnotationException(
-							isExplicitReference ?
-									"Unable to find column reference in the @MapsId mapping: " + logicalColumnName :
-									"Implicit column reference in the @MapsId mapping fails, try to use explicit referenceColumnNames: " + referencedEntityName
-					);
-				}
-				final String columnName = joinColumn == null || joinColumn.isNameDeferred() ? "tata_" + column.getName() : joinColumn
-						.getName();
-				value.addColumn( new Column( columnName, false ) );
-				if ( joinColumn != null ) {
-					applyComponentColumnSizeValueToJoinColumn( column, joinColumn );joinColumn.linkWithValue( value );
-				}
-				if ( value.getMappedTable() != null ) {column.setTableName( value .getMappedTable().getNameIdentifier() );
+							if ( joinColumn != null ) {
+								applyComponentColumnValuesToJoinColumn( column, joinColumn );
+								joinColumn.linkWithValue( value );
+							}
+							else {
+								Column valueColumn = new Column(
+										value.getMappedTable().getNameIdentifier(),
+										columnName,
+										false
+								);
+								value.addColumn( valueColumn );
 							}
 						}
 						else {
@@ -224,11 +230,12 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 		return property;
 	}
 
-	private void applyComponentColumnSizeValueToJoinColumn(Column column, Ejb3JoinColumn joinColumn) {
+	private void applyComponentColumnValuesToJoinColumn(Column column, Ejb3JoinColumn joinColumn) {
 		Column mappingColumn = joinColumn.getMappingColumn();
 		mappingColumn.setLength( column.getLength() );
 		mappingColumn.setPrecision( column.getPrecision() );
 		mappingColumn.setScale( column.getScale() );
+		mappingColumn.setNullable( column.isNullable() );
 	}
 
 	public boolean dependentUpon( CopyIdentifierComponentSecondPass other ) {

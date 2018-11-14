@@ -67,10 +67,7 @@ public class AnnotationUtil {
 
 			final Method valueMethod;
 			try {
-				valueMethod = groupAnnotationType.getDeclaredMethod(
-						"value",
-						Array.newInstance( annotationType, 0 ).getClass()
-				);
+				valueMethod = groupAnnotationType.getDeclaredMethod( "value", null );
 
 				Collections.addAll( list, (A[]) valueMethod.invoke( effectiveGroupingAnnotation.get() ) );
 			}

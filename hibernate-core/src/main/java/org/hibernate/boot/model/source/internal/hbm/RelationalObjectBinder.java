@@ -146,14 +146,7 @@ public class RelationalObjectBinder {
 		column.setCustomRead( columnSource.getReadFragment() );
 		column.setCustomWrite( columnSource.getWriteFragment() );
 
-
-		if ( table != null ) {
-			column.setTableName( table.getNameIdentifier() );
-			table.addColumn( column );
-		}
-
 		simpleValue.addColumn( column );
-
 
 		if ( table != null ) {
 			for ( String name : columnSource.getIndexConstraintNames() ) {

@@ -52,8 +52,8 @@ public class MixedFieldPropertyAnnotationTest extends BaseSchemaUnitTestCase {
 	protected MetadataImplementor metadata;
 
 	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { MyEntity.class };
+	protected boolean createSqlScriptTempOutputFile() {
+		return true;
 	}
 
 	@Override

@@ -368,8 +368,12 @@ public class BinderHelper {
 		List<Column> orderedColumns = new ArrayList<>( columns.length );
 
 		//build the list of column names
-		for (Ejb3JoinColumn column1 : columns) {
-			Column column = new Column( column1.getReferencedColumn(), false );
+		for ( Ejb3JoinColumn ejb3JoinColumn : columns ) {
+			Column column = new Column(
+					ejb3JoinColumn.getMappedTable().getNameIdentifier(),
+					ejb3JoinColumn.getReferencedColumn(),
+					false
+			);
 			orderedColumns.add( column );
 			columnsToProperty.put( column, new HashSet<>() );
 		}
@@ -381,7 +385,7 @@ public class BinderHelper {
 			matchColumnsByProperty( (Property) it.next(), columnsToProperty );
 		}
 		if ( isPersistentClass ) {
-			matchColumnsByProperty( (Property) ( (PersistentClass) columnOwner ).getIdentifierAttributeMapping(), columnsToProperty );
+			matchColumnsByProperty( ((PersistentClass) columnOwner ).getIdentifierAttributeMapping(), columnsToProperty );
 		}
 
 		//first naive implementation

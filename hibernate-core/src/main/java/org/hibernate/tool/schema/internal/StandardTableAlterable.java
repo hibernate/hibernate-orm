@@ -9,11 +9,10 @@ package org.hibernate.tool.schema.internal;
 import java.util.Collection;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
-import org.hibernate.naming.spi.QualifiedName;
-import org.hibernate.naming.spi.QualifiedNameParser;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 import org.hibernate.tool.schema.spi.Alterable;
@@ -34,15 +33,14 @@ public class StandardTableAlterable implements Alterable<ExportableTable> {
 
 	@Override
 	public String[] getSqlAlterStrings(ExportableTable table, TableInformation tableInfo, JdbcServices jdbcServices) {
-		final QualifiedName tableName = new QualifiedNameParser.NameParts(
-				table.getCatalogName(),
-				table.getSchemaName(),
-				table.getTableName()
-		);
+		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 
-		final StringBuilder root = new StringBuilder( dialect.getAlterTableString( tableName.render() ) )
-				.append( ' ' )
-				.append( dialect.getAddColumnString() );
+		final StringBuilder root = new StringBuilder(
+				dialect.getAlterTableString( jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+						table.getQualifiedTableName(),
+						jdbcEnvironment.getDialect()
+				) )
+		).append( ' ' ).append( dialect.getAddColumnString() );
 		final Collection<PhysicalColumn> physicalColumns = table.getPhysicalColumns();
 		final String[] results = new String[physicalColumns.size()];
 		int i = 0;

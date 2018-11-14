@@ -89,9 +89,8 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	public void addColumn(Column column) {
-		if ( getMappedColumns() != null ) {
-			column.setTableName( getMappedTable().getNameIdentifier() );
-		}
+		column.setTableName( getMappedTable().getNameIdentifier() );
+		getMappedTable().addColumn( column );
 		if ( !columns.contains( column ) ) {
 			columns.add( column );
 		}

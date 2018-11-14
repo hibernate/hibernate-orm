@@ -81,7 +81,6 @@ public class SchemaExportWithGlobalQuotingEnabledTest extends BaseSchemaUnitTest
 		} );
 	}
 
-
 	@Entity
 	@Table(name = "MyEntity")
 	public static class MyEntity {

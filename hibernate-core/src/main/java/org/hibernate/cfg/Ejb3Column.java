@@ -66,9 +66,13 @@ public class Ejb3Column {
 	private MappedTable table;
 	private String readExpression;
 	private String writeExpression;
+	private boolean binded;
 
 	private String defaultValue;
 
+	public Ejb3Column(MetadataBuildingContext buildingContext) {
+		this.context = buildingContext;
+	}
 
 	/**
 	 * @deprecated since 6.0, use {@link #setTable(MappedTable)} instead.
@@ -201,26 +205,25 @@ public class Ejb3Column {
 		this.defaultValue = defaultValue;
 	}
 
-	public Ejb3Column(MetadataBuildingContext buildingContext) {
-		this.context = buildingContext;
-	}
-
 	public void bind() {
-		if ( StringHelper.isNotEmpty( formulaString ) ) {
-			LOG.debugf( "Binding formula %s", formulaString );
-			formula = new Formula(formulaString);
-		}
-		else {
-			initMappingColumn(
-					logicalColumnName, propertyName, length, precision, scale, nullable, sqlType, unique, true
-			);
-			if ( defaultValue != null ) {
-				mappingColumn.setDefaultValue( defaultValue );
+		if ( !binded ) {
+			if ( StringHelper.isNotEmpty( formulaString ) ) {
+				LOG.debugf( "Binding formula %s", formulaString );
+				formula = new Formula( formulaString );
 			}
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debugf( "Binding column: %s", toString() );
+			else {
+				initMappingColumn(
+						logicalColumnName, propertyName, length, precision, scale, nullable, sqlType, unique, true
+				);
+				if ( defaultValue != null ) {
+					mappingColumn.setDefaultValue( defaultValue );
+				}
+				if ( LOG.isDebugEnabled() ) {
+					LOG.debugf( "Binding column: %s", toString() );
+				}
 			}
 		}
+		binded = true;
 	}
 
 	protected void initMappingColumn(
@@ -237,7 +240,11 @@ public class Ejb3Column {
 			this.formula = new Formula(formulaString);
 		}
 		else {
-			this.mappingColumn = new Column(redefineColumnName( columnName, propertyName, applyNamingStrategy ), unique);
+
+			this.mappingColumn = new Column(
+					redefineColumnName( columnName, propertyName, applyNamingStrategy ),
+					unique
+			);
 			;
 			this.mappingColumn.setLength( length );
 			if ( precision != null && precision > 0 ) {  //revelent precision
@@ -367,13 +374,7 @@ public class Ejb3Column {
 			value.addFormula( formula );
 		}
 		else {
-			table = value.getMappedTable();
-			final Column mappingColumn = getMappingColumn();
-			if ( table != null ) {
-				mappingColumn.setTableName( table.getNameIdentifier() );
-			}
-			table.addColumn( mappingColumn );
-			value.addColumn( mappingColumn );
+			value.addColumn( getMappingColumn() );
 		}
 	}
 
@@ -399,7 +400,7 @@ public class Ejb3Column {
 			return getJoin().getMappedTable();
 		}
 		else {
-			return propertyHolder.getTable();
+			return propertyHolder.getMappedTable();
 		}
 	}
 
@@ -409,7 +410,7 @@ public class Ejb3Column {
 		}
 
 		return StringHelper.isNotEmpty( explicitTableName )
-				&& !propertyHolder.getTable().getName().equals( explicitTableName );
+				&& !propertyHolder.getMappedTable().getName().equals( explicitTableName );
 	}
 
 	public Join getJoin() {
@@ -529,11 +530,6 @@ public class Ejb3Column {
 								.getIdentifierHelper()
 								.toIdentifier( col.table() )
 								.render();
-//						final Identifier logicalName = database.getJdbcEnvironment()
-//								.getIdentifierHelper()
-//								.toIdentifier( col.table() );
-//						final Identifier physicalName = physicalNamingStrategy.toPhysicalTableName( logicalName );
-//						tableName = physicalName.render( database.getDialect() );
 					}
 
 					final Identifier columnName;
@@ -769,7 +765,7 @@ public class Ejb3Column {
 							"Mixing updatable and non updatable columns in a property is not allowed: " + propertyName
 					);
 				}
-				if ( !columns[currentIndex].getTable().equals( columns[currentIndex - 1].getTable() ) ) {
+				if ( !columns[currentIndex].getMappedTable().equals( columns[currentIndex - 1].getMappedTable() ) ) {
 					throw new AnnotationException(
 							"Mixing different tables in a property is not allowed: " + propertyName
 					);
@@ -807,7 +803,7 @@ public class Ejb3Column {
 
 	@Override
 	public String toString() {
-		return "Ejb3Column" + "{table=" + getTable()
+		return "Ejb3Column" + "{table=" + getMappedTable()
 				+ ", mappingColumn=" + mappingColumn.getName()
 				+ ", insertable=" + insertable
 				+ ", updatable=" + updatable

@@ -31,6 +31,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.naming.Identifier;
@@ -49,6 +50,7 @@ import static org.hamcrest.core.Is.is;
  * @author Andrea Boriero
  */
 @SkipForDialect(dialectClass = SQLServerDialect.class)
+@SkipForDialect(dialectClass = SybaseDialect.class)
 public class SchemaUpdateTest extends BaseSchemaUnitTestCase {
 
 	private boolean skipTest;

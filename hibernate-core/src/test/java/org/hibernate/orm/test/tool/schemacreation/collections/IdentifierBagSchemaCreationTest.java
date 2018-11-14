@@ -19,14 +19,17 @@ import javax.persistence.Table;
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.orm.test.tool.schemacreation.BaseSchemaCreationTestCase;
 
+import org.hibernate.testing.junit5.RequiresDialect;
 import org.hibernate.testing.junit5.schema.SchemaScope;
 import org.hibernate.testing.junit5.schema.SchemaTest;
 
 /**
  * @author Andrea Boriero
  */
+@RequiresDialect( dialectClass = H2Dialect.class)
 public class IdentifierBagSchemaCreationTest extends BaseSchemaCreationTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

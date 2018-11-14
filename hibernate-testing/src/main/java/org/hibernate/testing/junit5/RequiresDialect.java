@@ -8,6 +8,7 @@ package org.hibernate.testing.junit5;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -23,6 +24,7 @@ import org.hibernate.dialect.Dialect;
 @Retention( RetentionPolicy.RUNTIME )
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 @Inherited
+@Repeatable( RequiresDialects.class )
 public @interface RequiresDialect {
 	/**
 	 * The Dialect class to match.
@@ -32,5 +34,5 @@ public @interface RequiresDialect {
 	/**
 	 * Should subtypes of {@link #dialectClass()} be matched?
 	 */
-	boolean matchSubTypes() default false;
+	boolean matchSubTypes() default true;
 }

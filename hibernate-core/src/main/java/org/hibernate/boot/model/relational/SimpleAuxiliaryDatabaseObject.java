@@ -11,6 +11,7 @@ import java.util.Set;
 import org.hibernate.naming.Identifier;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.naming.QualifiedNameImpl;
 
 /**
  * A simple implementation of AbstractAuxiliaryDatabaseObject in which the CREATE and DROP strings are
@@ -105,5 +106,14 @@ public class SimpleAuxiliaryDatabaseObject extends AbstractAuxiliaryDatabaseObje
 		String rtn = StringHelper.replace( ddlString, CATALOG_NAME_PLACEHOLDER, catalogName == null ? "" : catalogName );
 		rtn = StringHelper.replace( rtn, SCHEMA_NAME_PLACEHOLDER, schemaName == null ? "" : schemaName );
 		return rtn;
+	}
+
+	@Override
+	public String getIdentifier() {
+		return new QualifiedNameImpl(
+				Identifier.toIdentifier( getCatalogName() ),
+				Identifier.toIdentifier( getSchemaName() ),
+				Identifier.toIdentifier( super.getIdentifier() )
+		).render();
 	}
 }

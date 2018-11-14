@@ -12,6 +12,7 @@ import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.SecondaryTable;
+import javax.persistence.Table;
 
 import org.hibernate.dialect.H2Dialect;
 
@@ -31,7 +32,8 @@ public class ForeignKeyDefinitionSecondaryTableTest
 		};
 	}
 
-	@Entity(name = "Users")
+	@Entity(name = "User")
+	@Table(name = "USERS")
 	@SecondaryTable(name = "User_details", foreignKey = @ForeignKey(name = "secondary", foreignKeyDefinition = "foreign key /* FK */ (id) references Users"))
 	public class User {
 

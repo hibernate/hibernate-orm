@@ -223,10 +223,10 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		valueMappingResolvers.add( resolver );
 	}
 
-	@Override
-	public List<Function<ResolutionContext, Boolean>> getValueMappingResolvers() {
-		return valueMappingResolvers;
-	}
+//	@Override
+//	public List<Function<ResolutionContext, Boolean>> getValueMappingResolvers() {
+//		return valueMappingResolvers;
+//	}
 
 	@Override
 	public NamedQueryRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory) {
@@ -2010,15 +2010,14 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	private void finalizeBootModel() {
-		final List<Function<ResolutionContext, Boolean>> resolvers = getValueMappingResolvers();
 		ResolutionContextImpl resolutionContext = new ResolutionContextImpl( bootstrapContext );
 		while ( true ) {
-			final boolean anyRemoved = resolvers.removeIf(
+			final boolean anyRemoved = valueMappingResolvers.removeIf(
 					resolver -> resolver.apply( resolutionContext )
 			);
 
 			if ( ! anyRemoved ) {
-				if ( ! resolvers.isEmpty() ) {
+				if ( ! valueMappingResolvers.isEmpty() ) {
 					throw new MappingException( "Unable to complete initialization of boot meta-model" );
 				}
 

@@ -47,7 +47,7 @@ public class Index implements Exportable {
 
 	@Override
 	public String getExportIdentifier() {
-		return StringHelper.qualify( getTable().getTableName().getText(), "IDX-" + getName().render() );
+		return StringHelper.qualify( getTable().getExportIdentifier(), "IDX-" + getName().render() );
 	}
 
 	public String getColumnOrderMap(Column column) {

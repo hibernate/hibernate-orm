@@ -15,9 +15,10 @@ import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
 import org.hibernate.orm.test.support.domains.gambit.Component;
 import org.hibernate.orm.test.support.domains.gambit.EntityOfSets;
 
-import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole
@@ -105,7 +106,7 @@ public class EntityOfSetsCrudTest extends SessionFactoryBasedFunctionalTest {
 		assert Hibernate.isInitialized( collection );
 
 		if ( collection.size() != expectedSize ) {
-			Assert.fail(
+			fail(
 					"Expecting Collection of size `" + expectedSize +
 							"`, but passed Collection has `" + collection.size() + "` entries"
 			);

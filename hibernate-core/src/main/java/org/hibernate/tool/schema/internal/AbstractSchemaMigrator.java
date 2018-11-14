@@ -486,7 +486,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		}
 
 		final String referencingColumn = ((PhysicalColumn)foreignKey.getColumnMappings().getColumnMappings().get( 0 ).getReferringColumn()).getName().getText();
-		final String referencedTable = ((PhysicalTable)foreignKey.getReferringTable()).getTableName().getText();
+		final String referencedTable = ((PhysicalTable)foreignKey.getTargetTable()).getTableName().getText();
 
 		/*
 		 * Find existing keys based on referencing column and referencedTable. "referencedColumnName" is not checked

@@ -33,19 +33,13 @@ public class StandardTableExporter implements Exporter<ExportableTable> {
 
 	@Override
 	public String[] getSqlCreateStrings(ExportableTable table, JdbcServices jdbcServices) {
-		final QualifiedName tableName = new QualifiedNameParser.NameParts(
-				table.getCatalogName(),
-				table.getSchemaName(),
-				table.getTableName()
-		);
-
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		StringBuilder buf =
 				new StringBuilder( tableCreateString( table.hasPrimaryKey() ) )
 						.append( ' ' )
 						.append(
 								jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-										tableName,
+										table.getQualifiedTableName(),
 										jdbcEnvironment.getDialect()
 								)
 						)
@@ -140,7 +134,7 @@ public class StandardTableExporter implements Exporter<ExportableTable> {
 		List<String> sqlStrings = new ArrayList<String>();
 		sqlStrings.add( buf.toString() );
 
-		applyComments( table, tableName, sqlStrings );
+		applyComments( table, table.getQualifiedTableName(), sqlStrings );
 
 		applyInitCommands( table, sqlStrings );
 

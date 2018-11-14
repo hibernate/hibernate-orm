@@ -292,7 +292,6 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 
 
 	void registerValueMappingResolver(Function<ResolutionContext,Boolean> resolver);
-	List<Function<ResolutionContext,Boolean>> getValueMappingResolvers();
 
 	interface DelayedPropertyReferenceHandler extends Serializable {
 		void process(InFlightMetadataCollector metadataCollector);

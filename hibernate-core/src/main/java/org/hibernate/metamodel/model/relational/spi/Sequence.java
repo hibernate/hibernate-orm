@@ -56,7 +56,7 @@ public class Sequence implements Exportable {
 
 	@Override
 	public String getExportIdentifier() {
-		return getName().render();
+		return getQualifiedName().render();
 	}
 
 	@Override

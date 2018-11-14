@@ -59,10 +59,6 @@ public class Column implements Selectable, Serializable, Cloneable {
 	private String customWrite;
 	private String customRead;
 
-	public Column(String columnName, boolean isUnique) {
-		this( Identifier.toIdentifier( columnName ), isUnique );
-	}
-
 	public Column(Identifier tableName, String columnName, boolean isUnique) {
 		this( Identifier.toIdentifier( columnName ), isUnique );
 		this.tableName = tableName;

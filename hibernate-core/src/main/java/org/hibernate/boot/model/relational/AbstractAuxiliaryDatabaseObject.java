@@ -30,21 +30,13 @@ public abstract class AbstractAuxiliaryDatabaseObject
 	private final boolean beforeTables;
 	private final Set<String> dialectScopes;
 
-	protected AbstractAuxiliaryDatabaseObject() {
-		this( null );
-	}
-
-	public AbstractAuxiliaryDatabaseObject(boolean beforeTables) {
-		this( beforeTables, null );
-	}
-
 	protected AbstractAuxiliaryDatabaseObject(Set<String> dialectScopes) {
 		this( false, dialectScopes );
 	}
 
 	protected AbstractAuxiliaryDatabaseObject(boolean beforeTables, Set<String> dialectScopes) {
 		this.beforeTables = beforeTables;
-		this.dialectScopes = dialectScopes == null ? new HashSet<String>() : dialectScopes;
+		this.dialectScopes = dialectScopes == null ? new HashSet<>() : dialectScopes;
 
 		this.exportIdentifier = EXPORT_IDENTIFIER_PREFIX + '.' + counter.getAndIncrement();
 	}

@@ -10,12 +10,10 @@ import java.util.regex.Pattern;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.H2Dialect;
 import org.hibernate.orm.test.tool.BaseSchemaUnitTestCase;
 import org.hibernate.orm.test.tool.util.RecordingTarget;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToStdout;
 
-import org.hibernate.testing.junit5.RequiresDialect;
 import org.hibernate.testing.junit5.schema.SchemaScope;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -24,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Andrea Boriero
  */
-@RequiresDialect(dialectClass = H2Dialect.class, matchSubTypes = true)
 public class BaseSchemaCreationTestCase extends BaseSchemaUnitTestCase {
 	protected final RecordingTarget target = new RecordingTarget( getDialect() );
 
@@ -68,13 +65,13 @@ public class BaseSchemaCreationTestCase extends BaseSchemaUnitTestCase {
 		);
 	}
 
-	protected void assertThatActionIsGenerated(String action) {
+	protected void assertThatActionIsGenerated(String regex) {
 		assertTrue(
 				target.containsAction(
 						Pattern.compile(
-								action.toLowerCase() )
+								regex.toLowerCase() )
 				),
-				"The expected action has not been generated : " + action
+				"The expected regex has not been generated : " + regex
 		);
 	}
 }

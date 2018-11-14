@@ -202,4 +202,10 @@ abstract public class DialectFeatureChecks {
 			return dialect.supportsPartitionBy();
 		}
 	}
+
+	public static class SupportDropConstraints implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.dropConstraints();
+		}
+	}
 }

@@ -10,6 +10,7 @@ import java.util.EnumSet;
 import java.util.List;
 
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.orm.test.tool.BaseSchemaUnitTestCase;
 import org.hibernate.tool.schema.TargetType;
@@ -62,9 +63,15 @@ public class SchemaCreationTest extends BaseSchemaUnitTestCase {
 					statement.toLowerCase().contains( "alter table element" ),
 					is( false )
 			);
-			if ( getStandardServiceRegistry().getService( JdbcEnvironment.class ).getDialect() instanceof DB2Dialect ) {
+			if ( getDialect() instanceof DB2Dialect ) {
 				if ( statement.toLowerCase().startsWith( "create unique index" )
 						&& statement.toLowerCase().contains( "category (code)" ) ) {
+					isUniqueConstraintCreated = true;
+				}
+			}
+			else if ( getDialect() instanceof PostgreSQL81Dialect ) {
+				if (statement.toLowerCase().startsWith("alter table if exists category add constraint")
+						&& statement.toLowerCase().contains("unique (code)")) {
 					isUniqueConstraintCreated = true;
 				}
 			}

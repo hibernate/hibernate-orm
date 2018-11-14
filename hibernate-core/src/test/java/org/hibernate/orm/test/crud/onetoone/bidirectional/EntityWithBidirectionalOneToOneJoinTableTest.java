@@ -25,7 +25,7 @@ import org.hamcrest.CoreMatchers;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Andrea Boriero
@@ -76,8 +76,8 @@ public class EntityWithBidirectionalOneToOneJoinTableTest extends SessionFactory
 			Child child = parent.getChild();
 			assertThat( child, CoreMatchers.notNullValue() );
 			assertTrue(
-					"The child eager OneToOne association is not initialized",
-					Hibernate.isInitialized( child )
+					Hibernate.isInitialized( child ),
+					"The child eager OneToOne association is not initialized"
 			);
 			assertThat( child.getName(), equalTo( "Acme" ) );
 			assertThat( child.getParent(), CoreMatchers.notNullValue() );
@@ -86,8 +86,8 @@ public class EntityWithBidirectionalOneToOneJoinTableTest extends SessionFactory
 			Child2 child2 = parent.getChild2();
 			assertThat( child2, CoreMatchers.notNullValue() );
 			assertTrue(
-					"The child2 eager OneToOne association is not initialized",
-					Hibernate.isInitialized( child2 )
+					Hibernate.isInitialized( child2 ),
+					"The child2 eager OneToOne association is not initialized"
 			);
 			assertThat( child2.getName(), equalTo( "Fab" ) );
 			assertThat( child2.getParent(), CoreMatchers.notNullValue() );
@@ -102,23 +102,24 @@ public class EntityWithBidirectionalOneToOneJoinTableTest extends SessionFactory
 			Parent parent = child.getParent();
 			assertThat( parent, CoreMatchers.notNullValue() );
 			assertTrue(
-					"The parent eager OneToOne association is not initialized",
-					Hibernate.isInitialized( parent )
+					Hibernate.isInitialized( parent ),
+					"The parent eager OneToOne association is not initialized"
 			);
 			assertThat( parent.getDescription(), CoreMatchers.notNullValue() );
 
 			Child child1 = parent.getChild();
 			assertThat( child1, CoreMatchers.notNullValue() );
 			assertTrue(
-					"The child eager OneToOne association is not initialized",
-					Hibernate.isInitialized( child1 )
+					Hibernate.isInitialized( child1 ),
+					"The child eager OneToOne association is not initialized"
 			);
 
 			Child2 child2 = parent.getChild2();
 			assertThat( child2, CoreMatchers.notNullValue() );
 			assertTrue(
-					"The child2 eager OneToOne association is not initialized",
-					Hibernate.isInitialized( child2 )
+					Hibernate.isInitialized( child2 ),
+					"The child2 eager OneToOne association is not initialized"
+
 			);
 			assertThat( child2.getParent(), CoreMatchers.notNullValue() );
 		} );
@@ -155,8 +156,8 @@ public class EntityWithBidirectionalOneToOneJoinTableTest extends SessionFactory
 					Child child = parent.getChild();
 					assertThat( child, CoreMatchers.notNullValue() );
 					assertTrue(
-							"the child have to be initialized",
-							Hibernate.isInitialized( child )
+							Hibernate.isInitialized( child ),
+							"the child have to be initialized"
 					);
 					String name = child.getName();
 					assertThat( name, CoreMatchers.notNullValue() );
@@ -176,8 +177,8 @@ public class EntityWithBidirectionalOneToOneJoinTableTest extends SessionFactory
 					Child child = parent.getChild();
 					assertThat( child, CoreMatchers.notNullValue() );
 					assertTrue(
-							"the child have to be initialized",
-							Hibernate.isInitialized( child )
+							Hibernate.isInitialized( child ),
+							"The child have to be initialized"
 					);
 					String name = child.getName();
 					assertThat( name, CoreMatchers.notNullValue() );

@@ -9,7 +9,7 @@
 
         <list name="children" table="test_entity_children" >
             <key column="entity_id" foreign-key="fk_entity"/>
-            <index column="order"/>
+            <index column="order_column"/>
             <many-to-many column="child" entity-name="TestEntity" unique="true" foreign-key="fk_entity_children"/>
         </list>
 

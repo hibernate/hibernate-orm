@@ -1768,12 +1768,12 @@ public class ModelBinder {
 		}
 		else {
 			final InLineViewSource inLineViewSource = (InLineViewSource) secondaryTableSource.getTableSource();
+			logicalTableName = Identifier.toIdentifier( inLineViewSource.getLogicalName() );
 			secondaryTable = new Table(
 					namespace,
 					inLineViewSource.getSelectStatement(),
 					false
 			);
-			logicalTableName = Identifier.toIdentifier( inLineViewSource.getLogicalName() );
 		}
 
 		secondaryTableJoin.setTable( secondaryTable );

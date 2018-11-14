@@ -31,8 +31,7 @@ import org.junit.jupiter.api.Disabled;
  * @author Yoann Rodiere
  */
 @TestForIssue(jiraKey = "HHH-10191")
-@RequiresDialect(dialectClass = PostgreSQL81Dialect.class, matchSubTypes = true)
-
+@RequiresDialect(dialectClass = PostgreSQL81Dialect.class)
 public class SchemaUpdateWithFunctionIndexTest extends BaseSchemaUnitTestCase {
 	protected ServiceRegistry serviceRegistry;
 	protected MetadataImplementor metadata;

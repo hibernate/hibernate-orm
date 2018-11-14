@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @TestForIssue(jiraKey = "HHH-9866")
 @RequiresDialect(dialectClass = PostgreSQL81Dialect.class, matchSubTypes = true)
-public class SchemaExportWithIndexAndDefaultSchema extends BaseSchemaUnitTestCase {
+public class SchemaExportWithIndexAndDefaultSchemaTest extends BaseSchemaUnitTestCase {
 
 	@Override
 	protected boolean createSqlScriptTempOutputFile() {

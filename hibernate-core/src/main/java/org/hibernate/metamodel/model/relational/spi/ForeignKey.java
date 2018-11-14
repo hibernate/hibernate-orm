@@ -75,7 +75,7 @@ public class ForeignKey implements Exportable {
 
 	@Override
 	public String getExportIdentifier() {
-		return StringHelper.qualify( ( (ExportableTable) referringTable ).getTableName().getText(), "FK-" + getName() );
+		return StringHelper.qualify( ( (ExportableTable) referringTable ).getExportIdentifier(), "FK-" + getName() );
 	}
 
 	/**

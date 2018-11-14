@@ -20,6 +20,7 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNo
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit5.RequiresDialect;
 import org.hibernate.testing.junit5.schema.SchemaScope;
 import org.hibernate.testing.junit5.schema.SchemaTest;
 
@@ -30,6 +31,7 @@ import org.hibernate.testing.junit5.schema.SchemaTest;
  * @see
  */
 @TestForIssue(jiraKey = "HHH-9745")
+@RequiresDialect(dialectClass = H2Dialect.class )
 public class SequenceReadingTest extends BaseSchemaUnitTestCase {
 
 	@Override

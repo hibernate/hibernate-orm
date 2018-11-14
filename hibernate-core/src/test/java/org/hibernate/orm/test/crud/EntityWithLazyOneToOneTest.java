@@ -23,8 +23,9 @@ import org.hamcrest.CoreMatchers;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 /**
  * @author Andrea Boriero
@@ -78,22 +79,23 @@ public class EntityWithLazyOneToOneTest extends SessionFactoryBasedFunctionalTes
 					assert loaded != null;
 					assertThat( loaded.getName(), equalTo( "first" ) );
 					assertFalse(
-							"The lazy association should not be initialized",
-							Hibernate.isInitialized( loaded.getOther() )
+							Hibernate.isInitialized( loaded.getOther() ),
+							"The lazy association should not be initialized"
 					);
 
 					SimpleEntity loadedOther = loaded.getOther();
 					assert loadedOther != null;
 					assertThat( loaded.getOther().getId(), equalTo( 2 ) );
 					assertFalse(
-							"getId() should not trigger the lazy association initialization",
-							Hibernate.isInitialized( loaded.getOther() )
+							Hibernate.isInitialized( loaded.getOther() ),
+							"getId() should not trigger the lazy association initialization"
+
 					);
 
 					loadedOther.getSomeDate();
 					assertTrue(
-							"The lazy association should be initialized",
-							Hibernate.isInitialized( loaded.getOther() )
+							Hibernate.isInitialized( loaded.getOther() ),
+							"The lazy association should be initialized"
 					);
 
 				}

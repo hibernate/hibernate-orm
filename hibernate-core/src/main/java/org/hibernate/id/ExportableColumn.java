@@ -62,11 +62,7 @@ public class ExportableColumn extends Column {
 			String name,
 			BasicType type,
 			String dbTypeDeclaration) {
-		super( name, false );
-		if ( table != null ) {
-			setTableName( table.getNameIdentifier() );
-		}
-
+		super( table.getNameIdentifier(), name, false );
 		setSqlType( dbTypeDeclaration );
 		this.type = type;
 	}

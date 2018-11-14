@@ -25,7 +25,7 @@ import org.hibernate.testing.junit5.schema.SchemaTest;
 /**
  * @author Steve Ebersole
  */
-public class TestFkUpdating extends BaseSchemaUnitTestCase {
+public class ForeignkeyUpdatingTest extends BaseSchemaUnitTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

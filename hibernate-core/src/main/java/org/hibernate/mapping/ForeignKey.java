@@ -36,14 +36,6 @@ public class ForeignKey extends Constraint implements MappedForeignKey {
 	public ForeignKey() {
 	}
 
-	public org.hibernate.metamodel.model.relational.spi.ForeignKey generateRuntimeModel(
-			RuntimeModelCreationContext creationContext,
-			ForeignKeyExporter exporter) {
-		// todo (6.0) : needed?  Depends how "ForeignKey resolver" works
-		//		see `org.hibernate.boot.spi.InFlightMetadataCollector#registerForeignKeyCreator`
-		throw new NotYetImplementedFor6Exception();
-	}
-
 	@Override
 	public void setName(String name) {
 		super.setName( name );

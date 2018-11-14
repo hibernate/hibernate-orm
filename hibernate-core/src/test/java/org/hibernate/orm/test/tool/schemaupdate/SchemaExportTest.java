@@ -61,7 +61,7 @@ public class SchemaExportTest extends BaseSchemaUnitTestCase {
 	@SchemaTest
 	public void testBothType(SchemaScope schemaScope) {
 		schemaScope.withSchemaExport( schemaExport -> {
-			// drop beforeQuery create (nothing to drop yeT)
+			// drop before create (nothing to drop yeT)
 			schemaExport.execute( EnumSet.of( TargetType.DATABASE ), SchemaExport.Action.DROP );
 			if ( doesDialectSupportDropTableIfExist() ) {
 				assertEquals( 0, schemaExport.getExceptions().size() );
@@ -70,7 +70,7 @@ public class SchemaExportTest extends BaseSchemaUnitTestCase {
 				assertEquals( 1, schemaExport.getExceptions().size() );
 			}
 
-			// drop beforeQuery create again (this time drops the tables beforeQuery re-creating)
+			// drop before create again (this time drops the tables before re-creating)
 			schemaExport.execute( EnumSet.of( TargetType.DATABASE ), SchemaExport.Action.BOTH );
 			int exceptionCount = schemaExport.getExceptions().size();
 			if ( doesDialectSupportDropTableIfExist() ) {
@@ -102,7 +102,7 @@ public class SchemaExportTest extends BaseSchemaUnitTestCase {
 	@SchemaTest
 	public void testCreateAndDrop(SchemaScope schemaScope) {
 		schemaScope.withSchemaExport( schemaExport -> {
-			// should drop beforeQuery creating, but tables don't exist yet
+			// should drop before creating, but tables don't exist yet
 			schemaExport.create( EnumSet.of( TargetType.DATABASE ) );
 			if ( doesDialectSupportDropTableIfExist() ) {
 				assertEquals( 0, schemaExport.getExceptions().size() );
@@ -111,7 +111,7 @@ public class SchemaExportTest extends BaseSchemaUnitTestCase {
 				assertEquals( 1, schemaExport.getExceptions().size() );
 			}
 
-			// call create again; it should drop tables beforeQuery re-creating
+			// call create again; it should drop tables before re-creating
 			schemaExport.create( EnumSet.of( TargetType.DATABASE ) );
 			assertEquals( 0, schemaExport.getExceptions().size() );
 
@@ -122,7 +122,7 @@ public class SchemaExportTest extends BaseSchemaUnitTestCase {
 	}
 
 	private boolean doesDialectSupportDropTableIfExist() {
-		return Dialect.getDialect().supportsIfExistsAfterTableName() || Dialect.getDialect()
+		return getDialect().supportsIfExistsAfterTableName() || Dialect.getDialect()
 				.supportsIfExistsBeforeTableName();
 	}
 }

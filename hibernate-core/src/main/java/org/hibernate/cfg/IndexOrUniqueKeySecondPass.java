@@ -21,6 +21,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.naming.Identifier;
 
 /**
  * @author Emmanuel Bernard
@@ -101,14 +102,14 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 	}
 
 	private void addConstraintToColumn(final String columnName ) {
-		MappedColumn column = table.getColumn( new Column( table.getNameIdentifier(), columnName, false ) );
+		MappedColumn column = table.getColumn( Identifier.toIdentifier( columnName ) );
 		if ( column == null ) {
 			throw new AnnotationException(
 					"@Index references a unknown column: " + columnName
 			);
 		}
 		if ( unique ) {
-			table.getOrCreateUniqueKey( indexName ).addColumn( (Column) column );
+			table.getOrCreateUniqueKey( indexName ).addColumn( column );
 		}
 		else {
 			table.getOrCreateIndex( indexName ).addColumn( (Column) column );

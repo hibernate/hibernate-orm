@@ -56,7 +56,10 @@ public class UniqueKey implements Exportable {
 
 	@Override
 	public String getExportIdentifier() {
-		return StringHelper.qualify( ( (ExportableTable) getTable() ).getTableName().getText(), "IDX-" + getName().getText() );
+		return StringHelper.qualify(
+				( (ExportableTable) getTable() ).getExportIdentifier(),
+				"UK-" + getName().getText()
+		);
 	}
 
 	@Override

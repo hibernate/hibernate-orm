@@ -79,21 +79,17 @@ public class Table implements MappedTable<Column>, Serializable {
 
 	private List<InitCommand> initCommands;
 
-	public Table() {
+	public Table(MappedNamespace namespace, Identifier tableName, boolean isAbstract) {
+		this( namespace.getCatalogName(), namespace.getSchemaName(), tableName, isAbstract );
 	}
 
-	public Table(String name) {
-		setName( name );
+	public Table(MappedNamespace namespace, String subselect, boolean isAbstract) {
+		this(namespace,null, subselect, isAbstract);
 	}
 
-	public Table(
-			MappedNamespace namespace,
-			Identifier tableName,
-			boolean isAbstract) {
-		this.name = tableName;
-		this.catalog = namespace.getCatalogName();
-		this.schema = namespace.getSchemaName();
-		this.isAbstract = isAbstract;
+	public Table(MappedNamespace namespace, Identifier tableName, String subselect, boolean isAbstract) {
+		this( namespace.getCatalogName(), namespace.getSchemaName(), tableName, isAbstract );
+		this.subselect = subselect;
 	}
 
 	public Table(
@@ -104,21 +100,6 @@ public class Table implements MappedTable<Column>, Serializable {
 		this.catalog = catalog;
 		this.schema = schema;
 		this.name = tableName;
-		this.isAbstract = isAbstract;
-	}
-
-	public Table(MappedNamespace namespace, Identifier tableName, String subselect, boolean isAbstract) {
-		this.catalog = namespace.getCatalogName();
-		this.schema = namespace.getSchemaName();
-		this.name = tableName;
-		this.subselect = subselect;
-		this.isAbstract = isAbstract;
-	}
-
-	public Table(MappedNamespace namespace, String subselect, boolean isAbstract) {
-		this.catalog = namespace.getCatalogName();
-		this.schema = namespace.getSchemaName();
-		this.subselect = subselect;
 		this.isAbstract = isAbstract;
 	}
 
@@ -767,7 +748,8 @@ public class Table implements MappedTable<Column>, Serializable {
 			PhysicalNamingStrategy namingStrategy,
 			JdbcEnvironment jdbcEnvironment,
 			IdentifierGeneratorFactory identifierGeneratorFactory,
-			RuntimeDatabaseModelProducer.Callback callback, TypeConfiguration typeConfiguration) {
+			RuntimeDatabaseModelProducer.Callback callback,
+			TypeConfiguration typeConfiguration) {
 
 		InflightTable runtimeTable;
 		if ( getSubselect() != null ) {
@@ -821,7 +803,7 @@ public class Table implements MappedTable<Column>, Serializable {
 					throw new MappingException( "UK column must be a physical column" );
 				}
 				final org.hibernate.metamodel.model.relational.spi.Column column = tableColumnXref.get( mappedColumn );
-				runtimeUk.addColumn( (PhysicalColumn) column, bootUk.getColumnOrderMap().get( column ) );
+				runtimeUk.addColumn( (PhysicalColumn) column, bootUk.getColumnOrderMap().get( mappedColumn ) );
 			}
 			callback.uniqueKeyBuilt( bootUk, runtimeUk );
 		} );

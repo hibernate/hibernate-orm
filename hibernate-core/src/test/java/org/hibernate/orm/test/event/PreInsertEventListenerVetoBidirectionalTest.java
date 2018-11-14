@@ -28,7 +28,7 @@ import org.hibernate.testing.junit5.RequiresDialectFeature;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Chris Cranford

@@ -28,14 +28,14 @@ import org.hibernate.testing.junit5.FailureExpected;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Chris Cranford
  */
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 @TestForIssue(jiraKey = "HHH-11721")
-@FailureExpected( value= "fetching database snapshot not yet implemented" )
+@FailureExpected(value = "fetching database snapshot not yet implemented")
 public class PreInsertEventListenerVetoUnidirectionalTest extends SessionFactoryBasedFunctionalTest {
 	@Override
 	protected void applyMetadataSources(MetadataSources metadataSources) {

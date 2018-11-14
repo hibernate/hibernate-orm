@@ -7,6 +7,8 @@
 package org.hibernate.orm.test.tool.schemaupdate;
 
 import java.util.EnumSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -17,6 +19,8 @@ import org.hibernate.tool.schema.TargetType;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit5.schema.SchemaScope;
 import org.hibernate.testing.junit5.schema.SchemaTest;
+
+import org.junit.Assert;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -52,7 +56,9 @@ public class SchemaUpdateGeneratingOnlyScriptFileTest extends BaseSchemaUnitTest
 												.execute( EnumSet.of( TargetType.SCRIPT ) ) );
 
 		String fileContent = getSqlScriptOutputFileContent();
-		assertThat( fileContent.toLowerCase().contains( "create table test_entity" ), is( true ) );
+		Pattern fileContentPattern = Pattern.compile( "create( (column|row))? table test_entity" );
+		Matcher fileContentMatcher = fileContentPattern.matcher( fileContent.toLowerCase() );
+		Assert.assertThat( fileContentMatcher.find(), is( true ) );
 	}
 
 	@Entity

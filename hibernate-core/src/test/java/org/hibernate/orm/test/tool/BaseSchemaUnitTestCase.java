@@ -10,9 +10,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import org.hibernate.boot.MetadataSources;
@@ -21,6 +25,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
@@ -28,14 +33,23 @@ import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
+import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.Helper;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
+import org.hibernate.tool.schema.internal.exec.ScriptTargetOutputToFile;
+import org.hibernate.tool.schema.spi.CommandAcceptanceException;
+import org.hibernate.tool.schema.spi.ExceptionHandler;
+import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.SchemaMigrator;
+import org.hibernate.tool.schema.spi.ScriptSourceInput;
+import org.hibernate.tool.schema.spi.ScriptTargetOutput;
+import org.hibernate.tool.schema.spi.SourceDescriptor;
+import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 import org.hibernate.testing.junit5.schema.FunctionalMetaModelTesting;
 import org.hibernate.testing.junit5.schema.SchemaScope;
@@ -54,14 +68,17 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Andrea Boriero
  */
 @FunctionalMetaModelTesting
-public abstract class BaseSchemaUnitTestCase
-		implements ServiceRegistryAccess, ServiceRegistryContainer, SchemaScopeProducer {
+public abstract class BaseSchemaUnitTestCase implements
+		ServiceRegistryAccess, ServiceRegistryContainer, SchemaScopeProducer, ExecutionOptions, ExceptionHandler {
 	protected static final Class<?>[] NO_CLASSES = new Class[0];
 	protected static final String[] NO_MAPPINGS = new String[0];
+	protected static final Map<String, String> NO_SETTINGS = new HashMap<>();
 
 	private StandardServiceRegistry standardServiceRegistry;
 	private DatabaseModel databaseModel;
 	private MetadataImplementor metadata;
+
+	private String metadataExtractionStrategyValue;
 
 	private File output;
 	private SchemaScope schemaScope;
@@ -87,6 +104,7 @@ public abstract class BaseSchemaUnitTestCase
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( standardServiceRegistry );
+			standardServiceRegistry = null;
 			schemaScope = null;
 			metadata = null;
 			databaseModel = null;
@@ -105,14 +123,32 @@ public abstract class BaseSchemaUnitTestCase
 
 	@Override
 	public SchemaScope produceTestScope(TestParameter<String> metadataExtractionStrategy) {
-		final String metadataExtractionStrategyValue = metadataExtractionStrategy.getValue();
+		metadataExtractionStrategyValue = metadataExtractionStrategy.getValue();
 		if ( schemaScope == null ) {
-			schemaScope = produceSchemaScope( metadataExtractionStrategyValue );
+			schemaScope = produceSchemaScope( metadataExtractionStrategyValue, NO_CLASSES, NO_SETTINGS );
+
 		}
 		return schemaScope;
 	}
 
+	protected SchemaScope regenerateSchemaScope(Class<?>[] annotatedClasses) {
+		schemaScope = produceSchemaScope( metadataExtractionStrategyValue, annotatedClasses, NO_SETTINGS );
+		return schemaScope;
+	}
+
+	protected SchemaScope regenerateSchemaScope(Class<?>[] annotatedClasses, Map<String, String> settings) {
+		schemaScope = produceSchemaScope( metadataExtractionStrategyValue, annotatedClasses, settings );
+		return schemaScope;
+	}
+
 	private SchemaScope produceSchemaScope(String metadataExtractionStrategyValue) {
+		return produceSchemaScope( metadataExtractionStrategyValue, NO_CLASSES, NO_SETTINGS );
+	}
+
+	private SchemaScope produceSchemaScope(
+			String metadataExtractionStrategyValue,
+			Class<?>[] annotatedClasses,
+			Map<String, String> settings) {
 		try {
 			createTempOutputFile();
 		}
@@ -120,9 +156,11 @@ public abstract class BaseSchemaUnitTestCase
 			fail( "Fail creating temporary file" + e.getMessage() );
 		}
 
-		setStandardServiceRegistry( buildServiceRegistry( metadataExtractionStrategyValue ) );
-		afterServiceRegistryCreation( standardServiceRegistry );
-		metadata = buildMetadata( standardServiceRegistry );
+		if ( standardServiceRegistry == null ) {
+			setStandardServiceRegistry( buildServiceRegistry( metadataExtractionStrategyValue, settings ) );
+			afterServiceRegistryCreation( standardServiceRegistry );
+		}
+		metadata = buildMetadata( standardServiceRegistry, annotatedClasses );
 		metadata.validate();
 
 		afterMetadataCreation( metadata );
@@ -195,6 +233,21 @@ public abstract class BaseSchemaUnitTestCase
 		}
 	}
 
+	public void executeSqlSelect(String sql, Consumer<ResultSet> consumer) throws Exception {
+		final ConnectionProvider connectionProvider = standardServiceRegistry.getService( ConnectionProvider.class );
+
+		DdlTransactionIsolator transactionIsolator = new DdlTransactionIsolatorTestingImpl(
+				standardServiceRegistry,
+				connectionProvider
+		);
+
+		try (Statement statement = transactionIsolator.getIsolatedConnection().createStatement()) {
+			try (ResultSet resultSet = statement.executeQuery( sql )) {
+				consumer.accept( resultSet );
+			}
+		}
+	}
+
 	protected void beforeEach(SchemaScope scope) {
 	}
 
@@ -211,6 +264,14 @@ public abstract class BaseSchemaUnitTestCase
 
 	protected String getOutputTempScriptFileAbsolutePath() {
 		return output.getAbsolutePath();
+	}
+
+	protected ScriptTargetOutput getScriptTargetOutputToFile() {
+		Map settings = standardServiceRegistry.getService( ConfigurationService.class ).getSettings();
+		return new ScriptTargetOutputToFile(
+				output,
+				(String) settings.get( AvailableSettings.HBM2DDL_CHARSET_NAME )
+		);
 	}
 
 	protected Class<?>[] getAnnotatedClasses() {
@@ -241,9 +302,16 @@ public abstract class BaseSchemaUnitTestCase
 		}
 	}
 
-	private StandardServiceRegistry buildServiceRegistry(String metadataExtractionStrategy) {
+	private StandardServiceRegistry buildServiceRegistry(
+			String metadataExtractionStrategy,
+			Map<String, String> settings) {
 		StandardServiceRegistryBuilder standardServiceRegistryBuilder = new StandardServiceRegistryBuilder();
-		applySettings( standardServiceRegistryBuilder );
+		if ( settings.size() != 0 ) {
+			standardServiceRegistryBuilder.applySettings( settings );
+		}
+		else {
+			applySettings( standardServiceRegistryBuilder );
+		}
 		return standardServiceRegistryBuilder
 				.applySetting(
 						AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY,
@@ -252,9 +320,16 @@ public abstract class BaseSchemaUnitTestCase
 				.build();
 	}
 
-	private MetadataImplementor buildMetadata(StandardServiceRegistry standardServiceRegistry) {
+	private MetadataImplementor buildMetadata(
+			StandardServiceRegistry standardServiceRegistry,
+			Class<?>[] annotatedClasses) {
 		final MetadataSources metadataSources = new MetadataSources( standardServiceRegistry );
-		addAnnotatedClass( metadataSources );
+		if ( annotatedClasses.length == 0 ) {
+			addAnnotatedClasses( metadataSources );
+		}
+		else {
+			addAnnotatedClasses( metadataSources, annotatedClasses );
+		}
 		addResources( metadataSources );
 
 		return (MetadataImplementor) metadataSources.buildMetadata();
@@ -271,8 +346,12 @@ public abstract class BaseSchemaUnitTestCase
 		}
 	}
 
-	private void addAnnotatedClass(MetadataSources metadataSources) {
+	private void addAnnotatedClasses(MetadataSources metadataSources) {
 		Class<?>[] annotatedClasses = getAnnotatedClasses();
+		addAnnotatedClasses( metadataSources, annotatedClasses );
+	}
+
+	private void addAnnotatedClasses(MetadataSources metadataSources, Class<?>[] annotatedClasses) {
 		for ( int i = 0; i < annotatedClasses.length; i++ ) {
 			metadataSources.addAnnotatedClass( annotatedClasses[i] );
 		}
@@ -369,6 +448,54 @@ public abstract class BaseSchemaUnitTestCase
 			}
 			return new SchemaDropperImpl( databaseModel, standardServiceRegistry );
 		}
+	}
+
+	protected SourceDescriptor getSourceDescriptor() {
+		return new SourceDescriptor() {
+			@Override
+			public SourceType getSourceType() {
+				return SourceType.METADATA;
+			}
+
+			@Override
+			public ScriptSourceInput getScriptSourceInput() {
+				return null;
+			}
+		};
+	}
+
+	protected TargetDescriptor getDatabaseTargetDescriptor(EnumSet<TargetType> targetTypes) {
+		return new TargetDescriptor() {
+			@Override
+			public EnumSet<TargetType> getTargetTypes() {
+				return targetTypes;
+			}
+
+			@Override
+			public ScriptTargetOutput getScriptTargetOutput() {
+				return getScriptTargetOutputToFile();
+			}
+		};
+	}
+
+	@Override
+	public Map getConfigurationValues() {
+		return getStandardServiceRegistry().getService( ConfigurationService.class ).getSettings();
+	}
+
+	@Override
+	public boolean shouldManageNamespaces() {
+		return false;
+	}
+
+	@Override
+	public ExceptionHandler getExceptionHandler() {
+		return this;
+	}
+
+	@Override
+	public void handleException(CommandAcceptanceException exception) {
+		throw exception;
 	}
 
 }

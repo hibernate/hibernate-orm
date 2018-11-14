@@ -46,28 +46,34 @@ public class DialectFilterExtension implements ExecutionCondition {
 
 		log.debugf( "Checking Dialect [%s] - context = %s", dialect, context.getDisplayName() );
 
-		final Optional<RequiresDialect> effectiveRequiresDialect = AnnotationUtil.findEffectiveAnnotation(
+		final List<RequiresDialect> effectiveRequiresDialects = AnnotationUtil.findEffectiveRepeatingAnnotation(
 				context,
-				RequiresDialect.class
+				RequiresDialect.class,
+				RequiresDialects.class
 		);
-		if ( effectiveRequiresDialect.isPresent() ) {
-			if ( effectiveRequiresDialect.get().matchSubTypes() ) {
-				if ( effectiveRequiresDialect.get().dialectClass().isInstance( dialect ) ) {
-					return ConditionEvaluationResult.enabled( "Matched @RequiresDialect" );
+
+		if ( !effectiveRequiresDialects.isEmpty() ) {
+			StringBuilder requiredDialects = new StringBuilder(  );
+			for ( RequiresDialect requiresDialect : effectiveRequiresDialects ) {
+				requiredDialects.append(requiresDialect.dialectClass()  );
+				requiredDialects.append( " " );
+				if ( requiresDialect.matchSubTypes() ) {
+					if ( requiresDialect.dialectClass().isInstance( dialect ) ) {
+						return ConditionEvaluationResult.enabled( "Matched @RequiresDialect" );
+					}
 				}
-			}
-			else {
-				if ( effectiveRequiresDialect.get().dialectClass().equals( dialect.getClass() ) ) {
-					return ConditionEvaluationResult.enabled( "Matched @RequiresDialect" );
+				else {
+					if ( requiresDialect.dialectClass().equals( dialect.getClass() ) ) {
+						return ConditionEvaluationResult.enabled( "Matched @RequiresDialect" );
+					}
 				}
 			}
 
 			return ConditionEvaluationResult.disabled(
 					String.format(
 							Locale.ROOT,
-							"Failed @RequiresDialect(dialect=%s, matchSubTypes=%s) check - found %s]",
-							effectiveRequiresDialect.get().dialectClass().getName(),
-							effectiveRequiresDialect.get().matchSubTypes(),
+							"Failed @RequiresDialect(dialect=%s) check - found %s]",
+							requiredDialects.toString(),
 							dialect.getClass().getName()
 					)
 			);

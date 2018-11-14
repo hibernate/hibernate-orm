@@ -32,6 +32,11 @@ import static org.hamcrest.core.Is.is;
 public class QuotedTableNameSchemaUpdateTest extends BaseSchemaUnitTestCase {
 
 	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { QuotedTable.class };
+	}
+
+	@Override
 	protected boolean createSqlScriptTempOutputFile() {
 		return true;
 	}

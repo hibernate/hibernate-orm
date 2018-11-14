@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.annotations.joins;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 import javax.persistence.PersistenceException;
@@ -19,17 +18,16 @@ import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
 import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryImplementor;
 
-import org.hibernate.testing.junit5.FailureExpected;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Emmanuel Bernard
@@ -83,7 +81,7 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 	public void testDefaultValue() {
 		Join join = (Join) getMetadata().getEntityBinding( Life.class.getName() ).getJoinClosureIterator().next();
 		MappedTable joinTable = join.getMappedTable();
-		assertEquals( "ExtendedLife", joinTable.getName() );
+		assertThat(  joinTable.getName(), is("ExtendedLife") );
 		org.hibernate.mapping.Column owner = new org.hibernate.mapping.Column(
 				joinTable.getNameIdentifier(),
 				"LIFE_ID",
@@ -102,7 +100,7 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 				session -> {
 					Query q = session.createQuery( "from " + Life.class.getName() );
 					Life life = (Life) q.uniqueResult();
-					assertEquals( "Long long description", life.fullDescription );
+					assertThat( life.fullDescription, is( "Long long description" ) );
 				} );
 	}
 
@@ -110,7 +108,7 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 	public void testCompositePK() {
 		Join join = (Join) getMetadata().getEntityBinding( Dog.class.getName() ).getJoinClosureIterator().next();
 		MappedTable joinTable = join.getMappedTable();
-		assertEquals( "DogThoroughbred", joinTable.getName() );
+		assertThat( joinTable.getName(), is( "DogThoroughbred" ) );
 		org.hibernate.mapping.Column owner = new org.hibernate.mapping.Column(
 				joinTable.getNameIdentifier(),
 				"OWNER_NAME",
@@ -134,7 +132,7 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 				session -> {
 					Query q = session.createQuery( "from Dog" );
 					Dog dog = (Dog) q.uniqueResult();
-					assertEquals( "Colley", dog.thoroughbredName );
+					assertThat( dog.thoroughbredName, is( "Colley" ) );
 				} );
 	}
 
@@ -152,7 +150,7 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 				session -> {
 					Query q = session.createQuery( "from " + Death.class.getName() );
 					Death death = (Death) q.uniqueResult();
-					assertEquals( "Well, haven't seen it", death.howDoesItHappen );
+					assertThat( death.howDoesItHappen, is( "Well, haven't seen it" ) );
 					session.delete( death );
 				} );
 	}
@@ -177,7 +175,7 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 					QueryImplementor query = session.createQuery( "from Life l where l.owner.name = :name" );
 					query.setParameter( "name", "kitty" );
 					Life life = (Life) query.uniqueResult();
-					assertEquals( "Long long description", life.fullDescription );
+					assertThat( life.fullDescription, is( "Long long description" ) );
 					session.delete( life.owner );
 					session.delete( life );
 				} );
@@ -249,7 +247,7 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 					session.clear();
 
 					Cat c = session.get( Cat.class, cat.getId() );
-					assertEquals( storyPart2.toUpperCase( Locale.ROOT ), c.getStoryPart2() );
+					assertThat( c.getStoryPart2(), is( storyPart2.toUpperCase( Locale.ROOT ) ) );
 
 				} );
 	}

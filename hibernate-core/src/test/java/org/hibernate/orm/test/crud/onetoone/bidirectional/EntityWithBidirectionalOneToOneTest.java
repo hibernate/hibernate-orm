@@ -23,7 +23,7 @@ import org.hamcrest.CoreMatchers;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Chris Cranford
@@ -73,8 +73,8 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 			Child child = parent.getChild();
 			assertThat( child, CoreMatchers.notNullValue() );
 			assertTrue(
-					"The child eager OneToOne association is not initialized",
-					Hibernate.isInitialized( child )
+					Hibernate.isInitialized( child ),
+					"The child eager OneToOne association is not initialized"
 			);
 			assertThat( child.getName(), CoreMatchers.notNullValue() );
 			assertThat( child.getParent(), CoreMatchers.notNullValue() );
@@ -83,8 +83,8 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 			Child2 child2 = parent.getChild2();
 			assertThat( child2, CoreMatchers.notNullValue() );
 			assertTrue(
-					"The child2 eager OneToOne association is not initialized",
-					Hibernate.isInitialized( child2 )
+					Hibernate.isInitialized( child2 ),
+					"The child2 eager OneToOne association is not initialized"
 			);
 			assertThat( child2.getName(), equalTo( "Fab" ) );
 			assertThat( child2.getParent(), CoreMatchers.notNullValue() );
@@ -94,7 +94,7 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 
 	@Test
 	public void testGetParent2() {
-		sessionFactoryScope().inTransaction( session ->{
+		sessionFactoryScope().inTransaction( session -> {
 			Parent parent = new Parent( 4, "Hibernate OGM" );
 			Child child = new Child( 5, parent );
 			child.setName( "Acme2" );
@@ -114,8 +114,8 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 			Child child = parent.getChild();
 			assertThat( child, CoreMatchers.notNullValue() );
 			assertTrue(
-					"The child eager OneToOne association is not initialized",
-					Hibernate.isInitialized( child )
+					Hibernate.isInitialized( child ),
+					"The child eager OneToOne association is not initialized"
 			);
 			assertThat( child.getName(), CoreMatchers.notNullValue() );
 			assertThat( child.getParent(), CoreMatchers.notNullValue() );
@@ -123,8 +123,8 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 			Child2 child2 = parent.getChild2();
 			assertThat( child2, CoreMatchers.notNullValue() );
 			assertTrue(
-					"The child2 eager OneToOne association is not initialized",
-					Hibernate.isInitialized( child2 )
+					Hibernate.isInitialized( child2 ),
+					"The child2 eager OneToOne association is not initialized"
 			);
 			assertThat( child2.getName(), equalTo( "Fab2" ) );
 			assertThat( child2.getParent(), CoreMatchers.notNullValue() );
@@ -140,7 +140,7 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 
 	@Test
 	public void testGetParent3() {
-		sessionFactoryScope().inTransaction( session ->{
+		sessionFactoryScope().inTransaction( session -> {
 
 			Parent parent = new Parent( 4, "Hibernate Search" );
 			Child child = new Child( 5, parent );
@@ -167,8 +167,8 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 			Child child = parent.getChild();
 			assertThat( child, CoreMatchers.notNullValue() );
 			assertTrue(
-					"The child eager OneToOne association is not initialized",
-					Hibernate.isInitialized( child )
+					Hibernate.isInitialized( child ),
+					"The child eager OneToOne association is not initialized"
 			);
 			assertThat( child.getName(), CoreMatchers.notNullValue() );
 			assertThat( child.getParent(), CoreMatchers.notNullValue() );
@@ -176,8 +176,8 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 			Child2 child2 = parent.getChild2();
 			assertThat( child2, CoreMatchers.notNullValue() );
 			assertTrue(
-					"The child2 eager OneToOne association is not initialized",
-					Hibernate.isInitialized( child2 )
+					Hibernate.isInitialized( child2 ),
+					"The child2 eager OneToOne association is not initialized"
 			);
 			assertThat( child2.getName(), equalTo( "Fab2" ) );
 			assertThat( child2.getParent(), CoreMatchers.notNullValue() );
@@ -197,22 +197,22 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 			final Child child = session.get( Child.class, 2 );
 			Parent parent = child.getParent();
 			assertTrue(
-					"The parent eager OneToOne association is not initialized",
-					Hibernate.isInitialized( parent )
+					Hibernate.isInitialized( parent ),
+					"The parent eager OneToOne association is not initialized"
 			);
 			assertThat( parent, CoreMatchers.notNullValue() );
 			assertThat( parent.getDescription(), CoreMatchers.notNullValue() );
 			Child child1 = parent.getChild();
 			assertThat( child1, CoreMatchers.notNullValue() );
 			assertTrue(
-					"The child eager OneToOne association is not initialized",
-					Hibernate.isInitialized( child1 )
+					Hibernate.isInitialized( child1 ),
+					"The child eager OneToOne association is not initialized"
 			);
 			Child2 child2 = parent.getChild2();
 			assertThat( child2, CoreMatchers.notNullValue() );
 			assertTrue(
-					"The child2 eager OneToOne association is not initialized",
-					Hibernate.isInitialized( child2 )
+					Hibernate.isInitialized( child2 ),
+					"The child2 eager OneToOne association is not initialized"
 			);
 			assertThat( child2.getParent(), CoreMatchers.notNullValue() );
 		} );

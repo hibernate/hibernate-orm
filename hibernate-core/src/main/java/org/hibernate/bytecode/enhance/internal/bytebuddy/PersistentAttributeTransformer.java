@@ -26,7 +26,6 @@ import org.hibernate.internal.CoreMessageLogger;
 
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.AsmVisitorWrapper;
-import net.bytebuddy.description.NamedElement;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.modifier.Visibility;

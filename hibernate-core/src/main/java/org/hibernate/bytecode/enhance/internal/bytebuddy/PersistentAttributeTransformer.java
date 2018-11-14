@@ -331,16 +331,11 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 			return false;
 		}
 		final PersistentAttributeTransformer that = (PersistentAttributeTransformer) o;
-		return Objects.equals( managedCtClass, that.managedCtClass ) &&
-			Objects.equals( enhancementContext, that.enhancementContext ) &&
-			Objects.equals( classPool, that.classPool ) &&
-			Arrays.equals( enhancedFields, that.enhancedFields );
+		return Objects.equals( managedCtClass, that.managedCtClass );
 	}
 
 	@Override
 	public int hashCode() {
-		int result = Objects.hash( managedCtClass, enhancementContext, classPool );
-		result = 31 * result + Arrays.hashCode( enhancedFields );
-		return result;
+		return managedCtClass.hashCode();
 	}
 }

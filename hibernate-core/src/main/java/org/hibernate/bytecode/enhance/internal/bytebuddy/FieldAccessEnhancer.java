@@ -141,14 +141,12 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 			return false;
 		}
 		final FieldAccessEnhancer that = (FieldAccessEnhancer) o;
-		return Objects.equals( managedCtClass, that.managedCtClass ) &&
-			Objects.equals( enhancementContext, that.enhancementContext ) &&
-			Objects.equals( classPool, that.classPool );
+		return Objects.equals( managedCtClass, that.managedCtClass );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( managedCtClass, enhancementContext, classPool );
+		return managedCtClass.hashCode();
 	}
 
 }

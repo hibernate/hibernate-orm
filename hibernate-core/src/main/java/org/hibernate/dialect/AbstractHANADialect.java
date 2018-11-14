@@ -1648,4 +1648,9 @@ public abstract class AbstractHANADialect extends Dialect {
 	public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
 		return false;
 	}
+
+	@Override
+	public String getNoColumnsInsertString() {
+		throw new MappingException( "SAP HANA requires at least one value in insert value-list clause." );
+	}
 }

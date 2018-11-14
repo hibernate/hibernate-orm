@@ -231,6 +231,25 @@ If applications set this to false the resolutions discussed here will be very di
 The rest of the discussion here assumes this setting is enabled (true).
 ====
 
+[IMPORTANT]
+====
+In Hibernate 5.3, Hibernate attempts to delay the insert of entities if the flush-mode does not equal `AUTO`.
+This was slightly problematic for entities that used `IDENTITY` or `SEQUENCE` generated identifiers that were
+also involved in some form of association with another entity in the same transaction.
++
+In Hibernate 5.4, Hibernate attempts to remedy the problem using an algorithm to decide if the insert should
+be delayed or if it requires immediate insertion.  We wanted to restore the behavior prior to 5.3 only for
+very specific use cases where it made sense.
++
+Entity mappings can sometimes be complex and it is possible a corner case was overlooked.  Hibernate offers a
+way to completely disable the 5.3 behavior in the event problems occur with `DelayedPostInsertIdentifier`.  To
+enable the legacy behavior, set `hibernate.id.disable_delayed_identity_inserts=true`.
++
+This configuration option is meant to act as a _temporary_ fix and bridge the gap between the changes in this
+behavior across Hibernate 5.x releases.  If this configuration setting is necessary for a mapping, please open
+a JIRA and report the mapping so that the algorithm can be reviewed.
+====
+
 `AUTO` (the default):: Indicates that the persistence provider (Hibernate) should choose an appropriate generation strategy. See <<identifiers-generators-auto>>.
 `IDENTITY`:: Indicates that database IDENTITY columns will be used for primary key value generation. See <<identifiers-generators-identity>>.
 `SEQUENCE`:: Indicates that database sequence should be used for obtaining primary key values. See <<identifiers-generators-sequence>>.

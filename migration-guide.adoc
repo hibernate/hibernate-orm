@@ -9,6 +9,25 @@ earlier versions, see any other pertinent migration guides as well.
 
 == Known changes
 
+=== Overriding Delayed Identity Insert Behavior
+
+In Hibernate 5.3, we added support for `DelayedPostInsertIdentifier` behavior to be influenced based on the
+`FlushMode` or `FlushModeType` values, in short enhancing Extended PersistenceContext support.  Unfortunately,
+there were a few side effects that were recently reported with this change.
+
+In Hibernate 5.4, we wanted to preserve as much of the 5.3 behavior as possible and only restore very specific
+`DelayedPostInsertIdentifier` behavior for selected use cases.
+
+We understand mappings can be complex and there very well could be a corner case we didn't consider.  In order
+to make 5.4 as flexible with these changes as possible, we added a configuration option that you can use as a
+_temporary_ solution to completely disable the 5.3 behavior, reverting it back to 5.2 and prior.
+
+`hibernate.id.disable_delayed_identity_inserts=true`
+
+If you find you need to use this configuration setting, be sure to report the mapping to us in a JIRA issue so
+that we can review it and determine if the mapping corner case should be included in our algorithm since the
+configuration setting is meant to bridge behavior support for this across a few releases.
+
 === Hibernate Spatial depends on JTS 1.6
 
 Hibernate Spatial depends on the https://github.com/locationtech/jts[Java Topology Suite (JTS)]. In 5.4 this

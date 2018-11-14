@@ -268,6 +268,13 @@ Users migrating from earlier versions using the legacy `hibernate_sequence` name
 This setting allows you to provide an instance or the class implementing the `org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider` interface,
 so you can provide a set of https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/id/IdentifierGenerator.html[`IdentifierGenerator`] strategies allowing to override the Hibernate Core default ones.
 
+`*hibernate.id.disable_delayed_identity_inserts*` (e.g. `true` or `false` (default value))::
+If true, inserts that use generated-identifiers (identity/sequences) will never be delayed and will always be inserted immediately.
+This should be used if you run into any errors with `DelayedPostInsertIdentifier` and should be considered a _temporary_ fix.
+Please report your mapping that causes the problem to us so we can examine the default algorithm to see if your use case should be included.
++
+The default value is `false` which means Hibernate will use an algorithm to determine if the insert can be delayed or if the insert should be performed immediately.
+
 ==== Quoting options
 
 `*hibernate.globally_quoted_identifiers*` (e.g. `true` or `false` (default value))::

@@ -44,6 +44,7 @@ public class UpdateOrderingIdentityIdentifierTest extends BaseEntityManagerFunct
 	@Entity(name = "Zoo")
 	public static class Zoo {
 		private Long id;
+		private String data;
 		private List<Animal> animals = new ArrayList<>();
 
 		@Id
@@ -54,6 +55,14 @@ public class UpdateOrderingIdentityIdentifierTest extends BaseEntityManagerFunct
 
 		public void setId(Long id) {
 			this.id = id;
+		}
+
+		public String getData() {
+			return data;
+		}
+
+		public void setData(String data) {
+			this.data = data;
 		}
 
 		@OneToMany(fetch = FetchType.LAZY, mappedBy = "zoo", cascade = CascadeType.ALL)

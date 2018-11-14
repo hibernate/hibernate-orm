@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.hibernate.MappingException;
 import org.hibernate.annotations.Remove;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.Type;
@@ -103,7 +104,18 @@ public class Insert {
 		buf.append("insert into ")
 			.append(tableName);
 		if ( columns.size()==0 ) {
-			buf.append(' ').append( dialect.getNoColumnsInsertString() );
+			try {
+				buf.append( ' ' ).append( dialect.getNoColumnsInsertString() );
+			}
+			catch ( MappingException e ) {
+				throw new MappingException(
+						String.format(
+								"Unable to build insert statement for table [%s]: %s",
+								tableName,
+								e.getMessage()
+						)
+				);
+			}
 		}
 		else {
 			buf.append(" (");

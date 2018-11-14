@@ -1793,4 +1793,9 @@ public abstract class AbstractHANADialect extends Dialect {
 			this.data = null;
 		}
 	}
+
+	@Override
+	public String getNoColumnsInsertString() {
+		throw new MappingException( "SAP HANA requires at least one value in insert value-list clause." );
+	}
 }

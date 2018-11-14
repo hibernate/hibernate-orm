@@ -627,18 +627,28 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			if ( !isTempSession ) {
 				if ( hasQueuedOperations() ) {
 					final String collectionInfoString = MessageHelper.collectionInfoString( getRole(), getKey() );
-					final TransactionStatus transactionStatus =
-							session.getTransactionCoordinator().getTransactionDriverControl().getStatus();
-					if ( transactionStatus.isOneOf(
-							TransactionStatus.ROLLED_BACK,
-							TransactionStatus.MARKED_ROLLBACK,
-							TransactionStatus.FAILED_COMMIT,
-							TransactionStatus.FAILED_ROLLBACK,
-							TransactionStatus.ROLLING_BACK
-					) ) {
-						LOG.queuedOperationWhenDetachFromSessionOnRollback( collectionInfoString );
+					try {
+						final TransactionStatus transactionStatus =
+								session.getTransactionCoordinator().getTransactionDriverControl().getStatus();
+						if ( transactionStatus.isOneOf(
+								TransactionStatus.ROLLED_BACK,
+								TransactionStatus.MARKED_ROLLBACK,
+								TransactionStatus.FAILED_COMMIT,
+								TransactionStatus.FAILED_ROLLBACK,
+								TransactionStatus.ROLLING_BACK
+						) ) {
+							// It was due to a rollback.
+							LOG.queuedOperationWhenDetachFromSessionOnRollback( collectionInfoString );
+						}
+						else {
+							// We don't know why the collection is being detached.
+							// Just log the info.
+							LOG.queuedOperationWhenDetachFromSession( collectionInfoString );
+						}
 					}
-					else {
+					catch (Exception e) {
+						// We don't know why the collection is being detached.
+						// Just log the info.
 						LOG.queuedOperationWhenDetachFromSession( collectionInfoString );
 					}
 				}

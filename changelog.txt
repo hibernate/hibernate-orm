@@ -3,6 +3,253 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.0.CR1 (November 15, 2018)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31691/tab/release-report-done
+
+** Bug
+    * [HHH-7686] - org.hibernate.proxy.map.MapProxy loses all important state on serialization
+    * [HHH-8805] - [SchemaUpdate] javax.persistence.ForeignKey doesn't respect ConstraintMode.NO_CONSTRAINT
+    * [HHH-10201] - Hibernate does not audit @ElementCollection when revision_on_collection_change is false
+    * [HHH-10603] - ORA-00932: inconsistent datatypes: expected - got BLOB after HHH-10345 with Oracle12cDialect
+    * [HHH-10891] - Exception at bootstrap when @Any is inside an @Embeddable object
+    * [HHH-11096] - @CreationTimestamp doesn't works with @Column(nullable=false)
+    * [HHH-11209] - NullPointerException in EntityType.replace() with a PersistentBag
+    * [HHH-11771] - @Id annotation ignored with @MappedSuperclass inheritance
+    * [HHH-12200] - Docs mention outdated APIs
+    * [HHH-12320] - @JoinColumn's foreign key custom name does not work with @MapsId
+    * [HHH-12425] - LazyInitializationIssue when enhancement enableDirtyTracking is enabled after session is committed
+    * [HHH-12436] - Attempted to assign id from null one-to-one property
+    * [HHH-12492] - JPA delete query generated has missing table alias and thus incorrect semantics
+    * [HHH-12542] - WildFly integration test, HibernateNativeAPINaturalIdTestCase, fails when security manager is enabled
+    * [HHH-12666] - Add an option for restoring 5.1 native exception handling
+    * [HHH-12675] - @Table(Inverse=true) ignored for SecondaryTables in JoinedSubclassEntityPersister
+    * [HHH-12695] - Incompatibility in return value for org.hibernate.procedure.ParameterRegistration.getType() 5.1 vs 5.3
+    * [HHH-12718] - Entity changes in @PreUpdate callback are not persisted when lazy loading is active for more than one field
+    * [HHH-12720] - LazyInitializationException with hibernate.enable_lazy_load_no_trans
+    * [HHH-12740] - Subselect fetching doesn't work when multiLoad was used
+    * [HHH-12753] - org.hibernate.envers.test.integration.collection.StringMapNationalizedLobTest fails with DB2
+    * [HHH-12768] - TimeAndTimestampTest fails with SQL Server and MYSQL
+    * [HHH-12771] - Caused by: java.lang.UnsupportedOperationException: Cache provider [org.hibernate.cache.ehcache.internal.EhcacheRegionFactory@3271ec2a] does not support `transactional` access
+    * [HHH-12776] - NullPointerException when executing native query on an Audited Entity
+    * [HHH-12779] - Revert HHH-12670 - Allows native SQL queries that take a given resultClass to map the result set to the required type
+    * [HHH-12781] - Update Javassist dependency to 3.23.1
+    * [HHH-12784] - Javassist support broken by HHH-12760
+    * [HHH-12786] - Deleting an entity leads to NullPointerException in ByteBuddy proxy
+    * [HHH-12787] - SessionJdbcBatchTest hangs with DB2
+    * [HHH-12791] - ComponentTuplizer generates a LOT of proxy classes when using Bytebuddy as bytecode provider
+    * [HHH-12795] - Setting FlushMode to manual for a @NamedQuery is ignored
+    * [HHH-12797] - Fix cache modes relationships table layout in the documentation
+    * [HHH-12798] - Nested spatial functions are not rendered correctly on SAP HANA
+    * [HHH-12800] - TuplizerInstantiatesByteBuddySubclassTest uses ByteBuddy operation unsafe with JDK 11
+    * [HHH-12802] - Hibernate does not throw an exception when more than one entity is loaded with the same ID
+    * [HHH-12815] - LocalDateCustomSessionLevelTimeZoneTest fails with mysql 5.5 and 5.7
+    * [HHH-12822] - Skip "case when" tests requiring casts for DB2
+    * [HHH-12823] - CompositeIdTest.testDistinctCountOfEntityWithCompositeId fails on databases that don't support tuple distinct counts because it expects wrong exception
+    * [HHH-12824] - ASTParserLoadingTest.testComponentNullnessChecks fail with DB2 because it uses legacy-style query parameter
+    * [HHH-12825] - CriteriaHQLAlignmentTest.testCountReturnValues fails on databases that don't support tuple distinct counts because it expects wrong exception
+    * [HHH-12826] - Persist cascade of collection fails when orphan removal enabled with flush mode commit.
+    * [HHH-12827] - NUMERIC column type is not handled correctly on DB2
+    * [HHH-12829] - Invalid references to outdated EhCache classes
+    * [HHH-12832] - SchemaUpdateHaltOnErrorTest and SchemaMigratorHaltOnErrorTest fail with DB2
+    * [HHH-12833] - UniqueConstraintDropTest fails with DB2
+    * [HHH-12834] - org.hibernate.envers.test.integration.collection.StringMapNationalizedLobTest fails with Sybase
+    * [HHH-12835] - Wrong assertion in BatchFetchQueueHelper
+    * [HHH-12838] - AndNationalizedTests fails with DB2
+    * [HHH-12839] - EntityProxySerializationTest fails with oracle
+    * [HHH-12842] - Non-optional OneToOne relation can't be lazy loaded anymore
+    * [HHH-12843] - CreateDeleteTest and FlushIdGenTest fail with ORA-00936 on oracle
+    * [HHH-12844] - HbmWithIdentityTest fails with ORA-00936 on oracle
+    * [HHH-12846] - Merge cascade of collection fails when orphan removal enabled with flush mode commit
+    * [HHH-12847] - NullPointerException in FetchStyleLoadPlanBuildingAssociationVisitationStrategy::adjustJoinFetchIfNeeded
+    * [HHH-12848] - UpgradeSkipLockedTest, PessimisticReadSkipLockedTest and OracleFollowOnLockingTest fail with Oracle12c
+    * [HHH-12849] - QuotedIdentifierTest fails with ORA-04043 on Oracle12c
+    * [HHH-12850] - null values for columns mapped as "Boolean" cause exception when saving entity with SAP Sql Anywhere jdbc4
+    * [HHH-12851] - ConverterTest fails with SQL Server depending on collation
+    * [HHH-12861] - SchemaUpdate doesn't work with Sybase
+    * [HHH-12863] - SchemaUpdateTest should be skipped with Sybase
+    * [HHH-12868] - Using CacheConcurrencyStrategy.NONE leads to a NPE when trying to load an entity
+    * [HHH-12869] - SingletonEhcacheRegionFactory initialization fails
+    * [HHH-12871] - Metamodel contains managed types related to dynamic-map entities that have been excluded.
+    * [HHH-12875] - Class level where="..." clause in hbm.xml mappings is not enforced on collections of that class
+    * [HHH-12880] - LockModeTest hangs indefinitely with Sybase due to HHH-12847
+    * [HHH-12882] - Where clauses mapped on collections and entities need parentheses when used in conjunction
+    * [HHH-12883] - NaturalIdDereferenceTest fails with Sybase
+    * [HHH-12890] - Fix link to JPA Metamodel generator documentation
+    * [HHH-12903] - CommitFlushCollectionTest fails when running on Oracle.
+    * [HHH-12905] - Passing null as parameter is not allowed even when enablePassingNulls() has been called
+    * [HHH-12906] - Statistics.getCollectionRoleNames() reports incorrect value
+    * [HHH-12913] - AuditJoinTable does not work when specified in an AuditOverride annotation.
+    * [HHH-12915] - Concurrency issue within org.hibernate.internal.SessionFactoryImpl
+    * [HHH-12920] - AbstractCachedDomainDataAccess.clearCache() throws MissingFormatArgumentException at DEBUG level
+    * [HHH-12921] - Hibernate Connection Pool Validation Thread should be defined as a daemon Thread
+    * [HHH-12927] - Immutable warning issued if immutable entities are referenced but not changed during update
+    * [HHH-12931] - Revert HHH-12542 as it introduces some issues with the security manager
+    * [HHH-12932] - Add privileged blocks in ByteBuddyState initialization
+    * [HHH-12933] - Generate_statistics grows QueryStatistics ConcurrentHashMap indefinitely
+    * [HHH-12934] - Exception handling documentation does not apply only to "Session-per-application anti-pattern"
+    * [HHH-12935] - Constraint and AuxiliaryDatabaseObject export identifiers are not qualified by schema or catalog
+    * [HHH-12937] - Where clause for collections  of basic, embeddable and "any" elements is ignored when mapped using hbm.xml
+    * [HHH-12939] - Database name not quoted at schema update
+    * [HHH-12944] - MultiIdentifierLoadAccess ignores the 2nd level cache
+    * [HHH-12945] - MapJoin#entry()  does not seem to work.
+    * [HHH-12955] - hibernate.hbm2ddl.auto option 'create-only' not recognized
+    * [HHH-12963] - HANA dialect doesn't set internal configuration for use_unicode_string_types correctly
+    * [HHH-12964] - Upgrade to dom4j 2.1.1
+    * [HHH-12966] - Make statistics serializable to allow JMX access
+    * [HHH-12968] - Flush is not flushing inserts for inherited tables before a select within a transaction
+    * [HHH-12973] - Inconsistent identity generation when using the default @SequenceGenerator with a database sequence having the increment size of 1
+    * [HHH-12975] - Foreign key constraint cannot be disabled with @JoinColumn(foreignKey=@ForeignKey(NO_CONSTRAINT)) in some cases
+    * [HHH-12979] - Setting hibernate.javax.cache.uri property value as relative path causes an error
+    * [HHH-12990] - JPA Model generator does not work in Java 9+
+    * [HHH-12992] - ClassCastException for an audited ordered collection
+    * [HHH-12995] - Querying DECIMAL columns via Double fields can lead to precision loss on SAP HANA
+    * [HHH-13000] - Association with -ToOne relation with JoinTable can't be refreshed on entity with PESSIMISTIC_LOCK
+    * [HHH-13001] - NPE rendering nested criteria expressions
+    * [HHH-13012] - JDBC default connection release mode does not match documentation
+    * [HHH-13027] - org.hibernate.ejb.HibernatePersistence can no longer be used as a persistence provider name
+    * [HHH-13040] - MetadataBuilderContributor should be applied before MetadataBuildingProcess.prepare
+    * [HHH-13042] - DelayedPostInsertIdentifier cannot be cast to class java.lang.Integer
+    * [HHH-13044] - MapsId and flushMode commit causes PersistenceException
+    * [HHH-13045] - Accessing id property of association within element collection in query leads to exception
+    * [HHH-13050] - On release of batch it still contained JDBC statements logged; unable to release batch statement
+    * [HHH-13053] - DelayedPostInsertIdentifier EXCEPTION on flush of identity created PARENT that has sequence created CHILD with cascade, when batch_update is true
+    * [HHH-13060] - Throw an exception when two entities are declared with the same name
+    * [HHH-13062] - Migrate User Guide links from Java EE 7 to 8
+    * [HHH-13064] - Documentation of Lock and LockModeType is on two columns instead of 3
+    * [HHH-13070] - callbackRegistry is not injected to event listener when appended to listener group using REPLACE_ORIGINAL duplication strategy
+    * [HHH-13076] - Hibernate “Transaction already active” behaviour with custom transaction manager
+    * [HHH-13097] - Hibernate enhancer is superslow after upgrade to latest 5.3 or 5.4-SNAPSHOT
+
+** New Feature
+    * [HHH-12857] - Support the security manager with ByteBuddy as bytecode provider
+
+** Task
+    * [HHH-10782] - Add a comment about what you can expect from a query plan cache cleanup
+    * [HHH-12730] - User types built using 5.1 are not binary compatible with 5.3
+    * [HHH-12751] - Remove the hibernate-infinispan OSGi feature as it's now provided by Infinispan
+    * [HHH-12762] - No longer needing to use port-offset in WildFly integration tests
+    * [HHH-12774] - JARs missing from the distribution ZIP
+    * [HHH-12785] - Test Javassist support
+    * [HHH-12788] - Enable mockito-inline for the Agroal integration module
+    * [HHH-12789] - Upgrade to Mockito 2.19.0
+    * [HHH-12793] - Upgrade Karaf, pax-exam and reenable the OSGi tests
+    * [HHH-12799] - Enforce version alignment of Mockito and ByteBuddy dependencies
+    * [HHH-12801] - Error message in SqlFunctionMetadataBuilderContributorIllegalClassArgumentTest differs with JDK 11
+    * [HHH-12803] - Upgrade ByteBuddy to 1.8.13
+    * [HHH-12805] - Upgrade Mockito to 2.19.1
+    * [HHH-12807] - Disable the hibernate-orm-modules tests for JDK 11
+    * [HHH-12808] - Upgrade Gradle to 4.8.1
+    * [HHH-12809] - Use an HTTP link for the Javadoc link to our Bean Validation documentation
+    * [HHH-12813] - Disable Asciidoclet in Javadoc generation
+    * [HHH-12816] - Enable the experimental features of ByteBuddy when building with JDK 11
+    * [HHH-12820] - Merge the migration guides in the code base
+    * [HHH-12828] - ScannerTests#testGetBytesFromInputStream() is not stable enough
+    * [HHH-12840] - Simplify implementation of LocalObjectUuidHelper
+    * [HHH-12841] - DriverManagerConnectionProviderImpl: implement lazy Thread starting and fix visibility guarantees
+    * [HHH-12877] - Upgrade ByteBuddy to 1.8.15
+    * [HHH-12884] - Upgrade to Gradle 4.9
+    * [HHH-12887] - Remove direct dependency on ASM
+    * [HHH-12894] - Simplify code of StandardSessionFactoryServiceInitiators
+    * [HHH-12898] - Enable integration tests for Oracle Standard Edition Two 12.1.0.2.v12 on the AWS build slaves
+    * [HHH-12899] - Enable integration tests for MS SQL Server on the AWS build slaves
+    * [HHH-12901] - Enable loading of additional JDBC drivers from a local path
+    * [HHH-12904] - Removing some dead code in InFlightMetadataCollectorImpl and MetadataImpl
+    * [HHH-12909] - Upgrade ByteBuddy to 1.8.17
+    * [HHH-12911] - Removing unused field from org.hibernate.mapping.Collection
+    * [HHH-12914] - Avoid need to create a java.lang.reflect.Proxy to implement org.hibernate.engine.jdbc.BlobProxy
+    * [HHH-12947] - Remove need for BootstrapContext where it's unused
+    * [HHH-12948] - Allow using a custom SessionFactoryOptionsBuilder to create a SessionFactoryBuilderImpl
+    * [HHH-12949] - Upgrade to Gradle 4.10
+    * [HHH-12950] - Use the Annotation Processor specific scopes of Gradle
+    * [HHH-12954] - Refactor boot/model/relational/Database to avoid holding references to MetadataBuildingOptions
+    * [HHH-13006] - Upgrade to Gradle 4.10.2
+    * [HHH-13007] - No longer use net.bytebuddy.experimental=true when testing on JDK11
+    * [HHH-13014] - Expose bytecode common utilities as SPI
+    * [HHH-13015] - Optimise loading of EntityCopyObserver implementation
+    * [HHH-13018] - Upgrade to Hibernate Commons Annotations 5.0.5.Final
+    * [HHH-13026] - Documentation: fixing link to Infinispan documentation section regarding Hibernate 2LC
+    * [HHH-13028] - Make ASTPrinter caches use less memory
+    * [HHH-13029] - Avoid static singletons to hold on Strategy Registration Implementations
+    * [HHH-13030] - Provide a`hibernate-orm-modules` tested version for WildFly 14.0.x
+    * [HHH-13033] - Upgrade ByteBuddy to 1.9.1
+    * [HHH-13034] - Upgrade Hibernate Validator to 6.0.13.Final
+    * [HHH-13035] - Upgrade Agroal to 1.2
+    * [HHH-13036] - Upgrade HikariCP to 3.2.0
+    * [HHH-13037] - Upgrade Vibur to 22.2
+    * [HHH-13038] - Upgrade ByteBuddy to 1.9.2
+    * [HHH-13039] - Upgrade Agroal to 1.3
+    * [HHH-13047] - Deprecate Environment#verifyProperties
+    * [HHH-13048] - Allow for parallel processing of entity enhancements via ByteBuddy
+    * [HHH-13074] - Upgrade ByteBuddy to 1.9.3
+    * [HHH-13075] - Upgrade Javassist to 3.24.0-GA
+    * [HHH-13091] - Upgrade Ehcache 2 to 2.10.6 and Ehcache 3 to 3.6.1
+    * [HHH-13092] - Upgrade Hibernate Commons Annotations to 5.1.0.Final
+    * [HHH-13099] - Update to Byte Buddy 1.9.4
+    * [HHH-13100] - All custom implementation of Byte Buddy "Implementation" s should have a proper equals and hashcode
+    * [HHH-13101] - Document hibernate.id.disable_delayed_identity_inserts in user guide and migration guide
+
+** Improvement
+    * [HHH-9038] - Use "cascade constraints" when dropping tables for HSQLDB
+    * [HHH-9241] - Allow declaring non-java.util Collection interfaces
+    * [HHH-12144] - Support JTS version 1.16.0
+    * [HHH-12196] - Sybase Dialect not supporting max result - paging
+    * [HHH-12349] - User Guide documentation for @Filter is too verbose
+    * [HHH-12361] - In the User Guide, omit constructors and equals/hashCode for brevity
+    * [HHH-12368] - java.sql.SQLFeatureNotSupportedException in LobCreatorBuilderImpl
+    * [HHH-12608] - Add the ST_DWithin() function  in DB2 Spatial Dialect
+    * [HHH-12713] - Make EntityGraph creation more convenient
+    * [HHH-12763] - Log which JtaPlatform implementation is used at startup on info level.
+    * [HHH-12770] - HHH-12770 - Document @NotFound(action = NotFoundAction.IGNORE) and FetchType.LAZY behavior
+    * [HHH-12775] - Avoid join on property access mapped by natural id
+    * [HHH-12778] - BasicProxyFactoryImpl.getProxy() swallows exception
+    * [HHH-12804] - No need to mock Map in CollectionBinderTest
+    * [HHH-12811] - @UpdateTimestamp and @CreationTimestamp missing @Target annotation and breaking in Kotlin
+    * [HHH-12830] - Improve error output with transaction issues
+    * [HHH-12855] - Add query plan compilation statistics
+    * [HHH-12872] - Reduce memory consumption of XSD schema validations
+    * [HHH-12879] - Remove unnecessary constants in StandardDialectResolver
+    * [HHH-12892] - Fix spelling issues in the User Guide
+    * [HHH-12896] - Minor memory improvements in HQLQueryPlan
+    * [HHH-12907] - Avoid garbage collection pressure when creating proxies with ByteBuddy
+    * [HHH-12917] - Interning of strings for Filter definitions
+    * [HHH-12918] - Interning of strings for Formula and Column exctraction templates
+    * [HHH-12919] - Interning of strings for EntityReferenceAliases
+    * [HHH-12922] - Hibernate Connection Pool Validation Thread should have a name
+    * [HHH-12925] - The JDBC Type to Hibernate matching is limited to the Dialect only instead of considering the Type contributions as well
+    * [HHH-12928] - Remove vestigial 'naturalIdTypes' field
+    * [HHH-12929] - Add AtomikosJtaPlatform implementation
+    * [HHH-12946] - Include JAXB as a dependency as it's not provided by JDK 11
+    * [HHH-12952] - Document the hibernate.statistics.query_max_size behavior and explain its implications
+    * [HHH-12957] - Calling custom functions in JPQL with the function() is missing in the documentation
+    * [HHH-12961] - The links in the Javadoc of the SAP HANA dialects don't work
+    * [HHH-12962] - Document how to tune the query plan cache size
+    * [HHH-12974] - Document @OnDelete behavior in regards to disabling the Persistence Context entity removal cascading event
+    * [HHH-12977] - Update latest dialect for MySQL
+    * [HHH-12978] - Enum value binding is not logged by BasicBinder
+    * [HHH-12982] - Generify Hibernate#unproxy
+    * [HHH-12989] - Support heterogeneous collections passed to JPA's (criteria) Expression#in
+    * [HHH-13003] - Skip processing of empty resource names defined for hibernate.hbm2ddl.import_files
+    * [HHH-13005] - Upgrade ByteBuddy to 1.9.0
+    * [HHH-13009] - No documentation for "hibernate.javax.cache.cache_manager"
+    * [HHH-13011] - Add option enabling/disabling use of an entity's mapped where-clause when loading collections of that entity
+    * [HHH-13017] - Exception on Service stop isn't logging the full stack
+    * [HHH-13020] - When proxying an entity having a private default constructor, the log message is not very clear about the problem
+    * [HHH-13021] - Add support for SAP HANA full-text search functions
+    * [HHH-13022] - Make OSGi integration work on JDK11
+    * [HHH-13025] - Rename MetadataContext#getEmbeddableTypeMap to getEmbeddableTypeSet
+    * [HHH-13051] - Structure of audit-tables should be extensible
+    * [HHH-13056] - Fix typo in documentation: "listner" should be "listener"
+    * [HHH-13057] - Prevent Byte Buddy's Advice helper to need reloading many resources from the ClassLoader
+    * [HHH-13061] - Introduce a 'none' option for BytecodeProvider implementation choice
+    * [HHH-13069] - Update the links to JBoss Nexus to use the direct repository over https
+    * [HHH-13071] - Remove deprecated call from gradle plugin
+    * [HHH-13078] - Not choosing the right dialect for SQL Anywhere 17
+    * [HHH-13090] - Allow to use specific cache implementations in Ehcache cache provider
+
+
+
 Changes in 5.3.2.final (July 5, 2018)
 ------------------------------------------------------------------------------------------------------------------------
 

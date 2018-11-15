@@ -8,11 +8,16 @@ package org.hibernate.type;
 
 import java.io.Serializable;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 
 import org.hibernate.MappingException;
+import org.hibernate.SessionFactory;
+import org.hibernate.SessionFactoryObserver;
 import org.hibernate.classic.Lifecycle;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.tuple.component.ComponentMetamodel;
@@ -38,7 +43,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  */
 @Deprecated
 @SuppressWarnings({"unchecked"})
-public final class TypeFactory implements Serializable {
+public final class TypeFactory implements Serializable, SessionFactoryObserver {
 	private static final CoreMessageLogger LOG = messageLogger( TypeFactory.class );
 
 	/**
@@ -52,35 +57,47 @@ public final class TypeFactory implements Serializable {
 	private final TypeConfiguration typeConfiguration;
 	private final TypeScope typeScope;
 
+	private final Map<TypeKey, Type> typeRegistry = new HashMap<>();
+	private final Map<TypeKey, CompositeCustomType> compositeTypeRegistry = new HashMap<>();
+	private final Map<TypeKey, CustomType> customTypeRegistry = new HashMap<>();
+	private final Map<TypeKey, EntityType> entityTypeRegistry = new HashMap<>();
+	private final Map<TypeKey, SerializableType> serializableTypeRegistry = new HashMap<>();
+
 	public TypeFactory(TypeConfiguration typeConfiguration) {
 		this.typeConfiguration = typeConfiguration;
 		this.typeScope = (TypeScope) () -> typeConfiguration;
 	}
 
-	public SessionFactoryImplementor resolveSessionFactory() {
-		return typeConfiguration.getSessionFactory();
+	@Override
+	public void sessionFactoryCreated(SessionFactory factory) {
+		typeRegistry.clear();
+		compositeTypeRegistry.clear();
+		customTypeRegistry.clear();
+		entityTypeRegistry.clear();
+		serializableTypeRegistry.clear();
 	}
 
 	public Type byClass(Class clazz, Properties parameters) {
+		TypeKey typeKey = new TypeKey( clazz, parameters );
 		if ( Type.class.isAssignableFrom( clazz ) ) {
-			return type( clazz, parameters );
+			return typeRegistry.computeIfAbsent( typeKey, key -> type( clazz, parameters ) );
 		}
 
 		if ( CompositeUserType.class.isAssignableFrom( clazz ) ) {
-			return customComponent( clazz, parameters );
+			return compositeTypeRegistry.computeIfAbsent( typeKey, key -> customComponent( clazz, parameters ) );
 		}
 
 		if ( UserType.class.isAssignableFrom( clazz ) ) {
-			return custom( clazz, parameters );
+			return customTypeRegistry.computeIfAbsent( typeKey, key -> custom( clazz, parameters ) );
 		}
 
 		if ( Lifecycle.class.isAssignableFrom( clazz ) ) {
 			// not really a many-to-one association *necessarily*
-			return manyToOne( clazz.getName() );
+			return entityTypeRegistry.computeIfAbsent( typeKey, key -> manyToOne( clazz.getName() ) );
 		}
 
 		if ( Serializable.class.isAssignableFrom( clazz ) ) {
-			return serializable( clazz );
+			return serializableTypeRegistry.computeIfAbsent( typeKey, key -> serializable( clazz ) );
 		}
 
 		return null;
@@ -403,5 +420,35 @@ public final class TypeFactory implements Serializable {
 
 	public Type any(Type metaType, Type identifierType) {
 		return new AnyType( typeScope, metaType, identifierType );
+	}
+
+	private static class TypeKey {
+		private final Class clazz;
+		private final Properties parameters = new Properties();
+
+		private TypeKey(Class clazz, Properties parameters) {
+			this.clazz = clazz;
+			if ( parameters != null && !parameters.isEmpty() ) {
+				this.parameters.putAll( parameters );
+			}
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if ( this == o ) {
+				return true;
+			}
+			if ( o == null || getClass() != o.getClass() ) {
+				return false;
+			}
+			TypeKey typeKey = (TypeKey) o;
+			return Objects.equals( clazz, typeKey.clazz ) &&
+					Objects.equals( parameters, typeKey.parameters );
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash( clazz, parameters );
+		}
 	}
 }

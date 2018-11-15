@@ -14,6 +14,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
@@ -83,6 +84,7 @@ public abstract class AbstractJtaBatchTest extends BaseEntityManagerFunctionalTe
 	protected abstract String getBatchBuilderClassName();
 
 	@Entity(name = "Comment")
+	@Table(name = "COMMENTS")
 	public static class Comment {
 		private Long id;
 		private String message;

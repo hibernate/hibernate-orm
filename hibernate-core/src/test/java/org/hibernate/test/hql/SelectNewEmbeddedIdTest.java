@@ -11,11 +11,13 @@ import java.io.Serializable;
 import javax.persistence.Embeddable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.Query;
+import org.hibernate.Session;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
+
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -26,7 +28,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Chris Cranford
  */
-public class SelectNewEmbeddedIdTest extends BaseEntityManagerFunctionalTestCase {
+public class SelectNewEmbeddedIdTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -34,24 +36,27 @@ public class SelectNewEmbeddedIdTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	private void assertQueryRowCount(String queryString, int rowCount) {
-		EntityManager entityManager = getOrCreateEntityManager();
+		Session session = openSession();
 		try {
 			// persist the data
-			entityManager.getTransaction().begin();
-			entityManager.persist( new Simple( new SimpleId( 1, 1 ), 1 ) );
-			entityManager.getTransaction().commit();
+			session.getTransaction().begin();
+			session.persist( new Simple( new SimpleId( 1, 1 ), 1 ) );
 
-			Query query = entityManager.createQuery( queryString );
-			assertEquals( rowCount, query.getResultList().size() );
+			session.flush();
+			session.clear();
+
+			Query query = session.createQuery( queryString );
+			assertEquals( rowCount, query.list().size() );
+			session.getTransaction().rollback();
 		}
 		catch ( Exception e ) {
-			if ( entityManager.getTransaction().isActive() ) {
-				entityManager.getTransaction().rollback();
+			if ( session.getTransaction().getStatus() == TransactionStatus.ACTIVE ) {
+				session.getTransaction().rollback();
 			}
 			throw e;
 		}
 		finally {
-			entityManager.close();
+			session.close();
 		}
 	}
 

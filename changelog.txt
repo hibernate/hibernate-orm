@@ -3,6 +3,82 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.2.18.Final (November 16, 2018)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/31663
+
+** Bug
+    * [HHH-9403] - AssertionFailure: Fail to process type argument in a generic declaration
+    * [HHH-10435] - ClassLoaderServiceImpl is getting a Permission check failed "createClassLoader" when run under Java security manager
+    * [HHH-11209] - NullPointerException in EntityType.replace() with a PersistentBag
+    * [HHH-11859] -  Class annotated with @Audited (withModifiedFlag = true) is giving error when executing update.
+    * [HHH-11979] - Invalid SQL when force increment version of inherited entity
+    * [HHH-12011] - Field annotated with target TYPE_USE break metamodel generation
+    * [HHH-12090] - PropertyAccessBuildingException: Could not locate setter for property named XXX for Java 8 default methods
+    * [HHH-12199] - Static fields should be ignored when resolving property type via reflection
+    * [HHH-12200] - Docs mention outdated APIs
+    * [HHH-12257] - Refreshing an entity clears the lock mode returned from EntityManager.getLockMode
+    * [HHH-12353] - Document that Session.getReference not always returns a T
+    * [HHH-12362] - Allow both SQL query hints and comments
+    * [HHH-12423] - SecondaryTable is not taking into account the schema while mapping the entity
+    * [HHH-12470] - Batching statements fails for delete
+    * [HHH-12508] - SessionFactoryOptions#isSecondLevelCacheEnabled returns true by default with NoCachingRegionFactory
+    * [HHH-12517] - Incorrect method references in @deprecated elements of the Query javadoc
+    * [HHH-12534] - SAP HANA dialects use unqualified dummy table in queries
+    * [HHH-12535] - SAP HANA dialect doesn't support circular cascade delete constraints
+    * [HHH-12539] - NPE in AbstractPropertyMapping.getCommonPersistentClass when creating UnionSubclassEntityPersister for dynamic-map
+    * [HHH-12546] - locate function doesn't work on SAP HANA
+    * [HHH-12561] - bulk_id_strategy does not work with globally_quoted_identifiers
+    * [HHH-12569] - Referential integrity violation on insert when using @OneToOne with @JoinColumn with hibernate.order_inserts=true
+    * [HHH-12581] - NPE for Criteria query containing fetch join as a regression of HHH-12338
+    * [HHH-12584] - Bytebuddy ReflectionOptimizer does not work with abstract class
+    * [HHH-12592] - Merge of detached, enhanced entity with orphanRemoval = true collection fails since 5.2.13
+    * [HHH-12594] - Using property "hibernate.default_batch_fetch_size" crashes bootstrapping
+    * [HHH-12612] - TYPE_USE annotated collections and elements fail metamodel generation.
+    * [HHH-12621] - Thread-unsafe behavior of Query Spaces in Named Queries
+    * [HHH-12631] - Fix invalid tracev calls in DefaultResolveNaturalIdEventListener
+    * [HHH-12633] - ClassCastException when updating lazy loaded bytecode enhanced byte[]
+    * [HHH-12634] - Make EntityPrinter more permissive regarding the parameters passed
+    * [HHH-12660] - Missing verb in reference documentation
+    * [HHH-12665] - Add to 5.2 migration guide: hibernate.allow_update_outside_transaction=true to restore 5.1 behavior allowing updates without a transaction
+    * [HHH-12687] - ManyToOne associations in embeddable collection elements and composite IDs are always eagerly loaded
+    * [HHH-12691] - Code block is broken in documentation about AUTO flushing
+    * [HHH-12697] - Headings problem in Hibernate Documentation 5.3.1 - Proxool configuration
+    * [HHH-12698] - Headings problem in Hibernate Documentation 5.3.1 - Transation Patterns
+    * [HHH-12715] - Error in documentation sample code about JPQL and HQL
+    * [HHH-12738] - Session/EntityManager is closed in ForeignGenerator (JTA setup)
+    * [HHH-12739] - CLONE - AssertionFailure: Fail to process type argument in a generic declaration
+    * [HHH-12740] - Subselect fetching doesn't work when multiLoad was used
+    * [HHH-12767] - Fix tests failing on Oracle
+    * [HHH-12798] - Nested spatial functions are not rendered correctly on SAP HANA
+    * [HHH-12802] - Hibernate does not throw an exception when more than one entity is loaded with the same ID
+    * [HHH-12906] - Statistics.getCollectionRoleNames() reports incorrect value
+    * [HHH-12964] - Upgrade to dom4j 2.1.1
+
+** Task
+    * [HHH-12545] - ByteBuddy based enhancer not accepting special character in description names
+    * [HHH-12554] - Make ByteBuddy EnhancerImpl more closely match the semantics described in Enhancer javadoc
+    * [HHH-12562] - Remove DefaultSchemaNameResolver#delegate since the value should not be cached
+    * [HHH-12637] - Add more tests and improve fix for HHH-12592
+    * [HHH-12792] - Document binary incompatibility of persisters and tuplizers
+    * [HHH-12820] - Merge the migration guides in the code base
+
+** Improvement
+    * [HHH-12341] - Documentation refers to nonexistent "image clob"
+    * [HHH-12349] - User Guide documentation for @Filter is too verbose
+    * [HHH-12350] - User Guide documentation for @Any is too verbose
+    * [HHH-12351] - User Guide: document why Subselect always requires Synchronize
+    * [HHH-12469] - Add support for IN-lists padding to better reuse cached statements
+    * [HHH-12537] - Query hint test for SAP HANA
+    * [HHH-12541] - Test for SAP HANA calculation views
+    * [HHH-12556] - Share data structures between similar LoadPlan based EntityLoaders
+    * [HHH-12589] - Add support for registering custom SQL functions when bootstrapping via JPA
+    * [HHH-12716] - Sample code is required for documentation of disabling polymorphism in queries
+    * [HHH-12749] - Avoid setting the isolation level to the same value in C3P0ConnectionProvider
+    * [HHH-12769] - Rework LockTest#testContendedPessimisticLock so that it can work on Oracle without throwing exceptions
+
+
+
 Changes in 5.2.17.Final (April 26, 2018)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/31651

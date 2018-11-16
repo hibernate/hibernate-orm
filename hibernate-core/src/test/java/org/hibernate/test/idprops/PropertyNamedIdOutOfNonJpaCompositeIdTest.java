@@ -38,7 +38,7 @@ public class PropertyNamedIdOutOfNonJpaCompositeIdTest extends BaseCoreFunctiona
 		s.flush();
 
 		try {
-			s.createQuery( "from Person p where p.id is null", Person.class ).list();
+			s.createQuery( "from Person p where p.id is null" ).list();
 			fail( "should have thrown UnsupportedOperationException" );
 		}
 		catch (UnsupportedOperationException ex) {

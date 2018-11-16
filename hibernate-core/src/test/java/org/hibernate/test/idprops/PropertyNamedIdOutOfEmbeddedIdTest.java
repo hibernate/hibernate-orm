@@ -40,7 +40,7 @@ public class PropertyNamedIdOutOfEmbeddedIdTest extends BaseCoreFunctionalTestCa
 		s.flush();
 
 		assertEquals(
-				2, s.createQuery( "from Person p where p.id = :id", Person.class )
+				2, s.createQuery( "from Person p where p.id = :id" )
 						.setParameter( "id", 6 )
 						.list()
 						.size()

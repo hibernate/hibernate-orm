@@ -39,14 +39,14 @@ public class PropertyNamedIdInEmbeddedIdTest extends BaseCoreFunctionalTestCase 
 		s.flush();
 
 		assertEquals(
-				1, s.createQuery( "from Person p where p.id = :id", Person.class )
+				1, s.createQuery( "from Person p where p.id = :id" )
 						.setParameter( "id", new PersonId( "John Doe", 0 ) )
 						.list()
 						.size()
 		);
 
 		assertEquals(
-				2, s.createQuery( "from Person p where p.id.id = :id", Person.class )
+				2, s.createQuery( "from Person p where p.id.id = :id" )
 						.setParameter( "id", 0 )
 						.list()
 						.size()

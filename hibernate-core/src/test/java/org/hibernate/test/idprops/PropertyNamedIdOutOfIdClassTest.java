@@ -39,8 +39,8 @@ public class PropertyNamedIdOutOfIdClassTest extends BaseCoreFunctionalTestCase 
 		s.persist( new Person( "John Doe", 2, 2 ) );
 		s.flush();
 
-		assertEquals( 1, s.createQuery( "from Person p where p.id is null", Person.class ).list().size() );
-		assertEquals( 2, s.createQuery( "from Person p where p.id is not null", Person.class ).list().size() );
+		assertEquals( 1, s.createQuery( "from Person p where p.id is null" ).list().size() );
+		assertEquals( 2, s.createQuery( "from Person p where p.id is not null" ).list().size() );
 
 		s.createQuery( "delete from Person" ).executeUpdate();
 		s.getTransaction().commit();

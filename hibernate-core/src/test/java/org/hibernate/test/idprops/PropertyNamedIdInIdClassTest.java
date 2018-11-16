@@ -38,7 +38,7 @@ public class PropertyNamedIdInIdClassTest extends BaseCoreFunctionalTestCase {
 		s.persist( new Person( "Jane Doe", 0 ) );
 		s.flush();
 
-		assertEquals( 2, s.createQuery( "from Person p where p.id = 0", Person.class ).list().size() );
+		assertEquals( 2, s.createQuery( "from Person p where p.id = 0" ).list().size() );
 
 		s.createQuery( "delete from Person" ).executeUpdate();
 		s.getTransaction().commit();

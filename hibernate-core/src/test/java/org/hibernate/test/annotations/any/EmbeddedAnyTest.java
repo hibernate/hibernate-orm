@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.annotations.any;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -18,13 +17,15 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Table;
 
+import org.hibernate.Session;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.MetaValue;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-public class EmbeddedAnyTest extends BaseEntityManagerFunctionalTestCase {
+public class EmbeddedAnyTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -33,7 +34,10 @@ public class EmbeddedAnyTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void testEmbeddedAny() {
-		doInJPA( this::entityManagerFactory, em -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
+
 			Foo foo1 = new Foo();
 			foo1.setId( 1 );
 
@@ -47,11 +51,15 @@ public class EmbeddedAnyTest extends BaseEntityManagerFunctionalTestCase {
 
 			foo1.setFooEmbedded( foo1Embedded );
 
-			em.persist( bar1 );
-			em.persist( foo1 );
-		} );
+			session.persist( bar1 );
+			session.persist( foo1 );
+		}
+		session.getTransaction().commit();
+		session.close();
 
-		doInJPA( this::entityManagerFactory, em -> {
+		session = openSession();
+		session.beginTransaction();
+		{
 			Foo foo2 = new Foo();
 			foo2.setId( 2 );
 
@@ -65,23 +73,33 @@ public class EmbeddedAnyTest extends BaseEntityManagerFunctionalTestCase {
 
 			foo2.setFooEmbedded( foo2Embedded );
 
-			em.persist( bar2 );
-			em.persist( foo2 );
-		} );
+			session.persist( bar2 );
+			session.persist( foo2 );
+		}
+		session.getTransaction().commit();
+		session.close();
 
-		doInJPA( this::entityManagerFactory, em -> {
-			Foo foo1 = em.find( Foo.class, 1 );
+		session = openSession();
+		session.beginTransaction();
+		{
+			Foo foo1 = session.get( Foo.class, 1 );
 
 			assertTrue( foo1.getFooEmbedded().getBar() instanceof Bar1 );
 			assertEquals( "bar 1", ( (Bar1) foo1.getFooEmbedded().getBar() ).getBar1() );
-		} );
+		}
+		session.getTransaction().commit();
+		session.close();
 
-		doInJPA( this::entityManagerFactory, em -> {
-			Foo foo2 = em.find( Foo.class, 2 );
+		session = openSession();
+		session.beginTransaction();
+		{
+			Foo foo2 = session.get( Foo.class, 2 );
 
 			assertTrue( foo2.getFooEmbedded().getBar() instanceof Bar2 );
 			assertEquals( "bar 2", ( (Bar2) foo2.getFooEmbedded().getBar() ).getBar2() );
-		} );
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Entity(name = "Foo")

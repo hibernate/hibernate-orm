@@ -7,6 +7,8 @@
 package org.hibernate.testing.junit5;
 
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -31,7 +33,9 @@ import static org.hibernate.testing.junit5.StandardTags.FAILURE_EXPECTED;
  */
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
+@Inherited
 @Tag( FAILURE_EXPECTED )
+@Repeatable( FailureExpectedGroup.class )
 public @interface FailureExpected {
 	String VALIDATE_FAILURE_EXPECTED = "hibernate.test.validatefailureexpected";
 

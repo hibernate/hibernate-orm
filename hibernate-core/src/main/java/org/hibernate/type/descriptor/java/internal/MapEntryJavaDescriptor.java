@@ -10,7 +10,7 @@ import java.util.Map;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
-import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
+import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
@@ -27,7 +27,7 @@ public class MapEntryJavaDescriptor extends AbstractBasicJavaDescriptor<Map.Entr
 	}
 
 	@Override
-	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
+	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
 		throw new UnsupportedOperationException( "Unsupported attempt to resolve JDBC type for Map.Entry" );
 	}
 

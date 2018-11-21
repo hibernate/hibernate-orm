@@ -15,6 +15,7 @@ import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractCollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.BasicCollectionIndex;
+import org.hibernate.metamodel.model.domain.spi.BasicValueMapper;
 import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
@@ -26,6 +27,7 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerRefer
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
@@ -34,7 +36,7 @@ import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -46,9 +48,8 @@ public class BasicCollectionIndexImpl<J>
 		implements BasicCollectionIndex<J>, ConvertibleNavigable<J> {
 	private static final Logger log = Logger.getLogger( BasicCollectionIndexImpl.class );
 
-	private final BasicType<J> basicType;
 	private final Column column;
-	private final BasicValueConverter valueConverter;
+	private final BasicValueMapper<J> valueMapper;
 
 	@SuppressWarnings("unchecked")
 	public BasicCollectionIndexImpl(
@@ -59,15 +60,12 @@ public class BasicCollectionIndexImpl<J>
 
 		final BasicValueMapping valueMapping = (BasicValueMapping) bootCollectionMapping.getIndex();
 		this.column  = creationContext.getDatabaseObjectResolver().resolveColumn( valueMapping.getMappedColumn() );
+		this.valueMapper = valueMapping.getResolution().getValueMapper();
 
-		this.basicType = valueMapping.resolveType();
-
-		this.valueConverter = valueMapping.resolveValueConverter( creationContext, basicType );
-
-		if ( valueConverter != null ) {
+		if ( valueMapper.getValueConverter() != null ) {
 			log.debugf(
 					"BasicValueConverter [%s] being applied for basic collection elements : %s",
-					valueConverter,
+					valueMapper.getValueConverter(),
 					getNavigableRole()
 			);
 		}
@@ -75,8 +73,13 @@ public class BasicCollectionIndexImpl<J>
 	}
 
 	@Override
+	public BasicJavaDescriptor<J> getJavaTypeDescriptor() {
+		return valueMapper.getDomainJavaDescriptor();
+	}
+
+	@Override
 	public BasicValueConverter getValueConverter() {
-		return valueConverter;
+		return valueMapper.getValueConverter();
 	}
 
 	@Override
@@ -85,18 +88,23 @@ public class BasicCollectionIndexImpl<J>
 	}
 
 	@Override
+	public BasicValueMapper<J> getValueMapper() {
+		return valueMapper;
+	}
+
+	@Override
+	public SqlExpressableType getSqlExpressableType() {
+		return valueMapper.getSqlExpressableType();
+	}
+
+	@Override
 	public SimpleTypeDescriptor<?> getDomainTypeDescriptor() {
-		return getBasicType();
+		return this;
 	}
 
 	@Override
 	public List<Column> getColumns() {
 		return Collections.singletonList( getBoundColumn() );
-	}
-
-	@Override
-	public BasicType<J> getBasicType() {
-		return basicType;
 	}
 
 	@Override

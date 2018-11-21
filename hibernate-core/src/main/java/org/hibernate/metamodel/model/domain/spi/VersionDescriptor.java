@@ -79,11 +79,6 @@ public interface VersionDescriptor<O,J>
 	}
 
 	@Override
-	default SimpleTypeDescriptor<J> getType() {
-		return getBasicType();
-	}
-
-	@Override
 	default Class<J> getJavaType() {
 		return getJavaTypeDescriptor().getJavaType();
 	}

@@ -20,32 +20,34 @@ import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
-import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.internal.ColumnBasedMapper;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
  */
-public class CollectionIdentifier implements DomainResultProducer, Navigable<Object> {
+public class CollectionIdentifier implements DomainResultProducer, BasicValuedNavigable<Object> {
 	public static final String NAVIGABLE_NAME = "{collection-id}";
 
 	private final PersistentCollectionDescriptor collectionDescriptor;
-	private final BasicType type;
+
 	private final Column column;
+	private final BasicValueMapper valueMapper;
 
 	private final IdentifierGenerator generator;
 
 	private final NavigableRole navigableRole;
 
 
-	public CollectionIdentifier(
-			PersistentCollectionDescriptor collectionDescriptor,
-			BasicType type,
+	public <O,C,E> CollectionIdentifier(
+			PersistentCollectionDescriptor<O,C,E> collectionDescriptor,
 			Column column,
 			IdentifierGenerator generator) {
 		this.collectionDescriptor = collectionDescriptor;
-		this.type = type;
+
 		this.column = column;
+		this.valueMapper = new ColumnBasedMapper( column );
+
 		this.generator = generator;
 
 		this.navigableRole = collectionDescriptor.getNavigableRole().append( NAVIGABLE_NAME );
@@ -54,10 +56,6 @@ public class CollectionIdentifier implements DomainResultProducer, Navigable<Obj
 
 	public IdentifierGenerator getGenerator() {
 		return generator;
-	}
-
-	public BasicType getBasicType() {
-		return type;
 	}
 
 
@@ -78,7 +76,7 @@ public class CollectionIdentifier implements DomainResultProducer, Navigable<Obj
 								creationState.getColumnReferenceQualifierStack().getCurrent(),
 								column
 						),
-						getBasicType().getJavaTypeDescriptor(),
+						column.getJavaTypeDescriptor(),
 						creationContext.getSessionFactory().getTypeConfiguration()
 				),
 				column.getExpressableType()
@@ -123,5 +121,15 @@ public class CollectionIdentifier implements DomainResultProducer, Navigable<Obj
 	@Override
 	public PersistenceType getPersistenceType() {
 		return PersistenceType.BASIC;
+	}
+
+	@Override
+	public Column getBoundColumn() {
+		return column;
+	}
+
+	@Override
+	public BasicValueMapper<Object> getValueMapper() {
+		return valueMapper;
 	}
 }

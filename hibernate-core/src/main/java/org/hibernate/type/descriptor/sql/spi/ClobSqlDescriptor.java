@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.descriptor.sql.spi;
 
+import java.io.Reader;
 import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.PreparedStatement;
@@ -72,57 +73,6 @@ public abstract class ClobSqlDescriptor extends AbstractTemplateSqlTypeDescripto
 		};
 	}
 
-	@Override
-	protected <X> JdbcValueBinder<X> createBinder(BasicJavaDescriptor<X> javaTypeDescriptor, TypeConfiguration typeConfiguration) {
-		return getClobBinder( javaTypeDescriptor );
-	}
-
-	protected abstract <X> JdbcValueBinder<X> getClobBinder(JavaTypeDescriptor<X> javaTypeDescriptor);
-
-
-	public static final ClobSqlDescriptor DEFAULT = new ClobSqlDescriptor() {
-		@Override
-		public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
-			return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Clob.class );
-		}
-
-
-
-		@Override
-		public <X> JdbcValueBinder<X> getClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-			return new AbstractJdbcValueBinder<X>( javaTypeDescriptor, this ) {
-				@Override
-				protected void doBind(
-						PreparedStatement st,
-						int index, X value,
-						ExecutionContext executionContext) throws SQLException {
-					if ( executionContext.getSession().useStreamForLobBinding() ) {
-						STREAM_BINDING.getClobBinder( javaTypeDescriptor )
-								.bind( st, index, value, executionContext );
-					}
-					else {
-						CLOB_BINDING.getClobBinder( javaTypeDescriptor )
-								.bind( st, index, value, executionContext );
-					}
-				}
-
-				@Override
-				protected void doBind(
-						CallableStatement st,
-						String name, X value,
-						ExecutionContext executionContext) throws SQLException {
-					if ( executionContext.getSession().useStreamForLobBinding() ) {
-						STREAM_BINDING.getClobBinder( javaTypeDescriptor )
-								.bind( st, name, value, executionContext );
-					}
-					else {
-						CLOB_BINDING.getClobBinder( javaTypeDescriptor )
-								.bind( st, name, value, executionContext );
-					}
-				}
-			};
-		}
-	};
 
 	public static final ClobSqlDescriptor CLOB_BINDING = new ClobSqlDescriptor() {
 		@Override
@@ -131,14 +81,27 @@ public abstract class ClobSqlDescriptor extends AbstractTemplateSqlTypeDescripto
 		}
 
 		@Override
-		public <X> JdbcValueBinder<X> getClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+		protected <X> JdbcValueBinder<X> createBinder(
+				BasicJavaDescriptor<X> javaTypeDescriptor,
+				TypeConfiguration typeConfiguration) {
 			return new AbstractJdbcValueBinder<X>( javaTypeDescriptor, this ) {
 				@Override
 				protected void doBind(
 						PreparedStatement st,
 						int index, X value,
 						ExecutionContext executionContext) throws SQLException {
-					st.setClob( index, javaTypeDescriptor.unwrap( value, Clob.class, executionContext.getSession() ) );
+					if ( executionContext.getSession().useStreamForLobBinding() ) {
+						st.setClob(
+								index,
+								javaTypeDescriptor.unwrap( value, CharacterStream.class, executionContext.getSession() ).asReader()
+						);
+					}
+					else {
+						st.setClob(
+								index,
+								javaTypeDescriptor.unwrap( value, Clob.class, executionContext.getSession() )
+						);
+					}
 				}
 
 				@Override
@@ -146,7 +109,18 @@ public abstract class ClobSqlDescriptor extends AbstractTemplateSqlTypeDescripto
 						CallableStatement st,
 						String name, X value,
 						ExecutionContext executionContext) throws SQLException {
-					st.setClob( name, javaTypeDescriptor.unwrap( value, Clob.class, executionContext.getSession() ) );
+					if ( executionContext.getSession().useStreamForLobBinding() ) {
+						st.setClob(
+								name,
+								javaTypeDescriptor.unwrap( value, CharacterStream.class, executionContext.getSession() ).asReader()
+						);
+					}
+					else {
+						st.setClob(
+								name,
+								javaTypeDescriptor.unwrap( value, Clob.class, executionContext.getSession() )
+						);
+					}
 				}
 			};
 		}
@@ -159,7 +133,9 @@ public abstract class ClobSqlDescriptor extends AbstractTemplateSqlTypeDescripto
 		}
 
 		@Override
-		public <X> JdbcValueBinder<X> getClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+		protected <X> JdbcValueBinder<X> createBinder(
+				BasicJavaDescriptor<X> javaTypeDescriptor,
+				TypeConfiguration typeConfiguration) {
 			return new AbstractJdbcValueBinder<X>( javaTypeDescriptor, this ) {
 				@Override
 				protected void doBind(
@@ -197,7 +173,9 @@ public abstract class ClobSqlDescriptor extends AbstractTemplateSqlTypeDescripto
 		}
 
 		@Override
-		public <X> JdbcValueBinder<X> getClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+		protected <X> JdbcValueBinder<X> createBinder(
+				BasicJavaDescriptor<X> javaTypeDescriptor,
+				TypeConfiguration typeConfiguration) {
 			return new AbstractJdbcValueBinder<X>( javaTypeDescriptor, this ) {
 				@Override
 				protected void doBind(
@@ -258,4 +236,5 @@ public abstract class ClobSqlDescriptor extends AbstractTemplateSqlTypeDescripto
 		}
 	};
 
+	public static final ClobSqlDescriptor DEFAULT = CLOB_BINDING;
 }

@@ -27,6 +27,12 @@ public interface ValueMapping<J> {
 
 	FetchMode getFetchMode();
 
+	/**
+	 * todo (6.0) : ? - expose this as LocalMetadataBuildingContext to get access to `#getOrigin`?
+	 * 		all ValueMapping should be created relative to a local MetadataBuildingContext.  Using
+	 * 		LocalMetadataBuildingContext would give us access to Origin which defines the
+	 * 		localized mapping info (attribute, class, etc) which is useful for error messages
+	 */
 	MetadataBuildingContext getMetadataBuildingContext();
 
 	JavaTypeMapping<J> getJavaTypeMapping();

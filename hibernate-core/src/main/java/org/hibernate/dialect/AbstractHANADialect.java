@@ -47,7 +47,6 @@ import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.ConfigurationService.Converter;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.BlobImplementer;
@@ -101,11 +100,11 @@ import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.BooleanSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.CharSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.DecimalSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.DoubleSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.sql.spi.NCharSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.NClobSqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.DecimalSqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.DoubleSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.NVarcharSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SmallIntSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
@@ -149,669 +148,6 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 	};
-
-	private static class CloseSuppressingReader extends FilterReader {
-		protected CloseSuppressingReader(final Reader in) {
-			super( in );
-		}
-
-		@Override
-		public void close() {
-			// do not close
-		}
-	}
-
-	private static class CloseSuppressingInputStream extends FilterInputStream {
-
-		protected CloseSuppressingInputStream(final InputStream in) {
-			super( in );
-		}
-
-		@Override
-		public void close() {
-			// do not close
-		}
-	}
-
-	private static class MaterializedBlob implements Blob {
-
-		private byte[] bytes = null;
-
-		public MaterializedBlob(byte[] bytes) {
-			this.setBytes( bytes );
-		}
-
-		@Override
-		public long length() {
-			return this.getBytes().length;
-		}
-
-		@Override
-		public byte[] getBytes(long pos, int length) {
-			return Arrays.copyOfRange( this.bytes, (int) ( pos - 1 ), (int) ( pos - 1 + length ) );
-		}
-
-		@Override
-		public InputStream getBinaryStream() {
-			return new ByteArrayInputStream( this.getBytes() );
-		}
-
-		@Override
-		public long position(byte[] pattern, long start) throws SQLException {
-			throw new SQLFeatureNotSupportedException();
-		}
-
-		@Override
-		public long position(Blob pattern, long start) throws SQLException {
-			throw new SQLFeatureNotSupportedException();
-		}
-
-		@Override
-		public int setBytes(long pos, byte[] bytes) {
-			int bytesSet = 0;
-			if ( this.bytes.length < pos - 1 + bytes.length ) {
-				this.bytes = Arrays.copyOf( this.bytes, (int) ( pos - 1 + bytes.length ) );
-			}
-			for ( int i = 0; i < bytes.length && i < this.bytes.length; i++, bytesSet++ ) {
-				this.bytes[(int) ( i + pos - 1 )] = bytes[i];
-			}
-			return bytesSet;
-		}
-
-		@Override
-		public int setBytes(long pos, byte[] bytes, int offset, int len) {
-			int bytesSet = 0;
-			if ( this.bytes.length < pos - 1 + len ) {
-				this.bytes = Arrays.copyOf( this.bytes, (int) ( pos - 1 + len ) );
-			}
-			for ( int i = offset; i < len && i < this.bytes.length; i++, bytesSet++ ) {
-				this.bytes[(int) ( i + pos - 1 )] = bytes[i];
-			}
-			return bytesSet;
-		}
-
-		@Override
-		public OutputStream setBinaryStream(long pos) {
-			return new ByteArrayOutputStream() {
-
-				{
-					this.buf = getBytes();
-				}
-			};
-		}
-
-		@Override
-		public void truncate(long len) {
-			this.setBytes( Arrays.copyOf( this.getBytes(), (int) len ) );
-		}
-
-		@Override
-		public void free() {
-			this.setBytes( null );
-		}
-
-		@Override
-		public InputStream getBinaryStream(long pos, long length) {
-			return new ByteArrayInputStream( this.getBytes(), (int) ( pos - 1 ), (int) length );
-		}
-
-		byte[] getBytes() {
-			return this.bytes;
-		}
-
-		void setBytes(byte[] bytes) {
-			this.bytes = bytes;
-		}
-
-	}
-
-	private static class MaterializedNClob implements NClob {
-
-		private String data;
-
-		public MaterializedNClob(String data) {
-			this.data = data;
-		}
-
-		@Override
-		public void truncate(long len) {
-			this.data = new String();
-		}
-
-		@Override
-		public int setString(long pos, String str, int offset, int len) {
-			this.data = this.data.substring( 0, (int) ( pos - 1 ) ) + str.substring( offset, offset + len )
-					+ this.data.substring( (int) ( pos - 1 + len ) );
-			return len;
-		}
-
-		@Override
-		public int setString(long pos, String str) {
-			this.data = this.data.substring( 0, (int) ( pos - 1 ) ) + str + this.data.substring( (int) ( pos - 1 + str.length() ) );
-			return str.length();
-		}
-
-		@Override
-		public Writer setCharacterStream(long pos) throws SQLException {
-			throw new SQLFeatureNotSupportedException();
-		}
-
-		@Override
-		public OutputStream setAsciiStream(long pos) throws SQLException {
-			throw new SQLFeatureNotSupportedException();
-		}
-
-		@Override
-		public long position(Clob searchstr, long start) {
-			return this.data.indexOf( LobStreamDataHelper.extractString( searchstr ), (int) ( start - 1 ) );
-		}
-
-		@Override
-		public long position(String searchstr, long start) {
-			return this.data.indexOf( searchstr, (int) ( start - 1 ) );
-		}
-
-		@Override
-		public long length() {
-			return this.data.length();
-		}
-
-		@Override
-		public String getSubString(long pos, int length) {
-			return this.data.substring( (int) ( pos - 1 ), (int) ( pos - 1 + length ) );
-		}
-
-		@Override
-		public Reader getCharacterStream(long pos, long length) {
-			return new StringReader( this.data.substring( (int) ( pos - 1 ), (int) ( pos - 1 + length ) ) );
-		}
-
-		@Override
-		public Reader getCharacterStream() {
-			return new StringReader( this.data );
-		}
-
-		@Override
-		public InputStream getAsciiStream() {
-			return new ByteArrayInputStream( this.data.getBytes( StandardCharsets.ISO_8859_1 ) );
-		}
-
-		@Override
-		public void free() {
-			this.data = null;
-		}
-	}
-
-	private static class HANAStreamBlobTypeDescriptor extends AbstractTemplateSqlTypeDescriptor {
-
-		private static final long serialVersionUID = -2476600722093442047L;
-
-		final int maxLobPrefetchSize;
-
-		public HANAStreamBlobTypeDescriptor(int maxLobPrefetchSize) {
-			this.maxLobPrefetchSize = maxLobPrefetchSize;
-		}
-
-		@Override
-		public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
-			return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getOrMakeJavaDescriptor( Clob.class );
-		}
-
-		@Override
-		public int getJdbcTypeCode() {
-			return Types.BLOB;
-		}
-
-		@Override
-		public boolean canBeRemapped() {
-			return true;
-		}
-
-		@Override
-		protected <X> JdbcValueBinder<X> createBinder(BasicJavaDescriptor<X> javaTypeDescriptor, TypeConfiguration typeConfiguration) {
-			return new AbstractJdbcValueBinder<X>( javaTypeDescriptor, this ) {
-				@Override
-				protected void doBind(
-						PreparedStatement st,
-						int index, X value,
-						ExecutionContext executionContext) throws SQLException {
-					final BinaryStream binaryStream = javaTypeDescriptor.unwrap( value, BinaryStream.class, executionContext.getSession() );
-					if ( value instanceof BlobImplementer ) {
-						try ( InputStream is = new CloseSuppressingInputStream( binaryStream.getInputStream() ) ) {
-							st.setBinaryStream( index, is, binaryStream.getLength() );
-						}
-						catch (IOException e) {
-							// can't happen => ignore
-						}
-					}
-					else {
-						st.setBinaryStream( index, binaryStream.getInputStream(), binaryStream.getLength() );
-					}
-				}
-
-				@Override
-				protected void doBind(
-						CallableStatement st,
-						String name, X value,
-						ExecutionContext executionContext) throws SQLException {
-					final BinaryStream binaryStream = javaTypeDescriptor.unwrap( value, BinaryStream.class, executionContext.getSession() );
-					if ( value instanceof BlobImplementer ) {
-						try ( InputStream is = new CloseSuppressingInputStream( binaryStream.getInputStream() ) ) {
-							st.setBinaryStream( name, is, binaryStream.getLength() );
-						}
-						catch (IOException e) {
-							// can't happen => ignore
-						}
-					}
-					else {
-						st.setBinaryStream( name, binaryStream.getInputStream(), binaryStream.getLength() );
-					}
-				}
-			};
-		}
-
-		@Override
-		protected <X> JdbcValueExtractor<X> createExtractor(BasicJavaDescriptor<X> javaTypeDescriptor, TypeConfiguration typeConfiguration) {
-			return new AbstractJdbcValueExtractor<X>( javaTypeDescriptor, this ) {
-				@Override
-				protected X doExtract(ResultSet rs, int position, ExecutionContext executionContext) throws SQLException {
-					Blob rsBlob = rs.getBlob( position );
-					if ( rsBlob == null || rsBlob.length() < HANAStreamBlobTypeDescriptor.this.maxLobPrefetchSize ) {
-						return javaTypeDescriptor.wrap( rsBlob, executionContext.getSession() );
-					}
-					Blob blob = new MaterializedBlob( LobStreamDataHelper.extractBytes( rsBlob.getBinaryStream() ) );
-					return javaTypeDescriptor.wrap( blob, executionContext.getSession() );
-				}
-
-				@Override
-				protected X doExtract(CallableStatement statement, int position, ExecutionContext executionContext) throws SQLException {
-					return javaTypeDescriptor.wrap( statement.getBlob( position ), executionContext.getSession() );
-				}
-
-				@Override
-				protected X doExtract(CallableStatement statement, String name, ExecutionContext executionContext) throws SQLException {
-					return javaTypeDescriptor.wrap( statement.getBlob( name ), executionContext.getSession() );
-				}
-			};
-		}
-
-		@Override
-		public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
-			// literal values for BLOB data is not supported.
-			return null;
-		}
-	}
-
-	// the ClobJavaDescriptor and NClobSqlDescriptor for HANA are slightly
-	// changed from the standard ones. The HANA JDBC driver currently closes any
-	// stream passed in via
-	// PreparedStatement.setCharacterStream(int,Reader,long)
-	// after the stream has been processed. this causes problems later if we are
-	// using non-contexual lob creation and HANA then closes our StringReader.
-	// see test case LobLocatorTest
-
-	private static class HANAClobTypeDescriptor<T> extends ClobSqlDescriptor {
-
-		/** serial version uid. */
-		private static final long serialVersionUID = -379042275442752102L;
-
-		final int maxLobPrefetchSize;
-		final boolean useUnicodeStringTypes;
-
-		public HANAClobTypeDescriptor(int maxLobPrefetchSize, boolean useUnicodeStringTypes) {
-			this.maxLobPrefetchSize = maxLobPrefetchSize;
-			this.useUnicodeStringTypes = useUnicodeStringTypes;
-		}
-
-		@Override
-		public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
-			return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getOrMakeJavaDescriptor( Clob.class );
-		}
-
-
-		@Override
-		public <X> JdbcValueBinder<X> getClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-			return new AbstractJdbcValueBinder<X>( javaTypeDescriptor, this ) {
-				@Override
-				protected void doBind(
-						PreparedStatement st,
-						int index, X value,
-						ExecutionContext executionContext) throws SQLException {
-					final CharacterStream characterStream = javaTypeDescriptor.unwrap( value, CharacterStream.class, executionContext.getSession() );
-
-					if ( value instanceof ClobImplementer ) {
-						try ( Reader r = new CloseSuppressingReader( characterStream.asReader() ) ) {
-							st.setCharacterStream( index, r, characterStream.getLength() );
-						}
-						catch (IOException e) {
-							// can't happen => ignore
-						}
-					}
-					else {
-						st.setCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
-					}
-
-				}
-
-				@Override
-				protected void doBind(
-						CallableStatement st,
-						String name, X value,
-						ExecutionContext executionContext) throws SQLException {
-					final CharacterStream characterStream = javaTypeDescriptor.unwrap( value, CharacterStream.class, executionContext.getSession() );
-
-					if ( value instanceof ClobImplementer ) {
-						try ( Reader r = new CloseSuppressingReader( characterStream.asReader() ) ) {
-							st.setCharacterStream( name, r, characterStream.getLength() );
-						}
-						catch (IOException e) {
-							// can't happen => ignore
-						}
-					}
-					else {
-						st.setCharacterStream( name, characterStream.asReader(), characterStream.getLength() );
-					}
-				}
-			};
-		}
-
-		@Override
-		protected <X> JdbcValueExtractor<X> createExtractor(
-				BasicJavaDescriptor<X> javaTypeDescriptor,
-				TypeConfiguration typeConfiguration) {
-			return new AbstractJdbcValueExtractor<X>( javaTypeDescriptor, this ) {
-				@Override
-				protected X doExtract(
-						ResultSet rs,
-						int position,
-						ExecutionContext executionContext) throws SQLException {
-					Clob rsClob;
-					if ( HANAClobTypeDescriptor.this.useUnicodeStringTypes ) {
-						rsClob = rs.getNClob( position );
-					}
-					else {
-						rsClob = rs.getClob( position );
-					}
-
-					if ( rsClob == null || rsClob.length() < HANAClobTypeDescriptor.this.maxLobPrefetchSize ) {
-						return javaTypeDescriptor.wrap( rsClob, executionContext.getSession() );
-					}
-
-					final Clob clob = new MaterializedNClob( LobStreamDataHelper.extractString( rsClob ) );
-					return javaTypeDescriptor.wrap( clob, executionContext.getSession() );
-				}
-
-				@Override
-				protected X doExtract(
-						CallableStatement statement,
-						int position,
-						ExecutionContext executionContext) throws SQLException {
-					return javaTypeDescriptor.wrap( statement.getClob( position ), executionContext.getSession() );
-				}
-
-				@Override
-				protected X doExtract(
-						CallableStatement statement,
-						String name,
-						ExecutionContext executionContext) throws SQLException {
-					return javaTypeDescriptor.wrap( statement.getClob( name ), executionContext.getSession() );
-				}
-			};
-		}
-
-		public int getMaxLobPrefetchSize() {
-			return this.maxLobPrefetchSize;
-		}
-
-		public boolean isUseUnicodeStringTypes() {
-			return this.useUnicodeStringTypes;
-		}
-
-	}
-
-	private static class HANANClobSqlDescriptor extends NClobSqlDescriptor {
-
-		/** serial version uid. */
-		private static final long serialVersionUID = 5651116091681647859L;
-
-		final int maxLobPrefetchSize;
-
-		public HANANClobSqlDescriptor(int maxLobPrefetchSize) {
-			this.maxLobPrefetchSize = maxLobPrefetchSize;
-		}
-
-		@Override
-		public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
-			return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getOrMakeJavaDescriptor( Clob.class );
-		}
-
-		@Override
-		public <X> JdbcValueBinder<X> getNClobBinder(
-				final JavaTypeDescriptor<X> javaTypeDescriptor,
-				TypeConfiguration typeConfiguration) {
-			return new AbstractJdbcValueBinder<X>( javaTypeDescriptor, this ) {
-
-				@Override
-				protected void doBind(
-						PreparedStatement st,
-						int index, X value,
-						ExecutionContext executionContext) throws SQLException {
-					final CharacterStream characterStream = javaTypeDescriptor.unwrap( value, CharacterStream.class, executionContext.getSession() );
-
-					if ( value instanceof NClobImplementer ) {
-						try ( Reader r = new CloseSuppressingReader( characterStream.asReader() ) ) {
-							st.setCharacterStream( index, r, characterStream.getLength() );
-						}
-						catch (IOException e) {
-							// can't happen => ignore
-						}
-					}
-					else {
-						st.setCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
-					}
-				}
-
-				@Override
-				protected void doBind(
-						CallableStatement st,
-						String name, X value,
-						ExecutionContext executionContext) throws SQLException {
-					final CharacterStream characterStream = javaTypeDescriptor.unwrap(
-							value,
-							CharacterStream.class,
-							executionContext.getSession()
-					);
-
-					if ( value instanceof NClobImplementer ) {
-						try ( Reader r = new CloseSuppressingReader( characterStream.asReader() ) ) {
-							st.setCharacterStream( name, r, characterStream.getLength() );
-						}
-						catch (IOException e) {
-							// can't happen => ignore
-						}
-					}
-					else {
-						st.setCharacterStream( name, characterStream.asReader(), characterStream.getLength() );
-					}
-				}
-			};
-		}
-
-		@Override
-		protected <X> JdbcValueExtractor<X> createExtractor(
-				BasicJavaDescriptor<X> javaTypeDescriptor,
-				TypeConfiguration typeConfiguration) {
-			return new AbstractJdbcValueExtractor<X>( javaTypeDescriptor, this ) {
-				@Override
-				protected X doExtract(
-						ResultSet rs,
-						int position,
-						ExecutionContext executionContext) throws SQLException {
-					NClob rsNClob = rs.getNClob( position );
-					if ( rsNClob == null || rsNClob.length() < HANANClobSqlDescriptor.this.maxLobPrefetchSize ) {
-						return javaTypeDescriptor.wrap( rsNClob, executionContext.getSession() );
-					}
-					NClob nClob = new MaterializedNClob( LobStreamDataHelper.extractString( rsNClob ) );
-					return javaTypeDescriptor.wrap( nClob, executionContext.getSession() );
-				}
-
-				@Override
-				protected X doExtract(
-						CallableStatement statement,
-						int position,
-						ExecutionContext executionContext) throws SQLException {
-					return javaTypeDescriptor.wrap( statement.getNClob( position ), executionContext.getSession() );
-				}
-
-				@Override
-				protected X doExtract(
-						CallableStatement statement,
-						String name,
-						ExecutionContext executionContext) throws SQLException {
-					return javaTypeDescriptor.wrap( statement.getNClob( name ), executionContext.getSession() );
-				}
-			};
-		}
-
-		public int getMaxLobPrefetchSize() {
-			return this.maxLobPrefetchSize;
-		}
-
-		@Override
-		public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
-			// literal values for (N)CLOB data is not supported.
-			return null;
-		}
-	}
-
-	public static class HANABlobTypeDescriptor extends AbstractTemplateSqlTypeDescriptor {
-
-		private static final long serialVersionUID = 5874441715643764323L;
-
-		final int maxLobPrefetchSize;
-
-		final HANAStreamBlobTypeDescriptor hanaStreamBlobTypeDescriptor;
-
-		public HANABlobTypeDescriptor(int maxLobPrefetchSize) {
-			this.maxLobPrefetchSize = maxLobPrefetchSize;
-			this.hanaStreamBlobTypeDescriptor = new HANAStreamBlobTypeDescriptor( maxLobPrefetchSize );
-		}
-
-		@Override
-		public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
-			return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getOrMakeJavaDescriptor( Clob.class );
-		}
-
-		@Override
-		public int getJdbcTypeCode() {
-			return Types.BLOB;
-		}
-
-		@Override
-		public boolean canBeRemapped() {
-			return true;
-		}
-
-		@Override
-		protected <X> JdbcValueExtractor<X> createExtractor(
-				BasicJavaDescriptor<X> javaTypeDescriptor,
-				TypeConfiguration typeConfiguration) {
-			return new AbstractJdbcValueExtractor<X>( javaTypeDescriptor, this ) {
-				@Override
-				protected X doExtract(
-						ResultSet rs,
-						int position,
-						ExecutionContext executionContext) throws SQLException {
-					Blob rsBlob = rs.getBlob( position );
-					if ( rsBlob == null || rsBlob.length() < HANABlobTypeDescriptor.this.maxLobPrefetchSize ) {
-						return javaTypeDescriptor.wrap( rsBlob, executionContext.getSession() );
-					}
-					Blob blob = new MaterializedBlob( LobStreamDataHelper.extractBytes( rsBlob.getBinaryStream() ) );
-					return javaTypeDescriptor.wrap( blob, executionContext.getSession() );
-				}
-
-				@Override
-				protected X doExtract(
-						CallableStatement statement,
-						int position,
-						ExecutionContext executionContext) throws SQLException {
-					return javaTypeDescriptor.wrap( statement.getBlob( position ), executionContext.getSession() );
-				}
-
-				@Override
-				protected X doExtract(
-						CallableStatement statement,
-						String name,
-						ExecutionContext executionContext) throws SQLException {
-					return javaTypeDescriptor.wrap( statement.getBlob( name ), executionContext.getSession() );
-				}
-			};
-		}
-
-		@Override
-		protected <X> JdbcValueBinder<X> createBinder(
-				BasicJavaDescriptor<X> javaTypeDescriptor,
-				TypeConfiguration typeConfiguration) {
-			return new AbstractJdbcValueBinder<X>( javaTypeDescriptor, this ) {
-
-				@Override
-				@SuppressWarnings("unchecked")
-				protected void doBind(
-						PreparedStatement st,
-						int index, X value,
-						ExecutionContext executionContext) throws SQLException {
-					final SharedSessionContractImplementor session = executionContext.getSession();
-
-					SqlTypeDescriptor descriptor = BlobSqlDescriptor.BLOB_BINDING;
-
-					if ( byte[].class.isInstance( value ) ) {
-						// performance shortcut for binding BLOB data in byte[] format
-						descriptor = BlobSqlDescriptor.PRIMITIVE_ARRAY_BINDING;
-					}
-					else if ( session.useStreamForLobBinding() ) {
-						descriptor = HANABlobTypeDescriptor.this.hanaStreamBlobTypeDescriptor;
-					}
-
-					final TypeConfiguration typeConfiguration = session.getFactory().getTypeConfiguration();
-					descriptor.getSqlExpressableType( javaTypeDescriptor, typeConfiguration)
-							.getJdbcValueBinder().bind( st, index, value, executionContext );
-				}
-
-				@Override
-				@SuppressWarnings("unchecked")
-				protected void doBind(
-						CallableStatement st,
-						String name, X value,
-						ExecutionContext executionContext) throws SQLException {
-					final SharedSessionContractImplementor session = executionContext.getSession();
-
-					SqlTypeDescriptor descriptor = BlobSqlDescriptor.BLOB_BINDING;
-
-					if ( byte[].class.isInstance( value ) ) {
-						// performance shortcut for binding BLOB data in byte[] format
-						descriptor = BlobSqlDescriptor.PRIMITIVE_ARRAY_BINDING;
-					}
-					else if ( session.useStreamForLobBinding() ) {
-						descriptor = HANABlobTypeDescriptor.this.hanaStreamBlobTypeDescriptor;
-					}
-
-					final TypeConfiguration typeConfiguration = session.getFactory().getTypeConfiguration();
-					descriptor.getSqlExpressableType( javaTypeDescriptor, typeConfiguration )
-							.getJdbcValueBinder().bind( st, name, value, executionContext );
-				}
-			};
-		}
-
-		public int getMaxLobPrefetchSize() {
-			return this.maxLobPrefetchSize;
-		}
-
-		@Override
-		public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
-			// literal values for BLOB data is not supported.
-			return null;
-		}
-	}
 
 	// Set the LOB prefetch size. LOBs larger than this value will be read into memory as the HANA JDBC driver closes
 	// the LOB when the result set is closed.
@@ -933,6 +269,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		// getGeneratedKeys() is not supported by the HANA JDBC driver
 		getDefaultProperties().setProperty( AvailableSettings.USE_GET_GENERATED_KEYS, "false" );
 	}
+
 
 	@Override
 	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
@@ -1684,28 +1021,12 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
-		int maxLobPrefetchSize = configurationService.getSetting(
-				MAX_LOB_PREFETCH_SIZE_PARAMETER_NAME,
-				new Converter<Integer>() {
 
-					@Override
-					public Integer convert(Object value) {
-						return Integer.valueOf( value.toString() );
-					}
-
-				},
-				Integer.valueOf( maxLobPrefetchSizeDefault ) ).intValue();
-
-		if ( this.nClobTypeDescriptor.getMaxLobPrefetchSize() != maxLobPrefetchSize ) {
-			this.nClobTypeDescriptor = new HANANClobSqlDescriptor( maxLobPrefetchSize );
-		}
-
-		if ( this.blobTypeDescriptor.getMaxLobPrefetchSize() != maxLobPrefetchSize ) {
-			this.blobTypeDescriptor = new HANABlobTypeDescriptor( maxLobPrefetchSize );
-		}
-
-		this.useUnicodeStringTypes = configurationService.getSetting( USE_UNICODE_STRING_TYPES_PARAMETER_NAME, StandardConverters.BOOLEAN,
-				USE_UNICODE_STRING_TYPES_DEFAULT_VALUE ).booleanValue();
+		this.useUnicodeStringTypes = configurationService.getSetting(
+				USE_UNICODE_STRING_TYPES_PARAMETER_NAME,
+				StandardConverters.BOOLEAN,
+				USE_UNICODE_STRING_TYPES_DEFAULT_VALUE
+		);
 
 		if ( this.useUnicodeStringTypes ) {
 			registerColumnType( Types.CHAR, "nvarchar(1)" );
@@ -1718,28 +1039,35 @@ public abstract class AbstractHANADialect extends Dialect {
 			registerColumnType( Types.CLOB, "nclob" );
 		}
 
-		if ( this.clobTypeDescriptor.getMaxLobPrefetchSize() != maxLobPrefetchSize
-				|| this.clobTypeDescriptor.isUseUnicodeStringTypes() != this.useUnicodeStringTypes ) {
-			this.clobTypeDescriptor = new HANAClobTypeDescriptor( maxLobPrefetchSize, this.useUnicodeStringTypes );
-		}
+		int maxLobPrefetchSize = configurationService.getSetting(
+				MAX_LOB_PREFETCH_SIZE_PARAMETER_NAME,
+				value -> Integer.valueOf( value.toString() ),
+				maxLobPrefetchSizeDefault
+		);
 
-		this.useLegacyBooleanType = configurationService.getSetting( USE_LEGACY_BOOLEAN_TYPE_PARAMETER_NAME, StandardConverters.BOOLEAN,
-				USE_LEGACY_BOOLEAN_TYPE_DEFAULT_VALUE ).booleanValue();
+		typeContributions.contributeSqlTypeDescriptor( new HANANClobSqlDescriptor( maxLobPrefetchSize ) );
+		typeContributions.contributeSqlTypeDescriptor( new HANABlobTypeDescriptor( maxLobPrefetchSize ) );
+		typeContributions.contributeSqlTypeDescriptor( new HANAClobTypeDescriptor( maxLobPrefetchSize, useUnicodeStringTypes ) );
+
+		this.useLegacyBooleanType = configurationService.getSetting(
+				USE_LEGACY_BOOLEAN_TYPE_PARAMETER_NAME,
+				StandardConverters.BOOLEAN,
+				USE_LEGACY_BOOLEAN_TYPE_DEFAULT_VALUE
+		);
 
 		if ( this.useLegacyBooleanType ) {
 			registerColumnType( Types.BOOLEAN, "tinyint" );
 		}
 
-		this.treatDoubleTypedFieldsAsDecimal = configurationService.getSetting( TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_PARAMETER_NAME, StandardConverters.BOOLEAN,
-				TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_DEFAULT_VALUE ).booleanValue();
+		this.treatDoubleTypedFieldsAsDecimal = configurationService.getSetting(
+				TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_PARAMETER_NAME,
+				StandardConverters.BOOLEAN,
+				TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_DEFAULT_VALUE
+		);
 
 		if ( this.treatDoubleTypedFieldsAsDecimal ) {
 			registerHibernateType( Types.DOUBLE, StandardSpiBasicTypes.BIG_DECIMAL.getJavaTypeDescriptor().getTypeName() );
 		}
-	}
-
-	public SqlTypeDescriptor getBlobTypeDescriptor() {
-		return this.blobTypeDescriptor;
 	}
 
 	@Override
@@ -1790,5 +1118,679 @@ public abstract class AbstractHANADialect extends Dialect {
 	@Override
 	public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
 		return false;
+	}
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Custom SqlTypeDescriptor impls
+
+	/**
+	 * HANA specific CLOB descriptor handling the fact that the driver closes
+	 * streams passed to it as bind values.  This impl circumvents that from
+	 * happening by wrapping the stream in a wrapper that simply ignores
+	 * the `#close` call
+	 */
+	private static class HANAClobTypeDescriptor extends ClobSqlDescriptor {
+
+		/** serial version uid. */
+		private static final long serialVersionUID = -379042275442752102L;
+
+		final int maxLobPrefetchSize;
+		final boolean useUnicodeStringTypes;
+
+		public HANAClobTypeDescriptor(int maxLobPrefetchSize, boolean useUnicodeStringTypes) {
+			this.maxLobPrefetchSize = maxLobPrefetchSize;
+			this.useUnicodeStringTypes = useUnicodeStringTypes;
+		}
+
+		@Override
+		public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+			return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getOrMakeJavaDescriptor( Clob.class );
+		}
+
+		@Override
+		protected <X> JdbcValueBinder<X> createBinder(
+				BasicJavaDescriptor<X> javaTypeDescriptor, TypeConfiguration typeConfiguration) {
+			return new AbstractJdbcValueBinder<X>( javaTypeDescriptor, this ) {
+				@Override
+				protected void doBind(
+						PreparedStatement st,
+						int index, X value,
+						ExecutionContext executionContext) throws SQLException {
+					final CharacterStream characterStream = javaTypeDescriptor.unwrap( value, CharacterStream.class, executionContext.getSession() );
+
+					if ( value instanceof ClobImplementer ) {
+						try ( Reader r = new CloseSuppressingReader( characterStream.asReader() ) ) {
+							st.setCharacterStream( index, r, characterStream.getLength() );
+						}
+						catch (IOException e) {
+							// can't happen => ignore
+						}
+					}
+					else {
+						st.setCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
+					}
+
+				}
+
+				@Override
+				protected void doBind(
+						CallableStatement st,
+						String name, X value,
+						ExecutionContext executionContext) throws SQLException {
+					final CharacterStream characterStream = javaTypeDescriptor.unwrap( value, CharacterStream.class, executionContext.getSession() );
+
+					if ( value instanceof ClobImplementer ) {
+						try ( Reader r = new CloseSuppressingReader( characterStream.asReader() ) ) {
+							st.setCharacterStream( name, r, characterStream.getLength() );
+						}
+						catch (IOException e) {
+							// can't happen => ignore
+						}
+					}
+					else {
+						st.setCharacterStream( name, characterStream.asReader(), characterStream.getLength() );
+					}
+				}
+			};
+		}
+
+		@Override
+		protected <X> JdbcValueExtractor<X> createExtractor(
+				BasicJavaDescriptor<X> javaTypeDescriptor,
+				TypeConfiguration typeConfiguration) {
+			return new AbstractJdbcValueExtractor<X>( javaTypeDescriptor, this ) {
+				@Override
+				protected X doExtract(
+						ResultSet rs,
+						int position,
+						ExecutionContext executionContext) throws SQLException {
+					Clob rsClob;
+					if ( HANAClobTypeDescriptor.this.useUnicodeStringTypes ) {
+						rsClob = rs.getNClob( position );
+					}
+					else {
+						rsClob = rs.getClob( position );
+					}
+
+					if ( rsClob == null || rsClob.length() < HANAClobTypeDescriptor.this.maxLobPrefetchSize ) {
+						return javaTypeDescriptor.wrap( rsClob, executionContext.getSession() );
+					}
+
+					final Clob clob = new MaterializedNClob( LobStreamDataHelper.extractString( rsClob ) );
+					return javaTypeDescriptor.wrap( clob, executionContext.getSession() );
+				}
+
+				@Override
+				protected X doExtract(
+						CallableStatement statement,
+						int position,
+						ExecutionContext executionContext) throws SQLException {
+					return javaTypeDescriptor.wrap( statement.getClob( position ), executionContext.getSession() );
+				}
+
+				@Override
+				protected X doExtract(
+						CallableStatement statement,
+						String name,
+						ExecutionContext executionContext) throws SQLException {
+					return javaTypeDescriptor.wrap( statement.getClob( name ), executionContext.getSession() );
+				}
+			};
+		}
+	}
+
+	/**
+	 * HANA specific CLOB descriptor handling the fact that the driver closes
+	 * streams passed to it as bind values.  This impl circumvents that from
+	 * happening by wrapping the stream in a wrapper that simply ignores
+	 * the `#close` call
+	 */
+	private static class HANANClobSqlDescriptor extends NClobSqlDescriptor {
+
+		/** serial version uid. */
+		private static final long serialVersionUID = 5651116091681647859L;
+
+		final int maxLobPrefetchSize;
+
+		public HANANClobSqlDescriptor(int maxLobPrefetchSize) {
+			this.maxLobPrefetchSize = maxLobPrefetchSize;
+		}
+
+		@Override
+		public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+			return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getOrMakeJavaDescriptor( Clob.class );
+		}
+
+		@Override
+		protected <X> JdbcValueBinder<X> createBinder(
+				BasicJavaDescriptor<X> javaTypeDescriptor,
+				TypeConfiguration typeConfiguration) {
+			return new AbstractJdbcValueBinder<X>( javaTypeDescriptor, this ) {
+
+				@Override
+				protected void doBind(
+						PreparedStatement st,
+						int index, X value,
+						ExecutionContext executionContext) throws SQLException {
+					final CharacterStream characterStream = javaTypeDescriptor.unwrap( value, CharacterStream.class, executionContext.getSession() );
+
+					if ( value instanceof NClobImplementer ) {
+						try ( Reader r = new CloseSuppressingReader( characterStream.asReader() ) ) {
+							st.setCharacterStream( index, r, characterStream.getLength() );
+						}
+						catch (IOException e) {
+							// can't happen => ignore
+						}
+					}
+					else {
+						st.setCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
+					}
+				}
+
+				@Override
+				protected void doBind(
+						CallableStatement st,
+						String name, X value,
+						ExecutionContext executionContext) throws SQLException {
+					final CharacterStream characterStream = javaTypeDescriptor.unwrap(
+							value,
+							CharacterStream.class,
+							executionContext.getSession()
+					);
+
+					if ( value instanceof NClobImplementer ) {
+						try ( Reader r = new CloseSuppressingReader( characterStream.asReader() ) ) {
+							st.setCharacterStream( name, r, characterStream.getLength() );
+						}
+						catch (IOException e) {
+							// can't happen => ignore
+						}
+					}
+					else {
+						st.setCharacterStream( name, characterStream.asReader(), characterStream.getLength() );
+					}
+				}
+			};
+		}
+
+		@Override
+		protected <X> JdbcValueExtractor<X> createExtractor(
+				BasicJavaDescriptor<X> javaTypeDescriptor,
+				TypeConfiguration typeConfiguration) {
+			return new AbstractJdbcValueExtractor<X>( javaTypeDescriptor, this ) {
+				@Override
+				protected X doExtract(
+						ResultSet rs,
+						int position,
+						ExecutionContext executionContext) throws SQLException {
+					NClob rsNClob = rs.getNClob( position );
+					if ( rsNClob == null || rsNClob.length() < HANANClobSqlDescriptor.this.maxLobPrefetchSize ) {
+						return javaTypeDescriptor.wrap( rsNClob, executionContext.getSession() );
+					}
+					NClob nClob = new MaterializedNClob( LobStreamDataHelper.extractString( rsNClob ) );
+					return javaTypeDescriptor.wrap( nClob, executionContext.getSession() );
+				}
+
+				@Override
+				protected X doExtract(
+						CallableStatement statement,
+						int position,
+						ExecutionContext executionContext) throws SQLException {
+					return javaTypeDescriptor.wrap( statement.getNClob( position ), executionContext.getSession() );
+				}
+
+				@Override
+				protected X doExtract(
+						CallableStatement statement,
+						String name,
+						ExecutionContext executionContext) throws SQLException {
+					return javaTypeDescriptor.wrap( statement.getNClob( name ), executionContext.getSession() );
+				}
+			};
+		}
+
+		public int getMaxLobPrefetchSize() {
+			return this.maxLobPrefetchSize;
+		}
+
+		@Override
+		public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
+			// literal values for (N)CLOB data is not supported.
+			return null;
+		}
+	}
+
+	/**
+	 * HANA specific BLOB descriptor handling the fact that the driver closes
+	 * streams passed to it as bind values.  This impl circumvents that from
+	 * happening by wrapping the stream in a wrapper that simply ignores
+	 * the `#close` call
+	 */
+	public static class HANABlobTypeDescriptor extends AbstractTemplateSqlTypeDescriptor {
+
+		private static final long serialVersionUID = 5874441715643764323L;
+
+		final int maxLobPrefetchSize;
+
+		final HANAStreamBlobTypeDescriptor hanaStreamBlobTypeDescriptor;
+
+		public HANABlobTypeDescriptor(int maxLobPrefetchSize) {
+			this.maxLobPrefetchSize = maxLobPrefetchSize;
+			this.hanaStreamBlobTypeDescriptor = new HANAStreamBlobTypeDescriptor( maxLobPrefetchSize );
+		}
+
+		@Override
+		public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+			return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getOrMakeJavaDescriptor( Clob.class );
+		}
+
+		@Override
+		public int getJdbcTypeCode() {
+			return Types.BLOB;
+		}
+
+		@Override
+		public boolean canBeRemapped() {
+			return true;
+		}
+
+		@Override
+		protected <X> JdbcValueExtractor<X> createExtractor(
+				BasicJavaDescriptor<X> javaTypeDescriptor,
+				TypeConfiguration typeConfiguration) {
+			return new AbstractJdbcValueExtractor<X>( javaTypeDescriptor, this ) {
+				@Override
+				protected X doExtract(
+						ResultSet rs,
+						int position,
+						ExecutionContext executionContext) throws SQLException {
+					Blob rsBlob = rs.getBlob( position );
+					if ( rsBlob == null || rsBlob.length() < HANABlobTypeDescriptor.this.maxLobPrefetchSize ) {
+						return javaTypeDescriptor.wrap( rsBlob, executionContext.getSession() );
+					}
+					Blob blob = new MaterializedBlob( LobStreamDataHelper.extractBytes( rsBlob.getBinaryStream() ) );
+					return javaTypeDescriptor.wrap( blob, executionContext.getSession() );
+				}
+
+				@Override
+				protected X doExtract(
+						CallableStatement statement,
+						int position,
+						ExecutionContext executionContext) throws SQLException {
+					return javaTypeDescriptor.wrap( statement.getBlob( position ), executionContext.getSession() );
+				}
+
+				@Override
+				protected X doExtract(
+						CallableStatement statement,
+						String name,
+						ExecutionContext executionContext) throws SQLException {
+					return javaTypeDescriptor.wrap( statement.getBlob( name ), executionContext.getSession() );
+				}
+			};
+		}
+
+		@Override
+		protected <X> JdbcValueBinder<X> createBinder(
+				BasicJavaDescriptor<X> javaTypeDescriptor,
+				TypeConfiguration typeConfiguration) {
+			return new AbstractJdbcValueBinder<X>( javaTypeDescriptor, this ) {
+
+				@Override
+				@SuppressWarnings("unchecked")
+				protected void doBind(
+						PreparedStatement st,
+						int index, X value,
+						ExecutionContext executionContext) throws SQLException {
+					final SharedSessionContractImplementor session = executionContext.getSession();
+
+					SqlTypeDescriptor descriptor = BlobSqlDescriptor.BLOB_BINDING;
+
+					if ( byte[].class.isInstance( value ) ) {
+						// performance shortcut for binding BLOB data in byte[] format
+						descriptor = BlobSqlDescriptor.PRIMITIVE_ARRAY_BINDING;
+					}
+					else if ( session.useStreamForLobBinding() ) {
+						descriptor = HANABlobTypeDescriptor.this.hanaStreamBlobTypeDescriptor;
+					}
+
+					final TypeConfiguration typeConfiguration = session.getFactory().getTypeConfiguration();
+					descriptor.getSqlExpressableType( javaTypeDescriptor, typeConfiguration)
+							.getJdbcValueBinder().bind( st, index, value, executionContext );
+				}
+
+				@Override
+				@SuppressWarnings("unchecked")
+				protected void doBind(
+						CallableStatement st,
+						String name, X value,
+						ExecutionContext executionContext) throws SQLException {
+					final SharedSessionContractImplementor session = executionContext.getSession();
+
+					SqlTypeDescriptor descriptor = BlobSqlDescriptor.BLOB_BINDING;
+
+					if ( byte[].class.isInstance( value ) ) {
+						// performance shortcut for binding BLOB data in byte[] format
+						descriptor = BlobSqlDescriptor.PRIMITIVE_ARRAY_BINDING;
+					}
+					else if ( session.useStreamForLobBinding() ) {
+						descriptor = HANABlobTypeDescriptor.this.hanaStreamBlobTypeDescriptor;
+					}
+
+					final TypeConfiguration typeConfiguration = session.getFactory().getTypeConfiguration();
+					descriptor.getSqlExpressableType( javaTypeDescriptor, typeConfiguration )
+							.getJdbcValueBinder().bind( st, name, value, executionContext );
+				}
+			};
+		}
+
+		public int getMaxLobPrefetchSize() {
+			return this.maxLobPrefetchSize;
+		}
+
+		@Override
+		public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
+			// literal values for BLOB data is not supported.
+			return null;
+		}
+	}
+
+	private static class HANAStreamBlobTypeDescriptor extends AbstractTemplateSqlTypeDescriptor {
+
+		private static final long serialVersionUID = -2476600722093442047L;
+
+		final int maxLobPrefetchSize;
+
+		public HANAStreamBlobTypeDescriptor(int maxLobPrefetchSize) {
+			this.maxLobPrefetchSize = maxLobPrefetchSize;
+		}
+
+		@Override
+		public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+			return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getOrMakeJavaDescriptor( Clob.class );
+		}
+
+		@Override
+		public int getJdbcTypeCode() {
+			return Types.BLOB;
+		}
+
+		@Override
+		public boolean canBeRemapped() {
+			return true;
+		}
+
+		@Override
+		protected <X> JdbcValueBinder<X> createBinder(BasicJavaDescriptor<X> javaTypeDescriptor, TypeConfiguration typeConfiguration) {
+			return new AbstractJdbcValueBinder<X>( javaTypeDescriptor, this ) {
+				@Override
+				protected void doBind(
+						PreparedStatement st,
+						int index, X value,
+						ExecutionContext executionContext) throws SQLException {
+					final BinaryStream binaryStream = javaTypeDescriptor.unwrap( value, BinaryStream.class, executionContext.getSession() );
+					if ( value instanceof BlobImplementer ) {
+						try ( InputStream is = new CloseSuppressingInputStream( binaryStream.getInputStream() ) ) {
+							st.setBinaryStream( index, is, binaryStream.getLength() );
+						}
+						catch (IOException e) {
+							// can't happen => ignore
+						}
+					}
+					else {
+						st.setBinaryStream( index, binaryStream.getInputStream(), binaryStream.getLength() );
+					}
+				}
+
+				@Override
+				protected void doBind(
+						CallableStatement st,
+						String name, X value,
+						ExecutionContext executionContext) throws SQLException {
+					final BinaryStream binaryStream = javaTypeDescriptor.unwrap( value, BinaryStream.class, executionContext.getSession() );
+					if ( value instanceof BlobImplementer ) {
+						try ( InputStream is = new CloseSuppressingInputStream( binaryStream.getInputStream() ) ) {
+							st.setBinaryStream( name, is, binaryStream.getLength() );
+						}
+						catch (IOException e) {
+							// can't happen => ignore
+						}
+					}
+					else {
+						st.setBinaryStream( name, binaryStream.getInputStream(), binaryStream.getLength() );
+					}
+				}
+			};
+		}
+
+		@Override
+		protected <X> JdbcValueExtractor<X> createExtractor(BasicJavaDescriptor<X> javaTypeDescriptor, TypeConfiguration typeConfiguration) {
+			return new AbstractJdbcValueExtractor<X>( javaTypeDescriptor, this ) {
+				@Override
+				protected X doExtract(ResultSet rs, int position, ExecutionContext executionContext) throws SQLException {
+					Blob rsBlob = rs.getBlob( position );
+					if ( rsBlob == null || rsBlob.length() < HANAStreamBlobTypeDescriptor.this.maxLobPrefetchSize ) {
+						return javaTypeDescriptor.wrap( rsBlob, executionContext.getSession() );
+					}
+					Blob blob = new MaterializedBlob( LobStreamDataHelper.extractBytes( rsBlob.getBinaryStream() ) );
+					return javaTypeDescriptor.wrap( blob, executionContext.getSession() );
+				}
+
+				@Override
+				protected X doExtract(CallableStatement statement, int position, ExecutionContext executionContext) throws SQLException {
+					return javaTypeDescriptor.wrap( statement.getBlob( position ), executionContext.getSession() );
+				}
+
+				@Override
+				protected X doExtract(CallableStatement statement, String name, ExecutionContext executionContext) throws SQLException {
+					return javaTypeDescriptor.wrap( statement.getBlob( name ), executionContext.getSession() );
+				}
+			};
+		}
+
+		@Override
+		public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
+			// literal values for BLOB data is not supported.
+			return null;
+		}
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Support classes
+
+
+	private static class CloseSuppressingReader extends FilterReader {
+		protected CloseSuppressingReader(final Reader in) {
+			super( in );
+		}
+
+		@Override
+		public void close() {
+			// do not close
+		}
+	}
+
+	private static class CloseSuppressingInputStream extends FilterInputStream {
+
+		protected CloseSuppressingInputStream(final InputStream in) {
+			super( in );
+		}
+
+		@Override
+		public void close() {
+			// do not close
+		}
+	}
+
+	private static class MaterializedBlob implements Blob {
+
+		private byte[] bytes = null;
+
+		public MaterializedBlob(byte[] bytes) {
+			this.setBytes( bytes );
+		}
+
+		@Override
+		public long length() {
+			return this.getBytes().length;
+		}
+
+		@Override
+		public byte[] getBytes(long pos, int length) {
+			return Arrays.copyOfRange( this.bytes, (int) ( pos - 1 ), (int) ( pos - 1 + length ) );
+		}
+
+		@Override
+		public InputStream getBinaryStream() {
+			return new ByteArrayInputStream( this.getBytes() );
+		}
+
+		@Override
+		public long position(byte[] pattern, long start) throws SQLException {
+			throw new SQLFeatureNotSupportedException();
+		}
+
+		@Override
+		public long position(Blob pattern, long start) throws SQLException {
+			throw new SQLFeatureNotSupportedException();
+		}
+
+		@Override
+		public int setBytes(long pos, byte[] bytes) {
+			int bytesSet = 0;
+			if ( this.bytes.length < pos - 1 + bytes.length ) {
+				this.bytes = Arrays.copyOf( this.bytes, (int) ( pos - 1 + bytes.length ) );
+			}
+			for ( int i = 0; i < bytes.length && i < this.bytes.length; i++, bytesSet++ ) {
+				this.bytes[(int) ( i + pos - 1 )] = bytes[i];
+			}
+			return bytesSet;
+		}
+
+		@Override
+		public int setBytes(long pos, byte[] bytes, int offset, int len) {
+			int bytesSet = 0;
+			if ( this.bytes.length < pos - 1 + len ) {
+				this.bytes = Arrays.copyOf( this.bytes, (int) ( pos - 1 + len ) );
+			}
+			for ( int i = offset; i < len && i < this.bytes.length; i++, bytesSet++ ) {
+				this.bytes[(int) ( i + pos - 1 )] = bytes[i];
+			}
+			return bytesSet;
+		}
+
+		@Override
+		public OutputStream setBinaryStream(long pos) {
+			return new ByteArrayOutputStream() {
+
+				{
+					this.buf = getBytes();
+				}
+			};
+		}
+
+		@Override
+		public void truncate(long len) {
+			this.setBytes( Arrays.copyOf( this.getBytes(), (int) len ) );
+		}
+
+		@Override
+		public void free() {
+			this.setBytes( null );
+		}
+
+		@Override
+		public InputStream getBinaryStream(long pos, long length) {
+			return new ByteArrayInputStream( this.getBytes(), (int) ( pos - 1 ), (int) length );
+		}
+
+		byte[] getBytes() {
+			return this.bytes;
+		}
+
+		void setBytes(byte[] bytes) {
+			this.bytes = bytes;
+		}
+
+	}
+
+	private static class MaterializedNClob implements NClob {
+
+		private String data;
+
+		public MaterializedNClob(String data) {
+			this.data = data;
+		}
+
+		@Override
+		public void truncate(long len) {
+			this.data = new String();
+		}
+
+		@Override
+		public int setString(long pos, String str, int offset, int len) {
+			this.data = this.data.substring( 0, (int) ( pos - 1 ) ) + str.substring( offset, offset + len )
+					+ this.data.substring( (int) ( pos - 1 + len ) );
+			return len;
+		}
+
+		@Override
+		public int setString(long pos, String str) {
+			this.data = this.data.substring( 0, (int) ( pos - 1 ) ) + str + this.data.substring( (int) ( pos - 1 + str.length() ) );
+			return str.length();
+		}
+
+		@Override
+		public Writer setCharacterStream(long pos) throws SQLException {
+			throw new SQLFeatureNotSupportedException();
+		}
+
+		@Override
+		public OutputStream setAsciiStream(long pos) throws SQLException {
+			throw new SQLFeatureNotSupportedException();
+		}
+
+		@Override
+		public long position(Clob searchstr, long start) {
+			return this.data.indexOf( LobStreamDataHelper.extractString( searchstr ), (int) ( start - 1 ) );
+		}
+
+		@Override
+		public long position(String searchstr, long start) {
+			return this.data.indexOf( searchstr, (int) ( start - 1 ) );
+		}
+
+		@Override
+		public long length() {
+			return this.data.length();
+		}
+
+		@Override
+		public String getSubString(long pos, int length) {
+			return this.data.substring( (int) ( pos - 1 ), (int) ( pos - 1 + length ) );
+		}
+
+		@Override
+		public Reader getCharacterStream(long pos, long length) {
+			return new StringReader( this.data.substring( (int) ( pos - 1 ), (int) ( pos - 1 + length ) ) );
+		}
+
+		@Override
+		public Reader getCharacterStream() {
+			return new StringReader( this.data );
+		}
+
+		@Override
+		public InputStream getAsciiStream() {
+			return new ByteArrayInputStream( this.data.getBytes( StandardCharsets.ISO_8859_1 ) );
+		}
+
+		@Override
+		public void free() {
+			this.data = null;
+		}
 	}
 }

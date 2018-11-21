@@ -6,7 +6,11 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import java.util.function.Supplier;
+
 import org.hibernate.collection.spi.CollectionClassification;
+import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
+import org.hibernate.metamodel.model.domain.spi.CollectionIndexEntity;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
@@ -51,8 +55,8 @@ public abstract class AbstractSqmCollectionIndexReference
 	}
 
 	@Override
-	public ExpressableType getInferableType() {
-		return getExpressableType();
+	public Supplier<? extends CollectionIndex> getInferableType() {
+		return () -> pluralAttributeReference.getPersistentCollectionDescriptor().getIndexDescriptor();
 	}
 
 	@Override

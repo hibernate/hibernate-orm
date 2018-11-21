@@ -12,7 +12,7 @@ import java.net.URL;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
-import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
+import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
@@ -28,7 +28,7 @@ public class UrlJavaDescriptor extends AbstractBasicJavaDescriptor<URL> {
 	}
 
 	@Override
-	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
+	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
 		return StringJavaDescriptor.INSTANCE.getJdbcRecommendedSqlType( context );
 	}
 

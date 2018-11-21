@@ -8,21 +8,27 @@ package org.hibernate.query.sqm.tree.expression;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmCaseSearched implements ImpliedTypeSqmExpression {
+public class SqmCaseSearched extends AbstractInferableTypeSqmExpression {
 	private List<WhenFragment> whenFragments = new ArrayList<>();
 	private SqmExpression otherwise;
 
-	private ExpressableType expressableType;
-	private ExpressableType impliedType;
+	public SqmCaseSearched() {
+		this( null );
+	}
+
+	public SqmCaseSearched(BasicValuedExpressableType inherentType) {
+		super( inherentType );
+	}
 
 	public List<WhenFragment> getWhenFragments() {
 		return whenFragments;
@@ -34,37 +40,31 @@ public class SqmCaseSearched implements ImpliedTypeSqmExpression {
 
 	public void when(SqmPredicate predicate, SqmExpression result) {
 		whenFragments.add( new WhenFragment( predicate, result ) );
+		setInherentType( result.getExpressableType() );
 	}
 
 	public void otherwise(SqmExpression otherwiseExpression) {
 		this.otherwise = otherwiseExpression;
-		// todo : inject implied type?
+		setInherentType( otherwiseExpression.getExpressableType() );
 	}
 
 	@Override
-	public void impliedType(ExpressableType type) {
-		this.impliedType = type;
-		// todo : visit whenFragments and otherwise
-	}
+	public void impliedType(Supplier<? extends ExpressableType> inference) {
+		super.impliedType( inference );
 
-	@Override
-	public ExpressableType getExpressableType() {
-		return expressableType;
-	}
-
-	@Override
-	public ExpressableType getInferableType() {
-		if ( otherwise != null ) {
-			return otherwise.getInferableType();
-		}
+		// apply the inference to `when` and `otherwise` fragments...
 
 		for ( WhenFragment whenFragment : whenFragments ) {
-			if ( whenFragment.result.getExpressableType() != null ) {
-				return whenFragment.result.getInferableType();
+			if ( whenFragment.getResult() instanceof InferableTypeSqmExpression ) {
+				( (InferableTypeSqmExpression) whenFragment.getResult() ).impliedType( inference );
 			}
 		}
 
-		return expressableType;
+		if ( otherwise != null ) {
+			if ( otherwise instanceof InferableTypeSqmExpression ) {
+				( (InferableTypeSqmExpression) otherwise ).impliedType( inference );
+			}
+		}
 	}
 
 	@Override
@@ -75,11 +75,6 @@ public class SqmCaseSearched implements ImpliedTypeSqmExpression {
 	@Override
 	public String asLoggableText() {
 		return "<searched-case>";
-	}
-
-	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return expressableType.getJavaTypeDescriptor();
 	}
 
 	public static class WhenFragment {

@@ -17,6 +17,8 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public interface Type<T> extends Serializable {
 
+	// todo (6.0) : can uses of this just use DomainType?
+
 	JavaTypeDescriptor<T> getJavaTypeDescriptor();
 
 	/**

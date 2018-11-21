@@ -10,23 +10,10 @@ import org.hibernate.boot.model.domain.ResolutionContext;
 import org.hibernate.type.spi.BasicType;
 
 /**
- * Describes the data needed to resolve a BasicType.
- * <p/>
- * Generally speaking, this gives the resolver access directly back to the persistent
- * attribute's metadata.
- * <p/>
- * This interface caters to 2 forms of BasicType definition for an attribute:<ol>
- *     <li>
- *         The first is by explicitly defining a type to use via {@link #getExplicitTypeName()},
- *         e.g. through {@link org.hibernate.annotations.Type}.  This name can be resolved in
- *         a number of ways:
- *         <ul>
- *             <li>
- *                 If the name refers to an existing entry in the
- *             </li>
- *         </ul>N
- *     </li>
- * </ol>
+ * Support for resolving an explicitly named BasicType.  Can be named either by: <ul>
+ *     <li>{@link org.hibernate.annotations.TypeDef}</li>
+ *     <li>{@link org.hibernate.annotations.Type}</li>
+ * </ul>
  *
  * @author Steve Ebersole
  */

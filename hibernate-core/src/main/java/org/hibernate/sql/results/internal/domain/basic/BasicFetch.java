@@ -14,6 +14,7 @@ import org.hibernate.metamodel.model.domain.spi.BasicValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.results.spi.AssemblerCreationContext;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
@@ -48,13 +49,16 @@ public class BasicFetch implements Fetch {
 		this.navigable = navigable;
 		this.fetchTiming = fetchTiming;
 
-		SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
+		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
+
+		final Expression expression = sqlExpressionResolver.resolveSqlExpression(
+				creationState.getColumnReferenceQualifierStack().getCurrent(),
+				getFetchedNavigable().getBoundColumn()
+		);
+
 		sqlSelection = sqlExpressionResolver.resolveSqlSelection(
-				sqlExpressionResolver.resolveSqlExpression(
-						creationState.getColumnReferenceQualifierStack().getCurrent(),
-						getFetchedNavigable().getBoundColumn()
-				),
-				getFetchedNavigable().getJavaTypeDescriptor(),
+				expression,
+				getFetchedNavigable().getSqlExpressableType().getJavaTypeDescriptor(),
 				creationContext.getSessionFactory().getTypeConfiguration()
 		);
 

@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import java.util.function.Supplier;
+
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.CollectionElementEmbedded;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
@@ -25,18 +27,19 @@ public class SqmMinElementReferenceEmbedded
 	}
 
 	@Override
-	public CollectionElement getExpressableType() {
-		return getPluralAttributeReference().getReferencedNavigable().getPersistentCollectionDescriptor().getElementDescriptor();
-	}
-
-	@Override
-	public CollectionElement getInferableType() {
-		return getExpressableType();
-	}
-
-	@Override
 	public CollectionElementEmbedded getReferencedNavigable() {
 		return (CollectionElementEmbedded) super.getReferencedNavigable();
+	}
+
+	@Override
+	public CollectionElementEmbedded getExpressableType() {
+		return (CollectionElementEmbedded) getPluralAttributeReference().getReferencedNavigable().getPersistentCollectionDescriptor().getElementDescriptor();
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public Supplier<? extends CollectionElementEmbedded> getInferableType() {
+		return (Supplier<? extends CollectionElementEmbedded>) super.getExpressableType();
 	}
 
 	@Override

@@ -6,8 +6,10 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import java.util.function.Supplier;
+
+import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
@@ -15,24 +17,38 @@ import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractSqmCollectionElementReference extends AbstractSqmNavigableReference implements
-		SqmCollectionElementReference {
+public abstract class AbstractSqmCollectionElementReference
+		extends AbstractSqmNavigableReference
+		implements SqmCollectionElementReference {
+
 	private final SqmPluralAttributeReference attributeReference;
 	private final PluralPersistentAttribute navigable;
 	private final NavigablePath navigablePath;
+
+	// this may get accessed multiple times, so cache it
+	private final CollectionElement elementDescriptor;
+
 
 	public AbstractSqmCollectionElementReference(SqmPluralAttributeReference pluralAttributeBinding) {
 		this.attributeReference = pluralAttributeBinding;
 		this.navigable = pluralAttributeBinding.getReferencedNavigable();
 
 		this.navigablePath = pluralAttributeBinding.getNavigablePath().append( "{elements}" );
+
+		elementDescriptor = getPluralAttributeReference().getReferencedNavigable()
+				.getPersistentCollectionDescriptor()
+				.getElementDescriptor();
+	}
+
+	@Override
+	public NavigablePath getNavigablePath() {
+		return navigablePath;
 	}
 
 	public SqmPluralAttributeReference getPluralAttributeReference() {
@@ -45,30 +61,18 @@ public abstract class AbstractSqmCollectionElementReference extends AbstractSqmN
 	}
 
 	@Override
-	public Navigable getReferencedNavigable() {
-		return getPluralAttributeReference().getReferencedNavigable().getPersistentCollectionDescriptor().getElementDescriptor();
+	public CollectionElement getReferencedNavigable() {
+		return elementDescriptor;
 	}
 
 	@Override
-	public NavigablePath getNavigablePath() {
-		return navigablePath;
+	public CollectionElement getExpressableType() {
+		return getReferencedNavigable();
 	}
 
 	@Override
-	public String asLoggableText() {
-		return getNavigablePath().getFullPath();
-	}
-
-	@Override
-	public ExpressableType getExpressableType() {
-		return getPluralAttributeReference().getReferencedNavigable()
-				.getPersistentCollectionDescriptor()
-				.getElementDescriptor();
-	}
-
-	@Override
-	public ExpressableType getInferableType() {
-		return getExpressableType();
+	public Supplier<? extends CollectionElement> getInferableType() {
+		return this::getExpressableType;
 	}
 
 	@Override
@@ -135,6 +139,12 @@ public abstract class AbstractSqmCollectionElementReference extends AbstractSqmN
 			SqmCreationContext context) {
 		throw new UnsupportedOperationException(  );
 	}
+
+	@Override
+	public String asLoggableText() {
+		return getNavigablePath().getFullPath();
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// todo (6.0) : this is probably not right depending how we intend the logical join to element/index table

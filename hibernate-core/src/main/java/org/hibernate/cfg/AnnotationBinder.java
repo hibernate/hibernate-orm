@@ -1406,7 +1406,7 @@ public final class AnnotationBinder {
 					context.getMetadataCollector()
 							.getTypeConfiguration()
 							.getBasicTypeRegistry()
-							.getBasicType( param.type() )
+							.getBasicTypeByName( param.type() )
 			);
 		}
 		FilterDefinition def = new FilterDefinition( defAnn.name(), defAnn.defaultCondition(), params );
@@ -1515,8 +1515,7 @@ public final class AnnotationBinder {
 			}
 			discriminatorColumn.setJoins( secondaryTables );
 			discriminatorColumn.setPropertyHolder( propertyHolder );
-			BasicValue discriminatorColumnBinding = new BasicValue( context, rootClass.getTable()
-			);
+			BasicValue discriminatorColumnBinding = new BasicValue( context, rootClass.getTable() );
 			discriminatorColumnBinding.setExplicitTypeName( discriminatorColumn.getDiscriminatorTypeName() );
 			rootClass.setDiscriminatorValueMapping( discriminatorColumnBinding );
 			discriminatorColumn.linkWithValue( discriminatorColumnBinding );

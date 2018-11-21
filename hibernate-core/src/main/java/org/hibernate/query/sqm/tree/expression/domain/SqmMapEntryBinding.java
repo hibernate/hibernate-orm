@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.expression.domain;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -45,8 +46,8 @@ public class SqmMapEntryBinding implements SqmExpression, ExpressableType {
 	}
 
 	@Override
-	public ExpressableType getInferableType() {
-		return this;
+	public Supplier<? extends ExpressableType> getInferableType() {
+		return () -> this;
 	}
 
 	@Override

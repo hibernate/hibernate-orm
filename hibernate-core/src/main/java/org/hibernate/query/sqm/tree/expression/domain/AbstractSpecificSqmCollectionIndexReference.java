@@ -10,7 +10,6 @@ import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 
 /**
  * @author Steve Ebersole
@@ -18,16 +17,6 @@ import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 public abstract class AbstractSpecificSqmCollectionIndexReference extends AbstractSqmCollectionIndexReference {
 	public AbstractSpecificSqmCollectionIndexReference(SqmPluralAttributeReference pluralAttributeBinding) {
 		super( pluralAttributeBinding );
-	}
-
-	@Override
-	public ExpressableType getExpressableType() {
-		return getReferencedNavigable();
-	}
-
-	@Override
-	public ExpressableType getInferableType() {
-		return getExpressableType();
 	}
 
 	@Override

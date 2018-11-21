@@ -822,7 +822,9 @@ public class QuerySplitter {
 		@Override
 		@SuppressWarnings("unchecked")
 		public SqmConstantEnum visitConstantEnumExpression(SqmConstantEnum expression) {
-			return new SqmConstantEnum( expression.getLiteralValue(), expression.getExpressableType() );
+			// todo (6.0) : does an enum constant reference really need to be deep copied?
+			//		that's probably a valid question for a few other visitations here
+			return new SqmConstantEnum( (Enum) expression.getLiteralValue(), expression.getExpressableType() );
 		}
 
 		@Override

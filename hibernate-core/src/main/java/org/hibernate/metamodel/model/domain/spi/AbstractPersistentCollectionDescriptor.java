@@ -329,7 +329,6 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 
 			this.idDescriptor = new CollectionIdentifier(
 					this,
-					( (BasicValueMapping) identifierCollection.getIdentifier() ).resolveType(),
 					idColumn,
 					identifierGenerator
 			);

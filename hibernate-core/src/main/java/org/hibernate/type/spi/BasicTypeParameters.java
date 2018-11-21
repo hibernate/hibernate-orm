@@ -14,7 +14,7 @@ import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
- * Essentially acts as a parameter-object to {@link BasicTypeRegistry#resolveBasicType}.
+ * Essentially acts as a parameter-object to {@link BasicTypeRegistry#resolve}.
  *
  * @author Steve Ebersole
  */

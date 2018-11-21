@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.model.relational.spi;
 
 import java.util.Collection;
+import java.util.Objects;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.relational.InitCommand;
@@ -31,6 +32,14 @@ public interface DatabaseModel {
 
 	default Namespace getNamespace(String catalogName, String schemaName) {
 		if ( catalogName == null && schemaName == null ) {
+			return getDefaultNamespace();
+		}
+
+		final boolean catalogsMatch = getDefaultNamespace().getCatalogName() != null
+				&& Objects.equals( catalogName, getDefaultNamespace().getCatalogName().getText() );
+		final boolean schemasMatch = getDefaultNamespace().getSchemaName() != null
+				&& Objects.equals( schemaName, getDefaultNamespace().getSchemaName().getText() );
+		if ( catalogsMatch && schemasMatch ) {
 			return getDefaultNamespace();
 		}
 

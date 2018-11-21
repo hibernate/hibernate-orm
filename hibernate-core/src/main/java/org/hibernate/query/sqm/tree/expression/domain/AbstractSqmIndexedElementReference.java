@@ -6,9 +6,10 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import java.util.function.Supplier;
+
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
@@ -36,18 +37,18 @@ public abstract class AbstractSqmIndexedElementReference
 	}
 
 	@Override
-	public Navigable getReferencedNavigable() {
+	public CollectionElement getReferencedNavigable() {
 		return getPluralAttributeReference().getReferencedNavigable().getPersistentCollectionDescriptor().getElementDescriptor();
 	}
 
 	@Override
 	public CollectionElement getExpressableType() {
-		return (CollectionElement) getReferencedNavigable();
+		return getReferencedNavigable();
 	}
 
 	@Override
-	public CollectionElement getInferableType() {
-		return getExpressableType();
+	public Supplier<? extends CollectionElement> getInferableType() {
+		return this::getExpressableType;
 	}
 
 	@Override

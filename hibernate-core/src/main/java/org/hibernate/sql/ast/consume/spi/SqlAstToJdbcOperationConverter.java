@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.consume.spi;
 import java.util.Set;
 
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
+import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
 
 /**
  * Base contract for {@link SqlAstWalker} implementations that convert
@@ -18,6 +18,6 @@ import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
  * @author Steve Ebersole
  */
 public interface SqlAstToJdbcOperationConverter
-		extends SqlAstWalker, JdbcRecommendedSqlTypeMappingContext {
+		extends SqlAstWalker, SqlTypeDescriptorIndicators {
 	Set<String> getAffectedTableNames();
 }

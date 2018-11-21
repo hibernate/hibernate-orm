@@ -6,6 +6,10 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import java.util.function.Supplier;
+
+import org.hibernate.metamodel.model.domain.spi.BasicCollectionElement;
+
 /**
  * @author Steve Ebersole
  */
@@ -14,5 +18,16 @@ public class SqmCollectionElementReferenceBasic
 		implements SqmCollectionElementReference {
 	public SqmCollectionElementReferenceBasic(SqmPluralAttributeReference pluralAttributeBinding) {
 		super( pluralAttributeBinding );
+	}
+
+	@Override
+	public BasicCollectionElement getExpressableType() {
+		return (BasicCollectionElement) super.getExpressableType();
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public Supplier<? extends BasicCollectionElement> getInferableType() {
+		return (Supplier<? extends BasicCollectionElement>) super.getInferableType();
 	}
 }

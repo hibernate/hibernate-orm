@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
@@ -120,10 +121,11 @@ public class CollectionKey implements Navigable {
 			SqlExpressionResolver sqlExpressionResolver) {
 		if ( columns.size() == 1 ) {
 			return new ResolvedScalarDomainResult(
-					sqlExpressionResolver.resolveSqlSelection(
-							sqlExpressionResolver.resolveSqlExpression( referenceQualifier, columns.get( 0 ) ),
-							columns.get( 0 ).getJavaTypeDescriptor(),
-							collectionDescriptor.getSessionFactory().getTypeConfiguration()
+					resolveSqlSelection(
+							referenceQualifier,
+							sqlExpressionResolver,
+							columns.get( 0 ),
+							collectionDescriptor.getSessionFactory()
 					),
 					null,
 					columns.get( 0 ).getJavaTypeDescriptor()
@@ -134,13 +136,11 @@ public class CollectionKey implements Navigable {
 
 			for ( Column column : columns ) {
 				sqlSelections.add(
-						sqlExpressionResolver.resolveSqlSelection(
-								sqlExpressionResolver.resolveSqlExpression(
-										referenceQualifier,
-										column
-								),
-								column.getJavaTypeDescriptor(),
-								collectionDescriptor.getSessionFactory().getTypeConfiguration()
+						resolveSqlSelection(
+								referenceQualifier,
+								sqlExpressionResolver,
+								column,
+								collectionDescriptor.getSessionFactory()
 						)
 				);
 			}
@@ -152,6 +152,16 @@ public class CollectionKey implements Navigable {
 		}
 	}
 
+	private SqlSelection resolveSqlSelection(
+			ColumnReferenceQualifier referenceQualifier,
+			SqlExpressionResolver sqlExpressionResolver, Column column, SessionFactoryImplementor sessionFactory) {
+		return sqlExpressionResolver.resolveSqlSelection(
+				sqlExpressionResolver.resolveSqlExpression( referenceQualifier, column ),
+				column.getJavaTypeDescriptor(),
+				sessionFactory.getTypeConfiguration()
+		);
+	}
+
 	private DomainResult createDomainResult(
 			List<Column> keyColumns,
 			ColumnReferenceQualifier referenceQualifier,
@@ -160,10 +170,11 @@ public class CollectionKey implements Navigable {
 			DomainResultCreationContext creationContext) {
 		if ( keyColumns.size() == 1 ) {
 			return new ResolvedScalarDomainResult(
-					expressionResolver.resolveSqlSelection(
-							expressionResolver.resolveSqlExpression( referenceQualifier, keyColumns.get( 0 ) ),
-							keyColumns.get( 0 ).getJavaTypeDescriptor(),
-							creationContext.getSessionFactory().getTypeConfiguration()
+					resolveSqlSelection(
+							referenceQualifier,
+							expressionResolver,
+							keyColumns.get( 0 ),
+							creationContext.getSessionFactory()
 					),
 					null,
 					keyColumns.get( 0 ).getJavaTypeDescriptor()
@@ -174,13 +185,11 @@ public class CollectionKey implements Navigable {
 
 			for ( Column column : keyColumns ) {
 				sqlSelections.add(
-						expressionResolver.resolveSqlSelection(
-								expressionResolver.resolveSqlExpression(
-										creationState.getColumnReferenceQualifierStack().getCurrent(),
-										column
-								),
-								column.getJavaTypeDescriptor(),
-								creationContext.getSessionFactory().getTypeConfiguration()
+						resolveSqlSelection(
+								creationState.getColumnReferenceQualifierStack().getCurrent(),
+								expressionResolver,
+								column,
+								creationContext.getSessionFactory()
 						)
 				);
 			}

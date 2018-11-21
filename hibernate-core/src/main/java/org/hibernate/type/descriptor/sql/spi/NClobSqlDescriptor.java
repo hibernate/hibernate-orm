@@ -47,17 +47,6 @@ public abstract class NClobSqlDescriptor extends AbstractTemplateSqlTypeDescript
 	}
 
 	@Override
-	protected <X> JdbcValueBinder<X> createBinder(
-			BasicJavaDescriptor<X> javaTypeDescriptor,
-			TypeConfiguration typeConfiguration) {
-		return getNClobBinder( javaTypeDescriptor, typeConfiguration );
-	}
-
-	protected abstract <X> JdbcValueBinder<X> getNClobBinder(
-			JavaTypeDescriptor<X> javaTypeDescriptor,
-			TypeConfiguration typeConfiguration);
-
-	@Override
 	protected <X> JdbcValueExtractor<X> createExtractor(
 			BasicJavaDescriptor<X> javaTypeDescriptor,
 			TypeConfiguration typeConfiguration) {
@@ -88,52 +77,6 @@ public abstract class NClobSqlDescriptor extends AbstractTemplateSqlTypeDescript
 		};
 	}
 
-
-	public static final NClobSqlDescriptor DEFAULT = new NClobSqlDescriptor() {
-		@Override
-		public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
-			return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( NClob.class );
-		}
-
-		@Override
-		public <X> JdbcValueBinder<X> getNClobBinder(
-				final JavaTypeDescriptor<X> javaTypeDescriptor,
-				TypeConfiguration typeConfiguration) {
-			return new AbstractJdbcValueBinder<X>( javaTypeDescriptor, this ) {
-				@Override
-				protected void doBind(
-						PreparedStatement st,
-						int index, X value,
-						ExecutionContext executionContext) throws SQLException {
-					if ( executionContext.getSession().useStreamForLobBinding() ) {
-						STREAM_BINDING.getNClobBinder( javaTypeDescriptor, typeConfiguration )
-								.bind( st, index, value, executionContext );
-					}
-					else {
-						NCLOB_BINDING.getNClobBinder( javaTypeDescriptor, typeConfiguration )
-								.bind( st, index, value, executionContext );
-					}
-				}
-
-
-				@Override
-				protected void doBind(
-						CallableStatement st,
-						String name, X value,
-						ExecutionContext executionContext) throws SQLException {
-					if ( executionContext.getSession().useStreamForLobBinding() ) {
-						STREAM_BINDING.getNClobBinder( javaTypeDescriptor,typeConfiguration )
-								.bind( st, name, value, executionContext );
-					}
-					else {
-						NCLOB_BINDING.getNClobBinder( javaTypeDescriptor, typeConfiguration )
-								.bind( st, name, value, executionContext );
-					}
-				}
-			};
-		}
-	};
-
 	public static final NClobSqlDescriptor NCLOB_BINDING = new NClobSqlDescriptor() {
 		@Override
 		public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
@@ -142,24 +85,50 @@ public abstract class NClobSqlDescriptor extends AbstractTemplateSqlTypeDescript
 
 		@Override
 		@SuppressWarnings("unchecked")
-		protected JdbcValueBinder getNClobBinder(
-				JavaTypeDescriptor javaTypeDescriptor,
+		protected <X> JdbcValueBinder<X> createBinder(
+				BasicJavaDescriptor<X> javaTypeDescriptor,
 				TypeConfiguration typeConfiguration) {
 			return new AbstractJdbcValueBinder( javaTypeDescriptor, this ) {
 				@Override
 				protected void doBind(
 						PreparedStatement st,
-						int index, Object value,
+						int index,
+						Object value,
 						ExecutionContext executionContext) throws SQLException {
-					st.setNClob( index, (NClob) javaTypeDescriptor.unwrap( value, NClob.class, executionContext.getSession() ) );
+					if ( executionContext.getSession().useStreamForLobBinding() ) {
+						st.setNClob(
+								index,
+								javaTypeDescriptor.unwrap( (X) value, CharacterStream.class, executionContext.getSession() )
+										.asReader()
+						);
+					}
+					else {
+						st.setNClob(
+								index,
+								javaTypeDescriptor.unwrap( (X) value, NClob.class, executionContext.getSession() )
+						);
+					}
 				}
 
 				@Override
 				protected void doBind(
 						CallableStatement st,
-						String name, Object value,
+						String name,
+						Object value,
 						ExecutionContext executionContext) throws SQLException {
-					st.setNClob( name, (NClob) javaTypeDescriptor.unwrap( value, NClob.class, executionContext.getSession() ) );
+					if ( executionContext.getSession().useStreamForLobBinding() ) {
+						st.setNClob(
+								name,
+								javaTypeDescriptor.unwrap( (X) value, CharacterStream.class, executionContext.getSession() )
+										.asReader()
+						);
+					}
+					else {
+						st.setNClob(
+								name,
+								javaTypeDescriptor.unwrap( (X) value, NClob.class, executionContext.getSession() )
+						);
+					}
 				}
 			};
 		}
@@ -172,8 +141,9 @@ public abstract class NClobSqlDescriptor extends AbstractTemplateSqlTypeDescript
 		}
 
 		@Override
-		public <X> JdbcValueBinder<X> getNClobBinder(
-				final JavaTypeDescriptor<X> javaTypeDescriptor,
+		@SuppressWarnings("unchecked")
+		protected <X> JdbcValueBinder<X> createBinder(
+				BasicJavaDescriptor<X> javaTypeDescriptor,
 				TypeConfiguration typeConfiguration) {
 			return new AbstractJdbcValueBinder<X>( javaTypeDescriptor, this ) {
 				@Override
@@ -204,4 +174,6 @@ public abstract class NClobSqlDescriptor extends AbstractTemplateSqlTypeDescript
 			};
 		}
 	};
+
+	public static final NClobSqlDescriptor DEFAULT = NCLOB_BINDING;
 }

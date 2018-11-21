@@ -16,8 +16,8 @@ public interface SqlAppender {
 	String SELECT_KEYWORD = "select ";
 	String DISTINCT_KEYWORD = "distinct ";
 	String COMA_SEPARATOR = ", ";
-	String OPEN_PARENTHESYS = "(";
-	String CLOSE_PARENTHESYS = ")";
+	String OPEN_PARENTHESIS = "(";
+	String CLOSE_PARENTHESIS = ")";
 	String NO_SEPARATOR = "";
 	String EMPTY_STRING_SEPARATOR = " ";
 	String FROM_KEYWORD = " from ";

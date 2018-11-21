@@ -12,14 +12,12 @@ import java.time.LocalDateTime;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.internal.JdbcTimestampJavaDescriptor;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmLiteralTimestamp implements SqmLiteral<Timestamp>, ImpliedTypeSqmExpression {
+public class SqmLiteralTimestamp extends AbstractSqmLiteral<Timestamp> {
 	public static SqmLiteralTimestamp from(String literalText, SqmCreationContext creationContext) {
 		final Timestamp literal = Timestamp.valueOf(
 				LocalDateTime.from( JdbcTimestampJavaDescriptor.FORMATTER.parse( literalText ) )
@@ -31,43 +29,13 @@ public class SqmLiteralTimestamp implements SqmLiteral<Timestamp>, ImpliedTypeSq
 		);
 	}
 
-	private final Timestamp value;
-
-	private BasicValuedExpressableType type;
-
-	public SqmLiteralTimestamp(Timestamp value, BasicValuedExpressableType rawType) {
-		this.value = value;
-		this.type = rawType;
-	}
-
-	@Override
-	public Timestamp getLiteralValue() {
-		return value;
-	}
-
-
-	@Override
-	public BasicValuedExpressableType getExpressableType() {
-		return type;
-	}
-
-	@Override
-	public BasicValuedExpressableType getInferableType() {
-		return type;
-	}
-
-	@Override
-	public void impliedType(ExpressableType type) {
-		this.type = (BasicValuedExpressableType) type;
+	public SqmLiteralTimestamp(Timestamp value, BasicValuedExpressableType inherentType) {
+		super( value, inherentType );
+		assert inherentType != null;
 	}
 
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitLiteralTimestampExpression( this );
-	}
-
-	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return type.getJavaTypeDescriptor();
 	}
 }

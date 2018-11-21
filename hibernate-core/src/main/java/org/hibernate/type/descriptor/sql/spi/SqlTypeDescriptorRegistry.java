@@ -68,7 +68,7 @@ public class SqlTypeDescriptorRegistry implements SqlTypeDescriptorBaseline.Base
 				if ( potentialAlternateTypeCode != jdbcTypeCode ) {
 					final SqlTypeDescriptor potentialAlternateDescriptor = descriptorMap.get( potentialAlternateTypeCode );
 					if ( potentialAlternateDescriptor != null ) {
-						// todo : add a SqlTypeDescriptor.canBeAssignedFrom method...
+						// todo (6.0) : add a SqlTypeDescriptor#canBeAssignedFrom method ?
 						return potentialAlternateDescriptor;
 					}
 
@@ -86,6 +86,12 @@ public class SqlTypeDescriptorRegistry implements SqlTypeDescriptorBaseline.Base
 		final ObjectSqlTypeDescriptor fallBackDescriptor = new ObjectSqlTypeDescriptor( jdbcTypeCode );
 		addDescriptor( fallBackDescriptor );
 		return fallBackDescriptor;
+	}
+
+	public boolean hasRegisteredDescriptor(int jdbcTypeCode) {
+		return descriptorMap.containsKey( jdbcTypeCode )
+				|| JdbcTypeNameMapper.isStandardTypeCode( jdbcTypeCode )
+				|| JdbcTypeFamilyInformation.INSTANCE.locateJdbcTypeFamilyByTypeCode( jdbcTypeCode ) != null;
 	}
 
 	public static class ObjectSqlTypeDescriptor extends AbstractTemplateSqlTypeDescriptor {

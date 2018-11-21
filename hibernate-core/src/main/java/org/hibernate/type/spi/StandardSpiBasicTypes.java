@@ -29,6 +29,8 @@ import java.util.TimeZone;
 import java.util.UUID;
 
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.model.convert.spi.SimpleBasicValueConverter;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.internal.BigDecimalJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.BigIntegerJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.BlobJavaDescriptor;
@@ -43,12 +45,14 @@ import org.hibernate.type.descriptor.java.internal.CharacterJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.ClassJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.ClobJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.CurrencyJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.DateJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.DoubleJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.DurationJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.FloatJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.InstantJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.IntegerJavaDescriptor;
+import org.hibernate.type.descriptor.java.internal.JdbcDateJavaDescriptor;
+import org.hibernate.type.descriptor.java.internal.JdbcTimeJavaDescriptor;
+import org.hibernate.type.descriptor.java.internal.JdbcTimestampJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.LocalDateJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.LocalDateTimeJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.LocalTimeJavaDescriptor;
@@ -89,8 +93,7 @@ import org.hibernate.type.descriptor.sql.spi.TimestampSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.TinyIntSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.VarbinarySqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.VarcharSqlDescriptor;
-import org.hibernate.type.internal.BasicTypeImpl;
-import org.hibernate.type.internal.BooleanBasicTypeImpl;
+import org.hibernate.type.internal.StandardBasicTypeImpl;
 
 /**
  * Centralizes access to the standard set of basic {@link BasicType types}.
@@ -101,8 +104,11 @@ import org.hibernate.type.internal.BooleanBasicTypeImpl;
  * @author Gavin King
  * @author Steve Ebersole
  */
-@SuppressWarnings({"UnusedDeclaration"})
+@SuppressWarnings({"UnusedDeclaration", "Convert2Lambda", "unchecked", "WeakerAccess"})
 public final class StandardSpiBasicTypes {
+	/**
+	 * Disallow instantiation
+	 */
 	private StandardSpiBasicTypes() {
 	}
 
@@ -112,39 +118,55 @@ public final class StandardSpiBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link Boolean} to JDBC {@link java.sql.Types#BIT BIT}.
 	 */
-	public static final BasicType<Boolean> BOOLEAN = new BasicTypeImpl<>(
+	public static final StandardBasicType<Boolean> BOOLEAN = new StandardBasicTypeImpl(
 			BooleanJavaDescriptor.INSTANCE,
 			BitSqlDescriptor.INSTANCE
 	);
 
+
 	/**
 	 * The standard Hibernate type for mapping {@link Boolean} to JDBC {@link java.sql.Types#INTEGER INTEGER}.
 	 */
-	public static final BasicType<Boolean> NUMERIC_BOOLEAN = new BooleanBasicTypeImpl<>(
+	public static final StandardBasicType<Boolean> NUMERIC_BOOLEAN = new StandardBasicTypeImpl(
 			BooleanJavaDescriptor.INSTANCE,
+			IntegerJavaDescriptor.INSTANCE,
 			NumericSqlDescriptor.INSTANCE,
-			1,
-			0
+			new SimpleBasicValueConverter<>(
+					BooleanJavaDescriptor.INSTANCE,
+					IntegerJavaDescriptor.INSTANCE,
+					(r, sessionContractImplementor) -> r != null && r == 1,
+					(d, sessionContractImplementor) -> d != null && d ? 1 : 0
+			)
 	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link Boolean} to JDBC {@link java.sql.Types#CHAR CHAR(1)} (using 'T'/'F').
 	 */
-	public static final BasicType<Boolean> TRUE_FALSE = new BooleanBasicTypeImpl<>(
+	public static final StandardBasicType<Boolean> TRUE_FALSE = new StandardBasicTypeImpl(
 			BooleanJavaDescriptor.INSTANCE,
+			CharacterJavaDescriptor.INSTANCE,
 			CharSqlDescriptor.INSTANCE,
-			'T',
-			'F'
+			new SimpleBasicValueConverter<>(
+					BooleanJavaDescriptor.INSTANCE,
+					CharacterJavaDescriptor.INSTANCE,
+					(r, sessionContractImplementor) -> r != null && r == 'T',
+					(d, sessionContractImplementor) -> d != null && d ? 'T' : 'F'
+			)
 	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link Boolean} to JDBC {@link java.sql.Types#CHAR CHAR(1)} (using 'Y'/'N').
 	 */
-	public static final BasicType<Boolean> YES_NO = new BooleanBasicTypeImpl<>(
+	public static final StandardBasicType<Boolean> YES_NO = new StandardBasicTypeImpl(
 			BooleanJavaDescriptor.INSTANCE,
+			CharacterJavaDescriptor.INSTANCE,
 			CharSqlDescriptor.INSTANCE,
-			'Y',
-			'N'
+			new SimpleBasicValueConverter<>(
+					BooleanJavaDescriptor.INSTANCE,
+					CharacterJavaDescriptor.INSTANCE,
+					(r, sessionContractImplementor) -> r != null && r == 'Y',
+					(d, sessionContractImplementor) -> d != null && d ? 'Y' : 'N'
+			)
 	);
 
 
@@ -154,7 +176,7 @@ public final class StandardSpiBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link Byte} to JDBC {@link java.sql.Types#TINYINT TINYINT}.
 	 */
-	public static final BasicType<Byte> BYTE = new BasicTypeImpl<>(
+	public static final StandardBasicType<Byte> BYTE = new StandardBasicTypeImpl(
 			ByteJavaDescriptor.INSTANCE,
 			TinyIntSqlDescriptor.INSTANCE
 	);
@@ -162,7 +184,7 @@ public final class StandardSpiBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@code byte[]} to JDBC {@link java.sql.Types#VARBINARY VARBINARY}.
 	 */
-	public static final BasicType<byte[]> BINARY = new BasicTypeImpl<>(
+	public static final StandardBasicType<byte[]> BINARY = new StandardBasicTypeImpl(
 			PrimitiveByteArrayJavaDescriptor.INSTANCE,
 			VarbinarySqlDescriptor.INSTANCE
 	);
@@ -170,7 +192,7 @@ public final class StandardSpiBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link Byte Byte[]} to JDBC {@link java.sql.Types#VARBINARY VARBINARY}.
 	 */
-	public static final BasicType<Byte[]> WRAPPER_BINARY = new BasicTypeImpl(
+	public static final StandardBasicType<Byte[]> WRAPPER_BINARY = new StandardBasicTypeImpl(
 			ByteArrayJavaDescriptor.INSTANCE,
 			VarbinarySqlDescriptor.INSTANCE
 	);
@@ -180,41 +202,39 @@ public final class StandardSpiBasicTypes {
 	 *
 	 * @see #MATERIALIZED_BLOB
 	 */
-	public static final BasicType<byte[]> IMAGE = new BasicTypeImpl(
+	public static final StandardBasicType<byte[]> IMAGE = new StandardBasicTypeImpl(
 			PrimitiveByteArrayJavaDescriptor.INSTANCE,
 			LongVarbinarySqlDescriptor.INSTANCE
 	);
 
 	/**
-	 * The standard Hibernate type for mapping {@link Blob} to JDBC {@link java.sql.Types#BLOB BLOB}.
+	 * The standard Hibernate type for mapping {@link java.sql.Blob} to JDBC {@link java.sql.Types#BLOB BLOB}.
 	 *
 	 * @see #MATERIALIZED_BLOB
 	 */
-	public static final BasicType<Blob> BLOB = new BasicTypeImpl(
+	public static final StandardBasicType<Blob> BLOB = new StandardBasicTypeImpl(
 			BlobJavaDescriptor.INSTANCE,
-			BlobSqlDescriptor.DEFAULT
+			BlobSqlDescriptor.BLOB_BINDING
 	);
 
 	/**
 	 * The standard Hibernate type for mapping {@code byte[]} to JDBC {@link java.sql.Types#BLOB BLOB}.
 	 *
 	 * @see #MATERIALIZED_BLOB
-	 */
-	public static final BasicType<byte[]> MATERIALIZED_BLOB = new BasicTypeImpl(
-			PrimitiveByteArrayJavaDescriptor.INSTANCE,
-			BlobSqlDescriptor.DEFAULT
-	);
-
-	/**
-	 * The standard Hibernate type for mapping {@code Byte[]} to JDBC {@link java.sql.Types#BLOB BLOB}.
-	 *
-	 * @see #MATERIALIZED_BLOB
 	 * @see #IMAGE
 	 */
-	public static final BasicType<byte[]> WRAPPED_MATERIALIZED_BLOB = new BasicTypeImpl(
-			ByteArrayJavaDescriptor.INSTANCE,
-			BlobSqlDescriptor.DEFAULT
+	public static final StandardBasicType<byte[]> MATERIALIZED_BLOB = new StandardBasicTypeImpl(
+			PrimitiveByteArrayJavaDescriptor.INSTANCE,
+			BlobSqlDescriptor.BLOB_BINDING
 	);
+
+
+	// todo (6.0) : streaming variants here too?
+	//		e.g.,
+//	public static final StandardBasicType<byte[]> STREAMING_BLOB = new StandardBasicTypeImpl(
+//			PrimitiveByteArrayJavaDescriptor.INSTANCE,
+//			BlobSqlDescriptor.STREAM_BINDING
+//	);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -223,7 +243,7 @@ public final class StandardSpiBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link Short} to JDBC {@link java.sql.Types#SMALLINT SMALLINT}.
 	 */
-	public static final BasicType<Short> SHORT = new BasicTypeImpl(
+	public static final StandardBasicType<Short> SHORT = new StandardBasicTypeImpl(
 			ShortJavaDescriptor.INSTANCE,
 			SmallIntSqlDescriptor.INSTANCE
 	);
@@ -231,7 +251,7 @@ public final class StandardSpiBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link Integer} to JDBC {@link java.sql.Types#INTEGER INTEGER}.
 	 */
-	public static final BasicType<Integer> INTEGER = new BasicTypeImpl(
+	public static final StandardBasicType<Integer> INTEGER = new StandardBasicTypeImpl(
 			IntegerJavaDescriptor.INSTANCE,
 			IntegerSqlDescriptor.INSTANCE
 	);
@@ -239,7 +259,7 @@ public final class StandardSpiBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link Long} to JDBC {@link java.sql.Types#BIGINT BIGINT}.
 	 */
-	public static final BasicType<Long> LONG = new BasicTypeImpl(
+	public static final StandardBasicType<Long> LONG = new StandardBasicTypeImpl(
 			LongJavaDescriptor.INSTANCE,
 			BigIntSqlDescriptor.INSTANCE
 	);
@@ -247,34 +267,38 @@ public final class StandardSpiBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link Float} to JDBC {@link java.sql.Types#FLOAT FLOAT}.
 	 */
-	public static final BasicType<Float> FLOAT = new BasicTypeImpl(
+	public static final StandardBasicType<Float> FLOAT = new StandardBasicTypeImpl(
 			FloatJavaDescriptor.INSTANCE,
 			FloatSqlDescriptor.INSTANCE
 	);
 
+
 	/**
 	 * The standard Hibernate type for mapping {@link Double} to JDBC {@link java.sql.Types#DOUBLE DOUBLE}.
 	 */
-	public static final BasicType<Double> DOUBLE = new BasicTypeImpl(
+	public static final StandardBasicType<Double> DOUBLE = new StandardBasicTypeImpl(
 			DoubleJavaDescriptor.INSTANCE,
 			DoubleSqlDescriptor.INSTANCE
 	);
 
+
 	/**
-	 * The standard Hibernate type for mapping {@link BigInteger} to JDBC {@link java.sql.Types#NUMERIC NUMERIC}.
+	 * The standard Hibernate type for mapping {@link java.math.BigInteger} to JDBC {@link java.sql.Types#NUMERIC NUMERIC}.
 	 */
-	public static final BasicType<BigInteger> BIG_INTEGER = new BasicTypeImpl(
+	public static final StandardBasicType<BigInteger> BIG_INTEGER = new StandardBasicTypeImpl(
 			BigIntegerJavaDescriptor.INSTANCE,
 			NumericSqlDescriptor.INSTANCE
 	);
 
+
 	/**
-	 * The standard Hibernate type for mapping {@link BigDecimal} to JDBC {@link java.sql.Types#NUMERIC NUMERIC}.
+	 * The standard Hibernate type for mapping {@link java.math.BigDecimal} to JDBC {@link java.sql.Types#NUMERIC NUMERIC}.
 	 */
-	public static final BasicType<BigDecimal> BIG_DECIMAL = new BasicTypeImpl(
+	public static final StandardBasicType<BigDecimal> BIG_DECIMAL = new StandardBasicTypeImpl(
 			BigDecimalJavaDescriptor.INSTANCE,
 			NumericSqlDescriptor.INSTANCE
 	);
+
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -283,101 +307,123 @@ public final class StandardSpiBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link Character} to JDBC {@link java.sql.Types#CHAR CHAR(1)}.
 	 */
-	public static final BasicType<Character> CHARACTER = new BasicTypeImpl(
+	public static final StandardBasicType<Character> CHARACTER = new StandardBasicTypeImpl(
 			CharacterJavaDescriptor.INSTANCE,
 			CharSqlDescriptor.INSTANCE
 	);
 
+
 	/**
 	 * The standard Hibernate type for mapping {@link Character} to JDBC {@link java.sql.Types#NCHAR NCHAR(1)}.
 	 */
-	public static final BasicType<Character> CHARACTER_NCHAR = new BasicTypeImpl(
+	public static final StandardBasicType<Character> CHARACTER_NCHAR = new StandardBasicTypeImpl(
 			CharacterJavaDescriptor.INSTANCE,
 			NCharSqlDescriptor.INSTANCE
 	);
 
+
 	/**
 	 * The standard Hibernate type for mapping {@link String} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
 	 */
-	public static final BasicType<String> STRING = new BasicTypeImpl(
+	public static final StandardBasicType<String> STRING = new StandardBasicTypeImpl(
 			StringJavaDescriptor.INSTANCE,
 			VarcharSqlDescriptor.INSTANCE
 	);
+
 
 	/**
 	 * The standard Hibernate type for mapping {@link String} to JDBC {@link java.sql.Types#NVARCHAR NVARCHAR}.
 	 */
-	public static final BasicType<String> NSTRING = new BasicTypeImpl(
+	public static final StandardBasicType<String> NSTRING = new StandardBasicTypeImpl(
 			StringJavaDescriptor.INSTANCE,
 			NVarcharSqlDescriptor.INSTANCE
 	);
 
+
 	/**
 	 * The standard Hibernate type for mapping {@code char[]} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
 	 */
-	public static final BasicType<char[]> CHAR_ARRAY = new BasicTypeImpl(
+	public static final StandardBasicType<char[]> CHAR_ARRAY = new StandardBasicTypeImpl(
 			PrimitiveCharacterArrayJavaDescriptor.INSTANCE,
 			VarcharSqlDescriptor.INSTANCE
 	);
+
 
 	/**
 	 * The standard Hibernate type for mapping {@link Character Character[]} to JDBC
 	 * {@link java.sql.Types#VARCHAR VARCHAR}.
 	 */
-	public static final BasicType<Character[]> CHARACTER_ARRAY = new BasicTypeImpl(
+	public static final StandardBasicType<Character[]> CHARACTER_ARRAY = new StandardBasicTypeImpl(
 			CharacterArrayJavaDescriptor.INSTANCE,
 			VarcharSqlDescriptor.INSTANCE
 	);
+
 
 	/**
 	 * The standard Hibernate type for mapping {@link String} to JDBC {@link java.sql.Types#LONGVARCHAR LONGVARCHAR}.
 	 * <p/>
 	 * Similar to a {@link #MATERIALIZED_CLOB}
 	 */
-	public static final BasicType<String> TEXT = new BasicTypeImpl(
+	public static final StandardBasicType<String> TEXT = new StandardBasicTypeImpl(
 			StringJavaDescriptor.INSTANCE,
 			LongVarcharSqlDescriptor.INSTANCE
 	);
+
 
 	/**
 	 * The standard Hibernate type for mapping {@link String} to JDBC {@link java.sql.Types#LONGNVARCHAR LONGNVARCHAR}.
 	 * <p/>
 	 * Similar to a {@link #MATERIALIZED_NCLOB}
 	 */
-	public static final BasicType<String> NTEXT = new BasicTypeImpl(
+	public static final StandardBasicType<String> NTEXT = new StandardBasicTypeImpl(
 			StringJavaDescriptor.INSTANCE,
 			LongNVarcharSqlDescriptor.INSTANCE
 	);
 
+
 	/**
-	 * The standard Hibernate type for mapping {@link Clob} to JDBC {@link java.sql.Types#CLOB CLOB}.
+	 * The standard Hibernate type for mapping {@link java.sql.Clob} to JDBC {@link java.sql.Types#CLOB CLOB}.
 	 *
 	 * @see #MATERIALIZED_CLOB
 	 */
-	public static final BasicType<Clob> CLOB = new BasicTypeImpl(
+	public static final StandardBasicType<Clob> CLOB = new StandardBasicTypeImpl(
 			ClobJavaDescriptor.INSTANCE,
 			ClobSqlDescriptor.CLOB_BINDING
 	);
 
+
 	/**
-	 * The standard Hibernate type for mapping {@link NClob} to JDBC {@link java.sql.Types#NCLOB NCLOB}.
+	 * The standard Hibernate type for mapping {@link java.sql.NClob} to JDBC {@link java.sql.Types#NCLOB NCLOB}.
 	 *
 	 * @see #MATERIALIZED_NCLOB
 	 */
-	public static final BasicType<NClob> NCLOB = new BasicTypeImpl(
+	public static final StandardBasicType<NClob> NCLOB = new StandardBasicTypeImpl(
 			NClobJavaDescriptor.INSTANCE,
-			NClobSqlDescriptor.DEFAULT
+			NClobSqlDescriptor.NCLOB_BINDING
 	);
+
 
 	/**
 	 * The standard Hibernate type for mapping {@link String} to JDBC {@link java.sql.Types#CLOB CLOB}.
 	 *
 	 * @see #TEXT
 	 */
-	public static final BasicType<String> MATERIALIZED_CLOB = new BasicTypeImpl(
+	public static final StandardBasicType<String> MATERIALIZED_CLOB = new StandardBasicTypeImpl(
 			StringJavaDescriptor.INSTANCE,
-			ClobSqlDescriptor.DEFAULT
+			ClobSqlDescriptor.CLOB_BINDING
 	);
+
+
+	/**
+	 * The standard Hibernate type for mapping {@code Byte[]} to JDBC {@link java.sql.Types#BLOB BLOB}.
+	 *
+	 * @see #MATERIALIZED_BLOB
+	 */
+	public static final StandardBasicType<byte[]> WRAPPED_MATERIALIZED_BLOB = new StandardBasicTypeImpl(
+			ByteArrayJavaDescriptor.INSTANCE,
+			BlobSqlDescriptor.BLOB_BINDING
+	);
+
 
 	/**
 	 * The standard Hibernate type for mapping {@link Character Character[]} to JDBC {@link java.sql.Types#NCLOB NCLOB} and
@@ -385,10 +431,11 @@ public final class StandardSpiBasicTypes {
 	 * @see #NCLOB
 	 * @see #CHAR_ARRAY
 	 */
-	public static final BasicType<Character[]> MATERIALIZED_NCLOB_CHARACTER_ARRAY = new BasicTypeImpl(
+	public static final StandardBasicType<Character[]> MATERIALIZED_NCLOB_CHARACTER_ARRAY = new StandardBasicTypeImpl(
 			CharacterArrayJavaDescriptor.INSTANCE,
-			NClobSqlDescriptor.DEFAULT
+			NClobSqlDescriptor.NCLOB_BINDING
 	);
+
 
 	/**
 	 * The standard Hibernate type for mapping {@code char[]} to JDBC {@link java.sql.Types#CLOB CLOB}.
@@ -396,10 +443,11 @@ public final class StandardSpiBasicTypes {
 	 * @see #MATERIALIZED_CLOB
 	 * @see #TEXT
 	 */
-	public static final BasicType<String> MATERIALIZED_CLOB_CHAR_ARRAY = new BasicTypeImpl(
+	public static final StandardBasicType<String> MATERIALIZED_CLOB_CHAR_ARRAY = new StandardBasicTypeImpl(
 			PrimitiveCharacterArrayJavaDescriptor.INSTANCE,
-			ClobSqlDescriptor.DEFAULT
+			ClobSqlDescriptor.CLOB_BINDING
 	);
+
 
 	/**
 	 * The standard Hibernate type for mapping {@code Character[]} to JDBC {@link java.sql.Types#CLOB CLOB}.
@@ -407,10 +455,11 @@ public final class StandardSpiBasicTypes {
 	 * @see #MATERIALIZED_CLOB
 	 * @see #TEXT
 	 */
-	public static final BasicType<String> MATERIALIZED_CLOB_CHARACTER_ARRAY = new BasicTypeImpl(
+	public static final StandardBasicType<String> MATERIALIZED_CLOB_CHARACTER_ARRAY = new StandardBasicTypeImpl(
 			CharacterArrayJavaDescriptor.INSTANCE,
-			ClobSqlDescriptor.DEFAULT
+			ClobSqlDescriptor.CLOB_BINDING
 	);
+
 
 	/**
 	 * The standard Hibernate type for mapping {@code char[]} to JDBC {@link java.sql.Types#NCLOB NCLOB}.
@@ -418,10 +467,11 @@ public final class StandardSpiBasicTypes {
 	 * @see #MATERIALIZED_NCLOB
 	 * @see #TEXT
 	 */
-	public static final BasicType<String> MATERIALIZED_NCLOB_CHAR_ARRAY = new BasicTypeImpl(
+	public static final StandardBasicType<String> MATERIALIZED_NCLOB_CHAR_ARRAY = new StandardBasicTypeImpl(
 			PrimitiveCharacterArrayJavaDescriptor.INSTANCE,
-			NClobSqlDescriptor.DEFAULT
+			NClobSqlDescriptor.NCLOB_BINDING
 	);
+
 
 	/**
 	 * The standard Hibernate type for mapping {@link String} to JDBC {@link java.sql.Types#NCLOB NCLOB}.
@@ -429,10 +479,14 @@ public final class StandardSpiBasicTypes {
 	 * @see #MATERIALIZED_CLOB
 	 * @see #NTEXT
 	 */
-	public static final BasicType<String> MATERIALIZED_NCLOB = new BasicTypeImpl(
+	public static final StandardBasicType<String> MATERIALIZED_NCLOB = new StandardBasicTypeImpl(
 			StringJavaDescriptor.INSTANCE,
-			NClobSqlDescriptor.DEFAULT
+			NClobSqlDescriptor.NCLOB_BINDING
 	);
+
+
+	// todo (6.0) : streaming variants here too?
+
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -441,109 +495,131 @@ public final class StandardSpiBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link Duration} to JDBC {@link java.sql.Types#BIGINT BIGINT}.
 	 */
-	public static final BasicType<Duration> DURATION = new BasicTypeImpl(
+	public static final StandardBasicType<Duration> DURATION = new StandardBasicTypeImpl(
 			DurationJavaDescriptor.INSTANCE,
 			BigIntSqlDescriptor.INSTANCE
 	);
 
+
 	/**
 	 * The standard Hibernate type for mapping {@link LocalDateTime} to JDBC {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
 	 */
-	public static final BasicType<LocalDateTime> LOCAL_DATE_TIME = new BasicTypeImpl<>(
+	public static final StandardBasicType<LocalDateTime> LOCAL_DATE_TIME = new StandardBasicTypeImpl(
+			// todo (6.0) : apply timezone normalization (as value converter)?
 			LocalDateTimeJavaDescriptor.INSTANCE,
 			TimestampSqlDescriptor.INSTANCE
 	);
 
+
 	/**
 	 * The standard Hibernate type for mapping {@link LocalDate} to JDBC {@link java.sql.Types#DATE DATE}.
 	 */
-	public static final BasicType<LocalDate> LOCAL_DATE = new BasicTypeImpl(
+	public static final StandardBasicType<LocalDate> LOCAL_DATE = new StandardBasicTypeImpl(
 			LocalDateJavaDescriptor.INSTANCE,
 			DateSqlDescriptor.INSTANCE
 	);
 
+
 	/**
 	 * The standard Hibernate type for mapping {@link LocalTime} to JDBC {@link java.sql.Types#TIME TIME}.
 	 */
-	public static final BasicType<LocalTime> LOCAL_TIME = new BasicTypeImpl(
+	public static final StandardBasicType<LocalTime> LOCAL_TIME = new StandardBasicTypeImpl(
+			// todo (6.0) : apply timezone normalization (as value converter)?
 			LocalTimeJavaDescriptor.INSTANCE,
 			TimeSqlDescriptor.INSTANCE
 	);
 
+
 	/**
 	 * The standard Hibernate type for mapping {@link OffsetDateTime} to JDBC {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
 	 */
-	public static final BasicType<OffsetDateTime> OFFSET_DATE_TIME = new BasicTypeImpl(
+	public static final StandardBasicType<OffsetDateTime> OFFSET_DATE_TIME = new StandardBasicTypeImpl(
+			// todo (6.0) : apply timezone normalization (as value converter)?
 			OffsetDateTimeJavaDescriptor.INSTANCE,
 			TimestampSqlDescriptor.INSTANCE
 	);
 
+
 	/**
 	 * The standard Hibernate type for mapping {@link OffsetTime} to JDBC {@link java.sql.Types#TIME TIME}.
 	 */
-	public static final BasicType<OffsetTime> OFFSET_TIME = new BasicTypeImpl(
+	public static final StandardBasicType<OffsetTime> OFFSET_TIME = new StandardBasicTypeImpl<>(
+			// todo (6.0) : apply timezone normalization (as value converter)?
 			OffsetTimeJavaDescriptor.INSTANCE,
 			TimeSqlDescriptor.INSTANCE
 	);
 
+
 	/**
 	 * The standard Hibernate type for mapping {@link ZonedDateTime} to JDBC {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
 	 */
-	public static final BasicType<ZonedDateTime> ZONED_DATE_TIME = new BasicTypeImpl(
+	public static final StandardBasicType<ZonedDateTime> ZONED_DATE_TIME = new StandardBasicTypeImpl(
+			// todo (6.0) : apply timezone normalization (as value converter)?
 			ZonedDateTimeJavaDescriptor.INSTANCE,
 			TimestampSqlDescriptor.INSTANCE
 	);
 
+
 	/**
-	 * The standard Hibernate type for mapping {@link Date} ({@link java.sql.Time}) to JDBC
+	 * The standard Hibernate type for mapping {@link java.util.Date} ({@link java.sql.Time}) to JDBC
 	 * {@link java.sql.Types#TIME TIME}.
 	 */
-	public static final BasicType<Date> TIME = new BasicTypeImpl(
-			DateJavaDescriptor.INSTANCE,
+	public static final StandardBasicType<Date> TIME = new StandardBasicTypeImpl(
+			// todo (6.0) : apply timezone normalization (as value converter)?
+			JdbcTimeJavaDescriptor.INSTANCE,
 			TimeSqlDescriptor.INSTANCE
 	);
 
+
 	/**
-	 * The standard Hibernate type for mapping {@link Date} ({@link java.sql.Date}) to JDBC
+	 * The standard Hibernate type for mapping {@link java.util.Date} ({@link java.sql.Date}) to JDBC
 	 * {@link java.sql.Types#DATE DATE}.
 	 */
-	public static final BasicType<Date> DATE = new BasicTypeImpl(
-			DateJavaDescriptor.INSTANCE,
+	public static final StandardBasicType<Date> DATE = new StandardBasicTypeImpl(
+			JdbcDateJavaDescriptor.INSTANCE,
 			DateSqlDescriptor.INSTANCE
 	);
 
+
 	/**
-	 * The standard Hibernate type for mapping {@link Date} ({@link java.sql.Timestamp}) to JDBC
+	 * The standard Hibernate type for mapping {@link java.util.Date} ({@link java.sql.Timestamp}) to JDBC
 	 * {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
 	 */
-	public static final BasicType<Date> TIMESTAMP = new BasicTypeImpl(
-			DateJavaDescriptor.INSTANCE,
+	public static final StandardBasicType<Date> TIMESTAMP = new StandardBasicTypeImpl(
+			// todo (6.0) : apply timezone normalization (as value converter)?
+			JdbcTimestampJavaDescriptor.INSTANCE,
 			TimestampSqlDescriptor.INSTANCE
 	);
 
+
 	/**
-	 * The standard Hibernate type for mapping {@link Calendar} to JDBC
+	 * The standard Hibernate type for mapping {@link java.util.Calendar} to JDBC
 	 * {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
 	 */
-	public static final BasicType<Calendar> CALENDAR = new BasicTypeImpl(
+	public static final StandardBasicType<Calendar> CALENDAR = new StandardBasicTypeImpl(
+			// todo (6.0) : apply timezone normalization (as value converter)?
 			CalendarJavaDescriptor.INSTANCE,
 			TimestampSqlDescriptor.INSTANCE
 	);
 
+
 	/**
-	 * The standard Hibernate type for mapping {@link Calendar} to JDBC
+	 * The standard Hibernate type for mapping {@link java.util.Calendar} to JDBC
 	 * {@link java.sql.Types#DATE DATE}.
 	 */
-	public static final BasicType<Calendar> CALENDAR_DATE = new BasicTypeImpl(
+	public static final StandardBasicType<Calendar> CALENDAR_DATE = new StandardBasicTypeImpl(
+			// todo (6.0) : apply timezone normalization (as value converter)?
 			CalendarDateJavaDescriptor.INSTANCE,
 			DateSqlDescriptor.INSTANCE
 	);
 
+
 	/**
-	 * The standard Hibernate type for mapping {@link Calendar} to JDBC
+	 * The standard Hibernate type for mapping {@link java.util.Calendar} to JDBC
 	 * {@link java.sql.Types#TIME TIME}.
 	 */
-	public static final BasicType<Calendar> CALENDAR_TIME = new BasicTypeImpl(
+	public static final StandardBasicType<Calendar> CALENDAR_TIME = new StandardBasicTypeImpl(
+			// todo (6.0) : apply timezone normalization (as value converter)?
 			CalendarTimeJavaDescriptor.INSTANCE,
 			TimeSqlDescriptor.INSTANCE
 	);
@@ -553,28 +629,36 @@ public final class StandardSpiBasicTypes {
 	 * The standard Hibernate type for mapping {@link Instant} to JDBC
 	 * {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
 	 */
-	public static final BasicType<Instant> INSTANT = new BasicTypeImpl(
-			InstantJavaDescriptor.INSTANCE, TimestampSqlDescriptor.INSTANCE
+	public static final StandardBasicType<Instant> INSTANT = new StandardBasicTypeImpl(
+			// todo (6.0) : apply timezone normalization (as value converter)?
+			InstantJavaDescriptor.INSTANCE,
+			TimestampSqlDescriptor.INSTANCE
 	);
+
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// UUID data
 
 	/**
-	 * The standard Hibernate type for mapping {@link UUID} to JDBC {@link java.sql.Types#BINARY BINARY}.
+	 * The standard Hibernate type for mapping {@link java.util.UUID} to JDBC {@link java.sql.Types#BINARY BINARY}.
 	 */
-	public static final BasicType<UUID> UUID_BINARY = new BasicTypeImpl(
+	public static final StandardBasicType<UUID> UUID_BINARY = new StandardBasicTypeImpl(
+			// todo (6.0) : converter?
 			UUIDJavaDescriptor.INSTANCE,
 			BinarySqlDescriptor.INSTANCE
 	);
 
+
 	/**
-	 * The standard Hibernate type for mapping {@link UUID} to JDBC {@link java.sql.Types#CHAR CHAR}.
+	 * The standard Hibernate type for mapping {@link java.util.UUID} to JDBC {@link java.sql.Types#CHAR CHAR}.
 	 */
-	public static final BasicType<UUID> UUID_CHAR = new BasicTypeImpl(
+	public static final StandardBasicType<UUID> UUID_CHAR = new StandardBasicTypeImpl(
+			// todo (6.0) : converter?
 			UUIDJavaDescriptor.INSTANCE,
 			CharSqlDescriptor.INSTANCE
 	);
+
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -583,47 +667,52 @@ public final class StandardSpiBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link Class} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
 	 */
-	public static final BasicType<Class> CLASS = new BasicTypeImpl(
+	public static final StandardBasicType<Class> CLASS = new StandardBasicTypeImpl(
 			ClassJavaDescriptor.INSTANCE,
 			VarcharSqlDescriptor.INSTANCE
 	);
 
+
 	/**
-	 * The standard Hibernate type for mapping {@link Currency} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
+	 * The standard Hibernate type for mapping {@link java.util.Currency} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
 	 */
-	public static final BasicType<Currency> CURRENCY = new BasicTypeImpl(
+	public static final StandardBasicType<Currency> CURRENCY = new StandardBasicTypeImpl(
 			CurrencyJavaDescriptor.INSTANCE,
 			VarcharSqlDescriptor.INSTANCE
 	);
 
+
 	/**
-	 * The standard Hibernate type for mapping {@link Locale} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
+	 * The standard Hibernate type for mapping {@link java.util.Locale} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
 	 */
-	public static final BasicType<Locale> LOCALE = new BasicTypeImpl(
+	public static final StandardBasicType<Locale> LOCALE = new StandardBasicTypeImpl(
 			LocaleJavaDescriptor.INSTANCE,
 			VarcharSqlDescriptor.INSTANCE
 	);
 
+
 	/**
-	 * The standard Hibernate type for mapping {@link Serializable} to JDBC {@link java.sql.Types#VARBINARY VARBINARY}.
+	 * The standard Hibernate type for mapping {@link java.io.Serializable} to JDBC {@link java.sql.Types#VARBINARY VARBINARY}.
 	 */
-	public static final BasicType<Serializable> SERIALIZABLE = new BasicTypeImpl(
+	public static final StandardBasicType<Serializable> SERIALIZABLE = new StandardBasicTypeImpl(
 			SerializableJavaDescriptor.INSTANCE,
 			VarbinarySqlDescriptor.INSTANCE
 	);
 
+
 	/**
-	 * The standard Hibernate type for mapping {@link TimeZone} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
+	 * The standard Hibernate type for mapping {@link java.util.TimeZone} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
 	 */
-	public static final BasicType<TimeZone> TIMEZONE = new BasicTypeImpl(
+	public static final StandardBasicType<TimeZone> TIMEZONE = new StandardBasicTypeImpl(
 			TimeZoneJavaDescriptor.INSTANCE,
 			VarcharSqlDescriptor.INSTANCE
 	);
 
+
 	/**
 	 * The standard Hibernate type for mapping {@link java.net.URL} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
 	 */
-	public static final BasicType<java.net.URL> URL = new BasicTypeImpl(
+	public static final StandardBasicType<java.net.URL> URL = new StandardBasicTypeImpl(
 			UrlJavaDescriptor.INSTANCE,
 			VarcharSqlDescriptor.INSTANCE
 	);
@@ -1065,7 +1154,7 @@ public final class StandardSpiBasicTypes {
 	}
 
 	private static void handle(
-			BasicType type,
+			StandardBasicType type,
 			String legacyTypeClassName,
 			TypeConfiguration typeConfiguration,
 			String... registrationKeys) {
@@ -1079,4 +1168,9 @@ public final class StandardSpiBasicTypes {
 
 		basicTypeRegistry.register( type, registrationKeys );
 	}
+
+
+	public interface StandardBasicType<J> extends StandardBasicTypes.StandardBasicType<J>, BasicType<J> {
+	}
+
 }

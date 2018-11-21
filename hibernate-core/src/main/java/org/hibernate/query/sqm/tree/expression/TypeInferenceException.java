@@ -9,7 +9,7 @@ package org.hibernate.query.sqm.tree.expression;
 import javax.persistence.metamodel.Type;
 
 /**
- * Indicates a problem during {@link ImpliedTypeSqmExpression#impliedType(Type)} execution
+ * Indicates a problem during {@link InferableTypeSqmExpression#impliedType(Type)} execution
  *
  * @author Steve Ebersole
  */

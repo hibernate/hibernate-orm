@@ -7,9 +7,10 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 
 /**
  * @author Steve Ebersole
  */
-public interface DomainTypeDescriptor<J> extends DomainType<J> {
+public interface DomainTypeDescriptor<J> extends DomainType<J>, ExpressableType<J> {
 }

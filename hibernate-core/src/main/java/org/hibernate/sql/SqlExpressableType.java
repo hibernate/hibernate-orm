@@ -15,6 +15,8 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
  * @author Steve Ebersole
  */
 public interface SqlExpressableType {
+	// todo (6.0) : rename JdbcTypeMapper?  JdbcTypeMapping?  ??
+
 	/**
 	 * The descriptor for the Java type represented by this
 	 * expressable type

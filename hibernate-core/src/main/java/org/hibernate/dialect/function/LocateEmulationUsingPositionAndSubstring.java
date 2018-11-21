@@ -44,8 +44,6 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
 public class LocateEmulationUsingPositionAndSubstring
 		extends AbstractSqmFunctionTemplate
 		implements SqmFunctionRegistryAware {
-	public static final SqmExpression ONE = new SqmLiteralInteger( 1 );
-
 	private final SqmFunctionProducer positionFunctionProducer;
 	private final SqmFunctionProducer substringFunctionProducer;
 
@@ -116,33 +114,31 @@ public class LocateEmulationUsingPositionAndSubstring
 	private SqmExpression build3ArgVariation(
 			List<SqmExpression> arguments,
 			AllowableFunctionReturnType impliedResultType) {
+
 		final SqmExpression pattern = arguments.get( 0 );
 		final SqmExpression string = arguments.get( 1 );
 		final SqmExpression start = arguments.get( 2 );
-
-		final ExpressableType resolvedIntResultType = impliedResultType != null
-				? impliedResultType
-				: start.getExpressableType() == null ? ONE.getExpressableType() : start.getExpressableType();
 
 		// (position( $pattern in substring($string, $start) ) + $start-1)
 
 		final SqmExpression substringCall = substringFunctionProducer.produce(
 				registry,
-				impliedResultType,
+				StandardSpiBasicTypes.INTEGER,
 				Arrays.asList( string, start )
 		);
 
+
 		final SqmExpression positionCall = positionFunctionProducer.produce(
 				registry,
-				impliedResultType,
+				StandardSpiBasicTypes.INTEGER,
 				Arrays.asList( pattern, substringCall )
 		);
 
 		final SqmExpression startMinusOne = new SqmBinaryArithmetic(
 				SqmBinaryArithmetic.Operation.SUBTRACT,
 				start,
-				ONE,
-				resolvedIntResultType
+				SqmLiteralInteger.ONE,
+				StandardSpiBasicTypes.INTEGER
 		);
 
 
@@ -150,7 +146,7 @@ public class LocateEmulationUsingPositionAndSubstring
 				SqmBinaryArithmetic.Operation.ADD,
 				positionCall,
 				startMinusOne,
-				resolvedIntResultType
+				StandardSpiBasicTypes.INTEGER
 		);
 
 		return new SqmTuple( positionPluStartMinusOne );

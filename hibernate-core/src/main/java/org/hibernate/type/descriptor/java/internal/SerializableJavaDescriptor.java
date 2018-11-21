@@ -21,7 +21,7 @@ import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.MutableMutabilityPlan;
-import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
+import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
@@ -82,7 +82,7 @@ public class SerializableJavaDescriptor<T extends Serializable> extends Abstract
 	}
 
 	@Override
-	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
+	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
 		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.VARBINARY );
 	}
 

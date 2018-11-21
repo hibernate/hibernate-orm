@@ -6,8 +6,10 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import java.util.function.Supplier;
+
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierComposite;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
@@ -58,8 +60,8 @@ public class SqmEntityIdentifierReferenceComposite
 	}
 
 	@Override
-	public EntityIdentifierComposite getInferableType() {
-		return getReferencedNavigable();
+	public Supplier<? extends EntityIdentifierComposite> getInferableType() {
+		return this::getReferencedNavigable;
 	}
 
 	@Override

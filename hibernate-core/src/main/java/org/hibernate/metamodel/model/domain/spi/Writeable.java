@@ -35,14 +35,11 @@ public interface Writeable {
 	Predicate<StateArrayContributor> STANDARD_INSERT_INCLUSION_CHECK = StateArrayContributor::isInsertable;
 	Predicate<StateArrayContributor> STANDARD_UPDATE_INCLUSION_CHECK = StateArrayContributor::isUpdatable;
 
-	// todo (6.0) : the corollary to Writeable is really DomainResult(Assembler) / Initializer
-	//		Readable should just go away
-
 	// todo (6.0) : consider defining these contracts in terms of the inclusion checks rather than Clause
-	// todo (6.0) : remove `#unresolve`
-	// todo (6.0) : consider "recasting" `#visitJdbcTypes` as `#visitColumns` accepting `Consumer<Column>`
-	//		originally went with SqlExpressableType because not every implementor was mapped to columns -
-	//		originally BasicType, e.g., implemented this contract
+
+	// todo (6.0) : Use BasicValueMapper here instead of SqlExpressableType - gives us access to
+
+	// todo (6.0) : remove `#unresolve` ^^
 
 
 	/**

@@ -6,9 +6,12 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import java.util.function.Supplier;
+
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.internal.Helper;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
@@ -44,8 +47,35 @@ public class SqmConcat implements SqmExpression {
 	}
 
 	@Override
-	public BasicValuedExpressableType getInferableType() {
-		return (BasicValuedExpressableType) Helper.firstNonNull( lhsOperand.getInferableType(), rhsOperand.getInferableType() ) ;
+	@SuppressWarnings("unchecked")
+	public Supplier<? extends BasicValuedExpressableType> getInferableType() {
+		return () -> {
+			// check LHS
+			{
+				final Supplier<? extends BasicValuedExpressableType> inference =
+						(Supplier<? extends BasicValuedExpressableType>) lhsOperand.getInferableType();
+				if ( inference != null ) {
+					final BasicValuedExpressableType inferableType = inference.get();
+					if ( inferableType != null ) {
+						return inferableType;
+					}
+				}
+			}
+
+			// check RHS
+			{
+				final Supplier<? extends BasicValuedExpressableType> inference =
+						(Supplier<? extends BasicValuedExpressableType>) rhsOperand.getInferableType();
+				if ( inference != null ) {
+					final BasicValuedExpressableType inferableType = inference.get();
+					if ( inferableType != null ) {
+						return inferableType;
+					}
+				}
+			}
+
+			return resultType;
+		};
 	}
 
 	@Override

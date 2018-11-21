@@ -10,8 +10,12 @@ import java.io.InvalidObjectException;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.Types;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.persistence.EnumType;
+import javax.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
@@ -25,16 +29,22 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.uuid.LocalObjectUuidHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationProcess;
+import org.hibernate.metamodel.model.domain.spi.BasicTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.BasicValueMapper;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.StandardBasicTypes.StandardBasicType;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 import org.hibernate.type.internal.TypeConfigurationRegistry;
@@ -66,6 +76,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	private final String uuid = LocalObjectUuidHelper.generateLocalObjectUuid();
 
 	private final Scope scope;
+
 	private boolean initialized;
 
 	// things available during both boot and runtime ("active") lifecycle phases
@@ -75,14 +86,21 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	private final transient Map<SqlTypeDescriptor,Map<BasicJavaDescriptor, SqlExpressableType>> jdbcValueMapperCache = new ConcurrentHashMap<>();
 
+	private final Map<String, BasicValueMapper> namedMappers = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<StandardBasicType<?>,BasicValueMapper<?>> standardBasicTypeResolutionCache = new ConcurrentHashMap<>();
+
+
 	public TypeConfiguration() {
-		this.scope = new Scope();
+		log.debugf( "Instantiating TypeConfiguration : %s", uuid );
+
+		this.scope = new Scope( this );
 
 		this.javaTypeDescriptorRegistry = new JavaTypeDescriptorRegistry( this );
 		this.sqlTypeDescriptorRegistry = new SqlTypeDescriptorRegistry( this );
 
 		this.basicTypeRegistry = new BasicTypeRegistry( this );
-		StandardBasicTypes.prime( this );
+
+		StandardSpiBasicTypes.prime( this );
 
 		this.initialized = true;
 
@@ -107,11 +125,150 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return sqlTypeDescriptorRegistry;
 	}
 
+	public SqlTypeDescriptorIndicators getCurrentBaseSqlTypeIndicators() {
+		return scope.getCurrentBaseSqlTypeIndicators();
+	}
+
+	/**
+	 * Resolve the BasicValueMapper related with the StandardBasicType in relation to
+	 * this TypeConfiguration.
+	 *
+	 * StandardBasicType references exist statically.  This call acts as a cacheable lookup
+	 * for the related BasicValueMapper scoped to this TypeConfiguration
+	 */
+	@SuppressWarnings("unchecked")
+	public <J> BasicTypeResolution<J> resolveStandardBasicType(StandardBasicType<J> standardBasicType) {
+		return (BasicTypeResolution<J>) standardBasicTypeResolutionCache.computeIfAbsent(
+				standardBasicType,
+				key -> new StandardBasicTypeResolutionImpl<>( standardBasicType )
+		);
+	}
+
+	public interface BasicTypeResolution<J> extends BasicValueMapper<J>, BasicValuedExpressableType<J>, BasicTypeDescriptor<J> {
+		@Override
+		default PersistenceType getPersistenceType() {
+			return PersistenceType.BASIC;
+		}
+	}
+
+	private class StandardBasicTypeResolutionImpl<J> implements BasicTypeResolution<J> {
+		private final StandardBasicType<J> standardBasicType;
+		private final SqlExpressableType sqlExpressableType;
+
+		@SuppressWarnings("unchecked")
+		public StandardBasicTypeResolutionImpl(StandardBasicType<J> standardBasicType) {
+			this.standardBasicType = standardBasicType;
+			this.sqlExpressableType = standardBasicType.getRelationalSqlTypeDescriptor().getSqlExpressableType(
+					standardBasicType.getRelationalJavaTypeDescriptor(),
+					TypeConfiguration.this
+			);
+		}
+
+		@Override
+		public Class<J> getJavaType() {
+			return getDomainJavaDescriptor().getJavaType();
+		}
+
+		@Override
+		public BasicJavaDescriptor<J> getDomainJavaDescriptor() {
+			return standardBasicType.getDomainJavaTypeDescriptor();
+		}
+
+		@Override
+		public SqlExpressableType getSqlExpressableType() {
+			return sqlExpressableType;
+		}
+
+		@Override
+		public BasicValueConverter getValueConverter() {
+			return standardBasicType.getValueConverter();
+		}
+
+		@Override
+		public MutabilityPlan<J> getMutabilityPlan() {
+			return standardBasicType.getMutabilityPlan();
+		}
+
+		@Override
+		public BasicJavaDescriptor<J> getJavaTypeDescriptor() {
+			return standardBasicType.getDomainJavaTypeDescriptor();
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public <J> BasicValuedExpressableType<J> standardExpressableTypeForJavaType(Class<J> javaType) {
+		return standardExpressableTypeForJavaType(
+				(BasicJavaDescriptor) getJavaTypeDescriptorRegistry().getDescriptor( javaType )
+		);
+	}
+
+	private final ConcurrentHashMap<BasicJavaDescriptor<?>,BasicTypeResolution> basicTypeResolutionsByJavaType = new ConcurrentHashMap<>();
+
+	@SuppressWarnings("unchecked")
+	public <J> BasicTypeResolution<J> standardExpressableTypeForJavaType(BasicJavaDescriptor<J> javaTypeDescriptor) {
+		return basicTypeResolutionsByJavaType.computeIfAbsent(
+				javaTypeDescriptor,
+				StandardJavaTypeResolutionImpl::new
+		);
+	}
+
+	private class StandardJavaTypeResolutionImpl<J> implements BasicTypeResolution<J> {
+
+		private final BasicJavaDescriptor<J> javaTypeDescriptor;
+		private final SqlTypeDescriptor sqlTypeDescriptor;
+
+		private final SqlExpressableType sqlExpressableType;
+
+		@SuppressWarnings("unchecked")
+		public StandardJavaTypeResolutionImpl(BasicJavaDescriptor<J> javaTypeDescriptor) {
+			this.javaTypeDescriptor = javaTypeDescriptor;
+
+			this.sqlTypeDescriptor = javaTypeDescriptor.getJdbcRecommendedSqlType( getCurrentBaseSqlTypeIndicators() );
+
+			this.sqlExpressableType = sqlTypeDescriptor.getSqlExpressableType( javaTypeDescriptor, TypeConfiguration.this );
+		}
+
+		@Override
+		public Class<J> getJavaType() {
+			return getDomainJavaDescriptor().getJavaType();
+		}
+
+		@Override
+		public BasicJavaDescriptor<J> getDomainJavaDescriptor() {
+			return javaTypeDescriptor;
+		}
+
+		@Override
+		public SqlExpressableType getSqlExpressableType() {
+			return sqlExpressableType;
+		}
+
+		@Override
+		public BasicValueConverter getValueConverter() {
+			return null;
+		}
+
+		@Override
+		public MutabilityPlan<J> getMutabilityPlan() {
+			return javaTypeDescriptor.getMutabilityPlan();
+		}
+
+		@Override
+		public BasicJavaDescriptor<J> getJavaTypeDescriptor() {
+			return javaTypeDescriptor;
+		}
+	}
+
 	public BasicTypeRegistry getBasicTypeRegistry() {
 		return basicTypeRegistry;
 	}
 
-	public SqlExpressableType resolveJdbcValueMapper(
+	/**
+	 * Resolve the SqlExpressableType for a SqlTypeDescriptor and
+	 * BasicJavaDescriptor combo.  This form creates one if not already
+	 * cached using the passed `creator`
+	 */
+	public SqlExpressableType resolveSqlExpressableType(
 			SqlTypeDescriptor sqlTypeDescriptor,
 			BasicJavaDescriptor javaDescriptor,
 			java.util.function.Function<BasicJavaDescriptor, SqlExpressableType> creator) {
@@ -121,6 +278,30 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		);
 
 		return cacheForSqlType.computeIfAbsent( javaDescriptor, x -> creator.apply( javaDescriptor ) );
+	}
+
+	/**
+	 * Resolve the SqlExpressableType for a SqlTypeDescriptor and
+	 * BasicJavaDescriptor combo.  This form throws an exception if
+	 * not already cached.
+	 */
+	public SqlExpressableType resolveSqlExpressableType(
+			SqlTypeDescriptor sqlTypeDescriptor,
+			BasicJavaDescriptor javaDescriptor) {
+		final Map<BasicJavaDescriptor, SqlExpressableType> cacheForSqlType = jdbcValueMapperCache.computeIfAbsent(
+				sqlTypeDescriptor,
+				x -> new ConcurrentHashMap<>()
+		);
+
+		final SqlExpressableType sqlExpressableType = cacheForSqlType.get( javaDescriptor );
+		if ( sqlExpressableType == null ) {
+			throw new IllegalArgumentException(
+					"No SqlExpressableType cached for [" + sqlTypeDescriptor + "] and ["
+							+ javaDescriptor + "] combination"
+			);
+		}
+
+		return sqlExpressableType;
 	}
 
 
@@ -192,7 +373,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		// to handle this, allowing any SessionFactory constructor code to be able to continue to have access to the
 		// MetadataBuildingContext through TypeConfiguration until this callback is fired.
 		log.tracef( "Handling #sessionFactoryCreated from [%s] for TypeConfiguration", factory );
-		scope.setMetadataBuildingContext( null );
+		scope.unsetMetadataBuildingContext();
 	}
 
 	@Override
@@ -207,6 +388,17 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		//		release Database, descriptor Maps, etc... things that are only
 		// 		valid while the TypeConfiguration is scoped to SessionFactory
 	}
+
+	public void registerBasicValueMapper(BasicValueMapper valueMapper, String... registrationKeys) {
+		for ( String registrationKey : registrationKeys ) {
+			namedMappers.put( registrationKey, valueMapper );
+		}
+	}
+
+	public BasicValueMapper getNamedBasicValueMapper(String name) {
+		return namedMappers.get( name );
+	}
+
 
 	// todo (6.0) - have this algorithm be extendable by users.
 	// 		I have received at least one user request for this, and I can completely see the
@@ -390,11 +582,32 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 * Each stage or phase is consider a "scope" for the TypeConfiguration.
 	 */
 	private static class Scope implements Serializable {
+		private final TypeConfiguration typeConfiguration;
+
 		private transient MetadataBuildingContext metadataBuildingContext;
 		private transient SessionFactoryImplementor sessionFactory;
+		private transient SqlTypeDescriptorIndicators currentSqlTypeIndicators = new SqlTypeDescriptorIndicators() {
+			@Override
+			public TypeConfiguration getTypeConfiguration() {
+				return typeConfiguration;
+			}
+
+			@Override
+			public int getPreferredSqlTypeCodeForBoolean() {
+				return Types.BOOLEAN;
+			}
+		};
 
 		private String sessionFactoryName;
 		private String sessionFactoryUuid;
+
+		public Scope(TypeConfiguration typeConfiguration) {
+			this.typeConfiguration = typeConfiguration;
+		}
+
+		public SqlTypeDescriptorIndicators getCurrentBaseSqlTypeIndicators() {
+			return currentSqlTypeIndicators;
+		}
 
 		public MetadataBuildingContext getMetadataBuildingContext() {
 			if ( metadataBuildingContext == null ) {
@@ -415,6 +628,36 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 		public void setMetadataBuildingContext(MetadataBuildingContext metadataBuildingContext) {
 			this.metadataBuildingContext = metadataBuildingContext;
+
+			this.currentSqlTypeIndicators = new SqlTypeDescriptorIndicators() {
+				private final boolean globalNationalization = metadataBuildingContext.getBuildingOptions().useNationalizedCharacterData();
+				private final int preferredBooleanSqlTypeCode = metadataBuildingContext.getPreferredSqlTypeCodeForBoolean();
+				private final EnumType implicitEnumStorage = metadataBuildingContext.getBuildingOptions().getImplicitEnumType();
+
+				@Override
+				public boolean isNationalized() {
+					return globalNationalization;
+				}
+
+				@Override
+				public int getPreferredSqlTypeCodeForBoolean() {
+					return preferredBooleanSqlTypeCode;
+				}
+
+				@Override
+				public EnumType getEnumeratedType() {
+					return implicitEnumStorage;
+				}
+
+				@Override
+				public TypeConfiguration getTypeConfiguration() {
+					return typeConfiguration;
+				}
+			};
+		}
+
+		public void unsetMetadataBuildingContext() {
+			this.metadataBuildingContext = null;
 		}
 
 		public SessionFactoryImplementor getSessionFactory() {

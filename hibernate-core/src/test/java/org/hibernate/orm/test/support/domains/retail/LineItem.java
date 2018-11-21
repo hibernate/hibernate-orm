@@ -10,6 +10,7 @@ import javax.money.MonetaryAmount;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 
 /**
@@ -19,8 +20,11 @@ import javax.persistence.ManyToOne;
 public class LineItem {
 	private Integer id;
 	private Product product;
+
 	private int quantity;
 	private MonetaryAmount subTotal;
+
+	private Order order;
 
 	@Id
 	public Integer getId() {
@@ -32,7 +36,7 @@ public class LineItem {
 	}
 
 	@ManyToOne
-	@JoinColumn
+	@JoinColumn( name = "product_id" )
 	public Product getProduct() {
 		return product;
 	}
@@ -55,5 +59,15 @@ public class LineItem {
 
 	public void setSubTotal(MonetaryAmount subTotal) {
 		this.subTotal = subTotal;
+	}
+
+	@ManyToOne
+	@JoinColumn( name = "order_id" )
+	public Order getOrder() {
+		return order;
+	}
+
+	public void setOrder(Order order) {
+		this.order = order;
 	}
 }

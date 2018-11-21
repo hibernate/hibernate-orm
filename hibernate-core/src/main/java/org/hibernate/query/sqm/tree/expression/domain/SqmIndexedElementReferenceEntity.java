@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import java.util.function.Supplier;
+
 import org.hibernate.metamodel.model.domain.spi.CollectionElementEntity;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -32,12 +34,12 @@ public class SqmIndexedElementReferenceEntity
 
 	@Override
 	public CollectionElementEntity getExpressableType() {
-		return getReferencedNavigable();
+		return (CollectionElementEntity) getPluralAttributeReference().getReferencedNavigable().getPersistentCollectionDescriptor().getElementDescriptor();
 	}
 
 	@Override
-	public CollectionElementEntity getInferableType() {
-		return getExpressableType();
+	public Supplier<? extends CollectionElementEntity> getInferableType() {
+		return this::getExpressableType;
 	}
 
 	@Override

@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-
 /**
  * Specialization of a literal expression which is a reference to user
  * code value.  Two flavors:
@@ -17,10 +15,5 @@ import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
  *
  * @author Steve Ebersole
  */
-public interface SqmConstantReference<T> extends SqmLiteral {
-	@Override
-	BasicValuedExpressableType getExpressableType();
-
-	@Override
-	BasicValuedExpressableType getInferableType();
+public interface SqmConstantReference<T> extends SqmLiteral<T> {
 }

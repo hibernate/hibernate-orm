@@ -13,7 +13,7 @@ import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
 import org.hibernate.orm.test.support.domains.contacts.Contact;
-import org.hibernate.orm.test.support.domains.contacts.ModelClasses;
+import org.hibernate.orm.test.support.domains.contacts.ContactsDomainModel;
 
 import org.junit.jupiter.api.Test;
 
@@ -29,7 +29,7 @@ public class SecondaryTableTests extends SessionFactoryBasedFunctionalTest {
 	@Override
 	protected void applyMetadataSources(MetadataSources metadataSources) {
 		super.applyMetadataSources( metadataSources );
-		ModelClasses.applyContactsModel( metadataSources );
+		ContactsDomainModel.applyContactsModel( metadataSources );
 	}
 
 	@Test

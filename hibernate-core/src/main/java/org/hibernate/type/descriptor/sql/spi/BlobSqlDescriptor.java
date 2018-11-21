@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.descriptor.sql.spi;
 
+import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -80,41 +81,60 @@ public abstract class BlobSqlDescriptor extends AbstractTemplateSqlTypeDescripto
 		};
 	}
 
+	/*
+	 * @Converter( JsonNodeConverter.class, autoApply=true )
+	 *
+	 * @TypeDef(...)
+	 *
+	 * @Entity {
+	 *     ...
+	 *     @SqlType(Descriptor)
+	 *     JsonNode getJson() {...}
+	 * }
+	 *
+	 * domain JTD - JsonNode
+	 * relational JTD - JsonNode
+	 * relational STD - JSON (implicit conversion)
+	 * conversion - none
+	 *
+	 * Clob -> CLOB
+	 * Clob -> stream
+	 * Clob ->
+	 *
+	 * Blob -> BLOB
+	 * Blob -> byte[]
+	 * Blob -> stream
+	 */
+
 	@Override
-	protected <X> JdbcValueBinder<X> createBinder(BasicJavaDescriptor<X> javaTypeDescriptor, TypeConfiguration typeConfiguration) {
-		return getBlobBinder( javaTypeDescriptor, typeConfiguration );
-	}
+	protected abstract <X> JdbcValueBinder<X> createBinder(BasicJavaDescriptor<X> javaTypeDescriptor, TypeConfiguration typeConfiguration);
 
-	protected abstract <X> JdbcValueBinder<X> getBlobBinder(JavaTypeDescriptor<X> javaTypeDescriptor, TypeConfiguration typeConfiguration);
-
-
-	public static final BlobSqlDescriptor DEFAULT = new BlobSqlDescriptor() {
+	public static final BlobSqlDescriptor BLOB_BINDING = new BlobSqlDescriptor() {
 		@Override
 		public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
 			return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Blob.class );
 		}
 
 		@Override
-		public <X> JdbcValueBinder<X> getBlobBinder(JavaTypeDescriptor<X> javaTypeDescriptor, TypeConfiguration typeConfiguration) {
+		public <X> JdbcValueBinder<X> createBinder(BasicJavaDescriptor<X> javaTypeDescriptor, TypeConfiguration typeConfiguration) {
 			return new AbstractJdbcValueBinder<X>( javaTypeDescriptor, this ) {
 				@Override
 				protected void doBind(
 						PreparedStatement st,
 						int index, X value,
 						ExecutionContext executionContext) throws SQLException {
-					BlobSqlDescriptor descriptor = BLOB_BINDING;
-					if ( byte[].class.isInstance( value ) ) {
-						// performance shortcut for binding BLOB data in byte[] format
-						descriptor = PRIMITIVE_ARRAY_BINDING;
+					if ( executionContext.getSession().useStreamForLobBinding() ) {
+						st.setBlob(
+								index,
+								javaTypeDescriptor.unwrap( value, InputStream.class, executionContext.getSession() )
+						);
 					}
-					else if ( executionContext.getSession().useStreamForLobBinding() ) {
-						descriptor = STREAM_BINDING;
+					else {
+						st.setBlob(
+								index,
+								javaTypeDescriptor.unwrap( value, Blob.class, executionContext.getSession() )
+						);
 					}
-
-					descriptor.getBlobBinder( javaTypeDescriptor, typeConfiguration ).bind( st,
-																							index,
-																							value,
-																							executionContext );
 				}
 
 				@Override
@@ -122,19 +142,18 @@ public abstract class BlobSqlDescriptor extends AbstractTemplateSqlTypeDescripto
 						CallableStatement st,
 						String name, X value,
 						ExecutionContext executionContext) throws SQLException {
-					BlobSqlDescriptor descriptor = BLOB_BINDING;
-					if ( byte[].class.isInstance( value ) ) {
-						// performance shortcut for binding BLOB data in byte[] format
-						descriptor = PRIMITIVE_ARRAY_BINDING;
+					if ( executionContext.getSession().useStreamForLobBinding() ) {
+						st.setBlob(
+								name,
+								javaTypeDescriptor.unwrap( value, InputStream.class, executionContext.getSession() )
+						);
 					}
-					else if ( executionContext.getSession().useStreamForLobBinding() ) {
-						descriptor = STREAM_BINDING;
+					else {
+						st.setBlob(
+								name,
+								javaTypeDescriptor.unwrap( value, Blob.class, executionContext.getSession() )
+						);
 					}
-
-					descriptor.getBlobBinder( javaTypeDescriptor, typeConfiguration ).bind( st,
-																							name,
-																							value,
-																							executionContext );
 				}
 			};
 		}
@@ -147,7 +166,7 @@ public abstract class BlobSqlDescriptor extends AbstractTemplateSqlTypeDescripto
 		}
 
 		@Override
-		public <X> JdbcValueBinder<X> getBlobBinder(JavaTypeDescriptor<X> javaTypeDescriptor, TypeConfiguration typeConfiguration) {
+		public <X> JdbcValueBinder<X> createBinder(BasicJavaDescriptor<X> javaTypeDescriptor, TypeConfiguration typeConfiguration) {
 			return new AbstractJdbcValueBinder<X>( javaTypeDescriptor, this ) {
 				@Override
 				protected void doBind(
@@ -168,34 +187,6 @@ public abstract class BlobSqlDescriptor extends AbstractTemplateSqlTypeDescripto
 		}
 	};
 
-	public static final BlobSqlDescriptor BLOB_BINDING = new BlobSqlDescriptor() {
-		@Override
-		public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
-			return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Blob.class );
-		}
-
-		@Override
-		public <X> JdbcValueBinder<X> getBlobBinder(JavaTypeDescriptor<X> javaTypeDescriptor, TypeConfiguration typeConfiguration) {
-			return new AbstractJdbcValueBinder<X>( javaTypeDescriptor, this ) {
-				@Override
-				protected void doBind(
-						PreparedStatement st,
-						int index, X value,
-						ExecutionContext executionContext) throws SQLException {
-					st.setBlob( index, javaTypeDescriptor.unwrap( value, Blob.class, executionContext.getSession() ) );
-				}
-
-				@Override
-				protected void doBind(
-						CallableStatement st,
-						String name, X value,
-						ExecutionContext executionContext) throws SQLException {
-					st.setBlob( name, javaTypeDescriptor.unwrap( value, Blob.class, executionContext.getSession() ) );
-				}
-			};
-		}
-	};
-
 	public static final BlobSqlDescriptor STREAM_BINDING = new BlobSqlDescriptor() {
 		@Override
 		public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
@@ -203,7 +194,7 @@ public abstract class BlobSqlDescriptor extends AbstractTemplateSqlTypeDescripto
 		}
 
 		@Override
-		public <X> JdbcValueBinder<X> getBlobBinder(JavaTypeDescriptor<X> javaTypeDescriptor, TypeConfiguration typeConfiguration) {
+		public <X> JdbcValueBinder<X> createBinder(BasicJavaDescriptor<X> javaTypeDescriptor, TypeConfiguration typeConfiguration) {
 			return new AbstractJdbcValueBinder<X>( javaTypeDescriptor, this ) {
 				@Override
 				protected void doBind(
@@ -233,4 +224,6 @@ public abstract class BlobSqlDescriptor extends AbstractTemplateSqlTypeDescripto
 			};
 		}
 	};
+
+	public static final BlobSqlDescriptor DEFAULT = BLOB_BINDING;
 }

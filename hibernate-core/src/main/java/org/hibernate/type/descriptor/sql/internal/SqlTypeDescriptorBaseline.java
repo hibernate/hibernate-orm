@@ -65,16 +65,18 @@ public class SqlTypeDescriptorBaseline {
 		target.addDescriptor( BinarySqlDescriptor.INSTANCE );
 		target.addDescriptor( VarbinarySqlDescriptor.INSTANCE );
 		target.addDescriptor( LongVarbinarySqlDescriptor.INSTANCE );
-		target.addDescriptor( BlobSqlDescriptor.DEFAULT );
 
 		target.addDescriptor( CharSqlDescriptor.INSTANCE );
 		target.addDescriptor( VarcharSqlDescriptor.INSTANCE );
 		target.addDescriptor( LongVarcharSqlDescriptor.INSTANCE );
-		target.addDescriptor( ClobSqlDescriptor.DEFAULT );
 
 		target.addDescriptor( NCharSqlDescriptor.INSTANCE );
 		target.addDescriptor( NVarcharSqlDescriptor.INSTANCE );
 		target.addDescriptor( LongNVarcharSqlDescriptor.INSTANCE );
+
+		// Use the default LOB mappings by default
+		target.addDescriptor( BlobSqlDescriptor.DEFAULT );
+		target.addDescriptor( ClobSqlDescriptor.DEFAULT );
 		target.addDescriptor( NClobSqlDescriptor.DEFAULT );
 	}
 }

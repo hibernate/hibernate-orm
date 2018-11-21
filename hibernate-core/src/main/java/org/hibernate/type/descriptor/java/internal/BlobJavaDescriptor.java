@@ -24,7 +24,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
 import org.hibernate.type.descriptor.spi.IncomparableComparator;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
+import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
@@ -85,7 +85,7 @@ public class BlobJavaDescriptor extends AbstractBasicJavaDescriptor<Blob> {
 	}
 
 	@Override
-	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
+	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
 		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.BLOB );
 	}
 

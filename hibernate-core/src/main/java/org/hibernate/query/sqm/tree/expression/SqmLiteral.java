@@ -18,12 +18,9 @@ import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
  * </ul>
  * @author Steve Ebersole
  */
-public interface SqmLiteral<T> extends ImpliedTypeSqmExpression {
+public interface SqmLiteral<T> extends InferableTypeSqmExpression {
 	T getLiteralValue();
 
 	@Override
 	BasicValuedExpressableType getExpressableType();
-
-	@Override
-	BasicValuedExpressableType getInferableType();
 }

@@ -9,9 +9,9 @@ package org.hibernate.envers.internal.entities;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.type.descriptor.java.internal.EnumJavaDescriptor;
-import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
-import org.hibernate.type.descriptor.sql.spi.IntegerSqlDescriptor;
+import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.TinyIntSqlDescriptor;
 
 /**
  * @author Chris Cranford
@@ -24,11 +24,12 @@ public class RevisionTypeJavaDescriptor extends EnumJavaDescriptor<RevisionType>
 	}
 
 	@Override
-	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
-		return IntegerSqlDescriptor.INSTANCE;
+	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
+		return TinyIntSqlDescriptor.INSTANCE;
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <X> X unwrap(RevisionType value, Class<X> type, SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;
@@ -46,18 +47,19 @@ public class RevisionTypeJavaDescriptor extends EnumJavaDescriptor<RevisionType>
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <X> RevisionType wrap(X value, SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;
 		}
-		if ( RevisionType.class.isInstance( value ) ) {
+		if ( value instanceof RevisionType ) {
 			return (RevisionType) value;
 		}
-		if ( Integer.class.isInstance( value ) ) {
+		if ( value instanceof Integer ) {
 			int ordinal = (Integer) value;
 			return RevisionType.values()[ ordinal ];
 		}
-		if ( Byte.class.isInstance( value ) ) {
+		if ( value instanceof Byte ) {
 			return RevisionType.fromRepresentation( value );
 		}
 		throw unknownWrap( value.getClass() );

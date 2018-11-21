@@ -15,7 +15,7 @@ import java.sql.Types;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.type.descriptor.java.internal.EnumJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.EnumJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 

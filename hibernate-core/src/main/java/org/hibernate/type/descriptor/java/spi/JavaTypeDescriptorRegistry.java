@@ -18,7 +18,7 @@ import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.type.descriptor.java.internal.EnumJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.JavaTypeDescriptorBaseline;
 import org.hibernate.type.descriptor.java.internal.JavaTypeDescriptorBasicAdaptor;
-import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
+import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.VarbinarySqlDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -251,7 +251,7 @@ public class JavaTypeDescriptorRegistry implements Serializable, JavaTypeDescrip
 		}
 
 		@Override
-		public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
+		public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
 			return sqlTypeDescriptor;
 		}
 

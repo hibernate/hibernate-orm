@@ -17,12 +17,12 @@ import javax.persistence.Table;
  * @author Steve Ebersole
  */
 @Entity
-@Table( name = "ORDERS")
+@Table( name = "orders")
 public class Order {
 	private Integer id;
 	private Instant transacted;
 
-	private Customer customer;
+	private SalesAssociate salesAssociate;
 
 	@Id
 	public Integer getId() {
@@ -42,12 +42,13 @@ public class Order {
 	}
 
 	@ManyToOne
-	@JoinColumn( name = "customer_id" )
-	public Customer getCustomer() {
-		return customer;
+	@JoinColumn(name = "associate_id")
+	public SalesAssociate getSalesAssociate() {
+		return salesAssociate;
 	}
 
-	public void setCustomer(Customer customer) {
-		this.customer = customer;
+	public void setSalesAssociate(SalesAssociate salesAssociate) {
+		this.salesAssociate = salesAssociate;
 	}
+
 }

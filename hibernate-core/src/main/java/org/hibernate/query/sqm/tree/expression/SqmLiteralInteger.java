@@ -14,6 +14,9 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
  * @author Steve Ebersole
  */
 public class SqmLiteralInteger extends AbstractSqmLiteral<Integer> {
+	public static final SqmLiteralInteger ZERO = new SqmLiteralInteger( 0 );
+	public static final SqmLiteralInteger ONE = new SqmLiteralInteger( 1 );
+
 	public SqmLiteralInteger(Integer value, BasicValuedExpressableType sqmExpressableTypeBasic) {
 		super( value, sqmExpressableTypeBasic );
 	}

@@ -23,21 +23,33 @@ import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
+ * Models a reference to a Column in a SQL AST
+ *
  * @author Steve Ebersole
  */
 public class ColumnReference implements Expression {
-	private String sqlFragment;
 	private final Column column;
+	private String sqlFragment;
 
 	public ColumnReference(ColumnReferenceQualifier qualifier, Column column) {
 		assert qualifier != null;
 		this.column = column;
-		renderSqlFragment(qualifier);
+		this.sqlFragment = renderSqlFragment( qualifier, column );
+	}
+
+	private static String renderSqlFragment(ColumnReferenceQualifier qualifier, Column column) {
+		if ( qualifier == null ) {
+			return column.render();
+		}
+		else {
+			final TableReference tableReference = qualifier.locateTableReference( column.getSourceTable() );
+			return column.render( tableReference.getIdentificationVariable() );
+		}
 	}
 
 	public ColumnReference(Column column) {
 		this.column = column;
-		renderSqlFragment(null);
+		this.sqlFragment = renderSqlFragment( null, column );
 	}
 
 	@Override
@@ -46,10 +58,7 @@ public class ColumnReference implements Expression {
 			int valuesArrayPosition,
 			BasicJavaDescriptor javaTypeDescriptor,
 			TypeConfiguration typeConfiguration) {
-		final JdbcValueExtractor jdbcValueExtractor = getColumn().getSqlTypeDescriptor().getSqlExpressableType(
-				column.getSqlTypeDescriptor().getJdbcRecommendedJavaTypeMapping( typeConfiguration ),
-				typeConfiguration
-		).getJdbcValueExtractor();
+		final JdbcValueExtractor jdbcValueExtractor = getColumn().getExpressableType().getJdbcValueExtractor();
 		return new SqlSelectionImpl(
 				jdbcPosition,
 				valuesArrayPosition,
@@ -69,24 +78,12 @@ public class ColumnReference implements Expression {
 
 	@Override
 	public SqlExpressableType getType() {
-		// n/a
-		return null;
+		return column.getExpressableType();
 	}
 
 	@Override
 	public SqlExpressable getExpressable() {
 		return getColumn();
-	}
-
-	private void renderSqlFragment(ColumnReferenceQualifier qualifier) {
-		if ( qualifier == null ) {
-			sqlFragment = column.render();
-		}
-
-else {
-			final TableReference tableReference = qualifier.locateTableReference( column.getSourceTable() );
-			sqlFragment = column.render( tableReference.getIdentificationVariable() );
-		}
 	}
 
 	public String renderSqlFragment() {

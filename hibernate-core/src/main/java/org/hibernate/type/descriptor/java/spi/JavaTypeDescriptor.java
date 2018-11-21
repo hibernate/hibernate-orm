@@ -7,7 +7,7 @@
 package org.hibernate.type.descriptor.java.spi;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
+import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
@@ -29,8 +29,10 @@ public interface JavaTypeDescriptor<T> extends org.hibernate.type.descriptor.jav
 	 * @param context Contextual information
 	 *
 	 * @return The recommended SQL type descriptor
+	 *
+	 * todo (6.0) : ? - rename `#getImplicitSqlTypeDescriptor` ?
 	 */
-	SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context);
+	SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context);
 
 	/**
 	 * Unwrap an instance of our handled Java type into the requested type.

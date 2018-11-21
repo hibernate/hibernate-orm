@@ -10,56 +10,22 @@ import java.lang.reflect.Field;
 
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Represents a constant that came from a static field reference.
  *
  * @author Steve Ebersole
  */
-public class SqmConstantFieldReference<T> implements SqmConstantReference<T> {
+public class SqmConstantFieldReference<T> extends AbstractSqmLiteral<T> implements SqmConstantReference<T> {
 	private final Field sourceField;
-	private final T value;
 
-	private BasicValuedExpressableType typeDescriptor;
-
-	public SqmConstantFieldReference(Field sourceField, T value) {
-		this( sourceField, value, null );
-	}
-
-	public SqmConstantFieldReference(Field sourceField, T value, BasicValuedExpressableType typeDescriptor) {
+	public SqmConstantFieldReference(Field sourceField, T value, BasicValuedExpressableType inherentType) {
+		super( value, inherentType );
 		this.sourceField = sourceField;
-		this.value = value;
-		this.typeDescriptor = typeDescriptor;
 	}
 
 	public Field getSourceField() {
 		return sourceField;
-	}
-
-
-	@Override
-	public T getLiteralValue() {
-		return value;
-	}
-
-	@Override
-	public BasicValuedExpressableType getExpressableType() {
-		return typeDescriptor;
-	}
-
-	@Override
-	public BasicValuedExpressableType getInferableType() {
-		return getExpressableType();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void impliedType(ExpressableType type) {
-		if ( type != null ) {
-			this.typeDescriptor = (BasicValuedExpressableType) type;
-		}
 	}
 
 	@Override
@@ -69,11 +35,6 @@ public class SqmConstantFieldReference<T> implements SqmConstantReference<T> {
 
 	@Override
 	public String asLoggableText() {
-		return "ConstantField(" + value + ")";
-	}
-
-	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return typeDescriptor.getJavaTypeDescriptor();
+		return "ConstantField(" + getLiteralValue() + ")";
 	}
 }

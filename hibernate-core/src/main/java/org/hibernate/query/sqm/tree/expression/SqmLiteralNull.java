@@ -6,37 +6,17 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.HibernateException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.spi.BasicType;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmLiteralNull implements SqmLiteral<Void> {
-	private BasicValuedExpressableType injectedExpressionType;
-
+public class SqmLiteralNull extends AbstractSqmLiteral<Void> {
 	public SqmLiteralNull() {
-		injectedExpressionType = NULL_TYPE;
-	}
-
-	@Override
-	public Void getLiteralValue() {
-		return null;
-	}
-
-	@Override
-	public BasicValuedExpressableType getExpressableType() {
-		return injectedExpressionType;
-	}
-
-	@Override
-	public BasicValuedExpressableType getInferableType() {
-		return getExpressableType();
+		super( null, NULL_TYPE );
 	}
 
 	@Override
@@ -56,7 +36,7 @@ public class SqmLiteralNull implements SqmLiteral<Void> {
 		}
 
 		@Override
-		public BasicType getBasicType() {
+		public SqlExpressableType getSqlExpressableType() {
 			return null;
 		}
 
@@ -75,17 +55,4 @@ public class SqmLiteralNull implements SqmLiteral<Void> {
 			return void.class;
 		}
 	};
-
-	@Override
-	public void impliedType(ExpressableType type) {
-		if ( !BasicValuedExpressableType.class.isInstance( type ) ) {
-			throw new HibernateException( "Invalid type.  Found [" + type  + "], but expecting BasicValuedExpressableType" );
-		}
-		injectedExpressionType = (BasicValuedExpressableType) type;
-	}
-
-	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return injectedExpressionType.getJavaTypeDescriptor();
-	}
 }

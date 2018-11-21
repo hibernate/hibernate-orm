@@ -99,7 +99,7 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 			identifiers.put(
 					(i/2),
 					getCollectionDescriptor().getIdDescriptor()
-						.getBasicType()
+
 						.getJavaTypeDescriptor()
 						.getMutabilityPlan()
 						.assemble( array[i] )
@@ -247,7 +247,6 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 		for ( int j=0; j< values.size(); j++ ) {
 			final E value = values.get( j );
 			result[i++] = collectionDescriptor.getIdDescriptor()
-					.getBasicType()
 					.getJavaTypeDescriptor()
 					.getMutabilityPlan()
 					.disassemble( identifiers.get( j ) );

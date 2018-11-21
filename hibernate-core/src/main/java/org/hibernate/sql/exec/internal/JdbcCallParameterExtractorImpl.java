@@ -15,8 +15,6 @@ import org.hibernate.sql.JdbcValueExtractor;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
-import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Standard implementation of JdbcCallParameterExtractor
@@ -27,17 +25,23 @@ public class JdbcCallParameterExtractorImpl<T> implements JdbcCallParameterExtra
 	private final String callableName;
 	private final String parameterName;
 	private final int parameterPosition;
-	private final AllowableParameterType ormType;
+	private final BasicValuedExpressableType ormType;
 
 	public JdbcCallParameterExtractorImpl(
 			String callableName,
 			String parameterName,
 			int parameterPosition,
 			AllowableParameterType ormType) {
+		if ( ! (ormType instanceof BasicValuedExpressableType) ) {
+			throw new NotYetImplementedFor6Exception(
+					"Support for JDBC CallableStatement parameter extraction not yet supported for non-basic types"
+			);
+		}
+
 		this.callableName = callableName;
 		this.parameterName = parameterName;
 		this.parameterPosition = parameterPosition;
-		this.ormType = ormType;
+		this.ormType = (BasicValuedExpressableType) ormType;
 	}
 
 	@Override
@@ -56,20 +60,13 @@ public class JdbcCallParameterExtractorImpl<T> implements JdbcCallParameterExtra
 			CallableStatement callableStatement,
 			boolean shouldUseJdbcNamedParameters,
 			ExecutionContext executionContext) {
-		if ( !BasicValuedExpressableType.class.isInstance( ormType ) ) {
-			throw new NotYetImplementedFor6Exception(
-					"Support for JDBC CallableStatement parameter extraction not yet supported for non-basic types"
-			);
-		}
 
 		final boolean useNamed = shouldUseJdbcNamedParameters
 				&& parameterName != null;
 
-		final TypeConfiguration typeConfiguration = executionContext.getSession().getFactory().getTypeConfiguration();
-		final JdbcValueExtractor valueExtractor = ( (BasicValuedExpressableType) ormType ).getBasicType()
-				.getSqlTypeDescriptor()
-				.getSqlExpressableType( ( BasicJavaDescriptor) ormType.getJavaTypeDescriptor(), typeConfiguration )
-				.getJdbcValueExtractor();
+		// todo (6.0) : we should just ask BasicValuedExpressableType for the JdbcValueExtractor...
+
+		final JdbcValueExtractor valueExtractor = ormType.getSqlExpressableType().getJdbcValueExtractor();
 
 		try {
 			if ( useNamed ) {

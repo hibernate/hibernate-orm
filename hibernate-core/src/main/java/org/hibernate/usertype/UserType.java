@@ -7,55 +7,54 @@
 package org.hibernate.usertype;
 
 import java.io.Serializable;
+import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
- * This interface should be implemented by user-defined "types".
- * A "type" class is <em>not</em> the actual property type - it
- * is a class that knows how to serialize instances of another
- * class to and from JDBC.<br>
- * <br>
- * This interface
- * <ul>
- * <li>abstracts user code from future changes to the <tt>Type</tt>
- * interface,</li>
- * <li>simplifies the implementation of custom types and</li>
- * <li>hides certain "internal" interfaces from user code.</li>
- * </ul>
- * <br>
- * Implementors must be immutable and must declare a public
- * default constructor.<br>
- * <br>
- * The actual class mapped by a <tt>UserType</tt> may be just
- * about anything.<br>
- * <br>
- * <tt>CompositeUserType</tt> provides an extended version of
- * this interface that is useful for more complex cases.<br>
- * <br>
- * Alternatively, custom types could implement <tt>Type</tt>
- * directly or extend one of the abstract classes in
- * <tt>org.hibernate.type</tt>. This approach risks future
- * incompatible changes to classes or interfaces in that
- * package.
+ * Custom type mapping between a java-type and a sql-type.
  *
- * @see Type
+ * @implSpec In additional to being deprecated, support for these UserTypes has
+ * been limited to just basic type mappings; specifically, support for multi-column
+ * mappings via UserType has been removed - use {@link javax.persistence.Embeddable}
+ * instead
+ *
+ * @see org.hibernate.annotations.SqlType
+ * @see org.hibernate.annotations.SqlTypeDescriptor
+ * @see org.hibernate.annotations.JavaTypeDescriptor
+ * @see org.hibernate.annotations.Type
+ * @see org.hibernate.annotations.TypeDef
+ * @see org.hibernate.annotations.Immutable
+ * @see org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry
+ * @see org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry
+ * @see org.hibernate.boot.model.TypeContributions#contributeSqlTypeDescriptor
+ * @see org.hibernate.boot.model.TypeContributions#contributeJavaTypeDescriptor
+ *
  * @author Gavin King
+ * @author Steve Ebersole
+ *
+ * @deprecated This package is considered deprecated.  This
+ * can all be achieved through some combination of: <ul>
+ *     <li>{@link org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor}</li>
+ *     <li>{@link org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor}</li>
+ *     <li>{@link javax.persistence.AttributeConverter}</li>
+ * </ul>
  */
+@Deprecated
 public interface UserType {
 
 	/**
-	 * Return the SQL type codes for the columns mapped by this type. The
-	 * codes are defined on <tt>java.sql.Types</tt>.
-	 * @see java.sql.Types
-	 * @return int[] the typecodes
+	 * The SQL type code for the {@link SqlTypeDescriptor} to use - the key into
+	 * {@link org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry}.
+	 * Generally speaking, defined by {@link java.sql.Types} but may be
+	 * extension codes
 	 */
-	int[] sqlTypes();
+	int sqlTypeCode();
 
 	/**
 	 * The class returned by <tt>nullSafeGet()</tt>.
@@ -67,10 +66,6 @@ public interface UserType {
 	/**
 	 * Compare two instances of the class mapped by this type for persistence "equality".
 	 * Equality of the persistent state.
-	 *
-	 * @param x
-	 * @param y
-	 * @return boolean
 	 */
 	boolean equals(Object x, Object y) throws HibernateException;
 
@@ -80,33 +75,29 @@ public interface UserType {
 	int hashCode(Object x) throws HibernateException;
 
 	/**
-	 * Retrieve an instance of the mapped class from a JDBC resultset. Implementors
+	 * Extract an instance of the mapped class from a JDBC ResultSet. Implementors
 	 * should handle possibility of null values.
-	 *
-	 *
-	 * @param rs a JDBC result set
-	 * @param names the column names
-	 * @param session
-	 *@param owner the containing entity  @return Object
-	 * @throws HibernateException
-	 * @throws SQLException
 	 */
-	Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws HibernateException, SQLException;
+	Object nullSafeGet(ResultSet rs, int parameterPosition, SharedSessionContractImplementor session)
+			throws HibernateException, SQLException;
 
 	/**
 	 * Write an instance of the mapped class to a prepared statement. Implementors
-	 * should handle possibility of null values. A multi-column type should be written
-	 * to parameters starting from <tt>index</tt>.
-	 *
+	 * should handle possibility of null values.
 	 *
 	 * @param st a JDBC prepared statement
 	 * @param value the object to write
 	 * @param index statement parameter index
-	 * @param session
-	 * @throws HibernateException
-	 * @throws SQLException
 	 */
-	void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException;
+	void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
+			throws HibernateException, SQLException;
+
+	/**
+	 * Are objects of this type mutable?
+	 *
+	 * @return boolean
+	 */
+	boolean isMutable();
 
 	/**
 	 * Return a deep copy of the persistent state, stopping at entities and at
@@ -117,13 +108,6 @@ public interface UserType {
 	 * @return Object a copy
 	 */
 	Object deepCopy(Object value) throws HibernateException;
-
-	/**
-	 * Are objects of this type mutable?
-	 *
-	 * @return boolean
-	 */
-	boolean isMutable();
 
 	/**
 	 * Transform the object into its cacheable representation. At the very least this
@@ -147,17 +131,4 @@ public interface UserType {
 	 * @throws HibernateException
 	 */
 	Object assemble(Serializable cached, Object owner) throws HibernateException;
-
-	/**
-	 * During merge, replace the existing (target) value in the entity we are merging to
-	 * with a new (original) value from the detached entity we are merging. For immutable
-	 * objects, or null values, it is safe to simply return the first parameter. For
-	 * mutable objects, it is safe to return a copy of the first parameter. For objects
-	 * with component values, it might make sense to recursively replace component values.
-	 *
-	 * @param original the value from the detached entity being merged
-	 * @param target the value in the managed entity
-	 * @return the value to be merged
-	 */
-	Object replace(Object original, Object target, Object owner) throws HibernateException;
 }

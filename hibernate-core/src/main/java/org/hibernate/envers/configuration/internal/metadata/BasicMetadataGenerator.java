@@ -79,7 +79,7 @@ public final class BasicMetadataGenerator {
 			useNamed = parameters.getProperty( NAMED );
 		}
 		else {
-			final SqlTypeDescriptor descriptor = value.resolveType().getSqlTypeDescriptor();
+			final SqlTypeDescriptor descriptor = value.getResolution().getValueMapper().getSqlExpressableType().getSqlTypeDescriptor();
 			useNamed = descriptor.equals( IntegerSqlDescriptor.INSTANCE ) ? "false" : "true";
 		}
 		parent.addElement( "param" ).addAttribute( "name", NAMED ).setText( useNamed );

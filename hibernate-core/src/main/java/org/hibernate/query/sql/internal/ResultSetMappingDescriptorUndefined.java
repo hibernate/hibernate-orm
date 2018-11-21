@@ -46,10 +46,12 @@ public class ResultSetMappingDescriptorUndefined implements ResultSetMappingDesc
 
 		for ( int columnPosition = 0; columnPosition < columnCount; columnPosition++ ) {
 			final String columnName = jdbcResultsMetadata.resolveColumnName( columnPosition );
-			log.tracef( "Discovering JDBC result column metadata : %s (%s)", columnName, columnPosition );
+			log.tracef( "Discovering JDBC result column metadata [%s (%s)]", columnName, columnPosition );
 
 			final SqlTypeDescriptor sqlTypeDescriptor = jdbcResultsMetadata.resolveSqlTypeDescriptor( columnPosition );
 			final BasicJavaDescriptor javaTypeDescriptor = sqlTypeDescriptor.getJdbcRecommendedJavaTypeMapping( typeConfiguration );
+
+			log.debugf( "Discovered JDBC result column metadata [%s (%s)] : %s, %s ", columnName, columnPosition, sqlTypeDescriptor, javaTypeDescriptor );
 
 			final SqlSelection sqlSelection = new SqlSelectionImpl(
 					columnPosition,

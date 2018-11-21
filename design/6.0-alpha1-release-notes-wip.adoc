@@ -1,0 +1,6 @@
+== 6.0 Alpha1 announcement
+
+* background
+* read-by-position rather than read-by-name
+* improving the generated SQL (no aliases, fewer joins, etc)
+** less data sent over-the-wire

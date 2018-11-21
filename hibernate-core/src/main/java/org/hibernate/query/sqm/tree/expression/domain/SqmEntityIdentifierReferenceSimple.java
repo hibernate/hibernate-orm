@@ -6,9 +6,11 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import java.util.function.Supplier;
+
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
@@ -16,7 +18,6 @@ import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
@@ -36,13 +37,13 @@ public class SqmEntityIdentifierReferenceSimple
 	}
 
 	@Override
-	public ExpressableType getExpressableType() {
-		return entityIdentifier;
+	public EntityIdentifierSimple getExpressableType() {
+		return getReferencedNavigable();
 	}
 
 	@Override
-	public ExpressableType getInferableType() {
-		return entityIdentifier;
+	public Supplier<? extends EntityIdentifierSimple> getInferableType() {
+		return this::getReferencedNavigable;
 	}
 
 	@Override

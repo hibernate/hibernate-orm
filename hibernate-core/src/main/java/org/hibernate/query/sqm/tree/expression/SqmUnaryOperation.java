@@ -6,15 +6,15 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import java.util.function.Supplier;
+
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmUnaryOperation implements ImpliedTypeSqmExpression {
+public class SqmUnaryOperation extends AbstractInferableTypeSqmExpression {
 
 	public enum Operation {
 		PLUS,
@@ -24,36 +24,33 @@ public class SqmUnaryOperation implements ImpliedTypeSqmExpression {
 	private final Operation operation;
 	private final SqmExpression operand;
 
-	private BasicValuedExpressableType typeDescriptor;
-
 	public SqmUnaryOperation(Operation operation, SqmExpression operand) {
 		this( operation, operand, (BasicValuedExpressableType) operand.getExpressableType() );
 	}
 
-	public SqmUnaryOperation(Operation operation, SqmExpression operand, BasicValuedExpressableType typeDescriptor) {
+	public SqmUnaryOperation(Operation operation, SqmExpression operand, BasicValuedExpressableType inherentType) {
+		super( inherentType );
 		this.operation = operation;
 		this.operand = operand;
-		this.typeDescriptor = typeDescriptor;
+	}
+
+	public SqmExpression getOperand() {
+		return operand;
+	}
+
+	public Operation getOperation() {
+		return operation;
 	}
 
 	@Override
 	public BasicValuedExpressableType getExpressableType() {
-		return typeDescriptor;
+		return (BasicValuedExpressableType) super.getExpressableType();
 	}
 
 	@Override
-	public BasicValuedExpressableType getInferableType() {
-		return (BasicValuedExpressableType) operand.getExpressableType();
-	}
-
-	@Override
-	public void impliedType(ExpressableType type) {
-		if ( type != null ) {
-			this.typeDescriptor = (BasicValuedExpressableType) type;
-			if ( operand instanceof ImpliedTypeSqmExpression ) {
-				( (ImpliedTypeSqmExpression) operand ).impliedType( type );
-			}
-		}
+	@SuppressWarnings("unchecked")
+	public Supplier<? extends BasicValuedExpressableType> getInferableType() {
+		return (Supplier<? extends BasicValuedExpressableType>) super.getInferableType();
 	}
 
 	@Override
@@ -64,18 +61,5 @@ public class SqmUnaryOperation implements ImpliedTypeSqmExpression {
 	@Override
 	public String asLoggableText() {
 		return ( operation == Operation.MINUS ? '-' : '+' ) + operand.asLoggableText();
-	}
-
-	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return typeDescriptor.getJavaTypeDescriptor();
-	}
-
-	public SqmExpression getOperand() {
-		return operand;
-	}
-
-	public Operation getOperation() {
-		return operation;
 	}
 }

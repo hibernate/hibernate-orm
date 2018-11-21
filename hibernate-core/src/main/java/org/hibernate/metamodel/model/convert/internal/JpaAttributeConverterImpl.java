@@ -21,17 +21,14 @@ import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
  */
 public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R> {
 	private final ManagedBean<AttributeConverter<O,R>> attributeConverterBean;
-	private final JavaTypeDescriptor<AttributeConverter<O, R>> converterJavaTypeDescriptor;
 	private final BasicJavaDescriptor<O> domainJavaTypeDescriptor;
 	private final BasicJavaDescriptor<R> relationalJavaTypeDescriptor;
 
 	public JpaAttributeConverterImpl(
 			ManagedBean<AttributeConverter<O, R>> attributeConverterBean,
-			JavaTypeDescriptor<AttributeConverter<O,R>> converterJavaTypeDescriptor,
 			JavaTypeDescriptor<O> domainJavaTypeDescriptor,
 			JavaTypeDescriptor<R> relationalJavaTypeDescriptor) {
 		this.attributeConverterBean = attributeConverterBean;
-		this.converterJavaTypeDescriptor = converterJavaTypeDescriptor;
 		this.domainJavaTypeDescriptor = (BasicJavaDescriptor<O>) domainJavaTypeDescriptor;
 		this.relationalJavaTypeDescriptor = (BasicJavaDescriptor<R>) relationalJavaTypeDescriptor;
 	}
@@ -49,11 +46,6 @@ public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R
 	@Override
 	public R toRelationalValue(O domainForm, SharedSessionContractImplementor session) {
 		return attributeConverterBean.getBeanInstance().convertToDatabaseColumn( domainForm );
-	}
-
-	@Override
-	public JavaTypeDescriptor<AttributeConverter<O, R>> getConverterJavaTypeDescriptor() {
-		return converterJavaTypeDescriptor;
 	}
 
 	@Override

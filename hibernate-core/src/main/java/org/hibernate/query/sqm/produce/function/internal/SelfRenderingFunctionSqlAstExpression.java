@@ -65,7 +65,7 @@ public class SelfRenderingFunctionSqlAstExpression
 
 	@Override
 	public SqlExpressableType getExpressableType() {
-		return ( (BasicValuedExpressableType) getType() ).getBasicType().getSqlExpressableType( typeConfiguration );
+		return ( (BasicValuedExpressableType) getType() ).getSqlExpressableType();
 	}
 
 	@Override

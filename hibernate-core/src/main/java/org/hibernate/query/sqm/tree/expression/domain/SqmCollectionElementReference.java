@@ -6,6 +6,9 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import java.util.function.Supplier;
+
+import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
@@ -14,4 +17,10 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 public interface SqmCollectionElementReference extends SqmExpression, SqmNavigableReference {
 	@Override
 	SqmPluralAttributeReference getSourceReference();
+
+	@Override
+	CollectionElement getExpressableType();
+
+	@Override
+	Supplier<? extends CollectionElement> getInferableType();
 }

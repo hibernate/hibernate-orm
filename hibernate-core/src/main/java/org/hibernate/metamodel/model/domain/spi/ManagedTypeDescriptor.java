@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import javax.persistence.metamodel.CollectionAttribute;
 import javax.persistence.metamodel.ManagedType;
 
 import org.hibernate.HibernateException;
@@ -20,6 +21,7 @@ import org.hibernate.graph.Graph;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -231,4 +233,19 @@ public interface ManagedTypeDescriptor<T>
 		 */
 		void finishUp();
 	}
+
+	@Override
+	PersistentAttributeDescriptor<? super T, ?> getAttribute(String name);
+
+	@Override
+	PersistentAttributeDescriptor<T, ?> getDeclaredAttribute(String name);
+
+	@Override
+	CollectionAttribute<? super T, ?> getCollection(String name);
+
+	@Override
+	<E> CollectionAttribute<? super T, E> getCollection(String name, Class<E> elementType);
+
+	@Override
+	CollectionAttribute<T, ?> getDeclaredCollection(String name);
 }

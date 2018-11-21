@@ -18,12 +18,14 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.BasicTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.BasicValueMapper;
 import org.hibernate.metamodel.model.domain.spi.BasicValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -32,7 +34,6 @@ import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
-import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -44,7 +45,7 @@ public class EntityIdentifierSimpleImpl<O,J>
 
 	private final String name;
 	private final Column column;
-	private final BasicType<J> basicType;
+	private final BasicValueMapper<J> valueMapper;
 	private final IdentifierGenerator identifierGenerator;
 
 	@SuppressWarnings({"unchecked", "WeakerAccess"})
@@ -68,21 +69,19 @@ public class EntityIdentifierSimpleImpl<O,J>
 
 		final BasicValueMapping<J> basicValueMapping = (BasicValueMapping<J>) bootModelRootEntity.getIdentifierAttributeMapping().getValueMapping();
 		this.column = creationContext.getDatabaseObjectResolver().resolveColumn( basicValueMapping.getMappedColumn() );
-		this.basicType = basicValueMapping.resolveType();
+		this.valueMapper = basicValueMapping.getResolution().getValueMapper();
 		this.identifierGenerator = creationContext.getSessionFactory().getIdentifierGenerator( bootModelRootEntity.getEntityName() );
 	}
 
 	@Override
 	public BasicTypeDescriptor<J> getNavigableType() {
-		return getBasicType();
+		return this;
 	}
 
 	@Override
 	public BasicTypeDescriptor<J> getAttributeType() {
 		return (BasicTypeDescriptor<J>) super.getAttributeType();
 	}
-
-
 
 	@Override
 	public boolean hasSingleIdAttribute() {
@@ -111,8 +110,13 @@ public class EntityIdentifierSimpleImpl<O,J>
 	}
 
 	@Override
-	public BasicType<J> getBasicType() {
-		return basicType;
+	public BasicValueMapper<J> getValueMapper() {
+		return valueMapper;
+	}
+
+	@Override
+	public SqlExpressableType getSqlExpressableType() {
+		return valueMapper.getSqlExpressableType();
 	}
 
 	@Override

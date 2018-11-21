@@ -8,14 +8,17 @@ package org.hibernate.sql.ast.produce.metamodel.spi;
 
 import javax.persistence.TemporalType;
 
-import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.annotations.Remove;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
+import org.hibernate.metamodel.model.domain.spi.BasicTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.BasicValueMapper;
+import org.hibernate.query.internal.BindingTypeHelper;
+import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
-import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -23,18 +26,25 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public interface BasicValuedExpressableType<J>
 		extends ExpressableType<J>, AllowableParameterType<J>, AllowableFunctionReturnType<J> {
-	BasicType<J> getBasicType();
-
-	@Override
-	default PersistenceType getPersistenceType() {
-		return PersistenceType.BASIC;
-	}
 
 	@Override
 	BasicJavaDescriptor<J> getJavaTypeDescriptor();
 
 	default SqlTypeDescriptor getSqlTypeDescriptor() {
-		throw new NotYetImplementedFor6Exception();
+//		throw new NotYetImplementedFor6Exception( getClass() );
+		return getSqlExpressableType().getSqlTypeDescriptor();
+	}
+
+	@Remove
+	SqlExpressableType getSqlExpressableType();
+
+	default SqlExpressableType getSqlExpressableType(TypeConfiguration typeConfiguration) {
+		return getSqlTypeDescriptor().getSqlExpressableType( getJavaTypeDescriptor(), typeConfiguration );
+	}
+
+	@Override
+	default PersistenceType getPersistenceType() {
+		return PersistenceType.BASIC;
 	}
 
 	@Override
@@ -45,7 +55,7 @@ public interface BasicValuedExpressableType<J>
 	default AllowableParameterType resolveTemporalPrecision(
 			TemporalType temporalType,
 			TypeConfiguration typeConfiguration) {
-		return getBasicType().resolveTemporalPrecision( temporalType, typeConfiguration );
+		return BindingTypeHelper.INSTANCE.resolveTemporalPrecision( temporalType, this, typeConfiguration );
 	}
 
 	@Override
@@ -54,10 +64,6 @@ public interface BasicValuedExpressableType<J>
 			JdbcValueCollector jdbcValueCollector,
 			Clause clause,
 			SharedSessionContractImplementor session) {
-		jdbcValueCollector.collect(
-				value,
-				getBasicType().getSqlExpressableType( session.getFactory().getTypeConfiguration() ),
-				null
-		);
+		jdbcValueCollector.collect( value, getSqlExpressableType(), null );
 	}
 }

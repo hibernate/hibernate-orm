@@ -1,0 +1,155 @@
+= Type System Customization
+
+Hibernate's "type system" can be customized in a number of ways depending on the
+nature of the type (basic, entity, etc).
+
+[NOTE]
+====
+Customization of the Hibernate type system is considered an integration activity,
+as opposed to an application activity.  As of 6.0, all of Hibernate's type system
+is considered "incubating"
+====
+
+[[JavaTypeDescriptorRegistry]]
+== JavaTypeDescriptorRegistry
+
+A Java type in the type system is modeled as `org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor`.
+Hibernate always deals with a JavaTypeDescriptor rather than simply a `java.lang.Class` because the
+descriptor gives Hibernate additional information about the Java type.
+
+`org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry` is a registry of
+ `JavaTypeDescriptor` by name.  Generally the name is simply the name of the described
+ Java type.  Descriptors can be added to the registry or overridden, although generally this
+ would only happen for basic types.
+
+`JavaTypeDescriptor` instances can be contributed to the registry in a number of ways:
+
+* `@org.hibernate.annotations.JavaTypeRegistration`
+* `org.hibernate.boot.model.TypeContributor`, either via:
+** a Java service (`java.util.ServiceLoader`)
+** `org.hibernate.boot.MetadataBuilder#applyTypes`
+** `org.hibernate.dialect.Dialect#contributeTypes`
+
+Generally speaking, only `JavaTypeDescriptor`s for basic types would be managed in this way.  See
+<<BasicJavaDescriptor>> for details.
+
+
+[[SqlTypeDescriptorRegistry]]
+== SqlTypeDescriptorRegistry
+
+A SQL type is modeled as `org.hibernate.type.descriptor.sql.SqlTypeDescriptor`.  Again, the descriptor
+tells Hibernate additional information about the type.
+
+`org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry` is a registry of `SqlTypeDescriptor`
+by an integer code.  Generally this code maps to one of the `java.sql.Types` codes, however Hibernate
+supports "extended" codes.
+
+* `@org.hibernate.annotations.SqlTypeRegistration`
+* `org.hibernate.boot.model.TypeContributor`, either via:
+** a Java service (`java.util.ServiceLoader`)
+** `org.hibernate.boot.MetadataBuilder#applyTypes`
+** `org.hibernate.dialect.Dialect#contributeTypes`
+
+
+[[MutabilityPlan]]
+== MutabilityPlan
+
+Yadda yadda yadda...
+
+
+[[BasicType]]
+== Basic Type Customization
+
+A basic type in Hibernate boils down to the mapping between a Java type and a SQL type via
+JDBC.
+
+[[BasicJavaDescriptor]]
+=== BasicJavaDescriptor
+
+`org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor` is a specialization of `JavaTypeDescriptor` that
+describes Java types that are basic values (as opposed to an entity or an embeddable).  Hibernate requires
+that all basic types be represented by a real Java Class : no non-POJO representations (MAP) are supported
+for basic types.  The values in the `JavaTypeDescriptorRegistry` for basic types are always keyed by the
+name of corresponding Java class.
+
+`BasicJavaDescriptor` is further specialized into:
+
+* `org.hibernate.type.descriptor.java.spi.EnumJavaDescriptor`
+* `org.hibernate.type.descriptor.java.spi.TemporalJavaDescriptor`
+* `org.hibernate.type.descriptor.java.spi.Primitive`
+* `org.hibernate.type.descriptor.java.spi.NumericJavaDescriptor`
+
+Generally the `BasicJavaDescriptor` for a particular Java type is resolved from the `JavaTypeDescriptorRegistry`.  There
+area number of ways to influence picking which `BasicJavaDescriptor` is used:
+
+1. Register a corresponding descriptor with the registry.
+2. Specify a particular descriptor to use
+3. Implicitly via `SqlTypeDescriptor#getJdbcRecommendedJavaTypeMapping` (custom `SqlTypeDescriptor`)
+
+todo Examples...
+
+
+=== SqlTypeDescriptor
+
+Determining the `SqlTypeDescriptor` to use for a basic mapping is determined in a number of ways:
+
+1. Register a corresponding descriptor with the registry.
+2. Specify a particular descriptor to use
+3. Implicitly via `BasicJavaDescriptor#getJdbcRecommendedSqlType` (custom `BasicJavaDescriptor`)
+
+todo Examples...
+
+[[Legacy-Type]]
+==== Hibernate's Legacy Type
+
+`UserType` and `BasicType`.
+
+Changes due to reading from JDBC by position rather than by name
+
+CDI integration for resolving named type classes
+
+todo Examples...
+
+
+==== BasicValueConverter
+
+Yadda yadda yadda...
+
+todo Examples...
+
+
+==== @JavaTypeDescriptor
+
+
+[[Non-Basic-Type]]
+== Non-basic Type Customization
+
+`org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorClassResolver`
+
+`org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorFactory`
+
+[[EntityTypeDescriptor]]
+=== EntityTypeDescriptor
+
+Yadda yadda yadda...
+
+
+[[MappedSuperclassTypeDescriptor]]
+=== MappedSuperclassTypeDescriptor
+
+Yadda yadda yadda...
+
+
+[[EmbeddedTypeDescriptor]]
+=== EmbeddedTypeDescriptor
+
+Yadda yadda yadda...
+
+
+=== PersistentCollectionDescriptor
+
+`org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor`
+`org.hibernate.collection.spi.CollectionSemantics`
+
+Support for collection types other than those from the Java Collection Framework
+

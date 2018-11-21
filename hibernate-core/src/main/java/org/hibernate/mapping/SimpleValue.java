@@ -33,7 +33,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
+import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -364,19 +364,19 @@ public abstract class SimpleValue implements KeyValue {
 //		return getColumnSpan()==getType().getColumnSpan();
 	}
 
-	public JdbcRecommendedSqlTypeMappingContext makeJdbcRecommendedSqlTypeMappingContext(
+	public SqlTypeDescriptorIndicators makeJdbcRecommendedSqlTypeMappingContext(
 			TypeConfiguration typeConfiguration,
 			boolean isNationalized,
 			boolean isLob) {
-		return new LocalJdbcRecommendedSqlTypeMappingContext( typeConfiguration, isNationalized, isLob );
+		return new LocalSqlTypeDescriptorIndicators( typeConfiguration, isNationalized, isLob );
 	}
 
-	private class LocalJdbcRecommendedSqlTypeMappingContext implements JdbcRecommendedSqlTypeMappingContext {
+	private class LocalSqlTypeDescriptorIndicators implements SqlTypeDescriptorIndicators {
 		private final TypeConfiguration typeConfiguration;
 		private final boolean isNationalized;
 		private final boolean isLob;
 
-		private LocalJdbcRecommendedSqlTypeMappingContext(
+		private LocalSqlTypeDescriptorIndicators(
 				TypeConfiguration typeConfiguration,
 				boolean isNationalized,
 				boolean isLob) {

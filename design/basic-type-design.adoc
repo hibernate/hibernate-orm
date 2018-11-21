@@ -1,0 +1,134 @@
+= Basic Type Mappings
+
+The last thing I wanted to get into 6.0 Alpha1 are some
+proposals about how we can allow users to customize the
+domain-relational mapping for basic types.  The proposals
+are based on some designs that came out of group programming
+with Andrea and Chris and Vlad.
+
+I wanted to get it into Alpha1 because its something most users
+will want to do and currently do do in some fashion, so it is
+important to have it available early for people to try and
+get feedback.
+
+[NOTE]
+====
+TL;DR - UserType (and friends) will, at the least, have
+to change to account for moving from reading-by-name to
+reading-by-position when getting values from JDBC.  It is
+a significant change, whatever else happens.
+====
+
+
+=== The basics of Basics
+
+
+Domain JavaTypeDescriptor::
+	Descriptor for the Java type (Class) in the application's domain model
+
+Relational JavaTypeDescriptor::
+	Descriptor for the Java type (Class) in application's relational model (in JDBC)
+
+SqlTypeDescriptor::
+	Descriptor for the SQL type
+
+BasicValueConverter::
+	Any conversion to apply as values are bound/extracted.  Built-in support for
+	EnumType and AttributeConverter handling
+
+
+Some examples will help explain what each piece models:
+
+```
+@Entity
+class Person {
+	...
+
+	@Basic
+	String getName() {...}
+
+	@Enumerated(STRING)
+	Gender getGender() {...}
+
+	@Convert( MyJsonConverter.class )
+	JsonObject getJsonObject() {...}
+}
+
+class MyJsonConverter implements AttributeConverter<JsonObject,String> {
+	...
+}
+```
+
+* `#name`
+** domain JavaTypeDescriptor is the descriptor for String
+** relational JavaTypeDescriptor is the same (there is no conversion)
+** SqlTypeDescriptor is (usually) the descriptor for VARCHAR
+** the converter is null (there is no conversion)
+* `#gender`
+** domain JavaTypeDescriptor is the descriptor for Gender
+** relational JavaTypeDescriptor is the descriptor for String (implicit converter's type)
+** SqlTypeDescriptor is (usually) the descriptor for VARCHAR
+** the converter is an implicit converter for mapping between Gender and name
+* `#jsonObject`
+** domain JavaTypeDescriptor is the descriptor for JsonObject
+** relational JavaTypeDescriptor is the descriptor for String (
+** SqlTypeDescriptor is (usually) the descriptor for VARCHAR
+** the converter is the `MyJsonConverter` instance
+
+
+Most of the time this all #justworks.  It works because of the relationship
+between `JavaTypeDescriptorRegistry` and `SqlTypeDescriptorRegistry`, along with
+`JavaTypeDescriptor#getJdbcRecommendedSqlType` and `
+SqlTypeDescriptor#getJdbcRecommendedJavaTypeMapping`
+
+
+JPA has `AttributeConverter` and `@Enumerated` which allow controlling the conversion
+and specifying the relational JavaTypeDescriptor.  But it just "hints"at the actual
+SqlTypeDescriptor to use (VARCHAR, NVARCHAR, CLOB, NCLOB, ...).
+
+
+`BasicType` is Hibernate's legacy way of allowing tweaking.  Hibernate also adds
+`UserType`, `@Type`, `@TypeDef` - which all boil down to `BasicType`.
+Hibernate's `BasicType` is basically the domain JavaTypeDescriptor and
+SqlTypeDescriptor combined with an internal conversion.  _If an actual
+AttributeConverter were applied also, it would be incorporated  into that
+internal conversion_
+
+
+So let's look at some of the ways we can adjust these mappings..
+
+[NOTE]
+====
+Even in 5 Hibernate has, e.g., `@Nationalized`, `@Lob`, etc.  They work
+the same way they would in 6.  They "hint" at a SqlTypeDescriptor to use
+====
+
+`@UUID` would be a good one.
+
+As I said, normally
+
+, but there are times users will want to tweak how
+this all happens at some level.
+
+JPA has `AttributeConverter` and `@Enumerated` for tweaking, which allow controlling
+the conversion and specifying the relational JavaTypeDescriptor.  But it just "hints"
+at the actual SqlTypeDescriptor to use.  That's why I kept saying "(usually)" above -
+it really depends on the method `JavaTypeDescriptor#getJdbcRecommendedSqlType`.  For the
+standard `JavaTypeDescriptor<String>` this would return the standard VARCHAR
+descriptor; unless we were configured to use nationalized charsets, then we would use
+the standard descriptor for
+
+```
+
+class Person {
+    @Basic
+    @Type( MyCustomBasicType.class )
+    Gender getGender() { ... }
+
+    ...
+}
+
+class MyCustomBasicType implements BasicType {
+    ???
+}
+```

@@ -13,4 +13,13 @@ import javax.persistence.Entity;
  */
 @Entity
 public class CardPayment extends Payment {
+	Integer transactionId;
+
+	public Integer getTransactionId() {
+		return transactionId;
+	}
+
+	public void setTransactionId(Integer transactionId) {
+		this.transactionId = transactionId;
+	}
 }

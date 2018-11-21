@@ -116,6 +116,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 				ArchiveDescriptorFactory.class,
 				configService.getSettings().get( AvailableSettings.SCANNER_ARCHIVE_INTERPRETER )
 		);
+
 		this.typeConfiguration = new TypeConfiguration();
 	}
 

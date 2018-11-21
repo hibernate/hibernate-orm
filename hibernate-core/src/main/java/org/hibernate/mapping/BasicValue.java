@@ -6,7 +6,11 @@
  */
 package org.hibernate.mapping;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import javax.persistence.AttributeConverter;
 import javax.persistence.EnumType;
 import javax.persistence.TemporalType;
@@ -16,28 +20,36 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
-import org.hibernate.boot.model.domain.BasicValueMapping;
+import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
 import org.hibernate.boot.model.domain.JavaTypeMapping;
 import org.hibernate.boot.model.domain.NotYetResolvedException;
 import org.hibernate.boot.model.domain.ResolutionContext;
+import org.hibernate.boot.model.domain.internal.NamedBasicTypeResolution;
+import org.hibernate.boot.model.domain.internal.NamedConverterResolution;
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.model.convert.internal.NamedEnumValueConverter;
 import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.internal.EnumJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.spi.TemporalJavaDescriptor;
+import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.internal.InferredBasicValueResolver;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.BasicTypeParameters;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -47,28 +59,51 @@ import org.hibernate.type.spi.TypeConfiguration;
 @SuppressWarnings("unused")
 public class BasicValue
 		extends SimpleValue
-		implements BasicValueMapping, JdbcRecommendedSqlTypeMappingContext {
+		implements org.hibernate.boot.model.domain.BasicValueMapping, SqlTypeDescriptorIndicators {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( BasicValue.class );
 
 	private final TypeConfiguration typeConfiguration;
 	private final int preferredJdbcTypeCodeForBoolean;
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// incoming "configuration" values
+
+
+	private Function<TypeConfiguration,BasicJavaDescriptor<?>> explicitJavaTypeAccess;
+	private Function<TypeConfiguration,SqlTypeDescriptor> explicitSqlTypeAccess;
+
+	private MutabilityPlan explicitMutabilityPlan;
 
 	private boolean isNationalized;
 	private boolean isLob;
 	private EnumType enumType;
 	private TemporalType temporalPrecision;
 
-	private BasicType basicType;
+	private ConverterDescriptor attributeConverterDescriptor;
+
+	private Class resolvedJavaClass;
+
+	private String ownerName;
+	private String propertyName;
+
+	private Map explicitLocalTypeParams;
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Resolution - resolved state; available after `#resolve`
+
+	private Resolution resolution;
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// remove these - they serve dual purpose (in/out) in original code.  Use
+	//		`#resolution` instead for outputs
+
 	private BasicJavaDescriptor javaTypeDescriptor;
 	private JavaTypeMapping javaTypeMapping;
 	private SqlTypeDescriptor sqlTypeDescriptor;
 
-	private ConverterDescriptor attributeConverterDescriptor;
-
-	private Class resolvedJavaClass;
-	private String ownerName;
-	private String propertyName;
-	private Map explicitLocalTypeParams;
 
 	public BasicValue(MetadataBuildingContext buildingContext, MappedTable table) {
 		super( buildingContext, table );
@@ -77,10 +112,9 @@ public class BasicValue
 		this.preferredJdbcTypeCodeForBoolean = buildingContext.getPreferredSqlTypeCodeForBoolean();
 
 		this.javaTypeMapping = new BasicJavaTypeMapping( this );
-		buildingContext.getMetadataCollector().registerValueMappingResolver(
-				resolutionContext -> resolve( resolutionContext )
-		);
+		buildingContext.getMetadataCollector().registerValueMappingResolver( this::resolve );
 	}
+
 
 	@Override
 	public JavaTypeMapping getJavaTypeMapping() {
@@ -88,197 +122,379 @@ public class BasicValue
 	}
 
 	@Override
+	public Resolution getResolution() throws NotYetResolvedException {
+		if ( resolution == null ) {
+			throw new NotYetResolvedException( "BasicValue[" + toString() + "] not yet resolved" );
+		}
+		return resolution;
+	}
+
+
+	@Override
 	@SuppressWarnings("unchecked")
 	public Boolean resolve(ResolutionContext context) {
+		if ( resolution != null ) {
+			return true;
+		}
+
+		/*
+		 * @Entity
+		 * @TypeDef( name="mine", implClass="..", parameters={...} )
+		 * class It {
+		 *     ...
+		 *     @Basic
+		 *     @Type( name="mine", parameters={...} )
+		 *     pubic Mine getMine() {...}
+		 * }
+		 */
+
 		final String name = getTypeName();
+		if ( name != null ) {
+			resolution = interpretExplicitlyNamedType(
+					name,
+					explicitJavaTypeAccess,
+					explicitSqlTypeAccess,
+					attributeConverterDescriptor,
+					explicitMutabilityPlan,
+					explicitLocalTypeParams,
+					this,
+					typeConfiguration,
+					context
+			);
 
-		if ( basicType == null && name != null ) {
-			// Name could refer to:
-			//		1) a registered TypeDef
-
-			//		2) basic type "resolution key"
-			//
-			final TypeDefinition typeDefinition = getMetadataBuildingContext().resolveTypeDefinition( name );
-			if ( typeDefinition != null ) {
-				basicType = typeDefinition.resolveTypeResolver( explicitLocalTypeParams ).resolveBasicType( context );
-			}
-			else {
-				basicType = getMetadataBuildingContext()
-						.getBootstrapContext()
-						.getTypeConfiguration()
-						.getBasicTypeRegistry()
-						.getBasicType( name );
-			}
-
-			this.javaTypeDescriptor = basicType.getJavaTypeDescriptor();
-			this.sqlTypeDescriptor = basicType.getSqlTypeDescriptor();
 		}
 		else {
-			if ( javaTypeDescriptor == null && resolvedJavaClass != null ) {
-				javaTypeDescriptor = (BasicJavaDescriptor) context.getBootstrapContext()
-						.getTypeConfiguration()
-						.getJavaTypeDescriptorRegistry()
-						.getOrMakeJavaDescriptor( resolvedJavaClass );
-			}
+			final ServiceRegistry serviceRegistry = typeConfiguration.getServiceRegistry();
+			final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 
-			if ( javaTypeDescriptor == null && ownerName != null && propertyName != null ) {
-				resolvedJavaClass = ReflectHelper.reflectedPropertyClass(
-						ownerName,
-						propertyName,
-						context.getBootstrapContext().getServiceRegistry().getService( ClassLoaderService.class )
-				);
-				javaTypeDescriptor = (BasicJavaDescriptor) context.getBootstrapContext()
-						.getTypeConfiguration()
-						.getJavaTypeDescriptorRegistry()
-						.getOrMakeJavaDescriptor( resolvedJavaClass );
-			}
-
-			if ( basicType == null ) {
-				basicType = context.getBootstrapContext().getTypeConfiguration().getBasicTypeRegistry().resolveBasicType(
-						new BasicTypeParameters() {
-							@Override
-							public BasicJavaDescriptor getJavaTypeDescriptor() {
-								return javaTypeDescriptor;
-							}
-
-							@Override
-							public SqlTypeDescriptor getSqlTypeDescriptor() {
-								return sqlTypeDescriptor;
-							}
-
-							@Override
-							public ConverterDescriptor getAttributeConverterDescriptor() {
-								return attributeConverterDescriptor;
-							}
-
-							@Override
-							public TemporalType getTemporalPrecision() {
-								return temporalPrecision;
-							}
-						},
-						new JdbcRecommendedSqlTypeMappingContext() {
-							final int preferredSqlTypeCodeForBoolean = context.getBootstrapContext()
+			resolution = implicitlyResolveBasicType(
+					explicitJavaTypeAccess,
+					explicitSqlTypeAccess,
+					attributeConverterDescriptor,
+					this,
+					() -> {
+						if ( resolvedJavaClass != null ) {
+							return (BasicJavaDescriptor) context.getBootstrapContext()
 									.getTypeConfiguration()
-									.getBasicTypeRegistry()
-									.getBaseJdbcRecommendedSqlTypeMappingContext()
-									.getPreferredSqlTypeCodeForBoolean();
-
-							@Override
-							public EnumType getEnumeratedType() {
-								return enumType == null
-										? context.getBootstrapContext().getMetadataBuildingOptions().getImplicitEnumType()
-										: enumType;
-							}
-
-							@Override
-							public SqlTypeDescriptor getExplicitSqlTypeDescriptor() {
-								return sqlTypeDescriptor;
-							}
-
-							@Override
-							public int getPreferredSqlTypeCodeForBoolean() {
-								return preferredSqlTypeCodeForBoolean;
-							}
-
-							@Override
-							public boolean isNationalized() {
-								return isNationalized;
-							}
-
-							@Override
-							public boolean isLob() {
-								return isLob;
-							}
-
-							@Override
-							public TemporalType getTemporalType() {
-								return temporalPrecision;
-							}
-
-							@Override
-							public TypeConfiguration getTypeConfiguration() {
-								return typeConfiguration;
-							}
+									.getJavaTypeDescriptorRegistry()
+									.getOrMakeJavaDescriptor( resolvedJavaClass );
 						}
-				);
-			}
+						else if ( ownerName != null && propertyName != null ) {
+							final Class reflectedJavaType = ReflectHelper.reflectedPropertyClass(
+									ownerName,
+									propertyName,
+									classLoaderService
+							);
+							return (BasicJavaDescriptor) context.getBootstrapContext()
+									.getTypeConfiguration()
+									.getJavaTypeDescriptorRegistry()
+									.getOrMakeJavaDescriptor( reflectedJavaType );
+						}
+
+						return null;
+					},
+					typeConfiguration
+			);
 		}
+
+		assert resolution.getValueMapper() != null;
+		assert resolution.getValueMapper().getSqlExpressableType() != null;
+		assert resolution.getBasicType() != null;
 
 		final MappedColumn column = getMappedColumn();
 
-		final JavaTypeMapping columnJavaTypeMapping;
-
-		if ( basicType.getJavaTypeDescriptor() instanceof EnumJavaDescriptor ) {
-			final EnumType enumType = this.enumType == null
-					? context.getBootstrapContext().getMetadataBuildingOptions().getImplicitEnumType()
-					: this.enumType;
-
-			if ( enumType == EnumType.STRING ) {
-				column.setJavaTypeMapping(
-						new JavaTypeMapping() {
-							@Override
-							public String getTypeName() {
-								return null;
-							}
-
-							@Override
-							public JavaTypeDescriptor getJavaTypeDescriptor() throws NotYetResolvedException {
-								return context.getBootstrapContext().getTypeConfiguration()
-										.getJavaTypeDescriptorRegistry()
-										.getDescriptor( String.class );
-							}
-						}
-				);
-			}
-			else {
-				column.setJavaTypeMapping(
-						new JavaTypeMapping() {
-							@Override
-							public String getTypeName() {
-								return null;
-							}
-
-							@Override
-							public JavaTypeDescriptor getJavaTypeDescriptor() throws NotYetResolvedException {
-								return context.getBootstrapContext().getTypeConfiguration()
-										.getJavaTypeDescriptorRegistry()
-										.getDescriptor( Integer.class );
-							}
-						}
-				);
-			}
-		}
-		else if ( attributeConverterDescriptor != null ) {
-			column.setJavaTypeMapping(
-					new JavaTypeMapping() {
-						@Override
-						public String getTypeName() {
-							return null;
-						}
-
-						@Override
-						public JavaTypeDescriptor getJavaTypeDescriptor() throws NotYetResolvedException {
-							final Class<?> convertedRelationalJavaType = attributeConverterDescriptor.getRelationalValueResolvedType()
-									.getErasedType();
-							return context.getBootstrapContext().getTypeConfiguration()
-									.getJavaTypeDescriptorRegistry()
-									.getDescriptor( convertedRelationalJavaType );
-						}
+		// todo (6.0) : look at having this accept `Supplier<JavaTypeDescriptor>` instead
+		column.setJavaTypeMapping(
+				new JavaTypeMapping() {
+					@Override
+					public String getTypeName() {
+						return name;
 					}
-			);
-		}
-		else {
-			column.setJavaTypeMapping( javaTypeMapping );
-		}
 
-		column.setSqlTypeDescriptorAccess( () -> basicType.getSqlTypeDescriptor() );
+					@Override
+					public JavaTypeDescriptor getJavaTypeDescriptor() throws NotYetResolvedException {
+						return resolution.getRelationalJavaDescriptor();
+					}
+				}
+		);
+
+		column.setSqlTypeDescriptorAccess( resolution::getRelationalSqlTypeDescriptor );
 
 		return true;
 	}
 
-	@Override
-	public ConverterDescriptor getAttributeConverterDescriptor() {
-		return attributeConverterDescriptor;
+
+	@SuppressWarnings("unchecked")
+	private static Resolution interpretExplicitlyNamedType(
+			String name,
+			Function<TypeConfiguration,BasicJavaDescriptor<?>> explicitJtdAccess,
+			Function<TypeConfiguration,SqlTypeDescriptor> explicitStdAccess,
+			ConverterDescriptor converterDescriptor,
+			MutabilityPlan explicitMutabilityPlan,
+			Map localTypeParams,
+			SqlTypeDescriptorIndicators stdIndicators,
+			TypeConfiguration typeConfiguration,
+			ResolutionContext resolutionContext) {
+
+		final ManagedBeanRegistry managedBeanRegistry = resolutionContext.getBootstrapContext()
+				.getServiceRegistry()
+				.getService( ManagedBeanRegistry.class );
+
+		final JpaAttributeConverterCreationContext converterCreationContext = new JpaAttributeConverterCreationContext() {
+			@Override
+			public ManagedBeanRegistry getManagedBeanRegistry() {
+				return managedBeanRegistry;
+			}
+
+			@Override
+			public JavaTypeDescriptorRegistry getJavaTypeDescriptorRegistry() {
+				return typeConfiguration.getJavaTypeDescriptorRegistry();
+			}
+		};
+
+
+		// Name could refer to:
+		//		1) a named converter - HBM support for JPA's AttributeConverter via its `type="..."` XML attribute
+		//		2) basic type "resolution key"
+		//		3) UserType or BasicType class name - directly, or through a TypeDefinition
+
+		if ( name.startsWith( ConverterDescriptor.TYPE_NAME_PREFIX  ) ) {
+			// atm this should never happen due to impl of `#setExplicitTypeName`
+			return NamedConverterResolution.from(
+					name,
+					explicitJtdAccess,
+					explicitStdAccess,
+					converterCreationContext,
+					explicitMutabilityPlan,
+					stdIndicators,
+					resolutionContext
+			);
+		}
+
+		// see if it is a named basic type
+		final BasicType basicTypeByName = typeConfiguration.getBasicTypeRegistry().getBasicTypeByName( name );
+		if ( basicTypeByName != null ) {
+			final BasicValueConverter valueConverter;
+			final BasicJavaDescriptor domainJtd;
+			if ( converterDescriptor == null ) {
+				valueConverter = null;
+				domainJtd = basicTypeByName.getJavaTypeDescriptor();
+			}
+			else {
+				valueConverter = converterDescriptor.createJpaAttributeConverter( converterCreationContext );
+				domainJtd = valueConverter.getDomainJavaDescriptor();
+			}
+
+			return new NamedBasicTypeResolution(
+					domainJtd,
+					basicTypeByName,
+					valueConverter,
+					explicitMutabilityPlan,
+					resolutionContext
+			);
+		}
+
+		// see if it is a named TypeDefinition
+		final TypeDefinition typeDefinition = resolutionContext.getMetadataBuildingContext().resolveTypeDefinition( name );
+		if ( typeDefinition != null ) {
+			return typeDefinition.resolve(
+					explicitJtdAccess.apply( typeConfiguration ),
+					explicitStdAccess.apply( typeConfiguration ),
+					localTypeParams,
+					explicitMutabilityPlan,
+					resolutionContext.getMetadataBuildingContext()
+		    );
+		}
+
+
+		// see if the name is a UserType or (API) BasicType impl class name
+		final ClassLoaderService cls = typeConfiguration.getServiceRegistry().getService( ClassLoaderService.class );
+		try {
+			final Class typeNamedClass = cls.classForName( name );
+
+			// if there are no local config params, register an implicit TypeDefinition for this custom type .
+			//  later uses may find it and re-use its cacheable reference...
+			if ( CollectionHelper.isEmpty( localTypeParams ) ) {
+				final TypeDefinition implicitDefinition = new TypeDefinition(
+						name,
+						typeNamedClass,
+						null,
+						Collections.emptyMap(),
+						typeConfiguration
+				);
+				resolutionContext.getMetadataBuildingContext().addTypeDefinition( implicitDefinition );
+				return implicitDefinition.resolve(
+						explicitJtdAccess.apply( typeConfiguration ),
+						explicitStdAccess.apply( typeConfiguration ),
+						Collections.emptyMap(),
+						explicitMutabilityPlan,
+						resolutionContext.getMetadataBuildingContext()
+				);
+			}
+
+			return TypeDefinition.createLocalResolution(
+					name,
+					typeNamedClass,
+					explicitJtdAccess.apply( typeConfiguration ),
+					explicitStdAccess.apply( typeConfiguration ),
+					explicitMutabilityPlan,
+					localTypeParams,
+					resolutionContext
+			);
+		}
+		catch (ClassLoadingException ignore) {
+			// allow the exception below to trigger
+		}
+
+		throw new NotYetResolvedException( "Could not resolve named type : " + name );
+	}
+
+	@SuppressWarnings("unchecked")
+	private static Resolution implicitlyResolveBasicType(
+			Function<TypeConfiguration,BasicJavaDescriptor<?>> explicitJtdAccess,
+			Function<TypeConfiguration,SqlTypeDescriptor> explicitStdAccess,
+			ConverterDescriptor attributeConverterDescriptor,
+			SqlTypeDescriptorIndicators stdIndicators,
+			Supplier<BasicJavaDescriptor> reflectedJtdResolver,
+			TypeConfiguration typeConfiguration) {
+
+		final InferredBasicValueResolver resolution = new InferredBasicValueResolver( explicitJtdAccess, explicitStdAccess, typeConfiguration );
+
+		if ( attributeConverterDescriptor != null ) {
+			// we have an attribute converter, use that to either:
+			//		1) validate the explicit BasicJavaDescriptor/SqlTypeDescriptor
+			//		2) use the converter Class parameters to infer the BasicJavaDescriptor/SqlTypeDescriptor
+
+			final Class<?> converterDomainJavaType = attributeConverterDescriptor.getDomainValueResolvedType()
+					.getErasedType();
+
+			final JavaTypeDescriptor<?> converterDomainJtd = typeConfiguration.getJavaTypeDescriptorRegistry()
+					.getDescriptor( converterDomainJavaType );
+
+			if ( resolution.getDomainJtd() == null ) {
+				resolution.setDomainJtd( (BasicJavaDescriptor) converterDomainJtd );
+			}
+			else {
+				if ( !resolution.getDomainJtd().equals( converterDomainJtd ) ) {
+					throw new HibernateException(
+							"JavaTypeDescriptors did not match between BasicTypeParameters#getJavaTypeDescriptor and " +
+									"BasicTypeParameters#getAttributeConverterDefinition#getDomainType"
+					);
+				}
+			}
+
+			final Class<?> converterRelationalJavaType = attributeConverterDescriptor.getRelationalValueResolvedType()
+					.getErasedType();
+
+			resolution.setRelationalJtd(
+					(BasicJavaDescriptor<?>) typeConfiguration.getJavaTypeDescriptorRegistry()
+							.getDescriptor( converterRelationalJavaType )
+			);
+
+			final SqlTypeDescriptor converterHintedStd = resolution.getRelationalJtd().getJdbcRecommendedSqlType( stdIndicators );
+
+			if ( resolution.getRelationalStd() == null ) {
+				resolution.setRelationalStd( converterHintedStd );
+			}
+			else {
+				if ( !resolution.getRelationalStd().equals( converterHintedStd ) ) {
+					throw new HibernateException(
+							"SqlTypeDescriptors did not match between BasicTypeParameters#getSqlTypeDescriptor and " +
+									"BasicTypeParameters#getAttributeConverterDefinition#getJdbcType"
+					);
+				}
+			}
+
+			resolution.setValueConverter(
+					attributeConverterDescriptor.createJpaAttributeConverter(
+							new JpaAttributeConverterCreationContext() {
+								@Override
+								public ManagedBeanRegistry getManagedBeanRegistry() {
+									return typeConfiguration.getServiceRegistry().getService( ManagedBeanRegistry.class );
+								}
+
+								@Override
+								public JavaTypeDescriptorRegistry getJavaTypeDescriptorRegistry() {
+									return typeConfiguration.getJavaTypeDescriptorRegistry();
+								}
+							}
+					)
+			);
+		}
+		else {
+			if ( resolution.getDomainJtd() == null ) {
+				resolution.setDomainJtd( reflectedJtdResolver.get() );
+			}
+
+			if ( resolution.getDomainJtd() instanceof EnumJavaDescriptor ) {
+				final EnumJavaDescriptor enumJavaDescriptor = (EnumJavaDescriptor) resolution.getDomainJtd();
+
+				final EnumType enumType = stdIndicators.getEnumeratedType() != null
+						? stdIndicators.getEnumeratedType()
+						: typeConfiguration.getMetadataBuildingContext().getBuildingOptions().getImplicitEnumType();
+
+				switch ( enumType ) {
+					case STRING: {
+						resolution.setRelationalJtd(
+								(BasicJavaDescriptor<?>) typeConfiguration.getJavaTypeDescriptorRegistry()
+										.getDescriptor( String.class )
+						);
+						resolution.setValueConverter(
+								new NamedEnumValueConverter( enumJavaDescriptor, typeConfiguration )
+						);
+						break;
+					}
+					case ORDINAL: {
+						resolution.setRelationalJtd(
+								(BasicJavaDescriptor<?>) typeConfiguration.getJavaTypeDescriptorRegistry()
+										.getDescriptor( Integer.class )
+						);
+						resolution.setValueConverter(
+								new OrdinalEnumValueConverter( enumJavaDescriptor, typeConfiguration )
+						);
+						break;
+					}
+					default: {
+						throw new HibernateException( "Unknown EnumType : " + enumType );
+					}
+				}
+			}
+			else if ( resolution.getDomainJtd() instanceof TemporalJavaDescriptor ) {
+				if ( stdIndicators.getTemporalPrecision() != null ) {
+					resolution.setDomainJtd(
+							( (TemporalJavaDescriptor) resolution.getDomainJtd() ).resolveTypeForPrecision(
+									stdIndicators.getTemporalPrecision(),
+									typeConfiguration
+							)
+					);
+				}
+			}
+		}
+
+
+		if ( resolution.getRelationalStd() == null ) {
+			if ( resolution.getRelationalJtd() == null ) {
+				if ( resolution.getDomainJtd() == null ) {
+					throw new IllegalArgumentException(
+							"Could not determine JavaTypeDescriptor nor SqlTypeDescriptor to use"
+					);
+				}
+
+				resolution.setRelationalJtd( resolution.getDomainJtd() );
+			}
+
+			resolution.setRelationalStd( resolution.getRelationalJtd().getJdbcRecommendedSqlType( stdIndicators ) );
+		}
+		else if ( resolution.getRelationalJtd() == null ) {
+			resolution.setRelationalJtd(
+					resolution.getRelationalStd().getJdbcRecommendedJavaTypeMapping( typeConfiguration )
+			);
+			if ( resolution.getDomainJtd() == null ) {
+				resolution.setDomainJtd( resolution.getRelationalJtd() );
+			}
+		}
+
+		return resolution.build();
 	}
 
 	public boolean isNationalized() {
@@ -325,8 +541,12 @@ public class BasicValue
 		this.temporalPrecision = temporalPrecision;
 	}
 
-	public void setSqlType(SqlTypeDescriptor sqlTypeDescriptor) {
-		this.sqlTypeDescriptor = sqlTypeDescriptor;
+	public void setExplicitSqlTypeAccess(Function<TypeConfiguration, SqlTypeDescriptor> sqlTypeAccess) {
+		this.explicitSqlTypeAccess = sqlTypeAccess;
+	}
+
+	public void setExplicitMutabilityPlan(MutabilityPlan explicitMutabilityPlan) {
+		this.explicitMutabilityPlan = explicitMutabilityPlan;
 	}
 
 	@Override
@@ -380,14 +600,6 @@ public class BasicValue
 	}
 
 	@Override
-	public BasicType resolveType() {
-		if ( basicType == null ) {
-			throw new NotYetResolvedException( "BasicValue has not been resolved yet" );
-		}
-		return basicType;
-	}
-
-	@Override
 	public boolean isTypeSpecified() {
 		// We mandate a BasicTypeResolver, so this is always true.
 		return true;
@@ -403,58 +615,35 @@ public class BasicValue
 		this.javaTypeDescriptor = javaDescriptor;
 	}
 
-
-	@Override
 	@SuppressWarnings("unchecked")
-	public BasicValueConverter resolveValueConverter(
-			RuntimeModelCreationContext creationContext,
-			BasicType basicType) {
-		if ( getAttributeConverterDescriptor() != null ) {
-			return getAttributeConverterDescriptor().createJpaAttributeConverter( creationContext );
+	public <T> void setExplicitJavaTypeAccess(Function<TypeConfiguration,BasicJavaDescriptor<T>> access) {
+		this.explicitJavaTypeAccess = (Function) access;
+	}
+
+	class ValueConverterCollector implements Consumer<BasicValueConverter> {
+		private BasicValueConverter basicValueConverter;
+
+		public BasicValueConverter getBasicValueConverter() {
+			return basicValueConverter;
 		}
 
-		final JavaTypeDescriptor jtd = basicType.getJavaTypeDescriptor();
-
-		if ( jtd instanceof EnumJavaDescriptor ) {
-			final EnumType enumType = this.enumType == null
-					? creationContext.getBootstrapContext().getMetadataBuildingOptions().getImplicitEnumType()
-					: this.enumType;
-			switch ( enumType ) {
-				case STRING: {
-					return new NamedEnumValueConverter( (EnumJavaDescriptor) jtd, creationContext );
-				}
-				case ORDINAL: {
-					return new OrdinalEnumValueConverter( (EnumJavaDescriptor) jtd, creationContext );
-				}
-				default: {
-					throw new HibernateException( "Unknown EnumType : " + enumType );
-				}
-			}
+		public void setBasicValueConverter(BasicValueConverter basicValueConverter) {
+			this.basicValueConverter = basicValueConverter;
 		}
 
-		// todo (6.0) : other conversions?
-		// 		- how is temporalPrecision going to be handled?  during resolution of BasicType?
-
-		return null;
+		@Override
+		public void accept(BasicValueConverter valueConverter) {
+			setBasicValueConverter( valueConverter );
+		}
 	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// JdbcRecommendedSqlTypeMappingContext
+	// SqlTypeDescriptorIndicators
 
 	@Override
 	public EnumType getEnumeratedType() {
 		return enumType;
-	}
-
-	@Override
-	public TemporalType getTemporalType() {
-		return temporalPrecision;
-	}
-
-	@Override
-	public SqlTypeDescriptor getExplicitSqlTypeDescriptor() {
-		return sqlTypeDescriptor;
 	}
 
 	@Override
@@ -497,10 +686,10 @@ public class BasicValue
 
 		@Override
 		public JavaTypeDescriptor getJavaTypeDescriptor() {
-			if ( basicValue.javaTypeDescriptor == null ) {
+			if ( basicValue.resolution == null ) {
 				throw new NotYetResolvedException( "JavaTypeDescriptor not yet resolved" );
 			}
-			return basicValue.javaTypeDescriptor;
+			return basicValue.resolution.getDomainJavaDescriptor();
 		}
 	}
 

@@ -6,7 +6,10 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import java.util.function.Supplier;
+
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
@@ -14,7 +17,6 @@ import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
 
 import org.jboss.logging.Logger;
@@ -61,7 +63,7 @@ public class SqmEntityReference extends AbstractSqmNavigableReference
 	}
 
 	@Override
-	public EntityValuedExpressableType getReferencedNavigable() {
+	public EntityValuedNavigable getReferencedNavigable() {
 		return entityDescriptor;
 	}
 
@@ -71,13 +73,13 @@ public class SqmEntityReference extends AbstractSqmNavigableReference
 	}
 
 	@Override
-	public EntityValuedExpressableType getExpressableType() {
+	public EntityValuedNavigable getExpressableType() {
 		return getReferencedNavigable();
 	}
 
 	@Override
-	public EntityValuedExpressableType getInferableType() {
-		return getExpressableType();
+	public Supplier<? extends EntityValuedNavigable> getInferableType() {
+		return this::getReferencedNavigable;
 	}
 
 	@Override

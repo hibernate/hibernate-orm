@@ -14,20 +14,29 @@ import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
-import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
  */
-public interface BasicValuedNavigable<J> extends BasicValuedExpressableType<J>, Navigable<J> {
+public interface BasicValuedNavigable<J> extends BasicValuedExpressableType<J>, Navigable<J>, SimpleTypeDescriptor<J>, BasicTypeDescriptor<J> {
+	@Override
+	default PersistenceType getPersistenceType() {
+		return PersistenceType.BASIC;
+	}
+
 	Column getBoundColumn();
 
-	BasicType<J> getBasicType();
+	BasicValueMapper<J> getValueMapper();
 
 	@Override
 	default BasicJavaDescriptor<J> getJavaTypeDescriptor() {
-		return getBasicType().getJavaTypeDescriptor();
+		return getValueMapper().getDomainJavaDescriptor();
+	}
+
+	@Override
+	default SqlExpressableType getSqlExpressableType() {
+		return getValueMapper().getSqlExpressableType();
 	}
 
 	@Override

@@ -27,7 +27,7 @@ public interface JdbcValueExtractor<J>  {
 	/**
 	 * Extract value from result set
 	 */
-	J extract(ResultSet rs, int position, ExecutionContext executionContext) throws SQLException;
+	J extract(ResultSet resultSet, int jdbcParameterPosition, ExecutionContext executionContext) throws SQLException;
 
 	/**
 	 * Extract value from CallableStatement

@@ -39,7 +39,7 @@ public class ScalarResultDefinitionImpl implements ResultSetMappingDefinition.Sc
 	@Override
 	public QueryResultBuilder generateQueryResultBuilder(Metamodel metamodel) {
 		final BasicType basicType = metamodel.getTypeConfiguration().getBasicTypeRegistry()
-				.getBasicType( typeName );
+				.getBasicTypeByName( typeName );
 		if ( basicType == null ) {
 			throw noTypeException( typeName );
 		}

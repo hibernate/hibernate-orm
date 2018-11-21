@@ -13,16 +13,19 @@ import org.hibernate.HibernateException;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.model.domain.spi.BasicValueMapper;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.RowIdDescriptor;
 import org.hibernate.metamodel.model.relational.spi.DerivedColumn;
+import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.internal.ColumnBasedMapper;
 import org.hibernate.type.spi.BasicType;
 
 /**
@@ -33,12 +36,13 @@ public class RowIdDescriptorImpl<J> implements RowIdDescriptor<J> {
 	// todo : really need to expose AbstractEntityPersister.rowIdName for this to work.
 	//		for now we will just always assume a selection name of "ROW_ID"
 	private final DerivedColumn column;
+	private final BasicValueMapper valueMapper;
 
 	public RowIdDescriptorImpl(
 			EntityHierarchy hierarchy,
 			RuntimeModelCreationContext creationContext) {
 		this.hierarchy = hierarchy;
-		column = new DerivedColumn(
+		this.column = new DerivedColumn(
 				hierarchy.getRootEntityType().getPrimaryTable(),
 				"ROW_ID",
 				creationContext.getTypeConfiguration()
@@ -46,6 +50,7 @@ public class RowIdDescriptorImpl<J> implements RowIdDescriptor<J> {
 						.getDescriptor( Types.INTEGER ),
 				creationContext.getTypeConfiguration()
 		);
+		this.valueMapper = new ColumnBasedMapper( column );
 	}
 
 	@Override
@@ -101,6 +106,15 @@ public class RowIdDescriptorImpl<J> implements RowIdDescriptor<J> {
 	}
 
 	@Override
+	public BasicValueMapper<J> getValueMapper() {
+		return valueMapper;
+	}
+
+	@Override
+	public SqlExpressableType getSqlExpressableType() {
+		return column.getExpressableType();
+	}
+
 	public BasicType<J> getBasicType() {
 		return null;
 	}

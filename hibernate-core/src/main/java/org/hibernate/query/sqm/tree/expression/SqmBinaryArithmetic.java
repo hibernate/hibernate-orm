@@ -6,8 +6,12 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import java.util.function.Supplier;
+
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
@@ -18,13 +22,13 @@ public class SqmBinaryArithmetic implements SqmExpression {
 	private final SqmExpression lhsOperand;
 	private final SqmExpression rhsOperand;
 
-	private ExpressableType expressionType;
+	private BasicValuedExpressableType expressionType;
 
 	public SqmBinaryArithmetic(
 			Operation operation,
 			SqmExpression lhsOperand,
 			SqmExpression rhsOperand,
-			ExpressableType expressionType) {
+			BasicValuedExpressableType expressionType) {
 		this.operation = operation;
 		this.lhsOperand = lhsOperand;
 		this.rhsOperand = rhsOperand;
@@ -32,7 +36,7 @@ public class SqmBinaryArithmetic implements SqmExpression {
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public BasicJavaDescriptor getJavaTypeDescriptor() {
 		return expressionType.getJavaTypeDescriptor();
 	}
 
@@ -40,6 +44,51 @@ public class SqmBinaryArithmetic implements SqmExpression {
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitBinaryArithmeticExpression( this );
 	}
+
+	/**
+	 * Get the left-hand operand.
+	 *
+	 * @return The left-hand operand.
+	 */
+	public SqmExpression getLeftHandOperand() {
+		return lhsOperand;
+	}
+
+	/**
+	 * Get the operation
+	 *
+	 * @return The operation
+	 */
+	public Operation getOperation() {
+		return operation;
+	}
+
+	/**
+	 * Get the right-hand operand.
+	 *
+	 * @return The right-hand operand.
+	 */
+	public SqmExpression getRightHandOperand() {
+		return rhsOperand;
+	}
+
+	@Override
+	public BasicValuedExpressableType getExpressableType() {
+		return expressionType;
+	}
+
+	@Override
+	public Supplier<? extends BasicValuedExpressableType> getInferableType() {
+		return this::getExpressableType;
+	}
+
+
+	@Override
+	public String asLoggableText() {
+		return getOperation().apply( lhsOperand.asLoggableText(), rhsOperand.asLoggableText() );
+	}
+
+
 
 	public enum Operation {
 		ADD {
@@ -85,47 +134,5 @@ public class SqmBinaryArithmetic implements SqmExpression {
 		private static String applyPrimitive(String lhs, char operator, String rhs) {
 			return '(' + lhs + operator + rhs + ')';
 		}
-	}
-
-	/**
-	 * Get the left-hand operand.
-	 *
-	 * @return The left-hand operand.
-	 */
-	public SqmExpression getLeftHandOperand() {
-		return lhsOperand;
-	}
-
-	/**
-	 * Get the operation
-	 *
-	 * @return The operation
-	 */
-	public Operation getOperation() {
-		return operation;
-	}
-
-	/**
-	 * Get the right-hand operand.
-	 *
-	 * @return The right-hand operand.
-	 */
-	public SqmExpression getRightHandOperand() {
-		return rhsOperand;
-	}
-
-	@Override
-	public ExpressableType getExpressableType() {
-		return expressionType;
-	}
-
-	@Override
-	public ExpressableType getInferableType() {
-		return expressionType;
-	}
-
-	@Override
-	public String asLoggableText() {
-		return getOperation().apply( lhsOperand.asLoggableText(), rhsOperand.asLoggableText() );
 	}
 }

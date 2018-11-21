@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.support.domains.retail;
 
+import java.util.UUID;
 import javax.money.MonetaryAmount;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -18,8 +19,10 @@ import javax.persistence.ManyToOne;
 @Entity
 public class Product {
 	private Integer id;
+	private UUID sku;
+
 	private Vendor vendor;
-	private String sku;
+
 	private MonetaryAmount currentSellPrice;
 
 	@Id
@@ -41,11 +44,11 @@ public class Product {
 		this.vendor = vendor;
 	}
 
-	public String getSku() {
+	public UUID getSku() {
 		return sku;
 	}
 
-	public void setSku(String sku) {
+	public void setSku(UUID sku) {
 		this.sku = sku;
 	}
 

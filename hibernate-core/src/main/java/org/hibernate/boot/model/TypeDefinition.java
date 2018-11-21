@@ -13,15 +13,32 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.BasicValueMapping;
 import org.hibernate.boot.model.domain.ResolutionContext;
 import org.hibernate.boot.model.type.spi.BasicTypeResolver;
 import org.hibernate.boot.model.type.spi.TypeResolverTemplate;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.internal.BasicTypeAdapter;
+import org.hibernate.type.internal.BasicTypeMutabilityPlanAdapter;
+import org.hibernate.type.internal.BasicTypeResolution;
+import org.hibernate.type.internal.UserTypeAdapter;
+import org.hibernate.type.internal.UserTypeMutabilityPlanAdapter;
+import org.hibernate.type.internal.UserTypeResolution;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.ParameterizedType;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.UserType;
 
 /**
  * Models the information pertaining to a custom type definition supplied by the user.  Used
@@ -34,11 +51,11 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author John Verhaeg
  */
 public class TypeDefinition implements TypeResolverTemplate, Serializable {
+	// todo (6.0) : make it illegal for a TypeDefinition to define registrationKeys and later be used with local-params
 	private final String name;
 	private final Class typeImplementorClass;
 	private final String[] registrationKeys;
 	private final Map<String, String> parameters;
-	private final TypeConfiguration typeConfiguration;
 
 	private BasicTypeResolver typeResolver;
 
@@ -54,7 +71,6 @@ public class TypeDefinition implements TypeResolverTemplate, Serializable {
 		this.parameters = parameters == null
 				? Collections.<String, String>emptyMap()
 				: Collections.unmodifiableMap( parameters );
-		this.typeConfiguration = typeConfiguration;
 	}
 
 	public TypeDefinition(
@@ -69,7 +85,6 @@ public class TypeDefinition implements TypeResolverTemplate, Serializable {
 		this.parameters = parameters == null
 				? Collections.emptyMap()
 				: extractStrings( parameters );
-		this.typeConfiguration = typeConfiguration;
 	}
 
 	private Map<String, String> extractStrings(Properties properties) {
@@ -109,6 +124,166 @@ public class TypeDefinition implements TypeResolverTemplate, Serializable {
 		properties.putAll( parameters );
 		return properties;
 	}
+
+	private static final AtomicInteger nameCounter = new AtomicInteger();
+
+	private BasicValueMapping.Resolution reusableResolution;
+
+	@SuppressWarnings("unchecked")
+	public BasicValueMapping.Resolution resolve(
+			BasicJavaDescriptor explicitJtd,
+			SqlTypeDescriptor explicitStd,
+			Map localConfigParameters,
+			MutabilityPlan explicitMutabilityPlan,
+			MetadataBuildingContext context) {
+		if ( CollectionHelper.isEmpty( localConfigParameters ) ) {
+			// we can use the re-usable resolution...
+			if ( reusableResolution == null ) {
+				final ManagedBean typeBean = context.getBootstrapContext()
+						.getServiceRegistry()
+						.getService( ManagedBeanRegistry.class )
+						.getBean( typeImplementorClass );
+
+				final Object typeInstance = typeBean.getBeanInstance();
+
+				injectParameters( typeInstance, () -> parameters );
+
+				reusableResolution = createReusableResolution( typeInstance, name, context );
+			}
+
+			return reusableResolution;
+		}
+		else {
+			final String name = this.name + ":" + nameCounter.getAndIncrement();
+
+			final ManagedBean typeBean = context.getBootstrapContext()
+					.getServiceRegistry()
+					.getService( ManagedBeanRegistry.class )
+					.getBean( name, typeImplementorClass );
+
+			final Object typeInstance = typeBean.getBeanInstance();
+
+			injectParameters(
+					typeInstance,
+					() -> mergeParameters( parameters, localConfigParameters )
+			);
+
+
+			return createResolution(
+					name,
+					typeInstance,
+					explicitJtd,
+					explicitStd,
+					explicitMutabilityPlan,
+					context
+			);
+		}
+	}
+
+	private static Map<String,String> mergeParameters(Map<String, String> parameters, Map<String,String> localConfigParameters) {
+		final Map<String, String> mergedParameters = new HashMap<>( parameters );
+		if ( localConfigParameters != null && ! localConfigParameters.isEmpty() ) {
+			mergedParameters.putAll( localConfigParameters );
+		}
+
+		return mergedParameters;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static void injectParameters(Object customType, Supplier<Map> parameterSupplier) {
+		if ( customType instanceof ParameterizedType ) {
+			( (ParameterizedType) customType ).setParameters( parameterSupplier.get() );
+		}
+	}
+
+	public static BasicValueMapping.Resolution createReusableResolution(
+			Object namedTypeInstance,
+			String name,
+			MetadataBuildingContext metadataBuildingContext) {
+		if ( namedTypeInstance instanceof UserType ) {
+			final UserType userType = (UserType) namedTypeInstance;
+			return new UserTypeResolution(
+					new UserTypeAdapter( userType, name, metadataBuildingContext ),
+					new UserTypeMutabilityPlanAdapter( userType )
+			);
+		}
+		else if ( namedTypeInstance instanceof org.hibernate.type.BasicType ) {
+			final org.hibernate.type.BasicType basicType = (org.hibernate.type.BasicType) namedTypeInstance;
+			return new BasicTypeResolution(
+					new BasicTypeAdapter( basicType, name ),
+					new BasicTypeMutabilityPlanAdapter( basicType )
+			);
+		}
+
+		throw new IllegalArgumentException(
+				"Named type [" + namedTypeInstance + "] did not implement BasicType nor UserType"
+		);
+	}
+
+	@SuppressWarnings("unchecked")
+	public static BasicValueMapping.Resolution createLocalResolution(
+			String name,
+			Class typeImplementorClass,
+			BasicJavaDescriptor explicitJtd,
+			SqlTypeDescriptor explicitStd,
+			MutabilityPlan explicitMutabilityPlan,
+			Map localTypeParams,
+			ResolutionContext resolutionContext) {
+		name = name + ':' + nameCounter.getAndIncrement();
+
+		final ManagedBean typeBean = resolutionContext.getBootstrapContext()
+				.getServiceRegistry()
+				.getService( ManagedBeanRegistry.class )
+				.getBean( name, typeImplementorClass );
+
+		final Object typeInstance = typeBean.getBeanInstance();
+
+		injectParameters( typeInstance, () -> localTypeParams );
+
+		return createResolution(
+				name,
+				typeInstance,
+				explicitJtd,
+				explicitStd,
+				explicitMutabilityPlan,
+				resolutionContext.getMetadataBuildingContext()
+		);
+	}
+
+	private static BasicValueMapping.Resolution createResolution(
+			String name,
+			Object namedTypeInstance,
+			BasicJavaDescriptor explicitJtd,
+			SqlTypeDescriptor explicitStd,
+			MutabilityPlan explicitMutabilityPlan,
+			MetadataBuildingContext metadataBuildingContext) {
+		if ( namedTypeInstance instanceof UserType ) {
+			return new UserTypeResolution(
+					(UserType) namedTypeInstance,
+					name,
+					explicitJtd,
+					explicitStd,
+					explicitMutabilityPlan,
+					metadataBuildingContext
+			);
+		}
+		else if ( namedTypeInstance instanceof org.hibernate.type.BasicType ) {
+			return new BasicTypeResolution(
+					(org.hibernate.type.BasicType) namedTypeInstance,
+					name,
+					explicitJtd,
+					explicitStd,
+					explicitMutabilityPlan,
+					metadataBuildingContext
+			);
+		}
+
+		throw new IllegalArgumentException(
+				"Named type [" + name + " : " + namedTypeInstance
+						+ "] did not implement BasicType nor UserType"
+		);
+	}
+
 
 	@Override
 	public BasicTypeResolver resolveTypeResolver(Map<String, String> localConfigParameters) {

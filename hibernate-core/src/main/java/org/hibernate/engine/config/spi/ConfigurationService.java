@@ -7,6 +7,7 @@
 package org.hibernate.engine.config.spi;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.hibernate.service.Service;
 

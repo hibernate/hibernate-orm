@@ -12,6 +12,8 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.spi.BasicType;
 
 /**
+ * BasicTypeResolver handling for {@link org.hibernate.annotations.Type}
+ *
  * @author Chris Cranford
  */
 public class BasicTypeResolverExplicitNamedImpl implements BasicTypeResolver {
@@ -28,6 +30,6 @@ public class BasicTypeResolverExplicitNamedImpl implements BasicTypeResolver {
 	public <T> BasicType<T> resolveBasicType(ResolutionContext context) {
 		return buildingContext.getBootstrapContext().getTypeConfiguration()
 				.getBasicTypeRegistry()
-				.getBasicType( name );
+				.getBasicTypeByName( name );
 	}
 }

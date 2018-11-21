@@ -10,11 +10,13 @@ import java.util.List;
 
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
-import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.spi.BasicValueMapper;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.BasicType;
 
 /**
@@ -40,17 +42,59 @@ public interface BasicValueMapping<J> extends ValueMapping<J> {
 				? ( (LocalMetadataBuildingContext) getMetadataBuildingContext() ).getOrigin()
 				: null;
 
-		throw new MappingException(
-				"Basic valued mappping cannot define more than 1 column",
-				origin
-		);
+		throw new MappingException( "Basic valued mapping cannot define more than 1 column", origin );
 	}
 
-	BasicType<J> resolveType();
+	/**
+	 * Get this mapping's resolution
+	 *
+	 * @throws NotYetResolvedException If the mapping has not yet been resolved - see {@link #resolve}
+	 */
+	Resolution<J> getResolution() throws NotYetResolvedException;
 
-	ConverterDescriptor getAttributeConverterDescriptor();
+	/**
+	 * Resolved form of {@link BasicValueMapping} as part of interpreting the
+	 * boot-time model into the run-time model
+	 *
+	 * @author Steve Ebersole
+	 */
+	interface Resolution<J> {
+		/**
+		 * The associated BasicType
+		 */
+		BasicType getBasicType();
 
-	BasicValueConverter resolveValueConverter(
-			RuntimeModelCreationContext creationContext,
-			BasicType basicType);
+		/**
+		 * The indicated mapper
+		 */
+		BasicValueMapper<J> getValueMapper();
+
+		/**
+		 * The JavaTypeDescriptor for the value as part of the domain model
+		 */
+		BasicJavaDescriptor<J> getDomainJavaDescriptor();
+
+		/**
+		 * The JavaTypeDescriptor for the relational value as part of
+		 * the relational model (its JDBC representation)
+		 */
+		BasicJavaDescriptor<?> getRelationalJavaDescriptor();
+
+		/**
+		 * The JavaTypeDescriptor for the relational value as part of
+		 * the relational model (its JDBC representation)
+		 */
+		SqlTypeDescriptor getRelationalSqlTypeDescriptor();
+
+		/**
+		 * Converter, if any, to convert values between the
+		 * domain and relational JavaTypeDescriptor representations
+		 */
+		BasicValueConverter getValueConverter();
+
+		/**
+		 * The resolved MutabilityPlan
+		 */
+		MutabilityPlan<J> getMutabilityPlan();
+	}
 }

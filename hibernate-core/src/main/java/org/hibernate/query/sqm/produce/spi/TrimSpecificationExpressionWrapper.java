@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm.produce.spi;
 
+import java.util.function.Supplier;
+
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
@@ -14,11 +16,15 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Needed to pass TrimSpecification as an SqmExpression when we call out to
- * SqmFunctionTemplates handling TRIM calls.
+ * SqmFunctionTemplates handling TRIM calls as a function argument.
  *
  * @author Steve Ebersole
  */
 public class TrimSpecificationExpressionWrapper implements SqmExpression {
+	private static final TrimSpecificationExpressionWrapper LEADING = new TrimSpecificationExpressionWrapper( TrimSpecification.LEADING );
+	private static final TrimSpecificationExpressionWrapper TRAILING = new TrimSpecificationExpressionWrapper( TrimSpecification.TRAILING );
+	private static final TrimSpecificationExpressionWrapper BOTH = new TrimSpecificationExpressionWrapper( TrimSpecification.BOTH );
+
 	private final TrimSpecification specification;
 
 	private TrimSpecificationExpressionWrapper(TrimSpecification specification) {
@@ -35,7 +41,7 @@ public class TrimSpecificationExpressionWrapper implements SqmExpression {
 	}
 
 	@Override
-	public ExpressableType getInferableType() {
+	public Supplier<ExpressableType> getInferableType() {
 		return null;
 	}
 
@@ -55,6 +61,10 @@ public class TrimSpecificationExpressionWrapper implements SqmExpression {
 	}
 
 	public static TrimSpecificationExpressionWrapper wrap(TrimSpecification specification) {
-		return new TrimSpecificationExpressionWrapper( specification );
+		switch ( specification ) {
+			case LEADING: return LEADING;
+			case TRAILING: return TRAILING;
+			default: return BOTH;
+		}
 	}
 }

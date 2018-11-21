@@ -7,8 +7,8 @@
 package org.hibernate.sql.results.internal.domain.basic;
 
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
-import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
+import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -27,7 +27,10 @@ public class BasicResultAssembler implements DomainResultAssembler {
 			JavaTypeDescriptor javaTypeDescriptor) {
 		this.sqlSelection = sqlSelection;
 		this.valueConverter = valueConverter;
-		this.javaTypeDescriptor = javaTypeDescriptor;
+
+		this.javaTypeDescriptor = valueConverter != null
+				? valueConverter.getRelationalJavaDescriptor()
+				: javaTypeDescriptor;
 	}
 
 	@Override
@@ -35,17 +38,22 @@ public class BasicResultAssembler implements DomainResultAssembler {
 		return javaTypeDescriptor;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
+	@SuppressWarnings("unchecked")
 	public Object assemble(
 			RowProcessingState rowProcessingState,
 			JdbcValuesSourceProcessingOptions options) {
-		final Object rawJdbcValue = rowProcessingState.getJdbcValue( sqlSelection );
+		Object value = rowProcessingState.getJdbcValue( sqlSelection );
 
 		if ( valueConverter != null ) {
-			return valueConverter.toDomainValue( rawJdbcValue, rowProcessingState.getJdbcValuesSourceProcessingState().getSession() );
+			// the raw value type should be the converter's relational-JTD
+			assert ( value == null || valueConverter.getRelationalJavaDescriptor().getJavaType().isInstance( value ) )
+					: "Expecting raw JDBC value of type [" + valueConverter.getRelationalJavaDescriptor().getJavaType().getName()
+							+ "] but found [" + value + ']';
+
+			value = valueConverter.toDomainValue( value, rowProcessingState.getJdbcValuesSourceProcessingState().getSession() );
 		}
 
-		return rawJdbcValue;
+		return value;
 	}
 }

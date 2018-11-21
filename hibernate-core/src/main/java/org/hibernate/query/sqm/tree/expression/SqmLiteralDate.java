@@ -12,14 +12,12 @@ import java.time.LocalDate;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.internal.JdbcDateJavaDescriptor;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmLiteralDate implements SqmLiteral<Date>, ImpliedTypeSqmExpression {
+public class SqmLiteralDate extends AbstractSqmLiteral<Date> {
 	public static SqmLiteralDate from(String literalText, SqmCreationContext creationContext) {
 		final LocalDate localDate = LocalDate.from( JdbcDateJavaDescriptor.FORMATTER.parse( literalText ) );
 		final Date literal = new Date( localDate.toEpochDay() );
@@ -30,42 +28,12 @@ public class SqmLiteralDate implements SqmLiteral<Date>, ImpliedTypeSqmExpressio
 		);
 	}
 
-	private final Date value;
-
-	private BasicValuedExpressableType type;
-
-	public SqmLiteralDate(Date value, BasicValuedExpressableType type) {
-		this.value = value;
-		this.type = type;
-	}
-
-	@Override
-	public Date getLiteralValue() {
-		return value;
-	}
-
-	@Override
-	public BasicValuedExpressableType getExpressableType() {
-		return type;
-	}
-
-	@Override
-	public BasicValuedExpressableType getInferableType() {
-		return type;
-	}
-
-	@Override
-	public void impliedType(ExpressableType type) {
-		this.type = (BasicValuedExpressableType) type;
+	public SqmLiteralDate(Date value, BasicValuedExpressableType inherentType) {
+		super( value, inherentType );
 	}
 
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitLiteralDateExpression( this );
-	}
-
-	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return getExpressableType().getJavaTypeDescriptor();
 	}
 }

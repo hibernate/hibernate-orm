@@ -6,8 +6,11 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import java.util.function.Supplier;
+
+import org.hibernate.metamodel.model.domain.spi.CollectionIndexEntity;
+import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 
 /**
  * @author Steve Ebersole
@@ -22,18 +25,19 @@ public class SqmMinIndexReferenceEntity
 	}
 
 	@Override
-	public EntityValuedExpressableType getReferencedNavigable() {
-		return (EntityValuedExpressableType) super.getReferencedNavigable();
+	public EntityValuedNavigable getReferencedNavigable() {
+		return (EntityValuedNavigable) super.getReferencedNavigable();
 	}
 
 	@Override
-	public EntityValuedExpressableType getExpressableType() {
+	public EntityValuedNavigable getExpressableType() {
 		return getReferencedNavigable();
 	}
 
 	@Override
-	public EntityValuedExpressableType getInferableType() {
-		return getReferencedNavigable();
+	@SuppressWarnings("unchecked")
+	public Supplier<? extends CollectionIndexEntity> getInferableType() {
+		return (Supplier<? extends CollectionIndexEntity>) super.getInferableType();
 	}
 
 	@Override

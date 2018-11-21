@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.orm.test.support.domains.retail.ModelClasses.applyRetailModel;
+import static org.hibernate.orm.test.support.domains.retail.RetailDomainModel.applyRetailModel;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 
 /**

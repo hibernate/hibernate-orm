@@ -6,31 +6,42 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import java.util.function.Supplier;
+
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * The base contract for any kind of expression node in the SQM tree.
- * An expression might be a reference to an attribute, a literal, etc.
+ * An expression might be a reference to an attribute, a literal,
+ * a function, etc.
  *
  * @author Steve Ebersole
  */
 public interface SqmExpression extends SqmSelectableNode {
 	/**
-	 * Obtain reference to the expression's ExpressableType
+	 * The expression's type
+	 *
+	 * todo (6.0) : given the conversion to use Suppliers, should this act as the resolution?
+	 * 		- iow, should this method consider and inferable and fallback types?
+	 * 		- or, should this method act as access to the "inherent type" with
+	 * 			an additional resolution method?
 	 *
 	 * @return The expression's type.
 	 */
 	ExpressableType getExpressableType();
 
 	/**
-	 * Obtain reference to the type, or {@code null}, for this expression that can be used
-	 * to infer the "implied type" of related expressions. Not all expressions can act as the
-	 * source of an inferred type, in which case the method would return {@code null}.
+	 * Obtains a Supplier for this expression's inferable type.  Used in conjunction with
+	 * {@link InferableTypeSqmExpression#impliedType(Supplier)}
+	 *
+	 * Not all expressions can act as the source of an inferred type, in which case the
+	 * method would return {@code null}, or its Supplier would return {@code null}
 	 *
 	 * @return The inferable type
 	 *
-	 * @see ImpliedTypeSqmExpression#impliedType
+	 * @see InferableTypeSqmExpression#impliedType
 	 */
-	ExpressableType getInferableType();
+	Supplier<? extends ExpressableType> getInferableType();
 }

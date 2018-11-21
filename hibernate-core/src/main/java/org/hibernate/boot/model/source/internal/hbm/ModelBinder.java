@@ -2339,7 +2339,10 @@ public class ModelBinder {
 
 		final AnyDiscriminatorSource discriminatorSource = anyMapping.getDiscriminatorSource();
 
-		final BasicTypeResolver identifierTypeResolver = new HbmBasicTypeResolverImpl( sourceDocument, anyMapping.getKeySource().getTypeSource() );
+		final BasicTypeResolver identifierTypeResolver = new BasicTypeResolverExplicitNamedImpl(
+				sourceDocument,
+				anyMapping.getKeySource().getTypeSource().getName()
+		);
 		final BasicTypeResolver discriminatorTypeResolver = new BasicTypeResolverExplicitNamedImpl(
 				sourceDocument,
 				discriminatorSource.getTypeSource().getName()

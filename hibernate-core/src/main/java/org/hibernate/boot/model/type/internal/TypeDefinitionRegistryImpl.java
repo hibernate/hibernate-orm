@@ -25,7 +25,7 @@ public class TypeDefinitionRegistryImpl implements TypeDefinitionRegistry {
 	private static final Logger log = Logger.getLogger( TypeDefinitionRegistryImpl.class );
 
 	private final TypeConfiguration typeConfiguration;
-	private final Map<String, TypeDefinition> typeResolverTemplateMap = new HashMap<>();
+	private final Map<String, TypeDefinition> typeDefinitionMap = new HashMap<>();
 
 	public TypeDefinitionRegistryImpl(TypeConfiguration typeConfiguration) {
 		this.typeConfiguration = typeConfiguration;
@@ -33,7 +33,7 @@ public class TypeDefinitionRegistryImpl implements TypeDefinitionRegistry {
 
 	@Override
 	public TypeDefinition resolve(String typeName) {
-		return typeResolverTemplateMap.get( typeName );
+		return typeDefinitionMap.get( typeName );
 	}
 
 	@Override
@@ -46,6 +46,7 @@ public class TypeDefinitionRegistryImpl implements TypeDefinitionRegistry {
 		if ( typeDefinition == null ) {
 			throw new IllegalArgumentException( "TypeDefinition to register cannot be null" );
 		}
+
 		if ( typeDefinition.getTypeImplementorClass() == null ) {
 			throw new IllegalArgumentException( "TypeDefinition to register cannot define null #typeImplementorClass" );
 		}
@@ -65,12 +66,12 @@ public class TypeDefinitionRegistryImpl implements TypeDefinitionRegistry {
 
 	private void register(String name, TypeDefinition typeDefinition, DuplicationStrategy duplicationStrategy) {
 		if ( duplicationStrategy == DuplicationStrategy.KEEP ) {
-			if ( !typeResolverTemplateMap.containsKey( name ) ) {
-				typeResolverTemplateMap.put( name, typeDefinition );
+			if ( !typeDefinitionMap.containsKey( name ) ) {
+				typeDefinitionMap.put( name, typeDefinition );
 			}
 		}
 		else {
-			final TypeResolverTemplate existing = typeResolverTemplateMap.put( name, typeDefinition );
+			final TypeResolverTemplate existing = typeDefinitionMap.put( name, typeDefinition );
 			if ( existing != null && existing != typeDefinition ) {
 				if ( duplicationStrategy == DuplicationStrategy.OVERWRITE ) {
 					log.debugf( "Overwrote existing registration [%s] for type definition.", name );

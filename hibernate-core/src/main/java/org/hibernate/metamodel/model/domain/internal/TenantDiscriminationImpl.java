@@ -8,11 +8,14 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.model.domain.spi.BasicValueMapper;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.TenantDiscrimination;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.internal.ColumnBasedMapper;
 import org.hibernate.type.spi.BasicType;
 
 /**
@@ -22,22 +25,24 @@ public class TenantDiscriminationImpl implements TenantDiscrimination {
 	private static final String NAVIGABLE_NAME = "{tenantId}";
 
 	private final IdentifiableTypeDescriptor container;
-	private final BasicJavaDescriptor<String> javaDescriptor;
+	private final NavigableRole navigableRole;
+
 	private final Column column;
+	private final BasicValueMapper<String> valueMapper;
+
 	private final boolean isShared;
 	private final boolean useParameterBinding;
 
-	private final NavigableRole navigableRole;
-
 	public TenantDiscriminationImpl(
 			IdentifiableTypeDescriptor container,
-			BasicJavaDescriptor<String> javaDescriptor,
 			Column column,
 			boolean isShared,
 			boolean useParameterBinding) {
 		this.container = container;
-		this.javaDescriptor = javaDescriptor;
+
 		this.column = column;
+		this.valueMapper = new ColumnBasedMapper<>( column );
+
 		this.isShared = isShared;
 		this.useParameterBinding = useParameterBinding;
 
@@ -55,6 +60,11 @@ public class TenantDiscriminationImpl implements TenantDiscrimination {
 	}
 
 	@Override
+	public BasicJavaDescriptor<String> getJavaTypeDescriptor() {
+		return valueMapper.getDomainJavaDescriptor();
+	}
+
+	@Override
 	public String asLoggableText() {
 		return getNavigableRole().getFullPath();
 	}
@@ -65,6 +75,15 @@ public class TenantDiscriminationImpl implements TenantDiscrimination {
 	}
 
 	@Override
+	public BasicValueMapper<String> getValueMapper() {
+		return valueMapper;
+	}
+
+	@Override
+	public SqlExpressableType getSqlExpressableType() {
+		return column.getExpressableType();
+	}
+
 	public BasicType<String> getBasicType() {
 		throw new NotYetImplementedFor6Exception();
 	}

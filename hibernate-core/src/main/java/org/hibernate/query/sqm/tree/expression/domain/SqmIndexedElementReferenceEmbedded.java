@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import java.util.function.Supplier;
+
 import org.hibernate.metamodel.model.domain.spi.CollectionElementEmbedded;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -33,8 +35,9 @@ public class SqmIndexedElementReferenceEmbedded
 	}
 
 	@Override
-	public CollectionElementEmbedded getInferableType() {
-		return getExpressableType();
+	@SuppressWarnings("unchecked")
+	public Supplier<? extends CollectionElementEmbedded> getInferableType() {
+		return (Supplier<? extends CollectionElementEmbedded>) super.getInferableType();
 	}
 
 	@Override

@@ -9,5 +9,5 @@ package org.hibernate.query.sqm.tree.expression.domain;
 /**
  * @author Steve Ebersole
  */
-public interface SqmMaxElementReference extends SqmRestrictedCollectionElementReferenceBasic {
+public interface SqmMaxElementReference extends SqmRestrictedCollectionElementReference {
 }

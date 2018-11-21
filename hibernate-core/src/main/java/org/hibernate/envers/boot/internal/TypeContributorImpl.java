@@ -8,7 +8,7 @@ package org.hibernate.envers.boot.internal;
 
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
-import org.hibernate.envers.internal.entities.RevisionTypeType;
+import org.hibernate.envers.internal.entities.RevisionTypeJavaDescriptor;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -27,7 +27,6 @@ public class TypeContributorImpl implements TypeContributor {
 
 		// Register our custom java type and basic type mapping.
 		// No need to register the SqlTypeDescriptor as we use an already registered type.
-		typeContributions.contributeJavaTypeDescriptor( RevisionTypeType.INSTANCE.getJavaTypeDescriptor() );
-		typeContributions.contributeType( RevisionTypeType.INSTANCE );
+		typeContributions.contributeJavaTypeDescriptor( RevisionTypeJavaDescriptor.INSTANCE );
 	}
 }

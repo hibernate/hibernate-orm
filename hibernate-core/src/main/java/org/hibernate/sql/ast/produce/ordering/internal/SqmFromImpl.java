@@ -7,6 +7,7 @@
 package org.hibernate.sql.ast.produce.ordering.internal;
 
 import java.util.Locale;
+import java.util.function.Supplier;
 
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
@@ -130,8 +131,8 @@ public class SqmFromImpl implements SqmFrom {
 		}
 
 		@Override
-		public ExpressableType getInferableType() {
-			return null;
+		public Supplier<? extends ExpressableType> getInferableType() {
+			return this::getExpressableType;
 		}
 
 		@Override

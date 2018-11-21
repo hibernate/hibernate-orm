@@ -366,7 +366,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> BasicType<T> basicType(String registrationKey) {
-		return getBootstrapContext().getTypeConfiguration().getBasicTypeRegistry().getBasicType( registrationKey );
+		return getBootstrapContext().getTypeConfiguration().getBasicTypeRegistry().getBasicTypeByName( registrationKey );
 	}
 
 

@@ -9,7 +9,7 @@ package org.hibernate.type.descriptor.java.internal;
 import java.util.Comparator;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
+import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
@@ -39,7 +39,7 @@ public class JavaTypeDescriptorBasicAdaptor<T> extends AbstractBasicJavaDescript
 	}
 
 	@Override
-	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
+	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
 		throw new UnsupportedOperationException(
 				"Recommended SqlTypeDescriptor not known for this Java type : " + getJavaType().getName()
 		);

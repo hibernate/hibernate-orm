@@ -6,8 +6,12 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
+import java.util.function.Supplier;
+
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.expression.InferableTypeSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 
 /**
  * @author Steve Ebersole
@@ -25,6 +29,20 @@ public class RelationalSqmPredicate implements SqmPredicate, NegatableSqmPredica
 		this.leftHandExpression = leftHandExpression;
 		this.rightHandExpression = rightHandExpression;
 		this.operator = operator;
+
+		if ( rightHandExpression instanceof InferableTypeSqmExpression ) {
+			final Supplier<? extends ExpressableType> inference = leftHandExpression.getInferableType();
+			if ( inference != null ) {
+				( (InferableTypeSqmExpression) rightHandExpression ).impliedType( inference );
+			}
+		}
+
+		if ( leftHandExpression instanceof InferableTypeSqmExpression ) {
+			final Supplier<? extends ExpressableType> inference = rightHandExpression.getInferableType();
+			if ( inference != null ) {
+				( (InferableTypeSqmExpression) leftHandExpression ).impliedType( rightHandExpression.getInferableType() );
+			}
+		}
 	}
 
 	public SqmExpression getLeftHandExpression() {

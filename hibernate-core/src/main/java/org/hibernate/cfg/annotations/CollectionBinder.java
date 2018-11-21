@@ -1279,9 +1279,6 @@ public abstract class CollectionBinder {
 			}
 		}
 
-		// todo (6.0) : Can we find a better way to initialize this?
-		key.getJavaTypeMapping().getJavaTypeDescriptor();
-
 		return key;
 	}
 

@@ -13,7 +13,7 @@ import java.sql.Types;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.spi.AbstractNumericJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.Primitive;
-import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
+import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
@@ -31,7 +31,7 @@ public class DoubleJavaDescriptor extends AbstractNumericJavaDescriptor<Double> 
 	}
 
 	@Override
-	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
+	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
 		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.DOUBLE );
 	}
 

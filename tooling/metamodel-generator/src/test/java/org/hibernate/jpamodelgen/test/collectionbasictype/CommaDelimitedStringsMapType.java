@@ -8,13 +8,13 @@ package org.hibernate.jpamodelgen.test.collectionbasictype;
 
 import java.util.Map;
 
-import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.VarcharSqlDescriptor;
+import org.hibernate.type.internal.StandardBasicTypeImpl;
 
 /**
  * @author Vlad Mihalcea
  */
-public class CommaDelimitedStringsMapType extends BasicTypeImpl<Map> {
+public class CommaDelimitedStringsMapType extends StandardBasicTypeImpl<Map> {
 
     public CommaDelimitedStringsMapType() {
         super(

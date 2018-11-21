@@ -15,7 +15,7 @@ import org.hibernate.sql.ast.tree.spi.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcSelectImpl;
 import org.hibernate.sql.exec.internal.StandardResultSetMappingDescriptor;
 import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
+import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
 
 /**
  * The final phase of query translation.  Here we take the SQL-AST an
@@ -26,7 +26,7 @@ import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
  */
 public class SqlAstSelectToJdbcSelectConverter
 		extends AbstractSqlAstToJdbcOperationConverter
-		implements SqlSelectAstWalker, JdbcRecommendedSqlTypeMappingContext {
+		implements SqlSelectAstWalker, SqlTypeDescriptorIndicators {
 	/**
 	 * Perform interpretation of a select query, returning the SqlSelectInterpretation
 	 *

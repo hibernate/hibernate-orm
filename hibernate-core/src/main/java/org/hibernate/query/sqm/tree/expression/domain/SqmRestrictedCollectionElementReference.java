@@ -7,6 +7,10 @@
 package org.hibernate.query.sqm.tree.expression.domain;
 
 /**
+ * Specialized form of SqmCollectionElementReference for element referenced
+ * restricted to a single element.  This includes `minelement`, `maxelement`
+ * and "indexed access" (i.e. `"... from Order o where o.lines[1] =..."`).
+ *
  * @author Steve Ebersole
  */
 public interface SqmRestrictedCollectionElementReference extends SqmCollectionElementReference {

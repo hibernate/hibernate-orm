@@ -19,7 +19,7 @@ import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
  *
  * @author Steve Ebersole
  */
-public interface SqmParameter extends ImpliedTypeSqmExpression {
+public interface SqmParameter extends InferableTypeSqmExpression {
 	/**
 	 * If this represents a named parameter, return that parameter name;
 	 * otherwise return {@code null}.
@@ -56,15 +56,10 @@ public interface SqmParameter extends ImpliedTypeSqmExpression {
 	 * NOTE: If {@link #allowMultiValuedBinding()} is true, this will indicate
 	 * the Type of the individual values.
 	 *
-	 * todo (6.0) : shouldn't this be AllowableParameterType?
-	 *
 	 * @return The anticipated Type.
 	 */
 	AllowableParameterType getAnticipatedType();
 
 	@Override
 	AllowableParameterType getExpressableType();
-
-	@Override
-	AllowableParameterType getInferableType();
 }

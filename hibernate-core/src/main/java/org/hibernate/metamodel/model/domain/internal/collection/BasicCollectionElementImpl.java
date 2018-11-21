@@ -14,6 +14,7 @@ import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractCollectionElement;
 import org.hibernate.metamodel.model.domain.spi.BasicCollectionElement;
+import org.hibernate.metamodel.model.domain.spi.BasicValueMapper;
 import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
@@ -35,7 +36,7 @@ import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
@@ -49,8 +50,7 @@ public class BasicCollectionElementImpl<J>
 	private static final Logger log = Logger.getLogger( BasicCollectionElementImpl.class );
 
 	private final Column column;
-	private final BasicType<J> basicType;
-	private final BasicValueConverter valueConverter;
+	private final BasicValueMapper<J> valueMapper;
 
 	@SuppressWarnings("unchecked")
 	public BasicCollectionElementImpl(
@@ -63,23 +63,25 @@ public class BasicCollectionElementImpl<J>
 
 		this.column = creationContext.getDatabaseObjectResolver().resolveColumn( simpleElementValueMapping.getMappedColumn() );
 
-		// todo (6.0) : resolve SimpleValue -> BasicType
-		this.basicType = ( (BasicValueMapping) bootCollectionMapping.getElement() ).resolveType();
+		this.valueMapper = ( (BasicValueMapping) bootCollectionMapping.getElement() ).getResolution().getValueMapper();
 
-		this.valueConverter = simpleElementValueMapping.resolveValueConverter( creationContext, basicType );
-
-		if ( valueConverter != null ) {
+		if ( valueMapper.getValueConverter() != null ) {
 			log.debugf(
 					"BasicValueConverter [%s] being applied for basic collection elements : %s",
-					valueConverter,
+					valueMapper.getValueConverter(),
 					getNavigableRole()
 			);
 		}
 	}
 
 	@Override
+	public BasicJavaDescriptor<J> getJavaTypeDescriptor() {
+		return valueMapper.getDomainJavaDescriptor();
+	}
+
+	@Override
 	public BasicValueConverter getValueConverter() {
-		return valueConverter;
+		return valueMapper.getValueConverter();
 	}
 
 	@Override
@@ -89,7 +91,7 @@ public class BasicCollectionElementImpl<J>
 
 	@Override
 	public SimpleTypeDescriptor getDomainTypeDescriptor() {
-		return getBasicType();
+		return this;
 	}
 
 	@Override
@@ -109,13 +111,18 @@ public class BasicCollectionElementImpl<J>
 	}
 
 	@Override
-	public BasicType<J> getBasicType() {
-		return basicType;
+	public Column getBoundColumn() {
+		return column;
 	}
 
 	@Override
-	public Column getBoundColumn() {
-		return column;
+	public BasicValueMapper<J> getValueMapper() {
+		return valueMapper;
+	}
+
+	@Override
+	public SqlExpressableType getSqlExpressableType() {
+		return valueMapper.getSqlExpressableType();
 	}
 
 

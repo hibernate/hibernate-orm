@@ -6,14 +6,14 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import java.util.function.Supplier;
+
 import org.hibernate.metamodel.model.domain.spi.CollectionIndexEntity;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 
 /**
  * @author Steve Ebersole
@@ -28,18 +28,19 @@ public class SqmCollectionIndexReferenceEntity
 	}
 
 	@Override
-	public EntityValuedNavigable getReferencedNavigable() {
+	public CollectionIndexEntity getReferencedNavigable() {
 		return (CollectionIndexEntity) getPluralAttributeReference().getReferencedNavigable().getPersistentCollectionDescriptor().getIndexDescriptor();
 	}
 
 	@Override
-	public EntityValuedExpressableType getExpressableType() {
+	public CollectionIndexEntity getExpressableType() {
 		return getReferencedNavigable();
 	}
 
 	@Override
-	public EntityValuedExpressableType getInferableType() {
-		return getExpressableType();
+	@SuppressWarnings("unchecked")
+	public Supplier<? extends CollectionIndexEntity> getInferableType() {
+		return (Supplier<? extends CollectionIndexEntity>) super.getInferableType();
 	}
 
 	@Override

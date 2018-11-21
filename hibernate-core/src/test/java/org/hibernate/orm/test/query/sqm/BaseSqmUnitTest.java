@@ -31,9 +31,12 @@ public abstract class BaseSqmUnitTest
 	protected void applySettings(StandardServiceRegistryBuilder builder) {
 		super.applySettings( builder );
 
-		builder.applySetting( AvailableSettings.JPAQL_STRICT_COMPLIANCE, strictJpaCompliance() );
+		builder.applySetting( AvailableSettings.JPA_QUERY_COMPLIANCE, strictJpaCompliance() );
 	}
 
+	/**
+	 * todo (6.0) : use JUnit parameters for this (see envers)
+	 */
 	protected boolean strictJpaCompliance() {
 		return false;
 	}

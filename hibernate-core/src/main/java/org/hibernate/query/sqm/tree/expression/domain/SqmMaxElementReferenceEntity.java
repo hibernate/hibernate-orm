@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import java.util.function.Supplier;
+
 import org.hibernate.metamodel.model.domain.spi.CollectionElementEntity;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
@@ -34,8 +36,8 @@ public class SqmMaxElementReferenceEntity
 	}
 
 	@Override
-	public CollectionElementEntity getInferableType() {
-		return getExpressableType();
+	public Supplier<? extends CollectionElementEntity> getInferableType() {
+		return this::getExpressableType;
 	}
 
 	@Override

@@ -248,7 +248,7 @@ public class SqlSelectionReaderImpl implements SqlSelectionReader {
 			return extractRawJdbcValue(
 					resultSet,
 					determineJavaTypeDescriptor( expressableType ),
-					expressableType.getBasicType().getSqlTypeDescriptor(),
+					expressableType.getSqlTypeDescriptor(),
 					jdbcValuesSourceProcessingState,
 					position
 			);
@@ -263,7 +263,7 @@ public class SqlSelectionReaderImpl implements SqlSelectionReader {
 			return extractRawJdbcParameterValue(
 					statement,
 					determineJavaTypeDescriptor( expressableType ),
-					expressableType.getBasicType().getSqlTypeDescriptor(),
+					expressableType.getSqlTypeDescriptor(),
 					jdbcValuesSourceProcessingState,
 					jdbcParameterIndex
 			);
@@ -278,7 +278,7 @@ public class SqlSelectionReaderImpl implements SqlSelectionReader {
 			return extractRawJdbcParameterValue(
 					statement,
 					determineJavaTypeDescriptor( expressableType ),
-					expressableType.getBasicType().getSqlTypeDescriptor(),
+					expressableType.getSqlTypeDescriptor(),
 					jdbcValuesSourceProcessingState,
 					jdbcParameterName
 			);

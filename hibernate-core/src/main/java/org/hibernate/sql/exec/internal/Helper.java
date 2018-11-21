@@ -15,6 +15,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -22,6 +23,7 @@ import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.internal.StandardSqlExpressionResolver;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
@@ -37,6 +39,7 @@ import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
 import org.hibernate.sql.results.spi.Initializer;
 import org.hibernate.sql.results.spi.RowReader;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -123,8 +126,11 @@ public class Helper {
 				(queryParameterImplementor, queryParameterBinding) -> {
 					final List<JdbcParameter> jdbcParameters = jdbcParamsByDomainParams.get( queryParameterImplementor );
 					final Object bindValue = domainParamBindings.getBinding( queryParameterImplementor ).getBindValue();
-					queryParameterBinding.getBindType().dehydrate(
-							queryParameterBinding.getBindType().unresolve( bindValue, session ),
+
+					final AllowableParameterType parameterType = determineParameterType( queryParameterBinding, queryParameterImplementor, session );
+
+					parameterType.dehydrate(
+							parameterType.unresolve( bindValue, session ),
 							new ExpressableType.JdbcValueCollector() {
 								private int position = 0;
 
@@ -184,5 +190,23 @@ public class Helper {
 //		}
 
 		return jdbcParameterBindings;
+	}
+
+	private static AllowableParameterType determineParameterType(
+			QueryParameterBinding<?> binding,
+			QueryParameterImplementor<?> parameter,
+			SharedSessionContractImplementor session) {
+		if ( binding.getBindType() != null ) {
+			return binding.getBindType();
+		}
+
+		if ( parameter.getHibernateType() != null ) {
+			return parameter.getHibernateType();
+		}
+
+		final TypeConfiguration typeConfiguration = session.getFactory().getTypeConfiguration();
+
+		// assume we have (or can create) a mapping for the parameter's Java type
+		return typeConfiguration.standardExpressableTypeForJavaType( parameter.getParameterType() );
 	}
 }

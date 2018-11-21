@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
-import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.CollectionAttribute;
 import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.MapAttribute;
@@ -55,6 +54,7 @@ import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.NonIdPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.StateArrayContributor;
 import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
@@ -905,12 +905,12 @@ public class PolymorphicEntityTypeValuedExpressableTypeImpl<T> implements Entity
 	}
 
 	@Override
-	public Attribute getAttribute(String name) {
+	public PersistentAttributeDescriptor getAttribute(String name) {
 		throw new UnsupportedOperationException(  );
 	}
 
 	@Override
-	public Attribute getDeclaredAttribute(String name) {
+	public PersistentAttributeDescriptor getDeclaredAttribute(String name) {
 		throw new UnsupportedOperationException(  );
 	}
 

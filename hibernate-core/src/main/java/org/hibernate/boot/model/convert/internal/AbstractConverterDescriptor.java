@@ -106,7 +106,6 @@ public abstract class AbstractConverterDescriptor implements ConverterDescriptor
 		final ManagedBean<? extends AttributeConverter> managedBean = createManagedBean( context );
 		return new JpaAttributeConverterImpl(
 				managedBean,
-				context.getJavaTypeDescriptorRegistry().getDescriptor( managedBean.getBeanClass() ),
 				context.getJavaTypeDescriptorRegistry().getDescriptor( getDomainValueResolvedType().getErasedType() ),
 				context.getJavaTypeDescriptorRegistry().getDescriptor( getRelationalValueResolvedType().getErasedType() )
 		);

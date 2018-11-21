@@ -8,44 +8,13 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmConstantEnum<T extends Enum> implements SqmConstantReference<T> {
-	private final T value;
-	private BasicValuedExpressableType domainType;
-
-	public SqmConstantEnum(T value) {
-		this( value, null );
-	}
-
-	public SqmConstantEnum(T value, BasicValuedExpressableType domainType) {
-		this.value = value;
-		this.domainType = domainType;
-	}
-
-	@Override
-	public T getLiteralValue() {
-		return value;
-	}
-
-	@Override
-	public BasicValuedExpressableType getExpressableType() {
-		return domainType;
-	}
-
-	@Override
-	public BasicValuedExpressableType getInferableType() {
-		return getExpressableType();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void impliedType(ExpressableType expressableType) {
-		this.domainType = (BasicValuedExpressableType) expressableType;
+public class SqmConstantEnum<T extends Enum> extends AbstractSqmLiteral<T> implements SqmConstantReference<T> {
+	public SqmConstantEnum(T value, BasicValuedExpressableType inherentType) {
+		super( value, inherentType );
 	}
 
 	@Override
@@ -55,11 +24,6 @@ public class SqmConstantEnum<T extends Enum> implements SqmConstantReference<T> 
 
 	@Override
 	public String asLoggableText() {
-		return "EnumConstant(" + value + ")";
-	}
-
-	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return domainType.getJavaTypeDescriptor();
+		return "EnumConstant(" + getLiteralValue() + ")";
 	}
 }

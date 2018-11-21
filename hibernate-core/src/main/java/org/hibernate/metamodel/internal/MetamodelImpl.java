@@ -448,7 +448,7 @@ public class MetamodelImpl extends AbstractRuntimeModel implements MetamodelImpl
 
 	@Override
 	public AllowableParameterType resolveAllowableParamterType(Class clazz) {
-		BasicType basicType = typeConfiguration.getBasicTypeRegistry().getBasicType( clazz.getName() );
+		BasicType basicType = typeConfiguration.getBasicTypeRegistry().getBasicTypeByName( clazz.getName() );
 		if ( basicType != null ) {
 			return basicType;
 		}

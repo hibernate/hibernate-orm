@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import java.util.function.Supplier;
+
 import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.tree.from.SqmFromExporter;
@@ -70,8 +72,8 @@ public abstract class AbstractSqmAttributeReference<A extends PersistentAttribut
 	}
 
 	@Override
-	public ExpressableType getInferableType() {
-		return getExpressableType();
+	public Supplier<? extends PersistentAttributeDescriptor> getInferableType() {
+		return this::getReferencedNavigable;
 	}
 
 	@Override

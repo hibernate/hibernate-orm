@@ -16,13 +16,13 @@ import org.hibernate.type.spi.TypeConfiguration;
  * Abstract SqlTypeDescriptor that defines templated support for handling
  * JdbcValueMapper resolution.
  *
- * @see TypeConfiguration#resolveJdbcValueMapper
+ * @see TypeConfiguration#resolveSqlExpressableType
  *
  * @author Steve Ebersole
  */
 public abstract class AbstractTemplateSqlTypeDescriptor implements SqlTypeDescriptor {
 	/**
-	 * Delegates to {@link TypeConfiguration#resolveJdbcValueMapper}
+	 * Delegates to {@link TypeConfiguration#resolveSqlExpressableType}
 	 *
 	 * @implSpec Defined as final since the whole point of this base class is to support
 	 * this method via templating.  Subclasses should instead implement {@link #createBinder}
@@ -33,7 +33,7 @@ public abstract class AbstractTemplateSqlTypeDescriptor implements SqlTypeDescri
 	public final SqlExpressableType getSqlExpressableType(
 			BasicJavaDescriptor javaTypeDescriptor,
 			TypeConfiguration typeConfiguration) {
-		return typeConfiguration.resolveJdbcValueMapper(
+		return typeConfiguration.resolveSqlExpressableType(
 				this,
 				javaTypeDescriptor,
 				jtd -> {

@@ -9,6 +9,7 @@ package org.hibernate.sql.ast.tree.spi.expression;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.hibernate.metamodel.model.domain.spi.Writeable;
 import org.hibernate.sql.JdbcValueBinder;
 import org.hibernate.sql.JdbcValueExtractor;
 import org.hibernate.sql.SqlExpressableType;
@@ -79,10 +80,12 @@ public abstract class AbstractParameter
 			bindType = guessBindType( executionContext, binding );
 		}
 
+		final Object bindValue = binding.getBindValue();
+
 		bindType.getJdbcValueBinder().bind(
 				statement,
 				startPosition,
-				binding.getBindValue(),
+				bindValue,
 				executionContext
 		);
 
@@ -148,7 +151,7 @@ public abstract class AbstractParameter
 				jdbcPosition,
 				valuesArrayPosition,
 				this,
-				( (BasicValuedExpressableType) getType() ).getBasicType().getSqlExpressableType( typeConfiguration )
+				( (BasicValuedExpressableType) getType() ).getSqlExpressableType()
 		);
 	}
 }

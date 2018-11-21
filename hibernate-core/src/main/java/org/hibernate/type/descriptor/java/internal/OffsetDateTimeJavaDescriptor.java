@@ -22,7 +22,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.TemporalJavaDescriptor;
-import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
+import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.OffsetDateTimeVersionSupport;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -51,7 +51,7 @@ public class OffsetDateTimeJavaDescriptor
 	}
 
 	@Override
-	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
+	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
 		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.TIMESTAMP );
 	}
 

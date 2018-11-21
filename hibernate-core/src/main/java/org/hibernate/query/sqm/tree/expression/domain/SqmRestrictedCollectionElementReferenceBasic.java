@@ -6,8 +6,24 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import java.util.function.Supplier;
+
+import org.hibernate.metamodel.model.domain.spi.BasicCollectionElement;
+import org.hibernate.metamodel.model.domain.spi.BasicValuedNavigable;
+
 /**
+ * Specialized SqmRestrictedCollectionElementReference for basic-valued
+ * collection elements
+ *
  * @author Steve Ebersole
  */
 public interface SqmRestrictedCollectionElementReferenceBasic extends SqmRestrictedCollectionElementReference {
+	@Override
+	BasicCollectionElement getExpressableType();
+
+	@Override
+	Supplier<? extends BasicCollectionElement> getInferableType();
+
+	@Override
+	BasicValuedNavigable getReferencedNavigable();
 }

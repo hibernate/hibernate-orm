@@ -28,13 +28,22 @@ import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.AdditionalJaxbMappingProducer;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataContributor;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.NCharSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.NClobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -319,7 +328,6 @@ public class MetadataBuildingProcess {
 //	}
 
 	private static void handleTypes(BootstrapContext bootstrapContext, MetadataBuildingOptions options) {
-
 		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
 
 		final TypeContributions typeContributions = new TypeContributions() {
@@ -344,6 +352,12 @@ public class MetadataBuildingProcess {
 				return bootstrapContext.getTypeConfiguration();
 			}
 		};
+
+		if ( Environment.useStreamsForBinary() ) {
+			typeContributions.contributeSqlTypeDescriptor( BlobSqlDescriptor.STREAM_BINDING );
+			typeContributions.contributeSqlTypeDescriptor( ClobSqlDescriptor.STREAM_BINDING );
+			typeContributions.contributeSqlTypeDescriptor( NClobSqlDescriptor.STREAM_BINDING );
+		}
 
 		final Dialect dialect = options.getServiceRegistry().getService( JdbcServices.class ).getDialect();
 		dialect.contributeTypes( typeContributions, options.getServiceRegistry() );

@@ -22,7 +22,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.CalendarComparator;
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.TemporalJavaDescriptor;
-import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
+import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.spi.TemporalSqlDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -81,7 +81,7 @@ public class CalendarTimeJavaDescriptor
 	}
 
 	@Override
-	public TemporalSqlDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
+	public TemporalSqlDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
 		return (TemporalSqlDescriptor) context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.TIME );
 	}
 

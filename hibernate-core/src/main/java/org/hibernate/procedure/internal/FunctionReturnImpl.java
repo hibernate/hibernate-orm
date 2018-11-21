@@ -41,7 +41,7 @@ public class FunctionReturnImpl implements FunctionReturnImplementor {
 
 	public FunctionReturnImpl(ProcedureCallImplementor procedureCall, BasicValuedExpressableType ormType) {
 		this.procedureCall = procedureCall;
-		this.jdbcTypeCode = ormType.getBasicType().getSqlTypeDescriptor().getJdbcTypeCode();
+		this.jdbcTypeCode = ormType.getSqlTypeDescriptor().getJdbcTypeCode();
 
 		this.ormType = ormType;
 	}

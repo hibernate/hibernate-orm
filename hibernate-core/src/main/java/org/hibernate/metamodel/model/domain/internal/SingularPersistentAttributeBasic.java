@@ -22,6 +22,7 @@ import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractNonIdSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.BasicTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.BasicValueMapper;
 import org.hibernate.metamodel.model.domain.spi.BasicValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
@@ -50,7 +51,6 @@ import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
-import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
@@ -64,9 +64,9 @@ public class SingularPersistentAttributeBasic<O, J>
 	private static final Logger log = Logger.getLogger( SingularPersistentAttributeBasic.class );
 
 	private final Column boundColumn;
-	private final BasicType<J> basicType;
-	private final SqlExpressableType sqlExpressableType;
-	private final BasicValueConverter valueConverter;
+
+	private final BasicValueMapper<J> valueMapper;
+
 	private final FetchStrategy fetchStrategy;
 
 	@SuppressWarnings("unchecked")
@@ -83,28 +83,16 @@ public class SingularPersistentAttributeBasic<O, J>
 				disposition
 		);
 
-		final BasicValueMapping<J> basicValueMapping = (BasicValueMapping<J>) bootAttribute.getValueMapping();
-		this.boundColumn = context.getDatabaseObjectResolver().resolveColumn( basicValueMapping.getMappedColumn() );
-		this.basicType = basicValueMapping.resolveType();
+		final BasicValueMapping bootMapping = (BasicValueMapping) bootAttribute.getValueMapping();
 
-		this.valueConverter = basicValueMapping.resolveValueConverter( context, basicType );
+		this.boundColumn = context.getDatabaseObjectResolver().resolveColumn( bootMapping.getMappedColumn() );
+		this.valueMapper = bootMapping.getResolution().getValueMapper();
 
-		if ( valueConverter != null ) {
+		if ( valueMapper.getValueConverter() != null ) {
 			log.debugf(
 					"BasicValueConverter [%s] being applied for basic attribute : %s",
-					valueConverter,
+					valueMapper.getValueConverter(),
 					getNavigableRole()
-			);
-
-			sqlExpressableType = basicType.getSqlTypeDescriptor().getSqlExpressableType(
-					valueConverter.getRelationalJavaDescriptor(),
-					context.getSessionFactory().getTypeConfiguration()
-			);
-		}
-		else {
-			sqlExpressableType = basicType.getSqlTypeDescriptor().getSqlExpressableType(
-					basicType.getJavaTypeDescriptor(),
-					context.getSessionFactory().getTypeConfiguration()
 			);
 		}
 
@@ -123,12 +111,12 @@ public class SingularPersistentAttributeBasic<O, J>
 
 	@Override
 	public BasicTypeDescriptor<J> getType() {
-		return basicType;
+		return (BasicTypeDescriptor<J>) this;
 	}
 
 	@Override
 	public BasicJavaDescriptor<J> getJavaTypeDescriptor() {
-		return (BasicJavaDescriptor<J>) super.getJavaTypeDescriptor();
+		return valueMapper.getDomainJavaDescriptor();
 	}
 
 	@Override
@@ -164,13 +152,23 @@ public class SingularPersistentAttributeBasic<O, J>
 	}
 
 	@Override
+	public BasicValueMapper<J> getValueMapper() {
+		return valueMapper;
+	}
+
+	@Override
+	public SqlExpressableType getSqlExpressableType() {
+		return valueMapper.getSqlExpressableType();
+	}
+
+	@Override
 	public String asLoggableText() {
 		return "SingularAttributeBasic(" + getContainer().asLoggableText() + '.' + getAttributeName() + ')';
 	}
 
 	@Override
 	public BasicValueConverter getValueConverter() {
-		return valueConverter;
+		return valueMapper.getValueConverter();
 	}
 
 	@Override
@@ -184,19 +182,14 @@ public class SingularPersistentAttributeBasic<O, J>
 	}
 
 	@Override
-	public BasicType<J> getBasicType() {
-		return basicType;
-	}
-
-	@Override
 	@SuppressWarnings("unchecked")
 	public Object resolveHydratedState(
 			Object hydratedForm,
 			ExecutionContext executionContext,
 			SharedSessionContractImplementor session,
 			Object containerInstance) {
-		if ( valueConverter != null ) {
-			return valueConverter.toDomainValue( hydratedForm, session );
+		if ( valueMapper.getValueConverter() != null ) {
+			return valueMapper.getValueConverter().toDomainValue( hydratedForm, session );
 		}
 		return hydratedForm;
 	}
@@ -217,8 +210,8 @@ public class SingularPersistentAttributeBasic<O, J>
 
 	@Override
 	public Object unresolve(Object value, SharedSessionContractImplementor session) {
-		if ( valueConverter != null ) {
-			value = valueConverter.toRelationalValue( value, session );
+		if ( valueMapper.getValueConverter() != null ) {
+			value = valueMapper.getValueConverter().toRelationalValue( value, session );
 		}
 
 		return value;
@@ -231,7 +224,7 @@ public class SingularPersistentAttributeBasic<O, J>
 			Clause clause,
 			SharedSessionContractImplementor session) {
 		if ( clause.getInclusionChecker().test( this ) ) {
-			jdbcValueCollector.collect( value, getBoundColumn().getExpressableType(), getBoundColumn() );
+			jdbcValueCollector.collect( value, valueMapper.getSqlExpressableType(), getBoundColumn() );
 		}
 	}
 
@@ -241,7 +234,7 @@ public class SingularPersistentAttributeBasic<O, J>
 			Clause clause,
 			TypeConfiguration typeConfiguration) {
 		if ( clause.getInclusionChecker().test( this ) ) {
-			action.accept( sqlExpressableType );
+			action.accept( getBoundColumn().getExpressableType() );
 		}
 	}
 

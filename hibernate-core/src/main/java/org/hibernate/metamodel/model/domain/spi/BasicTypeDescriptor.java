@@ -6,14 +6,13 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import javax.persistence.metamodel.BasicType;
-
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 
 /**
- * Hibernate extension to the JPA {@link BasicType} descriptor
+ * SPI extension to {@link BasicDomainType}
  *
  * @author Steve Ebersole
  */
-public interface BasicTypeDescriptor<J> extends BasicDomainType<J>, SimpleTypeDescriptor<J> {
+public interface BasicTypeDescriptor<J>
+		extends BasicDomainType<J>, SimpleTypeDescriptor<J>, AllowableParameterType<J>, AllowableFunctionReturnType<J> {
 }

@@ -8,9 +8,11 @@ package org.hibernate.orm.test.conversions;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
-import org.hibernate.orm.test.support.domains.converters.Account;
-import org.hibernate.orm.test.support.domains.converters.Status;
+import org.hibernate.orm.test.support.domains.helpdesk.Account;
+import org.hibernate.orm.test.support.domains.helpdesk.Status;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -32,8 +34,8 @@ public class BasicConversionsTest extends SessionFactoryBasedFunctionalTest {
 		return true;
 	}
 
-	@Test
-	public void testBasicConversions() {
+	@BeforeEach
+	public void createData() {
 		final Account initialAccount = new Account(
 				1,
 				Status.CREATED,
@@ -42,7 +44,17 @@ public class BasicConversionsTest extends SessionFactoryBasedFunctionalTest {
 		);
 
 		sessionFactoryScope().inTransaction( session -> session.save( initialAccount ) );
+	}
 
+	@AfterEach
+	public void cleanData() {
+		sessionFactoryScope().inTransaction(
+				session -> session.delete( session.byId( Account.class ).load( 1 ) )
+		);
+	}
+
+	@Test
+	public void testBasicConversions() {
 		sessionFactoryScope().inTransaction(
 				session -> {
 					final Account loaded = session.get( Account.class, 1 );
@@ -52,17 +64,49 @@ public class BasicConversionsTest extends SessionFactoryBasedFunctionalTest {
 					assertThat( loaded.getServiceStatus(), equalTo( Status.ACTIVE ) );
 				}
 		);
+	}
 
-		// todo (6.0) : good test for "parameter inferring"
-//		sessionFactoryScope().inTransaction(
-//				session -> {
-//					final Account loaded = session.createQuery( "from Account a where a.loginStatus = :status", Account.class ).setParameter( "status", Status.CREATED ).uniqueResult();
-//					assertThat( loaded, notNullValue() );
-//					assertThat( loaded.getLoginStatus(), equalTo( Status.CREATED ) );
-//					assertThat( loaded.getSystemAccessStatus(), equalTo( Status.INITIALIZING ) );
-//					assertThat( loaded.getServiceStatus(), equalTo( Status.ACTIVE ) );
-//				}
-//		);
+	@Test
+	public void testSqmTypeInference() {
+		sessionFactoryScope().inTransaction(
+				session -> {
+					Account loaded = session.createQuery( "from Account a where a.loginStatus = :status", Account.class )
+							.setParameter( "status", Status.CREATED )
+							.uniqueResult();
 
+					assertThat( loaded, notNullValue() );
+
+					assertThat( loaded.getLoginStatus(), equalTo( Status.CREATED ) );
+					assertThat( loaded.getSystemAccessStatus(), equalTo( Status.INITIALIZING ) );
+					assertThat( loaded.getServiceStatus(), equalTo( Status.ACTIVE ) );
+
+
+					// after this, asserting not-null is enough
+
+					loaded = session.createQuery( "from Account a where a.loginStatus <> :status", Account.class )
+							.setParameter( "status", Status.INITIALIZING )
+							.uniqueResult();
+
+					assertThat( loaded, notNullValue() );
+
+					loaded = session.createQuery( "from Account a where a.loginStatus >= :status", Account.class )
+							.setParameter( "status", Status.CREATED )
+							.uniqueResult();
+
+					assertThat( loaded, notNullValue() );
+
+					loaded = session.createQuery( "from Account a where a.loginStatus < :status", Account.class )
+							.setParameter( "status", Status.INACTIVE )
+							.uniqueResult();
+
+					assertThat( loaded, notNullValue() );
+
+					loaded = session.createQuery( "from Account a where a.loginStatus <= :status", Account.class )
+							.setParameter( "status", Status.INACTIVE )
+							.uniqueResult();
+
+					assertThat( loaded, notNullValue() );
+				}
+		);
 	}
 }

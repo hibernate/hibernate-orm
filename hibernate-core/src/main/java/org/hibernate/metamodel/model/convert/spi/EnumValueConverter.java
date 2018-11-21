@@ -11,7 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.descriptor.java.internal.EnumJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.EnumJavaDescriptor;
 
 /**
  * BasicValueConverter extension for enum-specific support

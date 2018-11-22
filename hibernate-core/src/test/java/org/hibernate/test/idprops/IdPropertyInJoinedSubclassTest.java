@@ -14,13 +14,12 @@ import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 
-import org.hibernate.Session;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
+import org.junit.Before;
 import org.junit.Test;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -32,49 +31,67 @@ public class IdPropertyInJoinedSubclassTest extends BaseCoreFunctionalTestCase {
 		return new Class[] { Human.class, Genius.class };
 	}
 
+	@Before
+	public void setUp() {
+		doInHibernate( this::sessionFactory, session -> {
+			session.persist( new Genius() );
+			session.persist( new Genius( 1L ) );
+			session.persist( new Genius( 1L ) );
+		} );
+	}
+
 	@Test
-	@TestForIssue( jiraKey = "HHH-13114")
+	@TestForIssue(jiraKey = "HHH-13114")
 	public void testHql() {
-		Session s = openSession();
-		s.beginTransaction();
-		s.persist( new Genius() );
-		s.persist( new Genius( 1L ) );
-		s.persist( new Genius( 1L ) );
-		s.flush();
+		doInHibernate( this::sessionFactory, session -> {
+			assertEquals(
+					2, session.createQuery( "from Genius g where g.id = :id", Genius.class )
+							.setParameter( "id", 1L )
+							.list()
+							.size()
+			);
 
-		assertEquals(
-				2, s.createQuery( "from Genius g where g.id = :id", Genius.class )
-						.setParameter( "id", 1L )
-						.list()
-						.size()
-		);
+			assertEquals(
+					1, session.createQuery( "from Genius g where g.id is null", Genius.class )
+							.list()
+							.size()
+			);
 
-		assertEquals(
-				1, s.createQuery( "from Genius g where g.id is null", Genius.class )
-						.list()
-						.size()
-		);
+			assertEquals( 3L, session.createQuery( "select count( g ) from Genius g" ).uniqueResult() );
 
-		assertEquals( 3L, s.createQuery( "select count( g ) from Genius g" ).uniqueResult() );
+			assertEquals(
+					2, session.createQuery( "from Human h where h.id = :id", Human.class )
+							.setParameter( "id", 1L )
+							.list()
+							.size()
+			);
 
-		assertEquals(
-				2, s.createQuery( "from Human h where h.id = :id", Human.class )
-						.setParameter( "id", 1L )
-						.list()
-						.size()
-		);
+			assertEquals(
+					1, session.createQuery( "from Human h where h.id is null", Human.class )
+							.list()
+							.size()
+			);
 
-		assertEquals(
-				1, s.createQuery( "from Human h where h.id is null", Human.class )
-						.list()
-						.size()
-		);
+			assertEquals( 3L, session.createQuery( "select count( h ) from Human h" ).uniqueResult() );
+		} );
+	}
 
-		assertEquals( 3L, s.createQuery( "select count( h ) from Human h" ).uniqueResult() );
+	@Entity(name = "Human")
+	@Inheritance(strategy = InheritanceType.JOINED)
+	public static class Human {
 
-		s.createQuery( "delete from Genius" ).executeUpdate();
-		s.getTransaction().commit();
-		s.close();
+		private Long realId;
+
+		@Id
+		@GeneratedValue(strategy = GenerationType.AUTO)
+		@Column(name = "realId")
+		public Long getRealId() {
+			return realId;
+		}
+
+		public void setRealId(Long realId) {
+			this.realId = realId;
+		}
 	}
 
 	@Entity(name = "Genius")
@@ -96,23 +113,5 @@ public class IdPropertyInJoinedSubclassTest extends BaseCoreFunctionalTestCase {
 			this.id = id;
 		}
 
-	}
-
-	@Entity(name = "Human")
-	@Inheritance(strategy = InheritanceType.JOINED)
-	public static class Human {
-
-		private Long realId;
-
-		@Id
-		@GeneratedValue(strategy = GenerationType.AUTO)
-		@Column(name = "realId")
-		public Long getRealId() {
-			return realId;
-		}
-
-		public void setRealId(Long realId) {
-			this.realId = realId;
-		}
 	}
 }

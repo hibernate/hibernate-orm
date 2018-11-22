@@ -11,12 +11,12 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
 
-import org.hibernate.Session;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Before;
 import org.junit.Test;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -28,23 +28,24 @@ public class PropertyNamedIdInIdClassTest extends BaseCoreFunctionalTestCase {
 		return new Class[] { Person.class };
 	}
 
+	@Before
+	public void setUp() {
+		doInHibernate( this::sessionFactory, session -> {
+			session.persist( new Person( "John Doe", 0 ) );
+			session.persist( new Person( "John Doe", 1 ) );
+			session.persist( new Person( "Jane Doe", 0 ) );
+		} );
+	}
+
 	@Test
-	@TestForIssue( jiraKey = "HHH-13084")
+	@TestForIssue(jiraKey = "HHH-13084")
 	public void testHql() {
-		Session s = openSession();
-		s.beginTransaction();
-		s.persist( new Person( "John Doe", 0 ) );
-		s.persist( new Person( "John Doe", 1 ) );
-		s.persist( new Person( "Jane Doe", 0 ) );
-		s.flush();
+		doInHibernate( this::sessionFactory, session -> {
+			assertEquals( 2, session.createQuery( "from Person p where p.id = 0", Person.class ).list().size() );
 
-		assertEquals( 2, s.createQuery( "from Person p where p.id = 0", Person.class ).list().size() );
+			assertEquals( 3L, session.createQuery( "select count( p ) from Person p" ).uniqueResult() );
 
-		assertEquals( 3L, s.createQuery( "select count( p ) from Person p" ).uniqueResult() );
-
-		s.createQuery( "delete from Person" ).executeUpdate();
-		s.getTransaction().commit();
-		s.close();
+		} );
 	}
 
 	@Entity(name = "Person")
@@ -61,6 +62,7 @@ public class PropertyNamedIdInIdClassTest extends BaseCoreFunctionalTestCase {
 			setName( name );
 			setId( id );
 		}
+
 		public String getName() {
 			return name;
 		}

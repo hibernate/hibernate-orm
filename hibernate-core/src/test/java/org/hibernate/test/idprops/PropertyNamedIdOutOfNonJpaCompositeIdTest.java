@@ -11,12 +11,11 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.hibernate.Session;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.fail;
 
 /**
@@ -28,26 +27,26 @@ public class PropertyNamedIdOutOfNonJpaCompositeIdTest extends BaseCoreFunctiona
 		return new Class[] { Person.class };
 	}
 
+	@Before
+	public void setUp() {
+		doInHibernate( this::sessionFactory, session -> {
+			session.persist( new Person( "John Doe", 0 ) );
+			session.persist( new Person( "John Doe", 1, 1 ) );
+			session.persist( new Person( "John Doe", 2, 2 ) );
+		} );
+	}
+
 	@Test
 	public void testHql() {
-		Session s = openSession();
-		s.beginTransaction();
-		s.persist( new Person( "John Doe", 0 ) );
-		s.persist( new Person( "John Doe", 1, 1 ) );
-		s.persist( new Person( "John Doe", 2, 2 ) );
-		s.flush();
-
-		try {
-			s.createQuery( "from Person p where p.id is null", Person.class ).list();
-			fail( "should have thrown UnsupportedOperationException" );
-		}
-		catch (UnsupportedOperationException ex) {
-			//expected
-		}
-		finally {
-			s.getTransaction().rollback();
-			s.close();
-		}
+		doInHibernate( this::sessionFactory, session -> {
+			try {
+				session.createQuery( "from Person p where p.id is null", Person.class ).list();
+				fail( "should have thrown UnsupportedOperationException" );
+			}
+			catch (UnsupportedOperationException ex) {
+				//expected
+			}
+		} );
 	}
 
 	@Entity(name = "Person")
@@ -56,7 +55,7 @@ public class PropertyNamedIdOutOfNonJpaCompositeIdTest extends BaseCoreFunctiona
 		private String name;
 
 		@Id
-		@Column( name = "ind")
+		@Column(name = "ind")
 		private int index;
 
 		private Integer id;

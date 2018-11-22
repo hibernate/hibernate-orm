@@ -39,6 +39,8 @@ public class PropertyNamedIdInNonJpaCompositeIdTest extends BaseCoreFunctionalTe
 
 		assertEquals( 2, s.createQuery( "from Person p where p.id = 0", Person.class ).list().size() );
 
+		assertEquals( 3L, s.createQuery( "select count( p ) from Person p" ).uniqueResult() );
+
 		s.createQuery( "delete from Person" ).executeUpdate();
 		s.getTransaction().commit();
 		s.close();

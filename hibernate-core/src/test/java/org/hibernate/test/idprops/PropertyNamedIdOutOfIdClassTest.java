@@ -41,6 +41,7 @@ public class PropertyNamedIdOutOfIdClassTest extends BaseCoreFunctionalTestCase 
 
 		assertEquals( 1, s.createQuery( "from Person p where p.id is null", Person.class ).list().size() );
 		assertEquals( 2, s.createQuery( "from Person p where p.id is not null", Person.class ).list().size() );
+		assertEquals( 3L, s.createQuery( "select count( p ) from Person p" ).uniqueResult() );
 
 		s.createQuery( "delete from Person" ).executeUpdate();
 		s.getTransaction().commit();

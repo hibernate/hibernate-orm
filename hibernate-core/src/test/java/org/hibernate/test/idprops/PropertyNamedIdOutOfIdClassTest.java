@@ -43,8 +43,8 @@ public class PropertyNamedIdOutOfIdClassTest extends BaseCoreFunctionalTestCase 
 	@TestForIssue(jiraKey = "HHH-13084")
 	public void testHql() {
 		doInHibernate( this::sessionFactory, session -> {
-//			assertEquals( 1, session.createQuery( "from Person p where p.id is null", Person.class ).list().size() );
-//			assertEquals( 2, session.createQuery( "from Person p where p.id is not null", Person.class ).list().size() );
+			assertEquals( 1, session.createQuery( "from Person p where p.id is null", Person.class ).list().size() );
+			assertEquals( 2, session.createQuery( "from Person p where p.id is not null", Person.class ).list().size() );
 			assertEquals( 3L, session.createQuery( "select count( p ) from Person p" ).uniqueResult() );
 		} );
 	}

@@ -683,12 +683,12 @@ class FromElementType {
 	}
 
 	public String getIdentifierPropertyName() {
-		if ( getEntityPersister() != null && getEntityPersister().getEntityMetamodel() != null
-				&& getEntityPersister().getEntityMetamodel().hasNonIdentifierPropertyNamedId() ) {
-			return getEntityPersister().getIdentifierPropertyName();
+		if ( getEntityPersister() != null ) {
+			String identifierPropertyName = getEntityPersister().getIdentifierPropertyName();
+			if ( identifierPropertyName != null ) {
+				return identifierPropertyName;
+			}
 		}
-		else {
-			return EntityPersister.ENTITY_ID;
-		}
+		return EntityPersister.ENTITY_ID;
 	}
 }

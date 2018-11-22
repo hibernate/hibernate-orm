@@ -209,7 +209,7 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 			cacheManager = cachingProvider.getCacheManager( cacheManagerUri, getClassLoader( cachingProvider ));
 		}
 		else {
-			cacheManager = cachingProvider.getCacheManager();
+			cacheManager = cachingProvider.getCacheManager( cachingProvider.getDefaultURI(), getClassLoader( cachingProvider ));
 		}
 		return cacheManager;
 	}

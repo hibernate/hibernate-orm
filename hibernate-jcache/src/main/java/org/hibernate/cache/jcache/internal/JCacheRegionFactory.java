@@ -206,10 +206,10 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 		final CacheManager cacheManager;
 		final URI cacheManagerUri = getUri( settings, properties );
 		if ( cacheManagerUri != null ) {
-			cacheManager = cachingProvider.getCacheManager( cacheManagerUri, getClassLoader( cachingProvider ));
+			cacheManager = cachingProvider.getCacheManager( cacheManagerUri, getClassLoader( cachingProvider ) );
 		}
 		else {
-			cacheManager = cachingProvider.getCacheManager();
+			cacheManager = cachingProvider.getCacheManager( cachingProvider.getDefaultURI(), getClassLoader( cachingProvider ) );
 		}
 		return cacheManager;
 	}

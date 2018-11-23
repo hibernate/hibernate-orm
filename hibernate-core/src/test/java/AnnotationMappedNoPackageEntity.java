@@ -9,7 +9,7 @@ import javax.persistence.Basic;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-@Entity
+@Entity(name = "annotationnopackage")
 public class AnnotationMappedNoPackageEntity {
 	@Id
 	private Integer id;

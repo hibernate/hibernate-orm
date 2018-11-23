@@ -36,6 +36,11 @@ ext {
 
     jodaTimeVersion = '2.3'
 
+    jaxbApiVersion = '2.3.1'
+    // We can't upgrade JAXB in Karaf (yet), but fortunately everything works fine with the version built in Karaf
+    jaxbApiVersionOsgiRange = "[2.2,3)"
+    jaxbRuntimeVersion = '2.3.1'
+
     libraries = [
             // Ant
             ant:            'org.apache.ant:ant:1.8.2',
@@ -75,14 +80,13 @@ ext {
             logging_processor:  'org.jboss.logging:jboss-logging-processor:2.1.0.Final',
 
             // jaxb task
-            // Strangely, jaxb-runtime 2.2.11 depends on jaxb-api 2.2.12-b140109.1041
-            jaxb_api: 'javax.xml.bind:jaxb-api:2.2.12-b140109.1041',
-            jaxb_runtime: 'org.glassfish.jaxb:jaxb-runtime:2.2.11',
-            jaxb_xjc: 'org.glassfish.jaxb:jaxb-xjc:2.2.11',
+            jaxb_api: "javax.xml.bind:jaxb-api:${jaxbApiVersion}",
+            jaxb_runtime: "org.glassfish.jaxb:jaxb-runtime:${jaxbRuntimeVersion}",
+            jaxb_xjc: "org.glassfish.jaxb:jaxb-xjc:${jaxbRuntimeVersion}",
             // Note that jaxb2_basics is a set of tools on *top* of JAXB.
             // See https://github.com/highsource/jaxb2-basics
-            jaxb2_basics: 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0',
-            jaxb2_basics_ant: 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0',
+            jaxb2_basics: 'org.jvnet.jaxb2_commons:jaxb2-basics:0.12.0',
+            jaxb2_basics_ant: 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.12.0',
 
             geolatte:       "org.geolatte:geolatte-geom:${geolatteVersion}",
 

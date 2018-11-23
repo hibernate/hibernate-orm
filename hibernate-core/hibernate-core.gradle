@@ -127,7 +127,9 @@ jar {
             'javax.enterprise.inject.spi;resolution:=optional',
             'javax.inject;resolution:=optional',
             'net.bytebuddy.*;resolution:=optional',
-            'javax.xml.bind.*'
+            // We must specify the version explicitly to allow Karaf
+            // to use an older version of JAXB (the only one we can use in Karaf)
+            "javax.xml.bind.*;version=\"${project.jaxbApiVersionOsgiRange}\""
 
 //        // TODO: Uncomment once EntityManagerFactoryBuilderImpl no longer
 //        // uses ClassLoaderServiceImpl.

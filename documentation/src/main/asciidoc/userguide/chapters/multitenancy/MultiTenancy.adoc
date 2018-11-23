@@ -1,6 +1,7 @@
 [[multitenacy]]
 == Multitenancy
 :sourcedir: ../../../../../test/java/org/hibernate/userguide/multitenancy
+:extrasdir: extras
 
 [[multitenacy-intro]]
 === What is multitenancy?
@@ -180,3 +181,82 @@ Currently, schema export will not really work with multitenancy. That may not ch
 
 The JPA expert group is in the process of defining multitenancy support for an upcoming version of the specification.
 ====
+
+[[multitenacy-hibernate-session-configuration]]
+==== Multitenancy Hibernate Session configuration
+
+When using multitenancy, you might want to configure each tenant-specific `Session` differently.
+For instance, each tenant could take a different time zone configuration.
+
+[[multitenacy-hibernate-timezone-configuration-registerConnectionProvider-call-example]]
+.Registering the tenant-specific time zone information
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-timezone-configuration-registerConnectionProvider-call-example]
+----
+====
+
+The `registerConnectionProvider` method is used to define the tenant-specific context.
+
+[[multitenacy-hibernate-timezone-configuration-registerConnectionProvider-example]]
+.The `registerConnectionProvider` method used for defining the tenant-specific context
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-timezone-configuration-registerConnectionProvider-example]
+----
+====
+
+For our example, the tenant-specific context is held in the `connectionProviderMap` and `timeZoneTenantMap`.
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-timezone-configuration-context-example]
+----
+
+Now, when building the Hibernate `Session`, aside from passing the tenant identifier,
+we could also configure the `Session` to use the tenant-specific time zone.
+
+[[multitenacy-hibernate-timezone-configuration-session-example]]
+.The Hibernate `Session` can be configured using the tenant-specific context
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-timezone-configuration-session-example]
+----
+====
+
+So, if we set the `useTenantTimeZone` parameter to `true`, Hibernate will persist the `Timestamp` properties using the
+tenant-specific time zone. As you can see in the following example, the `Timestamp` is successfully retrieved
+even if the currently running JVM uses a different time zone.
+
+[[multitenacy-hibernate-applying-timezone-configuration-example]]
+.The `useTenantTimeZone` allows you to persist a `Timestamp` in the provided time zone
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-applying-timezone-configuration-example]
+----
+====
+
+However, behind the scenes, we can see that Hibernate has saved the `created_on` property in the tenant-specific time zone.
+The following example shows you that the `Timestamp` was saved in the UTC time zone, hence the offset displayed in the
+test output.
+
+[[multitenacy-hibernate-not-applying-timezone-configuration-example]]
+.With the `useTenantTimeZone` property set to `false`, the `Timestamp` in fetched in the tenant-specific time zone
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-not-applying-timezone-configuration-example]
+----
+
+[source, SQL,indent=0]
+----
+include::{extrasdir}/multitenacy-hibernate-not-applying-timezone-configuration-example.sql[]
+----
+====
+
+Notice that, for the `Eastern European Time` time zone, the time zone offset was 2 hours when the test was executed.
+

@@ -312,11 +312,11 @@ public class OverrideBinder {
 		}					
 		if(manyToOne.hasAttribute("insert")) {
 			associationInfo = ensureInit(associationInfo);
-			associationInfo.setInsert(new Boolean(manyToOne.getAttribute("insert")));
+			associationInfo.setInsert(Boolean.parseBoolean(manyToOne.getAttribute("insert")));
 		}					
 		if(manyToOne.hasAttribute("update")) {
 			associationInfo = ensureInit(associationInfo);
-			associationInfo.setUpdate(new Boolean(manyToOne.getAttribute("update")));
+			associationInfo.setUpdate(Boolean.parseBoolean(manyToOne.getAttribute("update")));
 		}
 		return associationInfo;
 	}

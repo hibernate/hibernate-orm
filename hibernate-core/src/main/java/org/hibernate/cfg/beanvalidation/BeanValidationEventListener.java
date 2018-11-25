@@ -7,6 +7,7 @@
 package org.hibernate.cfg.beanvalidation;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,6 +21,7 @@ import javax.validation.ValidatorFactory;
 import org.hibernate.EntityMode;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.PreDeleteEvent;
 import org.hibernate.event.spi.PreDeleteEventListener;
@@ -113,7 +115,22 @@ public class BeanValidationEventListener
 				.getValidator();
 		final Class<?>[] groups = groupsPerOperation.get( operation );
 		if ( groups.length > 0 ) {
-			final Set<ConstraintViolation<T>> constraintViolations = validator.validate( object, groups );
+			Set<ConstraintViolation<T>> constraintViolations;
+			if ( object instanceof SelfDirtinessTracker ) {
+				// validate dirty attributes only, if in-line dirty tracking is enabled
+				constraintViolations = new LinkedHashSet<>();
+
+				final SelfDirtinessTracker selfDirtinessTracker = (SelfDirtinessTracker) object;
+				if ( selfDirtinessTracker.$$_hibernate_hasDirtyAttributes() ) {
+					for ( String dirtyAttribute : selfDirtinessTracker.$$_hibernate_getDirtyAttributes() ) {
+						constraintViolations.addAll( validator.validateProperty( object, dirtyAttribute, groups ) );
+					}
+				}
+			}
+			else {
+				constraintViolations = validator.validate( object, groups );
+			}
+
 			if ( constraintViolations.size() > 0 ) {
 				Set<ConstraintViolation<?>> propagatedViolations =
 						new HashSet<ConstraintViolation<?>>( constraintViolations.size() );

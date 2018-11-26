@@ -161,9 +161,8 @@ public class JDBCReader {
 					try {
 						statement = connection.createStatement();
 						rs = statement.executeQuery(sql);
-
 						while ( rs.next() ) {
-							sequences.add( rs.getString(1).toLowerCase().trim() );
+							sequences.add( rs.getString("SEQUENCE_NAME").toLowerCase().trim() );
 						}
 					}
 					finally {

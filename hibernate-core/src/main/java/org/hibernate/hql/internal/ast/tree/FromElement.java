@@ -339,7 +339,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 			throw new IllegalStateException( "No table alias for node " + this );
 		}
 
-		final String[] propertyNames = getIdentifierPropertyName();
+		final String[] propertyNames = getIdentifierPropertyNames();
 		List<String> columns = new ArrayList<>();
 		for ( int i = 0; i < propertyNames.length; i++ ) {
 			String[] propertyNameColumns = toColumns(
@@ -531,7 +531,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		return elementType.getCollectionPropertyReference( propertyName );
 	}
 
-	public String[] getIdentifierPropertyName() {
+	public String[] getIdentifierPropertyNames() {
 		return elementType.getIdentifierPropertyName();
 	}
 

@@ -57,7 +57,7 @@ public class ManyToOneLazyLoadingByIdTest extends BaseEntityManagerFunctionalTes
 			return country.getContinent();
 		} );
 
-		assertEquals( 1L, (long) continent.getId());
+		assertEquals( 1L, (long) continent.getId() );
 
 		assertProxyState( continent );
 	}

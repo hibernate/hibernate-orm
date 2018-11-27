@@ -159,6 +159,9 @@ public class TypeHelper {
 			if ( original[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY || original[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 				copied[i] = target[i];
 			}
+			else if ( target[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+				copied[i] = types[i].replace( original[i], null, session, owner, copyCache );
+			}
 			else {
 				copied[i] = types[i].replace( original[i], target[i], session, owner, copyCache );
 			}
@@ -192,6 +195,9 @@ public class TypeHelper {
 			if ( original[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
 					|| original[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 				copied[i] = target[i];
+			}
+			else if ( target[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+				copied[i] = types[i].replace( original[i], null, session, owner, copyCache, foreignKeyDirection );
 			}
 			else {
 				copied[i] = types[i].replace( original[i], target[i], session, owner, copyCache, foreignKeyDirection );

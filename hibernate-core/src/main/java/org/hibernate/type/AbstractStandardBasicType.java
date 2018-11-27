@@ -345,17 +345,10 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public final Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map copyCache) {
 		if ( original == null && target == null ) {
 			return null;
-		}
-
-		if ( original == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
-			return target;
-		}
-
-		if ( target == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
-			return getReplacement( (T) original, null, session );
 		}
 
 		return getReplacement( (T) original, (T) target, session );

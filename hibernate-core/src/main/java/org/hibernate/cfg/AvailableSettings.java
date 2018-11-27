@@ -1067,7 +1067,10 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String CACHE_PROVIDER_CONFIG = "hibernate.cache.provider_configuration_file_resource_path";
 
 	/**
-	 * Enable the second-level cache (enabled by default)
+	 * Enable the second-level cache.
+	 * <p>
+	 * By default, if the currently configured {@link org.hibernate.cache.spi.RegionFactory} is not the {@link org.hibernate.cache.internal.NoCachingRegionFactory},
+	 * then the second-level cache is going to be enabled. Otherwise, the second-level cache is disabled.
 	 */
 	String USE_SECOND_LEVEL_CACHE = "hibernate.cache.use_second_level_cache";
 

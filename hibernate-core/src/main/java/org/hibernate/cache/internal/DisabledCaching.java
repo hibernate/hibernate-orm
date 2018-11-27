@@ -33,7 +33,7 @@ public class DisabledCaching implements CacheImplementor {
 
 	public DisabledCaching(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
-		this.regionFactory = sessionFactory.getServiceRegistry().getService( RegionFactory.class );
+		this.regionFactory = getSessionFactory().getSessionFactoryOptions().getServiceRegistry().getService( RegionFactory.class );
 	}
 
 	@Override

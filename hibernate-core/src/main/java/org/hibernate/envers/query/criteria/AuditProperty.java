@@ -9,7 +9,8 @@ package org.hibernate.envers.query.criteria;
 import java.util.Collection;
 
 import org.hibernate.envers.boot.AuditService;
-import org.hibernate.envers.internal.entities.EntityInstantiator;
+import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.metamodel.spi.EntityInstantiator;
 import org.hibernate.envers.query.criteria.internal.BetweenAuditExpression;
 import org.hibernate.envers.query.criteria.internal.IlikeAuditExpression;
 import org.hibernate.envers.query.criteria.internal.InAuditExpression;
@@ -370,7 +371,12 @@ public class AuditProperty<T> implements AuditProjection {
 	}
 	
 	@Override
-	public Object convertQueryResult(EntityInstantiator entityInstantiator, String entityName, Number revision, Object value) {
+	public Object convertQueryResult(
+			EnversService enversService,
+			EntityInstantiator entityInstantiator,
+			String entityName,
+			Number revision,
+			Object value) {
 		return value;
 	}
 	

@@ -32,7 +32,7 @@ import org.hibernate.annotations.Remove;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  * @author Chris Cranford
  *
- * @deprecated (since 5.4), use {@link org.hibernate.envers.strategy.internal.ValidityAuditStrategy} instead.
+ * @deprecate (since 5.4), use {@link org.hibernate.envers.strategy.internal.ValidityAuditStrategy}.
  */
 @Deprecated
 @Remove

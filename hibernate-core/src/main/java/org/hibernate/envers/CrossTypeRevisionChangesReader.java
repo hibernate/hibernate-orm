@@ -6,6 +6,7 @@
  */
 package org.hibernate.envers;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,6 +19,7 @@ import org.hibernate.envers.tools.Pair;
  * is enabled.
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public interface CrossTypeRevisionChangesReader {
 	/**
@@ -76,7 +78,28 @@ public interface CrossTypeRevisionChangesReader {
 	 *
 	 * @throws IllegalStateException If the associated entity manager is closed.
 	 * @throws IllegalArgumentException If a revision number is {@code null}, less or equal to 0.
+	 *
+	 * @deprecated (since 6.0), use {@link #findEntityTypesByRevision(Number)} instead.
 	 */
+	@Deprecated
 	Set<Pair<String, Class>> findEntityTypes(Number revision)
 			throws IllegalStateException, IllegalArgumentException;
+
+	/**
+	 * Return a map of entity names and associated java classes modified at a given revision.
+	 *
+	 * @param revision The revision number.
+	 *
+	 * @return Map of entity-name and java-class pairs.
+	 *
+	 * @throws IllegalStateException If the associated persistence context is closed.
+	 * @throws IllegalArgumentException If a revision number is {@code null} or less than or equal to 0.
+	 */
+	default Map<String, Class<?>> findEntityTypesByRevision(Number revision) {
+		final Map<String, Class<?>> map = new HashMap<>();
+		for ( Pair<String, Class> pair : findEntityTypes( revision ) ) {
+			map.put( pair.getFirst(), pair.getSecond() );
+		}
+		return map;
+	}
 }

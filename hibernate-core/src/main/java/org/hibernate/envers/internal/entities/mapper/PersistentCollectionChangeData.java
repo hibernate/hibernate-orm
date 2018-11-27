@@ -8,7 +8,7 @@ package org.hibernate.envers.internal.entities.mapper;
 
 import java.util.Map;
 
-import org.hibernate.envers.tools.Pair;
+import org.hibernate.envers.internal.tools.Pair;
 
 /**
  * Data describing the change of a single object in a persistent collection (when the object was added, removed or

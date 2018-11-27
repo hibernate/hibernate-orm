@@ -9,8 +9,8 @@ package org.hibernate.envers.internal.entities.mapper.relation.component;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.tools.query.Parameters;
+import org.hibernate.envers.metamodel.spi.EntityInstantiator;
 
 /**
  * A mapper for reading and writing a property straight to/from maps. This mapper cannot be used with middle tables,

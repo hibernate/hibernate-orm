@@ -24,16 +24,17 @@ import org.hibernate.envers.boot.spi.AuditServiceOptions;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.internal.entities.EntityConfiguration;
-import org.hibernate.envers.internal.entities.EntityInstantiator;
+import org.hibernate.envers.internal.entities.EntityInstantiatorImpl;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
+import org.hibernate.envers.internal.tools.Pair;
+import org.hibernate.envers.metamodel.spi.EntityInstantiator;
 import org.hibernate.envers.query.AuditAssociationQuery;
 import org.hibernate.envers.query.AuditQuery;
 import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.envers.query.criteria.internal.CriteriaTools;
 import org.hibernate.envers.query.order.AuditOrder;
 import org.hibernate.envers.query.projection.AuditProjection;
-import org.hibernate.envers.tools.Pair;
 import org.hibernate.query.Query;
 
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REFERENCED_ENTITY_ALIAS;
@@ -77,7 +78,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 		criterions = new ArrayList<>();
 
 		this.versionsReader = versionsReader;
-		this.entityInstantiator = new EntityInstantiator( versionsReader );
+		this.entityInstantiator = new EntityInstantiatorImpl( versionsReader );
 		this.entityClass = clazz;
 		this.entityName = entityName;
 
@@ -314,6 +315,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	protected List applyProjections(final List queryResult, final Number revision) {
 		final List result = new ArrayList( queryResult.size() );
 		if ( hasProjection() ) {
@@ -336,7 +338,10 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 			}
 		}
 		else {
-			entityInstantiator.addInstancesFromVersionsEntities( entityName, result, queryResult, revision );
+			final List<Map> versionedEntities = (List<Map>) queryResult;
+			for ( Map versionedEntity : versionedEntities ) {
+				result.add( entityInstantiator.createInstanceFromVersionsEntity( entityName, versionedEntity, revision ) );
+			}
 		}
 		return result;
 	}

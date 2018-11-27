@@ -7,7 +7,8 @@
 package org.hibernate.envers.query.projection.internal;
 
 import org.hibernate.envers.boot.AuditService;
-import org.hibernate.envers.internal.entities.EntityInstantiator;
+import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.metamodel.spi.EntityInstantiator;
 import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 import org.hibernate.envers.query.projection.AuditProjection;
 
@@ -35,7 +36,12 @@ public class PropertyAuditProjection implements AuditProjection {
 	}
 
 	@Override
-	public Object convertQueryResult(EntityInstantiator entityInstantiator, String entityName, Number revision, Object value) {
+	public Object convertQueryResult(
+			EnversService enversService,
+			EntityInstantiator entityInstantiator,
+			String entityName,
+			Number revision,
+			Object value) {
 		return value;
 	}
 }

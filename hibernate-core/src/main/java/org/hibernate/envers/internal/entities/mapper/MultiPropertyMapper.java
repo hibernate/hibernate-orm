@@ -18,8 +18,8 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.MappingTools;
+import org.hibernate.envers.internal.tools.Pair;
 import org.hibernate.envers.internal.tools.ReflectionTools;
-import org.hibernate.envers.tools.Pair;
 import org.hibernate.property.access.spi.Getter;
 
 /**

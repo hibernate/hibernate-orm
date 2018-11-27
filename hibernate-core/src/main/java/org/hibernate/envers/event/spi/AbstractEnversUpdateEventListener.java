@@ -12,8 +12,8 @@ import org.hibernate.envers.internal.entities.EntityConfiguration;
 /**
  * @author Chris Cranford
  */
-public class BaseEnversUpdateEventListener extends BaseEnversEventListener {
-	public BaseEnversUpdateEventListener(AuditService auditService) {
+public abstract class AbstractEnversUpdateEventListener extends AbstractEnversEventListener {
+	public AbstractEnversUpdateEventListener(AuditService auditService) {
 		super( auditService );
 	}
 

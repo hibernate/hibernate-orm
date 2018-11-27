@@ -28,7 +28,7 @@ import org.hibernate.event.spi.AbstractCollectionEvent;
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 
 /**
- * Base class for Envers' collection event related listeners
+ * Abstract class for Envers' collection event related listeners
  *
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
@@ -37,8 +37,8 @@ import org.hibernate.metamodel.model.domain.spi.CollectionElement;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  * @author Chris Cranford
  */
-public abstract class BaseEnversCollectionEventListener extends BaseEnversEventListener {
-	protected BaseEnversCollectionEventListener(AuditService auditService) {
+public abstract class AbstractEnversCollectionEventListener extends AbstractEnversEventListener {
+	protected AbstractEnversCollectionEventListener(AuditService auditService) {
 		super( auditService );
 	}
 

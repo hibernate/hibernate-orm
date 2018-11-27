@@ -13,13 +13,13 @@ import java.util.Map;
 
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.exception.AuditException;
-import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.entities.mapper.CompositeMapperBuilder;
 import org.hibernate.envers.internal.entities.mapper.MultiPropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.ToOneIdMapper;
 import org.hibernate.envers.internal.tools.query.Parameters;
+import org.hibernate.envers.metamodel.spi.EntityInstantiator;
 import org.hibernate.internal.util.ReflectHelper;
 
 /**

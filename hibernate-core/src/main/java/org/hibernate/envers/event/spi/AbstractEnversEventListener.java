@@ -22,7 +22,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.proxy.HibernateProxy;
 
 /**
- * Base class for all Envers event listeners
+ * Abstract class for all Envers event listeners
  *
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
@@ -30,10 +30,10 @@ import org.hibernate.proxy.HibernateProxy;
  * @author Michal Skowronek (mskowr at o2 dot pl)
  * @author Chris Cranford
  */
-public abstract class BaseEnversEventListener implements EnversListener {
+public abstract class AbstractEnversEventListener implements EnversListener {
 	private final AuditService auditService;
 
-	protected BaseEnversEventListener(AuditService auditService) {
+	protected AbstractEnversEventListener(AuditService auditService) {
 		this.auditService = auditService;
 	}
 

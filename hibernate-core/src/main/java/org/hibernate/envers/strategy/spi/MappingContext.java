@@ -24,7 +24,11 @@ public class MappingContext {
 	private AuditServiceOptions options;
 	private Dialect dialect;
 
-	public MappingContext(Element auditEntityMapping, Element revisionEntityMapping, AuditServiceOptions options, Dialect dialect) {
+	public MappingContext(
+			Element auditEntityMapping,
+			Element revisionEntityMapping,
+			AuditServiceOptions options,
+			Dialect dialect) {
 		this.auditEntityMapping = auditEntityMapping;
 		this.revisionEntityMapping = revisionEntityMapping;
 		this.options = options;

@@ -11,9 +11,9 @@ import java.security.PrivilegedAction;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.query.Parameters;
+import org.hibernate.envers.metamodel.spi.EntityInstantiator;
 import org.hibernate.property.access.spi.Getter;
 
 /**

@@ -6,8 +6,7 @@
  */
 package org.hibernate.envers.boot.internal;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 
 import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.boot.registry.selector.StrategyRegistration;
@@ -23,11 +22,10 @@ import org.hibernate.envers.strategy.ValidityAuditStrategy;
  * @author Chris Cranford
  */
 public class StrategyRegistrationProviderImpl implements StrategyRegistrationProvider {
-
-	private static final List<StrategyRegistration> STRATEGIES = new ArrayList<>();
-
-	static {
-		STRATEGIES.add(
+	@Override
+	@SuppressWarnings("unchecked")
+	public Iterable<StrategyRegistration> getStrategyRegistrations() {
+		return Arrays.asList(
 				new SimpleStrategyRegistrationImpl(
 						AuditStrategy.class,
 						DefaultAuditStrategy.class,
@@ -36,10 +34,7 @@ public class StrategyRegistrationProviderImpl implements StrategyRegistrationPro
 						org.hibernate.envers.strategy.internal.DefaultAuditStrategy.class.getName(),
 						// legacy support
 						"org.hibernate.envers.strategy.DefaultAuditStrategy"
-				)
-		);
-
-		STRATEGIES.add(
+				),
 				new SimpleStrategyRegistrationImpl(
 						AuditStrategy.class,
 						ValidityAuditStrategy.class,
@@ -50,10 +45,5 @@ public class StrategyRegistrationProviderImpl implements StrategyRegistrationPro
 						"org.hibernate.envers.strategy.ValidityAuditStrategy"
 				)
 		);
-	}
-
-	@Override
-	public Iterable<StrategyRegistration> getStrategyRegistrations() {
-		return STRATEGIES;
 	}
 }

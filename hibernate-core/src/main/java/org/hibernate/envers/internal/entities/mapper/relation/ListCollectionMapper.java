@@ -24,7 +24,7 @@ import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.I
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.ListCollectionInitializor;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.proxy.ListProxy;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
-import org.hibernate.envers.tools.Pair;
+import org.hibernate.envers.internal.tools.Pair;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
 /**

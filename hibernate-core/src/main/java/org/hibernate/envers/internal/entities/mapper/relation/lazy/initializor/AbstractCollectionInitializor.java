@@ -9,9 +9,10 @@ package org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor;
 import java.util.List;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.envers.internal.entities.EntityInstantiator;
+import org.hibernate.envers.internal.entities.EntityInstantiatorImpl;
 import org.hibernate.envers.internal.entities.mapper.relation.query.RelationQueryGenerator;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+import org.hibernate.envers.metamodel.spi.EntityInstantiator;
 
 /**
  * Initializes a persistent collection.
@@ -37,7 +38,7 @@ public abstract class AbstractCollectionInitializor<T> implements Initializor<T>
 		this.revision = revision;
 		this.removed = removed;
 
-		entityInstantiator = new EntityInstantiator( versionsReader );
+		entityInstantiator = new EntityInstantiatorImpl( versionsReader );
 	}
 
 	protected abstract T initializeCollection(int size);

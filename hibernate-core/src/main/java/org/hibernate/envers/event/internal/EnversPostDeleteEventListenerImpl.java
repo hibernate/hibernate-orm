@@ -4,9 +4,10 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.event.spi;
+package org.hibernate.envers.event.internal;
 
 import org.hibernate.envers.boot.AuditService;
+import org.hibernate.envers.event.spi.AbstractEnversEventListener;
 import org.hibernate.envers.internal.synchronization.AuditProcess;
 import org.hibernate.envers.internal.synchronization.work.AuditWorkUnit;
 import org.hibernate.envers.internal.synchronization.work.DelWorkUnit;
@@ -22,7 +23,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
  * @author Steve Ebersole
  * @author Chris Cranford
  */
-public class EnversPostDeleteEventListenerImpl extends BaseEnversEventListener implements PostDeleteEventListener {
+public class EnversPostDeleteEventListenerImpl extends AbstractEnversEventListener implements PostDeleteEventListener {
 	public EnversPostDeleteEventListenerImpl(AuditService auditService) {
 		super( auditService );
 	}

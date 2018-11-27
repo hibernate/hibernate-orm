@@ -4,10 +4,11 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.event.spi;
+package org.hibernate.envers.event.internal;
 
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.envers.boot.AuditService;
+import org.hibernate.envers.event.spi.AbstractEnversCollectionEventListener;
 import org.hibernate.event.spi.PostCollectionRecreateEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEventListener;
 
@@ -20,7 +21,7 @@ import org.hibernate.event.spi.PostCollectionRecreateEventListener;
  * @author Chris Cranford
  */
 public class EnversPostCollectionRecreateEventListenerImpl
-		extends BaseEnversCollectionEventListener
+		extends AbstractEnversCollectionEventListener
 		implements PostCollectionRecreateEventListener {
 
 	public EnversPostCollectionRecreateEventListenerImpl(AuditService auditService) {

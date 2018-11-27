@@ -9,9 +9,9 @@ package org.hibernate.envers.internal.entities.mapper.relation.component;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 import org.hibernate.envers.internal.tools.query.Parameters;
+import org.hibernate.envers.metamodel.spi.EntityInstantiator;
 
 /**
  * A component mapper for the @MapKey mapping: the value of the map's key is the id of the entity. This

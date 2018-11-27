@@ -4,9 +4,10 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.event.spi;
+package org.hibernate.envers.event.internal;
 
 import org.hibernate.envers.boot.AuditService;
+import org.hibernate.envers.event.spi.AbstractEnversUpdateEventListener;
 import org.hibernate.envers.internal.synchronization.AuditProcess;
 import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpdateEventListener;
@@ -16,7 +17,8 @@ import org.hibernate.event.spi.PreUpdateEventListener;
  *
  * @author Chris Cranford
  */
-public class EnversPreUpdateEventListenerImpl extends BaseEnversUpdateEventListener implements PreUpdateEventListener {
+public class EnversPreUpdateEventListenerImpl extends AbstractEnversUpdateEventListener
+		implements PreUpdateEventListener {
 	public EnversPreUpdateEventListenerImpl(AuditService auditService) {
 		super( auditService );
 	}

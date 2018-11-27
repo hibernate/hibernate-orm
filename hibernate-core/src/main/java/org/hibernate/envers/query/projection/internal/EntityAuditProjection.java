@@ -9,7 +9,8 @@ package org.hibernate.envers.query.projection.internal;
 import java.util.Map;
 
 import org.hibernate.envers.boot.AuditService;
-import org.hibernate.envers.internal.entities.EntityInstantiator;
+import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.metamodel.spi.EntityInstantiator;
 import org.hibernate.envers.query.projection.AuditProjection;
 
 /**
@@ -34,10 +35,11 @@ public class EntityAuditProjection implements AuditProjection {
 
 	@Override
 	public Object convertQueryResult(
-			final EntityInstantiator entityInstantiator,
-			final String entityName,
-			final Number revision,
-			final Object value) {
+			EnversService enversService,
+			EntityInstantiator entityInstantiator,
+			String entityName,
+			Number revision,
+			Object value) {
 		final Object result;
 		if ( entityInstantiator.getAuditService().getEntityBindings().isVersioned( entityName ) ) {
 			result = entityInstantiator.createInstanceFromVersionsEntity( entityName, (Map) value, revision );

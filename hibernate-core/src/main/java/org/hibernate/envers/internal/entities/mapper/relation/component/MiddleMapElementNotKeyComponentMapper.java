@@ -9,8 +9,8 @@ package org.hibernate.envers.internal.entities.mapper.relation.component;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.tools.query.Parameters;
+import org.hibernate.envers.metamodel.spi.EntityInstantiator;
 
 /**
  * A middle table component mapper which assigns a Map-type's element as part

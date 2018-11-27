@@ -8,7 +8,7 @@ package org.hibernate.envers.boot.internal;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -86,13 +86,8 @@ public class AuditMetadataBuilderImpl implements AuditMetadataBuilderImplementor
 		options.auditStrategy = options.serviceRegistry.getService( StrategySelector.class ).resolveStrategy(
 				AuditStrategy.class,
 				options.auditStrategyName,
-				new Callable<AuditStrategy>() {
-					@Override
-					public AuditStrategy call() throws Exception {
-						return new DefaultAuditStrategy();
-					}
-				},
-				new StrategyCreatorAuditStrategyImpl(
+				(Supplier<AuditStrategy>) () -> new DefaultAuditStrategy(),
+				new StrategyCreatorAuditStrategyImpl<>(
 						revisionInfoConfiguration.getRevisionInfoTimestampData(),
 						revisionInfoConfiguration.getRevisionInfoClass(),
 						options.serviceRegistry
@@ -106,16 +101,6 @@ public class AuditMetadataBuilderImpl implements AuditMetadataBuilderImplementor
 				revisionInfoConfiguration.getRevisionInfoXmlMapping(),
 				revisionInfoConfiguration.getRevisionInfoRelationMapping()
 		);
-	}
-
-	private Class<?> resolveAuditStrategyClass(String auditStrategyName, ServiceRegistry serviceRegistry) {
-		try {
-			return AuditMetadataBuilderImpl.class.getClassLoader().loadClass( auditStrategyName );
-		}
-		catch ( Exception e ) {
-			final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
-			return ReflectionTools.loadClass( auditStrategyName, cls );
-		}
 	}
 
 	public static class AuditMetadataBuildingOptionsImpl implements AuditMetadataBuildingOptions {
@@ -264,7 +249,7 @@ public class AuditMetadataBuilderImpl implements AuditMetadataBuilderImplementor
 			this.auditStrategyName = ConfigurationHelper.getString(
 					EnversSettings.AUDIT_STRATEGY,
 					properties,
-					AuditStrategy.getDefaultStrategyName()
+					org.hibernate.envers.strategy.internal.DefaultAuditStrategy.class.getName()
 			);
 
 			this.originalIdPropertyName = "originalId";

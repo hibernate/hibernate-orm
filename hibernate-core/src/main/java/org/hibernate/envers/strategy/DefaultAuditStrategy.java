@@ -15,11 +15,10 @@ import org.hibernate.annotations.Remove;
  * @author Stephanie Pau
  * @author Chris Cranford
  *
- * @deprecated (since 5.4), use {@link org.hibernate.envers.strategy.internal.DefaultAuditStrategy} instead.
+ * @deprecated (since 5.4), use {@link org.hibernate.envers.strategy.internal.DefaultAuditStrategy}.
  */
 @Deprecated
 @Remove
 public class DefaultAuditStrategy extends org.hibernate.envers.strategy.internal.DefaultAuditStrategy {
-
 
 }

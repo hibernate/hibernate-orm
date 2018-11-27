@@ -6,8 +6,6 @@
  */
 package org.hibernate.envers.internal.entities;
 
-import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 import org.hibernate.envers.RevisionType;
@@ -17,6 +15,7 @@ import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.ToOneDelegateSessionImplementor;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.ReflectionTools;
+import org.hibernate.envers.metamodel.spi.EntityInstantiator;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
@@ -26,11 +25,11 @@ import org.hibernate.proxy.LazyInitializer;
  * @author Hern&aacute;n Chanfreau
  * @author Chris Cranford
  */
-public class EntityInstantiator {
+public class EntityInstantiatorImpl implements EntityInstantiator {
 
 	private final AuditReaderImplementor versionsReader;
 
-	public EntityInstantiator(AuditReaderImplementor versionsReader) {
+	public EntityInstantiatorImpl(AuditReaderImplementor versionsReader) {
 		this.versionsReader = versionsReader;
 	}
 
@@ -146,17 +145,6 @@ public class EntityInstantiator {
 					);
 				}
 			}
-		}
-	}
-
-	@SuppressWarnings({"unchecked"})
-	public void addInstancesFromVersionsEntities(
-			String entityName,
-			Collection addTo,
-			List<Map> versionsEntities,
-			Number revision) {
-		for ( Map versionsEntity : versionsEntities ) {
-			addTo.add( createInstanceFromVersionsEntity( entityName, versionsEntity, revision ) );
 		}
 	}
 

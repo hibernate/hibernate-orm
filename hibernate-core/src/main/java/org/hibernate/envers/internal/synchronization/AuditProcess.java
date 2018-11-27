@@ -18,7 +18,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.internal.synchronization.work.AuditWorkUnit;
-import org.hibernate.envers.tools.Pair;
+import org.hibernate.envers.internal.tools.Pair;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.jboss.logging.Logger;
 
@@ -51,7 +51,7 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 	}
 
 	public void cacheEntityState(Object id, String entityName, Object[] snapshot) {
-		final Pair<String, Object> key = new Pair<>( entityName, id );
+		final Pair<String, Object> key = Pair.make( entityName, id );
 		if ( entityStateCache.containsKey( key ) ) {
 			throw new AuditException( "The entity [" + entityName + "] with id [" + id + "] is already cached." );
 		}
@@ -59,7 +59,7 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 	}
 
 	public Object[] getCachedEntityState(Object id, String entityName) {
-		final Pair<String, Object> key = new Pair<>( entityName, id );
+		final Pair<String, Object> key = Pair.make( entityName, id );
 		final Object[] entityState = entityStateCache.get( key );
 		if ( entityState != null ) {
 			entityStateCache.remove( key );

@@ -15,16 +15,12 @@ import org.hibernate.annotations.Remove;
  * @author Adam Warski (adam at warski dot org)
  * @author Chris Cranford
  *
- * @deprecated (since 5.4), use {@link org.hibernate.envers.strategy.spi.AuditStrategy} instead.
+ * @deprecated (since 5.4), to be removed in 6.0.
  */
 @Deprecated
 @Remove
 public interface AuditStrategy extends org.hibernate.envers.strategy.spi.AuditStrategy {
-	/**
-	 * Get the default audit strategy name.
-	 * @return the default audit strategy class name.
-	 */
-	static String getDefaultStrategyName() {
-		return DefaultAuditStrategy.class.getName();
-	}
+	// todo (6.0) : these methods need to change to accept ExecutionContext rather than just Session
+	//		this (^^) will also allow Envers to work against StatelessSession whereas
+	//		it is currently limited to just Session
 }

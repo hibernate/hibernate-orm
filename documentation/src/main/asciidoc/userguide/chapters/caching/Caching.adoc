@@ -35,7 +35,8 @@ Detailed information is provided later in this chapter.
 Besides specific provider configuration, there are a number of configurations options on the Hibernate side of the integration that control various caching behaviors:
 
 `hibernate.cache.use_second_level_cache`::
-	Enable or disable second level caching overall. The default is true, although the default region factory is `NoCachingRegionFactory`.
+	Enable or disable second level caching overall. By default, if the currently configured
+	https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/cache/spi/RegionFactory.html[`RegionFactory`] is not the `NoCachingRegionFactory`, then the second-level cache is going to be enabled. Otherwise, the second-level cache is disabled.
 `hibernate.cache.use_query_cache`::
 	Enable or disable second level caching of query results. The default is false.
 `hibernate.cache.query_cache_factory`::

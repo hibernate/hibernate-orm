@@ -32,7 +32,7 @@ Supply a custom strategy for the scoping of the _current_ `Session`.
 +
 The definition of what exactly _current_ means is controlled by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/context/spi/CurrentSessionContext.html[`CurrentSessionContext`] implementation in use.
 +
-Note that for backward compatibility, if a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/context/spi/CurrentSessionContext.html[`CurrentSessionContext`] is not configured but JTA is configured this will default to the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/context/internal/JTASessionContext.html[`JTASessionContext`].
+Note that for backward compatibility, if a `CurrentSessionContext` is not configured but JTA is configured this will default to the `JTASessionContext`.
 
 [[configurations-jpa-compliance]]
 === JPA compliance
@@ -893,7 +893,7 @@ Valid options are defined by the `strategy` value of the https://docs.jboss.org/
 Identifies the delimiter to use to separate schema management statements in script outputs.
 
 `*hibernate.schema_management_tool*` (e.g. A schema name)::
-Used to specify the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/spi/SchemaManagementTool.html[`SchemaManagementTool`] to use for performing schema management. The default is to use https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/internal/HibernateSchemaManagementTool.html[`HibernateSchemaManagementTool`]
+Used to specify the `SchemaManagementTool` to use for performing schema management. The default is to use `HibernateSchemaManagementTool`.
 
 `*hibernate.synonyms*` (e.g. `true` or `false` (default value))::
 If enabled, allows schema update and validation to support synonyms. Due to the possibility that this would return duplicate tables (especially in Oracle), this is disabled by default.

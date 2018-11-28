@@ -42,8 +42,17 @@ This strategy may require `hibernate.default_schema` and/or `hibernate.default_c
 To use the old strategy, which executes a `java.sql.DatabaseMetaData#getTables(String, String, String, String[])` call for
 each javax.persistence.Entity, use the property setting `hibernate.hbm2ddl.jdbc_metadata_extraction_strategy=individually`.
 
+== Changes to Java compatibility
 
-=== Many-to-one association in embeddable collection elements and composite IDs
+Versions 5.1.0.Final through 5.1.3.Final ensure Java 6 compatibility.
+
+Versions through 5.1.16.Final ensure Java 7 compatibility.
+
+As of 5.1.17.Final, Java 8 is required.
+
+See details on the https://hibernate.atlassian.net/browse/HHH-13126[HHH-13126] Jira issue.
+
+== Many-to-one association in embeddable collection elements and composite IDs
 
 A bug introduced in 4.3 caused many-to-one associations in embeddable collection elements and
 composite IDs to be eagerly fetched, even when explicitly mapped as lazy.

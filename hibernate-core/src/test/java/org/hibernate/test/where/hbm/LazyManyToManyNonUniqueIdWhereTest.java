@@ -14,6 +14,8 @@ import java.util.Set;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -35,6 +37,11 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 
 	protected String[] getMappings() {
 		return new String[] { "where/hbm/LazyManyToManyNonUniqueIdWhereTest.hbm.xml" };
+	}
+
+	protected void configure(Configuration cfg) {
+		super.configure( cfg );
+		cfg.setProperty( AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS, "true" );
 	}
 
 	@Before

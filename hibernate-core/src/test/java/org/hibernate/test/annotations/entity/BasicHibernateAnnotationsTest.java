@@ -25,6 +25,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.TeradataDialect;
 
@@ -46,6 +47,12 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  */
 public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
+
+	protected void configure(Configuration cfg) {
+		super.configure( cfg );
+		cfg.setProperty( AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS, "true" );
+	}
+
 	@Override
 	protected boolean isCleanupTestDataRequired() {
 		return true;

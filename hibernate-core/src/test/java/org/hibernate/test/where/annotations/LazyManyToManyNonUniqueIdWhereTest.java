@@ -25,6 +25,8 @@ import org.hibernate.Session;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Where;
 import org.hibernate.annotations.WhereJoinTable;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -46,6 +48,11 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { Material.class, Building.class, Rating.class, Size.class };
+	}
+
+	protected void configure(Configuration cfg) {
+		super.configure( cfg );
+		cfg.setProperty( AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS, "true" );
 	}
 
 	@Before

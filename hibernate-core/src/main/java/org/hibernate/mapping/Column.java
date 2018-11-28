@@ -6,9 +6,6 @@
  */
 package org.hibernate.mapping;
 
-import java.io.Serializable;
-import java.util.Locale;
-
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
@@ -16,6 +13,9 @@ import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.Template;
+
+import java.io.Serializable;
+import java.util.Locale;
 
 import static org.hibernate.internal.util.StringHelper.safeInterning;
 
@@ -109,33 +109,9 @@ public class Column implements Selectable, Serializable, Cloneable {
 
 	@Override
 	public String getAlias(Dialect dialect) {
-		final int lastLetter = StringHelper.lastIndexOfLetter( name );
-		final String suffix = Integer.toString( uniqueInteger ) + '_';
-
-		String alias = name;
-		if ( lastLetter == -1 ) {
-			alias = "column";
-		}
-		else if ( name.length() > lastLetter + 1 ) {
-			alias = name.substring( 0, lastLetter + 1 );
-		}
-
-		boolean useRawName = name.length() + suffix.length() <= dialect.getMaxAliasLength()
-				&& !quoted && !name.toLowerCase( Locale.ROOT ).equals( "rowid" );
-		if ( !useRawName ) {
-			if ( suffix.length() >= dialect.getMaxAliasLength() ) {
-				throw new MappingException(
-						String.format(
-								"Unique suffix [%s] length must be less than maximum [%d]",
-								suffix, dialect.getMaxAliasLength()
-						)
-				);
-			}
-			if ( alias.length() + suffix.length() > dialect.getMaxAliasLength() ) {
-				alias = alias.substring( 0, dialect.getMaxAliasLength() - suffix.length() );
-			}
-		}
-		return alias + suffix;
+		final String suffix = String.valueOf(uniqueInteger) +
+                '_';
+		return getAlias(suffix, dialect.getMaxAliasLength());
 	}
 
 	/**
@@ -143,7 +119,43 @@ public class Column implements Selectable, Serializable, Cloneable {
 	 */
 	@Override
 	public String getAlias(Dialect dialect, Table table) {
-		return safeInterning( getAlias( dialect ) + table.getUniqueInteger() + '_' );
+		final String suffix = String.valueOf(uniqueInteger) +
+                '_' +
+                table.getUniqueInteger() +
+                '_';
+
+		return getAlias(suffix, dialect.getMaxAliasLength());
+	}
+
+	private String getAlias(String suffix, int maxAliasLength) {
+		final int lastLetter = StringHelper.lastIndexOfLetter( name );
+
+		String alias;
+		if ( lastLetter == -1 ) {
+			alias = "column";
+		}
+		else if ( name.length() > lastLetter + 1 ) {
+			alias = name.substring( 0, lastLetter + 1 );
+		} else {
+			alias = name;
+		}
+
+		boolean useRawName = name.length() + suffix.length() <= maxAliasLength
+				&& !quoted && !name.toLowerCase( Locale.ROOT ).equals( "rowid" );
+		if ( !useRawName ) {
+			if ( suffix.length() >= maxAliasLength ) {
+				throw new MappingException(
+						String.format(
+								"Unique suffix [%s] length must be less than maximum [%d]",
+								suffix, maxAliasLength
+						)
+				);
+			}
+			if ( alias.length() + suffix.length() > maxAliasLength ) {
+				alias = alias.substring( 0, maxAliasLength - suffix.length() );
+			}
+		}
+		return alias + suffix;
 	}
 
 	public boolean isNullable() {

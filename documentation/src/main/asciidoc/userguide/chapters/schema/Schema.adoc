@@ -4,7 +4,6 @@
 :extrasdir: extras
 :resourcesdir: ../../../../../test/resources
 
-
 Hibernate allows you to generate the database from the entity mappings.
 
 [TIP]

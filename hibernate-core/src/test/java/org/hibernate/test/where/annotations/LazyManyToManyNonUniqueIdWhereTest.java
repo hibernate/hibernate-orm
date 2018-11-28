@@ -42,6 +42,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
+ * Tests association collections with AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS=true.
+ *
  * @author Gail Badner
  */
 public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCase {

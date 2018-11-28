@@ -8,6 +8,7 @@ package org.hibernate.test.where.annotations;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -19,22 +20,22 @@ import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import org.hibernate.Session;
 import org.hibernate.annotations.Where;
 import org.hibernate.annotations.WhereJoinTable;
+import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Tests association collections with default AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS,
- * which is true.
+ * Tests association collections with AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS=true.
  *
  * @author Gail Badner
  */
@@ -43,6 +44,11 @@ public class LazyToManyWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] { Product.class, Category.class };
+	}
+
+	@Override
+	protected void addSettings(Map settings) {
+		settings.put( AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS, "true" );
 	}
 
 	@Test
@@ -87,20 +93,21 @@ public class LazyToManyWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 		product.categoriesWithDescManyToMany.add( building );
 		product.categoriesWithDescIdLt4ManyToMany.add( building );
 
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 					session.persist( flowers );
 					session.persist( vegetables );
 					session.persist( dogs );
 					session.persist( building );
 					session.persist( product );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+		session = openSession();
+		session.beginTransaction();
+		{
 					Product p = session.get( Product.class, product.id );
 					assertNotNull( p );
 					assertEquals( 4, p.categoriesOneToMany.size() );
@@ -113,29 +120,32 @@ public class LazyToManyWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 					checkIds( p.categoriesWithDescManyToMany, new Integer[] { 1, 2, 4 } );
 					assertEquals( 2, p.categoriesWithDescIdLt4ManyToMany.size() );
 					checkIds( p.categoriesWithDescIdLt4ManyToMany, new Integer[] { 1, 2 } );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+		session = openSession();
+		session.beginTransaction();
+		{
 					Category c = session.get( Category.class, flowers.id );
 					assertNotNull( c );
 					c.inactive = true;
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+		session = openSession();
+		session.beginTransaction();
+		{
 					Category c = session.get( Category.class, flowers.id );
 					assertNull( c );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+		session = openSession();
+		session.beginTransaction();
+		{
 					Product p = session.get( Product.class, product.id );
 					assertNotNull( p );
 					assertEquals( 3, p.categoriesOneToMany.size() );
@@ -147,9 +157,10 @@ public class LazyToManyWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 					assertEquals( 2, p.categoriesWithDescManyToMany.size() );
 					checkIds( p.categoriesWithDescManyToMany, new Integer[] { 2, 4 } );
 					assertEquals( 1, p.categoriesWithDescIdLt4ManyToMany.size() );
-					checkIds( p.categoriesWithDescIdLt4ManyToMany, new Integer[] { 2 } );
-				}
-		);
+			checkIds( p.categoriesWithDescIdLt4ManyToMany, new Integer[] { 2 } );
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	private void checkIds(Set<Category> categories, Integer[] expectedIds) {

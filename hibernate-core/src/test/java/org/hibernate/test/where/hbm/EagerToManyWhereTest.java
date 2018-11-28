@@ -8,21 +8,23 @@ package org.hibernate.test.where.hbm;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+
+import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Tests association collections with default AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS,
- * which is true.
+ * Tests association collections with AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS=true.
  *
  * @author Gail Badner
  */
@@ -31,6 +33,11 @@ public class EagerToManyWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	protected String[] getMappings() {
 		return new String[] { "where/hbm/EagerToManyWhere.hbm.xml" };
+	}
+
+	@Override
+	protected void addSettings(Map settings) {
+		settings.put( AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS, "true" );
 	}
 
 	@Test
@@ -75,20 +82,21 @@ public class EagerToManyWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 		product.getCategoriesWithDescManyToMany().add( building );
 		product.getCategoriesWithDescIdLt4ManyToMany().add( building );
 
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 					session.persist( flowers );
 					session.persist( vegetables );
 					session.persist( dogs );
 					session.persist( building );
 					session.persist( product );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+		session = openSession();
+		session.beginTransaction();
+		{
 					Product p = session.get( Product.class, product.getId() );
 					assertNotNull( p );
 					assertEquals( 4, p.getCategoriesOneToMany().size() );
@@ -101,29 +109,32 @@ public class EagerToManyWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 					checkIds( p.getCategoriesWithDescManyToMany(), new Integer[] { 1, 2, 4 } );
 					assertEquals( 2, p.getCategoriesWithDescIdLt4ManyToMany().size() );
 					checkIds( p.getCategoriesWithDescIdLt4ManyToMany(), new Integer[] { 1, 2 } );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+		session = openSession();
+		session.beginTransaction();
+		{
 					Category c = session.get( Category.class, flowers.getId() );
 					assertNotNull( c );
 					c.setInactive( true );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+		session = openSession();
+		session.beginTransaction();
+		{
 					Category c = session.get( Category.class, flowers.getId() );
 					assertNull( c );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+		session = openSession();
+		session.beginTransaction();
+		{
 					Product p = session.get( Product.class, product.getId() );
 					assertNotNull( p );
 					assertEquals( 3, p.getCategoriesOneToMany().size() );
@@ -136,8 +147,9 @@ public class EagerToManyWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 					checkIds( p.getCategoriesWithDescManyToMany(), new Integer[] { 2, 4 } );
 					assertEquals( 1, p.getCategoriesWithDescIdLt4ManyToMany().size() );
 					checkIds( p.getCategoriesWithDescIdLt4ManyToMany(), new Integer[] { 2 } );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	private void checkIds(Set<Category> categories, Integer[] expectedIds) {

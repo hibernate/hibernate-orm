@@ -13,8 +13,7 @@ import javax.persistence.OneToOne;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
-
-import org.hibernate.testing.junit5.FailureExpected;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Andrea Boriero
  */
-@FailureExpected( "issues with non-aggregated composite-id" )
+@Disabled( "issues with non-aggregated composite-id" )
 public class OneToOneWithDerivedIdentityTest extends SessionFactoryBasedFunctionalTest {
 
 	private static final Integer PERSON_ID = 1;

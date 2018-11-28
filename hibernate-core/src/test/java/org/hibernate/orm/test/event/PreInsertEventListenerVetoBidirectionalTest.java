@@ -23,9 +23,9 @@ import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit5.DialectFeatureChecks;
 import org.hibernate.testing.junit5.ExpectedException;
-import org.hibernate.testing.junit5.FailureExpected;
 import org.hibernate.testing.junit5.RequiresDialectFeature;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.fail;
@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 @TestForIssue(jiraKey = "HHH-11721")
-@FailureExpected( value= "fetching database snapshot not yet implemented" )
+@Disabled("When performing insert, operation fails due to attempting to bind POST_INSERT_INDICATOR incorrectly")
 public class PreInsertEventListenerVetoBidirectionalTest extends SessionFactoryBasedFunctionalTest {
 	@Override
 	protected void applyMetadataSources(MetadataSources metadataSources) {

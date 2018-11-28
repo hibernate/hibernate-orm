@@ -59,7 +59,8 @@ public class PersistentBagDescriptorImpl<O,E> extends AbstractPersistentCollecti
 		final DomainResult elementResult = getElementDescriptor().createDomainResult(
 				navigableReference,
 				null,
-				creationState, creationContext
+				creationState,
+				creationContext
 		);
 
 		return new BagInitializerProducer(

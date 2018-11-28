@@ -364,7 +364,7 @@ public class MetamodelSelectBuilderProcess
 
 					@Override
 					public JoinType getTableReferenceJoinType() {
-						return null;
+						return JoinType.INNER;
 					}
 
 					@Override

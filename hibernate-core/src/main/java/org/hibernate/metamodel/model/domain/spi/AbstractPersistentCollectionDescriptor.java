@@ -73,6 +73,7 @@ import org.hibernate.metamodel.model.domain.internal.collection.OneToManyCreatio
 import org.hibernate.metamodel.model.domain.internal.collection.OneToManyRemovalExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.RootTableReferenceCollectorImpl;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.naming.Identifier;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -86,12 +87,17 @@ import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
+import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
+import org.hibernate.sql.ast.tree.spi.predicate.Junction;
+import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
+import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
 import org.hibernate.sql.results.internal.domain.collection.CollectionFetchImpl;
 import org.hibernate.sql.results.internal.domain.collection.CollectionInitializerProducer;
 import org.hibernate.sql.results.internal.domain.collection.CollectionResultImpl;
@@ -476,7 +482,6 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 		return table;
 	}
 
-
 	public SessionFactoryImplementor getSessionFactory() {
 		return sessionFactory;
 	}
@@ -802,11 +807,6 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 		throw new UnsupportedOperationException();
 	}
 
-
-
-
-
-
 	@Override
 	public ManagedTypeDescriptor getContainer() {
 		return container;
@@ -959,21 +959,74 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 			SqlAliasBase sqlAliasBase,
 			TableReferenceJoinCollector joinCollector) {
 
-		if ( separateCollectionTable != null ) {
-			joinCollector.addPrimaryReference( new TableReference(
-					separateCollectionTable,
-					sqlAliasBase.generateNewAlias(),
-					false
-			) );
-		}
-
 		if ( getIndexDescriptor() != null ) {
 			getIndexDescriptor().applyTableReferenceJoins( lhs, joinType, sqlAliasBase, joinCollector );
 		}
 
 		getElementDescriptor().applyTableReferenceJoins( lhs, joinType, sqlAliasBase, joinCollector );
+
+		if ( separateCollectionTable != null ) {
+			/*
+			  For CollectionElementEntityImpl the previous call to getElementDescriptor().applyTableReferenceJoins(....) has already
+			  added a PrimaryReference to the joinCollector so now we need to add a secondaryReference
+			*/
+			// todo (6.0) : is there a better way to manage this?
+			if ( joinCollector.getPrimaryTableReference() != null ) {
+				TableReference joinedTableReference = new TableReference(
+						separateCollectionTable,
+						sqlAliasBase.generateNewAlias(),
+						false
+				);
+				joinCollector.addSecondaryReference(
+						new TableReferenceJoin(
+								JoinType.INNER,
+								joinedTableReference,
+								makePredicate(
+										joinedTableReference,
+										joinCollector.getPrimaryTableReference()
+								)
+						) );
+			}
+			else {
+				joinCollector.addPrimaryReference( new TableReference(
+						separateCollectionTable,
+						sqlAliasBase.generateNewAlias(),
+						false
+				) );
+			}
+		}
 	}
 
+	/*
+	 todo (6.0) : the quite same logic of this method is also in {@link FetchedTableReferenceCollectorImpl},
+	 {@link ToOneJoinCollectorImpl}, {@link AbstractEntityTypeDescriptor}
+	  */
+	private Predicate makePredicate(ColumnReferenceQualifier lhs, TableReference rhs) {
+		final Junction conjunction = new Junction( Junction.Nature.CONJUNCTION );
+		for ( ForeignKey foreignKey : foreignKeyDescriptor.getJoinForeignKey().getReferringTable().getForeignKeys() ) {
+			if ( foreignKey.getTargetTable().equals( rhs.getTable() ) ) {
+				for(ForeignKey.ColumnMappings.ColumnMapping columnMapping : foreignKey.getColumnMappings().getColumnMappings()) {
+					final ColumnReference referringColumnReference = lhs.resolveColumnReference( columnMapping.getReferringColumn() );
+					final ColumnReference targetColumnReference = rhs.resolveColumnReference( columnMapping.getTargetColumn() );
+
+					// todo (6.0) : we need some kind of validation here that the column references are properly defined
+
+					// todo (6.0) : we could also handle this using SQL row-value syntax, e.g.:
+					//		`... where ... [ (rCol1, rCol2, ...) = (tCol1, tCol2, ...) ] ...`
+
+					conjunction.add(
+							new RelationalPredicate(
+									RelationalPredicate.Operator.EQUAL,
+									referringColumnReference,
+									targetColumnReference
+							)
+					);
+				}
+				break;
+			}
+		}
+		return conjunction;
+	}
 
 	@Override
 	public void recreate(

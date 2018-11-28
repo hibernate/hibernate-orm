@@ -40,7 +40,9 @@ import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
+import org.hibernate.sql.ast.tree.spi.expression.domain.EntityValuedNavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeReference;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
@@ -274,11 +276,20 @@ public class CollectionElementEntityImpl<J>
 	public DomainResult createDomainResult(
 			NavigableReference navigableReference,
 			String resultVariable,
-			DomainResultCreationState creationState, DomainResultCreationContext creationContext) {
+			DomainResultCreationState creationState,
+			DomainResultCreationContext creationContext) {
 		// delegate to the persister because here we are returning
 		// 		the entities that make up the referenced collection's elements
+		// we need to pass an EntityValuedNavigableReference
+		EntityValuedNavigableReference entityValuedNavigableReference = new EntityValuedNavigableReference(
+				navigableReference.getNavigableContainerReference(),
+				getEntityDescriptor(),
+				navigableReference.getNavigablePath(),
+				navigableReference.getColumnReferenceQualifier(),
+				( (PluralAttributeReference) navigableReference ).getLockMode()
+		);
 		return getEntityDescriptor().createDomainResult(
-				navigableReference,
+				entityValuedNavigableReference,
 				resultVariable,
 				creationState, creationContext
 		);

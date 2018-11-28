@@ -25,6 +25,7 @@ public abstract class AbstractTableReferenceCollector implements TableReferenceJ
 	private TableReference primaryTableReference;
 	private List<TableReferenceJoin> tableReferenceJoins;
 
+	@Override
 	public TableReference getPrimaryTableReference() {
 		return primaryTableReference;
 	}

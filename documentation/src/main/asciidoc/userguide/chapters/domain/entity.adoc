@@ -1,7 +1,7 @@
 ﻿[[entity]]
 === Entity types
 :sourcedir-locking: ../../../../../test/java/org/hibernate/userguide/locking
-:sourcedir-mapping: ../../../../../test/java/org/hibernate/userguide/mapping/
+:sourcedir-mapping: ../../../../../test/java/org/hibernate/userguide/mapping
 :sourcedir-proxy: ../../../../../test/java/org/hibernate/userguide/proxy
 :sourcedir-persister: ../../../../../test/java/org/hibernate/userguide/persister
 :extrasdir: extras
@@ -160,6 +160,74 @@ To explicitly give the name of the table or to specify other information about t
 ----
 include::{sourcedir-mapping}/identifier/SimpleEntityTableTest.java[tag=entity-pojo-table-mapping-example, indent=0]
 ----
+====
+
+[[mapping-entity-table-catalog]]
+===== Mapping the catalog of the associated table
+
+Without specifying the catalog of the associated database table a given entity is mapped to, Hibernate will use the default catalog associated with the current database connection.
+
+However, if your database hosts multiple catalogs, you can specify the catalog where a given table is located using the `catalog` attribute of the JPA https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Table.html[`@Table`] annotation.
+
+Let's assume we are using MySQL and want to map a `Book` entity to the `book` table located in the `public` catalog
+which looks as follows.
+
+[[mapping-post-table-catalog-mysql-example]]
+.The `post` table located in the `public` catalog
+====
+[source,sql]
+----
+include::{extrasdir}/entity/mapping-post-table-catalog-mysql-example.sql[]
+----
+====
+
+Now, to map the `Book` entity to the `book` table in the `public` catalog we can use the `catalog` attribute of the `@Table` JPA annotation.
+
+[[mapping-entity-table-catalog-mysql-example]]
+.Specifying the database catalog using the `@Table` annotation
+====
+[source,java]
+----
+include::{sourcedir-mapping}/identifier/EntityTableCatalogTest.java[tag=mapping-entity-table-catalog-mysql-example, indent=0]
+----
+====
+
+[[mapping-entity-table-schema]]
+===== Mapping the schema of the associated table
+
+Without specifying the schema of the associated database table a given entity is mapped to, Hibernate will use the default schema associated with the current database connection.
+
+However, if your database supports schemas, you can specify the schema where a given table is located using the `schema` attribute of the JPA https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Table.html[`@Table`] annotation.
+
+Let's assume we are using PostgreSQL and want to map a `Book` entity to the `book` table located in the `library` schema
+which looks as follows.
+
+[[mapping-post-table-schema-postgresql-example]]
+.The `post` table located in the `library` schema
+====
+[source,sql]
+----
+include::{extrasdir}/entity/mapping-post-table-schema-postgresql-example.sql[]
+----
+====
+
+Now, to map the `Book` entity to the `book` table in the `library` schema we can use the `schema` attribute of the `@Table` JPA annotation.
+
+[[mapping-entity-table-catalog-mysql-example]]
+.Specifying the database schema using the `@Table` annotation
+====
+[source,java]
+----
+include::{sourcedir-mapping}/identifier/EntityTableSchemaTest.java[tag=mapping-entity-table-schema-postgresql-example, indent=0]
+----
+====
+
+[IMPORTANT]
+====
+The `schema` attribute of the `@Table` annotation works only if the underlying database supports schemas (e.g. PostgreSQL).
+
+Therefore, if you're using MySQL or MariaDB, which do not support schemas natively (schemas being just an alias for catalog), you need to use the
+`catalog` attribute, and not the `schema` one.
 ====
 
 [[mapping-model-pojo-equalshashcode]]

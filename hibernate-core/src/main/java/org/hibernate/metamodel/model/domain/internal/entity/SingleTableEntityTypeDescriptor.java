@@ -1030,7 +1030,7 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 
 	@Override
 	public Class getMappedClass() {
-		return null;
+		return getJavaTypeDescriptor().getJavaType();
 	}
 
 	@Override

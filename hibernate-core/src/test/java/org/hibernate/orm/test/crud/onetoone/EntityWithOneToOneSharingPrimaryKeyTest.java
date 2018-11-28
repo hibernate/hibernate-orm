@@ -21,7 +21,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Andrea Boriero
  */
-//@FailureExpected( value= "When the FK==PK the id column appears twice in the insert statement causing an error" )
 public class EntityWithOneToOneSharingPrimaryKeyTest extends SessionFactoryBasedFunctionalTest {
 	@Override
 	protected void applyMetadataSources(MetadataSources metadataSources) {

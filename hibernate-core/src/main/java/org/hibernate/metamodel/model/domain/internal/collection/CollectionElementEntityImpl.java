@@ -133,9 +133,20 @@ public class CollectionElementEntityImpl<J>
 		else {
 			foreignKeyTargetNavigable = getEntityDescriptor().findNavigable( mappedBy );
 		}
+
 		assert foreignKeyTargetNavigable != null;
 
-		this.foreignKey = creationContext.getDatabaseObjectResolver().resolveForeignKey( bootDescriptor.getForeignKey() );
+		// Resolve the foreign-key from the boot-model based on the entity descriptor.
+		//
+		// In the case of an entity that owns the many-side of a OneToMany collection that uses a join-table,
+		// this ensures we get the ForeignKey for the foreignKeyTargetNavigable.
+		for ( ForeignKey fk : resolveForeignKeys( bootDescriptor, creationContext ) ) {
+			if ( fk.getTargetTable().equals( getEntityDescriptor().getPrimaryTable() ) ) {
+				this.foreignKey = fk;
+				break;
+			}
+		}
+
 		assert foreignKey != null;
 
 		return true;
@@ -225,7 +236,19 @@ public class CollectionElementEntityImpl<J>
 			JdbcValueCollector jdbcValueCollector,
 			Clause clause,
 			SharedSessionContractImplementor session) {
-		getEntityDescriptor().getIdentifierDescriptor().dehydrate( value, jdbcValueCollector, clause, session );
+		//getEntityDescriptor().getIdentifierDescriptor().dehydrate( value, jdbcValueCollector, clause, session );
+		getEntityDescriptor().getIdentifierDescriptor().dehydrate(
+				value,
+				(jdbcValue, sqlExpressableType, boundColumn) -> {
+					jdbcValueCollector.collect(
+							jdbcValue,
+							sqlExpressableType,
+							foreignKey.resolveReferringFromTargetColumn( boundColumn )
+					);
+				},
+				clause,
+				session
+		);
 	}
 
 	@Override
@@ -238,11 +261,11 @@ public class CollectionElementEntityImpl<J>
 			return;
 		}
 
-		if ( clause == Clause.INSERT || clause == Clause.UPDATE ) {
-			return;
-		}
+//		if ( clause == Clause.INSERT || clause == Clause.UPDATE ) {
+//			return;
+//		}
 
-		foreignKey.getColumnMappings().getTargetColumns().forEach(
+		foreignKey.getColumnMappings().getReferringColumns().forEach(
 				column -> action.accept( column.getExpressableType(), column )
 		);
 	}
@@ -269,5 +292,14 @@ public class CollectionElementEntityImpl<J>
 	@Override
 	public void visitFetchables(Consumer<Fetchable> fetchableConsumer) {
 		entityDescriptor.visitFetchables( fetchableConsumer );
+	}
+
+	private static java.util.Collection<ForeignKey> resolveForeignKeys(
+			Collection bootDescriptor,
+			RuntimeModelCreationContext creationContext) {
+		return creationContext.getDatabaseObjectResolver()
+				.resolveForeignKey( bootDescriptor.getForeignKey() )
+				.getReferringTable()
+				.getForeignKeys();
 	}
 }

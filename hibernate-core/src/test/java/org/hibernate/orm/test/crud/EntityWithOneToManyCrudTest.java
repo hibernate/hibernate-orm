@@ -12,8 +12,6 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
 import org.hibernate.orm.test.support.domains.gambit.EntityWithOneToMany;
 import org.hibernate.orm.test.support.domains.gambit.SimpleEntity;
-
-import org.hibernate.testing.junit5.FailureExpected;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -22,7 +20,6 @@ import static org.hamcrest.core.IsNull.notNullValue;
 /**
  * @author Andrea Boriero
  */
-@FailureExpected( value= "Persist and find og OneToMany has not yet been implemented" )
 public class EntityWithOneToManyCrudTest extends SessionFactoryBasedFunctionalTest {
 	@Override
 	protected void applyMetadataSources(MetadataSources metadataSources) {

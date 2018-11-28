@@ -93,6 +93,24 @@ public class ForeignKey implements Exportable {
 		return cascadeDeleteEnabled;
 	}
 
+	public Column resolveReferringFromTargetColumn(Column targetColumn) {
+		for ( ColumnMappings.ColumnMapping columnMapping : getColumnMappings().getColumnMappings() ) {
+			if ( columnMapping.getTargetColumn().equals( targetColumn ) ) {
+				return columnMapping.getReferringColumn();
+			}
+		}
+		return null;
+	}
+
+	public Column resolveTargetFromReferringColumn(Column referringColumn) {
+		for ( ColumnMappings.ColumnMapping columnMapping : getColumnMappings().getColumnMappings() ) {
+			if ( columnMapping.getReferringColumn().equals( referringColumn ) ) {
+				return columnMapping.getTargetColumn();
+			}
+		}
+		return null;
+	}
+
 	/**
 	 * Models the metadata for a foreign key (physical or logical).
 	 * <p/>

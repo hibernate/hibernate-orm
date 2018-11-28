@@ -9,7 +9,7 @@ package org.hibernate.annotations;
 /**
  * Enumeration extending javax.persistence flush modes.
  *
- * @author Carlos Gonz�lez-Cadenas
+ * @author Carlos Gonzalez-Cadenas
  */
 public enum FlushModeType {
 	/**

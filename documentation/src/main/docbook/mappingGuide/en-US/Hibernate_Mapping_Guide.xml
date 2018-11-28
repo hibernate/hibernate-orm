@@ -5,7 +5,7 @@
   ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
   ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
   -->
-<!DOCTYPE book SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd" [
+<!DOCTYPE book SYSTEM "https://www.oasis-open.org/docbook/xml/5.0b5/dtd/docbook.dtd" [
 <!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Mapping_Guide.ent">
 %BOOK_ENTITIES;
 ]>

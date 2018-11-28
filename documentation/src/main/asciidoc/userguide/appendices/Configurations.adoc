@@ -758,5 +758,7 @@ ignoreUnsupported:: Do the population, but ignore any non-JPA features that woul
 
 |`hibernate.collection_join_subquery`| `true` (default value) or `false` | Setting which indicates whether or not the new JOINS over collection tables should be rewritten to subqueries.
 
+|`hibernate.use_entity_where_clause_for_collections`| `true` or `false` (default value) | Setting controls whether an entity's "where" clause, mapped using `@Where(clause="...")` or `<entity ... where="...">`, is taken into account when loading one-to-many or many-to-many collections of that type of entity.
+
 |=====================================================================================================================================================================================================================================================
 

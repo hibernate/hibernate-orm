@@ -375,6 +375,9 @@ Just check the "Enable annotation processing" option, configure the directory fo
 generated sources and finally add the Hibernate Static Metamodel Generator and JPA 2 jar
 files to the factory path.
 
+If you use JDK 11+, you also need to add the `javax.xml.bind:jaxb-api` and
+`org.glassfish.jaxb:jaxb-runtime` jars as JAXB is not included in the JDK anymore.
+
 image:eclipse-annotation-processor-config.png[]
 
 === Processor specific options

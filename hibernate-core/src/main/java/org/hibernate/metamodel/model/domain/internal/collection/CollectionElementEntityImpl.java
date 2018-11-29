@@ -138,18 +138,10 @@ public class CollectionElementEntityImpl<J>
 
 		assert foreignKeyTargetNavigable != null;
 
-		// Resolve the foreign-key from the boot-model based on the entity descriptor.
-		//
-		// In the case of an entity that owns the many-side of a OneToMany collection that uses a join-table,
-		// this ensures we get the ForeignKey for the foreignKeyTargetNavigable.
-		for ( ForeignKey fk : resolveForeignKeys( bootDescriptor, creationContext ) ) {
-			if ( fk.getTargetTable().equals( getEntityDescriptor().getPrimaryTable() ) ) {
-				this.foreignKey = fk;
-				break;
-			}
-		}
-
-		assert foreignKey != null;
+		// Resolve the foreign-key from the boot-model based on the entity primary table.
+		// In the case of an entity that owns the many-side of a one-to-many collection that uses a join-table,
+		// this guarantees we get the ForeignKey for the foreignKeyTargetNavigable.
+		this.foreignKey = resolveForeignKey( bootDescriptor, getEntityDescriptor().getPrimaryTable(), creationContext );
 
 		return true;
 	}
@@ -305,12 +297,51 @@ public class CollectionElementEntityImpl<J>
 		entityDescriptor.visitFetchables( fetchableConsumer );
 	}
 
-	private static java.util.Collection<ForeignKey> resolveForeignKeys(
+	private static ForeignKey resolveForeignKey(
 			Collection bootDescriptor,
+			Table table,
 			RuntimeModelCreationContext creationContext) {
-		return creationContext.getDatabaseObjectResolver()
+		final Iterable<ForeignKey> foreignKeys = creationContext.getDatabaseObjectResolver()
 				.resolveForeignKey( bootDescriptor.getForeignKey() )
 				.getReferringTable()
 				.getForeignKeys();
+
+		ForeignKey resolvedForeignKey = null;
+		for ( ForeignKey foreignKey : foreignKeys ) {
+			if ( StringHelper.isEmpty( bootDescriptor.getMappedByProperty() ) ) {
+				if ( foreignKey.getTargetTable().equals( table ) ) {
+					resolvedForeignKey = foreignKey;
+					break;
+				}
+			}
+			else {
+				if ( foreignKey.getReferringTable().equals( table ) ) {
+					resolvedForeignKey = foreignKey;
+					break;
+				}
+			}
+		}
+
+		if ( resolvedForeignKey == null ) {
+			log.warnf(
+					String.format(
+							Locale.ROOT,
+							"Failed to locate foreign key for [%s] with mapped-by [%s], using fallback look-up.",
+							bootDescriptor.getRole(),
+							bootDescriptor.getMappedByProperty()
+					)
+			);
+
+			for ( ForeignKey foreignKey : foreignKeys ) {
+				if ( foreignKey.getReferringTable().equals( table ) ) {
+					resolvedForeignKey = foreignKey;
+					break;
+				}
+			}
+		}
+
+		assert resolvedForeignKey != null;
+
+		return resolvedForeignKey;
 	}
 }

@@ -6,6 +6,7 @@
  */
 package org.hibernate.cfg;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -56,7 +57,9 @@ public class AttributeConverterDefinition implements AttributeConverterInfo {
 
 	private static AttributeConverter instantiateAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass) {
 		try {
-			return attributeConverterClass.newInstance();
+			Constructor<? extends AttributeConverter> constructor = attributeConverterClass.getDeclaredConstructor();
+			constructor.setAccessible( true );
+			return constructor.newInstance();
 		}
 		catch (Exception e) {
 			throw new AnnotationException(

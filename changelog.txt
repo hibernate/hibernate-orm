@@ -3,6 +3,29 @@ Hibernate 5.1 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changed in 5.1.17.Final (November 28, 2018)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/31707
+https://hibernate.atlassian.net/issues/?jql=project%20%3D%2010031%20AND%20fixVersion%20%3D%2031707%20ORDER%20BY%20priority%20DESC%2C%20key%20ASC
+
+** Bug
+    * [HHH-6781] - Class level @Where annotation is not enforced on collections of that class
+    * [HHH-10891] - Exception at bootstrap when @Any is inside an @Embeddable object
+    * [HHH-12374] - Order inserts sorting code gives up too soon
+    * [HHH-12380] - Stackoverflow when order_inserts=true
+    * [HHH-12875] - Class level where="..." clause in hbm.xml mappings is not enforced on collections of that class
+    * [HHH-12882] - Where clauses mapped on collections and entities need parentheses when used in conjunction
+    * [HHH-12935] - Constraint and AuxiliaryDatabaseObject export identifiers are not qualified by schema or catalog
+    * [HHH-12937] - Where clause for collections of basic, embeddable and "any" elements is ignored when mapped using hbm.xml
+    * [HHH-12958] - NotFoundLogicalOneToOneTest fails on Oracle due to identifiers that are too long (5.1)
+    * [HHH-12964] - Upgrade to dom4j 2.1.1
+
+** Task
+    * [HHH-13126] - Update README and migration notes to indicate changes in Java compatibility in 5.1 branch
+
+** Improvement
+    * [HHH-13011] - Add option enabling/disabling use of an entity's mapped where-clause when loading collections of that entity
+
 Changed in 5.1.16.Final (August 26, 2018)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/31689

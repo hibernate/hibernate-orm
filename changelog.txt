@@ -3,6 +3,31 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.0.CR2 (November 29, 2018)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31729/tab/release-report-done
+
+** Bug
+    * [HHH-13107] - JtaWithStatementsBatchTest fails on Oracle
+    * [HHH-13111] - Subquery cannot occur in select clause anymore for Criteria API
+    * [HHH-13112] - Proxies on entity types in the default package lead to MappingException with JDK9+
+    * [HHH-13116] - Jaxb-runtime transitive dependencies are ignored when building a Maven project on JDK11 with a dependency to Hibernate ORM
+    * [HHH-13118] - Use the provided class loader even when using the default URI
+    * [HHH-13128] - Missing jaxb-runtime dependency for hibernate-jpamodelgen
+
+** Task
+    * [HHH-13043] - Upgrade to JAXB 2.3
+
+** Improvement
+    * [HHH-13102] - Document how catalog and schema attributes need to be applied based on the underlying DB capabilities
+    * [HHH-13115] - Document how to define timezone per tenant when using Multitenant Database
+    * [HHH-13124] - Document the CachingRegionFactory resolution algorithm has changed
+    * [HHH-13125] - Remove the Javadoc links in the User Guide pointing internal classes
+    * [HHH-13127] - Document JAXB dependencies should be added for using hibernate-jpamodelgen in Eclipse IDE
+
+
+
 Changes in 5.4.0.CR1 (November 15, 2018)
 ------------------------------------------------------------------------------------------------------------------------
 

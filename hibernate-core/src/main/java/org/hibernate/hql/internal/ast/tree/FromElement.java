@@ -532,7 +532,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 	}
 
 	public String[] getIdentifierPropertyNames() {
-		return elementType.getIdentifierPropertyName();
+		return elementType.getIdentifierPropertyNames();
 	}
 
 	public void setFetch(boolean fetch) {

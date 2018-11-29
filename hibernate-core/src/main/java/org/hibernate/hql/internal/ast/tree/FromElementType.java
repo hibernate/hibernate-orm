@@ -129,7 +129,7 @@ class FromElementType {
 	String renderScalarIdentifierSelect(int i) {
 		checkInitialized();
 
-		final String[] idPropertyName = getIdentifierPropertyName();
+		final String[] idPropertyName = getIdentifierPropertyNames();
 		StringBuilder buf = new StringBuilder();
 		for ( int j = 0; j < idPropertyName.length; j++ ) {
 			String propertyName = idPropertyName[j];
@@ -683,7 +683,7 @@ class FromElementType {
 		}
 	}
 
-	public String[] getIdentifierPropertyName() {
+	public String[] getIdentifierPropertyNames() {
 		if ( getEntityPersister() != null ) {
 			String identifierPropertyName = getEntityPersister().getIdentifierPropertyName();
 			if ( identifierPropertyName != null ) {

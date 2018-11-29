@@ -109,8 +109,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 
 	@Override
 	public String getAlias(Dialect dialect) {
-		final String suffix = String.valueOf(uniqueInteger) +
-                '_';
+		final String suffix = String.valueOf(uniqueInteger) + '_';
 		return getAlias(suffix, dialect.getMaxAliasLength());
 	}
 
@@ -119,16 +118,16 @@ public class Column implements Selectable, Serializable, Cloneable {
 	 */
 	@Override
 	public String getAlias(Dialect dialect, Table table) {
-		final String suffix = String.valueOf(uniqueInteger) +
-                '_' +
-                table.getUniqueInteger() +
-                '_';
-
+		final String suffix = String.valueOf(uniqueInteger) + '_' +
+			table.getUniqueInteger() + '_';
 		return getAlias(suffix, dialect.getMaxAliasLength());
 	}
 
 	private String getAlias(String suffix, int maxAliasLength) {
 		final int lastLetter = StringHelper.lastIndexOfLetter( name );
+		// AbstractEntityPersister uses a select fragment which adds another suffix to the already suffixed alias,
+		// therefore we leave it some safety space here (instead of digging up the whole alias handling):
+		int usableLength = maxAliasLength -3;
 
 		String alias;
 		if ( lastLetter == -1 ) {
@@ -136,23 +135,24 @@ public class Column implements Selectable, Serializable, Cloneable {
 		}
 		else if ( name.length() > lastLetter + 1 ) {
 			alias = name.substring( 0, lastLetter + 1 );
-		} else {
+		}
+		else {
 			alias = name;
 		}
 
-		boolean useRawName = name.length() + suffix.length() <= maxAliasLength
+		boolean useRawName = name.length() + suffix.length() <= usableLength
 				&& !quoted && !name.toLowerCase( Locale.ROOT ).equals( "rowid" );
 		if ( !useRawName ) {
-			if ( suffix.length() >= maxAliasLength ) {
+			if ( suffix.length() >= usableLength ) {
 				throw new MappingException(
 						String.format(
 								"Unique suffix [%s] length must be less than maximum [%d]",
-								suffix, maxAliasLength
+								suffix, usableLength
 						)
 				);
 			}
-			if ( alias.length() + suffix.length() > maxAliasLength ) {
-				alias = alias.substring( 0, maxAliasLength - suffix.length() );
+			if ( alias.length() + suffix.length() > usableLength ) {
+				alias = alias.substring( 0, usableLength - suffix.length() );
 			}
 		}
 		return alias + suffix;

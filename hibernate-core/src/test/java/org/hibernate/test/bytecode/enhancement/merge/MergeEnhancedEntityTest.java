@@ -34,7 +34,7 @@ import static org.junit.Assert.fail;
 @TestForIssue( jiraKey = "HHH-11459" )
 @RunWith( BytecodeEnhancerRunner.class )
 public class MergeEnhancedEntityTest extends BaseCoreFunctionalTestCase {
-
+    private Person person;
     @Override
     public Class<?>[] getAnnotatedClasses() {
         return new Class<?>[]{Person.class, PersonAddress.class};
@@ -42,8 +42,9 @@ public class MergeEnhancedEntityTest extends BaseCoreFunctionalTestCase {
 
     @Before
     public void prepare() {
+        person = new Person( 1L, "Sam" );
         doInHibernate( this::sessionFactory, s -> {
-            s.persist( new Person( 1L, "Sam" ) );
+            s.persist( person );
         } );
     }
 
@@ -76,7 +77,7 @@ public class MergeEnhancedEntityTest extends BaseCoreFunctionalTestCase {
     @After
     public void cleanup() {
         doInHibernate( this::sessionFactory, s -> {
-            s.delete( new Person( 1L, "Sam" ) );
+            s.delete( person );
         } );
     }
 

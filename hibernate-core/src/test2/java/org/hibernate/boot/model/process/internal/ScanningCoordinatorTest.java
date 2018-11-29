@@ -5,6 +5,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 
+import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.archive.internal.ByteArrayInputStreamAccess;
 import org.hibernate.boot.archive.scan.internal.ClassDescriptorImpl;
@@ -130,6 +131,45 @@ public class ScanningCoordinatorTest extends BaseUnitTestCase {
 			}
 		};
 		assertManagedResourcesAfterCoordinateScanWithScanner( scanner, false );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10778")
+	public void testManagedResourcesAfterCoordinateScanWithConverterScanner() {
+
+		when( classLoaderService.classForName( "converter" ) ).thenReturn( (Class) IntegerToVarcharConverter.class );
+
+		final Scanner scanner = (ScanEnvironment environment, ScanOptions options, ScanParameters parameters) -> {
+			final InputStreamAccess dummyInputStreamAccess = new ByteArrayInputStreamAccess( "dummy", new byte[0] );
+
+			return new ScanResultImpl(
+					Collections.singleton( new PackageDescriptorImpl( "dummy", dummyInputStreamAccess ) ),
+					Collections.singleton( new ClassDescriptorImpl(
+							"converter",
+							ClassDescriptor.Categorization.CONVERTER,
+							dummyInputStreamAccess
+					) ),
+					Collections.singleton( new MappingFileDescriptorImpl( "dummy", dummyInputStreamAccess ) )
+			);
+		};
+
+		when( bootstrapContext.getScanner() ).thenReturn( scanner );
+
+		final ManagedResourcesImpl managedResources = ManagedResourcesImpl.baseline(
+				new MetadataSources(),
+				bootstrapContext
+		);
+
+		ScanningCoordinator.INSTANCE.coordinateScan( managedResources, bootstrapContext, xmlMappingBinderAccess );
+
+		assertEquals( 1, scanEnvironment.getExplicitlyListedClassNames().size() );
+		assertEquals( "a.b.C", scanEnvironment.getExplicitlyListedClassNames().get( 0 ) );
+
+		assertEquals( 1, managedResources.getAttributeConverterDefinitions().size() );
+		AttributeConverterInfo attributeConverterInfo = managedResources.getAttributeConverterDefinitions()
+				.iterator()
+				.next();
+		assertEquals( IntegerToVarcharConverter.class, attributeConverterInfo.getConverterClass() );
 	}
 
 	/**

@@ -45,6 +45,7 @@ import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ExceptionUtil;
 import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
@@ -67,8 +68,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			fail( "expecting an exception" );
 		}
 		catch (AnnotationException e) {
-			assertNotNull( e.getCause() );
-			assertTyping( BlewUpException.class, e.getCause() );
+			assertTyping( BlewUpException.class, ExceptionUtil.rootCause( e ) );
 		}
 	}
 

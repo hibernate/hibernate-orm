@@ -17,8 +17,10 @@ ext {
 }
 
 dependencies {
-    compile( libraries.jaxb_api )
 
+    // JAXB
+    compile( libraries.jaxb_api )
+    compile( libraries.jaxb_runtime )
     xjc( libraries.jaxb_runtime )
     xjc( libraries.jaxb_xjc )
     xjc( libraries.jaxb2_basics )

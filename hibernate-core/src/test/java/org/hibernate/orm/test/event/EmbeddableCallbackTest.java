@@ -17,6 +17,8 @@ import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.hibernate.testing.TestForIssue;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -40,6 +42,7 @@ public class EmbeddableCallbackTest extends SessionFactoryBasedFunctionalTest {
 	public void test() {
 		sessionFactoryScope().inTransaction( session -> {
 			Employee employee = new Employee();
+			employee.details = new EmployeeDetails();
 			employee.id = 1;
 
 			session.persist( employee );
@@ -50,6 +53,28 @@ public class EmbeddableCallbackTest extends SessionFactoryBasedFunctionalTest {
 
 			assertEquals( "Vlad", employee.name );
 			assertEquals( "Developer Advocate", employee.details.jobTitle );
+
+			session.delete( employee );
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-13110")
+	public void testNullEmbeddable() {
+		sessionFactoryScope().inTransaction( session -> {
+			Employee employee = new Employee();
+			employee.id = 1;
+
+			session.persist( employee );
+		} );
+
+		sessionFactoryScope().inTransaction( session -> {
+			Employee employee = session.find( Employee.class, 1 );
+
+			assertEquals( "Vlad", employee.name );
+			assertTrue( employee.details == null || employee.details.jobTitle == null );
+
+			session.delete( employee );
 		} );
 	}
 
@@ -61,7 +86,7 @@ public class EmbeddableCallbackTest extends SessionFactoryBasedFunctionalTest {
 
 		private String name;
 
-		private EmployeeDetails details = new EmployeeDetails();
+		private EmployeeDetails details;
 
 		@PrePersist
 		public void setUp() {

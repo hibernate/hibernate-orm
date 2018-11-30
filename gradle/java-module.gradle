@@ -138,6 +138,10 @@ tasks.withType(JavaCompile) {
 	options.encoding = 'UTF-8'
 }
 
+junitPlatformTest {
+	enableAssertions = true
+}
+
 task compile(dependsOn: [compileJava, processResources, compileTestJava, processTestResources] )
 
 sourceSets.main {

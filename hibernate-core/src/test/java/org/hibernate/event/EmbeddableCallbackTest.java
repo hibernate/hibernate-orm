@@ -18,11 +18,11 @@ import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-12326")
 public class EmbeddableCallbackTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
@@ -31,9 +31,11 @@ public class EmbeddableCallbackTest extends BaseEntityManagerFunctionalTestCase 
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-12326")
 	public void test() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Employee employee = new Employee();
+			employee.details = new EmployeeDetails();
 			employee.id = 1;
 
 			entityManager.persist( employee );
@@ -47,6 +49,24 @@ public class EmbeddableCallbackTest extends BaseEntityManagerFunctionalTestCase 
 		} );
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-13110")
+	public void testNullEmbeddable() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Employee employee = new Employee();
+			employee.id = 1;
+
+			entityManager.persist( employee );
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Employee employee = entityManager.find( Employee.class, 1 );
+
+			assertEquals( "Vlad", employee.name );
+			assertNull( employee.details );
+		} );
+	}
+
 	@Entity(name = "Employee")
 	public static class Employee {
 
@@ -55,7 +75,7 @@ public class EmbeddableCallbackTest extends BaseEntityManagerFunctionalTestCase 
 
 		private String name;
 
-		private EmployeeDetails details = new EmployeeDetails();
+		private EmployeeDetails details;
 
 		@PrePersist
 		public void setUp() {

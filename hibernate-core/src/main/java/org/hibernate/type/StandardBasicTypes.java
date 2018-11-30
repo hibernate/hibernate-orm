@@ -49,6 +49,13 @@ public final class StandardBasicTypes {
 	private static final Set<SqlTypeDescriptor> SQL_TYPE_DESCRIPTORS = new HashSet<SqlTypeDescriptor>();
 
 	/**
+	 * The standard Hibernate type for mapping {@value null} to JDBC {@link java.sql.Types#NULL NULL}.
+	 *
+	 * @see NullType
+	 */
+	public static final NullType NULL = NullType.INSTANCE;
+
+	/**
 	 * The standard Hibernate type for mapping {@link Boolean} to JDBC {@link java.sql.Types#BIT BIT}.
 	 *
 	 * @see BooleanType

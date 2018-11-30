@@ -14,9 +14,18 @@ import javax.persistence.ManyToOne;
  * @author Chris Cranford
  */
 @Entity
-public class EntityWithManyToOneNonJoinTable {
+public class EntityWithManyToOneWithoutJoinTable {
 	private Integer id;
+	private Integer someInteger;
 	private EntityWithOneToManyNotOwned owner;
+
+	EntityWithManyToOneWithoutJoinTable() {
+	}
+
+	public EntityWithManyToOneWithoutJoinTable(Integer id, Integer someInteger) {
+		this.id = id;
+		this.someInteger = someInteger;
+	}
 
 	@Id
 	public Integer getId() {
@@ -25,6 +34,14 @@ public class EntityWithManyToOneNonJoinTable {
 
 	public void setId(Integer id) {
 		this.id = id;
+	}
+
+	public Integer getSomeInteger() {
+		return someInteger;
+	}
+
+	public void setSomeInteger(Integer someInteger) {
+		this.someInteger = someInteger;
 	}
 
 	@ManyToOne

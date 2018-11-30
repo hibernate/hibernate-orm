@@ -19,7 +19,7 @@ import javax.persistence.OneToMany;
 @Entity
 public class EntityWithOneToManyNotOwned {
 	private Integer id;
-	private List<EntityWithManyToOneNonJoinTable> collection = new ArrayList<>();
+	private List<EntityWithManyToOneWithoutJoinTable> childs = new ArrayList<>();
 
 	@Id
 	public Integer getId() {
@@ -31,16 +31,16 @@ public class EntityWithOneToManyNotOwned {
 	}
 
 	@OneToMany(mappedBy = "owner")
-	public List<EntityWithManyToOneNonJoinTable> getCollection() {
-		return collection;
+	public List<EntityWithManyToOneWithoutJoinTable> getChilds() {
+		return childs;
 	}
 
-	public void setCollection(List<EntityWithManyToOneNonJoinTable> collection) {
-		this.collection = collection;
+	public void setChilds(List<EntityWithManyToOneWithoutJoinTable> childs) {
+		this.childs = childs;
 	}
 
-	public void addChild(EntityWithManyToOneNonJoinTable child) {
+	public void addChild(EntityWithManyToOneWithoutJoinTable child) {
 		child.setOwner( this );
-		getCollection().add( child );
+		getChilds().add( child );
 	}
 }

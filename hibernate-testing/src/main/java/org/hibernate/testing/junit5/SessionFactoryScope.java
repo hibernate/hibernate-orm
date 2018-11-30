@@ -6,7 +6,6 @@
  */
 package org.hibernate.testing.junit5;
 
-
 import java.util.function.Consumer;
 
 import org.hibernate.Transaction;
@@ -59,8 +58,6 @@ public class SessionFactoryScope implements SessionFactoryAccess {
 		}
 		return sessionFactory;
 	}
-
-
 
 	public void inSession(Consumer<SessionImplementor> action) {
 		log.trace( "#inSession(action)" );

@@ -40,9 +40,9 @@ public class CollectionKey implements Navigable {
 	private final AbstractPersistentCollectionDescriptor collectionDescriptor;
 	private final JavaTypeDescriptor javaTypeDescriptor;
 	private final NavigableRole navigableRole;
+	private final ForeignKey joinForeignKey;
 
 	private Navigable foreignKeyTargetNavigable;
-	private ForeignKey joinForeignKey;
 
 	public CollectionKey(
 			AbstractPersistentCollectionDescriptor<?, ?, ?> runtimeDescriptor,
@@ -52,14 +52,6 @@ public class CollectionKey implements Navigable {
 		this.javaTypeDescriptor = resolveJavaTypeDescriptor( bootDescriptor );
 		this.navigableRole = runtimeDescriptor.getNavigableRole().append( "{collection-key}" );
 		this.joinForeignKey = creationContext.getDatabaseObjectResolver().resolveForeignKey( bootDescriptor.getForeignKey() );
-
-		final String mappedBy = bootDescriptor.getMappedByProperty();
-		if ( isEmpty( mappedBy ) ) {
-			this.foreignKeyTargetNavigable = runtimeDescriptor.findEntityOwnerDescriptor().getIdentifierDescriptor();
-		}
-		else {
-			this.foreignKeyTargetNavigable = runtimeDescriptor.findEntityOwnerDescriptor().findNavigable( mappedBy );
-		}
 	}
 
 	public ForeignKey getJoinForeignKey() {
@@ -71,6 +63,9 @@ public class CollectionKey implements Navigable {
 	}
 
 	public Navigable getForeignKeyTargetNavigable() {
+		if ( foreignKeyTargetNavigable == null ) {
+			createForeignKeyTargteNavigable();
+		}
 		return foreignKeyTargetNavigable;
 	}
 
@@ -106,7 +101,17 @@ public class CollectionKey implements Navigable {
 				creationState,
 				creationContext
 		);
+	}
 
+
+	void createForeignKeyTargteNavigable() {
+		if ( isEmpty( collectionDescriptor.getMappedByProperty() ) ) {
+			foreignKeyTargetNavigable = collectionDescriptor.findEntityOwnerDescriptor().getIdentifierDescriptor();
+		}
+		else {
+			foreignKeyTargetNavigable = ( (NavigableContainer) collectionDescriptor.getElementDescriptor() ).findNavigable(
+					collectionDescriptor.getMappedByProperty() );
+		}
 	}
 
 	private DomainResult createDomainResult(
@@ -185,7 +190,6 @@ public class CollectionKey implements Navigable {
 					sqlSelections
 			);
 		}
-
 	}
 
 	/**
@@ -228,7 +232,7 @@ public class CollectionKey implements Navigable {
 
 	@Override
 	public Object unresolve(Object value, SharedSessionContractImplementor session) {
-		return foreignKeyTargetNavigable.unresolve( value, session );
+		return getForeignKeyTargetNavigable().unresolve( value, session );
 	}
 
 	@Override
@@ -240,7 +244,7 @@ public class CollectionKey implements Navigable {
 		final List<Column> referringColumns = getJoinForeignKey().getColumnMappings().getReferringColumns();
 		final AtomicInteger position = new AtomicInteger();
 
-		foreignKeyTargetNavigable.dehydrate(
+		getForeignKeyTargetNavigable().dehydrate(
 				value,
 				(jdbcValue, type, boundColumn) -> {
 					final Column fkColumn = referringColumns.get( position.getAndIncrement() );

@@ -127,7 +127,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 	private final ManagedTypeDescriptor container;
 	private final PluralPersistentAttribute attribute;
 	private final NavigableRole navigableRole;
-	private final CollectionKey foreignKeyDescriptor;
+	private CollectionKey foreignKeyDescriptor;
 
 	private Navigable foreignKeyTargetNavigable;
 
@@ -142,6 +142,8 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 	private CollectionLoader collectionLoader;
 	private CollectionCreationExecutor collectionCreationExecutor;
 	private CollectionRemovalExecutor collectionRemovalExecutor;
+
+	private final String mappedBy;
 
 
 	// todo (6.0) - rework this (and friends) per todo item...
@@ -226,14 +228,13 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 		}
 		this.batchSize = batch;
 
-		this.separateCollectionTable = resolveCollectionTable( collectionBinding, creationContext );
-
 		this.extraLazy = collectionBinding.isExtraLazy();
 		this.hasOrphanDeletes = collectionBinding.hasOrphanDelete();
 		this.inverse = collectionBinding.isInverse();
+		this.mappedBy = collectionBinding.getMappedByProperty();
 	}
 
-	protected static CollectionJavaDescriptor findCollectionJtd(
+	protected static CollectionJavaDescriptor findJavaTypeDescriptor(
 			Class javaType,
 			RuntimeModelCreationContext creationContext) {
 		final JavaTypeDescriptorRegistry jtdRegistry = creationContext.getTypeConfiguration()
@@ -298,13 +299,6 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 			foreignKeyTargetNavigable = getContainer().findPersistentAttribute( referencedPropertyName );
 		}
 
-		// todo (6.0) : this is technically not the `separateCollectionTable` as for one-to-many it returns the element entity's table.
-		//		need to decide how we want to model tables for collections.
-		//
-		//	^^ the better option seems to be exposing through `#createRootTableGroup` and `#createTableGroupJoin`
-
-//		separateCollectionTable = resolveCollectionTable( bootCollectionDescriptor, creationContext );
-
 		final Database database = creationContext.getMetadata().getDatabase();
 		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
 		final Dialect dialect = jdbcEnvironment.getDialect();
@@ -349,6 +343,14 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 		}
 		else {
 			this.indexDescriptor = null;
+		}
+
+		// todo (6.0) : this is technically not the `separateCollectionTable` as for one-to-many it returns the element entity's table.
+		//		need to decide how we want to model tables for collections.
+		//
+		//	^^ the better option seems to be exposing through `#createRootTableGroup` and `#createTableGroupJoin`
+		if ( !( bootCollectionDescriptor.getElement() instanceof OneToMany ) ) {
+			separateCollectionTable = resolveCollectionTable( bootCollectionDescriptor, creationContext );
 		}
 
 		this.elementDescriptor = resolveElementDescriptor( this, bootCollectionDescriptor, separateCollectionTable, creationContext );
@@ -604,7 +606,6 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 				navigablePath,
 				lockMode
 		);
-
 
 		applyTableReferenceJoins(
 				lhs.getColumnReferenceQualifier(),
@@ -937,7 +938,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 
 	@Override
 	public String getMappedByProperty() {
-		throw new NotYetImplementedFor6Exception();
+		return mappedBy;
 	}
 
 	@Override

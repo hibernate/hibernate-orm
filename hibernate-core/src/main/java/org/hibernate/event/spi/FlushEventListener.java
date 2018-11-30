@@ -22,5 +22,5 @@ public interface FlushEventListener extends Serializable {
      * @param event The flush event to be handled.
      * @throws HibernateException
      */
-	public void onFlush(FlushEvent event) throws HibernateException;
+	void onFlush(FlushEvent event) throws HibernateException;
 }

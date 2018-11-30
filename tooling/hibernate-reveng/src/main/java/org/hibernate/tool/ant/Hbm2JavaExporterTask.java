@@ -7,7 +7,6 @@ package org.hibernate.tool.ant;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterFactory;
 import org.hibernate.tool.api.export.ExporterType;
-import org.hibernate.tool.internal.export.pojo.POJOExporter;
 
 /**
  * @author max

@@ -26,28 +26,28 @@ public final class JdbcToHibernateTypeHelper {
    private static final Map<Integer, String[]> PREFERRED_HIBERNATETYPE_FOR_SQLTYPE = new HashMap<Integer, String[]>();
 
    static {
-      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(new Integer(Types.TINYINT), new String[] { "byte", Byte.class.getName()} );
-      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(new Integer(Types.SMALLINT), new String[] { "short", Short.class.getName()} );
-      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(new Integer(Types.INTEGER), new String[] { "int", Integer.class.getName()} );
-      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(new Integer(Types.BIGINT), new String[] { "long", Long.class.getName()} );
-      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(new Integer(Types.REAL), new String[] { "float", Float.class.getName()} );
-      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(new Integer(Types.FLOAT), new String[] { "double", Double.class.getName()} );
-      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(new Integer(Types.DOUBLE), new String[] { "double", Double.class.getName()});
-      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(new Integer(Types.DECIMAL), new String[] { "big_decimal", "big_decimal" });
-      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(new Integer(Types.NUMERIC), new String[] { "big_decimal", "big_decimal" });
-      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(new Integer(Types.BIT), new String[] { "boolean", Boolean.class.getName()});
-      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(new Integer(Types.BOOLEAN), new String[] { "boolean", Boolean.class.getName()});
-      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(new Integer(Types.CHAR), new String[] { "char", Character.class.getName()});
-      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(new Integer(Types.VARCHAR), new String[] { "string", "string" });
-      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(new Integer(Types.LONGVARCHAR), new String[] { "string", "string" });
-      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(new Integer(Types.BINARY), new String[] { "binary", "binary" });
-      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(new Integer(Types.VARBINARY), new String[] { "binary", "binary" });
-      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(new Integer(Types.LONGVARBINARY), new String[] { "binary", "binary" });
-      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(new Integer(Types.DATE), new String[] { "date", "date" });
-      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(new Integer(Types.TIME), new String[] { "time", "time" });
-      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(new Integer(Types.TIMESTAMP), new String[] { "timestamp", "timestamp" });
-      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(new Integer(Types.CLOB), new String[] { "clob", "clob" });
-      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(new Integer(Types.BLOB), new String[] { "blob", "blob" });
+      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(Integer.valueOf(Types.TINYINT), new String[] { "byte", Byte.class.getName()} );
+      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(Integer.valueOf(Types.SMALLINT), new String[] { "short", Short.class.getName()} );
+      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(Integer.valueOf(Types.INTEGER), new String[] { "int", Integer.class.getName()} );
+      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(Integer.valueOf(Types.BIGINT), new String[] { "long", Long.class.getName()} );
+      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(Integer.valueOf(Types.REAL), new String[] { "float", Float.class.getName()} );
+      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(Integer.valueOf(Types.FLOAT), new String[] { "double", Double.class.getName()} );
+      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(Integer.valueOf(Types.DOUBLE), new String[] { "double", Double.class.getName()});
+      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(Integer.valueOf(Types.DECIMAL), new String[] { "big_decimal", "big_decimal" });
+      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(Integer.valueOf(Types.NUMERIC), new String[] { "big_decimal", "big_decimal" });
+      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(Integer.valueOf(Types.BIT), new String[] { "boolean", Boolean.class.getName()});
+      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(Integer.valueOf(Types.BOOLEAN), new String[] { "boolean", Boolean.class.getName()});
+      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(Integer.valueOf(Types.CHAR), new String[] { "char", Character.class.getName()});
+      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(Integer.valueOf(Types.VARCHAR), new String[] { "string", "string" });
+      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(Integer.valueOf(Types.LONGVARCHAR), new String[] { "string", "string" });
+      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(Integer.valueOf(Types.BINARY), new String[] { "binary", "binary" });
+      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(Integer.valueOf(Types.VARBINARY), new String[] { "binary", "binary" });
+      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(Integer.valueOf(Types.LONGVARBINARY), new String[] { "binary", "binary" });
+      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(Integer.valueOf(Types.DATE), new String[] { "date", "date" });
+      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(Integer.valueOf(Types.TIME), new String[] { "time", "time" });
+      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(Integer.valueOf(Types.TIMESTAMP), new String[] { "timestamp", "timestamp" });
+      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(Integer.valueOf(Types.CLOB), new String[] { "clob", "clob" });
+      PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.put(Integer.valueOf(Types.BLOB), new String[] { "blob", "blob" });
 	  
 	  //Hibernate does not have any built-in Type for these:
       //preferredJavaTypeForSqlType.put(new Integer(Types.ARRAY), "java.sql.Array");
@@ -87,7 +87,7 @@ public final class JdbcToHibernateTypeHelper {
 		  return "string";
 	   }
 	   
-	   String[] result = (String[]) PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.get(new Integer(sqlType) );
+	   String[] result = (String[]) PREFERRED_HIBERNATETYPE_FOR_SQLTYPE.get(Integer.valueOf(sqlType) );
 	   
 	   if(result==null) {
 		   return null;
@@ -166,7 +166,7 @@ public final class JdbcToHibernateTypeHelper {
 			}
 		}
 		
-		String name = (String) jdbcTypeValues.get(new Integer(value) );
+		String name = (String) jdbcTypeValues.get(Integer.valueOf(value) );
 		
 		if(name!=null) {
 			return name;

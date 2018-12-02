@@ -332,12 +332,12 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 					element.clear();
 					element.put("COLUMN_NAME", rs.getString(1));
 					element.put("TABLE_SCHEM", rs.getString(2));
-					element.put("NULLABLE", new Integer(rs.getInt(3)));
-					element.put("COLUMN_SIZE", new Integer(rs.getInt(4)));
-					element.put("DATA_TYPE", new Integer(rs.getInt(5)));
+					element.put("NULLABLE", Integer.valueOf(rs.getInt(3)));
+					element.put("COLUMN_SIZE", Integer.valueOf(rs.getInt(4)));
+					element.put("DATA_TYPE", Integer.valueOf(rs.getInt(5)));
 					element.put("TABLE_NAME", rs.getString(6));
 					element.put("TYPE_NAME", rs.getString(7));
-					element.put("DECIMAL_DIGITS", new Integer(rs.getInt(8)));
+					element.put("DECIMAL_DIGITS", Integer.valueOf(rs.getInt(8)));
 					element.put("TABLE_CAT", null);
 					element.put("REMARKS", rs.getString(9));
 					return element;

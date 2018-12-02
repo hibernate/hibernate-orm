@@ -84,7 +84,7 @@ public class BasicColumnProcessor {
 				//TODO: column.setSqlType(sqlTypeName); //this does not work 'cos the precision/scale/length are not retured in TYPE_NAME
 				//column.setSqlType(sqlTypeName);
 				column.setComment(comment);
-				column.setSqlTypeCode(new Integer(sqlType) );
+				column.setSqlTypeCode(Integer.valueOf(sqlType) );
                 if(intBounds(size) ) {
                 	if(JdbcToHibernateTypeHelper.typeHasLength(sqlType) ) {
                 		column.setLength(size);

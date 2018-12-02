@@ -104,12 +104,12 @@ public class JDBCMetaDataDialect extends AbstractMetaDataDialect {
 				protected Map<String, Object> convertRow(ResultSet rs) throws SQLException {
 					element.clear();
 					putTablePart(element, rs);
-					element.put("DATA_TYPE", new Integer(rs.getInt("DATA_TYPE")));
+					element.put("DATA_TYPE", Integer.valueOf(rs.getInt("DATA_TYPE")));
 					element.put("TYPE_NAME", rs.getString("TYPE_NAME"));
 					element.put("COLUMN_NAME", rs.getString("COLUMN_NAME"));
-					element.put("NULLABLE", new Integer(rs.getInt("NULLABLE")));
-					element.put("COLUMN_SIZE", new Integer(rs.getInt("COLUMN_SIZE")));
-					element.put("DECIMAL_DIGITS", new Integer(rs.getInt("DECIMAL_DIGITS")));
+					element.put("NULLABLE", Integer.valueOf(rs.getInt("NULLABLE")));
+					element.put("COLUMN_SIZE", Integer.valueOf(rs.getInt("COLUMN_SIZE")));
+					element.put("DECIMAL_DIGITS", Integer.valueOf(rs.getInt("DECIMAL_DIGITS")));
 					element.put("REMARKS", rs.getString("REMARKS"));
 					return element;					
 				}

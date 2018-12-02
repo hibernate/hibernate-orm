@@ -116,7 +116,7 @@ public class OverrideBinder {
 			column.setName(getAttribute(element, "name"));
 			String attributeValue = getAttribute(element, "jdbc-type");
 			if (StringHelper.isNotEmpty(attributeValue)) {
-				column.setSqlTypeCode(new Integer(JdbcToHibernateTypeHelper.getJDBCType(attributeValue)));
+				column.setSqlTypeCode(Integer.valueOf(JdbcToHibernateTypeHelper.getJDBCType(attributeValue)));
 			}
 			TableIdentifier tableIdentifier = TableIdentifier.create(table);
 			if (table.getColumn(column) != null) {

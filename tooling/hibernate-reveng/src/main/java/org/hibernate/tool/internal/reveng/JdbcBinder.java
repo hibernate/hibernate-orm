@@ -910,7 +910,7 @@ public class JdbcBinder {
 			int wantedSqlType = wantedSqlTypes[0];
 			if(wantedSqlType!=sqlTypeCode.intValue() ) {
 				log.debug("Sql type mismatch for " + location + " between DB and wanted hibernate type. Sql type set to " + typeCodeName( sqlTypeCode.intValue() ) + " instead of " + typeCodeName(wantedSqlType) );
-				column.setSqlTypeCode(new Integer(wantedSqlType));
+				column.setSqlTypeCode(Integer.valueOf(wantedSqlType));
 			}
 		}
 		else {

@@ -163,15 +163,15 @@ public class HQLAnalyzer {
                     caretDepth = depth;
                 }
             } else if (numericId == HqlSqlTokenTypes.CLOSE) {
-                SubQuery currentDepthQuery = level2SubQuery.get(new Integer(depth));
+                SubQuery currentDepthQuery = level2SubQuery.get(Integer.valueOf(depth));
                 // We check if we have a query on the current depth.
                 // If yes, we'll have to close it
                 if (currentDepthQuery != null && currentDepthQuery.depth == depth) {
                     currentDepthQuery.endOffset = syntax.getTokenOffset();
-                    currentDepthQuery.tokenIds.add(new Integer(numericId));
+                    currentDepthQuery.tokenIds.add(Integer.valueOf(numericId));
                     currentDepthQuery.tokenText.add(String.valueOf(query, syntax.getTokenOffset(), syntax.getTokenLength()));
                     subQueries.add(currentDepthQuery);
-                    level2SubQuery.remove(new Integer(depth));
+                    level2SubQuery.remove(Integer.valueOf(depth));
                     tokenAdded = true;
                 }
                 depth--;
@@ -184,24 +184,24 @@ public class HQLAnalyzer {
                 case HqlSqlTokenTypes.UPDATE:
                 case HqlSqlTokenTypes.DELETE:
                 case HqlSqlTokenTypes.SELECT:
-                    if (!level2SubQuery.containsKey(new Integer(depth))) {
+                    if (!level2SubQuery.containsKey(Integer.valueOf(depth))) {
                         current = new SubQuery();
                         current.depth = depth;
                         current.startOffset = syntax.getTokenOffset();
-                        level2SubQuery.put(new Integer(depth), current);
+                        level2SubQuery.put(Integer.valueOf(depth), current);
                     }
-                    current.tokenIds.add(new Integer(numericId));
+                    current.tokenIds.add(Integer.valueOf(numericId));
                     current.tokenText.add(String.valueOf(query, syntax.getTokenOffset(), syntax.getTokenLength()));
                     break;
                 default:
                     if (!tokenAdded) {
-                        SubQuery sq = level2SubQuery.get(new Integer(depth));
+                        SubQuery sq = level2SubQuery.get(Integer.valueOf(depth));
                         int i = depth;
                         while (sq == null && i >= 0) {
-                            sq = level2SubQuery.get(new Integer(i--));
+                            sq = level2SubQuery.get(Integer.valueOf(i--));
                         }
                         if (sq != null) {
-                            sq.tokenIds.add(new Integer(numericId));
+                            sq.tokenIds.add(Integer.valueOf(numericId));
                             sq.tokenText.add(String.valueOf(query, syntax.getTokenOffset(), syntax.getTokenLength()));
                         }
                     }

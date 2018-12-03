@@ -63,7 +63,7 @@ public class PrimaryKeyProcessor {
 					}	      		
 				}
 				
-				columns.add(new Object[] { new Short(seq), columnName});
+				columns.add(new Object[] { Short.valueOf(seq), columnName});
 			}
 		} finally {
 			if (primaryKeyIterator!=null) {

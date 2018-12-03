@@ -70,7 +70,7 @@ public class JDBCMetaDataDialect extends AbstractMetaDataDialect {
 					element.put("INDEX_NAME", rs.getString("INDEX_NAME"));
 					element.put("COLUMN_NAME", rs.getString("COLUMN_NAME"));
 					element.put("NON_UNIQUE", Boolean.valueOf(rs.getBoolean("NON_UNIQUE")));
-					element.put("TYPE", new Short(rs.getShort("TYPE")));					 
+					element.put("TYPE", Short.valueOf(rs.getShort("TYPE")));					 
 					return element;					
 				}
 				protected Throwable handleSQLException(SQLException e) {
@@ -138,7 +138,7 @@ public class JDBCMetaDataDialect extends AbstractMetaDataDialect {
 					element.clear();
 					putTablePart(element, rs);
 					element.put("COLUMN_NAME", rs.getString("COLUMN_NAME"));
-					element.put("KEY_SEQ", new Short(rs.getShort("KEY_SEQ")));
+					element.put("KEY_SEQ", Short.valueOf(rs.getShort("KEY_SEQ")));
 					element.put("PK_NAME", rs.getString("PK_NAME"));
 					return element;					
 				}
@@ -187,7 +187,7 @@ public class JDBCMetaDataDialect extends AbstractMetaDataDialect {
 		element.put( "FKCOLUMN_NAME", rs.getString("FKCOLUMN_NAME"));
 		element.put( "PKCOLUMN_NAME", rs.getString("PKCOLUMN_NAME"));
 		element.put( "FK_NAME", rs.getString("FK_NAME"));
-		element.put( "KEY_SEQ", new Short(rs.getShort("KEY_SEQ")));
+		element.put( "KEY_SEQ", Short.valueOf(rs.getShort("KEY_SEQ")));
 	}
 	
 	

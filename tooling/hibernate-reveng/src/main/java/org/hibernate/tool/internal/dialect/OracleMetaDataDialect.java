@@ -286,7 +286,7 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 				protected Map<String, Object> convertRow(ResultSet rs) throws SQLException {
 					element.clear();
 					element.put("COLUMN_NAME", rs.getString(1));
-					element.put("TYPE", new Short((short) 1)); // CLUSTERED
+					element.put("TYPE", Short.valueOf((short) 1)); // CLUSTERED
 																// INDEX
 					element.put("NON_UNIQUE", Boolean.valueOf(rs.getString(2)));
 					element.put("TABLE_SCHEM", rs.getString(3));
@@ -379,7 +379,7 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 					element.clear();
 					element.put("TABLE_NAME", rs.getString(1));
 					element.put("COLUMN_NAME", rs.getString(2));
-					element.put("KEY_SEQ", new Short(rs.getShort(3)));
+					element.put("KEY_SEQ", Short.valueOf(rs.getShort(3)));
 					element.put("PK_NAME", rs.getString(4));
 					element.put("TABLE_SCHEM", rs.getString(5));
 					element.put("TABLE_CAT", null);
@@ -429,7 +429,7 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 					element.put("FKCOLUMN_NAME", rs.getString(5));
 					element.put("PKCOLUMN_NAME", rs.getString(6));
 					element.put("FK_NAME", rs.getString(7));
-					element.put("KEY_SEQ", new Short(rs.getShort(8)));
+					element.put("KEY_SEQ", Short.valueOf(rs.getShort(8)));
 					return element;
 				}
 

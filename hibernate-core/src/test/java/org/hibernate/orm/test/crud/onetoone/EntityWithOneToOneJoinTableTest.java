@@ -13,9 +13,11 @@ import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
 import org.hibernate.orm.test.support.domains.gambit.EntityWithOneToOneJoinTable;
 import org.hibernate.orm.test.support.domains.gambit.SimpleEntity;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
@@ -32,6 +34,17 @@ public class EntityWithOneToOneJoinTableTest extends SessionFactoryBasedFunction
 	@Override
 	protected boolean exportSchema() {
 		return true;
+	}
+
+	@AfterEach
+	public void tearDown() {
+		sessionFactoryScope().inTransaction(
+				session -> {
+					final EntityWithOneToOneJoinTable loaded = session.get( EntityWithOneToOneJoinTable.class, 1 );
+					session.delete( loaded );
+					session.delete( loaded.getOther() );
+				}
+		);
 	}
 
 	@Test
@@ -77,6 +90,55 @@ public class EntityWithOneToOneJoinTableTest extends SessionFactoryBasedFunction
 							String.class
 					).uniqueResult();
 					assertThat( value, equalTo( "first" ) );
+				}
+		);
+	}
+
+	@Test
+	public void testUpdate() {
+		EntityWithOneToOneJoinTable entity = new EntityWithOneToOneJoinTable( 1, "first", Integer.MAX_VALUE );
+
+		SimpleEntity other = new SimpleEntity(
+				2,
+				Calendar.getInstance().getTime(),
+				null,
+				Integer.MAX_VALUE,
+				Long.MAX_VALUE,
+				null
+		);
+
+		entity.setOther( other );
+
+		sessionFactoryScope().inTransaction(
+				session -> {
+					session.save( other );
+					session.save( entity );
+				}
+		);
+
+		SimpleEntity anOther = new SimpleEntity(
+				3,
+				Calendar.getInstance().getTime(),
+				null,
+				Integer.MIN_VALUE,
+				Long.MAX_VALUE,
+				null
+		);
+
+		sessionFactoryScope().inTransaction(
+				session -> {
+					EntityWithOneToOneJoinTable loaded = session.get( EntityWithOneToOneJoinTable.class, 1 );
+					session.save( anOther );
+					loaded.setOther( anOther );
+				}
+		);
+
+		sessionFactoryScope().inTransaction(
+				session -> {
+					EntityWithOneToOneJoinTable loaded = session.get( EntityWithOneToOneJoinTable.class, 1 );
+					SimpleEntity loadedOther = loaded.getOther();
+					assertThat( loadedOther, notNullValue() );
+					assertThat( loadedOther.getId(), equalTo( 3 ) );
 				}
 		);
 	}

@@ -101,6 +101,7 @@ public class EntityWithOneToManyCrudTest extends SessionFactoryBasedFunctionalTe
 					assertThat( othersById.get( 3 ).getSomeInteger(), is( Integer.MIN_VALUE ) );
 					assertThat( othersById.get( 3 ).getSomeLong(), is( Long.MIN_VALUE ) );
 
-				} );
+				}
+		);
 	}
 }

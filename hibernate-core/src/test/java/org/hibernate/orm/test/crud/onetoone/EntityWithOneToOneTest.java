@@ -8,8 +8,6 @@ package org.hibernate.orm.test.crud.onetoone;
 
 import java.util.Calendar;
 
-import org.hamcrest.CoreMatchers;
-
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
 import org.hibernate.orm.test.support.domains.gambit.EntityWithOneToOne;
@@ -19,8 +17,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import org.hamcrest.CoreMatchers;
+
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
@@ -89,6 +88,42 @@ public class EntityWithOneToOneTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
+	public void testUpdate(){
+		SimpleEntity other = new SimpleEntity(
+				3,
+				Calendar.getInstance().getTime(),
+				null,
+				Integer.MIN_VALUE,
+				Long.MIN_VALUE,
+				null
+		);
+
+		sessionFactoryScope().inTransaction(
+				session -> {
+					final EntityWithOneToOne loaded = session.get( EntityWithOneToOne.class, 1 );
+					assert loaded != null;
+					assertThat( loaded.getName(), equalTo( "first" ) );
+					assert loaded.getOther() != null;
+					assertThat( loaded.getOther().getId(), equalTo( 2 ) );
+					session.delete( loaded.getOther() );
+					loaded.setOther( other );
+					session.save( other );
+				}
+		);
+
+		sessionFactoryScope().inTransaction(
+				session -> {
+					final EntityWithOneToOne loaded = session.get( EntityWithOneToOne.class, 1 );
+					assert loaded != null;
+					assertThat( loaded.getName(), equalTo( "first" ) );
+					assert loaded.getOther() != null;
+					assertThat( loaded.getOther().getId(), equalTo( 3 ) );
+				}
+		);
+
+	}
+
+	@Test
 	public void testQueryParentAttribute2() {
 		sessionFactoryScope().inTransaction(
 				session -> {
@@ -147,6 +182,7 @@ public class EntityWithOneToOneTest extends SessionFactoryBasedFunctionalTest {
 					assert loaded != null;
 					assert loaded.getOther() != null;
 					session.remove( loaded );
+					session.remove( loaded.getOther() );
 				}
 		);
 
@@ -154,14 +190,6 @@ public class EntityWithOneToOneTest extends SessionFactoryBasedFunctionalTest {
 				session -> {
 					final EntityWithOneToOne notfound = session.find( EntityWithOneToOne.class, 1 );
 					assertThat( notfound, CoreMatchers.nullValue() );
-				}
-		);
-
-		sessionFactoryScope().inTransaction(
-				session -> {
-					final SimpleEntity simpleEntity = session.find( SimpleEntity.class, 2 );
-					assertThat( simpleEntity, notNullValue() );
-					session.remove( simpleEntity );
 				}
 		);
 	}

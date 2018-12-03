@@ -13,9 +13,11 @@ import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
 import org.hibernate.orm.test.support.domains.gambit.EntityWithManyToOneJoinTable;
 import org.hibernate.orm.test.support.domains.gambit.SimpleEntity;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
@@ -35,8 +37,19 @@ public class EntityWithManyToOneJoinTableTest extends SessionFactoryBasedFunctio
 		return true;
 	}
 
+	@AfterEach
+	public void tearDown() {
+		sessionFactoryScope().inTransaction(
+				session -> {
+					final EntityWithManyToOneJoinTable loaded = session.get( EntityWithManyToOneJoinTable.class, 1 );
+					session.delete( loaded );
+					session.delete( loaded.getOther() );
+				}
+		);
+	}
+
 	@Test
-	public void testOperations() {
+	public void testSave() {
 		EntityWithManyToOneJoinTable entity = new EntityWithManyToOneJoinTable( 1, "first", Integer.MAX_VALUE );
 
 		SimpleEntity other = new SimpleEntity(
@@ -70,6 +83,27 @@ public class EntityWithManyToOneJoinTableTest extends SessionFactoryBasedFunctio
 					assertThat( loaded.getSomeInteger(), equalTo( Integer.MAX_VALUE ) );
 				}
 		);
+	}
+
+	@Test
+	public void testHqlSelect() {
+		EntityWithManyToOneJoinTable entity = new EntityWithManyToOneJoinTable( 1, "first", Integer.MAX_VALUE );
+
+		SimpleEntity other = new SimpleEntity(
+				2,
+				Calendar.getInstance().getTime(),
+				null,
+				Integer.MAX_VALUE,
+				Long.MAX_VALUE,
+				null
+		);
+
+		entity.setOther( other );
+
+		sessionFactoryScope().inTransaction( session -> {
+			session.save( other );
+			session.save( entity );
+		} );
 
 		sessionFactoryScope().inTransaction(
 				session -> {
@@ -80,7 +114,53 @@ public class EntityWithManyToOneJoinTableTest extends SessionFactoryBasedFunctio
 					assertThat( value, equalTo( "first" ) );
 				}
 		);
+	}
 
+	@Test
+	public void testUpdate() {
+		EntityWithManyToOneJoinTable entity = new EntityWithManyToOneJoinTable( 1, "first", Integer.MAX_VALUE );
 
+		SimpleEntity other = new SimpleEntity(
+				2,
+				Calendar.getInstance().getTime(),
+				null,
+				Integer.MAX_VALUE,
+				Long.MAX_VALUE,
+				null
+		);
+
+		entity.setOther( other );
+
+		sessionFactoryScope().inTransaction( session -> {
+			session.save( other );
+			session.save( entity );
+		} );
+
+		SimpleEntity anOther = new SimpleEntity(
+				3,
+				Calendar.getInstance().getTime(),
+				null,
+				Integer.MIN_VALUE,
+				Long.MIN_VALUE,
+				null
+		);
+
+		sessionFactoryScope().inTransaction(
+				session -> {
+					final EntityWithManyToOneJoinTable loaded = session.get( EntityWithManyToOneJoinTable.class, 1 );
+					assert loaded != null;
+					session.save( anOther );
+					loaded.setOther( anOther );
+				}
+		);
+
+		sessionFactoryScope().inTransaction(
+				session -> {
+					final EntityWithManyToOneJoinTable loaded = session.get( EntityWithManyToOneJoinTable.class, 1 );
+
+					assertThat( loaded.getOther(), notNullValue() );
+					assertThat( loaded.getOther().getId(), equalTo( 3 ) );
+				}
+		);
 	}
 }

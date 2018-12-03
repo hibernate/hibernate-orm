@@ -6,15 +6,6 @@
  */
 package org.hibernate.testing.bytecode.enhancement;
 
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
-import org.hibernate.bytecode.enhance.spi.Enhancer;
-import org.hibernate.cfg.Environment;
-import org.hibernate.testing.junit4.CustomRunner;
-import org.junit.runner.Runner;
-import org.junit.runners.Suite;
-import org.junit.runners.model.InitializationError;
-import org.junit.runners.model.RunnerBuilder;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -22,6 +13,17 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.enhance.spi.Enhancer;
+import org.hibernate.cfg.Environment;
+import org.hibernate.testing.junit4.CustomRunner;
+import org.junit.runner.Runner;
+import org.junit.runner.notification.RunNotifier;
+import org.junit.runners.ParentRunner;
+import org.junit.runners.Suite;
+import org.junit.runners.model.InitializationError;
+import org.junit.runners.model.RunnerBuilder;
 
 /**
  * @author Luis Barreiro
@@ -109,6 +111,24 @@ public class BytecodeEnhancerRunner extends Suite {
 				}
 			}
 		};
+	}
+
+	@Override
+	protected void runChild(Runner runner, RunNotifier notifier) {
+		// This is ugly but, for now, ORM class loading is inconsistent.
+		// It sometimes use ClassLoaderService which takes into account AvailableSettings.CLASSLOADERS, and sometimes
+		// ReflectHelper#classForName() which uses the TCCL.
+		// See https://hibernate.atlassian.net/browse/HHH-13136 for more information.
+		ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
+		try {
+			Thread.currentThread().setContextClassLoader(
+							( (ParentRunner<?>) runner ).getTestClass().getJavaClass().getClassLoader() );
+
+			super.runChild( runner, notifier );
+		}
+		finally {
+			Thread.currentThread().setContextClassLoader( originalClassLoader );
+		}
 	}
 
 }

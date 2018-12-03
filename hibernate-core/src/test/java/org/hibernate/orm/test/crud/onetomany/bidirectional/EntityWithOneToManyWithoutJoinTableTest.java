@@ -16,6 +16,7 @@ import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
 import org.hibernate.orm.test.support.domains.gambit.EntityWithManyToOneWithoutJoinTable;
 import org.hibernate.orm.test.support.domains.gambit.EntityWithOneToManyNotOwned;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -27,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 /**
  * @author Chris Cranford
  */
-public class EntityWithManyToOneNonJoinTableCrudTest extends SessionFactoryBasedFunctionalTest {
+public class EntityWithOneToManyWithoutJoinTableTest extends SessionFactoryBasedFunctionalTest {
 	@Override
 	protected void applyMetadataSources(MetadataSources metadataSources) {
 		super.applyMetadataSources( metadataSources );
@@ -35,13 +36,27 @@ public class EntityWithManyToOneNonJoinTableCrudTest extends SessionFactoryBased
 		metadataSources.addAnnotatedClass( EntityWithOneToManyNotOwned.class );
 	}
 
+//	@AfterEach
+//	public void tearDown() {
+//		sessionFactoryScope().inTransaction(
+//				session -> {
+//					final EntityWithOneToManyNotOwned loaded = session.get(
+//							EntityWithOneToManyNotOwned.class,
+//							1
+//					);
+//					session.remove( loaded.getChildren() );
+//					session.remove( loaded );
+//				}
+//		);
+//	}
+
 	@Override
 	protected boolean exportSchema() {
 		return true;
 	}
 
 	@Test
-	public void testSaveOperation() {
+	public void testSave() {
 		EntityWithOneToManyNotOwned owner = new EntityWithOneToManyNotOwned();
 		owner.setId( 1 );
 
@@ -61,17 +76,17 @@ public class EntityWithManyToOneNonJoinTableCrudTest extends SessionFactoryBased
 				session -> {
 					EntityWithOneToManyNotOwned retrieved = session.get( EntityWithOneToManyNotOwned.class, 1 );
 					assertThat( retrieved, notNullValue() );
-					List<EntityWithManyToOneWithoutJoinTable> childs = retrieved.getChilds();
+					List<EntityWithManyToOneWithoutJoinTable> children = retrieved.getChildren();
 
 					assertFalse(
-							Hibernate.isInitialized( childs ),
+							Hibernate.isInitialized( children ),
 							"The association should ne not initialized"
 
 					);
-					assertThat( childs.size(), is( 2 ) );
+					assertThat( children.size(), is( 2 ) );
 
 					Map<Integer, EntityWithManyToOneWithoutJoinTable> othersById = new HashMap<>();
-					for ( EntityWithManyToOneWithoutJoinTable child : childs ) {
+					for ( EntityWithManyToOneWithoutJoinTable child : children ) {
 						othersById.put( child.getId(), child );
 					}
 
@@ -81,8 +96,34 @@ public class EntityWithManyToOneNonJoinTableCrudTest extends SessionFactoryBased
 	}
 
 	@Test
+	@Disabled("Issue with the empty list initialization")
+	public void testSaveWhitoutChildren() {
+		EntityWithOneToManyNotOwned owner = new EntityWithOneToManyNotOwned();
+		owner.setId( 2 );
+
+		sessionFactoryScope().inTransaction(
+				session -> {
+					session.save( owner );
+				} );
+
+		sessionFactoryScope().inTransaction(
+				session -> {
+					EntityWithOneToManyNotOwned retrieved = session.get( EntityWithOneToManyNotOwned.class, 2 );
+					assertThat( retrieved, notNullValue() );
+					List<EntityWithManyToOneWithoutJoinTable> children = retrieved.getChildren();
+
+					assertFalse(
+							Hibernate.isInitialized( children ),
+							"The association should ne not initialized"
+
+					);
+					assertThat( children.size(), is( 0 ) );
+				} );
+	}
+
+	@Test
 	@Disabled("Update OneToMany association not yet implemented")
-	public void testUpdateperation() {
+	public void testUpdate() {
 		EntityWithOneToManyNotOwned owner = new EntityWithOneToManyNotOwned();
 		owner.setId( 1 );
 
@@ -109,17 +150,17 @@ public class EntityWithManyToOneNonJoinTableCrudTest extends SessionFactoryBased
 				session -> {
 					EntityWithOneToManyNotOwned retrieved = session.get( EntityWithOneToManyNotOwned.class, 1 );
 					assertThat( retrieved, notNullValue() );
-					List<EntityWithManyToOneWithoutJoinTable> childs = retrieved.getChilds();
+					List<EntityWithManyToOneWithoutJoinTable> children = retrieved.getChildren();
 
 					assertFalse(
-							Hibernate.isInitialized( childs ),
+							Hibernate.isInitialized( children ),
 							"The association should ne not initialized"
 
 					);
-					assertThat( childs.size(), is( 2 ) );
+					assertThat( children.size(), is( 2 ) );
 
 					Map<Integer, EntityWithManyToOneWithoutJoinTable> othersById = new HashMap<>();
-					for ( EntityWithManyToOneWithoutJoinTable child : childs ) {
+					for ( EntityWithManyToOneWithoutJoinTable child : children ) {
 						othersById.put( child.getId(), child );
 					}
 

@@ -21,7 +21,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Steve Ebersole
  */
-public class EntityWithManyToOneSelfReferenceCrudTest extends SessionFactoryBasedFunctionalTest {
+public class EntityWithManyToOneSelfReferenceTest extends SessionFactoryBasedFunctionalTest {
 	@Override
 	protected void applyMetadataSources(MetadataSources metadataSources) {
 		super.applyMetadataSources( metadataSources );

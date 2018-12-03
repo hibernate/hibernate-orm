@@ -233,13 +233,13 @@ public class CollectionElementEntityImpl<J>
 		//getEntityDescriptor().getIdentifierDescriptor().dehydrate( value, jdbcValueCollector, clause, session );
 		getEntityDescriptor().getIdentifierDescriptor().dehydrate(
 				value,
-				(jdbcValue, sqlExpressableType, boundColumn) -> {
-					jdbcValueCollector.collect(
-							jdbcValue,
-							sqlExpressableType,
-							foreignKey.resolveReferringFromTargetColumn( boundColumn )
-					);
-				},
+				(jdbcValue, sqlExpressableType, boundColumn) ->
+						jdbcValueCollector.collect(
+								jdbcValue,
+								sqlExpressableType,
+								foreignKey.resolveReferringFromTargetColumn( boundColumn )
+						)
+				,
 				clause,
 				session
 		);
@@ -297,7 +297,7 @@ public class CollectionElementEntityImpl<J>
 		entityDescriptor.visitFetchables( fetchableConsumer );
 	}
 
-	private static ForeignKey resolveForeignKey(
+	private ForeignKey resolveForeignKey(
 			Collection bootDescriptor,
 			Table table,
 			RuntimeModelCreationContext creationContext) {
@@ -307,31 +307,15 @@ public class CollectionElementEntityImpl<J>
 				.getForeignKeys();
 
 		ForeignKey resolvedForeignKey = null;
-		for ( ForeignKey foreignKey : foreignKeys ) {
-			if ( StringHelper.isEmpty( bootDescriptor.getMappedByProperty() ) ) {
+		if ( elementClassification.equals( ElementClassification.MANY_TO_MANY ) ) {
+			for ( ForeignKey foreignKey : foreignKeys ) {
 				if ( foreignKey.getTargetTable().equals( table ) ) {
 					resolvedForeignKey = foreignKey;
 					break;
 				}
 			}
-			else {
-				if ( foreignKey.getReferringTable().equals( table ) ) {
-					resolvedForeignKey = foreignKey;
-					break;
-				}
-			}
 		}
-
-		if ( resolvedForeignKey == null ) {
-			log.warnf(
-					String.format(
-							Locale.ROOT,
-							"Failed to locate foreign key for [%s] with mapped-by [%s], using fallback look-up.",
-							bootDescriptor.getRole(),
-							bootDescriptor.getMappedByProperty()
-					)
-			);
-
+		else {
 			for ( ForeignKey foreignKey : foreignKeys ) {
 				if ( foreignKey.getReferringTable().equals( table ) ) {
 					resolvedForeignKey = foreignKey;
@@ -339,6 +323,24 @@ public class CollectionElementEntityImpl<J>
 				}
 			}
 		}
+
+//		if ( resolvedForeignKey == null ) {
+//			log.warnf(
+//					String.format(
+//							Locale.ROOT,
+//							"Failed to locate foreign key for [%s] with mapped-by [%s], using fallback look-up.",
+//							bootDescriptor.getRole(),
+//							mappedByProperty
+//					)
+//			);
+//
+//			for ( ForeignKey foreignKey : foreignKeys ) {
+//				if ( foreignKey.getReferringTable().equals( table ) ) {
+//					resolvedForeignKey = foreignKey;
+//					break;
+//				}
+//			}
+//		}
 
 		assert resolvedForeignKey != null;
 

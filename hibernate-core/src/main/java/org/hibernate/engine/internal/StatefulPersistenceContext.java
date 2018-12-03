@@ -855,6 +855,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void addUninitializedCollection(PersistentCollectionDescriptor descriptor, PersistentCollection collection, Object collectionKey) {
 		final CollectionEntry ce = new CollectionEntry( collection, descriptor, collectionKey, flushing );
+		if ( !collection.wasInitialized() ) {
+			collection.beforeInitialize( -1, descriptor );
+		}
 		addCollection( collection, ce, collectionKey );
 		if ( descriptor.getBatchSize() > 1 ) {
 			getBatchFetchQueue().addBatchLoadableCollection( collection, ce );

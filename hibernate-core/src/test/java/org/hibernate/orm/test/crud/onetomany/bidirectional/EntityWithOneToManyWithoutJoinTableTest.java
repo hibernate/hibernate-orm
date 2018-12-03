@@ -36,19 +36,21 @@ public class EntityWithOneToManyWithoutJoinTableTest extends SessionFactoryBased
 		metadataSources.addAnnotatedClass( EntityWithOneToManyNotOwned.class );
 	}
 
-//	@AfterEach
-//	public void tearDown() {
-//		sessionFactoryScope().inTransaction(
-//				session -> {
-//					final EntityWithOneToManyNotOwned loaded = session.get(
-//							EntityWithOneToManyNotOwned.class,
-//							1
-//					);
-//					session.remove( loaded.getChildren() );
-//					session.remove( loaded );
-//				}
-//		);
-//	}
+	@AfterEach
+	public void tearDown() {
+		sessionFactoryScope().inTransaction(
+				session -> {
+					final EntityWithOneToManyNotOwned loaded = session.get(
+							EntityWithOneToManyNotOwned.class,
+							1
+					);
+
+					List<EntityWithManyToOneWithoutJoinTable> children = loaded.getChildren();
+					children.forEach( child -> session.remove( child ) );
+					session.remove( loaded );
+				}
+		);
+	}
 
 	@Override
 	protected boolean exportSchema() {
@@ -96,10 +98,9 @@ public class EntityWithOneToManyWithoutJoinTableTest extends SessionFactoryBased
 	}
 
 	@Test
-	@Disabled("Issue with the empty list initialization")
-	public void testSaveWhitoutChildren() {
+	public void testSaveWithoutChildren() {
 		EntityWithOneToManyNotOwned owner = new EntityWithOneToManyNotOwned();
-		owner.setId( 2 );
+		owner.setId( 1 );
 
 		sessionFactoryScope().inTransaction(
 				session -> {
@@ -108,7 +109,7 @@ public class EntityWithOneToManyWithoutJoinTableTest extends SessionFactoryBased
 
 		sessionFactoryScope().inTransaction(
 				session -> {
-					EntityWithOneToManyNotOwned retrieved = session.get( EntityWithOneToManyNotOwned.class, 2 );
+					EntityWithOneToManyNotOwned retrieved = session.get( EntityWithOneToManyNotOwned.class, 1 );
 					assertThat( retrieved, notNullValue() );
 					List<EntityWithManyToOneWithoutJoinTable> children = retrieved.getChildren();
 

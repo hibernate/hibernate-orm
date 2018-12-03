@@ -7,7 +7,9 @@
 package org.hibernate.orm.test.crud.onetomany.bidirectional;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -20,7 +22,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
 
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -45,12 +47,29 @@ public class EntityWithOneToManyTest extends SessionFactoryBasedFunctionalTest {
 		return true;
 	}
 
+	@AfterEach
+	public void tearDown() {
+		sessionFactoryScope().inTransaction(
+				session -> {
+					final User loaded = session.get(
+							User.class,
+							1
+					);
+
+					List<Item> bought = loaded.getBoughtItems();
+					bought.forEach( item -> session.remove( item ) );
+					session.remove( loaded );
+				}
+		);
+	}
+
 	@Test
-	@Disabled()
 	public void testSave() {
 		User user = new User( 1, "Fab" );
 		Item firstItem = new Item( 2, 100.0 );
-		Item secondItem = new Item( 3, 100.0 );
+		Item secondItem = new Item( 3, 120.0 );
+		user.addBoughtItem( firstItem );
+		user.addBoughtItem( secondItem );
 
 		sessionFactoryScope().inTransaction(
 				session -> {
@@ -73,10 +92,35 @@ public class EntityWithOneToManyTest extends SessionFactoryBasedFunctionalTest {
 
 					);
 					assertThat( boughtItems.size(), is( 2 ) );
+					Map<Integer, Item> othersById = new HashMap<>();
+					for ( Item item : boughtItems ) {
+						othersById.put( item.getId(), item );
+					}
+
+					assertThat( othersById.get( 2 ).getPrice(), is( 100.0 ) );
+					assertThat( othersById.get( 3 ).getPrice(), is( 120.0 ) );
+				}
+		);
+	}
+
+	@Test
+	public void testSaveWithoutChildren() {
+		User user = new User( 1, "Fab" );
+		sessionFactoryScope().inTransaction(
+				session -> {
+					session.save( user );
 				}
 		);
 
+		sessionFactoryScope().inTransaction(
+				session -> {
+					User retrieved = session.get( User.class, 1 );
+					assertThat( retrieved, notNullValue() );
 
+					List<Item> boughtItems = retrieved.getBoughtItems();
+
+					assertThat( boughtItems.size(), is( 0 ) );
+				} );
 	}
 
 	@Entity(name = "User")

@@ -1489,7 +1489,7 @@ public final class SessionImpl
 	public EntityTypeDescriptor getEntityDescriptor(final String entityName, final Object object) {
 		checkOpenOrWaitingForAutoClose();
 		if ( entityName == null ) {
-			return getFactory().getMetamodel().findEntityDescriptor( guessEntityName( object ) );
+			return getFactory().getMetamodel().getEntityDescriptor( guessEntityName( object ) );
 		}
 		else {
 			// try block is a hack around fact that currently tuplizers are not

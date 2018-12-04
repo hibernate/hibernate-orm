@@ -303,7 +303,7 @@ public class BasicValue
 					localTypeParams,
 					explicitMutabilityPlan,
 					resolutionContext.getMetadataBuildingContext()
-		    );
+			);
 		}
 
 

@@ -74,8 +74,18 @@ Known limitations:
 
 relocated::Envers (`hibernate-envers`) has been folded into the `hibernate-core` module to provide better integration - easier
 and more powerful for users.
-disabled:: The following artifacts are currently disabled
+disabled:: The following artifacts are temporarily disabled
 * `hibernate-spatial`
+
+* `hibernate-agroal`
+* `hibernate-hikaricp`
+* `hibernate-proxool`
+* `hibernate-vibur`
+
+* `hibernate-ehcache`
+* `hibernate-infinispan`
+* `hibernate-jcache`
+
 
 
 === Envers folded into hibernate-core

@@ -26,7 +26,7 @@ project.tasks.jar.enabled = false
 project.tasks.javadoc.enabled = false
 
 evaluationDependsOn( ':hibernate-core' )
-evaluationDependsOn( ':hibernate-envers' )
+//evaluationDependsOn( ':hibernate-envers' )
 
 ext {
 	// NOTE : `wildflyVersion` comes from libraries.gradle...
@@ -93,7 +93,7 @@ task createCoreFeaturePackZip( type: Zip, dependsOn: [featurepack] ) {
 
 provision {
 	dependsOn( createCoreFeaturePackZip )
-	dependsOn( ":hibernate-envers:jar")
+//	dependsOn( ":hibernate-envers:jar")
 	dependsOn( ":hibernate-core:jar")
 	configuration = file( 'wildfly-server-provisioning.xml' )
 	destinationDir = file( "$project.wildFlyInstallDir" )
@@ -109,7 +109,7 @@ provision {
 
 dependencies {
 	testCompile project( ":hibernate-core" )
-	testCompile project( ":hibernate-envers" )
+//	testCompile project( ":hibernate-envers" )
 	testCompile libraries.junit
 	testCompile libraries.arquillian_junit_container
 	testCompile libraries.arquillian_protocol_servlet
@@ -119,7 +119,7 @@ dependencies {
 
 	featurePack libraries.byteBuddy
 	featurePack project( ":hibernate-core" )
-	featurePack project( ":hibernate-envers" )
+//	featurePack project( ":hibernate-envers" )
 	featurePack "org.wildfly:jipijapa-hibernate5:${wildflyVersion}"
 }
 

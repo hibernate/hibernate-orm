@@ -21,6 +21,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 
@@ -167,13 +168,11 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 		//property.setOptional( property.isOptional() );
 		property.setPersistentClass( component.getOwner() );
 		property.setPropertyAccessorName( referencedProperty.getPropertyAccessorName() );
-		final BasicValue value = new BasicValue( buildingContext, component.getMappedTable()
-		);
-		property.setValue( value );
 		final BasicValue referencedValue = (BasicValue) referencedProperty.getValueMapping();
+		final DependantValue value = new DependantValue( buildingContext, component.getMappedTable(), referencedValue );
+		property.setValue( value );
 		value.setExplicitTypeName( referencedValue.getTypeName() );
 		value.setTypeParameters( referencedValue.getTypeParameters() );
-		value.setJavaTypeDescriptor( referencedValue.getExplicitJavaTypeDescriptor() );
 		final List<MappedColumn> mappedColumns = referencedValue.getMappedColumns();
 		if ( joinColumns[0].isNameDeferred() ) {
 			joinColumns[0].copyReferencedStructureAndCreateDefaultJoinColumns(

@@ -105,47 +105,44 @@ distributions {
                 from parent.project( 'hibernate-core' ).configurations.provided.files { dep -> dep.name == 'javassist' }
             }
 
-//            into( 'lib/jpa' ) {
-//                from parent.project( 'hibernate-entitymanager' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
+//            into( 'lib/spatial' ) {
+//                from(
+//                        ( parent.project( 'hibernate-spatial' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
+//                                + parent.project( 'hibernate-spatial' ).configurations.runtime )
+//                                - parent.project( 'hibernate-core' ).configurations.runtime
+//                                - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
+//                )
 //            }
-
-            into( 'lib/spatial' ) {
-                from(
-                        ( parent.project( 'hibernate-spatial' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-                                + parent.project( 'hibernate-spatial' ).configurations.runtime )
-                                - parent.project( 'hibernate-core' ).configurations.runtime
-                                - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
-                )
-            }
 
             into( 'lib/jpa-metamodel-generator' ) {
                 from parent.project( 'hibernate-jpamodelgen' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
             }
 
-            into( 'lib/envers' ) {
-                from(
-                        ( parent.project( 'hibernate-envers' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-                                + parent.project( 'hibernate-envers' ).configurations.runtime )
-                                - parent.project( 'hibernate-core' ).configurations.runtime
-                                - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
-                )
-            }
-
-            into( 'lib/osgi' ) {
-                from(
-                        ( parent.project( 'hibernate-osgi' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-                                + parent.project( 'hibernate-osgi' ).configurations.runtime )
-                                - parent.project( 'hibernate-core' ).configurations.runtime
-                                - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
-                )
-                from(
-                        parent.project( 'hibernate-osgi' ).extensions.karaf.features.outputFile
-                )
-            }
+//            into( 'lib/envers' ) {
+//                from(
+//                        ( parent.project( 'hibernate-envers' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
+//                                + parent.project( 'hibernate-envers' ).configurations.runtime )
+//                                - parent.project( 'hibernate-core' ).configurations.runtime
+//                                - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
+//                )
+//            }
+//
+//            into( 'lib/osgi' ) {
+//                from(
+//                        ( parent.project( 'hibernate-osgi' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
+//                                + parent.project( 'hibernate-osgi' ).configurations.runtime )
+//                                - parent.project( 'hibernate-core' ).configurations.runtime
+//                                - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
+//                )
+//                from(
+//                        parent.project( 'hibernate-osgi' ).extensions.karaf.features.outputFile
+//                )
+//            }
 
             // todo : this closure is problematic as it does not write into the hibernate-release-$project.version directory
             // due to http://issues.gradle.org/browse/GRADLE-1450
-            [ 'hibernate-agroal', 'hibernate-c3p0', 'hibernate-ehcache', 'hibernate-hikaricp', 'hibernate-jcache', 'hibernate-proxool', 'hibernate-vibur' ].each { feature ->
+//            [ 'hibernate-agroal', 'hibernate-c3p0', 'hibernate-ehcache', 'hibernate-hikaricp', 'hibernate-jcache', 'hibernate-proxool', 'hibernate-vibur' ].each { feature ->
+            [ 'hibernate-c3p0' ].each { feature ->
                 final String shortName = feature.substring( 'hibernate-'.length() )
 // WORKAROUND http://issues.gradle.org/browse/GRADLE-1450
 //                into('lib/optional/' + shortName) {

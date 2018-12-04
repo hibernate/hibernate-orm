@@ -15,25 +15,44 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
+ * @asciidoc
+ *
  * Allows specifying the SQL type code to use for a column mapping.  Must
  * resolve to a {@link org.hibernate.type.descriptor.sql.SqlTypeDescriptor}.
  *
  * The SQL type code is defined by a {@linkplain java.sql.Types JDBC Types} code
  * or a custom code.
  *
- * @apiNote Should not be used in combination with {@link SqlTypeDescriptor}
+ * ````
+ * @Entity
+ * class User {
+ *     ...
+ *     // By default Hibernate maps Java's Integer to JDBC's INTEGER
+ *     // but here we want to use JDBC's TINYINT instead.
+ *     @SqlType( Types.TINYINT )
+ *     int getAge() { ... }
+ *
+ *     // By default Hibernate maps Java's String to JDBC's VARCHAR
+ *     // but here we want to use JDBC's NVARCHAR instead.
+ *     @SqlType( Types.NVARCHAR )
+ *     String getName() { ... }
+ * }
+ *
+ * ````
+ * Other forms of influencing the JDBC type used include:<ul>
+ *     <li>{@link javax.persistence.Enumerated} / {@link javax.persistence.EnumType}</li>
+ *     <li>{@link javax.persistence.TemporalType}</li>
+ *     <li>{@link javax.persistence.Lob}</li>
+ *     <li>{@link Nationalized}</li>
+ *     <li>{@link SqlTypeRegistration}</li>
+ * </ul>
+ *
+ * These forms should not be mixed on the same mapping.  The result is not defined
  *
  * @see org.hibernate.type.descriptor.sql.SqlTypeDescriptor
  * @see org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry
+ * @see SqlTypeRegistration
  *
- * @SqlTypeDef( 2001, MySqlTypeDescriptor.class )
- *
- * @Entity
- * class Person {
- * 	   @Basic
- *     @SqlType(2001)
- *     String getName() {...}
- * }
  * @author Steve Ebersole
  */
 @java.lang.annotation.Target({METHOD, FIELD, ANNOTATION_TYPE})

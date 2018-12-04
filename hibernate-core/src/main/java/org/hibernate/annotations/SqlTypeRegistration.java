@@ -19,7 +19,9 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Describes a SqlTypeDescriptor to be
+ * Describes a SqlTypeDescriptor to be added to the
+ * {@link org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry}
+ *
  * @author Steve Ebersole
  */
 @java.lang.annotation.Target({TYPE, METHOD, FIELD, ANNOTATION_TYPE})

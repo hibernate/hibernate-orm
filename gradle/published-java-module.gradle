@@ -87,6 +87,7 @@ javadoc {
 	final int currentYear = new GregorianCalendar().get( Calendar.YEAR )
 
 	configure( options ) {
+//		options.docletpath = configurations.asciidoclet.files.asType(List)
 		windowTitle = "$project.name JavaDocs"
 		docTitle = "$project.name JavaDocs ($project.version)"
 		bottom = "Copyright &copy; 2001-$currentYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."

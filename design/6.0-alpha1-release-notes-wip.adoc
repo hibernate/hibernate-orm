@@ -43,7 +43,10 @@ Known limitations:
 * inheritance is not yet implemented (limited support for discriminator-based)
 * support for `@SQLInsert`, `@SQLDelete`, etc not yet implemented
 
-See the new _Type System Customization_ chapter in the user guide for details
+See the `design/type-customization.adoc` document in the root of the project.  It
+describes how to customize Hibernate's type system and how Hibernate maps values
+to the database.  This document will eventually become a chapter in the user guide.
+
 
 
 === Queries
@@ -59,11 +62,20 @@ Quite a few new HQL language features are planned for 6.0.  Alpha1  includes the
 * Expanded literal type support using JDBC escape-like syntax.  E.g. `where e.startTime < {ts '1999-01-01 00:00:00.0'}`
 * Better support for custom query functions.  Better, but different - suppliers of custom functions will need to update to the new signatures designed to work with an AST
 
-Note also that Hibernate's legacy Criteria support has been removed
+Note also that Hibernate's legacy `org.hibernate.Criteria` support has been removed.  `Query#iterate`
+has also been removed.
 
 Known limitations:
 * support for criteria queries not not yet implemented
 * support for native queries not not yet implemented
+
+
+=== Artifacts
+
+relocated::Envers (`hibernate-envers`) has been folded into the `hibernate-core` module to provide better integration - easier
+and more powerful for users.
+disabled:: The following artifacts are currently disabled
+* `hibernate-spatial`
 
 
 === Envers folded into hibernate-core
@@ -73,10 +85,6 @@ and more powerful for users.
 
 `hibernate-envers` has been "relocated" (in Maven terms)
 
-
-=== Miscellaneous
-
-* Drop `Query#iterate`
 
 
 === More information

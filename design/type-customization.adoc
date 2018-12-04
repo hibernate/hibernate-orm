@@ -13,9 +13,10 @@ is considered "incubating"
 [[JavaTypeDescriptorRegistry]]
 == JavaTypeDescriptorRegistry
 
-A Java type in the type system is modeled as `org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor`.
-Hibernate always deals with a JavaTypeDescriptor rather than simply a `java.lang.Class` because the
-descriptor gives Hibernate additional information about the Java type.
+A Java type (Class) is modeled as `org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor`.
+Hibernate always deals with a JavaTypeDescriptor rather than simply a `java.lang.Class` - the
+descriptor gives Hibernate additional information about the Java type beyond what is available
+from Class
 
 `org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry` is a registry of
  `JavaTypeDescriptor` by name.  Generally the name is simply the name of the described

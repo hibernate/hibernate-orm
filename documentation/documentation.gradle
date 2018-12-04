@@ -26,6 +26,7 @@ rootProject.subprojects { subproject ->
 	}
 }
 
+
 apply from: rootProject.file( 'gradle/java-module.gradle' )
 
 apply plugin: 'org.asciidoctor.convert'
@@ -33,6 +34,9 @@ apply plugin: 'org.asciidoctor.convert'
 apply plugin: 'hibernate-matrix-testing'
 
 defaultTasks 'buildDocs'
+
+tasks.test.enabled = false
+tasks.compileTestJava.enabled = false
 
 
 dependencies {
@@ -45,7 +49,7 @@ dependencies {
 	testCompile( 'org.apache.commons:commons-lang3:3.4' )
 
 	testCompile( project(':hibernate-envers') )
-	testCompile( project(':hibernate-spatial') )
+//	testCompile( project(':hibernate-spatial') )
 	testCompile( project(path: ':hibernate-core', configuration: 'tests') )
 
 	testCompile( project(':hibernate-testing') )
@@ -64,7 +68,7 @@ dependencies {
 	testRuntime( libraries.mssql )
 	testRuntime( libraries.hana )
 
-	testCompile( project( ':hibernate-jcache' ) )
+//	testCompile( project( ':hibernate-jcache' ) )
 	testRuntime( libraries.ehcache3 )
 }
 
@@ -115,6 +119,7 @@ task aggregateJavadocs(type: Javadoc) {
 	maxMemory = '512m'
 	destinationDir = javadocDir
 	configure( options ) {
+//		options.docletpath = configurations.asciidoclet.files.asType(List)
 		overview = project.file( 'src/main/javadoc/overview.html' )
 		windowTitle = 'Hibernate JavaDocs'
 		docTitle = "Hibernate JavaDoc ($project.version)"

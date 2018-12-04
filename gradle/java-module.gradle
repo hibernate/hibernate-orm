@@ -109,7 +109,7 @@ dependencies {
 	testRuntime( libraries.informix )
 	testRuntime( libraries.hana )
 
-	asciidoclet 'org.asciidoctor:asciidoclet:1.+'
+	asciidoclet( libraries.asciidoclet )
 
 	if ( db.equalsIgnoreCase( 'oracle' ) ) {
 		testRuntime( libraries.oracle ) {

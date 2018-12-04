@@ -9,14 +9,13 @@ if ( !JavaVersion.current().java8Compatible ) {
 }
 
 include 'hibernate-core'
-include 'hibernate-entitymanager'
 include 'hibernate-testing'
 //include 'hibernate-osgi'
 
-//include 'hibernate-envers'
 //include 'hibernate-spatial'
 
-include 'hibernate-java8'
+include 'documentation'
+include 'release'
 
 //include 'hibernate-agroal'
 include 'hibernate-c3p0'
@@ -31,8 +30,6 @@ include 'hibernate-c3p0'
 //include 'hibernate-jipijapa'
 //include 'hibernate-orm-modules'
 
-//include 'documentation'
-//include 'release'
 
 include 'metamodel-generator'
 project(':metamodel-generator').projectDir = new File(rootProject.projectDir, "tooling/metamodel-generator")
@@ -43,6 +40,10 @@ project(':metamodel-generator').name = 'hibernate-jpamodelgen'
 //
 //include 'hibernate-enhance-maven-plugin'
 //project(':hibernate-enhance-maven-plugin').projectDir = new File(rootProject.projectDir, "tooling/hibernate-enhance-maven-plugin")
+
+include 'hibernate-entitymanager'
+include 'hibernate-envers'
+include 'hibernate-java8'
 
 rootProject.children.each { project ->
     project.buildFileName = "${project.name}.gradle"

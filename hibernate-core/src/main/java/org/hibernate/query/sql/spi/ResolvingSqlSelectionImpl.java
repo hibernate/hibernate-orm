@@ -69,6 +69,9 @@ public class ResolvingSqlSelectionImpl implements SqlSelection, JdbcValueExtract
 
 		if ( sqlExpressableType == null ) {
 			// assume we should auto-discover the type
+
+			// todo (6.0) : add support for resolving the STD when the type code is OTHER using `java.sql.ResultSetMetaData#getColumnTypeName` as a secondary indicator
+
 			final SqlTypeDescriptor sqlTypeDescriptor = jdbcResultsMetadata.resolveSqlTypeDescriptor( jdbcResultSetPosition );
 
 			final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();

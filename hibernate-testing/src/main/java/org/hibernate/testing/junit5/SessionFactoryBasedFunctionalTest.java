@@ -4,12 +4,13 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test;
+package org.hibernate.testing.junit5;
 
 import java.util.EnumSet;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -21,11 +22,6 @@ import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.Helper;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
-
-import org.hibernate.testing.junit5.FunctionalSessionFactoryTesting;
-import org.hibernate.testing.junit5.SessionFactoryProducer;
-import org.hibernate.testing.junit5.SessionFactoryScope;
-import org.hibernate.testing.junit5.SessionFactoryScopeContainer;
 
 import org.jboss.logging.Logger;
 
@@ -60,6 +56,8 @@ public abstract class SessionFactoryBasedFunctionalTest
 		final StandardServiceRegistry ssr = ssrBuilder.build();
 		try {
 			metadata = buildMetadata( ssr );
+			final SessionFactoryBuilder sfBuilder = metadata.getSessionFactoryBuilder();
+			configure( sfBuilder );
 			final SessionFactoryImplementor factory = (SessionFactoryImplementor) metadata.buildSessionFactory();
 			sessionFactoryBuilt( factory );
 			return factory;
@@ -92,10 +90,13 @@ public abstract class SessionFactoryBasedFunctionalTest
 		}
 	}
 
-	protected void sessionFactoryBuilt(SessionFactoryImplementor factory) {
+	protected void applySettings(StandardServiceRegistryBuilder builer) {
 	}
 
-	protected void applySettings(StandardServiceRegistryBuilder builer) {
+	protected void configure(SessionFactoryBuilder builder) {
+	}
+
+	protected void sessionFactoryBuilt(SessionFactoryImplementor factory) {
 	}
 
 	protected boolean strictJpaCompliance() {

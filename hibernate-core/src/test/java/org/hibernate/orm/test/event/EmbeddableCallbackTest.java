@@ -12,7 +12,7 @@ import javax.persistence.Id;
 import javax.persistence.PrePersist;
 
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
+import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.jupiter.api.Test;

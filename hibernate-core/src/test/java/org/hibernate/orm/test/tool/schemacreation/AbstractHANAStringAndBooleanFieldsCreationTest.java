@@ -18,7 +18,7 @@ import org.hibernate.testing.junit5.RequiresDialect;
 /**
  * @author Andrea Boriero
  */
-@RequiresDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true)
+@RequiresDialect(value = AbstractHANADialect.class, matchSubTypes = true)
 public class AbstractHANAStringAndBooleanFieldsCreationTest extends BaseSchemaCreationTestCase {
 	@Override
 	protected boolean createSqlScriptTempOutputFile() {

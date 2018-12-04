@@ -55,15 +55,15 @@ public class DialectFilterExtension implements ExecutionCondition {
 		if ( !effectiveRequiresDialects.isEmpty() ) {
 			StringBuilder requiredDialects = new StringBuilder(  );
 			for ( RequiresDialect requiresDialect : effectiveRequiresDialects ) {
-				requiredDialects.append(requiresDialect.dialectClass()  );
+				requiredDialects.append(requiresDialect.value()  );
 				requiredDialects.append( " " );
 				if ( requiresDialect.matchSubTypes() ) {
-					if ( requiresDialect.dialectClass().isInstance( dialect ) ) {
+					if ( requiresDialect.value().isInstance( dialect ) ) {
 						return ConditionEvaluationResult.enabled( "Matched @RequiresDialect" );
 					}
 				}
 				else {
-					if ( requiresDialect.dialectClass().equals( dialect.getClass() ) ) {
+					if ( requiresDialect.value().equals( dialect.getClass() ) ) {
 						return ConditionEvaluationResult.enabled( "Matched @RequiresDialect" );
 					}
 				}

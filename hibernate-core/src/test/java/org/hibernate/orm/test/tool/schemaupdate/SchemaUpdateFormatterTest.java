@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Koen Aers
  */
-@RequiresDialect(dialectClass = H2Dialect.class, matchSubTypes = true)
+@RequiresDialect(value = H2Dialect.class, matchSubTypes = true)
 @TestForIssue(jiraKey = "HHH-10158")
 public class SchemaUpdateFormatterTest extends BaseSchemaUnitTestCase {
 

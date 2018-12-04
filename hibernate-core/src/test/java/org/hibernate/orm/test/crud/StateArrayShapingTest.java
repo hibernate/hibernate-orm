@@ -12,7 +12,7 @@ import java.util.Date;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
-import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
+import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.hibernate.orm.test.support.domains.gambit.Component;
 import org.hibernate.orm.test.support.domains.gambit.EntityOfComposites;
 import org.hibernate.orm.test.support.domains.gambit.EntityWithManyToOneSelfReference;

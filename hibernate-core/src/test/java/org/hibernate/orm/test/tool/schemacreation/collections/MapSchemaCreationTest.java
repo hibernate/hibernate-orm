@@ -28,7 +28,7 @@ import org.hibernate.testing.junit5.schema.SchemaTest;
 /**
  * @author Andrea Boriero
  */
-@RequiresDialect( dialectClass = H2Dialect.class)
+@RequiresDialect( value = H2Dialect.class)
 public class MapSchemaCreationTest extends BaseSchemaCreationTestCase {
 
 	@Override

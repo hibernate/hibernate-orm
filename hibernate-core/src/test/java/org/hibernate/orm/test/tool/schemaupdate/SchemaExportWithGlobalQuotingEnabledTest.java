@@ -50,7 +50,7 @@ import static org.hamcrest.core.IsNot.not;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-9866")
-@RequiresDialect(dialectClass = MySQLDialect.class, matchSubTypes = true)
+@RequiresDialect(value = MySQLDialect.class, matchSubTypes = true)
 public class SchemaExportWithGlobalQuotingEnabledTest extends BaseSchemaUnitTestCase {
 
 	@Override

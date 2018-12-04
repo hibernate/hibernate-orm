@@ -2,68 +2,83 @@ package org.hibernate.test.c3p0;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.junit5.DatabaseAgnostic;
+import org.hibernate.testing.junit5.FailureExpected;
+import org.hibernate.testing.junit5.JiraKey;
+import org.hibernate.testing.junit5.RequiresDialect;
+import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-12749")
-@RequiresDialect(H2Dialect.class)
-public class C3P0DifferentIsolationLevelTest extends
-		BaseNonConfigCoreFunctionalTestCase {
+@JiraKey( "HHH-12749" )
+@DatabaseAgnostic
+@RequiresDialect( H2Dialect.class )
+public class C3P0DifferentIsolationLevelTest extends SessionFactoryBasedFunctionalTest {
+
+	private final SQLStatementInterceptor sqlStatementInterceptor = new SQLStatementInterceptor();
 
 	private C3P0ProxyConnectionProvider connectionProvider;
-	private SQLStatementInterceptor sqlStatementInterceptor;
 
 	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		sqlStatementInterceptor = new SQLStatementInterceptor( sfb );
-	}
+	protected void applySettings(StandardServiceRegistryBuilder builder) {
+		super.applySettings( builder );
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-		};
-	}
-
-	@Override
-	protected void addSettings(Map settings) {
 		connectionProvider = new C3P0ProxyConnectionProvider();
-		settings.put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
-		settings.put( AvailableSettings.ISOLATION, "REPEATABLE_READ" );
+
+		builder.applySetting( AvailableSettings.STATEMENT_INSPECTOR, sqlStatementInterceptor );
+		builder.applySetting( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
+		builder.applySetting( AvailableSettings.ISOLATION, "REPEATABLE_READ" );
+	}
+
+	@Override
+	protected void configure(SessionFactoryBuilder builder) {
+		super.configure( builder );
+
+		builder.applyStatementInspector( sqlStatementInterceptor );
+	}
+
+	@Override
+	protected void applyMetadataSources(MetadataSources metadataSources) {
+		super.applyMetadataSources( metadataSources );
+
+		metadataSources.addAnnotatedClass( Person.class );
+	}
+
+	@Override
+	protected boolean exportSchema() {
+		return true;
 	}
 
 	@Test
+	@FailureExpected( "Support for StatementInspector not yet implemented" )
 	public void testStoredProcedureOutParameter() throws SQLException {
-		clearSpies();
-
-		doInHibernate( this::sessionFactory, session -> {
-			Person person = new Person();
-			person.id = 1L;
-			person.name = "Vlad Mihalcea";
-
-			session.persist( person );
-		} );
+		sessionFactoryScope().inTransaction(
+				session -> {
+					Person person = new Person();
+					person.id = 1L;
+					person.name = "Vlad Mihalcea";
+					session.persist( person );
+				}
+		);
 
 		assertEquals( 1, sqlStatementInterceptor.getSqlQueries().size() );
 		assertTrue( sqlStatementInterceptor.getSqlQueries().get( 0 ).toLowerCase().startsWith( "insert into" ) );
@@ -84,6 +99,7 @@ public class C3P0DifferentIsolationLevelTest extends
 		verify( connectionSpy, times(1) ).setTransactionIsolation( Connection.TRANSACTION_REPEATABLE_READ );
 	}
 
+	@BeforeEach
 	private void clearSpies() {
 		sqlStatementInterceptor.getSqlQueries().clear();
 		connectionProvider.clear();

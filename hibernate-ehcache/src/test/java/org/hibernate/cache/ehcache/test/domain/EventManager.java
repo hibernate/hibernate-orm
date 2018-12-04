@@ -12,7 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
@@ -108,8 +108,8 @@ public class EventManager {
 
 		Query query = session.createQuery("from Event ev where ev.organizer = :organizer");
 
-		query.setCacheable(true);
-		query.setEntity("organizer", organizer);
+		query.setCacheable( true );
+		query.setParameter( "organizer", organizer );
 		List result = query.list();
 
 		session.getTransaction().commit();
@@ -117,22 +117,22 @@ public class EventManager {
 		return result;
 	}
 
-	/**
-	 * Use a Criteria query - see FORGE-247
-	 */
-	public List listEventsWithCriteria() {
-		Session session = sessionFactory.getCurrentSession();
-
-		session.beginTransaction();
-
-		List result = session.createCriteria(Event.class)
-			.setCacheable(true)
-			.list();
-
-		session.getTransaction().commit();
-
-		return result;
-	}
+//	/**
+//	 * Use a Criteria query - see FORGE-247
+//	 */
+//	public List listEventsWithCriteria() {
+//		Session session = sessionFactory.getCurrentSession();
+//
+//		session.beginTransaction();
+//
+//		List result = session.createCriteria(Event.class)
+//			.setCacheable(true)
+//			.list();
+//
+//		session.getTransaction().commit();
+//
+//		return result;
+//	}
 
 	public void addPersonToEvent(Long personId, Long eventId) {
 

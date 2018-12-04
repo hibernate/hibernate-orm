@@ -23,7 +23,7 @@ import org.hibernate.testing.junit5.schema.SchemaTest;
 /**
  * @author Andrea Boriero
  */
-@RequiresDialect(dialectClass = H2Dialect.class)
+@RequiresDialect(value = H2Dialect.class)
 public class TableGeneratorTest extends BaseSchemaCreationTestCase {
 	private static final int INITIAL_VALUE = 5;
 	private static final int EXPECTED_DB_INSERTED_VALUE = INITIAL_VALUE;

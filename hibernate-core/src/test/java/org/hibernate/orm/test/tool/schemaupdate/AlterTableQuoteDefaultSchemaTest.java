@@ -24,9 +24,9 @@ import org.junit.jupiter.api.Test;
  * @author Guillaume Smet
  */
 @TestForIssue(jiraKey = "HHH-12939")
-@RequiresDialect(dialectClass = H2Dialect.class)
-@RequiresDialect(dialectClass = PostgreSQL82Dialect.class)
-@RequiresDialect(dialectClass = SQLServer2012Dialect.class)
+@RequiresDialect(value = H2Dialect.class)
+@RequiresDialect(value = PostgreSQL82Dialect.class)
+@RequiresDialect(value = SQLServer2012Dialect.class)
 public class AlterTableQuoteDefaultSchemaTest extends AbstractAlterTableQuoteSchemaTest {
 	public static final String SCHEMA_NAME = "default-schema";
 

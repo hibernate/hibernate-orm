@@ -68,7 +68,7 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
-public class BaseNonConfigCoreFunctionalTestCase {
+public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 	public static final String VALIDATE_DATA_CLEANUP = "hibernate.test.validateDataCleanup";
 
 	private static final Logger log = Logger.getLogger( BaseNonConfigCoreFunctionalTestCase.class );

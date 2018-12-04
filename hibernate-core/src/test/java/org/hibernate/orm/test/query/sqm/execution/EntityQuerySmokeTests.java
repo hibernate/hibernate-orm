@@ -12,7 +12,7 @@ import java.util.List;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
+import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.hibernate.orm.test.support.domains.gambit.EntityOfBasics;
 import org.hibernate.orm.test.support.domains.retail.Vendor;
 

@@ -9,7 +9,7 @@ package org.hibernate.orm.test.crud.manytoone;
 import java.util.List;
 
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
+import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.hibernate.orm.test.support.domains.gambit.EntityWithLazyManyToOneSelfReference;
 
 import org.junit.jupiter.api.AfterEach;

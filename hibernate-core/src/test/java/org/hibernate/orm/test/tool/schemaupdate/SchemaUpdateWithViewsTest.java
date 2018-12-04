@@ -27,7 +27,7 @@ import org.hibernate.testing.junit5.schema.SchemaTest;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-1872")
-@RequiresDialect(dialectClass = PostgreSQL81Dialect.class, matchSubTypes = true)
+@RequiresDialect(value = PostgreSQL81Dialect.class, matchSubTypes = true)
 public class SchemaUpdateWithViewsTest extends BaseSchemaUnitTestCase {
 
 	@Override

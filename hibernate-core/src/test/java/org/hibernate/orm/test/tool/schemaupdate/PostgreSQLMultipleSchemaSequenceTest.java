@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.tool.schemaupdate;
 
-import java.sql.ResultSet;
 import java.util.EnumSet;
 import java.util.List;
 import javax.persistence.Entity;
@@ -32,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(dialectClass = PostgreSQL81Dialect.class)
+@RequiresDialect(value = PostgreSQL81Dialect.class)
 public class PostgreSQLMultipleSchemaSequenceTest extends BaseSchemaUnitTestCase {
 
 	@Override

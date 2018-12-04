@@ -18,7 +18,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PreInsertEventListener;
-import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
+import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit5.DialectFeatureChecks;

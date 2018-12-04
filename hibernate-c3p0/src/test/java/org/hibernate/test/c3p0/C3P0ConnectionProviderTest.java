@@ -17,9 +17,10 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.ConnectionProviderJdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.junit5.JiraKey;
+import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
@@ -28,22 +29,22 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Strong Liu
  */
-public class C3P0ConnectionProviderTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected void releaseSessionFactory() {
-		super.releaseSessionFactory();
-		try {
-			//c3p0 does not close physical connections right away, so without this hack a connection leak false alarm is triggered.
-			Thread.sleep( 100 );
-		}
-		catch ( InterruptedException e ) {
-		}
-	}
+public class C3P0ConnectionProviderTest extends SessionFactoryBasedFunctionalTest {
+//
+//	@Override
+//	protected void releaseSessionFactory() {
+//		super.releaseSessionFactory();
+//		try {
+//			//c3p0 does not close physical connections right away, so without this hack a connection leak false alarm is triggered.
+//			Thread.sleep( 100 );
+//		}
+//		catch ( InterruptedException e ) {
+//		}
+//	}
 
 	@Test
 	public void testC3P0isDefaultWhenThereIsC3P0Properties() {
-		JdbcServices jdbcServices = serviceRegistry().getService( JdbcServices.class );
+		JdbcServices jdbcServices = sessionFactory().getServiceRegistry().getService( JdbcServices.class );
 		ConnectionProviderJdbcConnectionAccess connectionAccess =
 			assertTyping(
 				ConnectionProviderJdbcConnectionAccess.class,
@@ -90,7 +91,8 @@ public class C3P0ConnectionProviderTest extends BaseCoreFunctionalTestCase {
 		assertTrue( "PooledDataSource BMean not found, please verify version of c3p0", mbeanfound );
 	}
 
-	@Test @TestForIssue(jiraKey="HHH-9498")
+	@Test
+	@JiraKey( "HHH-9498" )
 	public void testIsolationPropertyCouldBeEmpty() {
 		C3P0ConnectionProvider provider = new C3P0ConnectionProvider();
 		try {

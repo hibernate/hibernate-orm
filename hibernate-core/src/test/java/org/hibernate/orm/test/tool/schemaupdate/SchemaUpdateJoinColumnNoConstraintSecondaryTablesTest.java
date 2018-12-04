@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(dialectClass = H2Dialect.class)
+@RequiresDialect(value = H2Dialect.class)
 @TestForIssue(jiraKey = "HHH-8805")
 public class SchemaUpdateJoinColumnNoConstraintSecondaryTablesTest extends BaseSchemaUnitTestCase {
 

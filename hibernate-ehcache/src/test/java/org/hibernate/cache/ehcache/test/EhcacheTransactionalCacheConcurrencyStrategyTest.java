@@ -39,7 +39,8 @@ public class EhcacheTransactionalCacheConcurrencyStrategyTest
 
 	@Override
 	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		sqlStatementInterceptor = new SQLStatementInterceptor( sfb );
+		sqlStatementInterceptor = new SQLStatementInterceptor();
+		sfb.applyStatementInspector( sqlStatementInterceptor );
 	}
 
 	@Override

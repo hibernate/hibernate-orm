@@ -31,7 +31,7 @@ import org.hibernate.testing.junit5.schema.SchemaTest;
  * @see
  */
 @TestForIssue(jiraKey = "HHH-9745")
-@RequiresDialect(dialectClass = H2Dialect.class )
+@RequiresDialect(value = H2Dialect.class )
 public class SequenceReadingTest extends BaseSchemaUnitTestCase {
 
 	@Override

@@ -17,9 +17,9 @@ import org.hibernate.testing.junit5.schema.SchemaScope;
 import org.hibernate.testing.junit5.schema.SchemaTest;
 
 @TestForIssue(jiraKey = "HHH-11913")
-@RequiresDialect(dialectClass = H2Dialect.class)
-@RequiresDialect(dialectClass = PostgreSQL81Dialect.class)
-@RequiresDialect(dialectClass = MySQLDialect.class)
+@RequiresDialect(value = H2Dialect.class)
+@RequiresDialect(value = PostgreSQL81Dialect.class)
+@RequiresDialect(value = MySQLDialect.class)
 public class IndexesCreationTest extends BaseSchemaCreationTestCase {
 
 	@Override

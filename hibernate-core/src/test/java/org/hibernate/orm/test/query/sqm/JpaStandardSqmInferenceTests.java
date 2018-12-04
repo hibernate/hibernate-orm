@@ -9,15 +9,13 @@ package org.hibernate.orm.test.query.sqm;
 import javax.money.MonetaryAmount;
 
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
+import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.hibernate.orm.test.support.domains.helpdesk.HelpDeskDomainModel;
 import org.hibernate.orm.test.support.domains.helpdesk.Status;
 import org.hibernate.orm.test.support.domains.retail.RetailDomainModel;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 
-import org.hibernate.testing.hamcrest.AssignableMatcher;
-import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;

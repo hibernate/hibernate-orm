@@ -8,7 +8,7 @@ package org.hibernate.orm.test.query.sqm;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.jpa.spi.JpaCompliance;
-import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
+import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.hibernate.orm.test.support.domains.helpdesk.HelpDeskDomainModel;
 import org.hibernate.orm.test.support.domains.retail.RetailDomainModel;
 

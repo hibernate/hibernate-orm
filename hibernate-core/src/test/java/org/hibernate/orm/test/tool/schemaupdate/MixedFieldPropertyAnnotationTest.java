@@ -46,7 +46,7 @@ import org.hibernate.testing.junit5.schema.SchemaTest;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-9849")
-@RequiresDialect(dialectClass = MySQLDialect.class, matchSubTypes = true)
+@RequiresDialect(value = MySQLDialect.class, matchSubTypes = true)
 public class MixedFieldPropertyAnnotationTest extends BaseSchemaUnitTestCase {
 	protected ServiceRegistry serviceRegistry;
 	protected MetadataImplementor metadata;

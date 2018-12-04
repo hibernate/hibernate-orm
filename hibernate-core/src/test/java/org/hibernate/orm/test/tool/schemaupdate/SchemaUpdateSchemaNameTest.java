@@ -13,7 +13,6 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Table;
 
 import org.hibernate.dialect.MariaDB53Dialect;
-import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.orm.test.tool.BaseSchemaUnitTestCase;
 import org.hibernate.tool.schema.TargetType;
@@ -29,8 +28,8 @@ import org.hibernate.testing.junit5.schema.SchemaTest;
  *
  * @author Chris Cranford
  */
-@RequiresDialect(dialectClass = MySQL5Dialect.class)
-@RequiresDialect(dialectClass = MariaDB53Dialect.class)
+@RequiresDialect(value = MySQL5Dialect.class)
+@RequiresDialect(value = MariaDB53Dialect.class)
 @TestForIssue(jiraKey = "HHH-11455")
 public class SchemaUpdateSchemaNameTest extends BaseSchemaUnitTestCase {
 

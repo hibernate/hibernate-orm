@@ -15,7 +15,7 @@ import javax.persistence.Table;
 
 import org.hibernate.Hibernate;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
+import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

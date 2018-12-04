@@ -25,7 +25,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
-import org.hibernate.orm.test.BaseUnitTest;
+import org.hibernate.testing.junit5.BaseUnitTest;
 
 import org.jboss.logging.Logger;
 

@@ -12,7 +12,7 @@ import java.util.Map;
 
 import org.hibernate.Hibernate;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
+import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.hibernate.orm.test.support.domains.gambit.EntityWithManyToOneWithoutJoinTable;
 import org.hibernate.orm.test.support.domains.gambit.EntityWithOneToManyNotOwned;
 

@@ -7,35 +7,20 @@
 package org.hibernate.testing.jdbc;
 
 import java.util.LinkedList;
-import java.util.Map;
 
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
+ * todo (6.0) : use ManagedBean to locate SQLStatementInterceptor if specified by Class
+ *
  * @author Vlad Mihalcea
  */
-public class SQLStatementInterceptor {
+public class SQLStatementInterceptor implements StatementInspector {
 
 	private final LinkedList<String> sqlQueries = new LinkedList<>();
-
-	public SQLStatementInterceptor(SessionFactoryBuilder sessionFactoryBuilder) {
-		sessionFactoryBuilder.applyStatementInspector( (StatementInspector) sql -> {
-			sqlQueries.add( sql );
-			return sql;
-		} );
-	}
-
-	public SQLStatementInterceptor(Map settings) {
-		settings.put( AvailableSettings.STATEMENT_INSPECTOR, (StatementInspector) sql -> {
-			sqlQueries.add( sql );
-			return sql;
-		} );
-	}
 
 	public LinkedList<String> getSqlQueries() {
 		return sqlQueries;
@@ -51,5 +36,11 @@ public class SQLStatementInterceptor {
 
 	public void assertExecutedCount(int expected) {
 		assertEquals(expected, sqlQueries.size());
+	}
+
+	@Override
+	public String inspect(String sql) {
+		sqlQueries.add( sql );
+		return sql;
 	}
 }

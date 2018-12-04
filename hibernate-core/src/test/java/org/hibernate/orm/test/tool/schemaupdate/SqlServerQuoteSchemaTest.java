@@ -31,7 +31,7 @@ import static org.hamcrest.core.Is.is;
  * @author Vlad Mihalcea
  */
 @TestForIssue(jiraKey = "HHH-12106")
-@RequiresDialect(dialectClass = SQLServerDialect.class)
+@RequiresDialect(value = SQLServerDialect.class)
 public class SqlServerQuoteSchemaTest extends BaseSchemaUnitTestCase {
 
 	@Override

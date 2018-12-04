@@ -29,10 +29,10 @@ public @interface RequiresDialect {
 	/**
 	 * The Dialect class to match.
 	 */
-	Class<? extends Dialect> dialectClass();
+	Class<? extends Dialect> value();
 
 	/**
-	 * Should subtypes of {@link #dialectClass()} be matched?
+	 * Should subtypes of {@link #value()} be matched?
 	 */
 	boolean matchSubTypes() default true;
 }

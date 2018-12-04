@@ -25,7 +25,7 @@ import org.hibernate.testing.junit5.schema.SchemaTest;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-10605")
-@RequiresDialect(dialectClass = HSQLDialect.class, matchSubTypes = true)
+@RequiresDialect(value = HSQLDialect.class, matchSubTypes = true)
 public class SchemaDropSequenceTest extends BaseSchemaUnitTestCase {
 
 	@Override

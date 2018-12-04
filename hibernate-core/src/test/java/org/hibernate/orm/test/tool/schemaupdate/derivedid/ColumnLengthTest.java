@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Andrea Boriero
  */
-@RequiresDialect(dialectClass = H2Dialect.class)
+@RequiresDialect(value = H2Dialect.class)
 @TestForIssue( jiraKey= "HHH-12212")
 public class ColumnLengthTest
 		extends BaseSchemaUnitTestCase {

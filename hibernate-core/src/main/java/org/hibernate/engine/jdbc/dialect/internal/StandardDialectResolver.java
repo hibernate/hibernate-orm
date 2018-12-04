@@ -16,7 +16,7 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
  *
  * @author Steve Ebersole
  */
-public final class StandardDialectResolver implements DialectResolver {
+public class StandardDialectResolver implements DialectResolver {
 
 	@Override
 	public Dialect resolveDialect(DialectResolutionInfo info) {

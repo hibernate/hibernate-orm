@@ -471,11 +471,13 @@ public class MetamodelSelectBuilderProcess
 			// minus one because the root is not a fetch
 			final int fetchDepth = getNavigableReferenceStack().depth() - 1;
 
-			if ( fetchDepth == maximumFetchDepth ) {
-				joined = false;
-			}
-			else if ( fetchDepth > maximumFetchDepth ) {
-				return;
+			if ( maximumFetchDepth != null ) {
+				if ( fetchDepth == maximumFetchDepth ) {
+					joined = false;
+				}
+				else if ( fetchDepth > maximumFetchDepth ) {
+					return;
+				}
 			}
 
 			Fetch fetch = fetchable.generateFetch( fetchParent, fetchTiming, joined, lockMode, null, this, this );

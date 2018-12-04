@@ -24,8 +24,10 @@ import org.hibernate.service.Service;
  * The persister class is chosen according to the following rules:<ol>
  *     <li>the persister class defined explicitly via annotation or XML</li>
  *     <li>the persister class returned by the installed {@link RuntimeModelDescriptorClassResolver}</li>
- *     <li>the default provider as chosen by Hibernate Core (best choice most of the time)</li>
+ *     <li>the default provider as chosen by Hibernate</li>
  * </ol>
+ *
+ * @see RuntimeModelDescriptorFactory
  *
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
  * @author Steve Ebersole

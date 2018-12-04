@@ -1,6 +1,95 @@
 == 6.0 Alpha1 announcement
 
-* background
-* read-by-position rather than read-by-name
-* improving the generated SQL (no aliases, fewer joins, etc)
-** less data sent over-the-wire
+We are excited to announce the release of 6.0 Alpha1.
+
+The main design goal for 6.0 is to improve the performance of Hibernate's interactions with JDBC.  High-load performance
+testing showed that Hibernate's approach of reading values from the ResultSet by name to be the a big obstacle to scaling
+through-put.  This obviously affects the actual calls to ResultSet (resolving name to position).  But it also has
+implications on the SQL generated; since we do not need the selection alias to read back the selection, we no longer
+render the alias which, combined with other SQL generation improvements reduces the size of the query string sent to the
+database which help better optimize sending the query "across the wire" as well as the database optimizer's ability to
+parse the query (smaller strings parse faster).
+
+
+=== Type system
+
+6.0 required some pretty major changes to a few Hibernate contracts, especially Hibernate's "type system" to account for
+read-by-position rather than read-by-name.
+
+Alpha1 contains the initial proposal for handling various "basic value" customizations including `BasicType`,
+`UserType`, `@SqlType`, `@SqlTypeDescriptor`, `@SqlTypeRegistration`, `@JavaTypeDescriptor`, `@JavaTypeRegistration`.
+
+The descriptors for managed-types and collections have also changed significantly.  See `RuntimeModelDescriptorFactory`
+and `RuntimeModelDescriptorClassResolver`
+
+Supported:
+
+basic values:: fully supported
+embeddable values:: fully supported
+one-to-one:: supported (see note about "non-aggregated composite identifiers")
+many-to-one:: fully supported
+one-to-many:: supported except:
+* adding values to an existing collection
+* removing values from an existing collection
+* non-bidirectional mappings using a join table works, not using a join table does not
+many-to-many:: partial support
+any:: not yet supported
+
+
+Known limitations:
+* extra-lazy collection fetching is, for the most part, not yet implemented
+* "non-aggregated composite identifiers" (`@IdClass`) are not yet supported
+* post-insert identifier generation (IDENTITY, etc) not yet implemented
+* inheritance is not yet implemented (limited support for discriminator-based)
+* support for `@SQLInsert`, `@SQLDelete`, etc not yet implemented
+
+See the new _Type System Customization_ chapter in the user guide for details
+
+
+=== Queries
+
+Hibernate now uses Antlr v4 for interpreting HQL queries.  Antlr v4 is significantly faster than Antlr v2, which
+is what Hibernate has been using up through (and including) 5.x.
+
+We also cleaned up and refactored the grammars to perform better.
+
+Quite a few new HQL language features are planned for 6.0.  Alpha1  includes the following:
+
+* Nested dynamic-instantiations - use dynamic-instantiation as an argument to another dynamic-instantiation.  E.g. `select new DTO( a.id, new AnotherDTO( a.name, .... ), ... ) ...`
+* Expanded literal type support using JDBC escape-like syntax.  E.g. `where e.startTime < {ts '1999-01-01 00:00:00.0'}`
+* Better support for custom query functions.  Better, but different - suppliers of custom functions will need to update to the new signatures designed to work with an AST
+
+Note also that Hibernate's legacy Criteria support has been removed
+
+Known limitations:
+* support for criteria queries not not yet implemented
+* support for native queries not not yet implemented
+
+
+=== Envers folded into hibernate-core
+
+Envers is now defined as part of the `hibernate-core` model which provides for better integration - easier
+and more powerful for users.
+
+`hibernate-envers` has been "relocated" (in Maven terms)
+
+
+=== Miscellaneous
+
+* Drop `Query#iterate`
+
+
+=== More information
+
+See the user guide and migration guide for more information
+
+Gitter, IRC, ...
+
+
+=== Next step
+
+The plan for Alpha2 includes:
+
+* Inheritance
+* Complete association mapping support
+* Criteria

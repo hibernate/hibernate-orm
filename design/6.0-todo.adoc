@@ -136,6 +136,8 @@ As always the "trigger" for Beta1 is (relatively) stable API.
 	(use the default impl) move handling of String-based conversions into `#wrap` and `#unwrap`.
 	Tedious task, so adding a todo note here - bu partially done.
 
+* Literals for custom types
+
 * Change how we handle boolean/Boolean types in terms of JavaTypeDescriptor, specifically how we convert them
 	to/from their representation in the database (most databases do not support a boolean data type) such as
 	1/0, 'T'/'F', 'Y'/'N', etc.  The initial design plan is to leverage AttributeConverter (see

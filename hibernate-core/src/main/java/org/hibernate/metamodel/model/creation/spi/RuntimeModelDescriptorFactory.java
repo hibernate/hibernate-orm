@@ -25,6 +25,8 @@ import org.hibernate.service.Service;
  * Contract for creating persister instances including {@link EntityTypeDescriptor},
  * {@link PersistentCollectionDescriptor} and {@link EmbeddedTypeDescriptor}
  *
+ * @see RuntimeModelDescriptorClassResolver
+ *
  * @author Steve Ebersole
  */
 public interface RuntimeModelDescriptorFactory extends Service {

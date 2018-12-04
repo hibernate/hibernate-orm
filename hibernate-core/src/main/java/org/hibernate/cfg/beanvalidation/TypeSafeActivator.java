@@ -49,6 +49,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.SingleTableSubclass;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
 
 import org.jboss.logging.Logger;
 
@@ -174,6 +175,10 @@ class TypeSafeActivator {
 		final Set<Class<?>> groups = new HashSet<>( Arrays.asList( groupsArray ) );
 
 		for ( EntityMappingImplementor entityMapping : entityMappings ) {
+			if ( entityMapping.getExplicitRepresentationMode().equals( RepresentationMode.MAP ) ) {
+				continue;
+			}
+
 			final String className = entityMapping.getEntityName();
 
 			if ( className == null || className.length() == 0 ) {

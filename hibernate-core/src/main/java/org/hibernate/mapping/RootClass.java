@@ -22,6 +22,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.SingletonIterator;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
 
 /**
  * The root class of an inheritance hierarchy
@@ -59,6 +60,10 @@ public class RootClass extends PersistentClass implements TableOwner {
 				null
 		) );
 		getEntityMappingHierarchy().setRootType( this );
+
+		// by default we assume `MAP`
+		// when `setClassName` gets called, that triggers whether this will become `POJO` or not.
+		getEntityMappingHierarchy().setExplicitRepresentationMode( RepresentationMode.MAP );
 	}
 
 	@Override

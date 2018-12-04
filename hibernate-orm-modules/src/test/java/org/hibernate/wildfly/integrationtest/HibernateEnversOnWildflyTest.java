@@ -25,6 +25,8 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.descriptor.api.Descriptors;
 import org.jboss.shrinkwrap.descriptor.api.persistence21.PersistenceDescriptor;
 import org.jboss.shrinkwrap.descriptor.api.persistence21.PersistenceUnitTransactionType;
+
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -68,7 +70,10 @@ public class HibernateEnversOnWildflyTest {
 	@Inject
 	private UserTransaction userTransaction;
 
+	// todo (6.0) : Re-enable this test.
+
 	@Test
+	@Ignore("NYI - Temporarily ignored because POST_INSERT_INDICATOR is not yet supported")
 	public void testEnversCompatibility() throws Exception {
 		// revision 1
 		userTransaction.begin();

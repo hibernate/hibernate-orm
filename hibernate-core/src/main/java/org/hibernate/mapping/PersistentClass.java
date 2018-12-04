@@ -126,6 +126,10 @@ public abstract class PersistentClass
 	public void setClassName(String className) {
 		this.className = className == null ? null : className.intern();
 		this.mappedClass = null;
+
+		getEntityMappingHierarchy().setExplicitRepresentationMode(
+				this.className == null ? RepresentationMode.MAP : RepresentationMode.POJO
+		);
 	}
 
 	@Override
@@ -1127,12 +1131,13 @@ public abstract class PersistentClass
 
 	@Override
 	public RepresentationMode getExplicitRepresentationMode() {
-		if ( className != null ) {
+		return getEntityMappingHierarchy().getExplicitRepresentationMode();
+		/*if ( className != null ) {
 			return RepresentationMode.POJO;
 		}
 		else {
 			return RepresentationMode.MAP;
-		}
+		}*/
 	}
 
 	@Override

@@ -5,6 +5,10 @@
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 
+/**
+ * Support for modules that contain Java code
+ */
+
 buildscript {
 	repositories {
 		mavenCentral()
@@ -16,10 +20,6 @@ buildscript {
 
 import de.thetaphi.forbiddenapis.gradle.CheckForbiddenApis
 import org.apache.tools.ant.filters.ReplaceTokens
-
-/**
- * Support for modules that contain Java code
- */
 
 apply from: rootProject.file( 'gradle/base-information.gradle' )
 apply from: rootProject.file( 'gradle/libraries.gradle' )
@@ -175,20 +175,24 @@ if ( ext.toolsJar.exists() ) {
 // Testing
 
 tasks.withType( Test.class ).all { task ->
+	Test test = task as Test
+
 	if ( JavaVersion.current().isJava9Compatible() ) {
 		// Byteman needs this property to be set, https://developer.jboss.org/thread/274997
-		task.jvmArgs += ["-Djdk.attach.allowAttachSelf=true"]
+		test.jvmArgs += ["-Djdk.attach.allowAttachSelf=true"]
 	}
-	task.jvmArgs += [
+	test.jvmArgs += [
 			'-XX:+HeapDumpOnOutOfMemoryError',
 			"-XX:HeapDumpPath=${file( "${buildDir}/OOM-dump.hprof" ).absolutePath}",
 			'-XX:MetaspaceSize=512M'
 	]
 
-	task.maxHeapSize = '4G'
+	test.maxHeapSize = '4G'
 
-	task.systemProperties['hibernate.test.validatefailureexpected'] = true
-	task.systemProperties += System.properties.findAll { it.key.startsWith( "hibernate." ) }
+	test.systemProperties['hibernate.test.validatefailureexpected'] = true
+	test.systemProperties += System.properties.findAll { it.key.startsWith( "hibernate." ) }
+
+	test.enableAssertions = true
 }
 
 processTestResources {

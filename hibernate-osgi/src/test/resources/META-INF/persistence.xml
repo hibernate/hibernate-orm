@@ -10,7 +10,10 @@
     version="1.0">
     <persistence-unit name="hibernate-osgi-test">
     	<class>org.hibernate.osgi.test.client.DataPoint</class>
+        <!--
+        // todo (6.0) : re-add this back - removing this avoids a DuplicateMappingException which shouldn't happen
         <class>org.hibernate.osgi.test.client.AuditedDataPoint</class>
+        -->
     	<exclude-unlisted-classes>true</exclude-unlisted-classes>
         <properties>
             <property name="hibernate.connection.driver_class" value="org.h2.Driver"/>

@@ -19,6 +19,10 @@ ext {
 
 test.enabled = true
 
+junitPlatform {
+	details 'verbose'
+}
+
 sourceSets {
 	test {
 		// send javac output and resource copying to the same output directory for test
@@ -72,7 +76,7 @@ dependencies {
 
 	karafDistro "org.apache.karaf:apache-karaf:${project.karafVersion}@tar.gz"
 
-	hibernateEnvers( project( ':hibernate-envers' ) )
+	hibernateEnvers( project( ':hibernate-core' ) )
 }
 
 jar {
@@ -86,7 +90,6 @@ jar {
 			"javax.persistence.spi;version=\"${project.jpaVersion.osgiName}\""
 	}
 }
-
 
 task generateVersionFile {
 	File outputFileDir = project.file( "${buildDir}/classes/test/META-INF/hibernate-osgi/" )

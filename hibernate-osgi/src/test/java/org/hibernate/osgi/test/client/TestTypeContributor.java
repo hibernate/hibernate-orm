@@ -6,12 +6,14 @@
  */
 package org.hibernate.osgi.test.client;
 
+import java.sql.Types;
+
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
-import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
-import org.hibernate.type.descriptor.spi.WrapperOptions;
+import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 
@@ -36,17 +38,17 @@ public class TestTypeContributor implements TypeContributor {
 		}
 
 		@Override
-		public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
+		public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
+			return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.INTEGER );
+		}
+
+		@Override
+		public <X> X unwrap(TestType value, Class<X> type, SharedSessionContractImplementor session) {
 			return null;
 		}
 
 		@Override
-		public <X> X unwrap(TestType value, Class<X> type, WrapperOptions options) {
-			return null;
-		}
-
-		@Override
-		public <X> TestType wrap(X value, WrapperOptions options) {
+		public <X> TestType wrap(X value, SharedSessionContractImplementor session) {
 			return null;
 		}
 	}

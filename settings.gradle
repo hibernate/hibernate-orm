@@ -20,7 +20,7 @@ include 'release'
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Container integrations
 
-//include 'hibernate-osgi'
+include 'hibernate-osgi'
 include 'hibernate-jipijapa'
 include 'hibernate-orm-modules'
 
@@ -28,7 +28,7 @@ include 'hibernate-orm-modules'
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Connection pool integrations
 
-//include 'hibernate-agroal'
+include 'hibernate-agroal'
 include 'hibernate-c3p0'
 //include 'hibernate-hikaricp'
 //include 'hibernate-proxool'

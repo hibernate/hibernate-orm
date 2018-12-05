@@ -6,54 +6,15 @@
  */
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
-apply plugin: 'hibernate-matrix-testing'
+apply plugin: 'maven-publish'
+apply plugin: 'maven-publish-auth'
 
-description = 'Hibernate\'s entity version (audit/history) support'
+description = '(deprecated - use hibernate-core instead) Hibernate\'s entity version (audit/history) support'
 
 dependencies {
-    compile( project( ':hibernate-core' ) ) {
-        // Exclude access to this to avoid future use.
-        exclude group: "org.javassist", module: "javassist"
-    }
-
-    provided( libraries.ant )
-    annotationProcessor( project( ':hibernate-jpamodelgen' ) )
-
-    testCompile( project( ':hibernate-testing' ) )
-    testCompile( project( path: ':hibernate-core', configuration: 'tests' ) )
+    compile( project( ':hibernate-core' ) );
 }
 
-sourceSets {
-    test {
-        ext {
-            enversDemoJavaDir = file( "src/demo/java" )
-            enversDemoResourcesDir = file( "src/demo/resources" )
-        }
-        java {
-            srcDir enversDemoJavaDir
-        }
-        resources {
-            srcDir enversDemoResourcesDir
-        }
-    }
-}
-
-/*
-jar {
-    manifest {
-        instructionFirst 'Import-Package',
-            // TODO: Shouldn't have to explicitly list the JPA packages, but
-            // the plugin generates them with [1.0,2) versions.
-            "javax.persistence;version=\"${project.jpaVersion.osgiName}\"",
-            "javax.persistence.criteria;version=\"${project.jpaVersion.osgiName}\"",
-            "javax.persistence.metamodel;version=\"${project.jpaVersion.osgiName}\"",
-            "javax.persistence.spi;version=\"${project.jpaVersion.osgiName}\"",
-            // optionals
-            'javax.naming;resolution:=optional',
-            'org.apache.tools.ant;resolution:=optional'
-    }
-}
-*/
 jar {
     // The OSGi JAR manifest support does not like a non-existent classes dir,
     // so make sure we dont use the OSGi one :)
@@ -66,8 +27,25 @@ sourcesJar {
     manifest = null
 }
 
-tasks."matrix_mariadb" {
-    beforeTest { descriptor ->
-        println "Starting test: " + descriptor
-    }
+javadocJar {
+    manifest = null;
 }
+
+//ext {
+//    relocatedGroupId = 'org.hibernate'
+//    relocatedArtifactId = 'hibernate-core'
+//    relocatedVersion = rootProject.version
+//}
+//
+//publishing {
+//    publications {
+//        publishedArtifacts {
+//            pom.withXml {
+//                def relocation = asNode().appendNode( 'distributionManagement' ).appendNode( 'relation' )
+//                relocation.appendNode( 'groupId', project.relatedGroupId )
+//                relocation.appendNode( 'artifactId', project.relatedArtifactId )
+//                relocation.appendNode( 'version', project.relatedVersion )
+//            }
+//        }
+//    }
+//}

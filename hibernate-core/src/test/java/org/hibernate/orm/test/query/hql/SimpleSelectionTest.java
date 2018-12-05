@@ -49,6 +49,56 @@ public class SimpleSelectionTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
+	public void testLengthFunctionPredicate() {
+		sessionFactoryScope().inTransaction(
+				session -> {
+					List<Object> results = session.createQuery(
+							"select s.someString from SimpleEntity s where length(s.someString) > :p1 ORDER BY s.someString" )
+							.setParameter( "p1", 0L )
+							.list();
+					assertThat( results.size(), is( 2 ) );
+					assertThat( results.get( 0 ), is( "a" ) );
+				} );
+	}
+
+	@Test
+	public void testLengthFunctionSelection() {
+		sessionFactoryScope().inTransaction(
+				session -> {
+					List<Object> results = session.createQuery(
+							"select length(s.someString) from SimpleEntity s" )
+							.list();
+					assertThat( results.size(), is( 2 ) );
+					results.forEach( value -> assertThat( value, is( 1L ) ) );
+				} );
+	}
+
+	@Test
+	public void testSubstringFunctionPredicate() {
+		sessionFactoryScope().inTransaction(
+				session -> {
+					List<Object> results = session.createQuery(
+							"select s.someString from SimpleEntity s where substring(s.someString, 0, 1) = :p1" )
+							.setParameter( "p1", "a" )
+							.list();
+					assertThat( results.size(), is( 1 ) );
+					assertThat( results.get( 0 ), is( "a" ) );
+				} );
+	}
+
+	@Test
+	public void testSubstringFunctionSelection() {
+		sessionFactoryScope().inTransaction(
+				session -> {
+					List<Object> results = session.createQuery(
+							"select substring(s.someString, 0, 1) from SimpleEntity s ORDER BY s.someString" )
+							.list();
+					assertThat( results.size(), is( 2 ) );
+					assertThat( results.get( 0 ), is( "a" ) );
+				} );
+	}
+
+	@Test
 	public void testSelectAnIntegerConstant() {
 		sessionFactoryScope().inTransaction(
 				session -> {

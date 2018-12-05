@@ -24,12 +24,8 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
-import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
-import org.hibernate.metamodel.model.domain.spi.BasicTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.BasicValueMapper;
-import org.hibernate.metamodel.model.domain.spi.BasicValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierComposite;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
@@ -92,6 +88,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmMaxFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmMinFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmModFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmNullifFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmSubstringFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSumFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmTrimFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmUpperFunction;
@@ -167,6 +164,7 @@ import org.hibernate.sql.ast.tree.spi.expression.NullifFunction;
 import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.spi.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.spi.expression.SubQuery;
+import org.hibernate.sql.ast.tree.spi.expression.SubstrFunction;
 import org.hibernate.sql.ast.tree.spi.expression.SumFunction;
 import org.hibernate.sql.ast.tree.spi.expression.TrimFunction;
 import org.hibernate.sql.ast.tree.spi.expression.UnaryOperation;
@@ -203,8 +201,6 @@ import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameters;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.sql.results.spi.SqlSelection;
-import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.StandardBasicTypes.StandardBasicType;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -1400,7 +1396,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 		try {
 			return new LengthFunction(
-					(Expression) function.getArgument().accept( this ),
+					toExpression( function.getArgument().accept( this ) ),
 					getSessionFactory().getTypeConfiguration()
 							.getBasicTypeRegistry()
 							.getBasicType( Long.class )
@@ -1489,6 +1485,27 @@ public abstract class BaseSqmToSqlAstConverter
 					dividend,
 					divisor,
 					( (BasicValuedExpressableType) function.getExpressableType() ).getSqlExpressableType()
+			);
+		}
+		finally {
+			shallownessStack.pop();
+		}
+	}
+
+	@Override
+	public Object visitSubstringFunction(SqmSubstringFunction expression) {
+		shallownessStack.push( Shallowness.FUNCTION );
+
+		try {
+			List<Expression> expressionList = new ArrayList<>();
+			expressionList.add( toExpression( expression.getSource().accept( this ) ) );
+			expressionList.add( toExpression( expression.getStartPosition().accept( this ) ) );
+			expressionList.add( toExpression( expression.getLength().accept( this ) ) );
+
+			return new SubstrFunction(
+					expression.getFunctionName(),
+					expressionList,
+					( (BasicValuedExpressableType) expression.getExpressableType() ).getSqlExpressableType()
 			);
 		}
 		finally {
@@ -1659,7 +1676,7 @@ public abstract class BaseSqmToSqlAstConverter
 	@Override
 	public Object visitUpperFunction(SqmUpperFunction sqmFunction) {
 		return new UpperFunction(
-				(Expression) sqmFunction.getArgument().accept( this ),
+				toExpression( sqmFunction.getArgument().accept( this ) ),
 				( (BasicValuedExpressableType) sqmFunction.getExpressableType() ).getSqlExpressableType()
 		);
 

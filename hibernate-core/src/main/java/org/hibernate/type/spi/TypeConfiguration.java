@@ -13,6 +13,7 @@ import java.math.BigInteger;
 import java.sql.Types;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 import javax.persistence.EnumType;
 import javax.persistence.TemporalType;
@@ -38,6 +39,7 @@ import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.SqlExpressableType;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.StandardBasicTypes.StandardBasicType;
@@ -256,6 +258,14 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		@Override
 		public BasicJavaDescriptor<J> getJavaTypeDescriptor() {
 			return javaTypeDescriptor;
+		}
+
+		@Override
+		public void visitJdbcTypes(
+				Consumer<SqlExpressableType> action,
+				Clause clause,
+				TypeConfiguration typeConfiguration) {
+			action.accept( getSqlExpressableType() );
 		}
 	}
 

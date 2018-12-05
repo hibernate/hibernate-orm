@@ -21,6 +21,7 @@ import org.hibernate.sql.ast.produce.SqlTreeException;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.spi.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.spi.expression.SubstrFunction;
 import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.expression.AbsFunction;
@@ -486,6 +487,23 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	@SuppressWarnings("unchecked")
+	public void visitSubstrFunction(SubstrFunction function) {
+		appendSql( "substr(" );
+
+		boolean firstPass = true;
+		for ( Expression expression : function.getExpressions() ) {
+			if ( ! firstPass ) {
+				appendSql( COMA_SEPARATOR );
+			}
+			expression.accept( this );
+			firstPass = false;
+		}
+
+		appendSql( CLOSE_PARENTHESIS );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
 	public void visitCountFunction(CountFunction function) {
 		appendSql( "count(" );
 		if ( function.isDistinct() ) {
@@ -644,7 +662,7 @@ public abstract class AbstractSqlAstWalker
 	@Override
 	@SuppressWarnings("unchecked")
 	public void visitUpperFunction(UpperFunction function) {
-		appendSql( "lower(" );
+		appendSql( "upper(" );
 		function.getArgument().accept( this );
 		appendSql( CLOSE_PARENTHESIS );
 	}

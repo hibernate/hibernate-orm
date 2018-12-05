@@ -134,6 +134,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmConcatFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCountFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCountStarFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmLengthFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmLowerFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmMaxFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmMinFunction;
@@ -1272,18 +1273,6 @@ public class SemanticQueryBuilder
 		final SqmExpression lhs = (SqmExpression) ctx.expression().get( 0 ).accept( this );
 		final SqmExpression rhs = (SqmExpression) ctx.expression().get( 1 ).accept( this );
 
-		if ( lhs.getInferableType() != null ) {
-			if ( rhs instanceof InferableTypeSqmExpression ) {
-				( (InferableTypeSqmExpression) rhs ).impliedType( lhs.getInferableType() );
-			}
-		}
-
-		if ( rhs.getInferableType() != null ) {
-			if ( lhs instanceof InferableTypeSqmExpression ) {
-				( (InferableTypeSqmExpression) lhs ).impliedType( rhs.getInferableType() );
-			}
-		}
-
 		return new RelationalSqmPredicate( RelationalPredicateOperator.GREATER_THAN, lhs, rhs );
 	}
 
@@ -1292,18 +1281,6 @@ public class SemanticQueryBuilder
 		final SqmExpression lhs = (SqmExpression) ctx.expression().get( 0 ).accept( this );
 		final SqmExpression rhs = (SqmExpression) ctx.expression().get( 1 ).accept( this );
 
-		if ( lhs.getInferableType() != null ) {
-			if ( rhs instanceof InferableTypeSqmExpression ) {
-				( (InferableTypeSqmExpression) rhs ).impliedType( lhs.getInferableType() );
-			}
-		}
-
-		if ( rhs.getInferableType() != null ) {
-			if ( lhs instanceof InferableTypeSqmExpression ) {
-				( (InferableTypeSqmExpression) lhs ).impliedType( rhs.getInferableType() );
-			}
-		}
-
 		return new RelationalSqmPredicate( RelationalPredicateOperator.GREATER_THAN_OR_EQUAL, lhs, rhs );
 	}
 
@@ -1311,18 +1288,6 @@ public class SemanticQueryBuilder
 	public Object visitLessThanPredicate(HqlParser.LessThanPredicateContext ctx) {
 		final SqmExpression lhs = (SqmExpression) ctx.expression().get( 0 ).accept( this );
 		final SqmExpression rhs = (SqmExpression) ctx.expression().get( 1 ).accept( this );
-
-		if ( lhs.getInferableType() != null ) {
-			if ( rhs instanceof InferableTypeSqmExpression ) {
-				( (InferableTypeSqmExpression) rhs ).impliedType( lhs.getInferableType() );
-			}
-		}
-
-		if ( rhs.getInferableType() != null ) {
-			if ( lhs instanceof InferableTypeSqmExpression ) {
-				( (InferableTypeSqmExpression) lhs ).impliedType( rhs.getInferableType() );
-			}
-		}
 
 		return new RelationalSqmPredicate( RelationalPredicateOperator.LESS_THAN, lhs, rhs );
 	}
@@ -2312,6 +2277,12 @@ public class SemanticQueryBuilder
 				SqmCountFunction.NAME,
 				ctx.DISTINCT() != null, ctx.expression()
 		);
+	}
+
+	@Override
+	public Object visitLengthFunction(HqlParser.LengthFunctionContext ctx) {
+		final SqmExpression sqmExpression = (SqmExpression) ctx.expression().accept( this );
+		return new SqmLengthFunction( sqmExpression, resolveExpressableTypeBasic( Long.class ) );
 	}
 
 	@Override

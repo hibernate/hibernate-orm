@@ -40,6 +40,7 @@ import org.hibernate.sql.ast.tree.spi.expression.PositionalParameter;
 import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.spi.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.spi.expression.SqrtFunction;
+import org.hibernate.sql.ast.tree.spi.expression.SubstrFunction;
 import org.hibernate.sql.ast.tree.spi.expression.SumFunction;
 import org.hibernate.sql.ast.tree.spi.expression.TrimFunction;
 import org.hibernate.sql.ast.tree.spi.expression.UnaryOperation;
@@ -163,6 +164,8 @@ public interface SqlAstWalker {
 	void visitCastFunction(CastFunction function);
 
 	void visitConcatFunction(ConcatFunction function);
+
+	void visitSubstrFunction(SubstrFunction function);
 
 	void visitCountFunction(CountFunction function);
 

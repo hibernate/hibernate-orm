@@ -60,9 +60,9 @@ project(':metamodel-generator').name = 'hibernate-jpamodelgen'
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // re-locations
 
-include 'hibernate-entitymanager'
+//include 'hibernate-entitymanager'
 include 'hibernate-envers'
-include 'hibernate-java8'
+//include 'hibernate-java8'
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

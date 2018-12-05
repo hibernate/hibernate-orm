@@ -95,7 +95,7 @@ public class SQLServerDialectSequenceInformationTest extends BaseCoreFunctionalT
 		} );
 	}
 
-	private void doInAutoCommit(String updateQuery ) {
+	private void doInAutoCommit( String updateQuery ) {
 		try ( Connection connection = serviceRegistry().getService( JdbcServices.class )
 				.getBootstrapJdbcConnectionAccess()
 				.obtainConnection();
@@ -106,7 +106,6 @@ public class SQLServerDialectSequenceInformationTest extends BaseCoreFunctionalT
 		catch ( SQLException e ) {
 			log.debug( e.getMessage() );
 		}
-
 	}
 
 }

@@ -132,8 +132,8 @@ public class ViburDBCPConnectionProviderTest extends BaseCoreFunctionalTestCase 
 
     @SuppressWarnings("unchecked")
     private static void executeAndVerifySelect(Session session) {
-        List<Actor> list = session.createQuery("from Actor where firstName = ?0")
-                .setParameter(0, "CHRISTIAN").list();
+        List<Actor> list = session.createQuery("from Actor where firstName = ?1")
+                .setParameter(1, "CHRISTIAN").list();
 
         Set<String> expectedLastNames = new HashSet<>(Arrays.asList("GABLE", "AKROYD", "NEESON"));
         assertEquals(expectedLastNames.size(), list.size());

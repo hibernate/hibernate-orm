@@ -22,7 +22,8 @@ include 'release'
 
 include 'hibernate-osgi'
 include 'hibernate-jipijapa'
-include 'hibernate-orm-modules'
+// problems with `featurepack` task and new groupId
+//include 'hibernate-orm-modules'
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -30,9 +31,9 @@ include 'hibernate-orm-modules'
 
 include 'hibernate-agroal'
 include 'hibernate-c3p0'
-//include 'hibernate-hikaricp'
-//include 'hibernate-proxool'
-//include 'hibernate-vibur'
+include 'hibernate-hikaricp'
+include 'hibernate-proxool'
+include 'hibernate-vibur'
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

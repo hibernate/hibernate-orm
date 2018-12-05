@@ -10,6 +10,15 @@ plugins {
   id "org.wildfly.build.featurepack" version '0.0.9'
 }
 
+repositories {
+	mavenLocal()
+	mavenCentral()
+	maven {
+		name 'jboss-public'
+		url 'http://repository.jboss.org/nexus/content/groups/public/'
+	}
+}
+
 apply from: rootProject.file( 'gradle/base-information.gradle' )
 apply plugin: 'java'
 apply from: rootProject.file( 'gradle/libraries.gradle' )
@@ -26,7 +35,6 @@ project.tasks.jar.enabled = false
 project.tasks.javadoc.enabled = false
 
 evaluationDependsOn( ':hibernate-core' )
-//evaluationDependsOn( ':hibernate-envers' )
 
 ext {
 	// NOTE : `wildflyVersion` comes from libraries.gradle...
@@ -52,15 +60,6 @@ configurations {
 	}
 	provisioning {
 		description = "Dependencies which should be made available to the provisioning of WildFly"
-	}
-}
-
-repositories {
-	mavenLocal()
-	mavenCentral()
-	maven {
-		name 'jboss-public'
-		url 'http://repository.jboss.org/nexus/content/groups/public/'
 	}
 }
 
@@ -93,7 +92,6 @@ task createCoreFeaturePackZip( type: Zip, dependsOn: [featurepack] ) {
 
 provision {
 	dependsOn( createCoreFeaturePackZip )
-//	dependsOn( ":hibernate-envers:jar")
 	dependsOn( ":hibernate-core:jar")
 	configuration = file( 'wildfly-server-provisioning.xml' )
 	destinationDir = file( "$project.wildFlyInstallDir" )

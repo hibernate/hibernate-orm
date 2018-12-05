@@ -13,7 +13,7 @@ ext {
 	jpaVersion = new JpaVersion('2.2')
 }
 
-group = 'org.hibernate'
+group = 'org.hibernate.orm'
 version = project.ormVersion.fullName
 
 class JpaVersion {

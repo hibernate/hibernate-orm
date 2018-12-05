@@ -72,20 +72,14 @@ Known limitations:
 
 === Artifacts
 
-relocated::Envers (`hibernate-envers`) has been folded into the `hibernate-core` module to provide better integration - easier
+relocated::`hibernate-envers` has been folded into the `hibernate-core` module to provide better integration - easier
 and more powerful for users.
 disabled:: The following artifacts are temporarily disabled
 * `hibernate-spatial`
-
-* `hibernate-agroal`
-* `hibernate-hikaricp`
-* `hibernate-proxool`
-* `hibernate-vibur`
-
 * `hibernate-ehcache`
 * `hibernate-infinispan`
 * `hibernate-jcache`
-
+removed::
 
 
 === Envers folded into hibernate-core
@@ -93,7 +87,8 @@ disabled:: The following artifacts are temporarily disabled
 Envers is now defined as part of the `hibernate-core` model which provides for better integration - easier
 and more powerful for users.
 
-`hibernate-envers` has been "relocated" (in Maven terms)
+`hibernate-envers` has been "relocated" (in Maven terms) and will be removed at a later date.  To use
+Envers functionality, just use `hibernate-core` and its dependencies
 
 
 

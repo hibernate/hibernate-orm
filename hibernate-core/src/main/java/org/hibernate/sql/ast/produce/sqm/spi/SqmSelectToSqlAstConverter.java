@@ -273,11 +273,13 @@ public class SqmSelectToSqlAstConverter
 				alias = null;
 			}
 
-			if ( fetchDepth == maximumFetchDepth ) {
-				joined = false;
-			}
-			else if ( fetchDepth > maximumFetchDepth ) {
-				return;
+			if ( maximumFetchDepth != null ) {
+				if ( fetchDepth == maximumFetchDepth ) {
+					joined = false;
+				}
+				else if ( fetchDepth > maximumFetchDepth ) {
+					return;
+				}
 			}
 
 			final Fetch fetch = fetchable.generateFetch(

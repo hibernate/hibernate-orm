@@ -112,7 +112,7 @@ public class OsgiIntegrationTest {
 				editConfigurationFileExtend(
 						"etc/org.ops4j.pax.url.mvn.cfg",
 						"org.ops4j.pax.url.mvn.repositories",
-						"file:///home/ccranfor/.m2/repository/, https://repository.jboss.org/nexus/content/groups/public/"
+						"https://repository.jboss.org/nexus/content/groups/public/"
 				),
 				configureConsole().ignoreLocalConsole().ignoreRemoteShell(),
 				when( debug ).useOptions( keepRuntimeFolder() ),

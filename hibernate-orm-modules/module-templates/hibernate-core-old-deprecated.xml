@@ -15,7 +15,7 @@
 
     <dependencies>
         <module name="org.hibernate.orm" services="import" export="true" slot="${minorSlot}"/>
-        <module name="org.hibernate.envers" services="import" export="true" slot="${minorSlot}"/>
+        <!--<module name="org.hibernate.envers" services="import" export="true" slot="${minorSlot}"/>-->
     </dependencies>
 
 </module>

@@ -7,11 +7,11 @@
   -->
 <module xmlns="urn:jboss:module:1.3" name="org.hibernate.orm" slot="${slot}">
     <resources>
-        <artifact name="${org.hibernate:hibernate-core}"/>
+        <artifact name="${org.hibernate.orm:hibernate-core}"/>
     </resources>
 
     <dependencies>
-        <module name="org.hibernate.envers" slot="${slot}" services="import" optional="true"/>
+        <!--<module name="org.hibernate.envers" slot="${slot}" services="import" optional="true"/>-->
         <module name="com.fasterxml.classmate"/>
         <module name="javax.api"/>
         <module name="javax.annotation.api"/>

@@ -22,8 +22,7 @@ include 'release'
 
 include 'hibernate-osgi'
 include 'hibernate-jipijapa'
-// problems with `featurepack` task and new groupId
-//include 'hibernate-orm-modules'
+include 'hibernate-orm-modules'
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

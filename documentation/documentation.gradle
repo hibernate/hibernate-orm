@@ -48,7 +48,6 @@ dependencies {
 
 	testCompile( 'org.apache.commons:commons-lang3:3.4' )
 
-	testCompile( project(':hibernate-envers') )
 //	testCompile( project(':hibernate-spatial') )
 	testCompile( project(path: ':hibernate-core', configuration: 'tests') )
 

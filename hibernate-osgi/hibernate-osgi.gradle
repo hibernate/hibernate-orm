@@ -53,7 +53,6 @@ dependencies {
 		exclude module: 'jaxb-api'
 		exclude module: 'jaxb-runtime'
 	}
-	testCompile( project( ':hibernate-envers' ) )
 
 	compile "org.osgi:org.osgi.core:${osgiCoreVersion}"
 	compile "org.osgi:org.osgi.compendium:${osgiCompediumVersion}"
@@ -216,16 +215,15 @@ task generatePaxExamEnvironmentFile {
 	}
 }
 
-tasks.junitPlatformTest.dependsOn tasks.generateFeatures
-tasks.junitPlatformTest.dependsOn tasks.jar
-tasks.junitPlatformTest.dependsOn tasks.generateDependsFile
-tasks.junitPlatformTest.dependsOn tasks.generatePaxExamEnvironmentFile
+tasks.test.dependsOn tasks.generateFeatures
+tasks.test.dependsOn tasks.jar
+tasks.test.dependsOn tasks.generateDependsFile
+tasks.test.dependsOn tasks.generatePaxExamEnvironmentFile
 
 // we also need to make sure that hibernate-core, hibernate-entitymanager and hibernate-osgi
 // are published to maven-local before running tests
-tasks.junitPlatformTest.dependsOn rootProject.childProjects.'hibernate-core'.tasks.publishToMavenLocal
-tasks.junitPlatformTest.dependsOn rootProject.childProjects.'hibernate-envers'.tasks.publishToMavenLocal
-tasks.junitPlatformTest.dependsOn tasks.publishToMavenLocal
+tasks.test.dependsOn rootProject.childProjects.'hibernate-core'.tasks.publishToMavenLocal
+tasks.test.dependsOn tasks.publishToMavenLocal
 
 publishing {
 	publications {

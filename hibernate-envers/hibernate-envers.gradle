@@ -12,7 +12,7 @@ apply plugin: 'maven-publish-auth'
 description = '(deprecated - use hibernate-core instead) Hibernate\'s entity version (audit/history) support'
 
 dependencies {
-    compile( project( ':hibernate-core' ) );
+    compile( project( ':hibernate-core' ) )
 }
 
 jar {
@@ -28,7 +28,7 @@ sourcesJar {
 }
 
 javadocJar {
-    manifest = null;
+    manifest = null
 }
 
 //ext {

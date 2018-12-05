@@ -542,6 +542,7 @@ standardFunction
 	|	absFunction
 	|	sqrtFunction
 	|	modFunction
+	|   strFunction
 	|	currentDateFunction
 	|	currentTimeFunction
 	|	currentTimestampFunction
@@ -637,6 +638,10 @@ sqrtFunction
 modFunction
 	:	MOD LEFT_PAREN modDividendArgument COMMA modDivisorArgument RIGHT_PAREN
 	;
+
+strFunction
+    :   STR LEFT_PAREN expression RIGHT_PAREN
+    ;
 
 modDividendArgument
 	: expression
@@ -778,6 +783,7 @@ identifier
 	| SECOND
 	| SET
 	| SQRT
+	| STR
 	| SUBSTRING
 	| SUM
 	| TRAILING

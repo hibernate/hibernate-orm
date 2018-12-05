@@ -75,6 +75,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmMinFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmModFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmNullifFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSqrtFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmStrFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSubstringFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSumFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmTrimFunction;
@@ -243,6 +244,8 @@ public interface SemanticQueryWalker<T> {
 	T visitNullifFunction(SqmNullifFunction expression);
 
 	T visitSqrtFunction(SqmSqrtFunction sqmSqrtFunction);
+
+	T visitStrFunction(SqmStrFunction sqmStrFunction);
 
 	T visitSubstringFunction(SqmSubstringFunction expression);
 

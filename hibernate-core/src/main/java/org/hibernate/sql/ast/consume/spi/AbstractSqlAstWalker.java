@@ -16,9 +16,9 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.sqm.tree.order.SqmSortOrder;
+import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.SqlTreeException;
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.spi.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.spi.expression.SubstrFunction;
@@ -454,7 +454,7 @@ public abstract class AbstractSqlAstWalker
 			return castFunction.getExplicitCastTargetTypeSqlExpression();
 		}
 
-		final BasicValuedExpressableType castResultType = (BasicValuedExpressableType) castFunction.getCastResultType();
+		final SqlExpressableType castResultType = castFunction.getCastResultType();
 
 		if ( castResultType == null ) {
 			throw new SqlTreeException(

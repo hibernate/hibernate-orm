@@ -88,6 +88,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmMaxFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmMinFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmModFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmNullifFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmStrFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSubstringFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSumFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmTrimFunction;
@@ -1433,7 +1434,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 		try {
 			return new LowerFunction(
-					(Expression) function.getArgument().accept( this ),
+					toExpression( function.getArgument().accept( this ) ),
 					( (BasicValuedExpressableType) function.getExpressableType() ).getSqlExpressableType()
 			);
 		}
@@ -1514,6 +1515,22 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
+	public Object visitStrFunction(SqmStrFunction expression) {
+		shallownessStack.push( Shallowness.FUNCTION );
+
+		try {
+			return new CastFunction(
+					toExpression( expression.getArgument().accept( this ) ),
+					( (BasicValuedExpressableType) expression.getExpressableType() ).getSqlExpressableType(),
+					null
+			);
+		}
+		finally {
+			shallownessStack.pop();
+		}
+	}
+
+	@Override
 	public SumFunction visitSumFunction(SqmSumFunction expression) {
 		shallownessStack.push( Shallowness.FUNCTION );
 
@@ -1577,7 +1594,7 @@ public abstract class BaseSqmToSqlAstConverter
 					interpret( expression.getOperation() ),
 					(Expression) expression.getLeftHandOperand().accept( this ),
 					(Expression) expression.getRightHandOperand().accept( this ),
-					( (BasicValuedExpressableType) expression.getExpressableType() ).getSqlExpressableType()
+					expression.getExpressableType().getSqlExpressableType()
 			);
 		}
 		finally {

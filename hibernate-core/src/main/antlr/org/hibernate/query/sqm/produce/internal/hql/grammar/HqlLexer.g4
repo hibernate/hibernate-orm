@@ -197,6 +197,7 @@ SELECT				: [sS] [eE] [lL] [eE] [cC] [tT];
 SET					: [sS] [eE] [tT];
 SIZE				: [sS] [iI] [zZ] [eE];
 SQRT				: [sS] [qQ] [rR] [tT];
+STR                 : [sS] [tT] [rR];
 SUBSTRING			: [sS] [uU] [bB] [sS] [tT] [rR] [iI] [nN] [gG];
 SUBSTR				: [sS] [uU] [bB] [sS] [tT] [rR];
 SUM					: [sS] [uU] [mM];

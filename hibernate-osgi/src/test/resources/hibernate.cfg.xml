@@ -18,9 +18,6 @@
         <property name="hibernate.hbm2ddl.auto">create-drop</property>
         <property name="hibernate.cache.use_second_level_cache">false</property>
         <mapping class="org.hibernate.osgi.test.client.DataPoint"/>
-        <!--
-        // todo (6.0) : re-add this back - removing this avoids a DuplicateMappingException which shouldn't happen
         <mapping class="org.hibernate.osgi.test.client.AuditedDataPoint"/>
-        -->
     </session-factory>
 </hibernate-configuration>

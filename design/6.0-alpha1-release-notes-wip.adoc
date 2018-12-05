@@ -72,6 +72,8 @@ Known limitations:
 
 === Artifacts
 
+Notice we have moved all Hibernate ORM artifacts to a new groupdId - from `org.hibernate` to `org.hibernate.orm`
+
 relocated::`hibernate-envers` has been folded into the `hibernate-core` module to provide better integration - easier
 and more powerful for users.
 disabled:: The following artifacts are temporarily disabled
@@ -79,7 +81,10 @@ disabled:: The following artifacts are temporarily disabled
 * `hibernate-ehcache`
 * `hibernate-infinispan`
 * `hibernate-jcache`
-removed::
+removed:: we have removed the following artifacts:
+* `hibernate-entitymanager` - JPA support has been part of `hibernate-core` since 5.0
+* `hibernate-java8` - Java 8 support (Instant, etc) has been part of `hibernate-core` since 4.3(?)
+* `hibernate-envers` - Support for Envers is made part of `hibernate-core` as of 6.0
 
 
 === Envers folded into hibernate-core

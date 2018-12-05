@@ -134,6 +134,31 @@ publishing {
 	}
 }
 
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Relocation for the published artifacts based on the old groupId
+
+publishing {
+	publications {
+		relocationArtifact( MavenPublication ) {
+			pom {
+				name = project.name + ' - relocation'
+				groupId = 'org.hibernate'
+				artifactId = project.name
+				version = project.version
+
+				distributionManagement {
+					relocation {
+						groupId = 'org.hibernate.orm'
+						artifactId = project.name
+						version = project.version
+					}
+				}
+			}
+		}
+	}
+}
+
 task ciBuild( dependsOn: [test, publish] )
 
 task release( dependsOn: [test, bintrayUpload] )

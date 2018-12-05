@@ -32,10 +32,6 @@ apply plugin: 'checkstyle'
 apply plugin: 'build-dashboard'
 apply plugin: 'project-report'
 
-apply plugin: 'org.junit.platform.gradle.plugin'
-
-// todo (6.0) - ?
-// apply plugin: org.hibernate.build.HibernateBuildPlugin
 
 ext {
 	java9ModuleNameBase = project.name.startsWith( 'hibernate-' ) ? name.drop( 'hibernate-'.length() ): name
@@ -136,10 +132,6 @@ dependencies {
 
 tasks.withType(JavaCompile) {
 	options.encoding = 'UTF-8'
-}
-
-junitPlatformTest {
-	enableAssertions = true
 }
 
 task compile(dependsOn: [compileJava, processResources, compileTestJava, processTestResources] )

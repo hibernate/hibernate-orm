@@ -19,10 +19,6 @@ ext {
 
 test.enabled = true
 
-junitPlatform {
-	details 'verbose'
-}
-
 sourceSets {
 	test {
 		// send javac output and resource copying to the same output directory for test

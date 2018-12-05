@@ -99,7 +99,7 @@ public class SQLServerDialectSequenceInformationTest extends BaseCoreFunctionalT
 		try ( Connection connection = serviceRegistry().getService( JdbcServices.class )
 				.getBootstrapJdbcConnectionAccess()
 				.obtainConnection();
-			 Statement statement = connection.createStatement() ) {
+			  Statement statement = connection.createStatement() ) {
 			connection.setAutoCommit( true );
 			statement.executeUpdate( updateQuery );
 		}

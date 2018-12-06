@@ -7,17 +7,19 @@
 package org.hibernate.engine.config.spi;
 
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.service.Service;
 
 /**
  * Provides access to the initial user-provided configuration values.  Generally speaking
  * these values come from:<ul>
- *     <li>Calls to {@link org.hibernate.boot.registry.StandardServiceRegistryBuilder#loadProperties}</li>
- *     <li>Calls to {@link org.hibernate.boot.registry.StandardServiceRegistryBuilder#applySetting}</li>
- *     <li>Calls to {@link org.hibernate.boot.registry.StandardServiceRegistryBuilder#applySettings}</li>
- *     <li>Calls to {@link org.hibernate.boot.registry.StandardServiceRegistryBuilder#configure}</li>
+ *     <li>Calls to {@link StandardServiceRegistryBuilder#loadProperties}</li>
+ *     <li>Calls to {@link StandardServiceRegistryBuilder#applySetting}</li>
+ *     <li>Calls to {@link StandardServiceRegistryBuilder#applySettings}</li>
+ *     <li>Calls to {@link StandardServiceRegistryBuilder#configure}</li>
  * </ul>
  *
  * @author Steve Ebersole
@@ -39,7 +41,20 @@ public interface ConfigurationService extends Service {
 	 *
 	 * @return The converted (typed) setting.  May return {@code null} (see {@link #getSetting(String, Class, Object)})
 	 */
-	<T> T getSetting(String name, Converter<T> converter);
+	default <T> T getSetting(String name, Converter<T> converter) {
+		return getSetting( name, (Function<?,T>) converter::convert );
+	}
+
+	/**
+	 * Get the named setting, using the specified converter.
+	 *
+	 * @param name The name of the setting to get.
+	 * @param converter The converter to apply
+	 * @param <T> The Java type of the conversion
+	 *
+	 * @return The converted (typed) setting.  May return {@code null} (see {@link #getSetting(String, Class, Object)})
+	 */
+	<T> T getSetting(String name, Function<?,T> converter);
 
 	/**
 	 * Get the named setting, using the specified converter and default value.
@@ -51,7 +66,11 @@ public interface ConfigurationService extends Service {
 	 *
 	 * @return The converted (typed) setting.  Will be the defaultValue if no such setting was defined.
 	 */
-	<T> T getSetting(String name, Converter<T> converter, T defaultValue);
+	default <T> T getSetting(String name, Converter<T> converter, T defaultValue) {
+		return getSetting( name, (Function<?,T>) converter::convert, () -> defaultValue );
+	}
+
+	<T> T getSetting(String name, Function<?,T> converter, Supplier<T> defaultValue);
 
 	/**
 	 * Get the named setting.  Differs from the form taking a Converter in that here we expect to have a simple
@@ -64,7 +83,11 @@ public interface ConfigurationService extends Service {
 	 *
 	 * @return The converted (typed) setting.  Will be the defaultValue if no such setting was defined.
 	 */
-	<T> T getSetting(String name, Class<T> expected, T defaultValue);
+	default <T> T getSetting(String name, Class<T> expected, T defaultValue) {
+		return getSetting( name, expected, (Supplier<T>) () -> defaultValue );
+	}
+
+	<T> T getSetting(String name, Class<T> expected, Supplier<T> defaultValue);
 
 	/**
 	 * Cast <tt>candidate</tt> to the instance of <tt>expected</tt> type.

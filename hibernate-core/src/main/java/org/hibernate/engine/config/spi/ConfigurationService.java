@@ -89,6 +89,8 @@ public interface ConfigurationService extends Service {
 
 	<T> T getSetting(String name, Class<T> expected, Supplier<T> defaultValue);
 
+	<T> T getSetting(String name, Class<T> expected);
+
 	/**
 	 * Cast <tt>candidate</tt> to the instance of <tt>expected</tt> type.
 	 *

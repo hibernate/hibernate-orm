@@ -77,6 +77,11 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 	}
 
 	@Override
+	public <T> T getSetting(String name, Class<T> expected) {
+		return getSetting( name, expected, (T) null );
+	}
+
+	@Override
 	public <T> T getSetting(String name, Class<T> expected, T defaultValue) {
 		final Object value = settings.get( name );
 		final T target = cast( expected, value );

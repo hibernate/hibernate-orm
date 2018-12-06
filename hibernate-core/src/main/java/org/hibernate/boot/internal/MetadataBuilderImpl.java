@@ -656,8 +656,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 			this.schemaCharset = configService.getSetting(
 					AvailableSettings.HBM2DDL_CHARSET_NAME,
-					String.class,
-					null
+					String.class
 			);
 		}
 

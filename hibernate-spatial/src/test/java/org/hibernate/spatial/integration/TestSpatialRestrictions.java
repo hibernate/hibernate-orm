@@ -19,7 +19,7 @@ import org.hibernate.spatial.HSMessageLogger;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.criterion.SpatialRestrictions;
 import org.hibernate.spatial.dialect.hana.HANASpatialDialect;
-import org.hibernate.spatial.integration.jts.GeomEntity;
+import org.hibernate.spatial.integration.jts.JtsGeomEntity;
 import org.hibernate.spatial.testing.SpatialDialectMatcher;
 import org.hibernate.spatial.testing.SpatialFunctionalTestCase;
 
@@ -188,7 +188,7 @@ public class TestSpatialRestrictions extends SpatialFunctionalTestCase {
 		try {
 			session = openSession();
 			tx = session.beginTransaction();
-			Criteria criteria = session.createCriteria( GeomEntity.class );
+			Criteria criteria = session.createCriteria( JtsGeomEntity.class );
 			criteria.add( spatialCriterion );
 			compare( dbexpected, criteria.list() );
 		}
@@ -207,7 +207,7 @@ public class TestSpatialRestrictions extends SpatialFunctionalTestCase {
 		for ( Map.Entry<Integer, Boolean> entry : dbexpected.entrySet() ) {
 			if ( entry.getValue() ) {
 				cnt++;
-				if ( !findInList( entry.getKey(), (List<GeomEntity>) list ) ) {
+				if ( !findInList( entry.getKey(), (List<JtsGeomEntity>) list ) ) {
 					fail( String.format( "Expected object with id= %d, but not found in result", entry.getKey() ) );
 				}
 			}
@@ -216,8 +216,8 @@ public class TestSpatialRestrictions extends SpatialFunctionalTestCase {
 		LOG.info( String.format( "Found %d objects within testsuite-suite polygon.", cnt ) );
 	}
 
-	private boolean findInList(Integer id, List<GeomEntity> list) {
-		for ( GeomEntity entity : list ) {
+	private boolean findInList(Integer id, List<JtsGeomEntity> list) {
+		for ( JtsGeomEntity entity : list ) {
 			if ( entity.getId().equals( id ) ) {
 				return true;
 			}

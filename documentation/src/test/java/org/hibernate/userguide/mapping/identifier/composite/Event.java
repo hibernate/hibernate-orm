@@ -6,6 +6,7 @@
  */
 package org.hibernate.userguide.mapping.identifier.composite;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -19,8 +20,10 @@ class Event {
     @Id
     private EventId id;
 
+    @Column(name = "event_key")
     private String key;
 
+    @Column(name = "event_value")
     private String value;
 
     //Getters and setters are omitted for brevity

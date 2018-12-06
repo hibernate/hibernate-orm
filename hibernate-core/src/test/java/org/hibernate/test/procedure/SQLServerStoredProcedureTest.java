@@ -29,6 +29,7 @@ import org.hibernate.testing.RequiresDialect;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInAutoCommit;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -38,7 +39,7 @@ import static org.junit.Assert.assertTrue;
  * @author Vlad Mihalcea
  */
 @RequiresDialect(SQLServer2012Dialect.class)
-public class SQLServerStoredProcedureTest extends AbstractStoredProcedureTest {
+public class SQLServerStoredProcedureTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -50,78 +51,41 @@ public class SQLServerStoredProcedureTest extends AbstractStoredProcedureTest {
 
 	@Before
 	public void init() {
-		doInAutoCommit( statement -> {
-			try {
-				statement.executeUpdate( "DROP PROCEDURE sp_count_phones" );
-			}
-			catch (SQLException e) {
-				log.debug( e.getMessage() );
-			}
-		} );
-
-		doInAutoCommit( statement -> {
-			try {
-				statement.executeUpdate( "DROP FUNCTION fn_count_phones" );
-			}
-			catch (SQLException e) {
-				log.debug( e.getMessage() );
-			}
-		} );
-
-		doInAutoCommit( statement -> {
-			try {
-				statement.executeUpdate( "DROP PROCEDURE sp_phones" );
-			}
-			catch (SQLException e) {
-				log.debug( e.getMessage() );
-			}
-		} );
-
-		doInAutoCommit( statement -> {
-			try {
-				statement.executeUpdate(
-					"CREATE PROCEDURE sp_count_phones " +
-					"   @personId INT, " +
-					"   @phoneCount INT OUTPUT " +
-					"AS " +
-					"BEGIN " +
-					"   SELECT @phoneCount = COUNT(*)  " +
-					"   FROM Phone  " +
-					"   WHERE person_id = @personId " +
-					"END"
-				);
-
-				statement.executeUpdate(
-					"CREATE FUNCTION fn_count_phones (@personId INT)  " +
-					"RETURNS INT  " +
-					"AS  " +
-					"BEGIN  " +
-					"    DECLARE @phoneCount int;  " +
-					"    SELECT @phoneCount = COUNT(*) " +
-					"    FROM Phone   " +
-					"    WHERE person_id = @personId;  " +
-					"    RETURN(@phoneCount);  " +
-					"END"
-				);
-
-				statement.executeUpdate(
-					"CREATE PROCEDURE sp_phones " +
-					"    @personId INT, " +
-					"    @phones CURSOR VARYING OUTPUT " +
-					"AS " +
-					"    SET NOCOUNT ON; " +
-					"    SET @phones = CURSOR " +
-					"    FORWARD_ONLY STATIC FOR " +
-					"        SELECT *  " +
-					"        FROM Phone   " +
-					"        WHERE person_id = @personId;  " +
-					"    OPEN @phones;"
-				);
-			}
-			catch (SQLException e) {
-				log.debug( e.getMessage() );
-			}
-		} );
+		doInAutoCommit(
+				"DROP PROCEDURE sp_count_phones",
+				"DROP FUNCTION fn_count_phones",
+				"DROP PROCEDURE sp_phones",
+				"CREATE PROCEDURE sp_count_phones " +
+				"   @personId INT, " +
+				"   @phoneCount INT OUTPUT " +
+				"AS " +
+				"BEGIN " +
+				"   SELECT @phoneCount = COUNT(*)  " +
+				"   FROM Phone  " +
+				"   WHERE person_id = @personId " +
+				"END",
+				"CREATE FUNCTION fn_count_phones (@personId INT)  " +
+				"RETURNS INT  " +
+				"AS  " +
+				"BEGIN  " +
+				"    DECLARE @phoneCount int;  " +
+				"    SELECT @phoneCount = COUNT(*) " +
+				"    FROM Phone   " +
+				"    WHERE person_id = @personId;  " +
+				"    RETURN(@phoneCount);  " +
+				"END",
+				"CREATE PROCEDURE sp_phones " +
+				"    @personId INT, " +
+				"    @phones CURSOR VARYING OUTPUT " +
+				"AS " +
+				"    SET NOCOUNT ON; " +
+				"    SET @phones = CURSOR " +
+				"    FORWARD_ONLY STATIC FOR " +
+				"        SELECT *  " +
+				"        FROM Phone   " +
+				"        WHERE person_id = @personId;  " +
+				"    OPEN @phones;"
+		);
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Person person1 = new Person( "John Doe" );

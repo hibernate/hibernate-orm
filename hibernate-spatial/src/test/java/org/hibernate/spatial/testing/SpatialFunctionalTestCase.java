@@ -19,6 +19,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.HSMessageLogger;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
+import org.hibernate.spatial.integration.jts.JtsGeomEntity;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -73,7 +74,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 		try {
 			session = openSession();
 			tx = session.beginTransaction();
-			String hql = String.format( "delete from org.hibernate.spatial.integration.%s.GeomEntity", pckg );
+			String hql = String.format( "delete from %s", entityName(pckg) );
 			Query q = session.createQuery( hql );
 			q.executeUpdate();
 			tx.commit();
@@ -145,7 +146,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 				org.hibernate.spatial.integration.geolatte.GeomEntity.class,
-				org.hibernate.spatial.integration.jts.GeomEntity.class
+				JtsGeomEntity.class
 		};
 	}
 
@@ -249,6 +250,14 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 			else {
 				assertEquals( "Failure on testsuite-suite for case " + id, expected, received );
 			}
+		}
+	}
+
+	protected String entityName(String pckg) {
+		if (JTS.equalsIgnoreCase(  pckg )) {
+			return "org.hibernate.spatial.integration.jts.JtsGeomEntity";
+		} else {
+			return "org.hibernate.spatial.integration.geolatte.GeomEntity";
 		}
 	}
 

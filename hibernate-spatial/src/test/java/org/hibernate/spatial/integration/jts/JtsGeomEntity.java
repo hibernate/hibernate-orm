@@ -27,7 +27,7 @@ import static org.hibernate.spatial.integration.DecodeUtil.getWktDecoder;
  */
 @Entity
 @Table(name = "geomtest")
-public class GeomEntity implements GeomEntityLike<Geometry> {
+public class JtsGeomEntity implements GeomEntityLike<Geometry> {
 
 
 	@Id
@@ -37,10 +37,10 @@ public class GeomEntity implements GeomEntityLike<Geometry> {
 
 	private Geometry geom;
 
-	public static GeomEntity createFrom(TestDataElement element, Dialect dialect) throws ParseException {
+	public static JtsGeomEntity createFrom(TestDataElement element, Dialect dialect) throws ParseException {
 		WktDecoder decoder = getWktDecoder( dialect );
 		Geometry geom = JTS.to( decoder.decode( element.wkt ) );
-		GeomEntity result = new GeomEntity();
+		JtsGeomEntity result = new JtsGeomEntity();
 		result.setId( element.id );
 		result.setGeom( geom );
 		result.setType( element.type );
@@ -80,7 +80,7 @@ public class GeomEntity implements GeomEntityLike<Geometry> {
 			return false;
 		}
 
-		GeomEntity geomEntity = (GeomEntity) o;
+		JtsGeomEntity geomEntity = (JtsGeomEntity) o;
 
 		if ( !id.equals( geomEntity.id ) ) {
 			return false;

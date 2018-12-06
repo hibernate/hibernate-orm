@@ -42,7 +42,7 @@ public interface ConfigurationService extends Service {
 	 * @return The converted (typed) setting.  May return {@code null} (see {@link #getSetting(String, Class, Object)})
 	 */
 	default <T> T getSetting(String name, Converter<T> converter) {
-		return getSetting( name, (Function<?,T>) converter::convert );
+		return getSetting( name, (Function<Object,T>) converter::convert );
 	}
 
 	/**
@@ -54,7 +54,7 @@ public interface ConfigurationService extends Service {
 	 *
 	 * @return The converted (typed) setting.  May return {@code null} (see {@link #getSetting(String, Class, Object)})
 	 */
-	<T> T getSetting(String name, Function<?,T> converter);
+	<T> T getSetting(String name, Function<Object,T> converter);
 
 	/**
 	 * Get the named setting, using the specified converter and default value.
@@ -67,10 +67,10 @@ public interface ConfigurationService extends Service {
 	 * @return The converted (typed) setting.  Will be the defaultValue if no such setting was defined.
 	 */
 	default <T> T getSetting(String name, Converter<T> converter, T defaultValue) {
-		return getSetting( name, (Function<?,T>) converter::convert, () -> defaultValue );
+		return getSetting( name, converter::convert, () -> defaultValue );
 	}
 
-	<T> T getSetting(String name, Function<?,T> converter, Supplier<T> defaultValue);
+	<T> T getSetting(String name, Function<Object,T> converter, Supplier<T> defaultValue);
 
 	/**
 	 * Get the named setting.  Differs from the form taking a Converter in that here we expect to have a simple

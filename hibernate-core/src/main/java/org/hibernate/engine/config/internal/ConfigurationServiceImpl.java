@@ -8,6 +8,8 @@ package org.hibernate.engine.config.internal;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -53,18 +55,25 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 	}
 
 	@Override
-	public <T> T getSetting(String name, Converter<T> converter) {
-		return getSetting( name, converter, null );
+	public <T> T getSetting(String name, Function<Object,T> converter) {
+		return getSetting( name, converter, () -> null );
 	}
 
 	@Override
-	public <T> T getSetting(String name, Converter<T> converter, T defaultValue) {
+	public <T> T getSetting(String name, Function<Object, T> converter, Supplier<T> defaultValue) {
 		final Object value = settings.get( name );
 		if ( value == null ) {
-			return defaultValue;
+			return defaultValue.get();
 		}
 
-		return converter.convert( value );
+		return converter.apply( value );
+	}
+
+	@Override
+	public <T> T getSetting(String name, Class<T> expected, Supplier<T> defaultValueSupplier) {
+		final Object value = settings.get( name );
+		final T target = cast( expected, value );
+		return target !=null ? target : defaultValueSupplier.get();
 	}
 
 	@Override

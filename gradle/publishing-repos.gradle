@@ -47,6 +47,7 @@ bintray {
 
 		version {
 			name = project.version
+			description ="Hibernate ORM ${project.version} release.  See http://hibernate.org/orm/releases/${project.hibernateVersion.family}" 
 			released  = new Date()
 			vcsTag = project.version
 			gpg {

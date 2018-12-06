@@ -146,12 +146,14 @@ public interface ManagedTypeDescriptor<T>
 	default Object[] getPropertyValues(Object object) {
 		// todo (6.0) : hook in BytecodeProvider's ReflectionOptimizer (if one) for this managed-type
 		final Object[] values = new Object[getStateArrayContributors().size()];
-		visitStateArrayContributors(
-				contributor ->
-						values[contributor.getStateArrayPosition()] = contributor
-								.getPropertyAccess().getGetter().get( object )
+		if ( object != null ) {
+			visitStateArrayContributors(
+					contributor ->
+							values[ contributor.getStateArrayPosition() ] = contributor
+									.getPropertyAccess().getGetter().get( object )
 
-		);
+			);
+		}
 		return values;
 	}
 

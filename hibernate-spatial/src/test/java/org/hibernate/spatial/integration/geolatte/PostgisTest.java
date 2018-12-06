@@ -8,12 +8,15 @@ package org.hibernate.spatial.integration.geolatte;
 
 import java.util.List;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 import org.hibernate.spatial.dialect.postgis.PostgisPG95Dialect;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
 import org.junit.Test;
 
 import org.geolatte.geom.C2D;
@@ -30,10 +33,12 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 
 /**
+ * Integration tests for Postgis
+ *
  * @author Vlad Mihalcea, Karel Maesen
  */
 @RequiresDialect(PostgisPG95Dialect.class)
-public class PostgisBufferTest extends BaseCoreFunctionalTestCase {
+public class PostgisTest extends BaseCoreFunctionalTestCase {
 
 	public static CoordinateReferenceSystem<C2D> crs = CoordinateReferenceSystems.PROJECTED_2D_METER;
 
@@ -49,23 +54,23 @@ public class PostgisBufferTest extends BaseCoreFunctionalTestCase {
 		};
 	}
 
-	@Test
-	public void test() {
-		Long addressId = doInHibernate( this::sessionFactory, session -> {
-			Event event = new Event();
-			event.setId( 1L );
-			event.setName( "Hibernate ORM presentation" );
-			Point<C2D> pnt = point( crs, c( 10, 5 ) );
-			event.setLocation( pnt );
-			session.persist( event );
-			return event.getId();
+	@After
+	public void cleanUp() {
+		doInHibernate( this::sessionFactory, session -> {
+			session.createQuery( "delete from Event" ).executeUpdate();
 		} );
+	}
+
+
+	@Test
+	public void testBuffer() {
+		Long addressId = insertEvent( c( 10, 5 ) );
 
 		doInHibernate( this::sessionFactory, session -> {
 			List<Event> events = session.createQuery(
 					"select e " +
 							"from Event e " +
-							"where buffer(:window, 100) is not null", Event.class )
+							"where within( e.location, buffer(:window, 100)) = true", Event.class )
 					.setParameter( "window", window )
 					.getResultList();
 
@@ -74,10 +79,39 @@ public class PostgisBufferTest extends BaseCoreFunctionalTestCase {
 		} );
 	}
 
+	@Test
+	public void testMakeEnvelope() {
+		Long addressId = insertEvent( c( 10, 5 ) );
+
+		doInHibernate( this::sessionFactory, session -> {
+			List<Event> events = session.createQuery(
+					"select e " +
+							"from Event e " +
+							"where within(e.location, makeenvelope(0, 0, 11, 11, -1 )) = true", Event.class )
+					.getResultList();
+
+			assertEquals( 1, events.size() );
+
+		} );
+
+	}
+
+	private Long insertEvent(C2D position) {
+		return doInHibernate( this::sessionFactory, session -> {
+			Event event = new Event();
+			event.setName( "Hibernate ORM presentation" );
+			Point<C2D> pnt = point( crs, position );
+			event.setLocation( pnt );
+			session.persist( event );
+			return event.getId();
+		} );
+	}
+
 	@Entity(name = "Event")
 	public static class Event {
 
 		@Id
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		private Long id;
 
 		private String name;

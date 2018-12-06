@@ -851,7 +851,7 @@ public final class CollectionMetadataGenerator {
 				isEmbeddableElementType()
 		);
 
-		mainGenerator.addAdditionalColumns( middleEntityXmlId );
+		mainGenerator.addAdditionalColumns( middleEntityXml );
 
 		// All other properties should also be part of the primary key of the middle entity.
 		return middleEntityXmlId;

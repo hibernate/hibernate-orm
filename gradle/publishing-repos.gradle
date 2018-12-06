@@ -53,7 +53,7 @@ bintray {
 				sign = true
 			}
 			attributes = [
-					'jpa': project.jpaVersion,
+					'jpa': project.jpaVersion.name,
 					'family': project.ormVersion.family
 			]
 			mavenCentralSync {

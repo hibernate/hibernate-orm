@@ -34,6 +34,7 @@ import org.hibernate.testing.TestForIssue;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInAutoCommit;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 
@@ -42,7 +43,7 @@ import static org.junit.Assert.assertEquals;
  */
 @RequiresDialect(SQLServer2012Dialect.class)
 @TestForIssue( jiraKey = "HHH-12704" )
-public class SQLServerStoredProcedureCrossDatabaseTest extends AbstractStoredProcedureTest {
+public class SQLServerStoredProcedureCrossDatabaseTest extends BaseEntityManagerFunctionalTestCase {
 
 	private final String DATABASE_NAME_TOKEN = "databaseName=";
 
@@ -59,23 +60,10 @@ public class SQLServerStoredProcedureCrossDatabaseTest extends AbstractStoredPro
 
 	@Before
 	public void init() {
-		doInAutoCommit( statement -> {
-			try {
-				statement.executeUpdate( "DROP DATABASE " + DATABASE_NAME );
-			}
-			catch (SQLException e) {
-				log.debug( e.getMessage() );
-			}
-		} );
-
-		doInAutoCommit( statement -> {
-			try {
-				statement.executeUpdate( "CREATE DATABASE " + DATABASE_NAME );
-			}
-			catch (SQLException e) {
-				log.debug( e.getMessage() );
-			}
-		} );
+		doInAutoCommit(
+			"DROP DATABASE " + DATABASE_NAME,
+			"CREATE DATABASE " + DATABASE_NAME
+		);
 
 		String url = (String) Environment.getProperties().get( AvailableSettings.URL );
 
@@ -83,31 +71,16 @@ public class SQLServerStoredProcedureCrossDatabaseTest extends AbstractStoredPro
 
 		url = tokens[0] + DATABASE_NAME_TOKEN + DATABASE_NAME;
 
-		doInAutoCommit( statement -> {
-			try {
-				statement.executeUpdate( "DROP PROCEDURE sp_square_number" );
-			}
-			catch (SQLException e) {
-				log.debug( e.getMessage() );
-			}
-		}, Collections.singletonMap( AvailableSettings.URL, url ));
-
-		doInAutoCommit( statement -> {
-			try {
-				statement.executeUpdate(
-					"CREATE PROCEDURE sp_square_number " +
-					"   @inputNumber INT, " +
-					"   @outputNumber INT OUTPUT " +
-					"AS " +
-					"BEGIN " +
-					"   SELECT @outputNumber = @inputNumber * @inputNumber; " +
-					"END"
-				);
-			}
-			catch (SQLException e) {
-				log.debug( e.getMessage() );
-			}
-		}, Collections.singletonMap( AvailableSettings.URL, url ));
+		doInAutoCommit( Collections.singletonMap( AvailableSettings.URL, url ),
+						"DROP PROCEDURE sp_square_number",
+						"CREATE PROCEDURE sp_square_number " +
+						"   @inputNumber INT, " +
+						"   @outputNumber INT OUTPUT " +
+						"AS " +
+						"BEGIN " +
+						"   SELECT @outputNumber = @inputNumber * @inputNumber; " +
+						"END"
+		);
 	}
 
 	@Test

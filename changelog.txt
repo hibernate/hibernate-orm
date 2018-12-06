@@ -3,6 +3,65 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.0.0.Alpha1 (December6, 2018)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/23251
+
+** Bug
+    * [HHH-6907] - Long "in" lists in queries results in a Java stack overflow exception.
+    * [HHH-9228] - @AuditOverride has no affect if an embeddable is @Audited
+    * [HHH-9229] - @Audited and @AuditOverride does not work consistently for embeddables that extend a mapped superclass
+    * [HHH-10912] - Parametrized AuditStrategy not being applied to specific test cases.
+    * [HHH-11437] - Entity joins are not polymorphic
+    * [HHH-11662] - The BinaryArithmeticExpression rightHandOperand is wrong
+    * [HHH-11663] - Add support for COALESCE
+    * [HHH-11664] - Add support for CASE
+
+** New Feature
+    * [HHH-6210] - ValidityAuditStrategy doesn't support a numeric column for the revision end timestamp
+    * [HHH-8051] - targetAuditMode=RelationTargetAuditMode.NOT_AUDITED should allow for missing entity targets
+    * [HHH-9062] - Validity audit strategy: end revision timestamp is not stored in tables for joined subclasses
+    * [HHH-9193] - Make default audit behavior of extending a mapped-superclass with an embeddable consistent with extending with an entity
+    * [HHH-10925] - Add annotation to ignore specific tests based on audit strategy being used.
+    * [HHH-11668] - Allow for selection of single properties of map key elements
+
+** Task
+    * [HHH-11478] - General package restructuring
+    * [HHH-11669] - Make project importable into Eclipse
+    * [HHH-11670] - Account for standard aggregate functions
+    * [HHH-11671] - Support for map/list dynamic instantiation
+    * [HHH-11674] - Initial InsertStatement support
+    * [HHH-11675] - Support constructor expression mixed with other select expressions
+    * [HHH-11676] - Develop initial UPDATE/DELETE statement support
+    * [HHH-11680] - Move SQM-based QuerySplitter into SQM project
+    * [HHH-11681] - Support collection function expressions
+    * [HHH-11683] - Add a NonSelectStatement grouping for non-SELECT queries
+    * [HHH-11687] - Created a unified "alias registry"
+    * [HHH-11693] - Verify refering to 'id' psuedo name works
+    * [HHH-12066] - Migrate to JUnit 5 for testing
+
+** Improvement
+    * [HHH-9877] - Support constructor expression mixed with other select expressions
+    * [HHH-10496] - Allow RevisionTimestamp to be of type java.time.LocalDateTime
+    * [HHH-10830] - Scope SqlTypeDescriptor and JavaTypeDescriptor to SessionFactory/Metamodel
+    * [HHH-11104] - Split ResultTransformer into TupleTransformer and ResultListTransformer
+    * [HHH-11261] - Document logging ID ranges and enforce them
+    * [HHH-11263] - Improvements in boot-time model and its creation as well as processing into runtime-model
+    * [HHH-11348] - Provide  "property path search" SPI over the AttributeContainer
+    * [HHH-11358] - Changes to persister contracts
+    * [HHH-12077] - Support short-naming of audit strategies via configuration.
+    * [HHH-12078] - Allow Java 8 functional interfaces for ConfigurationService
+    * [HHH-12987] - Document the JavaTypeDescriptor registration process and the JavaTypeDescriptorRegistry.
+
+** Deprecation
+    * [HHH-11469] - Remove ModificationStore
+
+** Remove Feature
+    * [HHH-10673] - Remove deprecated auditParents from @Audited
+
+
+
 Changes in 5.4.0.CR1 (November 15, 2018)
 ------------------------------------------------------------------------------------------------------------------------
 

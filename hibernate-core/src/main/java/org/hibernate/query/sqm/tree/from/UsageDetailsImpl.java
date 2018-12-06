@@ -11,6 +11,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 
@@ -52,6 +53,11 @@ public class UsageDetailsImpl implements MutableUsageDetails {
 	}
 
 	@Override
+	public boolean isUsedInWhere() {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
 	public ManagedTypeDescriptor getIntrinsicSubclassIndicator() {
 		return intrinsicSubclassIndicator;
 	}
@@ -84,6 +90,11 @@ public class UsageDetailsImpl implements MutableUsageDetails {
 	@Override
 	public void usedInSelectClause() {
 		this.usedInSelect = true;
+	}
+
+	@Override
+	public void usedInWhereClause() {
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	@Override

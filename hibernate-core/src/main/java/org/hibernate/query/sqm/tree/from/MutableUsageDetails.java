@@ -39,6 +39,11 @@ public interface MutableUsageDetails extends UsageDetails {
 	void usedInSelectClause();
 
 	/**
+	 *  See note on {@link UsageDetails#isUsedInWhere()}
+	 */
+	void usedInWhereClause();
+
+	/**
 	 * todo (6.0) : implement appropriate calls to this
 	 * todo (6.0) : this could be used to handle implicit downcasts
 	 */

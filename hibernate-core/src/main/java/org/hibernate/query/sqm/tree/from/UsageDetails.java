@@ -31,9 +31,12 @@ public interface UsageDetails {
 	 * <p>
 	 * todo (6.0) : use this from visiting selections
 	 */
-	default boolean isUsedInSelect() {
-		throw new NotYetImplementedFor6Exception(  );
-	}
+	boolean isUsedInSelect();
+
+	/**
+	 * todo (6.0) : are uses in join predicates important?  If so, should this be `#isUsedInPredicate`?  Or would a separate `#isUsedInJoinPredicate` be more appropriate?
+	 */
+	boolean isUsedInWhere();
 
 	/**
 	 * An intrinsic subclass indicator is given when the SqmFrom

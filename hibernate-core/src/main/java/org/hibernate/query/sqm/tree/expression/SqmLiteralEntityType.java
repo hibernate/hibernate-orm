@@ -8,10 +8,9 @@ package org.hibernate.query.sqm.tree.expression;
 
 import java.util.function.Supplier;
 
-import org.hibernate.query.sqm.tree.TreeException;
+import org.hibernate.query.sqm.tree.SqmTreeException;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
@@ -59,7 +58,7 @@ public class SqmLiteralEntityType implements SqmExpression, DomainResultProducer
 			String resultVariable,
 			DomainResultCreationState creationState,
 			DomainResultCreationContext creationContext) {
-		throw new TreeException("Selecting an entity type is not allowed. An entity type expression can be used to restrict query polymorphism ");
+		throw new SqmTreeException( "Selecting an entity type is not allowed. An entity type expression can be used to restrict query polymorphism ");
 		// todo (6.0) : but could be ^^ - consider adding support for this (returning Class)
 	}
 

@@ -11,12 +11,12 @@ package org.hibernate.query.sqm.tree;
  *
  * @author Steve Ebersole
  */
-public class TreeException extends RuntimeException {
-	public TreeException(String message) {
+public class SqmTreeException extends RuntimeException {
+	public SqmTreeException(String message) {
 		super( message );
 	}
 
-	public TreeException(String message, Throwable cause) {
+	public SqmTreeException(String message, Throwable cause) {
 		super( message, cause );
 	}
 }

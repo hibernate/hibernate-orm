@@ -11,21 +11,28 @@ import java.util.Locale;
 import org.hibernate.query.criteria.LiteralHandlingMode;
 
 /**
- * Defines possible ways we can handle query literals in terms of handling in regards to JDBC.
+ * Defines possible ways we can handle query literals in terms of JDBC.
  *
  * @author Steve Ebersole
+ *
+ * @since 6.0
  */
 public enum QueryLiteralRendering {
-
+	/**
+	 * The default - more-or-less an alias for {@link #AS_PARAM_OUTSIDE_SELECT}
+	 */
 	AUTO( "auto" ),
+
 	/**
 	 * Always render as a SQL literal, never a parameter
 	 */
 	AS_LITERAL( "literal" ),
+
 	/**
 	 * Always as a parameter, never as a literal
 	 */
 	AS_PARAM( "param" ),
+
 	/**
 	 * As a parameter when the literal occurs outside the SELECT clause,
 	 * otherwise render as a SQL literal.

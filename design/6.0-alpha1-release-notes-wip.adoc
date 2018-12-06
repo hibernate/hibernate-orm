@@ -13,8 +13,8 @@ parse the query (smaller strings parse faster).
 
 === Type system
 
-6.0 required some pretty major changes to a few Hibernate contracts, especially Hibernate's "type system" to account for
-read-by-position rather than read-by-name.
+6.0 required some pretty major changes to a few Hibernate contracts, especially Hibernate's "type system", to account
+for read-by-position rather than read-by-name.
 
 Alpha1 contains the initial proposal for handling various "basic value" customizations including `BasicType`,
 `UserType`, `@SqlType`, `@SqlTypeDescriptor`, `@SqlTypeRegistration`, `@JavaTypeDescriptor`, `@JavaTypeRegistration`.
@@ -34,6 +34,7 @@ one-to-many:: supported except:
 * non-bidirectional mappings using a join table works, not using a join table does not
 many-to-many:: partial support
 any:: not yet supported
+many-to-any:: not yet supported
 
 
 Known limitations:
@@ -42,6 +43,7 @@ Known limitations:
 * post-insert identifier generation (IDENTITY, etc) not yet implemented
 * inheritance is not yet implemented (limited support for discriminator-based)
 * support for `@SQLInsert`, `@SQLDelete`, etc not yet implemented
+
 
 See the `design/type-customization.adoc` document in the root of the project.  It
 describes how to customize Hibernate's type system and how Hibernate maps values
@@ -85,15 +87,6 @@ removed:: we have removed the following artifacts:
 * `hibernate-entitymanager` - JPA support has been part of `hibernate-core` since 5.0
 * `hibernate-java8` - Java 8 support (Instant, etc) has been part of `hibernate-core` since 4.3(?)
 * `hibernate-envers` - Support for Envers is made part of `hibernate-core` as of 6.0
-
-
-=== Envers folded into hibernate-core
-
-Envers is now defined as part of the `hibernate-core` model which provides for better integration - easier
-and more powerful for users.
-
-`hibernate-envers` has been "relocated" (in Maven terms) and will be removed at a later date.  To use
-Envers functionality, just use `hibernate-core` and its dependencies
 
 
 

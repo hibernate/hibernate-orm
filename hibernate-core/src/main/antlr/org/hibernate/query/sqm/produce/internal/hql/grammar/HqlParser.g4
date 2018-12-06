@@ -44,7 +44,7 @@ deleteStatement
 	;
 
 insertStatement
-// todo : VERSIONED
+// todo (6.0 : VERSIONED
 	: INSERT insertSpec querySpec
 	;
 
@@ -66,7 +66,7 @@ targetFieldsSpec
 // ORDER BY clause
 
 orderByClause
-// todo : null precedence
+// todo (6.0) : null precedence
 	: ORDER BY sortSpecification (COMMA sortSpecification)*
 	;
 
@@ -86,6 +86,7 @@ orderingSpecification
 	:	ASC
 	|	DESC
 	;
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // LIMIT/OFFSET clause
@@ -121,10 +122,8 @@ selectClause
 selectionList
 	: selection (COMMA selection)*
 	;
+
 selection
-	// I have noticed that without this predicate, Antlr will sometimes
-	// interpret `select a.b from Something ...` as `from` being the
-	// select-expression alias
 	: selectExpression (resultIdentifier)?
 	;
 
@@ -268,7 +267,6 @@ jpaCollectionJoin
 	;
 
 qualifiedJoin
-//	: ( INNER | ((LEFT|RIGHT|FULL)? OUTER) )? JOIN FETCH? qualifiedJoinRhs (qualifiedJoinPredicate)?
 	: joinTypeQualifier JOIN FETCH? qualifiedJoinRhs (qualifiedJoinPredicate)?
 	;
 
@@ -301,6 +299,7 @@ groupingSpecification
 groupingValue
 	:	expression collationSpecification?
 	;
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //HAVING clause
@@ -475,7 +474,15 @@ function
 	;
 
 jpaNonStandardFunction
-	: FUNCTION LEFT_PAREN nonStandardFunctionName (COMMA nonStandardFunctionArguments)? RIGHT_PAREN
+	: FUNCTION LEFT_PAREN jpaNonStandardFunctionName (COMMA nonStandardFunctionArguments)? RIGHT_PAREN
+	;
+
+jpaNonStandardFunctionName
+	: STRING_LITERAL
+	;
+
+nonStandardFunction
+	: nonStandardFunctionName LEFT_PAREN nonStandardFunctionArguments? RIGHT_PAREN
 	;
 
 nonStandardFunctionName
@@ -484,10 +491,6 @@ nonStandardFunctionName
 
 nonStandardFunctionArguments
 	: expression (COMMA expression)*
-	;
-
-nonStandardFunction
-	: nonStandardFunctionName LEFT_PAREN nonStandardFunctionArguments? RIGHT_PAREN
 	;
 
 jpaCollectionFunction
@@ -559,7 +562,7 @@ castFunction
 	;
 
 castTarget
-	// should allow either
+	// todo (6.0) : should allow either
 	// 		- named cast (IDENTIFIER)
 	//			- JavaTypeDescriptorRegistry (imported) key
 	//			- java.sql.Types field NAME (alias for its value as a coded cast)

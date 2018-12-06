@@ -17,13 +17,13 @@ public class StrictJpaComplianceViolation extends SemanticException {
 		ALIASED_FETCH_JOIN( "aliased fetch join" ),
 		UNMAPPED_POLYMORPHISM( "unmapped polymorphic reference" ),
 		FUNCTION_CALL( "improper non-standard function call" ),
-		HQL_COLLECTION_FUNCTION( "use of HQL collection functions (maxelement,minelement,maxindex,minindex)"),
+		HQL_COLLECTION_FUNCTION( "use of HQL collection functions (maxelement, minelement, maxindex, minindex)"),
 		VALUE_FUNCTION_ON_NON_MAP( "use of value() function for non-Map type" ),
 		RESERVED_WORD_USED_AS_ALIAS( "use of reserved word as alias (identification variable or result variable)" ),
 		INDEXED_ELEMENT_REFERENCE( "use of HQL indexed element reference syntax" ),
 		SUBQUERY_ORDER_BY( "use of ORDER BY clause in subquery" ),
 		LIMIT_OFFSET_CLAUSE( "use of LIMIT/OFFSET clause" ),
-		IDENTIFICATION_VARIABLE_NOT_DECLARED_IN_FROM_CLAUSE( "use of an alias not declared in the FROM clause" )
+		IDENTIFICATION_VARIABLE_NOT_DECLARED_IN_FROM_CLAUSE( "use of an alias not declared in the FROM clause" ),
 		;
 
 		private final String description;
@@ -40,7 +40,7 @@ public class StrictJpaComplianceViolation extends SemanticException {
 	private final Type type;
 
 	public StrictJpaComplianceViolation(Type type) {
-		super( "Strict JPQL compliance was violated : " + type.description );
+		super( "Strict JPA query language compliance was violated : " + type.description );
 		this.type = type;
 	}
 

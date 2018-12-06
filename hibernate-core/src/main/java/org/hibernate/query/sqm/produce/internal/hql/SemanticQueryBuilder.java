@@ -356,6 +356,7 @@ public class SemanticQueryBuilder
 	}
 
 
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Grammar rules
 
@@ -2102,7 +2103,7 @@ public class SemanticQueryBuilder
 
 	@Override
 	public SqmGenericFunction visitJpaNonStandardFunction(HqlParser.JpaNonStandardFunctionContext ctx) {
-		final String functionName = ctx.nonStandardFunctionName().getText();
+		final String functionName = ctx.jpaNonStandardFunctionName().STRING_LITERAL().getText();
 		final List<SqmExpression> functionArguments = visitNonStandardFunctionArguments( ctx.nonStandardFunctionArguments() );
 
 		// todo : integrate some form of SqlFunction look-up using the ParsingContext so we can resolve the "type"

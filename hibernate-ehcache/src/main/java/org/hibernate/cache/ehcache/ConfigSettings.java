@@ -35,4 +35,6 @@ public interface ConfigSettings {
 	String EHCACHE_CONFIGURATION_RESOURCE_NAME = "net.sf.ehcache.configurationResourceName";
 
 	String EHCACHE_CONFIGURATION_CACHE_MANAGER_NAME = "net.sf.ehcache.cacheManagerName";
+
+	String EHCACHE_CONFIGURATION_CACHE_LOCK_TIMEOUT = "net.sf.ehcache.hibernate.cache_lock_timeout";
 }

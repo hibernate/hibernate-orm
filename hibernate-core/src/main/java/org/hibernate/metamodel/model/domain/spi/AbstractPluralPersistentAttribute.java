@@ -142,7 +142,18 @@ public class AbstractPluralPersistentAttribute<O,C,E> extends AbstractPersistent
 
 	@Override
 	public PersistentAttributeType getPersistentAttributeType() {
-		throw new NotYetImplementedFor6Exception();
+		final CollectionElement collectionElement = getPersistentCollectionDescriptor().getElementDescriptor();
+		switch ( collectionElement.getClassification() ) {
+			case EMBEDDABLE:
+			case BASIC:
+				return PersistentAttributeType.ELEMENT_COLLECTION;
+			case MANY_TO_MANY:
+				return PersistentAttributeType.MANY_TO_MANY;
+			case ONE_TO_MANY:
+				return PersistentAttributeType.ONE_TO_MANY;
+			default:
+				throw new NotYetImplementedFor6Exception(  );
+		}
 	}
 
 	@Override

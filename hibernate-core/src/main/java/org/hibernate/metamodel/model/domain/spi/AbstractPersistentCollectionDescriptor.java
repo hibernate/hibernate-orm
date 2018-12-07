@@ -899,7 +899,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 
 	@Override
 	public boolean isDirty(Object old, Object value, SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception();
+		return !getElementDescriptor().getJavaTypeDescriptor().areEqual( old, value );
 	}
 
 	@Override

@@ -4164,6 +4164,12 @@ public abstract class AbstractEntityPersister
 		canIdentityInsertBeDelayed = true;
 
 		if ( getEntityMetamodel().getIdentifierProperty().isIdentifierAssignedByInsert() ) {
+			// if the persister writes the entity to the second-level cache; we cannot delay.
+			if ( canWriteToCache ) {
+				canIdentityInsertBeDelayed = false;
+				return;
+			}
+
 			// if the persister's identifier is assigned by insert, we need to see if we must force non-delay mode.
 			for ( NonIdentifierAttribute attribute : getEntityMetamodel().getProperties() ) {
 				if ( isTypeSelfReferencing( attribute.getType() ) ) {

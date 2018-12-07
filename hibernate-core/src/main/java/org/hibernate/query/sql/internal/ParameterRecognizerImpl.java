@@ -76,22 +76,23 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 
 		// validate the positions.  JPA says that these should start with 1 and
 		// increment contiguously (no gaps)
-		int[] positionsArray = positionalQueryParameters.keySet().stream().mapToInt( Integer::intValue ).toArray();
-		Arrays.sort( positionsArray );
-
-		int previous = 0;
-		boolean first = true;
-		for ( Integer position : positionsArray ) {
-			if ( position != previous + 1 ) {
-				if ( first ) {
-					throw new QueryException( "Positional parameters did not start with base [" + ordinalParameterBase + "] : " + position );
+		if ( positionalQueryParameters != null ) {
+			final int[] positionsArray = positionalQueryParameters.keySet().stream().mapToInt( Integer::intValue ).toArray();
+			Arrays.sort( positionsArray );
+			int previous = 0;
+			boolean first = true;
+			for ( Integer position : positionsArray ) {
+				if ( position != previous + 1 ) {
+					if ( first ) {
+						throw new QueryException( "Positional parameters did not start with base [" + ordinalParameterBase + "] : " + position );
+					}
+					else {
+						throw new QueryException( "Gap in positional parameter positions; skipped " + (previous+1) );
+					}
 				}
-				else {
-					throw new QueryException( "Gap in positional parameter positions; skipped " + (previous+1) );
-				}
+				first = false;
+				previous = position;
 			}
-			first = false;
-			previous = position;
 		}
 	}
 

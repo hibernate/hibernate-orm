@@ -60,7 +60,7 @@ public abstract class AbstractNamedQueryDefinition implements NamedQueryDefiniti
 			String comment,
 			Map<String,Object> hints) {
 		this.name = name;
-		this.parameterDescriptors = new ArrayList<>( parameterDescriptors );
+		this.parameterDescriptors = parameterDescriptors == null ? new ArrayList<>() : new ArrayList<>( parameterDescriptors );
 		this.cacheable = cacheable;
 		this.cacheRegion = cacheRegion;
 		this.cacheMode = cacheMode;
@@ -70,7 +70,7 @@ public abstract class AbstractNamedQueryDefinition implements NamedQueryDefiniti
 		this.timeout = timeout;
 		this.fetchSize = fetchSize;
 		this.comment = comment;
-		this.hints = new HashMap<>( hints );
+		this.hints = hints == null ? new HashMap<>() : new HashMap<>( hints );
 	}
 
 	@Override

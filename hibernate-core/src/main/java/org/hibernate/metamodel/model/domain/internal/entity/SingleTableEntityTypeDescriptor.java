@@ -890,7 +890,7 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 
 	@Override
 	public String getIdentifierPropertyName() {
-		return null;
+		return getHierarchy().getIdentifierDescriptor().getNavigableName();
 	}
 
 	@Override

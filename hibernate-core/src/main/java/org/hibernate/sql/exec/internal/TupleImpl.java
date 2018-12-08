@@ -8,15 +8,16 @@
 package org.hibernate.sql.exec.internal;
 
 import java.util.List;
-import javax.persistence.Tuple;
 import javax.persistence.TupleElement;
+
+import org.hibernate.query.JpaTuple;
 
 /**
  * Implementation of the JPA Tuple contract
  *
  * @author Steve Ebersole
  */
-public class TupleImpl implements Tuple {
+public class TupleImpl implements JpaTuple {
 	private final List<TupleElement<?>> tupleElements;
 	private final Object[] row;
 

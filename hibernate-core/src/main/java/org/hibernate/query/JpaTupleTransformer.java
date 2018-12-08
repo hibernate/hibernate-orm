@@ -31,11 +31,11 @@ import org.hibernate.sql.exec.internal.TupleImpl;
  * which does this same logic
  */
 @Deprecated
-public class JpaTupleTransformer implements TupleTransformer<Tuple> {
+public class JpaTupleTransformer implements TupleTransformer<JpaTuple> {
 	private List<TupleElement<?>> tupleElements;
 
 	@Override
-	public Tuple transformTuple(Object[] row, String[] aliases) {
+	public JpaTuple transformTuple(Object[] row, String[] aliases) {
 		if ( tupleElements == null ) {
 			tupleElements = generateTupleElements( row, aliases );
 		}

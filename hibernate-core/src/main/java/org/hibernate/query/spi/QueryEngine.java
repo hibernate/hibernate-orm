@@ -12,6 +12,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.spi.CriteriaNodeBuilder;
 import org.hibernate.query.internal.QueryPlanCacheImpl;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.internal.SemanticQueryProducerImpl;
@@ -28,7 +29,7 @@ public class QueryEngine {
 	private final SessionFactoryImplementor sessionFactory;
 
 	private final NamedQueryRepository namedQueryRepository;
-	private final HibernateCriteriaBuilder criteriaBuilder;
+	private final CriteriaNodeBuilder criteriaBuilder;
 	private final SemanticQueryProducer semanticQueryProducer;
 	private final QueryPlanCache queryPlanCache;
 	private final SqmFunctionRegistry sqmFunctionRegistry;
@@ -40,11 +41,7 @@ public class QueryEngine {
 		this.sessionFactory = sessionFactory;
 		this.namedQueryRepository = namedQueryRepository;
 		this.semanticQueryProducer = new SemanticQueryProducerImpl( sessionFactory );
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// todo (6.0) : re-enable this, to initialize whatever class ultimately represents our SPI view of the JPA CriteriaBuilder...
-		//this.criteriaBuilder = new CriteriaBuilderImpl( sessionFactory );
-		this.criteriaBuilder = null;
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		this.criteriaBuilder = new CriteriaNodeBuilder( sessionFactory );
 		this.queryPlanCache = new QueryPlanCacheImpl( sessionFactory );
 		this.sqmFunctionRegistry = sqmFunctionRegistry;
 

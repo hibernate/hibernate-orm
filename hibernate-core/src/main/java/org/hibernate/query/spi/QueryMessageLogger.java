@@ -27,9 +27,11 @@ import static org.jboss.logging.Logger.Level.ERROR;
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 90003001, max = 90004000 )
 public interface QueryMessageLogger {
+	String LOGGER_NAME = "org.hibernate.orm.query";
+
 	QueryMessageLogger QUERY_LOGGER = Logger.getMessageLogger(
 			QueryMessageLogger.class,
-			"org.hibernate.orm.query"
+			LOGGER_NAME
 	);
 
 

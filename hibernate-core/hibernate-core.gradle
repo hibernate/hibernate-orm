@@ -343,7 +343,7 @@ class Antlr4Plugin implements Plugin<Project> {
 }
 
 class Antlr4GenerationTask extends DefaultTask {
-    static final String HQL_PCKG = 'org.hibernate.query.sqm.produce.internal.hql.grammar'
+    static final String HQL_PCKG = 'org.hibernate.query.hql.internal'
     static final String IMPORT_SQL_PCKG = 'org.hibernate.tool.hbm2ddl.grammar'
     static final String GRAPH_PCKG = 'org.hibernate.graph.internal.parse'
 

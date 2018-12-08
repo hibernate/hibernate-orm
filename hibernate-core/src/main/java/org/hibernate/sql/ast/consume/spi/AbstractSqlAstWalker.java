@@ -15,7 +15,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.query.QueryLiteralRendering;
-import org.hibernate.query.sqm.tree.order.SqmSortOrder;
+import org.hibernate.SortOrder;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.SqlTreeException;
@@ -215,11 +215,11 @@ public abstract class AbstractSqlAstWalker
 			appendSql( collation );
 		}
 
-		final SqmSortOrder sortOrder = sortSpecification.getSortOrder();
-		if ( sortOrder == SqmSortOrder.ASCENDING ) {
+		final SortOrder sortOrder = sortSpecification.getSortOrder();
+		if ( sortOrder == SortOrder.ASCENDING ) {
 			appendSql( " asc" );
 		}
-		else if ( sortOrder == SqmSortOrder.DESCENDING ) {
+		else if ( sortOrder == SortOrder.DESCENDING ) {
 			appendSql( " desc" );
 		}
 

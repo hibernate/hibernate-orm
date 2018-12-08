@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.order;
 
+import org.hibernate.SortOrder;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
@@ -14,9 +15,9 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 public class SqmSortSpecification {
 	private final SqmExpression sortExpression;
 	private final String collation;
-	private final SqmSortOrder sortOrder;
+	private final SortOrder sortOrder;
 
-	public SqmSortSpecification(SqmExpression sortExpression, String collation, SqmSortOrder sortOrder) {
+	public SqmSortSpecification(SqmExpression sortExpression, String collation, SortOrder sortOrder) {
 		this.sortExpression = sortExpression;
 		this.collation = collation;
 		this.sortOrder = sortOrder;
@@ -26,7 +27,7 @@ public class SqmSortSpecification {
 		this( sortExpression, null, null );
 	}
 
-	public SqmSortSpecification(SqmExpression sortExpression, SqmSortOrder sortOrder) {
+	public SqmSortSpecification(SqmExpression sortExpression, SortOrder sortOrder) {
 		this( sortExpression, null, sortOrder );
 	}
 
@@ -38,7 +39,7 @@ public class SqmSortSpecification {
 		return collation;
 	}
 
-	public SqmSortOrder getSortOrder() {
+	public SortOrder getSortOrder() {
 		return sortOrder;
 	}
 }

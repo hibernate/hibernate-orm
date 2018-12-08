@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.spi.sort;
 
-import org.hibernate.query.sqm.tree.order.SqmSortOrder;
+import org.hibernate.SortOrder;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.SqlAstNode;
@@ -17,9 +17,9 @@ import org.hibernate.sql.ast.tree.spi.SqlAstNode;
 public class SortSpecification implements SqlAstNode {
 	private final Expression sortExpression;
 	private final String collation;
-	private final SqmSortOrder sortOrder;
+	private final SortOrder sortOrder;
 
-	public SortSpecification(Expression sortExpression, String collation, SqmSortOrder sortOrder) {
+	public SortSpecification(Expression sortExpression, String collation, SortOrder sortOrder) {
 		this.sortExpression = sortExpression;
 		this.collation = collation;
 		this.sortOrder = sortOrder;
@@ -33,7 +33,7 @@ public class SortSpecification implements SqlAstNode {
 		return collation;
 	}
 
-	public SqmSortOrder getSortOrder() {
+	public SortOrder getSortOrder() {
 		return sortOrder;
 	}
 

@@ -6,9 +6,11 @@
  */
 package org.hibernate.test.any;
 
+import java.util.HashSet;
 import javax.persistence.PersistenceException;
 
 import org.hibernate.JDBCException;
+import org.hibernate.LazyInitializationException;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
@@ -19,6 +21,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.junit.Assert.fail;
 
 /**
  * @author Steve Ebersole
@@ -81,6 +84,61 @@ public class AnyTypeTest extends BaseCoreFunctionalTestCase {
 		}
 		finally {
 			session.close();
+		}
+	}
+
+	@Test
+	public void testFetchEager () {
+		Session session = openSession();
+		session.beginTransaction();
+		Person person = new Person();
+		Address address = new Address();
+		address.setLines(new HashSet());
+		person.setData( address );
+		session.saveOrUpdate(person);
+		session.saveOrUpdate(address);
+		session.getTransaction().commit();
+		session.close();
+
+		session = openSession();
+		session.beginTransaction();
+		person = (Person) session.load( Person.class, person.getId() );
+		address = (Address) person.getData();
+		session.getTransaction().commit();
+		session.close();
+
+		address.getLines();
+	}
+
+	@Test
+	public void testFetchLazy () {
+		Session session = openSession();
+		session.beginTransaction();
+		LazyPerson person = new LazyPerson();
+		Address address = new Address();
+		address.setLines(new HashSet());
+		person.setData( address );
+		session.saveOrUpdate(person);
+		session.saveOrUpdate(address);
+		session.getTransaction().commit();
+		session.close();
+
+		session = openSession();
+		session.beginTransaction();
+		person = (LazyPerson) session.load( LazyPerson.class, person.getId() );
+		address = (Address) person.getData();
+		session.getTransaction().commit();
+		session.close();
+
+		try {
+			address.getLines();
+			fail( "should not get the property string after session closed." );
+		}
+		catch (LazyInitializationException e) {
+			// expected
+		}
+		catch (Exception e) {
+			fail( "should not throw exception other than LazyInitializationException." );
 		}
 	}
 }

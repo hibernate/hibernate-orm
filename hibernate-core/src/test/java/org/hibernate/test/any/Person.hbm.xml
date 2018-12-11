@@ -33,4 +33,16 @@
         </set>
     </class>
 
+    <class name="LazyPerson" table="T_ANY_LAZY_PERSON">
+        <id name="id" column="ID_">
+            <generator class="increment" />
+        </id>
+        <property name="name" />
+        <any name="data" id-type="long" cascade="none" lazy="true">
+            <meta-value value="A" class="Address"/>
+            <column name="DATATYPE_"/>
+            <column name="DATAID_"/>
+        </any>
+    </class>
+
 </hibernate-mapping>

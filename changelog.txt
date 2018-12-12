@@ -3,6 +3,30 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.0.Final (December 12, 2018)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31738/tab/release-report-done
+
+** Bug
+    * [HHH-13110] - @PreUpdate method on a Embeddable null on the parent caused NullPointerException
+    * [HHH-13141] - Could not fetch the SequenceInformation from the database when using SQL Server with a case-sensitive collation
+    * [HHH-13147] - DelayedPostInsertIdentifier handling broken since 5.3.0
+
+** New Feature
+    * [HHH-13083] - Add st_makeenvelope to the supported PostGIS functions in hibernate-spatial
+
+** Task
+    * [HHH-13095] - Document how to use arithmetic expressions in CASE statements
+    * [HHH-13096] - Document that composite identifier cannot use auto-generated properties
+
+** Improvement
+    * [HHH-10778] - Add support for non-public AttributeConverter implementations
+    * [HHH-13144] - Move the doInAutoCommit utility to TranscationUtil
+    * [HHH-13156] - Enhance the @AnyMetaDef annotation section with more details about the optimal placement
+
+
+
 Changes in 5.4.0.CR2 (November 29, 2018)
 ------------------------------------------------------------------------------------------------------------------------
 

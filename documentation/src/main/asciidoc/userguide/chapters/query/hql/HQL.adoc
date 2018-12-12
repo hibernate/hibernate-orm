@@ -11,9 +11,6 @@ A JPQL query is always a valid HQL query, the reverse is not true, however.
 Both HQL and JPQL are non-type-safe ways to perform query operations.
 Criteria queries offer a type-safe approach to querying.  See <<chapters/query/criteria/Criteria.adoc#criteria,Criteria>> for more information.
 
-[[query-api]]
-=== Query API
-
 [[hql-examples-domain-model]]
 === Example domain model
 
@@ -44,10 +41,19 @@ include::{modeldir}/WireTransferPayment.java[tags=hql-examples-domain-model-exam
 ----
 ====
 
-[[jpql-api]]
-=== JPA Query API
+[[query-api]]
+=== Query API
 
-In JPA the query is represented by `javax.persistence.Query` or `javax.persistence.TypedQuery` as obtained from the `EntityManager`.
+When using Hibernate, you can execute entity queries either via JPA or the Hibernate-specific API.
+Since 5.2, the Hibernate `Session` interface extends the JPA `EntityManager` interface.
+For this reason, the query API was also merged, and now the Hibernate `org.hibernate.query.Query` interface extends the JPA `javax.persistence.Query`.
+
+Next, we are going to see how the query API differs between the standard JPA interfaces and the Hibernate-specific API.
+
+[[jpql-api]]
+==== JPA Query API
+
+In JPA, the query is represented by `javax.persistence.Query` or `javax.persistence.TypedQuery` as obtained from the `EntityManager`.
 The create an inline `Query` or `TypedQuery`, you need to use the `EntityManager#createQuery` method.
 For named queries, the `EntityManager#createNamedQuery` method is needed.
 
@@ -183,7 +189,7 @@ include::{sourcedir}/HQLTest.java[tags=jpql-api-single-result-example]
 ====
 
 [[hql-api]]
-=== Hibernate Query API
+==== Hibernate Query API
 
 In Hibernate, the HQL query is represented as `org.hibernate.query.Query` which is obtained from a `Session`.
 If the HQL is a named query, `Session#getNamedQuery` would be used; otherwise `Session#createQuery` is needed.

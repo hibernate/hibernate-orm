@@ -34,6 +34,7 @@ apply plugin: 'checkstyle'
 apply plugin: 'build-dashboard'
 apply plugin: 'project-report'
 
+apply plugin: 'org.junit.platform.gradle.plugin'
 
 ext {
 	java9ModuleNameBase = project.name.startsWith( 'hibernate-' ) ? name.drop( 'hibernate-'.length() ): name

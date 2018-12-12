@@ -542,8 +542,6 @@ The `property_id` is used to match the `id` column of either the `string_propert
 while the `property_type` is used to match the `string_property` or the `integer_property` table.
 
 The table resolving mapping is defined by the `metaDef` attribute which references an `@AnyMetaDef` mapping.
-Although the `@AnyMetaDef` mapping could be set right next to the `@Any` annotation,
-it's good practice to reuse it, therefore it makes sense to configure it on a class or package-level basis.
 
 The `package-info.java` contains the `@AnyMetaDef` mapping:
 
@@ -558,7 +556,8 @@ include::{sourcedir}/any/package-info.java[tags=associations-any-meta-def-exampl
 
 [NOTE]
 ====
-It is recommended to place the `@AnyMetaDef` mapping as a package metadata.
+Although the `@AnyMetaDef` mapping could be set right next to the `@Any` annotation,
+if you need to reuse it, it's good practice to configure it at the class or package level.
 ====
 
 To see the `@Any` annotation in action, consider the next examples.

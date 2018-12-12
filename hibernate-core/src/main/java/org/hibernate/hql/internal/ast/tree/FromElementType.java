@@ -131,18 +131,20 @@ class FromElementType {
 
 		final String[] idPropertyName = getIdentifierPropertyNames();
 		StringBuilder buf = new StringBuilder();
+		int counter = 0;
 		for ( int j = 0; j < idPropertyName.length; j++ ) {
 			String propertyName = idPropertyName[j];
 			String[] toColumns = getPropertyMapping( propertyName ).toColumns( getTableAlias(), propertyName );
-			for ( int h = 0; h < toColumns.length; h++ ) {
+			for ( int h = 0; h < toColumns.length; h++, counter++ ) {
 				String column = toColumns[h];
 				if ( j + h > 0 ) {
 					buf.append( ", " );
 				}
-				buf.append( column ).append( " as " ).append( NameGenerator.scalarName( i, j + h ) );
+				buf.append( column ).append( " as " ).append( NameGenerator.scalarName( i, counter ) );
 			}
 		}
 
+		LOG.debug( "Rendered scalar ID select column(s): " + buf );
 		return buf.toString();
 	}
 

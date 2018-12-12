@@ -558,7 +558,7 @@ include::{sourcedir}/any/package-info.java[tags=associations-any-meta-def-exampl
 
 [NOTE]
 ====
-It is recommended to place the `@AnyMetaDef` mapping as a package metadata.
+It is recommended to place the `@AnyMetaDef` mapping as a package metadata if you can reuse it.
 ====
 
 To see the `@Any` annotation in action, consider the next examples.

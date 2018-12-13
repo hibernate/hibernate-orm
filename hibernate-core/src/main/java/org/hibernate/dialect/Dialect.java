@@ -496,6 +496,11 @@ public abstract class Dialect implements ConversionContext {
 	@SuppressWarnings( {"UnusedDeclaration"})
 	protected static final LobMergeStrategy LEGACY_LOB_MERGE_STRATEGY = new LobMergeStrategy() {
 		@Override
+		public boolean supportsMerge() {
+			return false;
+		}
+
+		@Override
 		public Blob mergeBlob(Blob original, Blob target, SharedSessionContractImplementor session) {
 			return target;
 		}

@@ -17,7 +17,7 @@ import org.hibernate.type.descriptor.java.BlobTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class BlobType extends AbstractSingleColumnStandardBasicType<Blob> {
+public class BlobType extends LobType<Blob> {
 	public static final BlobType INSTANCE = new BlobType();
 
 	public BlobType() {
@@ -38,5 +38,4 @@ public class BlobType extends AbstractSingleColumnStandardBasicType<Blob> {
 	protected Blob getReplacement(Blob original, Blob target, SharedSessionContractImplementor session) {
 		return session.getJdbcServices().getJdbcEnvironment().getDialect().getLobMergeStrategy().mergeBlob( original, target, session );
 	}
-
 }

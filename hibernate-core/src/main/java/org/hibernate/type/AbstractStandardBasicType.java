@@ -71,11 +71,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	protected T getReplacement(T original, T target, SharedSessionContractImplementor session) {
-		if ( original == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
-			return target;
-		}
-		else if ( !isMutable() ||
-					( target != LazyPropertyInitializer.UNFETCHED_PROPERTY && isEqual( original, target ) ) ) {
+		if ( !isMutable() || isEqual( original, target ) ) {
 			return original;
 		}
 		else {
@@ -277,7 +273,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	@SuppressWarnings({ "unchecked" })
 	protected final void nullSafeSet(PreparedStatement st, Object value, int index, WrapperOptions options) throws SQLException {
-		remapSqlTypeDescriptor( options ).getBinder( javaTypeDescriptor ).bind( st, ( T ) value, index, options );
+		remapSqlTypeDescriptor( options ).getBinder( javaTypeDescriptor ).bind( st, (T) value, index, options );
 	}
 
 	protected SqlTypeDescriptor remapSqlTypeDescriptor(WrapperOptions options) {
@@ -351,7 +347,7 @@ public abstract class AbstractStandardBasicType<T>
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public final Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map copyCache) {
-		return getReplacement( (T) original, (T) target, session );
+		return doReplacement( original, target, session );
 	}
 
 	@Override
@@ -364,8 +360,18 @@ public abstract class AbstractStandardBasicType<T>
 			Map copyCache,
 			ForeignKeyDirection foreignKeyDirection) {
 		return ForeignKeyDirection.FROM_PARENT == foreignKeyDirection
-				? getReplacement( (T) original, (T) target, session )
+				? doReplacement( original, target, session )
 				: target;
+	}
+
+	protected Object doReplacement(Object original, Object target, SharedSessionContractImplementor session) {
+		if ( original == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+			return target;
+		}
+		else if ( target == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+			return getReplacement( (T) original, null, session );
+		}
+		return getReplacement( (T) original, (T) target, session );
 	}
 
 	@Override

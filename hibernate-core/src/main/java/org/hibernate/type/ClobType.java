@@ -17,7 +17,7 @@ import org.hibernate.type.descriptor.java.ClobTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class ClobType extends AbstractSingleColumnStandardBasicType<Clob> {
+public class ClobType extends LobType<Clob> {
 	public static final ClobType INSTANCE = new ClobType();
 
 	public ClobType() {
@@ -38,5 +38,4 @@ public class ClobType extends AbstractSingleColumnStandardBasicType<Clob> {
 	protected Clob getReplacement(Clob original, Clob target, SharedSessionContractImplementor session) {
 		return session.getJdbcServices().getJdbcEnvironment().getDialect().getLobMergeStrategy().mergeClob( original, target, session );
 	}
-
 }

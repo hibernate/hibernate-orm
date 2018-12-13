@@ -17,7 +17,7 @@ import org.hibernate.type.descriptor.java.NClobTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class NClobType extends AbstractSingleColumnStandardBasicType<NClob> {
+public class NClobType extends LobType<NClob> {
 	public static final NClobType INSTANCE = new NClobType();
 
 	public NClobType() {

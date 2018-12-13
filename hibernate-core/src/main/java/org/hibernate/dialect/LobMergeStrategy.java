@@ -18,6 +18,16 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @author Steve Ebersole
  */
 public interface LobMergeStrategy {
+
+	/**
+	 * Does this LobMergeStrategy support the merging a Lobs?
+	 *
+	 * @return true, if merging Lobs is supported; false, otherwise.
+	 */
+	default boolean supportsMerge() {
+		return true;
+	}
+
 	/**
 	 * Perform merge on {@link Blob} values.
 	 *
@@ -25,7 +35,8 @@ public interface LobMergeStrategy {
 	 * @param target The managed {@code BLOB} state
 	 * @param session The session
 	 *
-	 * @return The merged {@code BLOB} state
+	 * @return The merged {@code BLOB} state; if {@link #supportsMerge()} returns
+	 *         {@code false}, then {@code target} is returned.
 	 */
 	Blob mergeBlob(Blob original, Blob target, SharedSessionContractImplementor session);
 
@@ -36,7 +47,8 @@ public interface LobMergeStrategy {
 	 * @param target The managed {@code CLOB} state
 	 * @param session The session
 	 *
-	 * @return The merged {@code CLOB} state
+	 * @return The merged {@code CLOB} state; if {@link #supportsMerge()} returns
+	 *         {@code false}, then {@code target} is returned.
 	 */
 	Clob mergeClob(Clob original, Clob target, SharedSessionContractImplementor session);
 
@@ -47,7 +59,8 @@ public interface LobMergeStrategy {
 	 * @param target The managed {@code NCLOB} state
 	 * @param session The session
 	 *
-	 * @return The merged {@code NCLOB} state
+	 * @return The merged {@code NCLOB} state; if {@link #supportsMerge()} returns
+	 *         {@code false}, then {@code target} is returned.
 	 */
 	NClob mergeNClob(NClob original, NClob target, SharedSessionContractImplementor session);
 }

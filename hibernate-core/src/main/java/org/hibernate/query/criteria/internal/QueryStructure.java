@@ -306,6 +306,7 @@ public class QueryStructure<T> implements Serializable {
 					Set<TreatedRoot> treats = ( (RootImpl) root ).getTreats();
 					for ( TreatedRoot treat : treats ) {
 						renderJoins( jpaqlQuery, renderingContext, treat.getJoins() );
+						renderFetches( jpaqlQuery, renderingContext, treat.getFetches() );
 					}
 				}
 				renderFetches( jpaqlQuery, renderingContext, root.getFetches() );

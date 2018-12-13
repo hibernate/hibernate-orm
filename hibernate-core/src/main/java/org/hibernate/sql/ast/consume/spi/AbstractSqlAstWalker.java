@@ -20,6 +20,7 @@ import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.SqlTreeException;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
+import org.hibernate.sql.ast.tree.spi.SqlAstNode;
 import org.hibernate.sql.ast.tree.spi.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.spi.expression.SubstrFunction;
 import org.hibernate.sql.exec.spi.JdbcParameter;
@@ -86,6 +87,7 @@ import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.sql.ast.consume.spi.SqlAppender.AND;
 import static org.hibernate.sql.ast.consume.spi.SqlAppender.CLOSE_PARENTHESIS;
 import static org.hibernate.sql.ast.consume.spi.SqlAppender.COMA_SEPARATOR;
 import static org.hibernate.sql.ast.consume.spi.SqlAppender.DISTINCT_KEYWORD;
@@ -99,7 +101,7 @@ import static org.hibernate.sql.ast.consume.spi.SqlAppender.SELECT_KEYWORD;
  * @author Steve Ebersole
  */
 public abstract class AbstractSqlAstWalker
-		implements SqlAstWalker, SqlTypeDescriptorIndicators  {
+		implements SqlAstWalker, SqlTypeDescriptorIndicators {
 
 	// pre-req state
 	private final SessionFactoryImplementor sessionFactory;
@@ -130,6 +132,7 @@ public abstract class AbstractSqlAstWalker
 	public String getSql() {
 		return sqlBuffer.toString();
 	}
+
 	public List<JdbcParameterBinder> getParameterBinders() {
 		return parameterBinders;
 	}
@@ -188,7 +191,7 @@ public abstract class AbstractSqlAstWalker
 			appendSql( " order by " );
 
 			String separator = NO_SEPARATOR;
-			for (SortSpecification sortSpecification : sortSpecifications ) {
+			for ( SortSpecification sortSpecification : sortSpecifications ) {
 				appendSql( separator );
 				visitSortSpecification( sortSpecification );
 				separator = COMA_SEPARATOR;
@@ -475,7 +478,7 @@ public abstract class AbstractSqlAstWalker
 
 		boolean firstPass = true;
 		for ( Expression expression : function.getExpressions() ) {
-			if ( ! firstPass ) {
+			if ( !firstPass ) {
 				appendSql( COMA_SEPARATOR );
 			}
 			expression.accept( this );
@@ -492,7 +495,7 @@ public abstract class AbstractSqlAstWalker
 
 		boolean firstPass = true;
 		for ( Expression expression : function.getExpressions() ) {
-			if ( ! firstPass ) {
+			if ( !firstPass ) {
 				appendSql( COMA_SEPARATOR );
 			}
 			expression.accept( this );
@@ -535,6 +538,26 @@ public abstract class AbstractSqlAstWalker
 	@Override
 	public void visitCurrentTimestampFunction(CurrentTimestampFunction function) {
 		appendSql( "current_timestamp" );
+	}
+
+	private void visitTuple(SqlTuple leftHandSide, SqlTuple rightHandSide, RelationalPredicate.Operator operator) {
+		List<Expression> leftHandSideExpressions = leftHandSide.getExpressions();
+		List<Expression> rightHandSideExpressions = rightHandSide.getExpressions();
+		String separator = NO_SEPARATOR;
+		boolean isCurrentWhereClause = clauseStack.getCurrent() == Clause.WHERE;
+		if ( isCurrentWhereClause ) {
+			appendSql( OPEN_PARENTHESIS );
+		}
+		for ( int i = 0; i < leftHandSideExpressions.size(); i++ ) {
+			appendSql( separator );
+			leftHandSideExpressions.get( i ).accept( this );
+			appendSql( operator.sqlText() );
+			rightHandSideExpressions.get( i ).accept( this );
+			separator = AND;
+		}
+		if ( isCurrentWhereClause ) {
+			appendSql( CLOSE_PARENTHESIS );
+		}
 	}
 
 	@Override
@@ -746,7 +769,6 @@ public abstract class AbstractSqlAstWalker
 	}
 
 
-
 	protected void visitJdbcParameterBinder(JdbcParameterBinder jdbcParameterBinder) {
 		parameterBinders.add( jdbcParameterBinder );
 
@@ -770,7 +792,7 @@ public abstract class AbstractSqlAstWalker
 		final QueryLiteralRendering queryLiteralRendering = getSessionFactory().getSessionFactoryOptions()
 				.getQueryLiteralRendering();
 
-		switch( queryLiteralRendering ) {
+		switch ( queryLiteralRendering ) {
 			case AS_LITERAL: {
 				renderAsLiteral( queryLiteral );
 				break;
@@ -986,9 +1008,22 @@ public abstract class AbstractSqlAstWalker
 //			// transform this into a
 //		}
 //
-		relationalPredicate.getLeftHandExpression().accept( this );
-		appendSql( relationalPredicate.getOperator().sqlText() );
-		relationalPredicate.getRightHandExpression().accept( this );
+		Expression leftHandExpression = relationalPredicate.getLeftHandExpression();
+		RelationalPredicate.Operator operator = relationalPredicate.getOperator();
+		if ( leftHandExpression instanceof SqlTuple &&
+				( !sessionFactory.getDialect().supportsRowValueConstructorSyntax() ||
+						operator != RelationalPredicate.Operator.EQUAL ) ) {
+			visitTuple(
+					(SqlTuple) leftHandExpression,
+					(SqlTuple) relationalPredicate.getRightHandExpression(),
+					operator
+			);
+		}
+		else {
+			leftHandExpression.accept( this );
+			appendSql( operator.sqlText() );
+			relationalPredicate.getRightHandExpression().accept( this );
+		}
 	}
 
 

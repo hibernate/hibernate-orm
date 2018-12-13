@@ -21,6 +21,7 @@ public interface SqlAppender {
 	String NO_SEPARATOR = "";
 	String EMPTY_STRING_SEPARATOR = " ";
 	String FROM_KEYWORD = " from ";
+	String AND = " and ";
 
 	/**
 	 * Add the passed fragment into the in-flight buffer

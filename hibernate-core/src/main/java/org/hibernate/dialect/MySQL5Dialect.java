@@ -60,4 +60,9 @@ public class MySQL5Dialect extends MySQLDialect {
 	public String getQueryHintString(String query, String hints) {
 		return IndexQueryHintHandler.INSTANCE.addQueryHints( query, hints );
 	}
+
+	@Override
+	public boolean supportsUnionAll() {
+		return true;
+	}
 }

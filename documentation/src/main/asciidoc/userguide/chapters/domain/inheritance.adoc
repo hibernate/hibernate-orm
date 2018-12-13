@@ -310,6 +310,21 @@ include::{extrasdir}/entity-inheritance-table-per-class-query-example.sql[]
 [IMPORTANT]
 ====
 Polymorphic queries require multiple UNION queries, so be aware of the performance implications of a large class hierarchy.
+
+Unfortunatelly, not all database systems support UNION ALL, so if your current Hibernate dialect does not extend any of these dialects, then UNION is going to be used instead of UNION ALL.
+
+- `AbstractHANADialect`
+- `AbstractTransactSQLDialect`
+- `CUBRIDDialect`
+- `DB2Dialect`
+- `H2Dialect`
+- `HSQLDialect`
+- `Ingres9Dialect`
+- `MySQL5Dialect`
+- `Oracle8iDialect`
+- `Oracle9Dialect`
+- `PostgreSQL81Dialect`
+- `RDMSOS2200Dialect`
 ====
 
 [[entity-inheritance-polymorphism]]

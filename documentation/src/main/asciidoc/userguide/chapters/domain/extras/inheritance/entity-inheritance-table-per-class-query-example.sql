@@ -14,7 +14,7 @@ FROM (
              CAST(NULL AS INT) AS creditLimit ,
              0 AS clazz_
     FROM     Account
-    UNION ALL
+    UNION
     SELECT   id ,
              balance ,
              interestRate ,
@@ -23,7 +23,7 @@ FROM (
              CAST(NULL AS INT) AS creditLimit ,
              1 AS clazz_
     FROM     DebitAccount
-    UNION ALL
+    UNION
     SELECT   id ,
              balance ,
              interestRate ,

@@ -6,7 +6,11 @@
  */
 package org.hibernate.testing.junit5;
 
+import java.util.Arrays;
 import java.util.EnumSet;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaDelete;
+import javax.persistence.criteria.Root;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
@@ -23,7 +27,11 @@ import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.Helper;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 
+import org.junit.jupiter.api.AfterEach;
+
 import org.jboss.logging.Logger;
+
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 /**
  * @author Steve Ebersole
@@ -108,6 +116,15 @@ public abstract class SessionFactoryBasedFunctionalTest
 	}
 
 	protected void applyMetadataSources(MetadataSources metadataSources) {
+		for ( Class annotatedClass : getAnnotatedClasses() ) {
+			metadataSources.addAnnotatedClass( annotatedClass );
+		}
+	}
+
+	protected static final Class[] NO_CLASSES = new Class[0];
+
+	protected Class[] getAnnotatedClasses() {
+		return NO_CLASSES;
 	}
 
 	@Override
@@ -122,5 +139,24 @@ public abstract class SessionFactoryBasedFunctionalTest
 
 	protected Metadata getMetadata(){
 		return  metadata;
+	}
+
+	@AfterEach
+	public final void afterTest() {
+		if ( isCleanupTestDataRequired() ) {
+			cleanupTestData();
+		}
+	}
+
+	protected boolean isCleanupTestDataRequired() {
+		return false;
+	}
+
+	protected void cleanupTestData() {
+		doInHibernate(this::sessionFactory, session -> {
+			Arrays.stream( getAnnotatedClasses() ).forEach( annotatedClass ->
+				session.createQuery( "delete from " + annotatedClass.getSimpleName() ).executeUpdate()
+			);
+		});
 	}
 }

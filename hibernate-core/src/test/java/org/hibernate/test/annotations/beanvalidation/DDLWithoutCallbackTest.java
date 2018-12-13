@@ -8,6 +8,9 @@ package org.hibernate.test.annotations.beanvalidation;
 
 import java.math.BigDecimal;
 import java.util.Map;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import javax.persistence.PersistenceException;
 import javax.validation.ConstraintViolationException;
 
@@ -21,6 +24,7 @@ import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
@@ -29,6 +33,27 @@ import static org.junit.Assert.fail;
  * @author Hardy Ferentschik
  */
 public class DDLWithoutCallbackTest extends BaseNonConfigCoreFunctionalTestCase {
+
+	@Override
+	protected void addSettings(Map settings) {
+		settings.put( "javax.persistence.validation.mode", "ddl" );
+	}
+
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] {
+				Address.class,
+				CupHolder.class,
+				MinMax.class,
+				RangeEntity.class
+		};
+	}
+
+	@Override
+	protected boolean isCleanupTestDataRequired() {
+		return true;
+	}
+
 	@Test
 	@RequiresDialectFeature(DialectChecks.SupportsColumnCheck.class)
 	public void testListeners() {
@@ -46,31 +71,27 @@ public class DDLWithoutCallbackTest extends BaseNonConfigCoreFunctionalTestCase 
 		minMax = new MinMax( 11 );
 		assertDatabaseConstraintViolationThrown( minMax );
 
-		minMax = new MinMax( 5 );
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		s.persist( minMax );
-		s.flush();
-		tx.rollback();
-		s.close();
+		final MinMax validMinMax = new MinMax( 5 );
+
+		doInHibernate( this::sessionFactory, session -> {
+			session.persist( validMinMax );
+		} );
 	}
 
 	@Test
 	@RequiresDialectFeature(DialectChecks.SupportsColumnCheck.class)
 	public void testRangeChecksGetApplied() {
-		Range range = new Range( 1 );
+		RangeEntity range = new RangeEntity( 1 );
 		assertDatabaseConstraintViolationThrown( range );
 
-		range = new Range( 11 );
+		range = new RangeEntity( 11 );
 		assertDatabaseConstraintViolationThrown( range );
 
-		range = new Range( 5 );
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		s.persist( range );
-		s.flush();
-		tx.rollback();
-		s.close();
+		RangeEntity validRange = new RangeEntity( 5 );
+
+		doInHibernate( this::sessionFactory, session -> {
+			session.persist( validRange );
+		} );
 	}
 
 	@Test
@@ -80,45 +101,46 @@ public class DDLWithoutCallbackTest extends BaseNonConfigCoreFunctionalTestCase 
 		assertFalse( "DDL constraints are not applied", countryColumn.isNullable() );
 	}
 
-	@Override
-	protected void addSettings(Map settings) {
-		settings.put( "javax.persistence.validation.mode", "ddl" );
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Address.class,
-				CupHolder.class,
-				MinMax.class,
-				Range.class
-		};
-	}
-
 	private void assertDatabaseConstraintViolationThrown(Object o) {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		try {
-			s.persist( o );
-			s.flush();
-			fail( "expecting SQL constraint violation" );
-		}
-		catch (PersistenceException pe) {
-			final Throwable cause = pe.getCause();
-			if ( cause instanceof ConstraintViolationException ) {
-				fail( "invalid object should not be validated" );
+		doInHibernate( this::sessionFactory, session -> {
+			try {
+				session.persist( o );
+				session.flush();
+				fail( "expecting SQL constraint violation" );
 			}
-			else if ( cause instanceof org.hibernate.exception.ConstraintViolationException ) {
-				if ( getDialect().supportsColumnCheck() ) {
-					// expected
+			catch (PersistenceException pe) {
+				final Throwable cause = pe.getCause();
+				if ( cause instanceof ConstraintViolationException ) {
+					fail( "invalid object should not be validated" );
 				}
-				else {
-					org.hibernate.exception.ConstraintViolationException cve = (org.hibernate.exception.ConstraintViolationException) cause;
-					fail( "Unexpected SQL constraint violation [" + cve.getConstraintName() + "] : " + cve.getSQLException() );
+				else if ( cause instanceof org.hibernate.exception.ConstraintViolationException ) {
+					if ( getDialect().supportsColumnCheck() ) {
+						// expected
+					}
+					else {
+						org.hibernate.exception.ConstraintViolationException cve = (org.hibernate.exception.ConstraintViolationException) cause;
+						fail( "Unexpected SQL constraint violation [" + cve.getConstraintName() + "] : " + cve.getSQLException() );
+					}
 				}
 			}
+		} );
+	}
+
+	@Entity(name = "RangeEntity")
+	public static class RangeEntity {
+
+		@Id
+		@GeneratedValue
+		private Long id;
+
+		@org.hibernate.validator.constraints.Range(min = 2, max = 10)
+		private Integer rangeProperty;
+
+		private RangeEntity() {
 		}
-		tx.rollback();
-		s.close();
+
+		public RangeEntity(Integer value) {
+			this.rangeProperty = value;
+		}
 	}
 }

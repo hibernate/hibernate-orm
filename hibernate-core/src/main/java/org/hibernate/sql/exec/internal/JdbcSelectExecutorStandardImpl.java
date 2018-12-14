@@ -7,12 +7,12 @@
 package org.hibernate.sql.exec.internal;
 
 import java.io.Serializable;
-import java.sql.Connection;
-import java.sql.ResultSet;
+import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -26,7 +26,6 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
-import org.hibernate.sql.exec.spi.PreparedStatementCreator;
 import org.hibernate.sql.exec.spi.RowTransformer;
 import org.hibernate.sql.results.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
@@ -68,7 +67,10 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				jdbcSelect,
 				executionContext,
 				rowTransformer,
-				Connection::prepareStatement,
+				(sql) -> executionContext.getSession()
+						.getJdbcCoordinator()
+						.getStatementPreparer()
+						.prepareStatement( sql ),
 				ListResultsConsumer.instance()
 		);
 	}
@@ -83,11 +85,10 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				jdbcSelect,
 				executionContext,
 				rowTransformer,
-				(connection, sql) -> connection.prepareStatement(
+				(sql) -> executionContext.getSession().getJdbcCoordinator().getStatementPreparer().prepareQueryStatement(
 						sql,
-						scrollMode.toResultSetType(),
-						ResultSet.CONCUR_READ_ONLY,
-						ResultSet.CLOSE_CURSORS_AT_COMMIT
+						scrollMode,
+						true
 				),
 				ScrollableResultsConsumer.instance()
 		);
@@ -121,7 +122,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			JdbcSelect jdbcSelect,
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer,
-			PreparedStatementCreator statementCreator,
+			Function<String, PreparedStatement> statementCreator,
 			ResultsConsumer<T,R> resultsConsumer) {
 
 		final JdbcValues jdbcValues = resolveJdbcValuesSource(

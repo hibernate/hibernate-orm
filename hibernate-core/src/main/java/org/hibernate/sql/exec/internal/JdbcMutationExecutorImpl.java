@@ -6,10 +6,10 @@
  */
 package org.hibernate.sql.exec.internal;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
@@ -17,7 +17,6 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutation;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
-import org.hibernate.sql.exec.spi.PreparedStatementCreator;
 
 /**
  * @author Steve Ebersole
@@ -34,23 +33,19 @@ public class JdbcMutationExecutorImpl implements JdbcMutationExecutor {
 	public int execute(
 			JdbcMutation jdbcMutation,
 			ExecutionContext executionContext,
-			PreparedStatementCreator statementCreator,
+			Function<String, PreparedStatement> statementCreator,
 			BiConsumer<Integer, PreparedStatement> expectationCkeck) {
 		final LogicalConnectionImplementor logicalConnection = executionContext.getSession()
 				.getJdbcCoordinator()
 				.getLogicalConnection();
-		final Connection connection = logicalConnection.getPhysicalConnection();
 
 		final JdbcServices jdbcServices = executionContext.getSession().getFactory().getServiceRegistry().getService(
 				JdbcServices.class );
 
 		final String sql = jdbcMutation.getSql();
 		try {
-			jdbcServices.getSqlStatementLogger().logStatement( sql );
-
 			// prepare the query
-			final PreparedStatement preparedStatement = statementCreator.create( connection, sql );
-			logicalConnection.getResourceRegistry().register( preparedStatement, true );
+			final PreparedStatement preparedStatement = statementCreator.apply( sql );
 
 			try {
 				if ( executionContext.getQueryOptions().getTimeout() != null ) {
@@ -90,8 +85,40 @@ public class JdbcMutationExecutorImpl implements JdbcMutationExecutor {
 
 	@Override
 	public int execute(
-			JdbcMutation jdbcMutation, ExecutionContext executionContext, PreparedStatementCreator statementCreator) {
-		return execute( jdbcMutation, executionContext, statementCreator, (integer, preparedStatement) -> {
-		} );
+			JdbcMutation jdbcMutation,
+			ExecutionContext executionContext,
+			Function<String, PreparedStatement> statementCreator) {
+		return execute(
+				jdbcMutation, executionContext,
+				statementCreator,
+				(integer, preparedStatement) -> {
+				}
+		);
+	}
+
+	public int execute(
+			JdbcMutation jdbcMutation,
+			ExecutionContext executionContext,
+			BiConsumer<Integer, PreparedStatement> expectationCkeck) {
+		return execute(
+				jdbcMutation,
+				executionContext,
+				(sql) -> executionContext.getSession()
+						.getJdbcCoordinator()
+						.getStatementPreparer()
+						.prepareStatement( sql ),
+				expectationCkeck
+		);
+	}
+
+	public int execute(JdbcMutation jdbcMutation, ExecutionContext executionContext) {
+		return execute(
+				jdbcMutation,
+				executionContext,
+				(sql) -> executionContext.getSession()
+						.getJdbcCoordinator()
+						.getStatementPreparer()
+						.prepareStatement( sql )
+		);
 	}
 }

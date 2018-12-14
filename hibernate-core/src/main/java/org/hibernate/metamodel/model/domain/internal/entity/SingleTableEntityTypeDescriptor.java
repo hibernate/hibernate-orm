@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.model.domain.internal.entity;
 
 import java.io.Serializable;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -733,7 +732,6 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 		return executor.execute(
 				operation,
 				executionContext,
-				Connection::prepareStatement,
 				(rows, preparestatement) -> checker.accept( rows, preparestatement )
 		);
 	}

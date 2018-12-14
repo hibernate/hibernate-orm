@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.sqm.consume.multitable.spi.idtable;
 
-import java.sql.Connection;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
@@ -83,12 +82,7 @@ public class TableBasedUpdateHandlerImpl
 					executionContext.getSessionFactory()
 			);
 
-			JdbcMutationExecutor.NO_AFTER_STATEMENT_CALL.execute(
-					jdbcUpdate,
-					executionContext,
-					Connection::prepareStatement
-			);
-
+			JdbcMutationExecutor.NO_AFTER_STATEMENT_CALL.execute( jdbcUpdate, executionContext );
 		}
 	}
 

@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.sqm.internal;
 
-import java.sql.Connection;
 import java.util.Collections;
 import java.util.Set;
 
@@ -106,8 +105,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 					public Callback getCallback() {
 						return afterLoadAction -> {};
 					}
-				},
-				Connection::prepareStatement
+				}
 		);
 	}
 }

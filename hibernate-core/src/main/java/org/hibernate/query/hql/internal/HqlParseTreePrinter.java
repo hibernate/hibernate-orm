@@ -7,8 +7,6 @@
 package org.hibernate.query.hql.internal;
 
 import org.hibernate.query.spi.QueryMessageLogger;
-import org.hibernate.query.sqm.produce.internal.hql.grammar.HqlParser;
-import org.hibernate.query.sqm.produce.internal.hql.grammar.HqlParserBaseListener;
 
 import org.jboss.logging.Logger;
 

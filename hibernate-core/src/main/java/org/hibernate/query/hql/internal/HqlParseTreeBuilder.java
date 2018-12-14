@@ -6,6 +6,9 @@
  */
 package org.hibernate.query.hql.internal;
 
+import org.hibernate.query.sqm.produce.internal.hql.grammar.HqlLexer;
+import org.hibernate.query.sqm.produce.internal.hql.grammar.HqlParser;
+
 import org.jboss.logging.Logger;
 
 import org.antlr.v4.runtime.CharStreams;

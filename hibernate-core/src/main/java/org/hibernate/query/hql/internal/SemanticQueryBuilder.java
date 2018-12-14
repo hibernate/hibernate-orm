@@ -48,6 +48,8 @@ import org.hibernate.query.sqm.produce.internal.SqmFromBuilderFromClauseQualifie
 import org.hibernate.query.sqm.produce.internal.SqmFromBuilderFromClauseStandard;
 import org.hibernate.query.sqm.produce.internal.SqmFromBuilderStandard;
 import org.hibernate.query.sqm.produce.internal.UniqueIdGenerator;
+import org.hibernate.query.sqm.produce.internal.hql.grammar.HqlParser;
+import org.hibernate.query.sqm.produce.internal.hql.grammar.HqlParserBaseVisitor;
 import org.hibernate.query.sqm.produce.path.internal.SemanticPathPartJoinPredicate;
 import org.hibernate.query.sqm.produce.path.internal.SemanticPathPartNamedEntity;
 import org.hibernate.query.sqm.produce.path.internal.SemanticPathPartRoot;

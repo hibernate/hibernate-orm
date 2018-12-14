@@ -14,7 +14,7 @@ import javax.persistence.criteria.Subquery;
 /**
  * @author Steve Ebersole
  */
-public interface JpaSubQuery<T> extends Subquery<T>, JpaQuerySpecification<T> {
+public interface JpaSubQuery<T> extends Subquery<T>, JpaSelectCriteria<T> {
 	@Override
 	JpaSubQuery<T> distinct(boolean distinct);
 

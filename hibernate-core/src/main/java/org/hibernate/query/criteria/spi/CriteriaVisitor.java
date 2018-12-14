@@ -12,6 +12,8 @@ package org.hibernate.query.criteria.spi;
 public interface CriteriaVisitor {
 	<R> R visitRootQuery(RootQuery rootQuery);
 
+	<R> R visitQueryStructure(QueryStructure<?> queryStructure);
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Paths

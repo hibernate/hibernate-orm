@@ -6,15 +6,40 @@
  */
 package org.hibernate.query.criteria.spi;
 
+import java.util.List;
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Predicate;
+
 import org.hibernate.query.criteria.JpaSubQuery;
 
 /**
  * @author Steve Ebersole
  */
-public interface SubQuery<T> extends QuerySpecificationImplementor<T>, JpaSubQuery<T> {
+public interface SubQuery<T> extends SelectCriteriaImplementor<T>, JpaSubQuery<T> {
 	@Override
 	SubQuery<T> distinct(boolean distinct);
 
 	@Override
 	ExpressionImplementor<T> getSelection();
+
+	@Override
+	SubQuery<T> select(Expression<T> expression);
+
+	@Override
+	SubQuery<T> where(Expression<Boolean> restriction);
+
+	@Override
+	SubQuery<T> where(Predicate... restrictions);
+
+	@Override
+	SubQuery<T> groupBy(Expression<?>... grouping);
+
+	@Override
+	SubQuery<T> groupBy(List<Expression<?>> grouping);
+
+	@Override
+	SubQuery<T> having(Expression<Boolean> restriction);
+
+	@Override
+	SubQuery<T> having(Predicate... restrictions);
 }

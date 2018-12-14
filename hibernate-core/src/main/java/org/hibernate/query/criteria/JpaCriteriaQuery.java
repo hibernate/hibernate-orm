@@ -17,9 +17,11 @@ import javax.persistence.criteria.Selection;
 import javax.persistence.metamodel.EntityType;
 
 /**
+ * Extension of the JPA {@link CriteriaQuery}
+ *
  * @author Steve Ebersole
  */
-public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaCriteria, JpaQuerySpecification<T> {
+public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, QueryableCriteria, JpaSelectCriteria<T> {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Accessors
@@ -27,9 +29,15 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaCriteria, JpaQ
 	@Override
 	@SuppressWarnings("unchecked")
 	default List<Order> getOrderList() {
-		return (List) getSortSpecifications();
+		return (List) getQueryStructure().getSortSpecifications();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @apiNote Warning!  This actually walks the criteria tree looking
+	 * for parameters nodes.
+	 */
 	@Override
 	Set<ParameterExpression<?>> getParameters();
 

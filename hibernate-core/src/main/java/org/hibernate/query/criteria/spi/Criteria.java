@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.criteria.spi;
 
-import org.hibernate.query.criteria.JpaCriteria;
+import org.hibernate.query.criteria.QueryableCriteria;
 
 /**
  * Common SPI-level contract for {@link org.hibernate.query.criteria.JpaCriteriaQuery}
@@ -14,5 +14,5 @@ import org.hibernate.query.criteria.JpaCriteria;
  *
  * @author Steve Ebersole
  */
-public interface Criteria extends JpaCriteria, CriteriaNode {
+public interface Criteria extends QueryableCriteria, CriteriaNode {
 }

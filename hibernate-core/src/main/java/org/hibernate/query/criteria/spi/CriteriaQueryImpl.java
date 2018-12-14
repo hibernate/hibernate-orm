@@ -9,41 +9,31 @@ package org.hibernate.query.criteria.spi;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.ParameterExpression;
-import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Selection;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.JpaTuple;
-import org.hibernate.query.criteria.JpaCriteriaQuery;
-import org.hibernate.query.criteria.JpaSelection;
-import org.hibernate.query.criteria.JpaSubQuery;
 
 /**
  * @author Steve Ebersole
  */
-public class CriteriaQueryImpl<T> extends AbstractQuerySpecification<T> implements RootQuery<T> {
+public class CriteriaQueryImpl<T> extends AbstractSelectCriteria<T,RootQuery<T>> implements RootQuery<T> {
 	public CriteriaQueryImpl(Class<T> resultType, CriteriaNodeBuilder criteriaBuilder) {
 		super( resultType, criteriaBuilder );
 	}
 
 	@Override
-	public RootQuery<T> distinct(boolean distinct) {
-		return (CriteriaQueryImpl<T>) super.distinct( distinct );
-	}
-
-	@Override
 	@SuppressWarnings("unchecked")
-	public JpaCriteriaQuery<T> select(Selection<? extends T> selection) {
-		super.setSelection( (JpaSelection) selection );
+	public RootQuery<T> select(Selection<? extends T> selection) {
+		getQueryStructure().setSelection( (SelectionImplementor) selection );
 		return this;
 	}
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public JpaCriteriaQuery<T> multiselect(Selection<?>... selections) {
+	public RootQuery<T> multiselect(Selection<?>... selections) {
 		applyMultiSelect( (List) Arrays.asList( selections ) );
 		return this;
 	}
@@ -84,59 +74,25 @@ public class CriteriaQueryImpl<T> extends AbstractQuerySpecification<T> implemen
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public JpaCriteriaQuery<T> multiselect(List<Selection<?>> selections) {
+	public RootQuery<T> multiselect(List<Selection<?>> selections) {
 		applyMultiSelect( (List) selections );
 		return this;
 	}
 
 	@Override
-	public JpaCriteriaQuery<T> where(Expression<Boolean> booleanExpression) {
-		setWhere( nodeBuilder().wrap( booleanExpression ) );
-		return this;
-	}
-
-	@Override
-	public JpaCriteriaQuery<T> where(Predicate... predicates) {
-		setWhere( nodeBuilder().wrap( predicates ) );
-		return this;
-	}
-
-	@Override
-	public JpaCriteriaQuery<T> groupBy(Expression<?>... expressions) {
-		return (JpaCriteriaQuery<T>) super.groupBy( expressions );
-	}
-
-	@Override
-	public JpaCriteriaQuery<T> groupBy(List<Expression<?>> grouping) {
-		return (JpaCriteriaQuery<T>) super.groupBy( grouping );
-	}
-
-	@Override
-	public JpaCriteriaQuery<T> having(Expression<Boolean> booleanExpression) {
-		setGroupRestriction( nodeBuilder().wrap( booleanExpression ) );
-		return this;
-	}
-
-	@Override
-	public JpaCriteriaQuery<T> having(Predicate... predicates) {
-		setGroupRestriction( nodeBuilder().wrap( predicates ) );
-		return this;
-	}
-
-	@Override
-	public JpaCriteriaQuery<T> orderBy(Order... o) {
+	public RootQuery<T> orderBy(Order... o) {
 		return orderBy( Arrays.asList( o ) );
 	}
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public JpaCriteriaQuery<T> orderBy(List<Order> orderList) {
-		setSortSpecifications( (List) orderList );
+	public RootQuery<T> orderBy(List<Order> orderList) {
+		getQueryStructure().setSortSpecifications( (List) orderList );
 		return this;
 	}
 
 	@Override
-	public <U> JpaSubQuery<U> subquery(Class<U> type) {
+	public <U> SubQuery<U> subquery(Class<U> type) {
 		throw new NotYetImplementedFor6Exception();
 	}
 

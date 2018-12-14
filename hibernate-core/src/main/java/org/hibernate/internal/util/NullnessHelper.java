@@ -40,7 +40,7 @@ public class NullnessHelper {
 		}
 		for ( T value : values ) {
 			if ( value != null ) {
-				if ( String.class.isInstance( value ) ) {
+				if ( value instanceof String ) {
 					if ( StringHelper.isNotEmpty( (String) value ) ) {
 						return value;
 					}

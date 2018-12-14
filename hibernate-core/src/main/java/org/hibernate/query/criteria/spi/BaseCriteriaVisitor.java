@@ -18,53 +18,55 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 public class BaseCriteriaVisitor implements CriteriaVisitor {
 	@Override
 	public <R> R visitRootQuery(RootQuery criteriaQuery) {
-		visitFromClause( criteriaQuery );
-		visitSelectClause( criteriaQuery );
-		visitWhereClause( criteriaQuery );
-		visitOrderByClause( criteriaQuery );
-		visitGrouping( criteriaQuery );
-		visitLimit( criteriaQuery );
+		visitQueryStructure( criteriaQuery.getQueryStructure() );
 
 		return (R) criteriaQuery;
+	}
+
+	@Override
+	public <R> R visitQueryStructure(QueryStructure<?> queryStructure) {
+		visitFromClause( queryStructure );
+		visitSelectClause( queryStructure );
+		visitWhereClause( queryStructure );
+		visitOrderByClause( queryStructure );
+		visitGrouping( queryStructure );
+		visitLimit( queryStructure );
+
+		return (R) queryStructure;
 	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Query structure
 
-	protected <R> R visitFromClause(QuerySpecificationImplementor<?> querySpec) {
-		querySpec.getJpaRoots().forEach( root -> root.accept( this ) );
+	protected <R> R visitFromClause(QueryStructure<?> querySpec) {
+		querySpec.getRoots().forEach( root -> root.accept( this ) );
 		return (R) querySpec;
 	}
 
-	protected <R> R visitSelectClause(QuerySpecificationImplementor<?> querySpec) {
+	protected <R> R visitSelectClause(QueryStructure<?> querySpec) {
 		querySpec.getSelection().accept( this );
-		return (R) querySpec.getSelection();
-	}
-
-	protected <R> R visitWhereClause(QuerySpecificationImplementor<?> querySpec) {
-		final PredicateImplementor restriction = querySpec.getRestriction();
-		if ( restriction == null ) {
-			return null;
-		}
-
-		restriction.accept( this );
-
-		return (R) restriction;
-	}
-
-	protected <R> R visitOrderByClause(QuerySpecificationImplementor<?> querySpec) {
-		querySpec.getSortSpecifications().forEach( sortSpec -> sortSpec.accept( this ) );
 		return (R) querySpec;
 	}
 
-	protected <R> R visitGrouping(QuerySpecificationImplementor<?> querySpec) {
-		final List<? extends ExpressionImplementor<?>> groupByList = querySpec.getGroupByList();
-		if ( CollectionHelper.isEmpty( groupByList ) ) {
-			return null;
+	protected <R> R visitWhereClause(QueryStructure<?> querySpec) {
+		querySpec.visitRestriction( restriction -> restriction.accept( this ) );
+
+		return (R) querySpec;
+	}
+
+	protected <R> R visitOrderByClause(QueryStructure<?> querySpec) {
+		querySpec.visitSortSpecifications( sortSpec -> sortSpec.accept( this ) );
+		return (R) querySpec;
+	}
+
+	protected <R> R visitGrouping(QueryStructure<?> querySpec) {
+		final List<? extends ExpressionImplementor<?>> groupByExpressions = querySpec.getGroupingExpressions();
+		if ( CollectionHelper.isEmpty( groupByExpressions ) ) {
+			return (R) querySpec;
 		}
 
-		groupByList.forEach( gb -> gb.accept( this ) );
+		groupByExpressions.forEach( gb -> gb.accept( this ) );
 
 		if ( querySpec.getGroupRestriction() != null ) {
 			querySpec.getGroupRestriction().accept( this );
@@ -73,7 +75,7 @@ public class BaseCriteriaVisitor implements CriteriaVisitor {
 		return (R) querySpec;
 	}
 
-	protected <R> R visitLimit(QuerySpecificationImplementor<?> querySpec) {
+	protected <R> R visitLimit(QueryStructure<?> querySpec) {
 		if ( querySpec.getLimit() == null ) {
 			return null;
 		}

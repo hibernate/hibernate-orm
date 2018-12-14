@@ -9,5 +9,5 @@ package org.hibernate.query.criteria;
 /**
  * @author Steve Ebersole
  */
-public interface JpaManipulationCriteria<E> extends JpaCriteria {
+public interface JpaManipulationCriteria<E> extends QueryableCriteria {
 }

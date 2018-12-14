@@ -9,14 +9,17 @@ package org.hibernate.query.criteria;
 import javax.persistence.criteria.CommonAbstractCriteria;
 
 /**
- * Hibernate API extension to the JPA CommonAbstractCriteria, which is the
- * common base contract for {@link JpaCriteriaQuery},
- * {@link JpaCriteriaDelete} and
- * {@link JpaCriteriaUpdate}
+ * Common contract for the forms of criteria that are "queryable" - can be
+ * converted into a {@link org.hibernate.query.Query}.  They are "top-level"
+ * criteria
+ *
+ * @see JpaCriteriaQuery
+ * @see JpaCriteriaDelete
+ * @see JpaCriteriaUpdate
  *
  * @author Steve Ebersole
  */
-public interface JpaCriteria extends CommonAbstractCriteria, JpaCriteriaNode {
+public interface QueryableCriteria extends CommonAbstractCriteria, JpaCriteriaNode {
 	@Override
 	<U> JpaSubQuery<U> subquery(Class<U> type);
 

@@ -34,13 +34,6 @@ apply plugin: 'checkstyle'
 apply plugin: 'build-dashboard'
 apply plugin: 'project-report'
 
-allprojects {
-	if (!it.name.equals('hibernate-osgi')) {
-		// todo (6.0) : remove after migrating osgi tests to Junit5
-		apply plugin: 'org.junit.platform.gradle.plugin'
-	}
-}
-
 ext {
 	java9ModuleNameBase = project.name.startsWith( 'hibernate-' ) ? name.drop( 'hibernate-'.length() ): name
 	java9ModuleName = "org.hibernate.orm.$project.java9ModuleNameBase"
@@ -182,8 +175,8 @@ if ( ext.toolsJar.exists() ) {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Testing
 
-tasks.withType( Test.class ).all { task ->
-	Test test = task as Test
+tasks.withType( Test.class ).each { test ->
+	test.useJUnitPlatform()
 
 	if ( JavaVersion.current().isJava9Compatible() ) {
 		// Byteman needs this property to be set, https://developer.jboss.org/thread/274997

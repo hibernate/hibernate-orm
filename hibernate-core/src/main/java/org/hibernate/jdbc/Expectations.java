@@ -48,14 +48,14 @@ public class Expectations {
 		public final void verifyOutcome(int rowCount, PreparedStatement statement, int batchPosition) {
 			rowCount = determineRowCount( rowCount, statement );
 			if ( batchPosition < 0 ) {
-				checkNonBatched( rowCount );
+				checkNonBatched( rowCount, statement );
 			}
 			else {
-				checkBatched( rowCount, batchPosition );
+				checkBatched( rowCount, batchPosition, statement );
 			}
 		}
 
-		private void checkBatched(int rowCount, int batchPosition) {
+		private void checkBatched(int rowCount, int batchPosition, PreparedStatement statement) {
 			if ( rowCount == -2 ) {
 				LOG.debugf( "Success of batch update unknown: %s", batchPosition );
 			}
@@ -67,7 +67,8 @@ public class Expectations {
 					throw new StaleStateException(
 							"Batch update returned unexpected row count from update ["
 									+ batchPosition + "]; actual row count: " + rowCount
-									+ "; expected: " + expectedRowCount
+									+ "; expected: " + expectedRowCount + "; statement executed: "
+									+ statement
 					);
 				}
 				if ( expectedRowCount < rowCount ) {
@@ -79,10 +80,11 @@ public class Expectations {
 			}
 		}
 
-		private void checkNonBatched(int rowCount) {
+		private void checkNonBatched(int rowCount, PreparedStatement statement) {
 			if ( expectedRowCount > rowCount ) {
 				throw new StaleStateException(
 						"Unexpected row count: " + rowCount + "; expected: " + expectedRowCount
+						+ "; statement executed: " + statement
 				);
 			}
 			if ( expectedRowCount < rowCount ) {

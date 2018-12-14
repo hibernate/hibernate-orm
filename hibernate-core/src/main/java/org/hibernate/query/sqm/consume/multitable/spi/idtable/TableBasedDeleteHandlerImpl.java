@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.sqm.consume.multitable.spi.idtable;
 
-import java.sql.Connection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -23,7 +22,6 @@ import org.hibernate.query.sqm.tree.SqmDeleteStatement;
 import org.hibernate.sql.ast.consume.spi.SqlAstSelectToJdbcSelectConverter;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcDelete;
-import org.hibernate.sql.exec.spi.JdbcMutation;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 
@@ -133,8 +131,7 @@ public class TableBasedDeleteHandlerImpl
 						return Collections.singleton( table.getTableExpression() );
 					}
 				},
-				executionContext,
-				Connection::prepareStatement
+				executionContext
 		);
 	}
 

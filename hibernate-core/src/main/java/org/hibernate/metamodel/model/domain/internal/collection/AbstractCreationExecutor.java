@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.model.domain.internal.collection;
 
-import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -102,11 +101,7 @@ public abstract class AbstractCreationExecutor implements CollectionCreationExec
 			bindCollectionIndex( entry, passes, collection, jdbcParameterBindings, session );
 			bindCollectionElement( entry, collection, jdbcParameterBindings, session );
 
-			JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute(
-					creationOperation,
-					executionContext,
-					Connection::prepareStatement
-			);
+			JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute( creationOperation, executionContext );
 
 			passes++;
 			jdbcParameterBindings.clear();

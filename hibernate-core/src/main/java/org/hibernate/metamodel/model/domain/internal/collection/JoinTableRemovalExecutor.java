@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.model.domain.internal.collection;
 
-import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -121,11 +120,7 @@ public class JoinTableRemovalExecutor implements CollectionRemovalExecutor {
 				session
 		);
 
-		JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute(
-				removalOperation,
-				executionContext,
-				Connection::prepareStatement
-		);
+		JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute( removalOperation, executionContext );
 	}
 
 	@SuppressWarnings("WeakerAccess")

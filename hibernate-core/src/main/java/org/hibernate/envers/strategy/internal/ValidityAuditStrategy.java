@@ -6,7 +6,6 @@
  */
 package org.hibernate.envers.strategy.internal;
 
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -185,8 +184,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 											updateDescriptor.getSqlAstStatement(),
 											executionContext.getSession().getSessionFactory()
 									),
-									executionContext,
-									Connection::prepareStatement
+									executionContext
 							);
 
 							if ( rowsAffected != 1 ) {

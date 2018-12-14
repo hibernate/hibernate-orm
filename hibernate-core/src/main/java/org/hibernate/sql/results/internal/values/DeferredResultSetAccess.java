@@ -6,10 +6,10 @@
  */
 package org.hibernate.sql.results.internal.values;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.function.Function;
 
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -18,7 +18,6 @@ import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.exec.spi.PreparedStatementCreator;
 
 import org.jboss.logging.Logger;
 
@@ -30,7 +29,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 
 	private final JdbcSelect jdbcSelect;
 	private final ExecutionContext executionContext;
-	private final PreparedStatementCreator statementCreator;
+	private final Function<String, PreparedStatement> statementCreator;
 
 	private PreparedStatement preparedStatement;
 	private ResultSet resultSet;
@@ -38,7 +37,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 	public DeferredResultSetAccess(
 			JdbcSelect jdbcSelect,
 			ExecutionContext executionContext,
-			PreparedStatementCreator statementCreator) {
+			Function<String, PreparedStatement> statementCreator) {
 		super( executionContext.getSession() );
 		this.executionContext = executionContext;
 		this.jdbcSelect = jdbcSelect;
@@ -60,19 +59,14 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 
 	private void executeQuery() {
 		final LogicalConnectionImplementor logicalConnection = getPersistenceContext().getJdbcCoordinator().getLogicalConnection();
-		final Connection connection = logicalConnection.getPhysicalConnection();
-
 		final JdbcServices jdbcServices = getPersistenceContext().getFactory().getServiceRegistry().getService( JdbcServices.class );
 
 		final String sql = jdbcSelect.getSql();
 
 		try {
 			log.tracef( "Executing query to retrieve ResultSet : %s", sql );
-			jdbcServices.getSqlStatementLogger().logStatement( sql );
-
 			// prepare the query
-			preparedStatement = statementCreator.create( connection, sql );
-			logicalConnection.getResourceRegistry().register( preparedStatement, true );
+			preparedStatement = statementCreator.apply( sql );
 
 			// set options
 			if ( executionContext.getQueryOptions().getFetchSize() != null ) {

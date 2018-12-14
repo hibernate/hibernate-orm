@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.sqm.consume.multitable.spi.idtable;
 
-import java.sql.Connection;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -197,8 +196,7 @@ public abstract class AbstractTableBasedHandler implements Handler {
 
 		return JdbcMutationExecutor.NO_AFTER_STATEMENT_CALL.execute(
 				insertSelectCall,
-				executionContext,
-				Connection::prepareStatement
+				executionContext
 		);
 	}
 

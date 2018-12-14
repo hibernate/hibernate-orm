@@ -13,7 +13,6 @@ import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.hibernate.testing.junit5.DatabaseAgnostic;
-import org.hibernate.testing.junit5.FailureExpected;
 import org.hibernate.testing.junit5.JiraKey;
 import org.hibernate.testing.junit5.RequiresDialect;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
@@ -69,7 +68,6 @@ public class C3P0DifferentIsolationLevelTest extends SessionFactoryBasedFunction
 	}
 
 	@Test
-	@FailureExpected( "Support for StatementInspector not yet implemented" )
 	public void testStoredProcedureOutParameter() throws SQLException {
 		sessionFactoryScope().inTransaction(
 				session -> {

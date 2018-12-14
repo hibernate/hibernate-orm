@@ -88,7 +88,7 @@ public class CoalesceExpression<T> extends AbstractExpression<T> implements JpaC
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
+	public <R> R accept(CriteriaVisitor visitor) {
 		return visitor.visitCoalesceExpression( this );
 	}
 }

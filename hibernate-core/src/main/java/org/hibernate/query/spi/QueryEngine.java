@@ -11,7 +11,6 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.spi.CriteriaNodeBuilder;
 import org.hibernate.query.internal.QueryPlanCacheImpl;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
@@ -69,7 +68,7 @@ public class QueryEngine {
 		return namedQueryRepository;
 	}
 
-	public HibernateCriteriaBuilder getCriteriaBuilder() {
+	public CriteriaNodeBuilder getCriteriaBuilder() {
 		return criteriaBuilder;
 	}
 

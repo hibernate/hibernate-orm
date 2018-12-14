@@ -6,16 +6,13 @@
  */
 package org.hibernate.query.criteria.spi;
 
-import org.hibernate.query.criteria.JpaCriteriaNode;
+import org.hibernate.query.criteria.JpaCriteria;
 
 /**
+ * Common SPI-level contract for {@link org.hibernate.query.criteria.JpaCriteriaQuery}
+ * and {@link org.hibernate.query.criteria.JpaManipulationCriteria}
+ *
  * @author Steve Ebersole
  */
-public interface CriteriaNode extends JpaCriteriaNode {
-	CriteriaNodeBuilder nodeBuilder();
-
-	/**
-	 * Visitation support
-	 */
-	<R> R accept(CriteriaVisitor visitor);
+public interface Criteria extends JpaCriteria, CriteriaNode {
 }

@@ -53,12 +53,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	<X, T> JpaExpression<X> cast(JpaExpression<T> expression, Class<X> castTargetJavaType);
 
-	JpaPredicate wrap(JpaExpression<Boolean> expression);
-
 	JpaPredicate wrap(Expression<Boolean> expression);
-
-	@SuppressWarnings("unchecked")
-	JpaPredicate wrap(JpaExpression<Boolean>... expressions);
 
 	@SuppressWarnings("unchecked")
 	JpaPredicate wrap(Expression<Boolean>... expressions);

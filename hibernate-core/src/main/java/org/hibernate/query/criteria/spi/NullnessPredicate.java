@@ -28,12 +28,12 @@ public class NullnessPredicate extends AbstractSimplePredicate {
 		this.test = test;
 	}
 
-	public ExpressionImplementor<?> getTestExpression() {
+	public ExpressionImplementor<?> getExpression() {
 		return test;
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
+	public <R> R accept(CriteriaVisitor visitor) {
 		return visitor.visitNullnessPredicate( this );
 	}
 }

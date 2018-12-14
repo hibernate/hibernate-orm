@@ -6,36 +6,34 @@
  */
 package org.hibernate.query.criteria.spi;
 
-import javax.persistence.criteria.Expression;
-
 /**
  * A string concatenation.
  *
  * @author Steve Ebersole
  */
 public class ConcatExpression extends AbstractExpression<String> {
-	private Expression<String> first;
-	private Expression<String> second;
+	private ExpressionImplementor<String> first;
+	private ExpressionImplementor<String> second;
 
 	public ConcatExpression(
-			Expression<String> expression1,
-			Expression<String> expression2,
+			ExpressionImplementor<String> expression1,
+			ExpressionImplementor<String> expression2,
 			CriteriaNodeBuilder builder) {
 		super( String.class, builder );
 		this.first = expression1;
 		this.second = expression2;
 	}
 
-	public Expression<String> getFirstExpression() {
+	public ExpressionImplementor<String> getFirstExpression() {
 		return first;
 	}
 
-	public Expression<String> getSecondExpression() {
+	public ExpressionImplementor<String> getSecondExpression() {
 		return second;
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
+	public <R> R accept(CriteriaVisitor visitor) {
 		return visitor.visitConcatExpression( this );
 	}
 }

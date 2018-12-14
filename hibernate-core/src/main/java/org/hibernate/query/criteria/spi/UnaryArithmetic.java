@@ -39,7 +39,7 @@ public class UnaryArithmetic<T> extends AbstractExpression<T> {
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
+	public <R> R accept(CriteriaVisitor visitor) {
 		return visitor.visitUnaryArithmetic( this );
 	}
 }

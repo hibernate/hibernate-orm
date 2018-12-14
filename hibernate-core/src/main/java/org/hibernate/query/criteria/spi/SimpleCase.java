@@ -55,7 +55,7 @@ public class SimpleCase<C,R> extends AbstractExpression<R> implements JpaSimpleC
 		return whenClauses;
 	}
 
-	public Expression<? extends R> getOtherwiseResult() {
+	public ExpressionImplementor<? extends R> getOtherwiseResult() {
 		return otherwiseResult;
 	}
 
@@ -98,7 +98,7 @@ public class SimpleCase<C,R> extends AbstractExpression<R> implements JpaSimpleC
 	}
 
 	@Override
-	public <V> V accept(JpaCriteriaVisitor visitor) {
+	public <V> V accept(CriteriaVisitor visitor) {
 		return visitor.visitSimpleCase( this );
 	}
 

@@ -101,7 +101,7 @@ public class TreatedPath<T> extends AbstractPath<T> {
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
+	public <R> R accept(CriteriaVisitor visitor) {
 		return visitor.visitTreatedPath( this );
 	}
 }

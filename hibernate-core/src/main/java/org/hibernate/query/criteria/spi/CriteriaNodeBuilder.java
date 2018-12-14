@@ -46,7 +46,6 @@ import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSetJoin;
-import org.hibernate.query.criteria.JpaSubQuery;
 
 import static javax.persistence.criteria.Predicate.BooleanOperator.AND;
 import static javax.persistence.criteria.Predicate.BooleanOperator.OR;
@@ -76,14 +75,16 @@ public class CriteriaNodeBuilder implements HibernateCriteriaBuilder {
 		return sessionFactory;
 	}
 
+	public void close() {
+		// for future use (maybe)
+	}
 
 	@Override
 	public <X, T> JpaExpression<X> cast(JpaExpression<T> expression, Class<X> castTargetJavaType) {
 		throw new NotYetImplementedFor6Exception();
 	}
 
-	@Override
-	public PredicateImplementor wrap(JpaExpression<Boolean> expression) {
+	public PredicateImplementor wrap(ExpressionImplementor<Boolean> expression) {
 		if ( expression instanceof PredicateImplementor ) {
 			return (PredicateImplementor) expression;
 		}
@@ -97,7 +98,7 @@ public class CriteriaNodeBuilder implements HibernateCriteriaBuilder {
 
 	@Override
 	public PredicateImplementor wrap(Expression<Boolean> expression) {
-		return wrap( (JpaExpression<Boolean>) expression );
+		return wrap( (ExpressionImplementor<Boolean>) expression );
 	}
 
 	@Override
@@ -114,9 +115,8 @@ public class CriteriaNodeBuilder implements HibernateCriteriaBuilder {
 		return junction;
 	}
 
-	@Override
 	@SuppressWarnings("unchecked")
-	public PredicateImplementor wrap(JpaExpression<Boolean>... expressions) {
+	public PredicateImplementor wrap(ExpressionImplementor<Boolean>... expressions) {
 		if ( expressions == null || expressions.length == 0 ) {
 			return null;
 		}
@@ -541,17 +541,17 @@ public class CriteriaNodeBuilder implements HibernateCriteriaBuilder {
 
 	@Override
 	public <Y> RestrictedSubQueryExpression<Y> all(Subquery<Y> subquery) {
-		return new RestrictedSubQueryExpression<>( ( JpaSubQuery<Y>) subquery, ALL, this );
+		return new RestrictedSubQueryExpression<>( (SubQuery<Y>) subquery, ALL, this );
 	}
 
 	@Override
 	public <Y> RestrictedSubQueryExpression<Y> some(Subquery<Y> subquery) {
-		return new RestrictedSubQueryExpression<>( ( JpaSubQuery<Y>) subquery, SOME, this );
+		return new RestrictedSubQueryExpression<>( (SubQuery<Y>) subquery, SOME, this );
 	}
 
 	@Override
 	public <Y> RestrictedSubQueryExpression<Y> any(Subquery<Y> subquery) {
-		return new RestrictedSubQueryExpression<>( ( JpaSubQuery<Y>) subquery, ANY, this );
+		return new RestrictedSubQueryExpression<>( (SubQuery<Y>) subquery, ANY, this );
 	}
 
 	@Override
@@ -869,12 +869,12 @@ public class CriteriaNodeBuilder implements HibernateCriteriaBuilder {
 
 	@Override
 	public PredicateImplementor isTrue(Expression<Boolean> x) {
-		return new BooleanAssertionPredicate( x, true, this );
+		return new BooleanAssertionPredicate( (ExpressionImplementor<Boolean>) x, true, this );
 	}
 
 	@Override
 	public PredicateImplementor isFalse(Expression<Boolean> x) {
-		return new BooleanAssertionPredicate( x, false, this );
+		return new BooleanAssertionPredicate( (ExpressionImplementor<Boolean>) x, false, this );
 	}
 
 	@Override
@@ -1114,7 +1114,7 @@ public class CriteriaNodeBuilder implements HibernateCriteriaBuilder {
 
 	@Override
 	public ExistsPredicate exists(Subquery<?> subquery) {
-		return new ExistsPredicate( (JpaSubQuery<?>) subquery, this );
+		return new ExistsPredicate( (SubQuery<?>) subquery, this );
 	}
 
 	@Override
@@ -1318,9 +1318,5 @@ public class CriteriaNodeBuilder implements HibernateCriteriaBuilder {
 	@Override
 	public <M extends Map<?, ?>> JpaExpression<Integer> mapSize(M map) {
 		throw new NotYetImplementedFor6Exception();
-	}
-
-	public void close() {
-		// for future use (maybe)
 	}
 }

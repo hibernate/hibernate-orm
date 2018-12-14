@@ -46,9 +46,9 @@ public class BinaryArithmetic<N extends Number> extends AbstractExpression<N> {
 	}
 
 
-	private final JpaExpression<? extends N> lhs;
+	private final ExpressionImplementor<? extends N> lhs;
 	private final Operation operator;
-	private final JpaExpression<? extends N> rhs;
+	private final ExpressionImplementor<? extends N> rhs;
 
 
 	/**
@@ -61,9 +61,9 @@ public class BinaryArithmetic<N extends Number> extends AbstractExpression<N> {
 	 * @param rhs The right-hand operand
 	 */
 	public BinaryArithmetic(
-			JpaExpression<? extends N> lhs,
+			ExpressionImplementor<? extends N> lhs,
 			Operation operator,
-			JpaExpression<? extends N> rhs,
+			ExpressionImplementor<? extends N> rhs,
 			Class<N> resultType,
 			CriteriaNodeBuilder criteriaBuilder) {
 		super( resultType, criteriaBuilder );
@@ -82,7 +82,7 @@ public class BinaryArithmetic<N extends Number> extends AbstractExpression<N> {
 	 * @param rhs The right-hand operand (the literal)
 	 */
 	public BinaryArithmetic(
-			JpaExpression<? extends N> lhs,
+			ExpressionImplementor<? extends N> lhs,
 			Operation operator,
 			N rhs,
 			Class<N> javaType,
@@ -105,7 +105,7 @@ public class BinaryArithmetic<N extends Number> extends AbstractExpression<N> {
 	public BinaryArithmetic(
 			N lhs,
 			Operation operator,
-			JpaExpression<? extends N> rhs,
+			ExpressionImplementor<? extends N> rhs,
 			Class<N> javaType,
 			CriteriaNodeBuilder criteriaBuilder) {
 		super( javaType, criteriaBuilder );
@@ -114,7 +114,7 @@ public class BinaryArithmetic<N extends Number> extends AbstractExpression<N> {
 		this.rhs = rhs;
 	}
 
-	public Expression<? extends N> getLeftHandOperand() {
+	public ExpressionImplementor<? extends N> getLeftHandOperand() {
 		return lhs;
 	}
 
@@ -122,12 +122,12 @@ public class BinaryArithmetic<N extends Number> extends AbstractExpression<N> {
 		return operator;
 	}
 
-	public JpaExpression<? extends N> getRightHandOperand() {
+	public ExpressionImplementor<? extends N> getRightHandOperand() {
 		return rhs;
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
+	public <R> R accept(CriteriaVisitor visitor) {
 		return visitor.visitBinaryArithmetic( this );
 	}
 }

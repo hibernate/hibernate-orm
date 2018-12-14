@@ -11,7 +11,7 @@ package org.hibernate.query.criteria.spi;
  */
 public interface SingularPath<T> extends PathImplementor<T> {
 	@Override
-	default  <R> R accept(JpaCriteriaVisitor visitor) {
+	default  <R> R accept(CriteriaVisitor visitor) {
 		return visitor.visitSingularAttributePath( this );
 	}
 }

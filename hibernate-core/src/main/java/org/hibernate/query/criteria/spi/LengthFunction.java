@@ -29,7 +29,7 @@ public class LengthFunction
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
+	public <R> R accept(CriteriaVisitor visitor) {
 		return visitor.visitLengthFunction( this );
 	}
 }

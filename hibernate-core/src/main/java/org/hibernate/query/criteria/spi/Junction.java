@@ -63,7 +63,7 @@ public class Junction extends AbstractPredicate {
 	}
 
 	@Override
-	public <T> T accept(JpaCriteriaVisitor visitor) {
+	public <T> T accept(CriteriaVisitor visitor) {
 		return visitor.visitJunctionPredicate( this );
 	}
 }

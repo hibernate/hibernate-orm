@@ -61,6 +61,10 @@ public class NegatedPredicateWrapper extends AbstractPredicate {
 		return ! wrappedPredicate.isNegated();
 	}
 
+	public PredicateImplementor getWrappedPredicate() {
+		return wrappedPredicate;
+	}
+
 	@Override
 	@SuppressWarnings("unchecked")
 	public List<Expression<Boolean>> getExpressions() {
@@ -73,7 +77,7 @@ public class NegatedPredicateWrapper extends AbstractPredicate {
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
+	public <R> R accept(CriteriaVisitor visitor) {
 		return visitor.visitNegatedPredicate( this );
 	}
 }

@@ -6,10 +6,6 @@
  */
 package org.hibernate.query.criteria.spi;
 
-import java.io.Serializable;
-
-import org.hibernate.query.criteria.JpaExpression;
-
 /**
  * Models the ANSI SQL <tt>SUBSTRING</tt> function.
  *
@@ -18,14 +14,14 @@ import org.hibernate.query.criteria.JpaExpression;
 public class SubstringFunction extends AbstractStandardFunction<String> {
 	public static final String NAME = "substring";
 
-	private final JpaExpression<String> value;
-	private final JpaExpression<Integer> start;
-	private final JpaExpression<Integer> length;
+	private final ExpressionImplementor<String> value;
+	private final ExpressionImplementor<Integer> start;
+	private final ExpressionImplementor<Integer> length;
 
 	public SubstringFunction(
-			JpaExpression<String> value,
-			JpaExpression<Integer> start,
-			JpaExpression<Integer> length,
+			ExpressionImplementor<String> value,
+			ExpressionImplementor<Integer> start,
+			ExpressionImplementor<Integer> length,
 			CriteriaNodeBuilder criteriaBuilder) {
 		super( NAME, String.class, criteriaBuilder );
 		this.value = value;
@@ -35,50 +31,26 @@ public class SubstringFunction extends AbstractStandardFunction<String> {
 
 	@SuppressWarnings({ "RedundantCast" })
 	public SubstringFunction(
-			JpaExpression<String> value,
-			JpaExpression<Integer> start,
+			ExpressionImplementor<String> value,
+			ExpressionImplementor<Integer> start,
 			CriteriaNodeBuilder criteriaBuilder) {
-		this( value, start, (JpaExpression<Integer>)null, criteriaBuilder );
+		this( value, start, (ExpressionImplementor<Integer>) null, criteriaBuilder );
 	}
 
-	public SubstringFunction(
-			JpaExpression<String> value,
-			int start,
-			CriteriaNodeBuilder criteriaBuilder) {
-		this(
-				value,
-				criteriaBuilder.literal( start ),
-				criteriaBuilder
-		);
-	}
-
-	public SubstringFunction(
-			JpaExpression<String> value,
-			int start,
-			int length,
-			CriteriaNodeBuilder criteriaBuilder) {
-		this(
-				value,
-				criteriaBuilder.literal( start ),
-				criteriaBuilder.literal( length ),
-				criteriaBuilder
-		);
-	}
-
-	public JpaExpression<Integer> getLength() {
+	public ExpressionImplementor<Integer> getLength() {
 		return length;
 	}
 
-	public JpaExpression<Integer> getStart() {
+	public ExpressionImplementor<Integer> getStart() {
 		return start;
 	}
 
-	public JpaExpression<String> getValue() {
+	public ExpressionImplementor<String> getValue() {
 		return value;
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
+	public <R> R accept(CriteriaVisitor visitor) {
 		return visitor.visitSubstringFunction( this );
 	}
 }

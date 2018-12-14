@@ -61,7 +61,7 @@ public class RootImpl<T> extends AbstractFrom<T,T> implements RootImplementor<T>
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
+	public <R> R accept(CriteriaVisitor visitor) {
 		return visitor.visitRoot( this );
 	}
 
@@ -79,7 +79,7 @@ public class RootImpl<T> extends AbstractFrom<T,T> implements RootImplementor<T>
 		}
 
 		@Override
-		public <R> R accept(JpaCriteriaVisitor visitor) {
+		public <R> R accept(CriteriaVisitor visitor) {
 			return visitor.visitCorrelationDelegate( this );
 		}
 

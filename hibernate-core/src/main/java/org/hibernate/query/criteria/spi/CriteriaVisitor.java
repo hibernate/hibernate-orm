@@ -9,8 +9,9 @@ package org.hibernate.query.criteria.spi;
 /**
  * @author Steve Ebersole
  */
-public interface JpaCriteriaVisitor {
-	<R> R visitCriteriaQuery(CriteriaQueryImpl criteriaQuery);
+public interface CriteriaVisitor {
+	<R> R visitRootQuery(RootQuery rootQuery);
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Paths
@@ -27,35 +28,35 @@ public interface JpaCriteriaVisitor {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Selections
 
-	<R> R visitMultiSelect(MultiSelectSelection selection);
+	<R> R visitMultiSelect(MultiSelectSelection<?> selection);
 
-	<R> R visitDynamicInstantiation(ConstructorSelection selection);
+	<R> R visitDynamicInstantiation(ConstructorSelection<?> selection);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Expressions
 
 	<R> R visitLiteral(LiteralExpression<?> expression);
-	<R> R visitNullLiteral(NullLiteralExpression expression);
+	<R> R visitNullLiteral(NullLiteralExpression<?> expression);
 
-	<R> R visitParameter(ParameterExpression expression);
+	<R> R visitParameter(ParameterExpression<?> expression);
 
 	<R> R visitSearchedCase(SearchedCase<?> expression);
-	<V> V visitSimpleCase(SimpleCase<?,?> expression);
+	<R> R visitSimpleCase(SimpleCase<?,?> expression);
 
-	<R> R visitCoalesceExpression(CoalesceExpression expression);
+	<R> R visitCoalesceExpression(CoalesceExpression<?> expression);
 
-	<R> R visitNullifExpression(NullifExpression expression);
+	<R> R visitNullifExpression(NullifExpression<?> expression);
 
 	<R> R visitConcatExpression(ConcatExpression expression);
 
 	<R> R visitPathType(PathTypeExpression<?> expression);
 
-	<R> R acceptRestrictedSubQueryExpression(RestrictedSubQueryExpression expression);
+	<R> R acceptRestrictedSubQueryExpression(RestrictedSubQueryExpression<?> expression);
 
-	<R> R visitBinaryArithmetic(BinaryArithmetic expression);
+	<R> R visitBinaryArithmetic(BinaryArithmetic<?> expression);
 
-	<R> R visitUnaryArithmetic(UnaryArithmetic expression);
+	<R> R visitUnaryArithmetic(UnaryArithmetic<?> expression);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -104,7 +105,7 @@ public interface JpaCriteriaVisitor {
 
 	<R> R visitLikePredicate(LikePredicate predicate);
 
-	<R> R visitInPredicate(InPredicate predicate);
+	<R> R visitInPredicate(InPredicate<?> predicate);
 
 	<R> R visitExistsPredicate(ExistsPredicate predicate);
 

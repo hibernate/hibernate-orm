@@ -29,7 +29,7 @@ import org.hibernate.query.criteria.JpaSelection;
  */
 public abstract class AbstractQuerySpecification<T>
 		extends AbstractNode
-		implements JpaQuerySpecification<T> {
+		implements QuerySpecificationImplementor<T> {
 
 	private final Class<T> resultType;
 
@@ -102,7 +102,7 @@ public abstract class AbstractQuerySpecification<T>
 	}
 
 	@Override
-	public JpaQuerySpecification<T> distinct(boolean distinct) {
+	public QuerySpecificationImplementor<T> distinct(boolean distinct) {
 		this.distinct = distinct;
 		return this;
 	}
@@ -156,7 +156,7 @@ public abstract class AbstractQuerySpecification<T>
 
 
 	@Override
-	public List<? extends JpaExpression<?>> getGroupByList() {
+	public List<? extends ExpressionImplementor<?>> getGroupByList() {
 		return grouping;
 	}
 
@@ -222,7 +222,7 @@ public abstract class AbstractQuerySpecification<T>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <X> JpaExpression<X> getOffset() {
+	public <X> ExpressionImplementor<X> getOffset() {
 		return offset;
 	}
 

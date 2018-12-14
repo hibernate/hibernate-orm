@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.criteria.spi;
 
-import java.io.Serializable;
-
 /**
  * Models a <tt>BETWEEN</tt> {@link javax.persistence.criteria.Predicate}.
  *
@@ -42,7 +40,7 @@ public class BetweenPredicate<Y> extends AbstractSimplePredicate {
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
+	public <R> R accept(CriteriaVisitor visitor) {
 		return visitor.visitBetweenPredicate( this );
 	}
 }

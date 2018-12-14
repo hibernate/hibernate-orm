@@ -23,7 +23,7 @@ import org.hibernate.query.criteria.JpaSubQuery;
  */
 public abstract class AbstractManipulationCriteria<T>
 		extends AbstractNode
-		implements JpaManipulationCriteria {
+		implements JpaManipulationCriteria, Criteria {
 
 	private RootImpl<T> root;
 	private JpaPredicate restriction;

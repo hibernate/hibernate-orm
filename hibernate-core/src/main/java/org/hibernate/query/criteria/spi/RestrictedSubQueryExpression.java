@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.criteria.spi;
 
-import org.hibernate.query.criteria.JpaSubQuery;
-
 /**
  * Represents a {@link Modifier#ALL}, {@link Modifier#ANY}, {@link Modifier#SOME} modifier appplied to a subquery as
  * part of a comparison.
@@ -17,16 +15,16 @@ import org.hibernate.query.criteria.JpaSubQuery;
 public class RestrictedSubQueryExpression<Y> extends AbstractExpression<Y> {
 	public enum Modifier {
 		ALL,
+		ANY,
 		SOME,
-		ANY;
 	}
 
-	private final JpaSubQuery<Y> subQuery;
+	private final SubQuery<Y> subQuery;
 	private final Modifier modifier;
 
 	public RestrictedSubQueryExpression(
 			Class<Y> javaType,
-			JpaSubQuery<Y> subQuery,
+			SubQuery<Y> subQuery,
 			Modifier modifier,
 			CriteriaNodeBuilder builder) {
 		super( javaType, builder );
@@ -35,7 +33,7 @@ public class RestrictedSubQueryExpression<Y> extends AbstractExpression<Y> {
 	}
 
 	public RestrictedSubQueryExpression(
-			JpaSubQuery<Y> subquery,
+			SubQuery<Y> subquery,
 			Modifier modifier,
 			CriteriaNodeBuilder builder) {
 		this ( subquery.getResultType(), subquery, modifier, builder );
@@ -45,12 +43,12 @@ public class RestrictedSubQueryExpression<Y> extends AbstractExpression<Y> {
 		return modifier;
 	}
 
-	public JpaSubQuery<Y> getSubQuery() {
+	public SubQuery<Y> getSubQuery() {
 		return subQuery;
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
+	public <R> R accept(CriteriaVisitor visitor) {
 		return visitor.acceptRestrictedSubQueryExpression( this );
 	}
 }

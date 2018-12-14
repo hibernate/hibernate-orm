@@ -38,5 +38,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith( SessionFactoryScopeExtension.class )
 @ExtendWith( DialectFilterExtension.class )
 @ExtendWith( FailureExpectedExtension.class )
+@SuppressWarnings("WeakerAccess")
 public @interface FunctionalSessionFactoryTesting {
 }

@@ -22,12 +22,12 @@ public class AbsFunction<N extends Number> extends AbstractStandardFunction<N> {
 		this.numericExpression = numericExpression;
 	}
 
-	public ExpressionImplementor<N> getNumericExpression() {
+	public ExpressionImplementor<N> getArgument() {
 		return numericExpression;
 	}
 
 	@Override
-	public <T> T accept(JpaCriteriaVisitor visitor) {
+	public <T> T accept(CriteriaVisitor visitor) {
 		return visitor.visitAbsFunction( this );
 	}
 }

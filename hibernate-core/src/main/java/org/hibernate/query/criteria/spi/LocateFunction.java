@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.criteria.spi;
 
-import org.hibernate.query.criteria.JpaExpression;
-
 /**
  * Models the ANSI SQL <tt>LOCATE</tt> function.
  *
@@ -16,14 +14,14 @@ import org.hibernate.query.criteria.JpaExpression;
 public class LocateFunction extends AbstractStandardFunction<Integer> {
 	public static final String NAME = "locate";
 
-	private final JpaExpression<String> pattern;
-	private final JpaExpression<String> string;
-	private final JpaExpression<Integer> start;
+	private final ExpressionImplementor<String> pattern;
+	private final ExpressionImplementor<String> string;
+	private final ExpressionImplementor<Integer> start;
 
 	public LocateFunction(
-			JpaExpression<String> pattern,
-			JpaExpression<String> string,
-			JpaExpression<Integer> start,
+			ExpressionImplementor<String> pattern,
+			ExpressionImplementor<String> string,
+			ExpressionImplementor<Integer> start,
 			CriteriaNodeBuilder criteriaBuilder) {
 		super( NAME, Integer.class, criteriaBuilder );
 
@@ -32,20 +30,20 @@ public class LocateFunction extends AbstractStandardFunction<Integer> {
 		this.start = start;
 	}
 
-	public JpaExpression<String> getPattern() {
+	public ExpressionImplementor<String> getPattern() {
 		return pattern;
 	}
 
-	public JpaExpression<Integer> getStart() {
+	public ExpressionImplementor<Integer> getStart() {
 		return start;
 	}
 
-	public JpaExpression<String> getString() {
+	public ExpressionImplementor<String> getString() {
 		return string;
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
+	public <R> R accept(CriteriaVisitor visitor) {
 		return visitor.visitLocateFunction( this );
 	}
 }

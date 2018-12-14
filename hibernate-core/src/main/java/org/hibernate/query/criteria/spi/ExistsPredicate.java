@@ -6,29 +6,25 @@
  */
 package org.hibernate.query.criteria.spi;
 
-import javax.persistence.criteria.Subquery;
-
-import org.hibernate.query.criteria.JpaSubQuery;
-
 /**
  * Models an <tt>EXISTS(<subquery>)</tt> predicate
  *
  * @author Steve Ebersole
  */
 public class ExistsPredicate extends AbstractSimplePredicate {
-	private final JpaSubQuery<?> subQuery;
+	private final SubQuery<?> subQuery;
 
-	public ExistsPredicate(JpaSubQuery<?> subQuery, CriteriaNodeBuilder builder) {
+	public ExistsPredicate(SubQuery<?> subQuery, CriteriaNodeBuilder builder) {
 		super( builder );
 		this.subQuery = subQuery;
 	}
 
-	public Subquery<?> getSubQuery() {
+	public SubQuery<?> getSubQuery() {
 		return subQuery;
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
+	public <R> R accept(CriteriaVisitor visitor) {
 		return visitor.visitExistsPredicate( this );
 	}
 }

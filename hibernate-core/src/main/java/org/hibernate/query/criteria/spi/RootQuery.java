@@ -6,16 +6,13 @@
  */
 package org.hibernate.query.criteria.spi;
 
-import org.hibernate.query.criteria.JpaCriteriaNode;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
 
 /**
  * @author Steve Ebersole
  */
-public interface CriteriaNode extends JpaCriteriaNode {
-	CriteriaNodeBuilder nodeBuilder();
+public interface RootQuery<T> extends QuerySpecificationImplementor<T>, JpaCriteriaQuery<T>, Criteria {
+	@Override
+	RootQuery<T> distinct(boolean distinct);
 
-	/**
-	 * Visitation support
-	 */
-	<R> R accept(CriteriaVisitor visitor);
 }

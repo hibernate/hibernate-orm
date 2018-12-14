@@ -45,7 +45,7 @@ public class NullifExpression<T> extends AbstractExpression<T> {
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
+	public <R> R accept(CriteriaVisitor visitor) {
 		return visitor.visitNullifExpression( this );
 	}
 }

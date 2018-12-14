@@ -40,7 +40,7 @@ public class ComparisonPredicate extends AbstractSimplePredicate {
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
+	public <R> R accept(CriteriaVisitor visitor) {
 		return visitor.visitComparisonPredicate( this );
 	}
 

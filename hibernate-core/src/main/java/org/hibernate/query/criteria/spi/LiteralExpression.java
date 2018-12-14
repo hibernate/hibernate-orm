@@ -8,7 +8,6 @@ package org.hibernate.query.criteria.spi;
 
 import java.io.Serializable;
 
-import org.hibernate.query.criteria.spi.AbstractExpression;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
@@ -48,7 +47,7 @@ public class LiteralExpression<T> extends AbstractExpression<T> implements Seria
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
+	public <R> R accept(CriteriaVisitor visitor) {
 		return visitor.visitLiteral( this );
 	}
 }

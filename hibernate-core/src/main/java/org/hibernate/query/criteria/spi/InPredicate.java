@@ -7,17 +7,12 @@
 package org.hibernate.query.criteria.spi;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
-import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Expression;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaInPredicate;
-import org.hibernate.type.Type;
 
 /**
  * Models a <tt>[NOT] IN</tt> restriction
@@ -88,7 +83,7 @@ public class InPredicate<T> extends AbstractSimplePredicate implements JpaInPred
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
+	public <R> R accept(CriteriaVisitor visitor) {
 		return visitor.visitInPredicate( this );
 	}
 }

@@ -6,16 +6,15 @@
  */
 package org.hibernate.query.criteria.spi;
 
-import org.hibernate.query.criteria.JpaCriteriaNode;
+import org.hibernate.query.criteria.JpaSubQuery;
 
 /**
  * @author Steve Ebersole
  */
-public interface CriteriaNode extends JpaCriteriaNode {
-	CriteriaNodeBuilder nodeBuilder();
+public interface SubQuery<T> extends QuerySpecificationImplementor<T>, JpaSubQuery<T> {
+	@Override
+	SubQuery<T> distinct(boolean distinct);
 
-	/**
-	 * Visitation support
-	 */
-	<R> R accept(CriteriaVisitor visitor);
+	@Override
+	ExpressionImplementor<T> getSelection();
 }

@@ -77,7 +77,7 @@ public class SearchedCase<T> extends AbstractExpression<T> implements JpaSearche
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
+	public <R> R accept(CriteriaVisitor visitor) {
 		return visitor.visitSearchedCase( this );
 	}
 

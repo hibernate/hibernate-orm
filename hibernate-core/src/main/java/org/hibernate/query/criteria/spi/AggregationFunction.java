@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.criteria.spi;
 
-import java.util.Collections;
-
 import org.hibernate.query.criteria.JpaExpression;
 
 /**
@@ -56,6 +54,10 @@ public abstract class AggregationFunction<T> extends AbstractStandardFunction<T>
 		return true;
 	}
 
+	public ExpressionImplementor<?> getArgument() {
+		return argument;
+	}
+
 	/**
 	 * Implementation of a <tt>COUNT</tt> function providing convenience in construction.
 	 * <p/>
@@ -77,7 +79,7 @@ public abstract class AggregationFunction<T> extends AbstractStandardFunction<T>
 		}
 
 		@Override
-		public <R> R accept(JpaCriteriaVisitor visitor) {
+		public <R> R accept(CriteriaVisitor visitor) {
 			return visitor.visitCountFunction( this );
 		}
 	}
@@ -95,7 +97,7 @@ public abstract class AggregationFunction<T> extends AbstractStandardFunction<T>
 		}
 
 		@Override
-		public <R> R accept(JpaCriteriaVisitor visitor) {
+		public <R> R accept(CriteriaVisitor visitor) {
 			return visitor.visitAvgFunction( this );
 		}
 	}
@@ -119,7 +121,7 @@ public abstract class AggregationFunction<T> extends AbstractStandardFunction<T>
 		}
 
 		@Override
-		public <R> R accept(JpaCriteriaVisitor visitor) {
+		public <R> R accept(CriteriaVisitor visitor) {
 			return visitor.visitSumFunction( this );
 		}
 	}
@@ -139,7 +141,7 @@ public abstract class AggregationFunction<T> extends AbstractStandardFunction<T>
 		}
 
 		@Override
-		public <R> R accept(JpaCriteriaVisitor visitor) {
+		public <R> R accept(CriteriaVisitor visitor) {
 			return visitor.visitMaxFunction( this );
 		}
 	}
@@ -159,7 +161,7 @@ public abstract class AggregationFunction<T> extends AbstractStandardFunction<T>
 		}
 
 		@Override
-		public <R> R accept(JpaCriteriaVisitor visitor) {
+		public <R> R accept(CriteriaVisitor visitor) {
 			return visitor.visitMinFunction( this );
 		}
 	}
@@ -178,7 +180,7 @@ public abstract class AggregationFunction<T> extends AbstractStandardFunction<T>
 		}
 
 		@Override
-		public <R> R accept(JpaCriteriaVisitor visitor) {
+		public <R> R accept(CriteriaVisitor visitor) {
 			return visitor.visitLeastFunction( this );
 		}
 	}
@@ -197,7 +199,7 @@ public abstract class AggregationFunction<T> extends AbstractStandardFunction<T>
 		}
 
 		@Override
-		public <R> R accept(JpaCriteriaVisitor visitor) {
+		public <R> R accept(CriteriaVisitor visitor) {
 			return visitor.visitGreatestFunction( this );
 		}
 	}

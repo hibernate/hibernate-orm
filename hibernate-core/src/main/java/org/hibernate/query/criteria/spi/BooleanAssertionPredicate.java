@@ -6,9 +6,6 @@
  */
 package org.hibernate.query.criteria.spi;
 
-import java.io.Serializable;
-import javax.persistence.criteria.Expression;
-
 /**
  * Predicate to assert the explicit value of a boolean expression:<ul>
  * <li>x = true</li>
@@ -20,11 +17,11 @@ import javax.persistence.criteria.Expression;
  * @author Steve Ebersole
  */
 public class BooleanAssertionPredicate extends AbstractSimplePredicate {
-	private final Expression<Boolean> expression;
+	private final ExpressionImplementor<Boolean> expression;
 	private final Boolean assertedValue;
 
 	public BooleanAssertionPredicate(
-			Expression<Boolean> expression,
+			ExpressionImplementor<Boolean> expression,
 			Boolean assertedValue,
 			CriteriaNodeBuilder builder) {
 		super( builder );
@@ -32,7 +29,7 @@ public class BooleanAssertionPredicate extends AbstractSimplePredicate {
 		this.assertedValue = assertedValue;
 	}
 
-	public Expression<Boolean> getExpression() {
+	public ExpressionImplementor<Boolean> getExpression() {
 		return expression;
 	}
 
@@ -41,7 +38,7 @@ public class BooleanAssertionPredicate extends AbstractSimplePredicate {
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
+	public <R> R accept(CriteriaVisitor visitor) {
 		return visitor.visitBooleanAssertionPredicate( this );
 	}
 }

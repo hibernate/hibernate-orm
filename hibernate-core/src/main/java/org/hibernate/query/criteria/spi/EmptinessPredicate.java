@@ -32,7 +32,7 @@ public class EmptinessPredicate extends AbstractSimplePredicate {
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
+	public <R> R accept(CriteriaVisitor visitor) {
 		return visitor.visitEmptinessPredicate( this );
 	}
 }

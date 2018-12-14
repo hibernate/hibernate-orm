@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.criteria.spi;
 
-import javax.persistence.criteria.Expression;
-
 /**
  * Defines a {@link PredicateImplementor} used to wrap a Boolean-valued
  * {@link ExpressionImplementor}.
@@ -15,9 +13,9 @@ import javax.persistence.criteria.Expression;
  * @author Steve Ebersole
  */
 public class BooleanExpressionPredicate extends AbstractSimplePredicate {
-	private final Expression<Boolean> expression;
+	private final ExpressionImplementor<Boolean> expression;
 
-	public BooleanExpressionPredicate(Expression<Boolean> expression, CriteriaNodeBuilder criteriaBuilder) {
+	public BooleanExpressionPredicate(ExpressionImplementor<Boolean> expression, CriteriaNodeBuilder criteriaBuilder) {
 		super( criteriaBuilder );
 		this.expression = expression;
 	}
@@ -27,12 +25,12 @@ public class BooleanExpressionPredicate extends AbstractSimplePredicate {
 	 * 
 	 * @return The underlying boolean expression.
 	 */
-	public Expression<Boolean> getExpression() {
+	public ExpressionImplementor<Boolean> getExpression() {
 		return expression;
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
+	public <R> R accept(CriteriaVisitor visitor) {
 		return visitor.visitBooleanExpressionPredicate( this );
 	}
 }

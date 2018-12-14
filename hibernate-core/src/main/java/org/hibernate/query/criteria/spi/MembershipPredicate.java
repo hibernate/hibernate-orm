@@ -44,7 +44,7 @@ public class MembershipPredicate<E> extends AbstractSimplePredicate {
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
+	public <R> R accept(CriteriaVisitor visitor) {
 		return visitor.visitMembershipPredicate( this );
 	}
 }

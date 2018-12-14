@@ -51,7 +51,7 @@ public class GenericFunction<X>
 	}
 
 	@Override
-	public <T> T accept(JpaCriteriaVisitor visitor) {
+	public <T> T accept(CriteriaVisitor visitor) {
 		return visitor.visitGenericFunction( this );
 	}
 }

@@ -24,13 +24,13 @@ import org.hibernate.query.criteria.JpaSubQuery;
 /**
  * @author Steve Ebersole
  */
-public class CriteriaQueryImpl<T> extends AbstractQuerySpecification<T> implements JpaCriteriaQuery<T> {
+public class CriteriaQueryImpl<T> extends AbstractQuerySpecification<T> implements RootQuery<T> {
 	public CriteriaQueryImpl(Class<T> resultType, CriteriaNodeBuilder criteriaBuilder) {
 		super( resultType, criteriaBuilder );
 	}
 
 	@Override
-	public JpaCriteriaQuery<T> distinct(boolean distinct) {
+	public RootQuery<T> distinct(boolean distinct) {
 		return (CriteriaQueryImpl<T>) super.distinct( distinct );
 	}
 
@@ -141,12 +141,13 @@ public class CriteriaQueryImpl<T> extends AbstractQuerySpecification<T> implemen
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public Set<ParameterExpression<?>> getParameters() {
-		throw new NotYetImplementedFor6Exception();
+		return (Set) ParameterCollector.collectParameters( this );
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
-		return visitor.visitCriteriaQuery( this );
+	public <R> R accept(CriteriaVisitor visitor) {
+		return visitor.visitRootQuery( this );
 	}
 }

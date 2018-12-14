@@ -6,10 +6,7 @@
  */
 package org.hibernate.query.criteria.spi;
 
-import java.io.Serializable;
 import javax.persistence.criteria.CriteriaBuilder.Trimspec;
-
-import org.hibernate.query.criteria.JpaExpression;
 
 /**
  * Models the ANSI SQL <tt>TRIM</tt> function.
@@ -19,17 +16,18 @@ import org.hibernate.query.criteria.JpaExpression;
  */
 public class TrimFunction extends AbstractStandardFunction<String> {
 	public static final String NAME = "trim";
+
 	public static final Trimspec DEFAULT_TRIMSPEC = Trimspec.BOTH;
 	public static final char DEFAULT_TRIM_CHAR = ' ';
 
 	private final Trimspec trimspec;
-	private final JpaExpression<Character> trimCharacter;
-	private final JpaExpression<String> trimSource;
+	private final ExpressionImplementor<Character> trimCharacter;
+	private final ExpressionImplementor<String> trimSource;
 
 	public TrimFunction(
 			Trimspec trimspec,
-			JpaExpression<Character> trimCharacter,
-			JpaExpression<String> trimSource,
+			ExpressionImplementor<Character> trimCharacter,
+			ExpressionImplementor<String> trimSource,
 			CriteriaNodeBuilder criteriaBuilder) {
 		super( NAME, String.class, criteriaBuilder );
 
@@ -38,50 +36,11 @@ public class TrimFunction extends AbstractStandardFunction<String> {
 		this.trimSource = trimSource;
 	}
 
-	public TrimFunction(
-			Trimspec trimspec,
-			char trimCharacter,
-			JpaExpression<String> trimSource,
-			CriteriaNodeBuilder criteriaBuilder) {
-		super( NAME, String.class, criteriaBuilder );
-
-		this.trimspec = trimspec;
-		this.trimCharacter = criteriaBuilder.literal( trimCharacter );
-		this.trimSource = trimSource;
-	}
-
-	public TrimFunction(
-			JpaExpression<String> trimSource,
-			CriteriaNodeBuilder criteriaBuilder) {
-		this( DEFAULT_TRIMSPEC, DEFAULT_TRIM_CHAR, trimSource, criteriaBuilder );
-	}
-
-	public TrimFunction(
-			JpaExpression<Character> trimCharacter,
-			JpaExpression<String> trimSource,
-			CriteriaNodeBuilder criteriaBuilder) {
-		this( DEFAULT_TRIMSPEC, trimCharacter, trimSource, criteriaBuilder );
-	}
-
-	public TrimFunction(
-			char trimCharacter,
-			JpaExpression<String> trimSource,
-			CriteriaNodeBuilder criteriaBuilder) {
-		this( DEFAULT_TRIMSPEC, trimCharacter, trimSource, criteriaBuilder );
-	}
-
-	public TrimFunction(
-			Trimspec trimspec,
-			JpaExpression<String> trimSource,
-			CriteriaNodeBuilder criteriaBuilder) {
-		this( trimspec, DEFAULT_TRIM_CHAR, trimSource, criteriaBuilder );
-	}
-
-	public JpaExpression<Character> getTrimCharacter() {
+	public ExpressionImplementor<Character> getTrimCharacter() {
 		return trimCharacter;
 	}
 
-	public JpaExpression<String> getTrimSource() {
+	public ExpressionImplementor<String> getTrimSource() {
 		return trimSource;
 	}
 
@@ -90,7 +49,7 @@ public class TrimFunction extends AbstractStandardFunction<String> {
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
+	public <R> R accept(CriteriaVisitor visitor) {
 		return visitor.visitTrimFunction( this );
 	}
 }

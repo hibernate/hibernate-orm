@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.criteria.spi;
 
-import java.io.Serializable;
 import java.sql.Date;
 
 /**
@@ -22,7 +21,7 @@ public class CurrentDateFunction extends AbstractStandardFunction<Date> {
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
+	public <R> R accept(CriteriaVisitor visitor) {
 		return visitor.visitCurrentDateFunction( this );
 	}
 }

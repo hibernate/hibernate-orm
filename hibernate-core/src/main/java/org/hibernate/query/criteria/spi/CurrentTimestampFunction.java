@@ -21,7 +21,7 @@ public class CurrentTimestampFunction extends AbstractStandardFunction<Timestamp
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
+	public <R> R accept(CriteriaVisitor visitor) {
 		return visitor.visitCurrentTimestampFunction( this );
 	}
 }

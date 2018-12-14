@@ -6,10 +6,6 @@
  */
 package org.hibernate.query.criteria.spi;
 
-import java.io.Serializable;
-
-import org.hibernate.query.criteria.JpaExpression;
-import org.hibernate.query.criteria.JpaFunction;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
@@ -20,22 +16,20 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class CastFunction<T,Y>
-		extends AbstractStandardFunction<T>
-		implements JpaFunction<T>, Serializable {
+public class CastFunction<T,Y> extends AbstractStandardFunction<T> {
 	public static final String CAST_NAME = "cast";
 
-	private final JpaExpression<Y> castSource;
+	private final ExpressionImplementor<Y> castSource;
 
 	public CastFunction(
-			JpaExpression<Y> castSource,
+			ExpressionImplementor<Y> castSource,
 			Class<T> javaType,
 			CriteriaNodeBuilder builder) {
 		super( CAST_NAME, javaType, builder );
 		this.castSource = castSource;
 	}
 
-	public JpaExpression<Y> getCastSource() {
+	public ExpressionImplementor<Y> getCastSource() {
 		return castSource;
 	}
 
@@ -44,7 +38,7 @@ public class CastFunction<T,Y>
 	}
 
 	@Override
-	public <R> R accept(JpaCriteriaVisitor visitor) {
+	public <R> R accept(CriteriaVisitor visitor) {
 		return visitor.visitCastFunction( this );
 	}
 }

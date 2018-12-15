@@ -127,7 +127,8 @@ public class BinaryArithmetic<N extends Number> extends AbstractExpression<N> {
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitBinaryArithmetic( this );
+		return (R) visitor.visitBinaryArithmetic( this );
 	}
 }

@@ -43,7 +43,8 @@ public class LocateFunction extends AbstractStandardFunction<Integer> {
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitLocateFunction( this );
+		return (R) visitor.visitLocateFunction( this );
 	}
 }

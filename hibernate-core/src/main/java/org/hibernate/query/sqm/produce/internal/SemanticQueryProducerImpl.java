@@ -7,17 +7,18 @@
 package org.hibernate.query.sqm.produce.internal;
 
 import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.hql.internal.HqlParser;
-import org.hibernate.query.sqm.InterpretationException;
-import org.hibernate.query.sqm.QueryException;
+import org.hibernate.query.criteria.spi.RootQuery;
+import org.hibernate.query.criteria.sqm.CriteriaQueryToSqmTransformer;
 import org.hibernate.query.hql.internal.HqlParseTreeBuilder;
 import org.hibernate.query.hql.internal.HqlParseTreePrinter;
+import org.hibernate.query.hql.internal.HqlParser;
 import org.hibernate.query.hql.internal.SemanticQueryBuilder;
+import org.hibernate.query.sqm.InterpretationException;
+import org.hibernate.query.sqm.QueryException;
 import org.hibernate.query.sqm.produce.spi.SemanticQueryProducer;
 import org.hibernate.query.sqm.tree.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
@@ -59,12 +60,12 @@ public class SemanticQueryProducerImpl implements SemanticQueryProducer {
 	}
 
 	@Override
-	public SqmSelectStatement interpret(CriteriaQuery query) {
-		throw new NotYetImplementedFor6Exception(  );
+	public <R> SqmSelectStatement<R> interpret(RootQuery<R> query) {
+		return CriteriaQueryToSqmTransformer.transform( query, sessionFactory );
 	}
 
 	@Override
-	public SqmDeleteStatement interpret(CriteriaDelete criteria) {
+	public <E> SqmDeleteStatement<E> interpret(CriteriaDelete<E> criteria) {
 		throw new NotYetImplementedFor6Exception(  );
 	}
 

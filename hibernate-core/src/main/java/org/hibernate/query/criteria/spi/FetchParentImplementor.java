@@ -12,5 +12,5 @@ import org.hibernate.query.criteria.JpaFetchParent;
  * @author Steve Ebersole
  */
 @SuppressWarnings("WeakerAccess")
-public interface FetchParentImplementor<O,T> extends JpaFetchParent<O,T> {
+public interface FetchParentImplementor<O,T> extends JpaFetchParent<O,T>, CriteriaNode {
 }

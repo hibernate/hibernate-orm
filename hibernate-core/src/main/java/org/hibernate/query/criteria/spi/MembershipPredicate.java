@@ -44,7 +44,8 @@ public class MembershipPredicate<E> extends AbstractSimplePredicate {
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitMembershipPredicate( this );
+		return (R) visitor.visitMembershipPredicate( this );
 	}
 }

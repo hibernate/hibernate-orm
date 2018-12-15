@@ -49,8 +49,9 @@ public class QueryStructure<T> extends AbstractNode implements JpaQueryStructure
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitQueryStructure( this );
+		return (R) visitor.visitQueryStructure( this );
 	}
 
 

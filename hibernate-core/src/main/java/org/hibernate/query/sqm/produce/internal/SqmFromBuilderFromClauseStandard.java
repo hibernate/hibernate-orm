@@ -23,13 +23,13 @@ public class SqmFromBuilderFromClauseStandard extends AbstractSqmFromBuilderFrom
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public SqmRoot buildRoot(EntityValuedNavigable navigable) {
 		final SqmRoot root = new SqmRoot(
 				getSqmCreationContext().getCurrentFromElementSpace(),
 				getSqmCreationContext().generateUniqueIdentifier(),
 				getAlias(),
-				navigable,
-				getSqmCreationContext()
+				navigable
 		);
 
 		getSqmCreationContext().getCurrentFromElementSpace().setRoot( root );
@@ -44,8 +44,7 @@ public class SqmFromBuilderFromClauseStandard extends AbstractSqmFromBuilderFrom
 				getSqmCreationContext().getCurrentFromElementSpace(),
 				getSqmCreationContext().generateUniqueIdentifier(),
 				getAlias(),
-				navigable.getEntityDescriptor(),
-				getSqmCreationContext()
+				navigable.getEntityDescriptor()
 		);
 
 		getSqmCreationContext().getCurrentFromElementSpace().addJoin( join );

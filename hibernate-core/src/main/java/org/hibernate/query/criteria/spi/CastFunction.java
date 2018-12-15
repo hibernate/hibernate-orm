@@ -38,7 +38,8 @@ public class CastFunction<T,Y> extends AbstractStandardFunction<T> {
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitCastFunction( this );
+		return (R) visitor.visitCastFunction( this );
 	}
 }

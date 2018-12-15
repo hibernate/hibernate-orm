@@ -27,7 +27,8 @@ public class AbsFunction<N extends Number> extends AbstractStandardFunction<N> {
 	}
 
 	@Override
-	public <T> T accept(CriteriaVisitor visitor) {
-		return visitor.visitAbsFunction( this );
+	@SuppressWarnings("unchecked")
+	public <R> R accept(CriteriaVisitor visitor) {
+		return (R) visitor.visitAbsFunction( this );
 	}
 }

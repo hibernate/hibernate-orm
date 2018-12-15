@@ -853,7 +853,7 @@ public class SemanticQueryBuilder
 					entityReference.getEntityName()
 			);
 		}
-		final SqmRoot root = new SqmRoot( null, generateUniqueIdentifier(), alias, entityReference, this );
+		final SqmRoot root = new SqmRoot( null, generateUniqueIdentifier(), alias, entityReference );
 		querySpecProcessingStateStack.getCurrent().getAliasRegistry().registerAlias( root );
 		querySpecProcessingStateStack.getCurrent().getFromClause().getFromElementSpaces().get( 0 ).setRoot( root );
 		return root;
@@ -940,7 +940,7 @@ public class SemanticQueryBuilder
 					entityReference.getEntityName()
 			);
 
-			SqmRoot root = new SqmRoot( null, generateUniqueIdentifier(), alias, entityReference, this );
+			SqmRoot root = new SqmRoot( null, generateUniqueIdentifier(), alias, entityReference );
 			querySpecProcessingStateStack.getCurrent().getAliasRegistry().registerAlias( root );
 			querySpecProcessingStateStack.getCurrent().getFromClause().getFromElementSpaces().get( 0 ).setRoot( root );
 

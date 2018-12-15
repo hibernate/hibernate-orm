@@ -88,7 +88,8 @@ public class CoalesceExpression<T> extends AbstractExpression<T> implements JpaC
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitCoalesceExpression( this );
+		return (R) visitor.visitCoalesceExpression( this );
 	}
 }

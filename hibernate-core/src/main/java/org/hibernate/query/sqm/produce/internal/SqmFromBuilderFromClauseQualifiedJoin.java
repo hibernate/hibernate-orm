@@ -43,8 +43,7 @@ public class SqmFromBuilderFromClauseQualifiedJoin extends AbstractSqmFromBuilde
 				getSqmCreationContext().generateUniqueIdentifier(),
 				getAlias(),
 				navigable.getEntityDescriptor(),
-				joinType,
-				getSqmCreationContext()
+				joinType
 		);
 
 		fromElementSpace.addJoin( join );

@@ -29,7 +29,8 @@ public class NullLiteralExpression<T> extends AbstractExpression<T> {
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitNullLiteral( this );
+		return (R) visitor.visitNullLiteral( this );
 	}
 }

@@ -24,7 +24,8 @@ public class ExistsPredicate extends AbstractSimplePredicate {
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitExistsPredicate( this );
+		return (R) visitor.visitExistsPredicate( this );
 	}
 }

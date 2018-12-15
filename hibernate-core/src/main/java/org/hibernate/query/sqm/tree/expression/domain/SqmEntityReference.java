@@ -39,10 +39,7 @@ public class SqmEntityReference extends AbstractSqmNavigableReference
 
 	private final NavigablePath propertyPath;
 
-	public SqmEntityReference(
-			EntityTypeDescriptor entityDescriptor,
-			SqmFrom sqmFrom,
-			SqmCreationContext creationContext) {
+	public SqmEntityReference(EntityTypeDescriptor entityDescriptor, SqmFrom sqmFrom) {
 		this.entityDescriptor = entityDescriptor;
 		this.exportedFromElement = sqmFrom;
 		this.propertyPath = new NavigablePath( null, this.entityDescriptor.getEntityName() + '(' + sqmFrom.getIdentificationVariable() + ')' );

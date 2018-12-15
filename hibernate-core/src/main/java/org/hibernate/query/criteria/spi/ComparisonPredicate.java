@@ -40,8 +40,9 @@ public class ComparisonPredicate extends AbstractSimplePredicate {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitComparisonPredicate( this );
+		return (R) visitor.visitComparisonPredicate( this );
 	}
 
 	/**

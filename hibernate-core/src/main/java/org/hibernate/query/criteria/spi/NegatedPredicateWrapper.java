@@ -77,7 +77,8 @@ public class NegatedPredicateWrapper extends AbstractPredicate {
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitNegatedPredicate( this );
+		return (R) visitor.visitNegatedPredicate( this );
 	}
 }

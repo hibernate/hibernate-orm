@@ -8,7 +8,6 @@ package org.hibernate.query.sqm.tree.from;
 
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
@@ -28,15 +27,14 @@ public class SqmEntityJoin
 			String uid,
 			String alias,
 			EntityTypeDescriptor joinedEntityDescriptor,
-			SqmJoinType joinType,
-			SqmCreationContext creationContext) {
+			SqmJoinType joinType) {
 		super(
 				fromElementSpace,
 				uid,
 				alias,
 				joinType
 		);
-		this.joinedEntityReference = new SqmEntityReference( joinedEntityDescriptor, this, creationContext );
+		this.joinedEntityReference = new SqmEntityReference( joinedEntityDescriptor, this );
 	}
 
 	@Override

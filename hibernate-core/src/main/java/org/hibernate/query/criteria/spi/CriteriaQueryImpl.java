@@ -103,7 +103,8 @@ public class CriteriaQueryImpl<T> extends AbstractSelectCriteria<T,RootQuery<T>>
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitRootQuery( this );
+		return (R) visitor.visitRootQuery( this );
 	}
 }

@@ -45,7 +45,8 @@ public class ParameterExpression<T>
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitParameter( this );
+		return (R) visitor.visitParameter( this );
 	}
 }

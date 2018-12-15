@@ -63,7 +63,8 @@ public class Junction extends AbstractPredicate {
 	}
 
 	@Override
-	public <T> T accept(CriteriaVisitor visitor) {
-		return visitor.visitJunctionPredicate( this );
+	@SuppressWarnings({ "unchecked" })
+	public <R> R accept(CriteriaVisitor visitor) {
+		return (R) visitor.visitJunctionPredicate( this );
 	}
 }

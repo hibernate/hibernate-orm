@@ -40,7 +40,8 @@ public class BetweenPredicate<Y> extends AbstractSimplePredicate {
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitBetweenPredicate( this );
+		return (R) visitor.visitBetweenPredicate( this );
 	}
 }

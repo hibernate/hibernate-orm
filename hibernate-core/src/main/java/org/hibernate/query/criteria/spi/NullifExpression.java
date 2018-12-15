@@ -45,7 +45,8 @@ public class NullifExpression<T> extends AbstractExpression<T> {
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitNullifExpression( this );
+		return (R) visitor.visitNullifExpression( this );
 	}
 }

@@ -6,10 +6,7 @@
  */
 package org.hibernate.query.criteria.spi;
 
-import javax.persistence.metamodel.EntityType;
-
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.criteria.PathException;
 
@@ -31,7 +28,7 @@ public class RootImpl<T> extends AbstractFrom<T,T> implements RootImplementor<T>
 	}
 
 	@Override
-	public ManagedTypeDescriptor<T> getManagedType() {
+	public EntityTypeDescriptor<T> getManagedType() {
 		return getNavigable();
 	}
 
@@ -46,8 +43,8 @@ public class RootImpl<T> extends AbstractFrom<T,T> implements RootImplementor<T>
 	}
 
 	@Override
-	public EntityType<T> getModel() {
-		return entityTypeDescriptor;
+	public EntityTypeDescriptor<T> getModel() {
+		return getEntityTypeDescriptor();
 	}
 
 	@Override
@@ -61,8 +58,9 @@ public class RootImpl<T> extends AbstractFrom<T,T> implements RootImplementor<T>
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitRoot( this );
+		return (R) visitor.visitRoot( this );
 	}
 
 	private static class CorrelationDelegateImpl<D>
@@ -79,8 +77,9 @@ public class RootImpl<T> extends AbstractFrom<T,T> implements RootImplementor<T>
 		}
 
 		@Override
+		@SuppressWarnings("unchecked")
 		public <R> R accept(CriteriaVisitor visitor) {
-			return visitor.visitCorrelationDelegate( this );
+			return (R) visitor.visitCorrelationDelegate( this );
 		}
 
 		@Override
@@ -94,12 +93,12 @@ public class RootImpl<T> extends AbstractFrom<T,T> implements RootImplementor<T>
 		}
 
 		@Override
-		public EntityType<D> getModel() {
+		public EntityTypeDescriptor<D> getModel() {
 			return getCorrelationParent().getModel();
 		}
 
 		@Override
-		public ManagedTypeDescriptor<D> getManagedType() {
+		public EntityTypeDescriptor<D> getManagedType() {
 			return getCorrelationParent().getManagedType();
 		}
 

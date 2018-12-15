@@ -38,6 +38,7 @@ public class LiteralExpression<T> extends AbstractExpression<T> implements Seria
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	protected void setJavaType(Class targetType) {
 		final JavaTypeDescriptor jtd = getJavaTypeDescriptor();
 
@@ -47,7 +48,8 @@ public class LiteralExpression<T> extends AbstractExpression<T> implements Seria
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitLiteral( this );
+		return (R) visitor.visitLiteral( this );
 	}
 }

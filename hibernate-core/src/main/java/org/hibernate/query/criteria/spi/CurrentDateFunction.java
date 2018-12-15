@@ -21,7 +21,8 @@ public class CurrentDateFunction extends AbstractStandardFunction<Date> {
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitCurrentDateFunction( this );
+		return (R) visitor.visitCurrentDateFunction( this );
 	}
 }

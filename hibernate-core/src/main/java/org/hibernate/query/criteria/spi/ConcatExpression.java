@@ -33,7 +33,8 @@ public class ConcatExpression extends AbstractExpression<String> {
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitConcatExpression( this );
+		return (R) visitor.visitConcatExpression( this );
 	}
 }

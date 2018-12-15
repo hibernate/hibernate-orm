@@ -26,7 +26,7 @@ public class ParameterCollector extends BaseCriteriaVisitor {
 	private Set<ParameterExpression<?>> parameterExpressions;
 
 	@Override
-	public <R> R visitParameter(ParameterExpression<?> expression) {
+	public Object visitParameter(ParameterExpression<?> expression) {
 		if ( parameterExpressions == null ) {
 			parameterExpressions = new HashSet<>();
 		}

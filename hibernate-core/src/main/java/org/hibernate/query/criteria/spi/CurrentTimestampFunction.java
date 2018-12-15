@@ -21,7 +21,8 @@ public class CurrentTimestampFunction extends AbstractStandardFunction<Timestamp
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitCurrentTimestampFunction( this );
+		return (R) visitor.visitCurrentTimestampFunction( this );
 	}
 }

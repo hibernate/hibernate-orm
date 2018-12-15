@@ -39,7 +39,8 @@ public class UnaryArithmetic<T> extends AbstractExpression<T> {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitUnaryArithmetic( this );
+		return (R) visitor.visitUnaryArithmetic( this );
 	}
 }

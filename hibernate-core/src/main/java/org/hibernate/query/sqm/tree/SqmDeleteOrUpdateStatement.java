@@ -12,6 +12,6 @@ import org.hibernate.query.sqm.tree.predicate.SqmWhereClauseContainer;
 /**
  * @author Steve Ebersole
  */
-public interface SqmDeleteOrUpdateStatement extends SqmNonSelectStatement, SqmWhereClauseContainer {
-	SqmRoot getEntityFromElement();
+public interface SqmDeleteOrUpdateStatement<E> extends SqmNonSelectStatement, SqmWhereClauseContainer {
+	SqmRoot<E> getEntityFromElement();
 }

@@ -18,11 +18,12 @@
  * == From HQL/JPQL
  *
  * `SemanticQueryProducer` defines just a single method for producing SQM based on HQL:
- * {@link org.hibernate.query.sqm.produce.spi.SemanticQueryProducer#interpret(java.lang.String)}.
- * See {@link org.hibernate.query.sqm.produce.internal.hql} for details
+ * {@link org.hibernate.query.sqm.produce.spi.SemanticQueryProducer#interpret(String, SharedSessionContractImplementor)}.
+ * See {@link org.hibernate.query.hql.internal} for details
  *
  * == From Criteria
  *
+ * todo (6.0) ...
  * TDB
  *
  * [NOTE]
@@ -47,3 +48,5 @@
  *  * {@link org.hibernate.query.sqm.InterpretationException} represents an unexpected problem
  */
 package org.hibernate.query.sqm.produce;
+
+import org.hibernate.engine.spi.SharedSessionContractImplementor;

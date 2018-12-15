@@ -19,6 +19,7 @@ public class EmptinessPredicate extends AbstractSimplePredicate {
 			CriteriaNodeBuilder builder) {
 		this( pluralPath, false, builder );
 	}
+
 	public EmptinessPredicate(
 			PluralPath<?> pluralPath,
 			boolean negated,
@@ -32,7 +33,8 @@ public class EmptinessPredicate extends AbstractSimplePredicate {
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitEmptinessPredicate( this );
+		return (R) visitor.visitEmptinessPredicate( this );
 	}
 }

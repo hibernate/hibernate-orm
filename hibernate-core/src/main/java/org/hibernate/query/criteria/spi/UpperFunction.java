@@ -26,7 +26,8 @@ public class UpperFunction extends AbstractStandardFunction<String> {
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitUpperFunction( this );
+		return (R) visitor.visitUpperFunction( this );
 	}
 }

@@ -144,6 +144,7 @@ import org.hibernate.procedure.UnknownSqlResultSetMappingException;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.Query;
+import org.hibernate.query.criteria.spi.RootQuery;
 import org.hibernate.query.named.spi.NamedCallableQueryMemento;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
@@ -163,13 +164,15 @@ import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
 
 /**
+ * @asciidoc
+ *
  * Concrete implementation of a Session.
- * <p/>
- * Exposes two interfaces:<ul>
- * <li>{@link org.hibernate.Session} to the application</li>
- * <li>{@link org.hibernate.engine.spi.SessionImplementor} to other Hibernate components (SPI)</li>
- * </ul>
- * <p/>
+ *
+ * Exposes two interfaces:
+ *
+ * 	{@link org.hibernate.Session}:: to the application
+ * 	{@link SessionImplementor}:: to other Hibernate components (SPI)
+ *
  * This class is not thread-safe.
  *
  * @author Gavin King
@@ -3139,14 +3142,13 @@ public final class SessionImpl
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> QueryImplementor<T> createQuery(CriteriaQuery<T> criteriaQuery) {
 		checkOpen();
 
 		try {
 			return new QuerySqmImpl<>(
 					"<criteria>",
-					getSessionFactory().getQueryEngine().getSemanticQueryProducer().interpret( criteriaQuery ),
+					getSessionFactory().getQueryEngine().getSemanticQueryProducer().interpret( (RootQuery<T>) criteriaQuery ),
 					criteriaQuery.getResultType(),
 					this
 			);

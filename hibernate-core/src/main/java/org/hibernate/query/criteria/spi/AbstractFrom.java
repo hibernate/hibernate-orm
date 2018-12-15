@@ -7,6 +7,7 @@
 package org.hibernate.query.criteria.spi;
 
 import java.util.Set;
+import java.util.function.Consumer;
 import javax.persistence.criteria.CollectionJoin;
 import javax.persistence.criteria.Fetch;
 import javax.persistence.criteria.Join;
@@ -54,6 +55,13 @@ public abstract class AbstractFrom<O,T>
 	@SuppressWarnings("unchecked")
 	public Set<Join<T, ?>> getJoins() {
 		return (Set) joins;
+	}
+
+	@Override
+	public void visitJoins(Consumer<JoinImplementor<T, ?>> consumer) {
+		if ( joins != null ) {
+			joins.forEach( consumer );
+		}
 	}
 
 	@Override
@@ -164,6 +172,13 @@ public abstract class AbstractFrom<O,T>
 	@Override
 	public Set<Fetch<T, ?>> getFetches() {
 		return null;
+	}
+
+	@Override
+	public void visitFetches(Consumer<FetchImplementor<T, ?>> consumer) {
+		if ( fetches != null ) {
+			fetches.forEach( consumer );
+		}
 	}
 
 	@Override

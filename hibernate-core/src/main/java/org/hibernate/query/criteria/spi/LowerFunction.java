@@ -26,7 +26,8 @@ public class LowerFunction extends AbstractStandardFunction<String> {
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitLowerFunction( this );
+		return (R) visitor.visitLowerFunction( this );
 	}
 }

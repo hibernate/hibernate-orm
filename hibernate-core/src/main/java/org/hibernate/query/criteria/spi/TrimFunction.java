@@ -49,7 +49,8 @@ public class TrimFunction extends AbstractStandardFunction<String> {
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitTrimFunction( this );
+		return (R) visitor.visitTrimFunction( this );
 	}
 }

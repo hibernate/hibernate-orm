@@ -10,114 +10,114 @@ package org.hibernate.query.criteria.spi;
  * @author Steve Ebersole
  */
 public interface CriteriaVisitor {
-	<R> R visitRootQuery(RootQuery rootQuery);
+	Object visitRootQuery(RootQuery rootQuery);
 
-	<R> R visitQueryStructure(QueryStructure<?> queryStructure);
+	Object visitQueryStructure(QueryStructure<?> queryStructure);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Paths
 
-	<R> R visitRoot(RootImpl<?> root);
+	Object visitRoot(RootImplementor<?> root);
 
-	<R> R visitSingularAttributePath(SingularPath<?> singularAttributePath);
+	Object visitSingularAttributePath(SingularPath<?> singularAttributePath);
 
-	<R> R visitTreatedPath(TreatedPath<?> treatedPath);
+	Object visitTreatedPath(TreatedPath<?> treatedPath);
 
-	<R> R visitCorrelationDelegate(CorrelationDelegate<?,?> correlationDelegate);
+	Object visitCorrelationDelegate(CorrelationDelegate<?,?> correlationDelegate);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Selections
 
-	<R> R visitMultiSelect(MultiSelectSelection<?> selection);
+	Object visitMultiSelect(MultiSelectSelection<?> selection);
 
-	<R> R visitDynamicInstantiation(ConstructorSelection<?> selection);
+	Object visitDynamicInstantiation(ConstructorSelection<?> selection);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Expressions
 
-	<R> R visitLiteral(LiteralExpression<?> expression);
-	<R> R visitNullLiteral(NullLiteralExpression<?> expression);
+	Object visitLiteral(LiteralExpression<?> expression);
+	Object visitNullLiteral(NullLiteralExpression<?> expression);
 
-	<R> R visitParameter(ParameterExpression<?> expression);
+	Object visitParameter(ParameterExpression<?> expression);
 
-	<R> R visitSearchedCase(SearchedCase<?> expression);
-	<R> R visitSimpleCase(SimpleCase<?,?> expression);
+	Object visitSearchedCase(SearchedCase<?> expression);
+	Object visitSimpleCase(SimpleCase<?,?> expression);
 
-	<R> R visitCoalesceExpression(CoalesceExpression<?> expression);
+	Object visitCoalesceExpression(CoalesceExpression<?> expression);
 
-	<R> R visitNullifExpression(NullifExpression<?> expression);
+	Object visitNullifExpression(NullifExpression<?> expression);
 
-	<R> R visitConcatExpression(ConcatExpression expression);
+	Object visitConcatExpression(ConcatExpression expression);
 
-	<R> R visitPathType(PathTypeExpression<?> expression);
+	Object visitPathType(PathTypeExpression<?> expression);
 
-	<R> R acceptRestrictedSubQueryExpression(RestrictedSubQueryExpression<?> expression);
+	Object acceptRestrictedSubQueryExpression(RestrictedSubQueryExpression<?> expression);
 
-	<R> R visitBinaryArithmetic(BinaryArithmetic<?> expression);
+	Object visitBinaryArithmetic(BinaryArithmetic<?> expression);
 
-	<R> R visitUnaryArithmetic(UnaryArithmetic<?> expression);
+	Object visitUnaryArithmetic(UnaryArithmetic<?> expression);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Functions
 
-	<R> R visitGenericFunction(GenericFunction<?> function);
+	Object visitGenericFunction(GenericFunction<?> function);
 
-	<R> R visitAbsFunction(AbsFunction<? extends Number> function);
-	<R> R visitAvgFunction(AggregationFunction.AVG function);
-	<R> R visitCastFunction(CastFunction<?,?> function);
-	<R> R visitCountFunction(AggregationFunction.COUNT function);
-	<R> R visitCurrentDateFunction(CurrentDateFunction function);
-	<R> R visitCurrentTimeFunction(CurrentTimeFunction function);
-	<R> R visitCurrentTimestampFunction(CurrentTimestampFunction function);
-	<R> R visitGreatestFunction(AggregationFunction.GREATEST<? extends Comparable> function);
-	<R> R visitLeastFunction(AggregationFunction.LEAST<? extends Comparable> function);
-	<R> R visitLengthFunction(LengthFunction function);
-	<R> R visitLocateFunction(LocateFunction function);
-	<R> R visitLowerFunction(LowerFunction function);
-	<R> R visitMaxFunction(AggregationFunction.MAX<? extends Number> function);
-	<R> R visitMinFunction(AggregationFunction.MIN<? extends Number> function);
-	<R> R visitSqrtFunction(SqrtFunction function);
-	<R> R visitSubstringFunction(SubstringFunction function);
-	<R> R visitSumFunction(AggregationFunction.SUM<? extends Number> function);
-	<R> R visitTrimFunction(TrimFunction function);
-	<R> R visitUpperFunction(UpperFunction function);
+	Object visitAbsFunction(AbsFunction<? extends Number> function);
+	Object visitAvgFunction(AggregationFunction.AVG function);
+	Object visitCastFunction(CastFunction<?,?> function);
+	Object visitCountFunction(AggregationFunction.COUNT function);
+	Object visitCurrentDateFunction(CurrentDateFunction function);
+	Object visitCurrentTimeFunction(CurrentTimeFunction function);
+	Object visitCurrentTimestampFunction(CurrentTimestampFunction function);
+	Object visitGreatestFunction(AggregationFunction.GREATEST<? extends Comparable> function);
+	Object visitLeastFunction(AggregationFunction.LEAST<? extends Comparable> function);
+	Object visitLengthFunction(LengthFunction function);
+	Object visitLocateFunction(LocateFunction function);
+	Object visitLowerFunction(LowerFunction function);
+	Object visitMaxFunction(AggregationFunction.MAX<? extends Number> function);
+	Object visitMinFunction(AggregationFunction.MIN<? extends Number> function);
+	Object visitSqrtFunction(SqrtFunction function);
+	Object visitSubstringFunction(SubstringFunction function);
+	Object visitSumFunction(AggregationFunction.SUM<? extends Number> function);
+	Object visitTrimFunction(TrimFunction function);
+	Object visitUpperFunction(UpperFunction function);
 
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Predicates
 
-	<R> R visitNegatedPredicate(NegatedPredicateWrapper predicate);
+	Object visitNegatedPredicate(NegatedPredicateWrapper predicate);
 
-	<R> R visitJunctionPredicate(Junction predicate);
+	Object visitJunctionPredicate(Junction predicate);
 
-	<R> R visitBooleanExpressionPredicate(BooleanExpressionPredicate predicate);
+	Object visitBooleanExpressionPredicate(BooleanExpressionPredicate predicate);
 
-	<R> R visitBooleanAssertionPredicate(BooleanAssertionPredicate predicate);
+	Object visitBooleanAssertionPredicate(BooleanAssertionPredicate predicate);
 
-	<R> R visitNullnessPredicate(NullnessPredicate predicate);
+	Object visitNullnessPredicate(NullnessPredicate predicate);
 
-	<R> R visitComparisonPredicate(ComparisonPredicate predicate);
+	Object visitComparisonPredicate(ComparisonPredicate predicate);
 
-	<R> R visitBetweenPredicate(BetweenPredicate predicate);
+	Object visitBetweenPredicate(BetweenPredicate predicate);
 
-	<R> R visitLikePredicate(LikePredicate predicate);
+	Object visitLikePredicate(LikePredicate predicate);
 
-	<R> R visitInPredicate(InPredicate<?> predicate);
+	Object visitInPredicate(InPredicate<?> predicate);
 
-	<R> R visitExistsPredicate(ExistsPredicate predicate);
+	Object visitExistsPredicate(ExistsPredicate predicate);
 
-	<R> R visitEmptinessPredicate(EmptinessPredicate predicate);
+	Object visitEmptinessPredicate(EmptinessPredicate predicate);
 
-	<R> R visitMembershipPredicate(MembershipPredicate<?> membershipPredicate);
+	Object visitMembershipPredicate(MembershipPredicate<?> membershipPredicate);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Sorting
 
-	<R> R visitSortSpecification(SortSpecification sortSpecification);
+	Object visitSortSpecification(SortSpecification sortSpecification);
 }

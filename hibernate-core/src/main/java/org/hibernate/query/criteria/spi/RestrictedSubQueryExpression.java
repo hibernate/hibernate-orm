@@ -48,7 +48,8 @@ public class RestrictedSubQueryExpression<Y> extends AbstractExpression<Y> {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.acceptRestrictedSubQueryExpression( this );
+		return (R) visitor.acceptRestrictedSubQueryExpression( this );
 	}
 }

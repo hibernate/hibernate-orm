@@ -71,7 +71,8 @@ public class SortSpecification extends AbstractNode implements JpaOrder {
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitSortSpecification( this );
+		return (R) visitor.visitSortSpecification( this );
 	}
 }

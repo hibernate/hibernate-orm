@@ -29,7 +29,8 @@ public class LengthFunction
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitLengthFunction( this );
+		return (R) visitor.visitLengthFunction( this );
 	}
 }

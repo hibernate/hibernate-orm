@@ -51,7 +51,8 @@ public class GenericFunction<X>
 	}
 
 	@Override
-	public <T> T accept(CriteriaVisitor visitor) {
-		return visitor.visitGenericFunction( this );
+	@SuppressWarnings({ "unchecked" })
+	public <R> R accept(CriteriaVisitor visitor) {
+		return (R) visitor.visitGenericFunction( this );
 	}
 }

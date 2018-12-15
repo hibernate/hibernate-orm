@@ -50,7 +50,8 @@ public class SubstringFunction extends AbstractStandardFunction<String> {
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitSubstringFunction( this );
+		return (R) visitor.visitSubstringFunction( this );
 	}
 }

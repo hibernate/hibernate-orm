@@ -24,7 +24,8 @@ public class PathTypeExpression<T> extends AbstractExpression<T> {
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitPathType( this );
+		return (R) visitor.visitPathType( this );
 	}
 }

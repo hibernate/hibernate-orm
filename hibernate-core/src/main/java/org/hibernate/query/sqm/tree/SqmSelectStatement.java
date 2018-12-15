@@ -15,7 +15,7 @@ import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 /**
  * @author Steve Ebersole
  */
-public interface SqmSelectStatement extends SqmStatement {
+public interface SqmSelectStatement<R> extends SqmStatement {
 	/**
 	 * The SQM AST
 	 */

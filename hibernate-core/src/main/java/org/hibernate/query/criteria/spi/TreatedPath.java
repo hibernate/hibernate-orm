@@ -101,7 +101,8 @@ public class TreatedPath<T> extends AbstractPath<T> {
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitTreatedPath( this );
+		return (R) visitor.visitTreatedPath( this );
 	}
 }

@@ -79,8 +79,9 @@ public abstract class AggregationFunction<T> extends AbstractStandardFunction<T>
 		}
 
 		@Override
+		@SuppressWarnings("unchecked")
 		public <R> R accept(CriteriaVisitor visitor) {
-			return visitor.visitCountFunction( this );
+			return (R) visitor.visitCountFunction( this );
 		}
 	}
 
@@ -97,8 +98,9 @@ public abstract class AggregationFunction<T> extends AbstractStandardFunction<T>
 		}
 
 		@Override
+		@SuppressWarnings("unchecked")
 		public <R> R accept(CriteriaVisitor visitor) {
-			return visitor.visitAvgFunction( this );
+			return (R) visitor.visitAvgFunction( this );
 		}
 	}
 
@@ -121,8 +123,9 @@ public abstract class AggregationFunction<T> extends AbstractStandardFunction<T>
 		}
 
 		@Override
+		@SuppressWarnings("unchecked")
 		public <R> R accept(CriteriaVisitor visitor) {
-			return visitor.visitSumFunction( this );
+			return (R) visitor.visitSumFunction( this );
 		}
 	}
 
@@ -141,8 +144,9 @@ public abstract class AggregationFunction<T> extends AbstractStandardFunction<T>
 		}
 
 		@Override
+		@SuppressWarnings("unchecked")
 		public <R> R accept(CriteriaVisitor visitor) {
-			return visitor.visitMaxFunction( this );
+			return (R) visitor.visitMaxFunction( this );
 		}
 	}
 
@@ -161,8 +165,9 @@ public abstract class AggregationFunction<T> extends AbstractStandardFunction<T>
 		}
 
 		@Override
+		@SuppressWarnings({ "unchecked" })
 		public <R> R accept(CriteriaVisitor visitor) {
-			return visitor.visitMinFunction( this );
+			return (R)visitor.visitMinFunction( this );
 		}
 	}
 
@@ -180,8 +185,9 @@ public abstract class AggregationFunction<T> extends AbstractStandardFunction<T>
 		}
 
 		@Override
+		@SuppressWarnings({ "unchecked" })
 		public <R> R accept(CriteriaVisitor visitor) {
-			return visitor.visitLeastFunction( this );
+			return (R) visitor.visitLeastFunction( this );
 		}
 	}
 
@@ -199,8 +205,9 @@ public abstract class AggregationFunction<T> extends AbstractStandardFunction<T>
 		}
 
 		@Override
+		@SuppressWarnings({ "unchecked" })
 		public <R> R accept(CriteriaVisitor visitor) {
-			return visitor.visitGreatestFunction( this );
+			return (R) visitor.visitGreatestFunction( this );
 		}
 	}
 }

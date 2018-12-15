@@ -83,7 +83,8 @@ public class InPredicate<T> extends AbstractSimplePredicate implements JpaInPred
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitInPredicate( this );
+		return (R) visitor.visitInPredicate( this );
 	}
 }

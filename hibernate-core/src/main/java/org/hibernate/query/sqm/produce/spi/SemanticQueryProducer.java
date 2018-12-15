@@ -7,10 +7,11 @@
 package org.hibernate.query.sqm.produce.spi;
 
 import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.query.criteria.spi.RootQuery;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.tree.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
@@ -36,27 +37,30 @@ public interface SemanticQueryProducer {
 	SqmStatement interpret(String query);
 
 	/**
-	 * Perform the interpretation of a (select) criteria query.
+	 * Interpret the JPA criteria tree into SQM
 	 *
 	 * @param query The criteria query
 	 *
 	 * @return The semantic representation of the incoming criteria query.
 	 */
-	SqmSelectStatement interpret(CriteriaQuery query);
+	<R> SqmSelectStatement<R> interpret(RootQuery<R> query);
 
 	/**
-	 * Perform the interpretation of a (delete) criteria query.
+	 * Interpret the JPA criteria tree into SQM
 	 *
 	 * @param criteria The DELETE criteria
 	 *
 	 * @return The semantic representation of the incoming criteria query.
 	 */
-	SqmDeleteStatement interpret(CriteriaDelete criteria);
+	<E> SqmDeleteStatement<E> interpret(CriteriaDelete<E> criteria);
+
+	// todo (6.0) : whatever JpaCriteriaDelete becomes in SPI ^^
+	//		and JpaCriteriaUpdate vv
 
 	/**
-	 * Perform the interpretation of a (update) criteria query.
+	 * Interpret the JPA criteria tree into SQM
 	 *
-	 * @param criteria The criteria query
+	 * @param criteria The UPDATE criteria
 	 *
 	 * @return The semantic representation of the incoming criteria query.
 	 */

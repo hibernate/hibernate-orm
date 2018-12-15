@@ -77,8 +77,9 @@ public class SearchedCase<T> extends AbstractExpression<T> implements JpaSearche
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitSearchedCase( this );
+		return (R) visitor.visitSearchedCase( this );
 	}
 
 	public class WhenClause {

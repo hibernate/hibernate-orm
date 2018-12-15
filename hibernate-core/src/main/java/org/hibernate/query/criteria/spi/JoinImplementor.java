@@ -21,6 +21,7 @@ import org.hibernate.query.criteria.PathException;
  * @author Steve Ebersole
  */
 public interface JoinImplementor<O,T> extends FromImplementor<O,T>, JpaJoin<O,T> {
+
 	@Override
 	JpaJoin<O, T> on(JpaExpression<Boolean> restriction);
 

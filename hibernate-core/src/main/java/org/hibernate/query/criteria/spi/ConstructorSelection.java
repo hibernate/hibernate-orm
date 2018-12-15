@@ -25,7 +25,8 @@ public class ConstructorSelection<T> extends CompoundSelection<T> implements Jpa
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitDynamicInstantiation( this );
+		return (R) visitor.visitDynamicInstantiation( this );
 	}
 }

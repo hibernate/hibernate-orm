@@ -33,7 +33,8 @@ public class NullnessPredicate extends AbstractSimplePredicate {
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitNullnessPredicate( this );
+		return (R) visitor.visitNullnessPredicate( this );
 	}
 }

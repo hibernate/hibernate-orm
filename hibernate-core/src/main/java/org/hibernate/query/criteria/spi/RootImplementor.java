@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.criteria.spi;
 
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.PathException;
 
@@ -13,6 +14,17 @@ import org.hibernate.query.criteria.PathException;
  * @author Steve Ebersole
  */
 public interface RootImplementor<T> extends FromImplementor<T,T>, JpaRoot<T> {
+	@Override
+	default boolean isFetched() {
+		return true;
+	}
+
+	@Override
+	EntityTypeDescriptor<T> getModel();
+
+	@Override
+	EntityTypeDescriptor<T> getManagedType();
+
 	@Override
 	<S extends T> RootImplementor<S> treatAs(Class<S> treatJavaType) throws PathException;
 }

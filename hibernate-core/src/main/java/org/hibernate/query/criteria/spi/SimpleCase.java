@@ -98,8 +98,9 @@ public class SimpleCase<C,R> extends AbstractExpression<R> implements JpaSimpleC
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <V> V accept(CriteriaVisitor visitor) {
-		return visitor.visitSimpleCase( this );
+		return (V) visitor.visitSimpleCase( this );
 	}
 
 	public class WhenClause {

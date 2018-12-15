@@ -8,8 +8,15 @@ package org.hibernate.query.criteria;
 
 import javax.persistence.criteria.Root;
 
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+
 /**
  * @author Steve Ebersole
  */
 public interface JpaRoot<T> extends JpaFrom<T,T>, JpaPathSource<T>, Root<T> {
+	@Override
+	EntityDomainType<T> getModel();
+
+	@Override
+	EntityDomainType<T> getManagedType();
 }

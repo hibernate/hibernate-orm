@@ -26,7 +26,8 @@ public class SqrtFunction extends AbstractStandardFunction<Double> {
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitSqrtFunction( this );
+		return (R) visitor.visitSqrtFunction( this );
 	}
 }

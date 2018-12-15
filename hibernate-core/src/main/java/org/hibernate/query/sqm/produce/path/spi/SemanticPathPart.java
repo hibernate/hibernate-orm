@@ -12,6 +12,8 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 
 /**
+ * @asciidoc
+ *
  * Contract for things that can be part of a path structure, including:
  *
  * 		* package name

@@ -11,7 +11,8 @@ package org.hibernate.query.criteria.spi;
  */
 public interface SingularPath<T> extends PathImplementor<T> {
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	default  <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitSingularAttributePath( this );
+		return (R) visitor.visitSingularAttributePath( this );
 	}
 }

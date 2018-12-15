@@ -410,7 +410,7 @@ public abstract class BaseSqmToSqlAstConverter
 			}
 
 			final SqmWhereClause whereClause = querySpec.getWhereClause();
-			if ( whereClause != null ) {
+			if ( whereClause != null && whereClause.getPredicate() != null ) {
 				currentClauseStack.push( Clause.WHERE );
 				try {
 					astQuerySpec.setWhereClauseRestrictions(

@@ -20,7 +20,8 @@ public class MultiSelectSelection<T> extends CompoundSelection<T> {
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitMultiSelect( this );
+		return (R) visitor.visitMultiSelect( this );
 	}
 }

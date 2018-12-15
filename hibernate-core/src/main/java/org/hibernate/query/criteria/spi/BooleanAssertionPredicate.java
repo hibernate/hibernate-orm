@@ -38,7 +38,8 @@ public class BooleanAssertionPredicate extends AbstractSimplePredicate {
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitBooleanAssertionPredicate( this );
+		return (R) visitor.visitBooleanAssertionPredicate( this );
 	}
 }

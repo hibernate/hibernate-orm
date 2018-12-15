@@ -30,7 +30,8 @@ public class BooleanExpressionPredicate extends AbstractSimplePredicate {
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <R> R accept(CriteriaVisitor visitor) {
-		return visitor.visitBooleanExpressionPredicate( this );
+		return (R) visitor.visitBooleanExpressionPredicate( this );
 	}
 }

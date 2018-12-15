@@ -6,6 +6,8 @@
  */
 
 /**
+ * @asciidoc
+ *
  * = Producing SQM
  *
  * This package defines support for producing SQM trees (see {@link org.hibernate.query.sqm.tree}).
@@ -15,16 +17,25 @@
  * {@link org.hibernate.query.spi.QueryEngine} which in turn is obtained via
  * {@link org.hibernate.engine.spi.SessionFactoryImplementor#getQueryEngine()}.
  *
+ *
  * == From HQL/JPQL
  *
  * `SemanticQueryProducer` defines just a single method for producing SQM based on HQL:
- * {@link org.hibernate.query.sqm.produce.spi.SemanticQueryProducer#interpret(String, SharedSessionContractImplementor)}.
+ * {@link org.hibernate.query.sqm.produce.spi.SemanticQueryProducer#interpret}.
  * See {@link org.hibernate.query.hql.internal} for details
+ *
  *
  * == From Criteria
  *
- * todo (6.0) ...
- * TDB
+ * Because criteria queries are already typed, `SemanticQueryProducer` offers 3 distinct methods for transforming
+ * select, update and delete criteria trees.  Mainly this is done to take advantage of the distinct typing to
+ * define better return types.  See
+ *
+ * 		* {@link org.hibernate.query.criteria.sqm.CriteriaQueryToSqmTransformer#transform}:: For select criteria
+ * 			transformation
+ * 	    * _update and delete criteria transformations not yet implemented_
+ *
+ *
  *
  * [NOTE]
  * ====
@@ -48,5 +59,3 @@
  *  * {@link org.hibernate.query.sqm.InterpretationException} represents an unexpected problem
  */
 package org.hibernate.query.sqm.produce;
-
-import org.hibernate.engine.spi.SharedSessionContractImplementor;

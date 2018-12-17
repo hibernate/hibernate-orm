@@ -33,14 +33,8 @@ public class NamedQueryTest extends EntityManagerFactoryBasedFunctionalTest {
 		return new Class[] { Game.class };
 	}
 
-	@Override
-	protected boolean exportSchema() {
-		return true;
-	}
-
 	@BeforeEach
-	public void setUp()
-			throws Exception {
+	public void setUp() {
 		entityManagerFactoryScope().inTransaction( entityManager -> {
 			for ( String title : GAME_TITLES ) {
 				Game game = new Game( title );
@@ -49,11 +43,9 @@ public class NamedQueryTest extends EntityManagerFactoryBasedFunctionalTest {
 		} );
 	}
 
-	@AfterEach
-	public void tearDown() {
-		entityManagerFactoryScope().inTransaction( entityManager -> {
-			entityManager.createQuery( "delete from Game" ).executeUpdate();
-		} );
+	@Override
+	protected boolean isCleanupTestDataRequired() {
+		return true;
 	}
 
 	@Test

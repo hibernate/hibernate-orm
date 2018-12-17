@@ -38,11 +38,6 @@ public class NamedNativeQueryTest extends EntityManagerFactoryBasedFunctionalTes
 		return new Class[] { Game.class };
 	}
 
-	@Override
-	protected boolean exportSchema() {
-		return true;
-	}
-
 	@BeforeEach
 	public void setUp()
 			throws Exception {

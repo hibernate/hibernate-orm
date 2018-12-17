@@ -33,10 +33,6 @@ public class PackagePrivateAttributeConverterEntityManagerFactoryTest
 		return new Class[] { Tester.class };
 	}
 
-	protected boolean exportSchema() {
-		return true;
-	}
-
 	@Test
 	public void test() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
@@ -62,8 +58,6 @@ public class PackagePrivateAttributeConverterEntityManagerFactoryTest
 			assertEquals( 123, (int) tester.getCode() );
 		} );
 	}
-
-	// Entity declarations used in the test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Entity(name = "Tester")
 	public static class Tester {

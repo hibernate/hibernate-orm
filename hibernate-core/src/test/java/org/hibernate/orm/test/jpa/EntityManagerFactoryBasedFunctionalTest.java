@@ -33,6 +33,10 @@ import org.hibernate.testing.junit5.EntityManagerFactoryProducer;
 import org.hibernate.testing.junit5.EntityManagerFactoryScope;
 import org.hibernate.testing.junit5.EntityManagerFactoryScopeContainer;
 import org.hibernate.testing.junit5.FunctionalEntityManagerFactoryTesting;
+import org.junit.jupiter.api.AfterEach;
+
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
  * @author Chris Cranford
@@ -83,7 +87,7 @@ public class EntityManagerFactoryBasedFunctionalTest
 	}
 
 	protected boolean exportSchema() {
-		return false;
+		return true;
 	}
 
 	protected static final String[] NO_MAPPINGS = new String[0];
@@ -249,5 +253,24 @@ public class EntityManagerFactoryBasedFunctionalTest
 		@Override
 		public void pushClassTransformer(EnhancementContext enhancementContext) {
 		}
+	}
+
+	@AfterEach
+	public final void afterTest() {
+		if ( isCleanupTestDataRequired() ) {
+			cleanupTestData();
+		}
+	}
+
+	protected boolean isCleanupTestDataRequired() {
+		return false;
+	}
+
+	protected void cleanupTestData() {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Arrays.stream( getAnnotatedClasses() ).forEach( annotatedClass ->
+																	entityManager.createQuery( "delete from " + annotatedClass.getSimpleName() ).executeUpdate()
+			);
+		});
 	}
 }

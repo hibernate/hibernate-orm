@@ -17,7 +17,6 @@ import org.hibernate.testing.logger.LoggerInspectionExtension;
 import org.hibernate.testing.logger.Triggerable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.jboss.logging.Logger;

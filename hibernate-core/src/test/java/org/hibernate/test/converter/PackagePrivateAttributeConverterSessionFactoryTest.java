@@ -30,12 +30,11 @@ public class PackagePrivateAttributeConverterSessionFactoryTest
 		extends SessionFactoryBasedFunctionalTest {
 
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-
-		metadataSources.addAnnotatedClass( Tester.class );
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] { Tester.class };
 	}
 
+	@Override
 	protected boolean exportSchema() {
 		return true;
 	}
@@ -65,8 +64,6 @@ public class PackagePrivateAttributeConverterSessionFactoryTest
 			assertEquals( 123, (int) tester.getCode() );
 		} );
 	}
-
-	// Entity declarations used in the test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Entity(name = "Tester")
 	public static class Tester {

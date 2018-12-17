@@ -19,14 +19,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Chris Cranford
  */
 public class SimpleEntityCrudTest extends EntityManagerFactoryBasedFunctionalTest {
+
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] { SimpleEntity.class };
-	}
-
-	@Override
-	protected boolean exportSchema() {
-		return true;
 	}
 
 	@Test

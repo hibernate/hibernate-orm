@@ -7,10 +7,16 @@
 package org.hibernate.test.type;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import java.io.IOException;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.NClob;
+import java.sql.SQLException;
+import java.util.Arrays;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -20,6 +26,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.testing.DialectChecks;
@@ -41,36 +48,84 @@ public class LobUnfetchedPropertyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testBlob() {
-		doInHibernate( this::sessionFactory, s -> {
+	public void testBlob() throws SQLException {
+		final int id = doInHibernate( this::sessionFactory, s -> {
 			FileBlob file = new FileBlob();
 			file.setBlob( s.getLobHelper().createBlob( "TEST CASE".getBytes() ) );
-			s.save( file );
-			s.clear();
-			s.merge( file );
+			// merge transient entity
+			file = (FileBlob) s.merge( file );
+			return file.getId();
 		} );
+
+		doInHibernate( this::sessionFactory, s -> {
+			FileBlob file = s.get( FileBlob.class, id );
+			assertFalse( Hibernate.isPropertyInitialized( file, "blob" ) );
+			Blob blob = file.getBlob();
+			try {
+				assertTrue(
+					Arrays.equals( "TEST CASE".getBytes(), blob.getBytes( 1, (int) file.getBlob().length() ) )
+				);
+			}
+			catch (SQLException ex) {
+				fail( "could not determine Lob length" );
+			}
+		});
 	}
 
 	@Test
 	public void testClob() {
-		doInHibernate( this::sessionFactory, s -> {
+		final int id = doInHibernate( this::sessionFactory, s -> {
 			FileClob file = new FileClob();
 			file.setClob( s.getLobHelper().createClob( "TEST CASE" ) );
-			s.save( file );
-			s.clear();
-			s.merge( file );
+			// merge transient entity
+			file = (FileClob) s.merge( file );
+			return file.getId();
 		} );
+
+		doInHibernate( this::sessionFactory, s -> {
+			FileClob file = s.get( FileClob.class, id );
+			assertFalse( Hibernate.isPropertyInitialized( file, "clob" ) );
+			Clob clob = file.getClob();
+			try {
+				final char[] chars = new char[(int) file.getClob().length()];
+				clob.getCharacterStream().read( chars );
+				assertTrue( Arrays.equals( "TEST CASE".toCharArray(), chars ) );
+			}
+			catch (SQLException ex ) {
+				fail( "could not determine Lob length" );
+			}
+			catch (IOException ex) {
+				fail( "could not read Lob" );
+			}
+		});
 	}
 
 	@Test
 	public void testNClob() {
-		doInHibernate( this::sessionFactory, s -> {
+		final int id = doInHibernate( this::sessionFactory, s -> {
 			FileNClob file = new FileNClob();
-			file.setNClob( s.getLobHelper().createNClob( "TEST CASE" ) );
-			s.save( file );
-			s.clear();
-			s.merge( file );
-		} );
+			file.setClob( s.getLobHelper().createNClob( "TEST CASE" ) );
+			// merge transient entity
+			file = (FileNClob) s.merge( file );
+			return file.getId();
+		});
+
+		doInHibernate( this::sessionFactory, s -> {
+			FileNClob file = s.get( FileNClob.class, id );
+			assertFalse( Hibernate.isPropertyInitialized( file, "clob" ) );
+			NClob nClob = file.getClob();
+			try {
+			   final char[] chars = new char[(int) file.getClob().length()];
+			   nClob.getCharacterStream().read( chars );
+			   assertTrue( Arrays.equals( "TEST CASE".toCharArray(), chars ) );
+			}
+			catch (SQLException ex ) {
+			   fail( "could not determine Lob length" );
+			}
+			catch (IOException ex) {
+			   fail( "could not read Lob" );
+			}
+		});
 	}
 
 	@Entity(name = "FileBlob")
@@ -139,7 +194,7 @@ public class LobUnfetchedPropertyTest extends BaseCoreFunctionalTestCase {
 
 		private int id;
 
-		private NClob nClob;
+		private NClob clob;
 
 		@Id
 		@GeneratedValue
@@ -154,12 +209,12 @@ public class LobUnfetchedPropertyTest extends BaseCoreFunctionalTestCase {
 		@Column(name = "filedata", length = 1024 * 1024)
 		@Lob
 		@Basic(fetch = FetchType.LAZY)
-		public NClob getNClob() {
-			return nClob;
+		public NClob getClob() {
+			return clob;
 		}
 
-		public void setNClob(NClob nClob) {
-			this.nClob = nClob;
+		public void setClob(NClob clob) {
+			this.clob = clob;
 		}
 	}
 }

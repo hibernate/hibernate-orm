@@ -22,15 +22,12 @@ import static org.hamcrest.core.IsNull.notNullValue;
  * @author Chris Cranford
  */
 public class EmbeddedIdEntityTest extends SessionFactoryBasedFunctionalTest {
-	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( EmbeddedIdEntity.class );
-	}
 
 	@Override
-	protected boolean exportSchema() {
-		return true;
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				EmbeddedIdEntity.class,
+		};
 	}
 
 	@Test

@@ -28,14 +28,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class EmbeddableCallbackTest extends SessionFactoryBasedFunctionalTest {
 
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( Employee.class );
-	}
-
-	@Override
-	protected boolean exportSchema() {
-		return true;
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				Employee.class,
+		};
 	}
 
 	@Test

@@ -26,14 +26,10 @@ import static org.junit.jupiter.api.Assertions.fail;
 @SuppressWarnings("WeakerAccess")
 public class EntityOfSetsCrudTest extends SessionFactoryBasedFunctionalTest {
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( EntityOfSets.class );
-	}
-
-	@Override
-	protected boolean exportSchema() {
-		return true;
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				EntityOfSets.class,
+		};
 	}
 
 	@BeforeEach

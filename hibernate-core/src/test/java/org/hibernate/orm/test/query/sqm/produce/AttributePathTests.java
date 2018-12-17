@@ -33,10 +33,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class AttributePathTests extends BaseSqmUnitTest {
 
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-
-		metadataSources.addAnnotatedClass( Person.class );
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				Person.class,
+		};
 	}
 
 	@Test

@@ -170,11 +170,6 @@ public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Override
-	protected boolean exportSchema() {
-		return true;
-	}
-
-	@Override
 	protected void applyMetadataSources(MetadataSources metadataSources) {
 		super.applyMetadataSources( metadataSources );
 		metadataSources.addAnnotatedClass( EntityOfBasics.class );

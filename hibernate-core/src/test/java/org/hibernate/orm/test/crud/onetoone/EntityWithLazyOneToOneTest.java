@@ -31,16 +31,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Andrea Boriero
  */
 public class EntityWithLazyOneToOneTest extends SessionFactoryBasedFunctionalTest {
-	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( EntityWithLazyOneToOne.class );
-		metadataSources.addAnnotatedClass( SimpleEntity.class );
-	}
 
 	@Override
-	protected boolean exportSchema() {
-		return true;
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				EntityWithLazyOneToOne.class,
+				SimpleEntity.class
+		};
 	}
 
 	@BeforeEach

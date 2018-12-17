@@ -28,16 +28,13 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
  * @author Andrea Boriero
  */
 public class EntityWithOneToManyCrudTest extends SessionFactoryBasedFunctionalTest {
-	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( EntityWithOneToMany.class );
-		metadataSources.addAnnotatedClass( SimpleEntity.class );
-	}
 
 	@Override
-	protected boolean exportSchema() {
-		return true;
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				EntityWithOneToMany.class,
+				SimpleEntity.class
+		};
 	}
 
 	@Test

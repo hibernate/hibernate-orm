@@ -36,10 +36,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @SuppressWarnings("WeakerAccess")
 public class DynamicInstantiationTests extends BaseSqmUnitTest {
+
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( EntityOfBasics.class );
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				EntityOfBasics.class,
+		};
 	}
 
 	@Test

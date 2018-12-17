@@ -25,15 +25,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Andrea Boriero
  */
 public class EmbeddableAsParameterTest extends SessionFactoryBasedFunctionalTest {
-	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( Person.class );
-	}
 
 	@Override
-	protected boolean exportSchema() {
-		return true;
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				Person.class,
+		};
 	}
 
 	@Test

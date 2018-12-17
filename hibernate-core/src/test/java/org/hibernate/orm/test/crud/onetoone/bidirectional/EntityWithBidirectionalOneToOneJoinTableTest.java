@@ -33,17 +33,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class EntityWithBidirectionalOneToOneJoinTableTest extends SessionFactoryBasedFunctionalTest {
 
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-
-		metadataSources.addAnnotatedClass( Parent.class );
-		metadataSources.addAnnotatedClass( Child.class );
-		metadataSources.addAnnotatedClass( Child2.class );
-	}
-
-	@Override
-	protected boolean exportSchema() {
-		return true;
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				Parent.class,
+				Child.class,
+				Child2.class,
+		};
 	}
 
 	@BeforeEach

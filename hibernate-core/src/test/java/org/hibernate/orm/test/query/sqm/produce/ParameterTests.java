@@ -82,12 +82,11 @@ public class ParameterTests extends BaseSqmUnitTest {
 		assertThat( parameter.allowMultiValuedBinding(), is(true) );
 	}
 
-
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-
-		metadataSources.addAnnotatedClass( Person.class );
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				Person.class
+		};
 	}
 
 	@Entity( name = "Person" )

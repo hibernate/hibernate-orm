@@ -33,13 +33,15 @@ import static org.hibernate.query.sqm.StrictJpaComplianceViolation.Type.VALUE_FU
  */
 @SuppressWarnings("WeakerAccess")
 public class LenientJpqlComplianceTests extends BaseSqmUnitTest {
+
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( Person.class );
-		metadataSources.addAnnotatedClass( EntityOfLists.class );
-		metadataSources.addAnnotatedClass( EntityOfSets.class );
-		metadataSources.addAnnotatedClass( EntityOfMaps.class );
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				Person.class,
+				EntityOfLists.class,
+				EntityOfSets.class,
+				EntityOfMaps.class
+		};
 	}
 
 	private StrictJpaComplianceViolation.Type violationChecked;

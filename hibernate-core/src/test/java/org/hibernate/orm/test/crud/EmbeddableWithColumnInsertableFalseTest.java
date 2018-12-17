@@ -27,15 +27,12 @@ import static org.hamcrest.core.IsNull.nullValue;
  */
 public class EmbeddableWithColumnInsertableFalseTest
 		extends SessionFactoryBasedFunctionalTest {
-	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( Person.class );
-	}
 
 	@Override
-	protected boolean exportSchema() {
-		return true;
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				Person.class,
+		};
 	}
 
 	@BeforeEach

@@ -16,15 +16,12 @@ import org.junit.jupiter.api.Test;
  * @author Steve Ebersole
  */
 public class CrossJoinTest extends SessionFactoryBasedFunctionalTest {
-	@Override
-	protected boolean exportSchema() {
-		return true;
-	}
 
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( SimpleEntity.class );
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				SimpleEntity.class,
+		};
 	}
 
 	@Test

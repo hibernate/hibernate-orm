@@ -34,11 +34,6 @@ public class PackagePrivateAttributeConverterSessionFactoryTest
 		return new Class[] { Tester.class };
 	}
 
-	@Override
-	protected boolean exportSchema() {
-		return true;
-	}
-
 	@Test
 	public void test() {
 		doInHibernate( this::sessionFactory, session -> {

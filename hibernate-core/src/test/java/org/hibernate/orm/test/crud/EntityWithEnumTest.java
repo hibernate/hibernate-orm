@@ -16,15 +16,12 @@ import org.junit.jupiter.api.Test;
  * @author Chris Cranford
  */
 public class EntityWithEnumTest extends SessionFactoryBasedFunctionalTest {
-	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( Shirt.class );
-	}
 
 	@Override
-	protected boolean exportSchema() {
-		return true;
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				Shirt.class,
+		};
 	}
 
 	@Test

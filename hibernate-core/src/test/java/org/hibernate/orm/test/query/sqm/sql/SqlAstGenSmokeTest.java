@@ -33,10 +33,12 @@ import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
  * @author Steve Ebersole
  */
 public class SqlAstGenSmokeTest extends BaseSqmSqlTest {
+
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( EntityOfBasics.class );
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				EntityOfBasics.class
+		};
 	}
 
 	@Test

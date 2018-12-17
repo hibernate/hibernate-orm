@@ -29,11 +29,13 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
  * @author Chris Cranford
  */
 public class EntityWithOneToManyWithoutJoinTableTest extends SessionFactoryBasedFunctionalTest {
+
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( EntityWithManyToOneWithoutJoinTable.class );
-		metadataSources.addAnnotatedClass( EntityWithOneToManyNotOwned.class );
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				EntityWithManyToOneWithoutJoinTable.class,
+				EntityWithOneToManyNotOwned.class
+		};
 	}
 
 	@AfterEach
@@ -50,11 +52,6 @@ public class EntityWithOneToManyWithoutJoinTableTest extends SessionFactoryBased
 					session.remove( loaded );
 				}
 		);
-	}
-
-	@Override
-	protected boolean exportSchema() {
-		return true;
 	}
 
 	@Test

@@ -112,7 +112,7 @@ public abstract class SessionFactoryBasedFunctionalTest
 	}
 
 	protected boolean exportSchema() {
-		return false;
+		return true;
 	}
 
 	protected void applyMetadataSources(MetadataSources metadataSources) {

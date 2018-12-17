@@ -34,6 +34,11 @@ public abstract class BaseSqmUnitTest
 		builder.applySetting( AvailableSettings.JPA_QUERY_COMPLIANCE, strictJpaCompliance() );
 	}
 
+	@Override
+	protected boolean exportSchema() {
+		return false;
+	}
+
 	/**
 	 * todo (6.0) : use JUnit parameters for this (see envers)
 	 */

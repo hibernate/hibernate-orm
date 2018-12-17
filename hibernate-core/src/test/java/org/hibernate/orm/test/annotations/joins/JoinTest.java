@@ -33,24 +33,20 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Emmanuel Bernard
  */
 public class JoinTest extends SessionFactoryBasedFunctionalTest {
-	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-
-		metadataSources.addAnnotatedClass( Life.class );
-		metadataSources.addAnnotatedClass( Death.class );
-		metadataSources.addAnnotatedClass( Cat.class );
-		metadataSources.addAnnotatedClass( Dog.class );
-		metadataSources.addAnnotatedClass( A.class );
-		metadataSources.addAnnotatedClass( B.class );
-		metadataSources.addAnnotatedClass( C.class );
-		metadataSources.addAnnotatedClass( SysGroupsOrm.class );
-		metadataSources.addAnnotatedClass( SysUserOrm.class );
-	}
 
 	@Override
-	protected boolean exportSchema() {
-		return true;
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				Life.class,
+				Death.class,
+				Cat.class,
+				Dog.class,
+				A.class,
+				B.class,
+				C.class,
+				SysGroupsOrm.class,
+				SysUserOrm.class,
+		};
 	}
 
 	@AfterEach

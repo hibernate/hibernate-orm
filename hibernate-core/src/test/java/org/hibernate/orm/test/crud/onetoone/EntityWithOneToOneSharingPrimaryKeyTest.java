@@ -22,16 +22,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Andrea Boriero
  */
 public class EntityWithOneToOneSharingPrimaryKeyTest extends SessionFactoryBasedFunctionalTest {
-	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( EntityWithOneToOneSharingPrimaryKey.class );
-		metadataSources.addAnnotatedClass( SimpleEntity.class );
-	}
 
 	@Override
-	protected boolean exportSchema() {
-		return true;
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				EntityWithOneToOneSharingPrimaryKey.class,
+				SimpleEntity.class
+		};
 	}
 
 	@Test

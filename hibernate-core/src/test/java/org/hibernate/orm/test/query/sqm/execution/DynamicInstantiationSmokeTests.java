@@ -31,10 +31,12 @@ import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
  */
 @SuppressWarnings("WeakerAccess")
 public class DynamicInstantiationSmokeTests extends BaseSqmUnitTest {
+
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( EntityOfBasics.class );
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				EntityOfBasics.class,
+		};
 	}
 
 	@Override

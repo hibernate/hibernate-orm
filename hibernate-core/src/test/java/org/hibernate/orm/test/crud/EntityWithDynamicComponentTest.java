@@ -26,11 +26,6 @@ public class EntityWithDynamicComponentTest extends SessionFactoryBasedFunctiona
 		metadataSources.addResource( "org/hibernate/test/dynamic-components/EntityOfDynamicComponent.hbm.xml" );
 	}
 
-	@Override
-	protected boolean exportSchema() {
-		return true;
-	}
-
 	@Test
 	public void testDynamicComponentLifecycle() {
 		// Create entity

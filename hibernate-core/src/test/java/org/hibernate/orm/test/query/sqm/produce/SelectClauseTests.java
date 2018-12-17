@@ -288,14 +288,14 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 	}
 
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-
-		metadataSources.addAnnotatedClass( Person.class );
-		metadataSources.addAnnotatedClass( EntityOfBasics.class );
-		metadataSources.addAnnotatedClass( EntityOfLists.class );
-		metadataSources.addAnnotatedClass( EntityOfMaps.class );
-		metadataSources.addAnnotatedClass( EntityOfSets.class );
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				Person.class,
+				EntityOfBasics.class,
+				EntityOfLists.class,
+				EntityOfMaps.class,
+				EntityOfSets.class,
+		};
 	}
 
 }

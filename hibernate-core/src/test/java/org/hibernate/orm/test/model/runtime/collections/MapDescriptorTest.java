@@ -30,10 +30,10 @@ public class MapDescriptorTest extends SessionFactoryBasedFunctionalTest {
 	private EntityTypeDescriptor entityDescriptor;
 
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-
-		metadataSources.addAnnotatedClass( EntityOfMaps.class );
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				EntityOfMaps.class
+		};
 	}
 
 	@BeforeAll

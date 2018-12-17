@@ -28,11 +28,6 @@ public class BasicCriteriaExecutionTests extends SessionFactoryBasedFunctionalTe
 		AvailableDomainModel.GAMBIT.getDomainModel().applyDomainModel( metadataSources );
 	}
 
-	@Override
-	protected boolean exportSchema() {
-		return true;
-	}
-
 	@Test
 	public void testExecutingBasicCriteriaQuery() {
 		final CriteriaNodeBuilder criteriaBuilder = sessionFactory().getQueryEngine().getCriteriaBuilder();

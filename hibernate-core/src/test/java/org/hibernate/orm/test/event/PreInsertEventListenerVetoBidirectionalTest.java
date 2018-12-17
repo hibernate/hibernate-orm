@@ -37,18 +37,14 @@ import static org.junit.jupiter.api.Assertions.fail;
 @TestForIssue(jiraKey = "HHH-11721")
 @Disabled("When performing insert, operation fails due to attempting to bind POST_INSERT_INDICATOR incorrectly")
 public class PreInsertEventListenerVetoBidirectionalTest extends SessionFactoryBasedFunctionalTest {
-	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( Child.class );
-		metadataSources.addAnnotatedClass( Parent.class );
-	}
 
 	@Override
-	protected boolean exportSchema() {
-		return true;
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				Child.class,
+				Parent.class,
+		};
 	}
-
 
 	@AfterAll
 	protected void afterSessionFactoryBuilt() {

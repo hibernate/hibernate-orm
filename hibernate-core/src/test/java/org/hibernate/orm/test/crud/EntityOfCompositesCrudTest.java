@@ -21,15 +21,12 @@ import org.junit.jupiter.api.Test;
  * @author Steve Ebersole
  */
 public class EntityOfCompositesCrudTest extends SessionFactoryBasedFunctionalTest {
-	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( EntityOfComposites.class );
-	}
 
 	@Override
-	protected boolean exportSchema() {
-		return true;
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				EntityOfComposites.class,
+		};
 	}
 
 	@Test

@@ -41,6 +41,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SuppressWarnings("WeakerAccess")
 public class AliasCollisionTest extends BaseSqmUnitTest {
 
+	@Override
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				EntityWithManyToOneSelfReference.class,
+				SimpleEntity.class,
+				EntityWithManyToOneSelfReference.class,
+		};
+	}
+
 	@Test
 	@ExpectedException( AliasCollisionException.class )
 	public void testDuplicateResultVariableCollision() {
@@ -145,14 +154,5 @@ public class AliasCollisionTest extends BaseSqmUnitTest {
 				rightHandExpression.getSourceReference().getIdentificationVariable(),
 				is( "b" )
 		);
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-
-		metadataSources.addAnnotatedClass( EntityWithManyToOneSelfReference.class );
-		metadataSources.addAnnotatedClass( SimpleEntity.class );
-		metadataSources.addAnnotatedClass( EntityWithManyToOneSelfReference.class );
 	}
 }

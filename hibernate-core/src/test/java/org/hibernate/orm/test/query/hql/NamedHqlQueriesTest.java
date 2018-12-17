@@ -32,16 +32,11 @@ public class NamedHqlQueriesTest extends SessionFactoryBasedFunctionalTest {
 			"TLOU_2013", "The last of us", LocalDate.of( 2013, Month.JUNE, 14 ) );
 
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( VideoGame.class );
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				VideoGame.class,
+		};
 	}
-
-	@Override
-	protected boolean exportSchema() {
-		return true;
-	}
-
 
 	@Test
 	public void testQueryWithoutParameters() {

@@ -56,15 +56,10 @@ public class C3P0DefaultIsolationLevelTest extends SessionFactoryBasedFunctional
 	}
 
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-
-		metadataSources.addAnnotatedClass( Person.class );
-	}
-
-	@Override
-	protected boolean exportSchema() {
-		return true;
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				Person.class,
+		};
 	}
 
 	@Test

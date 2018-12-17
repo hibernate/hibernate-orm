@@ -36,15 +36,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 public class EntityWithOneToManyTest extends SessionFactoryBasedFunctionalTest {
 
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( Item.class );
-		metadataSources.addAnnotatedClass( User.class );
-	}
-
-	@Override
-	protected boolean exportSchema() {
-		return true;
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				Item.class,
+				User.class
+		};
 	}
 
 	@AfterEach

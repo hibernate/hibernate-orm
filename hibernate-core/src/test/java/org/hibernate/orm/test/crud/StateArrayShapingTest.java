@@ -33,6 +33,15 @@ import static org.hamcrest.core.IsNull.notNullValue;
 @SuppressWarnings("WeakerAccess")
 public class StateArrayShapingTest extends SessionFactoryBasedFunctionalTest {
 
+	@Override
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				SimpleEntity.class,
+				EntityWithManyToOneSelfReference.class,
+				EntityOfComposites.class
+		};
+	}
+
 	@Test
 	public void testSimple() {
 		final Instant theInstant = Instant.EPOCH;
@@ -183,31 +192,6 @@ public class StateArrayShapingTest extends SessionFactoryBasedFunctionalTest {
 					// "back the other way" wont work here as the code would be unable to resolve the many-to-one instance
 				}
 		);
-	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( SimpleEntity.class );
-		metadataSources.addAnnotatedClass( EntityWithManyToOneSelfReference.class );
-		metadataSources.addAnnotatedClass( EntityOfComposites.class );
 	}
 
 	// todo (6.0) : Need to decide how to best handle the "state array" versus the "shaped array", if anything

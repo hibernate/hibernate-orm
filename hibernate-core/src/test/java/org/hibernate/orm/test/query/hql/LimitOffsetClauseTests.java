@@ -28,16 +28,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class LimitOffsetClauseTests extends SessionFactoryBasedFunctionalTest {
 
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( SimpleEntity.class );
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				SimpleEntity.class,
+		};
 	}
-
-	@Override
-	protected boolean exportSchema() {
-		return true;
-	}
-
 
 	@Test
 	public void testParameterOffset() {

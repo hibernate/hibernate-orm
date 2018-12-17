@@ -44,8 +44,10 @@ public class SchemaMigrationTargetScriptCreationTest extends SessionFactoryBased
 	private File output;
 
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		metadataSources.addAnnotatedClass( TestEntity.class );
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				TestEntity.class
+		};
 	}
 
 	@Override

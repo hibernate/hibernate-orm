@@ -21,15 +21,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Chris Cranford
  */
 public class SubQueryTest extends SessionFactoryBasedFunctionalTest {
-	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( BasicEntity.class );
-	}
 
 	@Override
-	protected boolean exportSchema() {
-		return true;
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				BasicEntity.class
+		};
 	}
 
 	@BeforeAll

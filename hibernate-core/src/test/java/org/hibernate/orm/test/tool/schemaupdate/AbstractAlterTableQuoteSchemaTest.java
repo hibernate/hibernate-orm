@@ -35,6 +35,11 @@ public abstract class AbstractAlterTableQuoteSchemaTest extends SessionFactoryBa
 
 	protected File output;
 
+	@Override
+	protected boolean exportSchema() {
+		return false;
+	}
+
 	protected void setUp(String schemaName) throws Exception {
 		output = File.createTempFile( "update_script", ".sql" );
 		output.deleteOnExit();

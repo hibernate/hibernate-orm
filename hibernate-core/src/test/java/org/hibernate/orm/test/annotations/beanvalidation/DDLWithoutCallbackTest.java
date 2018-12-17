@@ -49,10 +49,6 @@ public class DDLWithoutCallbackTest extends SessionFactoryBasedFunctionalTest {
 		builder.applySetting( "javax.persistence.validation.mode", "ddl" );
 	}
 
-	protected boolean exportSchema() {
-		return true;
-	}
-
 	@Override
 	protected boolean isCleanupTestDataRequired() {
 		return true;

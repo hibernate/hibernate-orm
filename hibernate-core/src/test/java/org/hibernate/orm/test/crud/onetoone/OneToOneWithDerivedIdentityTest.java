@@ -27,15 +27,11 @@ public class OneToOneWithDerivedIdentityTest extends SessionFactoryBasedFunction
 	private static final Integer PERSON_ID = 1;
 
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( Person.class );
-		metadataSources.addAnnotatedClass( PersonInfo.class );
-	}
-
-	@Override
-	protected boolean exportSchema() {
-		return true;
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				Person.class,
+				PersonInfo.class
+		};
 	}
 
 	@Test

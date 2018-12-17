@@ -16,7 +16,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
 import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
-import org.hibernate.query.sqm.tree.predicate.RelationalSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 
 import org.junit.jupiter.api.Test;
@@ -80,7 +80,7 @@ public class AttributePathTests extends BaseSqmUnitTest {
 		final SqmSingularAttributeReference selectExpression = (SqmSingularAttributeReference) selection.getSelectableNode();
 		assertThat( selectExpression.getExportedFromElement(), notNullValue() );
 
-		final RelationalSqmPredicate predicate = (RelationalSqmPredicate) statement.getQuerySpec().getWhereClause().getPredicate();
+		final SqmComparisonPredicate predicate = (SqmComparisonPredicate) statement.getQuerySpec().getWhereClause().getPredicate();
 		final SqmSingularAttributeReference predicateLhs = (SqmSingularAttributeReference) predicate.getLeftHandExpression();
 		assertThat( predicateLhs.getSourceReference().getExportedFromElement(), notNullValue() );
 

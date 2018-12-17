@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.consume.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.criteria.sqm.JpaParameterSqmWrapper;
 import org.hibernate.query.sqm.tree.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.SqmQuerySpec;
@@ -17,24 +18,9 @@ import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.SqmConcat;
-import org.hibernate.query.sqm.tree.expression.SqmConstantEnum;
-import org.hibernate.query.sqm.tree.expression.SqmConstantFieldReference;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralBigDecimal;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralBigInteger;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralCharacter;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralDate;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralDouble;
+import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralFalse;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralFloat;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralInteger;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralLong;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralString;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralTime;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralTimestamp;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralTrue;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
@@ -104,7 +90,7 @@ import org.hibernate.query.sqm.tree.predicate.MemberOfSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.NegatedSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.NullnessSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.OrSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.RelationalSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
@@ -276,7 +262,7 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitRelationalPredicate(RelationalSqmPredicate predicate) {
+	public T visitComparisonPredicate(SqmComparisonPredicate predicate) {
 		predicate.getLeftHandExpression().accept( this );
 		predicate.getRightHandExpression().accept( this );
 		return (T) predicate;
@@ -380,6 +366,11 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 
 	@Override
 	public T visitNamedParameterExpression(SqmNamedParameter expression) {
+		return (T) expression;
+	}
+
+	@Override
+	public T visitJpaParameterWrapper(JpaParameterSqmWrapper expression) {
 		return (T) expression;
 	}
 
@@ -587,72 +578,7 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitLiteralStringExpression(SqmLiteralString expression) {
-		return (T) expression;
-	}
-
-	@Override
-	public T visitLiteralCharacterExpression(SqmLiteralCharacter expression) {
-		return (T) expression;
-	}
-
-	@Override
-	public T visitLiteralDoubleExpression(SqmLiteralDouble expression) {
-		return (T) expression;
-	}
-
-	@Override
-	public T visitLiteralIntegerExpression(SqmLiteralInteger expression) {
-		return (T) expression;
-	}
-
-	@Override
-	public T visitLiteralBigIntegerExpression(SqmLiteralBigInteger expression) {
-		return (T) expression;
-	}
-
-	@Override
-	public T visitLiteralBigDecimalExpression(SqmLiteralBigDecimal expression) {
-		return (T) expression;
-	}
-
-	@Override
-	public T visitLiteralFloatExpression(SqmLiteralFloat expression) {
-		return (T) expression;
-	}
-
-	@Override
-	public T visitLiteralLongExpression(SqmLiteralLong expression) {
-		return (T) expression;
-	}
-
-	@Override
-	public T visitLiteralTrueExpression(SqmLiteralTrue expression) {
-		return (T) expression;
-	}
-
-	@Override
-	public T visitLiteralFalseExpression(SqmLiteralFalse expression) {
-		return (T) expression;
-	}
-
-	@Override
-	public T visitLiteralNullExpression(SqmLiteralNull expression) {
-		return (T) expression;
-	}
-
-	@Override
-	public T visitLiteralTimestampExpression(SqmLiteralTimestamp literal) {
-		return (T) literal;
-	}
-
-	@Override
-	public T visitLiteralDateExpression(SqmLiteralDate literal) {
-		return (T) literal;
-	}
-
-	@Override
-	public T visitLiteralTimeExpression(SqmLiteralTime literal) {
+	public T visitLiteral(SqmLiteral literal) {
 		return (T) literal;
 	}
 
@@ -660,16 +586,6 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	public T visitConcatExpression(SqmConcat expression) {
 		expression.getLeftHandOperand().accept( this );
 		expression.getRightHandOperand().accept( this );
-		return (T) expression;
-	}
-
-	@Override
-	public T visitConstantEnumExpression(SqmConstantEnum expression) {
-		return (T) expression;
-	}
-
-	@Override
-	public T visitConstantFieldReference(SqmConstantFieldReference expression) {
 		return (T) expression;
 	}
 

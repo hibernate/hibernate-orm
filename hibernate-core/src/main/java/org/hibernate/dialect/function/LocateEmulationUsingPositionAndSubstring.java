@@ -18,8 +18,8 @@ import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunctio
 import org.hibernate.query.sqm.produce.function.spi.AbstractSqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.spi.SelfRenderingFunctionSupport;
 import org.hibernate.query.sqm.produce.function.spi.SqmFunctionRegistryAware;
+import org.hibernate.query.sqm.tree.expression.LiteralHelper;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralInteger;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.function.SqmNonStandardFunction;
@@ -27,7 +27,6 @@ import org.hibernate.query.sqm.tree.expression.function.SqmSubstringFunction;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -137,7 +136,7 @@ public class LocateEmulationUsingPositionAndSubstring
 		final SqmExpression startMinusOne = new SqmBinaryArithmetic(
 				SqmBinaryArithmetic.Operation.SUBTRACT,
 				start,
-				SqmLiteralInteger.ONE,
+				LiteralHelper.INTEGER_ONE,
 				StandardSpiBasicTypes.INTEGER
 		);
 

@@ -74,7 +74,7 @@ import org.hibernate.sql.ast.tree.spi.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
-import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
+import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.spi.select.SelectClause;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
@@ -971,7 +971,7 @@ public abstract class AbstractSqlAstWalker
 	}
 
 	@Override
-	public void visitRelationalPredicate(RelationalPredicate relationalPredicate) {
+	public void visitRelationalPredicate(ComparisonPredicate comparisonPredicate) {
 		// todo (6.0) : do we want to allow multi-valued parameters in a relational predicate?
 		//		yes means we'd have to support dynamically converting this predicate into
 		//		an IN predicate or an OR predicate
@@ -986,9 +986,9 @@ public abstract class AbstractSqlAstWalker
 //			// transform this into a
 //		}
 //
-		relationalPredicate.getLeftHandExpression().accept( this );
-		appendSql( relationalPredicate.getOperator().sqlText() );
-		relationalPredicate.getRightHandExpression().accept( this );
+		comparisonPredicate.getLeftHandExpression().accept( this );
+		appendSql( comparisonPredicate.getOperator().sqlText() );
+		comparisonPredicate.getRightHandExpression().accept( this );
 	}
 
 

@@ -12,8 +12,7 @@ import java.util.List;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.spi.TrimSpecificationExpressionWrapper;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralCharacter;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralString;
+import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
@@ -82,7 +81,8 @@ public class AnsiTrimEmulationFunctionTemplate implements SqmFunctionTemplate {
 			List<SqmExpression> arguments,
 			AllowableFunctionReturnType impliedResultType) {
 		final TrimSpecification specification = ( (TrimSpecificationExpressionWrapper) arguments.get( 0 ) ).getSpecification();
-		final SqmLiteralCharacter trimCharacterExpr = (SqmLiteralCharacter) arguments.get( 1 );
+		//noinspection unchecked
+		final SqmLiteral<Character> trimCharacterExpr = (SqmLiteral<Character>) arguments.get( 1 );
 		final SqmExpression sourceExpr = arguments.get( 1 );
 
 		// NOTE we assume here that the specific ltrim/rtrim/replace function names do not need additional resolution
@@ -102,7 +102,7 @@ public class AnsiTrimEmulationFunctionTemplate implements SqmFunctionTemplate {
 	}
 
 	private SqmFunction trimLeading(
-			SqmLiteralCharacter trimChar,
+			SqmLiteral<Character> trimChar,
 			SqmExpression source) {
 		if ( trimChar.getLiteralValue() == ' ' ) {
 			return trimLeadingSpaces( source );
@@ -116,9 +116,9 @@ public class AnsiTrimEmulationFunctionTemplate implements SqmFunctionTemplate {
 		return ltrim( source );
 	}
 
-	private SqmFunction trimLeadingNonSpaces(SqmLiteralCharacter trimChar, SqmExpression source) {
-		final SqmLiteralCharacter space = charExpr( ' ' );
-		final SqmLiteralString placeholder = placeholder();
+	private SqmFunction trimLeadingNonSpaces(SqmLiteral<Character> trimChar, SqmExpression source) {
+		final SqmLiteral<Character> space = charExpr( ' ' );
+		final SqmLiteral<String> placeholder = placeholder();
 
 		// replace all the '${space}$' text with space chars
 		return replace(
@@ -147,7 +147,7 @@ public class AnsiTrimEmulationFunctionTemplate implements SqmFunctionTemplate {
 	}
 
 	private SqmFunction trimTrailing(
-			SqmLiteralCharacter trimChar,
+			SqmLiteral<Character> trimChar,
 			SqmExpression source) {
 		if ( trimChar.getLiteralValue() == ' ' ) {
 			return trimTrailingSpaces( source );
@@ -162,10 +162,10 @@ public class AnsiTrimEmulationFunctionTemplate implements SqmFunctionTemplate {
 	}
 
 	private SqmFunction trimTrailingNonSpaces(
-			SqmLiteralCharacter trimChar,
+			SqmLiteral<Character> trimChar,
 			SqmExpression source) {
-		final SqmLiteralCharacter space = charExpr( ' ' );
-		final SqmLiteralString placeholder = placeholder();
+		final SqmLiteral<Character> space = charExpr( ' ' );
+		final SqmLiteral<String> placeholder = placeholder();
 
 		// replace all the '${space}$' text with space chars
 		return replace(
@@ -194,7 +194,7 @@ public class AnsiTrimEmulationFunctionTemplate implements SqmFunctionTemplate {
 	}
 
 	private SqmFunction trimBoth(
-			SqmLiteralCharacter trimCharacterExpr,
+			SqmLiteral<Character> trimCharacterExpr,
 			SqmExpression sourceExpr) {
 		// BOTH
 		if ( trimCharacterExpr.getLiteralValue() == ' ' ) {
@@ -209,9 +209,9 @@ public class AnsiTrimEmulationFunctionTemplate implements SqmFunctionTemplate {
 		return ltrim( rtrim( sourceExpr ) );
 	}
 
-	private SqmFunction trimBothNonSpaces(SqmLiteralCharacter trimChar, SqmExpression source) {
-		final SqmLiteralCharacter space = charExpr( ' ' );
-		final SqmLiteralString placeholder = placeholder();
+	private SqmFunction trimBothNonSpaces(SqmLiteral<Character> trimChar, SqmExpression source) {
+		final SqmLiteral<Character> space = charExpr( ' ' );
+		final SqmLiteral<String> placeholder = placeholder();
 
 		// replace all the '${space}$' text with space chars
 		return replace(
@@ -267,12 +267,12 @@ public class AnsiTrimEmulationFunctionTemplate implements SqmFunctionTemplate {
 		);
 	}
 
-	protected final SqmLiteralString placeholder() {
-		return new SqmLiteralString( TRIM_CHAR_PLACEHOLDER, StandardSpiBasicTypes.STRING );
+	protected final SqmLiteral<String> placeholder() {
+		return new SqmLiteral<>( TRIM_CHAR_PLACEHOLDER, StandardSpiBasicTypes.STRING );
 	}
 
-	protected SqmLiteralCharacter charExpr(char trimChar) {
-		return new SqmLiteralCharacter( trimChar, StandardSpiBasicTypes.CHARACTER );
+	protected SqmLiteral<Character> charExpr(char trimChar) {
+		return new SqmLiteral<>( trimChar, StandardSpiBasicTypes.CHARACTER );
 	}
 
 

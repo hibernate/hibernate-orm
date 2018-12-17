@@ -78,6 +78,7 @@ import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.naming.Identifier;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
@@ -97,7 +98,7 @@ import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
-import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
+import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.results.internal.domain.collection.CollectionFetchImpl;
 import org.hibernate.sql.results.internal.domain.collection.CollectionInitializerProducer;
 import org.hibernate.sql.results.internal.domain.collection.CollectionResultImpl;
@@ -1015,9 +1016,8 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 					//		`... where ... [ (rCol1, rCol2, ...) = (tCol1, tCol2, ...) ] ...`
 
 					conjunction.add(
-							new RelationalPredicate(
-									RelationalPredicate.Operator.EQUAL,
-									referringColumnReference,
+							new ComparisonPredicate(
+									referringColumnReference, ComparisonOperator.EQUAL,
 									targetColumnReference
 							)
 					);

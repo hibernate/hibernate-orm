@@ -12,6 +12,7 @@ import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.sqm.consume.multitable.spi.Handler;
 import org.hibernate.query.sqm.consume.multitable.spi.HandlerCreationContext;
 import org.hibernate.query.sqm.consume.multitable.spi.HandlerExecutionContext;
@@ -31,7 +32,7 @@ import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
-import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
+import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.exec.spi.JdbcInsertSelect;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
@@ -259,12 +260,11 @@ public abstract class AbstractTableBasedHandler implements Handler {
 		if ( sessionUidSupport.needsSessionUidColumn() ) {
 			final IdTableColumn sessUidColumn = (IdTableColumn) idTableInfo.getColumn( SessionUidSupport.SESSION_ID_COLUMN_NAME );
 			idTableSelect.addRestriction(
-					new RelationalPredicate(
-							RelationalPredicate.Operator.EQUAL,
+					new ComparisonPredicate(
 							new ColumnReference(
 									tableSpace.getRootTableGroup(),
 									sessUidColumn
-							),
+							), ComparisonOperator.EQUAL,
 							generateSessionUidLiteralExpression( executionContext )
 					)
 			);

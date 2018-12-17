@@ -33,29 +33,16 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.criteria.sqm.JpaParameterSqmWrapper;
+import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.tree.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmConcat;
-import org.hibernate.query.sqm.tree.expression.SqmConstantEnum;
-import org.hibernate.query.sqm.tree.expression.SqmConstantFieldReference;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralBigDecimal;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralBigInteger;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralCharacter;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralDate;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralDouble;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralFalse;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralFloat;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralInteger;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralLong;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralString;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralTime;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralTimestamp;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralTrue;
+import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
@@ -112,8 +99,7 @@ import org.hibernate.query.sqm.tree.predicate.LikeSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.NegatedSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.NullnessSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.OrSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.RelationalPredicateOperator;
-import org.hibernate.query.sqm.tree.predicate.RelationalSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.sql.SqlExpressableType;
@@ -185,6 +171,7 @@ import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.BetweenPredicate;
+import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.GroupedPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.InSubQueryPredicate;
@@ -193,7 +180,6 @@ import org.hibernate.sql.ast.tree.spi.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
-import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
 import org.hibernate.sql.ast.tree.spi.select.SelectClause;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
@@ -871,163 +857,10 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public QueryLiteral visitLiteralStringExpression(SqmLiteralString expression) {
-		return new QueryLiteral(
-				expression.getLiteralValue(),
-				determineSqlTypeInfo( expression, StandardSpiBasicTypes.STRING ),
-				getCurrentClauseStack().getCurrent()
-		);
-	}
-
-	private SqlExpressableType determineSqlTypeInfo(
-			SqmExpression expression,
-			StandardSpiBasicTypes.StandardBasicType fallbackType) {
-		return determineSqlTypeInfo( (BasicValuedExpressableType) expression.getExpressableType(), fallbackType );
-	}
-
-	private SqlExpressableType determineSqlTypeInfo(
-			BasicValuedExpressableType expressionType,
-			StandardSpiBasicTypes.StandardBasicType fallbackType) {
-		if ( expressionType != null ) {
-			return expressionType.getSqlExpressableType();
-		}
-		else {
-			final TypeConfiguration typeConfiguration = producerContext.getSessionFactory().getTypeConfiguration();
-			return typeConfiguration.resolveStandardBasicType( fallbackType ).getSqlExpressableType( typeConfiguration );
-		}
-	}
-
-	@Override
-	public QueryLiteral visitLiteralCharacterExpression(SqmLiteralCharacter expression) {
-		return new QueryLiteral(
-				expression.getLiteralValue(),
-				determineSqlTypeInfo( expression, StandardSpiBasicTypes.CHARACTER ),
-				getCurrentClauseStack().getCurrent()
-		);
-	}
-
-	@Override
-	public QueryLiteral visitLiteralDoubleExpression(SqmLiteralDouble expression) {
-		return new QueryLiteral(
-				expression.getLiteralValue(),
-				determineSqlTypeInfo( expression, StandardSpiBasicTypes.DOUBLE ),
-				getCurrentClauseStack().getCurrent()
-		);
-	}
-
-	@Override
-	public QueryLiteral visitLiteralIntegerExpression(SqmLiteralInteger expression) {
-		return new QueryLiteral(
-				expression.getLiteralValue(),
-				determineSqlTypeInfo( expression, StandardSpiBasicTypes.INTEGER ),
-				getCurrentClauseStack().getCurrent()
-		);
-	}
-
-	@Override
-	public QueryLiteral visitLiteralBigIntegerExpression(SqmLiteralBigInteger expression) {
-		return new QueryLiteral(
-				expression.getLiteralValue(),
-				determineSqlTypeInfo( expression, StandardSpiBasicTypes.BIG_INTEGER ),
-				getCurrentClauseStack().getCurrent()
-		);
-	}
-
-	@Override
-	public QueryLiteral visitLiteralBigDecimalExpression(SqmLiteralBigDecimal expression) {
-		return new QueryLiteral(
-				expression.getLiteralValue(),
-				determineSqlTypeInfo( expression, StandardSpiBasicTypes.BIG_DECIMAL ),
-				getCurrentClauseStack().getCurrent()
-		);
-	}
-
-	@Override
-	public QueryLiteral visitLiteralFloatExpression(SqmLiteralFloat expression) {
-		return new QueryLiteral(
-				expression.getLiteralValue(),
-				determineSqlTypeInfo( expression, StandardSpiBasicTypes.FLOAT ),
-				getCurrentClauseStack().getCurrent()
-		);
-	}
-
-	@Override
-	public QueryLiteral visitLiteralLongExpression(SqmLiteralLong expression) {
-		return new QueryLiteral(
-				expression.getLiteralValue(),
-				determineSqlTypeInfo( expression, StandardSpiBasicTypes.LONG ),
-				getCurrentClauseStack().getCurrent()
-		);
-	}
-
-	@Override
-	public QueryLiteral visitLiteralTrueExpression(SqmLiteralTrue expression) {
-		return new QueryLiteral(
-				Boolean.TRUE,
-				determineSqlTypeInfo( expression, StandardSpiBasicTypes.BOOLEAN ),
-				getCurrentClauseStack().getCurrent()
-		);
-	}
-
-	@Override
-	public QueryLiteral visitLiteralFalseExpression(SqmLiteralFalse expression) {
-		return new QueryLiteral(
-				Boolean.FALSE,
-				determineSqlTypeInfo( expression, StandardSpiBasicTypes.BOOLEAN ),
-				getCurrentClauseStack().getCurrent()
-		);
-	}
-
-	@Override
-	public QueryLiteral visitLiteralNullExpression(SqmLiteralNull expression) {
-		return new QueryLiteral(
-				null,
-				expression.getExpressableType().getSqlExpressableType(),
-				getCurrentClauseStack().getCurrent()
-		);
-	}
-
-	@Override
-	public QueryLiteral visitLiteralTimestampExpression(SqmLiteralTimestamp literal) {
+	public Object visitLiteral(SqmLiteral literal) {
 		return new QueryLiteral(
 				literal.getLiteralValue(),
 				literal.getExpressableType().getSqlExpressableType(),
-				getCurrentClauseStack().getCurrent()
-		);
-	}
-
-	@Override
-	public QueryLiteral visitLiteralDateExpression(SqmLiteralDate literal) {
-		return new QueryLiteral(
-				literal.getLiteralValue(),
-				literal.getExpressableType().getSqlExpressableType(),
-				getCurrentClauseStack().getCurrent()
-		);
-	}
-
-	@Override
-	public QueryLiteral visitLiteralTimeExpression(SqmLiteralTime literal) {
-		return new QueryLiteral(
-				literal.getLiteralValue(),
-				literal.getExpressableType().getSqlExpressableType(),
-				getCurrentClauseStack().getCurrent()
-		);
-	}
-
-	@Override
-	public QueryLiteral visitConstantEnumExpression(SqmConstantEnum expression) {
-		return new QueryLiteral(
-				expression.getLiteralValue(),
-				expression.getExpressableType().getSqlExpressableType(),
-				getCurrentClauseStack().getCurrent()
-		);
-	}
-
-	@Override
-	public Object visitConstantFieldReference(SqmConstantFieldReference expression) {
-		return new QueryLiteral(
-				expression.getLiteralValue(),
-				expression.getExpressableType().getSqlExpressableType(),
 				getCurrentClauseStack().getCurrent()
 		);
 	}
@@ -1129,6 +962,50 @@ public abstract class BaseSqmToSqlAstConverter
 
 	@Override
 	public Object visitPositionalParameterExpression(SqmPositionalParameter expression) {
+		final List<JdbcParameter> jdbcParameterList;
+
+		List<JdbcParameter> existing = this.jdbcParamsBySqmParam.get( expression );
+		if ( existing != null ) {
+			final int number = expression.getExpressableType().getNumberOfJdbcParametersNeeded();
+			assert existing.size() == number;
+			jdbcParameterList = existing;
+		}
+		else {
+			jdbcParameterList = new ArrayList<>();
+
+			//noinspection Convert2Lambda
+			expression.getExpressableType().visitJdbcTypes(
+					new Consumer<SqlExpressableType>() {
+						@Override
+						public void accept(SqlExpressableType type) {
+							jdbcParameterList.add(
+									new StandardJdbcParameterImpl(
+											jdbcParameters.getJdbcParameters().size(),
+											type,
+											currentClauseStack.getCurrent(),
+											getProducerContext().getSessionFactory().getTypeConfiguration()
+									)
+							);
+						}
+					},
+					currentClauseStack.getCurrent(),
+					getProducerContext().getSessionFactory().getTypeConfiguration()
+			);
+
+			jdbcParamsBySqmParam.put( expression, jdbcParameterList );
+			jdbcParameters.addParameters( jdbcParameterList );
+		}
+
+		if ( jdbcParameterList.size() > 1 ) {
+			return new SqlTuple( jdbcParameterList );
+		}
+		else {
+			return jdbcParameterList.get( 0 );
+		}
+	}
+
+	@Override
+	public Object visitJpaParameterWrapper(JpaParameterSqmWrapper expression) {
 		final List<JdbcParameter> jdbcParameterList;
 
 		List<JdbcParameter> existing = this.jdbcParamsBySqmParam.get( expression );
@@ -1770,13 +1647,12 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public RelationalPredicate visitRelationalPredicate(RelationalSqmPredicate predicate) {
+	public ComparisonPredicate visitComparisonPredicate(SqmComparisonPredicate predicate) {
 		final Expression lhs = toExpression( predicate.getLeftHandExpression().accept( this ) );
 		final Expression rhs = toExpression( predicate.getRightHandExpression().accept( this ) );
 
-		return new RelationalPredicate(
-				interpret( predicate.getOperator() ),
-				lhs,
+		return new ComparisonPredicate(
+				lhs, interpret( predicate.getOperator() ),
 				rhs
 		);
 	}
@@ -1812,25 +1688,25 @@ public abstract class BaseSqmToSqlAstConverter
 		return (Expression) value;
 	}
 
-	private RelationalPredicate.Operator interpret(RelationalPredicateOperator operator) {
+	private ComparisonOperator interpret(ComparisonOperator operator) {
 		switch ( operator ) {
 			case EQUAL: {
-				return RelationalPredicate.Operator.EQUAL;
+				return ComparisonOperator.EQUAL;
 			}
 			case NOT_EQUAL: {
-				return RelationalPredicate.Operator.NOT_EQUAL;
+				return ComparisonOperator.NOT_EQUAL;
 			}
 			case GREATER_THAN_OR_EQUAL: {
-				return RelationalPredicate.Operator.GE;
+				return ComparisonOperator.GREATER_THAN_OR_EQUAL;
 			}
 			case GREATER_THAN: {
-				return RelationalPredicate.Operator.GT;
+				return ComparisonOperator.GREATER_THAN;
 			}
 			case LESS_THAN_OR_EQUAL: {
-				return RelationalPredicate.Operator.LE;
+				return ComparisonOperator.LESS_THAN_OR_EQUAL;
 			}
 			case LESS_THAN: {
-				return RelationalPredicate.Operator.LT;
+				return ComparisonOperator.LESS_THAN;
 			}
 		}
 

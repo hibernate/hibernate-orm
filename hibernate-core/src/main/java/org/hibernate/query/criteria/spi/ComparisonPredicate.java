@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.criteria.spi;
 
+import org.hibernate.query.spi.ComparisonOperator;
+
 /**
  * Models a basic relational comparison predicate.
  *
@@ -45,42 +47,4 @@ public class ComparisonPredicate extends AbstractSimplePredicate {
 		return (R) visitor.visitComparisonPredicate( this );
 	}
 
-	/**
-	 * Defines the comparison operators.  We could also get away with
-	 * only 3 and use negation...
-	 */
-	public enum ComparisonOperator {
-		EQUAL {
-			public ComparisonOperator negated() {
-				return NOT_EQUAL;
-			}
-		},
-		NOT_EQUAL {
-			public ComparisonOperator negated() {
-				return EQUAL;
-			}
-		},
-		LESS_THAN {
-			public ComparisonOperator negated() {
-				return GREATER_THAN_OR_EQUAL;
-			}
-		},
-		LESS_THAN_OR_EQUAL {
-			public ComparisonOperator negated() {
-				return GREATER_THAN;
-			}
-		},
-		GREATER_THAN {
-			public ComparisonOperator negated() {
-				return LESS_THAN_OR_EQUAL;
-			}
-		},
-		GREATER_THAN_OR_EQUAL {
-			public ComparisonOperator negated() {
-				return LESS_THAN;
-			}
-		};
-
-		public abstract ComparisonOperator negated();
-	}
 }

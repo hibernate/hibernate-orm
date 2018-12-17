@@ -74,6 +74,7 @@ import org.hibernate.metamodel.model.relational.spi.PhysicalTable;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.ProxyFactory;
+import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
@@ -86,7 +87,7 @@ import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
-import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
+import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.results.internal.domain.entity.EntityResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationContext;
@@ -679,9 +680,9 @@ public abstract class AbstractEntityTypeDescriptor<J>
 
 		for ( ForeignKey.ColumnMappings.ColumnMapping columnMapping : joinForeignKey.getColumnMappings().getColumnMappings() ) {
 			conjunction.add(
-					new RelationalPredicate(
-							RelationalPredicate.Operator.EQUAL,
+					new ComparisonPredicate(
 							rootTableReference.resolveColumnReference( columnMapping.getTargetColumn() ),
+							ComparisonOperator.EQUAL,
 							joinedTableReference.resolveColumnReference( columnMapping.getReferringColumn() )
 					)
 			);

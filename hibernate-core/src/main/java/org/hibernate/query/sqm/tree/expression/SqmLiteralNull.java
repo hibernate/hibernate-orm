@@ -14,14 +14,14 @@ import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 /**
  * @author Steve Ebersole
  */
-public class SqmLiteralNull extends AbstractSqmLiteral<Void> {
+public class SqmLiteralNull extends SqmLiteral<Void> {
 	public SqmLiteralNull() {
 		super( null, NULL_TYPE );
 	}
 
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return walker.visitLiteralNullExpression( this );
+		return walker.visitLiteral( this );
 	}
 
 	@Override

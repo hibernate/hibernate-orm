@@ -22,6 +22,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.SqlExpressableType;
@@ -47,7 +48,7 @@ import org.hibernate.sql.ast.tree.spi.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
-import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
+import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.spi.select.SelectClause;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
@@ -497,9 +498,8 @@ public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> 
 				entityDescriptor.getFactory().getTypeConfiguration()
 		);
 		rootQuerySpec.addRestriction(
-				new RelationalPredicate(
-						RelationalPredicate.Operator.EQUAL,
-						idExpression,
+				new ComparisonPredicate(
+						idExpression, ComparisonOperator.EQUAL,
 						idParameter
 				)
 		);

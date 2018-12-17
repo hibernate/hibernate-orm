@@ -747,8 +747,8 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@SuppressWarnings("unchecked")
 	protected <P> QueryParameterBinding<P> locateBinding(Parameter<P> parameter) {
-		if ( parameter instanceof QueryParameter ) {
-			return locateBinding( (QueryParameter) parameter );
+		if ( parameter instanceof QueryParameterImplementor ) {
+			return locateBinding( (QueryParameterImplementor) parameter );
 		}
 		else if ( parameter.getName() != null ) {
 			return locateBinding( parameter.getName() );

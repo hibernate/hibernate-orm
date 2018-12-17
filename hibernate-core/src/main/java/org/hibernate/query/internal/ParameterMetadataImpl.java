@@ -7,7 +7,6 @@
 package org.hibernate.query.internal;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -20,6 +19,8 @@ import javax.persistence.Parameter;
 
 import org.hibernate.QueryException;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -30,92 +31,150 @@ import org.hibernate.query.spi.QueryParameterImplementor;
  * @author Steve Ebersole
  */
 public class ParameterMetadataImpl implements ParameterMetadataImplementor<QueryParameterImplementor<?>> {
-	private final Map<Integer,QueryParameterImplementor<?>> ordinalDescriptorMap;
-	private final Map<String,QueryParameterImplementor<?>> namedDescriptorMap;
+	/**
+	 * Singleton access
+	 */
+	public static final ParameterMetadataImpl EMPTY = new ParameterMetadataImpl();
+
+	private final Set<QueryParameterImplementor<?>> queryParameters;
+
+	private final Set<String> names;
+	private final Set<Integer> labels;
+
+
+	private ParameterMetadataImpl() {
+		this.queryParameters = Collections.emptySet();
+		this.names = Collections.emptySet();
+		this.labels = Collections.emptySet();
+	}
+
+	public ParameterMetadataImpl(Set<QueryParameterImplementor<?>> queryParameters) {
+		this.queryParameters = queryParameters;
+
+		// if we have any ordinal parameters, make sure the numbers
+		// start with 1 and are contiguous
+
+		Set<String> names = null;
+		Set<Integer> labels = null;
+
+		for ( QueryParameterImplementor<?> queryParameter : queryParameters ) {
+			if ( queryParameter.getPosition() != null ) {
+				if ( labels == null ) {
+					labels = new HashSet<>();
+				}
+				labels.add( queryParameter.getPosition() );
+			}
+			else if ( queryParameter.getName() != null ) {
+				if ( names == null ) {
+					names = new HashSet<>();
+				}
+				names.add( queryParameter.getName() );
+			}
+		}
+
+		this.labels = labels == null
+				? Collections.emptySet()
+				: labels;
+
+		this.names = names == null
+				? Collections.emptySet()
+				: names;
+
+		verifyOrdinalParamLabels( labels );
+	}
 
 	public ParameterMetadataImpl(
-			Map<Integer,QueryParameterImplementor<?>> ordinalDescriptorMap,
-			Map<String, QueryParameterImplementor<?>> namedDescriptorMap) {
-		this.ordinalDescriptorMap = ordinalDescriptorMap == null
-				? Collections.emptyMap()
-				: Collections.unmodifiableMap( ordinalDescriptorMap );
-		this.namedDescriptorMap = namedDescriptorMap == null
-				? Collections.emptyMap()
-				: Collections.unmodifiableMap( namedDescriptorMap );
+			Map<Integer, QueryParameterImplementor<?>> positionalQueryParameters,
+			Map<String, QueryParameterImplementor<?>> namedQueryParameters) {
+		if ( CollectionHelper.isEmpty( positionalQueryParameters )
+				&& CollectionHelper.isEmpty( namedQueryParameters ) ) {
+			// no parameters
+			this.queryParameters = Collections.emptySet();
+			this.names = Collections.emptySet();
+			this.labels = Collections.emptySet();
+		}
+		else {
+			this.queryParameters = new IdentitySet<>();
+			this.queryParameters.addAll( positionalQueryParameters.values() );
+			this.queryParameters.addAll( namedQueryParameters.values() );
 
-		if (ordinalDescriptorMap != null &&  ! ordinalDescriptorMap.isEmpty() ) {
-			final List<Integer> sortedPositions = new ArrayList<>( ordinalDescriptorMap.keySet() );
-			sortedPositions.sort( ComparableComparator.INSTANCE );
+			this.names = namedQueryParameters.keySet();
+			this.labels = positionalQueryParameters.keySet();
 
-			int lastPosition = -1;
-			for ( Integer sortedPosition : sortedPositions ) {
-				if ( lastPosition == -1 ) {
-					lastPosition = sortedPosition;
-					continue;
-				}
+			verifyOrdinalParamLabels( labels );
+		}
 
-				if ( sortedPosition != lastPosition + 1 ) {
+	}
+
+	private static void verifyOrdinalParamLabels(Set<Integer> labels) {
+		if ( CollectionHelper.isEmpty( labels ) ) {
+			return;
+		}
+
+		final List<Integer> sortedLabels = new ArrayList<>( labels );
+		sortedLabels.sort( ComparableComparator.instance() );
+
+		int lastPosition = -1;
+		for ( Integer sortedPosition : sortedLabels ) {
+			if ( lastPosition == -1 ) {
+				if ( sortedPosition != 1 ) {
 					throw new QueryException(
 							String.format(
 									Locale.ROOT,
-									"Unexpected gap in ordinal parameter labels [%s -> %s] : [%s]",
-									lastPosition,
-									sortedPosition,
-									StringHelper.join( ",", sortedPositions.iterator() )
+									"Expected ordinal parameter labels to start with 1, but found - %s",
+									sortedPosition
 							)
 					);
 				}
 
 				lastPosition = sortedPosition;
+				continue;
 			}
 
+			if ( sortedPosition != lastPosition + 1 ) {
+				throw new QueryException(
+						String.format(
+								Locale.ROOT,
+								"Unexpected gap in ordinal parameter labels [%s -> %s] : [%s]",
+								lastPosition,
+								sortedPosition,
+								StringHelper.join( ",", sortedLabels.iterator() )
+						)
+				);
+			}
+
+			lastPosition = sortedPosition;
 		}
 	}
 
 	@Override
 	public int getParameterCount() {
-		return ordinalDescriptorMap.size() + namedDescriptorMap.size();
+		return queryParameters.size();
 	}
 
 	@Override
-	@SuppressWarnings("SuspiciousMethodCalls")
 	public boolean containsReference(QueryParameterImplementor<?> parameter) {
-		return ordinalDescriptorMap.containsValue( parameter )
-				|| namedDescriptorMap.containsValue( parameter );
+		return queryParameters.contains( parameter );
 	}
 
 	@Override
 	public void visitRegistrations(Consumer<QueryParameterImplementor<?>> action) {
-		ordinalDescriptorMap.values().forEach( action );
-		namedDescriptorMap.values().forEach( action );
+		queryParameters.forEach( action );
 	}
 
 	@Override
 	public void collectAllParameters(ParameterCollector<QueryParameterImplementor<?>> collector) {
-		ordinalDescriptorMap.values().forEach( collector::collect );
-		namedDescriptorMap.values().forEach( collector::collect );
+		queryParameters.forEach( collector::collect );
 	}
 
 	@Override
 	public Set<QueryParameterImplementor<?>> getRegistrations() {
-		if ( ! hasNamedParameters() && ! hasPositionalParameters() ) {
-			return Collections.emptySet();
-		}
-
-		final HashSet<QueryParameterImplementor<?>> allParameters = new HashSet<>();
-		collectAllParameters( allParameters::add );
-		return allParameters;
+		return Collections.unmodifiableSet( queryParameters );
 	}
 
 	@Override
 	public boolean hasAnyMatching(Predicate<QueryParameterImplementor<?>> filter) {
-		for ( QueryParameterImplementor<?> queryParameter : ordinalDescriptorMap.values() ) {
-			if ( filter.test( queryParameter ) ) {
-				return true;
-			}
-		}
-
-		for ( QueryParameterImplementor<?> queryParameter : namedDescriptorMap.values() ) {
+		for ( QueryParameterImplementor<?> queryParameter : queryParameters ) {
 			if ( filter.test( queryParameter ) ) {
 				return true;
 			}
@@ -139,28 +198,23 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor<Query
 
 	@Override
 	public boolean hasNamedParameters() {
-		return !namedDescriptorMap.isEmpty();
-	}
-
-	@Override
-	public int getNamedParameterCount() {
-		return namedDescriptorMap.size();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Collection<QueryParameterImplementor<?>> getNamedParameters() {
-		return Collections.unmodifiableCollection( namedDescriptorMap.values() );
+		return ! names.isEmpty();
 	}
 
 	@Override
 	public Set<String> getNamedParameterNames() {
-		return  namedDescriptorMap.keySet();
+		return  names;
 	}
 
 	@Override
 	public QueryParameterImplementor<?> getQueryParameter(String name) {
-		return namedDescriptorMap.get( name );
+		for ( QueryParameterImplementor<?> queryParameter : queryParameters ) {
+			if ( name.equals( queryParameter.getName() ) ) {
+				return queryParameter;
+			}
+		}
+
+		return null;
 	}
 
 
@@ -170,27 +224,21 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor<Query
 
 	@Override
 	public boolean hasPositionalParameters() {
-		return getPositionalParameterCount() > 0;
+		return ! labels.isEmpty();
 	}
-
-	@Override
-	public int getPositionalParameterCount() {
-		return ordinalDescriptorMap.size();
-	}
-
 
 	public Set<Integer> getOrdinalParameterLabels() {
-		return ordinalDescriptorMap.keySet();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Collection<QueryParameterImplementor<?>> getPositionalParameters() {
-		return Collections.unmodifiableCollection( ordinalDescriptorMap.values() );
+		return labels;
 	}
 
 	@Override
 	public QueryParameterImplementor<?> getQueryParameter(int positionLabel) {
-		return ordinalDescriptorMap.get( positionLabel );
+		for ( QueryParameterImplementor<?> queryParameter : queryParameters ) {
+			if ( queryParameter.getPosition() != null && queryParameter.getPosition() == positionLabel ) {
+				return queryParameter;
+			}
+		}
+
+		return null;
 	}
 }

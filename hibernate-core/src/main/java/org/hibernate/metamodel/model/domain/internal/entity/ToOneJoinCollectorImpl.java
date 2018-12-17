@@ -11,6 +11,7 @@ import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttribute
 import org.hibernate.metamodel.model.domain.spi.AbstractTableReferenceCollector;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
@@ -22,7 +23,7 @@ import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
-import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
+import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 
 /**
  * @author Steve Ebersole
@@ -91,9 +92,8 @@ public class ToOneJoinCollectorImpl extends AbstractTableReferenceCollector {
 			//		`... where ... [ (rCol1, rCol2, ...) = (tCol1, tCol2, ...) ] ...`
 
 			conjunction.add(
-					new RelationalPredicate(
-							RelationalPredicate.Operator.EQUAL,
-							referringColumnReference,
+					new ComparisonPredicate(
+							referringColumnReference, ComparisonOperator.EQUAL,
 							targetColumnReference
 					)
 			);

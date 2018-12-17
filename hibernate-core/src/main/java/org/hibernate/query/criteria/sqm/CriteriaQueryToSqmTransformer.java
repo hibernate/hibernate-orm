@@ -10,7 +10,6 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -18,11 +17,13 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.criteria.spi.BaseCriteriaVisitor;
+import org.hibernate.query.criteria.spi.ComparisonPredicate;
 import org.hibernate.query.criteria.spi.CompoundSelection;
 import org.hibernate.query.criteria.spi.ConstructorSelection;
 import org.hibernate.query.criteria.spi.FromImplementor;
 import org.hibernate.query.criteria.spi.JoinImplementor;
-import org.hibernate.query.criteria.spi.PathImplementor;
+import org.hibernate.query.criteria.spi.LiteralExpression;
+import org.hibernate.query.criteria.spi.ParameterExpression;
 import org.hibernate.query.criteria.spi.QueryStructure;
 import org.hibernate.query.criteria.spi.RootImplementor;
 import org.hibernate.query.criteria.spi.RootQuery;
@@ -30,12 +31,17 @@ import org.hibernate.query.criteria.spi.SelectionImplementor;
 import org.hibernate.query.sqm.produce.internal.UniqueIdGenerator;
 import org.hibernate.query.sqm.tree.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.expression.SqmLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.internal.ParameterCollector;
 import org.hibernate.query.sqm.tree.internal.SqmSelectStatementImpl;
+import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
@@ -47,6 +53,9 @@ import org.hibernate.query.sqm.tree.select.SqmSelection;
  */
 public class CriteriaQueryToSqmTransformer extends BaseCriteriaVisitor {
 
+	/**
+	 * Used to transform `SELECT` criteria tree into a SQM tree
+	 */
 	@SuppressWarnings("unchecked")
 	public static <R> SqmSelectStatement<R> transform(
 			RootQuery<R> query,
@@ -57,22 +66,22 @@ public class CriteriaQueryToSqmTransformer extends BaseCriteriaVisitor {
 
 
 	private final SessionFactoryImplementor sessionFactory;
-
 	private final UniqueIdGenerator uidGenerator = new UniqueIdGenerator();
 
-
 	private Map<NavigablePath, Set<SqmNavigableJoin>> fetchedJoinsByParentPath;
-
+	private Map<ParameterExpression<?>, SqmParameter> parameterExpressionMap;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Processing state
 
+	private ParameterCollector parameterCollector;
 	private boolean multiValuedParameterBindingsAllowed = false;
 
 
 
-	public CriteriaQueryToSqmTransformer(SessionFactoryImplementor sessionFactory) {
+
+	protected CriteriaQueryToSqmTransformer(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
 	}
 
@@ -80,12 +89,19 @@ public class CriteriaQueryToSqmTransformer extends BaseCriteriaVisitor {
 	public SqmSelectStatement visitRootQuery(RootQuery criteriaQuery) {
 		final SqmSelectStatementImpl sqmSelectStatement = new SqmSelectStatementImpl();
 
-		sqmSelectStatement.applyQuerySpec(
-				visitQueryStructure( criteriaQuery.getQueryStructure() ),
-				fetchedJoinsByParentPath
-		);
+		parameterCollector = sqmSelectStatement;
 
-		return sqmSelectStatement;
+		try {
+			sqmSelectStatement.applyQuerySpec(
+					visitQueryStructure( criteriaQuery.getQueryStructure() ),
+					fetchedJoinsByParentPath
+			);
+
+			return sqmSelectStatement;
+		}
+		finally {
+			parameterCollector = null;
+		}
 	}
 
 	@Override
@@ -102,6 +118,10 @@ public class CriteriaQueryToSqmTransformer extends BaseCriteriaVisitor {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// From clause
+
+	protected interface FromClauseElementConsumer {
+		SqmFrom consume(FromImplementor fromElement);
+	}
 
 	private FromClauseElementConsumer fromClauseElementConsumer;
 
@@ -243,6 +263,44 @@ public class CriteriaQueryToSqmTransformer extends BaseCriteriaVisitor {
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Expressions
+
+
+	@Override
+	public SqmLiteral visitLiteral(LiteralExpression<?> expression) {
+		return new SqmLiteral<>(
+				expression.getValue(),
+				sessionFactory.getTypeConfiguration().standardExpressableTypeForJavaType( expression.getJavaType() )
+		);
+	}
+
+	@Override
+	public SqmParameter visitParameter(ParameterExpression<?> expression) {
+		if ( parameterExpressionMap != null ) {
+			final SqmParameter existing = parameterExpressionMap.get( expression );
+			if ( existing != null ) {
+				return existing;
+			}
+		}
+		else {
+			parameterExpressionMap = new IdentityHashMap<>();
+		}
+
+		// create one and register the mapping
+		final JpaParameterSqmWrapper sqmParam = new JpaParameterSqmWrapper(
+				expression,
+				multiValuedParameterBindingsAllowed
+		);
+
+		parameterExpressionMap.put( expression, sqmParam );
+		parameterCollector.addParameter( sqmParam );
+
+		return sqmParam;
+	}
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Predicates
 
 	@Override
@@ -256,18 +314,13 @@ public class CriteriaQueryToSqmTransformer extends BaseCriteriaVisitor {
 		return sqmWhereClause;
 	}
 
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Support
-
-	protected interface PathConsumer extends Consumer<PathImplementor<?>> {
-		void consume(PathImplementor<?> path);
-	}
-
-
-	protected interface FromClauseElementConsumer {
-		SqmFrom consume(FromImplementor fromElement);
+	@Override
+	public SqmPredicate visitComparisonPredicate(ComparisonPredicate predicate) {
+		return new SqmComparisonPredicate(
+				predicate.getLeftHandOperand().accept( this ),
+				predicate.getComparisonOperator(),
+				predicate.getLeftHandOperand().accept( this )
+		);
 	}
 }
 

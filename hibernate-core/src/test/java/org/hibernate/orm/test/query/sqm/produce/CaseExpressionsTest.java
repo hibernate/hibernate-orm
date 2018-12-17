@@ -12,11 +12,11 @@ import org.hibernate.orm.test.query.sqm.produce.domain.Person;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralInteger;
+import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
 import org.hibernate.query.sqm.tree.expression.function.SqmCoalesceFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmNullifFunction;
-import org.hibernate.query.sqm.tree.predicate.RelationalSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 
 import org.junit.jupiter.api.Test;
 
@@ -46,9 +46,9 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 				"select p from Person p where p.numberOfToes = case p.dob when ?1 then 6 else 8 end"
 		);
 
-		final RelationalSqmPredicate predicate = cast(
+		final SqmComparisonPredicate predicate = cast(
 				select.getQuerySpec().getWhereClause().getPredicate(),
-				RelationalSqmPredicate.class
+				SqmComparisonPredicate.class
 		);
 
 		final SqmCaseSimple caseStatement = cast(
@@ -60,7 +60,7 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 		assertThat( caseStatement.getFixture(), instanceOf( SqmSingularAttributeReference.class ) );
 
 		assertThat( caseStatement.getOtherwise(), notNullValue() );
-		assertThat( caseStatement.getOtherwise(), instanceOf( SqmLiteralInteger.class ) );
+		assertThat( caseStatement.getOtherwise(), instanceOf( SqmLiteral.class ) );
 
 		assertThat( caseStatement.getWhenFragments().size(), is(1) );
 	}
@@ -71,9 +71,9 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 				"select p from Person p where p.numberOfToes = case when p.dob = ?1 then 6 else 8 end"
 		);
 
-		final RelationalSqmPredicate predicate = cast(
+		final SqmComparisonPredicate predicate = cast(
 				select.getQuerySpec().getWhereClause().getPredicate(),
-				RelationalSqmPredicate.class
+				SqmComparisonPredicate.class
 		);
 
 		final SqmCaseSearched caseStatement = cast(
@@ -82,7 +82,7 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 		);
 
 		assertThat( caseStatement.getOtherwise(), notNullValue() );
-		assertThat( caseStatement.getOtherwise(), instanceOf( SqmLiteralInteger.class ) );
+		assertThat( caseStatement.getOtherwise(), instanceOf( SqmLiteral.class ) );
 
 		assertThat( caseStatement.getWhenFragments().size(), is(1) );
 	}

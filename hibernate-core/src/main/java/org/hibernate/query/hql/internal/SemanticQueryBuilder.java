@@ -22,6 +22,7 @@ import java.util.function.Function;
 
 import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.SortOrder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.collection.spi.CollectionClassification;
@@ -34,6 +35,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.sqm.LiteralNumberFormatException;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.ParsingException;
@@ -67,6 +69,7 @@ import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmUpdateStatement;
 import org.hibernate.query.sqm.tree.expression.InferableTypeSqmExpression;
+import org.hibernate.query.sqm.tree.expression.LiteralHelper;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
@@ -74,20 +77,7 @@ import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.SqmConcat;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralBigDecimal;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralBigInteger;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralCharacter;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralDate;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralDouble;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralFalse;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralFloat;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralInteger;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralLong;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralString;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralTime;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralTimestamp;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralTrue;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
@@ -159,7 +149,6 @@ import org.hibernate.query.sqm.tree.internal.SqmInsertSelectStatementImpl;
 import org.hibernate.query.sqm.tree.internal.SqmSelectStatementImpl;
 import org.hibernate.query.sqm.tree.internal.SqmUpdateStatementImpl;
 import org.hibernate.query.sqm.tree.order.SqmOrderByClause;
-import org.hibernate.SortOrder;
 import org.hibernate.query.sqm.tree.order.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.paging.SqmLimitOffsetClause;
 import org.hibernate.query.sqm.tree.predicate.AndSqmPredicate;
@@ -174,8 +163,7 @@ import org.hibernate.query.sqm.tree.predicate.NegatableSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.NegatedSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.NullnessSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.OrSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.RelationalPredicateOperator;
-import org.hibernate.query.sqm.tree.predicate.RelationalSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
@@ -1244,9 +1232,19 @@ public class SemanticQueryBuilder
 	}
 
 	@Override
-	public RelationalSqmPredicate visitEqualityPredicate(HqlParser.EqualityPredicateContext ctx) {
+	public SqmComparisonPredicate visitEqualityPredicate(HqlParser.EqualityPredicateContext ctx) {
 		final SqmExpression lhs = (SqmExpression) ctx.expression().get( 0 ).accept( this );
 		final SqmExpression rhs = (SqmExpression) ctx.expression().get( 1 ).accept( this );
+
+		// todo (6.0) : the problem with doing this in the HQL -> SQM translation is that we'd need to duplicate it for criteria
+		//		Do we need these types really prior to interpreting the SQM?  Couldn't we make the SQM walker
+		//		responsible for handling this?
+		//
+		// An expression has 3 associated types:
+		//
+		//		1) explicit type - the user has (somehow) explicitly told us the type.  (where does this exist?)
+		//		2) fallback type - generally this is one of the standard basic type
+		//		3) inferred type - a type that is inferred by its surroundings
 
 		if ( lhs.getInferableType() != null ) {
 			if ( rhs instanceof InferableTypeSqmExpression ) {
@@ -1260,7 +1258,7 @@ public class SemanticQueryBuilder
 			}
 		}
 
-		return new RelationalSqmPredicate( RelationalPredicateOperator.EQUAL, lhs, rhs );
+		return new SqmComparisonPredicate( lhs, ComparisonOperator.EQUAL, rhs );
 	}
 
 	@Override
@@ -1268,7 +1266,7 @@ public class SemanticQueryBuilder
 		final SqmExpression lhs = (SqmExpression) ctx.expression().get( 0 ).accept( this );
 		final SqmExpression rhs = (SqmExpression) ctx.expression().get( 1 ).accept( this );
 
-		return new RelationalSqmPredicate( RelationalPredicateOperator.NOT_EQUAL, lhs, rhs );
+		return new SqmComparisonPredicate( lhs, ComparisonOperator.NOT_EQUAL, rhs );
 	}
 
 	@Override
@@ -1276,7 +1274,7 @@ public class SemanticQueryBuilder
 		final SqmExpression lhs = (SqmExpression) ctx.expression().get( 0 ).accept( this );
 		final SqmExpression rhs = (SqmExpression) ctx.expression().get( 1 ).accept( this );
 
-		return new RelationalSqmPredicate( RelationalPredicateOperator.GREATER_THAN, lhs, rhs );
+		return new SqmComparisonPredicate( lhs, ComparisonOperator.GREATER_THAN, rhs );
 	}
 
 	@Override
@@ -1284,7 +1282,7 @@ public class SemanticQueryBuilder
 		final SqmExpression lhs = (SqmExpression) ctx.expression().get( 0 ).accept( this );
 		final SqmExpression rhs = (SqmExpression) ctx.expression().get( 1 ).accept( this );
 
-		return new RelationalSqmPredicate( RelationalPredicateOperator.GREATER_THAN_OR_EQUAL, lhs, rhs );
+		return new SqmComparisonPredicate( lhs, ComparisonOperator.GREATER_THAN_OR_EQUAL, rhs );
 	}
 
 	@Override
@@ -1292,7 +1290,7 @@ public class SemanticQueryBuilder
 		final SqmExpression lhs = (SqmExpression) ctx.expression().get( 0 ).accept( this );
 		final SqmExpression rhs = (SqmExpression) ctx.expression().get( 1 ).accept( this );
 
-		return new RelationalSqmPredicate( RelationalPredicateOperator.LESS_THAN, lhs, rhs );
+		return new SqmComparisonPredicate( lhs, ComparisonOperator.LESS_THAN, rhs );
 	}
 
 	@Override
@@ -1300,7 +1298,7 @@ public class SemanticQueryBuilder
 		final SqmExpression lhs = (SqmExpression) ctx.expression().get( 0 ).accept( this );
 		final SqmExpression rhs = (SqmExpression) ctx.expression().get( 1 ).accept( this );
 
-		return new RelationalSqmPredicate( RelationalPredicateOperator.LESS_THAN_OR_EQUAL, lhs, rhs );
+		return new SqmComparisonPredicate( lhs, ComparisonOperator.LESS_THAN_OR_EQUAL, rhs );
 	}
 
 	@Override
@@ -1863,7 +1861,6 @@ public class SemanticQueryBuilder
 	}
 
 	@Override
-	@SuppressWarnings("UnnecessaryBoxing")
 	public SqmLiteral visitLiteralExpression(HqlParser.LiteralExpressionContext ctx) {
 		if ( ctx.literal().CHARACTER_LITERAL() != null ) {
 			return characterLiteral( ctx.literal().CHARACTER_LITERAL().getText() );
@@ -1917,13 +1914,13 @@ public class SemanticQueryBuilder
 			return new SqmLiteralNull();
 		}
 		else if ( ctx.literal().timestampLiteral() != null ) {
-			return SqmLiteralTimestamp.from( ctx.literal().timestampLiteral().dateTimeLiteralText().getText(), this );
+			return LiteralHelper.timestampLiteralFrom( ctx.literal().timestampLiteral().dateTimeLiteralText().getText(), this );
 		}
 		else if ( ctx.literal().dateLiteral() != null ) {
-			return SqmLiteralDate.from( ctx.literal().dateLiteral().dateTimeLiteralText().getText(), this );
+			return LiteralHelper.dateLiteralFrom( ctx.literal().dateLiteral().dateTimeLiteralText().getText(), this );
 		}
 		else if ( ctx.literal().timeLiteral() != null ) {
-			return SqmLiteralTime.from( ctx.literal().timeLiteral().dateTimeLiteralText().getText(), this );
+			return LiteralHelper.timeLiteralFrom( ctx.literal().timeLiteral().dateTimeLiteralText().getText(), this );
 		}
 
 		// otherwise we have a problem
@@ -1932,34 +1929,32 @@ public class SemanticQueryBuilder
 
 	private SqmLiteral<Boolean> booleanLiteral(boolean value) {
 		final BasicValuedExpressableType expressionType = resolveExpressableTypeBasic( Boolean.class );
-		return value
-				? new SqmLiteralTrue( expressionType )
-				: new SqmLiteralFalse( expressionType );
+		return new SqmLiteral<>( value, expressionType );
 	}
 
-	private SqmLiteralCharacter characterLiteral(String text) {
+	private SqmLiteral<Character> characterLiteral(String text) {
 		if ( text.length() > 1 ) {
 			// todo : or just treat it as a String literal?
 			throw new ParsingException( "Value for CHARACTER_LITERAL token was more than 1 character" );
 		}
-		return new SqmLiteralCharacter(
+		return new SqmLiteral<>(
 				text.charAt( 0 ),
 				resolveExpressableTypeBasic( Character.class )
 		);
 	}
 
-	private SqmLiteral stringLiteral(String text) {
-		return new SqmLiteralString(
+	private SqmLiteral<String> stringLiteral(String text) {
+		return new SqmLiteral<>(
 				text,
 				getSessionFactory().getTypeConfiguration().resolveStandardBasicType( StandardBasicTypes.STRING )
 		);
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected SqmLiteralInteger integerLiteral(String text) {
+	protected SqmLiteral<Integer> integerLiteral(String text) {
 		try {
 			final Integer value = Integer.valueOf( text );
-			return new SqmLiteralInteger(
+			return new SqmLiteral<>(
 					value,
 					resolveExpressableTypeBasic( Integer.class )
 			);
@@ -1973,14 +1968,14 @@ public class SemanticQueryBuilder
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected SqmLiteralLong longLiteral(String text) {
+	protected SqmLiteral<Long> longLiteral(String text) {
 		final String originalText = text;
 		try {
 			if ( text.endsWith( "l" ) || text.endsWith( "L" ) ) {
 				text = text.substring( 0, text.length() - 1 );
 			}
 			final Long value = Long.valueOf( text );
-			return new SqmLiteralLong(
+			return new SqmLiteral<>(
 					value,
 					resolveExpressableTypeBasic( Long.class )
 			);
@@ -1994,13 +1989,13 @@ public class SemanticQueryBuilder
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected SqmLiteralBigInteger bigIntegerLiteral(String text) {
+	protected SqmLiteral<BigInteger> bigIntegerLiteral(String text) {
 		final String originalText = text;
 		try {
 			if ( text.endsWith( "bi" ) || text.endsWith( "BI" ) ) {
 				text = text.substring( 0, text.length() - 2 );
 			}
-			return new SqmLiteralBigInteger(
+			return new SqmLiteral<>(
 					new BigInteger( text ),
 					resolveExpressableTypeBasic( BigInteger.class  )
 			);
@@ -2014,9 +2009,9 @@ public class SemanticQueryBuilder
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected SqmLiteralFloat floatLiteral(String text) {
+	protected SqmLiteral<Float> floatLiteral(String text) {
 		try {
-			return new SqmLiteralFloat(
+			return new SqmLiteral<>(
 					Float.valueOf( text ),
 					resolveExpressableTypeBasic( Float.class )
 			);
@@ -2030,9 +2025,9 @@ public class SemanticQueryBuilder
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected SqmLiteralDouble doubleLiteral(String text) {
+	protected SqmLiteral<Double> doubleLiteral(String text) {
 		try {
-			return new SqmLiteralDouble(
+			return new SqmLiteral<>(
 					Double.valueOf( text ),
 					resolveExpressableTypeBasic( Double.class )
 			);
@@ -2046,13 +2041,13 @@ public class SemanticQueryBuilder
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected SqmLiteralBigDecimal bigDecimalLiteral(String text) {
+	protected SqmLiteral<BigDecimal> bigDecimalLiteral(String text) {
 		final String originalText = text;
 		try {
 			if ( text.endsWith( "bd" ) || text.endsWith( "BD" ) ) {
 				text = text.substring( 0, text.length() - 2 );
 			}
-			return new SqmLiteralBigDecimal(
+			return new SqmLiteral<>(
 					new BigDecimal( text ),
 					resolveExpressableTypeBasic( BigDecimal.class )
 			);
@@ -2446,13 +2441,15 @@ public class SemanticQueryBuilder
 	}
 
 	@Override
-	public SqmLiteralCharacter visitTrimCharacter(HqlParser.TrimCharacterContext ctx) {
+	public SqmLiteral<Character> visitTrimCharacter(HqlParser.TrimCharacterContext ctx) {
+		// todo (6.0) : we should delay this until we are walking the SQM
+
 		if ( ctx.CHARACTER_LITERAL() != null ) {
 			final String trimCharText = ctx.CHARACTER_LITERAL().getText();
 			if ( trimCharText.length() != 1 ) {
 				throw new SemanticException( "Expecting [trim character] for TRIM function to be  single character, found : " + trimCharText );
 			}
-			return new SqmLiteralCharacter(
+			return new SqmLiteral<>(
 					trimCharText.charAt( 0 ),
 					resolveExpressableTypeBasic( Character.class )
 			);
@@ -2462,13 +2459,13 @@ public class SemanticQueryBuilder
 			if ( trimCharText.length() != 1 ) {
 				throw new SemanticException( "Expecting [trim character] for TRIM function to be  single character, found : " + trimCharText );
 			}
-			return new SqmLiteralCharacter(
+			return new SqmLiteral<>(
 					trimCharText.charAt( 0 ),
 					resolveExpressableTypeBasic( Character.class ));
 		}
 
 		// JPA says space is the default
-		return new SqmLiteralCharacter(
+		return new SqmLiteral<>(
 				' ',
 				resolveExpressableTypeBasic( Character.class )
 		);

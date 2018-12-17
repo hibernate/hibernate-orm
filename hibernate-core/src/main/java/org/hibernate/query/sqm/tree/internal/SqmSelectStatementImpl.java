@@ -18,8 +18,8 @@ import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
  * @author Steve Ebersole
  */
 public class SqmSelectStatementImpl extends AbstractSqmStatement implements SqmSelectStatement {
-	private Map<NavigablePath, Set<SqmNavigableJoin>> fetchJoinsByParentPath;
 	private SqmQuerySpec querySpec;
+	private Map<NavigablePath, Set<SqmNavigableJoin>> fetchJoinsByParentPath;
 
 	public SqmSelectStatementImpl() {
 	}

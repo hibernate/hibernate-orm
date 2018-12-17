@@ -30,21 +30,9 @@ import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.SqmUpdateStatement;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmConcat;
-import org.hibernate.query.sqm.tree.expression.SqmConstantEnum;
-import org.hibernate.query.sqm.tree.expression.SqmConstantFieldReference;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralBigDecimal;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralBigInteger;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralCharacter;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralDouble;
+import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralFalse;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralFloat;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralInteger;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralLong;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralString;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralTrue;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmSubQuery;
@@ -86,7 +74,7 @@ import org.hibernate.query.sqm.tree.predicate.MemberOfSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.NegatedSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.NullnessSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.OrSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.RelationalSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
@@ -451,10 +439,9 @@ public class QuerySplitter {
 		}
 
 		@Override
-		public RelationalSqmPredicate visitRelationalPredicate(RelationalSqmPredicate predicate) {
-			return new RelationalSqmPredicate(
-					predicate.getOperator(),
-					(SqmExpression) predicate.getLeftHandExpression().accept( this ),
+		public SqmComparisonPredicate visitComparisonPredicate(SqmComparisonPredicate predicate) {
+			return new SqmComparisonPredicate(
+					(SqmExpression) predicate.getLeftHandExpression().accept( this ), predicate.getOperator(),
 					(SqmExpression) predicate.getRightHandExpression().accept( this )
 			);
 		}
@@ -740,58 +727,8 @@ public class QuerySplitter {
 		}
 
 		@Override
-		public SqmLiteralString visitLiteralStringExpression(SqmLiteralString expression) {
-			return new SqmLiteralString( expression.getLiteralValue(), expression.getExpressableType() );
-		}
-
-		@Override
-		public SqmLiteralCharacter visitLiteralCharacterExpression(SqmLiteralCharacter expression) {
-			return new SqmLiteralCharacter( expression.getLiteralValue(), expression.getExpressableType() );
-		}
-
-		@Override
-		public SqmLiteralDouble visitLiteralDoubleExpression(SqmLiteralDouble expression) {
-			return new SqmLiteralDouble( expression.getLiteralValue(), expression.getExpressableType() );
-		}
-
-		@Override
-		public SqmLiteralInteger visitLiteralIntegerExpression(SqmLiteralInteger expression) {
-			return new SqmLiteralInteger( expression.getLiteralValue(), expression.getExpressableType() );
-		}
-
-		@Override
-		public SqmLiteralBigInteger visitLiteralBigIntegerExpression(SqmLiteralBigInteger expression) {
-			return new SqmLiteralBigInteger( expression.getLiteralValue(), expression.getExpressableType() );
-		}
-
-		@Override
-		public SqmLiteralBigDecimal visitLiteralBigDecimalExpression(SqmLiteralBigDecimal expression) {
-			return new SqmLiteralBigDecimal( expression.getLiteralValue(), expression.getExpressableType() );
-		}
-
-		@Override
-		public SqmLiteralFloat visitLiteralFloatExpression(SqmLiteralFloat expression) {
-			return new SqmLiteralFloat( expression.getLiteralValue(), expression.getExpressableType() );
-		}
-
-		@Override
-		public SqmLiteralLong visitLiteralLongExpression(SqmLiteralLong expression) {
-			return new SqmLiteralLong( expression.getLiteralValue(), expression.getExpressableType() );
-		}
-
-		@Override
-		public SqmLiteralTrue visitLiteralTrueExpression(SqmLiteralTrue expression) {
-			return new SqmLiteralTrue( expression.getExpressableType() );
-		}
-
-		@Override
-		public SqmLiteralFalse visitLiteralFalseExpression(SqmLiteralFalse expression) {
-			return new SqmLiteralFalse( expression.getExpressableType() );
-		}
-
-		@Override
-		public SqmLiteralNull visitLiteralNullExpression(SqmLiteralNull expression) {
-			return new SqmLiteralNull();
+		public SqmLiteral visitLiteral(SqmLiteral literal) {
+			return new SqmLiteral( literal.getLiteralValue(), literal.getExpressableType() );
 		}
 
 		@Override
@@ -813,20 +750,6 @@ public class QuerySplitter {
 					(BasicValuedExpressableType) expression.getExpressableType(),
 					arguments
 			);
-		}
-
-		@Override
-		@SuppressWarnings("unchecked")
-		public SqmConstantEnum visitConstantEnumExpression(SqmConstantEnum expression) {
-			// todo (6.0) : does an enum constant reference really need to be deep copied?
-			//		that's probably a valid question for a few other visitations here
-			return new SqmConstantEnum( (Enum) expression.getLiteralValue(), expression.getExpressableType() );
-		}
-
-		@Override
-		@SuppressWarnings("unchecked")
-		public SqmConstantFieldReference visitConstantFieldReference(SqmConstantFieldReference expression) {
-			return new SqmConstantFieldReference( expression.getSourceField(), expression.getLiteralValue(), expression.getExpressableType() );
 		}
 
 		@Override

@@ -6,6 +6,9 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import java.util.function.Supplier;
+
+import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 
 /**
@@ -18,9 +21,36 @@ import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
  * </ul>
  * @author Steve Ebersole
  */
-public interface SqmLiteral<T> extends InferableTypeSqmExpression {
-	T getLiteralValue();
+public class SqmLiteral<T> extends AbstractInferableTypeSqmExpression implements InferableTypeSqmExpression {
+	private T value;
+
+	public SqmLiteral(T value, BasicValuedExpressableType inherentType) {
+		super( inherentType );
+		this.value = value;
+	}
+
+	public T getLiteralValue() {
+		return value;
+	}
 
 	@Override
-	BasicValuedExpressableType getExpressableType();
+	public BasicValuedExpressableType getExpressableType() {
+		return (BasicValuedExpressableType) super.getExpressableType();
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public Supplier<? extends BasicValuedExpressableType> getInferableType() {
+		return (Supplier<? extends BasicValuedExpressableType>) super.getInferableType();
+	}
+
+	@Override
+	public <R> R accept(SemanticQueryWalker<R> walker) {
+		return walker.visitLiteral( this );
+	}
+
+	@Override
+	public String asLoggableText() {
+		return "Literal( " + value + ")";
+	}
 }

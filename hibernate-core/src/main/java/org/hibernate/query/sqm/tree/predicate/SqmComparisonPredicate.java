@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.tree.predicate;
 
 import java.util.function.Supplier;
 
+import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.InferableTypeSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -16,15 +17,15 @@ import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 /**
  * @author Steve Ebersole
  */
-public class RelationalSqmPredicate implements SqmPredicate, NegatableSqmPredicate {
+public class SqmComparisonPredicate implements SqmPredicate, NegatableSqmPredicate {
 
 	private final SqmExpression leftHandExpression;
+	private ComparisonOperator operator;
 	private final SqmExpression rightHandExpression;
-	private RelationalPredicateOperator operator;
 
-	public RelationalSqmPredicate(
-			RelationalPredicateOperator operator,
+	public SqmComparisonPredicate(
 			SqmExpression leftHandExpression,
+			ComparisonOperator operator,
 			SqmExpression rightHandExpression) {
 		this.leftHandExpression = leftHandExpression;
 		this.rightHandExpression = rightHandExpression;
@@ -53,7 +54,7 @@ public class RelationalSqmPredicate implements SqmPredicate, NegatableSqmPredica
 		return rightHandExpression;
 	}
 
-	public RelationalPredicateOperator getOperator() {
+	public ComparisonOperator getOperator() {
 		return operator;
 	}
 
@@ -64,11 +65,11 @@ public class RelationalSqmPredicate implements SqmPredicate, NegatableSqmPredica
 
 	@Override
 	public void negate() {
-		this.operator = this.operator.negate();
+		this.operator = this.operator.negated();
 	}
 
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return walker.visitRelationalPredicate( this );
+		return walker.visitComparisonPredicate( this );
 	}
 }

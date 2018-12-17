@@ -44,6 +44,7 @@ import org.hibernate.metamodel.model.domain.spi.NonIdPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.property.access.spi.Getter;
+import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
@@ -56,7 +57,7 @@ import org.hibernate.sql.ast.tree.spi.expression.LiteralParameter;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.predicate.NullnessPredicate;
-import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
+import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.exec.spi.BasicExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.type.spi.BasicType;
@@ -670,9 +671,8 @@ public class ValidityAuditStrategy implements AuditStrategy {
 				productionIdentifier.unresolve( id, session ),
 				(jdbcValue, type, boundColumn) -> {
 					identifierJunction.add(
-							new RelationalPredicate(
-									RelationalPredicate.Operator.EQUAL,
-									new ColumnReference( boundColumn ),
+							new ComparisonPredicate(
+									new ColumnReference( boundColumn ), ComparisonOperator.EQUAL,
 									new LiteralParameter(
 											jdbcValue,
 											boundColumn.getExpressableType(),
@@ -697,9 +697,8 @@ public class ValidityAuditStrategy implements AuditStrategy {
 					public void accept(SqlExpressableType sqlExpressableType, Column column) {
 						if ( column.getExpression().equals( options.getRevisionFieldName() ) ) {
 							builder.addRestriction(
-									new RelationalPredicate(
-											RelationalPredicate.Operator.NOT_EQUAL,
-											new ColumnReference( column ),
+									new ComparisonPredicate(
+											new ColumnReference( column ), ComparisonOperator.NOT_EQUAL,
 											new LiteralParameter(
 													revisionNumber,
 													column.getExpressableType(),

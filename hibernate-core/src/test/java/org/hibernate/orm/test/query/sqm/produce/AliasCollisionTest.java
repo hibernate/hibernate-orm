@@ -19,7 +19,7 @@ import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
 import org.hibernate.query.sqm.tree.predicate.InSubQuerySqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.RelationalSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 
 import org.hibernate.testing.junit5.ExpectedException;
@@ -134,7 +134,7 @@ public class AliasCollisionTest extends BaseSqmUnitTest {
 				is( "b" )
 		);
 
-		final RelationalSqmPredicate correlation = (RelationalSqmPredicate) subQuerySpec.getWhereClause().getPredicate();
+		final SqmComparisonPredicate correlation = (SqmComparisonPredicate) subQuerySpec.getWhereClause().getPredicate();
 		final SqmNavigableReference leftHandExpression = (SqmNavigableReference) correlation.getLeftHandExpression();
 		assertThat(
 				leftHandExpression.getSourceReference().getIdentificationVariable(),

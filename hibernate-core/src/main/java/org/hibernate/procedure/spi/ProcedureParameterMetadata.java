@@ -7,7 +7,6 @@
 package org.hibernate.procedure.spi;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -15,7 +14,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import javax.persistence.Parameter;
 
 import org.hibernate.procedure.ParameterStrategyException;
@@ -127,11 +125,6 @@ public class ProcedureParameterMetadata<P extends ProcedureParameterImplementor<
 	}
 
 	@Override
-	public int getNamedParameterCount() {
-		return hasNamedParameters() ? parameters.size() : 0;
-	}
-
-	@Override
 	public Set<String> getNamedParameterNames() {
 		if ( !hasNamedParameters() ) {
 			return Collections.emptySet();
@@ -148,11 +141,6 @@ public class ProcedureParameterMetadata<P extends ProcedureParameterImplementor<
 	@Override
 	public boolean hasPositionalParameters() {
 		return parameterStrategy == ParameterStrategy.POSITIONAL;
-	}
-
-	@Override
-	public int getPositionalParameterCount() {
-		return hasPositionalParameters() ? parameters.size() : 0;
 	}
 
 	@Override
@@ -174,7 +162,6 @@ public class ProcedureParameterMetadata<P extends ProcedureParameterImplementor<
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public P getQueryParameter(String name) {
 		assert name != null;
 
@@ -190,7 +177,6 @@ public class ProcedureParameterMetadata<P extends ProcedureParameterImplementor<
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public P getQueryParameter(int positionLabel) {
 		if ( hasPositionalParameters() ) {
 			for ( P parameter : parameters ) {
@@ -205,7 +191,7 @@ public class ProcedureParameterMetadata<P extends ProcedureParameterImplementor<
 
 	@Override
 	public P resolve(Parameter param) {
-		if ( ProcedureParameterImplementor.class.isInstance( param ) ) {
+		if ( param instanceof ProcedureParameterImplementor ) {
 			for ( P parameter : parameters ) {
 				if ( parameter == param ) {
 					return parameter;
@@ -214,17 +200,5 @@ public class ProcedureParameterMetadata<P extends ProcedureParameterImplementor<
 		}
 
 		throw new IllegalArgumentException( "Could not resolve javax.persistence.Parameter to org.hibernate.query.QueryParameter" );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Collection<P> getPositionalParameters() {
-		return parameters.stream().filter( p -> p.getPosition() != null ).collect( Collectors.toList() );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Collection<P> getNamedParameters() {
-		return parameters.stream().filter( p -> p.getPosition() == null ).collect( Collectors.toList() );
 	}
 }

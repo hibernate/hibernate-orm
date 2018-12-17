@@ -6,8 +6,9 @@
  */
 package org.hibernate.query.sqm.internal;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,8 +24,10 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.query.Query;
+import org.hibernate.query.criteria.sqm.JpaParameterSqmWrapper;
 import org.hibernate.query.internal.AbstractQuery;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.internal.QueryOptionsImpl;
@@ -71,9 +74,10 @@ public class QuerySqmImpl<R>
 	private final SqmStatement sqmStatement;
 	private final Class resultType;
 
+	private final Map<QueryParameterImplementor<?>, SqmParameter> sqmParamByQueryParam;
+
 	private final ParameterMetadataImpl parameterMetadata;
 	private final QueryParameterBindingsImpl parameterBindings;
-	private final Map<QueryParameterImplementor, SqmParameter> sqmParamByQueryParam = new HashMap<>(  );
 
 	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
 
@@ -94,47 +98,47 @@ public class QuerySqmImpl<R>
 		this.sqmStatement = sqmStatement;
 		this.resultType = resultType;
 
-		this.parameterMetadata = buildParameterMetadata( sqmStatement, sqmParamByQueryParam );
+		if ( CollectionHelper.isEmpty( sqmStatement.getQueryParameters() ) ) {
+			this.sqmParamByQueryParam = Collections.emptyMap();
+			this.parameterMetadata = ParameterMetadataImpl.EMPTY;
+		}
+		else {
+			this.sqmParamByQueryParam = buildParameterMapping( sqmStatement );
+			this.parameterMetadata = new ParameterMetadataImpl( sqmParamByQueryParam.keySet() );
+		}
+
 		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, producer.getFactory() );
 	}
 
+	private Map<QueryParameterImplementor<?>, SqmParameter> buildParameterMapping(SqmStatement sqmStatement) {
+		final Map<QueryParameterImplementor<?>, SqmParameter> paramMap = new IdentityHashMap<>();
 
-	private static ParameterMetadataImpl buildParameterMetadata(
-			SqmStatement sqm,
-			Map<QueryParameterImplementor, SqmParameter> queryParamBySqmParamMap) {
-		Map<String, QueryParameterImplementor<?>> namedQueryParameters = null;
-		Map<Integer, QueryParameterImplementor<?>> positionalQueryParameters = null;
-
-		for ( SqmParameter parameter : sqm.getQueryParameters() ) {
-			if ( parameter.getName() != null ) {
-				if ( namedQueryParameters == null ) {
-					namedQueryParameters = new HashMap<>();
-				}
-				else if ( namedQueryParameters.containsKey( parameter.getName() ) ) {
-					// nothing to do
-					continue;
-				}
-
-				final QueryParameterNamedImpl<Object> queryParameter = QueryParameterNamedImpl.fromSqm( parameter );
-				namedQueryParameters.put( parameter.getName(), queryParameter );
-				queryParamBySqmParamMap.put( queryParameter, parameter );
+		for ( SqmParameter sqmParameter : sqmStatement.getQueryParameters() ) {
+			if ( paramMap.containsValue( sqmParameter ) ) {
+				continue;
 			}
-			else if ( parameter.getPosition() != null ) {
-				if ( positionalQueryParameters == null ) {
-					positionalQueryParameters = new HashMap<>();
-				}
-				else if ( positionalQueryParameters.containsKey( parameter.getPosition() ) ) {
-					// nothing to do
-					continue;
-				}
 
-				final QueryParameterPositionalImpl<Object> queryParameter = QueryParameterPositionalImpl.fromSqm( parameter );
-				positionalQueryParameters.put( parameter.getPosition(), queryParameter );
-				queryParamBySqmParamMap.put( queryParameter, parameter );
+			if ( sqmParameter instanceof JpaParameterSqmWrapper ) {
+				paramMap.put(
+						( (JpaParameterSqmWrapper) sqmParameter ).getJpaParameterExpression(),
+						sqmParameter
+				);
+			}
+			else if ( sqmParameter.getName() != null ) {
+				paramMap.put(
+						QueryParameterNamedImpl.fromSqm( sqmParameter ),
+						sqmParameter
+				);
+			}
+			else if ( sqmParameter.getPosition() != null ) {
+				paramMap.put(
+						QueryParameterPositionalImpl.fromSqm( sqmParameter ),
+						sqmParameter
+				);
 			}
 		}
 
-		return new ParameterMetadataImpl( positionalQueryParameters, namedQueryParameters );
+		return paramMap;
 	}
 
 	@Override

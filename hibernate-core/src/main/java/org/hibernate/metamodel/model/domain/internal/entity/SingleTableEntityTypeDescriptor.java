@@ -50,6 +50,7 @@ import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.query.internal.QueryOptionsImpl;
+import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
@@ -71,7 +72,7 @@ import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.LiteralParameter;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
-import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
+import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutation;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
@@ -429,9 +430,8 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 				unresolvedId,
 				(jdbcValue, type, boundColumn) ->
 						identifierJunction.add(
-								new RelationalPredicate(
-										RelationalPredicate.Operator.EQUAL,
-										new ColumnReference( boundColumn ),
+								new ComparisonPredicate(
+										new ColumnReference( boundColumn ), ComparisonOperator.EQUAL,
 										new LiteralParameter(
 												jdbcValue,
 												boundColumn.getExpressableType(),
@@ -466,9 +466,8 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 								.getColumnMappings()
 								.findReferringColumn( boundColumn );
 						identifierJunction.add(
-								new RelationalPredicate(
-										RelationalPredicate.Operator.EQUAL,
-										new ColumnReference( referringColumn ),
+								new ComparisonPredicate(
+										new ColumnReference( referringColumn ), ComparisonOperator.EQUAL,
 										new LiteralParameter(
 												jdbcValue,
 												boundColumn.getExpressableType(),
@@ -684,9 +683,8 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 				unresolvedId,
 				(jdbcValue, type, boundColumn) ->
 						identifierJunction.add(
-								new RelationalPredicate(
-										RelationalPredicate.Operator.EQUAL,
-										new ColumnReference( boundColumn ),
+								new ComparisonPredicate(
+										new ColumnReference( boundColumn ), ComparisonOperator.EQUAL,
 										new LiteralParameter(
 												jdbcValue,
 												boundColumn.getExpressableType(),

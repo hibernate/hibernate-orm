@@ -55,7 +55,7 @@ import org.hibernate.sql.exec.spi.RowTransformer;
  */
 public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private final SqmSelectStatement sqm;
-	private final Map<QueryParameterImplementor, SqmParameter> sqmParamByQueryParam;
+	private final Map<QueryParameterImplementor<?>, SqmParameter> sqmParamByQueryParam;
 	private final RowTransformer<R> rowTransformer;
 
 	private JdbcSelect jdbcSelect;
@@ -64,7 +64,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	@SuppressWarnings("WeakerAccess")
 	public ConcreteSqmSelectQueryPlan(
 			SqmSelectStatement sqm,
-			Map<QueryParameterImplementor, SqmParameter> sqmParamByQueryParam,
+			Map<QueryParameterImplementor<?>, SqmParameter> sqmParamByQueryParam,
 			Class<R> resultType,
 			QueryOptions queryOptions) {
 		this.sqm = sqm;
@@ -215,7 +215,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			SqmSelectToSqlAstConverter sqmConverter) {
 		final Map<QueryParameterImplementor,List<JdbcParameter>> jdbcParamsByDomainParams = new HashMap<>();
 
-		for ( Map.Entry<QueryParameterImplementor, SqmParameter> paramEntry : sqmParamByQueryParam.entrySet() ) {
+		for ( Map.Entry<QueryParameterImplementor<?>, SqmParameter> paramEntry : sqmParamByQueryParam.entrySet() ) {
 			final List<JdbcParameter> jdbcParameters = sqmConverter.getJdbcParamsBySqmParam().get( paramEntry.getValue() );
 			jdbcParamsByDomainParams.put( paramEntry.getKey(), jdbcParameters );
 		}

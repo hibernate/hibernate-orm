@@ -15,6 +15,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.consume.spi.SqlDeleteToJdbcDeleteConverter;
@@ -23,7 +24,7 @@ import org.hibernate.sql.ast.tree.spi.expression.LiteralParameter;
 import org.hibernate.sql.ast.tree.spi.expression.PositionalParameter;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
-import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
+import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.BasicExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcDelete;
@@ -88,9 +89,8 @@ public class JoinTableRemovalExecutor implements CollectionRemovalExecutor {
 					parameterCollector.accept( column, parameter );
 
 					deleteRestriction.add(
-							new RelationalPredicate(
-									RelationalPredicate.Operator.EQUAL,
-									collectionTableRef.qualify( column ),
+							new ComparisonPredicate(
+									collectionTableRef.qualify( column ), ComparisonOperator.EQUAL,
 									parameter
 							)
 					);

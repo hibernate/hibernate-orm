@@ -32,6 +32,7 @@ import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.sqm.produce.internal.UniqueIdGenerator;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
@@ -66,7 +67,7 @@ import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
-import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
+import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.exec.internal.StandardJdbcParameterImpl;
 import org.hibernate.sql.results.spi.CircularFetchDetector;
 import org.hibernate.sql.results.spi.DomainResult;
@@ -256,9 +257,8 @@ public class MetamodelSelectBuilderProcess
 
 		if ( numberOfKeysToLoad <= 1 ) {
 			rootQuerySpec.addRestriction(
-					new RelationalPredicate(
-							RelationalPredicate.Operator.EQUAL,
-							keyColumnExpression,
+					new ComparisonPredicate(
+							keyColumnExpression, ComparisonOperator.EQUAL,
 							keyParameterExpression
 					)
 			);

@@ -49,12 +49,12 @@ import org.hibernate.query.criteria.JpaSetJoin;
 
 import static javax.persistence.criteria.Predicate.BooleanOperator.AND;
 import static javax.persistence.criteria.Predicate.BooleanOperator.OR;
-import static org.hibernate.query.criteria.spi.ComparisonPredicate.ComparisonOperator.EQUAL;
-import static org.hibernate.query.criteria.spi.ComparisonPredicate.ComparisonOperator.GREATER_THAN;
-import static org.hibernate.query.criteria.spi.ComparisonPredicate.ComparisonOperator.GREATER_THAN_OR_EQUAL;
-import static org.hibernate.query.criteria.spi.ComparisonPredicate.ComparisonOperator.LESS_THAN;
-import static org.hibernate.query.criteria.spi.ComparisonPredicate.ComparisonOperator.LESS_THAN_OR_EQUAL;
-import static org.hibernate.query.criteria.spi.ComparisonPredicate.ComparisonOperator.NOT_EQUAL;
+import static org.hibernate.query.spi.ComparisonOperator.EQUAL;
+import static org.hibernate.query.spi.ComparisonOperator.GREATER_THAN;
+import static org.hibernate.query.spi.ComparisonOperator.GREATER_THAN_OR_EQUAL;
+import static org.hibernate.query.spi.ComparisonOperator.LESS_THAN;
+import static org.hibernate.query.spi.ComparisonOperator.LESS_THAN_OR_EQUAL;
+import static org.hibernate.query.spi.ComparisonOperator.NOT_EQUAL;
 import static org.hibernate.query.criteria.spi.RestrictedSubQueryExpression.Modifier.ALL;
 import static org.hibernate.query.criteria.spi.RestrictedSubQueryExpression.Modifier.ANY;
 import static org.hibernate.query.criteria.spi.RestrictedSubQueryExpression.Modifier.SOME;

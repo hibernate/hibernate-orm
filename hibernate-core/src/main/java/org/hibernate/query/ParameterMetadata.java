@@ -81,21 +81,11 @@ public interface ParameterMetadata<P extends QueryParameter<?>> {
 	boolean hasNamedParameters();
 
 	/**
-	 * Returns the number of named parameters.
-	 *
-	 * @return The number of named parameters.  Will return zero if
-	 * {@link #hasNamedParameters()} ()} is {@code false}
-	 */
-	int getNamedParameterCount();
-
-	/**
 	 * Return the names of all named parameters of the query.
 	 *
 	 * @return the parameter names
 	 */
 	Set<String> getNamedParameterNames();
-
-	Collection<P> getNamedParameters();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
@@ -108,15 +98,5 @@ public interface ParameterMetadata<P extends QueryParameter<?>> {
 	 */
 	boolean hasPositionalParameters();
 
-	/**
-	 * Returns the number of positional parameters.
-	 *
-	 * @return The number of positional parameters.  Will return zero if
-	 * {@link #hasPositionalParameters()} is {@code false}
-	 */
-	int getPositionalParameterCount();
-
 	Set<Integer> getOrdinalParameterLabels();
-
-	Collection<P> getPositionalParameters();
 }

@@ -101,6 +101,7 @@ public class LobUnfetchedPropertyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialectFeature(DialectChecks.SupportsNClob.class)
 	public void testNClob() {
 		final int id = doInHibernate( this::sessionFactory, s -> {
 			FileNClob file = new FileNClob();

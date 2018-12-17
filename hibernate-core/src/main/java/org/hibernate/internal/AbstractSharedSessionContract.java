@@ -10,11 +10,13 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.util.TimeZone;
 import java.util.UUID;
 import javax.persistence.FlushModeType;
 import javax.persistence.TransactionRequiredException;
+import javax.persistence.Tuple;
 
 import org.hibernate.CacheMode;
 import org.hibernate.EmptyInterceptor;
@@ -49,6 +51,7 @@ import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
+import org.hibernate.jpa.spi.NativeQueryTupleTransformer;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.procedure.ProcedureCall;
@@ -70,6 +73,7 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
+import org.hibernate.transform.BasicTransformerAdapter;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
@@ -684,11 +688,44 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		try {
 			NativeQueryImplementor query = createNativeQuery( sqlString );
-			query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
+			handleNativeQueryResult(query, resultClass);
 			return query;
 		}
 		catch (RuntimeException he) {
 			throw exceptionConverter.convert( he );
+		}
+	}
+
+	private void handleNativeQueryResult(NativeQueryImplementor query, Class resultClass) {
+		boolean isObjectArray = Object[].class.equals( resultClass );
+
+		if ( Tuple.class.equals( resultClass ) ) {
+			query.setResultTransformer( new NativeQueryTupleTransformer() );
+		}
+		else if ( resultClass.isArray() && !isObjectArray ) {
+			Class elementClass = resultClass.getComponentType();
+
+			query.setResultTransformer( new BasicTransformerAdapter() {
+				@Override
+				public Object transformTuple(Object[] tuple, String[] aliases) {
+					Object[] result = (Object[]) Array.newInstance( elementClass, tuple.length );
+					for ( int i = 0; i < tuple.length; i++ ) {
+						result[i] = elementClass.cast( tuple[i] );
+					}
+					return result;
+				}
+			} );
+		}
+		else if ( this.getFactory().getMetamodel().getEntities().stream().filter( entity -> resultClass.isAssignableFrom( entity.getClass() ) ).findAny().isPresent() ) {
+			query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
+		}
+		else if ( !isObjectArray ) {
+			query.setResultTransformer( new BasicTransformerAdapter() {
+				@Override
+				public Object transformTuple(Object[] tuple, String[] aliases) {
+					return resultClass.cast( tuple[0] );
+				}
+			} );
 		}
 	}
 

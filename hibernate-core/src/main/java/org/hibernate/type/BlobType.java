@@ -7,12 +7,8 @@
 package org.hibernate.type;
 
 import java.sql.Blob;
-import java.sql.SQLException;
 
-import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.descriptor.java.BlobTypeDescriptor;
 
 /**
@@ -40,23 +36,7 @@ public class BlobType extends AbstractSingleColumnStandardBasicType<Blob> {
 
 	@Override
 	protected Blob getReplacement(Blob original, Blob target, SharedSessionContractImplementor session) {
-		if ( target == null ) {
-			return copyOriginalBlob( (Blob) original, session );
-		}
-
 		return session.getJdbcServices().getJdbcEnvironment().getDialect().getLobMergeStrategy().mergeBlob( original, target, session );
 	}
 
-	private Blob copyOriginalBlob(Blob original, SharedSessionContractImplementor session) {
-		try {
-			final LobCreator lobCreator = session.getFactory().getServiceRegistry().getService( JdbcServices.class ).getLobCreator(
-					session );
-			return original == null
-					? lobCreator.createBlob( ArrayHelper.EMPTY_BYTE_ARRAY )
-					: lobCreator.createBlob( original.getBinaryStream(), original.length() );
-		}
-		catch (SQLException e) {
-			throw session.getJdbcServices().getSqlExceptionHelper().convert( e, "unable to merge BLOB data" );
-		}
-	}
 }

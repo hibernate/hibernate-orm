@@ -1771,7 +1771,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Attaching an uninitialized collection with queued operations to a session: %s", id = 495)
 	void queuedOperationWhenAttachToSession(String collectionInfoString);
 
-	@LogMessage(level = INFO)
+	@LogMessage(level = DEBUG)
 	@Message(value = "Detaching an uninitialized collection with queued operations from a session: %s", id = 496)
 	void queuedOperationWhenDetachFromSession(String collectionInfoString);
 }

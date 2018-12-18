@@ -1,0 +1,26 @@
+== 6.0 Alpha2 announcement
+
+We are excited to announce the release of 6.0 Alpha2.
+
+See the announcements for previous 6.0 development releases:
+
+Alpha1:: http://in.relation.to/2018/12/06/hibernate-orm-600-alpha1-out/
+
+
+...
+
+
+=== More information
+
+See the user guide and migration guide for more information
+
+Gitter, IRC, ...
+
+
+=== Next step
+
+The plan for Alpha2 includes:
+
+* Inheritance
+* Complete association mapping support
+* Criteria

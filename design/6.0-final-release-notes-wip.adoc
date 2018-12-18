@@ -1,10 +1,17 @@
-== 6.0 Alpha1 announcement
+== 6.0 Alpha2 announcement
 
-We are excited to announce the release of 6.0 Alpha1.
+We are excited to announce the release of 6.0 Final.  6.0 is now considered stable and ready for
+production use.
+
+=== Synopsis
 
 The main design goal for 6.0 is to improve the performance of Hibernate's interactions with JDBC.  High-load performance
 testing showed that Hibernate's approach of reading values from the ResultSet by name to be the a big obstacle to scaling
-through-put.  This obviously affects the actual calls to ResultSet (resolving name to position).  But it also has
+through-put.  6.0 is essentially about converting Hibernate to read-by-name to read-by-position.  That seemingly
+minor change has major implications however.
+
+
+This obviously affects the actual calls to ResultSet (resolving name to position).  But it also has
 implications on the SQL generated; since we do not need the selection alias to read back the selection, we no longer
 render the alias which, combined with other SQL generation improvements reduces the size of the query string sent to the
 database which help better optimize sending the query "across the wire" as well as the database optimizer's ability to

@@ -8,6 +8,7 @@ package org.hibernate.test.ecid;
 
 import java.io.Serializable;
 import java.util.Iterator;
+import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -147,6 +148,7 @@ public class CompositeIdAssociationsWithEmbeddedCompositeIdTest extends BaseCore
 		private String name;
 
 		@Id
+		@Column(name="ind")
 		private int index;
 
 		public Parent() {

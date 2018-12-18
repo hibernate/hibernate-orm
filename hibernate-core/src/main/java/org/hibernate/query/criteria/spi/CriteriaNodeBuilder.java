@@ -32,6 +32,7 @@ import org.hibernate.NullPrecedence;
 import org.hibernate.SortOrder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.JpaTuple;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCompoundSelection;
@@ -58,7 +59,7 @@ import static org.hibernate.query.spi.ComparisonOperator.NOT_EQUAL;
 import static org.hibernate.query.criteria.spi.RestrictedSubQueryExpression.Modifier.ALL;
 import static org.hibernate.query.criteria.spi.RestrictedSubQueryExpression.Modifier.ANY;
 import static org.hibernate.query.criteria.spi.RestrictedSubQueryExpression.Modifier.SOME;
-import static org.hibernate.query.criteria.spi.UnaryArithmetic.Operation.UNARY_MINUS;
+import static org.hibernate.query.UnaryArithmeticOperator.UNARY_MINUS;
 
 /**
  * @author Steve Ebersole
@@ -331,11 +332,13 @@ public class CriteriaNodeBuilder implements HibernateCriteriaBuilder {
 			throw new IllegalArgumentException( "arguments to sum() cannot be null" );
 		}
 
+		// todo (6.0) : another case of where we should delay type "calculation" until we walk the SQM
+
 		final Class resultType = BinaryArithmetic.determineResultType( lhs.getJavaType(), rhs.getJavaType() );
 
 		return new BinaryArithmetic<N>(
 				(ExpressionImplementor) lhs,
-				BinaryArithmetic.Operation.ADD,
+				BinaryArithmeticOperator.ADD,
 				(ExpressionImplementor) rhs,
 				resultType,
 				this
@@ -367,7 +370,7 @@ public class CriteriaNodeBuilder implements HibernateCriteriaBuilder {
 
 		return new BinaryArithmetic<N>(
 				(ExpressionImplementor) lhs,
-				BinaryArithmetic.Operation.SUBTRACT,
+				BinaryArithmeticOperator.SUBTRACT,
 				(ExpressionImplementor) rhs,
 				resultType,
 				this
@@ -401,7 +404,7 @@ public class CriteriaNodeBuilder implements HibernateCriteriaBuilder {
 
 		return new BinaryArithmetic<N>(
 				(ExpressionImplementor) lhs,
-				BinaryArithmetic.Operation.MULTIPLY,
+				BinaryArithmeticOperator.MULTIPLY,
 				(ExpressionImplementor) rhs,
 				resultType,
 				this
@@ -433,7 +436,7 @@ public class CriteriaNodeBuilder implements HibernateCriteriaBuilder {
 
 		return new BinaryArithmetic<Number>(
 				(ExpressionImplementor) lhs,
-				BinaryArithmetic.Operation.DIVIDE,
+				BinaryArithmeticOperator.DIVIDE,
 				(ExpressionImplementor) rhs,
 				resultType,
 				this
@@ -465,7 +468,7 @@ public class CriteriaNodeBuilder implements HibernateCriteriaBuilder {
 
 		return new BinaryArithmetic<Integer>(
 				(ExpressionImplementor) lhs,
-				BinaryArithmetic.Operation.DIVIDE,
+				BinaryArithmeticOperator.DIVIDE,
 				(ExpressionImplementor) rhs,
 				resultType,
 				this

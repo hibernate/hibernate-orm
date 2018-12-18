@@ -14,9 +14,7 @@ import java.sql.Types;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
-
 import javax.persistence.EnumType;
-import javax.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
@@ -35,13 +33,12 @@ import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationProcess;
 import org.hibernate.metamodel.model.domain.spi.BasicTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.BasicValueMapper;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
-import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
+import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.StandardBasicTypes.StandardBasicType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
@@ -52,6 +49,7 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 import org.hibernate.type.internal.TypeConfigurationRegistry;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.query.BinaryArithmeticOperator.DIVIDE;
 
 /**
  * Defines a set of available Type instances as isolated from other configurations.  The
@@ -452,8 +450,8 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	public BasicValuedExpressableType resolveArithmeticType(
 			BasicValuedExpressableType firstType,
 			BasicValuedExpressableType secondType,
-			SqmBinaryArithmetic.Operation operation) {
-		return resolveArithmeticType( firstType, secondType, operation == SqmBinaryArithmetic.Operation.DIVIDE );
+			BinaryArithmeticOperator operator) {
+		return resolveArithmeticType( firstType, secondType, operator == DIVIDE );
 	}
 
 	/**

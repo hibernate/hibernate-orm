@@ -7,6 +7,7 @@
 
 package org.hibernate.sql.ast.tree.spi.expression;
 
+import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.spi.SqlExpressable;
@@ -25,17 +26,19 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class BinaryArithmeticExpression
 		implements Expression, SqlExpressable, DomainResultProducer {
-	private final Operation operation;
+
 	private final Expression lhsOperand;
+	private final BinaryArithmeticOperator operator;
 	private final Expression rhsOperand;
+
 	private final SqlExpressableType resultType;
 
 	public BinaryArithmeticExpression(
-			Operation operation,
 			Expression lhsOperand,
+			BinaryArithmeticOperator operator,
 			Expression rhsOperand,
 			SqlExpressableType resultType) {
-		this.operation = operation;
+		this.operator = operator;
 		this.lhsOperand = lhsOperand;
 		this.rhsOperand = rhsOperand;
 		this.resultType = resultType;
@@ -85,41 +88,6 @@ public class BinaryArithmeticExpression
 		);
 	}
 
-	public enum Operation {
-		ADD {
-			@Override
-			public String getOperatorSqlText() {
-				return "+";
-			}
-		},
-		SUBTRACT {
-			@Override
-			public String getOperatorSqlText() {
-				return "-";
-			}
-		},
-		MULTIPLY {
-			@Override
-			public String getOperatorSqlText() {
-				return "*";
-			}
-		},
-		DIVIDE {
-			@Override
-			public String getOperatorSqlText() {
-				return "/";
-			}
-		},
-		QUOT {
-			@Override
-			public String getOperatorSqlText() {
-				return "/";
-			}
-		};
-
-		public abstract String getOperatorSqlText();
-	}
-
 	/**
 	 * Get the left-hand operand.
 	 *
@@ -134,8 +102,8 @@ public class BinaryArithmeticExpression
 	 *
 	 * @return The operation
 	 */
-	public Operation getOperation() {
-		return operation;
+	public BinaryArithmeticOperator getOperator() {
+		return operator;
 	}
 
 	/**

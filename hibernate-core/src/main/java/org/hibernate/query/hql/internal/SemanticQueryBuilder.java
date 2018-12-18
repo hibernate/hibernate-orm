@@ -34,7 +34,9 @@ import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.sqm.LiteralNumberFormatException;
 import org.hibernate.query.sqm.NotYetImplementedException;
@@ -1698,13 +1700,13 @@ public class SemanticQueryBuilder
 		final SqmExpression firstOperand = (SqmExpression) ctx.expression( 0 ).accept( this );
 		final SqmExpression secondOperand = (SqmExpression) ctx.expression( 1 ).accept( this );
 		return new SqmBinaryArithmetic(
-				SqmBinaryArithmetic.Operation.ADD,
 				firstOperand,
+				BinaryArithmeticOperator.ADD,
 				secondOperand,
 				getSessionFactory().getTypeConfiguration().resolveArithmeticType(
 						(BasicValuedExpressableType) firstOperand.getExpressableType(),
 						(BasicValuedExpressableType) secondOperand.getExpressableType(),
-						SqmBinaryArithmetic.Operation.ADD
+						BinaryArithmeticOperator.ADD
 				)
 		);
 	}
@@ -1718,13 +1720,13 @@ public class SemanticQueryBuilder
 		final SqmExpression firstOperand = (SqmExpression) ctx.expression( 0 ).accept( this );
 		final SqmExpression secondOperand = (SqmExpression) ctx.expression( 1 ).accept( this );
 		return new SqmBinaryArithmetic(
-				SqmBinaryArithmetic.Operation.SUBTRACT,
 				firstOperand,
+				BinaryArithmeticOperator.SUBTRACT,
 				secondOperand,
 				getSessionFactory().getTypeConfiguration().resolveArithmeticType(
 						(BasicValuedExpressableType) firstOperand.getExpressableType(),
 						(BasicValuedExpressableType) secondOperand.getExpressableType(),
-						SqmBinaryArithmetic.Operation.SUBTRACT
+						BinaryArithmeticOperator.SUBTRACT
 				)
 		);
 	}
@@ -1738,13 +1740,13 @@ public class SemanticQueryBuilder
 		final SqmExpression firstOperand = (SqmExpression) ctx.expression( 0 ).accept( this );
 		final SqmExpression secondOperand = (SqmExpression) ctx.expression( 1 ).accept( this );
 		return new SqmBinaryArithmetic(
-				SqmBinaryArithmetic.Operation.MULTIPLY,
 				firstOperand,
+				BinaryArithmeticOperator.MULTIPLY,
 				secondOperand,
 				getSessionFactory().getTypeConfiguration().resolveArithmeticType(
 						(BasicValuedExpressableType) firstOperand.getExpressableType(),
 						(BasicValuedExpressableType) secondOperand.getExpressableType(),
-						SqmBinaryArithmetic.Operation.MULTIPLY
+						BinaryArithmeticOperator.MULTIPLY
 				)
 		);
 	}
@@ -1758,13 +1760,13 @@ public class SemanticQueryBuilder
 		final SqmExpression firstOperand = (SqmExpression) ctx.expression( 0 ).accept( this );
 		final SqmExpression secondOperand = (SqmExpression) ctx.expression( 1 ).accept( this );
 		return new SqmBinaryArithmetic(
-				SqmBinaryArithmetic.Operation.DIVIDE,
 				firstOperand,
+				BinaryArithmeticOperator.DIVIDE,
 				secondOperand,
 				getSessionFactory().getTypeConfiguration().resolveArithmeticType(
 						(BasicValuedExpressableType) firstOperand.getExpressableType(),
 						(BasicValuedExpressableType) secondOperand.getExpressableType(),
-						SqmBinaryArithmetic.Operation.DIVIDE
+						BinaryArithmeticOperator.DIVIDE
 				)
 		);
 	}
@@ -1778,13 +1780,13 @@ public class SemanticQueryBuilder
 		final SqmExpression firstOperand = (SqmExpression) ctx.expression( 0 ).accept( this );
 		final SqmExpression secondOperand = (SqmExpression) ctx.expression( 1 ).accept( this );
 		return new SqmBinaryArithmetic(
-				SqmBinaryArithmetic.Operation.MODULO,
 				firstOperand,
+				BinaryArithmeticOperator.MODULO,
 				secondOperand,
 				getSessionFactory().getTypeConfiguration().resolveArithmeticType(
 						(BasicValuedExpressableType) firstOperand.getExpressableType(),
 						(BasicValuedExpressableType) secondOperand.getExpressableType(),
-						SqmBinaryArithmetic.Operation.MODULO
+						BinaryArithmeticOperator.MODULO
 				)
 		);
 	}
@@ -1792,7 +1794,7 @@ public class SemanticQueryBuilder
 	@Override
 	public Object visitUnaryPlusExpression(HqlParser.UnaryPlusExpressionContext ctx) {
 		return new SqmUnaryOperation(
-				SqmUnaryOperation.Operation.PLUS,
+				UnaryArithmeticOperator.UNARY_PLUS,
 				(SqmExpression) ctx.expression().accept( this )
 		);
 	}
@@ -1800,7 +1802,7 @@ public class SemanticQueryBuilder
 	@Override
 	public Object visitUnaryMinusExpression(HqlParser.UnaryMinusExpressionContext ctx) {
 		return new SqmUnaryOperation(
-				SqmUnaryOperation.Operation.MINUS,
+				UnaryArithmeticOperator.UNARY_MINUS,
 				(SqmExpression) ctx.expression().accept( this )
 		);
 	}

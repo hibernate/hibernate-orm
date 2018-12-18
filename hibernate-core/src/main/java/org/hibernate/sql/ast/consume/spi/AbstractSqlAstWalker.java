@@ -16,6 +16,7 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.SortOrder;
+import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.SqlTreeException;
@@ -685,7 +686,7 @@ public abstract class AbstractSqlAstWalker
 	@SuppressWarnings("unchecked")
 	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
 		arithmeticExpression.getLeftHandOperand().accept( this );
-		appendSql( arithmeticExpression.getOperation().getOperatorSqlText() );
+		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
 		arithmeticExpression.getRightHandOperand().accept( this );
 	}
 
@@ -836,7 +837,7 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitUnaryOperationExpression(UnaryOperation unaryOperationExpression) {
-		if ( unaryOperationExpression.getOperator() == UnaryOperation.Operator.PLUS ) {
+		if ( unaryOperationExpression.getOperator() == UnaryArithmeticOperator.UNARY_PLUS ) {
 			appendSql( "+" );
 		}
 		else {

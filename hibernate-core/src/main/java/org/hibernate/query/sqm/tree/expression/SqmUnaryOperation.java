@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import java.util.function.Supplier;
 
+import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 
@@ -15,20 +16,14 @@ import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
  * @author Steve Ebersole
  */
 public class SqmUnaryOperation extends AbstractInferableTypeSqmExpression {
-
-	public enum Operation {
-		PLUS,
-		MINUS
-	}
-
-	private final Operation operation;
+	private final UnaryArithmeticOperator operation;
 	private final SqmExpression operand;
 
-	public SqmUnaryOperation(Operation operation, SqmExpression operand) {
+	public SqmUnaryOperation(UnaryArithmeticOperator operation, SqmExpression operand) {
 		this( operation, operand, (BasicValuedExpressableType) operand.getExpressableType() );
 	}
 
-	public SqmUnaryOperation(Operation operation, SqmExpression operand, BasicValuedExpressableType inherentType) {
+	public SqmUnaryOperation(UnaryArithmeticOperator operation, SqmExpression operand, BasicValuedExpressableType inherentType) {
 		super( inherentType );
 		this.operation = operation;
 		this.operand = operand;
@@ -38,7 +33,7 @@ public class SqmUnaryOperation extends AbstractInferableTypeSqmExpression {
 		return operand;
 	}
 
-	public Operation getOperation() {
+	public UnaryArithmeticOperator getOperation() {
 		return operation;
 	}
 
@@ -60,6 +55,6 @@ public class SqmUnaryOperation extends AbstractInferableTypeSqmExpression {
 
 	@Override
 	public String asLoggableText() {
-		return ( operation == Operation.MINUS ? '-' : '+' ) + operand.asLoggableText();
+		return ( operation == UnaryArithmeticOperator.UNARY_MINUS ? '-' : '+' ) + operand.asLoggableText();
 	}
 }

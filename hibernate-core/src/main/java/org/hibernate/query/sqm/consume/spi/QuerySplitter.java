@@ -755,8 +755,8 @@ public class QuerySplitter {
 		@Override
 		public SqmBinaryArithmetic visitBinaryArithmeticExpression(SqmBinaryArithmetic expression) {
 			return new SqmBinaryArithmetic(
-					expression.getOperation(),
 					(SqmExpression) expression.getLeftHandOperand().accept( this ),
+					expression.getOperator(),
 					(SqmExpression) expression.getRightHandOperand().accept( this ),
 					expression.getExpressableType()
 			);

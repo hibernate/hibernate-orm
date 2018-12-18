@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.criteria.spi;
 
+import org.hibernate.query.UnaryArithmeticOperator;
+
 /**
  * Models unary arithmetic operation (unary plus and unary minus).
  *
@@ -13,25 +15,20 @@ package org.hibernate.query.criteria.spi;
  */
 public class UnaryArithmetic<T> extends AbstractExpression<T> {
 
-	public enum Operation {
-		UNARY_PLUS,
-		UNARY_MINUS
-	}
-
-	private final Operation operation;
+	private final UnaryArithmeticOperator operator;
 	private final ExpressionImplementor<T> operand;
 
 	public UnaryArithmetic(
-			Operation operation,
+			UnaryArithmeticOperator operator,
 			ExpressionImplementor<T> operand,
 			CriteriaNodeBuilder builder) {
 		super( operand.getJavaTypeDescriptor(), builder );
-		this.operation = operation;
+		this.operator = operator;
 		this.operand = operand;
 	}
 
-	public Operation getOperation() {
-		return operation;
+	public UnaryArithmeticOperator getOperator() {
+		return operator;
 	}
 
 	public ExpressionImplementor<T> getOperand() {

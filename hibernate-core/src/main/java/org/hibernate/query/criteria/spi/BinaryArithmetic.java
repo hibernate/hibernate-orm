@@ -6,9 +6,7 @@
  */
 package org.hibernate.query.criteria.spi;
 
-import javax.persistence.criteria.Expression;
-
-import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.BinaryArithmeticOperator;
 
 /**
  * Models standard arithmetc operations with two operands.
@@ -16,16 +14,6 @@ import org.hibernate.query.criteria.JpaExpression;
  * @author Steve Ebersole
  */
 public class BinaryArithmetic<N extends Number> extends AbstractExpression<N> {
-
-	public enum Operation {
-		ADD,
-		SUBTRACT,
-		MULTIPLY,
-		DIVIDE,
-		QUOT,
-		MOD,
-		;
-	}
 
 	public static Class<? extends Number> determineResultType(
 			Class<? extends Number> argument1Type,
@@ -47,22 +35,22 @@ public class BinaryArithmetic<N extends Number> extends AbstractExpression<N> {
 
 
 	private final ExpressionImplementor<? extends N> lhs;
-	private final Operation operator;
+	private final BinaryArithmeticOperator operator;
 	private final ExpressionImplementor<? extends N> rhs;
 
 
 	/**
 	 * Creates an arithmethic operation based on 2 expressions.
 	 *
-	 * @param criteriaBuilder The builder for query components.
-	 * @param resultType The operation result type
-	 * @param operator The operator (type of operation).
 	 * @param lhs The left-hand operand.
+	 * @param operator The operator (type of operation).
 	 * @param rhs The right-hand operand
+	 * @param criteriaBuilder The builder for query components.
 	 */
+	@SuppressWarnings("unchecked")
 	public BinaryArithmetic(
 			ExpressionImplementor<? extends N> lhs,
-			Operation operator,
+			BinaryArithmeticOperator operator,
 			ExpressionImplementor<? extends N> rhs,
 			Class<N> resultType,
 			CriteriaNodeBuilder criteriaBuilder) {
@@ -75,15 +63,15 @@ public class BinaryArithmetic<N extends Number> extends AbstractExpression<N> {
 	/**
 	 * Creates an arithmethic operation based on an expression and a literal.
 	 *
-	 * @param criteriaBuilder The builder for query components.
-	 * @param javaType The operation result type
-	 * @param operator The operator (type of operation).
 	 * @param lhs The left-hand operand
+	 * @param operator The operator (type of operation).
 	 * @param rhs The right-hand operand (the literal)
+	 * @param criteriaBuilder The builder for query components.
 	 */
+	@SuppressWarnings("unchecked")
 	public BinaryArithmetic(
 			ExpressionImplementor<? extends N> lhs,
-			Operation operator,
+			BinaryArithmeticOperator operator,
 			N rhs,
 			Class<N> javaType,
 			CriteriaNodeBuilder criteriaBuilder) {
@@ -96,15 +84,15 @@ public class BinaryArithmetic<N extends Number> extends AbstractExpression<N> {
 	/**
 	 * Creates an arithmetic operation based on an expression and a literal.
 	 *
-	 * @param criteriaBuilder The builder for query components.
-	 * @param javaType The operation result type
-	 * @param operator The operator (type of operation).
 	 * @param lhs The left-hand operand (the literal)
+	 * @param operator The operator (type of operation).
 	 * @param rhs The right-hand operand
+	 * @param criteriaBuilder The builder for query components.
 	 */
+	@SuppressWarnings("unchecked")
 	public BinaryArithmetic(
 			N lhs,
-			Operation operator,
+			BinaryArithmeticOperator operator,
 			ExpressionImplementor<? extends N> rhs,
 			Class<N> javaType,
 			CriteriaNodeBuilder criteriaBuilder) {
@@ -118,7 +106,7 @@ public class BinaryArithmetic<N extends Number> extends AbstractExpression<N> {
 		return lhs;
 	}
 
-	public Operation getOperator() {
+	public BinaryArithmeticOperator getOperator() {
 		return operator;
 	}
 

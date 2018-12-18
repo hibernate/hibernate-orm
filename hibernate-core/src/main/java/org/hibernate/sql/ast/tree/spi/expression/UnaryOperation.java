@@ -7,6 +7,7 @@
 
 package org.hibernate.sql.ast.tree.spi.expression;
 
+import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.spi.SqlExpressable;
@@ -25,22 +26,18 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class UnaryOperation implements Expression, SqlExpressable, DomainResultProducer {
 
-	public enum Operator {
-		PLUS,
-		MINUS;
-	}
-	private final Operator operator;
+	private final UnaryArithmeticOperator operator;
 
 	private final Expression operand;
 	private final SqlExpressableType type;
 
-	public UnaryOperation(Operator operator, Expression operand, SqlExpressableType type) {
+	public UnaryOperation(UnaryArithmeticOperator operator, Expression operand, SqlExpressableType type) {
 		this.operator = operator;
 		this.operand = operand;
 		this.type = type;
 	}
 
-	public Operator getOperator() {
+	public UnaryArithmeticOperator getOperator() {
 		return operator;
 	}
 

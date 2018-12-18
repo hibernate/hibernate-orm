@@ -32,7 +32,9 @@ import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
+import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.criteria.sqm.JpaParameterSqmWrapper;
 import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.spi.QueryOptions;
@@ -188,10 +190,15 @@ import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameters;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.sql.results.spi.SqlSelection;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.query.BinaryArithmeticOperator.ADD;
+import static org.hibernate.query.BinaryArithmeticOperator.DIVIDE;
+import static org.hibernate.query.BinaryArithmeticOperator.MODULO;
+import static org.hibernate.query.BinaryArithmeticOperator.MULTIPLY;
+import static org.hibernate.query.BinaryArithmeticOperator.QUOT;
+import static org.hibernate.query.BinaryArithmeticOperator.SUBTRACT;
 
 /**
  * @author Steve Ebersole
@@ -1441,17 +1448,8 @@ public abstract class BaseSqmToSqlAstConverter
 		}
 	}
 
-	private UnaryOperation.Operator interpret(SqmUnaryOperation.Operation operation) {
-		switch ( operation ) {
-			case PLUS: {
-				return UnaryOperation.Operator.PLUS;
-			}
-			case MINUS: {
-				return UnaryOperation.Operator.MINUS;
-			}
-		}
-
-		throw new IllegalStateException( "Unexpected UnaryOperationExpression Operation : " + operation );
+	private UnaryArithmeticOperator interpret(UnaryArithmeticOperator operator) {
+		return operator;
 	}
 
 	@Override
@@ -1459,7 +1457,7 @@ public abstract class BaseSqmToSqlAstConverter
 		shallownessStack.push( Shallowness.NONE );
 
 		try {
-			if ( expression.getOperation() == SqmBinaryArithmetic.Operation.MODULO ) {
+			if ( expression.getOperator() == MODULO ) {
 				return new NonStandardFunction(
 						"mod",
 						null, //(BasicType) extractOrmType( expression.getExpressableType() ),
@@ -1468,8 +1466,7 @@ public abstract class BaseSqmToSqlAstConverter
 				);
 			}
 			return new BinaryArithmeticExpression(
-					interpret( expression.getOperation() ),
-					(Expression) expression.getLeftHandOperand().accept( this ),
+					(Expression) expression.getLeftHandOperand().accept( this ), interpret( expression.getOperator() ),
 					(Expression) expression.getRightHandOperand().accept( this ),
 					expression.getExpressableType().getSqlExpressableType()
 			);
@@ -1479,26 +1476,26 @@ public abstract class BaseSqmToSqlAstConverter
 		}
 	}
 
-	private BinaryArithmeticExpression.Operation interpret(SqmBinaryArithmetic.Operation operation) {
-		switch ( operation ) {
+	private BinaryArithmeticOperator interpret(BinaryArithmeticOperator operator) {
+		switch ( operator ) {
 			case ADD: {
-				return BinaryArithmeticExpression.Operation.ADD;
+				return ADD;
 			}
 			case SUBTRACT: {
-				return BinaryArithmeticExpression.Operation.SUBTRACT;
+				return SUBTRACT;
 			}
 			case MULTIPLY: {
-				return BinaryArithmeticExpression.Operation.MULTIPLY;
+				return MULTIPLY;
 			}
 			case DIVIDE: {
-				return BinaryArithmeticExpression.Operation.DIVIDE;
+				return DIVIDE;
 			}
 			case QUOT: {
-				return BinaryArithmeticExpression.Operation.QUOT;
+				return QUOT;
 			}
 		}
 
-		throw new IllegalStateException( "Unexpected BinaryArithmeticExpression Operation : " + operation );
+		throw new IllegalStateException( "Unexpected BinaryArithmeticOperator : " + operator );
 	}
 
 	@Override

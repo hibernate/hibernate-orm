@@ -50,6 +50,39 @@ public class NullnessHelper {
 				}
 			}
 		}
+
+		return null;
+	}
+
+	/**
+	 * Operates like SQL coalesce expression, returning the first non-empty value
+	 *
+	 * @implNote This impl treats empty strings (`""`) as null.
+	 *
+	 * @param valueSuppliers List of value Suppliers
+	 * @param <T> Generic type of values to coalesce
+	 *
+	 * @return The first non-empty value, or null if all values were empty
+	 */
+	@SafeVarargs
+	public static <T> T coalesce(Supplier<T>... valueSuppliers) {
+		if ( valueSuppliers == null ) {
+			return null;
+		}
+		for ( Supplier<T> valueSupplier : valueSuppliers ) {
+			if ( valueSupplier != null ) {
+				final T value = valueSupplier.get();
+				if ( value instanceof String ) {
+					if ( StringHelper.isNotEmpty( (String) value ) ) {
+						return value;
+					}
+				}
+				else {
+					return value;
+				}
+			}
+		}
+
 		return null;
 	}
 }

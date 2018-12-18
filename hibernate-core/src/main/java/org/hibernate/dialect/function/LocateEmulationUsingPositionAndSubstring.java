@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
@@ -134,16 +135,16 @@ public class LocateEmulationUsingPositionAndSubstring
 		);
 
 		final SqmExpression startMinusOne = new SqmBinaryArithmetic(
-				SqmBinaryArithmetic.Operation.SUBTRACT,
 				start,
+				BinaryArithmeticOperator.SUBTRACT,
 				LiteralHelper.INTEGER_ONE,
 				StandardSpiBasicTypes.INTEGER
 		);
 
 
 		final SqmExpression positionPluStartMinusOne = new SqmBinaryArithmetic(
-				SqmBinaryArithmetic.Operation.ADD,
 				positionCall,
+				BinaryArithmeticOperator.ADD,
 				startMinusOne,
 				StandardSpiBasicTypes.INTEGER
 		);

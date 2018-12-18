@@ -296,6 +296,10 @@ public interface SessionFactoryOptions {
 		return Statistics.DEFAULT_QUERY_STATISTICS_MAX_SIZE;
 	}
 
+	/**
+	 * @deprecated Since 5.4.1, this is no longer used.
+	 */
+	@Deprecated
 	default boolean isPostInsertIdentifierDelayableEnabled() {
 		return true;
 	}

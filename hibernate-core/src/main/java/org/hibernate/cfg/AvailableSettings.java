@@ -2003,19 +2003,4 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * @since 5.4
 	 */
 	String SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY = "hibernate.id.sequence.increment_size_mismatch_strategy";
-
-	/**
-	 * This setting controls whether the default behavior for delayed identity inserts is disabled.
-	 * </p>
-	 * Hibernate defines a set of rules that are used to determine if an insert statement that has
-	 * an identity-based column can be delayed until flush/commit or if the statement must be
-	 * executed early because access to the identity column is needed.
-	 * </p>
-	 * In the event that those defined rules are insufficient for a given mapping scenario, this
-	 * setting can be set to {@code true} to permanently disable delayed identity inserts for all
-	 * transactions as a short-term workaround.
-	 * </p>
-	 * The default value is {@code false}.
-	 */
-	String DISABLE_DELAYED_IDENTIFIER_POST_INSERTS = "hibernate.id.disable_delayed_identifier_post_inserts";
 }

@@ -811,8 +811,4 @@ public interface EntityPersister extends EntityDefinition {
 	int[] resolveAttributeIndexes(String[] attributeNames);
 
 	boolean canUseReferenceCacheEntries();
-
-	default boolean canIdentityInsertBeDelayed() {
-		return false;
-	}
 }

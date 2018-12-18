@@ -101,7 +101,7 @@ Determining the `SqlTypeDescriptor` to use for a basic mapping is determined in 
 todo Examples...
 
 [[Legacy-Type]]
-==== Hibernate's Legacy Type
+=== Hibernate's Legacy Type
 
 `UserType` and `BasicType`.
 
@@ -112,14 +112,17 @@ CDI integration for resolving named type classes
 todo Examples...
 
 
-==== BasicValueConverter
+=== BasicValueConverter
 
 Yadda yadda yadda...
 
 todo Examples...
 
 
-==== @JavaTypeDescriptor
+=== @JavaTypeDescriptor
+
+
+=== `@Nationalized`, `@Lob`
 
 
 [[Non-Basic-Type]]

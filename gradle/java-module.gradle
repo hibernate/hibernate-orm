@@ -34,6 +34,13 @@ apply plugin: 'checkstyle'
 apply plugin: 'build-dashboard'
 apply plugin: 'project-report'
 
+// Attempt to leverage JetBrain's Gradle extension to automatically define 
+// `copyResourcesToIntelliJOutFolder` as a "build trigger" on import.
+//
+// However, see https://github.com/JetBrains/gradle-idea-ext-plugin/issues/8
+
+apply plugin: 'org.jetbrains.gradle.plugin.idea-ext'
+
 ext {
 	java9ModuleNameBase = project.name.startsWith( 'hibernate-' ) ? name.drop( 'hibernate-'.length() ): name
 	java9ModuleName = "org.hibernate.orm.$project.java9ModuleNameBase"

@@ -51,6 +51,9 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PointbaseDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.TimesTenDialect;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.CalendarType;
@@ -60,6 +63,7 @@ import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
 import org.junit.Test;
 
+@RequiresDialectFeature(DialectChecks.SupportsNoColumnInsert.class)
 public class FumTest extends LegacyTestCase {
 	private static short fumKeyShort = 1;
 

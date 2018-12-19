@@ -104,15 +104,15 @@ public class Insert {
 		buf.append("insert into ")
 			.append(tableName);
 		if ( columns.size()==0 ) {
-			try {
+			if ( dialect.supportsNoColumnsInsert() ) {
 				buf.append( ' ' ).append( dialect.getNoColumnsInsertString() );
 			}
-			catch ( MappingException e ) {
+			else {
 				throw new MappingException(
 						String.format(
-								"Unable to build insert statement for table [%s]: %s",
+								"The INSERT statement for table [%s] contains no column, and this is not supported by [%s]",
 								tableName,
-								e.getMessage()
+								dialect
 						)
 				);
 			}

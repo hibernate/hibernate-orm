@@ -1882,6 +1882,15 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * Check if the INSERT statement is allowed to contain no column.
+	 *
+	 * @return if the Dialect supports no-column INSERT.
+	 */
+	public boolean supportsNoColumnsInsert() {
+		return true;
+	}
+
+	/**
 	 * The name of the SQL function that transforms a string to
 	 * lowercase
 	 *

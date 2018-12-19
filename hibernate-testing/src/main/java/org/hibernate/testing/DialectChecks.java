@@ -153,13 +153,13 @@ abstract public class DialectChecks {
 			return dialect.supportsExistsInSelect();
 		}
 	}
-	
+
 	public static class SupportsLobValueChangePropogation implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return dialect.supportsLobValueChangePropogation();
 		}
 	}
-	
+
 	public static class SupportsLockTimeouts implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return dialect.supportsLockTimeouts();
@@ -254,6 +254,12 @@ abstract public class DialectChecks {
 			return !(
 				dialect instanceof DB2Dialect
 			);
+		}
+	}
+
+	public static class SupportsNoColumnInsert implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.supportsNoColumnsInsert();
 		}
 	}
 }

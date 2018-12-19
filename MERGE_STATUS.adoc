@@ -1,0 +1,65 @@
+= Hibernate ORM 5.x (master) -> 6 (wip/6.0) merge status
+
+Last merge: *2018-12-18*
+
+Last commit considered: https://github.com/hibernate/hibernate-orm/commit/08747fc2f4b33414ef05ac039b67e1d33c14db5f[*08747fc2f4b33414ef05ac039b67e1d33c14db5f*]
+
+[NOTE]
+====
+The _TODO_ section is about issues that should be merged as soon as possible.
+
+_Issues kept for later_ is for issues related to unimplemented or incomplete features that we cannot port right now.
+
+If a _TODO_ ends up being impossible to merge for now, please move the item to the next section.
+====
+
+== TODO
+
+=== HHH-13147 - Fix DelayedPostIdentifierInsert when second-level cache enabled
+
+https://github.com/hibernate/hibernate-orm/commit/6d5dd25e7aeba23161f82e79a2a5bd104dddbedf
+https://github.com/hibernate/hibernate-orm/commit/9ff14a33c78b11f03351748dfe4a5610517325f3
+
+-> *Chris*
+
+=== HHH-13084 HHH-13114 "id" not being an id
+
+https://github.com/hibernate/hibernate-orm/commit/346b3c7f3ed2c923f17967b6d88dd3dcd735c9e4
+https://github.com/hibernate/hibernate-orm/commit/7316307d0e10772b10b7dba94ac278ed1cf96c0f
+https://github.com/hibernate/hibernate-orm/commit/fa5b632f4e791f8b9b3c3065ea5e24a442a59f9c
+
+-> *Andrea*
+
+=== HHH-13140 - Criteria API multiselect aliases are not passed through t…
+
+https://github.com/hibernate/hibernate-orm/commit/89372191ecf450c37f2509ddfb61c638e1563413
+
+-> *Vlad* let's try to port the test and see if it still needs fixing in 6, if not implemented, move to other section
+
+== Issues kept for later
+
+=== HHH-12555 - Lazy loading of blobs with enhancement
+
+Related to blob type, merge and enhancement (UNFETCHED_PROPERTY)
+
+https://github.com/hibernate/hibernate-orm/commit/1af878166fe0883ceb3d9130afa2790850492624
+https://github.com/hibernate/hibernate-orm/commit/4e05953240264d32fe67f6e0f1810d8168c2725f
+https://github.com/hibernate/hibernate-orm/commit/ca6dc226eb53a0f40978847d2d251b64c5e49f41
+https://github.com/hibernate/hibernate-orm/commit/4d0b5dc184f7b48a493da31edfe4acea30c8e975
+
+Not implemented yet.
+
+=== HHH-13151 Fix fetch of treated entity
+
+Related to JPA criteria and treat.
+
+https://github.com/hibernate/hibernate-orm/commit/478f6d0e111d8714f36aa7026d47e8cffde99bb2
+
+Not implemented yet.
+
+=== HHH-13094 - Respect @Any.fetch setting to FetchType.EAGER
+
+https://github.com/hibernate/hibernate-orm/commit/08747fc2f4b33414ef05ac039b67e1d33c14db5f
+
+`@Any` support is not there for now.
+

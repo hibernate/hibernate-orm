@@ -33,7 +33,10 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 /**
  * @author Ryan Emerson
  */
-@RequiresDialectFeature( value = DialectChecks.SupportsIdentityColumns.class, jiraKey = "HHH-9979")
+@RequiresDialectFeature( value = {
+		DialectChecks.SupportsIdentityColumns.class,
+		DialectChecks.SupportsNoColumnInsert.class
+}, jiraKey = "HHH-9979")
 @TestForIssue( jiraKey = "HHH-9979")
 public class MergeNotNullCollectionUsingIdentityTest extends BaseCoreFunctionalTestCase {
 

@@ -10,9 +10,13 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+
 /**
  * @author Steve Ebersole
  */
+@RequiresDialectFeature(DialectChecks.SupportsNoColumnInsert.class)
 public class DeleteTest extends AbstractOperationTestCase {
 	@Test
 	@SuppressWarnings( {"unchecked"})

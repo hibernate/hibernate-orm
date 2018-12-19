@@ -17,6 +17,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
@@ -51,7 +53,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-
+@RequiresDialectFeature(DialectChecks.SupportsNoColumnInsert.class)
 public class ParentChildTest extends LegacyTestCase {
 	@Override
 	public String[] getMappings() {

@@ -90,6 +90,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+@RequiresDialectFeature(DialectChecks.SupportsNoColumnInsert.class)
 public class FooBarTest extends LegacyTestCase {
 
 	@Override

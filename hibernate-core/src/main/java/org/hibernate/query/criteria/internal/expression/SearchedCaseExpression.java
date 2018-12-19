@@ -114,9 +114,14 @@ public class SearchedCaseExpression<R>
 					.append( ( (Renderable) whenClause.getResult() ).render( renderingContext ) );
 		}
 
-		caseStatement.append( " else " )
-				.append( ( (Renderable) getOtherwiseResult() ).render( renderingContext ) )
-				.append( " end" );
+		Expression otherwiseResult = getOtherwiseResult();
+
+		if(otherwiseResult != null) {
+			caseStatement.append( " else " )
+					.append( ( (Renderable) otherwiseResult ).render( renderingContext ) );
+		}
+
+		caseStatement.append( " end" );
 
 		return caseStatement.toString();
 	}

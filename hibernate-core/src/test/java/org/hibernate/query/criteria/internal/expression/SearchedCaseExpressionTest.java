@@ -24,11 +24,13 @@ import org.hibernate.dialect.PostgreSQL81Dialect;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -85,7 +87,42 @@ public class SearchedCaseExpressionTest extends BaseCoreFunctionalTestCase {
 		} );
     }
 
-    @Override
+    @Test
+	@TestForIssue( jiraKey = "HHH-13167" )
+    public void testMissingElseClause() {
+		doInHibernate( this::sessionFactory, session -> {
+			Event event = new Event();
+			event.id = 1L;
+			event.type = EventType.TYPE1;
+
+			session.persist( event );
+		} );
+
+		doInHibernate( this::sessionFactory, session -> {
+			CriteriaBuilder cb = session.getCriteriaBuilder();
+
+			CriteriaQuery<Event> criteria = cb.createQuery(Event.class);
+
+			Root<Event> root = criteria.from(Event.class);
+			Path<EventType> type = root.get("type");
+
+			Expression<String> caseWhen = cb.<String>selectCase()
+					.when(cb.equal(type, EventType.TYPE1), "Matched");
+
+			criteria.select(root);
+			criteria.where(cb.equal(caseWhen, "Matched"));
+
+			Event event = session.createQuery(criteria).getSingleResult();
+			assertEquals(1L, (long) event.id);
+		} );
+    }
+
+	@Override
+	protected boolean isCleanupTestDataRequired() {
+		return true;
+	}
+
+	@Override
     protected Class[] getAnnotatedClasses() {
         return new Class[]{Event.class, EventType.class};
     }

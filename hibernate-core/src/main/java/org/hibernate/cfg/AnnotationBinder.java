@@ -565,7 +565,7 @@ public final class AnnotationBinder {
 				inheritanceState
 		);
 
-		if(superEntity != null && (
+		if(inheritanceState.getType() != InheritanceType.TABLE_PER_CLASS && superEntity != null && (
 				clazzToProcess.getAnnotation( AttributeOverride.class ) != null ||
 				clazzToProcess.getAnnotation( AttributeOverrides.class ) != null ) ) {
 			LOG.unsupportedAttributeOverrideWithEntityInheritance( clazzToProcess.getName() );

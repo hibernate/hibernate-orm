@@ -14,15 +14,22 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
+import org.hibernate.metamodel.model.domain.spi.DiscriminatorDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.SortOrder;
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.SqlTreeException;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.spi.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.spi.expression.SubstrFunction;
+import org.hibernate.sql.ast.tree.spi.expression.domain.DiscriminatorReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.EntityTypeLiteral;
+import org.hibernate.sql.ast.tree.spi.expression.domain.EntityValuedNavigableReference;
 import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.expression.AbsFunction;
@@ -679,6 +686,34 @@ public abstract class AbstractSqlAstWalker
 		}
 		else {
 			expression.getExpression().accept( this );
+		}
+	}
+
+	@Override
+	public void visitEntityTypeLiteral(EntityTypeLiteral expression) {
+		final EntityTypeDescriptor<?> referencedSubType = expression.getEntityTypeDescriptor();
+		final DiscriminatorDescriptor<?> discriminatorDescriptor = expression.getDiscriminatorDescriptor();
+
+		final Object discriminatorValue = discriminatorDescriptor.getDiscriminatorMappings()
+				.entityNameToDiscriminatorValue( referencedSubType.getEntityName() );
+
+		appendSql( discriminatorValue.toString() );
+	}
+
+	@Override
+	public void visitDiscriminatorReference(DiscriminatorReference reference) {
+		final EntityValuedNavigableReference entityReference = reference.getNavigableContainerReference();
+		final ColumnReferenceQualifier qualifier = entityReference.getColumnReferenceQualifier();
+
+		final DiscriminatorDescriptor discriminatorDescriptor = reference.getNavigable();
+		final Column column = discriminatorDescriptor.getBoundColumn();
+
+		if ( qualifier == null ) {
+			appendSql( column.render() );
+		}
+		else {
+			final TableReference tableReference = qualifier.locateTableReference( column.getSourceTable() );
+			appendSql( column.render( tableReference.getIdentificationVariable() ) );
 		}
 	}
 

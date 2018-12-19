@@ -277,12 +277,16 @@ public class CriteriaQueryToSqmTransformer extends BaseCriteriaVisitor {
 	@Override
 	public SqmParameter visitParameter(ParameterExpression<?> expression) {
 		if ( parameterExpressionMap != null ) {
+			// we have processed parameter-expressions previously - see if we have
+			// processed that specific one and if so, reuse it.
 			final SqmParameter existing = parameterExpressionMap.get( expression );
 			if ( existing != null ) {
 				return existing;
 			}
 		}
 		else {
+			// since `parameterExpressionMap` was previously null, it could not contain `expression` so
+			// just create the Map
 			parameterExpressionMap = new IdentityHashMap<>();
 		}
 
@@ -291,8 +295,9 @@ public class CriteriaQueryToSqmTransformer extends BaseCriteriaVisitor {
 				expression,
 				multiValuedParameterBindingsAllowed
 		);
-
 		parameterExpressionMap.put( expression, sqmParam );
+
+		// report the creation to the registered consumer
 		parameterCollector.addParameter( sqmParam );
 
 		return sqmParam;

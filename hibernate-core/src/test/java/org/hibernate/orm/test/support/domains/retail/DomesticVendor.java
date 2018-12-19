@@ -6,18 +6,19 @@
  */
 package org.hibernate.orm.test.support.domains.retail;
 
-import javax.money.MonetaryAmount;
+import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
 /**
  * @author Steve Ebersole
  */
 @Entity
-public class CashPayment extends Payment {
-	public CashPayment() {
+@DiscriminatorValue( "domestic" )
+public class DomesticVendor extends Vendor {
+	public DomesticVendor() {
 	}
 
-	public CashPayment(Integer id, MonetaryAmount amount) {
-		super( id, amount );
+	public DomesticVendor(Integer id, String name, String billingEntity) {
+		super( id, name, billingEntity );
 	}
 }

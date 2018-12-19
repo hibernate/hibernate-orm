@@ -9,10 +9,10 @@ package org.hibernate.orm.test.query.criteria;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.orm.test.support.domains.AvailableDomainModel;
 import org.hibernate.orm.test.support.domains.gambit.BasicEntity;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.criteria.JpaRoot;
-import org.hibernate.query.criteria.spi.CriteriaNodeBuilder;
 
 import org.hibernate.testing.junit5.FailureExpected;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
@@ -30,7 +30,7 @@ public class BasicCriteriaExecutionTests extends SessionFactoryBasedFunctionalTe
 
 	@Test
 	public void testExecutingBasicCriteriaQuery() {
-		final CriteriaNodeBuilder criteriaBuilder = sessionFactory().getQueryEngine().getCriteriaBuilder();
+		final HibernateCriteriaBuilder criteriaBuilder = sessionFactory().getQueryEngine().getCriteriaBuilder();
 
 		final JpaCriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
 
@@ -46,7 +46,7 @@ public class BasicCriteriaExecutionTests extends SessionFactoryBasedFunctionalTe
 	@Test
 	@FailureExpected( "Criteria nodes do not currently track ExpressableType + StackOverflow resolving implied type" )
 	public void testExecutingBasicCriteriaQueryLiteralPredicate() {
-		final CriteriaNodeBuilder criteriaBuilder = sessionFactory().getQueryEngine().getCriteriaBuilder();
+		final HibernateCriteriaBuilder criteriaBuilder = sessionFactory().getQueryEngine().getCriteriaBuilder();
 
 		final JpaCriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
 
@@ -64,7 +64,7 @@ public class BasicCriteriaExecutionTests extends SessionFactoryBasedFunctionalTe
 	@Test
 	@FailureExpected( "Criteria nodes do not currently track ExpressableType" )
 	public void testExecutingBasicCriteriaQueryParameterPredicate() {
-		final CriteriaNodeBuilder criteriaBuilder = sessionFactory().getQueryEngine().getCriteriaBuilder();
+		final HibernateCriteriaBuilder criteriaBuilder = sessionFactory().getQueryEngine().getCriteriaBuilder();
 
 		final JpaCriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
 

@@ -18,8 +18,42 @@ import org.jboss.logging.Logger;
 import static org.junit.jupiter.api.extension.ExtensionContext.Namespace.create;
 
 /**
+ * @asciidoc
+ *
  * The thing that actually manages lifecycle of the SessionFactory related to a
  * test class.  Work in conjunction with SessionFactoryScope and SessionFactoryScopeContainer
+ *
+ * todo (6.0) ?? - allow annotation-driven definition of the test mappings and settings
+ *
+ * [code]
+ * .Annotation-driven example
+ * ````
+ *
+ * @FunctionalSessionFactoryTesting(
+ * 		model = @ModelToTest(
+ * 			true, // export
+ * 			standardModels = {
+ * 				@DomainModel( AvailableDomainModel.CONTACTS )
+ *  		},
+ *  		annotatedClasses = {
+ *  			SomeAdditionalClass.class
+ *  		},
+ *  		mappings = {
+ *  			"some-orm-mappings.xml"
+ *  		},
+ *  		...
+ * 		),
+ * 		config = @PersistenceUnit(
+ * 			sessionFactoryName = "a-special-name",
+ * 			...
+ * 		)
+ * )
+ * public class MyTest {
+ *
+ * }
+ *
+ * ````
+ *
  *
  * @see SessionFactoryScope
  * @see SessionFactoryScopeContainer
@@ -32,19 +66,19 @@ public class SessionFactoryScopeExtension
 
 	private static final Logger log = Logger.getLogger( SessionFactoryScopeExtension.class );
 
+	public static final Object SESSION_FACTORY_KEY = "SESSION_FACTORY";
+
 	public static ExtensionContext.Namespace namespace(Object testInstance) {
 		return create( SessionFactoryScopeExtension.class.getName(), testInstance );
 	}
 
 	public static Optional<SessionFactoryScope> findSessionFactoryScope(ExtensionContext context) {
-		final Optional sessionFactoryScope = Optional.ofNullable(
-				context.getStore( namespace( context.getRequiredTestInstance() ) )
-						.get( SESSION_FACTORY_KEY )
-		);
-		return sessionFactoryScope;
+		final ExtensionContext.Namespace namespace = namespace( context.getRequiredTestInstance() );
+		final SessionFactoryScope storedScope = (SessionFactoryScope) context.getStore( namespace ).get( SESSION_FACTORY_KEY );
+
+		return Optional.ofNullable( storedScope );
 	}
 
-	public static final Object SESSION_FACTORY_KEY = "SESSION_FACTORY";
 
 	public SessionFactoryScopeExtension() {
 		log.trace( "SessionFactoryScopeExtension#<init>" );

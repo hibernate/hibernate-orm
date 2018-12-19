@@ -6,19 +6,33 @@
  */
 package org.hibernate.orm.test.support.domains.retail;
 
+import javax.persistence.DiscriminatorColumn;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 import javax.persistence.SecondaryTable;
 
 /**
  * @author Steve Ebersole
  */
 @Entity
+@Inheritance( strategy = InheritanceType.SINGLE_TABLE )
+@DiscriminatorColumn( name = "vendor_type" )
 @SecondaryTable(name = "vendor_supp")
 public class Vendor {
 	private Integer id;
 	private String name;
 	private String billingEntity;
+
+	public Vendor() {
+	}
+
+	public Vendor(Integer id, String name, String billingEntity) {
+		this.id = id;
+		this.name = name;
+		this.billingEntity = billingEntity;
+	}
 
 	@Id
 	public Integer getId() {

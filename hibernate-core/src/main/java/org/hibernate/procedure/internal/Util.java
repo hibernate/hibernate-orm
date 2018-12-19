@@ -163,13 +163,10 @@ public class Util {
 			final EntityTypeDescriptor entityDescriptor = sessionFactory.getMetamodel().getEntityDescriptor( resultType.getName() );
 			querySpacesConsumer.accept( entityDescriptor.getAffectedTableNames() );
 			resultConsumer.accept(
+					// todo (6.0) : implement this properly
 					new EntityResultImpl(
-							entityDescriptor,
-							// todo (6.0) : resultVariable?
 							null,
-							LockMode.NONE,
-							new NavigablePath( entityDescriptor.getEntityName() ),
-							// todo (6.0) : creation state & context
+							null,
 							null,
 							null
 					)

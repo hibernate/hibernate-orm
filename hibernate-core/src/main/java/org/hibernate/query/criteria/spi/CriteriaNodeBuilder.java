@@ -77,7 +77,7 @@ public class CriteriaNodeBuilder implements HibernateCriteriaBuilder {
 	}
 
 	public void close() {
-		// for future use (maybe)
+		// for potential future use
 	}
 
 	@Override

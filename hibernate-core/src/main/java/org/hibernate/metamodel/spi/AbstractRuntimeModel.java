@@ -141,7 +141,10 @@ public abstract class AbstractRuntimeModel implements RuntimeModel {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> EntityTypeDescriptor<T> findEntityDescriptor(String entityName) {
-		entityName = getImportedName( entityName );
+		final String importedName = getImportedName( entityName );
+		if ( importedName != null ) {
+			entityName = importedName;
+		}
 		return (EntityTypeDescriptor<T>) entityDescriptorMap.get( entityName );
 	}
 

@@ -64,7 +64,7 @@ dependencies {
     testCompile( libraries.mockito_inline )
     testCompile( libraries.jodaTime )
 	testCompile( 'javax.money:money-api:1.0.1' )
-	testRuntime( 'org.javamoney:moneta:1.1' )
+    testCompile( 'org.javamoney:moneta:1.1' )
 
     testCompile( libraries.cdi ) {
         // we need to force it to make sure we influence the one coming from arquillian
@@ -176,8 +176,8 @@ xjc {
 
 
 //sourceSets.main.sourceGeneratorsTask.dependsOn xjc
-//sourceSets.main.sourceGeneratorsTask.dependsOn generateGrammarSource
-tasks.compile.dependsOn generateGrammarSource
+//sourceSets.main.sourceGeneratorsTask.dependsOn antlr
+tasks.compile.dependsOn antlr
 
 // todo (6.0) : remove this once we get 6.0 stable-ish
 tasks.withType( JavaCompile ).forEach({ JavaCompile c -> c.options.compilerArgs += ["-Xmaxerrs", "4999"]})
@@ -322,7 +322,7 @@ class Antlr4Plugin implements Plugin<Project> {
 
             configurations.maybeCreate 'antlr'
 
-            Antlr4GenerationTask genTask = tasks.create 'generateGrammarSource', Antlr4GenerationTask
+            Antlr4GenerationTask genTask = tasks.create 'antlr', Antlr4GenerationTask
             genTask.group = 'Build'
             genTask.description = 'Generate source code from ANTLR grammar'
 

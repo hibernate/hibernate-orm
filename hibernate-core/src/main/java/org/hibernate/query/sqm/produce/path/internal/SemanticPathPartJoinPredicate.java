@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.produce.path.internal;
 
 import java.util.Locale;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
@@ -21,7 +22,10 @@ import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
 public class SemanticPathPartJoinPredicate extends SemanticPathPartRoot {
 	private final SqmFromElementSpace fromElementSpace;
 
-	public SemanticPathPartJoinPredicate(SqmFromElementSpace fromElementSpace) {
+	public SemanticPathPartJoinPredicate(
+			SqmFromElementSpace fromElementSpace,
+			SessionFactoryImplementor sessionFactory) {
+		super( sessionFactory );
 		this.fromElementSpace = fromElementSpace;
 	}
 

@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import javax.persistence.metamodel.CollectionAttribute;
 import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.MapAttribute;
@@ -1044,4 +1045,27 @@ public class PolymorphicEntityTypeValuedExpressableTypeImpl<T> implements Entity
 	public InFlightAccess<T> getInFlightAccess() {
 		throw new UnsupportedOperationException(  );
 	}
+
+	@Override
+	public void visitSubTypeDescriptors(Consumer<IdentifiableTypeDescriptor<? extends T>> action) {
+		for ( EntityTypeDescriptor<?> implementor : implementors ) {
+			action.accept( (EntityTypeDescriptor) implementor );
+		}
+	}
+
+	@Override
+	public void visitAllSubTypeDescriptors(Consumer<IdentifiableTypeDescriptor<? extends T>> action) {
+		for ( EntityTypeDescriptor<?> implementor : implementors ) {
+			action.accept( (IdentifiableTypeDescriptor) implementor );
+			implementor.visitAllSubTypeDescriptors( (Consumer) action );
+		}
+
+	}
+
+	@Override
+	public IdentifiableTypeDescriptor findMatchingSubTypeDescriptors(Predicate<IdentifiableTypeDescriptor<? extends T>> matcher) {
+		return null;
+	}
+
+
 }

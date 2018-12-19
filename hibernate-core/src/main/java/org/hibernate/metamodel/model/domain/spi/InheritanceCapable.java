@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import java.util.Collection;
+import java.util.function.Consumer;
 
 /**
  * Specialization of ManagedTypeImplementor for types for which
@@ -50,5 +51,4 @@ public interface InheritanceCapable<T> extends ManagedTypeDescriptor<T> {
 	 * of the type described by this descriptor
 	 */
 	boolean isSubclassTypeName(String name);
-
 }

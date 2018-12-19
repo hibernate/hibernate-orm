@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm.consume.spi;
 
+import java.lang.reflect.Field;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.criteria.sqm.JpaParameterSqmWrapper;
 import org.hibernate.query.sqm.tree.SqmDeleteStatement;
@@ -28,9 +30,9 @@ import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.expression.domain.AbstractSpecificSqmCollectionIndexReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionIndexReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmDiscriminatorReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityIdentifierReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmEntityTypeExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMapEntryBinding;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMaxElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMinElementReference;
@@ -177,7 +179,7 @@ public interface SemanticQueryWalker<T> {
 
 	T visitEntityTypeLiteralExpression(SqmLiteralEntityType expression);
 
-	T visitEntityTypeExpression(SqmEntityTypeExpression expression);
+	T visitDiscriminatorReference(SqmDiscriminatorReference expression);
 
 	T visitParameterizedEntityTypeExpression(SqmParameterizedEntityType expression);
 
@@ -328,4 +330,11 @@ public interface SemanticQueryWalker<T> {
 
 
 	T visitDynamicInstantiation(SqmDynamicInstantiation sqmDynamicInstantiation);
+
+
+	T visitFullyQualifiedClass(Class<?> namedClass);
+
+	T visitFullyQualifiedEnum(Enum<?> value);
+
+	T visitFullyQualifiedField(Field field);
 }

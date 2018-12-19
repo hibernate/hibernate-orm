@@ -9,6 +9,7 @@ package org.hibernate.metamodel.model.domain;
 import java.io.Serializable;
 import java.util.Objects;
 
+import org.hibernate.DotIdentifierSequence;
 import org.hibernate.internal.util.StringHelper;
 
 /**
@@ -18,21 +19,21 @@ import org.hibernate.internal.util.StringHelper;
  *
  * @author Steve Ebersole
  */
-public class NavigableRole implements Serializable {
+public class NavigableRole implements DotIdentifierSequence, Serializable {
 	public static final String IDENTIFIER_MAPPER_PROPERTY = "_identifierMapper";
 
 	private final NavigableRole parent;
-	private final String navigableName;
+	private final String localName;
 	private final String fullPath;
 
-	public NavigableRole(NavigableRole parent, String navigableName) {
+	public NavigableRole(NavigableRole parent, String localName) {
 		this.parent = parent;
-		this.navigableName = navigableName;
+		this.localName = localName;
 
 		// the _identifierMapper is a "hidden" property on entities with composite keys.
 		// concatenating it will prevent the path from correctly being used to look up
 		// various things such as criteria paths and fetch profile association paths
-		if ( IDENTIFIER_MAPPER_PROPERTY.equals( navigableName ) ) {
+		if ( IDENTIFIER_MAPPER_PROPERTY.equals( localName ) ) {
 			this.fullPath = parent != null ? parent.getFullPath() : "";
 		}
 		else {
@@ -50,30 +51,38 @@ public class NavigableRole implements Serializable {
 				prefix = "";
 			}
 
-			this.fullPath = prefix + navigableName;
+			this.fullPath = prefix + localName;
 		}
 	}
 
-	public NavigableRole(String navigableName) {
-		this( null, navigableName );
+	public NavigableRole(String localName) {
+		this( null, localName );
 	}
 
 	public NavigableRole() {
 		this( "" );
 	}
 
+	@Override
 	public NavigableRole append(String property) {
 		return new NavigableRole( this, property );
 	}
 
+	@Override
 	public NavigableRole getParent() {
 		return parent;
 	}
 
-	public String getNavigableName() {
-		return navigableName;
+	@Override
+	public String getLocalName() {
+		return localName;
 	}
 
+	public String getNavigableName() {
+		return getLocalName();
+	}
+
+	@Override
 	public String getFullPath() {
 		return fullPath;
 	}

@@ -24,12 +24,39 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Andrea Boriero
  */
 public class SimpleSelectionTest extends SessionFactoryBasedFunctionalTest {
+	public static final String STATIC_FIELD = "STATIC_FIELD";
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				SimpleEntity.class,
 		};
+	}
+
+	@Test
+	public void testFullyQualifiedEntityNameRoot() {
+		sessionFactoryScope().inTransaction(
+				session -> {
+					List<SimpleEntity> results = session.createQuery(
+							"select s.someString from org.hibernate.orm.test.support.domains.gambit.SimpleEntity s",
+							SimpleEntity.class ).list();
+					assertThat( results.size(), is( 2 ) );
+				}
+		);
+
+	}
+
+	@Test
+	public void testFullyQualifiedFieldName() {
+		sessionFactoryScope().inTransaction(
+				session -> {
+					List<SimpleEntity> results = session.createQuery(
+							"select s.someString from SimpleEntity s where s.someString != org.hibernate.orm.test.query.hql.SimpleSelectionTest.STATIC_FIELD",
+							SimpleEntity.class ).list();
+					assertThat( results.size(), is( 2 ) );
+				}
+		);
+
 	}
 
 	@Test

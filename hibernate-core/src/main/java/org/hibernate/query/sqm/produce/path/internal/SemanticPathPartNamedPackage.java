@@ -7,29 +7,91 @@
 package org.hibernate.query.sqm.produce.path.internal;
 
 
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import java.util.Locale;
+
+import org.hibernate.DotIdentifierSequence;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.sqm.SemanticException;
-import org.hibernate.query.sqm.produce.SqmProductionException;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 
+import static org.hibernate.internal.util.StringHelper.unqualify;
+
 /**
- * todo (6.0) : this needs to be a SqmExpression
- *
  * @author Steve Ebersole
  */
-public class SemanticPathPartNamedPackage implements SemanticPathPart {
-	private final Package namedPackage;
+public class SemanticPathPartNamedPackage implements FullyQualifiedReflectivePathSource {
+	private final FullyQualifiedReflectivePathSource pathSource;
+	private final SessionFactoryImplementor sessionFactory;
 
-	public SemanticPathPartNamedPackage(Package namedPackage) {
-		this.namedPackage = namedPackage;
+	private final String fullPath;
+	private final String localName;
+
+	public SemanticPathPartNamedPackage(
+			Package namedPackage,
+			SessionFactoryImplementor sessionFactory) {
+		this( null, namedPackage, sessionFactory );
+
+		assert namedPackage.getName().indexOf( '.' ) < 0;
 	}
 
-	public Package getNamedPackage() {
-		return namedPackage;
+	public SemanticPathPartNamedPackage(
+			FullyQualifiedReflectivePathSource pathSource,
+			Package namedPackage,
+			SessionFactoryImplementor sessionFactory) {
+		this.pathSource = pathSource;
+		this.sessionFactory = sessionFactory;
+
+		this.fullPath = namedPackage.getName();
+		this.localName = unqualify( namedPackage.getName() );
+
+		if ( namedPackage.getName().indexOf( '.' ) > 0 ) {
+			if ( pathSource == null ) {
+				throw new IllegalArgumentException(
+						String.format(
+								Locale.ROOT,
+								"Named package [%s] is composite, but no FullyQualifiedReflectivePathSource passed",
+								namedPackage.getName()
+						)
+				);
+			}
+
+			final String qualifier = StringHelper.qualifier( namedPackage.getName() );
+			if ( ! qualifier.equals( pathSource.getFullPath() ) ) {
+				throw new IllegalArgumentException(
+						String.format(
+								Locale.ROOT,
+								"Named package [%s] qualifier [%s] did not match passed source path [%s]",
+								namedPackage.getName(),
+								qualifier,
+								pathSource.getFullPath()
+						)
+				);
+			}
+		}
+	}
+
+	@Override
+	public FullyQualifiedReflectivePathSource getParent() {
+		return pathSource;
+	}
+
+	@Override
+	public String getLocalName() {
+		return localName;
+	}
+
+	@Override
+	public String getFullPath() {
+		return fullPath;
+	}
+
+	@Override
+	public FullyQualifiedReflectivePathSource append(String subPathName) {
+		return new FullyQualifiedReflectivePath( this, subPathName, sessionFactory );
 	}
 
 	@Override
@@ -38,27 +100,7 @@ public class SemanticPathPartNamedPackage implements SemanticPathPart {
 			String currentContextKey,
 			boolean isTerminal,
 			SqmCreationContext context) {
-		final String childName = namedPackage.getName() + '.' + name;
-
-		final Package childPackage = Package.getPackage( childName );
-		if ( childPackage != null ) {
-			return new SemanticPathPartNamedPackage( childPackage );
-		}
-
-		// it could also be a Class name within this package
-		try {
-			final Class namedClass = context.getSessionFactory()
-					.getServiceRegistry()
-					.getService( ClassLoaderService.class )
-					.classForName( childName );
-			if ( namedClass != null ) {
-				return new SemanticPathPartNamedClass( namedClass );
-			}
-		}
-		catch (ClassLoadingException ignore) {
-		}
-
-		throw new SqmProductionException( "Could not resolve path/name : " + childName );
+		return append( name );
 	}
 
 	@Override

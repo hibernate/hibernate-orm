@@ -16,9 +16,13 @@ import org.hibernate.metamodel.model.domain.spi.DiscriminatorMappings;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.tree.expression.domain.SqmDiscriminatorReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmEntityTypedReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
@@ -106,11 +110,11 @@ public class DiscriminatorDescriptorImpl<O,J> implements DiscriminatorDescriptor
 
 	@Override
 	public DomainResult createDomainResult(
-			NavigableReference navigableReference,
+			NavigableReference navigableReferenceIn,
 			String resultVariable,
 			DomainResultCreationState creationState, DomainResultCreationContext creationContext) {
-		return new BasicResultImpl(
-				resultVariable,
+		return new DiscriminatorDomainResult(
+				this,
 				creationState.getSqlExpressionResolver().resolveSqlSelection(
 						creationState.getSqlExpressionResolver().resolveSqlExpression(
 								creationState.getColumnReferenceQualifierStack().getCurrent(),
@@ -119,7 +123,16 @@ public class DiscriminatorDescriptorImpl<O,J> implements DiscriminatorDescriptor
 						getJavaTypeDescriptor(),
 						creationContext.getSessionFactory().getTypeConfiguration()
 				),
-				getBoundColumn().getExpressableType()
+				creationState.getNavigableReferenceStack().getCurrent().getNavigablePath().append( getNavigableName() ),
+				resultVariable
 		);
+	}
+
+	@Override
+	public SqmDiscriminatorReference createSqmExpression(
+			SqmFrom sourceSqmFrom,
+			SqmNavigableContainerReference containerReference,
+			SqmCreationContext creationContext) {
+		return new SqmDiscriminatorReference( (SqmEntityTypedReference) containerReference );
 	}
 }

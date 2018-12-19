@@ -8,9 +8,8 @@ package org.hibernate.sql.results.internal.domain.entity;
 
 import java.util.function.Consumer;
 
-import org.hibernate.LockMode;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.tree.spi.expression.domain.EntityValuedNavigableReference;
 import org.hibernate.sql.results.spi.AssemblerCreationContext;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
@@ -26,22 +25,34 @@ import org.hibernate.sql.results.spi.Initializer;
  */
 public class EntityResultImpl extends AbstractEntityMappingNode implements EntityResult {
 	private final String resultVariable;
+	private final EntityValuedNavigableReference entityReference;
+
 
 	public EntityResultImpl(
-			EntityValuedNavigable navigable,
+			EntityValuedNavigableReference entityReference,
 			String resultVariable,
-			LockMode lockMode,
-			NavigablePath navigablePath,
 			DomainResultCreationContext creationContext,
 			DomainResultCreationState creationState) {
-		super( navigable, lockMode, navigablePath, creationContext, creationState );
+		super(
+				entityReference.getNavigable(),
+				entityReference.getLockMode(),
+				entityReference.getNavigablePath(),
+				creationContext,
+				creationState
+		);
+
 		this.resultVariable = resultVariable;
+		this.entityReference = entityReference;
 
 		afterInitialize( creationState );
 	}
 
 	public EntityValuedNavigable getNavigable() {
 		return getEntityValuedNavigable();
+	}
+
+	public EntityValuedNavigableReference getEntityReference() {
+		return entityReference;
 	}
 
 	@Override

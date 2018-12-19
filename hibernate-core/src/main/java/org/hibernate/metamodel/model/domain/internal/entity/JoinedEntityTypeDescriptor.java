@@ -268,8 +268,21 @@ public class JoinedEntityTypeDescriptor<J> extends AbstractEntityTypeDescriptor<
 
 	@Override
 	public Object[] getPropertyValuesToInsert(
-			Object object, Map mergeMap, SharedSessionContractImplementor session) throws HibernateException {
-		return new Object[0];
+			Object object,
+			Map mergeMap,
+			SharedSessionContractImplementor session) throws HibernateException {
+		final Object[] stateArray = new Object[ getStateArrayContributors().size() ];
+		visitStateArrayContributors(
+				contributor -> {
+					stateArray[ contributor.getStateArrayPosition() ] = contributor.getPropertyAccess().getGetter().getForInsert(
+							object,
+							mergeMap,
+							session
+					);
+				}
+		);
+
+		return stateArray;
 	}
 
 	@Override
@@ -306,7 +319,8 @@ public class JoinedEntityTypeDescriptor<J> extends AbstractEntityTypeDescriptor<
 
 	@Override
 	public EntityTypeDescriptor getSubclassEntityPersister(
-			Object instance, SessionFactoryImplementor factory) {
+			Object instance,
+			SessionFactoryImplementor factory) {
 		return null;
 	}
 

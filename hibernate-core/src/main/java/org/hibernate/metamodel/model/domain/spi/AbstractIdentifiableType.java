@@ -6,7 +6,9 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import java.util.Collection;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
@@ -23,6 +25,10 @@ public abstract class AbstractIdentifiableType<T> extends AbstractManagedType<T>
 			IdentifiableJavaDescriptor<T> javaTypeDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		super( bootMapping, superTypeDescriptor, javaTypeDescriptor, creationContext );
+
+		if ( superTypeDescriptor != null ) {
+			superTypeDescriptor.getInFlightAccess().addSubTypeDescriptor( this );
+		}
 	}
 
 	@Override
@@ -121,8 +127,53 @@ public abstract class AbstractIdentifiableType<T> extends AbstractManagedType<T>
 		}
 
 		@Override
+		@SuppressWarnings("unchecked")
+		public void addSubTypeDescriptor(IdentifiableTypeDescriptor subTypeDescriptor) {
+			addSubclassDescriptor( subTypeDescriptor );
+		}
+
+		@Override
 		public void finishUp() {
 			managedTypeAccess.finishUp();
 		}
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public void visitSubTypeDescriptors(Consumer<IdentifiableTypeDescriptor<? extends T>> action) {
+		final Collection<InheritanceCapable<? extends T>> subclassTypes = getSubclassTypes();
+
+		for ( InheritanceCapable<? extends T> subclassType : subclassTypes ) {
+			action.accept( (IdentifiableTypeDescriptor) subclassType );
+		}
+
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public void visitAllSubTypeDescriptors(Consumer<IdentifiableTypeDescriptor<? extends T>> action) {
+		final Collection<IdentifiableTypeDescriptor<? extends T>> subclassTypes = (Collection) getSubclassTypes();
+		for ( IdentifiableTypeDescriptor<? extends T> subclassType : subclassTypes ) {
+			action.accept( subclassType );
+			subclassType.visitAllSubTypeDescriptors( (Consumer) action );
+		}
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public IdentifiableTypeDescriptor findMatchingSubTypeDescriptors(Predicate<IdentifiableTypeDescriptor<? extends T>> matcher) {
+		if ( matcher.test( this ) ) {
+			return this;
+		}
+
+		final Collection<IdentifiableTypeDescriptor<? extends T>> subclassTypes = (Collection) getSubclassTypes();
+		for ( IdentifiableTypeDescriptor<? extends T> subclassType : subclassTypes ) {
+			final IdentifiableTypeDescriptor matched = subclassType.findMatchingSubTypeDescriptors( (Predicate) matcher );
+			if ( matched != null ) {
+				return matched;
+			}
+		}
+
+		return null;
 	}
 }

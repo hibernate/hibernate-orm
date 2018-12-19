@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm.consume.spi;
 
+import java.lang.reflect.Field;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.criteria.sqm.JpaParameterSqmWrapper;
 import org.hibernate.query.sqm.tree.SqmDeleteStatement;
@@ -29,9 +31,9 @@ import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.expression.domain.AbstractSpecificSqmCollectionIndexReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionIndexReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmDiscriminatorReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityIdentifierReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmEntityTypeExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMapEntryBinding;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMaxElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMinElementReference;
@@ -380,7 +382,7 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitEntityTypeExpression(SqmEntityTypeExpression expression) {
+	public T visitDiscriminatorReference(SqmDiscriminatorReference expression) {
 		return (T) expression;
 	}
 
@@ -617,6 +619,22 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	@Override
 	public T visitDynamicInstantiation(SqmDynamicInstantiation sqmDynamicInstantiation) {
 		return (T) sqmDynamicInstantiation;
+	}
+
+
+	@Override
+	public T visitFullyQualifiedClass(Class<?> namedClass) {
+		throw new UnsupportedOperationException( "Not supported" );
+	}
+
+	@Override
+	public T visitFullyQualifiedEnum(Enum<?> value) {
+		throw new UnsupportedOperationException( "Not supported" );
+	}
+
+	@Override
+	public T visitFullyQualifiedField(Field field) {
+		throw new UnsupportedOperationException( "Not supported" );
 	}
 
 	@Override

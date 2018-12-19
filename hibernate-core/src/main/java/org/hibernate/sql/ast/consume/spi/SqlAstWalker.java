@@ -45,6 +45,8 @@ import org.hibernate.sql.ast.tree.spi.expression.SumFunction;
 import org.hibernate.sql.ast.tree.spi.expression.TrimFunction;
 import org.hibernate.sql.ast.tree.spi.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.spi.expression.UpperFunction;
+import org.hibernate.sql.ast.tree.spi.expression.domain.DiscriminatorReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.EntityTypeLiteral;
 import org.hibernate.sql.ast.tree.spi.from.FromClause;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
@@ -204,4 +206,8 @@ public interface SqlAstWalker {
 	void visitUpperFunction(UpperFunction function);
 
 	void visitSqlSelectionExpression(SqlSelectionExpression expression);
+
+	void visitEntityTypeLiteral(EntityTypeLiteral expression);
+
+	void visitDiscriminatorReference(DiscriminatorReference reference);
 }

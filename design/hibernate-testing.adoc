@@ -1,0 +1,57 @@
+== Thoughts about hibernate-testing
+
+
+=== Annotation-driven definition of the test mappings and settings
+
+[source,java]
+----
+@FunctionalSessionFactoryTesting(
+	model = @TestModel(
+		exportSchema = true,
+		services = {
+			CustomClassLoadingService.class,
+			...
+		},
+		standardModels = {
+			@DomainModel( AvailableDomainModel.CONTACTS )
+		},
+		annotatedClasses = {
+			SomeAdditionalClass.class
+		},
+		mappings = {
+			"some-orm-mappings.xml",
+			...
+		},
+		...
+	),
+	config = @SessionFactoryConfig(
+		exportSchema = true,
+		name = "a-special-name",
+		settings = {
+			"some-orm-settings.xml",
+			...
+		}
+		...
+	),
+	...
+)
+public class MyTest {
+	private SessionFactoryScope injectedSessionFactoryScope;
+
+	@Test
+	public void theTest() {
+		SessionFactoryImplementor sessionFactory = injectedSessionFactoryScope.sessionFactory();
+		...
+	}
+}
+----
+
+Oh!!!... could even make these tests parameterized - our `FunctionalSessionFactoryTesting` extension would
+register itself as a "parameter source" (cant remember the exact junit term).  And then:
+
+----
+	@Test
+	public void theTest(SessionFactoryImplementor sessionFactory) {
+    	...
+	}
+----

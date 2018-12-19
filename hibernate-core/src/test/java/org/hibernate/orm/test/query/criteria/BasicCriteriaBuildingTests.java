@@ -13,9 +13,9 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.orm.test.support.domains.AvailableDomainModel;
 import org.hibernate.orm.test.support.domains.gambit.BasicEntity;
 import org.hibernate.orm.test.support.domains.gambit.BasicEntity_;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
-import org.hibernate.query.criteria.spi.CriteriaNodeBuilder;
 
 import org.hibernate.testing.junit5.FailureExpected;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
@@ -38,7 +38,7 @@ public class BasicCriteriaBuildingTests extends SessionFactoryBasedFunctionalTes
 
 	@Test
 	public void testParameterCollecting() {
-		final CriteriaNodeBuilder criteriaBuilder = sessionFactory().getQueryEngine().getCriteriaBuilder();
+		final HibernateCriteriaBuilder criteriaBuilder = sessionFactory().getQueryEngine().getCriteriaBuilder();
 		final JpaCriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
 
 		final JpaRoot<BasicEntity> root = criteria.from( BasicEntity.class );

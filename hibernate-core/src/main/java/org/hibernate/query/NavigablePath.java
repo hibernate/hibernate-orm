@@ -8,6 +8,7 @@ package org.hibernate.query;
 
 import java.util.Objects;
 
+import org.hibernate.DotIdentifierSequence;
 import org.hibernate.internal.util.Loggable;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -20,7 +21,7 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
  *
  * @author Steve Ebersole
  */
-public class NavigablePath implements Loggable {
+public class NavigablePath implements DotIdentifierSequence, Loggable {
 	public static final String IDENTIFIER_MAPPER_PROPERTY = "_identifierMapper";
 
 	private final NavigablePath parent;
@@ -80,11 +81,6 @@ public class NavigablePath implements Loggable {
 		return fullPath;
 	}
 
-	public boolean isRoot() {
-//		return parent == null && StringHelper.isEmpty( localName );
-		return parent == null;
-	}
-
 	@Override
 	public String toString() {
 		return getClass().getSimpleName() + '[' + fullPath + ']';
@@ -105,10 +101,5 @@ public class NavigablePath implements Loggable {
 		}
 		NavigablePath path = (NavigablePath) o;
 		return Objects.equals( getFullPath(), path.getFullPath() );
-	}
-
-	@Override
-	public String toLoggableFragment() {
-		return getLocalName();
 	}
 }

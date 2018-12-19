@@ -7,9 +7,10 @@
 package org.hibernate.orm.test.query.sqm.execution;
 
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+import org.hibernate.orm.test.support.domains.AvailableDomainModel;
 import org.hibernate.orm.test.support.domains.gambit.EntityOfBasics;
 
+import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -18,10 +19,8 @@ import org.junit.jupiter.api.Test;
 public class LiteralTests extends SessionFactoryBasedFunctionalTest {
 
 	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				EntityOfBasics.class
-		};
+	protected void applyMetadataSources(MetadataSources metadataSources) {
+		AvailableDomainModel.GAMBIT.getDomainModel().applyDomainModel( metadataSources );
 	}
 
 	@Test

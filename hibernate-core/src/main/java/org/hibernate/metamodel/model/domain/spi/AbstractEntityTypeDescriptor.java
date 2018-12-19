@@ -711,17 +711,12 @@ public abstract class AbstractEntityTypeDescriptor<J>
 		assert navigableReference instanceof EntityValuedNavigableReference;
 		final EntityValuedNavigableReference entityValuedReference = (EntityValuedNavigableReference) navigableReference;
 
-		final EntityResultImpl entityQueryResult = new EntityResultImpl(
-				entityValuedReference.getNavigable(),
+		return new EntityResultImpl(
+				entityValuedReference,
 				resultVariable,
-				// todo (6.0) : LockMode ?
-				LockMode.READ,
-				navigableReference.getNavigablePath(),
 				creationContext,
 				creationState
 		);
-
-		return entityQueryResult;
 	}
 
 	@Override
@@ -905,5 +900,40 @@ public abstract class AbstractEntityTypeDescriptor<J>
 		}
 
 		return false;
+	}
+
+
+
+	@Override
+	public EntityTypeDescriptor getSubclassEntityPersister(
+			Object instance,
+			SessionFactoryImplementor factory) {
+		return getSubclassEntityDescriptor( instance, factory );
+	}
+
+	@Override
+	public EntityTypeDescriptor getSubclassEntityDescriptor(
+			Object instance,
+			SessionFactoryImplementor factory) {
+		if ( getRepresentationStrategy().isConcreteInstance( instance, this, factory ) ) {
+			return this;
+		}
+
+		if ( ! getSubclassTypes().isEmpty() ) {
+			final IdentifiableTypeDescriptor subTypeMatch = findMatchingSubTypeDescriptors(
+					typeDescriptor -> typeDescriptor.getRepresentationStrategy().isConcreteInstance(
+							instance,
+							typeDescriptor,
+							factory
+					)
+			);
+
+			if ( subTypeMatch != null ) {
+				// for it to be a concrete match, the descriptor must be for an entity
+				return (EntityTypeDescriptor) subTypeMatch;
+			}
+		}
+
+		return this;
 	}
 }

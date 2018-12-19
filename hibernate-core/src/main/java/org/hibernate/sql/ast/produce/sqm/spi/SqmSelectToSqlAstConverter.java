@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast.produce.sqm.spi;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.function.Consumer;
 import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -30,6 +32,9 @@ import org.hibernate.query.sqm.tree.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.SqmUpdateStatement;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
+import org.hibernate.query.sqm.tree.expression.domain.SqmDiscriminatorReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmEntityTypedReference;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
@@ -46,8 +51,13 @@ import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.spi.expression.domain.DiscriminatorReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.EntityTypeLiteral;
+import org.hibernate.sql.ast.tree.spi.expression.domain.EntityValuedNavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiation;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationNature;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.results.spi.CircularFetchDetector;
 import org.hibernate.sql.results.spi.DomainResult;
@@ -392,7 +402,70 @@ public class SqmSelectToSqlAstConverter
 		return expressionResolver;
 	}
 
-//	@Override
+	@Override
+	public Expression visitEntityTypeLiteralExpression(SqmLiteralEntityType expression) {
+		return new EntityTypeLiteral( expression.getExpressableType().getEntityDescriptor() );
+	}
+
+	@Override
+	public Expression visitDiscriminatorReference(SqmDiscriminatorReference expression) {
+		final SqmEntityTypedReference binding = expression.getSourceReference();
+		final TableGroup resolvedTableGroup = getFromClauseIndex().findResolvedTableGroup( binding.getExportedFromElement() );
+		final EntityValuedNavigableReference entityReference = (EntityValuedNavigableReference) resolvedTableGroup.getNavigableReference();
+
+		return new DiscriminatorReference( entityReference );
+	}
+
+	@Override
+	public Object visitFullyQualifiedClass(Class namedClass) {
+		throw new NotYetImplementedFor6Exception();
+
+		// what exactly is the expected end result here?
+
+//		final MetamodelImplementor metamodel = getSessionFactory().getMetamodel();
+//		final TypeConfiguration typeConfiguration = getSessionFactory().getTypeConfiguration();
+//
+//		// see if it is an entity-type
+//		final EntityTypeDescriptor entityDescriptor = metamodel.findEntityDescriptor( namedClass );
+//		if ( entityDescriptor != null ) {
+//			throw new NotYetImplementedFor6Exception( "Add support for entity type literals as SqlExpression" );
+//		}
+//
+//
+//		final JavaTypeDescriptor jtd = typeConfiguration
+//				.getJavaTypeDescriptorRegistry()
+//				.getOrMakeJavaDescriptor( namedClass );
+	}
+
+	@Override
+	public QueryLiteral visitFullyQualifiedEnum(Enum value) {
+		return new QueryLiteral(
+				value,
+				getSessionFactory().getTypeConfiguration()
+						.standardExpressableTypeForJavaType( value.getClass() )
+						.getSqlExpressableType(),
+				getCurrentClauseStack().getCurrent()
+		);
+	}
+
+	@Override
+	public QueryLiteral visitFullyQualifiedField(Field field) {
+		try {
+			final Object value = field.get( null );
+			return new QueryLiteral(
+					value,
+					getSessionFactory().getTypeConfiguration()
+							.standardExpressableTypeForJavaType( value.getClass() )
+							.getSqlExpressableType(),
+					getCurrentClauseStack().getCurrent()
+			);
+		}
+		catch (IllegalAccessException e) {
+			throw new IllegalArgumentException(  );
+		}
+	}
+
+	//	@Override
 //	public SqlSelection resolveSqlSelection(Expression expression) {
 //		return sqlSelectionByExpressionMap.get( expression );
 //	}

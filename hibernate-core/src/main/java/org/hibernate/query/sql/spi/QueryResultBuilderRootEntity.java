@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.metamodel.model.domain.spi.DiscriminatorDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.metamodel.model.relational.spi.Column;
@@ -30,6 +31,7 @@ import org.hibernate.sql.results.internal.domain.entity.EntityAssembler;
 import org.hibernate.sql.results.internal.domain.entity.EntityRootInitializer;
 import org.hibernate.sql.results.spi.AssemblerCreationContext;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
+import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
 import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
@@ -187,18 +189,26 @@ public class QueryResultBuilderRootEntity
 		@Override
 		public DomainResultAssembler createResultAssembler(
 				Consumer<Initializer> initializerCollector,
-				AssemblerCreationState creationOptions,
+				AssemblerCreationState creationState,
 				AssemblerCreationContext creationContext) {
+			final DiscriminatorDescriptor<?> discriminatorDescriptor = entityDescriptor.getHierarchy().getDiscriminatorDescriptor();
+
+			final DomainResult discriminatorResult = null;
+//			final DomainResult discriminatorResult = discriminatorDescriptor == null
+//					? null
+//					: discriminatorDescriptor.createDomainResult(  )
+//			discriminatorDescriptor.createDomainResult(  );
+
 			final EntityRootInitializer initializer = new EntityRootInitializer(
 					this,
 					getNavigablePath(),
 					LockMode.READ,
 					null,
-					null,
+					discriminatorResult,
 					null,
 					initializerCollector,
 					creationContext,
-					creationOptions
+					creationState
 			);
 
 			return new EntityAssembler( getJavaTypeDescriptor(), initializer );

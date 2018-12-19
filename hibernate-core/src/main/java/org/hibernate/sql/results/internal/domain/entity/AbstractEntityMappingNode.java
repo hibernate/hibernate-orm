@@ -7,6 +7,7 @@
 package org.hibernate.sql.results.internal.domain.entity;
 
 import org.hibernate.LockMode;
+import org.hibernate.metamodel.model.domain.spi.DiscriminatorDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
@@ -24,6 +25,7 @@ import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 public abstract class AbstractEntityMappingNode extends AbstractFetchParent implements EntityMappingNode {
 	private final EntityValuedNavigable entityValuedNavigable;
 	private final DomainResult identifierResult;
+	private final DomainResult discriminatorResult;
 	private final DomainResult versionResult;
 	private final LockMode lockMode;
 
@@ -44,6 +46,21 @@ public abstract class AbstractEntityMappingNode extends AbstractFetchParent impl
 				creationState,
 				creationContext
 		);
+
+		final DiscriminatorDescriptor<Object> discriminatorDescriptor = entityDescriptor.getHierarchy()
+				.getDiscriminatorDescriptor();
+
+		if ( discriminatorDescriptor == null ) {
+			discriminatorResult = null;
+		}
+		else {
+			discriminatorResult = discriminatorDescriptor.createDomainResult(
+					null,
+					null,
+					creationState,
+					creationContext
+			);
+		}
 
 		final VersionDescriptor<Object, Object> versionDescriptor = entityDescriptor.getHierarchy().getVersionDescriptor();
 		if ( versionDescriptor == null ) {
@@ -78,7 +95,7 @@ public abstract class AbstractEntityMappingNode extends AbstractFetchParent impl
 	}
 
 	protected DomainResult getDiscriminatorResult() {
-		return null;
+		return discriminatorResult;
 	}
 
 	protected DomainResult getVersionResult() {

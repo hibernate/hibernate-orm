@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast.produce.ordering.internal;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.path.internal.SemanticPathPartNamedEntity;
@@ -23,10 +24,12 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
  */
 public class SemanticPathPartRoot implements SemanticPathPart {
 	private final SqmFrom sqmFromBase;
+	private final SessionFactoryImplementor sessionFactory;
 
 	@SuppressWarnings("WeakerAccess")
-	public SemanticPathPartRoot(SqmFrom sqmFromBase) {
+	public SemanticPathPartRoot(SqmFrom sqmFromBase, SessionFactoryImplementor sessionFactory) {
 		this.sqmFromBase = sqmFromBase;
+		this.sessionFactory = sessionFactory;
 	}
 
 	@Override
@@ -69,7 +72,7 @@ public class SemanticPathPartRoot implements SemanticPathPart {
 		// #4
 		final Package namedPackageRoot = Package.getPackage( name );
 		if ( namedPackageRoot != null ) {
-			return new SemanticPathPartNamedPackage( namedPackageRoot );
+			return new SemanticPathPartNamedPackage( namedPackageRoot, sessionFactory );
 		}
 
 		if ( isTerminal ) {

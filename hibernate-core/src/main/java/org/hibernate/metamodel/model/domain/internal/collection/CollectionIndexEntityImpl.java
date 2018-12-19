@@ -127,13 +127,19 @@ public class CollectionIndexEntityImpl<J>
 		final EntityValuedNavigableReference entityReference = (EntityValuedNavigableReference) navigableReference;
 
 		return new EntityResultImpl(
-				entityReference.getNavigable(),
+				entityReference,
 				resultVariable,
-				entityReference.getLockMode(),
-				entityReference.getNavigablePath(),
 				creationContext,
 				creationState
 		);
+//		return new EntityResultImpl(
+//				entityReference.getNavigable(),
+//				resultVariable,
+//				entityReference.getLockMode(),
+//				entityReference.getNavigablePath(),
+//				creationContext,
+//				creationState
+//		);
 	}
 
 	@Override

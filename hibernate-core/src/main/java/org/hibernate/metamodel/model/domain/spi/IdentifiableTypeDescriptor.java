@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 import javax.persistence.metamodel.IdentifiableType;
 
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
@@ -32,8 +34,15 @@ public interface IdentifiableTypeDescriptor<T> extends InheritanceCapable<T>, Id
 	EntityHierarchy getHierarchy();
 
 	interface InFlightAccess<X> extends ManagedTypeDescriptor.InFlightAccess<X> {
+		void addSubTypeDescriptor(IdentifiableTypeDescriptor subTypeDescriptor);
 	}
 
 	@Override
 	InFlightAccess<T> getInFlightAccess();
+
+	void visitSubTypeDescriptors(Consumer<IdentifiableTypeDescriptor<? extends T>> action);
+	void visitAllSubTypeDescriptors(Consumer<IdentifiableTypeDescriptor<? extends T>> action);
+
+	IdentifiableTypeDescriptor findMatchingSubTypeDescriptors(Predicate<IdentifiableTypeDescriptor<? extends T>> matcher);
+
 }

@@ -26,8 +26,9 @@ public abstract class Payment {
 	public Payment() {
 	}
 
-	public Payment(Integer id) {
+	public Payment(Integer id, MonetaryAmount amount) {
 		this.id = id;
+		this.amount = amount;
 	}
 
 	@Id

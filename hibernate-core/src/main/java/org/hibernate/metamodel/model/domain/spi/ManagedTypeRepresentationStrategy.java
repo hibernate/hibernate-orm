@@ -6,15 +6,15 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.bytecode.spi.BytecodeProvider;
-import org.hibernate.bytecode.spi.ReflectionOptimizer;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.ProxyFactory;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Defines a singular extension point for capabilities pertaining to
@@ -34,6 +34,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface ManagedTypeRepresentationStrategy {
 	RepresentationMode getMode();
 
@@ -56,8 +57,14 @@ public interface ManagedTypeRepresentationStrategy {
 	 * Create the delegate capable of producing proxies for the given entity
 	 */
 	<J> ProxyFactory generateProxyFactory(
-			AbstractEntityTypeDescriptor<J> runtimeDescriptor,
+			EntityTypeDescriptor<J> runtimeDescriptor,
 			RuntimeModelCreationContext creationContext);
+
+
+	boolean isConcreteInstance(
+			Object instance,
+			IdentifiableTypeDescriptor<?> typeDescriptor,
+			SessionFactoryImplementor factory);
 
 	/**
 	 * @apiNote Moving/integrating this with such a representation-specific contract

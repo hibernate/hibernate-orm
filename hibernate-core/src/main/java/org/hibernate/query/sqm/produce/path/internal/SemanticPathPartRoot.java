@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.produce.path.internal;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
@@ -19,6 +20,12 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionEle
  * @author Steve Ebersole
  */
 public class SemanticPathPartRoot implements SemanticPathPart {
+	private final SessionFactoryImplementor sessionFactory;
+
+	public SemanticPathPartRoot(SessionFactoryImplementor sessionFactory) {
+		this.sessionFactory = sessionFactory;
+	}
+
 	@Override
 	public SemanticPathPart resolvePathPart(
 			String name,
@@ -53,17 +60,25 @@ public class SemanticPathPartRoot implements SemanticPathPart {
 		}
 
 		// #3
-		final EntityTypeDescriptor entityByName = context.getSessionFactory()
+		final EntityTypeDescriptor entityTypeByName = context.getSessionFactory()
 				.getMetamodel()
 				.findEntityDescriptor( name );
-		if ( entityByName != null ) {
-			return new SemanticPathPartNamedEntity( entityByName );
+		if ( entityTypeByName != null ) {
+			return new SemanticPathPartNamedEntity( entityTypeByName );
 		}
 
 		// #4
-		final Package namedPackageRoot = Package.getPackage( name );
-		if ( namedPackageRoot != null ) {
-			return new SemanticPathPartNamedPackage( namedPackageRoot );
+		final Package namedPackage = Package.getPackage( name );
+		if ( namedPackage != null ) {
+			return new SemanticPathPartNamedPackage( namedPackage, sessionFactory );
+		}
+
+		if ( ! isTerminal ) {
+			// Package#getPackage seems to not always return something for
+			// a valid package name if the package has no direct classes.  Since
+			// this is not yet the terminal the next node might still find the
+			// Package, so delay the resolution
+			return new PossiblePackageRoot( name, sessionFactory );
 		}
 
 		throw new SemanticException( "Could not resolve path root : " + name );

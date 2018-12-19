@@ -45,7 +45,6 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 
 	private final InheritanceCapable<? super J> superTypeDescriptor;
 	private final Set<InheritanceCapable<? extends J>> subclassTypes = ConcurrentHashMap.newKeySet();
-	private final Set<String> subClassEntityNames = ConcurrentHashMap.newKeySet();
 
 	private final Object discriminatorValue;
 
@@ -130,7 +129,8 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 		inFlightAccess.finishUp();
 	}
 
-	public void addSubclassDescriptor(InheritanceCapable<? extends J> subclassType) {
+	@SuppressWarnings("WeakerAccess")
+	protected void addSubclassDescriptor(InheritanceCapable<? extends J> subclassType) {
 		log.debugf(
 				"Adding runtime descriptor [%s] as subclass for ManagedType [%s]",
 				subclassType.getJavaTypeDescriptor().getTypeName(),
@@ -138,21 +138,6 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 		);
 
 		subclassTypes.add( subclassType );
-		addSubclassName( subclassType );
-	}
-
-	protected void addSubclassName(InheritanceCapable subclassType) {
-		subClassEntityNames.add( subclassType.getNavigableName() );
-
-		if ( superTypeDescriptor != null ) {
-			if ( !AbstractManagedType.class.isInstance( subclassType ) ) {
-				throw new HibernateException(
-						"Expecting super type to be derived from AbstractManagedType : " + superTypeDescriptor
-				);
-			}
-
-			( (AbstractManagedType) superTypeDescriptor ).addSubclassName( subclassType );
-		}
 	}
 
 	@Override
@@ -162,8 +147,19 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 
 	@Override
 	public boolean isSubclassTypeName(String name) {
+		if ( getDomainTypeName().equals( name ) ) {
+			return true;
+		}
 
-		return subClassEntityNames.contains( name );
+		if ( ! getSubclassTypes().isEmpty() ) {
+			for ( InheritanceCapable subclassType : getSubclassTypes() ) {
+				if ( subclassType.isSubclassTypeName( name ) ) {
+					return true;
+				}
+			}
+		}
+
+		return false;
 	}
 
 	@Override

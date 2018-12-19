@@ -6,12 +6,16 @@
  */
 package org.hibernate.metamodel.model.domain.internal.mode;
 
+import java.util.Map;
+
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.bytecode.spi.BytecodeProvider;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.RepresentationMode;
-import org.hibernate.metamodel.model.domain.spi.AbstractEntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Instantiator;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeRepresentationStrategy;
@@ -45,9 +49,23 @@ public class StandardMapRepresentationStrategy implements ManagedTypeRepresentat
 	@Override
 	@SuppressWarnings("unchecked")
 	public <J> ProxyFactory generateProxyFactory(
-			AbstractEntityTypeDescriptor<J> runtimeDescriptor,
+			EntityTypeDescriptor<J> runtimeDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		return StandardMapProxyFactoryInstantiator.INSTANCE.instantiate( runtimeDescriptor, creationContext );
+	}
+
+	@Override
+	public boolean isConcreteInstance(
+			Object instance,
+			IdentifiableTypeDescriptor<?> typeDescriptor,
+			SessionFactoryImplementor factory) {
+		if ( instance instanceof Map ) {
+			final Map mapInstance = (Map) instance;
+			final String name = (String) mapInstance.get( DynamicMapInstantiator.KEY );
+			return typeDescriptor.getDomainTypeName().equals( name );
+		}
+
+		return false;
 	}
 
 	@Override

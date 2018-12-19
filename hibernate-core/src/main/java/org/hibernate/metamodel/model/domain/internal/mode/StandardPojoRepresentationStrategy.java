@@ -18,10 +18,12 @@ import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.RepresentationMode;
-import org.hibernate.metamodel.model.domain.spi.AbstractEntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Instantiator;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeRepresentationStrategy;
@@ -128,9 +130,22 @@ public class StandardPojoRepresentationStrategy implements ManagedTypeRepresenta
 	@Override
 	@SuppressWarnings("unchecked")
 	public <J> ProxyFactory generateProxyFactory(
-			AbstractEntityTypeDescriptor<J> runtimeDescriptor,
+			EntityTypeDescriptor<J> runtimeDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		return StandardPojoProxyFactoryInstantiator.INSTANCE.instantiate( runtimeDescriptor, creationContext );
+	}
+
+	@Override
+	public boolean isConcreteInstance(
+			Object entityInstance,
+			IdentifiableTypeDescriptor<?> typeDescriptor,
+			SessionFactoryImplementor factory) {
+		if ( entityInstance != null ) {
+			final Class concreteEntityClass = entityInstance.getClass();
+			return concreteEntityClass.getName().equals( typeDescriptor.getDomainTypeName() );
+		}
+
+		return false;
 	}
 
 	@Override

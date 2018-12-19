@@ -22,6 +22,7 @@ public class Order {
 	private Integer id;
 	private Instant transacted;
 
+	private Payment payment;
 	private SalesAssociate salesAssociate;
 
 	@Id
@@ -39,6 +40,16 @@ public class Order {
 
 	public void setTransacted(Instant transacted) {
 		this.transacted = transacted;
+	}
+
+	@ManyToOne
+	@JoinColumn(name = "payment_id")
+	public Payment getPayment() {
+		return payment;
+	}
+
+	public void setPayment(Payment payment) {
+		this.payment = payment;
 	}
 
 	@ManyToOne

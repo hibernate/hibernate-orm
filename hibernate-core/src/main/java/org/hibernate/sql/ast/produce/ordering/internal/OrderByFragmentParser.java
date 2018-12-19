@@ -44,7 +44,7 @@ public class OrderByFragmentParser extends SemanticQueryBuilder {
 
 		final SqmFrom sqmFromBase = new SqmFromImpl( this, collectionDescriptor );
 
-		getSemanticPathPartStack().push( new SemanticPathPartRoot( sqmFromBase ) );
+		getSemanticPathPartStack().push( new SemanticPathPartRoot( sqmFromBase, getSessionFactory() ) );
 
 		primeStack( getParameterDeclarationContextStack(), () -> false );
 	}

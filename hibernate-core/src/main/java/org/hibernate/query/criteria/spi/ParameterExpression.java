@@ -23,6 +23,8 @@ public class ParameterExpression<T>
 	private final String name;
 	private boolean allowsMultiValuedBinding;
 
+	private AllowableParameterType explicitType;
+
 	public ParameterExpression(String name, Class<T> javaType, CriteriaNodeBuilder builder) {
 		super( javaType, builder );
 		this.name = name;
@@ -35,6 +37,10 @@ public class ParameterExpression<T>
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	public AllowableParameterType getExplicitType() {
+		return explicitType;
 	}
 
 	@Override

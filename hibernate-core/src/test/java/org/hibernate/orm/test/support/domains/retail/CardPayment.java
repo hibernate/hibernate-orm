@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.support.domains.retail;
 
+import javax.money.MonetaryAmount;
 import javax.persistence.Entity;
 
 /**
@@ -13,7 +14,15 @@ import javax.persistence.Entity;
  */
 @Entity
 public class CardPayment extends Payment {
-	Integer transactionId;
+	private Integer transactionId;
+
+	public CardPayment() {
+	}
+
+	public CardPayment(Integer id, Integer transactionId, MonetaryAmount amount) {
+		super( id,amount );
+		this.transactionId = transactionId;
+	}
 
 	public Integer getTransactionId() {
 		return transactionId;

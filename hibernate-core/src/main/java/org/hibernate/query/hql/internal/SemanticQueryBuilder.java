@@ -90,8 +90,8 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementRefere
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReferenceEmbedded;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReferenceEntity;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionIndexReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmDiscriminatorReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEmbeddableTypedReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmEntityTypeExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityTypedReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMapEntryBinding;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMaxElementReference;
@@ -219,7 +219,8 @@ public class SemanticQueryBuilder
 
 	private final SqmFromBuilderStandard standardSqmFromBuilder = new SqmFromBuilderStandard( this );
 
-	private final Stack<SemanticPathPart> semanticPathPartStack = new StandardStack<>( new SemanticPathPartRoot() );
+	private final Stack<SemanticPathPart> semanticPathPartStack;
+
 	private final Stack<SqmFromBuilder> fromBuilderStack = new StandardStack<>( standardSqmFromBuilder );
 	private final Stack<TreatHandler> treatHandlerStack = new StandardStack<>( new TreatHandlerNormal() );
 
@@ -238,6 +239,8 @@ public class SemanticQueryBuilder
 
 		this.implicitAliasGenerator = new ImplicitAliasGenerator();
 		this.uidGenerator = new UniqueIdGenerator();
+
+		this.semanticPathPartStack = new StandardStack<>( new SemanticPathPartRoot( sessionFactory ) );
 	}
 
 	@Override
@@ -1180,7 +1183,7 @@ public class SemanticQueryBuilder
 			throw new ParsingException( "Expecting join RHS to be set" );
 		}
 
-		semanticPathPartStack.push( new SemanticPathPartJoinPredicate( currentFromElementSpace ) );
+		semanticPathPartStack.push( new SemanticPathPartJoinPredicate( currentFromElementSpace, sessionFactory ) );
 
 		try {
 			return (SqmPredicate) ctx.predicate().accept( this );
@@ -1434,7 +1437,7 @@ public class SemanticQueryBuilder
 		else if ( ctx.entityTypeReference().path() != null ) {
 			final SqmNavigableReference binding = (SqmNavigableReference) ctx.entityTypeReference().path().accept( this );
 			validateBindingAsEntityTypeExpression( binding );
-			return new SqmEntityTypeExpression( binding );
+			return new SqmDiscriminatorReference( (SqmEntityTypedReference) binding );
 		}
 
 		throw new ParsingException( "Could not interpret grammar context as 'entity type' expression : " + ctx.getText() );
@@ -1589,6 +1592,29 @@ public class SemanticQueryBuilder
 
 	@Override
 	public Object visitNonSyntacticNavigablePath(HqlParser.NonSyntacticNavigablePathContext ctx) {
+		// todo (6.0) : one option to potentially(!!!) make this faster would be to
+		//		only have SemanticPathPart handle NavigablePath references.  Others would throw an
+		//		exception as not being a navigable path which we would catch here and try to resolve
+		//		as Class name, Field name, enum name, etc
+		//
+		// Think of this as 2 steps:
+		//		1) resolve the `dotIdentifierSequence` into a `org.hibernate.DotIdentifierSequence` sub-type (`ParseTreeDotIdentifierSequence`?)
+		// 		2) resolve that `ParseTreeDotIdentifierSequence` into a Navigable-based SemanticPathPart *only*.
+		//
+		// in the case of a non-Navigable SemanticPathPart, the ParseTreeDotIdentifierSequence resolution should
+		// 		throw an exception which gets caught here and the `dotIdentifierSequence()` will be attempted to
+		//		be interpreted as a Class FQN, a Field name, an enum name, etc
+		//
+		// atm the way SemanticPathPart works with any of these Class/Member references is to
+		//		access the ClassLoader (`Package#getPackage`, `Class#forName`, etc) for each part of
+		// 		the path.
+		//
+		// another, somewhat simpler approach is to instead create a series of
+		//		`FullyQualifiedReflectivePath` references that start with a `SemanticPathPartNamedPackage`
+		//		as the root, but simply keeps track of each sub-path part as a String.  The top-level (leaf)
+		//		`FullyQualifiedReflectivePath#accept` would attempt to resolve itself accessing the ClassLoader for
+		//		just that node.
+
 		final SemanticPathPart basePathPart = (SemanticPathPart) ctx.dotIdentifierSequence().accept( this );
 
 		if ( ctx.semanticNavigablePathFragment() != null ) {
@@ -1598,7 +1624,6 @@ public class SemanticQueryBuilder
 			semanticPathPartStack.push( basePathPart );
 
 			try {
-				// todo (6.0) : set up `basePathPart` as the base for SemanticPathPart resolution of the continuation
 				return ctx.semanticNavigablePathFragment().accept( this );
 			}
 			finally {

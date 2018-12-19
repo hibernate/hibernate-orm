@@ -6,23 +6,25 @@
  */
 package org.hibernate.orm.test.query.sqm.execution;
 
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.time.Instant;
 import java.util.List;
 
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+import org.hibernate.orm.test.support.domains.AvailableDomainModel;
 import org.hibernate.orm.test.support.domains.gambit.EntityOfBasics;
+import org.hibernate.orm.test.support.domains.gambit.EntityWithManyToOneJoinTable;
+import org.hibernate.orm.test.support.domains.gambit.SimpleEntity;
 import org.hibernate.orm.test.support.domains.retail.Vendor;
 
+import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.orm.test.support.domains.retail.RetailDomainModel.applyRetailModel;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 
 /**
@@ -30,39 +32,43 @@ import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
  */
 @SuppressWarnings("WeakerAccess")
 public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
-	@Override
-	public SessionFactoryImplementor produceSessionFactory() {
-		final SessionFactoryImplementor factory = super.produceSessionFactory();
-
-		// currently a problem with EntityEntry -> PC
+	@BeforeAll
+	public void setUpTestData() {
 		sessionFactoryScope().inTransaction(
-				factory,
-				session -> session.doWork(
-						connection -> {
-							final Statement statement = connection.createStatement();
-							try {
-								statement.execute(
-										"insert into EntityOfBasics( id, gender, theInt, ordinal_gender, converted_gender ) values ( 1, 'MALE', -1, 1, 'M' )"
-								);
-								statement.execute(
-										"insert into Vendor( id, name ) values ( 1, 'Acme Corp' )"
-								);
-								statement.execute(
-										"insert into Product( id, vendor, sku, currentSellPrice ) values ( 1, 1, 'CJS-HJWDI-1234', 2 )"
-								);
-							}
-							finally {
-								try {
-									statement.close();
-								}
-								catch (SQLException ignore) {
-								}
-							}
-						}
-				)
+				session -> {
+					final EntityOfBasics entityOfBasics = new EntityOfBasics();
+					entityOfBasics.setId( 1 );
+					entityOfBasics.setGender( EntityOfBasics.Gender.MALE );
+					entityOfBasics.setConvertedGender( EntityOfBasics.Gender.MALE );
+					entityOfBasics.setOrdinalGender( EntityOfBasics.Gender.MALE );
+					entityOfBasics.setTheInt( -1 );
+					session.save( entityOfBasics );
+
+					final SimpleEntity simpleEntity = new SimpleEntity();
+					simpleEntity.setId( 1 );
+					simpleEntity.setSomeInteger( -1 );
+					simpleEntity.setSomeString( "the string" );
+					simpleEntity.setSomeInstant( Instant.now() );
+					session.save( simpleEntity );
+
+					final EntityWithManyToOneJoinTable entityWithManyToOneJoinTable = new EntityWithManyToOneJoinTable(  );
+					entityWithManyToOneJoinTable.setId( 1 );
+					entityWithManyToOneJoinTable.setOther( simpleEntity );
+					session.save( entityWithManyToOneJoinTable );
+				}
 		);
 
-		return factory;
+	}
+
+	@AfterAll
+	public void cleanUpTestData() {
+		sessionFactoryScope().inTransaction(
+				session -> {
+					session.createQuery( "delete EntityOfBasics" ).executeUpdate();
+					session.createQuery( "delete EntityWithManyToOneJoinTable" ).executeUpdate();
+					session.createQuery( "delete SimpleEntity" ).executeUpdate();
+				}
+		);
 	}
 
 	@Test
@@ -81,7 +87,7 @@ public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
 					assertThat( entity.getGender(), is( EntityOfBasics.Gender.MALE ) );
 					assertThat( entity.getTheInt(), is( -1 ) );
 					assertThat( entity.getTheInteger(), nullValue() );
-					assertThat( entity.getOrdinalGender(), is( EntityOfBasics.Gender.FEMALE ) );
+					assertThat( entity.getOrdinalGender(), is( EntityOfBasics.Gender.MALE ) );
 					assertThat( entity.getConvertedGender(), is( EntityOfBasics.Gender.MALE ) );
 				}
 		);
@@ -120,7 +126,7 @@ public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
 					assertThat( entity.getGender(), is( EntityOfBasics.Gender.MALE ) );
 					assertThat( entity.getTheInt(), is( -1 ) );
 					assertThat( entity.getTheInteger(), nullValue() );
-					assertThat( entity.getOrdinalGender(), is( EntityOfBasics.Gender.FEMALE ) );
+					assertThat( entity.getOrdinalGender(), is( EntityOfBasics.Gender.MALE ) );
 					assertThat( entity.getConvertedGender(), is( EntityOfBasics.Gender.MALE ) );
 				}
 		);
@@ -130,16 +136,13 @@ public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
 	public void testRootEntityManyToOneSelection() {
 		sessionFactoryScope().inSession(
 				session -> {
-					final List result = session.createQuery( "select p.vendor from Product p" ).list();
+					final List result = session.createQuery( "select e.other from EntityWithManyToOneJoinTable e" ).list();
 					assertThat( result, hasSize( 1 ) );
 					final Object value = result.get( 0 );
 					assertThat( value, notNullValue() );
-					final Vendor entity = cast(
-							value,
-							Vendor.class
-					);
+					final SimpleEntity entity = cast( value, SimpleEntity.class );
 					assertThat( entity.getId(), is( 1 ) );
-					assertThat( entity.getName(), is( "Acme Corp") );
+					assertThat( entity.getSomeString(), is( "the string" ) );
 				}
 		);
 	}
@@ -148,16 +151,13 @@ public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
 	public void testRootEntityManyToOneAttributeReference() {
 		sessionFactoryScope().inSession(
 				session -> {
-					final List result = session.createQuery( "select p.vendor from Product p" ).list();
+					final List result = session.createQuery( "select e.other from EntityWithManyToOneJoinTable e" ).list();
 					assertThat( result, hasSize( 1 ) );
 					final Object value = result.get( 0 );
 					assertThat( value, notNullValue() );
-					final Vendor entity = cast(
-							value,
-							Vendor.class
-					);
+					final SimpleEntity entity = cast( value, SimpleEntity.class );
 					assertThat( entity.getId(), is( 1 ) );
-					assertThat( entity.getName(), is( "Acme Corp") );
+					assertThat( entity.getSomeString(), is( "the string" ) );
 				}
 		);
 	}
@@ -172,7 +172,8 @@ public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
 	@Override
 	protected void applyMetadataSources(MetadataSources metadataSources) {
 		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( EntityOfBasics.class );
-		applyRetailModel( metadataSources );
+
+		AvailableDomainModel.GAMBIT.getDomainModel().applyDomainModel( metadataSources );
+		AvailableDomainModel.RETAIL.getDomainModel().applyDomainModel( metadataSources );
 	}
 }

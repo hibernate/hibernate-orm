@@ -22,6 +22,9 @@ import org.hibernate.hql.internal.ast.QueryTranslatorImpl;
 import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static junit.framework.Assert.assertEquals;
@@ -30,6 +33,7 @@ import static junit.framework.Assert.assertTrue;
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  */
+@RequiresDialectFeature(DialectChecks.SupportsNoColumnInsert.class)
 public class EJBQLTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

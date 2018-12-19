@@ -17,6 +17,8 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
@@ -31,6 +33,7 @@ import static org.junit.Assert.fail;
  * @author Gavin King
  * @author Hardy Ferentschik
  */
+@RequiresDialectFeature(DialectChecks.SupportsNoColumnInsert.class)
 public class GetLoadJpaComplianceTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

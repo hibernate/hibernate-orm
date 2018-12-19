@@ -77,6 +77,7 @@ import static org.junit.Assert.fail;
  *
  * @author Gavin King
  */
+@RequiresDialectFeature(DialectChecks.SupportsNoColumnInsert.class)
 public class HQLTest extends QueryTranslatorTestCase {
 	@Override
 	public boolean createSchema() {

@@ -260,6 +260,12 @@ abstract public class DialectChecks {
 		}
 	}
 
+	public static class SupportsNoColumnInsert implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.supportsNoColumnsInsert();
+		}
+	}
+
 	public static class SupportsNClob implements DialectCheck {
 		@Override
 		public boolean isMatch(Dialect dialect) {

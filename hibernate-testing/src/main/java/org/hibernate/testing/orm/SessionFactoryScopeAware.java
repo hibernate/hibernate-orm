@@ -9,7 +9,7 @@ package org.hibernate.testing.orm;
 /**
  * @author Steve Ebersole
  */
-public interface SessionFactoryScopeInjectable {
+public interface SessionFactoryScopeAware {
 	/**
 	 * Callback to inject the SessionFactoryScope into the container
 	 */

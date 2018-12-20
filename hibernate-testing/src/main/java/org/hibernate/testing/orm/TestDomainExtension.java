@@ -82,7 +82,13 @@ public class TestDomainExtension implements TestInstancePostProcessor, AfterAllC
 			metadataSources.addResource( xmlMapping );
 		}
 
-		locateExtensionStore( testInstance, context ).put( MODEL_KEY, metadataSources.buildMetadata() );
+		final MetadataImplementor model = (MetadataImplementor) metadataSources.buildMetadata();
+
+		locateExtensionStore( testInstance, context ).put( MODEL_KEY, model );
+
+		if ( testInstance instanceof TestDomainAware ) {
+			( (TestDomainAware) testInstance ).injectTestModel( model );
+		}
 	}
 
 	@Override

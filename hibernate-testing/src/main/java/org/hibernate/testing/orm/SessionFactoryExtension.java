@@ -33,10 +33,10 @@ public class SessionFactoryExtension
 			throw new RuntimeException( "Unable to determine how to handle given ExtensionContext : " + context.getDisplayName() );
 		}
 
-		if ( ! SessionFactoryScopeInjectable.class.isInstance( testInstance ) ) {
+		if ( ! SessionFactoryScopeAware.class.isInstance( testInstance ) ) {
 			throw new RuntimeException(
 					"Test instance [" + testInstance + "] does not implement `" +
-							SessionFactoryScopeInjectable.class.getName() + "`"
+							SessionFactoryScopeAware.class.getName() + "`"
 			);
 		}
 
@@ -51,12 +51,12 @@ public class SessionFactoryExtension
 
 		locateExtensionStore( testInstance, context ).put( SESSION_FACTORY_KEY, sfScope );
 
-		( (SessionFactoryScopeInjectable) testInstance ).injectSessionFactoryScope( sfScope );
+		( (SessionFactoryScopeAware) testInstance ).injectSessionFactoryScope( sfScope );
 	}
 
 	@Override
 	public void afterAll(ExtensionContext context) {
-		( (SessionFactoryScopeInjectable) context.getRequiredTestInstance() ).injectSessionFactoryScope( null );
+		( (SessionFactoryScopeAware) context.getRequiredTestInstance() ).injectSessionFactoryScope( null );
 		final SessionFactoryScopeImpl removed = (SessionFactoryScopeImpl) locateExtensionStore( context.getRequiredTestInstance(), context ).remove( SESSION_FACTORY_KEY );
 		if ( removed != null ) {
 			removed.release();

@@ -54,7 +54,13 @@ public class ServiceRegistryExtension implements TestInstancePostProcessor, Afte
 			configureServices( serviceRegistryAnn, ssrb );
 		}
 
-		locateExtensionStore( testInstance, context ).put( REGISTRY_KEY, ssrb.build() );
+		final StandardServiceRegistry serviceRegistry = ssrb.build();
+
+		locateExtensionStore( testInstance, context ).put( REGISTRY_KEY, serviceRegistry );
+
+		if ( testInstance instanceof ServiceRegistryAware ) {
+			( (ServiceRegistryAware) testInstance ).injectServiceRegistry( serviceRegistry );
+		}
 	}
 
 	private void configureServices(ServiceRegistry serviceRegistryAnn, StandardServiceRegistryBuilder ssrb) throws Exception {
@@ -74,7 +80,13 @@ public class ServiceRegistryExtension implements TestInstancePostProcessor, Afte
 
 	@Override
 	public void afterAll(ExtensionContext context) {
-		final ExtensionContext.Store store = locateExtensionStore( context.getRequiredTestInstance(), context );
+		final Object testInstance = context.getRequiredTestInstance();
+
+		if ( testInstance instanceof ServiceRegistryAware ) {
+			( (ServiceRegistryAware) testInstance ).injectServiceRegistry( null );
+		}
+
+		final ExtensionContext.Store store = locateExtensionStore( testInstance, context );
 		final StandardServiceRegistry registry = (StandardServiceRegistry) store.remove( REGISTRY_KEY );
 		if ( registry != null ) {
 			StandardServiceRegistryBuilder.destroy( registry );

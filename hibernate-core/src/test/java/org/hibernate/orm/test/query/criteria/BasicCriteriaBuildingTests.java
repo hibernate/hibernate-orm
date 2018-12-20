@@ -14,12 +14,11 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
 
-import org.hibernate.testing.junit5.FailureExpected;
 import org.hibernate.testing.orm.ServiceRegistry;
 import org.hibernate.testing.orm.ServiceRegistry.Setting;
 import org.hibernate.testing.orm.SessionFactory;
 import org.hibernate.testing.orm.SessionFactoryScope;
-import org.hibernate.testing.orm.SessionFactoryScopeInjectable;
+import org.hibernate.testing.orm.SessionFactoryScopeAware;
 import org.hibernate.testing.orm.TestDomain;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
@@ -44,7 +43,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 )
 @SessionFactory
 @SuppressWarnings("WeakerAccess")
-public class BasicCriteriaBuildingTests implements SessionFactoryScopeInjectable {
+public class BasicCriteriaBuildingTests implements SessionFactoryScopeAware {
 	private SessionFactoryScope scope;
 
 	@Test

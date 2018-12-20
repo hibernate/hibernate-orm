@@ -34,7 +34,20 @@ If a _TODO_ ends up being impossible to merge for now, please move the item to t
 
 * https://github.com/hibernate/hibernate-orm/commit/89372191ecf450c37f2509ddfb61c638e1563413
 
--> *Vlad* let's try to port the test and see if it still needs fixing in 6, if not implemented, move to other section
+-> Fails due to:
+
+    java.lang.IllegalArgumentException: Could not resolve attribute named [id] relative to [SingleTableEntityDescriptor<org.hibernate.jpa.test.criteria.alias.CriteriaMultiselectAliasTest$Book>]
+
+    	at org.hibernate.metamodel.model.domain.spi.AbstractManagedType.getAttribute(AbstractManagedType.java:397)
+
+The problem is that we can no longer reference `id` attributes using Criteria API.
+
+If the `id` attribute is removed from the Criteria API projection,
+the test fails with:
+
+    java.lang.ClassCastException: org.hibernate.query.criteria.spi.SingularPathBasic cannot be cast to org.hibernate.query.sqm.tree.select.SqmSelectableNode
+
+    	at org.hibernate.query.criteria.sqm.CriteriaQueryToSqmTransformer.lambda$visitSelectClause$3(CriteriaQueryToSqmTransformer.java:215)
 
 == Issues kept for later
 

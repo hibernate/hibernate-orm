@@ -8,10 +8,9 @@ package org.hibernate.orm.test.crud;
 
 import java.util.List;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
-import org.hibernate.orm.test.support.domains.gambit.Component;
-import org.hibernate.orm.test.support.domains.gambit.EntityOfComposites;
+import org.hibernate.testing.orm.domain.gambit.Component;
+import org.hibernate.testing.orm.domain.gambit.EntityOfComposites;
 
 import org.junit.jupiter.api.Test;
 

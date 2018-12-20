@@ -8,9 +8,8 @@ package org.hibernate.orm.test.query.sqm.execution;
 
 import java.util.List;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
-import org.hibernate.orm.test.support.domains.gambit.BasicEntity;
+import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 

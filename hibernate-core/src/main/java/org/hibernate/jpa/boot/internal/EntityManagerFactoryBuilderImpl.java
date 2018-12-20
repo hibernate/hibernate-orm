@@ -921,7 +921,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			populate( sfBuilder, standardServiceRegistry );
 
 			SchemaManagementToolCoordinator.process(
-					Helper.buildDatabaseModel( metadata ),
+					Helper.buildDatabaseModel( standardServiceRegistry, metadata ),
 					standardServiceRegistry,
 					action -> {}
 			);

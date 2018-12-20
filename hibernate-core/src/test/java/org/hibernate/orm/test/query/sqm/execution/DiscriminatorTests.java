@@ -9,16 +9,14 @@ package org.hibernate.orm.test.query.sqm.execution;
 import java.util.List;
 
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.orm.test.support.domains.AvailableDomainModel;
-import org.hibernate.orm.test.support.domains.retail.CardPayment;
-import org.hibernate.orm.test.support.domains.retail.CashPayment;
-import org.hibernate.orm.test.support.domains.retail.DomesticVendor;
-import org.hibernate.orm.test.support.domains.retail.ForeignVendor;
-import org.hibernate.orm.test.support.domains.retail.Vendor;
 import org.hibernate.query.spi.QueryImplementor;
 
-import org.hibernate.testing.junit5.FailureExpected;
-import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.domain.StandardDomainModel;
+import org.hibernate.testing.orm.domain.retail.DomesticVendor;
+import org.hibernate.testing.orm.domain.retail.ForeignVendor;
+import org.hibernate.testing.orm.domain.retail.Vendor;
+import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,11 +28,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Steve Ebersole
  */
 @SuppressWarnings("WeakerAccess")
-public class DiscriminatorTests extends SessionFactoryBasedFunctionalTest {
+public class DiscriminatorTests extends BaseSessionFactoryFunctionalTest {
 
 	@Override
 	protected void applyMetadataSources(MetadataSources metadataSources) {
-		AvailableDomainModel.RETAIL.getDomainModel().applyDomainModel( metadataSources );
+		StandardDomainModel.RETAIL.getDescriptor().applyDomainModel( metadataSources );
 	}
 
 	@BeforeEach

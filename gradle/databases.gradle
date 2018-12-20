@@ -1,3 +1,5 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -115,4 +117,11 @@ ext {
                         'jdbc.url'   : 'jdbc:sap://localhost:39015/'
                 ]
         ]
+}
+
+
+def processTestResourcesTask = project.tasks.findByName( 'processTestResources' )
+if ( processTestResourcesTask != null ) {
+        processTestResourcesTask.inputs.property( 'db', db )
+        processTestResourcesTask.filter( ReplaceTokens, tokens: dbBundle[db] )
 }

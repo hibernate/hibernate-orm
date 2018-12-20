@@ -18,7 +18,7 @@ import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.orm.test.jpa.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 
-import org.hibernate.testing.junit5.SkipForDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;

@@ -365,7 +365,7 @@ public class SchemaExport {
 		try {
 			final MetadataImplementor metadata = buildMetadata( commandLineArgs, serviceRegistry );
 
-			new SchemaExport( Helper.buildDatabaseModel( metadata ), serviceRegistry )
+			new SchemaExport( Helper.buildDatabaseModel( serviceRegistry, metadata ), serviceRegistry )
 					.setHaltOnError( commandLineArgs.halt )
 					.setOutputFile( commandLineArgs.outputFile )
 					.setDelimiter( commandLineArgs.delimiter )

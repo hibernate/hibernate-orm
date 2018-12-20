@@ -58,7 +58,7 @@ public class SimpleColumnAdditionMigrationTest extends BaseSchemaUnitTestCase {
 				.addResource( resource1 )
 				.buildMetadata();
 
-		return Helper.buildDatabaseModel( v1metadata );
+		return Helper.buildDatabaseModel( getStandardServiceRegistry(), v1metadata );
 	}
 
 //	/**

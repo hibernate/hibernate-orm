@@ -15,7 +15,7 @@ import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.dialect.SQLServer2012Dialect;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit5.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -201,30 +201,39 @@ tasks.withType( Test.class ).each { test ->
 	test.systemProperties += System.properties.findAll { it.key.startsWith( "hibernate." ) }
 
 	test.enableAssertions = true
+	
+	if ( project.name != 'hibernate-testing' ) {
+		test.dependsOn ':hibernate-testing:test'
+	}
 }
+
+sourceSets {
+	test {
+		resources {
+			// add `src/test/java` as a test-resources dir
+			configure( srcDir('src/test/java') ) {
+				filter {
+					include '**/*.properties'
+					include '**/*.xml'
+				}
+			}
+			configure( srcDir('src/test/resources') ) {
+				filter {
+					include '*.properties'
+					include '*.xml'
+					include '**/*.properties'
+					include '**/*.xml'
+					exclude 'src/test/resources/arquillian.xml'
+				}
+			}
+		}
+	}
+}
+
 
 processTestResources {
 	inputs.property( "db", db )
-	doLast {
-		copy {
-			from( sourceSets.test.java.srcDirs ) {
-				include '**/*.properties'
-				include '**/*.xml'
-			}
-			into sourceSets.test.java.outputDir
-		}
-		copy {
-			from file( 'src/test/resources' )
-			into file( "${buildDir}/resources/test" )
-			exclude 'src/test/resources/arquillian.xml'
-			exclude 'src/test/resources/hibernate.properties'
-		}
-		copy {
-			from file( 'src/test/resources/hibernate.properties' )
-			into file( "${buildDir}/resources/test" )
-			filter( ReplaceTokens, tokens: dbBundle[db] )
-		}
-	}
+	filter( ReplaceTokens, tokens: dbBundle[db] )
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -262,7 +271,7 @@ processTestResources {
  A solution is to enable the 'After Build' Execution of the copyResourcesToIntelliJOutFolder task
  from the 'Gradle project' IntelliJ tool window ( The task can be found under hibernate-orm > Task > other)
  */
-task copyResourcesToIntelliJOutFolder {
+task copyResourcesToIntelliJOutFolder(type: Task, dependsOn: project.tasks.processTestResources) {
 	doLast {
 		copy {
 			from "$buildDir/resources/test"

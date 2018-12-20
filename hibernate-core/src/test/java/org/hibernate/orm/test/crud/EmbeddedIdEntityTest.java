@@ -6,10 +6,9 @@
  */
 package org.hibernate.orm.test.crud;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
-import org.hibernate.orm.test.support.domains.gambit.EmbeddedIdEntity;
-import org.hibernate.orm.test.support.domains.gambit.EmbeddedIdEntity.EmbeddedIdEntityId;
+import org.hibernate.testing.orm.domain.gambit.EmbeddedIdEntity;
+import org.hibernate.testing.orm.domain.gambit.EmbeddedIdEntity.EmbeddedIdEntityId;
 
 import org.junit.jupiter.api.Test;
 

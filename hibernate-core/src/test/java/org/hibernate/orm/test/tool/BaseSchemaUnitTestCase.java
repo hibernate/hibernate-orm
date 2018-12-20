@@ -165,7 +165,7 @@ public abstract class BaseSchemaUnitTestCase implements
 
 		afterMetadataCreation( metadata );
 
-		databaseModel = Helper.buildDatabaseModel( metadata );
+		databaseModel = Helper.buildDatabaseModel( standardServiceRegistry, metadata );
 		schemaScope = new SchemaScopeImpl( databaseModel, standardServiceRegistry, dropSchemaAfterTest() );
 		return schemaScope;
 	}

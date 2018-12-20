@@ -89,7 +89,7 @@ public class TestExtraPhysicalTableTypes {
 
 	private InformationExtractorJdbcDatabaseMetaDataImplTest buildInformationExtractorJdbcDatabaseMetaDataImplTest()
 			throws SQLException {
-		final DatabaseModel databaseModel = Helper.buildDatabaseModel( metadata );
+		final DatabaseModel databaseModel = Helper.buildDatabaseModel( ssr, metadata );
 		final ConnectionProvider connectionProvider = ssr.getService( ConnectionProvider.class );
 		final DatabaseInformation dbInfo = new DatabaseInformationImpl(
 				ssr,

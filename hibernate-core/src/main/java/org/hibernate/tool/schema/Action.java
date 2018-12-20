@@ -76,6 +76,14 @@ public enum Action {
 		this.externalHbm2ddlName = externalHbm2ddlName;
 	}
 
+	public String getExternalJpaName() {
+		return externalJpaName;
+	}
+
+	public String getExternalHbm2ddlName() {
+		return externalHbm2ddlName;
+	}
+
 	@Override
 	public String toString() {
 		return getClass().getSimpleName() + "(externalJpaName=" + externalJpaName + ", externalHbm2ddlName=" + externalHbm2ddlName + ")";

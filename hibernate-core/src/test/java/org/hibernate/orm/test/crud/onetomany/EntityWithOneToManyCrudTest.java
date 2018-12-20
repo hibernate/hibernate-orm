@@ -12,10 +12,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.Hibernate;
-import org.hibernate.boot.MetadataSources;
+
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
-import org.hibernate.orm.test.support.domains.gambit.EntityWithOneToMany;
-import org.hibernate.orm.test.support.domains.gambit.SimpleEntity;
+import org.hibernate.testing.orm.domain.gambit.EntityWithOneToMany;
+import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
 
 import org.junit.jupiter.api.Test;
 

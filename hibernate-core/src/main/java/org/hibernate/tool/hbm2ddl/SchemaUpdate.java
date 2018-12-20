@@ -148,7 +148,7 @@ public class SchemaUpdate {
 			try {
 				final MetadataImplementor metadata = buildMetadata( parsedArgs, serviceRegistry );
 
-				new SchemaUpdate( Helper.buildDatabaseModel( metadata ), serviceRegistry )
+				new SchemaUpdate( Helper.buildDatabaseModel( serviceRegistry, metadata ), serviceRegistry )
 						.setOutputFile( parsedArgs.outputFile )
 						.setDelimiter( parsedArgs.delimiter )
 						.execute( parsedArgs.targetTypes );

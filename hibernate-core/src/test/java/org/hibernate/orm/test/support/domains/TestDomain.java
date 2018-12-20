@@ -12,8 +12,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.hibernate.testing.orm.domain.StandardDomainModel;
+
 /**
- * Allows a test to indicate a {@link DomainModel} it uses via {@link AvailableDomainModel}.
+ * Allows a test to indicate a {@link DomainModel} it uses via {@link StandardDomainModel}.
  *
  * These models are then automatically applied on behalf of the test by our JUnit
  * extensions.  The ultimate goal is to allow the tests being executed to share
@@ -31,7 +33,7 @@ import java.lang.annotation.Target;
  *
  * NOTE : namespace = catalog/schema
  *
- * @see AvailableDomainModel
+ * @see StandardDomainModel
  * @see DomainModel
  * @see TestDomainGroup
  *
@@ -44,5 +46,5 @@ public @interface TestDomain {
 	/**
 	 * The AvailableDomainModel to apply
 	 */
-	AvailableDomainModel value();
+	StandardDomainModel value();
 }

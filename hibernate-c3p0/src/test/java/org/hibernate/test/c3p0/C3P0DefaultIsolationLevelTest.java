@@ -5,7 +5,6 @@ import java.sql.SQLException;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
@@ -13,8 +12,8 @@ import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.hibernate.testing.junit5.DatabaseAgnostic;
-import org.hibernate.testing.junit5.JiraKey;
-import org.hibernate.testing.junit5.RequiresDialect;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

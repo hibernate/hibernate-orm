@@ -12,7 +12,7 @@ import java.util.List;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
-import org.hibernate.orm.test.support.domains.gambit.EntityOfBasics;
+import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 
 import org.hibernate.testing.junit5.StandardTags;
 import org.junit.jupiter.api.AfterEach;
@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.orm.test.support.domains.retail.RetailDomainModel.applyRetailModel;
+import static org.hibernate.testing.orm.domain.retail.RetailDomainModel.applyRetailModel;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 
 /**

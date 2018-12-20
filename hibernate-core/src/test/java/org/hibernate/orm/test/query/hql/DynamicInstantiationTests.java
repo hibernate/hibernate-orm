@@ -6,8 +6,8 @@
  */
 package org.hibernate.orm.test.query.hql;
 
-import org.hibernate.testing.junit5.FailureExpected;
-import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.fail;
@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Steve Ebersole
  */
-public class DynamicInstantiationTests extends SessionFactoryBasedFunctionalTest {
+public class DynamicInstantiationTests extends BaseSessionFactoryFunctionalTest {
 	@Test
 	@FailureExpected( "Still need execution test(s)" )
 	public void testSerialInstantiations() {
@@ -45,7 +45,4 @@ public class DynamicInstantiationTests extends SessionFactoryBasedFunctionalTest
 	public void testEntityValuedArgumentsAsId() {
 		fail();
 	}
-
-
-
 }

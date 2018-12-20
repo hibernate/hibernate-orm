@@ -69,7 +69,7 @@ public class SchemaValidator {
 
 			try {
 				final MetadataImplementor metadata = buildMetadata( parsedArgs, serviceRegistry );
-				new SchemaValidator( Helper.buildDatabaseModel( metadata ), serviceRegistry ).validate();
+				new SchemaValidator( Helper.buildDatabaseModel( serviceRegistry, metadata ), serviceRegistry ).validate();
 			}
 			finally {
 				StandardServiceRegistryBuilder.destroy( serviceRegistry );

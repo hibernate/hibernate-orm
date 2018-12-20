@@ -11,7 +11,7 @@ import java.lang.reflect.Method;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.envers.strategy.AuditStrategy;
 
-import org.hibernate.testing.junit5.SkipForDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.junit5.dynamictests.AbstractDynamicTest;
 import org.hibernate.testing.junit5.dynamictests.DynamicExecutionContext;
 import org.hibernate.testing.junit5.envers.RequiresAuditStrategy;

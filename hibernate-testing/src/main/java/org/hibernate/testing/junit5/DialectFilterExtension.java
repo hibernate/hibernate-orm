@@ -12,6 +12,14 @@ import java.util.Optional;
 
 import org.hibernate.dialect.Dialect;
 
+import org.hibernate.testing.orm.junit.TestingUtil;
+import org.hibernate.testing.orm.junit.DialectFeatureCheck;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.RequiresDialectFeatureGroup;
+import org.hibernate.testing.orm.junit.RequiresDialects;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.orm.junit.SkipForDialectGroup;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -46,7 +54,7 @@ public class DialectFilterExtension implements ExecutionCondition {
 
 		log.debugf( "Checking Dialect [%s] - context = %s", dialect, context.getDisplayName() );
 
-		final List<RequiresDialect> effectiveRequiresDialects = AnnotationUtil.findEffectiveRepeatingAnnotation(
+		final List<RequiresDialect> effectiveRequiresDialects = TestingUtil.findEffectiveRepeatingAnnotation(
 				context,
 				RequiresDialect.class,
 				RequiresDialects.class
@@ -79,7 +87,7 @@ public class DialectFilterExtension implements ExecutionCondition {
 			);
 		}
 
-		final List<SkipForDialect> effectiveSkips = AnnotationUtil.findEffectiveRepeatingAnnotation(
+		final List<SkipForDialect> effectiveSkips = TestingUtil.findEffectiveRepeatingAnnotation(
 				context,
 				SkipForDialect.class,
 				SkipForDialectGroup.class
@@ -98,7 +106,7 @@ public class DialectFilterExtension implements ExecutionCondition {
 			}
 		}
 
-		List<RequiresDialectFeature> effectiveRequiresDialectFeatures = AnnotationUtil.findEffectiveRepeatingAnnotation(
+		List<RequiresDialectFeature> effectiveRequiresDialectFeatures = TestingUtil.findEffectiveRepeatingAnnotation(
 				context,
 				RequiresDialectFeature.class,
 				RequiresDialectFeatureGroup.class

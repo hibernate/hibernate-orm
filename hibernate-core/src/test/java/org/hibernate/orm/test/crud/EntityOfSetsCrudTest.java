@@ -10,10 +10,10 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.Hibernate;
-import org.hibernate.boot.MetadataSources;
+
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
-import org.hibernate.orm.test.support.domains.gambit.Component;
-import org.hibernate.orm.test.support.domains.gambit.EntityOfSets;
+import org.hibernate.testing.orm.domain.gambit.Component;
+import org.hibernate.testing.orm.domain.gambit.EntityOfSets;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -12,7 +12,7 @@ import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.orm.test.tool.schemacreation.BaseSchemaCreationTestCase;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit5.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.junit5.schema.SchemaScope;
 import org.hibernate.testing.junit5.schema.SchemaTest;
 

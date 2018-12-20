@@ -8,8 +8,7 @@ package org.hibernate.orm.test.jpa.ql;
 
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
 
-import org.hibernate.testing.junit5.FailureExpected;
-
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;

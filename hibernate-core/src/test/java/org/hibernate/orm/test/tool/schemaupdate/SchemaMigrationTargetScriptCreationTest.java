@@ -17,6 +17,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
@@ -67,14 +68,14 @@ public class SchemaMigrationTargetScriptCreationTest extends SessionFactoryBased
 
 	@AfterEach
 	public void tearDown() {
-		ServiceRegistry serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
+		StandardServiceRegistry serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 		try {
 			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
 					.addAnnotatedClass( TestEntity.class )
 					.buildMetadata();
 			metadata.validate();
 
-			DatabaseModel databaseModel = Helper.buildDatabaseModel( metadata );
+			DatabaseModel databaseModel = Helper.buildDatabaseModel( serviceRegistry, metadata );
 
 			new SchemaExport( databaseModel, serviceRegistry ).drop( EnumSet.of(
 					TargetType.DATABASE,

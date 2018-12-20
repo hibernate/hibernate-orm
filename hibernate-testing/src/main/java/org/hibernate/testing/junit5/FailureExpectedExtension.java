@@ -8,6 +8,8 @@ package org.hibernate.testing.junit5;
 
 import java.util.Locale;
 
+import org.hibernate.testing.orm.junit.TestingUtil;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
@@ -26,7 +28,7 @@ import org.jboss.logging.Logger;
 public class FailureExpectedExtension
 		implements ExecutionCondition, BeforeEachCallback, AfterEachCallback, TestExecutionExceptionHandler {
 
-	private static final Logger log = Logger.getLogger( FailureExpectedExtension.class );
+	private static final Logger log = Logger.getLogger( org.hibernate.testing.orm.junit.FailureExpectedExtension.class );
 
 	private static final String IS_MARKED_STORE_KEY = "IS_MARKED";
 	private static final String EXPECTED_FAILURE_STORE_KEY = "EXPECTED_FAILURE";
@@ -36,17 +38,27 @@ public class FailureExpectedExtension
 
 	static {
 		failureExpectedValidation = Boolean.getBoolean( FailureExpected.VALIDATE_FAILURE_EXPECTED );
+		log.debugf( "FailureExpectedExtension#failureExpectedValidation = %s", failureExpectedValidation );
 	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// ExecutionCondition - used to disable tests that are an `@ExpectedFailure`
+	// ExecutionCondition
+	// 		- used to disable tests that are an `@ExpectedFailure` when
+	// 			failureExpectedValidation == false which is the default.
+	//
+	// 			When failureExpectedValidation == true, the test is allowed to
+	// 			run and we validate that the test does in fact fail.
 
 	@Override
 	public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
+		log.tracef( "#evaluateExecutionCondition(%s)", context.getDisplayName() );
+
 		if ( !context.getElement().isPresent() ) {
 			throw new RuntimeException( "Unable to determine how to handle given ExtensionContext : " + context.getDisplayName() );
 		}
+
+		log.debugf( "Evaluating context - %s; failureExpectedValidation = %s", context.getDisplayName(), failureExpectedValidation );
 
 		if ( ! failureExpectedValidation ) {
 			// we are not validating the expected failures occur, so it does not matter
@@ -62,12 +74,18 @@ public class FailureExpectedExtension
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// BeforeEachCallback
+	//		- used to determine whether a test is considered as an expected
+	//			failure.  If so,
 
 	@Override
 	public void beforeEach(ExtensionContext context) {
-		final boolean markedExpectedFailure = AnnotationUtil.hasEffectiveAnnotation( context, FailureExpected.class );
-		final ExtensionContext.Namespace namespace = generateNamespace( context );
+		log.tracef( "#beforeEach(%s)", context.getDisplayName() );
 
+		final boolean markedExpectedFailure = TestingUtil.hasEffectiveAnnotation( context, FailureExpected.class );
+
+		log.debugf( "Checking for @FailureExpected [%s] - %s", context.getDisplayName(), markedExpectedFailure );
+
+		final ExtensionContext.Namespace namespace = generateNamespace( context );
 		context.getStore( namespace ).put( IS_MARKED_STORE_KEY, markedExpectedFailure );
 	}
 
@@ -88,10 +106,17 @@ public class FailureExpectedExtension
 
 	@Override
 	public void afterEach(ExtensionContext context) {
+		log.tracef( "#afterEach(%s)", context.getDisplayName() );
+
 		final ExtensionContext.Store store = context.getStore( generateNamespace( context ) );
 
-		if ( store.get( IS_MARKED_STORE_KEY ) == Boolean.TRUE ) {
+		final Boolean isMarked = (Boolean) store.remove( IS_MARKED_STORE_KEY );
+		log.debugf( "Post-handling for @FailureExpected [%s] - %s", context.getDisplayName(), isMarked );
+
+		if ( isMarked == Boolean.TRUE ) {
 			final Throwable expectedFailure = (Throwable) store.remove( EXPECTED_FAILURE_STORE_KEY );
+			log.debugf( "  >> Captured exception - %s", expectedFailure );
+
 			if ( expectedFailure == null ) {
 				// even though we expected a failure, the test did not fail
 				throw new ExpectedFailureDidNotFail( context );
@@ -114,13 +139,19 @@ public class FailureExpectedExtension
 
 	@Override
 	public void handleTestExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
+		log.tracef( "#handleTestExecutionException(%s, %s)", context.getDisplayName(), throwable.getClass().getName() );
 
 		final ExtensionContext.Store store = context.getStore( generateNamespace( context ) );
-		if ( store.get( IS_MARKED_STORE_KEY ) == Boolean.TRUE ) {
+
+		final Boolean isMarked = (Boolean) store.get( IS_MARKED_STORE_KEY );
+		log.debugf( "Handling test exception [%s]; marked @FailureExcepted = %s", context.getDisplayName(), isMarked );
+
+		if ( isMarked == Boolean.TRUE ) {
 			// test is marked as an `@ExpectedFailure`:
 
-			//		1) add an entry to the store
+			//		1) add the exception to the store
 			store.put( EXPECTED_FAILURE_STORE_KEY, throwable );
+			log.debugf( "  >> Stored expected failure - %s", throwable );
 
 			// 		2) eat the failure
 			return;

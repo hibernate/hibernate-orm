@@ -10,7 +10,7 @@
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping default-lazy="false">
     <!-- shortened table name for Oracle -->
-    <class name="org.hibernate.orm.test.support.domains.gambit.EntityOfDynamicComponent" table="EntityDynamicComponent">
+    <class name="org.hibernate.testing.orm.domain.gambit.EntityOfDynamicComponent" table="EntityDynamicComponent">
         <id name="id" type="long" column="id"/>
         <property name="note" type="string"/>
         <dynamic-component name="values" />

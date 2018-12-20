@@ -9,12 +9,13 @@ package org.hibernate.orm.test.query.sqm.produce;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.orm.test.query.sqm.produce.domain.ConstructedLookupListItem;
 import org.hibernate.orm.test.query.sqm.produce.domain.InjectedLookupListItem;
 import org.hibernate.orm.test.query.sqm.produce.domain.NestedCtorLookupListItem;
-import org.hibernate.orm.test.support.domains.gambit.EntityOfBasics;
+import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
+import org.hibernate.testing.orm.junit.TestingUtil;
+
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityIdentifierReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
@@ -51,7 +52,7 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 		);
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
 
-		final SqmDynamicInstantiation dynamicInstantiation = cast(
+		final SqmDynamicInstantiation dynamicInstantiation = TestingUtil.cast(
 				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
 				SqmDynamicInstantiation.class
 		);
@@ -72,7 +73,7 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 
 
 		{
-			final SqmDynamicInstantiation instantiation = cast(
+			final SqmDynamicInstantiation instantiation = TestingUtil.cast(
 					statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
 					SqmDynamicInstantiation.class
 			);
@@ -85,7 +86,7 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 		}
 
 		{
-			final SqmDynamicInstantiation instantiation = cast(
+			final SqmDynamicInstantiation instantiation = TestingUtil.cast(
 					statement.getQuerySpec().getSelectClause().getSelections().get( 1 ).getSelectableNode(),
 					SqmDynamicInstantiation.class
 			);
@@ -106,7 +107,7 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 		assertEquals( 2, statement.getQuerySpec().getSelectClause().getSelections().size() );
 
 
-		final SqmDynamicInstantiation instantiation = cast(
+		final SqmDynamicInstantiation instantiation = TestingUtil.cast(
 				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
 				SqmDynamicInstantiation.class
 		);
@@ -118,7 +119,7 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 		assertThat( instantiation.getArguments(), hasSize( 2 ) );
 
 
-		final SqmSingularAttributeReference attrRef = cast(
+		final SqmSingularAttributeReference attrRef = TestingUtil.cast(
 				statement.getQuerySpec().getSelectClause().getSelections().get( 1 ).getSelectableNode(),
 				SqmSingularAttributeReference.class
 		);
@@ -138,7 +139,7 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 		);
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
 
-		final SqmDynamicInstantiation instantiation = cast(
+		final SqmDynamicInstantiation instantiation = TestingUtil.cast(
 				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
 				SqmDynamicInstantiation.class
 		);
@@ -149,20 +150,20 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 		);
 		assertThat( instantiation.getArguments(), hasSize( 3 ) );
 
-		final SqmEntityIdentifierReference firstArg = cast(
+		final SqmEntityIdentifierReference firstArg = TestingUtil.cast(
 				instantiation.getArguments().get( 0 ).getSelectableNode(),
 				SqmEntityIdentifierReference.class
 		);
 		assertThat( firstArg.getReferencedNavigable().getNavigableName(), is( "id" ) );
 
-		final SqmSingularAttributeReference secondArg = cast(
+		final SqmSingularAttributeReference secondArg = TestingUtil.cast(
 				instantiation.getArguments().get( 1 ).getSelectableNode(),
 				SqmSingularAttributeReference.class
 		);
 		assertThat( secondArg.getReferencedNavigable().getNavigableName(), is( "theString" ) );
 
 
-		final SqmDynamicInstantiation thirdArg = cast(
+		final SqmDynamicInstantiation thirdArg = TestingUtil.cast(
 				instantiation.getArguments().get( 2 ).getSelectableNode(),
 				SqmDynamicInstantiation.class
 		);
@@ -179,7 +180,7 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 		SqmSelectStatement statement = interpretSelect( "select new list( e.id, e.theString ) from EntityOfBasics e" );
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
 
-		final SqmDynamicInstantiation instantiation = cast(
+		final SqmDynamicInstantiation instantiation = TestingUtil.cast(
 				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
 				SqmDynamicInstantiation.class
 		);
@@ -212,7 +213,7 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 		SqmSelectStatement statement = interpretSelect( "select new map( e.id as id, e.theString as ts ) from EntityOfBasics e" );
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
 
-		final SqmDynamicInstantiation instantiation = cast(
+		final SqmDynamicInstantiation instantiation = TestingUtil.cast(
 				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
 				SqmDynamicInstantiation.class
 		);
@@ -251,7 +252,7 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 		);
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
 
-		final SqmDynamicInstantiation dynamicInstantiation = cast(
+		final SqmDynamicInstantiation dynamicInstantiation = TestingUtil.cast(
 				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
 				SqmDynamicInstantiation.class
 		);

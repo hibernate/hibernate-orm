@@ -8,10 +8,9 @@ package org.hibernate.orm.test.crud.manytoone;
 
 import java.util.Calendar;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
-import org.hibernate.orm.test.support.domains.gambit.EntityWithManyToOneJoinTable;
-import org.hibernate.orm.test.support.domains.gambit.SimpleEntity;
+import org.hibernate.testing.orm.domain.gambit.EntityWithManyToOneJoinTable;
+import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;

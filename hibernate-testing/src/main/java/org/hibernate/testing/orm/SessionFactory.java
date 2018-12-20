@@ -27,10 +27,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @Inherited
 @TestInstance( TestInstance.Lifecycle.PER_CLASS )
 @ExtendWith( FailureExpectedExtension.class )
-//@ExtendWith( DialectFilterExtension.class )
+@ExtendWith( DialectFilterExtension.class )
 @ExtendWith( ServiceRegistryExtension.class )
 @ExtendWith( TestDomainExtension.class )
 @ExtendWith( SessionFactoryExtension.class )
+@ExtendWith( SessionFactoryParameterResolver.class )
 public @interface SessionFactory {
 	String sessionFactoryName() default "";
 

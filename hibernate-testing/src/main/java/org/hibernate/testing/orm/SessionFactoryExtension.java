@@ -6,7 +6,7 @@
  */
 package org.hibernate.testing.orm;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import java.util.Optional;
 
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -20,24 +20,21 @@ import org.junit.platform.commons.support.AnnotationSupport;
 public class SessionFactoryExtension
 		implements TestInstancePostProcessor, AfterAllCallback, TestExecutionExceptionHandler {
 
-	private static final String SESSION_FACTORY_KEY = SessionFactoryImplementor.class.getName();
+	private static final String SESSION_FACTORY_KEY = SessionFactoryScope.class.getName();
 
 	private static ExtensionContext.Store locateExtensionStore(Object testInstance, ExtensionContext context) {
-		return JUnitHelper.locateExtensionStore( ServiceRegistryExtension.class, context, testInstance );
+		return JUnitHelper.locateExtensionStore( SessionFactoryExtension.class, context, testInstance );
+	}
+
+	public static Optional<SessionFactoryScope> findSessionFactoryScope(Object testInstance, ExtensionContext context) {
+		final ExtensionContext.Store store = locateExtensionStore( testInstance, context );
+		return Optional.ofNullable( (SessionFactoryScope) store.get( SESSION_FACTORY_KEY ) );
 	}
 
 	@Override
-	@SuppressWarnings("RedundantClassCall")
 	public void postProcessTestInstance(Object testInstance, ExtensionContext context) throws Exception {
 		if ( !context.getElement().isPresent() ) {
 			throw new RuntimeException( "Unable to determine how to handle given ExtensionContext : " + context.getDisplayName() );
-		}
-
-		if ( ! SessionFactoryScopeAware.class.isInstance( testInstance ) ) {
-			throw new RuntimeException(
-					"Test instance [" + testInstance + "] does not implement `" +
-							SessionFactoryScopeAware.class.getName() + "`"
-			);
 		}
 
 		final SessionFactoryScopeImpl sfScope = new SessionFactoryScopeImpl(
@@ -51,13 +48,20 @@ public class SessionFactoryExtension
 
 		locateExtensionStore( testInstance, context ).put( SESSION_FACTORY_KEY, sfScope );
 
-		( (SessionFactoryScopeAware) testInstance ).injectSessionFactoryScope( sfScope );
+		if ( testInstance instanceof SessionFactoryScopeAware ) {
+			( (SessionFactoryScopeAware) testInstance ).injectSessionFactoryScope( sfScope );
+		}
 	}
 
 	@Override
 	public void afterAll(ExtensionContext context) {
-		( (SessionFactoryScopeAware) context.getRequiredTestInstance() ).injectSessionFactoryScope( null );
-		final SessionFactoryScopeImpl removed = (SessionFactoryScopeImpl) locateExtensionStore( context.getRequiredTestInstance(), context ).remove( SESSION_FACTORY_KEY );
+		final Object testInstance = context.getRequiredTestInstance();
+
+		if ( testInstance instanceof SessionFactoryScopeAware ) {
+			( (SessionFactoryScopeAware) testInstance ).injectSessionFactoryScope( null );
+		}
+
+		final SessionFactoryScopeImpl removed = (SessionFactoryScopeImpl) locateExtensionStore( testInstance, context ).remove( SESSION_FACTORY_KEY );
 		if ( removed != null ) {
 			removed.release();
 		}
@@ -65,6 +69,8 @@ public class SessionFactoryExtension
 
 	@Override
 	public void handleTestExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
-
+		final Object testInstance = context.getRequiredTestInstance();
+		final SessionFactoryScopeImpl scope = (SessionFactoryScopeImpl) locateExtensionStore( testInstance, context ).get( SESSION_FACTORY_KEY );
+		scope.release();
 	}
 }

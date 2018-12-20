@@ -8,6 +8,7 @@ package org.hibernate.testing.orm;
 
 import org.junit.jupiter.api.extension.Extension;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ParameterContext;
 
 import static org.junit.jupiter.api.extension.ExtensionContext.Namespace.create;
 
@@ -23,5 +24,9 @@ public class JUnitHelper {
 	}
 
 	private JUnitHelper() {
+	}
+
+	public static boolean supportsParameterInjection(ParameterContext parameterContext, Class<?> supportedType) {
+		return parameterContext.getParameter().getType().isAssignableFrom( supportedType );
 	}
 }

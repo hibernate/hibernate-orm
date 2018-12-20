@@ -40,6 +40,12 @@ public class SessionFactoryScopeImpl implements SessionFactoryScope {
 	}
 
 	public void release() {
+		releaseSessionFactory();
+
+		active = false;
+	}
+
+	public void releaseSessionFactory() {
 		if ( sessionFactory != null ) {
 			try {
 				sessionFactory.close();
@@ -48,8 +54,6 @@ public class SessionFactoryScopeImpl implements SessionFactoryScope {
 				log.warn( "Error closing SF", e );
 			}
 		}
-
-		active = false;
 	}
 
 	@Override

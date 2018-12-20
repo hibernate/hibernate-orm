@@ -33,12 +33,11 @@ dependencies {
     compile( 'org.javamoney:moneta:1.1' )
 
     annotationProcessor( project( ':hibernate-jpamodelgen' ) )
+
+    testRuntime( libraries.h2 )
+    testRuntime( libraries.log4j )
 }
 
-// resources inherently exclude sources
-sourceSets.test.resources {
-    setSrcDirs( ['src/test/java'] )
-}
 
 // todo : Fold into hibernate-core and publish in separate publications
 // 		once http://issues.gradle.org/browse/GRADLE-2966 is resolved;

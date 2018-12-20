@@ -9,6 +9,7 @@ package org.hibernate.orm.test.query.criteria;
 import java.util.Set;
 import javax.persistence.criteria.ParameterExpression;
 
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
@@ -24,6 +25,8 @@ import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity_;
 import org.junit.jupiter.api.Test;
+
+import org.hamcrest.CoreMatchers;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -43,11 +46,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 )
 @SessionFactory
 @SuppressWarnings("WeakerAccess")
-public class BasicCriteriaBuildingTests implements SessionFactoryScopeAware {
-	private SessionFactoryScope scope;
-
+public class BasicCriteriaBuildingTests {
 	@Test
-	public void testParameterCollecting() {
+	public void testParameterCollecting(SessionFactoryScope scope) {
+		assertThat( scope, notNullValue() );
 		final HibernateCriteriaBuilder criteriaBuilder = scope.getSessionFactory().getQueryEngine().getCriteriaBuilder();
 		final JpaCriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
 
@@ -69,8 +71,9 @@ public class BasicCriteriaBuildingTests implements SessionFactoryScopeAware {
 		assertThat( parameters.size(), is( 1 ) );
 	}
 
-	@Override
-	public void injectSessionFactoryScope(SessionFactoryScope scope) {
-		this.scope = scope;
+	@Test
+	public void testMultipleInjections(SessionFactoryScope scope, MetadataImplementor model) {
+		assertThat( scope, CoreMatchers.notNullValue() );
+		assertThat( model, CoreMatchers.notNullValue() );
 	}
 }

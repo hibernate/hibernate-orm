@@ -90,3 +90,4 @@ public class EntityWithLazyManyToOneSelfReference {
 		this.someInteger = someInteger;
 	}
 }
+

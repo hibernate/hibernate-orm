@@ -49,6 +49,12 @@ the test fails with:
 
     	at org.hibernate.query.criteria.sqm.CriteriaQueryToSqmTransformer.lambda$visitSelectClause$3(CriteriaQueryToSqmTransformer.java:215)
 
+=== HHH-13094 - Respect @Any.fetch setting to FetchType.EAGER
+
+* https://github.com/hibernate/hibernate-orm/pull/2683/commits/08747fc2f4b33414ef05ac039b67e1d33c14db5f
+
+The JavaTypeDescriptor is not made available to the any mapping discriminator values and the tests fail.
+
 == Issues kept for later
 
 === HHH-12555 - Lazy loading of blobs with enhancement

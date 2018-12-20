@@ -267,7 +267,7 @@ processTestResources {
  A solution is to enable the 'After Build' Execution of the copyResourcesToIntelliJOutFolder task
  from the 'Gradle project' IntelliJ tool window ( The task can be found under hibernate-orm > Task > other)
  */
-task copyResourcesToIntelliJOutFolder dependsOn( [processTestResources, processResources]) {
+task copyResourcesToIntelliJOutFolder(type: Task, dependsOn: project.tasks.processTestResources) {
 	doLast {
 		copy {
 			from "$buildDir/resources/test"

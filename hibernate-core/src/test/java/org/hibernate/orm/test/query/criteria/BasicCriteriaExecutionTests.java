@@ -7,8 +7,8 @@
 package org.hibernate.orm.test.query.criteria;
 
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.orm.test.support.domains.AvailableDomainModel;
-import org.hibernate.orm.test.support.domains.gambit.BasicEntity;
+import org.hibernate.testing.orm.domain.StandardDomainModel;
+import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaParameterExpression;
@@ -25,7 +25,7 @@ public class BasicCriteriaExecutionTests extends SessionFactoryBasedFunctionalTe
 	@Override
 	protected void applyMetadataSources(MetadataSources metadataSources) {
 		super.applyMetadataSources( metadataSources );
-		AvailableDomainModel.GAMBIT.getDomainModel().applyDomainModel( metadataSources );
+		StandardDomainModel.GAMBIT.getDescriptor().applyDomainModel( metadataSources );
 	}
 
 	@Test

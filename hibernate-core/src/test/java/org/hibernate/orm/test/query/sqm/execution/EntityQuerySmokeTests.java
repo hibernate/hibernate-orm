@@ -10,11 +10,10 @@ import java.time.Instant;
 import java.util.List;
 
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.orm.test.support.domains.AvailableDomainModel;
-import org.hibernate.orm.test.support.domains.gambit.EntityOfBasics;
-import org.hibernate.orm.test.support.domains.gambit.EntityWithManyToOneJoinTable;
-import org.hibernate.orm.test.support.domains.gambit.SimpleEntity;
-import org.hibernate.orm.test.support.domains.retail.Vendor;
+import org.hibernate.testing.orm.domain.StandardDomainModel;
+import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
+import org.hibernate.testing.orm.domain.gambit.EntityWithManyToOneJoinTable;
+import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
 
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.junit.jupiter.api.AfterAll;
@@ -173,7 +172,7 @@ public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
 	protected void applyMetadataSources(MetadataSources metadataSources) {
 		super.applyMetadataSources( metadataSources );
 
-		AvailableDomainModel.GAMBIT.getDomainModel().applyDomainModel( metadataSources );
-		AvailableDomainModel.RETAIL.getDomainModel().applyDomainModel( metadataSources );
+		StandardDomainModel.GAMBIT.getDescriptor().applyDomainModel( metadataSources );
+		StandardDomainModel.RETAIL.getDescriptor().applyDomainModel( metadataSources );
 	}
 }

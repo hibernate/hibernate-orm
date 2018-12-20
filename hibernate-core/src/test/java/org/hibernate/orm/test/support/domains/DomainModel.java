@@ -11,10 +11,13 @@ import java.util.EnumSet;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.dialect.Dialect;
 
+import org.hibernate.testing.orm.domain.MappingFeature;
+import org.hibernate.testing.orm.domain.StandardDomainModel;
+
 /**
  * Declares a domain model used by a test.
  *
- * @see AvailableDomainModel
+ * @see StandardDomainModel
  * @see TestDomain
  *
  * @author Steve Ebersole

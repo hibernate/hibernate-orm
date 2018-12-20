@@ -9,12 +9,11 @@ package org.hibernate.orm.test.query.sqm.produce;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.orm.test.query.sqm.produce.domain.ConstructedLookupListItem;
 import org.hibernate.orm.test.query.sqm.produce.domain.InjectedLookupListItem;
 import org.hibernate.orm.test.query.sqm.produce.domain.NestedCtorLookupListItem;
-import org.hibernate.orm.test.support.domains.gambit.EntityOfBasics;
+import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityIdentifierReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;

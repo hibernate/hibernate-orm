@@ -11,10 +11,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.Hibernate;
-import org.hibernate.boot.MetadataSources;
+
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
-import org.hibernate.orm.test.support.domains.gambit.EntityWithManyToOneWithoutJoinTable;
-import org.hibernate.orm.test.support.domains.gambit.EntityWithOneToManyNotOwned;
+import org.hibernate.testing.orm.domain.gambit.EntityWithManyToOneWithoutJoinTable;
+import org.hibernate.testing.orm.domain.gambit.EntityWithOneToManyNotOwned;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;

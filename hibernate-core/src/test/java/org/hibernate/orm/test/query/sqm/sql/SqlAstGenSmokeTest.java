@@ -9,10 +9,9 @@ package org.hibernate.orm.test.query.sqm.sql;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.orm.test.support.domains.gambit.EntityOfBasics;
+import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBinding;

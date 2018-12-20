@@ -9,12 +9,10 @@ package org.hibernate.orm.test.query.sqm.execution;
 import java.util.List;
 
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.orm.test.support.domains.AvailableDomainModel;
-import org.hibernate.orm.test.support.domains.retail.CardPayment;
-import org.hibernate.orm.test.support.domains.retail.CashPayment;
-import org.hibernate.orm.test.support.domains.retail.DomesticVendor;
-import org.hibernate.orm.test.support.domains.retail.ForeignVendor;
-import org.hibernate.orm.test.support.domains.retail.Vendor;
+import org.hibernate.testing.orm.domain.StandardDomainModel;
+import org.hibernate.testing.orm.domain.retail.DomesticVendor;
+import org.hibernate.testing.orm.domain.retail.ForeignVendor;
+import org.hibernate.testing.orm.domain.retail.Vendor;
 import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.junit5.FailureExpected;
@@ -34,7 +32,7 @@ public class DiscriminatorTests extends SessionFactoryBasedFunctionalTest {
 
 	@Override
 	protected void applyMetadataSources(MetadataSources metadataSources) {
-		AvailableDomainModel.RETAIL.getDomainModel().applyDomainModel( metadataSources );
+		StandardDomainModel.RETAIL.getDescriptor().applyDomainModel( metadataSources );
 	}
 
 	@BeforeEach

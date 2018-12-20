@@ -8,16 +8,15 @@ package org.hibernate.orm.test.query.sqm.produce;
 
 import java.util.Map;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndex.IndexClassification;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.orm.test.query.sqm.produce.domain.Person;
-import org.hibernate.orm.test.support.domains.gambit.EntityOfBasics;
-import org.hibernate.orm.test.support.domains.gambit.EntityOfLists;
-import org.hibernate.orm.test.support.domains.gambit.EntityOfMaps;
-import org.hibernate.orm.test.support.domains.gambit.EntityOfSets;
+import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
+import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
+import org.hibernate.testing.orm.domain.gambit.EntityOfMaps;
+import org.hibernate.testing.orm.domain.gambit.EntityOfSets;
 import org.hibernate.query.sqm.tree.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;

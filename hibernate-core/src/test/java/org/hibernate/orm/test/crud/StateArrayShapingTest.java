@@ -9,14 +9,13 @@ package org.hibernate.orm.test.crud;
 import java.time.Instant;
 import java.util.Date;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
-import org.hibernate.orm.test.support.domains.gambit.Component;
-import org.hibernate.orm.test.support.domains.gambit.EntityOfComposites;
-import org.hibernate.orm.test.support.domains.gambit.EntityWithManyToOneSelfReference;
-import org.hibernate.orm.test.support.domains.gambit.SimpleEntity;
+import org.hibernate.testing.orm.domain.gambit.Component;
+import org.hibernate.testing.orm.domain.gambit.EntityOfComposites;
+import org.hibernate.testing.orm.domain.gambit.EntityWithManyToOneSelfReference;
+import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
 import org.hibernate.sql.exec.spi.BasicExecutionContext;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 

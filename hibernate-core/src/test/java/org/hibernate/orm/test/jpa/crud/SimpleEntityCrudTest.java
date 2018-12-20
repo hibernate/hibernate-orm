@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hamcrest.CoreMatchers;
 import org.hibernate.orm.test.jpa.EntityManagerFactoryBasedFunctionalTest;
-import org.hibernate.orm.test.support.domains.gambit.SimpleEntity;
+import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;

@@ -29,6 +29,10 @@ dependencies {
     compile ( libraries.jboss_jta ) {
         transitive=false;
     }
+    compile( 'javax.money:money-api:1.0.1' )
+    compile( 'org.javamoney:moneta:1.1' )
+
+    annotationProcessor( project( ':hibernate-jpamodelgen' ) )
 }
 
 // resources inherently exclude sources

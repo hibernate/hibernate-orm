@@ -63,8 +63,6 @@ dependencies {
     testCompile( libraries.mockito )
     testCompile( libraries.mockito_inline )
     testCompile( libraries.jodaTime )
-	testCompile( 'javax.money:money-api:1.0.1' )
-    testCompile( 'org.javamoney:moneta:1.1' )
 
     testCompile( libraries.cdi ) {
         // we need to force it to make sure we influence the one coming from arquillian

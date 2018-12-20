@@ -8,7 +8,7 @@ package org.hibernate.orm.test.crud;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
-import org.hibernate.orm.test.support.domains.gambit.EntityOfDynamicComponent;
+import org.hibernate.testing.orm.domain.gambit.EntityOfDynamicComponent;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;

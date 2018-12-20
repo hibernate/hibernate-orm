@@ -6,14 +6,13 @@
  */
 package org.hibernate.orm.test.model.runtime.collections;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
-import org.hibernate.orm.test.support.domains.gambit.Component;
-import org.hibernate.orm.test.support.domains.gambit.EntityOfMaps;
+import org.hibernate.testing.orm.domain.gambit.Component;
+import org.hibernate.testing.orm.domain.gambit.EntityOfMaps;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

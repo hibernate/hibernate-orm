@@ -8,10 +8,9 @@ package org.hibernate.orm.test.crud.onetoone;
 
 import java.util.Calendar;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
-import org.hibernate.orm.test.support.domains.gambit.EntityWithOneToOne;
-import org.hibernate.orm.test.support.domains.gambit.SimpleEntity;
+import org.hibernate.testing.orm.domain.gambit.EntityWithOneToOne;
+import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

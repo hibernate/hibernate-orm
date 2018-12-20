@@ -8,9 +8,8 @@ package org.hibernate.orm.test.query.sqm.produce;
 
 import java.util.List;
 
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.orm.test.support.domains.gambit.EntityWithManyToOneSelfReference;
-import org.hibernate.orm.test.support.domains.gambit.SimpleEntity;
+import org.hibernate.testing.orm.domain.gambit.EntityWithManyToOneSelfReference;
+import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.query.sqm.AliasCollisionException;
 import org.hibernate.query.sqm.produce.spi.ImplicitAliasGenerator;

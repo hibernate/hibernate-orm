@@ -12,8 +12,8 @@ import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
-import org.hibernate.orm.test.support.domains.contacts.Contact;
-import org.hibernate.orm.test.support.domains.contacts.ContactsDomainModel;
+import org.hibernate.testing.orm.domain.contacts.Contact;
+import org.hibernate.testing.orm.domain.contacts.ContactsDomainModel;
 
 import org.junit.jupiter.api.Test;
 

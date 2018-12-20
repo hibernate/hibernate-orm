@@ -6,10 +6,9 @@
  */
 package org.hibernate.orm.test.conversions;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
-import org.hibernate.orm.test.support.domains.helpdesk.Account;
-import org.hibernate.orm.test.support.domains.helpdesk.Status;
+import org.hibernate.testing.orm.domain.helpdesk.Account;
+import org.hibernate.testing.orm.domain.helpdesk.Status;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

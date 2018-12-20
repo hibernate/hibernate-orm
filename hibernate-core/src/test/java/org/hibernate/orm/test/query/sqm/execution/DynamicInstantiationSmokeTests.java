@@ -11,11 +11,10 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.orm.test.query.sqm.produce.domain.ConstructedLookupListItem;
 import org.hibernate.orm.test.query.sqm.produce.domain.NestedCtorLookupListItem;
-import org.hibernate.orm.test.support.domains.gambit.EntityOfBasics;
+import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

@@ -107,16 +107,27 @@ public abstract class AbstractManagedType<J>
 	public Set<Attribute<J, ?>> getDeclaredAttributes() {
 		return new HashSet<>( declaredAttributes.values() );
 	}
-
-	@Override
-	@SuppressWarnings({ "unchecked" })
-	public PersistentAttributeDescriptor<? super J, ?> getAttribute(String name) {
+	
+	private PersistentAttributeDescriptor<? super J, ?> getAttribute(String name, boolean nullable) {
 		PersistentAttributeDescriptor<? super J, ?> attribute = declaredAttributes.get( name );
 		if ( attribute == null && getSuperType() != null ) {
 			attribute = getSuperType().getAttribute( name );
 		}
-		checkNotNull( "Attribute ", attribute, name );
+		
+		if(!nullable) {
+			checkNotNull( "Attribute ", attribute, name );
+		}
 		return attribute;
+	}
+
+	@Override
+	public PersistentAttributeDescriptor<? super J, ?> getAttribute(String name) {
+		return getAttribute(name, false);
+	}
+	
+	@Override
+	public PersistentAttributeDescriptor<? super J, ?> getAttributeIfExists(String name) {
+		return getAttribute(name, true);
 	}
 
 	@Override

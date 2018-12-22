@@ -6,10 +6,18 @@
  */
 package org.hibernate.metamodel.model.domain;
 
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
 
 /**
  * @author Steve Ebersole
  */
 public interface ManagedDomainType<J> extends SimpleDomainType<J>, ManagedType<J> {
+	/**
+     *  Return the attribute of the managed
+     *  type that corresponds to the specified name if exists.
+     *  @param name  the name of the represented attribute
+     *  @return attribute if exists else null
+     */
+	Attribute<? super J, ?> getAttributeIfExists(String name); 
 }

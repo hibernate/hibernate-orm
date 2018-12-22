@@ -139,7 +139,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	@Override
 	@SuppressWarnings("unchecked")
 	public <AJ> AttributeNodeImplementor<AJ> findAttributeNode(String attributeName) {
-		return findAttributeNode( (PersistentAttributeDescriptor) managedType.getAttribute( attributeName ) );
+		return findAttributeNode( (PersistentAttributeDescriptor) managedType.getAttributeIfExists( attributeName ) );
 	}
 
 	@Override

@@ -1830,4 +1830,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = DEBUG)
 	@Message(value = "Detaching an uninitialized collection with queued operations from a session due to rollback: %s", id = 498)
 	void queuedOperationWhenDetachFromSessionOnRollback(String collectionInfoString);
+	@Message(value = "Using @AttributeOverride or @AttributeOverrides in conjunction with entity inheritance is not supported: %s. The overriding definitions are ignored.", id = 499)
+	void unsupportedAttributeOverrideWithEntityInheritance(String entityName);
 }

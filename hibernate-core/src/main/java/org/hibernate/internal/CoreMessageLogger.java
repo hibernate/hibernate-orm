@@ -1814,4 +1814,8 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Setting " + AvailableSettings.NATIVE_EXCEPTION_HANDLING_51_COMPLIANCE + "=true is not valid with JPA bootstrapping; setting will be ignored.", id = 489 )
 	void nativeExceptionHandling51ComplianceJpaBootstrapping();
+
+	@LogMessage(level = WARN)
+	@Message(value = "Using @AttributeOverride or @AttributeOverrides in conjunction with entity inheritance is not supported: %s. The overriding definitions are ignored.", id = 499)
+	void unsupportedAttributeOverrideWithEntityInheritance(String entityName);
 }

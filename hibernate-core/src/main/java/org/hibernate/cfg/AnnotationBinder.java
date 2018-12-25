@@ -561,10 +561,7 @@ public final class AnnotationBinder {
 		if(superEntity != null && (
 				clazzToProcess.getAnnotation( AttributeOverride.class ) != null ||
 				clazzToProcess.getAnnotation( AttributeOverrides.class ) != null ) ) {
-			throw new AnnotationException(
-					"An entity annotated with @Inheritance cannot use @AttributeOverride or @AttributeOverrides: " +
-							clazzToProcess.getName()
-			);
+			LOG.unsupportedAttributeOverrideWithEntityInheritance( clazzToProcess.getName() );
 		}
 
 		PersistentClass persistentClass = makePersistentClass( inheritanceState, superEntity, context );
@@ -3004,7 +3001,7 @@ public final class AnnotationBinder {
 				column.setUpdatable( false );
 			}
 		}
-		
+
 		final JoinColumn joinColumn = property.getAnnotation( JoinColumn.class );
 		final JoinColumns joinColumns = property.getAnnotation( JoinColumns.class );
 

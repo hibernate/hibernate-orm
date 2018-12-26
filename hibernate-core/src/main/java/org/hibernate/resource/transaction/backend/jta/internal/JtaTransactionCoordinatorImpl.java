@@ -149,9 +149,9 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 			return;
 		}
 
-		// Can we resister a synchronization according to the JtaPlatform?
+		// Can we register a synchronization according to the JtaPlatform?
 		if ( !jtaPlatform.canRegisterSynchronization() ) {
-			log.trace( "JTA platform says we cannot currently resister synchronization; skipping" );
+			log.trace( "JTA platform says we cannot currently register synchronization; skipping" );
 			return;
 		}
 

@@ -1044,7 +1044,10 @@ public class ActionQueue {
 			private Set<String> childEntityNames = new HashSet<>( );
 
 			private BatchIdentifier parent;
-
+			
+			//Set of batchIdentifiers which depends upon current BatchIdentifer to be inserted first 
+			private Set<BatchIdentifier> childerns = new HashSet<BatchIdentifier>();
+			
 			BatchIdentifier(String entityName, String rootEntityName) {
 				this.entityName = entityName;
 				this.rootEntityName = rootEntityName;
@@ -1056,6 +1059,19 @@ public class ActionQueue {
 
 			public void setParent(BatchIdentifier parent) {
 				this.parent = parent;
+			}
+			
+			public Set<BatchIdentifier> getChilderns() {
+				return childerns;
+			}
+
+			public void setChilderns(Set<BatchIdentifier> childerns) {
+				
+				this.childerns = childerns;
+			}
+			
+			public void addChildern(BatchIdentifier childern) {
+				this.childerns.add(childern);
 			}
 
 			@Override
@@ -1178,9 +1194,11 @@ public class ActionQueue {
 					BatchIdentifier prevBatchIdentifier = latestBatches.get( j );
 					if ( prevBatchIdentifier.hasAnyParentEntityNames( batchIdentifier ) ) {
 						prevBatchIdentifier.parent = batchIdentifier;
+						batchIdentifier.addChildern(prevBatchIdentifier);
 					}
 					if ( batchIdentifier.hasAnyChildEntityNames( prevBatchIdentifier ) ) {
 						prevBatchIdentifier.parent = batchIdentifier;
+						batchIdentifier.addChildern(prevBatchIdentifier);
 					}
 				}
 
@@ -1189,58 +1207,113 @@ public class ActionQueue {
 
 					if ( nextBatchIdentifier.hasAnyParentEntityNames( batchIdentifier ) ) {
 						nextBatchIdentifier.parent = batchIdentifier;
+						batchIdentifier.addChildern(nextBatchIdentifier);
 					}
 					if ( batchIdentifier.hasAnyChildEntityNames( nextBatchIdentifier ) ) {
 						nextBatchIdentifier.parent = batchIdentifier;
+						batchIdentifier.addChildern(nextBatchIdentifier);
 					}
 				}
 			}
 
-			boolean sorted = false;
-
-			long maxIterations = latestBatches.size() * latestBatches.size();
-			long iterations = 0;
-
-			sort:
-			do {
-				// Examine each entry in the batch list, sorting them based on parent/child association
-				// as depicted by the dependency graph.
-				iterations++;
-
-				for ( int i = 0; i < latestBatches.size(); i++ ) {
-					BatchIdentifier batchIdentifier = latestBatches.get( i );
-
-					// Iterate next batches and make sure that children types are after parents.
-					// Since the outer loop looks at each batch entry individually and the prior loop will reorder
-					// entries as well, we need to look and verify if the current batch is a child of the next
-					// batch or if the current batch is seen as a parent or child of the next batch.
-					for ( int j = i + 1; j < latestBatches.size(); j++ ) {
-						BatchIdentifier nextBatchIdentifier = latestBatches.get( j );
-
-						if ( batchIdentifier.hasParent( nextBatchIdentifier ) && !nextBatchIdentifier.hasParent( batchIdentifier ) ) {
-							latestBatches.remove( batchIdentifier );
-							latestBatches.add( j, batchIdentifier );
-
-							continue sort;
-						}
-					}
+			//check if dependency graph contains the cycle then topological sort is not possible otherwise perform the topological sort
+			if(!isCycleExist()) {
+				LOG.warn("No circular entity relationship exists in the batch containing " + latestBatches.size() + ", performaing topological sort");
+				//topological sort operation
+				performTopologicalSort();
+				insertions.clear();
+				// Now, rebuild the insertions list. There is a batch for each entry in the name list.
+				for ( BatchIdentifier rootIdentifier : latestBatches ) {
+					List<AbstractEntityInsertAction> batch = actionBatches.get( rootIdentifier );
+					insertions.addAll( batch );
 				}
-				sorted = true;
-			}
-			while ( !sorted && iterations <= maxIterations);
-
-			if ( iterations > maxIterations ) {
-				LOG.warn( "The batch containing " + latestBatches.size() + " statements could not be sorted after " + maxIterations + " iterations. " +
-								"This might indicate a circular entity relationship." );
-			}
-
-			// Now, rebuild the insertions list. There is a batch for each entry in the name list.
-			for ( BatchIdentifier rootIdentifier : latestBatches ) {
-				List<AbstractEntityInsertAction> batch = actionBatches.get( rootIdentifier );
-				insertions.addAll( batch );
+			}else {
+				LOG.warn("Cycle detected in entity relationship in the batch containing " + latestBatches.size() + " statements, cannot be topologcal sorted" );
 			}
 		}
-
+		
+		/**
+		 * Perform the topological sort on the dependency graph such that sure children should be after the parent
+		 */
+		private void performTopologicalSort() {
+			Set<BatchIdentifier> visited = new HashSet();
+			Stack<BatchIdentifier> stack = new Stack<>();
+			for(BatchIdentifier node: latestBatches) {
+				if(!visited.contains(node)) {
+					topologicalSort(node,  visited, stack);
+				}
+			}
+			if(!stack.isEmpty()) {
+				latestBatches.clear();
+				while(!stack.isEmpty()) {
+					latestBatches.add(stack.pop());
+				}
+			}
+		}
+		
+		/**
+		 * topological sort on the sub graph where starting point in node. after completion of this method stack will contains the node in reverse topological sort
+		 *     
+		 * @param node
+		 * @param visited
+		 * @param stack
+		 */
+		private void topologicalSort(BatchIdentifier node, Set<BatchIdentifier> visited, Stack<BatchIdentifier> stack) {
+			visited.add(node);
+			for(BatchIdentifier adj: node.getChilderns()) {
+				if(!visited.contains(adj)) {
+					topologicalSort(adj,  visited, stack);
+				}
+			}
+			stack.add(node);
+		}
+    
+		/**
+		 * Check if cycle exists in the dependency graph (directed graph)
+		 * 
+		 * @return true if cycle is found otherwise false
+		 */
+		private boolean isCycleExist() {
+			Set<BatchIdentifier> visisted = new HashSet();
+			Stack<BatchIdentifier> recursionStack = new Stack<>();
+			for(BatchIdentifier node : latestBatches) {
+				if(node != null) {
+					if(isCycleUtil(node, visisted, recursionStack)) {
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+		
+		/**
+		 * Check if cycle exists in the dependency graph (directed graph) starting from node  
+		 * 
+		 * @param node
+		 * @param visisted
+		 * @param recursionStack
+		 * @return true if cycle is found otherwise false
+		 */
+		private boolean isCycleUtil(BatchIdentifier node, Set<BatchIdentifier> visisted, Stack<BatchIdentifier> recursionStack) {
+			//if node is not visited then add it to visited set
+			if(!visisted.contains(node)) {
+				// Mark the current node as visited and add it to recursion stack 
+				visisted.add(node);
+				recursionStack.push(node);
+				
+				for(BatchIdentifier adj : node.getChilderns()) {
+					if(!visisted.contains(adj) && isCycleUtil(adj, visisted, recursionStack)) {
+						return true;
+					}
+					else if(recursionStack.contains(adj)) {
+						return true;
+					}
+				}
+			}
+			recursionStack.remove(node);
+			return false;
+		}
+		
 		/**
 		 * Add parent and child entity names so that we know how to rearrange dependencies
 		 *

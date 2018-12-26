@@ -1111,7 +1111,8 @@ public class ActionQueue {
 			boolean hasParent(BatchIdentifier batchIdentifier) {
 				return (
 					parent == batchIdentifier
-					|| ( parentEntityNames.contains( batchIdentifier.getEntityName() ) )
+					|| parentEntityNames.contains( batchIdentifier.getEntityName() )
+					|| ( parentEntityNames.contains( batchIdentifier.getRootEntityName() ) && !this.getEntityName().equals( batchIdentifier.getRootEntityName() ) )
 					|| parent != null && parent.hasParent( batchIdentifier, new ArrayList<>() )
 				);
 			}
@@ -1168,7 +1169,6 @@ public class ActionQueue {
 				addParentChildEntityNames( action, batchIdentifier );
 				addToBatch( batchIdentifier, action );
 			}
-			insertions.clear();
 
 			// Examine each entry in the batch list, and build the dependency graph.
 			for ( int i = 0; i < latestBatches.size(); i++ ) {
@@ -1217,7 +1217,12 @@ public class ActionQueue {
 					for ( int j = i + 1; j < latestBatches.size(); j++ ) {
 						BatchIdentifier nextBatchIdentifier = latestBatches.get( j );
 
-						if ( batchIdentifier.hasParent( nextBatchIdentifier ) && !nextBatchIdentifier.hasParent( batchIdentifier ) ) {
+						if ( batchIdentifier.hasParent( nextBatchIdentifier ) ) {
+							if( nextBatchIdentifier.hasParent( batchIdentifier ) ) {
+								//cycle detected, no need to continue
+								break sort;
+							}
+
 							latestBatches.remove( batchIdentifier );
 							latestBatches.add( j, batchIdentifier );
 
@@ -1235,9 +1240,13 @@ public class ActionQueue {
 			}
 
 			// Now, rebuild the insertions list. There is a batch for each entry in the name list.
-			for ( BatchIdentifier rootIdentifier : latestBatches ) {
-				List<AbstractEntityInsertAction> batch = actionBatches.get( rootIdentifier );
-				insertions.addAll( batch );
+			if ( sorted ) {
+				insertions.clear();
+
+				for ( BatchIdentifier rootIdentifier : latestBatches ) {
+					List<AbstractEntityInsertAction> batch = actionBatches.get( rootIdentifier );
+					insertions.addAll( batch );
+				}
 			}
 		}
 
@@ -1252,17 +1261,27 @@ public class ActionQueue {
 			ClassMetadata classMetadata = action.getPersister().getClassMetadata();
 			if ( classMetadata != null ) {
 				Type[] propertyTypes = classMetadata.getPropertyTypes();
+				Type identifierType = classMetadata.getIdentifierType();
 
 				for ( int i = 0; i < propertyValues.length; i++ ) {
 					Object value = propertyValues[i];
 					Type type = propertyTypes[i];
 					addParentChildEntityNameByPropertyAndValue( action, batchIdentifier, type, value );
 				}
+
+				if ( identifierType.isComponentType() ) {
+					CompositeType compositeType = (CompositeType) identifierType;
+					Type[] compositeIdentifierTypes = compositeType.getSubtypes();
+
+					for ( Type type : compositeIdentifierTypes ) {
+						addParentChildEntityNameByPropertyAndValue( action, batchIdentifier, type, null );
+					}
+				}
 			}
 		}
 
 		private void addParentChildEntityNameByPropertyAndValue(AbstractEntityInsertAction action, BatchIdentifier batchIdentifier, Type type, Object value) {
-			if ( type.isEntityType() && value != null ) {
+			if ( type.isEntityType() ) {
 				final EntityType entityType = (EntityType) type;
 				final String entityName = entityType.getName();
 				final String rootEntityName = action.getSession().getFactory().getMetamodel().entityPersister( entityName ).getRootEntityName();
@@ -1276,17 +1295,26 @@ public class ActionQueue {
 					}
 				}
 				else {
-					batchIdentifier.getParentEntityNames().add( entityName );
+					if ( !batchIdentifier.getEntityName().equals( entityName ) ) {
+						batchIdentifier.getParentEntityNames().add( entityName );
+					}
+					if ( value != null ) {
+						String valueClass = value.getClass().getName();
+						if ( !valueClass.equals( entityName ) ) {
+							batchIdentifier.getParentEntityNames().add( valueClass );
+						}
+					}
 					if ( !rootEntityName.equals( entityName ) ) {
 						batchIdentifier.getParentEntityNames().add( rootEntityName );
 					}
 				}
 			}
-			else if ( type.isCollectionType() && value != null ) {
+			else if ( type.isCollectionType() ) {
 				CollectionType collectionType = (CollectionType) type;
 				final SessionFactoryImplementor sessionFactory = ( (SessionImplementor) action.getSession() )
 						.getSessionFactory();
-				if ( collectionType.getElementType( sessionFactory ).isEntityType() ) {
+				if ( collectionType.getElementType( sessionFactory ).isEntityType() &&
+						!sessionFactory.getMetamodel().collectionPersister( collectionType.getRole() ).isManyToMany() ) {
 					String entityName = collectionType.getAssociatedEntityName( sessionFactory );
 					String rootEntityName = action.getSession().getFactory().getMetamodel().entityPersister( entityName ).getRootEntityName();
 					batchIdentifier.getChildEntityNames().add( entityName );

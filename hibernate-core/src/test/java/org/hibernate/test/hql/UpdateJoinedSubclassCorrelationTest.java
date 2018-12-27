@@ -14,7 +14,7 @@ import java.util.List;
 import static javax.persistence.InheritanceType.JOINED;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
-@TestForIssue(jiraKey = "")
+@TestForIssue(jiraKey = "HHH-13169")
 public class UpdateJoinedSubclassCorrelationTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
@@ -35,11 +35,11 @@ public class UpdateJoinedSubclassCorrelationTest extends BaseEntityManagerFuncti
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			// DO NOT CHANGE this query: it used to trigger a very specific bug caused
 			// by the root table alias being added to the generated subquery instead of the table name
-			String d = "update SubMaster m set name = (select 'test' from Detail d where d.master = m)";
-			Query del = entityManager.createQuery( d );
-			del.executeUpdate();
+			String u = "update SubMaster m set name = (select 'test' from Detail d where d.master = m)";
+			Query updateQuery = entityManager.createQuery( u );
+			updateQuery.executeUpdate();
 
-			// so check for exactly one master after deletion
+			// so check if the name of the SubMaster has been correctly updated
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 			CriteriaQuery<Master> query = builder.createQuery( Master.class );
 			query.select( query.from( Master.class ) );

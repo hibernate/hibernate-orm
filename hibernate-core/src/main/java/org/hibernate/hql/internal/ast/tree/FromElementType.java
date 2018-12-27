@@ -456,12 +456,13 @@ class FromElementType {
 			// executors being used (as this subquery will
 			// actually be used in the "id select" phase
 			// of that multi-table executor)
-			// for update queries, we must only use the alias in the top level where clause
+			// for update queries, the real table name of the updated table must be used if not in the top level where
+			// clause, typically in a SET clause
 			// B) otherwise, we need to use the persister's
 			// table name as the column qualification
 			// 2) otherwise (not correlated), use the given alias
 			if ( isCorrelation() ) {
-				if ( isMultiTable() && ( !isUpdateQuery() || fromElement.getWalker().getCurrentTopLevelClauseType() == HqlSqlTokenTypes.WHERE ) ) {
+				if ( isMultiTable() && ( !isUpdateQuery() || inWhereClause() ) ) {
 					return propertyMapping.toColumns( tableAlias, path );
 				}
 				else if ( isInsertQuery() ) {

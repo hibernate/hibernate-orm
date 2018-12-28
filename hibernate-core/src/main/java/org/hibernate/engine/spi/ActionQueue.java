@@ -1046,8 +1046,10 @@ public class ActionQueue {
 
 			private BatchIdentifier parent;
 			
-			//Set of batchIdentifiers which depends upon current BatchIdentifer to be inserted first 
-			private Set<BatchIdentifier> childerns = new HashSet<BatchIdentifier>();
+			// Set of batchIdentifiers
+			// insert action on children should be
+			// performed after the current BatchIdentifier
+			private Set<BatchIdentifier> children = new HashSet<BatchIdentifier>();
 			
 			BatchIdentifier(String entityName, String rootEntityName) {
 				this.entityName = entityName;
@@ -1062,17 +1064,17 @@ public class ActionQueue {
 				this.parent = parent;
 			}
 			
-			public Set<BatchIdentifier> getChilderns() {
-				return childerns;
+			public Set<BatchIdentifier> getChildren() {
+				return children;
 			}
 
-			public void setChilderns(Set<BatchIdentifier> childerns) {
-				
-				this.childerns = childerns;
+			public void setChildren(Set<BatchIdentifier> children) {
+
+				this.children = children;
 			}
-			
-			public void addChildern(BatchIdentifier childern) {
-				this.childerns.add(childern);
+
+			public void addChild(BatchIdentifier child) {
+				this.children.add(child);
 			}
 
 			@Override
@@ -1195,11 +1197,11 @@ public class ActionQueue {
 					BatchIdentifier prevBatchIdentifier = latestBatches.get( j );
 					if ( prevBatchIdentifier.hasAnyParentEntityNames( batchIdentifier ) ) {
 						prevBatchIdentifier.parent = batchIdentifier;
-						batchIdentifier.addChildern(prevBatchIdentifier);
+						batchIdentifier.addChild( prevBatchIdentifier );
 					}
 					if ( batchIdentifier.hasAnyChildEntityNames( prevBatchIdentifier ) ) {
 						prevBatchIdentifier.parent = batchIdentifier;
-						batchIdentifier.addChildern(prevBatchIdentifier);
+						batchIdentifier.addChild( prevBatchIdentifier );
 					}
 				}
 
@@ -1208,65 +1210,78 @@ public class ActionQueue {
 
 					if ( nextBatchIdentifier.hasAnyParentEntityNames( batchIdentifier ) ) {
 						nextBatchIdentifier.parent = batchIdentifier;
-						batchIdentifier.addChildern(nextBatchIdentifier);
+						batchIdentifier.addChild( nextBatchIdentifier );
 					}
 					if ( batchIdentifier.hasAnyChildEntityNames( nextBatchIdentifier ) ) {
 						nextBatchIdentifier.parent = batchIdentifier;
-						batchIdentifier.addChildern(nextBatchIdentifier);
+						batchIdentifier.addChild( nextBatchIdentifier );
 					}
 				}
 			}
 
-			//check if dependency graph contains the cycle then topological sort is not possible otherwise perform the topological sort
-			if(!isCycleExist()) {
-				LOG.warn("No circular entity relationship exists in the batch containing " + latestBatches.size() + ", performaing topological sort");
-				//topological sort operation
+			// Check if dependency graph contains the cycle then 
+			// topological sort is not possible otherwise 
+			// perform the topological sort
+			if ( !isCycleExist() ) {
+				LOG.debug( "No circular entity relationship exists in the batch containing " + latestBatches.size() +
+								", performaing topological sort" );
+				
 				performTopologicalSort();
 				insertions.clear();
-				// Now, rebuild the insertions list. There is a batch for each entry in the name list.
+				
+				// Now, rebuild the insertions list. There is a batch for each entry in the latestBatches
 				for ( BatchIdentifier rootIdentifier : latestBatches ) {
 					List<AbstractEntityInsertAction> batch = actionBatches.get( rootIdentifier );
 					insertions.addAll( batch );
 				}
 			}else {
-				LOG.warn("Cycle detected in entity relationship in the batch containing " + latestBatches.size() + " statements, cannot be topologcal sorted" );
+				LOG.warn( "Cycle detected in entity relationship in the batch containing " + latestBatches.size() + 
+								" statements, cannot be topologcal sorted" );
 			}
 		}
 		
 		/**
-		 * Perform the topological sort on the dependency graph such that sure children should be after the parent
+		 * Perform the topological sort on the dependency graph such that 
+		 * children should come after the parent
 		 */
 		private void performTopologicalSort() {
 			Set<BatchIdentifier> visited = new HashSet();
 			Stack<BatchIdentifier> stack = new Stack<>();
-			for(BatchIdentifier node: latestBatches) {
-				if(!visited.contains(node)) {
-					topologicalSort(node,  visited, stack);
+			
+			for( BatchIdentifier node: latestBatches ) {
+				
+				if( !visited.contains( node ) ) {
+					topologicalSort( node,  visited, stack );
 				}
 			}
-			if(!stack.isEmpty()) {
+			
+			if( !stack.isEmpty() ) {
 				latestBatches.clear();
-				while(!stack.isEmpty()) {
-					latestBatches.add(stack.pop());
+				
+				while( !stack.isEmpty() ) {
+					latestBatches.add( stack.pop() );
 				}
 			}
 		}
 		
 		/**
-		 * topological sort on the sub graph where starting point in node. after completion of this method stack will contains the node in reverse topological sort
+		 * Topological sort on the sub graph where starting point in node. 
+		 * After completion of this method stack will contains the node in 
+		 * reverse topological sort
 		 *     
 		 * @param node
 		 * @param visited
-		 * @param stack
+		 * @param stack containing the nodes in reverse topological order
 		 */
 		private void topologicalSort(BatchIdentifier node, Set<BatchIdentifier> visited, Stack<BatchIdentifier> stack) {
-			visited.add(node);
-			for(BatchIdentifier adj: node.getChilderns()) {
-				if(!visited.contains(adj)) {
-					topologicalSort(adj,  visited, stack);
+			visited.add( node );
+			
+			for ( BatchIdentifier adj : node.getChildren() ) {
+				if ( !visited.contains( adj ) ) {
+					topologicalSort( adj, visited, stack );
 				}
 			}
-			stack.add(node);
+			stack.add( node );
 		}
     
 		/**
@@ -1277,9 +1292,10 @@ public class ActionQueue {
 		private boolean isCycleExist() {
 			Set<BatchIdentifier> visisted = new HashSet();
 			Stack<BatchIdentifier> recursionStack = new Stack<>();
-			for(BatchIdentifier node : latestBatches) {
-				if(node != null) {
-					if(isCycleUtil(node, visisted, recursionStack)) {
+			
+			for ( BatchIdentifier node : latestBatches ) {
+				if ( node != null ) {
+					if ( isCycleUtil( node, visisted, recursionStack ) ) {
 						return true;
 					}
 				}
@@ -1296,22 +1312,21 @@ public class ActionQueue {
 		 * @return true if cycle is found otherwise false
 		 */
 		private boolean isCycleUtil(BatchIdentifier node, Set<BatchIdentifier> visisted, Stack<BatchIdentifier> recursionStack) {
-			//if node is not visited then add it to visited set
-			if(!visisted.contains(node)) {
-				// Mark the current node as visited and add it to recursion stack 
-				visisted.add(node);
-				recursionStack.push(node);
-				
-				for(BatchIdentifier adj : node.getChilderns()) {
-					if(!visisted.contains(adj) && isCycleUtil(adj, visisted, recursionStack)) {
+			// if node is not visited then add it to visited set
+			if ( !visisted.contains( node ) ) {
+				// Mark the current node as visited and add it to recursion stack
+				visisted.add( node );
+				recursionStack.push( node );
+
+				for ( BatchIdentifier adj : node.getChildren() ) {
+					if ( !visisted.contains( adj ) && isCycleUtil( adj, visisted, recursionStack ) ) {
 						return true;
-					}
-					else if(recursionStack.contains(adj)) {
+					} else if ( recursionStack.contains( adj ) ) {
 						return true;
 					}
 				}
 			}
-			recursionStack.remove(node);
+			recursionStack.remove( node );
 			return false;
 		}
 		

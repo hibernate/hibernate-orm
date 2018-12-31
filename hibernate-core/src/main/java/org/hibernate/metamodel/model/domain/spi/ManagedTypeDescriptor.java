@@ -80,6 +80,9 @@ public interface ManagedTypeDescriptor<J> extends SimpleTypeDescriptor<J>, Manag
 		void finishUp();
 	}
 
+	PersistentAttributeDescriptor<J, ?> findDeclaredAttribute(String name);
+
+	PersistentAttributeDescriptor<? super J, ?> findAttribute(String name);
 
 	@Override
 	PersistentAttributeDescriptor<J, ?> getDeclaredAttribute(String name);

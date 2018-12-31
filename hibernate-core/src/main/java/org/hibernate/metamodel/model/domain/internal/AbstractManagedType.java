@@ -120,6 +120,20 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
+	public PersistentAttributeDescriptor<J, ?> findDeclaredAttribute(String name) {
+		return declaredAttributes.get( name );
+	}
+
+	@Override
+	public PersistentAttributeDescriptor<? super J, ?> findAttribute(String name) {
+		PersistentAttributeDescriptor<? super J, ?> attribute = findDeclaredAttribute( name );
+		if ( attribute == null && getSuperType() != null ) {
+			attribute = getSuperType().findAttribute( name );
+		}
+		return attribute;
+	}
+
+	@Override
 	public PersistentAttributeDescriptor<J, ?> getDeclaredAttribute(String name) {
 		PersistentAttributeDescriptor<J, ?> attr = declaredAttributes.get( name );
 		checkNotNull( "Attribute ", attr, name );

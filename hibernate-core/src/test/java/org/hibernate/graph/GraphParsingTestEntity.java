@@ -42,7 +42,7 @@ public class GraphParsingTestEntity {
 		this.name = name;
 	}
 
-	@ManyToOne
+	@ManyToOne( fetch = FetchType.LAZY )
 	public GraphParsingTestEntity getLinkToOne() {
 		return linkToOne;
 	}
@@ -51,7 +51,8 @@ public class GraphParsingTestEntity {
 		this.linkToOne = linkToOne;
 	}
 
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+//	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	@ElementCollection(targetClass = GraphParsingTestEntity.class)
 	public Map<GraphParsingTestEntity, GraphParsingTestEntity> getMap() {
 		return map;

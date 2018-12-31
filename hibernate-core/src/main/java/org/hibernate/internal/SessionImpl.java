@@ -86,6 +86,7 @@ import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.CollectionEntry;
+import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -1128,31 +1129,50 @@ public final class SessionImpl
 	}
 
 	@Override
-	public final Object internalLoad(String entityName, Serializable id, boolean eager, boolean nullable)
-			throws HibernateException {
-		// todo : remove
-		LoadEventListener.LoadType type = nullable
-				? LoadEventListener.INTERNAL_LOAD_NULLABLE
-				: eager
-				? LoadEventListener.INTERNAL_LOAD_EAGER
-				: LoadEventListener.INTERNAL_LOAD_LAZY;
+	public final Object internalLoad(
+			String entityName,
+			Serializable id,
+			boolean eager,
+			boolean nullable) throws HibernateException {
 
-		LoadEvent event = loadEvent;
-		loadEvent = null;
-		event = recycleEventInstance( event, id, entityName );
-		fireLoad( event, type );
-		Object result = event.getResult();
-		if ( !nullable ) {
-			UnresolvableObjectException.throwIfNull( result, id, entityName );
+		final EffectiveEntityGraph effectiveEntityGraph = getLoadQueryInfluencers().getEffectiveEntityGraph();
+		final GraphSemantic semantic = effectiveEntityGraph.getSemantic();
+		final RootGraphImplementor<?> graph = effectiveEntityGraph.getGraph();
+		effectiveEntityGraph.clear();
+
+		try {
+			final LoadEventListener.LoadType type;
+			if ( nullable ) {
+				type = LoadEventListener.INTERNAL_LOAD_NULLABLE;
+			}
+			else {
+				type = eager
+						? LoadEventListener.INTERNAL_LOAD_EAGER
+						: LoadEventListener.INTERNAL_LOAD_LAZY;
+			}
+
+			LoadEvent event = loadEvent;
+			loadEvent = null;
+			event = recycleEventInstance( event, id, entityName );
+			fireLoad( event, type );
+			Object result = event.getResult();
+			if ( !nullable ) {
+				UnresolvableObjectException.throwIfNull( result, id, entityName );
+			}
+			if ( loadEvent == null ) {
+				event.setEntityClassName( null );
+				event.setEntityId( null );
+				event.setInstanceToLoad( null );
+				event.setResult( null );
+				loadEvent = event;
+			}
+			return result;
 		}
-		if ( loadEvent == null ) {
-			event.setEntityClassName( null );
-			event.setEntityId( null );
-			event.setInstanceToLoad( null );
-			event.setResult( null );
-			loadEvent = event;
+		finally {
+			if ( semantic != null ) {
+				effectiveEntityGraph.applyGraph( graph, semantic );
+			}
 		}
-		return result;
 	}
 
 	/**

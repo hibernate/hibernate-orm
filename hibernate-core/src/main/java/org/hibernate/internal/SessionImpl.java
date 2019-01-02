@@ -1138,7 +1138,14 @@ public final class SessionImpl
 		final EffectiveEntityGraph effectiveEntityGraph = getLoadQueryInfluencers().getEffectiveEntityGraph();
 		final GraphSemantic semantic = effectiveEntityGraph.getSemantic();
 		final RootGraphImplementor<?> graph = effectiveEntityGraph.getGraph();
-		effectiveEntityGraph.clear();
+		boolean clearedEffectiveGraph = false;
+		if ( semantic != null ) {
+			if ( ! graph.appliesTo( entityName ) ) {
+				log.debugf( "Clearing effective entity graph for subsequent-select" );
+				clearedEffectiveGraph = true;
+				effectiveEntityGraph.clear();
+			}
+		}
 
 		try {
 			final LoadEventListener.LoadType type;
@@ -1169,7 +1176,7 @@ public final class SessionImpl
 			return result;
 		}
 		finally {
-			if ( semantic != null ) {
+			if ( clearedEffectiveGraph ) {
 				effectiveEntityGraph.applyGraph( graph, semantic );
 			}
 		}

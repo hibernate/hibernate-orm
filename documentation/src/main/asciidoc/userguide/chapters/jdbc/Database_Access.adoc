@@ -209,7 +209,7 @@ If for some reason it is not able to determine the proper one or you want to use
 |DB297 |Support for the DB2 database, version 9.7.
 |DB2390 |Support for DB2 Universal Database for OS/390, also known as DB2/390.
 |DB2400 |Support for DB2 Universal Database for iSeries, also known as DB2/400.
-|DB2400V7R1 |Support for DB2 Universal Database for i, also known as DB2/400, version 7.1
+|DB2400V7R3 |Support for DB2 Universal Database for i, also known as DB2/400, version 7.3
 |DerbyTenFive |Support for the Derby database, version 10.5
 |DerbyTenSix |Support for the Derby database, version 10.6
 |DerbyTenSeven |Support for the Derby database, version 10.7

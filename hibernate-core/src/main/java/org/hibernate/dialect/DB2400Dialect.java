@@ -32,6 +32,17 @@ public class DB2400Dialect extends DB2Dialect {
 	}
 
 	@Override
+	public String getLimitString(String sql, int offset, int limit) {
+		if ( offset > 0 ) {
+			throw new UnsupportedOperationException( "query result offset is not supported" );
+		}
+		if ( limit == 0 ) {
+			return sql;
+		}
+		return sql + " fetch first " + limit + " rows only ";
+	}
+
+	@Override
 	public String getForUpdateString() {
 		return " for update with rs";
 	}

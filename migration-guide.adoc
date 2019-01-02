@@ -28,10 +28,10 @@ If you find you need to use this configuration setting, be sure to report the ma
 that we can review it and determine if the mapping corner case should be included in our algorithm since the
 configuration setting is meant to bridge behavior support for this across a few releases.
 
-=== Hibernate Spatial depends on JTS 1.6
+=== Hibernate Spatial depends on JTS 1.16
 
 Hibernate Spatial depends on the https://github.com/locationtech/jts[Java Topology Suite (JTS)]. In 5.4 this
- dependency has been upgraded to version 1.6. This implies a change in package naming:
+ dependency has been upgraded to version 1.16. This implies a change in package naming:
  all `com.vividsolutions.jts.\*` packages have been renamed to `org.locationtech.jts.*`.
 
 See https://github.com/locationtech/jts/blob/master/MIGRATION.md[the JTS Migration guide] for more information.

@@ -74,7 +74,7 @@ public class BinaryLogicOperatorNode extends AbstractSelectExpression implements
 			int lhsColumnSpan = getColumnSpan( lhsType, sessionFactory );
 			if ( lhsColumnSpan != getColumnSpan( rhsType, sessionFactory ) ) {
 				throw new TypeMismatchException(
-						"left and right hand sides of a binary logic operator were incompatibile [" +
+						"left and right hand sides of a binary logic operator were incompatible [" +
 								lhsType.getName() + " : " + rhsType.getName() + "]"
 				);
 			}

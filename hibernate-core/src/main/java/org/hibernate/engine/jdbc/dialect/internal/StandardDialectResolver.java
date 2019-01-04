@@ -209,6 +209,8 @@ public class StandardDialectResolver implements DialectResolver {
 			final int majorVersion = info.getDatabaseMajorVersion();
 
 			switch ( majorVersion ) {
+				case 18:
+					// fall through
 				case 12:
 					// fall through
 				case 11:
@@ -222,7 +224,7 @@ public class StandardDialectResolver implements DialectResolver {
 				default:
 					LOG.unknownOracleVersion( majorVersion );
 			}
-			return new Oracle8iDialect();
+			return new Oracle10gDialect();
 		}
 
 		if ( "HDB".equals( databaseName ) ) {

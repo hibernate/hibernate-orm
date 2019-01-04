@@ -257,7 +257,7 @@ public enum Database {
 	MARIADB {
 		@Override
 		public Class<? extends Dialect> latestDialect() {
-			return MariaDB102Dialect.class;
+			return MariaDB103Dialect.class;
 		}
 
 		@Override

@@ -231,7 +231,7 @@ public class EntityGraphFunctionalTests extends BaseEntityManagerFunctionalTestC
 		}
 	}
 
-	@Entity( name = "Comment")
+	@Entity(name="CommentTable") // "Comment" reserved in Oracle
 	@Table( name = "comment" )
 	public static class Comment {
 		private Integer id;
@@ -247,7 +247,6 @@ public class EntityGraphFunctionalTests extends BaseEntityManagerFunctionalTestC
 				Issue issue,
 				String text,
 				User commenter) {
-			this.id = id;
 			this.issue = issue;
 			this.text = text;
 			this.commenter = commenter;

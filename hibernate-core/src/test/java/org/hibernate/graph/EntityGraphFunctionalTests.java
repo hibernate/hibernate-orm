@@ -109,7 +109,7 @@ public class EntityGraphFunctionalTests extends BaseEntityManagerFunctionalTestC
 		inTransaction(
 				entityManagerFactory(),
 				session -> {
-					session.createQuery( "delete from CommentTable" ).executeUpdate();
+					session.createQuery( "delete from Comment" ).executeUpdate();
 					session.createQuery( "delete from Issue" ).executeUpdate();
 					session.createQuery( "delete from User" ).executeUpdate();
 				}
@@ -231,8 +231,8 @@ public class EntityGraphFunctionalTests extends BaseEntityManagerFunctionalTestC
 		}
 	}
 
-	@Entity(name="CommentTable") // "Comment" reserved in Oracle
-	@Table( name = "comment" )
+	@Entity(name = "Comment")
+	@Table(name = "CommentTable") // "Comment" reserved in Oracle
 	public static class Comment {
 		private Integer id;
 		private Issue issue;

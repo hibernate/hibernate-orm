@@ -109,7 +109,7 @@ public class EntityGraphFunctionalTests extends BaseEntityManagerFunctionalTestC
 		inTransaction(
 				entityManagerFactory(),
 				session -> {
-					session.createQuery( "delete from Comment" ).executeUpdate();
+					session.createQuery( "delete from CommentTable" ).executeUpdate();
 					session.createQuery( "delete from Issue" ).executeUpdate();
 					session.createQuery( "delete from User" ).executeUpdate();
 				}

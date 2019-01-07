@@ -6,43 +6,36 @@
  */
 package org.hibernate.testing.orm.domain.gambit;
 
-import org.hibernate.boot.MetadataSources;
-
-import org.hibernate.testing.orm.domain.DomainModelDescriptor;
+import org.hibernate.testing.orm.domain.AbstractDomainModelDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class GambitDomainModel implements DomainModelDescriptor {
+public class GambitDomainModel extends AbstractDomainModelDescriptor {
 	public static final GambitDomainModel INSTANCE = new GambitDomainModel();
 
-	private static final Class[] CLASSES = new Class[] {
-			BasicEntity.class,
-			Component.class,
-			EmbeddedIdEntity.class,
-			EntityOfBasics.class,
-			EntityOfComposites.class,
-			EntityOfDynamicComponent.class,
-			EntityOfLists.class,
-			EntityOfMaps.class,
-			EntityOfSets.class,
-			EntityWithLazyManyToOneSelfReference.class,
-			EntityWithLazyOneToOne.class,
-			EntityWithManyToOneJoinTable.class,
-			EntityWithManyToOneSelfReference.class,
-			EntityWithNonIdAttributeNamedId.class,
-			EntityWithOneToMany.class,
-			EntityWithOneToOne.class,
-			EntityWithOneToOneJoinTable.class,
-			EntityWithOneToOneSharingPrimaryKey.class,
-			Shirt.class,
-			SimpleEntity.class
-	};
-
-	@Override
-	public void applyDomainModel(MetadataSources sources) {
-		for ( Class domainClass : CLASSES ) {
-			sources.addAnnotatedClass( domainClass );
-		}
+	public GambitDomainModel() {
+		super(
+				BasicEntity.class,
+				Component.class,
+				EmbeddedIdEntity.class,
+				EntityOfBasics.class,
+				EntityOfComposites.class,
+				EntityOfDynamicComponent.class,
+				EntityOfLists.class,
+				EntityOfMaps.class,
+				EntityOfSets.class,
+				EntityWithLazyManyToOneSelfReference.class,
+				EntityWithLazyOneToOne.class,
+				EntityWithManyToOneJoinTable.class,
+				EntityWithManyToOneSelfReference.class,
+				EntityWithNonIdAttributeNamedId.class,
+				EntityWithOneToMany.class,
+				EntityWithOneToOne.class,
+				EntityWithOneToOneJoinTable.class,
+				EntityWithOneToOneSharingPrimaryKey.class,
+				Shirt.class,
+				SimpleEntity.class
+		);
 	}
 }

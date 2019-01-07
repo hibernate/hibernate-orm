@@ -8,31 +8,23 @@ package org.hibernate.testing.orm.domain.contacts;
 
 import org.hibernate.boot.MetadataSources;
 
-import org.hibernate.testing.orm.domain.DomainModelDescriptor;
+import org.hibernate.testing.orm.domain.AbstractDomainModelDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class ContactsDomainModel implements DomainModelDescriptor {
+public class ContactsDomainModel extends AbstractDomainModelDescriptor {
 	public static ContactsDomainModel INSTANCE = new ContactsDomainModel();
 
-	private static final Class[] CLASSES = new Class[] {
-			Address.class,
-			PhoneNumber.class,
-			Contact.class
-	};
-
 	public static void applyContactsModel(MetadataSources sources) {
-		for ( Class domainClass : CLASSES ) {
-			sources.addAnnotatedClass( domainClass );
-		}
+		INSTANCE.applyDomainModel( sources );
 	}
 
 	private ContactsDomainModel() {
-	}
-
-	@Override
-	public void applyDomainModel(MetadataSources sources) {
-		applyContactsModel( sources );
+		super(
+				Address.class,
+				PhoneNumber.class,
+				Contact.class
+		);
 	}
 }

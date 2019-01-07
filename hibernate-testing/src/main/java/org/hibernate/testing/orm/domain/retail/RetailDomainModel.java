@@ -10,7 +10,7 @@ import java.util.EnumSet;
 
 import org.hibernate.boot.MetadataSources;
 
-import org.hibernate.testing.orm.domain.DomainModelDescriptor;
+import org.hibernate.testing.orm.domain.AbstractDomainModelDescriptor;
 import org.hibernate.testing.orm.domain.MappingFeature;
 import org.hibernate.testing.orm.domain.MonetaryAmountConverter;
 
@@ -24,35 +24,27 @@ import static org.hibernate.testing.orm.domain.MappingFeature.SECONDARY_TABLE;
 /**
  * @author Steve Ebersole
  */
-public class RetailDomainModel implements DomainModelDescriptor {
+public class RetailDomainModel extends AbstractDomainModelDescriptor {
 	public static final RetailDomainModel INSTANCE = new RetailDomainModel();
 
-	private static final Class[] CLASSES = new Class[] {
-			MonetaryAmountConverter.class,
-			SalesAssociate.class,
-			Vendor.class,
-			DomesticVendor.class,
-			ForeignVendor.class,
-			Product.class,
-			Order.class,
-			LineItem.class,
-			Payment.class,
-			CashPayment.class,
-			CardPayment.class
-	};
+	public RetailDomainModel() {
+		super(
+				MonetaryAmountConverter.class,
+				SalesAssociate.class,
+				Vendor.class,
+				DomesticVendor.class,
+				ForeignVendor.class,
+				Product.class,
+				Order.class,
+				LineItem.class,
+				Payment.class,
+				CashPayment.class,
+				CardPayment.class
+		);
+	}
 
 	public static void applyRetailModel(MetadataSources sources) {
-		for ( Class domainClass : CLASSES ) {
-			sources.addAnnotatedClass( domainClass );
-		}
-	}
-
-	private RetailDomainModel() {
-	}
-
-	@Override
-	public void applyDomainModel(MetadataSources sources) {
-		applyRetailModel( sources );
+		INSTANCE.applyDomainModel( sources );
 	}
 
 	@Override

@@ -6,25 +6,18 @@
  */
 package org.hibernate.testing.orm.domain.helpdesk;
 
-import org.hibernate.boot.MetadataSources;
-
-import org.hibernate.testing.orm.domain.DomainModelDescriptor;
+import org.hibernate.testing.orm.domain.AbstractDomainModelDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class HelpDeskDomainModel implements DomainModelDescriptor {
+public class HelpDeskDomainModel extends AbstractDomainModelDescriptor {
 	public static final HelpDeskDomainModel INSTANCE = new HelpDeskDomainModel();
 
-	private static Class[] CLASSES = new Class[] {
-			Status.class,
-			Account.class
-	};
-
-	@Override
-	public void applyDomainModel(MetadataSources sources) {
-		for ( Class domainClass : CLASSES ) {
-			sources.addAnnotatedClass( domainClass );
-		}
+	public HelpDeskDomainModel() {
+		super(
+				Status.class,
+				Account.class
+		);
 	}
 }

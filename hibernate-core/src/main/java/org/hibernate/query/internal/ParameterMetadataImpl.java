@@ -36,6 +36,8 @@ import org.hibernate.type.Type;
 public class ParameterMetadataImpl implements ParameterMetadata {
 	private final Map<Integer,OrdinalParameterDescriptor> ordinalDescriptorMap;
 	private final Map<String,NamedParameterDescriptor> namedDescriptorMap;
+	private final Set<OrdinalParameterDescriptor> ordinalDescriptorValueCache;
+	private final Set<NamedParameterDescriptor> namedDescriptorValueCache;
 
 	public ParameterMetadataImpl(
 			Map<Integer,OrdinalParameterDescriptor> ordinalDescriptorMap,
@@ -43,9 +45,16 @@ public class ParameterMetadataImpl implements ParameterMetadata {
 		this.ordinalDescriptorMap = ordinalDescriptorMap == null
 				? Collections.emptyMap()
 				: Collections.unmodifiableMap( ordinalDescriptorMap );
+		this.ordinalDescriptorValueCache = ordinalDescriptorMap == null
+				? Collections.emptySet()
+				: Collections.unmodifiableSet(new HashSet<>(this.ordinalDescriptorMap.values()));
 		this.namedDescriptorMap = namedDescriptorMap == null
 				? Collections.emptyMap()
 				: Collections.unmodifiableMap( namedDescriptorMap );
+		this.namedDescriptorValueCache = namedDescriptorMap == null
+				? Collections.emptySet()
+				: Collections.unmodifiableSet(new HashSet<>(this.namedDescriptorMap.values()));
+
 
 		if (ordinalDescriptorMap != null &&  ! ordinalDescriptorMap.isEmpty() ) {
 			final List<Integer> sortedPositions = new ArrayList<>( ordinalDescriptorMap.keySet() );
@@ -95,8 +104,8 @@ public class ParameterMetadataImpl implements ParameterMetadata {
 	@Override
 	@SuppressWarnings("SuspiciousMethodCalls")
 	public boolean containsReference(QueryParameter parameter) {
-		return ordinalDescriptorMap.containsValue( parameter )
-				|| namedDescriptorMap.containsValue( parameter );
+		return ordinalDescriptorValueCache.contains( parameter )
+				|| namedDescriptorValueCache.contains( parameter );
 	}
 
 	@Override

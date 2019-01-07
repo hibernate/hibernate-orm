@@ -45,13 +45,13 @@ public class ParameterMetadataImpl implements ParameterMetadata {
 		this.ordinalDescriptorMap = ordinalDescriptorMap == null
 				? Collections.emptyMap()
 				: Collections.unmodifiableMap( ordinalDescriptorMap );
-		this.ordinalDescriptorValueCache = ordinalDescriptorMap == null
+		this.ordinalDescriptorValueCache = this.ordinalDescriptorMap.isEmpty()
 				? Collections.emptySet()
 				: Collections.unmodifiableSet(new HashSet<>(this.ordinalDescriptorMap.values()));
 		this.namedDescriptorMap = namedDescriptorMap == null
 				? Collections.emptyMap()
 				: Collections.unmodifiableMap( namedDescriptorMap );
-		this.namedDescriptorValueCache = namedDescriptorMap == null
+		this.namedDescriptorValueCache = this.namedDescriptorMap.isEmpty()
 				? Collections.emptySet()
 				: Collections.unmodifiableSet(new HashSet<>(this.namedDescriptorMap.values()));
 

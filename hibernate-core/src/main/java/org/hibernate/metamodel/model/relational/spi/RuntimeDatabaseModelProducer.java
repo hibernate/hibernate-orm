@@ -52,13 +52,21 @@ public class RuntimeDatabaseModelProducer {
 	private final TypeConfiguration typeConfiguration;
 
 	public RuntimeDatabaseModelProducer(BootstrapContext bootstrapContext) {
-		this.namingStrategy = bootstrapContext.getMetadataBuildingOptions().getPhysicalNamingStrategy();
+		this(
+				bootstrapContext.getServiceRegistry(),
+				bootstrapContext.getMetadataBuildingOptions().getPhysicalNamingStrategy(),
+				bootstrapContext.getTypeConfiguration()
+		);
+	}
 
-		final StandardServiceRegistry serviceRegistry = bootstrapContext.getServiceRegistry();
+	public RuntimeDatabaseModelProducer(
+			StandardServiceRegistry serviceRegistry,
+			PhysicalNamingStrategy namingStrategy,
+			TypeConfiguration typeConfiguration) {
+		this.namingStrategy = namingStrategy;
 		this.jdbcEnvironment = serviceRegistry.getService( JdbcServices.class ).getJdbcEnvironment();
 		this.identifierGeneratorFactory = serviceRegistry.getService( MutableIdentifierGeneratorFactory.class );
-
-		this.typeConfiguration = bootstrapContext.getTypeConfiguration();
+		this.typeConfiguration = typeConfiguration;
 	}
 
 	public DatabaseModel produceDatabaseModel(

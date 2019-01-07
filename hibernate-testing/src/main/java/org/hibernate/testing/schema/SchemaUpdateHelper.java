@@ -10,6 +10,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.Map;
 
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -34,7 +35,7 @@ public class SchemaUpdateHelper {
 		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, Action.UPDATE );
 
 		SchemaManagementToolCoordinator.process(
-				Helper.buildDatabaseModel( metadata ),
+				Helper.buildDatabaseModel( (StandardServiceRegistry) serviceRegistry, metadata ),
 				serviceRegistry,
 				action -> {}
 		);
@@ -47,14 +48,14 @@ public class SchemaUpdateHelper {
 
 	@SuppressWarnings("unchecked")
 	public static void toWriter(MetadataImplementor metadata, Writer writer) {
-		final ServiceRegistry serviceRegistry = metadata.getMetadataBuildingOptions().getServiceRegistry();
+		final StandardServiceRegistry serviceRegistry = metadata.getMetadataBuildingOptions().getServiceRegistry();
 		final Map settings = serviceRegistry.getService( ConfigurationService.class ).getSettings();
 		settings.put( AvailableSettings.HBM2DDL_SCRIPTS_ACTION, Action.UPDATE );
 		// atm we reuse the CREATE scripts setting
 		settings.put( AvailableSettings.HBM2DDL_SCRIPTS_CREATE_TARGET, writer );
 
 		SchemaManagementToolCoordinator.process(
-				Helper.buildDatabaseModel( metadata ),
+				Helper.buildDatabaseModel( serviceRegistry, metadata ),
 				serviceRegistry,
 				action -> {}
 		);

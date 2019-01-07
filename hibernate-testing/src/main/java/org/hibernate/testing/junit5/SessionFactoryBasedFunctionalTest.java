@@ -6,11 +6,7 @@
  */
 package org.hibernate.testing.junit5;
 
-import java.util.Arrays;
 import java.util.EnumSet;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.Root;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
@@ -31,7 +27,7 @@ import org.junit.jupiter.api.AfterEach;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
 
 /**
  * @author Steve Ebersole
@@ -90,7 +86,7 @@ public abstract class SessionFactoryBasedFunctionalTest
 	private void dropDatabase() {
 		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
 		try {
-			final DatabaseModel databaseModel = Helper.buildDatabaseModel( buildMetadata( ssr ) );
+			final DatabaseModel databaseModel = Helper.buildDatabaseModel( ssr, buildMetadata( ssr ) );
 			new SchemaExport( databaseModel, ssr ).drop( EnumSet.of( TargetType.DATABASE ) );
 		}
 		finally {
@@ -153,10 +149,13 @@ public abstract class SessionFactoryBasedFunctionalTest
 	}
 
 	protected void cleanupTestData() {
-		doInHibernate(this::sessionFactory, session -> {
-			Arrays.stream( getAnnotatedClasses() ).forEach( annotatedClass ->
-				session.createQuery( "delete from " + annotatedClass.getSimpleName() ).executeUpdate()
-			);
-		});
+		inTransaction(
+				sessionFactory(),
+				session -> {
+					getMetadata().getEntityHierarchies().forEach(
+							hierarchy -> session.createQuery( "delete from " + hierarchy.getRootType().getName() ).executeUpdate()
+					);
+				}
+		);
 	}
 }

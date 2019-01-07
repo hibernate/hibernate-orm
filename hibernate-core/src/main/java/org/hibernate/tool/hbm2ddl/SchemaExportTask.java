@@ -267,7 +267,7 @@ public class SchemaExportTask extends MatchingTask {
 		metadata.validate();
 
 		SchemaManagementToolCoordinator.process(
-				Helper.buildDatabaseModel( metadata ),
+				Helper.buildDatabaseModel( ssr, metadata ),
 				ssr,
 				action -> {}
 		);

@@ -15,7 +15,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeBasic;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.query.sqm.SemanticException;
@@ -23,8 +22,8 @@ import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 
 
-import org.hibernate.testing.junit5.ExpectedException;
-import org.hibernate.testing.junit5.ExpectedExceptionExtension;
+import org.hibernate.testing.orm.junit.ExpectedException;
+import org.hibernate.testing.orm.junit.ExpectedExceptionExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 

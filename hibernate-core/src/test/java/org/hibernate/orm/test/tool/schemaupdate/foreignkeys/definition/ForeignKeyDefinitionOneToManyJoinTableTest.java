@@ -17,7 +17,7 @@ import javax.persistence.OneToMany;
 
 import org.hibernate.dialect.H2Dialect;
 
-import org.hibernate.testing.junit5.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 
 
 /**

@@ -33,7 +33,7 @@ public class SchemaDropHelper {
 		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, Action.DROP );
 
 		SchemaManagementToolCoordinator.process(
-				Helper.buildDatabaseModel( metadata ),
+				Helper.buildDatabaseModel( (StandardServiceRegistry) serviceRegistry, metadata ),
 				serviceRegistry,
 				action -> {}
 		);
@@ -49,7 +49,7 @@ public class SchemaDropHelper {
 		settings.put( AvailableSettings.HBM2DDL_CONNECTION, connection );
 
 		SchemaManagementToolCoordinator.process(
-				Helper.buildDatabaseModel( metadata ),
+				Helper.buildDatabaseModel( serviceRegistry, metadata ),
 				serviceRegistry,
 				action -> {}
 		);

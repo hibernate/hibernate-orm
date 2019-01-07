@@ -13,7 +13,7 @@ import javax.persistence.Table;
 
 import org.hibernate.dialect.AbstractHANADialect;
 
-import org.hibernate.testing.junit5.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 
 /**
  * @author Andrea Boriero

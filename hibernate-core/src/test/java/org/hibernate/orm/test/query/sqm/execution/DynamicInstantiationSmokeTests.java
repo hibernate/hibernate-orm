@@ -15,6 +15,7 @@ import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.orm.test.query.sqm.produce.domain.ConstructedLookupListItem;
 import org.hibernate.orm.test.query.sqm.produce.domain.NestedCtorLookupListItem;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
+import org.hibernate.testing.orm.junit.TestingUtil;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,22 +47,14 @@ public class DynamicInstantiationSmokeTests extends BaseSqmUnitTest {
 	@BeforeEach
 	public void createData() {
 		sessionFactoryScope().inTransaction(
-				session -> session.doWork(
-						connection -> {
-							final Statement statement = connection.createStatement();
-							try {
-								statement.execute(
-										"insert into EntityOfBasics( id, theString, gender, theInt ) values ( 1, 'Some name', 'M', -1 )" );
-							}
-							finally {
-								try {
-									statement.close();
-								}
-								catch (SQLException ignore) {
-								}
-							}
-						}
-				)
+				session -> {
+					final EntityOfBasics entity = new EntityOfBasics();
+					entity.setId( 1 );
+					entity.setTheString( "Some name" );
+					entity.setGender( EntityOfBasics.Gender.MALE );
+					entity.setTheInt( -1 );
+					session.save( entity );
+				}
 		);
 	}
 
@@ -151,7 +144,7 @@ public class DynamicInstantiationSmokeTests extends BaseSqmUnitTest {
 					).list();
 
 					assertThat( results, hasSize(1) );
-					final Object[] result = cast(
+					final Object[] result = TestingUtil.cast(
 							results.get( 0 ),
 							Object[].class
 					);
@@ -175,7 +168,7 @@ public class DynamicInstantiationSmokeTests extends BaseSqmUnitTest {
 
 					assertThat( results, hasSize( 1 ) );
 
-					final List row = cast( results.get( 0 ), List.class );
+					final List row = TestingUtil.cast( results.get( 0 ), List.class );
 					assertThat( row, hasSize( 2 ) );
 					assertThat( row.get( 0 ), is( 1 ) );
 					assertThat( row.get( 1 ), is( "Some name" ) );
@@ -193,7 +186,7 @@ public class DynamicInstantiationSmokeTests extends BaseSqmUnitTest {
 
 					assertThat( results, hasSize( 1 ) );
 
-					final Map row = cast( results.get( 0 ), Map.class );
+					final Map row = TestingUtil.cast( results.get( 0 ), Map.class );
 					assertThat( row.get( "id" ), is( 1 ) );
 					assertThat( row.get( "ts" ), is( "Some name" ) );
 				}
@@ -215,7 +208,7 @@ public class DynamicInstantiationSmokeTests extends BaseSqmUnitTest {
 
 					assertThat( results, hasSize( 1 ) );
 
-					final NestedCtorLookupListItem item = cast(
+					final NestedCtorLookupListItem item = TestingUtil.cast(
 							results.get( 0 ),
 							NestedCtorLookupListItem.class
 					);
@@ -243,7 +236,7 @@ public class DynamicInstantiationSmokeTests extends BaseSqmUnitTest {
 
 					assertThat( results, hasSize( 1 ) );
 
-					final NestedCtorLookupListItem item = cast(
+					final NestedCtorLookupListItem item = TestingUtil.cast(
 							results.get( 0 ),
 							NestedCtorLookupListItem.class
 					);

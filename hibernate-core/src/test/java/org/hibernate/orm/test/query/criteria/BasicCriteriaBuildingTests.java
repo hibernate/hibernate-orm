@@ -15,12 +15,11 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
 
-import org.hibernate.testing.orm.ServiceRegistry;
-import org.hibernate.testing.orm.ServiceRegistry.Setting;
-import org.hibernate.testing.orm.SessionFactory;
-import org.hibernate.testing.orm.SessionFactoryScope;
-import org.hibernate.testing.orm.SessionFactoryScopeAware;
-import org.hibernate.testing.orm.TestDomain;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistry.Setting;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity_;
@@ -35,7 +34,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Steve Ebersole
  */
-@TestDomain(
+@DomainModel(
 		standardModels = StandardDomainModel.GAMBIT
 )
 @ServiceRegistry(
@@ -61,7 +60,7 @@ public class BasicCriteriaBuildingTests {
 				criteriaBuilder.equal(
 						// grr, see below
 						//root.get( BasicEntity_.data ),
-						root.get( BasicEntity_.data ),
+						root.get( BasicEntity_.DATA ),
 						criteriaBuilder.parameter( String.class )
 				)
 		);

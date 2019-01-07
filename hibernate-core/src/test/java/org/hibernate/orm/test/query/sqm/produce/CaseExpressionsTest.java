@@ -18,6 +18,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmCoalesceFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmNullifFunction;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 
+import org.hibernate.testing.orm.junit.TestingUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -46,12 +47,12 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 				"select p from Person p where p.numberOfToes = case p.dob when ?1 then 6 else 8 end"
 		);
 
-		final SqmComparisonPredicate predicate = cast(
+		final SqmComparisonPredicate predicate = TestingUtil.cast(
 				select.getQuerySpec().getWhereClause().getPredicate(),
 				SqmComparisonPredicate.class
 		);
 
-		final SqmCaseSimple caseStatement = cast(
+		final SqmCaseSimple caseStatement = TestingUtil.cast(
 				predicate.getRightHandExpression(),
 				SqmCaseSimple.class
 		);
@@ -71,12 +72,12 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 				"select p from Person p where p.numberOfToes = case when p.dob = ?1 then 6 else 8 end"
 		);
 
-		final SqmComparisonPredicate predicate = cast(
+		final SqmComparisonPredicate predicate = TestingUtil.cast(
 				select.getQuerySpec().getWhereClause().getPredicate(),
 				SqmComparisonPredicate.class
 		);
 
-		final SqmCaseSearched caseStatement = cast(
+		final SqmCaseSearched caseStatement = TestingUtil.cast(
 				predicate.getRightHandExpression(),
 				SqmCaseSearched.class
 		);
@@ -95,7 +96,7 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 
 		assertThat( select.getQuerySpec().getSelectClause().getSelections(), hasSize( 1 ) );
 
-		final SqmCoalesceFunction coalesce = cast(
+		final SqmCoalesceFunction coalesce = TestingUtil.cast(
 				select.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
 				SqmCoalesceFunction.class
 		);
@@ -111,7 +112,7 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 		);
 
 		assertThat( select.getQuerySpec().getSelectClause().getSelections(), hasSize( 1 ) );
-		final SqmNullifFunction nullif = cast(
+		final SqmNullifFunction nullif = TestingUtil.cast(
 				select.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
 				SqmNullifFunction.class
 		);

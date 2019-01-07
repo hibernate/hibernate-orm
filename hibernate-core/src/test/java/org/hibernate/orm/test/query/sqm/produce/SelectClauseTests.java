@@ -17,6 +17,8 @@ import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
 import org.hibernate.testing.orm.domain.gambit.EntityOfMaps;
 import org.hibernate.testing.orm.domain.gambit.EntityOfSets;
+import org.hibernate.testing.orm.junit.TestingUtil;
+
 import org.hibernate.query.sqm.tree.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
@@ -262,7 +264,7 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
 
-		final SqmMapEntryBinding sqmMapEntryBinding = cast(
+		final SqmMapEntryBinding sqmMapEntryBinding = TestingUtil.cast(
 				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
 				SqmMapEntryBinding.class
 		);
@@ -278,7 +280,7 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 		SqmSelectStatement statement = interpretSelect( "select e from EntityOfBasics e" );
 
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
-		final SqmEntityReference sqmEntityReference = cast(
+		final SqmEntityReference sqmEntityReference = TestingUtil.cast(
 				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
 				SqmEntityReference.class
 		);

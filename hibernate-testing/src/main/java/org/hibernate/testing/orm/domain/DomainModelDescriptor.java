@@ -11,13 +11,13 @@ import java.util.EnumSet;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.dialect.Dialect;
 
-import org.hibernate.testing.orm.TestDomain;
-
 /**
  * Describes a standard domain model
  *
  * @see StandardDomainModel
- * @see TestDomain
+ * @see org.hibernate.testing.orm.junit.DomainModel
+ * @see org.hibernate.testing.orm.junit.DomainModelFunctionalTesting
+ * @see org.hibernate.testing.orm.junit.DomainModelExtension
  *
  * @author Steve Ebersole
  */

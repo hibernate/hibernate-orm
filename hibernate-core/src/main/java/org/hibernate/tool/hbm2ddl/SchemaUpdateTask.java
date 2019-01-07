@@ -183,7 +183,7 @@ public class SchemaUpdateTask extends MatchingTask {
 
 			final MetadataImplementor metadata = (MetadataImplementor) metadataBuilder.build();
 
-			new SchemaUpdate( Helper.buildDatabaseModel( metadata ), ssr )
+			new SchemaUpdate( Helper.buildDatabaseModel( ssr, metadata ), ssr )
 					.setOutputFile( outputFile.getPath() )
 					.setDelimiter( delimiter )
 					.setHaltOnError( haltOnError )

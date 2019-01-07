@@ -201,6 +201,10 @@ tasks.withType( Test.class ).each { test ->
 	test.systemProperties += System.properties.findAll { it.key.startsWith( "hibernate." ) }
 
 	test.enableAssertions = true
+	
+	if ( project.name != 'hibernate-testing' ) {
+		test.dependsOn ':hibernate-testing:test'
+	}
 }
 
 sourceSets {

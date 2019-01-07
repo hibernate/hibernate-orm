@@ -13,6 +13,7 @@ import java.net.URL;
 import java.sql.SQLException;
 import java.util.Map;
 
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -146,16 +147,16 @@ public class Helper {
 		}
 	}
 
-	public static DatabaseModel buildDatabaseModel(MetadataImplementor metadata) {
+	public static DatabaseModel buildDatabaseModel(
+			StandardServiceRegistry registry,
+			MetadataImplementor metadata) {
 		final DatabaseObjectResolutionContextImpl dbObjectResolver = new DatabaseObjectResolutionContextImpl();
-		final BootstrapContext bootstrapContext = metadata.getTypeConfiguration()
-				.getMetadataBuildingContext()
-				.getBootstrapContext();
-		return new RuntimeDatabaseModelProducer( bootstrapContext )
-				.produceDatabaseModel(
-						metadata.getDatabase(),
-						dbObjectResolver,
-						dbObjectResolver
-				);
+		final RuntimeDatabaseModelProducer producer = new RuntimeDatabaseModelProducer(
+				registry,
+				metadata.getMetadataBuildingOptions().getPhysicalNamingStrategy(),
+				metadata.getTypeConfiguration()
+		);
+
+		return producer.produceDatabaseModel( metadata.getDatabase(), dbObjectResolver, dbObjectResolver );
 	}
 }

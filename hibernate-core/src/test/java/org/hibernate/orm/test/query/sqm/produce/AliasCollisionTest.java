@@ -10,6 +10,8 @@ import java.util.List;
 
 import org.hibernate.testing.orm.domain.gambit.EntityWithManyToOneSelfReference;
 import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
+import org.hibernate.testing.orm.junit.ExpectedException;
+
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.query.sqm.AliasCollisionException;
 import org.hibernate.query.sqm.produce.spi.ImplicitAliasGenerator;
@@ -21,7 +23,6 @@ import org.hibernate.query.sqm.tree.predicate.InSubQuerySqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 
-import org.hibernate.testing.junit5.ExpectedException;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;

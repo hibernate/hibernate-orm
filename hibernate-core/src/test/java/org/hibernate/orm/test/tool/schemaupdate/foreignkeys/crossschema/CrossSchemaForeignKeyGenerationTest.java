@@ -10,37 +10,22 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.orm.test.tool.BaseSchemaUnitTestCase;
-import org.hibernate.orm.test.tool.schemaupdate.SchemaUpdateTableBackedSequenceTest;
-import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
-import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
-import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
-import org.hibernate.tool.schema.internal.IndividuallySchemaMigratorImpl;
-import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
-import org.hibernate.tool.schema.spi.SchemaManagementTool;
-import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
-import org.hibernate.tool.schema.spi.SourceDescriptor;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit5.DialectFeatureChecks;
-import org.hibernate.testing.junit5.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.junit5.schema.SchemaScope;
 import org.hibernate.testing.junit5.schema.SchemaTest;
-
-import org.junit.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;

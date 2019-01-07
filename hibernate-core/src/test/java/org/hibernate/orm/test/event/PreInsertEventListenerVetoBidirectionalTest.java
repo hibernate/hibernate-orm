@@ -14,16 +14,15 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 
 import org.hibernate.action.internal.EntityActionVetoException;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PreInsertEventListener;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit5.DialectFeatureChecks;
-import org.hibernate.testing.junit5.ExpectedException;
-import org.hibernate.testing.junit5.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.ExpectedException;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;

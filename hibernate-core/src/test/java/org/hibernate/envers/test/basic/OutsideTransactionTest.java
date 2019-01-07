@@ -20,7 +20,7 @@ import org.hibernate.envers.test.support.domains.basic.StrTestEntity;
 import org.junit.jupiter.api.Disabled;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit5.SkipForDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.junit5.dynamictests.DynamicTest;
 
 /**

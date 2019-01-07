@@ -16,7 +16,7 @@ import javax.persistence.TableGenerator;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.orm.test.tool.schemacreation.BaseSchemaCreationTestCase;
 
-import org.hibernate.testing.junit5.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.junit5.schema.SchemaScope;
 import org.hibernate.testing.junit5.schema.SchemaTest;
 

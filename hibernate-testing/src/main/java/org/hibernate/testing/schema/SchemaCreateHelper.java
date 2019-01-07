@@ -36,7 +36,7 @@ public class SchemaCreateHelper {
 		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, Action.CREATE );
 
 		SchemaManagementToolCoordinator.process(
-				Helper.buildDatabaseModel( metadata ),
+				Helper.buildDatabaseModel( (StandardServiceRegistry) serviceRegistry, metadata ),
 				serviceRegistry,
 				action -> {}
 		);
@@ -47,7 +47,7 @@ public class SchemaCreateHelper {
 		final Map settings = serviceRegistry.getService( ConfigurationService.class ).getSettings();
 		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, Action.CREATE_ONLY );
 		SchemaManagementToolCoordinator.process(
-				Helper.buildDatabaseModel( metadata ),
+				Helper.buildDatabaseModel( (StandardServiceRegistry) serviceRegistry, metadata ),
 				serviceRegistry,
 				action -> {}
 		);
@@ -63,7 +63,7 @@ public class SchemaCreateHelper {
 		settings.put( AvailableSettings.HBM2DDL_CONNECTION, connection );
 
 		SchemaManagementToolCoordinator.process(
-				Helper.buildDatabaseModel( metadata ),
+				Helper.buildDatabaseModel( serviceRegistry, metadata ),
 				serviceRegistry,
 				action -> {}
 		);
@@ -77,13 +77,13 @@ public class SchemaCreateHelper {
 
 	@SuppressWarnings("unchecked")
 	public static void toWriter(MetadataImplementor metadata, Writer writer) {
-		final ServiceRegistry serviceRegistry = metadata.getMetadataBuildingOptions().getServiceRegistry();
+		final StandardServiceRegistry serviceRegistry = metadata.getMetadataBuildingOptions().getServiceRegistry();
 		final Map settings = serviceRegistry.getService( ConfigurationService.class ).getSettings();
 		settings.put( AvailableSettings.HBM2DDL_SCRIPTS_ACTION, Action.CREATE );
 		settings.put( AvailableSettings.HBM2DDL_SCRIPTS_CREATE_TARGET, writer );
 
 		SchemaManagementToolCoordinator.process(
-				Helper.buildDatabaseModel( metadata ),
+				Helper.buildDatabaseModel( serviceRegistry, metadata ),
 				serviceRegistry,
 				action -> {}
 		);

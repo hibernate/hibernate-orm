@@ -17,7 +17,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.ConnectionProviderJdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 
-import org.hibernate.testing.junit5.JiraKey;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 
 import org.junit.jupiter.api.Test;

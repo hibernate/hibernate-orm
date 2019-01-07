@@ -39,7 +39,7 @@ import org.hibernate.orm.test.tool.BaseSchemaUnitTestCase;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.SkipLog;
-import org.hibernate.testing.junit5.SkipForDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.junit5.schema.SchemaScope;
 import org.hibernate.testing.junit5.schema.SchemaTest;
 

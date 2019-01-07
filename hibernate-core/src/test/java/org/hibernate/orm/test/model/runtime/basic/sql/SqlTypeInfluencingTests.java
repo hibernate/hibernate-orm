@@ -22,8 +22,8 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.VarcharSqlDescriptor;
 
 import org.hibernate.testing.junit5.DatabaseAgnostic;
-import org.hibernate.testing.junit5.FailureExpected;
-import org.hibernate.testing.junit5.FailureExpectedExtension;
+import org.hibernate.testing.orm.junit.FailureExpectedExtension;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 

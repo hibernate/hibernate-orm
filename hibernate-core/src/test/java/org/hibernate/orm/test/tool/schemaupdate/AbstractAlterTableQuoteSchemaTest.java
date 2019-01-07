@@ -129,7 +129,7 @@ public abstract class AbstractAlterTableQuoteSchemaTest extends SessionFactoryBa
 		final MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
 		metadata.validate();
 
-		return Helper.buildDatabaseModel( metadata );
+		return Helper.buildDatabaseModel( ssr, metadata );
 	}
 
 	protected String quote(String element) {

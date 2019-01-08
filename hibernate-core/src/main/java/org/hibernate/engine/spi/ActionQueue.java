@@ -1234,7 +1234,8 @@ public class ActionQueue {
 					List<AbstractEntityInsertAction> batch = actionBatches.get( rootIdentifier );
 					insertions.addAll( batch );
 				}
-			}else {
+			}
+			else {
 				LOG.warn( "Cycle detected in entity relationship in the batch containing " + latestBatches.size() + 
 								" statements, cannot be topologcal sorted" );
 			}
@@ -1321,7 +1322,8 @@ public class ActionQueue {
 				for ( BatchIdentifier adj : node.getChildren() ) {
 					if ( !visisted.contains( adj ) && isCycleUtil( adj, visisted, recursionStack ) ) {
 						return true;
-					} else if ( recursionStack.contains( adj ) ) {
+					} 
+					else if ( recursionStack.contains( adj ) ) {
 						return true;
 					}
 				}

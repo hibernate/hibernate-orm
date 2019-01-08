@@ -168,7 +168,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			else if ( session == null ) {
 				throw new LazyInitializationException( "could not initialize proxy [" + entityName + "#" + id + "] - no Session" );
 			}
-			else if ( !session.isOpen() ) {
+			else if ( !session.isOpenOrWaitingForAutoClose() ) {
 				throw new LazyInitializationException( "could not initialize proxy [" + entityName + "#" + id + "] - the owning Session was closed" );
 			}
 			else if ( !session.isConnected() ) {
@@ -344,7 +344,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 					"Proxy [" + entityName + "#" + id + "] is detached (i.e, session is null). The read-only/modifiable setting is only accessible when the proxy is associated with an open session."
 			);
 		}
-		if ( session.isClosed() ) {
+		if ( !session.isOpenOrWaitingForAutoClose() ) {
 			throw new SessionException(
 					"Session is closed. The read-only/modifiable setting is only accessible when the proxy [" + entityName + "#" + id + "] is associated with an open session."
 			);

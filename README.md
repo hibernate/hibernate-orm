@@ -5,18 +5,32 @@
 
 This is a fork of Hibernate ORM (http://github.com/hibernate/hibernate-orm) to allow testing of NuoDB's Hibernate dialect.  The tests of interest are the matrix tests (which allow testing against multiple databases). Unfortunately the section on Matrix testing (in the original README below) is yet to be written.
 
-To run the matrix tests for NuoDB execute `gradle clean hibernate-core:matrix_nuodb`.  To setup gradle, see below.  The expected output is
+To run the matrix tests for NuoDB:
 
-```
-5953 tests completed, 1072 failed, 798 skipped
-```
+1. first make sure you have the hibernate5 dialect jar available:
+
+   * clone https://github.com/nuodb/HibernateDialect5
+   * Run `mvn install` - see [project README](https://github.com/nuodb/HibernateDialect5/blob/master/README.md)
+ 
+1. Tell gradle where this dependency can be found:
+   ```
+   export ADDITIONAL_REPO=~/.m2/repository/com/nuodb/hibernate/nuodb-hibernate/3.3.0-hib5.  (Linux/MAcOS)
+   set ADDITIONAL_REPO=~/.m2/repository/com/nuodb/hibernate/nuodb-hibernate/3.3.0-hib5 (Windows)
+   ```
+
+1. Run tests:
+
+   * Execute `gradle clean hibernate-core:matrix_nuodb`.  To setup gradle, see below.  The expected output is
+
+   ```
+   6935 tests completed, 171 failed, 824 skipped
+   ```
 
 Please note that even if NuoDB is not available, 3603 tests complete, 1922 fail, and 801 are skipped. So 880 tests pass without using the database because the tests are intended for testing Hibernate not the underlying database.  We are just piggybacking on them for convenience.
 
-DB 
 Changes made:
 
-1. Added `mavenLocal()` to `build.gradle` to pick up the NuoDB dialect under test.
+1. Added `compile('com.nuodb.hibernate:nuodb-hibernate:3.3.0-hib5')` to `hibernate-core/hibernate-core.gradle` to pick up the NuoDB dialect under test.
 2. Added `databases/nuodb` to define dependencies and configuration required to use NuoDB.
 
 To configure NuoDB

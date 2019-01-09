@@ -5,9 +5,11 @@
 
 This is a fork of Hibernate ORM (http://github.com/hibernate/hibernate-orm) to allow testing of NuoDB's Hibernate dialect.  The tests of interest are the matrix tests (which allow testing against multiple databases). Unfortunately the section on Matrix testing (in the original README below) is yet to be written.
 
+## Running Tests
+
 To run the matrix tests for NuoDB:
 
-1. first make sure you have the hibernate5 dialect jar available:
+1. Firstly make sure you have our Hibernate 5 dialect jar available:
 
    * clone https://github.com/nuodb/HibernateDialect5
    * Run `mvn install` - see [project README](https://github.com/nuodb/HibernateDialect5/blob/master/README.md)
@@ -37,6 +39,15 @@ To configure NuoDB
 
 1. Set the versions of NuoDB's JDBC and Dialect Jars in  [`databases/nuodb/matrix.gradle`](databases/nuodb/matrix.gradle)
 2. To configure the NuoDB data source modify [`databases/nuodb/resources/hibernate.properties`](databases/nuodb/resources/hibernate.properties)
+
+## To Run in IntelliJ
+
+It is possible to run the tests in IntelliH (Eclipse's gradle support can't handle this project).
+
+Open as a gradle project in IntelliJ in the usual way.
+
+To force it to use NuoDB: `cp databases/nuodb/resources/hibernate.properties hibernate-core/out/test/resources/hibernate.properties`.
+
 
 # Original README
 

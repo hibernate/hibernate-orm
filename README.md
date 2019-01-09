@@ -1,5 +1,30 @@
-<img src="http://static.jboss.org/hibernate/images/hibernate_logo_whitebkg_200px.png" />
 
+<img src="http://static.jboss.org/hibernate/images/hibernate_logo_whitebkg_200px.png" />  <img align="right" height="50" src="https://www.nuodb.com/sites/all/themes/nuodb/logo.svg" /> 
+
+# Hibernate and NuoDB
+
+This is a fork of Hibernate ORM (http://github.com/hibernate/hibernate-orm) to allow testing of NuoDB's Hibernate dialect.  The tests of interest are the matrix tests (which allow testing against multiple databases). Unfortunately the section on Matrix testing (in the original README below) is yet to be written.
+
+To run the matrix tests for NuoDB execute `gradle clean hibernate-core:matrix_nuodb`.  To setup gradle, see below.  The expected output is
+
+```
+5953 tests completed, 1072 failed, 798 skipped
+```
+
+Please note that even if NuoDB is not available, 3603 tests complete, 1922 fail, and 801 are skipped. So 880 tests pass without using the database because the tests are intended for testing Hibernate not the underlying database.  We are just piggybacking on them for convenience.
+
+DB 
+Changes made:
+
+1. Added `mavenLocal()` to `build.gradle` to pick up the NuoDB dialect under test.
+2. Added `databases/nuodb` to define dependencies and configuration required to use NuoDB.
+
+To configure NuoDB
+
+1. Set the versions of NuoDB's JDBC and Dialect Jars in  [`databases/nuodb/matrix.gradle`](databases/nuodb/matrix.gradle)
+2. To configure the NuoDB data source modify [`databases/nuodb/resources/hibernate.properties`](databases/nuodb/resources/hibernate.properties)
+
+# Original README
 
 Hibernate ORM is a library providing Object/Relational Mapping (ORM) support
 to applications, libraries, and frameworks.

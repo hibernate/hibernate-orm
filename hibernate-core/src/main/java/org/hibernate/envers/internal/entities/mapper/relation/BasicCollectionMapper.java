@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.metamodel.Type;
+
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
@@ -23,6 +25,8 @@ import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.BasicCollectionInitializor;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+import org.hibernate.metamodel.model.domain.spi.CollectionElement;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
 /**
@@ -119,7 +123,7 @@ public class BasicCollectionMapper<T extends Collection> extends AbstractCollect
 			for ( Object oldEntry : oldCollection ) {
 				for ( Iterator itor = addedElements.iterator(); itor.hasNext(); ) {
 					Object newEntry = itor.next();
-					if ( isSame( collectionDescriptor, oldEntry, newEntry ) ) {
+					if ( isCollectionElementSame( session, collectionDescriptor, oldEntry, newEntry ) ) {
 						itor.remove();
 						break;
 					}
@@ -131,8 +135,8 @@ public class BasicCollectionMapper<T extends Collection> extends AbstractCollect
 		if ( newColl != null ) {
 			for ( Object newEntry : newCollection ) {
 				for ( Iterator itor = deleteElements.iterator(); itor.hasNext(); ) {
-					Object deleteEntry = itor.next();
-					if ( isSame( collectionDescriptor, deleteEntry, newEntry ) ) {
+					Object deletedEntry = itor.next();
+					if ( isCollectionElementSame( session, collectionDescriptor, deletedEntry, newEntry ) ) {
 						itor.remove();
 						break;
 					}
@@ -144,5 +148,74 @@ public class BasicCollectionMapper<T extends Collection> extends AbstractCollect
 		addCollectionChanges( session, collectionChanges, deleteElements, RevisionType.DEL, id );
 
 		return collectionChanges;
+	}
+
+	@SuppressWarnings("unchecked")
+	private boolean isCollectionElementSame(
+			SessionImplementor session,
+			PersistentCollectionDescriptor collectionDescriptor,
+			Object lhs,
+			Object rhs) {
+		final CollectionElement element = collectionDescriptor.getElementDescriptor();
+
+		// If the collection element is an Entity association but the collection does not include the
+		// REVTYPE column as a part of the primary key, special care must be taken in order to assess
+		// whether the element actually changed.
+		//
+		// Previously we delegated to the element type, which for entity-based collections would be
+		// EntityType.  The EntityType#isSame method results in only a reference equality check.  This
+		// would result in both an ADD/DEL entry trying to be saved for the same entity identifier
+		// under certain circumstances.  While we generally agree with this ORM assessment, this
+		// leads to HHH-13080 which ultimately is because REVTYPE is not part of the middle entity
+		// table's primary key.
+		//
+		// For 5.x, rather than impose schema changes mid-major release, we're going to explore this
+		// compromise for now where we're going to treat EntityType-based collections in a slightly
+		// different way by delegating the equality check to the entity identifier instead.  This
+		// ultimately means that the equality check will leverage both reference and value equality
+		// since identifiers can be basic or composite types.
+		//
+		// In the end for 5.x, this means if an entity is removed from the collection and added
+		// back with the same identifier, we will treat it as a no-change for now to avoid the
+		// problem presented in HHH-13080.
+		//
+		// todo (6.0) - support REVTYPE as part of the primary key.
+		//		What we actually want to do here is to introduce a legacy compat flag that we check
+		//		when we generate the mapper that influences whether the revisionTypeInId value is
+		//		true or false.  When its set to true, we actually will treat all element types,
+		//		regardless if they're entity, embeddables, or basic types equally.
+		//
+		//		As an example, if a collection is cleared and instances are added back and it just
+		//		so happens that those instances ahve the same entity identifier but aren't reference
+		//		equal to the original collection elements, Envers will then actually treat that as
+		//		a series of DEL followed by ADD operations for those elements, which ultimately is
+		//		the right behavior.  But that only works if REVTYPE is part of the primary key so
+		//		that the tuple { owner_id, entity_id, rev, rev_type } differ for the two types of
+		//		revision type operations.
+		//
+		//		Currently the tuple is { owner_id, entity_id, rev } and so having this special
+		//		treatment is critical to avoid HHH-13080.
+		//
+		if ( Type.PersistenceType.ENTITY.equals( element.getPersistenceType() ) && !revisionTypeInId ) {
+
+			// This is a short-circuit to check for reference equality only.
+			// There is no need to delegate to the identifier if the objects are reference equal.
+			if ( isSame( collectionDescriptor, lhs, rhs ) ) {
+				return true;
+			}
+
+			final EntityTypeDescriptor entityDescriptor = session.getFactory()
+					.getMetamodel()
+					.findEntityDescriptor( element.getJavaType() );
+
+			final Object lhsId = entityDescriptor.getIdentifier( lhs, session );
+			final Object rhsId = entityDescriptor.getIdentifier( rhs, session );
+
+			// Since the two instances aren't reference equal, delegate to identifier now.
+			return entityDescriptor.getIdentifierDescriptor().getJavaTypeDescriptor().areEqual( lhsId, rhsId );
+		}
+
+		// for element types that aren't entities (aka embeddables/basic types), use legacy behavior.
+		return isSame( collectionDescriptor, lhs, rhs );
 	}
 }

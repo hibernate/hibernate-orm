@@ -232,7 +232,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 				throw new LazyInitializationException( e.getMessage() );
 			}
 		}
-		else if ( session.isOpen() && session.isConnected() ) {
+		else if ( session.isOpenOrWaitingForAutoClose() && session.isConnected() ) {
 			target = session.immediateLoad( entityName, id );
 			initialized = true;
 			checkTargetState(session);
@@ -250,7 +250,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	 * of that session since the proxy was created.
 	 */
 	public final void initializeWithoutLoadIfPossible() {
-		if ( !initialized && session != null && session.isOpen() ) {
+		if ( !initialized && session != null && session.isOpenOrWaitingForAutoClose() ) {
 			final EntityKey key = session.generateEntityKey(
 					getIdentifier(),
 					session.getFactory().getMetamodel().entityPersister( getEntityName() )
@@ -298,7 +298,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 
 	private Object getProxyOrNull() {
 		final EntityKey entityKey = generateEntityKeyOrNull( getIdentifier(), session, getEntityName() );
-		if ( entityKey != null && session != null && session.isOpen() ) {
+		if ( entityKey != null && session != null && session.isOpenOrWaitingForAutoClose() ) {
 			return session.getPersistenceContext().getProxy( entityKey );
 		}
 		return null;

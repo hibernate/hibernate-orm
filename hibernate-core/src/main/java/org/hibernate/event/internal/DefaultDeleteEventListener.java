@@ -131,6 +131,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 					persister,
 					false
 			);
+			persister.afterReassociate( entity, source );
 		}
 		else {
 			LOG.trace( "Deleting a persistent instance" );

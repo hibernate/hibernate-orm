@@ -85,24 +85,17 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 		generate();
 	}
 
-	/**
-	 * Constructs an EntityLoadQueryDetails object from an initial object and new building parameters,
-	 * with the guarantee that only batch size changed between the initial parameters and the new ones.
-	 *
-	 * @param initialEntityLoadQueryDetails The initial object to be copied
-	 * @param buildingParameters The new building parameters, with only the batch size being different
-	 * from the parameters used in the initial object.
-	 */
 	protected EntityLoadQueryDetails(
 			EntityLoadQueryDetails initialEntityLoadQueryDetails,
 			QueryBuildingParameters buildingParameters) {
-		super(
-				initialEntityLoadQueryDetails,
-				buildingParameters
+		this(
+				initialEntityLoadQueryDetails.getLoadPlan(),
+				initialEntityLoadQueryDetails.getKeyColumnNames(),
+				new AliasResolutionContextImpl( initialEntityLoadQueryDetails.getSessionFactory() ),
+				(EntityReturn) initialEntityLoadQueryDetails.getRootReturn(),
+				buildingParameters,
+				initialEntityLoadQueryDetails.getSessionFactory()
 		);
-		this.entityReferenceAliases = initialEntityLoadQueryDetails.entityReferenceAliases;
-		this.readerCollector = initialEntityLoadQueryDetails.readerCollector;
-		generate();
 	}
 
 	public boolean hasCollectionInitializers() {

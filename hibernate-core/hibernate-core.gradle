@@ -47,6 +47,14 @@ dependencies {
     compile( libraries.classmate )
     compile( libraries.activation )
 
+
+    compile('com.nuodb.hibernate:nuodb-hibernate:3.3.0-hib5')
+
+    // We need dom4j for a number of things temporarily:
+    //      1) (unsupported) EntityMode.DOM4J support
+    //      2) Envers
+    //      3) hibernate-commons-annotations
+    compile( libraries.dom4j )
     compile( libraries.commons_annotations )
     antlr( libraries.antlr )
 
@@ -93,7 +101,7 @@ dependencies {
     testRuntime( libraries.weld )
     testRuntime( libraries.atomikos )
     testRuntime( libraries.atomikos_jta )
-    testRuntime(libraries.wildfly_transaction_client)
+    testRuntime( libraries.wildfly_transaction_client )
 
     testAnnotationProcessor( project( ':hibernate-jpamodelgen' ) )
 
@@ -157,6 +165,43 @@ jar {
                 ].join( ',' ),
         )
     }
+}
+
+ext {
+	jaxbTargetDir = file( "${buildDir}/generated-src/jaxb/main" )
+	
+	// For ECLIPSE/STS
+	javaMainTargetDir = file( "${buildDir}/classes/java/main" )
+	javaTestTargetDir = file( "${buildDir}/classes/test/main" )
+	aptMainTargetDir = file( "${buildDir}/generated-src/apt/main" )
+	aptTestTargetDir = file( "${buildDir}/generated-src/apt/test" )
+	docuSrcDir = file( "${buildDir}/../../documentation/src/main/java" )
+	docuGenTargetDir = file( "${buildDir}/../../documentation/target/generated-src/apt/main" )
+	enversSrcDir = file( "${buildDir}/../../hibernate-envers/src/main/java" )
+	enversGenTargetDir = file( "${buildDir}/../../hibernate-envers/target/generated-src/apt/main" )
+	// END
+}
+
+sourceSets.main {
+    //java.srcDir project.jaxbTargetDir
+    
+    java.srcDirs += [
+    	project.jaxbTargetDir,
+
+     	project.javaMainTargetDir,
+  	 	project.javaTestTargetDir,
+     	project.aptMainTargetDir,
+     	project.aptTestTargetDir,
+     	project.docuSrcDir, 
+     	project.docuGenTargetDir,
+     	project.enversSrcDir,
+		project.enversGenTargetDir ]
+
+}
+
+// resources inherently exclude sources
+sourceSets.test.resources {
+    setSrcDirs( ['src/test/java','src/test/resources'] )
 }
 
 //idea {

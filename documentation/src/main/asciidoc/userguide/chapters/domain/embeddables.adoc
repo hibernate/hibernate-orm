@@ -55,7 +55,7 @@ JPA defines two terms for working with an embeddable type: `@Embeddable` and `@E
 
 `@Embeddable` is used to describe the mapping type itself (e.g. `Publisher`).
 
-`@Embedded` is for referencing a given embeddable type (e.g. `book#publisher`).
+`@Embedded` is for referencing a given embeddable type (e.g. `book.publisher`).
 ====
 
 So, the embeddable type is represented by the `Publisher` class and
@@ -140,7 +140,7 @@ include::{extrasdir}/embeddable/embeddable-type-override-mapping-example.sql[]
 
 [IMPORTANT]
 ====
-This is a Hibernate specific feature.
+The `ImplicitNamingStrategyComponentPathImpl` is a Hibernate-specific feature.
 Users concerned with JPA provider portability should instead prefer explicit column naming with `@AttributeOverride`.
 ====
 

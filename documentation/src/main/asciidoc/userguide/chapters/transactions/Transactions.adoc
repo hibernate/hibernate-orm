@@ -39,7 +39,8 @@ or provide a custom `org.hibernate.resource.transaction.TransactionCoordinatorBu
 
 [NOTE]
 ====
-For details on implementing a custom `TransactionCoordinatorBuilder`, or simply better understanding how it works, see the Integrations Guide.
+For details on implementing a custom `TransactionCoordinatorBuilder`, or simply better understanding how it works, see the
+http://docs.jboss.org/hibernate/orm/{majorMinorVersion}/integrationguide/html_single/Hibernate_Integration_Guide.html[Integration Guide] .
 ====
 
 Hibernate uses JDBC connections and JTA resources directly, without adding any additional locking behavior.
@@ -50,8 +51,10 @@ The Hibernate `Session` acts as a transaction-scoped cache providing repeatable 
 [IMPORTANT]
 ====
 To reduce lock contention in the database, the physical database transaction needs to be as short as possible.
+
 Long-running database transactions prevent your application from scaling to a highly-concurrent load.
 Do not hold a database transaction open during end-user-level work, but open it after the end-user-level work is finished.
+
 This concept is referred to as `transactional write-behind`.
 ====
 
@@ -202,6 +205,7 @@ Avoid auto-commit behavior for reading data because many small transactions are 
 [NOTE]
 ====
 Using auto-commit does not circumvent database transactions.
+
 Instead, when in auto-commit mode, JDBC drivers simply perform each call in an implicit transaction call.
 It is as if your application called commit after each and every JDBC call.
 ====

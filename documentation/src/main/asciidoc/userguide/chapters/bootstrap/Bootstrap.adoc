@@ -10,13 +10,6 @@ The term bootstrapping refers to initializing and starting a software component.
 In Hibernate, we are specifically talking about the process of building a fully functional `SessionFactory` instance or `EntityManagerFactory` instance, for JPA.
 The process is very different for each.
 
-[NOTE]
-====
-This chapter will not focus on all the possibilities of bootstrapping.
-Those will be covered in each specific more-relevant chapters later on.
-Instead, we focus here on the API calls needed to perform the bootstrapping.
-====
-
 [TIP]
 ====
 During the bootstrap process, you might want to customize Hibernate behavior so make sure you check the <<appendices/Configurations.adoc#configurations,Configurations>> section as well.
@@ -47,7 +40,7 @@ This is a very powerful service, but a full discussion of it is beyond the scope
 [NOTE]
 ====
 If you are ok with the default behavior of Hibernate in regards to these `BootstrapServiceRegistry` services
-(which is quite often the case, especially in stand-alone environments), then building the `BootstrapServiceRegistry` can be skipped.
+(which is quite often the case, especially in stand-alone environments), then you don't need to explicitly build the `BootstrapServiceRegistry`.
 ====
 
 If you wish to alter how the `BootstrapServiceRegistry` is built, that is controlled through the `org.hibernate.boot.registry.BootstrapServiceRegistryBuilder:`

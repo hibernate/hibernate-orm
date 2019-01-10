@@ -135,7 +135,7 @@ To be clear: this is only pertinent for mutable natural ids.
 [IMPORTANT]
 ====
 This _discovery and adjustment_ have a performance impact.
-If an application is certain that none of its mutable natural ids already associated with the Session have changed, it can disable that checking by calling `setSynchronizationEnabled(false)` (the default is true).
+If you are certain that none of the mutable natural ids already associated with the current `Session` have changed, you can disable this checking by calling `setSynchronizationEnabled(false)` (the default is `true`).
 This will force Hibernate to circumvent the checking of mutable natural ids.
 ====
 

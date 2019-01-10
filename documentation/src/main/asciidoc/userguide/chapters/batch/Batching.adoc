@@ -38,7 +38,7 @@ The following settings control this behavior.
 
 [NOTE]
 ====
-Since version 5.2, Hibernate allows overriding the global JDBC batch size given by the `hibernate.jdbc.batch_size` configuration property for a given `Session`.
+Since version 5.2, Hibernate allows overriding the global JDBC batch size given by the `hibernate.jdbc.batch_size` configuration property on a per `Session` basis.
 ====
 
 [[batch-session-jdbc-batch-size-example]]
@@ -73,7 +73,7 @@ There are several problems associated with this example:
 . JDBC batching is not enabled by default, so every insert statement requires a database roundtrip.
   To enable JDBC batching, set the `hibernate.jdbc.batch_size` property to an integer between 10 and 50.
 
-[NOTE]
+[IMPORTANT]
 ====
 Hibernate disables insert batching at the JDBC level transparently if you use an identity identifier generator.
 ====
@@ -175,7 +175,7 @@ DELETE FROM EntityName e WHERE e.name = ?
 
 [NOTE]
 ====
-The `FROM` and `WHERE` clauses are each optional, but it's good practice to use them.
+Although the `FROM` and `WHERE` clauses are optional, it is good practice to declare them explicitly.
 ====
 
 The `FROM` clause can only refer to a single entity, which can be aliased.
@@ -220,7 +220,7 @@ include::{sourcedir}/BatchTest.java[tags=batch-bulk-hql-update-version-example]
 
 [NOTE]
 ====
-If you use the `VERSIONED` statement, you cannot use custom version types, which use class `org.hibernate.usertype.UserVersionType`.
+If you use the `VERSIONED` statement, you cannot use custom version types that implement the `org.hibernate.usertype.UserVersionType`.
 
 This feature is only available in HQL since it's not standardized by JPA.
 ====
@@ -394,7 +394,7 @@ So, the entity identifiers are selected first and used for each particular updat
 [TIP]
 ====
 The IN clause row value expression has long been supported by Oracle, PostgreSQL, and nowadays by MySQL 5.7.
-However, SQL Server 2014 does not support this syntax, so you'll have to use a different strategy.
+However, SQL Server 2014 does not support it, so you'll have to use a different strategy.
 ====
 
 [[batch-bulk-hql-strategies-InlineIdsSubSelectValueListBulkIdStrategy]]
@@ -422,8 +422,8 @@ include::{extrasdir}/batch-bulk-hql-InlineIdsSubSelectValueListBulkIdStrategy-de
 
 [TIP]
 ====
-The underlying database must support the VALUES list clause, like PostgreSQL or SQL Server 2008.
-However, this strategy requires the IN-clause row value expression for composite identifiers so you can use this strategy only with PostgreSQL.
+The underlying database must support the `VALUES` list clause, like PostgreSQL or SQL Server 2008.
+However, this strategy requires the IN-clause row value expression for composite identifiers, and for this reason, you can only use the `InlineIdsSubSelectValueListBulkIdStrategy` strategy with PostgreSQL.
 ====
 
 [[batch-bulk-hql-strategies-InlineIdsOrClauseBulkIdStrategy]]
@@ -451,7 +451,7 @@ include::{extrasdir}/batch-bulk-hql-InlineIdsOrClauseBulkIdStrategy-delete-query
 
 [TIP]
 ====
-This strategy has the advantage of being supported by all the major relational database systems (e.g. Oracle, SQL Server, MySQL, and PostgreSQL).
+The `InlineIdsOrClauseBulkIdStrategy` strategy has the advantage of being supported by all the major relational database systems (e.g. Oracle, SQL Server, MySQL, and PostgreSQL).
 ====
 
 [[batch-bulk-hql-strategies-CteValuesListBulkIdStrategy]]
@@ -479,7 +479,8 @@ include::{extrasdir}/batch-bulk-hql-CteValuesListBulkIdStrategy-delete-query-exa
 
 [TIP]
 ====
-The underlying database must support the CTE (Common Table Expressions) that can be referenced from non-query statements as well, like PostgreSQL since 9.1 or SQL Server since 2005.
+The underlying database must support CTE (Common Table Expressions) that can be referenced from non-query statements as well. For instance, PostgreSQL supports this feature since version 9.1 and SQL Server offers support for it since version 2005.
+
 The underlying database must also support the VALUES list clause, like PostgreSQL or SQL Server 2008.
 
 However, this strategy requires the IN-clause row value expression for composite identifiers, so you can only use this strategy only with PostgreSQL.

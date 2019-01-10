@@ -9,7 +9,7 @@ JPQL is a heavily-inspired-by subset of HQL.
 A JPQL query is always a valid HQL query, the reverse is not true, however.
 
 Both HQL and JPQL are non-type-safe ways to perform query operations.
-Criteria queries offer a type-safe approach to querying.  See <<chapters/query/criteria/Criteria.adoc#criteria,Criteria>> for more information.
+Criteria queries offer a type-safe approach to querying. See <<chapters/query/criteria/Criteria.adoc#criteria,Criteria>> for more information.
 
 [[hql-examples-domain-model]]
 === Example domain model
@@ -162,7 +162,7 @@ include::{sourcedir}/HQLTest.java[tags=jpql-api-positional-parameter-example]
 
 [NOTE]
 ====
-It's good practice not to mix forms in a given query.
+It's good practice not to mix parameter binding forms in a given query.
 ====
 
 In terms of execution, JPA `Query` offers 2 different methods for retrieving a result set.
@@ -285,22 +285,16 @@ include::{sourcedir}/HQLTest.java[tags=hql-api-parameter-short-form-example]
 ----
 ====
 
-HQL-style positional parameters follow JDBC positional parameter syntax.
-They are declared using `?` without a following ordinal.
-There is no way to relate two such positional parameters as being "the same" aside from binding the same value to each.
-
-[[hql-api-positional-parameter-example]]
-.Hibernate positional parameter binding
+[IMPORTANT]
 ====
+Traditionally, Hibernate used to support a JDBC positional parameter syntax form via a `?` symbol without a following ordinal.
+
+There was no way to relate two such positional parameters as being "the same" aside from binding the same value to each and, for this reason, this form is no longer supported.
+
 [source, JAVA, indent=0]
 ----
 include::{sourcedir}/HQLTest.java[tags=hql-api-positional-parameter-example]
 ----
-====
-
-[IMPORTANT]
-====
-This form should be considered deprecated and may be removed in the near future.
 ====
 
 In terms of execution, Hibernate offers 4 different methods. The 2 most commonly used are
@@ -428,7 +422,7 @@ So `SeLeCT` is the same as `sELEct` is the same as `SELECT`, but `org.hibernate.
 
 [NOTE]
 ====
-This documentation uses lowercase keywords as a convention in examples.
+This documentation uses lowercase keywords as a convention in query examples.
 ====
 
 [[hql-statement-types]]
@@ -510,7 +504,7 @@ This is achieved by adding the `VERSIONED` keyword after the `UPDATE` keyword.
 
 [NOTE]
 ====
-This is a Hibernate specific feature and will not work in a portable manner.
+Versioned updates is a Hibernate-specific feature and will not work in a portable manner.
 
 Custom version types, `org.hibernate.usertype.UserVersionType`, are not allowed in conjunction with an `update versioned` statement.
 ====
@@ -564,7 +558,7 @@ HQL adds the ability to define `INSERT` statements as well.
 
 [NOTE]
 ====
-There is no JPQL equivalent to this.
+There is no JPQL equivalent to HQL-style INSERT statements.
 ====
 
 The BNF for an HQL `INSERT` statement is:
@@ -709,7 +703,7 @@ HQL also defines a `WITH` clause to qualify the join conditions.
 
 [NOTE]
 ====
-This is specific to HQL. JPQL defines the `ON` clause for this feature.
+The HQL-style WITH keyword is specific to Hibernate. JPQL defines the `ON` clause for this feature.
 ====
 
 [[hql-explicit-join-with-example]]
@@ -1504,9 +1498,9 @@ include::{sourcedir}/HQLTest.java[tags=hql-entity-type-exp-example]
 
 [NOTE]
 ====
-HQL also has a legacy form of referring to an entity type, though that legacy form is considered deprecated in favor of `TYPE`.
-The legacy form would have used `p.class` in the examples rather than `type(p)`.
-It is mentioned only for completeness.
+HQL also has a legacy form of referring to an entity type using the `class` keyword, though that legacy form is considered deprecated in favor of `TYPE`.
+
+The legacy form would have used `p.class` in the examples rather than `type(p)`. It is mentioned only for completeness.
 ====
 
 [[hql-case-expressions]]
@@ -1619,12 +1613,13 @@ include::{sourcedir}/HQLTest.java[tags=hql-select-clause-dynamic-instantiation-e
 
 [NOTE]
 ====
-The class reference must be fully qualified and it must have a matching constructor.
+The projection class must be fully qualified in the entity query, and it must define a matching constructor.
 ====
 
 [IMPORTANT]
 ====
-The class here need not be mapped.
+The class here need not be mapped. It can be a DTO class.
+
 If it does represent an entity, the resulting instances are returned in the NEW state (not managed!).
 ====
 
@@ -1847,7 +1842,7 @@ If that following predicate is true, the NOT resolves to false.
 
 [NOTE]
 ====
-If the predicate is true, NOT resolves to false. If the predicate is unknown (e.g. `NULL`), the NOT resolves to unknown as well.
+If the predicate is true, NOT resolves to false. If the predicate is unknown (e.g. `NULL`), then NOT resolves to unknown as well.
 ====
 
 [[hql-and-predicate]]

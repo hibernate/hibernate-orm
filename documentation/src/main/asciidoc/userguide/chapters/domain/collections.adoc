@@ -37,6 +37,7 @@ include::{sourcedir}/BasicTypeElementCollectionTest.java[tags=collections-collec
 [NOTE]
 ====
 It is important that collections be defined using the appropriate Java Collections Framework interface rather than a specific implementation.
+
 From a theoretical perspective, this just follows good design principles.
 From a practical perspective, Hibernate (like other persistence providers) will use their own collection implementations which conform to the Java Collections Framework interfaces.
 ====
@@ -195,7 +196,8 @@ include::{extrasdir}/collections-unidirectional-bag-example.sql[]
 [NOTE]
 ====
 Because both the parent and the child sides are entities, the persistence context manages each entity separately.
-Cascades can propagate an entity state transition from a parent entity to its children.
+
+The cascading mechanism allows you to propagate an entity state transition from a parent entity to its children.
 ====
 
 By marking the parent side with the `CascadeType.ALL` attribute, the unidirectional association lifecycle becomes very similar to that of a value type collection.
@@ -219,7 +221,8 @@ In the example above, once the parent entity is persisted, the child entities ar
 [NOTE]
 ====
 Just like value type collections, unidirectional bags are not as efficient when it comes to modifying the collection structure (removing or reshuffling elements).
-Because the parent-side cannot uniquely identify each individual child, Hibernate might delete all child table rows associated with the parent entity and re-add them according to the current collection state.
+
+Because the parent-side cannot uniquely identify each individual child, Hibernate deletes all link table rows associated with the parent entity and re-adds the remaining ones that are found in the current collection state.
 ====
 
 [[collections-bidirectional-bag]]
@@ -470,7 +473,8 @@ The only difference is that `Set` doesn't allow duplicates, but this constraint 
 
 [NOTE]
 ====
-When using sets, it's very important to supply proper equals/hashCode implementations for child entities.
+When using Sets, it's very important to supply proper equals/hashCode implementations for child entities.
+
 In the absence of a custom equals/hashCode implementation logic, Hibernate will use the default Java reference-based object equality which might render unexpected results when mixing detached and managed object instances.
 ====
 
@@ -605,8 +609,7 @@ The `call_timestamp_epoch` column stores the phone call timestamp as a Unix time
 
 [NOTE]
 ====
-The `@MapKeyColumn` annotation is used to define the table column holding the key
-while the `@Column` mapping gives the value of the `java.util.Map` in question.
+The `@MapKeyColumn` annotation is used to define the table column holding the key while the `@Column` mapping gives the value of the `java.util.Map` in question.
 ====
 
 Since we want to map all the calls by their associated `java.util.Date`, not by their timestamp since epoch which is a number, the entity mapping looks as follows:

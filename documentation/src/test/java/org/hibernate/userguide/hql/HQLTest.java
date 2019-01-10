@@ -43,6 +43,7 @@ import org.hibernate.userguide.model.PhoneType;
 import org.hibernate.userguide.model.WireTransferPayment;
 
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
@@ -776,7 +777,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		});
 	}
 
-	@Test
+	@Test(expected = IllegalArgumentException.class)
 	public void test_hql_api_positional_parameter_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Date timestamp = new Date(  );
@@ -785,7 +786,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			org.hibernate.query.Query query = session.createQuery(
 				"select p " +
 				"from Person p " +
-				"where p.name like ?1" )
+				"where p.name like ?" )
 			.setParameter( 1, "J%" );
 			//end::hql-api-positional-parameter-example[]
 		});

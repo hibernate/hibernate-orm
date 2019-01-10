@@ -44,7 +44,7 @@ Otherwise, the no-arg form is used.
 
 [IMPORTANT]
 ====
-To use this integration, the application must include the hibernate-c3p0 module jar (as well as its dependencies) on the classpath.
+To use the c3p0 integration, the application must include the `hibernate-c3p0` module jar (as well as its dependencies) on the classpath.
 ====
 
 Hibernate also provides support for applications to use http://www.mchange.com/projects/c3p0/[c3p0] connection pooling.
@@ -70,7 +70,7 @@ Any other settings prefixed with `c3p0.`:: Get passed to c3p0 as is. See http://
 
 [IMPORTANT]
 ====
-To use this integration, the application must include the hibernate-proxool module jar (as well as its dependencies) on the classpath.
+To use the Proxool integration, the application must include the `hibernate-proxool` module jar (as well as its dependencies) on the classpath.
 ====
 
 Hibernate also provides support for applications to use http://proxool.sourceforge.net/[Proxool] connection pooling.
@@ -102,7 +102,7 @@ See http://proxool.sourceforge.net/configure.html[proxool  configuration].
 
 [IMPORTANT]
 ====
-To use this integration, the application must include the hibernate-hikari module jar (as well as its dependencies) on the classpath.
+To use the HikariCP this integration, the application must include the `hibernate-hikari` module jar (as well as its dependencies) on the classpath.
 ====
 
 Hibernate also provides support for applications to use http://brettwooldridge.github.io/HikariCP/[Hikari] connection pool.
@@ -123,7 +123,7 @@ Note that Hikari only supports JDBC standard isolation levels (apparently).
 
 [IMPORTANT]
 ====
-To use this integration, the application must include the hibernate-vibur module jar (as well as its dependencies) on the classpath.
+To use the Vibur DBCP integration, the application must include the `hibernate-vibur` module jar (as well as its dependencies) on the classpath.
 ====
 
 Hibernate also provides support for applications to use http://www.vibur.org/[Vibur DBCP] connection pool.
@@ -143,7 +143,7 @@ Additionally, this `ConnectionProvider` will pick up the following Hibernate-spe
 
 [IMPORTANT]
 ====
-To use this integration, the application must include the hibernate-agroal module jar (as well as its dependencies) on the classpath.
+To use the Agroal integration, the application must include the `hibernate-agroal` module jar (as well as its dependencies) on the classpath.
 ====
 
 Hibernate also provides support for applications to use http://agroal.github.io/[Agroal] connection pool.
@@ -218,7 +218,7 @@ when starting a new transaction, the `Connection` is acquired and the autocommit
 
 [NOTE]
 ====
-If you are using a connection pool `DataSource` that already disabled the autocommit mode for every pooled `Connection`, you can set the `hibernate.connection.provider_disables_autocommit` to `true` and the database connection acquisition will be, indeed, delayed until Hibernate needs to execute an SQL statement.
+If you are using a connection pool `DataSource` that already disabled the autocommit mode for every pooled `Connection`, you should set the `hibernate.connection.provider_disables_autocommit` to `true` and the database connection acquisition will be, indeed, delayed until Hibernate needs to execute the first SQL statement.
 ====
 
 ===== JTA transaction connection handling

@@ -140,7 +140,7 @@ In the mapping above, both the `name` and `clientId` table columns are going to 
 
 [NOTE]
 ====
-The entity is annotated with the `@DynamicInsert` annotation so that the `INSERT` statement does not include the entity attribute that have not been set.
+The `Person` entity above is annotated with the `@DynamicInsert` annotation so that the `INSERT` statement does not include any entity attribute that does not contain a value.
 ====
 
 This way, when omitting the `name` and the `clientId` attribute, the database is going to set them according to their default values.

@@ -23,8 +23,8 @@ You can create, modify and delete the entities as always.
 [IMPORTANT]
 ====
 The use of JPA's `CriteriaUpdate` and `CriteriaDelete` bulk operations are not currently supported by Envers
-due to how an entity's lifecycle events are dispatched.  Such operations should be avoided as they're not
-captured by Envers and leads to incomplete audit history.
+due to how an entity's lifecycle events are dispatched. Such operations should be avoided as they're not
+captured by Envers and lead to incomplete audit history.
 ====
 
 If you look at the generated schema for your entities, or at the data persisted by Hibernate, you will notice that there are no changes.
@@ -308,8 +308,7 @@ Should use legacy validity-based audit strategy's joined inheritance-based revis
 
 [IMPORTANT]
 ====
-The following configuration options have been added recently and should
-be regarded as experimental:
+The following configuration options have been added recently and should be regarded as experimental:
 
 .  `org.hibernate.envers.track_entities_changed_in_revision`
 .  `org.hibernate.envers.using_modified_flag`
@@ -346,7 +345,7 @@ you can set the `@AuditOverride( forClass = SomeEntity.class, isAudited = true/f
 
 [NOTE]
 ====
-The `@Audited` annotation also features an `auditParents` attribute but it's now deprecated in favor of `@AuditOverride`,
+The `@Audited` annotation also features an `auditParents` attribute but it's now deprecated in favor of `@AuditOverride`.
 ====
 
 [[envers-audit-strategy]]
@@ -429,7 +428,7 @@ include::{extrasdir}/envers-audited-validity-rev1-example.sql[]
 
 [NOTE]
 ====
-Compared to the default strategy, the `ValidityAuditStrategy` generates simpler queries that can render better execution plans.
+Compared to the default strategy, the `ValidityAuditStrategy` generates simpler queries that can render better SQL execution plans.
 ====
 
 [[envers-revisionlog]]
@@ -537,7 +536,7 @@ As demonstrated by the example above, the username is properly set and propagate
 
 [WARNING]
 ====
-**This strategy is deprecated since version 5.2.  The alternative is to use dependency injection offered as of version 5.3.**
+**This strategy is deprecated since version 5.2. The alternative is to use dependency injection offered as of version 5.3.**
 
 An alternative method to using the `org.hibernate.envers.RevisionListener` is to instead call the
 [line-through]#https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/AuditReader.html#getCurrentRevision-java.lang.Class-boolean-[`getCurrentRevision( Class<T> revisionEntityClass, boolean persist )`]#
@@ -555,7 +554,7 @@ The method accepts a `persist` parameter indicating whether the revision entity 
 As of Hibernate Envers 5.3, dependency injection is now supported for a `RevisionListener`.
 
 This feature is up to the various dependency frameworks, such as CDI and Spring, to supply the
-necessary implementation during Hibernate ORM bootstrap to support injection.  If no qualifying
+necessary implementation during Hibernate ORM bootstrap to support injection. If no qualifying
 implementation is supplied, the `RevisionListener` will be constructed without injection.
 ====
 
@@ -742,7 +741,7 @@ The queries on the audited data will be in many cases much slower than correspon
 as, especially for the default audit strategy, they involve correlated subselects.
 
 Queries are improved both in terms of speed and possibilities when using the validity audit strategy,
-which stores both start and end revisions for entities. See <<envers-audit-ValidityAuditStrategy>>.
+which stores both start and end revisions for entities. See <<envers-audit-ValidityAuditStrategy>> for a more detailed discussion.
 ====
 
 [[entities-at-revision]]
@@ -1283,7 +1282,7 @@ To use customized Envers event listeners, the following steps are needed:
 [NOTE]
 ====
 The use of `hibernate.listeners.envers.autoRegister` has been deprecated.
-A new configuration setting `hibernate.envers.autoRegisterListeners` should be used instead.
+The new `hibernate.envers.autoRegisterListeners` configuration setting should be used instead.
 ====
 
 [[envers-schema]]
@@ -1320,7 +1319,7 @@ The name of this table can be configured, the name of its columns as well as add
 
 [NOTE]
 ====
-While global revisions are a good way to provide correct auditing of relations, some people have pointed out that this may be a bottleneck in systems, where data is very often modified.
+While global revisions are a good way to provide correct auditing of relations, some people have pointed out that this may be a bottleneck in systems where data is very often modified.
 
 One viable solution is to introduce an option to have an entity "locally revisioned", that is revisions would be created for it independently.
 This would not enable correct versioning of relations, but it would work without the `REVINFO` table.

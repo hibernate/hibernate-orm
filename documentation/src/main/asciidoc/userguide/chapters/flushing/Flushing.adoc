@@ -58,7 +58,7 @@ Hibernate logs the message prior to inserting the entity because the flush only 
 ====
 This is valid for the `SEQUENCE` and `TABLE` identifier generators.
 The `IDENTITY` generator must execute the insert right after calling `persist()`.
-For details, see the discussion of generators in <<chapters/domain/identifiers.adoc#identifiers,_Identifier generators_>>.
+For more details, see the discussion of generators in <<chapters/domain/identifiers.adoc#identifiers,_Identifier generators_>>.
 ====
 
 ==== `AUTO` flush on JPQL/HQL query
@@ -234,7 +234,7 @@ The `INSERT` statement was not executed because the persistence context because 
 
 [NOTE]
 ====
-This mode is useful when using multi-request logical transactions, and only the last request should flush the persistence context.
+The `MANUAL` flush mode is useful when using multi-request logical transactions, and only the last request should flush the persistence context.
 ====
 
 [[flushing-order]]

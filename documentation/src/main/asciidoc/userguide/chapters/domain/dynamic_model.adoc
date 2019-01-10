@@ -7,7 +7,7 @@
 [IMPORTANT]
 ====
 JPA only acknowledges the entity model mapping so, if you are concerned about JPA provider portability, it's best to stick to the strict POJO model.
-On the other hand, Hibernate can work with both POJO entities as well as with dynamic entity models.
+On the other hand, Hibernate can work with both POJO entities and dynamic entity models.
 ====
 
 [[mapping-model-dynamic]]

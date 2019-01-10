@@ -15,9 +15,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.domain.gambit.EntityWithManyToOneWithoutJoinTable;
 import org.hibernate.testing.orm.domain.gambit.EntityWithOneToManyNotOwned;
-
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -120,7 +118,6 @@ public class EntityWithOneToManyWithoutJoinTableTest extends SessionFactoryBased
 	}
 
 	@Test
-	@Disabled("Update OneToMany association not yet implemented")
 	public void testUpdate() {
 		EntityWithOneToManyNotOwned owner = new EntityWithOneToManyNotOwned();
 		owner.setId( 1 );

@@ -275,7 +275,12 @@ public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> 
 			return null;
 		}
 
-		return (Object[]) list.get( 0 );
+		final int size = list.size();
+		final Object[] values = new Object[size];
+		for ( int i = 0; i < size; i++ ) {
+			values[i] = list.get( i );
+		}
+		return values;
 	}
 
 	private ExecutionContext getExecutionContext(Object id,SharedSessionContractImplementor session) {

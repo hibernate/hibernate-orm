@@ -70,7 +70,12 @@ allprojects {
 				dirs "${System.env.ADDITIONAL_REPO}"
 			}
 		}
-		mavenLocal()
+		else {
+			flatDir {
+				dirs "${System.env.HOME}/.m2/repository/com/nuodb/hibernate/nuodb-hibernate/3.3.0-hib5"
+			}
+		}
+		//mavenLocal()
 	}
 	apply plugin: 'idea'
 

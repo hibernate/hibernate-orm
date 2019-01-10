@@ -25,7 +25,7 @@ include::{sourcedir}/InterceptorTest.java[tags=events-interceptors-example]
 
 [NOTE]
 ====
-You can either implement `Interceptor` directly or extend `org.hibernate.EmptyInterceptor`.
+You can either implement `Interceptor` directly or extend the `org.hibernate.EmptyInterceptor` base class.
 ====
 
 An Interceptor can be either `Session`-scoped or `SessionFactory`-scoped.
@@ -68,7 +68,7 @@ be responsible for processing the `load()` requests made of the `Session`.
 
 [NOTE]
 ====
-The listeners should be considered stateless; they are shared between requests, and should not save any state as instance variables.
+The listeners should be considered stateless. They are shared between requests, and should not save any state as instance variables.
 ====
 
 A custom listener implements the appropriate interface for the event it wants to process and/or extend one of the convenience base classes

@@ -7,7 +7,8 @@ I like to think of `Configuration` as a big pot to which we add a bunch of stuff
 
 [NOTE]
 ====
-There are some significant draw backs to this approach which led to its deprecation and the development of the new approach, which is discussed in  <<chapters/bootstrap/Bootstrap.adoc#bootstrap-native,Native Bootstrapping>>.
+There are some significant drawbacks to the legacy bootstrapping mechanism which led to its deprecation and the development of the new approach, which is discussed in  <<chapters/bootstrap/Bootstrap.adoc#bootstrap-native,Native Bootstrapping>>.
+
 `Configuration` is semi-deprecated but still available for use, in a limited form that eliminates these drawbacks.
 "Under the covers", `Configuration` uses the new bootstrapping code, so the things available there as also available here in terms of auto-discovery.
 ====

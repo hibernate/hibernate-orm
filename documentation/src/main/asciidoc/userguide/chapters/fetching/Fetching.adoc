@@ -20,7 +20,7 @@ The concept of fetching breaks down into two different questions.
 
 [NOTE]
 ====
-"now" is generally termed eager or immediate. "later" is generally termed lazy or delayed.
+"Now" is generally termed eager or immediate while "later" is generally termed lazy or delayed.
 ====
 
 There are a number of scopes for defining fetching:
@@ -122,8 +122,10 @@ include::{sourcedir}/FetchingTest.java[tags=fetching-strategies-domain-model-exa
 
 [IMPORTANT]
 ====
-The Hibernate recommendation is to statically mark all associations lazy and to use dynamic fetching strategies for eagerness. 
-This is unfortunately at odds with the JPA specification which defines that all one-to-one and many-to-one associations should be eagerly fetched by default. 
+The Hibernate recommendation is to statically mark all associations lazy and to use dynamic fetching strategies for eagerness.
+
+This is unfortunately at odds with the JPA specification which defines that all one-to-one and many-to-one associations should be eagerly fetched by default.
+
 Hibernate, as a JPA provider, honors that default.
 ====
 
@@ -281,8 +283,8 @@ list of attribute names, optionally including any sub-graph specifications.
 
 [NOTE]
 ====
-Parsing a textual representation of a graph is not (yet) a part of the JPA specification.  So the
-syntax described here is specific to Hibernate.  We do hope to eventually make this syntax part of
+Parsing a textual representation of a graph is not (yet) a part of the JPA specification. So the
+syntax described here is specific to Hibernate. We do hope to eventually make this syntax part of
 the JPA specification proper.
 ====
 
@@ -645,5 +647,5 @@ include::{extrasdir}/fetching-LazyCollection-select-example.sql[]
 ====
 Therefore, the child entities were fetched one after the other without triggering a full collection initialization.
 
-For this reason, caution is advised because `LazyCollectionOption.EXTRA` lazy collections are prone to N+1 query issues.
+For this reason, caution is advised since accessing all elements using `LazyCollectionOption.EXTRA` can lead to N+1 query issues.
 ====

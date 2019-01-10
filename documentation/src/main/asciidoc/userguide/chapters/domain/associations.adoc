@@ -93,7 +93,7 @@ Upon removing a `Phone` from the phones collection, the association row is delet
 [NOTE]
 ====
 The unidirectional associations are not very efficient when it comes to removing child entities.
-In this particular example, upon flushing the persistence context, Hibernate deletes all database child entries and reinserts the ones that are still found in the in-memory persistence context.
+In the example above, upon flushing the persistence context, Hibernate deletes all database rows from the link table (e.g. `Person_Phone`) that are associated with the parent `Person` entity and reinserts the ones that are still found in the `@OneToMany` collection.
 
 On the other hand, a bidirectional `@OneToMany` association is much more efficient because the child entity controls the association.
 ====
@@ -123,6 +123,7 @@ include::{extrasdir}/associations-one-to-many-bidirectional-example.sql[]
 [IMPORTANT]
 ====
 Whenever a bidirectional association is formed, the application developer must make sure both sides are in-sync at all times.
+
 The `addPhone()` and `removePhone()` are utility methods that synchronize both ends whenever a child element is added or removed.
 ====
 
@@ -392,8 +393,9 @@ Because this mapping is formed out of two bidirectional associations, the helper
 
 [NOTE]
 ====
-The aforementioned example uses a Hibernate specific mapping for the link entity since JPA doesn't allow building a composite identifier out of multiple `@ManyToOne` associations.
-For more details, see the <<chapters/domain/identifiers.adoc#identifiers-composite-associations,Composite identifiers - associations>> section.
+The aforementioned example uses a Hibernate-specific mapping for the link entity since JPA doesn't allow building a composite identifier out of multiple `@ManyToOne` associations.
+
+For more details, see the <<chapters/domain/identifiers.adoc#identifiers-composite-associations,composite identifiers with associations>> section.
 ====
 
 The entity state transitions are better managed than in the previous bidirectional `@ManyToMany` case.
@@ -427,8 +429,7 @@ To ignore non-existing parent entity references, even though not really recommen
 
 [NOTE]
 ====
-`@ManyToOne` and `@OneToOne` associations annotated with `@NotFound(action = NotFoundAction.IGNORE)` are always fetched eagerly
-even if you set the `fetch` attribute to `FetchType.LAZY`.
+The `@ManyToOne` and `@OneToOne` associations that are annotated with `@NotFound(action = NotFoundAction.IGNORE)` are always fetched eagerly even if the `fetch` strategy is set to `FetchType.LAZY`.
 ====
 
 Considering the following `City` and `Person` entity mappings:
@@ -497,7 +498,6 @@ a metadata information for the associated entity type.
 
 [NOTE]
 ====
-It is impossible to specify a foreign key constraint for this kind of association.
 This is not the usual way of mapping polymorphic associations and you should use this only in special cases (e.g. audit logs, user session data, etc).
 ====
 
@@ -556,8 +556,7 @@ include::{sourcedir}/any/package-info.java[tags=associations-any-meta-def-exampl
 
 [NOTE]
 ====
-Although the `@AnyMetaDef` mapping could be set right next to the `@Any` annotation,
-if you need to reuse it, it's good practice to configure it at the class or package level.
+Although the `@AnyMetaDef` mapping could be set right next to the `@Any` annotation, it is good practice to configure it at the class or package level, especially if you  need to reuse it for multiple `@Any` mappings.
 ====
 
 To see the `@Any` annotation in action, consider the next examples.

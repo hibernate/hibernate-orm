@@ -19,9 +19,9 @@ There are three main approaches to isolating information in these multitenant sy
 
 [NOTE]
 ====
-Each approach has pros and cons as well as specific techniques and considerations.
+Each multitenancy strategy has pros and cons as well as specific techniques and considerations.
 Such topics are beyond the scope of this documentation.
-Many resources exist which delve into these other topics, like http://msdn.microsoft.com/en-us/library/aa479086.aspx[this one] which does a great job of covering these topics.
+Many resources exist which delve into these other topics, like http://msdn.microsoft.com/en-us/library/aa479086.aspx[this one] which does a great job of covering this subject.
 ====
 
 [[multitenacy-separate-database]]
@@ -177,7 +177,7 @@ The key used to cache data encodes the tenant identifier.
 
 [NOTE]
 ====
-Currently, schema export will not really work with multitenancy. That may not change.
+Currently, schema export will not really work with multitenancy.
 
 The JPA expert group is in the process of defining multitenancy support for an upcoming version of the specification.
 ====

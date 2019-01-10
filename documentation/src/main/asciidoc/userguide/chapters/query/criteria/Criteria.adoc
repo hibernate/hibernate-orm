@@ -7,7 +7,8 @@ Criteria queries offer a type-safe alternative to HQL, JPQL and native SQL queri
 [IMPORTANT]
 ====
 Hibernate offers an older, legacy `org.hibernate.Criteria` API which should be considered deprecated.
-No feature development will target those APIs. Eventually, Hibernate-specific criteria features will be ported as extensions to the JPA `javax.persistence.criteria.CriteriaQuery`.
+
+No feature development will target those APIs. Eventually, Hibernate-specific Criteria features will be ported as extensions to the JPA `javax.persistence.criteria.CriteriaQuery`.
 For details on the `org.hibernate.Criteria` API, see <<appendices/Legacy_Criteria.adoc#appendix-legacy-criteria, Legacy Hibernate Criteria Queries>>.
 
 This chapter will focus on the JPA APIs for declaring type-safe criteria queries.
@@ -35,7 +36,7 @@ Each serves a different purpose depending on the expected type of the query resu
 
 [NOTE]
 ====
-Chapter 6 Criteria API of the JPA Specification already contains a decent amount of reference material pertaining to the various parts of a criteria query.
+The chapter 6 (e.g. Criteria API) of the JPA Specification already contains a decent amount of reference material pertaining to the various parts of a criteria query.
 So rather than duplicate all that content here, let's instead look at some of the more widely anticipated usages of the API.
 ====
 
@@ -281,7 +282,7 @@ However, in order to define the fetching of _Phone#addresses_ we needed a `javax
 
 [NOTE]
 ====
-Roots, joins and fetches are themselves paths as well.
+Roots, joins and fetches are themselves path expressions as well.
 ====
 
 [[criteria-param]]

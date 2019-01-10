@@ -90,8 +90,9 @@ Internally Hibernate uses a registry of basic types when it needs to resolve a s
 
 [NOTE]
 ====
-To use these hibernate-spatial types, you must add the `hibernate-spatial` dependency to your classpath _and_ use a `org.hibernate.spatial.SpatialDialect` implementation.
-See <<spatial>> for more details about spatial types.
+To use the Hibernate Spatial types, you must add the `hibernate-spatial` dependency to your classpath _and_ use a `org.hibernate.spatial.SpatialDialect` implementation.
+
+See the <<chapters/query/spatial/Spatial.adoc#spatial,Spatial>> chapter for more details.
 ====
 
 These mappings are managed by a service inside Hibernate called the `org.hibernate.type.BasicTypeRegistry`, which essentially maintains a map of `org.hibernate.type.BasicType` (a `org.hibernate.type.Type` specialization) instances keyed by a name.
@@ -142,7 +143,8 @@ The JPA specification strictly limits the Java types that can be marked as basic
 * any other type that implements `Serializable` (JPA's "support" for `Serializable` types is to directly serialize their state to the database).
 
 If provider portability is a concern, you should stick to just these basic types.
-Note that JPA 2.1 did add the notion of a `javax.persistence.AttributeConverter` to help alleviate some of these concerns; see <<basic-jpa-convert>> for more on this topic.
+
+Note that JPA 2.1 introduced the `javax.persistence.AttributeConverter` contract to help alleviate some of these concerns. See <<basic-jpa-convert>> for more on this topic.
 ====
 
 The `@Basic` annotation defines 2 attributes.
@@ -192,8 +194,9 @@ But first, let's explore how implicit resolution works and how applications can 
 
 [NOTE]
 ====
-A thorough discussion of the `BasicTypeRegistry` and all the different ways to contribute types to it is beyond the scope of this documentation.
-Please see Integrations Guide for complete details.
+A thorough discussion of `BasicTypeRegistry` and all the different ways to contribute types is beyond the scope of this documentation.
+
+Please see the http://docs.jboss.org/hibernate/orm/{majorMinorVersion}/integrationguide/html_single/Hibernate_Integration_Guide.html[Integration Guide] for complete details.
 ====
 
 As an example, take a String attribute such as we saw before with Product#sku.
@@ -256,8 +259,7 @@ The first approach is to directly implement the `BasicType` interface.
 
 [NOTE]
 ====
-Because the `BasicType` interface has a lot of methods to implement, it's much more convenient to extend the `AbstractStandardBasicType`,
-or the `AbstractSingleColumnStandardBasicType` if the value is stored in a single database column.
+Because the `BasicType` interface has a lot of methods to implement, if the value is stored in a single database column, it's much more convenient to extend the `AbstractStandardBasicType` or the `AbstractSingleColumnStandardBasicType` Hibernate classes.
 ====
 
 First, we need to extend the `AbstractSingleColumnStandardBasicType` like this:
@@ -397,7 +399,7 @@ include::{sourcedir}/../bootstrap/BootstrapTest.java[tags=basic-custom-type-regi
 ====
 Like `BasicType`, you can also register the `UserType` using a simple name.
 
-Without registration, the `UserType` mapping requires the fully-classified name:
+Without registering a name, the `UserType` mapping requires the fully-classified name:
 
 [source, JAVA, indent=0]
 ----
@@ -533,8 +535,9 @@ For additional details on using AttributeConverters, see <<basic-jpa-convert>> s
 
 [NOTE]
 ====
-JPA explicitly disallows the use of an AttributeConverter with an attribute marked as `@Enumerated`.
-So if using the AttributeConverter approach, be sure not to mark the attribute as `@Enumerated`.
+JPA explicitly disallows the use of an `AttributeConverter` with an attribute marked as `@Enumerated`.
+
+So, when using the `AttributeConverter` approach, be sure not to mark the attribute as `@Enumerated`.
 ====
 
 [[basic-attribute-converter-query-parameter]]
@@ -764,8 +767,7 @@ include::{sourcedir}/basic/ClobStringTest.java[tags=basic-clob-string-example]
 ====
 How JDBC deals with `LOB` data varies from driver to driver, and Hibernate tries to handle all these variances on your behalf.
 
-However, some drivers are trickier (e.g. PostgreSQL), and, in such cases, you may have to do some extra to get LOBs working.
-Such discussions are beyond the scope of this guide.
+However, some drivers are trickier (e.g. PostgreSQL), and, in such cases, you may have to do some extra steps to get LOBs working. Such discussions are beyond the scope of this guide.
 ====
 
 We might even want the materialized data as a char array (although this might not be a very good idea).
@@ -940,7 +942,8 @@ include::{sourcedir}/basic/NClobCharArrayTest.java[tags=basic-nclob-char-array-e
 
 [NOTE]
 ====
-If you application and database are entirely nationalized you may instead want to enable nationalized character data as the default.
+If your application and database use nationalization, you may instead want to enable nationalized character data as the default.
+
 You can do this via the `hibernate.use_nationalized_character_data` setting or by calling `MetadataBuilder#enableGlobalNationalizedCharacterDataSupport` during bootstrap.
 ====
 
@@ -951,8 +954,9 @@ Hibernate also allows you to map UUID values, again in a number of ways.
 
 [NOTE]
 ====
-The default UUID mapping is as binary because it represents more efficient storage.
-However, many applications prefer the readability of character storage.
+The default UUID mapping is the binary one because it uses a more efficient column storage.
+
+However, many applications prefer the readability of the character-based column storage.
 To switch the default mapping, simply call `MetadataBuilder.applyBasicType( UUIDCharType.INSTANCE, UUID.class.getName() )`.
 ====
 
@@ -971,10 +975,10 @@ Maps the UUID to a String using `java.util.UUID#toString` and `java.util.UUID#fr
 
 [IMPORTANT]
 ====
-When using one of the PostgreSQL Dialects, this becomes the default UUID mapping.
+When using one of the PostgreSQL Dialects, the PostgreSQL-specific UUID Hibernate type becomes the default UUID mapping.
 ====
 
-Maps the UUID using PostgreSQL's specific UUID data type.
+Maps the UUID using the PostgreSQL-specific UUID data type.
 The PostgreSQL JDBC driver chooses to map its UUID type to the `OTHER` code.
 Note that this can cause difficulty as the driver chooses to map many different data types to `OTHER`.
 
@@ -995,7 +999,7 @@ TIMESTAMP:: It stores both a DATE and a TIME plus nanoseconds. The JDBC equivale
 
 [NOTE]
 ====
-To avoid dependencies on the `java.sql` package, it's common to use the `java.util` or `java.time` Date/Time classes instead.
+To avoid dependencies on the `java.sql` package, it's common to use the `java.util` or `java.time` Date/Time classes instead of the `java.sql.Timestamp` and `java.sql.Time` ones.
 ====
 
 While the `java.sql` classes define a direct association to the SQL Date/Time data types,
@@ -1077,7 +1081,8 @@ include::{extrasdir}/basic/basic-datetime-temporal-timestamp-persist-example.sql
 
 [NOTE]
 ====
-Just like the `java.util.Date`, the `java.util.Calendar` requires the `@Temporal` annotation in order to know what JDBC data type to be chosen: DATE, TIME or TIMESTAMP.
+Just like the `java.util.Date`, the `java.util.Calendar` requires the `@Temporal` annotation in order to know what JDBC data type to be chosen: `DATE`, `TIME` or `TIMESTAMP`.
+
 If the `java.util.Date` marks a point in time, the `java.util.Calendar` takes into consideration the default Time Zone.
 ====
 
@@ -1094,7 +1099,8 @@ TIMESTAMP:: `java.time.Instant`, `java.time.LocalDateTime`, `java.time.OffsetDat
 
 [IMPORTANT]
 ====
-Because the mapping between Java 8 Date/Time classes and the SQL types is implicit, there is not need to specify the `@Temporal` annotation.
+Because the mapping between the Java 8 Date/Time classes and the SQL types is implicit, there is not need to specify the `@Temporal` annotation.
+
 Setting it on the `java.time` classes throws the following exception:
 
 ----
@@ -1258,7 +1264,7 @@ include::{sourcedir}/converter/MoneyConverterTest.java[tags=basic-jpa-convert-mo
 
 [TIP]
 ====
-Although the `AttributeConverter` types can be mutable so that dirty checking, deep copying and second-level caching work properly,
+Although the `AttributeConverter` types can be mutable so that dirty checking, deep copying, and second-level caching work properly,
 treating these as immutable (when they really are) is more efficient.
 
 For this reason, prefer immutable types over mutable ones whenever possible.
@@ -1640,12 +1646,7 @@ include::{sourcedir}/../fetching/FetchingTest.java[tags=mapping-column-read-and-
 ----
 ====
 
-[NOTE]
-====
-You can use the plural form `@ColumnTransformers` if more than one columns need to define either of these rules.
-====
-
-If a property uses more than one column, you must use the `forColumn` attribute to specify which column, the expressions are targeting.
+If a property uses more than one column, you must use the `forColumn` attribute to specify which column, the `@ColumnTransformer` read and write expressions are targeting.
 
 [[mapping-column-read-and-write-composite-type-example]]
 .`@ColumnTransformer` `forColumn` attribute usage
@@ -1686,7 +1687,7 @@ You can use a SQL fragment (aka formula) instead of mapping a property into a co
 
 [NOTE]
 ====
-You should be aware that the `@Formula` annotation takes a native SQL clause which can affect database portability.
+You should be aware that the `@Formula` annotation takes a native SQL clause which may affect database portability.
 ====
 
 [[mapping-column-formula-example]]
@@ -1716,5 +1717,5 @@ include::{extrasdir}/basic/mapping-column-formula-persistence-example.sql[]
 
 [NOTE]
 ====
-The SQL fragment can be as complex as you want and even include subselects.
+The SQL fragment defined by the `@Formula` annotation can be as complex as you want, and it can even include subselects.
 ====

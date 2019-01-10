@@ -36,7 +36,7 @@ include::{extrasdir}/entity-inheritance-mapped-superclass-example.sql[]
 [NOTE]
 ====
 Because the `@MappedSuperclass` inheritance model is not mirrored at the database level,
-it's not possible to use polymorphic queries (fetching subclasses by their base class).
+it's not possible to use polymorphic queries referencing the `@MappedSuperclass` when fetching persistent objects by their base class.
 ====
 
 [[entity-inheritance-single-table]]
@@ -119,20 +119,20 @@ You can also use `@DiscriminatorFormula` to express in SQL a virtual discriminat
 This is particularly useful when the discriminator value can be extracted from one or more columns of the table.
 Both `@DiscriminatorColumn` and `@DiscriminatorFormula` are to be set on the root entity (once per persisted hierarchy).
 
-`@org.hibernate.annotations.DiscriminatorOptions` allows to optionally specify Hibernate specific discriminator options which are not standardized in JPA.
+`@org.hibernate.annotations.DiscriminatorOptions` allows to optionally specify Hibernate-specific discriminator options which are not standardized in JPA.
 The available options are `force` and `insert`.
 
 The `force` attribute is useful if the table contains rows with _extra_ discriminator values that are not mapped to a persistent class.
 This could, for example, occur when working with a legacy database.
-If `force` is set to true Hibernate will specify the allowed discriminator values in the SELECT query, even when retrieving all instances of the root class.
+If `force` is set to `true`, Hibernate will specify the allowed discriminator values in the SELECT query even when retrieving all instances of the root class.
 
 The second option, `insert`, tells Hibernate whether or not to include the discriminator column in SQL INSERTs.
-Usually, the column should be part of the INSERT statement, but if your discriminator column is also part of a mapped composite identifier you have to set this option to false.
+Usually, the column should be part of the INSERT statement, but if your discriminator column is also part of a mapped composite identifier you have to set this option to `false`.
 ====
 
 [IMPORTANT]
 ====
-There used to be `@org.hibernate.annotations.ForceDiscriminator` annotation which was deprecated in version 3.6 and later removed. Use `@DiscriminatorOptions` instead.
+There used to be a `@org.hibernate.annotations.ForceDiscriminator` annotation which was deprecated in version 3.6 and later removed. Use `@DiscriminatorOptions` instead.
 ====
 
 [[entity-inheritance-discriminator-formula]]
@@ -226,7 +226,7 @@ include::{extrasdir}/entity-inheritance-joined-table-example.sql[]
 
 [NOTE]
 ====
-The primary key of this table is also a foreign key to the superclass table and described by the `@PrimaryKeyJoinColumns`.
+The primary keys of the `CreditAccount` and `DebitAccount` tables are also foreign keys to the superclass table primary key and described by the `@PrimaryKeyJoinColumns`.
 
 The table name still defaults to the non-qualified class name.
 Also, if `@PrimaryKeyJoinColumn` is not set, the primary key / foreign key columns are assumed to have the same names as the primary key columns of the primary table of the superclass.
@@ -311,7 +311,9 @@ include::{extrasdir}/entity-inheritance-table-per-class-query-example.sql[]
 ====
 Polymorphic queries require multiple UNION queries, so be aware of the performance implications of a large class hierarchy.
 
-Unfortunatelly, not all database systems support UNION ALL, so if your current Hibernate dialect does not extend any of these dialects, then UNION is going to be used instead of UNION ALL.
+Unfortunately, not all database systems support UNION ALL, in which case, UNION is going to be used instead of UNION ALL.
+
+The following Hibernate dialects support UNION ALL:
 
 - `AbstractHANADialect`
 - `AbstractTransactSQLDialect`

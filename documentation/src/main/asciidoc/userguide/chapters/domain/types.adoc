@@ -12,9 +12,9 @@ This Hibernate type also describes various behavioral aspects of the Java type s
 [NOTE]
 ====
 The Hibernate type is neither a Java type nor a SQL data type.
-It provides information about both of these as well as understanding marshalling between.
+It provides information about mapping a Java type to an SQL type as well as how to persist and fetch a given Java type to and from a relational database.
 
-When you encounter the term type in discussions of Hibernate, it may refer to the Java type, the JDBC type, or the Hibernate type, depending on context.
+When you encounter the term type in discussions of Hibernate, it may refer to the Java type, the JDBC type, or the Hibernate type, depending on the context.
 ====
 
 To help understand the type categorizations, let's look at a simple table and domain model that we wish to map.

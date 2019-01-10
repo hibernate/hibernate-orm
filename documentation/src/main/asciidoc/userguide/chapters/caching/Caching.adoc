@@ -10,8 +10,9 @@ It is possible to configure a JVM-level (`SessionFactory`-level) or even a clust
 
 [NOTE]
 ====
-Be aware that caches are not aware of changes made to the persistent store by other applications.
-They can, however, be configured to regularly expire cached data.
+Be aware that Hibernate caches are not aware of changes made to the persistent store by other applications.
+
+To address this limitation, you can configure a TTL (Time To Live) retention policy at the second-level cache region level so that the underlying cache entries expire regularly.
 ====
 
 [[caching-config]]
@@ -115,8 +116,9 @@ transactional::
 
 [NOTE]
 ====
-Rather than using a global cache concurrency strategy, it is recommended to define this setting on a per entity basis.
-Use the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Cache.html[`@org.hibernate.annotations.Cache`] annotation for that.
+Rather than using a global setting, it is recommended to define the cache concurrency strategy on a per entity basis.
+
+Use the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Cache.html[`@org.hibernate.annotations.Cache`] annotation for this purpose.
 ====
 
 The `@Cache` annotation define three attributes:
@@ -147,10 +149,9 @@ ____
 
 [NOTE]
 ====
-As of Hibernate ORM 5.3, it's now possible to possible to override a base class `@Cacheable` or `@Cache` definition in subclasses.
+As of Hibernate ORM 5.3, you can now override a base class `@Cacheable` or `@Cache` definition at subclass level.
 
-However, the Hibernate cache concurrency strategy (e.g. read-only, nonstrict-read-write, read-write, transactional) is still defined at the root entity level
-and cannot be overridden.
+However, the Hibernate cache concurrency strategy (e.g. read-only, nonstrict-read-write, read-write, transactional) is still defined at the root entity level and cannot be overridden.
 ====
 
 Nevertheless, the reasons why we advise you to have all entities belonging to an inheritance tree share the same caching definition can be summed as follows:
@@ -306,10 +307,13 @@ include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-query-native-example
 
 [NOTE]
 ====
-The query cache does not cache the state of the actual entities in the cache;
-it caches only identifier values and results of value type.
+
+
+For entity queries, the query cache does not cache the state of the actual entities. Instead, it stores the entity identifiers, and when the query result is fetched from the cache, the entity state is going to be loaded from the second-level cache entity regions.
 
 Just as with collection caching, the query cache should always be used in conjunction with the second-level cache for those entities expected to be cached as part of a query result cache.
+
+For projection queries, the query cache stores the dehydrated entity state (e.g. `Object[]`) associated with the underlying JDBC `ResultSet`.
 ====
 
 [[caching-query-region]]
@@ -327,7 +331,7 @@ This setting creates two new cache regions:
 ====
 If you configure your underlying cache implementation to use expiration, it's very important
 that the timeout of the underlying cache region for the `default-update-timestamps-region`
-is set to a higher value than the timeouts of any of the query caches.
+is set to a higher value than the timeout setting of any of the query caches.
 
 In fact, we recommend that the `default-update-timestamps-region` region is not configured for expiration (time-based) or eviction (size/memory-based) at all.
 Note that an LRU (Least Recently Used) cache eviction policy is never appropriate for this particular cache region.
@@ -380,7 +384,7 @@ include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-query-region-store-m
 When using https://javaee.github.io/javaee-spec/javadocs/javax/persistence/CacheStoreMode.html#REFRESH[`CacheStoreMode.REFRESH`] or https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/CacheMode.html#REFRESH[`CacheMode.REFRESH`] in conjunction with the region you have defined for the given query,
 Hibernate will selectively force the results cached in that particular region to be refreshed.
 
-This is particularly useful in cases where underlying data may have been updated via a separate process
+This behavior is particularly useful in cases when the underlying data may have been updated via a separate process
 and is a far more efficient alternative to the bulk eviction of the region via `SessionFactory` eviction which looks as follows:
 
 [source, JAVA, indent=0]
@@ -508,8 +512,9 @@ include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-statistics-example]
 
 [NOTE]
 ====
-Use of the built-in integration for https://jcp.org/en/jsr/detail?id=107[JCache] requires that the `hibernate-jcache` module jar (and all of its dependencies) are on the classpath.
-In addition a JCache implementation needs to be added as well.
+To use the built-in integration for https://jcp.org/en/jsr/detail?id=107[JCache], you need the `hibernate-jcache` module jar (and all of its dependencies) to be on the classpath.
+
+In addition, a JCache implementation needs to be added as well.
 A list of compatible implementations can be found https://jcp.org/aboutJava/communityprocess/implementations/jsr107/index.html[on the JCP website].
 An alternative source of compatible implementations can be found through https://github.com/cruftex/jsr107-test-zoo[the JSR-107 test zoo].
 ====
@@ -565,23 +570,21 @@ Only by specifying the second property `hibernate.javax.cache.uri` will you be a
 If you don't want to use the default `CacheManager`, you need to set the `hibernate.javax.cache.cache_manager` configuration property
 to one of the following values:
 
-Object reference:: If the value is an Object instance implementing the `CacheManager` interface,
+Object reference:: If the value is an `Object` instance implementing the `CacheManager` interface,
 the provided `CacheManager` instance will be used.
 `Class`:: If the value is a Java `Class` object that implements the `CacheManager` interface,
 Hibernate will create a new instance for that `Class` and use it instead of the default one.
 +
 [NOTE]
 ====
-The default no-arg constructor is going to be used, so make sure that the `CacheManager`
-implementation class provides it.
+When passing a Java `Class` that implements the `CacheManager` interface, you must make sure that the `CacheManager` implementation class provides a default no-arg constructor because that's going to be used to instantiate a `CacheManager` implementation `Object`.
 ====
 `String`:: If the value is a Java `String`, Hibernate expects it to be the fully-qualified `Class` name
 of the `CacheManager` implementation which will be used to instantiate the non-default `CacheManager`.
 +
 [NOTE]
 ====
-The default no-arg constructor is going to be used, so make sure that the `CacheManager`
-implementation class provides it.
+When passing the fully-qualified class name, you must make sure that the associated `Class` type provides a default no-arg constructor because that's going to be used to instantiate a `CacheManager` implementation `Object`.
 ====
 
 [[caching-provider-jcache-missing-cache-strategy]]
@@ -607,11 +610,9 @@ and also log a warning about the missing cache.
 
 [WARNING]
 ====
-Note that caches created this way may be very badly configured (unlimited size and no eviction in particular)
-unless the cache provider was explicitly configured to use a specific configuration for default caches.
+Note that caches created this way may not be suitable for production usage (unlimited size and no eviction in particular) unless the cache provider explicitly provides a specific configuration for default caches.
 
-Ehcache, in particular, allows to set such default configuration using cache templates,
-see http://www.ehcache.org/documentation/3.0/107.html#supplement-jsr-107-configurations
+Ehcache, in particular, allows to set such default configuration using cache templates. See the http://www.ehcache.org/documentation/3.0/107.html#supplement-jsr-107-configurations[Ehcache documentation] for more details.
 ====
 
 [[caching-provider-ehcache]]
@@ -669,7 +670,7 @@ shared among multiple `SessionFactory` instances in the same JVM.
 
 [NOTE]
 ====
-http://www.ehcache.org/documentation/2.8/integrations/hibernate#optional[Ehcache documentation] recommends using multiple non-singleton `CacheManager(s)` when there are multiple Hibernate `SessionFactory` instances running in the same JVM.
+The http://www.ehcache.org/documentation/2.8/integrations/hibernate#optional[Ehcache documentation] recommends using multiple non-singleton `CacheManager(s)` when there are multiple Hibernate `SessionFactory` instances running in the same JVM.
 ====
 
 [[caching-provider-ehcache-missing-cache-strategy]]
@@ -695,8 +696,7 @@ and also log a warning about the missing cache.
 
 [WARNING]
 ====
-Note that caches created this way may be very badly configured (large size in particular)
-unless an appropriate `<defaultCache>` entry is added to the Ehcache configuration.
+Note that caches created this way may be very badly configured (large size in particular) unless an appropriate `<defaultCache>` entry is added to the Ehcache configuration.
 ====
 
 [[caching-provider-infinispan]]

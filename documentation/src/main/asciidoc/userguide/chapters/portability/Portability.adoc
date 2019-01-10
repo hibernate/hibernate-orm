@@ -70,7 +70,7 @@ Starting with version 3.2.3, Hibernate comes with a set of http://in.relation.to
 
 [NOTE]
 ====
-There are specifically 2 bundled __enhanced__generators:
+There are specifically 2 bundled __enhanced__ generators:
 
 * `org.hibernate.id.enhanced.SequenceStyleGenerator`
 * `org.hibernate.id.enhanced.TableGenerator`
@@ -84,8 +84,9 @@ For example, the `org.hibernate.id.enhanced.SequenceStyleGenerator` mimics the b
 
 [WARNING]
 ====
-This is an area in Hibernate in need of improvement.
-In terms of portability concerns, this function handling currently works pretty well in HQL, however, it is quite lacking in all other aspects.
+When it comes to database functions, Hibernate could benefit from an improvement.
+
+In terms of portability concerns, the function handling currently works pretty well in HQL, however, it is quite lacking in all other aspects.
 ====
 
 SQL functions can be referenced in many ways by users.
@@ -94,7 +95,7 @@ Hibernate, provides a means of mapping a _logical_ function name to a delegate w
 
 [IMPORTANT]
 ====
-Technically this function registration is handled through the `org.hibernate.dialect.function.SQLFunctionRegistry` class which is intended to allow users to provide custom function definitions without having to provide a custom dialect.
+Technically the SQL function registration is handled through the `org.hibernate.dialect.function.SQLFunctionRegistry` class which is intended to allow users to provide custom function definitions without having to provide a custom dialect.
 This specific behavior is not fully completed as of yet.
 
 It is sort of implemented such that users can programmatically register functions with the `org.hibernate.cfg.Configuration` and those functions will be recognized for HQL.

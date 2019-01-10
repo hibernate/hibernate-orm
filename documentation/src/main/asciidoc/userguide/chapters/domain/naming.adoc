@@ -93,10 +93,11 @@ would be, for example, to say that the physical column name should instead be ab
 
 [NOTE]
 ====
-It is true that the resolution to `acct_num` could have been handled in an ImplicitNamingStrategy in this case.
-But the point is separation of concerns. The PhysicalNamingStrategy will be applied regardless of whether
+It is true that the resolution to `acct_num` could have been handled using an `ImplicitNamingStrategy` in this case.
+
+But the point here is the separation of concerns. The `PhysicalNamingStrategy` will be applied regardless of whether
 the attribute explicitly specified the column name or whether we determined that implicitly. The
-ImplicitNamingStrategy would only be applied if an explicit name was not given.  So it depends on needs
+`ImplicitNamingStrategy` would only be applied if an explicit name was not given. So, it all depends on needs
 and intent.
 ====
 

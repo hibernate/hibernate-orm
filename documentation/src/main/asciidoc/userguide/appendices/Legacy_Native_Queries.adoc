@@ -267,7 +267,7 @@ The following example shows how to define custom SQL operations using annotation
 
 [NOTE]
 ====
-If you expect to call a store procedure, be sure to set the `callable` attribute to `true`, in annotations as well as in xml.
+If you expect to call a stored procedure, be sure to set the `callable` attribute to `true` in both annotation and XML-based mappings.
 ====
 
 To check that the execution happens correctly, Hibernate allows you to define one of those three strategies:

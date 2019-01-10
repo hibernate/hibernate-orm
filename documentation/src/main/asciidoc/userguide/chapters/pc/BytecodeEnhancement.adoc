@@ -122,7 +122,7 @@ Enable association management feature in runtime bytecode enhancement which auto
 
 [NOTE]
 ====
-Also, at the moment, only annotated classes are supported for runtime enhancement.
+Also, at the moment, only annotated classes support runtime enhancement.
 ====
 
 [[BytecodeEnhancement-enhancement-gradle]]

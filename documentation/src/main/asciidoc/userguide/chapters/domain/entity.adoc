@@ -54,7 +54,7 @@ For the very same reason, you should also avoid declaring persistent attribute g
 
 [NOTE]
 ====
-Starting in 5.0 Hibernate offers a more robust version of bytecode enhancement as another means for handling lazy loading.
+Starting with 5.0, Hibernate offers a more robust version of bytecode enhancement as another means for handling lazy loading.
 Hibernate had some bytecode re-writing capabilities prior to 5.0 but they were very rudimentary.
 See the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,BytecodeEnhancement>> for additional information on fetching and on bytecode enhancement.
 ====
@@ -85,8 +85,9 @@ Again, if wanting to use runtime proxy generation for lazy loading, the getter/s
 
 [IMPORTANT]
 ====
-Historically this was considered optional.
-However, not defining identifier attribute(s) on the entity should be considered a deprecated feature that will be removed in an upcoming release.
+Historically, providing identifier attributes was considered optional.
+
+However, not defining identifier attributes on the entity should be considered a deprecated feature that will be removed in an upcoming release.
 ====
 
 The identifier attribute does not necessarily need to be mapped to the column(s) that physically define the primary key.
@@ -94,7 +95,7 @@ However, it should map to column(s) that can uniquely identify each row.
 
 [NOTE]
 ====
-We recommend that you declare consistently-named identifier attributes on persistent classes and that you use a nullable (i.e., non-primitive) type.
+We recommend that you declare consistently-named identifier attributes on persistent classes and that you use a wrapper (i.e., non-primitive) type (e.g. `Long` or `Integer`).
 ====
 
 The placement of the `@Id` annotation marks the <<chapters/domain/access.adoc#access,persistence state access strategy>>.

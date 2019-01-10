@@ -95,8 +95,9 @@ or defined using the `javax.persistence.IdClass` annotation (see <<identifiers-c
 
 [NOTE]
 ====
-The restriction that a composite identifier has to be represented by a "primary key class" is only JPA specific.
-Hibernate does allow composite identifiers to be defined without a "primary key class", although that modeling technique is deprecated and therefore omitted from this discussion.
+The restriction that a composite identifier has to be represented by a "primary key class" (e.g. `@EmbeddedId` or `@IdClass`) is only JPA-specific.
+
+Hibernate does allow composite identifiers to be defined without a "primary key class" via multiple `@Id` attributes.
 ====
 
 The attributes making up the composition can be either basic, composite, `@ManyToOne`.
@@ -130,10 +131,10 @@ include::{sourcedir}/EmbeddedIdManyToOneTest.java[tag=identifiers-basic-embedded
 
 [NOTE]
 ====
-Hibernate supports directly modeling the ManyToOne in the PK class, whether `@EmbeddedId` or `@IdClass`.
+Hibernate supports directly modeling `@ManyToOne` associations in the Primary Key class, whether `@EmbeddedId` or `@IdClass`.
 
 However, that is not portably supported by the JPA specification.
-In JPA terms one would use "derived identifiers"; for details, see <<identifiers-derived>>.
+In JPA terms, one would use "derived identifiers". For more details, see <<identifiers-derived>>.
 ====
 
 [[identifiers-composite-nonaggregated]]
@@ -175,7 +176,7 @@ include::{sourcedir}/IdClassGeneratedValueTest.java[tag=identifiers-basic-idclas
 
 [NOTE]
 ====
-This feature exists because of a highly questionable interpretation of the JPA specification made by the SpecJ committee.
+This feature which allows auto-generated values in composite identifiers exists because of a highly questionable interpretation of the JPA specification made by the SpecJ committee.
 
 Hibernate does not feel that JPA defines support for this, but added the feature simply to be usable in SpecJ benchmarks.
 Use of this feature may or may not be portable from a JPA perspective.
@@ -276,7 +277,7 @@ and we assigned it to the composite identifier prior to persisting the `Event` e
 
 [NOTE]
 ====
-For discussion of generated values for non-identifier attributes, see <<chapters/domain/basic_types.adoc#mapping-generated,Generated properties>>.
+You can also auto-generate values for non-identifier attributes. For more details, see the <<chapters/domain/basic_types.adoc#mapping-generated,Generated properties>> section.
 ====
 
 Hibernate supports identifier value generation across a number of different types.
@@ -289,9 +290,10 @@ The most important piece of information here is the specified `javax.persistence
 ====
 The discussions below assume that the application is using Hibernate's "new generator mappings" as indicated by the `hibernate.id.new_generator_mappings` setting or
 `MetadataBuilder.enableNewIdentifierGeneratorSupport` method during bootstrap.
-Starting with Hibernate 5, this is set to true by default.
-If applications set this to false the resolutions discussed here will be very different.
-The rest of the discussion here assumes this setting is enabled (true).
+
+Starting with Hibernate 5, this is set to `true` by default.
+In applications where the `hibernate.id.new_generator_mappings` configuration is set to `false` the resolutions discussed here will be very different.
+The rest of the discussion here assumes this setting is enabled (`true`).
 ====
 
 [IMPORTANT]
@@ -394,16 +396,18 @@ IdentityGenerator understands 3 different ways that the INSERT-generated value m
 
 [IMPORTANT]
 ====
-It is important to realize that this imposes a runtime behavior where the entity row *must* be physically inserted prior to the identifier value being known.
-This can mess up extended persistence contexts (conversations).
-Because of the runtime imposition/inconsistency, Hibernate suggests other forms of identifier value generation be used.
+It is important to realize that using IDENTITY columns imposes a runtime behavior where the entity row *must* be physically inserted prior to the identifier value being known.
+
+This can mess up extended persistence contexts (long conversations).
+Because of the runtime imposition/inconsistency, Hibernate suggests other forms of identifier value generation be used (e.g. SEQUENCE).
 ====
 
 [NOTE]
 ====
-There is yet another important runtime impact of choosing IDENTITY generation: Hibernate will not be able to JDBC batching for inserts of the entities that use IDENTITY generation.
+There is yet another important runtime impact of choosing IDENTITY generation: Hibernate will not be able to batch INSERT statements for the entities using the IDENTITY generation.
+
 The importance of this depends on the application-specific use cases.
-If the application is not usually creating many new instances of a given type of entity that uses IDENTITY generation, then this is not an important impact since batching would not have been helpful anyway.
+If the application is not usually creating many new instances of a given entity type using the IDENTITY generator, then this limitation will be less important since batching would not have been very helpful anyway.
 ====
 
 [[identifiers-generators-table]]
@@ -609,8 +613,7 @@ include::{sourcedir-associations}/OneToOnePrimaryKeyJoinColumnTest.java[tag=iden
 
 [NOTE]
 ====
-Unlike `@MapsId`, the application developer is responsible for ensuring that the identifier and the many-to-one (or one-to-one) association are in sync
-as you can see in the `PersonDetails#setPerson` method.
+Unlike `@MapsId`, the application developer is responsible for ensuring that the entity identifier and the many-to-one (or one-to-one) association are in sync, as you can see in the `PersonDetails#setPerson` method.
 ====
 
 [[identifiers-rowid]]

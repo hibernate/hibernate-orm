@@ -88,8 +88,9 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-remove-native-example]
 
 [NOTE]
 ====
-Hibernate itself can handle deleting detached state.
-JPA, however, disallows it.
+Hibernate itself can handle deleting entities in detached state.
+JPA, however, disallows this behavior.
+
 The implication here is that the entity instance passed to the `org.hibernate.Session` delete method can be either in managed or detached state,
 while the entity instance passed to remove on `javax.persistence.EntityManager` must be in the managed state.
 ====
@@ -848,11 +849,11 @@ See the discussion of non-identifier <<chapters/domain/basic_types.adoc#mapping-
 
 [IMPORTANT]
 ====
-Traditionally, Hibernate has been allowing detached entities to be refreshed.
+Traditionally, Hibernate allowed detached entities to be refreshed.
 Unfortunately, JPA prohibits this practice and specifies that an `IllegalArgumentException` should be thrown instead.
 
 For this reason, when bootstrapping the Hibernate `SessionFactory` using the native API, the legacy detached entity refresh behavior is going to be preserved.
-On the other hand, when bootstrapping Hibernate through JPA `EntityManagerFactory` building process, detached entities are not allowed to be refreshed by default.
+On the other hand, when bootstrapping Hibernate through the JPA `EntityManagerFactory` building process, detached entities are not allowed to be refreshed by default.
 
 However, this default behavior can be overwritten through the `hibernate.allow_refresh_detached_entity` configuration property.
 If this property is explicitly set to `true`, then you can refresh detached entities even when using the JPA bootstraps mechanism, therefore bypassing the JPA specification restriction.
@@ -903,7 +904,7 @@ Reattachment is the process of taking an incoming entity instance that is in the
 
 [IMPORTANT]
 ====
-JPA does not provide for this model. This is only available through Hibernate `org.hibernate.Session`.
+JPA does not support reattaching detached data. This is only available through Hibernate `org.hibernate.Session`.
 ====
 
 [[pc-detach-reattach-lock-example]]

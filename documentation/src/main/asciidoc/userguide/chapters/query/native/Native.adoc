@@ -196,7 +196,7 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-entity-associations-query-m
 
 [NOTE]
 ====
-Because of the `ROOT_ENTITY` `ResultTransformer`, this query will return the parent-side as root entities.
+Because of the `ROOT_ENTITY` `ResultTransformer`, the query above will return the parent-side as root entities.
 ====
 
 Notice that you added an alias name _pr_ to be able to specify the target property path of the join.
@@ -277,7 +277,7 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-multi-entity-query-alias-ex
 
 [NOTE]
 ====
-There's no such equivalent in JPA because the `Query` interface doesn't define an `addEntity` method equivalent.
+There's no such equivalent in JPA because the `javax.persistence.Query` interface does not define an `addEntity` method equivalent.
 ====
 
 The `{pr.*}` and `{pt.*}` notation used above is shorthand for "all properties".
@@ -342,7 +342,7 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-dto-query-example, indent=0
 
 [NOTE]
 ====
-There's no such equivalent in JPA because the `Query` interface doesn't define a `setResultTransformer` method equivalent.
+There's no such equivalent in JPA because the `javax.persistence.Query` interface does not define a `setResultTransformer` method equivalent.
 ====
 
 The above query will return a list of `PersonSummaryDTO` which has been instantiated and injected the values of `id` and `name` into its corresponding properties or fields.
@@ -363,7 +363,7 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-inheritance-query-example]
 
 [NOTE]
 ====
-There's no such equivalent in JPA because the `Query` interface doesn't define an `addEntity` method equivalent.
+There's no such equivalent in JPA because the `javax.persistence.Query` interface does not define an `addEntity` method equivalent.
 ====
 
 [[sql-query-parameters]]
@@ -775,7 +775,7 @@ include::{sourcedir}/OracleStoredProcedureTest.java[tags=sql-sp-ref-cursor-oracl
 
 [IMPORTANT]
 ====
-`REF_CURSOR` result sets are only supported by Oracle and PostgreSQL because other database systems JDBC drivers don't support this feature.
+`REF_CURSOR` result sets are only supported by some relational databases (e.g. Oracle and PostgreSQL), and other database systems JDBC drivers might not support this feature.
 ====
 
 This function can be called using the standard Java Persistence API:
@@ -909,9 +909,9 @@ To define the result check style, use the `check` parameter.
 [TIP]
 ====
 The parameter order is important and is defined by the order Hibernate handles properties.
-You can see the expected order by enabling debug logging, so Hibernate can print out the static SQL that is used to create, update, delete etc. entities.
+You can see the expected order by enabling debug logging, so Hibernate can print out the static SQL that is used to create, update, delete entities.
 
-To see the expected sequence, remember to not include your custom SQL through annotations or mapping files as that will override the Hibernate generated static sql.
+To see the expected sequence, remember to not include your custom SQL through annotations or mapping files as that will override the Hibernate generated static SQL.
 ====
 
 Overriding SQL statements for secondary tables is also possible using `@org.hibernate.annotations.Table` and the `sqlInsert`, `sqlUpdate`, `sqlDelete` attributes.

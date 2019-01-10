@@ -23,6 +23,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
@@ -155,6 +156,7 @@ public class IdentifierProxyJtaSessionClosedBeforeCommitTest extends BaseEnversJ
 
 		@OneToMany(cascade = CascadeType.ALL)
 		@JoinColumn(name = "idclient")
+		@AuditJoinTable(name = "AuthClient_AuthUser_AUD")
 		private List<AuthUser> authUsers = new ArrayList<>();
 
 		public AuthClient() {

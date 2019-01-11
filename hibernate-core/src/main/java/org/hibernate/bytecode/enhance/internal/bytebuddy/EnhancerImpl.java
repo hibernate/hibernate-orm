@@ -162,7 +162,7 @@ public class EnhancerImpl implements Enhancer {
 		PersistentAttributeTransformer transformer = PersistentAttributeTransformer.collectPersistentFields( managedCtClass, enhancementContext, typePool );
 
 		if ( enhancementContext.isEntityClass( managedCtClass ) ) {
-			log.infof( "Enhancing [%s] as Entity", managedCtClass.getName() );
+			log.debugf( "Enhancing [%s] as Entity", managedCtClass.getName() );
 			builder = builder.implement( ManagedEntity.class )
 					.defineMethod( EnhancerConstants.ENTITY_INSTANCE_GETTER_NAME, Object.class, Visibility.PUBLIC )
 					.intercept( FixedValue.self() );
@@ -294,7 +294,7 @@ public class EnhancerImpl implements Enhancer {
 			return transformer.applyTo( builder, false );
 		}
 		else if ( enhancementContext.isCompositeClass( managedCtClass ) ) {
-			log.infof( "Enhancing [%s] as Composite", managedCtClass.getName() );
+			log.debugf( "Enhancing [%s] as Composite", managedCtClass.getName() );
 
 			builder = builder.implement( ManagedComposite.class );
 			builder = addInterceptorHandling( builder, managedCtClass );
@@ -327,13 +327,13 @@ public class EnhancerImpl implements Enhancer {
 			return transformer.applyTo( builder, false );
 		}
 		else if ( enhancementContext.isMappedSuperclassClass( managedCtClass ) ) {
-			log.infof( "Enhancing [%s] as MappedSuperclass", managedCtClass.getName() );
+			log.debugf( "Enhancing [%s] as MappedSuperclass", managedCtClass.getName() );
 
 			builder = builder.implement( ManagedMappedSuperclass.class );
 			return transformer.applyTo( builder, true );
 		}
 		else if ( enhancementContext.doExtendedEnhancement( managedCtClass ) ) {
-			log.infof( "Extended enhancement of [%s]", managedCtClass.getName() );
+			log.debugf( "Extended enhancement of [%s]", managedCtClass.getName() );
 			return transformer.applyExtended( builder );
 		}
 		else {

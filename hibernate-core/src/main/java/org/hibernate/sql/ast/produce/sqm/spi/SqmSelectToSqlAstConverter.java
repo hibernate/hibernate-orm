@@ -328,6 +328,10 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	private SqmNavigableJoin findFetchedJoin(FetchParent fetchParent, Fetchable fetchable) {
+		if ( fetchJoinsByParentPath == null ) {
+			return null;
+		}
+
 		final Set<SqmNavigableJoin> explicitFetchJoins = fetchJoinsByParentPath.get( fetchParent.getNavigablePath() );
 
 		if ( explicitFetchJoins != null ) {

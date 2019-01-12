@@ -12,7 +12,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
-import org.hibernate.metamodel.model.domain.spi.BasicValueMapper;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
@@ -279,23 +278,4 @@ public class BasicTypeRegistry {
 		}
 	}
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// BasicTypeRegistry as a `ValueMapperRegistry`
-
-	private final Map<String,BasicValueMapper> mapperMap = new ConcurrentHashMap<>();
-
-	public void register(BasicValueMapper valueMapper, String... keys) {
-		for ( String key : keys ) {
-			final BasicValueMapper old = mapperMap.put( key, valueMapper );
-			if ( old != null && old != valueMapper ) {
-				log.debugf(
-						"BasicValueMapper registration [%s] overrode previous : %s -> %s",
-						key,
-						old,
-						valueMapper
-				);
-			}
-		}
-	}
 }

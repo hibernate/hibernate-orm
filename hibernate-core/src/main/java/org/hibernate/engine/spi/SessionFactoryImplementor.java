@@ -35,6 +35,8 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.spi.CriteriaNodeBuilder;
 import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
@@ -83,6 +85,11 @@ public interface SessionFactoryImplementor
 	 * Get a non-transactional "current" session (used by hibernate-envers)
 	 */
 	Session openTemporarySession() throws HibernateException;
+
+	@Override
+	default CriteriaNodeBuilder getCriteriaBuilder() {
+		return getQueryEngine().getCriteriaBuilder();
+	}
 
 	@Override
 	CacheImplementor getCache();

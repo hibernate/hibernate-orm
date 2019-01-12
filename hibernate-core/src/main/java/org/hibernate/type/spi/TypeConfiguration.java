@@ -25,6 +25,7 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.uuid.LocalObjectUuidHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
@@ -149,6 +150,16 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		default PersistenceType getPersistenceType() {
 			return PersistenceType.BASIC;
 		}
+
+		@Override
+		default BasicJavaDescriptor<J> getJavaTypeDescriptor() {
+			return getDomainJavaDescriptor();
+		}
+
+		@Override
+		default Class<J> getJavaType() {
+			return getDomainJavaDescriptor().getJavaType();
+		}
 	}
 
 	private class StandardBasicTypeResolutionImpl<J> implements BasicTypeResolution<J> {
@@ -264,6 +275,13 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 				Clause clause,
 				TypeConfiguration typeConfiguration) {
 			action.accept( getSqlExpressableType() );
+		}
+
+		@Override
+		public Object unresolve(
+				Object value,
+				SharedSessionContractImplementor session) {
+			return value;
 		}
 	}
 

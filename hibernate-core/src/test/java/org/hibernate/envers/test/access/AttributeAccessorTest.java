@@ -18,6 +18,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
 
 /**
  * @author Chris Cranford
@@ -38,10 +39,12 @@ public class AttributeAccessorTest extends EnversSessionFactoryBasedFunctionalTe
 
 	@DynamicTest
 	public void testCreateAndQueryAuditEntityWithAttributeAccessor() {
-		doInHibernate( this::sessionFactory, session -> {
-			final AttributeAccessorEntity entity = new AttributeAccessorEntity( 1, "ABC" );
-			session.save( entity );
-		} );
+		sessionFactoryScope().inTransaction(
+				session -> {
+					final AttributeAccessorEntity entity = new AttributeAccessorEntity( 1, "ABC" );
+					session.save( entity );
+				}
+		);
 
 		final AttributeAccessorEntity ver1 = getAuditReader().find( AttributeAccessorEntity.class, 1, 1 );
 		assertThat( ver1.getName(), is( "ABC" ) );

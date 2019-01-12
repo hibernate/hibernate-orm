@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -30,6 +31,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.metamodel.model.domain.spi.BasicValueMapper;
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
@@ -44,6 +46,7 @@ import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
 import org.hibernate.query.sqm.UnknownEntityException;
+import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.SqmProductionException;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.internal.QuerySpecProcessingStateDmlImpl;
@@ -123,6 +126,10 @@ import org.hibernate.query.sqm.tree.expression.function.SqmCoalesceFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmConcatFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCountFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCountStarFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmCurrentDateFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmCurrentInstantFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimeFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimestampFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmLengthFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmLowerFunction;
@@ -178,11 +185,15 @@ import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.PolymorphicEntityValuedExpressableType;
 import org.hibernate.sql.ast.tree.spi.TrimSpecification;
+import org.hibernate.sql.ast.tree.spi.expression.CurrentDateFunction;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.JdbcTypeNameMapper;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.StandardSpiBasicTypes.StandardBasicType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
@@ -2097,32 +2108,98 @@ public class SemanticQueryBuilder
 		return ctx.parameter().accept( this );
 	}
 
+	/**
+	 * Used to unique SqmNamedParameter instances based on the param name
+	 */
+	private Map<String,SqmNamedParameter> namedParameterMap;
+
 	@Override
 	public SqmNamedParameter visitNamedParameter(HqlParser.NamedParameterContext ctx) {
+		final String paramName = ctx.identifier().getText();
+		log.tracef( "#visitNamedParameter( %s )", paramName );
+
+		if ( namedParameterMap == null ) {
+			namedParameterMap = new HashMap<>();
+		}
+		else {
+			final SqmNamedParameter existing = namedParameterMap.get( paramName );
+			if ( existing != null ) {
+				return existing;
+			}
+		}
+
 		final SqmNamedParameter param = new SqmNamedParameter(
-				ctx.identifier().getText(),
+				paramName,
 				parameterDeclarationContextStack.getCurrent().isMultiValuedBindingAllowed()
 		);
+
+		namedParameterMap.put( paramName, param );
 		parameterCollector.addParameter( param );
+
 		return param;
 	}
+
+	/**
+	 * Used to unique SqmPositionalParameter instances based on the param label
+	 */
+	private Map<Integer,SqmPositionalParameter> positionalParameterMap;
 
 	@Override
 	public SqmPositionalParameter visitPositionalParameter(HqlParser.PositionalParameterContext ctx) {
 		if ( ctx.INTEGER_LITERAL() == null ) {
 			throw new SemanticException( "Encountered positional parameter which did not declare position (? instead of, e.g., ?1)" );
 		}
+
+		final String paramLabelText = ctx.INTEGER_LITERAL().getText();
+		log.tracef( "#visitPositionalParameter( %s )", paramLabelText );
+
+		final Integer paramLabel = Integer.valueOf( paramLabelText );
+
+		if ( positionalParameterMap == null ) {
+			positionalParameterMap = new HashMap<>();
+		}
+		else {
+			final SqmPositionalParameter existing = positionalParameterMap.get( paramLabel );
+			if ( existing != null ) {
+				return existing;
+			}
+		}
+
 		final SqmPositionalParameter param = new SqmPositionalParameter(
-				Integer.valueOf( ctx.INTEGER_LITERAL().getText() ),
+				paramLabel,
 				parameterDeclarationContextStack.getCurrent().isMultiValuedBindingAllowed()
 		);
+
+		positionalParameterMap.put( paramLabel, param );
 		parameterCollector.addParameter( param );
+
 		return param;
 	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Functions
+
+
+	@Override
+	public Object visitCurrentDateFunction(HqlParser.CurrentDateFunctionContext ctx) {
+		return new SqmCurrentDateFunction();
+	}
+
+	@Override
+	public Object visitCurrentTimeFunction(HqlParser.CurrentTimeFunctionContext ctx) {
+		return new SqmCurrentTimeFunction();
+	}
+
+	@Override
+	public Object visitCurrentTimestampFunction(HqlParser.CurrentTimestampFunctionContext ctx) {
+		return new SqmCurrentTimestampFunction();
+	}
+
+	@Override
+	public Object visitCurrentInstantFunction(HqlParser.CurrentInstantFunctionContext ctx) {
+		return new SqmCurrentInstantFunction();
+	}
 
 	@Override
 	public SqmGenericFunction visitJpaNonStandardFunction(HqlParser.JpaNonStandardFunctionContext ctx) {
@@ -2222,41 +2299,113 @@ public class SemanticQueryBuilder
 				.findFunctionTemplate( SqmCastFunction.NAME );
 
 		final SqmExpression expressionToCast = (SqmExpression) ctx.expression().accept( this );
-		final SqmExpression castTargetExpression = interpretCastTarget( ctx.castTarget() );
-
-		//getSessionFactory().getTypeConfiguration().resolveCastTargetType( ctx.dataType().IDENTIFIER().getText() )
-
-		if ( !AllowableFunctionReturnType.class.isInstance( castTargetExpression ) ) {
-			throw new SqmProductionException( "Found cast target expression [%s] which is not allowed as a function return" );
-		}
+		final BasicValuedExpressableType castTargetType = interpretCastTarget( ctx.castTarget() );
 
 		if ( template == null ) {
 			// use the standard CAST support
-			return new SqmCastFunction(
-					expressionToCast,
-					(AllowableFunctionReturnType) castTargetExpression,
-					castTargetExpression.getExpressableType().toString()
-			);
+			return new SqmCastFunction( expressionToCast, castTargetType );
 		}
 		else {
+			// todo (6.0) : make an expression (what form?) out of `castTargetType` to pass to the template
+			//		or just pass the `expressionToCast` and have the template use the second argument as the target type.
 			return template.makeSqmFunctionExpression(
-					Arrays.asList( expressionToCast, castTargetExpression ),
-					(AllowableFunctionReturnType) castTargetExpression.getExpressableType()
+					Arrays.asList( expressionToCast, new SqmCastTargetExpression( castTargetType ) ),
+					castTargetType
 			);
 		}
 	}
 
-	private SqmExpression interpretCastTarget(HqlParser.CastTargetContext castTargetContext) {
-		// todo (6.0) : what are the allowable forms of specifying cast-target?
-		// 		the exactness of this is being discussed on the dev ml.  Most
-		//		likely we will accept either:
-		//			1) a String, which might represent:
-		//				a) a Java type name
-		//				b) a java.sql.Types field name (e.g. VARCHAR...)
-		//				c) (not huge fan of this...) a "pass-thru" value
-		//			2) an int signifying the SqlTypeDescriptor (JDBC type code)
+	private static class SqmCastTargetExpression implements SqmExpression {
+		private final BasicValuedExpressableType type;
 
-		throw new NotYetImplementedFor6Exception(  );
+		public SqmCastTargetExpression(BasicValuedExpressableType type) {
+			this.type = type;
+		}
+
+		@Override
+		public BasicValuedExpressableType getExpressableType() {
+			return type;
+		}
+
+		@Override
+		public JavaTypeDescriptor getJavaTypeDescriptor() {
+			return type.getJavaTypeDescriptor();
+		}
+
+		@Override
+		public Supplier<? extends ExpressableType> getInferableType() {
+			return null;
+		}
+
+		@Override
+		public <T> T accept(SemanticQueryWalker<T> walker) {
+			throw new UnsupportedOperationException( "SqmCastTargetExpression not intended for translation into SQL AST" );
+		}
+	}
+
+	private BasicValuedExpressableType interpretCastTarget(HqlParser.CastTargetContext castTargetContext) {
+		// The cast target type can be defined as either:
+		// 		* String (IDENTIFIER) which might represent:
+		//			* Named BasicValueMapper
+		//			* JDBC type name (e.g. `VARCHAR`) resolved as a `java.sql.Types` field name
+		//			* Java type (Class name)
+		//		* Integer (INTEGER_LITERAL) which would represent a SqlTypeDescriptor registration
+
+		final TypeConfiguration typeConfiguration = getSessionFactory().getTypeConfiguration();
+
+		if ( castTargetContext.IDENTIFIER() != null ) {
+			final String castTargetName = castTargetContext.IDENTIFIER().getText();
+			log.debugf( "Resolving cast-target name : " + castTargetName );
+
+			// first, see if we have a BasicValueMapper registered under that name
+			final BasicValueMapper namedMapper = typeConfiguration.getNamedBasicValueMapper( castTargetName );
+			if ( namedMapper != null ) {
+				return namedMapper;
+			}
+
+			// Next, see if it matches a `java.sql.Types` field name
+			final Integer jdbcTypeCode = JdbcTypeNameMapper.getTypeCode( castTargetName );
+			if ( jdbcTypeCode != null ) {
+				final SqlTypeDescriptor std = typeConfiguration.getSqlTypeDescriptorRegistry().getDescriptor( jdbcTypeCode );
+
+				if ( std != null ) {
+					return typeConfiguration.getBasicTypeRegistry().resolve(
+							std.getJdbcRecommendedJavaTypeMapping( typeConfiguration ),
+							std
+					);
+				}
+			}
+
+			// Lastly, see if names a basic Java type
+			//		Note: we do this one last to avoid the potential ClassLoader overhead...
+			final JavaTypeDescriptor<Object> jtd = typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( castTargetName );
+			if ( jtd != null ) {
+				assert jtd instanceof BasicJavaDescriptor;
+				final SqlTypeDescriptor std = jtd.getJdbcRecommendedSqlType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
+				if ( std != null ) {
+					return typeConfiguration.getBasicTypeRegistry().resolve( (BasicJavaDescriptor<?>) jtd, std );
+				}
+			}
+
+			throw new IllegalArgumentException( "Could not resolve CAST target name : " + castTargetName );
+		}
+		else if ( castTargetContext.INTEGER_LITERAL() != null ) {
+			final Integer castTargetCode = Integer.valueOf( castTargetContext.INTEGER_LITERAL().getText() );
+			log.debugf( "Resolving cast-target code : " + castTargetCode );
+
+			final SqlTypeDescriptor std = typeConfiguration.getSqlTypeDescriptorRegistry().getDescriptor( castTargetCode );
+
+			if ( std != null ) {
+				return typeConfiguration.getBasicTypeRegistry().resolve(
+						std.getJdbcRecommendedJavaTypeMapping( typeConfiguration ),
+						std
+				);
+			}
+
+			throw new IllegalArgumentException( "Could not resolve CAST target code : " + castTargetCode );
+		}
+
+		throw new IllegalArgumentException( "Unexpected CAST target context [" + castTargetContext.getText() + "]; expecting a name or a JDBC type code" );
 	}
 
 	@Override

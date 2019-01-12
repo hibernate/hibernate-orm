@@ -59,8 +59,8 @@ public class BasicCriteriaBuildingTests {
 		criteria.where(
 				criteriaBuilder.equal(
 						// grr, see below
-						//root.get( BasicEntity_.data ),
-						root.get( BasicEntity_.DATA ),
+						root.get( BasicEntity_.data ),
+						//root.get( BasicEntity_.DATA ),
 						criteriaBuilder.parameter( String.class )
 				)
 		);

@@ -6,9 +6,9 @@
  */
 package org.hibernate.query.sqm.tree.expression.function;
 
-import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 
 /**
  * @author Steve Ebersole
@@ -17,29 +17,21 @@ public class SqmCastFunction extends AbstractSqmFunction implements SqmFunction 
 	public static final String NAME = "cast";
 
 	private final SqmExpression expressionToCast;
-	private final String explicitSqlCastTarget;
 
 	public SqmCastFunction(
 			SqmExpression expressionToCast,
-			AllowableFunctionReturnType castTargetType) {
-		this( expressionToCast, castTargetType, null );
-	}
-
-	public SqmCastFunction(
-			SqmExpression expressionToCast,
-			AllowableFunctionReturnType castTargetType,
-			String explicitSqlCastTarget) {
+			BasicValuedExpressableType<?> castTargetType) {
 		super( castTargetType );
 		this.expressionToCast = expressionToCast;
-		this.explicitSqlCastTarget = explicitSqlCastTarget;
+	}
+
+	@Override
+	public BasicValuedExpressableType getExpressableType() {
+		return (BasicValuedExpressableType) super.getExpressableType();
 	}
 
 	public SqmExpression getExpressionToCast() {
 		return expressionToCast;
-	}
-
-	public String getExplicitSqlCastTarget() {
-		return explicitSqlCastTarget;
 	}
 
 	@Override

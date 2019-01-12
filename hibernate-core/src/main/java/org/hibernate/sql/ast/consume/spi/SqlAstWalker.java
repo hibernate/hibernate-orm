@@ -23,6 +23,7 @@ import org.hibernate.sql.ast.tree.spi.expression.ConcatFunction;
 import org.hibernate.sql.ast.tree.spi.expression.CountFunction;
 import org.hibernate.sql.ast.tree.spi.expression.CountStarFunction;
 import org.hibernate.sql.ast.tree.spi.expression.CurrentDateFunction;
+import org.hibernate.sql.ast.tree.spi.expression.CurrentInstantFunction;
 import org.hibernate.sql.ast.tree.spi.expression.CurrentTimeFunction;
 import org.hibernate.sql.ast.tree.spi.expression.CurrentTimestampFunction;
 import org.hibernate.sql.ast.tree.spi.expression.ExtractFunction;
@@ -33,13 +34,12 @@ import org.hibernate.sql.ast.tree.spi.expression.LowerFunction;
 import org.hibernate.sql.ast.tree.spi.expression.MaxFunction;
 import org.hibernate.sql.ast.tree.spi.expression.MinFunction;
 import org.hibernate.sql.ast.tree.spi.expression.ModFunction;
-import org.hibernate.sql.ast.tree.spi.expression.NamedParameter;
 import org.hibernate.sql.ast.tree.spi.expression.NonStandardFunction;
 import org.hibernate.sql.ast.tree.spi.expression.NullifFunction;
-import org.hibernate.sql.ast.tree.spi.expression.PositionalParameter;
 import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.spi.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.spi.expression.SqrtFunction;
+import org.hibernate.sql.ast.tree.spi.expression.SubQuery;
 import org.hibernate.sql.ast.tree.spi.expression.SubstrFunction;
 import org.hibernate.sql.ast.tree.spi.expression.SumFunction;
 import org.hibernate.sql.ast.tree.spi.expression.TrimFunction;
@@ -119,11 +119,7 @@ public interface SqlAstWalker {
 
 	void visitCoalesceFunction(CoalesceFunction coalesceExpression);
 
-	void visitNamedParameter(NamedParameter namedParameter);
-
 	void visitGenericParameter(GenericParameter parameter);
-
-	void visitPositionalParameter(PositionalParameter positionalParameter);
 
 	void visitQueryLiteral(QueryLiteral queryLiteral);
 
@@ -179,6 +175,8 @@ public interface SqlAstWalker {
 
 	void visitCurrentTimestampFunction(CurrentTimestampFunction function);
 
+	void visitCurrentInstantFunction(CurrentInstantFunction function);
+
 	void visitTuple(SqlTuple tuple);
 
 	void visitExtractFunction(ExtractFunction extractFunction);
@@ -210,4 +208,6 @@ public interface SqlAstWalker {
 	void visitEntityTypeLiteral(EntityTypeLiteral expression);
 
 	void visitDiscriminatorReference(DiscriminatorReference reference);
+
+	void visitSubQuery(SubQuery subQuery);
 }

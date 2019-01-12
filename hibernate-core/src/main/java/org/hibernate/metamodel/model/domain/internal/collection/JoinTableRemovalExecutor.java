@@ -21,11 +21,11 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.consume.spi.SqlDeleteToJdbcDeleteConverter;
 import org.hibernate.sql.ast.tree.spi.DeleteStatement;
 import org.hibernate.sql.ast.tree.spi.expression.LiteralParameter;
-import org.hibernate.sql.ast.tree.spi.expression.PositionalParameter;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
+import org.hibernate.sql.exec.internal.StandardJdbcParameterImpl;
 import org.hibernate.sql.exec.spi.BasicExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcDelete;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
@@ -79,7 +79,7 @@ public class JoinTableRemovalExecutor implements CollectionRemovalExecutor {
 		final Junction deleteRestriction = new Junction( Junction.Nature.CONJUNCTION );
 		collectionDescriptor.getCollectionKeyDescriptor().visitColumns(
 				(BiConsumer<SqlExpressableType, Column>) (jdbcType, column) -> {
-					final PositionalParameter parameter = new PositionalParameter(
+					final StandardJdbcParameterImpl parameter = new StandardJdbcParameterImpl(
 							parameterCount.getAndIncrement(),
 							column.getExpressableType(),
 							Clause.INSERT,

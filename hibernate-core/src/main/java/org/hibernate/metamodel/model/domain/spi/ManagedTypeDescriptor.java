@@ -92,6 +92,12 @@ public interface ManagedTypeDescriptor<T>
 
 	List<NonIdPersistentAttribute> getDeclaredPersistentAttributes();
 
+	default void visitDeclaredAttributes(Consumer<NonIdPersistentAttribute> consumer) {
+		for ( NonIdPersistentAttribute attribute : getDeclaredPersistentAttributes() ) {
+			consumer.accept( attribute );
+		}
+	}
+
 	default void controlledVisitAttributes(Function<NonIdPersistentAttribute,Boolean> action) {
 		for ( NonIdPersistentAttribute attribute : getPersistentAttributes() ) {
 			final Boolean keepGoing = action.apply( attribute );

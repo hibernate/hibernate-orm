@@ -7,10 +7,11 @@
 package org.hibernate.orm.test.query.criteria;
 
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.criteria.JpaRoot;
+import org.hibernate.query.criteria.spi.CriteriaNodeBuilder;
+import org.hibernate.query.criteria.spi.ExpressionImplementor;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("WeakerAccess")
 public class BasicCriteriaExecutionTests extends BaseSessionFactoryFunctionalTest  {
 	@Override
 	protected void applyMetadataSources(MetadataSources metadataSources) {
@@ -30,7 +32,7 @@ public class BasicCriteriaExecutionTests extends BaseSessionFactoryFunctionalTes
 
 	@Test
 	public void testExecutingBasicCriteriaQuery() {
-		final HibernateCriteriaBuilder criteriaBuilder = sessionFactory().getQueryEngine().getCriteriaBuilder();
+		final CriteriaNodeBuilder criteriaBuilder = sessionFactory().getQueryEngine().getCriteriaBuilder();
 
 		final JpaCriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
 
@@ -44,9 +46,9 @@ public class BasicCriteriaExecutionTests extends BaseSessionFactoryFunctionalTes
 	}
 
 	@Test
-	@FailureExpected( "Criteria nodes do not currently track ExpressableType + StackOverflow resolving implied type" )
+//	@FailureExpected( "Criteria nodes do not currently track ExpressableType + StackOverflow resolving implied type" )
 	public void testExecutingBasicCriteriaQueryLiteralPredicate() {
-		final HibernateCriteriaBuilder criteriaBuilder = sessionFactory().getQueryEngine().getCriteriaBuilder();
+		final CriteriaNodeBuilder criteriaBuilder = sessionFactory().getQueryEngine().getCriteriaBuilder();
 
 		final JpaCriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
 
@@ -54,7 +56,9 @@ public class BasicCriteriaExecutionTests extends BaseSessionFactoryFunctionalTes
 
 		criteria.select( root );
 
-		criteria.where( criteriaBuilder.equal( criteriaBuilder.literal( 1 ), criteriaBuilder.literal( 1 ) ) );
+		final ExpressionImplementor<Integer> one = criteriaBuilder.literal( 1 );
+
+		criteria.where( criteriaBuilder.equal( one, one ) );
 
 		sessionFactoryScope().inSession(
 				session -> session.createQuery( criteria ).list()
@@ -62,9 +66,9 @@ public class BasicCriteriaExecutionTests extends BaseSessionFactoryFunctionalTes
 	}
 
 	@Test
-	@FailureExpected( "Criteria nodes do not currently track ExpressableType" )
+//	@FailureExpected( "Criteria nodes do not currently track ExpressableType" )
 	public void testExecutingBasicCriteriaQueryParameterPredicate() {
-		final HibernateCriteriaBuilder criteriaBuilder = sessionFactory().getQueryEngine().getCriteriaBuilder();
+		final CriteriaNodeBuilder criteriaBuilder = sessionFactory().getQueryEngine().getCriteriaBuilder();
 
 		final JpaCriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
 
@@ -77,7 +81,9 @@ public class BasicCriteriaExecutionTests extends BaseSessionFactoryFunctionalTes
 		criteria.where( criteriaBuilder.equal( param, param ) );
 
 		sessionFactoryScope().inSession(
-				session -> session.createQuery( criteria ).setParameter( param, 1 ).list()
+				session -> session.createQuery( criteria )
+						.setParameter( param, 1 )
+						.list()
 		);
 	}
 }

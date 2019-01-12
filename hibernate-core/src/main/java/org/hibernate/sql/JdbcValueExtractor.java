@@ -10,7 +10,10 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.hibernate.sql.exec.SqlExecLogger;
 import org.hibernate.sql.exec.spi.ExecutionContext;
+
+import org.jboss.logging.Logger;
 
 /**
  * The low-level contract for extracting (reading) values to JDBC.
@@ -24,6 +27,8 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
  * @see SqlExpressableType
  */
 public interface JdbcValueExtractor<J>  {
+	Logger EXTRACT_LOGGER = Logger.getLogger( SqlExecLogger.LOGGER_NAME + ".param.extract" );
+
 	/**
 	 * Extract value from result set
 	 */

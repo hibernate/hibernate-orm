@@ -24,27 +24,36 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 public final class JdbcTypeNameMapper {
 	private static final CoreMessageLogger LOG = messageLogger( JdbcTypeNameMapper.class );
 
-	private static Map<Integer,String> JDBC_TYPE_MAP = buildJdbcTypeMap();
+	private static Map<String,Integer> NAME_TO_CODE;
+	private static Map<Integer,String> CODE_TO_NAME;
 
-	private static Map<Integer, String> buildJdbcTypeMap() {
-		HashMap<Integer, String> map = new HashMap<Integer, String>();
-		Field[] fields = java.sql.Types.class.getFields();
-		if ( fields == null ) {
-			throw new HibernateException( "Unexpected problem extracting JDBC type mapping codes from java.sql.Types" );
-		}
+	static {
+		final Map<String,Integer> nameToCodeMap = new HashMap<>();
+		final Map<Integer,String> codeToNameMap = new HashMap<>();
+
+		final Field[] fields = java.sql.Types.class.getFields();
 		for ( Field field : fields ) {
 			try {
+				final String name = field.getName();
 				final int code = field.getInt( null );
-				String old = map.put( code, field.getName() );
+
+				final String old = codeToNameMap.put( code, name );
 				if ( old != null ) {
-					LOG.JavaSqlTypesMappedSameCodeMultipleTimes( code, old, field.getName() );
+					LOG.JavaSqlTypesMappedSameCodeMultipleTimes( code, old, name );
 				}
+
+				nameToCodeMap.put( name, code );
 			}
-			catch ( IllegalAccessException e ) {
+			catch (IllegalAccessException e) {
 				throw new HibernateException( "Unable to access JDBC type mapping [" + field.getName() + "]", e );
 			}
 		}
-		return Collections.unmodifiableMap( map );
+
+		NAME_TO_CODE = Collections.unmodifiableMap( nameToCodeMap );
+		CODE_TO_NAME = Collections.unmodifiableMap( codeToNameMap );
+	}
+
+	private JdbcTypeNameMapper() {
 	}
 
 	/**
@@ -67,7 +76,7 @@ public final class JdbcTypeNameMapper {
 	 * @see #isStandardTypeCode(int)
 	 */
 	public static boolean isStandardTypeCode(Integer typeCode) {
-		return JDBC_TYPE_MAP.containsKey( typeCode );
+		return CODE_TO_NAME.containsKey( typeCode );
 	}
 
 	/**
@@ -81,14 +90,14 @@ public final class JdbcTypeNameMapper {
 	 * @return The type name.
 	 */
 	public static String getTypeName(Integer typeCode) {
-		String name = JDBC_TYPE_MAP.get( typeCode );
+		String name = CODE_TO_NAME.get( typeCode );
 		if ( name == null ) {
 			return "UNKNOWN(" + typeCode + ")";
 		}
 		return name;
 	}
 
-	private JdbcTypeNameMapper() {
+	public static Integer getTypeCode(String name) {
+		return NAME_TO_CODE.get( name );
 	}
-
 }

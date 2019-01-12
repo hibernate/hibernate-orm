@@ -132,10 +132,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		try {
 			return (Class<T>) Class.forName( className, true, getAggregatedClassLoader() );
 		}
-		catch (Exception e) {
-			throw new ClassLoadingException( "Unable to load class [" + className + "]", e );
-		}
-		catch (LinkageError e) {
+		catch (Exception | LinkageError e) {
 			throw new ClassLoadingException( "Unable to load class [" + className + "]", e );
 		}
 	}

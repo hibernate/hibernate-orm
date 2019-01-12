@@ -8,6 +8,7 @@ package org.hibernate.metamodel.model.domain.spi;
 
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.sql.SqlExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 
@@ -18,7 +19,7 @@ import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface BasicValueMapper<J> {
+public interface BasicValueMapper<J> extends BasicValuedExpressableType<J> {
 	/**
 	 * The JTD for the value as part of the domain model
 	 */
@@ -41,4 +42,14 @@ public interface BasicValueMapper<J> {
 	 * The resolved MutabilityPlan
 	 */
 	MutabilityPlan<J> getMutabilityPlan();
+
+	@Override
+	default BasicJavaDescriptor getJavaTypeDescriptor() {
+		return getDomainJavaDescriptor();
+	}
+
+	@Override
+	default Class getJavaType() {
+		return getDomainJavaDescriptor().getJavaType();
+	}
 }

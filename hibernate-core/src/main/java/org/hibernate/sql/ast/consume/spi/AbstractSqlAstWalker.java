@@ -25,7 +25,9 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.SqlTreeException;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
+import org.hibernate.sql.ast.tree.spi.expression.CurrentInstantFunction;
 import org.hibernate.sql.ast.tree.spi.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.spi.expression.SubQuery;
 import org.hibernate.sql.ast.tree.spi.expression.SubstrFunction;
 import org.hibernate.sql.ast.tree.spi.expression.domain.DiscriminatorReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.EntityTypeLiteral;
@@ -56,10 +58,8 @@ import org.hibernate.sql.ast.tree.spi.expression.LowerFunction;
 import org.hibernate.sql.ast.tree.spi.expression.MaxFunction;
 import org.hibernate.sql.ast.tree.spi.expression.MinFunction;
 import org.hibernate.sql.ast.tree.spi.expression.ModFunction;
-import org.hibernate.sql.ast.tree.spi.expression.NamedParameter;
 import org.hibernate.sql.ast.tree.spi.expression.NonStandardFunction;
 import org.hibernate.sql.ast.tree.spi.expression.NullifFunction;
-import org.hibernate.sql.ast.tree.spi.expression.PositionalParameter;
 import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.spi.expression.SqrtFunction;
 import org.hibernate.sql.ast.tree.spi.expression.SumFunction;
@@ -546,6 +546,11 @@ public abstract class AbstractSqlAstWalker
 	}
 
 	@Override
+	public void visitCurrentInstantFunction(CurrentInstantFunction function) {
+		appendSql( "current_timestamp" );
+	}
+
+	@Override
 	public void visitTuple(SqlTuple tuple) {
 		List<Expression> expressions = tuple.getExpressions();
 		String separator = NO_SEPARATOR;
@@ -676,6 +681,13 @@ public abstract class AbstractSqlAstWalker
 	}
 
 	@Override
+	public void visitSubQuery(SubQuery subQuery) {
+		appendSql( "(" );
+		visitQuerySpec( subQuery.getQuerySpec() );
+		appendSql( ")" );
+	}
+
+	@Override
 	public void visitSqlSelectionExpression(SqlSelectionExpression expression) {
 		final boolean useSelectionPosition = getSessionFactory().getJdbcServices()
 				.getDialect()
@@ -781,24 +793,13 @@ public abstract class AbstractSqlAstWalker
 		}
 	}
 
-
-
+	@SuppressWarnings("WeakerAccess")
 	protected void visitJdbcParameterBinder(JdbcParameterBinder jdbcParameterBinder) {
 		parameterBinders.add( jdbcParameterBinder );
 
-		// todo (6.0) : ? wrap in cast function call if the literal occurs in SELECT (?based on Dialect?)
+		// todo (6.0) : (enhancement) wrap in cast function call if the literal occurs in SELECT based on Dialect?
 
 		appendSql( "?" );
-	}
-
-	@Override
-	public void visitNamedParameter(NamedParameter namedParameter) {
-		visitJdbcParameterBinder( namedParameter );
-	}
-
-	@Override
-	public void visitPositionalParameter(PositionalParameter positionalParameter) {
-		visitJdbcParameterBinder( positionalParameter );
 	}
 
 	@Override

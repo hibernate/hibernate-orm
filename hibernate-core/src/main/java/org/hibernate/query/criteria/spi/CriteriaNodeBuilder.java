@@ -81,8 +81,10 @@ public class CriteriaNodeBuilder implements HibernateCriteriaBuilder {
 	}
 
 	@Override
-	public <X, T> JpaExpression<X> cast(JpaExpression<T> expression, Class<X> castTargetJavaType) {
-		throw new NotYetImplementedFor6Exception();
+	public <X, T> ExpressionImplementor<X> cast(JpaExpression<T> expression, Class<X> castTargetJavaType) {
+		return expression.getJavaType() != null && castTargetJavaType.equals( expression.getJavaType() )
+				? (ExpressionImplementor<X>) expression
+				: new CastFunction<>( (ExpressionImplementor<T>) expression, castTargetJavaType, this );
 	}
 
 	public PredicateImplementor wrap(ExpressionImplementor<Boolean> expression) {
@@ -321,6 +323,18 @@ public class CriteriaNodeBuilder implements HibernateCriteriaBuilder {
 	@Override
 	public <N extends Number> AggregationFunction<N> min(Expression<N> argument) {
 		return new AggregationFunction.MIN<>( (ExpressionImplementor<N>) argument, this );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <X extends Comparable<? super X>> ExpressionImplementor<X> greatest(Expression<X> argument) {
+		return new AggregationFunction.GREATEST( (ExpressionImplementor) argument, this );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <X extends Comparable<? super X>> JpaExpression<X> least(Expression<X> argument) {
+		return new AggregationFunction.LEAST( (ExpressionImplementor) argument, this );
 	}
 
 	@Override
@@ -1273,15 +1287,6 @@ public class CriteriaNodeBuilder implements HibernateCriteriaBuilder {
 
 
 
-	@Override
-	public <X extends Comparable<? super X>> ExpressionImplementor<X> greatest(Expression<X> argument) {
-		throw new NotYetImplementedFor6Exception();
-	}
-
-	@Override
-	public <X extends Comparable<? super X>> JpaExpression<X> least(Expression<X> argument) {
-		throw new NotYetImplementedFor6Exception();
-	}
 
 	@Override
 	public <K, M extends Map<K, ?>> JpaExpression<Set<K>> keys(M map) {

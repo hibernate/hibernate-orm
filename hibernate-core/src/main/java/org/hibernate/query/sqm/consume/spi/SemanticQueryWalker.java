@@ -51,6 +51,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmConcatFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCountFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCountStarFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCurrentDateFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmCurrentInstantFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimeFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimestampFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractFunction;
@@ -211,11 +212,13 @@ public interface SemanticQueryWalker<T> {
 
 	T visitCountStarFunction(SqmCountStarFunction expression);
 
-	T visitCurrentDateFunction(SqmCurrentDateFunction sqmCurrentDate);
+	T visitCurrentDateFunction(SqmCurrentDateFunction sqmFunction);
 
-	T visitCurrentTimeFunction(SqmCurrentTimeFunction sqmCurrentTimeFunction);
+	T visitCurrentTimeFunction(SqmCurrentTimeFunction sqmFunction);
 
-	T visitCurrentTimestampFunction(SqmCurrentTimestampFunction sqmCurrentTimestampFunction);
+	T visitCurrentTimestampFunction(SqmCurrentTimestampFunction sqmFunction);
+
+	T visitCurrentInstantFunction(SqmCurrentInstantFunction sqmFunction);
 
 	T visitExtractFunction(SqmExtractFunction function);
 

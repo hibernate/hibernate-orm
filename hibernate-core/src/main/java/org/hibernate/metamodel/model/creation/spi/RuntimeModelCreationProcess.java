@@ -6,17 +6,22 @@
  */
 package org.hibernate.metamodel.model.creation.spi;
 
+import java.lang.reflect.Field;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.persistence.NamedAttributeNode;
 import javax.persistence.NamedEntityGraph;
 import javax.persistence.NamedSubgraph;
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.Type;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
@@ -24,6 +29,8 @@ import org.hibernate.boot.model.domain.MappedSuperclassMapping;
 import org.hibernate.boot.model.domain.ResolutionContext;
 import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
 import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -40,19 +47,27 @@ import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifierComposite;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeNonAggregated;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.InheritanceCapable;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.metamodel.model.domain.spi.MappedSuperclassTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.metamodel.model.relational.spi.RuntimeDatabaseModelProducer;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
@@ -61,6 +76,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting.DISABLED;
+import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting.IGNORE_UNSUPPORTED;
 import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting.determineJpaMetaModelPopulationSetting;
 
 /**
@@ -82,6 +99,8 @@ public class RuntimeModelCreationProcess implements ResolutionContext {
 	private final BootstrapContext bootstrapContext;
 	private final MetadataBuildingContext metadataBuildingContext;
 	private final InFlightRuntimeModel inFlightRuntimeModel;
+
+	private final JpaStaticMetaModelPopulationSetting jpaMetaModelPopulationSetting;
 
 	private final RuntimeModelDescriptorFactory descriptorFactory;
 
@@ -110,6 +129,7 @@ public class RuntimeModelCreationProcess implements ResolutionContext {
 
 		this.descriptorFactory = sessionFactory.getServiceRegistry().getService( RuntimeModelDescriptorFactory.class );
 
+		this.jpaMetaModelPopulationSetting = determineJpaMetaModelPopulationSetting( sessionFactory.getProperties() );
 	}
 
 	public SessionFactoryImplementor getSessionFactory() {
@@ -132,10 +152,6 @@ public class RuntimeModelCreationProcess implements ResolutionContext {
 		final DatabaseObjectResolutionContextImpl dbObjectResolver = new DatabaseObjectResolutionContextImpl();
 		final DatabaseModel databaseModel = new RuntimeDatabaseModelProducer( metadataBuildingContext.getBootstrapContext() )
 				.produceDatabaseModel( mappingMetadata.getDatabase(), dbObjectResolver, dbObjectResolver );
-
-		final JpaStaticMetaModelPopulationSetting jpaMetaModelPopulationSetting = determineJpaMetaModelPopulationSetting(
-				sessionFactory.getProperties()
-		);
 
 		final RuntimeModelCreationContext creationContext = new RuntimeModelCreationContextImpl(
 				mappingMetadata,
@@ -276,7 +292,7 @@ public class RuntimeModelCreationProcess implements ResolutionContext {
 		SchemaManagementToolCoordinator.process(
 				databaseModel,
 				sessionFactory.getServiceRegistry(),
-				action -> sessionFactory.addObserver( action )
+				sessionFactory::addObserver
 		);
 
 		mappingMetadata.getNamedEntityGraphs().values().forEach( this::applyNamedEntityGraph );
@@ -291,7 +307,151 @@ public class RuntimeModelCreationProcess implements ResolutionContext {
 						.collect( Collectors.toSet() )
 		);
 
+		inFlightRuntimeModel.visitEntityDescriptors( this::populateStaticMetamodelDescriptor );
+		inFlightRuntimeModel.visitMappedSuperclassDescriptors( this::populateStaticMetamodelDescriptor );
+		inFlightRuntimeModel.visitEmbeddedDescriptors( this::populateStaticMetamodelDescriptor );
+
 		return inFlightRuntimeModel.complete( sessionFactory, metadataBuildingContext );
+	}
+
+	private <X> void populateStaticMetamodelDescriptor(ManagedTypeDescriptor<X> managedTypeDescriptor) {
+		if ( jpaMetaModelPopulationSetting == DISABLED ) {
+			return;
+		}
+
+		final Class<X> managedTypeClass = managedTypeDescriptor.getJavaType();
+		if ( managedTypeClass == null ) {
+			// should indicate MAP entity mode
+
+			if ( jpaMetaModelPopulationSetting == IGNORE_UNSUPPORTED ) {
+				return;
+			}
+
+			throw new UnsupportedOperationException( "Cannot populate JPA static metamodel descriptor for non-POJO ManageType : " + managedTypeDescriptor.getDomainTypeName() );
+		}
+
+		final String staticModelDescriptorName = managedTypeClass.getName() + '_';
+		try {
+			final Class staticModelDescriptor = sessionFactory.getServiceRegistry()
+					.getService( ClassLoaderService.class )
+					.classForName( staticModelDescriptorName );
+
+			// we found the class; so populate it...
+			pushAttributeDescriptors( staticModelDescriptor, managedTypeDescriptor );
+
+			// todo (6.0) : register it as a known basic JTD?
+
+			if ( managedTypeDescriptor instanceof InheritanceCapable<?> ) {
+				final InheritanceCapable superclassType = ( (InheritanceCapable) managedTypeDescriptor ).getSuperclassType();
+				if ( superclassType != null ) {
+					//noinspection unchecked
+					populateStaticMetamodelDescriptor( superclassType );
+				}
+			}
+		}
+		catch (ClassLoadingException ignore) {
+			log.debugf( "Could not locate JPA static metamodel descriptor [%s] - skipping", staticModelDescriptorName );
+		}
+
+	}
+
+
+	private final Set<Class> processedMetamodelClasses = new HashSet<>();
+
+	private <X> void pushAttributeDescriptors(Class metamodelClass, ManagedTypeDescriptor<X> managedType) {
+		if ( ! processedMetamodelClasses.add( metamodelClass ) ) {
+			return;
+		}
+
+		// push the attribute descriptors on to the metamodel class...
+		managedType.visitDeclaredAttributes( attributeDescriptor -> pushAttributeDescriptor( metamodelClass, attributeDescriptor ) );
+
+
+		// special handling for identifier and version attributes
+		if ( managedType instanceof IdentifiableTypeDescriptor ) {
+			final IdentifiableTypeDescriptor<X> identifiableTypeDescriptor = (IdentifiableTypeDescriptor<X>) managedType;
+			final EntityHierarchy hierarchy = (identifiableTypeDescriptor).getHierarchy();
+
+			// handle version
+			if ( hierarchy.getVersionDescriptor() != null ) {
+				// the hierarchy has a version.  See if the version attribute is declared on
+				// the class we are currently processing
+				if ( hierarchy.getVersionDescriptor().getDeclaringType().equals( managedType ) ) {
+					pushAttributeDescriptor( metamodelClass, hierarchy.getVersionDescriptor() );
+				}
+			}
+
+			// handle identifier
+			final EntityIdentifier<Object, Object> idDescriptor = hierarchy.getIdentifierDescriptor();
+			if ( idDescriptor instanceof SingularPersistentAttribute ) {
+				final SingularPersistentAttribute idAttributeDescriptor = (SingularPersistentAttribute) idDescriptor;
+				if ( idAttributeDescriptor.getDeclaringType().equals( managedType ) ) {
+					pushAttributeDescriptor( metamodelClass, idAttributeDescriptor );
+				}
+
+				if ( idDescriptor instanceof EntityIdentifierComposite ) {
+					//noinspection unchecked
+					populateStaticMetamodelDescriptor( ( (EntityIdentifierComposite) idAttributeDescriptor ).getEmbeddedDescriptor() );
+				}
+			}
+			else {
+				assert idDescriptor instanceof EntityIdentifierCompositeNonAggregated;
+				final EntityIdentifierCompositeNonAggregated<?,?> cidDescriptor = (EntityIdentifierCompositeNonAggregated) idDescriptor;
+				cidDescriptor.getEmbeddedDescriptor().visitDeclaredAttributes(
+						attributeDescriptor -> pushAttributeDescriptor( metamodelClass, attributeDescriptor )
+				);
+			}
+		}
+	}
+
+	private void pushAttributeDescriptor(Class metamodelClass, PersistentAttribute<?, ?> attribute) {
+		final String name = attribute.getName();
+		try {
+			// there is a shortcoming in the existing Hibernate code in terms of the way MappedSuperclass
+			// support was bolted on which comes to bear right here when the attribute is an embeddable type
+			// defined on a MappedSuperclass.  We do not have the correct information to determine the
+			// appropriate attribute declarer in such cases and so the incoming metamodelClass most likely
+			// does not represent the declarer in such cases.
+			//
+			// As a result, in the case of embeddable classes we simply use getField rather than get
+			// getDeclaredField
+			final boolean allowNonDeclaredFieldReference =
+					attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED
+							|| attribute.getDeclaringType().getPersistenceType() == Type.PersistenceType.EMBEDDABLE;
+
+			final Field field = allowNonDeclaredFieldReference
+					? metamodelClass.getField( name )
+					: metamodelClass.getDeclaredField( name );
+			try {
+				// should be public anyway, but to be sure...
+				ReflectHelper.ensureAccessibility( field );
+				field.set( null, attribute );
+			}
+			catch (IllegalAccessException e) {
+				// todo : exception type?
+				throw new AssertionFailure(
+						"Unable to inject static metamodel attribute : " + metamodelClass.getName() + '#' + name,
+						e
+				);
+			}
+			catch (IllegalArgumentException e) {
+				// most likely a mismatch in the type we are injecting and the defined field; this represents a
+				// mismatch in how the annotation processor interpretted the attribute and how our metamodel
+				// and/or annotation binder did.
+
+				// This is particularly the case as arrays are not handled properly by the StaticMetamodel generator
+
+				RuntimeModelCreationLogger.INSTANCE.illegalArgumentOnStaticMetamodelFieldInjection(
+						metamodelClass.getName(),
+						name,
+						attribute.getClass().getName(),
+						field.getType().getName()
+				);
+			}
+		}
+		catch (NoSuchFieldException e) {
+			RuntimeModelCreationLogger.INSTANCE.unableToLocateStaticMetamodelField( metamodelClass.getName(), name );
+		}
 	}
 
 //	private void resolveForeignKeys(
@@ -376,35 +536,19 @@ public class RuntimeModelCreationProcess implements ResolutionContext {
 			IdentifiableTypeMappingImplementor bootMapping,
 			IdentifiableTypeDescriptor superTypeDescriptor,
 			RuntimeModelCreationContext creationContext) {
-		final IdentifiableTypeDescriptor runtimeType = bootMapping.makeRuntimeDescriptor(
-				superTypeDescriptor,
-				creationContext
-		);
+		final IdentifiableTypeDescriptor runtimeType = bootMapping.makeRuntimeDescriptor( superTypeDescriptor, creationContext );
 
 		bootByRuntime.put( runtimeType, bootMapping );
 		runtimeByBoot.put( bootMapping, runtimeType );
 
-		if ( runtimeType instanceof EntityTypeDescriptor ) {
-			creationContext.registerEntityDescriptor( (EntityTypeDescriptor) runtimeType, (EntityMapping) bootMapping );
-		}
-		else if ( runtimeType instanceof MappedSuperclassTypeDescriptor ) {
-			creationContext.registerMappedSuperclassDescriptor(
-					(MappedSuperclassTypeDescriptor) runtimeType,
-					(MappedSuperclassMapping) bootMapping
-			);
-		}
 		return runtimeType;
 	}
 
-	@SuppressWarnings("unchecked")
 	private void finishInitialization(
 			IdentifiableTypeDescriptor runtimeType,
 			IdentifiableTypeMappingImplementor bootType,
 			RuntimeModelCreationContext creationContext) {
-		runtimeType.finishInitialization(
-				bootType,
-				creationContext
-		);
+		runtimeType.finishInitialization( bootType, creationContext );
 
 		for ( IdentifiableTypeMapping subTypeMapping : bootType.getSubTypeMappings() ) {
 			finishInitialization(
@@ -588,6 +732,14 @@ public class RuntimeModelCreationProcess implements ResolutionContext {
 					addNaturalIdCachingConfig( runtimeDescriptor, rootBootMapping, accessType );
 				}
 			}
+
+			if ( getJpaStaticMetaModelPopulationSetting() != DISABLED ) {
+				populateJpaStaticMetamodelDescriptor( runtimeDescriptor );
+			}
+		}
+
+		private void populateJpaStaticMetamodelDescriptor(EntityTypeDescriptor runtimeDescriptor) {
+
 		}
 
 		private void addEntityCachingConfig(

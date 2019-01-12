@@ -549,6 +549,7 @@ standardFunction
 	|	currentDateFunction
 	|	currentTimeFunction
 	|	currentTimestampFunction
+	|	currentInstantFunction
 	|	extractFunction
 	|	positionFunction
 	|	charLengthFunction
@@ -562,14 +563,10 @@ castFunction
 	;
 
 castTarget
-	// todo (6.0) : should allow either
-	// 		- named cast (IDENTIFIER)
-	//			- JavaTypeDescriptorRegistry (imported) key
-	//			- java.sql.Types field NAME (alias for its value as a coded cast)
-	//			- "pass through"
-	//		- coded cast (INTEGER_LITERAL)
-	//			- SqlTypeDescriptorRegistry key
+	// todo (6.0) : should we use the `identifier` rule instead of the IDENTIFIER token?
+	//		- depends on whether we see need to support any key/reserved words as such a target
 	: IDENTIFIER
+	| INTEGER_LITERAL
 	;
 
 concatFunction
@@ -664,6 +661,10 @@ currentTimeFunction
 
 currentTimestampFunction
 	: CURRENT_TIMESTAMP (LEFT_PAREN RIGHT_PAREN)?
+	;
+
+currentInstantFunction
+	: CURRENT_INSTANT (LEFT_PAREN RIGHT_PAREN)?
 	;
 
 extractFunction
@@ -768,6 +769,7 @@ identifier
 	| LENGTH
 	| LIKE
 	| LIST
+	| LIMIT
 	| LOWER
 	| MAP
 	| MAX
@@ -776,6 +778,7 @@ identifier
 	| MEMBER
 	| MONTH
 	| OBJECT
+	| OFFSET
 	| ON
 	| OR
 	| ORDER

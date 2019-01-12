@@ -69,7 +69,7 @@ public class CriteriaQueryToSqmTransformer extends BaseCriteriaVisitor {
 	private final UniqueIdGenerator uidGenerator = new UniqueIdGenerator();
 
 	private Map<NavigablePath, Set<SqmNavigableJoin>> fetchedJoinsByParentPath;
-	private Map<ParameterExpression<?>, SqmParameter> parameterExpressionMap;
+	private Map<ParameterExpression<?>, JpaParameterSqmWrapper> parameterExpressionMap;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -275,11 +275,11 @@ public class CriteriaQueryToSqmTransformer extends BaseCriteriaVisitor {
 	}
 
 	@Override
-	public SqmParameter visitParameter(ParameterExpression<?> expression) {
+	public JpaParameterSqmWrapper visitParameter(ParameterExpression<?> expression) {
 		if ( parameterExpressionMap != null ) {
 			// we have processed parameter-expressions previously - see if we have
-			// processed that specific one and if so, reuse it.
-			final SqmParameter existing = parameterExpressionMap.get( expression );
+			// processed that specific one and, if so, reuse its wrapper
+			final JpaParameterSqmWrapper existing = parameterExpressionMap.get( expression );
 			if ( existing != null ) {
 				return existing;
 			}
@@ -295,9 +295,8 @@ public class CriteriaQueryToSqmTransformer extends BaseCriteriaVisitor {
 				expression,
 				multiValuedParameterBindingsAllowed
 		);
-		parameterExpressionMap.put( expression, sqmParam );
 
-		// report the creation to the registered consumer
+		parameterExpressionMap.put( expression, sqmParam );
 		parameterCollector.addParameter( sqmParam );
 
 		return sqmParam;

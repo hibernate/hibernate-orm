@@ -69,7 +69,7 @@ public abstract class AbstractParameter
 			PreparedStatement statement,
 			int startPosition,
 			ExecutionContext executionContext) throws SQLException {
-		final JdbcParameterBinding binding = executionContext.getJdbcParameterBindings().getBinding( AbstractParameter.this );
+		final JdbcParameterBinding binding = executionContext.getJdbcParameterBindings().getBinding( this );
 		if ( binding == null ) {
 			throw new ExecutionException( "JDBC parameter value not bound - " + this );
 		}

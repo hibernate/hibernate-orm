@@ -90,4 +90,9 @@
 |90005500
 |org.hibernate.sql.ast.tree.spi.SqlAstTreeLogger
 
+
+|90005501
+|90005600
+|org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationLogger
+
 |===

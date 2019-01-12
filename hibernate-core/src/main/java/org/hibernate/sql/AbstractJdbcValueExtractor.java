@@ -10,13 +10,10 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.hibernate.internal.CoreLogging;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
-
-import org.jboss.logging.Logger;
 
 /**
  * Convenience base implementation of {@link JdbcValueExtractor}
@@ -24,8 +21,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public abstract class AbstractJdbcValueExtractor<J> implements JdbcValueExtractor<J> {
-	private static final Logger log = CoreLogging.logger( AbstractJdbcValueExtractor.class );
-
 	private final JavaTypeDescriptor<J> javaDescriptor;
 	private final SqlTypeDescriptor sqlDescriptor;
 
@@ -45,10 +40,10 @@ public abstract class AbstractJdbcValueExtractor<J> implements JdbcValueExtracto
 	@Override
 	public J extract(ResultSet rs, int position, ExecutionContext executionContext) throws SQLException {
 		final J value = doExtract( rs, position, executionContext );
-		final boolean traceEnabled = log.isTraceEnabled();
+		final boolean traceEnabled = EXTRACT_LOGGER.isTraceEnabled();
 		if ( value == null || rs.wasNull() ) {
 			if ( traceEnabled ) {
-				log.tracef(
+				EXTRACT_LOGGER.tracef(
 						"extracted value ([%s] : [%s]) - [null]",
 						position,
 						JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getJdbcTypeCode() )
@@ -58,7 +53,7 @@ public abstract class AbstractJdbcValueExtractor<J> implements JdbcValueExtracto
 		}
 		else {
 			if ( traceEnabled ) {
-				log.tracef(
+				EXTRACT_LOGGER.tracef(
 						"extracted value ([%s] : [%s]) - [%s]",
 						position,
 						JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getJdbcTypeCode() ),
@@ -79,10 +74,10 @@ public abstract class AbstractJdbcValueExtractor<J> implements JdbcValueExtracto
 	@Override
 	public J extract(CallableStatement statement, int index, ExecutionContext executionContext) throws SQLException {
 		final J value = doExtract( statement, index, executionContext );
-		final boolean traceEnabled = log.isTraceEnabled();
+		final boolean traceEnabled = EXTRACT_LOGGER.isTraceEnabled();
 		if ( value == null || statement.wasNull() ) {
 			if ( traceEnabled ) {
-				log.tracef(
+				EXTRACT_LOGGER.tracef(
 						"extracted procedure output  parameter ([%s] : [%s]) - [null]",
 						index,
 						JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getJdbcTypeCode() )
@@ -92,7 +87,7 @@ public abstract class AbstractJdbcValueExtractor<J> implements JdbcValueExtracto
 		}
 		else {
 			if ( traceEnabled ) {
-				log.tracef(
+				EXTRACT_LOGGER.tracef(
 						"extracted procedure output  parameter ([%s] : [%s]) - [%s]",
 						index,
 						JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getJdbcTypeCode() ),
@@ -113,10 +108,10 @@ public abstract class AbstractJdbcValueExtractor<J> implements JdbcValueExtracto
 	@Override
 	public J extract(CallableStatement statement, String jdbcParameterName, ExecutionContext executionContext) throws SQLException {
 		final J value = doExtract( statement, jdbcParameterName, executionContext );
-		final boolean traceEnabled = log.isTraceEnabled();
+		final boolean traceEnabled = EXTRACT_LOGGER.isTraceEnabled();
 		if ( value == null || statement.wasNull() ) {
 			if ( traceEnabled ) {
-				log.tracef(
+				EXTRACT_LOGGER.tracef(
 						"extracted named procedure output  parameter ([%s] : [%s]) - [null]",
 						jdbcParameterName,
 						JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getJdbcTypeCode() )
@@ -126,7 +121,7 @@ public abstract class AbstractJdbcValueExtractor<J> implements JdbcValueExtracto
 		}
 		else {
 			if ( traceEnabled ) {
-				log.tracef(
+				EXTRACT_LOGGER.tracef(
 						"extracted named procedure output  parameter ([%s] : [%s]) - [%s]",
 						jdbcParameterName,
 						JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getJdbcTypeCode() ),

@@ -14,6 +14,8 @@ import org.hibernate.annotations.Remove;
 import org.hibernate.sql.exec.SqlExecLogger;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 
+import org.jboss.logging.Logger;
+
 /**
  * The low-level contract for binding (writing) values to JDBC.
  *
@@ -25,12 +27,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
  * @see JdbcValueExtractor
  */
 public interface JdbcValueBinder<J> {
-	/**
-	 * @deprecated Use {@link SqlExecLogger} instead
-	 */
-	@Remove
-	@Deprecated
-	SqlExecLogger BINDING_LOGGER = SqlExecLogger.INSTANCE;
+	Logger BIND_LOGGER = Logger.getLogger( SqlExecLogger.LOGGER_NAME + ".param.bind" );
 
 	/**
 	 * Bind a value to a prepared statement.

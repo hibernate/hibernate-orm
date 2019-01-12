@@ -116,22 +116,32 @@ public class Helper {
 	}
 
 
+	/**
+	 * Used during SQM-based Query execution to create JdbcParameterBindings from Query parameters
+	 * and bindings.  Assumptions are made here based on this only being used from SQM-based handling
+	 */
 	public static JdbcParameterBindings createJdbcParameterBindings(
 			QueryParameterBindings<QueryParameterBinding<?>> domainParamBindings,
 			Map<QueryParameterImplementor,List<JdbcParameter>> jdbcParamsByDomainParams,
+			Map<QueryParameterImplementor,AllowableParameterType<?>> resolvedTypeByDomainParam,
 			SharedSessionContractImplementor session) {
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl();
 
 		domainParamBindings.visitBindings(
 				(queryParameterImplementor, queryParameterBinding) -> {
 					final List<JdbcParameter> jdbcParameters = jdbcParamsByDomainParams.get( queryParameterImplementor );
-					final Object bindValue = domainParamBindings.getBinding( queryParameterImplementor ).getBindValue();
+					final Object bindValue = queryParameterBinding.getBindValue();
 
-					final AllowableParameterType parameterType = determineParameterType( queryParameterBinding, queryParameterImplementor, session );
+					// There may be more than one SqmParameter related to a single QueryParameter
+					//
+					// Ideally we'd have one
+					final AllowableParameterType parameterType = determineParameterType( queryParameterBinding, queryParameterImplementor, resolvedTypeByDomainParam, session );
 
+					// there may be more than one SqmParameter that QueryParameter
 					parameterType.dehydrate(
 							parameterType.unresolve( bindValue, session ),
 							new ExpressableType.JdbcValueCollector() {
+								// the position within `jdbcParameters`, thus local to this `#visitBindings` loop
 								private int position = 0;
 
 								@Override
@@ -142,7 +152,7 @@ public class Helper {
 											new JdbcParameterBinding() {
 												@Override
 												public SqlExpressableType getBindType() {
-													return jdbcParameter.getType();
+													return type;
 												}
 
 												@Override
@@ -195,7 +205,13 @@ public class Helper {
 	private static AllowableParameterType determineParameterType(
 			QueryParameterBinding<?> binding,
 			QueryParameterImplementor<?> parameter,
+			Map<QueryParameterImplementor,AllowableParameterType<?>> resolvedTypeByDomainParam,
 			SharedSessionContractImplementor session) {
+		final AllowableParameterType<?> resolvedType = resolvedTypeByDomainParam.get( parameter );
+		if ( resolvedType != null ) {
+			return resolvedType;
+		}
+
 		if ( binding.getBindType() != null ) {
 			return binding.getBindType();
 		}
@@ -207,6 +223,10 @@ public class Helper {
 		final TypeConfiguration typeConfiguration = session.getFactory().getTypeConfiguration();
 
 		// assume we have (or can create) a mapping for the parameter's Java type
-		return typeConfiguration.standardExpressableTypeForJavaType( parameter.getParameterType() );
+		if ( parameter.getParameterType() != null ) {
+			return typeConfiguration.standardExpressableTypeForJavaType( parameter.getParameterType() );
+		}
+
+		throw new IllegalArgumentException( "Cannot determine type for QueryParameter : " + parameter );
 	}
 }

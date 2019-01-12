@@ -6,9 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression.function;
 
-import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * @author Steve Ebersole
@@ -17,11 +15,7 @@ public class SqmCurrentDateFunction extends AbstractSqmFunction {
 	public static final String NAME = "current_date";
 
 	public SqmCurrentDateFunction() {
-		super( StandardSpiBasicTypes.DATE );
-	}
-
-	public SqmCurrentDateFunction(AllowableFunctionReturnType resultType) {
-		super( resultType );
+		super( null );
 	}
 
 	@Override

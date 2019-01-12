@@ -132,6 +132,7 @@ COUNT				: [cC] [oO] [uU] [nN] [tT];
 CURRENT_DATE		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [dD] [aA] [tT] [eE];
 CURRENT_TIME		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [tT] [iI] [mM] [eE];
 CURRENT_TIMESTAMP	: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [tT] [iI] [mM] [eE] [sS] [tT] [aA] [mM] [pP];
+CURRENT_INSTANT		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [iI] [nN] [sS] [tT] [aA] [nN] [tT];
 CROSS				: [cC] [rR] [oO] [sS] [sS];
 DAY					: [dD] [aA] [yY];
 DELETE				: [dD] [eE] [lL] [eE] [tT] [eE];

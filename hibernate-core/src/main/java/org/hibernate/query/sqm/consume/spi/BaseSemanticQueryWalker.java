@@ -53,6 +53,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmConcatFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCountFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCountStarFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCurrentDateFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmCurrentInstantFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimeFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimestampFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractFunction;
@@ -114,14 +115,14 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitSelectStatement(SqmSelectStatement statement) {
-		visitQuerySpec( statement.getQuerySpec() );
-		return (T) statement;
+	public SessionFactoryImplementor getSessionFactory() {
+		return sessionFactory;
 	}
 
 	@Override
-	public SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory;
+	public T visitSelectStatement(SqmSelectStatement statement) {
+		visitQuerySpec( statement.getQuerySpec() );
+		return (T) statement;
 	}
 
 	@Override
@@ -446,18 +447,23 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitCurrentDateFunction(SqmCurrentDateFunction function) {
-		return (T) function;
+	public T visitCurrentDateFunction(SqmCurrentDateFunction sqmFunction) {
+		return (T) sqmFunction;
 	}
 
 	@Override
-	public T visitCurrentTimeFunction(SqmCurrentTimeFunction function) {
-		return (T) function;
+	public T visitCurrentTimeFunction(SqmCurrentTimeFunction sqmFunction) {
+		return (T) sqmFunction;
 	}
 
 	@Override
-	public T visitCurrentTimestampFunction(SqmCurrentTimestampFunction function) {
-		return (T) function;
+	public T visitCurrentTimestampFunction(SqmCurrentTimestampFunction sqmFunction) {
+		return (T) sqmFunction;
+	}
+
+	@Override
+	public T visitCurrentInstantFunction(SqmCurrentInstantFunction sqmFunction) {
+		return (T) sqmFunction;
 	}
 
 	@Override

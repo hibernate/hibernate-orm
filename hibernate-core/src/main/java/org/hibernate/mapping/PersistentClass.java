@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.EntityJavaTypeMapping;
+import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.MappedJoin;
@@ -40,6 +41,7 @@ import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.SingletonIterator;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.RepresentationMode;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Alias;
@@ -1144,11 +1146,12 @@ public abstract class PersistentClass
 	public <X> IdentifiableTypeDescriptor<X> makeRuntimeDescriptor(
 			IdentifiableTypeDescriptor superTypeDescriptor,
 			RuntimeModelCreationContext creationContext) {
-		return creationContext.getRuntimeModelDescriptorFactory().createEntityDescriptor(
-				this,
-				superTypeDescriptor,
-				creationContext
-		);
+		final EntityTypeDescriptor<X> entityDescriptor = creationContext.getRuntimeModelDescriptorFactory()
+				.createEntityDescriptor( this, superTypeDescriptor, creationContext );
+
+		creationContext.registerEntityDescriptor( entityDescriptor, this );
+
+		return entityDescriptor;
 	}
 
 	@Override

@@ -8,21 +8,23 @@ package org.hibernate.query.sqm.produce.function.spi;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmCastFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCountFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCountStarFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmMaxFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmMinFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSumFunction;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
@@ -81,12 +83,14 @@ public class StandardAnsiSqlSqmAggregationFunctionTemplates {
 				AllowableFunctionReturnType impliedResultType) {
 			final SqmExpression argument = arguments.get( 0 );
 
+			// todo (6.0) : would be better to allow extension of this, probably through JavaTypeDescriptor
 			final Class argumentJavaType = argument.getExpressableType().getJavaType();
-			final boolean isFloatingPointNumber = Float.class.isInstance( argumentJavaType )
-					|| Double.class.isInstance( argumentJavaType );
-			final boolean needsCast = sqlCastTypeForFloatingPointArgTypes != null && !isFloatingPointNumber;
+			final boolean isFloatingPointNumber = Float.class.equals( argumentJavaType )
+					|| Double.class.equals( argumentJavaType )
+					|| BigDecimal.class.equals( argumentJavaType );
+			final boolean needsCast = isFloatingPointNumber && sqlCastTypeForFloatingPointArgTypes != null;
 			final SqmExpression argumentToPass = needsCast
-					? cast( argument, sqlCastTypeForFloatingPointArgTypes )
+					? castFloating( argument, sqlCastTypeForFloatingPointArgTypes )
 					: argument;
 
 			return new SqmAvgFunction( argumentToPass );
@@ -225,11 +229,17 @@ public class StandardAnsiSqlSqmAggregationFunctionTemplates {
 	private StandardAnsiSqlSqmAggregationFunctionTemplates() {
 	}
 
-	static SqmExpression cast(SqmExpression argument, String sqlCastTypeForFloatingPointArgTypes) {
-		return new SqmCastFunction(
-				argument,
-				StandardSpiBasicTypes.DOUBLE,
-				sqlCastTypeForFloatingPointArgTypes
+	static SqmExpression castFloating(SqmExpression sqmArgument, String castTargetType) {
+		return new SelfRenderingSqmFunction(
+				(sqlAppender, sqlAstArguments, walker, sessionFactory) -> {
+					assert sqlAstArguments.size() == 1;
+					final Expression argument = sqlAstArguments.get( 0 );
+					sqlAppender.appendSql( "cast(" );
+					argument.accept( walker );
+					sqlAppender.appendSql( " as " + castTargetType + ")" );
+				},
+				Collections.singletonList( sqmArgument ),
+				StandardSpiBasicTypes.DOUBLE
 		);
 	}
 

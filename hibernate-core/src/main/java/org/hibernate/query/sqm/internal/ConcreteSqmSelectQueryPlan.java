@@ -18,6 +18,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.streams.StingArrayCollector;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.JpaTupleTransformer;
 import org.hibernate.query.spi.QueryOptions;
@@ -59,7 +60,8 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private final RowTransformer<R> rowTransformer;
 
 	private JdbcSelect jdbcSelect;
-	private  Map<QueryParameterImplementor, List<JdbcParameter>> jdbcParamsByDomainParams;
+	private Map<QueryParameterImplementor, List<JdbcParameter>> jdbcParamsByDomainParams;
+	private Map<QueryParameterImplementor, AllowableParameterType<?>> domainParamResolvedTypeMap;
 
 	@SuppressWarnings("WeakerAccess")
 	public ConcreteSqmSelectQueryPlan(
@@ -165,13 +167,30 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 					executionContext.getSession().getSessionFactory()
 			);
 
-			jdbcParamsByDomainParams = generateJdbcParamsByQueryParamMap(
-					sqmConverter );
+			final Map<QueryParameterImplementor,List<JdbcParameter>> jdbcParamsByDomainParams = new HashMap<>();
+			final Map<QueryParameterImplementor,AllowableParameterType<?>> domainParamResolvedTypeMap = new HashMap<>();
+
+			for ( Map.Entry<QueryParameterImplementor<?>, SqmParameter> paramEntry : sqmParamByQueryParam.entrySet() ) {
+				final QueryParameterImplementor<?> domainParam = paramEntry.getKey();
+				final SqmParameter sqmParam = paramEntry.getValue();
+
+				final List<JdbcParameter> jdbcParameters = sqmConverter.getJdbcParamsBySqmParam().get( sqmParam );
+				jdbcParamsByDomainParams.put( domainParam, jdbcParameters );
+
+				final AllowableParameterType<?> domainParamType = sqmConverter.getSqmParamResolvedTypeMap().get( sqmParam );
+				if ( domainParamType != null ) {
+					domainParamResolvedTypeMap.put( domainParam, domainParamType );
+				}
+			}
+
+			this.jdbcParamsByDomainParams = jdbcParamsByDomainParams;
+			this.domainParamResolvedTypeMap = domainParamResolvedTypeMap;
 		}
 
 		final JdbcParameterBindings jdbcParameterBindings = Helper.createJdbcParameterBindings(
 				executionContext.getParameterBindingContext().getQueryParameterBindings(),
 				jdbcParamsByDomainParams,
+				domainParamResolvedTypeMap,
 				executionContext.getSession()
 		);
 
@@ -211,17 +230,6 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		);
 	}
 
-	private Map<QueryParameterImplementor, List<JdbcParameter>> generateJdbcParamsByQueryParamMap(
-			SqmSelectToSqlAstConverter sqmConverter) {
-		final Map<QueryParameterImplementor,List<JdbcParameter>> jdbcParamsByDomainParams = new HashMap<>();
-
-		for ( Map.Entry<QueryParameterImplementor<?>, SqmParameter> paramEntry : sqmParamByQueryParam.entrySet() ) {
-			final List<JdbcParameter> jdbcParameters = sqmConverter.getJdbcParamsBySqmParam().get( paramEntry.getValue() );
-			jdbcParamsByDomainParams.put( paramEntry.getKey(), jdbcParameters );
-		}
-		return jdbcParamsByDomainParams;
-	}
-
 	private SqmSelectToSqlAstConverter getSqmSelectToSqlAstConverter(ExecutionContext executionContext) {
 		// todo (6.0) : for cases where we have no "load query influencers" we could use a cached SQL AST
 		return new SqmSelectToSqlAstConverter(
@@ -248,9 +256,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public ScrollableResultsImplementor performScroll(ScrollMode scrollMode, ExecutionContext executionContext) {
-
 		final SqmSelectToSqlAstConverter sqmConverter = getSqmSelectToSqlAstConverter( executionContext );
-
 		final SqlAstSelectDescriptor interpretation = sqmConverter.interpret( sqm );
 
 		final JdbcSelect jdbcSelect = SqlAstSelectToJdbcSelectConverter.interpret(
@@ -258,12 +264,24 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				executionContext.getSession().getSessionFactory()
 		);
 
-		final Map<QueryParameterImplementor, List<JdbcParameter>> jdbcParamsByDomainParams
-				= generateJdbcParamsByQueryParamMap( sqmConverter );
+		final Map<QueryParameterImplementor,List<JdbcParameter>> jdbcParamsByDomainParams = new HashMap<>();
+		final Map<QueryParameterImplementor,AllowableParameterType<?>> domainParamResolvedTypeMap = new HashMap<>();
+
+		for ( Map.Entry<QueryParameterImplementor<?>, SqmParameter> paramEntry : sqmParamByQueryParam.entrySet() ) {
+			final QueryParameterImplementor<?> domainParam = paramEntry.getKey();
+			final SqmParameter sqmParam = paramEntry.getValue();
+
+			final List<JdbcParameter> jdbcParameters = sqmConverter.getJdbcParamsBySqmParam().get( sqmParam );
+			jdbcParamsByDomainParams.put( domainParam, jdbcParameters );
+
+			final AllowableParameterType<?> domainParamType = sqmConverter.getSqmParamResolvedTypeMap().get( sqmParam );
+			domainParamResolvedTypeMap.put( domainParam, domainParamType );
+		}
 
 		final JdbcParameterBindings jdbcParameterBindings = Helper.createJdbcParameterBindings(
 				executionContext.getParameterBindingContext().getQueryParameterBindings(),
 				jdbcParamsByDomainParams,
+				domainParamResolvedTypeMap,
 				executionContext.getSession()
 		);
 

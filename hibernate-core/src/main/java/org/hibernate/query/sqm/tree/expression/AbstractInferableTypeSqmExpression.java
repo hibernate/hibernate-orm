@@ -42,15 +42,16 @@ public abstract class AbstractInferableTypeSqmExpression implements InferableTyp
 	@Override
 	public Supplier<? extends ExpressableType> getInferableType() {
 		return () -> {
-			final ExpressableType inferredType;
-			if ( typeInference != null ) {
-				inferredType = typeInference.get();
-			}
-			else {
-				inferredType = null;
-			}
-
-			return firstNonStandardBasicType( inferredType, inherentType );
+//			final ExpressableType inferredType;
+//			if ( typeInference != null ) {
+//				inferredType = typeInference.get();
+//			}
+//			else {
+//				inferredType = null;
+//			}
+//
+//			return firstNonStandardBasicType( inferredType, inherentType );
+			return inherentType;
 		};
 	}
 

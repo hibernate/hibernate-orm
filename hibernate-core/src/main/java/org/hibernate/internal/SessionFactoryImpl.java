@@ -100,7 +100,7 @@ import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.HibernateProxyHelper;
-import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.spi.CriteriaNodeBuilder;
 import org.hibernate.query.spi.HqlQueryImplementor;
 import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryEngine;
@@ -625,7 +625,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public HibernateCriteriaBuilder getCriteriaBuilder() {
+	public CriteriaNodeBuilder getCriteriaBuilder() {
 		validateNotClosed();
 		return queryEngine.getCriteriaBuilder();
 	}

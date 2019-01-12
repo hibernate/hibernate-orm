@@ -9,12 +9,15 @@ package org.hibernate.query.sqm.tree.expression.function;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 
 /**
+ * Form of CURRENT_TIMESTAMP returning {@link java.time.Instant} rather than
+ * {@link java.sql.Timestamp}
+ *
  * @author Steve Ebersole
  */
-public class SqmCurrentTimeFunction extends AbstractSqmFunction {
-	public static final String NAME = "current_time";
+public class SqmCurrentInstantFunction extends AbstractSqmFunction {
+	public static final String NAME = "current_instant";
 
-	public SqmCurrentTimeFunction() {
+	public SqmCurrentInstantFunction() {
 		super( null );
 	}
 
@@ -30,7 +33,7 @@ public class SqmCurrentTimeFunction extends AbstractSqmFunction {
 
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return walker.visitCurrentTimeFunction( this );
+		return walker.visitCurrentInstantFunction( this );
 	}
 
 	@Override

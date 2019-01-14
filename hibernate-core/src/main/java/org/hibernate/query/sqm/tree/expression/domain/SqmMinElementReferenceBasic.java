@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import java.util.function.Supplier;
-
 import org.hibernate.metamodel.model.domain.spi.BasicCollectionElement;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
@@ -23,11 +21,6 @@ public class SqmMinElementReferenceBasic extends AbstractSpecificSqmElementRefer
 	@Override
 	public BasicCollectionElement getExpressableType() {
 		return (BasicCollectionElement) getPluralAttributeReference().getReferencedNavigable().getPersistentCollectionDescriptor().getElementDescriptor();
-	}
-
-	@Override
-	public Supplier<? extends BasicCollectionElement> getInferableType() {
-		return this::getExpressableType;
 	}
 
 	@Override

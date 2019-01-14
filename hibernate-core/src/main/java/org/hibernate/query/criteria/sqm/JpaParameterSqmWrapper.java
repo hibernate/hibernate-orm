@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.criteria.sqm;
 
-import java.util.Locale;
 import java.util.function.Supplier;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
@@ -82,16 +81,6 @@ public class JpaParameterSqmWrapper implements SqmParameter {
 		}
 
 		return parameterType;
-	}
-
-	@Override
-	public Supplier<? extends ExpressableType> getInferableType() {
-		return () -> parameterType;
-	}
-
-	@Override
-	public void impliedType(Supplier<? extends ExpressableType> inference) {
-		this.impliedTypeAccess = inference;
 	}
 
 	@Override

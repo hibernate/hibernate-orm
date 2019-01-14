@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.ast.produce.ordering.internal;
 
-import java.util.function.Supplier;
-
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
@@ -46,11 +44,6 @@ public class SqmColumnReference implements SqmExpression, SqmNavigableReference 
 	@Override
 	public ExpressableType getExpressableType() {
 		return null;
-	}
-
-	@Override
-	public Supplier<? extends ExpressableType> getInferableType() {
-		return () -> null;
 	}
 
 	@Override

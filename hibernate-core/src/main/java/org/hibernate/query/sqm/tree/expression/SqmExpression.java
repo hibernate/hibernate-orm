@@ -6,11 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import java.util.function.Supplier;
-
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * The base contract for any kind of expression node in the SQM tree.
@@ -31,17 +28,4 @@ public interface SqmExpression extends SqmSelectableNode {
 	 * @return The expression's type.
 	 */
 	ExpressableType getExpressableType();
-
-	/**
-	 * Obtains a Supplier for this expression's inferable type.  Used in conjunction with
-	 * {@link InferableTypeSqmExpression#impliedType(Supplier)}
-	 *
-	 * Not all expressions can act as the source of an inferred type, in which case the
-	 * method would return {@code null}, or its Supplier would return {@code null}
-	 *
-	 * @return The inferable type
-	 *
-	 * @see InferableTypeSqmExpression#impliedType
-	 */
-	Supplier<? extends ExpressableType> getInferableType();
 }

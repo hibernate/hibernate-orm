@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import java.util.function.Supplier;
-
 import org.hibernate.metamodel.model.domain.spi.BasicCollectionIndex;
 
 /**
@@ -22,11 +20,5 @@ public class SqmMaxIndexReferenceBasic extends AbstractSpecificSqmCollectionInde
 	@Override
 	public BasicCollectionIndex getReferencedNavigable() {
 		return (BasicCollectionIndex) super.getReferencedNavigable();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Supplier<? extends BasicCollectionIndex> getInferableType() {
-		return (Supplier<? extends BasicCollectionIndex>) super.getInferableType();
 	}
 }

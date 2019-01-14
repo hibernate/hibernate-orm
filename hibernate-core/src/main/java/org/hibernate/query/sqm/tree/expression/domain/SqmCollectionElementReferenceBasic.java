@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import java.util.function.Supplier;
-
 import org.hibernate.metamodel.model.domain.spi.BasicCollectionElement;
 
 /**
@@ -23,11 +21,5 @@ public class SqmCollectionElementReferenceBasic
 	@Override
 	public BasicCollectionElement getExpressableType() {
 		return (BasicCollectionElement) super.getExpressableType();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Supplier<? extends BasicCollectionElement> getInferableType() {
-		return (Supplier<? extends BasicCollectionElement>) super.getInferableType();
 	}
 }

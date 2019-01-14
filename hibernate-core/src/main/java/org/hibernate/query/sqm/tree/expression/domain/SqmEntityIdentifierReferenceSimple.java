@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import java.util.function.Supplier;
-
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
@@ -39,11 +37,6 @@ public class SqmEntityIdentifierReferenceSimple
 	@Override
 	public EntityIdentifierSimple getExpressableType() {
 		return getReferencedNavigable();
-	}
-
-	@Override
-	public Supplier<? extends EntityIdentifierSimple> getInferableType() {
-		return this::getReferencedNavigable;
 	}
 
 	@Override

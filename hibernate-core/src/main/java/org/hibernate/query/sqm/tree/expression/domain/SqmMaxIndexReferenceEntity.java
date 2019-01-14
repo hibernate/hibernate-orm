@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import java.util.function.Supplier;
-
 import org.hibernate.metamodel.model.domain.spi.CollectionIndexEntity;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
@@ -26,12 +24,6 @@ public class SqmMaxIndexReferenceEntity
 	@Override
 	public CollectionIndexEntity getExpressableType() {
 		return (CollectionIndexEntity) super.getExpressableType();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Supplier<? extends CollectionIndexEntity> getInferableType() {
-		return (Supplier<? extends CollectionIndexEntity>) super.getInferableType();
 	}
 
 	@Override

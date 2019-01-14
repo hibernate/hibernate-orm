@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import java.util.function.Supplier;
-
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.query.NavigablePath;
@@ -72,11 +70,6 @@ public class SqmEntityReference extends AbstractSqmNavigableReference
 	@Override
 	public EntityValuedNavigable getExpressableType() {
 		return getReferencedNavigable();
-	}
-
-	@Override
-	public Supplier<? extends EntityValuedNavigable> getInferableType() {
-		return this::getReferencedNavigable;
 	}
 
 	@Override

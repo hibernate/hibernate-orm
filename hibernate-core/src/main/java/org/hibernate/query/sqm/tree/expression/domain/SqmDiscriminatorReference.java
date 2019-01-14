@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import java.util.function.Supplier;
-
 import org.hibernate.metamodel.model.domain.spi.DiscriminatorDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
@@ -108,11 +106,6 @@ public class SqmDiscriminatorReference extends AbstractSqmNavigableReference imp
 	@Override
 	public ExpressableType getExpressableType() {
 		return discriminatorDescriptor;
-	}
-
-	@Override
-	public Supplier<? extends ExpressableType> getInferableType() {
-		return () -> discriminatorDescriptor;
 	}
 
 	@Override

@@ -19,7 +19,7 @@ import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
  *
  * @author Steve Ebersole
  */
-public interface SqmParameter extends InferableTypeSqmExpression {
+public interface SqmParameter extends SqmExpression {
 	/**
 	 * If this represents a named parameter, return that parameter name;
 	 * otherwise return {@code null}.

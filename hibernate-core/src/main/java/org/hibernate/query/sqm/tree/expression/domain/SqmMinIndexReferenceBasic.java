@@ -6,9 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import java.util.function.Supplier;
-
-import org.hibernate.metamodel.model.domain.spi.BasicCollectionIndex;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 
@@ -25,12 +22,6 @@ public class SqmMinIndexReferenceBasic
 	@Override
 	public ExpressableType getExpressableType() {
 		return getPluralAttributeReference().getReferencedNavigable().getPersistentCollectionDescriptor().getIndexDescriptor();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Supplier<? extends BasicCollectionIndex> getInferableType() {
-		return (Supplier<? extends BasicCollectionIndex>) super.getInferableType();
 	}
 
 	@Override

@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import java.util.function.Supplier;
-
 import org.hibernate.metamodel.model.domain.spi.CollectionIndexEntity;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
@@ -35,12 +33,6 @@ public class SqmCollectionIndexReferenceEntity
 	@Override
 	public CollectionIndexEntity getExpressableType() {
 		return getReferencedNavigable();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Supplier<? extends CollectionIndexEntity> getInferableType() {
-		return (Supplier<? extends CollectionIndexEntity>) super.getInferableType();
 	}
 
 	@Override

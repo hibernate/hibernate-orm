@@ -33,7 +33,7 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionIndexReferenc
 import org.hibernate.query.sqm.tree.expression.domain.SqmDiscriminatorReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityIdentifierReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmMapEntryBinding;
+import org.hibernate.query.sqm.tree.expression.domain.SqmMapEntryExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMaxElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMinElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMinIndexReferenceBasic;
@@ -304,7 +304,7 @@ public interface SemanticQueryWalker<T> {
 
 	T visitMapKeyBinding(SqmCollectionIndexReference binding);
 
-	T visitMapEntryFunction(SqmMapEntryBinding function);
+	T visitMapEntryFunction(SqmMapEntryExpression function);
 
 	T visitMaxElementBinding(SqmMaxElementReference binding);
 

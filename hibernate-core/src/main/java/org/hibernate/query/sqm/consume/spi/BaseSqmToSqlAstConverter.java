@@ -30,7 +30,6 @@ import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
-import org.hibernate.metamodel.model.domain.spi.BasicValueMapper;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierComposite;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
@@ -39,12 +38,10 @@ import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.criteria.spi.ParameterExpression;
 import org.hibernate.query.criteria.sqm.JpaParameterSqmWrapper;
-import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.tree.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
@@ -60,7 +57,6 @@ import org.hibernate.query.sqm.tree.expression.SqmSubQuery;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityIdentifierReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceAny;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceBasic;
@@ -203,21 +199,13 @@ import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameters;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.sql.results.spi.SqlSelection;
-import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.JdbcTypeNameMapper;
-import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.query.BinaryArithmeticOperator.ADD;
-import static org.hibernate.query.BinaryArithmeticOperator.DIVIDE;
 import static org.hibernate.query.BinaryArithmeticOperator.MODULO;
-import static org.hibernate.query.BinaryArithmeticOperator.MULTIPLY;
-import static org.hibernate.query.BinaryArithmeticOperator.QUOT;
-import static org.hibernate.query.BinaryArithmeticOperator.SUBTRACT;
 import static org.hibernate.query.sqm.tree.internal.Helper.firstNonNull;
 
 /**
@@ -1763,7 +1751,7 @@ public abstract class BaseSqmToSqlAstConverter
 	@Override
 	public CaseSimpleExpression visitSimpleCaseExpression(SqmCaseSimple expression) {
 		final CaseSimpleExpression result = new CaseSimpleExpression(
-				expression.getExpressableType().getSqlExpressableType(),
+				( (BasicValuedExpressableType) expression.getExpressableType() ).getSqlExpressableType(),
 				(Expression) expression.getFixture().accept( this )
 		);
 

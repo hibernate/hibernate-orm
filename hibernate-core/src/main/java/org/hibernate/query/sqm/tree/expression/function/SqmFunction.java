@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.expression.function;
 
-import java.util.function.Supplier;
-
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
@@ -19,9 +17,6 @@ public interface SqmFunction extends SqmExpression {
 
 	@Override
 	AllowableFunctionReturnType getExpressableType();
-
-	@Override
-	Supplier<? extends AllowableFunctionReturnType> getInferableType();
 
 	boolean hasArguments();
 }

@@ -6,11 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import java.util.function.Supplier;
-
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
@@ -31,10 +28,5 @@ public interface SqmEntityTypedReference extends SqmNavigableContainerReference 
 	@Override
 	default Class getJavaType() {
 		return getJavaTypeDescriptor().getJavaType();
-	}
-
-	@Override
-	default Supplier<? extends EntityValuedExpressableType> getInferableType() {
-		return this::getExpressableType;
 	}
 }

@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import java.util.function.Supplier;
-
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
@@ -40,11 +38,6 @@ public class SqmCollectionSize implements SqmExpression, DomainResultProducer {
 	@Override
 	public BasicValuedExpressableType getExpressableType() {
 		return sizeType;
-	}
-
-	@Override
-	public Supplier<? extends BasicValuedExpressableType> getInferableType() {
-		return this::getExpressableType;
 	}
 
 	@Override

@@ -7,7 +7,6 @@
 package org.hibernate.query.sqm.tree.expression.domain;
 
 import java.util.Map;
-import java.util.function.Supplier;
 
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -20,11 +19,11 @@ import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
  * @author Gunnar Morling
  * @author Steve Ebersole
  */
-public class SqmMapEntryBinding implements SqmExpression, ExpressableType {
+public class SqmMapEntryExpression implements SqmExpression, ExpressableType {
 	private final SqmPluralAttributeReference attributeBinding;
 	private final BasicJavaDescriptor<Map.Entry> mapEntryTypeDescriptor;
 
-	public SqmMapEntryBinding(
+	public SqmMapEntryExpression(
 			SqmPluralAttributeReference attributeBinding,
 			BasicJavaDescriptor<Map.Entry> mapEntryTypeDescriptor) {
 		this.attributeBinding = attributeBinding;
@@ -43,11 +42,6 @@ public class SqmMapEntryBinding implements SqmExpression, ExpressableType {
 	@Override
 	public ExpressableType getExpressableType() {
 		return this;
-	}
-
-	@Override
-	public Supplier<? extends ExpressableType> getInferableType() {
-		return () -> this;
 	}
 
 	@Override

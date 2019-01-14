@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import java.util.function.Supplier;
-
 import org.hibernate.metamodel.model.domain.spi.CollectionElementEntity;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -27,12 +25,6 @@ public class SqmMinElementReferenceEntity
 	@Override
 	public CollectionElementEntity getExpressableType() {
 		return (CollectionElementEntity) super.getExpressableType();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Supplier<? extends CollectionElementEntity> getInferableType() {
-		return (Supplier<? extends CollectionElementEntity>) super.getInferableType();
 	}
 
 	@Override

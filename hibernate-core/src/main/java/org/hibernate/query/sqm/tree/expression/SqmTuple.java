@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 import org.hibernate.query.sqm.QueryException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
@@ -52,11 +51,6 @@ public class SqmTuple implements SqmExpression {
 		}
 
 		return first.get().getExpressableType();
-	}
-
-	@Override
-	public Supplier<ExpressableType> getInferableType() {
-		return null;
 	}
 
 	@Override

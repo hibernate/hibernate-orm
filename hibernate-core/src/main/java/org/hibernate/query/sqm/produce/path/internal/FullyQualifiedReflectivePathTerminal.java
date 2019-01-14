@@ -8,7 +8,6 @@ package org.hibernate.query.sqm.produce.path.internal;
 
 import java.lang.reflect.Field;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -102,11 +101,6 @@ public class FullyQualifiedReflectivePathTerminal
 	@Override
 	public ExpressableType getExpressableType() {
 		return expressableType;
-	}
-
-	@Override
-	public Supplier<? extends ExpressableType> getInferableType() {
-		return this::getExpressableType;
 	}
 
 	@Override

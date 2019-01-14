@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import java.util.function.Supplier;
-
 import org.hibernate.metamodel.model.domain.spi.BasicCollectionElement;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 
@@ -24,12 +22,6 @@ public class SqmMaxElementReferenceBasic
 	@Override
 	public BasicCollectionElement getExpressableType() {
 		return getReferencedNavigable();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Supplier<? extends BasicCollectionElement> getInferableType() {
-		return (Supplier<? extends BasicCollectionElement>) super.getInferableType();
 	}
 
 	@Override

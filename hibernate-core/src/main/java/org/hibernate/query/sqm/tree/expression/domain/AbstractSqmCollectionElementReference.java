@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import java.util.function.Supplier;
-
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
@@ -68,11 +66,6 @@ public abstract class AbstractSqmCollectionElementReference
 	@Override
 	public CollectionElement getExpressableType() {
 		return getReferencedNavigable();
-	}
-
-	@Override
-	public Supplier<? extends CollectionElement> getInferableType() {
-		return this::getExpressableType;
 	}
 
 	@Override

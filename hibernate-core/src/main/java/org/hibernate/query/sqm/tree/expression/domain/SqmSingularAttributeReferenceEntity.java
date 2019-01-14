@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import java.util.function.Supplier;
-
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
@@ -72,11 +70,6 @@ public class SqmSingularAttributeReferenceEntity
 	@Override
 	public EntityValuedExpressableType getExpressableType() {
 		return (EntityValuedExpressableType) super.getExpressableType();
-	}
-
-	@Override
-	public Supplier<? extends SingularPersistentAttributeEntity> getInferableType() {
-		return this::getReferencedNavigable;
 	}
 
 	@Override

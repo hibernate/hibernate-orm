@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import java.util.function.Supplier;
-
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmQuerySpec;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
@@ -28,11 +26,6 @@ public class SqmSubQuery implements SqmExpression {
 	@Override
 	public ExpressableType getExpressableType() {
 		return expressableType;
-	}
-
-	@Override
-	public Supplier<? extends ExpressableType> getInferableType() {
-		return this::getExpressableType;
 	}
 
 	public SqmQuerySpec getQuerySpec() {

@@ -19,7 +19,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -47,7 +46,6 @@ import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
 import org.hibernate.query.sqm.UnknownEntityException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.produce.SqmProductionException;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.internal.QuerySpecProcessingStateDmlImpl;
 import org.hibernate.query.sqm.produce.internal.QuerySpecProcessingStateStandardImpl;
@@ -73,7 +71,6 @@ import org.hibernate.query.sqm.tree.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmUpdateStatement;
-import org.hibernate.query.sqm.tree.expression.InferableTypeSqmExpression;
 import org.hibernate.query.sqm.tree.expression.LiteralHelper;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
@@ -96,7 +93,7 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionIndexReferenc
 import org.hibernate.query.sqm.tree.expression.domain.SqmDiscriminatorReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEmbeddableTypedReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityTypedReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmMapEntryBinding;
+import org.hibernate.query.sqm.tree.expression.domain.SqmMapEntryExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMaxElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMaxElementReferenceBasic;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMaxElementReferenceEmbedded;
@@ -185,14 +182,11 @@ import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.PolymorphicEntityValuedExpressableType;
 import org.hibernate.sql.ast.tree.spi.TrimSpecification;
-import org.hibernate.sql.ast.tree.spi.expression.CurrentDateFunction;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
-import org.hibernate.type.spi.StandardSpiBasicTypes.StandardBasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
@@ -761,23 +755,12 @@ public class SemanticQueryBuilder
 
 	@Override
 	public SqmExpression visitLimitClause(HqlParser.LimitClauseContext ctx) {
-		SqmExpression sqmExpression = (SqmExpression) ctx.parameterOrNumberLiteral().accept( this );
-		applyImpliedType( sqmExpression, StandardSpiBasicTypes.INTEGER );
-		return sqmExpression;
+		return (SqmExpression) ctx.parameterOrNumberLiteral().accept( this );
 	}
 
 	@Override
 	public SqmExpression visitOffsetClause(HqlParser.OffsetClauseContext ctx) {
-		SqmExpression sqmExpression = (SqmExpression) ctx.parameterOrNumberLiteral().accept( this );
-		applyImpliedType( sqmExpression, StandardSpiBasicTypes.INTEGER );
-		return sqmExpression;
-	}
-
-	@SuppressWarnings("SameParameterValue")
-	private void applyImpliedType(SqmExpression sqmExpression, StandardBasicType impliedType) {
-		if ( sqmExpression instanceof InferableTypeSqmExpression ) {
-			( (InferableTypeSqmExpression) sqmExpression ).impliedType( () -> impliedType );
-		}
+		return (SqmExpression) ctx.parameterOrNumberLiteral().accept( this );
 	}
 
 	@Override
@@ -1252,28 +1235,6 @@ public class SemanticQueryBuilder
 		final SqmExpression lhs = (SqmExpression) ctx.expression().get( 0 ).accept( this );
 		final SqmExpression rhs = (SqmExpression) ctx.expression().get( 1 ).accept( this );
 
-		// todo (6.0) : the problem with doing this in the HQL -> SQM translation is that we'd need to duplicate it for criteria
-		//		Do we need these types really prior to interpreting the SQM?  Couldn't we make the SQM walker
-		//		responsible for handling this?
-		//
-		// An expression has 3 associated types:
-		//
-		//		1) explicit type - the user has (somehow) explicitly told us the type.  (where does this exist?)
-		//		2) fallback type - generally this is one of the standard basic type
-		//		3) inferred type - a type that is inferred by its surroundings
-
-		if ( lhs.getInferableType() != null ) {
-			if ( rhs instanceof InferableTypeSqmExpression ) {
-				( (InferableTypeSqmExpression) rhs ).impliedType( lhs.getInferableType() );
-			}
-		}
-
-		if ( rhs.getInferableType() != null ) {
-			if ( lhs instanceof InferableTypeSqmExpression ) {
-				( (InferableTypeSqmExpression) lhs ).impliedType( rhs.getInferableType() );
-			}
-		}
-
 		return new SqmComparisonPredicate( lhs, ComparisonOperator.EQUAL, rhs );
 	}
 
@@ -1322,31 +1283,6 @@ public class SemanticQueryBuilder
 		final SqmExpression expression = (SqmExpression) ctx.expression().get( 0 ).accept( this );
 		final SqmExpression lowerBound = (SqmExpression) ctx.expression().get( 1 ).accept( this );
 		final SqmExpression upperBound = (SqmExpression) ctx.expression().get( 2 ).accept( this );
-
-		if ( expression.getInferableType() != null ) {
-			if ( lowerBound instanceof InferableTypeSqmExpression ) {
-				( (InferableTypeSqmExpression) lowerBound ).impliedType( expression.getInferableType() );
-			}
-			if ( upperBound instanceof InferableTypeSqmExpression ) {
-				( (InferableTypeSqmExpression) upperBound ).impliedType( expression.getInferableType() );
-			}
-		}
-		else if ( lowerBound.getInferableType() != null ) {
-			if ( expression instanceof InferableTypeSqmExpression ) {
-				( (InferableTypeSqmExpression) expression ).impliedType( lowerBound.getInferableType() );
-			}
-			if ( upperBound instanceof InferableTypeSqmExpression ) {
-				( (InferableTypeSqmExpression) upperBound ).impliedType( lowerBound.getInferableType() );
-			}
-		}
-		else if ( upperBound.getInferableType() != null ) {
-			if ( expression instanceof InferableTypeSqmExpression ) {
-				( (InferableTypeSqmExpression) expression ).impliedType( upperBound.getInferableType() );
-			}
-			if ( lowerBound instanceof InferableTypeSqmExpression ) {
-				( (InferableTypeSqmExpression) lowerBound ).impliedType( upperBound.getInferableType() );
-			}
-		}
 
 		return new BetweenSqmPredicate(
 				expression,
@@ -1399,13 +1335,6 @@ public class SemanticQueryBuilder
 				final List<SqmExpression> listExpressions = new ArrayList<>( tupleExpressionListContext.expression().size() );
 				for ( HqlParser.ExpressionContext expressionContext : tupleExpressionListContext.expression() ) {
 					final SqmExpression listItemExpression = (SqmExpression) expressionContext.accept( this );
-
-					if ( testExpression.getInferableType() != null ) {
-						if ( listItemExpression instanceof InferableTypeSqmExpression ) {
-							( (InferableTypeSqmExpression) listItemExpression ).impliedType( testExpression.getInferableType() );
-						}
-					}
-
 					listExpressions.add( listItemExpression );
 				}
 
@@ -1468,10 +1397,10 @@ public class SemanticQueryBuilder
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public SqmMapEntryBinding visitMapEntrySelection(HqlParser.MapEntrySelectionContext ctx) {
+	public SqmMapEntryExpression visitMapEntrySelection(HqlParser.MapEntrySelectionContext ctx) {
 		final SqmPluralAttributeReference pathResolution = asMap( (SqmNavigableReference) ctx.path().accept( this ) );
 
-		return new SqmMapEntryBinding(
+		return new SqmMapEntryExpression(
 				pathResolution,
 				(BasicJavaDescriptor) getSessionFactory().getTypeConfiguration()
 						.getJavaTypeDescriptorRegistry()
@@ -2330,11 +2259,6 @@ public class SemanticQueryBuilder
 		@Override
 		public JavaTypeDescriptor getJavaTypeDescriptor() {
 			return type.getJavaTypeDescriptor();
-		}
-
-		@Override
-		public Supplier<? extends ExpressableType> getInferableType() {
-			return null;
 		}
 
 		@Override

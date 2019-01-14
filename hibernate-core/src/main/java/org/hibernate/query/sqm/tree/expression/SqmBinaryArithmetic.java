@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import java.util.function.Supplier;
-
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
@@ -75,12 +73,6 @@ public class SqmBinaryArithmetic implements SqmExpression {
 	public BasicValuedExpressableType getExpressableType() {
 		return expressionType;
 	}
-
-	@Override
-	public Supplier<? extends BasicValuedExpressableType> getInferableType() {
-		return this::getExpressableType;
-	}
-
 
 	@Override
 	public String asLoggableText() {

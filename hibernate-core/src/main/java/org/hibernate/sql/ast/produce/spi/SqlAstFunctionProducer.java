@@ -6,12 +6,9 @@
  */
 package org.hibernate.sql.ast.produce.spi;
 
-import java.util.function.Supplier;
-
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.results.spi.DomainResultProducer;
@@ -57,11 +54,6 @@ public interface SqlAstFunctionProducer extends SqmFunction {
 
 	@Override
 	default AllowableFunctionReturnType getExpressableType() {
-		return null;
-	}
-
-	@Override
-	default Supplier<? extends AllowableFunctionReturnType> getInferableType() {
 		return null;
 	}
 

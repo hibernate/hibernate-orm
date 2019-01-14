@@ -8,16 +8,14 @@ package org.hibernate.query.sqm.tree.expression;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmCaseSimple extends AbstractInferableTypeSqmExpression {
+public class SqmCaseSimple extends AbstractSqmExpression {
 	private final SqmExpression fixture;
 	private List<WhenFragment> whenFragments = new ArrayList<>();
 	private SqmExpression otherwise;
@@ -53,30 +51,6 @@ public class SqmCaseSimple extends AbstractInferableTypeSqmExpression {
 		whenFragments.add( new WhenFragment( test, result ) );
 
 		setInherentType( result.getExpressableType() );
-	}
-
-	@Override
-	public BasicValuedExpressableType getExpressableType() {
-		return (BasicValuedExpressableType) getInferableType().get();
-	}
-
-	@Override
-	public void impliedType(Supplier<? extends ExpressableType> inference) {
-		super.impliedType( inference );
-
-		// apply the inference to `when` and `otherwise` fragments...
-
-		for ( WhenFragment whenFragment : whenFragments ) {
-			if ( whenFragment.getResult() instanceof InferableTypeSqmExpression ) {
-				( (InferableTypeSqmExpression) whenFragment.getResult() ).impliedType( inference );
-			}
-		}
-
-		if ( otherwise != null ) {
-			if ( otherwise instanceof InferableTypeSqmExpression ) {
-				( (InferableTypeSqmExpression) otherwise ).impliedType( inference );
-			}
-		}
 	}
 
 	@Override

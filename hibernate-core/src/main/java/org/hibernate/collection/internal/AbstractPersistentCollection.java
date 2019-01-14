@@ -20,8 +20,6 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.Session;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -32,6 +30,8 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
+import org.hibernate.metamodel.model.domain.spi.CollectionIndexEmbedded;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
@@ -256,7 +256,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 				// be created even if a current session and transaction are
 				// open (ex: session.clear() was used).  We must prevent
 				// multiple transactions.
-				( (Session) session ).beginTransaction();
+				 session.beginTransaction();
 			}
 
 			session.getPersistenceContext().addUninitializedDetachedCollection(
@@ -276,9 +276,9 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 				try {
 					if ( !isJTA ) {
-						( (Session) tempSession ).getTransaction().commit();
+						tempSession.getTransaction().commit();
 					}
-					( (Session) tempSession ).close();
+					tempSession.close();
 				}
 				catch (Exception e) {
 					LOG.warn( "Unable to close temporary session used to load lazy collection associated to no session" );
@@ -497,7 +497,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	@SuppressWarnings({"JavaDoc"})
 	protected final void queueOperation(DelayedOperation operation) {
 		if ( operationQueue == null ) {
-			operationQueue = new ArrayList<DelayedOperation>( 10 );
+			operationQueue = new ArrayList<>( 10 );
 		}
 		operationQueue.add( operation );
 		//needed so that we remove this collection from the second-level cache
@@ -767,7 +767,19 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		// (must match condidion in org.hibernate.persister.collection.BasicCollectionPersister.doUpdateRows).
 		// See HHH-9474
 
-		throw new NotYetImplementedException(  );
+		CollectionIndex indexDescriptor = getCollectionDescriptor().getIndexDescriptor();
+		if ( indexDescriptor != null ) {
+			if(CollectionIndexEmbedded.class.isInstance( indexDescriptor )) {
+				throw new NotYetImplementedFor6Exception( getClass() );
+			}
+			return false;
+		}
+		else {
+			if ( CollectionIndexEmbedded.class.isInstance( getCollectionDescriptor().getElementDescriptor() ) ) {
+				throw new NotYetImplementedFor6Exception( getClass() );
+			}
+		}
+		return false;
 //		Type whereType;
 //		if ( persister.hasIndex() ) {
 //			whereType = persister.getIndexType();

@@ -8,15 +8,17 @@ package org.hibernate.orm.test.crud.onetomany;
 
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.Hibernate;
 
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.domain.gambit.EntityWithOneToMany;
 import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
-
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -37,8 +39,90 @@ public class EntityWithOneToManyCrudTest extends SessionFactoryBasedFunctionalTe
 		};
 	}
 
+	@AfterEach
+	public void tearDown() {
+		sessionFactoryScope().inTransaction(
+				session -> {
+					List<EntityWithOneToMany> results = session.createQuery( "from EntityWithOneToMany e" ).list();
+					results.forEach(
+							entity -> {
+								Set<SimpleEntity> others = entity.getOthers();
+								others.forEach( other -> session.remove( other ) );
+								session.remove( entity );
+							} );
+				} );
+	}
+
 	@Test
 	public void testSave() {
+		EntityWithOneToMany entity = new EntityWithOneToMany( 1, "first", Integer.MAX_VALUE );
+
+		SimpleEntity firstOther = new SimpleEntity(
+				2,
+				Calendar.getInstance().getTime(),
+				null,
+				Integer.MAX_VALUE,
+				Long.MAX_VALUE,
+				null
+		);
+
+		entity.getOthersIdentifierBag().add( firstOther );
+
+		SimpleEntity secondOther = new SimpleEntity(
+				3,
+				Calendar.getInstance().getTime(),
+				null,
+				Integer.MIN_VALUE,
+				Long.MIN_VALUE,
+				null
+		);
+
+		entity.addOther( firstOther );
+		entity.addOther( secondOther );
+
+		sessionFactoryScope().inTransaction(
+				session -> {
+					session.save( firstOther );
+				} );
+
+		sessionFactoryScope().inTransaction(
+				session -> {
+					session.save( secondOther );
+				} );
+
+		sessionFactoryScope().inTransaction(
+				session -> {
+					session.save( entity );
+				} );
+
+		sessionFactoryScope().inTransaction(
+				session -> {
+					EntityWithOneToMany retrieved = session.get( EntityWithOneToMany.class, 1 );
+					assertThat( retrieved, notNullValue() );
+					Set<SimpleEntity> others = retrieved.getOthers();
+					assertFalse(
+							Hibernate.isInitialized( others ),
+							"The association should ne not initialized"
+
+					);
+					assertThat( others.size(), is( 2 ) );
+
+					Map<Integer, SimpleEntity> othersById = new HashMap<>();
+					for ( SimpleEntity simpleEntity : others ) {
+						othersById.put( simpleEntity.getId(), simpleEntity );
+					}
+
+					assertThat( othersById.get( 2 ).getSomeInteger(), is( Integer.MAX_VALUE ) );
+					assertThat( othersById.get( 2 ).getSomeLong(), is( Long.MAX_VALUE ) );
+					assertThat( othersById.get( 3 ).getSomeInteger(), is( Integer.MIN_VALUE ) );
+					assertThat( othersById.get( 3 ).getSomeLong(), is( Long.MIN_VALUE ) );
+
+				}
+		);
+	}
+
+	@Test
+	public void testRemoveOneElement() {
 		EntityWithOneToMany entity = new EntityWithOneToMany( 1, "first", Integer.MAX_VALUE );
 
 		SimpleEntity firstOther = new SimpleEntity(
@@ -80,24 +164,38 @@ public class EntityWithOneToManyCrudTest extends SessionFactoryBasedFunctionalTe
 				session -> {
 					EntityWithOneToMany retrieved = session.get( EntityWithOneToMany.class, 1 );
 					assertThat( retrieved, notNullValue() );
-					List<SimpleEntity> others = retrieved.getOthers();
+					Set<SimpleEntity> others = retrieved.getOthers();
 					assertFalse(
 							Hibernate.isInitialized( others ),
 							"The association should ne not initialized"
 
 					);
 					assertThat( others.size(), is( 2 ) );
-
-					Map<Integer, SimpleEntity> othersById = new HashMap<>();
-					for ( SimpleEntity simpleEntity : others ) {
-						othersById.put( simpleEntity.getId(), simpleEntity );
+					SimpleEntity toRemove = null;
+					Iterator<SimpleEntity> iterator = others.iterator();
+					while ( iterator.hasNext() ) {
+						SimpleEntity other = iterator.next();
+						if ( other.getId() == 2 ) {
+							toRemove = other;
+						}
 					}
+					others.remove( toRemove );
+					session.remove( toRemove );
+				}
+		);
 
-					assertThat( othersById.get( 2 ).getSomeInteger(), is( Integer.MAX_VALUE ) );
-					assertThat( othersById.get( 2 ).getSomeLong(), is( Long.MAX_VALUE ) );
-					assertThat( othersById.get( 3 ).getSomeInteger(), is( Integer.MIN_VALUE ) );
-					assertThat( othersById.get( 3 ).getSomeLong(), is( Long.MIN_VALUE ) );
+		sessionFactoryScope().inTransaction(
+				session -> {
+					EntityWithOneToMany retrieved = session.get( EntityWithOneToMany.class, 1 );
+					assertThat( retrieved, notNullValue() );
+					Set<SimpleEntity> others = retrieved.getOthers();
+					assertFalse(
+							Hibernate.isInitialized( others ),
+							"The association should ne not initialized"
 
+					);
+					assertThat( others.size(), is( 1 ) );
+					assertThat( others.iterator().next().getId(), is( 3 ) );
 				}
 		);
 	}

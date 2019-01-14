@@ -9,6 +9,8 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.Collection;
 
 import org.hibernate.LockMode;
+import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractPersistentCollectionDescriptor;
@@ -82,5 +84,11 @@ public class PersistentBagDescriptorImpl<O,E> extends AbstractPersistentCollecti
 	@Override
 	public boolean contains(Object collection, Object childObject) {
 		return ( (Collection ) collection ).contains( childObject );
+	}
+
+	@Override
+	protected void doProcessQueuedOps(
+			PersistentCollection collection, Object id, SharedSessionContractImplementor session) {
+		// do nothing
 	}
 }

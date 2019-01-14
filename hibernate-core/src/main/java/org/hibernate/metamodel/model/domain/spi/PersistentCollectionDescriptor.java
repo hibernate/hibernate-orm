@@ -410,60 +410,48 @@ public interface PersistentCollectionDescriptor<O,C,E>
 	/**
 	 * Completely remove the persistent state of the collection
 	 */
-	default void remove(Object key, SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+	void remove(Object key, SharedSessionContractImplementor session);
 
 	/**
 	 * (Re)create the collection's persistent state
 	 */
-	default void recreate(
+	void recreate(
 			PersistentCollection collection,
 			Object key,
-			SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+			SharedSessionContractImplementor session);
 
 	/**
 	 * Delete the persistent state of any elements that were removed from
 	 * the collection
 	 */
-	default void deleteRows(
+	void deleteRows(
 			PersistentCollection collection,
 			Object key,
-			SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+			SharedSessionContractImplementor session);
 
 	/**
 	 * Update the persistent state of any elements that were modified
 	 */
-	default void updateRows(
+	void updateRows(
 			PersistentCollection collection,
 			Object key,
-			SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+			SharedSessionContractImplementor session);
 
 	/**
 	 * Insert the persistent state of any new collection elements
 	 */
-	default void insertRows(
+	void insertRows(
 			PersistentCollection collection,
 			Object key,
-			SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+			SharedSessionContractImplementor session);
 
 	/**
 	 * Process queued operations within the PersistentCollection.
 	 */
-	default void processQueuedOps(
+	void processQueuedOps(
 			PersistentCollection collection,
 			Object key,
-			SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+			SharedSessionContractImplementor session);
 
 //	/**
 //	 * Get the name of this collection role (the fully qualified class name,
@@ -591,9 +579,7 @@ public interface PersistentCollectionDescriptor<O,C,E>
 	 * As with all of these "owner"-related methods we need to come up with
 	 * a better plan for handling that stuff.
 	 */
-	default Object getKeyOfOwner(Object owner, SessionImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+	Object getKeyOfOwner(Object owner, SessionImplementor session);
 
 	default Iterator getElementsIterator(Object collection, SharedSessionContractImplementor session) {
 		throw new NotYetImplementedFor6Exception( getClass() );

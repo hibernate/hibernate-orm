@@ -22,5 +22,5 @@ public interface CollectionRemovalExecutor {
 	/**
 	 * Remove (delete) the collection indicated by key
 	 */
-	void remove(Object key, SharedSessionContractImplementor session);
+	void execute(Object key, SharedSessionContractImplementor session);
 }

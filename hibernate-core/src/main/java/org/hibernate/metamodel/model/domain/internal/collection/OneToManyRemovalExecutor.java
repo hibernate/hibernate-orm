@@ -22,7 +22,7 @@ public class OneToManyRemovalExecutor implements CollectionRemovalExecutor {
 	}
 
 	@Override
-	public void remove(Object key, SharedSessionContractImplementor session) {
+	public void execute(Object key, SharedSessionContractImplementor session) {
 
 	}
 }

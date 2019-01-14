@@ -44,10 +44,11 @@ public class EntityWithOneToManyWithoutJoinTableTest extends SessionFactoryBased
 							EntityWithOneToManyNotOwned.class,
 							1
 					);
-
-					List<EntityWithManyToOneWithoutJoinTable> children = loaded.getChildren();
-					children.forEach( child -> session.remove( child ) );
-					session.remove( loaded );
+					if ( loaded != null ) {
+						List<EntityWithManyToOneWithoutJoinTable> children = loaded.getChildren();
+						children.forEach( child -> session.remove( child ) );
+						session.remove( loaded );
+					}
 				}
 		);
 	}
@@ -118,7 +119,7 @@ public class EntityWithOneToManyWithoutJoinTableTest extends SessionFactoryBased
 	}
 
 	@Test
-	public void testUpdate() {
+	public void testAddElements() {
 		EntityWithOneToManyNotOwned owner = new EntityWithOneToManyNotOwned();
 		owner.setId( 1 );
 
@@ -133,11 +134,11 @@ public class EntityWithOneToManyWithoutJoinTableTest extends SessionFactoryBased
 				} );
 
 		EntityWithManyToOneWithoutJoinTable child2 = new EntityWithManyToOneWithoutJoinTable( 3, Integer.MIN_VALUE );
-		owner.addChild( child2 );
 
 		sessionFactoryScope().inTransaction(
 				session -> {
 					EntityWithOneToManyNotOwned retrieved = session.get( EntityWithOneToManyNotOwned.class, 1 );
+					retrieved.addChild( child2 );
 					session.save( child2 );
 				} );
 
@@ -163,4 +164,80 @@ public class EntityWithOneToManyWithoutJoinTableTest extends SessionFactoryBased
 					assertThat( othersById.get( 3 ).getSomeInteger(), is( Integer.MIN_VALUE ) );
 				} );
 	}
+
+	@Test
+	public void testRemoveAllElements() {
+		EntityWithOneToManyNotOwned owner = new EntityWithOneToManyNotOwned();
+		owner.setId( 1 );
+
+		EntityWithManyToOneWithoutJoinTable child1 = new EntityWithManyToOneWithoutJoinTable( 2, Integer.MAX_VALUE );
+
+		owner.addChild( child1 );
+
+		sessionFactoryScope().inTransaction(
+				session -> {
+					session.save( child1 );
+					session.save( owner );
+				} );
+
+
+		sessionFactoryScope().inTransaction(
+				session -> {
+					EntityWithOneToManyNotOwned retrieved = session.get( EntityWithOneToManyNotOwned.class, 1 );
+
+					List<EntityWithManyToOneWithoutJoinTable> children = retrieved.getChildren();
+					session.delete( children.get( 0 ) );
+					children.clear();
+				} );
+
+		sessionFactoryScope().inTransaction(
+				session -> {
+					EntityWithOneToManyNotOwned retrieved = session.get( EntityWithOneToManyNotOwned.class, 1 );
+					assertThat( retrieved, notNullValue() );
+					List<EntityWithManyToOneWithoutJoinTable> children = retrieved.getChildren();
+
+					assertThat( children.size(), is( 0 ) );
+				} );
+	}
+
+	@Test
+	public void testRemoveOneElement() {
+		EntityWithOneToManyNotOwned owner = new EntityWithOneToManyNotOwned();
+		owner.setId( 1 );
+
+		EntityWithManyToOneWithoutJoinTable child1 = new EntityWithManyToOneWithoutJoinTable( 2, Integer.MAX_VALUE );
+		EntityWithManyToOneWithoutJoinTable child2 = new EntityWithManyToOneWithoutJoinTable( 3, Integer.MAX_VALUE );
+
+		owner.addChild( child1 );
+		owner.addChild( child2 );
+
+		sessionFactoryScope().inTransaction(
+				session -> {
+					session.save( child1 );
+					session.save( child2 );
+					session.save( owner );
+				} );
+
+
+		sessionFactoryScope().inTransaction(
+				session -> {
+					EntityWithOneToManyNotOwned retrieved = session.get( EntityWithOneToManyNotOwned.class, 1 );
+
+					List<EntityWithManyToOneWithoutJoinTable> children = retrieved.getChildren();
+					EntityWithManyToOneWithoutJoinTable toDelete = children.get( 0 );
+					session.delete( toDelete );
+
+					children.remove( toDelete );
+				} );
+
+		sessionFactoryScope().inTransaction(
+				session -> {
+					EntityWithOneToManyNotOwned retrieved = session.get( EntityWithOneToManyNotOwned.class, 1 );
+					assertThat( retrieved, notNullValue() );
+					List<EntityWithManyToOneWithoutJoinTable> children = retrieved.getChildren();
+
+					assertThat( children.size(), is( 1 ) );
+				} );
+	}
+
 }

@@ -10,6 +10,9 @@ import java.lang.reflect.Array;
 
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractPersistentCollectionDescriptor;
@@ -25,12 +28,15 @@ import org.hibernate.sql.results.spi.FetchParent;
  * @author Steve Ebersole
  */
 public class PersistentArrayDescriptorImpl<O,E> extends AbstractPersistentCollectionDescriptor<O,E[], E> {
+	private final boolean hasFormula;
 
 	public PersistentArrayDescriptorImpl(
 			Property pluralProperty,
 			ManagedTypeDescriptor runtimeContainer,
 			RuntimeModelCreationContext creationContext) {
 		super( pluralProperty, runtimeContainer, creationContext );
+		IndexedCollection collection = (IndexedCollection) pluralProperty.getValue();
+		hasFormula = collection.getIndex().hasFormula();
 	}
 
 //	@Override
@@ -92,5 +98,21 @@ public class PersistentArrayDescriptorImpl<O,E> extends AbstractPersistentCollec
 
 		return false;
 	}
+
+	@Override
+	protected void doProcessQueuedOps(
+			PersistentCollection collection, Object id, SharedSessionContractImplementor session) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	protected boolean hasIndex() {
+		return true;
+	}
+
+	protected boolean indexContainsFormula(){
+		return hasFormula;
+	}
+
 
 }

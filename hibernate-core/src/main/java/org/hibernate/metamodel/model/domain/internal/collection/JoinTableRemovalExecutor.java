@@ -103,7 +103,7 @@ public class JoinTableRemovalExecutor implements CollectionRemovalExecutor {
 	}
 
 	@Override
-	public void remove(Object key, SharedSessionContractImplementor session) {
+	public void execute(Object key, SharedSessionContractImplementor session) {
 		final JdbcParameterBindingsImpl jdbcParameterBindings = new JdbcParameterBindingsImpl();
 		final BasicExecutionContext executionContext = new BasicExecutionContext( session, jdbcParameterBindings );
 

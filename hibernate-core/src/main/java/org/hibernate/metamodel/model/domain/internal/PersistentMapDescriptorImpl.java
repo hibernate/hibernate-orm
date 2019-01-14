@@ -11,8 +11,12 @@ import java.util.Map;
 
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cache.CacheException;
+import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractPersistentCollectionDescriptor;
@@ -33,6 +37,7 @@ import org.hibernate.sql.results.spi.FetchParent;
 public class PersistentMapDescriptorImpl<O,K,E>
 		extends AbstractPersistentCollectionDescriptor<O,Map<K,E>,E> {
 	private final Comparator<K> comparator;
+	private final boolean hasFormula;
 
 	@SuppressWarnings("unchecked")
 	public PersistentMapDescriptorImpl(
@@ -40,9 +45,11 @@ public class PersistentMapDescriptorImpl<O,K,E>
 			ManagedTypeDescriptor runtimeContainer,
 			RuntimeModelCreationContext creationContext) throws MappingException, CacheException {
 		super( pluralProperty, runtimeContainer, creationContext );
+		IndexedCollection collection = (IndexedCollection) pluralProperty.getValue();
+		hasFormula = collection.getIndex().hasFormula();
 
 		if ( pluralProperty.getValue() instanceof Collection ) {
-			this.comparator = ( (Collection) pluralProperty.getValue() ).getComparator();
+			this.comparator = collection.getComparator();
 		}
 		else {
 			this.comparator = null;
@@ -98,5 +105,21 @@ public class PersistentMapDescriptorImpl<O,K,E>
 			PropertyAccess propertyAccess,
 			RuntimeModelCreationContext creationContext) {
 		return new MapAttributeImpl<>( this, pluralProperty, propertyAccess, creationContext );
+	}
+
+	@Override
+	protected void doProcessQueuedOps(
+			PersistentCollection collection, Object id, SharedSessionContractImplementor session) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	protected boolean hasIndex() {
+		return true;
+	}
+
+	@Override
+	protected boolean indexContainsFormula(){
+		return hasFormula;
 	}
 }

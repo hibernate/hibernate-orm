@@ -12,6 +12,7 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.mapping.Array;
 import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.IdentifierBag;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.List;
 import org.hibernate.mapping.Map;
@@ -22,6 +23,7 @@ import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorClassResolver;
 import org.hibernate.metamodel.model.domain.NavigableResolutionException;
+import org.hibernate.metamodel.model.domain.internal.PersistentIdentifierBagDescriptorImpl;
 import org.hibernate.metamodel.model.domain.internal.entity.JoinedEntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.internal.PersistentArrayDescriptorImpl;
 import org.hibernate.metamodel.model.domain.internal.PersistentBagDescriptorImpl;
@@ -96,6 +98,10 @@ public class StandardRuntimeModelDescriptorClassResolver implements RuntimeModel
 
 		if ( bootMapping instanceof Map ) {
 			return PersistentMapDescriptorImpl.class;
+		}
+
+		if( bootMapping instanceof IdentifierBag ){
+			return PersistentIdentifierBagDescriptorImpl.class;
 		}
 
 		throw new HibernateException( "Unsure which PersistentCollectionDescriptor impl class to use - " + bootMapping );

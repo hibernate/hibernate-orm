@@ -10,21 +10,11 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
- * Delegate for creating a collection
- *
- * @author Steve Ebersole
+ * @author Andrea Boriero
  */
-public interface CollectionCreationExecutor {
-	/**
-	 * A no-op instance
-	 */
-	CollectionCreationExecutor NO_OP = (collection, key, session) -> {};
+public interface CollectionRowsDeletionExecutor {
+	CollectionRowsDeletionExecutor NO_OP = (collection, key, session) -> {};
 
-	/**
-	 * Execute the creation
-	 */
-	void execute(
-			PersistentCollection collection,
-			Object key,
-			SharedSessionContractImplementor session);
+	void execute(PersistentCollection collection, Object key, SharedSessionContractImplementor session);
 }
+

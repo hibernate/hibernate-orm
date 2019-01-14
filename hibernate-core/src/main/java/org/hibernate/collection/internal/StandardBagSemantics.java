@@ -11,6 +11,7 @@ import java.util.Collection;
 import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.domain.spi.IdentifierBagAttribute;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
 /**
@@ -47,6 +48,9 @@ public class StandardBagSemantics extends AbstractBagSemantics<Collection<?>> {
 			Collection<?> rawCollection,
 			PersistentCollectionDescriptor<?, Collection<?>, E> collectionDescriptor,
 			SharedSessionContractImplementor session) {
+		if ( collectionDescriptor.getDescribedAttribute() instanceof IdentifierBagAttribute ) {
+			return new PersistentIdentifierBag( session, collectionDescriptor, rawCollection );
+		}
 		return new PersistentBag( session, collectionDescriptor, rawCollection );
 	}
 

@@ -9,6 +9,10 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.List;
 
 import org.hibernate.LockMode;
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractPersistentCollectionDescriptor;
@@ -29,11 +33,15 @@ import org.hibernate.sql.results.spi.FetchParent;
  * @author Steve Ebersole
  */
 public class PersistentListDescriptorImpl<O,E> extends AbstractPersistentCollectionDescriptor<O,List<E>, E> {
+	private final boolean hasFormula;
+
 	public PersistentListDescriptorImpl(
 			Property bootProperty,
 			ManagedTypeDescriptor runtimeContainer,
 			RuntimeModelCreationContext context) {
 		super( bootProperty, runtimeContainer, context );
+		IndexedCollection collection = (IndexedCollection) bootProperty.getValue();
+		hasFormula = collection.getIndex().hasFormula();
 	}
 
 	@Override
@@ -73,5 +81,21 @@ public class PersistentListDescriptorImpl<O,E> extends AbstractPersistentCollect
 	@Override
 	public boolean contains(Object collection, Object childObject) {
 		return ( (List) collection ).contains( childObject );
+	}
+
+	@Override
+	protected void doProcessQueuedOps(
+			PersistentCollection collection, Object id, SharedSessionContractImplementor session) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	protected boolean hasIndex() {
+		return true;
+	}
+
+	@Override
+	protected boolean indexContainsFormula(){
+		return hasFormula;
 	}
 }

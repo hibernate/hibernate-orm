@@ -59,6 +59,10 @@ public abstract class AbstractCreationExecutor implements CollectionCreationExec
 		return collectionDescriptor;
 	}
 
+	protected JdbcMutation getCreationOperation(){
+		return creationOperation;
+	}
+
 	@SuppressWarnings("WeakerAccess")
 	protected abstract JdbcMutation generateCreationOperation(
 			TableReference dmlTableRef,
@@ -66,7 +70,7 @@ public abstract class AbstractCreationExecutor implements CollectionCreationExec
 			BiConsumer<Column,JdbcParameter> columnConsumer);
 
 	@Override
-	public void create(
+	public void execute(
 			PersistentCollection collection,
 			Object key,
 			SharedSessionContractImplementor session) {
@@ -92,17 +96,18 @@ public abstract class AbstractCreationExecutor implements CollectionCreationExec
 		}
 
 		int passes = 0;
+		collection.preInsert( collectionDescriptor );
 
 		while ( entries.hasNext() ) {
 			final Object entry = entries.next();
+			if ( collection.entryExists( entry, passes ) ) {
+				bindCollectionKey( key, jdbcParameterBindings, session );
+				bindCollectionId( entry, passes, collection, jdbcParameterBindings, session );
+				bindCollectionIndex( entry, passes, collection, jdbcParameterBindings, session );
+				bindCollectionElement( entry, collection, jdbcParameterBindings, session );
 
-			bindCollectionKey( key, jdbcParameterBindings, session );
-			bindCollectionId( entry, passes, collection, jdbcParameterBindings, session );
-			bindCollectionIndex( entry, passes, collection, jdbcParameterBindings, session );
-			bindCollectionElement( entry, collection, jdbcParameterBindings, session );
-
-			JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute( creationOperation, executionContext );
-
+				JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute( creationOperation, executionContext );
+			}
 			passes++;
 			jdbcParameterBindings.clear();
 		}
@@ -118,12 +123,14 @@ public abstract class AbstractCreationExecutor implements CollectionCreationExec
 		// todo (6.0) : probably not the correct `assumedIdentifier`
 		if ( collectionDescriptor.getIdDescriptor() != null ) {
 			final Object identifier = collection.getIdentifier( entry, assumedIdentifier, collectionDescriptor );
-			collectionDescriptor.getCollectionKeyDescriptor().dehydrate(
-					collectionDescriptor.getCollectionKeyDescriptor().unresolve( identifier, session ),
+			collectionDescriptor.getIdDescriptor().dehydrate(
+					collectionDescriptor.getIdDescriptor().unresolve( identifier, session ),
 					(jdbcValue, type, boundColumn) -> createBinding(
-							jdbcValue, boundColumn,
+							jdbcValue,
+							boundColumn,
 							type,
-							jdbcParameterBindings, session
+							jdbcParameterBindings,
+							session
 					),
 					Clause.INSERT,
 					session

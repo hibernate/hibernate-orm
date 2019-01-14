@@ -7,12 +7,9 @@
 
 package org.hibernate.metamodel.model.domain.spi;
 
-import java.util.function.BiConsumer;
-
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
@@ -21,7 +18,6 @@ import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.internal.ColumnBasedMapper;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -100,11 +96,6 @@ public class CollectionIdentifier implements DomainResultProducer, BasicValuedNa
 	@Override
 	public void visitNavigable(NavigableVisitationStrategy visitor) {
 		visitor.visitCollectionIdentifier( this );
-	}
-
-	@Override
-	public void visitColumns(BiConsumer action, Clause clause, TypeConfiguration typeConfiguration) {
-
 	}
 
 	@Override

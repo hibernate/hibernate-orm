@@ -6,10 +6,12 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import java.util.Set;
+import java.util.Collection;
 
 import org.hibernate.LockMode;
+import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.cache.CacheException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Property;
@@ -18,25 +20,22 @@ import org.hibernate.metamodel.model.domain.spi.AbstractPersistentCollectionDesc
 import org.hibernate.metamodel.model.domain.spi.AbstractPluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.internal.domain.collection.CollectionInitializerProducer;
-import org.hibernate.sql.results.internal.domain.collection.SetInitializerProducer;
 import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.FetchParent;
 
 /**
- * Hibernate's standard PersistentCollectionDescriptor implementor
- * for Lists
- *
- * @author Steve Ebersole
+ * @author Andrea Boriero
  */
-public class PersistentSetDescriptorImpl<O,E> extends AbstractPersistentCollectionDescriptor<O,Set<E>,E> {
-	public PersistentSetDescriptorImpl(
-			Property bootProperty,
+public class PersistentIdentifierBagDescriptorImpl<O, E>
+		extends AbstractPersistentCollectionDescriptor<O, Collection<E>, E> {
+	public PersistentIdentifierBagDescriptorImpl(
+			Property pluralProperty,
 			ManagedTypeDescriptor runtimeContainer,
-			RuntimeModelCreationContext context) {
-		super( bootProperty, runtimeContainer, context );
+			RuntimeModelCreationContext creationContext)
+			throws MappingException, CacheException {
+		super( pluralProperty, runtimeContainer, creationContext );
 	}
 
 	@Override
@@ -47,16 +46,7 @@ public class PersistentSetDescriptorImpl<O,E> extends AbstractPersistentCollecti
 			LockMode lockMode,
 			DomainResultCreationState creationState,
 			DomainResultCreationContext creationContext) {
-		final NavigableReference navigableReference = creationState.getNavigableReferenceStack().getCurrent();
-		return new SetInitializerProducer(
-				this,
-				selected,
-				getElementDescriptor().createDomainResult(
-						navigableReference,
-						null,
-						creationState, creationContext
-				)
-		);
+		return null;
 	}
 
 	@Override
@@ -64,22 +54,12 @@ public class PersistentSetDescriptorImpl<O,E> extends AbstractPersistentCollecti
 			Property pluralProperty,
 			PropertyAccess propertyAccess,
 			RuntimeModelCreationContext creationContext) {
-		return new SetAttributeImpl<>( this, pluralProperty, propertyAccess, creationContext );
-	}
-
-	@Override
-	public boolean contains(Object collection, Object childObject) {
-		return ( (Set) collection ).contains( childObject );
-	}
-
-	@Override
-	public String toString() {
-		return getNavigableRole().getFullPath();
+		return new IdentifierBagAttributeImpl<>( this, pluralProperty, propertyAccess, creationContext );
 	}
 
 	@Override
 	protected void doProcessQueuedOps(
 			PersistentCollection collection, Object id, SharedSessionContractImplementor session) {
-		// do nothing
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

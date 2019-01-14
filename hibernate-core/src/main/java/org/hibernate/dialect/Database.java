@@ -403,7 +403,7 @@ public enum Database {
 	POSTGRESQL {
 		@Override
 		public Class<? extends Dialect> latestDialect() {
-			return PostgreSQL95Dialect.class;
+			return PostgreSQL10Dialect.class;
 		}
 
 		@Override
@@ -432,7 +432,7 @@ public enum Database {
 					else if ( minorVersion < 5 ) {
 						return new PostgreSQL94Dialect();
 					}
-					else if ( minorVersion < 6 ) {
+					else {
 						return new PostgreSQL95Dialect();
 					}
 				}

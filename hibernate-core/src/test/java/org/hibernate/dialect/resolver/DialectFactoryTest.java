@@ -129,7 +129,8 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 		testDetermination( "PostgreSQL", 9, 3, PostgreSQL92Dialect.class, resolver );
 		testDetermination( "PostgreSQL", 9, 4, PostgreSQL94Dialect.class, resolver );
 		testDetermination( "PostgreSQL", 9, 5, PostgreSQL95Dialect.class, resolver );
-		testDetermination( "PostgreSQL", 10, 0, PostgreSQL95Dialect.class, resolver );
+		testDetermination( "PostgreSQL", 9, 6, PostgreSQL95Dialect.class, resolver );
+		testDetermination( "PostgreSQL", 10, 0, PostgreSQL10Dialect.class, resolver );
 		testDetermination( "EnterpriseDB", 9, 2, PostgresPlusDialect.class, resolver );
 		testDetermination( "Apache Derby", 10, 4, DerbyDialect.class, resolver );
 		testDetermination( "Apache Derby", 10, 5, DerbyTenFiveDialect.class, resolver );

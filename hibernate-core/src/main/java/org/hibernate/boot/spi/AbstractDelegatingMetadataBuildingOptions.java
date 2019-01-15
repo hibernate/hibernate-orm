@@ -191,4 +191,10 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 			);
 		}
 	}
+
+	@Override
+	public String getSchemaCharset() {
+		return delegate.getSchemaCharset();
+	}
+
 }

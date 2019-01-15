@@ -689,6 +689,14 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 */
 	String KEYWORD_AUTO_QUOTING_ENABLED = "hibernate.auto_quote_keyword";
 
+	/**
+	 * Allows to skip processing of XML Mapping.
+	 * This is for people using exclusively annotations to define their model, and might
+	 * be able to improve efficiency of booting Hibernate ORM.
+	 * By default, the XML mapping is taken into account.
+	 * @since 5.4.1
+	 */
+	String XML_MAPPING_ENABLED = "hibernate.xml_mapping_enabled";
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -197,4 +197,9 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 		return delegate.getSchemaCharset();
 	}
 
+	@Override
+	public boolean isXmlMappingEnabled() {
+		return delegate.isXmlMappingEnabled();
+	}
+
 }

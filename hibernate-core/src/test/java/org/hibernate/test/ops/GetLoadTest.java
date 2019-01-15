@@ -12,6 +12,8 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -24,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@RequiresDialectFeature(DialectChecks.SupportsNoColumnInsert.class)
 public class GetLoadTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public void configure(Configuration cfg) {

@@ -36,8 +36,8 @@ import org.hibernate.type.Type;
 public class ParameterMetadataImpl implements ParameterMetadata {
 	private final Map<Integer,OrdinalParameterDescriptor> ordinalDescriptorMap;
 	private final Map<String,NamedParameterDescriptor> namedDescriptorMap;
-	private final Set<OrdinalParameterDescriptor> ordinalDescriptorValueCache;
-	private final Set<NamedParameterDescriptor> namedDescriptorValueCache;
+	private final Collection<QueryParameter> ordinalDescriptorValueCache;
+	private final Collection<QueryParameter> namedDescriptorValueCache;
 
 	public ParameterMetadataImpl(
 			Map<Integer,OrdinalParameterDescriptor> ordinalDescriptorMap,
@@ -47,13 +47,13 @@ public class ParameterMetadataImpl implements ParameterMetadata {
 				: Collections.unmodifiableMap( ordinalDescriptorMap );
 		this.ordinalDescriptorValueCache = this.ordinalDescriptorMap.isEmpty()
 				? Collections.emptySet()
-				: Collections.unmodifiableSet(new HashSet<>(this.ordinalDescriptorMap.values()));
+				: Collections.unmodifiableCollection( this.ordinalDescriptorMap.values() );
 		this.namedDescriptorMap = namedDescriptorMap == null
 				? Collections.emptyMap()
 				: Collections.unmodifiableMap( namedDescriptorMap );
 		this.namedDescriptorValueCache = this.namedDescriptorMap.isEmpty()
 				? Collections.emptySet()
-				: Collections.unmodifiableSet(new HashSet<>(this.namedDescriptorMap.values()));
+				: Collections.unmodifiableCollection( this.namedDescriptorMap.values() );
 
 
 		if (ordinalDescriptorMap != null &&  ! ordinalDescriptorMap.isEmpty() ) {
@@ -87,14 +87,13 @@ public class ParameterMetadataImpl implements ParameterMetadata {
 
 	@Override
 	public Collection<QueryParameter> getPositionalParameters() {
-		return Collections.unmodifiableCollection( ordinalDescriptorMap.values() );
+		return ordinalDescriptorValueCache;
 	}
 
 	@Override
 	public Collection<QueryParameter> getNamedParameters() {
-		return Collections.unmodifiableCollection( namedDescriptorMap.values() );
+		return namedDescriptorValueCache;
 	}
-
 
 	@Override
 	public int getParameterCount() {

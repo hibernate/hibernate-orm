@@ -811,4 +811,12 @@ public interface EntityPersister extends EntityDefinition {
 	int[] resolveAttributeIndexes(String[] attributeNames);
 
 	boolean canUseReferenceCacheEntries();
+
+	/**
+	 * @deprecated Since 5.4.1, this is no longer used.
+	 */
+	@Deprecated
+	default boolean canIdentityInsertBeDelayed() {
+		return false;
+	}
 }

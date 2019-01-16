@@ -244,7 +244,8 @@ public abstract class AbstractSaveEventListener
 
 		Serializable id = key == null ? null : key.getIdentifier();
 
-		boolean shouldDelayIdentityInserts = !isPartOfTransaction( source ) && !requiresImmediateIdAccess;
+		boolean inTrx = source.isTransactionInProgress();
+		boolean shouldDelayIdentityInserts = !inTrx && !requiresImmediateIdAccess;
 
 		// Put a placeholder in entries, so we don't recurse back and try to save() the
 		// same object again. QUESTION: should this be done before onSave() is called?
@@ -314,10 +315,6 @@ public abstract class AbstractSaveEventListener
 		}
 
 		return id;
-	}
-
-	private static boolean isPartOfTransaction(EventSource source) {
-		return source.isTransactionInProgress() && source.getTransactionCoordinator().isJoined();
 	}
 
 	private AbstractEntityInsertAction addInsertAction(

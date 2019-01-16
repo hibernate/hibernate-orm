@@ -263,13 +263,43 @@ public class CascadeStyles {
 	 * @return The appropriate CascadeStyle
 	 */
 	public static CascadeStyle getCascadeStyle(String cascade) {
+		if ( cascade == null ) {
+			return NONE;
+		}
+
 		CascadeStyle style = STYLES.get( cascade );
 		if ( style == null ) {
-			throw new MappingException( "Unsupported cascade style: " + cascade );
+			if ( cascade.indexOf( "," ) > -1 ) {
+				return getMultipleCascadeStyle( cascade );
+			}
+			else {
+				throw new MappingException( "Unsupported cascade style: " + cascade );
+			}
 		}
-		else {
-			return style;
+
+		return style;
+	}
+
+	private static CascadeStyle getMultipleCascadeStyle(String cascade) {
+		StringBuilder exceptionBuilder = new StringBuilder();
+		String[] cascadeTypes = cascade.split( "," );
+
+		CascadeStyle[] styles = new CascadeStyle[cascadeTypes.length];
+		int i = 0;
+		for ( String cascadeType : cascadeTypes ) {
+			CascadeStyle cascadeStyle = STYLES.get( cascadeType );
+			if ( cascadeStyle != null ) {
+				styles[i++] = cascadeStyle;
+			}
+			else {
+				exceptionBuilder.append( ", " );
+				exceptionBuilder.append( cascadeType );
+			}
 		}
+		if ( exceptionBuilder.length() > 0 ) {
+			throw new MappingException( "Unsupported cascade styles: " + exceptionBuilder.substring( 2 ) );
+		}
+		return  new MultipleCascadeStyle( styles );
 	}
 
 	public static void registerCascadeStyle(String name, BaseCascadeStyle cascadeStyle) {

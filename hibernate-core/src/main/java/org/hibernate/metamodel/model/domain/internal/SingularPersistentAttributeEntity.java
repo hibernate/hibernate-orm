@@ -27,6 +27,8 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
+import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -128,6 +130,7 @@ public class SingularPersistentAttributeEntity<O, J>
 	private final FetchStrategy fetchStrategy;
 
 	private final NotFoundAction notFoundAction;
+	private final String cascade;
 
 	private StateArrayContributor referencedUkAttribute;
 	private SingleEntityLoader singleEntityLoader;
@@ -202,11 +205,17 @@ public class SingularPersistentAttributeEntity<O, J>
 
 		instantiationComplete( bootModelAttribute, context );
 
+		this.cascade = bootModelAttribute.getCascade();
 		this.fetchStrategy = DomainModelHelper.determineFetchStrategy(
 				bootModelAttribute,
 				runtimeModelContainer,
 				entityDescriptor
 		);
+	}
+
+	@Override
+	public CascadeStyle getCascadeStyle() {
+		return CascadeStyles.getCascadeStyle( this.cascade );
 	}
 
 	@Override

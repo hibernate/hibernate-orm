@@ -27,6 +27,7 @@ import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -876,6 +877,12 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 
 	@Override
 	public boolean hasCascades() {
+		for ( StateArrayContributor contributor : getStateArrayContributors() ) {
+			CascadeStyle cascadeStyle = contributor.getCascadeStyle();
+			if ( CascadeStyles.NONE != cascadeStyle ) {
+				return true;
+			}
+		}
 		return false;
 	}
 

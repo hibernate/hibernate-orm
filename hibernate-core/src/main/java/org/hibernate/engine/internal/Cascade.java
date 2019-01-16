@@ -135,7 +135,7 @@ public final class Cascade {
 						}
 					}
 					else {
-						child = descriptor.getPropertyValue( parent, i );
+						child = descriptor.getPropertyValues( parent )[i];
 					}
 					cascadeProperty(
 							action,

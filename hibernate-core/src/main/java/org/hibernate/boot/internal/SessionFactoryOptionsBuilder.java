@@ -83,7 +83,6 @@ import static org.hibernate.cfg.AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATE
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_BATCH_FETCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_ENTITY_MODE;
 import static org.hibernate.cfg.AvailableSettings.DELAY_ENTITY_LOADER_CREATIONS;
-import static org.hibernate.cfg.AvailableSettings.DISABLE_DELAYED_IDENTIFIER_POST_INSERTS;
 import static org.hibernate.cfg.AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS;
 import static org.hibernate.cfg.AvailableSettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH;
 import static org.hibernate.cfg.AvailableSettings.FLUSH_BEFORE_COMPLETION;
@@ -346,9 +345,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.defaultNullPrecedence = NullPrecedence.parse( defaultNullPrecedence );
 		this.orderUpdatesEnabled = ConfigurationHelper.getBoolean( ORDER_UPDATES, configurationSettings );
 		this.orderInsertsEnabled = ConfigurationHelper.getBoolean( ORDER_INSERTS, configurationSettings );
-		this.postInsertIdentifierDelayed = !ConfigurationHelper.getBoolean(
-				DISABLE_DELAYED_IDENTIFIER_POST_INSERTS, configurationSettings, false
-		);
 
 		this.callbacksEnabled = ConfigurationHelper.getBoolean( JPA_CALLBACKS_ENABLED, configurationSettings, true );
 
@@ -1052,11 +1048,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public int getQueryStatisticsMaxSize() {
 		return queryStatisticsMaxSize;
-	}
-
-	@Override
-	public boolean isPostInsertIdentifierDelayableEnabled() {
-		return postInsertIdentifierDelayed;
 	}
 
 	@Override

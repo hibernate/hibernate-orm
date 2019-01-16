@@ -18,7 +18,7 @@ import javax.persistence.criteria.Root;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.Query;
 import org.hibernate.transform.Transformers;
-
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,6 +50,7 @@ public class CriteriaMultiselectAliasTest extends BaseEntityManagerFunctionalTes
 	}
 
 	@Test
+	@FailureExpected(jiraKey = "HHH-13140")
 	public void test() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			final CriteriaBuilder cb = entityManager.getCriteriaBuilder();

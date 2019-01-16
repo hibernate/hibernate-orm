@@ -239,22 +239,12 @@ public abstract class AbstractPathImpl<X>
 	@Override
 	public String render(RenderingContext renderingContext) {
 		PathSource<?> source = getPathSource();
-		String path;
-
 		if ( source != null ) {
 			source.prepareAlias( renderingContext );
-			path = source.getPathIdentifier() + "." + getAttribute().getName();
+			return source.getPathIdentifier() + "." + getAttribute().getName();
 		}
 		else {
-			path = getAttribute().getName();
+			return getAttribute().getName();
 		}
-
-		String alias = getAlias();
-
-		if ( alias != null ) {
-			path = path + " as " + alias;
-		}
-
-		return path;
 	}
 }

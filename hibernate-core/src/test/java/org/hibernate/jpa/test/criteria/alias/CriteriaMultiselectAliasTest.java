@@ -6,25 +6,24 @@
  */
 package org.hibernate.jpa.test.criteria.alias;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.Assert.assertEquals;
+
 import java.util.List;
-import java.util.Map;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.Query;
-import org.hibernate.transform.Transformers;
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.jdbc.SQLStatementInterceptor;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.transform.Transformers;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Vlad Mihalcea
@@ -51,7 +50,8 @@ public class CriteriaMultiselectAliasTest extends BaseEntityManagerFunctionalTes
 
 	@Test
 	@FailureExpected(jiraKey = "HHH-13140")
-	public void test() {
+	@TestForIssue(jiraKey = "HHH-13140")
+	public void testAlias() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
@@ -64,6 +64,35 @@ public class CriteriaMultiselectAliasTest extends BaseEntityManagerFunctionalTes
 			);
 
 			List<BookDto> dtos = entityManager.createQuery( query )
+					.unwrap( Query.class )
+					.setResultTransformer( Transformers.aliasToBean( BookDto.class ) )
+					.getResultList();
+			assertEquals( 1, dtos.size() );
+			BookDto dto = dtos.get( 0 );
+
+			assertEquals( 1, (int) dto.getId() );
+			assertEquals( bookName(), dto.getTitle() );
+		} );
+	}
+
+	@Test
+	@FailureExpected(jiraKey = "HHH-13140")
+	@TestForIssue(jiraKey = "HHH-13192")
+	public void testNoAliasInWhereClause() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+
+			final CriteriaQuery<Object[]> query = cb.createQuery( Object[].class );
+
+			final Root<Book> entity = query.from( Book.class );
+			query.multiselect(
+					entity.get( "id" ).alias( "id" ),
+					entity.get( "name" ).alias( "title" )
+			);
+			query.where(cb.equal(entity.get("name"), cb.parameter(String.class, "name")));
+
+			List<BookDto> dtos = entityManager.createQuery( query )
+					.setParameter( "name", bookName() )
 					.unwrap( Query.class )
 					.setResultTransformer( Transformers.aliasToBean( BookDto.class ) )
 					.getResultList();

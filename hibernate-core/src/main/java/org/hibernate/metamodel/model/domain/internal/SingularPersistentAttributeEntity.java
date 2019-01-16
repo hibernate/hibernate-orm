@@ -454,7 +454,7 @@ public class SingularPersistentAttributeEntity<O, J>
 						: ForeignKeyDirection.TO_PARENT;
 			}
 			case ONE_TO_ONE: {
-				return constrained
+				return mappedBy != null
 						? ForeignKeyDirection.TO_PARENT
 						: ForeignKeyDirection.FROM_PARENT;
 

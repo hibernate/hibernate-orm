@@ -104,6 +104,23 @@ public class CriteriaMultiselectAliasTest extends BaseEntityManagerFunctionalTes
 		} );
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-13192")
+	public void testNoAliasInWhereClauseSimplified() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			CriteriaQuery<Object> criteriaQuery = cb.createQuery();
+			Root<Book> root = criteriaQuery.from( Book.class );
+			criteriaQuery.where( cb.equal( root.get( "id" ), cb.parameter( Integer.class, "id" ) ) );
+			criteriaQuery.select( root.get( "id" ).alias( "x" ) );
+
+			List<Object> results = entityManager.createQuery( criteriaQuery )
+					.setParameter( "id", 1 )
+					.getResultList();
+			assertEquals( 1, (int) results.get( 0 ) );
+		} );
+	}
+
 	@Entity(name = "Book")
 	public static class Book {
 

@@ -58,7 +58,7 @@ public class EntityJavaDescriptorImpl<J>
 
 	@Override
 	public boolean areEqual(Object one, Object another) {
-		return false;
+		return one == another;
 	}
 
 	@Override

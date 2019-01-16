@@ -34,10 +34,14 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class ParameterMetadataImpl implements ParameterMetadata {
+
 	private final Map<Integer,OrdinalParameterDescriptor> ordinalDescriptorMap;
 	private final Map<String,NamedParameterDescriptor> namedDescriptorMap;
-	private final Collection<QueryParameter> ordinalDescriptorValueCache;
-	private final Collection<QueryParameter> namedDescriptorValueCache;
+
+	//Important: queries with large amounts of parameters need the following
+	//cache to have efficient performance on #containsReference(QueryParameter).
+	private final Set<QueryParameter> ordinalDescriptorValueCache;
+	private final Set<QueryParameter> namedDescriptorValueCache;
 
 	public ParameterMetadataImpl(
 			Map<Integer,OrdinalParameterDescriptor> ordinalDescriptorMap,
@@ -47,14 +51,13 @@ public class ParameterMetadataImpl implements ParameterMetadata {
 				: Collections.unmodifiableMap( ordinalDescriptorMap );
 		this.ordinalDescriptorValueCache = this.ordinalDescriptorMap.isEmpty()
 				? Collections.emptySet()
-				: Collections.unmodifiableCollection( this.ordinalDescriptorMap.values() );
+				: Collections.unmodifiableSet( new HashSet<>( this.ordinalDescriptorMap.values() ) );
 		this.namedDescriptorMap = namedDescriptorMap == null
 				? Collections.emptyMap()
 				: Collections.unmodifiableMap( namedDescriptorMap );
 		this.namedDescriptorValueCache = this.namedDescriptorMap.isEmpty()
 				? Collections.emptySet()
-				: Collections.unmodifiableCollection( this.namedDescriptorMap.values() );
-
+				: Collections.unmodifiableSet( new HashSet<>( this.namedDescriptorMap.values() ) );
 
 		if (ordinalDescriptorMap != null &&  ! ordinalDescriptorMap.isEmpty() ) {
 			final List<Integer> sortedPositions = new ArrayList<>( ordinalDescriptorMap.keySet() );

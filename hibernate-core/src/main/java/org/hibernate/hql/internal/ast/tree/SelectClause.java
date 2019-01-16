@@ -193,7 +193,7 @@ public class SelectClause extends SelectExpressionList {
 				FromElement fromElement = (FromElement) iterator.next();
 
 				if ( fromElement.isFetch() ) {
-					FromElement origin;
+					final FromElement origin;
 					if ( fromElement.getRealOrigin() == null ) {
 						// work around that crazy issue where the tree contains
 						// "empty" FromElements (no text); afaict, this is caused

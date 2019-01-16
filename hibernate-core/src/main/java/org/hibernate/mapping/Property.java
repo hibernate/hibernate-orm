@@ -9,7 +9,6 @@ package org.hibernate.mapping;
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.List;
-import java.util.StringTokenizer;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -34,8 +33,6 @@ import org.hibernate.collection.internal.StandardSetSemantics;
 import org.hibernate.collection.internal.StandardSortedMapSemantics;
 import org.hibernate.collection.internal.StandardSortedSetSemantics;
 import org.hibernate.collection.spi.CollectionSemantics;
-import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeBasic;
@@ -143,7 +140,10 @@ public class Property implements Serializable, PersistentAttributeMapping {
 	public boolean isPrimitive(Class clazz) {
 		return getGetter(clazz).getReturnType().isPrimitive();
 	}
-//
+
+// todo (6.0): Can we remove these comments?
+//             See org.hibernate.engine.spi.CascadeStyles#getCascadeStyle(String cascade)
+
 //	public CascadeStyle getCascadeStyle() throws MappingException {
 //		Type type = value.getType();
 //		if ( type.isComponentType() ) {
@@ -178,20 +178,21 @@ public class Property implements Serializable, PersistentAttributeMapping {
 //			return getCascadeStyle( cascade );
 //		}
 //	}
-	private static CascadeStyle getCascadeStyle(String cascade) {
-		if ( cascade==null || cascade.equals("none") ) {
-			return CascadeStyles.NONE;
-		}
-		else {
-			StringTokenizer tokens = new StringTokenizer(cascade, ", ");
-			CascadeStyle[] styles = new CascadeStyle[ tokens.countTokens() ] ;
-			int i=0;
-			while ( tokens.hasMoreTokens() ) {
-				styles[i++] = CascadeStyles.getCascadeStyle( tokens.nextToken() );
-			}
-			return new CascadeStyles.MultipleCascadeStyle(styles);
-		}
-	}
+//
+//	private static CascadeStyle getCascadeStyle(String cascade) {
+//		if ( cascade==null || cascade.equals("none") ) {
+//			return CascadeStyles.NONE;
+//		}
+//		else {
+//			StringTokenizer tokens = new StringTokenizer(cascade, ", ");
+//			CascadeStyle[] styles = new CascadeStyle[ tokens.countTokens() ] ;
+//			int i=0;
+//			while ( tokens.hasMoreTokens() ) {
+//				styles[i++] = CascadeStyles.getCascadeStyle( tokens.nextToken() );
+//			}
+//			return new CascadeStyles.MultipleCascadeStyle(styles);
+//		}
+//	}
 
 	@Override
 	public String getCascade() {

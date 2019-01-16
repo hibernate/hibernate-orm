@@ -14,6 +14,7 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 
 import org.hibernate.action.internal.EntityActionVetoException;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PreInsertEventListener;
@@ -23,6 +24,7 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.ExpectedException;
+import org.junit.Before;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -34,7 +36,6 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 @TestForIssue(jiraKey = "HHH-11721")
-@Disabled("When performing insert, operation fails due to attempting to bind POST_INSERT_INDICATOR incorrectly")
 public class PreInsertEventListenerVetoUnidirectionalTest extends SessionFactoryBasedFunctionalTest {
 
 	@Override
@@ -45,9 +46,9 @@ public class PreInsertEventListenerVetoUnidirectionalTest extends SessionFactory
 		};
 	}
 
-	@AfterAll
-	protected void afterSessionFactoryBuilt() {
-		EventListenerRegistry registry = sessionFactory().getServiceRegistry()
+	@Override
+	protected void sessionFactoryBuilt(SessionFactoryImplementor factory) {
+		EventListenerRegistry registry = factory.getServiceRegistry()
 				.getService( EventListenerRegistry.class );
 		registry.appendListeners(
 				EventType.PRE_INSERT,

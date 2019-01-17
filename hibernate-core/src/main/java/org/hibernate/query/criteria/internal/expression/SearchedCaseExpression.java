@@ -9,7 +9,7 @@ package org.hibernate.query.criteria.internal.expression;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiFunction;
+
 import javax.persistence.criteria.CriteriaBuilder.Case;
 import javax.persistence.criteria.Expression;
 
@@ -69,7 +69,7 @@ public class SearchedCaseExpression<R>
 		final Class<R> type = result != null
 				? (Class<R>) result.getClass()
 				: getJavaType();
-		return new LiteralExpression<R>( criteriaBuilder(), type, result );
+		return new CaseLiteralExpression<R>( criteriaBuilder(), type, result );
 	}
 
 	public Case<R> when(Expression<Boolean> condition, Expression<? extends R> result) {

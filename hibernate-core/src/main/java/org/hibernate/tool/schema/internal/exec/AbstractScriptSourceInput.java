@@ -11,7 +11,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
+import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 
 /**
@@ -20,12 +23,17 @@ import org.hibernate.tool.schema.spi.ScriptSourceInput;
  * @author Steve Ebersole
  */
 public abstract class AbstractScriptSourceInput implements ScriptSourceInput {
+
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( SchemaCreatorImpl.class );
+
 	protected abstract Reader reader();
 
 	@Override
 	public void prepare() {
-		// by default there is nothing to do
+		log.executingImportScript( getScriptDescription() );
 	}
+
+	protected abstract String getScriptDescription();
 
 	@Override
 	public List<String> read(ImportSqlCommandExtractor commandExtractor) {

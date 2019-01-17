@@ -8,10 +8,13 @@ package org.hibernate.query.criteria.internal.expression;
 
 import java.io.Serializable;
 
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
 import org.hibernate.query.criteria.internal.ValueHandlerFactory;
+import org.hibernate.query.criteria.internal.ValueHandlerFactory.ValueHandler;
 import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
@@ -20,6 +23,9 @@ import org.hibernate.query.criteria.internal.compile.RenderingContext;
  * @author Steve Ebersole
  */
 public class LiteralExpression<T> extends ExpressionImpl<T> implements Serializable {
+
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( LiteralExpression.class );
+
 	private Object literal;
 
 	@SuppressWarnings({ "unchecked" })
@@ -41,33 +47,40 @@ public class LiteralExpression<T> extends ExpressionImpl<T> implements Serializa
 		return (T) literal;
 	}
 
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		// nothing to do
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@Override
 	public String render(RenderingContext renderingContext) {
+		// In the case of literals, we currently do not have an easy way to get the value.
+		// That would require some significant infrastructure changes.
+		// For now, we force the normalRender() code path for enums which means we will
+		// always use parameter binding for enum literals.
+		if ( literal instanceof Enum ) {
+			return normalRender( renderingContext, LiteralHandlingMode.BIND );
+		}
+
 		switch ( renderingContext.getClauseStack().getCurrent() ) {
 			case SELECT: {
-				return renderProjection();
+				return renderProjection( renderingContext );
 			}
 			case GROUP: {
 				// technically a literal in the group-by clause
 				// would be a reference to the position of a selection
 				//
 				// but this is what the code used to do...
-				return renderProjection();
+				return renderProjection( renderingContext );
 			}
 			default: {
-				return normalRender( renderingContext );
+				return normalRender( renderingContext, renderingContext.getCriteriaLiteralHandlingMode() );
 			}
 		}
 	}
 
 	@SuppressWarnings("unchecked")
-	private String normalRender(RenderingContext renderingContext) {
-		LiteralHandlingMode literalHandlingMode = renderingContext.getCriteriaLiteralHandlingMode();
-
+	private String normalRender(RenderingContext renderingContext, LiteralHandlingMode literalHandlingMode) {
 		switch ( literalHandlingMode ) {
 			case AUTO: {
 				if ( ValueHandlerFactory.isNumeric( literal ) ) {
@@ -86,6 +99,14 @@ public class LiteralExpression<T> extends ExpressionImpl<T> implements Serializa
 					literalValue = renderingContext.getDialect().inlineLiteral( (String) literal );
 				}
 
+				ValueHandler valueHandler = ValueHandlerFactory.determineAppropriateHandler( (Class) literal.getClass() );
+				if ( valueHandler == null ) {
+					LOG.warn( "Unable to find an appropriate value handler for literal type " + literal.getClass()
+							+ ". Using BIND literal handling mode instead of INLINE." );
+
+					return bindLiteral( renderingContext );
+				}
+
 				return ValueHandlerFactory.determineAppropriateHandler( (Class) literal.getClass() ).render( literalValue );
 			}
 			default: {
@@ -94,10 +115,18 @@ public class LiteralExpression<T> extends ExpressionImpl<T> implements Serializa
 		}
 	}
 
-	private String renderProjection() {
+	private String renderProjection(RenderingContext renderingContext) {
 		// some drivers/servers do not like parameters in the select clause
 		final ValueHandlerFactory.ValueHandler handler =
 				ValueHandlerFactory.determineAppropriateHandler( literal.getClass() );
+
+		if ( handler == null ) {
+			LOG.warn( "Unable to find an appropriate value handler for literal type " + literal.getClass()
+					+ ". Forcing BIND literal handling mode." );
+
+			return normalRender( renderingContext, LiteralHandlingMode.BIND );
+		}
+
 		if ( ValueHandlerFactory.isCharacter( literal ) ) {
 			return '\'' + handler.render( literal ) + '\'';
 		}

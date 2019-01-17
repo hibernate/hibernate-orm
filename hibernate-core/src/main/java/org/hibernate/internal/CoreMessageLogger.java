@@ -1402,10 +1402,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	void updatingSchema();
 
 	@LogMessage(level = INFO)
-	@Message(value = "Using ASTQueryTranslatorFactory", id = 397)
-	void usingAstQueryTranslatorFactory();
-
-	@LogMessage(level = INFO)
 	@Message(value = "Explicit segment value for id generator [%s.%s] suggested; using default [%s]", id = 398)
 	void usingDefaultIdGeneratorSegmentValue(
 			String tableName,

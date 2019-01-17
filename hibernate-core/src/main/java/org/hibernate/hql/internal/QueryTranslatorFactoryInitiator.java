@@ -13,7 +13,6 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
 import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import static org.hibernate.cfg.AvailableSettings.QUERY_TRANSLATOR;
@@ -24,7 +23,6 @@ import static org.hibernate.cfg.AvailableSettings.QUERY_TRANSLATOR;
  * @author Steve Ebersole
  */
 public class QueryTranslatorFactoryInitiator implements StandardServiceInitiator<QueryTranslatorFactory> {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( QueryTranslatorFactoryInitiator.class );
 
 	/**
 	 * Singleton access
@@ -42,10 +40,8 @@ public class QueryTranslatorFactoryInitiator implements StandardServiceInitiator
 				ASTQueryTranslatorFactory.INSTANCE
 		);
 
-		log.debugf( "QueryTranslatorFactory : %s", factory );
-		if ( factory instanceof ASTQueryTranslatorFactory ) {
-			log.usingAstQueryTranslatorFactory();
-		}
+		CoreLogging.messageLogger( QueryTranslatorFactoryInitiator.class )
+				.debug( "QueryTranslatorFactory: " + factory );
 
 		return factory;
 	}

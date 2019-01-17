@@ -463,7 +463,6 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 		if ( importScriptSetting != null ) {
 			final ScriptSourceInput importScriptInput = interpretScriptSourceSetting( importScriptSetting, classLoaderService, charsetName );
-			log.executingImportScript( importScriptInput.toString() );
 			importScriptInput.prepare();
 			try {
 				for ( String command : importScriptInput.read( commandExtractor ) ) {
@@ -490,7 +489,6 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			final ScriptSourceInput importScriptInput = interpretLegacyImportScriptSetting( resourceName, classLoaderService, charsetName );
 			importScriptInput.prepare();
 			try {
-				log.executingImportScript( importScriptInput.toString() );
 				for ( String command : importScriptInput.read( commandExtractor ) ) {
 					applySqlString( command, formatter, options, targets );
 				}

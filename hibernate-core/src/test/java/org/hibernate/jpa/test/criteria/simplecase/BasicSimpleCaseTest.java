@@ -173,6 +173,18 @@ public class BasicSimpleCaseTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-13016")
 	public void testCaseEnumResult() {
+		doInJPA( this::entityManagerFactory, em -> {
+			// create entities
+			Customer customer1 = new Customer();
+			customer1.setEmail( "LONG5678901234" );
+			em.persist( customer1 );
+			Customer customer2 = new Customer();
+			customer2.setEmail( "NORMAL7890123" );
+			em.persist( customer2 );
+			Customer customer3 = new Customer();
+			customer3.setEmail( "UNKNOWN" );
+			em.persist( customer3 );
+		});
 		EntityManager em = getOrCreateEntityManager();
 		CriteriaBuilder builder = em.getCriteriaBuilder();
 
@@ -186,8 +198,16 @@ public class BasicSimpleCaseTest extends BaseEntityManagerFunctionalTestCase {
 		Expression<EmailType> emailType = selectCase.otherwise( EmailType.UNKNOWN );
 
 		query.multiselect( emailPath, emailType );
+		query.orderBy( builder.asc( emailPath ) );
 
-		em.createQuery( query ).getResultList();
+		List<Tuple> results = em.createQuery( query ).getResultList();
+		assertEquals( 3, results.size() );
+		assertEquals( "LONG5678901234", results.get( 0 ).get( 0 ) );
+		assertEquals( EmailType.LONG, results.get( 0 ).get( 1 ) );
+		assertEquals( "NORMAL7890123", results.get( 1 ).get( 0 ) );
+		assertEquals( EmailType.NORMAL, results.get( 1 ).get( 1 )  );
+		assertEquals( "UNKNOWN", results.get( 2 ).get( 0 ) );
+		assertEquals( EmailType.UNKNOWN, results.get( 2 ).get( 1 )  );
 	}
 
 	@Test
@@ -224,8 +244,9 @@ public class BasicSimpleCaseTest extends BaseEntityManagerFunctionalTestCase {
 			case2.otherwise( cb.nullLiteral( Long.class ) );
 
 			/*
-			 * Generates something like on 5.3.7 "SELECT enumfield AS enumField, SUM(CASE WHEN enumfield ='1' THEN value
-			 * ELSE NULL END) AS VAL_1, SUM(CASE WHEN enumfield ='2' THEN value ELSE NULL END) AS VAL_1 FROM testentity
+			 * Forces enums to be bound as parameters, so SQL is something like
+			 * "SELECT enumfield AS enumField, SUM(CASE WHEN enumfield = ? THEN value
+			 * ELSE NULL END) AS VAL_1, SUM(CASE WHEN enumfield =? THEN value ELSE NULL END) AS VAL_1 FROM TestEntity
 			 * GROUP BY enumfield"
 			 */
 			query
@@ -257,6 +278,7 @@ public class BasicSimpleCaseTest extends BaseEntityManagerFunctionalTestCase {
 		private String email;
 
 		@Id
+		@GeneratedValue
 		public Integer getId() {
 			return id;
 		}
@@ -278,7 +300,7 @@ public class BasicSimpleCaseTest extends BaseEntityManagerFunctionalTestCase {
 		LONG, NORMAL, UNKNOWN
 	}
 
-	@Entity
+	@Entity(name = "TestEntity")
 	public static class TestEntity {
 		@Id
 		@GeneratedValue

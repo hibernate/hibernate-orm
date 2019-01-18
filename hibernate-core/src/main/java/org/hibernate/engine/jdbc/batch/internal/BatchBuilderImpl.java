@@ -70,21 +70,4 @@ public class BatchBuilderImpl implements BatchBuilder, Configurable, Manageable,
 				? new BatchingBatch( key, jdbcCoordinator, jdbcBatchSizeToUse )
 				: new NonBatchingBatch( key, jdbcCoordinator );
 	}
-
-	@Override
-	public String getManagementDomain() {
-		// use Hibernate default domain
-		return null;
-	}
-
-	@Override
-	public String getManagementServiceType() {
-		// use Hibernate default scheme
-		return null;
-	}
-
-	@Override
-	public Object getManagementBean() {
-		return this;
-	}
 }

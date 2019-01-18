@@ -76,7 +76,7 @@ public class SimpleCaseExpression<C,R>
 		final Class<R> type = result != null
 				? (Class<R>) result.getClass()
 				: getJavaType();
-		return new CaseLiteralExpression<R>( criteriaBuilder(), type, result );
+		return new LiteralExpression<R>( criteriaBuilder(), type, result );
 	}
 
 	public SimpleCase<C, R> when(C condition, Expression<? extends R> result) {

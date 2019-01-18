@@ -21,6 +21,7 @@ import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.Service;
+import org.hibernate.service.spi.Manageable;
 import org.hibernate.stat.Statistics;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
@@ -32,7 +33,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  * @author Alex Snaps
  */
 @SuppressWarnings({ "unchecked" })
-public class StatisticsImpl implements StatisticsImplementor, Service {
+public class StatisticsImpl implements StatisticsImplementor, Service, Manageable {
 	private static final CoreMessageLogger LOG = messageLogger( StatisticsImpl.class );
 
 	private final SessionFactoryImplementor sessionFactory;
@@ -930,8 +931,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 			committedTransactionCount.increment();
 		}
 	}
-
-
 
 	@Override
 	public void logSummary() {

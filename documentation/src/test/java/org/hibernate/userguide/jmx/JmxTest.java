@@ -36,6 +36,7 @@ public class JmxTest extends BaseEntityManagerFunctionalTestCase {
     @Override
     protected Map buildSettings() {
         Map properties = super.buildSettings();
+        properties.put( AvailableSettings.GENERATE_STATISTICS, Boolean.TRUE.toString());
         properties.put( AvailableSettings.JMX_ENABLED, Boolean.TRUE.toString());
         properties.put( AvailableSettings.JMX_DOMAIN_NAME, "test");
         return properties;

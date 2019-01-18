@@ -23,18 +23,6 @@ public interface OptionallyManageable extends Manageable {
 	List<Manageable> getRealManageables();
 
 	@Override
-	default String getManagementDomain() {
-		// Generally the wrapper is not Manageable itself
-		return null;
-	}
-
-	@Override
-	default String getManagementServiceType() {
-		// Generally the wrapper is not Manageable itself
-		return null;
-	}
-
-	@Override
 	default Object getManagementBean() {
 		// Generally the wrapper is not Manageable itself
 		return null;

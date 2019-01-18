@@ -6,6 +6,8 @@
  */
 package org.hibernate.stat;
 
+import javax.management.MXBean;
+
 /**
  * Exposes statistics for a particular {@link org.hibernate.SessionFactory}.  Beware of milliseconds metrics, they
  * are dependent of the JVM precision: you may then encounter a 10 ms approximation depending on you OS platform.
@@ -13,6 +15,7 @@ package org.hibernate.stat;
  * 
  * @author Emmanuel Bernard
  */
+@MXBean
 public interface Statistics {
 
 	int DEFAULT_QUERY_STATISTICS_MAX_SIZE = 5000;

@@ -28,6 +28,7 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
@@ -172,6 +173,7 @@ public class BasicSimpleCaseTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-13016")
+	@FailureExpected(jiraKey = "HHH-13016")
 	public void testCaseEnumResult() {
 		doInJPA( this::entityManagerFactory, em -> {
 			// create entities

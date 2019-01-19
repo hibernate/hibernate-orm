@@ -198,6 +198,9 @@ public class ValueHandlerFactory {
 			if ( BigInteger.class.isInstance( value ) ) {
 				return (BigInteger) value;
 			}
+			if ( BigDecimal.class.isInstance( value ) ) {
+				return ( (BigDecimal) value ).toBigInteger();
+			}
 			if ( Number.class.isInstance( value ) ) {
 				return BigInteger.valueOf( ( (Number) value ).longValue() );
 			}

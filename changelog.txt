@@ -3,6 +3,60 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.1.Final (January 19, 2019)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31726/tab/release-report-done
+
+** Bug
+    * [HHH-11807] - Enhanced entity delete not cascaded for some case
+    * [HHH-12555] - Merging a blob on an entity  results in a class cast exception
+    * [HHH-13059] - OneToMany with referencedColumnName returns too many entities
+    * [HHH-13068] - "order_inserts = true" causes FK Violation when inserting Self Referential Entity with Single_Table Inherited Entities
+    * [HHH-13080] - ManyToMany List update with detached entities throws EntityExistsException
+    * [HHH-13084] - Querying entity with non-ID property named 'id' fails if entity has an IdClass composite key
+    * [HHH-13094] - Setting @Any.fetch to FetchType.EAGER doesn't work
+    * [HHH-13104] - Oracle 12c / SAP Hana insert fails when entity contains only an identity-based column.
+    * [HHH-13114] - Query "select count(h) from Human h" fails if a subclass has a non-Id property named "id"
+    * [HHH-13129] - Cascaded merge fails for detached bytecode-enhanced entity with uninitialized  ToOne
+    * [HHH-13138] - Work around class loading issues so that bytecode enhanced tests can run as expected
+    * [HHH-13145] - Generated metamodel class can't be compiled.
+    * [HHH-13146] - Hibernate Ehcache no longer supports the `net.sf.ehcache.hibernate.cache_lock_timeout` configuration property
+    * [HHH-13151] - TreatedRoot misses fetches in query
+    * [HHH-13153] - No content in 15.1. Query API of User Guide
+    * [HHH-13160] - Polymorphic query for InheritanceType.TABLE_PER_CLASS is not using UNION ALL
+    * [HHH-13163] - Fix DDLWithoutCallbackTest#testRangeChecksGetApplied which fails on MariaDB
+    * [HHH-13164] - Detecting transient state of mandatory toOne relations is broken
+    * [HHH-13167] - When omitting the OTHERWISE clause in a CASE expression built with Criteria API, Hibernate throws a NullPointerException
+    * [HHH-13169] - Table alias used instead of exact table name in multitable update query
+    * [HHH-13172] - Log a warning instead of throwing an Exception when @AttributeOverride is used in conjunction with inheritance
+    * [HHH-13175] - Eager subsequent-select fails when EntityGraph is specified for find operation
+    * [HHH-13184] - Oracle dialect detection does not return latest dialect in the default case
+    * [HHH-13189] - org.hibernate.Query#setParameter(String, Object) is extremely slow
+    * [HHH-13191] - LazyInitializationException when Envers persists audit data that uses a proxy with JPA_PROXY_COMPLIANCE enabled under JTA
+    * [HHH-13192] - Select alias in Criteria API seems to bleed into where condition
+    * [HHH-13199] - NullPointerException when using case on select clause using JPA Criteria API
+
+** New Feature
+    * [HHH-13204] - Introduce a configuration flag to skip processing of XML mapping metadata
+    * [HHH-13209] - Experimental feature: Allow for ServiceRegistry "suspend and restore"
+
+** Task
+    * [HHH-13197] - Reduce bootstrap log verbosity
+    * [HHH-13198] - Introduce a global configuration flag to disable JPA callbacks
+    * [HHH-13210] - Don't log about running a script of type ScriptSourceInputNonExistentImpl
+    * [HHH-13211] - Reduce logging verbosity of QueryTranslatorFactoryInitiator
+
+** Improvement
+    * [HHH-12878] - StaleStateException does not log out the stale object or the statement that was executed
+    * [HHH-13162] - Upgrade MySQL and MariaDB Dialects as they support UNION ALL
+    * [HHH-13165] - Don't use confusing "this" in the User Guide admonition blocks
+    * [HHH-13181] - Reduce bootstrap log verbosity
+    * [HHH-13186] - MariaDB dialect detection does not return the latest by default
+    * [HHH-13206] - Apply dialect checks from both method and class level.
+
+
+
 Changes in 5.4.0.Final (December 12, 2018)
 ------------------------------------------------------------------------------------------------------------------------
 

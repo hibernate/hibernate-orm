@@ -195,6 +195,12 @@ public class ValueHandlerFactory {
 			if ( value == null ) {
 				return null;
 			}
+			if ( BigInteger.class.isInstance( value ) ) {
+				return (BigInteger) value;
+			}
+			if ( BigDecimal.class.isInstance( value ) ) {
+				return ( (BigDecimal) value ).toBigInteger();
+			}
 			if ( Number.class.isInstance( value ) ) {
 				return BigInteger.valueOf( ( (Number) value ).longValue() );
 			}
@@ -215,6 +221,9 @@ public class ValueHandlerFactory {
 		public BigDecimal convert(Object value) {
 			if ( value == null ) {
 				return null;
+			}
+			if ( BigDecimal.class.isInstance( value ) ) {
+				return (BigDecimal) value;
 			}
 			if ( BigInteger.class.isInstance( value ) ) {
 				return new BigDecimal( (BigInteger) value );

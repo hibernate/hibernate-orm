@@ -6,7 +6,8 @@
  */
 package org.hibernate.test.sql.storedproc;
 
-import javax.persistence.Column;
+import java.util.Arrays;
+import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.EntityResult;
 import javax.persistence.FieldResult;
@@ -26,8 +27,9 @@ import org.hibernate.dialect.H2Dialect;
  * @author Steve Ebersole
  */
 public class H2ProcTesting {
-	public static void applyProcDefinitions(Configuration configuration) {
-		configuration.addAuxiliaryDatabaseObject(
+
+	public static List<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjects() {
+		return Arrays.asList(
 				new AuxiliaryDatabaseObject() {
 					@Override
 					public String getExportIdentifier() {
@@ -68,10 +70,7 @@ public class H2ProcTesting {
 								"DROP ALIAS findUser IF EXISTS"
 						};
 					}
-				}
-		);
-
-		configuration.addAuxiliaryDatabaseObject(
+				},
 				new AuxiliaryDatabaseObject() {
 					@Override
 					public String getExportIdentifier() {
@@ -112,10 +111,7 @@ public class H2ProcTesting {
 					public String[] sqlDropStrings(Dialect dialect) {
 						return new String[] {"DROP ALIAS findUser IF EXISTS"};
 					}
-				}
-		);
-
-		configuration.addAuxiliaryDatabaseObject(
+				},
 				new AuxiliaryDatabaseObject() {
 					@Override
 					public String getExportIdentifier() {
@@ -158,7 +154,14 @@ public class H2ProcTesting {
 					}
 				}
 		);
+	}
 
+	public static void applyProcDefinitions(Configuration configuration) {
+		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : getAuxiliaryDatabaseObjects()) {
+			configuration.addAuxiliaryDatabaseObject(
+				auxiliaryDatabaseObject
+			);
+		}
 	}
 
 	@Entity

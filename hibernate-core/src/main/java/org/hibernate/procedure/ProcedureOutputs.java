@@ -14,7 +14,7 @@ import org.hibernate.result.Outputs;
  *
  * @author Steve Ebersole
  */
-public interface ProcedureOutputs extends Outputs {
+public interface ProcedureOutputs extends Outputs, AutoCloseable {
 	/**
 	 * Retrieve the value of an OUTPUT parameter by the parameter's registration memento.
 	 * <p/>
@@ -27,7 +27,7 @@ public interface ProcedureOutputs extends Outputs {
 	 *
 	 * @see ProcedureCall#registerParameter(String, Class, javax.persistence.ParameterMode)
 	 */
-	public <T> T getOutputParameterValue(ParameterRegistration<T> parameterRegistration);
+	<T> T getOutputParameterValue(ParameterRegistration<T> parameterRegistration);
 
 	/**
 	 * Retrieve the value of an OUTPUT parameter by the name under which the parameter was registered.
@@ -41,7 +41,7 @@ public interface ProcedureOutputs extends Outputs {
 	 *
 	 * @see ProcedureCall#registerParameter(String, Class, javax.persistence.ParameterMode)
 	 */
-	public Object getOutputParameterValue(String name);
+	Object getOutputParameterValue(String name);
 
 	/**
 	 * Retrieve the value of an OUTPUT parameter by the name position under which the parameter was registered.
@@ -55,5 +55,13 @@ public interface ProcedureOutputs extends Outputs {
 	 *
 	 * @see ProcedureCall#registerParameter(int, Class, javax.persistence.ParameterMode)
 	 */
-	public Object getOutputParameterValue(int position);
+	Object getOutputParameterValue(int position);
+
+	/**
+	 * Release the underlying JDBC resources.
+	 */
+	@Override
+	default void close() {
+		release();
+	}
 }

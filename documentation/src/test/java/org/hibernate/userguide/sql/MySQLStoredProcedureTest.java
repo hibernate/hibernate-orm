@@ -17,6 +17,7 @@ import org.hibernate.Session;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.procedure.ProcedureOutputs;
 import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
 import org.hibernate.userguide.model.AddressType;
@@ -238,6 +239,67 @@ public class MySQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCas
             //end::sql-hibernate-call-sp-no-out-mysql-example[]
             assertEquals( 2, personComments.size() );
         });
+    }
+
+    @Test
+    public void testStoredProcedureReturnValueAutoClosable() {
+        //tag::sql-jpa-call-sp-no-out-mysql-auto-closable-example[]
+        List<Object[]> personComments = doInJPA( this::entityManagerFactory, entityManager -> {
+            try(ProcedureCall query = entityManager.createStoredProcedureQuery( "sp_phones")
+                    .unwrap( ProcedureCall.class )) {
+                query.registerStoredProcedureParameter( 1, Long.class, ParameterMode.IN);
+
+                query.setParameter(1, 1L);
+
+                return query.getResultList();
+            }
+        });
+        assertEquals(2, personComments.size());
+        //end::sql-jpa-call-sp-no-out-mysql-auto-closable-example[]
+    }
+
+    @Test
+    public void testHibernateProcedureCallReturnValueParameterAutoClosable() {
+        //tag::sql-hibernate-call-sp-no-out-mysql-auto-closable-example[]
+        List<Object[]> personComments = doInJPA( this::entityManagerFactory, entityManager -> {
+            Session session = entityManager.unwrap( Session.class );
+
+            try(ProcedureCall call = session.createStoredProcedureCall( "sp_phones" )) {
+                call.registerParameter( 1, Long.class, ParameterMode.IN ).bindValue( 1L );
+
+                Output output = call.getOutputs().getCurrent();
+
+                return ( (ResultSetOutput) output ).getResultList();
+            }
+        });
+
+        assertEquals( 2, personComments.size() );
+        //end::sql-hibernate-call-sp-no-out-mysql-auto-closable-example[]
+    }
+
+    @Test
+    public void testHibernateProcedureCallReturnValueParameterManualClose() {
+        //tag::sql-hibernate-call-sp-no-out-mysql-manual-close-example[]
+        List<Object[]> personComments = doInJPA( this::entityManagerFactory, entityManager -> {
+            Session session = entityManager.unwrap( Session.class );
+
+            ProcedureCall call = session.createStoredProcedureCall( "sp_phones" );
+
+            call.registerParameter( 1, Long.class, ParameterMode.IN ).bindValue( 1L );
+
+            ProcedureOutputs outputs = call.getOutputs();
+
+            try {
+                Output output = outputs.getCurrent();
+                return ( (ResultSetOutput) output ).getResultList();
+            }
+            finally {
+                outputs.release();
+            }
+        });
+
+        assertEquals( 2, personComments.size() );
+        //end::sql-hibernate-call-sp-no-out-mysql-manual-close-example[]
     }
 
     @Test

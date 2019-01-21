@@ -21,7 +21,7 @@ import org.hibernate.query.CommonQueryContract;
  *
  * @author Steve Ebersole
  */
-public interface ProcedureCall extends BasicQueryContract<CommonQueryContract>, SynchronizeableQuery, StoredProcedureQuery {
+public interface ProcedureCall extends BasicQueryContract<CommonQueryContract>, SynchronizeableQuery, StoredProcedureQuery, AutoCloseable {
 	@Override
 	ProcedureCall addSynchronizedQuerySpace(String querySpace);
 
@@ -149,4 +149,12 @@ public interface ProcedureCall extends BasicQueryContract<CommonQueryContract>, 
 	 * @return The memento
 	 */
 	ProcedureCallMemento extractMemento();
+
+	/**
+	 * Release the underlying JDBC resources.
+	 */
+	@Override
+	default void close() {
+		getOutputs().release();
+	}
 }

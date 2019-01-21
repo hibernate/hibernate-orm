@@ -836,6 +836,48 @@ Hibernate will iterate the results and take the first result that is a result se
 For SQL Server, if you can enable `SET NOCOUNT ON` in your procedure it will probably be more efficient, but this is not a requirement.
 ====
 
+[[sql-sp-statement-close]]
+=== Closing the JDBC `CallableStatement`
+
+By default, the JDBC `CallableStatement` is closed when the currently running database transaction is either committed or rolled back.
+
+This can be problematic if you are calling many stored procedure within the context of the same database transaction
+as you might bump into issues like the Oracle http://www.orafaq.com/wiki/ORA-01000[`ORA-01000: Maximum open cursors exceeded`].
+
+Traditionally, to close the underlying `CallableStatement`, you'd have to call the `release` method of the `ProcedureOutputs` object:
+
+[[sql-hibernate-call-sp-no-out-mysql-manual-close-example]]
+.Calling the `ProcedureOutputs#release` to close the JDBC `CallableStatement`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/MySQLStoredProcedureTest.java[tags=sql-hibernate-call-sp-no-out-mysql-manual-close-example]
+----
+====
+
+To simplify the resource cleanup, the `ProcedureCall` and `ProcedureOutputs` interfaces now extend the `AutoClosable` interface,
+meaning that you can simplify the previous example like this:
+
+[[sql-hibernate-call-sp-no-out-mysql-auto-closable-example]]
+.Using the try-with-resources statement with `ProcedureCall`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/MySQLStoredProcedureTest.java[tags=sql-hibernate-call-sp-no-out-mysql-auto-closable-example]
+----
+====
+
+If you're using JPA, you need to unwrap the `StoredProcedureQuery` to a `ProcedureCall` as illustrated by the following example:
+
+[[sql-jpa-call-sp-no-out-mysql-auto-closable-example]]
+.Unwrapping the `StoredProcedureQuery` and Using the try-with-resources statement with `ProcedureCall`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/MySQLStoredProcedureTest.java[tags=sql-jpa-call-sp-no-out-mysql-auto-closable-example]
+----
+====
+
 [[sql-sp-named-query]]
 === Using named queries to call stored procedures
 

@@ -48,7 +48,7 @@ import org.hibernate.query.SynchronizeableQuery;
  * @author Steve Ebersole
  */
 @Incubating
-public interface ProcedureCall extends CommonQueryContract, SynchronizeableQuery, StoredProcedureQuery {
+public interface ProcedureCall extends CommonQueryContract, SynchronizeableQuery, StoredProcedureQuery, AutoCloseable {
 	/**
 	 * The hint key (for use with JPA's "hint system") indicating the function's return JDBC type code
 	 * (aka, {@link java.sql.Types} code)
@@ -189,4 +189,12 @@ public interface ProcedureCall extends CommonQueryContract, SynchronizeableQuery
 	 * @return The ProcedureOutputs representation
 	 */
 	ProcedureOutputs getOutputs();
+
+	/**
+	 * Release the underlying JDBC {@link java.sql.CallableStatement}
+	 */
+	@Override
+	default void close() {
+		getOutputs().release();
+	}
 }

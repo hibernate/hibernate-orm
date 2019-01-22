@@ -159,8 +159,6 @@ public class EnhancerImpl implements Enhancer {
 			return null;
 		}
 
-		PersistentAttributeTransformer transformer = PersistentAttributeTransformer.collectPersistentFields( managedCtClass, enhancementContext, typePool );
-
 		if ( enhancementContext.isEntityClass( managedCtClass ) ) {
 			log.infof( "Enhancing [%s] as Entity", managedCtClass.getName() );
 			builder = builder.implement( ManagedEntity.class )
@@ -291,7 +289,7 @@ public class EnhancerImpl implements Enhancer {
 				}
 			}
 
-			return transformer.applyTo( builder, false );
+			return createTransformer( managedCtClass ).applyTo( builder, false );
 		}
 		else if ( enhancementContext.isCompositeClass( managedCtClass ) ) {
 			log.infof( "Enhancing [%s] as Composite", managedCtClass.getName() );
@@ -324,22 +322,26 @@ public class EnhancerImpl implements Enhancer {
 								.intercept( implementationClearOwner );
 			}
 
-			return transformer.applyTo( builder, false );
+			return createTransformer( managedCtClass ).applyTo( builder, false );
 		}
 		else if ( enhancementContext.isMappedSuperclassClass( managedCtClass ) ) {
 			log.infof( "Enhancing [%s] as MappedSuperclass", managedCtClass.getName() );
 
 			builder = builder.implement( ManagedMappedSuperclass.class );
-			return transformer.applyTo( builder, true );
+			return createTransformer( managedCtClass ).applyTo( builder, true );
 		}
 		else if ( enhancementContext.doExtendedEnhancement( managedCtClass ) ) {
 			log.infof( "Extended enhancement of [%s]", managedCtClass.getName() );
-			return transformer.applyExtended( builder );
+			return createTransformer( managedCtClass ).applyExtended( builder );
 		}
 		else {
 			log.debugf( "Skipping enhancement of [%s]: not entity or composite", managedCtClass.getName() );
 			return null;
 		}
+	}
+
+	private PersistentAttributeTransformer createTransformer(TypeDescription typeDescription) {
+		return PersistentAttributeTransformer.collectPersistentFields( typeDescription, enhancementContext, typePool );
 	}
 
 	// See HHH-10977 HHH-11284 HHH-11404 --- check for declaration of Managed interface on the class, not inherited

@@ -1461,7 +1461,7 @@ Currently, the salary table contains the following rows for a certain person X:
 |==================
 
 The salary for the current fiscal year (2010) is unknown.
-The agency requires that all changes in registered salaries for a fiscal year are recorded (i.e. an audit trail).
+The agency requires that all changes in registered salaries for a fiscal year are recorded (i.e., an audit trail).
 The rationale behind this is that decisions made at a certain date are based on the registered salary at that time.
 And at any time it must be possible reproduce the reason why a certain decision was made at a certain date.
 

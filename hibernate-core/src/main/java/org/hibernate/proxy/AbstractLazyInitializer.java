@@ -198,17 +198,6 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 				session.getPersistenceContext().setDefaultReadOnly( true );
 				session.setFlushMode( FlushMode.MANUAL );
 
-				boolean isJTA = session.getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta();
-
-				if ( !isJTA ) {
-					// Explicitly handle the transactions only if we're not in
-					// a JTA environment.  A lazy loading temporary session can
-					// be created even if a current session and transaction are
-					// open (ex: session.clear() was used).  We must prevent
-					// multiple transactions.
-					session.beginTransaction();
-				}
-
 				try {
 					target = session.immediateLoad( entityName, id );
 					initialized = true;
@@ -217,9 +206,6 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 				finally {
 					// make sure the just opened temp session gets closed!
 					try {
-						if ( !isJTA ) {
-							session.getTransaction().commit();
-						}
 						session.close();
 					}
 					catch (Exception e) {

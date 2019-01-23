@@ -120,6 +120,9 @@ compile('com.nuodb.hibernate:nuodb-hibernate:3.3.0-hib5')
     testRuntime( libraries.atomikos_jta )
     testRuntime( libraries.wildfly_transaction_client )
 
+    testRuntime( "com.nuodb.hibernate:nuodb-hibernate:3.3.0-hib5" )
+    testRuntime( "com.nuodb.jdbc:nuodb-jdbc:3.3.0" )
+
     testAnnotationProcessor( project( ':hibernate-jpamodelgen' ) )
 
     testCompile libraries.arquillian_junit_container
@@ -134,6 +137,7 @@ compile('com.nuodb.hibernate:nuodb-hibernate:3.3.0-hib5')
     // Additional tests requiring Javassist
     // folder in src/javassist/java
     testJavassistCompile libraries.javassist
+    testCompile "com.nuodb.hibernate:nuodb-hibernate:3.3.0-hib5"
 }
 
 jar {

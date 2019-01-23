@@ -202,7 +202,7 @@ public abstract class AbstractCreationExecutor implements CollectionCreationExec
 		);
 	}
 
-	private JdbcParameter resolveJdbcParameter(Column boundColumn) {
+	protected JdbcParameter resolveJdbcParameter(Column boundColumn) {
 		final JdbcParameter jdbcParameter = jdbcParameterMap.get( boundColumn );
 		if ( jdbcParameter == null ) {
 			throw new IllegalStateException( "JdbcParameter not found for Column [" + boundColumn + "]" );

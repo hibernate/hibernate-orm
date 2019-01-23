@@ -55,7 +55,7 @@ public class BasicDialectResolver implements DialectResolver {
 			String nameToMatch,
 			int majorVersionToMatch,
 			int minorVersionToMatch,
-			Class<? extends Dialect> dialectClass) {
+			Class dialectClass) {
 		this.nameToMatch = nameToMatch;
 		this.majorVersionToMatch = majorVersionToMatch;
 		this.minorVersionToMatch = minorVersionToMatch;

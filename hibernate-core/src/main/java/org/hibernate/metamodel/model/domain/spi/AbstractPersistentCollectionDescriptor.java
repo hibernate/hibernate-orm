@@ -115,6 +115,7 @@ import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
+import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.internal.CollectionJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -1208,6 +1209,11 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 		if ( collection.hasQueuedOperations() && isOneToMany() ) {
 			doProcessQueuedOps(collection, key, session);
 		}
+	}
+
+	@Override
+	public ForeignKeyDirection getForeignKeyDirection() {
+		return ForeignKeyDirection.TO_PARENT;
 	}
 
 	protected abstract void doProcessQueuedOps(

@@ -15,6 +15,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
@@ -36,7 +37,6 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcMutation;
 import org.hibernate.sql.exec.spi.JdbcParameter;
 
-import com.sun.org.apache.bcel.internal.generic.RETURN;
 
 /**
  * @author Steve Ebersole
@@ -54,13 +54,6 @@ public class OneToManyCreationExecutor extends AbstractCreationExecutor {
 			TableReference dmlTableRef,
 			SessionFactoryImplementor sessionFactory,
 			BiConsumer<Column, JdbcParameter> columnConsumer) {
-
-		// Assignments
-		// CollectionIndex
-		// CollectionKey
-
-		// Predicate
-		// Element
 
 		final List<Assignment> assignments = new ArrayList<>();
 		final AtomicInteger parameterCount = new AtomicInteger();
@@ -93,7 +86,7 @@ public class OneToManyCreationExecutor extends AbstractCreationExecutor {
 				sessionFactory
 		);
 
-		final UpdateStatement updateStatement = new UpdateStatement( dmlTableRef, assignments, null );
+		final UpdateStatement updateStatement = new UpdateStatement( dmlTableRef, assignments, predicate );
 
 		return UpdateToJdbcUpdateConverter.createJdbcUpdate( updateStatement, sessionFactory );
 	}
@@ -138,11 +131,10 @@ public class OneToManyCreationExecutor extends AbstractCreationExecutor {
 		Junction junction = new Junction( Junction.Nature.CONJUNCTION );
 		navigable.visitColumns(
 				(BiConsumer<SqlExpressableType, Column>) (sqlExpressableType, column) -> {
-					final ColumnReference columnReference = dmltableRef.resolveColumnReference( column );
 					final PositionalParameter parameter = new PositionalParameter(
 							parameterCount.getAndIncrement(),
 							column.getExpressableType(),
-							Clause.INSERT,
+							Clause.UPDATE,
 							sessionFactory.getTypeConfiguration()
 					);
 
@@ -197,7 +189,7 @@ public class OneToManyCreationExecutor extends AbstractCreationExecutor {
 						jdbcParameterBindings,
 						session
 				),
-				Clause.UPDATE,
+				Clause.WHERE,
 				session
 		);
 	}

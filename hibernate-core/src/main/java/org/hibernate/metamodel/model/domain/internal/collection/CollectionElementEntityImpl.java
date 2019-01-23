@@ -230,14 +230,17 @@ public class CollectionElementEntityImpl<J>
 			JdbcValueCollector jdbcValueCollector,
 			Clause clause,
 			SharedSessionContractImplementor session) {
-		//getEntityDescriptor().getIdentifierDescriptor().dehydrate( value, jdbcValueCollector, clause, session );
+//		getEntityDescriptor().getIdentifierDescriptor().dehydrate( value, jdbcValueCollector, clause, session );
 		getEntityDescriptor().getIdentifierDescriptor().dehydrate(
 				value,
 				(jdbcValue, sqlExpressableType, boundColumn) ->
 						jdbcValueCollector.collect(
 								jdbcValue,
 								sqlExpressableType,
-								foreignKey.resolveReferringFromTargetColumn( boundColumn )
+								// todo (6.0) - this logic really belongs elsewhere, how/where to refactor?
+								getClassification() == ElementClassification.ONE_TO_MANY
+										? boundColumn
+										: foreignKey.resolveReferringFromTargetColumn( boundColumn )
 						)
 				,
 				clause,
@@ -259,9 +262,14 @@ public class CollectionElementEntityImpl<J>
 //			return;
 //		}
 
-		foreignKey.getColumnMappings().getReferringColumns().forEach(
-				column -> action.accept( column.getExpressableType(), column )
-		);
+		if ( getCollectionDescriptor().isOneToMany() ) {
+			getEntityDescriptor().getIdentifierDescriptor().visitColumns( action, clause, typeConfiguration );
+		}
+		else {
+			foreignKey.getColumnMappings().getReferringColumns().forEach(
+					column -> action.accept( column.getExpressableType(), column )
+			);
+		}
 	}
 
 	@Override

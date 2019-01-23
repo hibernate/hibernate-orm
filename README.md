@@ -19,14 +19,23 @@ To run the matrix tests for NuoDB:
    export ADDITIONAL_REPO=~/.m2/repository/com/nuodb/hibernate/nuodb-hibernate/3.3.0-hib5.  (Linux/MAcOS)
    set ADDITIONAL_REPO=~/.m2/repository/com/nuodb/hibernate/nuodb-hibernate/3.3.0-hib5 (Windows)
    ```
+   
+1. Compile the code: `gradle clean compile`.
+
+1. Tell the tests about your NuoDB database:
+    1. `cp databases/nuodb/resources/hibernate.properties hibernate-core/target/resources/test`.  
+    2. Edit `hibernate-core/target/resources/test/hibernate.properties` and set the database URL, username and password
+       as required.
 
 1. Run tests:
 
-   * Execute `gradle clean hibernate-core:matrix_nuodb`.  To setup gradle, see below.  The expected output is
+   * Execute `gradle clean hibernate-core:matrix_nuodb`.  To setup gradle, see below.  The expected output is:
 
    ```
    6935 tests completed, 171 failed, 824 skipped
    ```
+
+   **Note:** If you run the tests without the `clean` option you may get a weird internal error in the compiler.
 
 Please note that even if NuoDB is not available, 3603 tests complete, 1922 fail, and 801 are skipped. So 880 tests pass without using the database because the tests are intended for testing Hibernate not the underlying database.  We are just piggybacking on them for convenience.
 

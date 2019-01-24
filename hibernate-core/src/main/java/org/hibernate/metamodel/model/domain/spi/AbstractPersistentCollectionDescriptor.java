@@ -1181,7 +1181,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 		}
 
 		if ( isOneToMany() ) {
-			return new OneToManyRemovalExecutor( this, sessionFactory );
+			return new OneToManyRemovalExecutor( this, dmlTargetTable, sessionFactory );
 
 		}
 		else {

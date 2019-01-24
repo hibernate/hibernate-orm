@@ -37,7 +37,7 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
 /**
  * @author Steve Ebersole
  */
-public class CollectionKey implements Navigable {
+public class CollectionKey<T> implements Navigable<T> {
 	private final AbstractPersistentCollectionDescriptor collectionDescriptor;
 	private final JavaTypeDescriptor javaTypeDescriptor;
 	private final NavigableRole navigableRole;
@@ -219,7 +219,7 @@ public class CollectionKey implements Navigable {
 
 	@Override
 	public void visitColumns(
-			BiConsumer action,
+			BiConsumer<SqlExpressableType, Column> action,
 			Clause clause,
 			TypeConfiguration typeConfiguration) {
 		// because of the anticipated use cases, the expectation is that we

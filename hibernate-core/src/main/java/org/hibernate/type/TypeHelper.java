@@ -8,6 +8,7 @@ package org.hibernate.type;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.tuple.NonIdentifierAttribute;
 
@@ -325,9 +326,7 @@ public class TypeHelper {
 			return null;
 		}
 		else {
-			int[] trimmed = new int[count];
-			System.arraycopy( results, 0, trimmed, 0, count );
-			return trimmed;
+			return ArrayHelper.trim(results, count);
 		}
 	}
 

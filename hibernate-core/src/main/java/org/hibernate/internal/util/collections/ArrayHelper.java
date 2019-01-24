@@ -421,6 +421,12 @@ public final class ArrayHelper {
 		return destination;
 	}
 
+	public static int[] trim(int[] from, int length) {
+		int[] trimmed = new int[length];
+		System.arraycopy( from, 0, trimmed, 0, length );
+		return trimmed;
+	}
+
 	@AllowSysOut
 	public static void main(String... args) {
 		int[] batchSizes = ArrayHelper.getBatchSizes( 32 );

@@ -3546,6 +3546,7 @@ public abstract class AbstractEntityPersister
 			int valueGenerationStrategiesSize = valueGenerationStrategies.length;
 			if ( valueGenerationStrategiesSize != 0 ) {
 				int[] fieldsPreUpdateNeeded = new int[valueGenerationStrategiesSize];
+				int count = 0;
 				for ( int i = 0; i < valueGenerationStrategiesSize; i++ ) {
 					if ( valueGenerationStrategies[i] != null && valueGenerationStrategies[i].getGenerationTiming()
 							.includesUpdate() ) {
@@ -3554,7 +3555,7 @@ public abstract class AbstractEntityPersister
 								object
 						);
 						setPropertyValue( object, i, fields[i] );
-						fieldsPreUpdateNeeded[i] = i;
+						fieldsPreUpdateNeeded[count++] = i;
 					}
 				}
 //				if ( fieldsPreUpdateNeeded.length != 0 ) {
@@ -3567,7 +3568,7 @@ public abstract class AbstractEntityPersister
 //					// no dirty fields and no dirty collections so no update needed ???
 //				}
 				if ( fieldsPreUpdateNeeded.length != 0 && dirtyFields != null ) {
-					dirtyFields = ArrayHelper.join( fieldsPreUpdateNeeded, dirtyFields );
+					dirtyFields = ArrayHelper.join( dirtyFields, ArrayHelper.trim( fieldsPreUpdateNeeded, count ) );
 				}
 			}
 		}

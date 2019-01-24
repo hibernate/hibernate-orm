@@ -493,6 +493,10 @@ public abstract class AbstractEntityPersister
 				int table = propertyTableNumbers[property];
 				tableUpdateNeeded[table] = tableUpdateNeeded[table] ||
 						( getPropertyColumnSpan( property ) > 0 && updateability[property] );
+
+				if ( getPropertyColumnSpan( property ) > 0 && !updateability[property] ) {
+					LOG.ignoreImmutablePropertyModification( getPropertyNames()[property], getEntityName() );
+				}
 			}
 			if ( isVersioned() ) {
 				tableUpdateNeeded[0] = tableUpdateNeeded[0] ||

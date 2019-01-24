@@ -1863,4 +1863,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "The bytecode provider class [%s] does not implement BytecodeProvider", id = 501)
 	void bytecodeProviderInvalidClass(String className);
+
+	@LogMessage(level = WARN)
+	@Message(value = "The [%s] property of the [%s] entity was modified, but it won't be updated because the property is immutable.", id = 502)
+	void ignoreImmutablePropertyModification(String propertyName, String entityName);
 }
+

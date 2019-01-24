@@ -17,7 +17,6 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
 import org.hibernate.sql.results.spi.FetchParentAccess;
-import org.hibernate.sql.results.spi.LoadingCollectionEntry;
 import org.hibernate.sql.results.spi.RowProcessingState;
 
 /**
@@ -83,8 +82,6 @@ public class DelayedCollectionInitializer extends AbstractCollectionInitializer 
 			if ( getCollectionDescriptor().getSemantics().getCollectionClassification() == CollectionClassification.ARRAY ) {
 				session.getPersistenceContext().addCollectionHolder( collectionInstance );
 			}
-
-			takeResponsibility( rowProcessingState, collectionKey );
 		}
 	}
 
@@ -98,18 +95,6 @@ public class DelayedCollectionInitializer extends AbstractCollectionInitializer 
 		collectionInstance = null;
 
 		super.finishUpRow( rowProcessingState );
-	}
-
-	private void takeResponsibility(RowProcessingState rowProcessingState, CollectionKey collectionKey) {
-		rowProcessingState.getJdbcValuesSourceProcessingState().registerLoadingCollection(
-				collectionKey,
-				new LoadingCollectionEntry(
-						getCollectionDescriptor(),
-						this,
-						collectionKey.getKey(),
-						collectionInstance
-				)
-		);
 	}
 
 	@Override

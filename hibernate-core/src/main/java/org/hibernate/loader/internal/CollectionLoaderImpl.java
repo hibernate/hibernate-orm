@@ -11,6 +11,7 @@ import java.util.EnumMap;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -141,7 +142,18 @@ public class CollectionLoaderImpl implements CollectionLoader {
 				key
 		);
 
-		return session.getPersistenceContext().getCollection( collectionKey );
+		PersistentCollection collection = session.getPersistenceContext().getCollection( collectionKey );
+		finishInitialization( collection, session );
+
+		return collection;
+	}
+
+	private void finishInitialization(PersistentCollection collection, SharedSessionContractImplementor session) {
+		// todo (6.0) - taken from LoadingCollectoinEntry#finishLoading, can we refactor?
+		collection.endRead();
+
+		final CollectionEntry entry = session.getPersistenceContext().getCollectionEntry( collection );
+		entry.postInitialize( collection );
 	}
 
 	private JdbcSelect resolveJdbcSelect(

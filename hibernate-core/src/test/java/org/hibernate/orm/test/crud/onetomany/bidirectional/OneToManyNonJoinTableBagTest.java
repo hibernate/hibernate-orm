@@ -146,8 +146,7 @@ public class OneToManyNonJoinTableBagTest extends SessionFactoryBasedFunctionalT
 		sessionFactoryScope().inTransaction(
 				session -> {
 					final Owner owner2 = session.find( Owner.class, this.ownerId2 );
-					//final Owner owner3 = session.find( Owner.class, this.ownerId3 );
-					final Owner owner3 = session.createQuery( "SELECT o FROM Owner o JOIN FETCH o.cars WHERE o.id = :id", Owner.class ).setParameter( "id", this.ownerId3 ).getSingleResult();
+					final Owner owner3 = session.find( Owner.class, this.ownerId3 );
 					assertThat( owner2.getCars().isEmpty(), CoreMatchers.is( true ) );
 					assertThat( owner3.getCars().size(), CoreMatchers.is( 2 ) );
 

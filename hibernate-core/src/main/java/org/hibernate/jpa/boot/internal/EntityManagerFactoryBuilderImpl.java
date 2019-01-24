@@ -472,17 +472,14 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		final ConfigLoader configLoader = new ConfigLoader( ssrBuilder.getBootstrapServiceRegistry() );
 
 		// see if the persistence.xml settings named a Hibernate config file....
-		final String cfgXmlResourceName1 = (String) mergedSettings.configurationValues.remove( CFG_FILE );
-		if ( StringHelper.isNotEmpty( cfgXmlResourceName1 ) ) {
-			final LoadedConfig loadedCfg = configLoader.loadConfigXmlResource( cfgXmlResourceName1 );
-			processConfigXml( loadedCfg, mergedSettings, ssrBuilder );
+		String cfgXmlResourceName = (String) mergedSettings.configurationValues.remove( CFG_FILE );
+		if ( StringHelper.isEmpty( cfgXmlResourceName ) ) {
+			// see if integration settings named a Hibernate config file....
+			cfgXmlResourceName = (String) integrationSettings.get( CFG_FILE );
 		}
 
-		// see if integration settings named a Hibernate config file....
-		final String cfgXmlResourceName2 = (String) integrationSettings.get( CFG_FILE );
-		if ( StringHelper.isNotEmpty( cfgXmlResourceName2 ) ) {
-			integrationSettings.remove( CFG_FILE );
-			final LoadedConfig loadedCfg = configLoader.loadConfigXmlResource( cfgXmlResourceName2 );
+		if ( StringHelper.isNotEmpty( cfgXmlResourceName ) ) {
+			final LoadedConfig loadedCfg = configLoader.loadConfigXmlResource( cfgXmlResourceName );
 			processConfigXml( loadedCfg, mergedSettings, ssrBuilder );
 		}
 

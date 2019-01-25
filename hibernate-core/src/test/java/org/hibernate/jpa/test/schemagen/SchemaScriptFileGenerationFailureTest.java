@@ -104,7 +104,7 @@ public class SchemaScriptFileGenerationFailureTest {
 		final Map<Object, Object> config = Environment.getProperties();
 		config.put( org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_DROP_TARGET, writer );
 		config.put( org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_ACTION, "drop-and-create" );
-		config.put( AvailableSettings.HBM2DDL_HALT_ON_ERROR, true );
+		config.put( AvailableSettings.HBM2DDL_HALT_ON_ERROR, "true" );
 		ArrayList<Class> classes = new ArrayList<>();
 
 		classes.addAll( Arrays.asList( new Class[] { TestEntity.class } ) );

@@ -13,6 +13,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.SourceType;
@@ -60,7 +61,7 @@ public class SchemaManagementToolCoordinator {
 		final SchemaManagementTool tool = serviceRegistry.getService( SchemaManagementTool.class );
 		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
 
-		boolean haltOnError = configService.getSetting( AvailableSettings.HBM2DDL_HALT_ON_ERROR, Boolean.class, false);
+		boolean haltOnError = configService.getSetting( AvailableSettings.HBM2DDL_HALT_ON_ERROR, StandardConverters.BOOLEAN, false);
 
 		final ExecutionOptions executionOptions = buildExecutionOptions(
 				configurationValues,

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.schemagen;
+package org.hibernate.orm.test.tool.schemacreation;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -22,7 +22,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.tool.schema.spi.CommandAcceptanceException;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 
@@ -97,14 +97,14 @@ public class SchemaScriptFileGenerationFailureTest {
 	}
 
 	private PersistenceUnitDescriptor buildPersistenceUnitDescriptor() {
-		return new BaseEntityManagerFunctionalTestCase.TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() );
+		return new EntityManagerFactoryBasedFunctionalTest.TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() );
 	}
 
 	private Map getConfig() {
 		final Map<Object, Object> config = Environment.getProperties();
 		config.put( org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_DROP_TARGET, writer );
 		config.put( org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_ACTION, "drop-and-create" );
-		config.put( AvailableSettings.HBM2DDL_HALT_ON_ERROR, true );
+		config.put( AvailableSettings.HBM2DDL_HALT_ON_ERROR, "true" );
 		ArrayList<Class> classes = new ArrayList<>();
 
 		classes.addAll( Arrays.asList( new Class[] { TestEntity.class } ) );

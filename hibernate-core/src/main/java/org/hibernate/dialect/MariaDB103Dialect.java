@@ -6,10 +6,9 @@
  */
 package org.hibernate.dialect;
 
-
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.tool.schema.extract.internal.SequenceNameExtractorImpl;
+import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMariaDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -63,8 +62,7 @@ public class MariaDB103Dialect extends MariaDB102Dialect {
 
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
-		//TODO: Future improvement - https://hibernate.atlassian.net/browse/HHH-13008
-		return SequenceNameExtractorImpl.INSTANCE;
+		return SequenceInformationExtractorMariaDBDatabaseImpl.INSTANCE;
 	}
 
 	@Override

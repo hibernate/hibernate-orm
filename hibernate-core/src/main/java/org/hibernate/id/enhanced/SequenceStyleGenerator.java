@@ -7,6 +7,7 @@
 package org.hibernate.id.enhanced;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
@@ -568,14 +569,20 @@ public class SequenceStyleGenerator
 	 * @return sequence increment value
 	 */
 	private Long getSequenceIncrementValue(JdbcEnvironment jdbcEnvironment, String sequenceName) {
-		return jdbcEnvironment.getExtractedDatabaseMetaData().getSequenceInformationList().stream().filter(
-				sequenceInformation -> {
-					Identifier catalog = sequenceInformation.getSequenceName().getCatalogName();
-					Identifier schema = sequenceInformation.getSequenceName().getSchemaName();
-					return sequenceName.equalsIgnoreCase( sequenceInformation.getSequenceName().getSequenceName().getText() ) &&
-							( catalog == null || catalog.equals( jdbcEnvironment.getCurrentCatalog() ) ) &&
-							( schema == null || schema.equals( jdbcEnvironment.getCurrentSchema() ) );
-				}
-		).map( SequenceInformation::getIncrementValue ).findFirst().orElse( null );
+		return jdbcEnvironment.getExtractedDatabaseMetaData().getSequenceInformationList()
+				.stream()
+				.filter(
+					sequenceInformation -> {
+						Identifier catalog = sequenceInformation.getSequenceName().getCatalogName();
+						Identifier schema = sequenceInformation.getSequenceName().getSchemaName();
+						return sequenceName.equalsIgnoreCase( sequenceInformation.getSequenceName().getSequenceName().getText() ) &&
+								( catalog == null || catalog.equals( jdbcEnvironment.getCurrentCatalog() ) ) &&
+								( schema == null || schema.equals( jdbcEnvironment.getCurrentSchema() ) );
+					}
+				)
+				.map( SequenceInformation::getIncrementValue )
+				.filter( Objects::nonNull )
+				.findFirst()
+				.orElse( null );
 	}
 }

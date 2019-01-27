@@ -24,13 +24,25 @@ public class HelperId implements Serializable {
 	private String name;
 	public String getName( ) { return this.name; }
 	public void setName( String value ) { this.name = value; }
-	
+
+	// NuoDB: rename column to XHELPER_TYPE or IdClassPredicateTest fails to create TOOL table:
+	//
+	//     create table TOOL (
+	//       HELPERTYPE VARCHAR (4) not null,
+	//        NAME VARCHAR (12) not null,
+	//        COST DOUBLE,
+	//        primary key (HELPERTYPE, NAME)
+	//    )
+	//
+	// Syntax Error:
+	// HELPERTYPE VARCHAR (4) not null,
+	//            ^ expected closing parenthesis got VARCHAR
 	@Id
-	@Column( name = "HELPER_TYPE", length = 4 )
+	@Column( name = "XHELPER_TYPE", length = 4 )
 	private String type;
 	public String getType( ) { return this.type; }
 	public void setType( String value ) { this.type = value; }
-	
+
 	@Override
 	public boolean equals( Object obj ) {
 		if( obj == null ) return false;

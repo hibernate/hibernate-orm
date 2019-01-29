@@ -4,10 +4,10 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.orm.test.crud.onetomany.bidirectional;
+package org.hibernate.orm.test.crud.onetomany;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -26,7 +26,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Chris Cranford
  */
-public class OneToManyNonJoinTableBagTest extends SessionFactoryBasedFunctionalTest {
+public class OneToManyNonJoinTableSetTest extends SessionFactoryBasedFunctionalTest {
 	@Entity(name = "Owner")
 	public static class Owner {
 		@Id
@@ -35,7 +35,7 @@ public class OneToManyNonJoinTableBagTest extends SessionFactoryBasedFunctionalT
 
 		@OneToMany
 		@JoinColumn(name = "owner_id", referencedColumnName = "id")
-		private List<Car> cars = new ArrayList<>();
+		private Set<Car> cars = new HashSet<>();
 
 		public Integer getId() {
 			return id;
@@ -45,11 +45,11 @@ public class OneToManyNonJoinTableBagTest extends SessionFactoryBasedFunctionalT
 			this.id = id;
 		}
 
-		public List<Car> getCars() {
+		public Set<Car> getCars() {
 			return cars;
 		}
 
-		public void setCars(List<Car> cars) {
+		public void setCars(Set<Car> cars) {
 			this.cars = cars;
 		}
 	}
@@ -143,11 +143,14 @@ public class OneToManyNonJoinTableBagTest extends SessionFactoryBasedFunctionalT
 
 		// ownerId2 has no card
 		// ownerId3 has 2 cars (carId1, carId2)
+		System.out.println( "====" );
 		sessionFactoryScope().inTransaction(
 				session -> {
 					final Owner owner2 = session.find( Owner.class, this.ownerId2 );
 					final Owner owner3 = session.find( Owner.class, this.ownerId3 );
+					System.out.println( "*** isEmpty" );
 					assertThat( owner2.getCars().isEmpty(), CoreMatchers.is( true ) );
+					System.out.println( "*** size " );
 					assertThat( owner3.getCars().size(), CoreMatchers.is( 2 ) );
 
 				}
@@ -176,30 +179,30 @@ public class OneToManyNonJoinTableBagTest extends SessionFactoryBasedFunctionalT
 					assertThat( owner3.getCars().size(), CoreMatchers.is( 1 ) );
 				}
 		);
-//
-//		// Update owner, add car to non-empty collection
-//		sessionFactoryScope().inTransaction(
-//				session -> {
-//					final Car car1 = session.find( Car.class, this.carId1 );
-//					final Owner owner = session.find( Owner.class, this.ownerId2 );
-//					owner.getCars().add( car1 );
-//					session.update( owner );
-//				}
-//		);
-//
-//		// ownerId1 has no cars
-//		// ownerId2 has 1 car
-//		// ownerId3 has 1 car
-//		sessionFactoryScope().inTransaction(
-//				session -> {
-//					final Owner owner1 = session.find( Owner.class, this.ownerId1 );
-//					final Owner owner2 = session.find( Owner.class, this.ownerId2 );
-//					final Owner owner3 = session.find( Owner.class, this.ownerId3 );
-//					assertThat( owner1.getCars().isEmpty(), CoreMatchers.is( true ) );
-//					assertThat( owner2.getCars().size(), CoreMatchers.is( 1 ) );
-//					assertThat( owner3.getCars().size(), CoreMatchers.is( 1 ) );
-//				}
-//		);
+
+		// Update owner, add car to non-empty collection
+		sessionFactoryScope().inTransaction(
+				session -> {
+					final Car car1 = session.find( Car.class, this.carId1 );
+					final Owner owner = session.find( Owner.class, this.ownerId2 );
+					owner.getCars().add( car1 );
+					session.update( owner );
+				}
+		);
+
+		// ownerId1 has no cars
+		// ownerId2 has 1 car
+		// ownerId3 has 1 car
+		sessionFactoryScope().inTransaction(
+				session -> {
+					final Owner owner1 = session.find( Owner.class, this.ownerId1 );
+					final Owner owner2 = session.find( Owner.class, this.ownerId2 );
+					final Owner owner3 = session.find( Owner.class, this.ownerId3 );
+					assertThat( owner1.getCars().isEmpty(), CoreMatchers.is( true ) );
+					assertThat( owner2.getCars().size(), CoreMatchers.is( 1 ) );
+					assertThat( owner3.getCars().size(), CoreMatchers.is( 1 ) );
+				}
+		);
 
 		// Test removing element from collection
 		sessionFactoryScope().inTransaction(
@@ -220,7 +223,7 @@ public class OneToManyNonJoinTableBagTest extends SessionFactoryBasedFunctionalT
 					final Owner owner3 = session.find( Owner.class, this.ownerId3 );
 					assertThat( owner1.getCars().isEmpty(), CoreMatchers.is( true ) );
 					assertThat( owner2.getCars().isEmpty(), CoreMatchers.is( true ) );
-//					assertThat( owner3.getCars().size(), CoreMatchers.is( 1 ) );
+					assertThat( owner3.getCars().size(), CoreMatchers.is( 1 ) );
 				}
 		);
 
@@ -228,7 +231,7 @@ public class OneToManyNonJoinTableBagTest extends SessionFactoryBasedFunctionalT
 		sessionFactoryScope().inTransaction(
 				session -> {
 					final Owner owner = session.find( Owner.class, this.ownerId3 );
-					owner.setCars( new ArrayList<>() );
+					owner.setCars( new HashSet<>() );
 					session.update( owner );
 				}
 		);
@@ -246,6 +249,35 @@ public class OneToManyNonJoinTableBagTest extends SessionFactoryBasedFunctionalT
 					assertThat( owner3.getCars().isEmpty(), CoreMatchers.is( true ) );
 				}
 		);
-	}
 
+		// Add new collection of elements to an entity with empty collection
+		sessionFactoryScope().inTransaction(
+				session -> {
+					final Owner owner = session.find( Owner.class, this.ownerId1 );
+					final Car car1 = session.find( Car.class, this.carId1 );
+					final Car car2 = session.find( Car.class, this.carId2 );
+
+					final Set<Car> collection = new HashSet<>();
+					collection.add( car1 );
+					collection.add( car2 );
+					owner.setCars( collection );
+
+					session.update( owner );
+				}
+		);
+
+		// ownerId1 has 2 cars (carId1, carId2)
+		// ownerId2 has no cars
+		// ownerId3 has no cars
+		sessionFactoryScope().inTransaction(
+				session -> {
+					final Owner owner1 = session.find( Owner.class, this.ownerId1 );
+					final Owner owner2 = session.find( Owner.class, this.ownerId2 );
+					final Owner owner3 = session.find( Owner.class, this.ownerId3 );
+					assertThat( owner1.getCars().size(), CoreMatchers.is( 2 ) );
+					assertThat( owner2.getCars().isEmpty(), CoreMatchers.is( true ) );
+					assertThat( owner3.getCars().isEmpty(), CoreMatchers.is( true ) );
+				}
+		);
+	}
 }

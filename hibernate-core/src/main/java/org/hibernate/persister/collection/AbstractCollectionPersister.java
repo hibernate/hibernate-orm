@@ -160,6 +160,7 @@ public abstract class AbstractCollectionPersister
 	protected final String[] elementColumnReaderTemplates;
 	protected final String[] elementFormulaTemplates;
 	protected final String[] elementFormulas;
+	protected final boolean[] elementColumnIsGettable;
 	protected final boolean[] elementColumnIsSettable;
 	protected final boolean[] elementColumnIsInPrimaryKey;
 	protected final String[] indexColumnAliases;
@@ -332,9 +333,15 @@ public abstract class AbstractCollectionPersister
 		elementFormulaTemplates = new String[elementSpan];
 		elementFormulas = new String[elementSpan];
 		elementColumnIsSettable = new boolean[elementSpan];
+		elementColumnIsGettable = new boolean[elementSpan];
 		elementColumnIsInPrimaryKey = new boolean[elementSpan];
 		boolean isPureFormula = true;
 		boolean hasNotNullableColumns = false;
+		boolean oneToMany = collectionBinding.isOneToMany();
+		boolean[] columnInsertability = null;
+		if (!oneToMany) {
+			columnInsertability = collectionBinding.getElement().getColumnInsertability();
+		}
 		int j = 0;
 		iter = collectionBinding.getElement().getColumnIterator();
 		while ( iter.hasNext() ) {
@@ -351,7 +358,8 @@ public abstract class AbstractCollectionPersister
 				elementColumnWriters[j] = col.getWriteExpr();
 				elementColumnReaders[j] = col.getReadExpr( dialect );
 				elementColumnReaderTemplates[j] = col.getTemplate( dialect, factory.getSqlFunctionRegistry() );
-				elementColumnIsSettable[j] = true;
+				elementColumnIsGettable[j] = true;
+				elementColumnIsSettable[j] = oneToMany || columnInsertability[j];
 				elementColumnIsInPrimaryKey[j] = !col.isNullable();
 				if ( !col.isNullable() ) {
 					hasNotNullableColumns = true;
@@ -1087,8 +1095,8 @@ public abstract class AbstractCollectionPersister
 	}
 
 	protected void appendElementColumns(SelectFragment frag, String elemAlias) {
-		for ( int i = 0; i < elementColumnIsSettable.length; i++ ) {
-			if ( elementColumnIsSettable[i] ) {
+		for ( int i = 0; i < elementColumnIsGettable.length; i++ ) {
+			if ( elementColumnIsGettable[i] ) {
 				frag.addColumnTemplate( elemAlias, elementColumnReaderTemplates[i], elementColumnAliases[i] );
 			}
 			else {

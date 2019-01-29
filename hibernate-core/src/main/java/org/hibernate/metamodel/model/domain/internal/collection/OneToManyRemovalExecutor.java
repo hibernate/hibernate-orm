@@ -15,6 +15,7 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
@@ -144,6 +145,27 @@ public class OneToManyRemovalExecutor implements CollectionRemovalExecutor {
 				sessionFactory.getTypeConfiguration()
 		);
 
+		if ( collectionDescriptor.getIndexDescriptor() != null ) {
+			final CollectionIndex<?> collectionIndex = collectionDescriptor.getIndexDescriptor();
+			collectionIndex.visitColumns(
+					(sqlExpressableType, column) -> {
+						final ColumnReference columnReference = dmlTableRef.resolveColumnReference( column );
+
+						final LiteralParameter parameter = new LiteralParameter(
+								null,
+								column.getExpressableType(),
+								Clause.UPDATE,
+								sessionFactory.getTypeConfiguration()
+						);
+
+						final Assignment assignment = new Assignment( columnReference, parameter );
+						assignments.add( assignment );
+					},
+					Clause.UPDATE,
+					sessionFactory.getTypeConfiguration()
+			);
+		}
+
 		// Build parameterized predicate clause.
 		Junction junction = new Junction( Junction.Nature.CONJUNCTION );
 		collectionKey.visitColumns(
@@ -151,7 +173,7 @@ public class OneToManyRemovalExecutor implements CollectionRemovalExecutor {
 					final PositionalParameter parameter = new PositionalParameter(
 							parameterCount.getAndIncrement(),
 							column.getExpressableType(),
-							Clause.INSERT,
+							Clause.UPDATE,
 							sessionFactory.getTypeConfiguration()
 					);
 

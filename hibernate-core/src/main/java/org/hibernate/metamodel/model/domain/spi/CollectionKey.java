@@ -42,6 +42,8 @@ public class CollectionKey<T> implements Navigable<T> {
 	private final JavaTypeDescriptor javaTypeDescriptor;
 	private final NavigableRole navigableRole;
 	private final ForeignKey joinForeignKey;
+	private final boolean nullable;
+	private final boolean updatable;
 
 	private Navigable foreignKeyTargetNavigable;
 
@@ -53,6 +55,8 @@ public class CollectionKey<T> implements Navigable<T> {
 		this.javaTypeDescriptor = resolveJavaTypeDescriptor( bootDescriptor );
 		this.navigableRole = runtimeDescriptor.getNavigableRole().append( "{collection-key}" );
 		this.joinForeignKey = creationContext.getDatabaseObjectResolver().resolveForeignKey( bootDescriptor.getForeignKey() );
+		this.nullable = bootDescriptor.getKey().isNullable();
+		this.updatable = bootDescriptor.getKey().isUpdateable();
 	}
 
 	public ForeignKey getJoinForeignKey() {
@@ -61,6 +65,14 @@ public class CollectionKey<T> implements Navigable<T> {
 
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
 		return javaTypeDescriptor;
+	}
+
+	public boolean isNullable() {
+		return nullable;
+	}
+
+	public boolean isUpdatable() {
+		return updatable;
 	}
 
 	public Navigable getForeignKeyTargetNavigable() {

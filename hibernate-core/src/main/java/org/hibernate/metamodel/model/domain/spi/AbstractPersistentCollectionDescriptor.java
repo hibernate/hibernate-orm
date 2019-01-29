@@ -76,7 +76,10 @@ import org.hibernate.metamodel.model.domain.internal.collection.JoinTableRemoval
 import org.hibernate.metamodel.model.domain.internal.collection.JoinTableRowsDeleletionExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.JoinTableRowsInsertExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.OneToManyCreationExecutor;
+import org.hibernate.metamodel.model.domain.internal.collection.OneToManyNonJoinTableRowsInsertExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.OneToManyRemovalExecutor;
+import org.hibernate.metamodel.model.domain.internal.collection.OneToManyRowsDeletionExecutor;
+import org.hibernate.metamodel.model.domain.internal.collection.OneToManyRowsUpdateExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.RootTableReferenceCollectorImpl;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
@@ -1066,7 +1069,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 			return CollectionRowsDeletionExecutor.NO_OP;
 		}
 		else if ( isOneToMany() ) {
-			throw new NotYetImplementedFor6Exception( getClass() );
+			return new OneToManyRowsDeletionExecutor( this, sessionFactory, dmlTargetTable, hasIndex() && !indexContainsFormula() );
 		}
 		else {
 			return new JoinTableRowsDeleletionExecutor( this, sessionFactory, hasIndex() && !indexContainsFormula() );
@@ -1092,7 +1095,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 			return AbstractCreationExecutor.NO_OP;
 		}
 		else if ( isOneToMany() ) {
-			throw new NotYetImplementedFor6Exception( getClass() );
+			return new OneToManyNonJoinTableRowsInsertExecutor( this, dmlTargetTable, getSessionFactory() );
 		}
 		else {
 			return new JoinTableRowsInsertExecutor( this, dmlTargetTable, getSessionFactory() );
@@ -1112,6 +1115,9 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 	protected CollectionRowsUpdateExecutor generateCollectionRowsUpdateExecutor() {
 		if ( isInverse() ) {
 			return CollectionRowsUpdateExecutor.NO_OP;
+		}
+		else if ( isOneToMany() ) {
+			return new OneToManyRowsUpdateExecutor( this, dmlTargetTable, sessionFactory );
 		}
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}

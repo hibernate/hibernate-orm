@@ -53,6 +53,6 @@ public class StandardMapSemantics extends AbstractMapSemantics<Map<?,?>> {
 			Map<?, ?> rawCollection,
 			PersistentCollectionDescriptor<?, Map<?, ?>, E> collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentMap<>( session, collectionDescriptor, rawCollection );
+		return new PersistentMap<>( session, collectionDescriptor, (Map) rawCollection );
 	}
 }

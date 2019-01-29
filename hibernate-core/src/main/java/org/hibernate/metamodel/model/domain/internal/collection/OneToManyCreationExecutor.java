@@ -11,11 +11,9 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
@@ -123,14 +121,14 @@ public class OneToManyCreationExecutor extends AbstractCreationExecutor {
 	}
 
 	private Predicate resolvePredicate(
-			Navigable navigable,
+			Navigable<?> navigable,
 			TableReference dmltableRef,
 			AtomicInteger parameterCount,
 			BiConsumer<Column, JdbcParameter> columnConsumer,
 			SessionFactoryImplementor sessionFactory) {
 		Junction junction = new Junction( Junction.Nature.CONJUNCTION );
 		navigable.visitColumns(
-				(BiConsumer<SqlExpressableType, Column>) (sqlExpressableType, column) -> {
+				(sqlExpressableType, column) -> {
 					final PositionalParameter parameter = new PositionalParameter(
 							parameterCount.getAndIncrement(),
 							column.getExpressableType(),
@@ -175,13 +173,15 @@ public class OneToManyCreationExecutor extends AbstractCreationExecutor {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	protected void bindCollectionElement(
 			Object entry,
 			PersistentCollection collection,
 			JdbcParameterBindingsImpl jdbcParameterBindings,
 			SharedSessionContractImplementor session) {
+		final Object element = collection.getElement( entry, getCollectionDescriptor() );
 		getCollectionDescriptor().getElementDescriptor().dehydrate(
-				getCollectionDescriptor().getElementDescriptor().unresolve( entry, session ),
+				getCollectionDescriptor().getElementDescriptor().unresolve( element, session ),
 				(jdbcValue, type, boundColumn) -> createBinding(
 						jdbcValue,
 						boundColumn,
@@ -195,16 +195,32 @@ public class OneToManyCreationExecutor extends AbstractCreationExecutor {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	protected void bindCollectionId(
 			Object entry,
 			int assumedIdentifier,
 			PersistentCollection collection,
 			JdbcParameterBindingsImpl jdbcParameterBindings,
 			SharedSessionContractImplementor session) {
-		// anything here?
+		if ( getCollectionDescriptor().getIdDescriptor() != null ) {
+			final Object id = collection.getIdentifier( entry, assumedIdentifier, getCollectionDescriptor() );
+			getCollectionDescriptor().getIdDescriptor().dehydrate(
+					getCollectionDescriptor().getIdDescriptor().unresolve( id, session ),
+					(jdbcValue, type, boundColumn) -> createBinding(
+							jdbcValue,
+							boundColumn,
+							type,
+							jdbcParameterBindings,
+							session
+					),
+					Clause.UPDATE,
+					session
+			);
+		}
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	protected void bindCollectionIndex(
 			Object entry,
 			int assumedIndex,
@@ -212,7 +228,20 @@ public class OneToManyCreationExecutor extends AbstractCreationExecutor {
 			JdbcParameterBindingsImpl jdbcParameterBindings,
 			SharedSessionContractImplementor session) {
 		if ( getCollectionDescriptor().getIndexDescriptor() != null ) {
-			throw new NotYetImplementedFor6Exception(  );
+			final Object index = collection.getIndex( entry, assumedIndex, getCollectionDescriptor() );
+			getCollectionDescriptor().getIndexDescriptor().dehydrate(
+					getCollectionDescriptor().getIndexDescriptor().unresolve( index, session ),
+					(jdbcValue, type, boundColumn) -> createBinding(
+							jdbcValue,
+							boundColumn,
+							type,
+							jdbcParameterBindings,
+							session
+					),
+					Clause.UPDATE,
+					session
+
+			);
 		}
 	}
 

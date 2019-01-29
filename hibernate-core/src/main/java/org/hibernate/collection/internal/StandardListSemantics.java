@@ -67,6 +67,6 @@ public class StandardListSemantics implements CollectionSemantics<List> {
 			List rawCollection,
 			PersistentCollectionDescriptor<?, List, E> collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return null;
+		return new PersistentList( session, collectionDescriptor, (List) rawCollection );
 	}
 }

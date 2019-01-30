@@ -1,4 +1,4 @@
-package org.hibernate.boot.model.process.internal;
+package org.hibernate.orm.test.converter;
 
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;

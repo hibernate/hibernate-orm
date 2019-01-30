@@ -1115,8 +1115,8 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToJoinTransaction(String transactionStrategy);
 
 	@LogMessage(level = INFO)
-	@Message(value = "Error performing load command", id = 327)
-	void unableToLoadCommand(@Cause HibernateException e);
+	@Message(value = "Error performing load command : %s", id = 327)
+	void unableToLoadCommand(HibernateException e);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Unable to load/access derby driver class sysinfo to check versions : %s", id = 328)

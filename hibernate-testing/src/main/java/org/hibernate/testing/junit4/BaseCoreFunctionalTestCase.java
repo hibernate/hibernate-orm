@@ -373,7 +373,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	static String[] tables = {
 			"HT_ANIMAL",
-			"HT_CAR",PackagedEntityManagerTest
+			"HT_CAR",
 			"HT_CAT",
 			"HT_DOG",
 			"HT_DOMESTICANIMAL",

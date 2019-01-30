@@ -344,6 +344,8 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		if ( sessionFactory == null ) {
 			return;
 		}
+
+		cleanUp();
 		sessionFactory.close();
 		sessionFactory = null;
 		configuration = null;
@@ -369,6 +371,41 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		}
 	}
 
+	static String[] tables = {
+			"HT_ANIMAL",
+			"HT_CAR",PackagedEntityManagerTest
+			"HT_CAT",
+			"HT_DOG",
+			"HT_DOMESTICANIMAL",
+			"HT_FOOS",
+			"HT_HUMAN",
+			"HT_JOINER",
+			"HT_LEAFSUBCLASS",
+			"HT_LEAFSUBSUBCLASS",
+			"HT_LIZARD",
+			"HT_MAMMAL",
+			"HT_NONLEAFSUBCLASS",
+			"HT_PICKUP",
+			"HT_REPTILE",
+			"HT_ROOTCLASS",
+			"HT_SUV",
+			"HT_TRIVIALCLASS",
+			"HT_TRUCK",
+			"HT_VEHICLE"
+	};
+
+	// NuoDB Force clean up of schema - drop all tables in it
+	protected void cleanUp() {
+		Session s = openSession();
+		s.beginTransaction();
+
+		// just checking parsing and syntax...
+		for (String tableName : tables)
+			s.createNativeQuery("drop table " + tableName + " if exists").executeUpdate();
+
+		s.getTransaction().commit();
+		s.close();
+	}
 
 	// before/after each test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

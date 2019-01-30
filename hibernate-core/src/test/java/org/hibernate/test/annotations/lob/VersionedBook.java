@@ -32,7 +32,7 @@ public class VersionedBook extends AbstractBook{
 	}
 
 	@Version
-	@Column(name = "ver")
+	@Column(name = "_ver")  // NuoDB
 	public Integer getVersion() {
 		return version;
 	}

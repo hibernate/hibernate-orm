@@ -42,6 +42,7 @@ public class EntityEnum {
 	private long id;
 	private Common ordinal;
 	@Enumerated(EnumType.STRING)
+	@Column(name="str")  // NuoDB change string to str - string reserved word
 	private Common string;
 	@Type(type = "org.hibernate.test.annotations.enumerated.custom_types.FirstLetterType")
 	private FirstLetter firstLetter;

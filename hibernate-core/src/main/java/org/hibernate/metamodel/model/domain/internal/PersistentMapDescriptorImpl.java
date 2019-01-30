@@ -110,7 +110,7 @@ public class PersistentMapDescriptorImpl<O,K,E>
 	@Override
 	protected void doProcessQueuedOps(
 			PersistentCollection collection, Object id, SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+//		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override

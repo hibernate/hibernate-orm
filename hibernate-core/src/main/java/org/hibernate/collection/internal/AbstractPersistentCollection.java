@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -21,20 +22,31 @@ import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.CollectionEntry;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.Status;
+import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.MarkerObject;
+import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.model.domain.spi.CollectionElement;
+import org.hibernate.metamodel.model.domain.spi.CollectionElementEmbedded;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndexEmbedded;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * Base class implementing {@link org.hibernate.collection.spi.PersistentCollection}
@@ -767,31 +779,20 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		// (must match condidion in org.hibernate.persister.collection.BasicCollectionPersister.doUpdateRows).
 		// See HHH-9474
 
-		CollectionIndex indexDescriptor = getCollectionDescriptor().getIndexDescriptor();
+		final CollectionIndex indexDescriptor = getCollectionDescriptor().getIndexDescriptor();
+		final CollectionElement elementDescriptor = getCollectionDescriptor().getElementDescriptor();
+
 		if ( indexDescriptor != null ) {
-			if(CollectionIndexEmbedded.class.isInstance( indexDescriptor )) {
-				throw new NotYetImplementedFor6Exception( getClass() );
+			if ( indexDescriptor instanceof CollectionIndexEmbedded ) {
+				return !indexDescriptor.hasNotNullColumns();
 			}
-			return false;
 		}
 		else {
-			if ( CollectionIndexEmbedded.class.isInstance( getCollectionDescriptor().getElementDescriptor() ) ) {
-				throw new NotYetImplementedFor6Exception( getClass() );
+			if ( elementDescriptor instanceof CollectionElementEmbedded ) {
+				return !getCollectionDescriptor().getElementDescriptor().hasNotNullColumns();
 			}
 		}
 		return false;
-//		Type whereType;
-//		if ( persister.hasIndex() ) {
-//			whereType = persister.getIndexType();
-//		}
-//		else {
-//			whereType = (Type) persister.getElementType();
-//		}
-//		if ( whereType instanceof EmbeddedType ) {
-//			EmbeddedType componentIndexType = (EmbeddedType) whereType;
-//			return !componentIndexType.hasNotNullProperty();
-//		}
-//		return false;
 	}
 
 	@Override
@@ -1261,66 +1262,65 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 			String entityName,
 			SharedSessionContractImplementor session) throws HibernateException {
 
-		throw new NotYetImplementedFor6Exception(  );
+		// short-circuit(s)
+		if ( currentElements.size() == 0 ) {
+			// no new elements, the old list contains only Orphans
+			return oldElements;
+		}
+		if ( oldElements.size() == 0 ) {
+			// no old elements, so no Orphans neither
+			return oldElements;
+		}
 
-//		// short-circuit(s)
-//		if ( currentElements.size() == 0 ) {
-//			// no new elements, the old list contains only Orphans
-//			return oldElements;
-//		}
-//		if ( oldElements.size() == 0 ) {
-//			// no old elements, so no Orphans neither
-//			return oldElements;
-//		}
-//
-//		final EntityTypeImplementor entityPersister = session.getFactory().getEntityDescriptor( entityName );
-//		final Type idType = entityPersister.getIdentifierType();
-//		final boolean useIdDirect = mayUseIdDirect( idType );
-//
-//		// create the collection holding the Orphans
-//		final Collection res = new ArrayList();
-//
-//		// collect EntityIdentifier(s) of the *current* elements - add them into a HashSet for fast access
-//		final java.util.Set currentIds = new HashSet();
-//		final java.util.Set currentSaving = new IdentitySet();
-//		for ( Object current : currentElements ) {
-//			if ( current != null && ForeignKeys.isNotTransient( entityName, current, null, session ) ) {
-//				final EntityEntry ee = session.getPersistenceContext().getEntry( current );
-//				if ( ee != null && ee.getStatus() == Status.SAVING ) {
-//					currentSaving.add( current );
-//				}
-//				else {
-//					final Serializable currentId = ForeignKeys.getEntityIdentifierIfNotUnsaved(
-//							entityName,
-//							current,
-//							session
-//					);
-//					currentIds.add( useIdDirect ? currentId : new TypedValue( idType, currentId ) );
-//				}
-//			}
-//		}
-//
-//		// iterate over the *old* list
-//		for ( Object old : oldElements ) {
-//			if ( !currentSaving.contains( old ) ) {
-//				final Serializable oldId = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, old, session );
-//				if ( !currentIds.contains( useIdDirect ? oldId : new TypedValue( idType, oldId ) ) ) {
-//					res.add( old );
-//				}
-//			}
-//		}
-//
-//		return res;
+		final EntityTypeDescriptor entityDescriptor = session.getFactory().getMetamodel().getEntityDescriptor( entityName );
+		final SimpleTypeDescriptor idType = entityDescriptor.getIdentifierDescriptor().getNavigableType();
+		final boolean useIdDirect = mayUseIdDirect( idType );
+
+		// create the collection holding the Orphans
+		final Collection res = new ArrayList<>();
+
+		// collect EntityIdentifier(s) of the *current* elements -a dd them into a HashSet for fast access
+		final java.util.Set<Object> currentIds = new HashSet<>();
+		final java.util.Set<Object> currentSaving = new IdentitySet<>();
+		for ( Object current : currentElements ) {
+			if ( current != null && ForeignKeys.isNotTransient( entityName, current, null, session ) ) {
+				final EntityEntry ee = session.getPersistenceContext().getEntry( current );
+				if ( ee != null && ee.getStatus() == Status.SAVING ) {
+					currentSaving.add( current );
+				}
+				else {
+					final Object currentId = ForeignKeys.getEntityIdentifierIfNotUnsaved(
+							entityName,
+							current,
+							session
+					);
+					currentIds.add( useIdDirect ? currentId : new TypedValue( idType.getJavaTypeDescriptor(), currentId ) );
+				}
+			}
+		}
+
+		// iterate over the *old* list
+		for ( Object old : oldElements ) {
+			if ( !currentSaving.contains( old ) ) {
+				final Object oldId = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, old, session );
+				if ( !currentIds.contains( useIdDirect ? oldId : new TypedValue( idType.getJavaTypeDescriptor(), oldId ) ) ) {
+					res.add( old );
+				}
+			}
+		}
+
+		return res;
 	}
-//
-//	private static boolean mayUseIdDirect(Type idType) {
-//		return idType == StandardSpiBasicTypes.STRING
-//			|| idType == StandardSpiBasicTypes.INTEGER
-//			|| idType == StandardSpiBasicTypes.LONG
-//			|| idType == StandardSpiBasicTypes.UUID_BINARY
-//			|| idType == StandardSpiBasicTypes.UUID_CHAR
-//			|| idType == PostgresUUIDType.INSTANCE;
-//	}
+
+	private static boolean mayUseIdDirect(SimpleTypeDescriptor idType) {
+		// todo (6.0) - we need to possibly re-add or rework this?
+		return idType == StandardSpiBasicTypes.STRING
+			|| idType == StandardSpiBasicTypes.INTEGER
+			|| idType == StandardSpiBasicTypes.LONG
+			|| idType == StandardSpiBasicTypes.UUID_BINARY
+			|| idType == StandardSpiBasicTypes.UUID_CHAR;
+			//|| idType == PostgresUUIDType.INSTANCE;
+	}
 
 	/**
 	 * Removes entity entries that have an equal identifier with the incoming entity instance

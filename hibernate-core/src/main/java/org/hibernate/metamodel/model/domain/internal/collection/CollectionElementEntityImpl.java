@@ -354,4 +354,11 @@ public class CollectionElementEntityImpl<J>
 
 		return resolvedForeignKey;
 	}
+
+	@Override
+	public boolean hasNotNullColumns() {
+		return getEntityDescriptor().visitAndCollectStateArrayContributors( contributor -> !contributor.isNullable() )
+				.stream()
+				.anyMatch( value -> value == true );
+	}
 }

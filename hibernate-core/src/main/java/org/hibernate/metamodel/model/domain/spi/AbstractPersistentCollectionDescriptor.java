@@ -69,6 +69,7 @@ import org.hibernate.metamodel.model.domain.internal.collection.CollectionIndexE
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionIndexEntityImpl;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionRemovalExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionRowsDeletionExecutor;
+import org.hibernate.metamodel.model.domain.internal.collection.CollectionRowsIndexExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionRowsUpdateExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.FetchedTableReferenceCollectorImpl;
 import org.hibernate.metamodel.model.domain.internal.collection.JoinTableCreationExecutor;
@@ -79,6 +80,7 @@ import org.hibernate.metamodel.model.domain.internal.collection.OneToManyCreatio
 import org.hibernate.metamodel.model.domain.internal.collection.OneToManyNonJoinTableRowsInsertExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.OneToManyRemovalExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.OneToManyRowsDeletionExecutor;
+import org.hibernate.metamodel.model.domain.internal.collection.OneToManyRowsIndexExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.OneToManyRowsUpdateExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.RootTableReferenceCollectorImpl;
 import org.hibernate.metamodel.model.relational.spi.Column;
@@ -158,6 +160,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 	private CollectionRowsDeletionExecutor collectionRowsDeletionExecutor;
 	private CollectionRowsUpdateExecutor collectionRowsUpdateExecutor;
 	private CollectionCreationExecutor collectionRowsInsertExecutor;
+	private CollectionRowsIndexExecutor collectionRowsIndexExecutor;
 
 	private final String mappedBy;
 
@@ -180,6 +183,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 	private final boolean extraLazy;
 	private final boolean hasOrphanDeletes;
 	private final boolean inverse;
+	private final boolean indexSettable;
 
 	private boolean isRowInsertEnabled;
 	private boolean isRowDeleteEnabled;
@@ -256,6 +260,24 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 		this.hasOrphanDeletes = collectionBinding.hasOrphanDelete();
 		this.inverse = collectionBinding.isInverse();
 		this.mappedBy = collectionBinding.getMappedByProperty();
+
+		if ( collectionBinding.isIndexed() ) {
+			// todo (6.0) - how to source this from the CollectionIndex instead?
+			final IndexedCollection indexedCollection = (IndexedCollection) collectionBinding;
+			boolean indexCanBeSet = false;
+			for ( int i = 0; i < indexedCollection.getIndex().getColumnSpan(); ++i ) {
+				if ( indexedCollection.getIndex().getColumnInsertability()[i] ) {
+					indexCanBeSet = true;
+				}
+				if ( indexedCollection.getIndex().getColumnUpdateability()[i] ) {
+					indexCanBeSet = true;
+				}
+			}
+			indexSettable = indexCanBeSet;
+		}
+		else {
+			indexSettable = false;
+		}
 	}
 
 	protected static CollectionJavaDescriptor findJavaTypeDescriptor(
@@ -1088,6 +1110,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 			);
 		}
 		collectionRowsInsertExecutor.execute( collection, key, session );
+		writeIndex( collection, key, false, true, session );
 	}
 
 	private CollectionCreationExecutor generateCollectionRowsInsertExecutor() {
@@ -1117,9 +1140,23 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 			return CollectionRowsUpdateExecutor.NO_OP;
 		}
 		else if ( isOneToMany() ) {
-			return new OneToManyRowsUpdateExecutor( this, dmlTargetTable, sessionFactory );
+			return new OneToManyRowsUpdateExecutor(
+					this,
+					dmlTargetTable,
+					isRowDeleteEnabled,
+					isRowInsertEnabled,
+					sessionFactory
+			);
 		}
 		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	private CollectionRowsIndexExecutor generateCollectionRowsIndexExecutor() {
+		if ( !( isOneToMany() && isInverse() && hasIndex() && !indexContainsFormula() && indexSettable ) ){
+			return CollectionRowsIndexExecutor.NO_OP;
+		}
+
+		return new OneToManyRowsIndexExecutor( this, dmlTargetTable, sessionFactory );
 	}
 
 	protected boolean hasIndex() {
@@ -1144,6 +1181,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 		}
 
 		collectionCreationExecutor.execute( collection, key, session );
+		writeIndex( collection, key, false, true, session );
 	}
 
 	private CollectionCreationExecutor generateCollectionCreationExecutor() {
@@ -1175,7 +1213,6 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 		}
 
 		collectionRemovalExecutor.execute( key, session );
-
 	}
 
 	private CollectionRemovalExecutor generateCollectionRemovalExecutor() {
@@ -1210,16 +1247,29 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 	}
 
 	@Override
-	public void processQueuedOps(
-			PersistentCollection collection, Object key, SharedSessionContractImplementor session) {
+	public void processQueuedOps(PersistentCollection collection, Object key, SharedSessionContractImplementor session) {
 		if ( collection.hasQueuedOperations() && isOneToMany() ) {
-			doProcessQueuedOps(collection, key, session);
+			doProcessQueuedOps( collection, key, session );
+			writeIndex( collection, key, true, false, session );
 		}
 	}
 
 	@Override
 	public ForeignKeyDirection getForeignKeyDirection() {
 		return ForeignKeyDirection.TO_PARENT;
+	}
+
+	private void writeIndex(
+			PersistentCollection collection,
+			Object key,
+			boolean queuedOperations,
+			boolean resetIndex,
+			SharedSessionContractImplementor session) {
+		if ( collectionRowsIndexExecutor == null ) {
+			collectionRowsIndexExecutor = generateCollectionRowsIndexExecutor();
+		}
+
+		collectionRowsIndexExecutor.execute( collection, key, queuedOperations, resetIndex, session );
 	}
 
 	protected abstract void doProcessQueuedOps(

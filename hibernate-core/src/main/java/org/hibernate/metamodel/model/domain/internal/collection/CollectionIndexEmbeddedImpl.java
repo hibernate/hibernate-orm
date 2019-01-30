@@ -126,4 +126,11 @@ public class CollectionIndexEmbeddedImpl<J>
 				}
 		);
 	}
+
+	@Override
+	public boolean hasNotNullColumns() {
+		return getEmbeddedDescriptor().visitAndCollectStateArrayContributors( contributor -> !contributor.isNullable() )
+				.stream()
+				.anyMatch( value -> value == true );
+	}
 }

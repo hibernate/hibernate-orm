@@ -51,6 +51,7 @@ public class BasicCollectionElementImpl<J>
 
 	private final Column column;
 	private final BasicValueMapper<J> valueMapper;
+	private final boolean nullable;
 
 	@SuppressWarnings("unchecked")
 	public BasicCollectionElementImpl(
@@ -72,6 +73,8 @@ public class BasicCollectionElementImpl<J>
 					getNavigableRole()
 			);
 		}
+
+		this.nullable = bootCollectionMapping.getElement().isNullable();
 	}
 
 	@Override
@@ -154,5 +157,10 @@ public class BasicCollectionElementImpl<J>
 			SqlAliasBase sqlAliasBase,
 			TableReferenceJoinCollector joinCollector) {
 		// nothing to do
+	}
+
+	@Override
+	public boolean hasNotNullColumns() {
+		return !nullable;
 	}
 }

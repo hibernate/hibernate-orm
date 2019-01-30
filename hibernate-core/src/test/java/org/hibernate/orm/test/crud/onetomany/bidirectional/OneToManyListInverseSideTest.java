@@ -24,8 +24,9 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 
+import org.junit.jupiter.api.Test;
+
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
-import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -79,15 +80,15 @@ public class OneToManyListInverseSideTest extends SessionFactoryBasedFunctionalT
 					assertThat( parent.getChildren().size(), is( 1 ) );
 				}
 		);
-
-		sessionFactoryScope().inTransaction(
-				session -> {
-					Child child = new Child( "Veronica" );
-					session.save( child );
-					Parent parent = session.get( Parent.class, parentId );
-					parent.addChild( child );
-				}
-		);
+//
+//		sessionFactoryScope().inTransaction(
+//				session -> {
+//					Child child = new Child( "Veronica" );
+//					session.save( child );
+//					Parent parent = session.get( Parent.class, parentId );
+//					parent.addChild( child );
+//				}
+//		);
 	}
 
 

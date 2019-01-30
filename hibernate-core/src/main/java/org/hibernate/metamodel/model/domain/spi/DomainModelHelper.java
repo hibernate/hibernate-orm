@@ -6,12 +6,16 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import java.util.StringTokenizer;
+
 import org.hibernate.FetchMode;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
@@ -178,5 +182,20 @@ public class DomainModelHelper {
 		}
 
 		return FetchStyle.SELECT;
+	}
+
+	public static CascadeStyle determineCascadeStyle(String cascade) {
+		if ( cascade == null || cascade.equals( "none" ) ) {
+			return CascadeStyles.NONE;
+		}
+		else {
+			StringTokenizer tokens = new StringTokenizer( cascade, ", " );
+			CascadeStyle[] styles = new CascadeStyle[ tokens.countTokens() ];
+			int i = 0;
+			while ( tokens.hasMoreTokens() ) {
+				styles[ i++ ] = CascadeStyles.getCascadeStyle( tokens.nextToken() );
+			}
+			return new CascadeStyles.MultipleCascadeStyle( styles );
+		}
 	}
 }

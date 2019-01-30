@@ -178,7 +178,7 @@ public interface ManagedTypeDescriptor<T>
 		//		this with Luis a few times in regards to bytecode enhancement.  If the order were
 		//				1. well defined (alphabetical, super classes first)
 		//				2. ideally. easily calculable - probably a Helper class
-		throw new NotYetImplementedFor6Exception();
+		return getStateArrayContributors().get( i ).getPropertyAccess().getGetter().get( object );
 	}
 
 	/**

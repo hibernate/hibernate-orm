@@ -160,4 +160,11 @@ public class CollectionIndexEntityImpl<J>
 	public void visitFetchables(Consumer<Fetchable> fetchableConsumer) {
 		getEntityDescriptor().visitFetchables( fetchableConsumer );
 	}
+
+	@Override
+	public boolean hasNotNullColumns() {
+		return getEntityDescriptor().visitAndCollectStateArrayContributors( contributor -> !contributor.isNullable() )
+				.stream()
+				.anyMatch( value -> value == true );
+	}
 }

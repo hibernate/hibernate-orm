@@ -50,6 +50,7 @@ public class BasicCollectionIndexImpl<J>
 
 	private final Column column;
 	private final BasicValueMapper<J> valueMapper;
+	private final boolean nullable;
 
 	@SuppressWarnings("unchecked")
 	public BasicCollectionIndexImpl(
@@ -70,6 +71,7 @@ public class BasicCollectionIndexImpl<J>
 			);
 		}
 
+		this.nullable = bootCollectionMapping.getIndex().isNullable();
 	}
 
 	@Override
@@ -141,5 +143,10 @@ public class BasicCollectionIndexImpl<J>
 			SqlAliasBase sqlAliasBase,
 			TableReferenceJoinCollector joinCollector) {
 		// nothing to do
+	}
+
+	@Override
+	public boolean hasNotNullColumns() {
+		return !nullable;
 	}
 }

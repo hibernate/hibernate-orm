@@ -7,6 +7,7 @@
 package org.hibernate.sql.exec.spi;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryOptions;
@@ -56,4 +57,11 @@ public interface ExecutionContext {
 	}
 
 	Callback getCallback();
+
+	/**
+	 * Get the collection key for the collection which is to be loaded immediately.
+	 */
+	default CollectionKey getCollectionKey() {
+		return null;
+	}
 }

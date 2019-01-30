@@ -36,4 +36,6 @@ public interface CollectionIndex<J> extends Navigable<J>, TableReferenceContribu
 		final IndexClassification classification = getClassification();
 		return classification == IndexClassification.BASIC || classification == IndexClassification.ANY;
 	}
+
+	boolean hasNotNullColumns();
 }

@@ -38,4 +38,6 @@ public interface CollectionElement<J> extends Navigable<J>, CollectionDomainType
 	default Class<J> getJavaType() {
 		return getJavaTypeDescriptor().getJavaType();
 	}
+
+	boolean hasNotNullColumns();
 }

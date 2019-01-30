@@ -84,17 +84,17 @@ public final class EntityPrinter {
 		return buffer.toString();
 	}
 
-	public String toString(Map<String, TypedValue> namedTypedValues) throws HibernateException {
-		Map<String, String> result = new HashMap<String, String>();
-		for ( Map.Entry<String, TypedValue> entry : namedTypedValues.entrySet() ) {
-			result.put(
-					entry.getKey(), entry.getValue().getType().toLoggableString(
-							entry.getValue().getValue()
-					)
-			);
-		}
-		return result.toString();
-	}
+//	public String toString(Map<String, TypedValue> namedTypedValues) throws HibernateException {
+//		Map<String, String> result = new HashMap<String, String>();
+//		for ( Map.Entry<String, TypedValue> entry : namedTypedValues.entrySet() ) {
+//			result.put(
+//					entry.getKey(), entry.getValue().getType().toLoggableString(
+//							entry.getValue().getValue()
+//					)
+//			);
+//		}
+//		return result.toString();
+//	}
 
 	// Cannot use Map as an argument because it clashes with the previous method (due to type erasure)
 	public void toString(

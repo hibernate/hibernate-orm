@@ -13,10 +13,14 @@ import org.hibernate.sql.results.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
+import org.jboss.logging.Logger;
+
 /**
  * @author Steve Ebersole
  */
 public class BasicResultAssembler implements DomainResultAssembler {
+	private static final Logger LOG = Logger.getLogger( BasicResultAssembler.class );
+
 	private final SqlSelection sqlSelection;
 	private final BasicValueConverter valueConverter;
 	private final JavaTypeDescriptor javaTypeDescriptor;
@@ -44,6 +48,8 @@ public class BasicResultAssembler implements DomainResultAssembler {
 			RowProcessingState rowProcessingState,
 			JdbcValuesSourceProcessingOptions options) {
 		Object value = rowProcessingState.getJdbcValue( sqlSelection );
+
+		LOG.infof( "Extracted value [Position %d] - [%s]", sqlSelection.getValuesArrayPosition(), value );
 
 		if ( valueConverter != null ) {
 			// the raw value type should be the converter's relational-JTD

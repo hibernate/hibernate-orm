@@ -18,6 +18,7 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
+import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -43,6 +44,7 @@ import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.LoadingCollectionEntry;
+import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.internal.CollectionJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -66,6 +68,7 @@ public class AbstractPluralPersistentAttribute<O,C,E> extends AbstractPersistent
 
 	private final PersistentCollectionDescriptor collectionDescriptor;
 	private final FetchStrategy fetchStrategy;
+	private final CascadeStyle cascadeStyle;
 
 	private int stateArrayPosition;
 
@@ -84,6 +87,7 @@ public class AbstractPluralPersistentAttribute<O,C,E> extends AbstractPersistent
 		creationContext.registerCollectionDescriptor( collectionDescriptor, bootCollectionDescriptor );
 
 		this.fetchStrategy = DomainModelHelper.determineFetchStrategy( bootCollectionDescriptor );
+		this.cascadeStyle = DomainModelHelper.determineCascadeStyle( bootProperty.getCascade() );
 	}
 
 	@Override
@@ -94,6 +98,11 @@ public class AbstractPluralPersistentAttribute<O,C,E> extends AbstractPersistent
 	@Override
 	public Class getJavaType() {
 		return getJavaTypeDescriptor().getJavaType();
+	}
+
+	@Override
+	public CascadeStyle getCascadeStyle() {
+		return cascadeStyle;
 	}
 
 	@Override
@@ -438,5 +447,10 @@ public class AbstractPluralPersistentAttribute<O,C,E> extends AbstractPersistent
 	@Override
 	public DomainType getAttributeType() {
 		return null;
+	}
+
+	@Override
+	public ForeignKeyDirection getForeignKeyDirection() {
+		return getPersistentCollectionDescriptor().getForeignKeyDirection();
 	}
 }

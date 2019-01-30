@@ -146,4 +146,11 @@ public class CollectionElementEmbeddedImpl<J>
 	public EmbeddedTypeDescriptor<J> getDomainTypeDescriptor() {
 		return getEmbeddedDescriptor();
 	}
+
+	@Override
+	public boolean hasNotNullColumns() {
+		return getEmbeddedDescriptor().visitAndCollectStateArrayContributors( contributor -> !contributor.isNullable() )
+				.stream()
+				.anyMatch( value -> value == true );
+	}
 }

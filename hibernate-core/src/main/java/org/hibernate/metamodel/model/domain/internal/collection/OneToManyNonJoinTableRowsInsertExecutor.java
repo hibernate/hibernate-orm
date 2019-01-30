@@ -6,15 +6,11 @@
  */
 package org.hibernate.metamodel.model.domain.internal.collection;
 
-import java.util.function.BiConsumer;
-
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.Table;
-import org.hibernate.sql.ast.tree.spi.from.TableReference;
-import org.hibernate.sql.exec.spi.JdbcMutation;
-import org.hibernate.sql.exec.spi.JdbcParameter;
 
 /**
  * @author Chris Cranford
@@ -27,12 +23,17 @@ public class OneToManyNonJoinTableRowsInsertExecutor extends OneToManyCreationEx
 		super( collectionDescriptor, dmlTargetTable, sessionFactory );
 	}
 
+//	@Override
+//	protected JdbcMutation generateCreationOperation(
+//			TableReference dmlTableRef,
+//			SessionFactoryImplementor sessionFactory,
+//			BiConsumer<Column, JdbcParameter> columnConsumer) {
+//		// todo (6.0) - add support for writing the index somehow.
+//		return super.generateCreationOperation( dmlTableRef, sessionFactory, columnConsumer );
+//	}
+
 	@Override
-	protected JdbcMutation generateCreationOperation(
-			TableReference dmlTableRef,
-			SessionFactoryImplementor sessionFactory,
-			BiConsumer<Column, JdbcParameter> columnConsumer) {
-		// todo (6.0) - add support for writing the index somehow.
-		return super.generateCreationOperation( dmlTableRef, sessionFactory, columnConsumer );
+	public void execute(PersistentCollection collection, Object key, SharedSessionContractImplementor session) {
+		super.execute( collection, key, session );
 	}
 }

@@ -105,6 +105,11 @@ public class CollectionLoaderImpl implements CollectionLoader {
 				session
 		);
 
+		final CollectionKey collectionKey = new CollectionKey(
+				pluralAttribute.getPersistentCollectionDescriptor(),
+				key
+		);
+
 		JdbcSelectExecutorStandardImpl.INSTANCE.list(
 				jdbcSelect,
 				new ExecutionContext() {
@@ -132,13 +137,13 @@ public class CollectionLoaderImpl implements CollectionLoader {
 					public Callback getCallback() {
 						return null;
 					}
+
+					@Override
+					public CollectionKey getCollectionKey() {
+						return collectionKey;
+					}
 				},
 				RowTransformerSingularReturnImpl.instance()
-		);
-
-		final CollectionKey collectionKey = new CollectionKey(
-				pluralAttribute.getPersistentCollectionDescriptor(),
-				key
 		);
 
 		return session.getPersistenceContext().getCollection( collectionKey );

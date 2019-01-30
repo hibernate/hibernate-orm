@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.EntityNameResolver;
@@ -36,6 +37,7 @@ import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataPojoImpl;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -935,5 +937,15 @@ public abstract class AbstractEntityTypeDescriptor<J>
 		}
 
 		return this;
+	}
+
+	@Override
+	public boolean hasCascades() {
+		for ( StateArrayContributor contributor : getStateArrayContributors() ) {
+			if ( contributor.getCascadeStyle() != CascadeStyles.NONE ) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

@@ -20,10 +20,14 @@ import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.RowReader;
 
+import org.jboss.logging.Logger;
+
 /**
  * @author Steve Ebersole
  */
 public class RowReaderStandardImpl<T> implements RowReader<T> {
+	private static final Logger LOG = Logger.getLogger( RowReaderStandardImpl.class );
+
 	private final List<DomainResultAssembler> resultAssemblers;
 	private final List<Initializer> initializers;
 	private final RowTransformer<T> rowTransformer;
@@ -66,6 +70,7 @@ public class RowReaderStandardImpl<T> implements RowReader<T> {
 
 	@Override
 	public T readRow(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) throws SQLException {
+		LOG.info( "---Processing Row---" );
 		coordinateInitializers( rowProcessingState, options );
 
 		// finally assemble the results

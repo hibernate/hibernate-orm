@@ -58,9 +58,11 @@ public class OneToManyRowsUpdateExecutor implements CollectionRowsUpdateExecutor
 	public OneToManyRowsUpdateExecutor(
 			PersistentCollectionDescriptor collectionDescriptor,
 			Table dmlTargetTable,
+			boolean rowDeleteEnabled,
+			boolean rowInsertEnabled,
 			SessionFactoryImplementor sessionFactory) {
-		executors.add( new RowsUpdateDeleteExecutor( collectionDescriptor, dmlTargetTable, sessionFactory ) );
-		executors.add( new RowsUpdateInsertExecutor( collectionDescriptor, dmlTargetTable, sessionFactory ) );
+		executors.add( new RowsUpdateDeleteExecutor( collectionDescriptor, dmlTargetTable, rowDeleteEnabled, sessionFactory ) );
+		executors.add( new RowsUpdateInsertExecutor( collectionDescriptor, dmlTargetTable, rowInsertEnabled, sessionFactory ) );
 	}
 
 	@Override
@@ -219,17 +221,20 @@ public class OneToManyRowsUpdateExecutor implements CollectionRowsUpdateExecutor
 	 *
 	 */
 	private class RowsUpdateDeleteExecutor extends AbstractOneToManyRowsUpdateExecutor {
+		private final boolean isRowDeleteEnabled;
+
 		RowsUpdateDeleteExecutor(
 				PersistentCollectionDescriptor persistentCollectionDescriptor,
 				Table dmlTargetTable,
+				boolean rowDeleteEnabled,
 				SessionFactoryImplementor sessionFactory) {
 			super( persistentCollectionDescriptor, dmlTargetTable, sessionFactory );
+			this.isRowDeleteEnabled = rowDeleteEnabled;
 		}
 
 		@Override
 		protected boolean isExecutionAllowed() {
-			final CollectionKey<?> collectionKey = getCollectionDescriptor().getCollectionKeyDescriptor();
-			return collectionKey.isUpdatable() && collectionKey.isNullable();
+			return isRowDeleteEnabled;
 		}
 
 		@Override
@@ -307,16 +312,20 @@ public class OneToManyRowsUpdateExecutor implements CollectionRowsUpdateExecutor
 	 * Implementation that takes care of insert-specific operations for One-To-Many
 	 */
 	private class RowsUpdateInsertExecutor extends AbstractOneToManyRowsUpdateExecutor {
+		private final boolean isRowInsertEnabled;
+
 		RowsUpdateInsertExecutor(
 				PersistentCollectionDescriptor persistentCollectionDescriptor,
 				Table dmlTargetTable,
+				boolean rowInsertEnabled,
 				SessionFactoryImplementor sessionFactory) {
 			super( persistentCollectionDescriptor, dmlTargetTable, sessionFactory );
+			this.isRowInsertEnabled = rowInsertEnabled;
 		}
 
 		@Override
 		protected boolean isExecutionAllowed() {
-			return getCollectionDescriptor().getCollectionKeyDescriptor().isUpdatable();
+			return isRowInsertEnabled;
 		}
 
 		@Override

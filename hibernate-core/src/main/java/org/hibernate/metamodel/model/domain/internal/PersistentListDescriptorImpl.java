@@ -85,8 +85,10 @@ public class PersistentListDescriptorImpl<O,E> extends AbstractPersistentCollect
 
 	@Override
 	protected void doProcessQueuedOps(
-			PersistentCollection collection, Object id, SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+			PersistentCollection collection,
+			Object id,
+			SharedSessionContractImplementor session) {
+		// throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override

@@ -10,47 +10,41 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 
-import org.hibernate.EntityMode;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * An ordered pair of a value and its Hibernate type.
- * 
+ *
  * @see Type
  * @author Gavin King
  */
 public final class TypedValue implements Serializable {
-	private final Type type;
+	private final JavaTypeDescriptor javaTypeDescriptor;
 	private final Object value;
 	// "transient" is important here -- NaturalIdCacheKey needs to be Serializable
 	private transient ValueHolder<Integer> hashcode;
 
-	public TypedValue(final Type type, final Object value) {
-		this.type = type;
+	public TypedValue(final JavaTypeDescriptor javaTypeDescriptor, final Object value) {
+		this.javaTypeDescriptor = javaTypeDescriptor;
 		this.value = value;
 		initTransients();
-	}
-
-	/**
-	 * @deprecated explicit entity mode support is deprecated
-	 */
-	@Deprecated
-	public TypedValue(Type type, Object value, EntityMode entityMode) {
-		this(type, value);
 	}
 
 	public Object getValue() {
 		return value;
 	}
 
-	public Type getType() {
-		return type;
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		 return javaTypeDescriptor;
 	}
+
 	@Override
 	public String toString() {
 		return value==null ? "null" : value.toString();
 	}
+
 	@Override
 	public int hashCode() {
 		return hashcode.getValue();
@@ -66,8 +60,8 @@ public final class TypedValue implements Serializable {
 			return false;
 		}
 		final TypedValue that = (TypedValue) other;
-		return type.getJavaTypeDescriptor().getJavaType() == that.type.getJavaTypeDescriptor().getJavaType()
-				&& type.getJavaTypeDescriptor().areEqual( that.value, value );
+		return javaTypeDescriptor.getJavaType() == that.javaTypeDescriptor.getJavaType()
+				&& javaTypeDescriptor.areEqual( that.value, value );
 	}
 
 	private void readObject(ObjectInputStream ois)
@@ -80,7 +74,7 @@ public final class TypedValue implements Serializable {
 		this.hashcode = new ValueHolder<Integer>( new ValueHolder.DeferredInitializer<Integer>() {
 			@Override
 			public Integer initialize() {
-				return value == null ? 0 : type.getJavaTypeDescriptor().extractHashCode( value );
+				return value == null ? 0 : javaTypeDescriptor.extractHashCode( value );
 			}
 		} );
 	}

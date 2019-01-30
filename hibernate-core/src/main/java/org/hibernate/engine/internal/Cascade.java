@@ -26,6 +26,7 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
+import org.hibernate.metamodel.model.domain.spi.AbstractPluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
@@ -200,8 +201,8 @@ public final class Cascade {
 			final Object anything,
 			final boolean isCascadeDeleteEnabled) throws HibernateException {
 		if ( child != null ) {
-			if ( JoinablePersistentAttribute.class.isInstance( attribute ) ) {
-				if ( cascadeAssociationNow( cascadePoint, (JoinablePersistentAttribute) attribute ) ) {
+			if ( Joinable.class.isInstance( attribute ) ) {
+				if ( cascadeAssociationNow( cascadePoint, (Joinable) attribute ) ) {
 					cascadeAssociation(
 							action,
 							cascadePoint,
@@ -348,7 +349,7 @@ public final class Cascade {
 		return attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE;
 	}
 
-	private static boolean cascadeAssociationNow(final CascadePoint cascadePoint, JoinablePersistentAttribute attribute) {
+	private static boolean cascadeAssociationNow(final CascadePoint cascadePoint, Joinable attribute) {
 		return attribute.getForeignKeyDirection().cascadeNow( cascadePoint );
 	}
 

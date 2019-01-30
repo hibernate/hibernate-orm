@@ -36,6 +36,9 @@ public class JoinTableRowsInsertExecutor extends JoinTableCreationExecutor {
 			PersistentCollection collection,
 			Object key,
 			SharedSessionContractImplementor session) {
+		System.out.println( "JoinTableRowsInsertExecutor fired" );
+		System.out.println( "Key: " + key );
+		System.out.println( "Collection: " + collection.getRole() );
 		if ( key == null ) {
 			key = collection.getKey();
 		}

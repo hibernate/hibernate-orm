@@ -19,4 +19,5 @@ public interface CollectionIndexEmbedded<J> extends CollectionIndex<J>, Embedded
 	default void visitNavigable(NavigableVisitationStrategy visitor) {
 		visitor.visitCollectionIndexEmbedded( this );
 	}
+
 }

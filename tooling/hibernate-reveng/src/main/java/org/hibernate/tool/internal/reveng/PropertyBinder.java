@@ -4,12 +4,11 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.Logger;
 
 public class PropertyBinder {
 
-	private static final Logger log = LoggerFactory.getLogger(PropertyBinder.class);
+	private static final Logger log = Logger.getLogger(PropertyBinder.class);
 
 	public static Property makeProperty(
 			Table table, 

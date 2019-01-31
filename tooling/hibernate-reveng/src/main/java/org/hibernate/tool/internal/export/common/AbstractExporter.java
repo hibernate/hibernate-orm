@@ -17,8 +17,7 @@ import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.internal.export.hbm.Cfg2HbmTool;
 import org.hibernate.tool.internal.export.pojo.Cfg2JavaTool;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.Logger;
 
 /**
  * Base exporter for the template and direct output generation.
@@ -29,7 +28,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractExporter implements Exporter, ExporterConstants {
 
-	protected Logger log = LoggerFactory.getLogger(this.getClass());
+	protected Logger log = Logger.getLogger(this.getClass());
 	
 	private TemplateHelper vh;
 	private Properties properties = new Properties();

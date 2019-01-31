@@ -31,8 +31,7 @@ import org.hibernate.type.PrimitiveType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.Logger;
 
 /**
  * Helper methods for javacode generation.
@@ -43,7 +42,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Cfg2JavaTool {
 
-	private static final Logger log = LoggerFactory.getLogger( Cfg2JavaTool.class );	
+	private static final Logger log = Logger.getLogger( Cfg2JavaTool.class );	
 			
 	public Cfg2JavaTool() {
 

@@ -15,8 +15,7 @@ import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.reveng.ReverseEngineeringRuntimeInfo;
 import org.hibernate.tool.internal.reveng.JdbcBinderException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.Logger;
 
 /**
  * abstract base class for the metadatadialects to hold the
@@ -27,7 +26,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractMetaDataDialect implements MetaDataDialect {
 
-	protected final Logger log = LoggerFactory.getLogger(this.getClass());
+	protected final Logger log = Logger.getLogger(this.getClass());
 	
 	private Connection connection;
 	private DatabaseMetaData metaData;

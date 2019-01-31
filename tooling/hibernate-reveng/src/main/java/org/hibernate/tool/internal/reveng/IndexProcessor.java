@@ -15,12 +15,11 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.internal.util.TableNameQualifier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.Logger;
 
 public class IndexProcessor {
 
-	private static final Logger log = LoggerFactory.getLogger(IndexProcessor.class);
+	private static final Logger log = Logger.getLogger(IndexProcessor.class);
 
 	public static void processIndices(
 			MetaDataDialect metaDataDialect, 

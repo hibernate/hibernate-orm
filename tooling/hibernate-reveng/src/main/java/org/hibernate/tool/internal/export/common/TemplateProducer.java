@@ -10,13 +10,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.hibernate.tool.api.export.ArtifactCollector;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.Logger;
 
 
 public class TemplateProducer {
 
-	private static final Logger log = LoggerFactory.getLogger(TemplateProducer.class);
+	private static final Logger log = Logger.getLogger(TemplateProducer.class);
 	private final TemplateHelper th;
 	private ArtifactCollector ac;
 	

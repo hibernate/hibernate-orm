@@ -15,12 +15,11 @@ import org.hibernate.sql.Alias;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.Logger;
 
 public class PrimaryKeyProcessor {
 
-	private static final Logger log = LoggerFactory.getLogger(PrimaryKeyProcessor.class);
+	private static final Logger log = Logger.getLogger(PrimaryKeyProcessor.class);
 
 	public static void processPrimaryKey(
 			MetaDataDialect metaDataDialect, 

@@ -25,12 +25,11 @@ import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
 import org.hibernate.tool.internal.util.NameConverter;
 import org.hibernate.tool.internal.util.TableNameQualifier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.Logger;
 
 public class DefaultReverseEngineeringStrategy implements ReverseEngineeringStrategy {
 
-	static final private Logger log = LoggerFactory.getLogger(DefaultReverseEngineeringStrategy.class);
+	static final private Logger log = Logger.getLogger(DefaultReverseEngineeringStrategy.class);
 	
 	private static Set<String> AUTO_OPTIMISTICLOCK_COLUMNS;
 

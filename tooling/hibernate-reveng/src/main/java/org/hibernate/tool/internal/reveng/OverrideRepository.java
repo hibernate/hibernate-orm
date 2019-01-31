@@ -31,13 +31,12 @@ import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
 import org.hibernate.tool.internal.util.TableNameQualifier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.Logger;
 import org.w3c.dom.Document;
 
 public class OverrideRepository  {
 
-	final private static Logger log = LoggerFactory.getLogger( OverrideRepository.class );
+	final private static Logger log = Logger.getLogger( OverrideRepository.class );
 
 	final private Map<TypeMappingKey, List<SQLTypeMapping>> typeMappings; // from sqltypes to list of SQLTypeMapping
 

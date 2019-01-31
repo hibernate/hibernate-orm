@@ -17,8 +17,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.hibernate.tool.api.version.Version;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.Logger;
 
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.cache.FileTemplateLoader;
@@ -45,7 +44,7 @@ import freemarker.template.TemplateModelException;
  */
 public class TemplateHelper {
     
-	static final Logger log = LoggerFactory.getLogger(TemplateHelper.class);
+	static final Logger log = Logger.getLogger(TemplateHelper.class);
 	
     private String templatePrefix;
 	private File outputDirectory;

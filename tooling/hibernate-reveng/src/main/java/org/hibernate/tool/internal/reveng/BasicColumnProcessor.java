@@ -13,12 +13,11 @@ import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
 import org.hibernate.tool.internal.util.TableNameQualifier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.Logger;
 
 public class BasicColumnProcessor {
 
-	private static final Logger log = LoggerFactory.getLogger(BasicColumnProcessor.class);
+	private static final Logger log = Logger.getLogger(BasicColumnProcessor.class);
 
 	public static void processBasicColumns(
 			MetaDataDialect metaDataDialect, 

@@ -1855,4 +1855,12 @@ public interface CoreMessageLogger extends BasicLogger {
 					"Use `org.hibernate.procedure.ProcedureCall` or `javax.persistence.StoredProcedureQuery` instead"
 	)
 	void warnNativeQueryAsCallable();
+
+	@LogMessage(level = WARN)
+	@Message(value = "The bytecode provider class [%s] could not be loaded", id = 500)
+	void bytecodeProviderClassNotFound(String className);
+
+	@LogMessage(level = WARN)
+	@Message(value = "The bytecode provider class [%s] does not implement BytecodeProvider", id = 501)
+	void bytecodeProviderInvalidClass(String className);
 }

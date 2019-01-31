@@ -18,6 +18,7 @@ import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiato
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.UnsupportedLogger;
 import org.hibernate.internal.util.ConfigHelper;
+import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
 import org.jboss.logging.Logger;
@@ -352,10 +353,27 @@ public final class Environment implements AvailableSettings {
 
 		LOG.bytecodeProvider( providerName );
 
-		// todo : allow a custom class name - just check if the config is a FQN
-		//		currently we assume it is only ever the Strings "javassist" or "bytebuddy"...
+		Class<?> bytecodeProviderClass = null;
+		try {
+			bytecodeProviderClass = Class.forName( providerName );
 
-		LOG.unknownBytecodeProvider( providerName, BYTECODE_PROVIDER_NAME_DEFAULT );
+			if ( BytecodeProvider.class.isAssignableFrom( bytecodeProviderClass ) ) {
+				return (BytecodeProvider) bytecodeProviderClass.newInstance();
+			}
+			else {
+				LOG.bytecodeProviderInvalidClass(providerName);
+			}
+		}
+		catch (ClassNotFoundException e) {
+			LOG.bytecodeProviderClassNotFound(providerName);
+		}
+		catch (InstantiationException | IllegalAccessException e) {
+			LOG.bytecodeProviderInvalidClass(providerName);
+		}
+
+		if ( bytecodeProviderClass == null ) {
+			LOG.unknownBytecodeProvider( providerName, BYTECODE_PROVIDER_NAME_DEFAULT );
+		}
 		return new org.hibernate.bytecode.internal.bytebuddy.BytecodeProviderImpl();
 	}
 }

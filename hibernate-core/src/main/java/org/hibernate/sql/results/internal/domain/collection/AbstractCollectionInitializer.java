@@ -110,7 +110,7 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 				rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions()
 		);
 
-		if ( keyCollectionAssembler == null ) {
+		if ( keyCollectionAssembler == null || keyTargetAssembler == keyCollectionAssembler ) {
 			keyCollectionValue = keyContainerValue;
 		}
 		else {

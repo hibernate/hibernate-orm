@@ -32,7 +32,7 @@ To run the matrix tests for NuoDB:
    * Execute `./gradle clean hibernate-core:matrix_nuodb`.  To setup gradle, see below.  The expected output is:
 
    ```
-   6935 tests completed, 127 failed, 822 skipped
+   6935 tests completed, 114 failed, 822 skipped
    ```
 
    **Note:** If you run the tests without the `clean` option you may get a weird internal error in the compiler.

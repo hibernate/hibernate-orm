@@ -19,9 +19,13 @@ public class Category {
 	public static final int ROOT_ID = 42;
 
 	private long id;
-	private String name;
+
+	// NuoDB 3.2 or earlier requires actual default values
+	// From NuoDB 3.3 null is the default default-value
+	private String name = "";
+
 	private List subcategories = new ArrayList();
-	private Assignable assignable;
+	private Assignable assignable = null;
 	/**
 	 * Returns the id.
 	 * @return long

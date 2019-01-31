@@ -74,24 +74,24 @@ public class EntityOfSetsCrudTest extends SessionFactoryBasedFunctionalTest {
 				}
 		);
 
-//		inSession(
-//				session -> {
-//					final EntityOfSets loaded = session.get( EntityOfSets.class, 1 );
-//					assert loaded != null;
-//					checkExpectedSize( loaded.getSetOfBasics(), 2 );
-//				}
-//		);
+		inSession(
+				session -> {
+					final EntityOfSets loaded = session.get( EntityOfSets.class, 1 );
+					assert loaded != null;
+					checkExpectedSize( loaded.getSetOfBasics(), 2 );
+				}
+		);
 
-//		inSession(
-//				session -> {
-//					final List<EntityOfSets> list = session.byMultipleIds( EntityOfSets.class )
-//							.multiLoad( 1, 2 );
-//					assert list.size() == 1;
-//					final EntityOfSets loaded = list.get( 0 );
-//					assert loaded != null;
-//					checkExpectedSize( loaded.getSetOfBasics(), 2 );
-//				}
-//		);
+		inSession(
+				session -> {
+					final List<EntityOfSets> list = session.byMultipleIds( EntityOfSets.class )
+							.multiLoad( 1, 2 );
+					assert list.size() == 1;
+					final EntityOfSets loaded = list.get( 0 );
+					assert loaded != null;
+					checkExpectedSize( loaded.getSetOfBasics(), 2 );
+				}
+		);
 	}
 
 	private void checkExpectedSize(Collection collection, int expectedSize) {

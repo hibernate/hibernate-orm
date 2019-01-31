@@ -800,6 +800,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 						lockMode,
 						creationState.getCurrentTableSpace()
 				);
+				creationState.getCurrentTableSpace().addJoinedTableGroup( tableGroupJoin );
 				navigableReference = tableGroupJoin.getJoinedGroup().getNavigableReference();
 			}
 		}

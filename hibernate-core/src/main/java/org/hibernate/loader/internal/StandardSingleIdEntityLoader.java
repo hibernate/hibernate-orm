@@ -33,6 +33,7 @@ import org.hibernate.sql.ast.produce.internal.SqlAstSelectDescriptorImpl;
 import org.hibernate.sql.ast.produce.metamodel.internal.LoadIdParameter;
 import org.hibernate.sql.ast.produce.metamodel.internal.SelectByEntityIdentifierBuilder;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.MetamodelSelectBuilder;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
@@ -230,7 +231,7 @@ public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> 
 			LockOptions lockOptions,
 			LoadQueryInfluencers queryInfluencers,
 			SessionFactoryImplementor sessionFactory) {
-		final SelectByEntityIdentifierBuilder selectBuilder = new SelectByEntityIdentifierBuilder(
+		final MetamodelSelectBuilder selectBuilder = new SelectByEntityIdentifierBuilder(
 				entityDescriptor.getFactory(),
 				entityDescriptor
 		);

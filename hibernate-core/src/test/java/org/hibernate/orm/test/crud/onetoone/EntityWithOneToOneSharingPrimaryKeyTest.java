@@ -50,13 +50,13 @@ public class EntityWithOneToOneSharingPrimaryKeyTest extends SessionFactoryBased
 
 		entity.setOther( other );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 
 				session -> {
 					session.save( other );
 					session.save( entity );} );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityWithOneToOneSharingPrimaryKey loaded = session.get(
 							EntityWithOneToOneSharingPrimaryKey.class,
@@ -69,7 +69,7 @@ public class EntityWithOneToOneSharingPrimaryKeyTest extends SessionFactoryBased
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final SimpleEntity loaded = session.get(
 							SimpleEntity.class,
@@ -79,7 +79,7 @@ public class EntityWithOneToOneSharingPrimaryKeyTest extends SessionFactoryBased
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final String value = session.createQuery(
 							"select e.name from EntityWithOneToOneSharingPrimaryKey e where e.other.id = 2",

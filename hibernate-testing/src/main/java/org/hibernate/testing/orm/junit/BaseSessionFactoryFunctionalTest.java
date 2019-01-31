@@ -6,6 +6,8 @@
  */
 package org.hibernate.testing.orm.junit;
 
+import java.util.function.Consumer;
+
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -13,12 +15,11 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 
 import org.junit.jupiter.api.AfterEach;
 
 import org.jboss.logging.Logger;
-
-import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
 
 /**
  * Template (GoF pattern) based abstract class for tests bridging the legacy
@@ -145,12 +146,18 @@ public abstract class BaseSessionFactoryFunctionalTest
 
 	protected void cleanupTestData() {
 		inTransaction(
-				sessionFactory(),
-				session -> {
-					getMetadata().getEntityHierarchies().forEach(
-							hierarchy -> session.createQuery( "delete from " + hierarchy.getRootType().getName() ).executeUpdate()
-					);
-				}
+				session ->
+						getMetadata().getEntityHierarchies().forEach(
+								hierarchy -> session.createQuery( "delete from " + hierarchy.getRootType().getName() )
+										.executeUpdate()
+						)
+
 		);
 	}
+
+	protected void inTransaction(Consumer<SessionImplementor> action) {
+		sessionFactoryScope().inTransaction( action );
+	}
+
+
 }

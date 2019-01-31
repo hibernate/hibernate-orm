@@ -41,7 +41,7 @@ public class EntityWithOneToManyCrudTest extends SessionFactoryBasedFunctionalTe
 
 	@AfterEach
 	public void tearDown() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					List<EntityWithOneToMany> results = session.createQuery( "from EntityWithOneToMany e" ).list();
 					results.forEach(
@@ -80,22 +80,22 @@ public class EntityWithOneToManyCrudTest extends SessionFactoryBasedFunctionalTe
 		entity.addOther( firstOther );
 		entity.addOther( secondOther );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.save( firstOther );
 				} );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.save( secondOther );
 				} );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.save( entity );
 				} );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					EntityWithOneToMany retrieved = session.get( EntityWithOneToMany.class, 1 );
 					assertThat( retrieved, notNullValue() );
@@ -145,22 +145,22 @@ public class EntityWithOneToManyCrudTest extends SessionFactoryBasedFunctionalTe
 		entity.addOther( firstOther );
 		entity.addOther( secondOther );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.save( firstOther );
 				} );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.save( secondOther );
 				} );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.save( entity );
 				} );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					EntityWithOneToMany retrieved = session.get( EntityWithOneToMany.class, 1 );
 					assertThat( retrieved, notNullValue() );
@@ -184,7 +184,7 @@ public class EntityWithOneToManyCrudTest extends SessionFactoryBasedFunctionalTe
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					EntityWithOneToMany retrieved = session.get( EntityWithOneToMany.class, 1 );
 					assertThat( retrieved, notNullValue() );

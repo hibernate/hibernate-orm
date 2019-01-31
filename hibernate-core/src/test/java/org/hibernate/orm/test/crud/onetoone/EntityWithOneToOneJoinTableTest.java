@@ -34,7 +34,7 @@ public class EntityWithOneToOneJoinTableTest extends SessionFactoryBasedFunction
 
 	@AfterEach
 	public void tearDown() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityWithOneToOneJoinTable loaded = session.get( EntityWithOneToOneJoinTable.class, 1 );
 					session.delete( loaded );
@@ -58,10 +58,10 @@ public class EntityWithOneToOneJoinTableTest extends SessionFactoryBasedFunction
 
 		entity.setOther( other );
 
-		sessionFactoryScope().inTransaction( session -> session.save( other ) );
-		sessionFactoryScope().inTransaction( session -> session.save( entity ) );
+		inTransaction( session -> session.save( other ) );
+		inTransaction( session -> session.save( entity ) );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityWithOneToOneJoinTable loaded = session.get( EntityWithOneToOneJoinTable.class, 1 );
 					assert loaded != null;
@@ -71,7 +71,7 @@ public class EntityWithOneToOneJoinTableTest extends SessionFactoryBasedFunction
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final SimpleEntity loaded = session.get( SimpleEntity.class, 2 );
 					assert loaded != null;
@@ -79,7 +79,7 @@ public class EntityWithOneToOneJoinTableTest extends SessionFactoryBasedFunction
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final String value = session.createQuery(
 							"select e.name from EntityWithOneToOneJoinTable e where e.other.id = 2",
@@ -105,7 +105,7 @@ public class EntityWithOneToOneJoinTableTest extends SessionFactoryBasedFunction
 
 		entity.setOther( other );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.save( other );
 					session.save( entity );
@@ -121,7 +121,7 @@ public class EntityWithOneToOneJoinTableTest extends SessionFactoryBasedFunction
 				null
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					EntityWithOneToOneJoinTable loaded = session.get( EntityWithOneToOneJoinTable.class, 1 );
 					session.save( anOther );
@@ -129,7 +129,7 @@ public class EntityWithOneToOneJoinTableTest extends SessionFactoryBasedFunction
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					EntityWithOneToOneJoinTable loaded = session.get( EntityWithOneToOneJoinTable.class, 1 );
 					SimpleEntity loadedOther = loaded.getOther();

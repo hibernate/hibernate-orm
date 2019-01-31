@@ -45,7 +45,7 @@ public class EntityWithOneToManyTest extends SessionFactoryBasedFunctionalTest {
 
 	@AfterEach
 	public void tearDown() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final User loaded = session.get(
 							User.class,
@@ -67,7 +67,7 @@ public class EntityWithOneToManyTest extends SessionFactoryBasedFunctionalTest {
 		user.addBoughtItem( firstItem );
 		user.addBoughtItem( secondItem );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.save( user );
 					session.save( firstItem );
@@ -75,7 +75,7 @@ public class EntityWithOneToManyTest extends SessionFactoryBasedFunctionalTest {
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					User retrieved = session.get( User.class, 1 );
 					assertThat( retrieved, notNullValue() );
@@ -102,13 +102,13 @@ public class EntityWithOneToManyTest extends SessionFactoryBasedFunctionalTest {
 	@Test
 	public void testSaveWithoutChildren() {
 		User user = new User( 1, "Fab" );
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.save( user );
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					User retrieved = session.get( User.class, 1 );
 					assertThat( retrieved, notNullValue() );

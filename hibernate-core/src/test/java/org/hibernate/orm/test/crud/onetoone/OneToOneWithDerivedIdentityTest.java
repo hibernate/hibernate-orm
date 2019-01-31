@@ -36,7 +36,7 @@ public class OneToOneWithDerivedIdentityTest extends SessionFactoryBasedFunction
 
 	@Test
 	public void testGet() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 
 					Person p = new Person();
@@ -50,7 +50,7 @@ public class OneToOneWithDerivedIdentityTest extends SessionFactoryBasedFunction
 
 				} );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					Person person = session.get( Person.class, PERSON_ID );
 					assertEquals( person.getName(), "Alfio" );

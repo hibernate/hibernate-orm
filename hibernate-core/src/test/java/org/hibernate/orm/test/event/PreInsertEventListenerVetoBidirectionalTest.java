@@ -56,7 +56,7 @@ public class PreInsertEventListenerVetoBidirectionalTest extends SessionFactoryB
 	@Test
 	@ExpectedException(value = EntityActionVetoException.class  )
 	public void testVeto() {
-		sessionFactoryScope().inTransaction( session -> {
+		inTransaction( session -> {
 			Parent parent = new Parent();
 			parent.setField1( "f1" );
 			parent.setfield2( "f2" );

@@ -85,7 +85,7 @@ public class OneToManyNonJoinTableSetTest extends SessionFactoryBasedFunctionalT
 
 	@Test
 	public void testOperations() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final Car car1 = new Car();
 					session.save( car1 );
@@ -98,7 +98,7 @@ public class OneToManyNonJoinTableSetTest extends SessionFactoryBasedFunctionalT
 		);
 
 		// Save without a car
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final Owner owner = new Owner();
 					session.save( owner );
@@ -107,7 +107,7 @@ public class OneToManyNonJoinTableSetTest extends SessionFactoryBasedFunctionalT
 		);
 
 		// ownerId1 has no cars
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final Owner owner1 = session.find( Owner.class, this.ownerId1 );
 					assertThat( owner1.getCars().isEmpty(), CoreMatchers.is( true ) );
@@ -115,7 +115,7 @@ public class OneToManyNonJoinTableSetTest extends SessionFactoryBasedFunctionalT
 		);
 
 		// Save ownerId2 with 1 car
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final Car car = session.find( Car.class, this.carId1 );
 
@@ -128,7 +128,7 @@ public class OneToManyNonJoinTableSetTest extends SessionFactoryBasedFunctionalT
 
 		// ownerId2 has carId1
 		// Save ownerId3 with 2 cars
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final Car car1 = session.find( Car.class, this.carId1 );
 					final Car car2 = session.find( Car.class, this.carId2 );
@@ -144,7 +144,7 @@ public class OneToManyNonJoinTableSetTest extends SessionFactoryBasedFunctionalT
 		// ownerId2 has no card
 		// ownerId3 has 2 cars (carId1, carId2)
 		System.out.println( "====" );
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final Owner owner2 = session.find( Owner.class, this.ownerId2 );
 					final Owner owner3 = session.find( Owner.class, this.ownerId3 );
@@ -157,7 +157,7 @@ public class OneToManyNonJoinTableSetTest extends SessionFactoryBasedFunctionalT
 		);
 
 		// Update ownerId1, add car to empty collection
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final Car car1 = session.find( Car.class, this.carId1 );
 					final Owner owner = session.find( Owner.class, this.ownerId1 );
@@ -169,7 +169,7 @@ public class OneToManyNonJoinTableSetTest extends SessionFactoryBasedFunctionalT
 		// ownerId1 has 1 car (carId1)
 		// ownerId2 has no cars
 		// ownerId3 has 1 car (carId2)
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final Owner owner1 = session.find( Owner.class, this.ownerId1 );
 					final Owner owner2 = session.find( Owner.class, this.ownerId2 );
@@ -181,7 +181,7 @@ public class OneToManyNonJoinTableSetTest extends SessionFactoryBasedFunctionalT
 		);
 
 		// Update owner, add car to non-empty collection
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final Car car1 = session.find( Car.class, this.carId1 );
 					final Owner owner = session.find( Owner.class, this.ownerId2 );
@@ -193,7 +193,7 @@ public class OneToManyNonJoinTableSetTest extends SessionFactoryBasedFunctionalT
 		// ownerId1 has no cars
 		// ownerId2 has 1 car
 		// ownerId3 has 1 car
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final Owner owner1 = session.find( Owner.class, this.ownerId1 );
 					final Owner owner2 = session.find( Owner.class, this.ownerId2 );
@@ -205,7 +205,7 @@ public class OneToManyNonJoinTableSetTest extends SessionFactoryBasedFunctionalT
 		);
 
 		// Test removing element from collection
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final Owner owner = session.find( Owner.class, this.ownerId2 );
 					owner.getCars().removeIf( car -> car.getId().equals( this.carId1 ) );
@@ -216,7 +216,7 @@ public class OneToManyNonJoinTableSetTest extends SessionFactoryBasedFunctionalT
 		// ownerId1 has no cars
 		// ownerId2 has no cars
 		// ownerId3 has 1 car
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final Owner owner1 = session.find( Owner.class, this.ownerId1 );
 					final Owner owner2 = session.find( Owner.class, this.ownerId2 );
@@ -228,7 +228,7 @@ public class OneToManyNonJoinTableSetTest extends SessionFactoryBasedFunctionalT
 		);
 
 		// Test setting collection to new collection
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final Owner owner = session.find( Owner.class, this.ownerId3 );
 					owner.setCars( new HashSet<>() );
@@ -239,7 +239,7 @@ public class OneToManyNonJoinTableSetTest extends SessionFactoryBasedFunctionalT
 		// ownerId1 has no cars
 		// ownerId2 has no cars
 		// ownerId3 has no cars
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final Owner owner1 = session.find( Owner.class, this.ownerId1 );
 					final Owner owner2 = session.find( Owner.class, this.ownerId2 );
@@ -251,7 +251,7 @@ public class OneToManyNonJoinTableSetTest extends SessionFactoryBasedFunctionalT
 		);
 
 		// Add new collection of elements to an entity with empty collection
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final Owner owner = session.find( Owner.class, this.ownerId1 );
 					final Car car1 = session.find( Car.class, this.carId1 );
@@ -269,7 +269,7 @@ public class OneToManyNonJoinTableSetTest extends SessionFactoryBasedFunctionalT
 		// ownerId1 has 2 cars (carId1, carId2)
 		// ownerId2 has no cars
 		// ownerId3 has no cars
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final Owner owner1 = session.find( Owner.class, this.ownerId1 );
 					final Owner owner2 = session.find( Owner.class, this.ownerId2 );

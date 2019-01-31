@@ -34,21 +34,21 @@ public class ColumnInsertableFalseTest extends SessionFactoryBasedFunctionalTest
 
 	@Test
 	public void testSavingAndUpdating() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					Price price = new Price( 1, "first", 12 );
 					session.save( price );
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					assertThat( session.get( Price.class, 1 ).getInitalPrice(), equalTo( 12 ) );
 					assertThat( session.get( Price.class, 1 ).getDescription(), nullValue() );
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					Price price = session.get( Price.class, 1 );
 					session.update( price );
@@ -57,7 +57,7 @@ public class ColumnInsertableFalseTest extends SessionFactoryBasedFunctionalTest
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					assertThat( session.get( Price.class, 1 ).getInitalPrice(), equalTo( 20 ) );
 					assertThat( session.get( Price.class, 1 ).getDescription(), nullValue() );

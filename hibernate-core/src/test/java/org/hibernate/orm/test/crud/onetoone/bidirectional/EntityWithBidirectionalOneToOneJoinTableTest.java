@@ -43,7 +43,7 @@ public class EntityWithBidirectionalOneToOneJoinTableTest extends SessionFactory
 
 	@BeforeEach
 	public void setUp() {
-		sessionFactoryScope().inTransaction( session -> {
+		inTransaction( session -> {
 			Parent parent = new Parent( 1, "Hibernate" );
 			Child child = new Child( 2, parent );
 			child.setName( "Acme" );
@@ -57,7 +57,7 @@ public class EntityWithBidirectionalOneToOneJoinTableTest extends SessionFactory
 
 	@AfterEach
 	public void tearDown() {
-		sessionFactoryScope().inTransaction( session -> {
+		inTransaction( session -> {
 			session.createQuery( "delete from Parent" ).executeUpdate();
 			session.createQuery( "delete from Child" ).executeUpdate();
 			session.createQuery( "delete from Child2" ).executeUpdate();
@@ -66,7 +66,7 @@ public class EntityWithBidirectionalOneToOneJoinTableTest extends SessionFactory
 
 	@Test
 	public void testGetParent() {
-		sessionFactoryScope().inTransaction( session -> {
+		inTransaction( session -> {
 			final Parent parent = session.get( Parent.class, 1 );
 			Child child = parent.getChild();
 			assertThat( child, CoreMatchers.notNullValue() );
@@ -92,7 +92,7 @@ public class EntityWithBidirectionalOneToOneJoinTableTest extends SessionFactory
 
 	@Test
 	public void testGetChild() {
-		sessionFactoryScope().inTransaction( session -> {
+		inTransaction( session -> {
 			final Child child = session.get( Child.class, 2 );
 			Parent parent = child.getParent();
 			assertThat( parent, CoreMatchers.notNullValue() );
@@ -122,7 +122,7 @@ public class EntityWithBidirectionalOneToOneJoinTableTest extends SessionFactory
 
 	@Test
 	public void testHqlSelectChild() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final String queryString = "SELECT c FROM Child c JOIN c.parent d WHERE d.id = :id";
 					final Child child = session.createQuery( queryString, Child.class )
@@ -139,7 +139,7 @@ public class EntityWithBidirectionalOneToOneJoinTableTest extends SessionFactory
 
 	@Test
 	public void testHqlSelectParent() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final Parent parent = session.createQuery(
 							"SELECT p FROM Parent p JOIN p.child WHERE p.id = :id",
@@ -160,7 +160,7 @@ public class EntityWithBidirectionalOneToOneJoinTableTest extends SessionFactory
 
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final Parent parent = session.createQuery(
 							"SELECT p FROM Parent p JOIN p.child WHERE p.id = :id",

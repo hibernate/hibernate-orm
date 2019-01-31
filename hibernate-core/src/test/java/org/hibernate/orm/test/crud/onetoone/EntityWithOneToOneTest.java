@@ -49,7 +49,7 @@ public class EntityWithOneToOneTest extends SessionFactoryBasedFunctionalTest {
 
 		entity.setOther( other );
 
-		sessionFactoryScope().inTransaction( session -> {
+		inTransaction( session -> {
 			session.save( other );
 			session.save( entity );
 		} );
@@ -57,14 +57,14 @@ public class EntityWithOneToOneTest extends SessionFactoryBasedFunctionalTest {
 
 	@AfterEach
 	public void tearDown() {
-		sessionFactoryScope().inTransaction( session -> {
+		inTransaction( session -> {
 			deleteAll();
 		} );
 	}
 
 	@Test
 	public void testGet() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityWithOneToOne loaded = session.get( EntityWithOneToOne.class, 1 );
 					assert loaded != null;
@@ -74,7 +74,7 @@ public class EntityWithOneToOneTest extends SessionFactoryBasedFunctionalTest {
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final SimpleEntity loaded = session.get( SimpleEntity.class, 2 );
 					assert loaded != null;
@@ -94,7 +94,7 @@ public class EntityWithOneToOneTest extends SessionFactoryBasedFunctionalTest {
 				null
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityWithOneToOne loaded = session.get( EntityWithOneToOne.class, 1 );
 					assert loaded != null;
@@ -107,7 +107,7 @@ public class EntityWithOneToOneTest extends SessionFactoryBasedFunctionalTest {
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityWithOneToOne loaded = session.get( EntityWithOneToOne.class, 1 );
 					assert loaded != null;
@@ -121,7 +121,7 @@ public class EntityWithOneToOneTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testQueryParentAttribute2() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final String value = session.createQuery(
 							"select e.name from EntityWithOneToOne e where e.id = 1",
@@ -134,7 +134,7 @@ public class EntityWithOneToOneTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testQueryParentAttribute3() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityWithOneToOne value = session.createQuery(
 							"select e from EntityWithOneToOne e where e.id = 1",
@@ -147,7 +147,7 @@ public class EntityWithOneToOneTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testQueryParentAttribute() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final String value = session.createQuery(
 							"select e.name from EntityWithOneToOne e where e.other.id = 2",
@@ -160,7 +160,7 @@ public class EntityWithOneToOneTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testQueryParent() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityWithOneToOne value = session.createQuery(
 							"select e from EntityWithOneToOne e where e.other.id = 2",
@@ -172,7 +172,7 @@ public class EntityWithOneToOneTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	private void deleteAll() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityWithOneToOne loaded = session.get( EntityWithOneToOne.class, 1 );
 					assert loaded != null;
@@ -182,7 +182,7 @@ public class EntityWithOneToOneTest extends SessionFactoryBasedFunctionalTest {
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityWithOneToOne notfound = session.find( EntityWithOneToOne.class, 1 );
 					assertThat( notfound, CoreMatchers.nullValue() );

@@ -40,7 +40,7 @@ public class NamedHqlQueriesTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testQueryWithoutParameters() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					List<VideoGame> results = session.createNamedQuery( "videogames" ).list();
 					assertThat( results, containsInAnyOrder( GOD_OF_WAR, THE_LAST_OF_US ) );
@@ -49,7 +49,7 @@ public class NamedHqlQueriesTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testQueryWithSingleParameters() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					List<VideoGame> results = session.createNamedQuery( "title" )
 							.setParameter("title", GOD_OF_WAR.getTitle() )
@@ -60,7 +60,7 @@ public class NamedHqlQueriesTest extends SessionFactoryBasedFunctionalTest {
 
 	@BeforeEach
 	public void setUp() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.save( GOD_OF_WAR );
 					session.save( THE_LAST_OF_US );
@@ -69,7 +69,7 @@ public class NamedHqlQueriesTest extends SessionFactoryBasedFunctionalTest {
 
 	@AfterEach
 	public void tearDown() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.createQuery( "from VideoGame vg" )
 							.list()

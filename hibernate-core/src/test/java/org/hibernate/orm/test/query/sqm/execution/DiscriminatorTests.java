@@ -37,7 +37,7 @@ public class DiscriminatorTests extends BaseSessionFactoryFunctionalTest {
 
 	@BeforeEach
 	public void setUpTestData() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.save( new ForeignVendor( 1, "ForeignVendor", "Vendor, Inc." ) );
 					session.save( new DomesticVendor( 2, "DomesticVendor", "Vendor, Inc." ) );
@@ -47,7 +47,7 @@ public class DiscriminatorTests extends BaseSessionFactoryFunctionalTest {
 
 	@AfterEach
 	public void cleanUpTestData() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> session.createQuery( "select v from Vendor v", Vendor.class ).stream().forEach( session::delete )
 		);
 	}
@@ -55,7 +55,7 @@ public class DiscriminatorTests extends BaseSessionFactoryFunctionalTest {
 	@Test
 	@FailureExpected( "Discriminator mappings not yet implemented" )
 	public void testSelection() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final QueryImplementor query = session.createQuery( "select type( v ) from Vendor v" );
 					final List list = query.list();

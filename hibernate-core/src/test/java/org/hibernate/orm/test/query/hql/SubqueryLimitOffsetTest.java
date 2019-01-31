@@ -33,7 +33,7 @@ public class SubqueryLimitOffsetTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testSubqueryLimitOffset() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					List results = session.createQuery(
 							"select o from SimpleEntity o where o.someString = ( select oSub.someString from SimpleEntity oSub order by oSub.someString limit 1 )" )
@@ -44,7 +44,7 @@ public class SubqueryLimitOffsetTest extends SessionFactoryBasedFunctionalTest {
 
 	@BeforeEach
 	public void setUp() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					SimpleEntity entity = new SimpleEntity(
 							1,
@@ -71,7 +71,7 @@ public class SubqueryLimitOffsetTest extends SessionFactoryBasedFunctionalTest {
 
 	@AfterEach
 	public void tearDown() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.createQuery( "from SimpleEntity e" )
 							.list()

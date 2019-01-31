@@ -63,7 +63,7 @@ public class C3P0DefaultIsolationLevelTest extends SessionFactoryBasedFunctional
 
 	@Test
 	public void testStoredProcedureOutParameter() throws SQLException {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					Person person = new Person();
 					person.id = 1L;

@@ -35,7 +35,7 @@ public class EmbeddableAsParameterTest extends SessionFactoryBasedFunctionalTest
 
 	@Test
 	public void testAsParameterInwhereClause() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					List results = session.createQuery( "select p from Person p where p.name = :name" ).
 							setParameter( "name", new Name( "Fab", "Fab" ) ).list();
@@ -45,7 +45,7 @@ public class EmbeddableAsParameterTest extends SessionFactoryBasedFunctionalTest
 
 	@Test
 	public void testAsParameterInwhereClause2() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					List results = session.createQuery( "select p from Person p where p.name = :name or p.name = :name " ).
 							setParameter( "name", new Name( "Fab", "Fab" ) ).list();
@@ -55,7 +55,7 @@ public class EmbeddableAsParameterTest extends SessionFactoryBasedFunctionalTest
 
 	@BeforeEach
 	public void setUp() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					Person person = new Person(
 							1,
@@ -69,7 +69,7 @@ public class EmbeddableAsParameterTest extends SessionFactoryBasedFunctionalTest
 
 	@AfterEach
 	public void tearDown() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.createQuery( "from Person p" )
 							.list()

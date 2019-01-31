@@ -46,7 +46,7 @@ public class OneToManyListInverseSideTest extends SessionFactoryBasedFunctionalT
 
 	@Test
 	public void testOperations() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					Child child = new Child( "Leonardo" );
 					Child child2 = new Child( "Alessandro" );
@@ -60,28 +60,28 @@ public class OneToManyListInverseSideTest extends SessionFactoryBasedFunctionalT
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					Parent parent = session.get( Parent.class, parentId );
 					assertThat( parent.getChildren().size(), is( 2 ) );
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					Parent parent = session.get( Parent.class, parentId );
 					parent.getChildren().remove( 0 );
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					Parent parent = session.get( Parent.class, parentId );
 					assertThat( parent.getChildren().size(), is( 1 ) );
 				}
 		);
 //
-//		sessionFactoryScope().inTransaction(
+//		inTransaction(
 //				session -> {
 //					Child child = new Child( "Veronica" );
 //					session.save( child );

@@ -45,12 +45,12 @@ public class EntityWithManyToOneSelfReferenceTest extends SessionFactoryBasedFun
 				entity1
 		);
 
-		sessionFactoryScope().inTransaction( session -> {
+		inTransaction( session -> {
 			session.save( entity1 );
 			session.save( entity2 );
 		} );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityWithManyToOneSelfReference loaded = session.get(
 							EntityWithManyToOneSelfReference.class,
@@ -63,7 +63,7 @@ public class EntityWithManyToOneSelfReferenceTest extends SessionFactoryBasedFun
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityWithManyToOneSelfReference loaded = session.get(
 							EntityWithManyToOneSelfReference.class,
@@ -75,7 +75,7 @@ public class EntityWithManyToOneSelfReferenceTest extends SessionFactoryBasedFun
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final List<EntityWithManyToOneSelfReference> list = session.byMultipleIds(
 							EntityWithManyToOneSelfReference.class )
@@ -87,7 +87,7 @@ public class EntityWithManyToOneSelfReferenceTest extends SessionFactoryBasedFun
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final List<EntityWithManyToOneSelfReference> list = session.byMultipleIds(
 							EntityWithManyToOneSelfReference.class )
@@ -102,7 +102,7 @@ public class EntityWithManyToOneSelfReferenceTest extends SessionFactoryBasedFun
 		);
 
 		// todo (6.0) : the restriction here uses the wrong table alias...
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final String value = session.createQuery(
 							"select e.name from EntityWithManyToOneSelfReference e where e.other.name = 'first'",
@@ -112,7 +112,7 @@ public class EntityWithManyToOneSelfReferenceTest extends SessionFactoryBasedFun
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityWithManyToOneSelfReference queryResult = session.createQuery(
 							"select e from EntityWithManyToOneSelfReference e where e.other.name = 'first'",

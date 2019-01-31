@@ -8,6 +8,7 @@ package org.hibernate.envers.test;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.hibernate.Metamodel;
 import org.hibernate.Session;
@@ -16,6 +17,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.boot.AuditService;
 import org.junit.jupiter.api.Tag;
@@ -119,5 +121,9 @@ public class EnversSessionFactoryBasedFunctionalTest
 		for ( Class<?> annotatedClass : getAnnotatedClasses() ) {
 			metadataSources.addAnnotatedClass( annotatedClass );
 		}
+	}
+
+	protected void inTransaction(Consumer<SessionImplementor> action){
+		sessionFactoryScope().inTransaction( action );
 	}
 }

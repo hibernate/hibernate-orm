@@ -36,7 +36,7 @@ public class EmbeddableCallbackTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void test() {
-		sessionFactoryScope().inTransaction( session -> {
+		inTransaction( session -> {
 			Employee employee = new Employee();
 			employee.details = new EmployeeDetails();
 			employee.id = 1;
@@ -44,7 +44,7 @@ public class EmbeddableCallbackTest extends SessionFactoryBasedFunctionalTest {
 			session.persist( employee );
 		} );
 
-		sessionFactoryScope().inTransaction( session -> {
+		inTransaction( session -> {
 			Employee employee = session.find( Employee.class, 1 );
 
 			assertEquals( "Vlad", employee.name );
@@ -57,14 +57,14 @@ public class EmbeddableCallbackTest extends SessionFactoryBasedFunctionalTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-13110")
 	public void testNullEmbeddable() {
-		sessionFactoryScope().inTransaction( session -> {
+		inTransaction( session -> {
 			Employee employee = new Employee();
 			employee.id = 1;
 
 			session.persist( employee );
 		} );
 
-		sessionFactoryScope().inTransaction( session -> {
+		inTransaction( session -> {
 			Employee employee = session.find( Employee.class, 1 );
 
 			assertEquals( "Vlad", employee.name );

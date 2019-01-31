@@ -33,7 +33,7 @@ public class SimpleNestedFunctionsTest extends SessionFactoryBasedFunctionalTest
 
 	@Test
 	public void testSubstrInsideConcat() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					List<Object> results = session.createQuery(
 							"select concat('111', concat('222222', '1')) from SimpleEntity s where s.id = :id" )
@@ -46,7 +46,7 @@ public class SimpleNestedFunctionsTest extends SessionFactoryBasedFunctionalTest
 
 	@BeforeEach
 	public void setUp() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					SimpleEntity entity = new SimpleEntity(
 							1,
@@ -73,7 +73,7 @@ public class SimpleNestedFunctionsTest extends SessionFactoryBasedFunctionalTest
 
 	@AfterEach
 	public void tearDown() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.createQuery( "from SimpleEntity e" )
 							.list()

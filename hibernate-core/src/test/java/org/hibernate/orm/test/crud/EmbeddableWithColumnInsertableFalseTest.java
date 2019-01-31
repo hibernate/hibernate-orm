@@ -37,7 +37,7 @@ public class EmbeddableWithColumnInsertableFalseTest
 
 	@BeforeEach
 	public void setUp() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					Name name = new Name( "Fabiana", "Fab" );
 					Person person = new Person( 1, name, 33 );
@@ -47,7 +47,7 @@ public class EmbeddableWithColumnInsertableFalseTest
 
 	@AfterEach
 	public void tearDown() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.createQuery( "from Person p" )
 							.list()
@@ -57,7 +57,7 @@ public class EmbeddableWithColumnInsertableFalseTest
 
 	@Test
 	public void testSaving() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					Person person = session.get( Person.class, 1 );
 					assertThat( person.getName().getSecondName(), nullValue() );
@@ -67,14 +67,14 @@ public class EmbeddableWithColumnInsertableFalseTest
 
 	@Test
 	public void testUpdating() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					Person person = session.get( Person.class, 1 );
 					assertThat( person.getName().getSecondName(), nullValue() );
 					assertThat( person.getName().getFirstName(), is( "Fabiana" ) );
 				} );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					Person person = session.get( Person.class, 1 );
 					person.setAge( 34 );
@@ -83,7 +83,7 @@ public class EmbeddableWithColumnInsertableFalseTest
 					name.setFirstName( "Fabi" );
 				} );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					Person person = session.get( Person.class, 1 );
 					Name name = person.getName();

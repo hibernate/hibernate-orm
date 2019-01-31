@@ -55,7 +55,7 @@ public class EntityWithLazyOneToOneTest extends SessionFactoryBasedFunctionalTes
 
 		entity.setOther( other );
 
-		sessionFactoryScope().inTransaction( session -> {
+		inTransaction( session -> {
 			session.save( other );
 			session.save( entity );
 		} );
@@ -63,14 +63,14 @@ public class EntityWithLazyOneToOneTest extends SessionFactoryBasedFunctionalTes
 
 	@AfterEach
 	public void tearDown() {
-		sessionFactoryScope().inTransaction( session -> {
+		inTransaction( session -> {
 			deleteAll();
 		} );
 	}
 
 	@Test
 	public void testGet() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityWithLazyOneToOne loaded = session.get( EntityWithLazyOneToOne.class, 1 );
 					assert loaded != null;
@@ -98,7 +98,7 @@ public class EntityWithLazyOneToOneTest extends SessionFactoryBasedFunctionalTes
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final SimpleEntity loaded = session.get( SimpleEntity.class, 2 );
 					assert loaded != null;
@@ -110,7 +110,7 @@ public class EntityWithLazyOneToOneTest extends SessionFactoryBasedFunctionalTes
 	@Test
 	public void testHqlSelect() {
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final String value = session.createQuery(
 							"select e.name from EntityWithLazyOneToOne e where e.other.id = 2",
@@ -123,7 +123,7 @@ public class EntityWithLazyOneToOneTest extends SessionFactoryBasedFunctionalTes
 
 	private void deleteAll() {
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityWithLazyOneToOne loaded = session.get( EntityWithLazyOneToOne.class, 1 );
 					assert loaded != null;
@@ -132,14 +132,14 @@ public class EntityWithLazyOneToOneTest extends SessionFactoryBasedFunctionalTes
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityWithLazyOneToOne notfound = session.find( EntityWithLazyOneToOne.class, 1 );
 					assertThat( notfound, CoreMatchers.nullValue() );
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final SimpleEntity simpleEntity = session.find( SimpleEntity.class, 2 );
 					assertThat( simpleEntity, notNullValue() );

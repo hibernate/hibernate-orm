@@ -30,7 +30,7 @@ public class EntityOfCompositesCrudTest extends SessionFactoryBasedFunctionalTes
 
 	@Test
 	public void testOperations() {
-		sessionFactoryScope().inTransaction( session -> session.createQuery( "delete EntityOfComposites" ).executeUpdate() );
+		inTransaction( session -> session.createQuery( "delete EntityOfComposites" ).executeUpdate() );
 
 		final EntityOfComposites entity = new EntityOfComposites(
 				1,
@@ -46,21 +46,21 @@ public class EntityOfCompositesCrudTest extends SessionFactoryBasedFunctionalTes
 				)
 		);
 
-		sessionFactoryScope().inTransaction( session -> session.save( entity ) );
-		sessionFactoryScope().inTransaction(
+		inTransaction( session -> session.save( entity ) );
+		inTransaction(
 				session -> {
 					final String value = session.createQuery( "select s.component.basicString from EntityOfComposites s", String.class ).uniqueResult();
 					assert "the string".equals( value );
 				}
 		);
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityOfComposites loaded = session.get( EntityOfComposites.class, 1 );
 					assert loaded != null;
 					assert "the string".equals( loaded.getComponent().getBasicString() );
 				}
 		);
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final List<EntityOfComposites> list = session.byMultipleIds( EntityOfComposites.class )
 							.multiLoad( 1, 2 );
@@ -71,7 +71,7 @@ public class EntityOfCompositesCrudTest extends SessionFactoryBasedFunctionalTes
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.delete( session.find( EntityOfComposites.class, 1 ) );
 				}

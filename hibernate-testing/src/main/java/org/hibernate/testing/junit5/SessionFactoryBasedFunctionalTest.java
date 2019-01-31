@@ -7,6 +7,7 @@
 package org.hibernate.testing.junit5;
 
 import java.util.EnumSet;
+import java.util.function.Consumer;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
@@ -16,6 +17,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.Action;
@@ -26,8 +28,6 @@ import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.junit.jupiter.api.AfterEach;
 
 import org.jboss.logging.Logger;
-
-import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
 
 /**
  * @author Steve Ebersole
@@ -150,12 +150,20 @@ public abstract class SessionFactoryBasedFunctionalTest
 
 	protected void cleanupTestData() {
 		inTransaction(
-				sessionFactory(),
-				session -> {
-					getMetadata().getEntityHierarchies().forEach(
-							hierarchy -> session.createQuery( "delete from " + hierarchy.getRootType().getName() ).executeUpdate()
-					);
-				}
+				session ->
+						getMetadata().getEntityHierarchies().forEach(
+								hierarchy -> session.createQuery( "delete from " + hierarchy.getRootType().getName() )
+										.executeUpdate()
+						)
+
 		);
+	}
+
+	protected void inTransaction(Consumer<SessionImplementor> action) {
+		sessionFactoryScope().inTransaction( action );
+	}
+
+	protected void inSession(Consumer<SessionImplementor> action) {
+		sessionFactoryScope().inSession( action );
 	}
 }

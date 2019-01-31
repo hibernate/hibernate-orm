@@ -69,7 +69,7 @@ public class SessionFactoryScope implements SessionFactoryAccess {
 		inTransaction( getSessionFactory(), action );
 	}
 
-	public void inSession(SessionFactoryImplementor sfi, Consumer<SessionImplementor> action) {
+	private void inSession(SessionFactoryImplementor sfi, Consumer<SessionImplementor> action) {
 		log.trace( "##inSession(SF,action)" );
 
 		try (SessionImplementor session = (SessionImplementor) sfi.openSession()) {
@@ -82,7 +82,7 @@ public class SessionFactoryScope implements SessionFactoryAccess {
 		}
 	}
 
-	public void inTransaction(SessionFactoryImplementor factory, Consumer<SessionImplementor> action) {
+	private void inTransaction(SessionFactoryImplementor factory, Consumer<SessionImplementor> action) {
 		log.trace( "#inTransaction(factory, action)");
 
 
@@ -96,7 +96,7 @@ public class SessionFactoryScope implements SessionFactoryAccess {
 		}
 	}
 
-	public void inTransaction(SessionImplementor session, Consumer<SessionImplementor> action) {
+	private void inTransaction(SessionImplementor session, Consumer<SessionImplementor> action) {
 		log.trace( "inTransaction(session,action)" );
 
 		final Transaction txn = session.beginTransaction();

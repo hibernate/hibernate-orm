@@ -34,7 +34,7 @@ public class SimpleSelectionTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testFullyQualifiedEntityNameRoot() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					List<SimpleEntity> results = session.createQuery(
 							"select s.someString from org.hibernate.testing.orm.domain.gambit.SimpleEntity s",
@@ -47,7 +47,7 @@ public class SimpleSelectionTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testFullyQualifiedFieldName() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					List<SimpleEntity> results = session.createQuery(
 							"select s.someString from SimpleEntity s where s.someString != org.hibernate.orm.test.query.hql.SimpleSelectionTest.STATIC_FIELD",
@@ -60,7 +60,7 @@ public class SimpleSelectionTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testSubstrInsideConcat() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					List<Object> results = session.createQuery(
 							"select s.someString from SimpleEntity s where s.id = :id" )
@@ -73,7 +73,7 @@ public class SimpleSelectionTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testLengthFunctionPredicate() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					List<Object> results = session.createQuery(
 							"select s.someString from SimpleEntity s where length(s.someString) > :p1 ORDER BY s.someString" )
@@ -86,7 +86,7 @@ public class SimpleSelectionTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testLengthFunctionSelection() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					List<Object> results = session.createQuery(
 							"select length(s.someString) from SimpleEntity s" )
@@ -98,7 +98,7 @@ public class SimpleSelectionTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testSubstringFunctionPredicate() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					List<Object> results = session.createQuery(
 							"select s.someString from SimpleEntity s where substring(s.someString, 0, 1) = :p1" )
@@ -111,7 +111,7 @@ public class SimpleSelectionTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testSubstringFunctionSelection() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					List<Object> results = session.createQuery(
 							"select substring(s.someString, 0, 1) from SimpleEntity s ORDER BY s.someString" )
@@ -123,7 +123,7 @@ public class SimpleSelectionTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testSelectAnIntegerConstant() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					List<Object> results = session.createQuery(
 							"select 1 from SimpleEntity s where s.id = :id" )
@@ -136,7 +136,7 @@ public class SimpleSelectionTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testSelectACharConstant() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					List<Object> results = session.createQuery(
 							"select 'a' from SimpleEntity s where s.id = :id" )
@@ -149,7 +149,7 @@ public class SimpleSelectionTest extends SessionFactoryBasedFunctionalTest {
 
 	@BeforeEach
 	public void setUp() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					SimpleEntity entity = new SimpleEntity(
 							1,
@@ -176,7 +176,7 @@ public class SimpleSelectionTest extends SessionFactoryBasedFunctionalTest {
 
 	@AfterEach
 	public void tearDown() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.createQuery( "from SimpleEntity e" )
 							.list()

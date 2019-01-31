@@ -33,7 +33,7 @@ public class DynamicMapComponentNotAuditedTest extends EnversSessionFactoryBased
 	@DynamicBeforeAll
 	public void prepareAuditData() {
 		// Revision 1
-		sessionFactoryScope().inTransaction( session -> {
+		inTransaction( session -> {
 			DynamicMapComponentNotAuditedEntity entity = new DynamicMapComponentNotAuditedEntity( 1L, "static field value" );
 			entity.getCustomFields().put( "prop1", 13 );
 			entity.getCustomFields().put( "prop2", 0.1f );
@@ -42,21 +42,21 @@ public class DynamicMapComponentNotAuditedTest extends EnversSessionFactoryBased
 		} );
 
 		// No revision
-		sessionFactoryScope().inTransaction( session -> {
+		inTransaction( session -> {
 			DynamicMapComponentNotAuditedEntity entity = session.get( DynamicMapComponentNotAuditedEntity.class, entityId );
 			entity.getCustomFields().put( "prop1", 0 );
 			session.update( entity );
 		} );
 
 		// Revision 2
-		sessionFactoryScope().inTransaction( session -> {
+		inTransaction( session -> {
 			DynamicMapComponentNotAuditedEntity entity = session.get( DynamicMapComponentNotAuditedEntity.class, entityId );
 			entity.setNote( "updated note" );
 			session.update( entity );
 		} );
 
 		// Revision 3
-		sessionFactoryScope().inTransaction( session -> {
+		inTransaction( session -> {
 			session.delete( session.load( DynamicMapComponentNotAuditedEntity.class, entityId ) );
 		} );
 	}

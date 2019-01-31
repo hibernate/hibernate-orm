@@ -31,7 +31,7 @@ public class SimpleEntityCrudTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testEntitySaving() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> session.createQuery( "delete SimpleEntity" ).executeUpdate()
 		);
 
@@ -39,21 +39,21 @@ public class SimpleEntityCrudTest extends SessionFactoryBasedFunctionalTest {
 		entity.setId( 1 );
 		entity.setSomeString( "hi" );
 		entity.setSomeInteger( 2 );
-		sessionFactoryScope().inTransaction( session -> session.save( entity ) );
-		sessionFactoryScope().inTransaction(
+		inTransaction( session -> session.save( entity ) );
+		inTransaction(
 				session -> {
 					final String value = session.createQuery( "select s.someString from SimpleEntity s", String.class ).uniqueResult();
 					assert "hi".equals( value );
 				}
 		);
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final SimpleEntity loaded = session.get( SimpleEntity.class, 1 );
 					assert loaded != null;
 					assert "hi".equals( loaded.getSomeString() );
 				}
 		);
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class )
 							.multiLoad( 1, 2 );
@@ -63,7 +63,7 @@ public class SimpleEntityCrudTest extends SessionFactoryBasedFunctionalTest {
 					assert "hi".equals( loaded.getSomeString() );
 				}
 		);
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final SimpleEntity loaded = session.bySimpleNaturalId( SimpleEntity.class )
 							.load( 2 );
@@ -80,9 +80,9 @@ public class SimpleEntityCrudTest extends SessionFactoryBasedFunctionalTest {
 		entity.setSomeString( "hello world" );
 		entity.setSomeInteger( 5 );
 		entity.setSomeLong( 10L );
-		sessionFactoryScope().inTransaction( session -> session.save( entity ) );
+		inTransaction( session -> session.save( entity ) );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final SimpleEntity loaded = session.get( SimpleEntity.class, 2 );
 					assertThat( loaded, notNullValue() );
@@ -91,14 +91,14 @@ public class SimpleEntityCrudTest extends SessionFactoryBasedFunctionalTest {
 				}
 		);
 
-		sessionFactoryScope().inTransaction( session -> {
+		inTransaction( session -> {
 			final SimpleEntity e = session.find( SimpleEntity.class, entity.getId() );
 			e.setSomeLong( 25L );
 			e.setSomeString( "test" );
 			session.merge( e );
 		} );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final SimpleEntity loaded = session.get( SimpleEntity.class, 2 );
 					assertThat( loaded, notNullValue() );
@@ -115,9 +115,9 @@ public class SimpleEntityCrudTest extends SessionFactoryBasedFunctionalTest {
 		entity.setSomeString( "hello world" );
 		entity.setSomeInteger( 5 );
 		entity.setSomeLong( 10L );
-		sessionFactoryScope().inTransaction( session -> session.save( entity ) );
+		inTransaction( session -> session.save( entity ) );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final SimpleEntity loaded = session.get( SimpleEntity.class, 3 );
 					assertThat( loaded, notNullValue() );
@@ -126,11 +126,11 @@ public class SimpleEntityCrudTest extends SessionFactoryBasedFunctionalTest {
 				}
 		);
 
-		sessionFactoryScope().inTransaction( session -> {
+		inTransaction( session -> {
 			session.remove( session.find( SimpleEntity.class, entity.getId() ) );
 		} );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final SimpleEntity loaded = session.get( SimpleEntity.class, 3 );
 					assertThat( loaded, nullValue() );

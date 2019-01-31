@@ -33,7 +33,7 @@ import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
 	@BeforeAll
 	public void setUpTestData() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityOfBasics entityOfBasics = new EntityOfBasics();
 					entityOfBasics.setId( 1 );
@@ -61,7 +61,7 @@ public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
 
 	@AfterAll
 	public void cleanUpTestData() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.createQuery( "delete EntityOfBasics" ).executeUpdate();
 					session.createQuery( "delete EntityWithManyToOneJoinTable" ).executeUpdate();
@@ -72,7 +72,7 @@ public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testRootEntitySelection() {
-		sessionFactoryScope().inSession(
+		inSession(
 				session -> {
 					final List result = session.createQuery( "select e from EntityOfBasics e" ).list();
 					assertThat( result, hasSize( 1 ) );
@@ -94,7 +94,7 @@ public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testRootEntityAttributeSelection() {
-		sessionFactoryScope().inSession(
+		inSession(
 				session -> {
 					final List result = session.createQuery( "select e.id from EntityOfBasics e" ).list();
 					assertThat( result, hasSize( 1 ) );
@@ -111,7 +111,7 @@ public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testRootEntityAttributeReference() {
-		sessionFactoryScope().inSession(
+		inSession(
 				session -> {
 					final List result = session.createQuery( "select e from EntityOfBasics e where id = 1" ).list();
 					assertThat( result, hasSize( 1 ) );
@@ -133,7 +133,7 @@ public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testRootEntityManyToOneSelection() {
-		sessionFactoryScope().inSession(
+		inSession(
 				session -> {
 					final List result = session.createQuery( "select e.other from EntityWithManyToOneJoinTable e" ).list();
 					assertThat( result, hasSize( 1 ) );
@@ -148,7 +148,7 @@ public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testRootEntityManyToOneAttributeReference() {
-		sessionFactoryScope().inSession(
+		inSession(
 				session -> {
 					final List result = session.createQuery( "select e.other from EntityWithManyToOneJoinTable e" ).list();
 					assertThat( result, hasSize( 1 ) );
@@ -163,7 +163,7 @@ public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testJoinedSubclassRoot() {
-		sessionFactoryScope().inSession(
+		inSession(
 				session -> session.createQuery( "select p from Payment p" ).list()
 		);
 	}

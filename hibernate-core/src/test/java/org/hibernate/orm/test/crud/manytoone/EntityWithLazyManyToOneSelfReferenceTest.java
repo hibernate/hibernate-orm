@@ -46,7 +46,7 @@ public class EntityWithLazyManyToOneSelfReferenceTest extends SessionFactoryBase
 				entity1
 		);
 
-		sessionFactoryScope().inTransaction( session -> {
+		inTransaction( session -> {
 			session.save( entity1 );
 			session.save( entity2 );
 		} );
@@ -54,7 +54,7 @@ public class EntityWithLazyManyToOneSelfReferenceTest extends SessionFactoryBase
 
 	@AfterEach
 	public void tearDown() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityWithLazyManyToOneSelfReference loaded = session.get(
 							EntityWithLazyManyToOneSelfReference.class,
@@ -68,7 +68,7 @@ public class EntityWithLazyManyToOneSelfReferenceTest extends SessionFactoryBase
 
 	@Test
 	public void testGetEntityWithNoAssociation() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityWithLazyManyToOneSelfReference loaded = session.get(
 							EntityWithLazyManyToOneSelfReference.class,
@@ -83,7 +83,7 @@ public class EntityWithLazyManyToOneSelfReferenceTest extends SessionFactoryBase
 
 	@Test
 	public void testGetEntityWithTheAssociation() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityWithLazyManyToOneSelfReference loaded = session.get(
 							EntityWithLazyManyToOneSelfReference.class,
@@ -99,7 +99,7 @@ public class EntityWithLazyManyToOneSelfReferenceTest extends SessionFactoryBase
 
 	@Test
 	public void testByMultipleIds() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final List<EntityWithLazyManyToOneSelfReference> list = session.byMultipleIds(
 							EntityWithLazyManyToOneSelfReference.class )
@@ -111,7 +111,7 @@ public class EntityWithLazyManyToOneSelfReferenceTest extends SessionFactoryBase
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final List<EntityWithLazyManyToOneSelfReference> list = session.byMultipleIds(
 							EntityWithLazyManyToOneSelfReference.class )
@@ -129,7 +129,7 @@ public class EntityWithLazyManyToOneSelfReferenceTest extends SessionFactoryBase
 	@Test
 	public void testHqlSelect() {
 		// todo (6.0) : the restriction here uses the wrong table alias...
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final String value = session.createQuery(
 							"select e.name from EntityWithLazyManyToOneSelfReference e where e.other.name = 'first'",

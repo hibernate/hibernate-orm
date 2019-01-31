@@ -46,7 +46,7 @@ public class DynamicInstantiationSmokeTests extends BaseSqmUnitTest {
 
 	@BeforeEach
 	public void createData() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityOfBasics entity = new EntityOfBasics();
 					entity.setId( 1 );
@@ -60,7 +60,7 @@ public class DynamicInstantiationSmokeTests extends BaseSqmUnitTest {
 
 	@AfterEach
 	public void dropData() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> session.doWork(
 						connection -> {
 							final Statement statement = connection.createStatement();
@@ -81,7 +81,7 @@ public class DynamicInstantiationSmokeTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testSimpleDynamicInstantiation() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final List results = session.createQuery(
 							"select new org.hibernate.orm.test.query.sqm.produce.domain.ConstructedLookupListItem( e.id, e.theString ) from EntityOfBasics e"
@@ -97,7 +97,7 @@ public class DynamicInstantiationSmokeTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testSimpleInjectedInstantiation() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> session.createQuery(
 						"select new org.hibernate.orm.test.query.sqm.produce.domain.InjectedLookupListItem( e.id as id, e.theString as displayValue ) from EntityOfBasics e"
 				).list()
@@ -106,7 +106,7 @@ public class DynamicInstantiationSmokeTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testMultipleDynamicInstantiations() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final List results = session.createQuery(
 							"select new org.hibernate.orm.test.query.sqm.produce.domain.ConstructedLookupListItem( e.id, e.theString ), " +
@@ -137,7 +137,7 @@ public class DynamicInstantiationSmokeTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testMixedAttributeAndDynamicInstantiation() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final List results = session.createQuery(
 							"select new org.hibernate.orm.test.query.sqm.produce.domain.ConstructedLookupListItem( e.id, e.theString ), e.theInteger from EntityOfBasics e"
@@ -160,7 +160,7 @@ public class DynamicInstantiationSmokeTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testSimpleDynamicListInstantiation() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final List results = session.createQuery(
 							"select new list( e.id, e.theString ) from EntityOfBasics e"
@@ -178,7 +178,7 @@ public class DynamicInstantiationSmokeTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testSimpleDynamicMapInstantiation() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final List results = session.createQuery(
 							"select new map( e.id as id, e.theString as ts ) from EntityOfBasics e"
@@ -195,7 +195,7 @@ public class DynamicInstantiationSmokeTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testNestedDynamicInstantiation() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final List results = session.createQuery(
 							"select new org.hibernate.orm.test.query.sqm.produce.domain.NestedCtorLookupListItem(" +
@@ -223,7 +223,7 @@ public class DynamicInstantiationSmokeTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testNestedMixedDynamicInstantiation() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final List results = session.createQuery(
 							"select new org.hibernate.orm.test.query.sqm.produce.domain.NestedCtorLookupListItem(" +

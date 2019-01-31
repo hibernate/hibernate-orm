@@ -35,7 +35,7 @@ public class LimitOffsetClauseTests extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testParameterOffset() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					List results = session.createQuery( "select o from SimpleEntity o offset :param" ).setParameter(
 							"param",
@@ -47,7 +47,7 @@ public class LimitOffsetClauseTests extends SessionFactoryBasedFunctionalTest {
 
 	@BeforeEach
 	public void setUp() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					SimpleEntity entity = new SimpleEntity(
 							1,
@@ -74,7 +74,7 @@ public class LimitOffsetClauseTests extends SessionFactoryBasedFunctionalTest {
 
 	@AfterEach
 	public void tearDown() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.createQuery( "from SimpleEntity e" )
 							.list()

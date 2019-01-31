@@ -33,7 +33,7 @@ public class SimpleLimitTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testSimpleLimit() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					List results = session.createQuery( "select o from SimpleEntity o limit 1" ).list();
 					assertThat( results.size(), is( 1 ) );
@@ -42,7 +42,7 @@ public class SimpleLimitTest extends SessionFactoryBasedFunctionalTest {
 
 	@BeforeEach
 	public void setUp() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					SimpleEntity entity = new SimpleEntity(
 							1,
@@ -69,7 +69,7 @@ public class SimpleLimitTest extends SessionFactoryBasedFunctionalTest {
 
 	@AfterEach
 	public void tearDown() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.createQuery( "from SimpleEntity e" )
 							.list()

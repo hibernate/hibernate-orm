@@ -36,10 +36,10 @@ public class EmbeddedIdEntityTest extends SessionFactoryBasedFunctionalTest {
 		entity.setId( entityId );
 		entity.setData( "test" );
 
-		sessionFactoryScope().inTransaction( session -> session.save( entity ) );
+		inTransaction( session -> session.save( entity ) );
 
 		// select non-embeddable data
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final String value = session.createQuery( "select e.data FROM EmbeddedIdEntity e", String.class ).uniqueResult();
 					assertThat( value, is( "test" ) );
@@ -47,7 +47,7 @@ public class EmbeddedIdEntityTest extends SessionFactoryBasedFunctionalTest {
 		);
 
 		// select entity
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EmbeddedIdEntity loaded = session.createQuery( "select e FROM EmbeddedIdEntity e", EmbeddedIdEntity.class ).uniqueResult();
 					assertThat( loaded.getData(), is( "test" ) );
@@ -56,7 +56,7 @@ public class EmbeddedIdEntityTest extends SessionFactoryBasedFunctionalTest {
 		);
 
 		// select just embeddable
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EmbeddedIdEntityId value = session.createQuery( "select e.id FROM EmbeddedIdEntity e", EmbeddedIdEntityId.class ).uniqueResult();
 					assertThat( value, equalTo( entityId ) );
@@ -64,7 +64,7 @@ public class EmbeddedIdEntityTest extends SessionFactoryBasedFunctionalTest {
 		);
 
 		// load entity
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EmbeddedIdEntity loaded = session.get( EmbeddedIdEntity.class, entityId );
 					assertThat( loaded, notNullValue() );

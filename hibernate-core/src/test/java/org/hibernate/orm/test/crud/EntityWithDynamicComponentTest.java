@@ -29,7 +29,7 @@ public class EntityWithDynamicComponentTest extends SessionFactoryBasedFunctiona
 	@Test
 	public void testDynamicComponentLifecycle() {
 		// Create entity
-		sessionFactoryScope().inTransaction( session -> {
+		inTransaction( session -> {
 			final EntityOfDynamicComponent entity = new EntityOfDynamicComponent();
 			entity.setId( 1L );
 			entity.setNote( "Initial Commit" );
@@ -40,7 +40,7 @@ public class EntityWithDynamicComponentTest extends SessionFactoryBasedFunctiona
 		} );
 
 		// Test entity was saved properly
-		sessionFactoryScope().inTransaction( session -> {
+		inTransaction( session -> {
 			final EntityOfDynamicComponent entity = session.find( EntityOfDynamicComponent.class, 1L );
 			assertThat( entity, notNullValue() );
 			assertThat( entity.getNote(), is( "Initial Commit" ) );
@@ -56,7 +56,7 @@ public class EntityWithDynamicComponentTest extends SessionFactoryBasedFunctiona
 		// 		so right now updates won't work in terms of validating that the values change.
 
 //		// Update entity
-//		sessionFactoryScope().inTransaction( session -> {
+//		inTransaction( session -> {
 //			final EntityOfDynamicComponent entity = session.find( EntityOfDynamicComponent.class, 1 );
 //			entity.setNote( "Updated Note" );
 //			entity.getValues().put( "v2", 30 );
@@ -66,7 +66,7 @@ public class EntityWithDynamicComponentTest extends SessionFactoryBasedFunctiona
 //		} );
 //
 //		// Test entity was updated properly
-//		sessionFactoryScope().inTransaction( session -> {
+//		inTransaction( session -> {
 //			final EntityOfDynamicComponent entity = session.find( EntityOfDynamicComponent.class, 1 );
 //			assertThat( entity, notNullValue() );
 //			assertThat( entity.getNote(), is( "Updated Note" ) );
@@ -79,12 +79,12 @@ public class EntityWithDynamicComponentTest extends SessionFactoryBasedFunctiona
 //		} );
 
 		// Delete entity
-		sessionFactoryScope().inTransaction( session -> {
+		inTransaction( session -> {
 			session.delete( session.find( EntityOfDynamicComponent.class, 1L ) );
 		} );
 
 		// Test entity was deleted properly
-		sessionFactoryScope().inTransaction( session -> {
+		inTransaction( session -> {
 			final EntityOfDynamicComponent entity = session.find( EntityOfDynamicComponent.class, 1L );
 			assertThat( entity, nullValue() );
 		} );

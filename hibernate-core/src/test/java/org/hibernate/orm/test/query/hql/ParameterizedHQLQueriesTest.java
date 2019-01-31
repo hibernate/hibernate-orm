@@ -37,7 +37,7 @@ public class ParameterizedHQLQueriesTest extends SessionFactoryBasedFunctionalTe
 
 	@Test
 	public void testQueryWithoutParameters() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					List<VideoGame> results = session.createQuery( "select vg from VideoGame vg" )
 							.list();
@@ -47,7 +47,7 @@ public class ParameterizedHQLQueriesTest extends SessionFactoryBasedFunctionalTe
 
 	@Test
 	public void testQueryWithSingleParameters() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					List<VideoGame> results = session.createQuery( "select vg from VideoGame vg where vg.title=:title" )
 							.setParameter( "title",  GOD_OF_WAR.getTitle())
@@ -58,7 +58,7 @@ public class ParameterizedHQLQueriesTest extends SessionFactoryBasedFunctionalTe
 
 	@BeforeEach
 	public void setUp() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.save( GOD_OF_WAR );
 					session.save( THE_LAST_OF_US );
@@ -67,7 +67,7 @@ public class ParameterizedHQLQueriesTest extends SessionFactoryBasedFunctionalTe
 
 	@AfterEach
 	public void tearDown() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.createQuery( "from VideoGame vg" )
 							.list()

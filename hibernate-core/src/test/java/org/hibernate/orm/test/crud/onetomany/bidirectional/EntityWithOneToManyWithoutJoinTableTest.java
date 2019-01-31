@@ -38,7 +38,7 @@ public class EntityWithOneToManyWithoutJoinTableTest extends SessionFactoryBased
 
 	@AfterEach
 	public void tearDown() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityWithOneToManyNotOwned loaded = session.get(
 							EntityWithOneToManyNotOwned.class,
@@ -63,14 +63,14 @@ public class EntityWithOneToManyWithoutJoinTableTest extends SessionFactoryBased
 		owner.addChild( child1 );
 		owner.addChild( child2 );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.save( child1 );
 					session.save( child2 );
 					session.save( owner );
 				} );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					EntityWithOneToManyNotOwned retrieved = session.get( EntityWithOneToManyNotOwned.class, 1 );
 					assertThat( retrieved, notNullValue() );
@@ -98,12 +98,12 @@ public class EntityWithOneToManyWithoutJoinTableTest extends SessionFactoryBased
 		EntityWithOneToManyNotOwned owner = new EntityWithOneToManyNotOwned();
 		owner.setId( 1 );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.save( owner );
 				} );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					EntityWithOneToManyNotOwned retrieved = session.get( EntityWithOneToManyNotOwned.class, 1 );
 					assertThat( retrieved, notNullValue() );
@@ -127,7 +127,7 @@ public class EntityWithOneToManyWithoutJoinTableTest extends SessionFactoryBased
 
 		owner.addChild( child1 );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.save( child1 );
 					session.save( owner );
@@ -135,14 +135,14 @@ public class EntityWithOneToManyWithoutJoinTableTest extends SessionFactoryBased
 
 		EntityWithManyToOneWithoutJoinTable child2 = new EntityWithManyToOneWithoutJoinTable( 3, Integer.MIN_VALUE );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					EntityWithOneToManyNotOwned retrieved = session.get( EntityWithOneToManyNotOwned.class, 1 );
 					retrieved.addChild( child2 );
 					session.save( child2 );
 				} );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					EntityWithOneToManyNotOwned retrieved = session.get( EntityWithOneToManyNotOwned.class, 1 );
 					assertThat( retrieved, notNullValue() );
@@ -174,14 +174,14 @@ public class EntityWithOneToManyWithoutJoinTableTest extends SessionFactoryBased
 
 		owner.addChild( child1 );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.save( child1 );
 					session.save( owner );
 				} );
 
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					EntityWithOneToManyNotOwned retrieved = session.get( EntityWithOneToManyNotOwned.class, 1 );
 
@@ -190,7 +190,7 @@ public class EntityWithOneToManyWithoutJoinTableTest extends SessionFactoryBased
 					children.clear();
 				} );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					EntityWithOneToManyNotOwned retrieved = session.get( EntityWithOneToManyNotOwned.class, 1 );
 					assertThat( retrieved, notNullValue() );
@@ -211,7 +211,7 @@ public class EntityWithOneToManyWithoutJoinTableTest extends SessionFactoryBased
 		owner.addChild( child1 );
 		owner.addChild( child2 );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.save( child1 );
 					session.save( child2 );
@@ -219,7 +219,7 @@ public class EntityWithOneToManyWithoutJoinTableTest extends SessionFactoryBased
 				} );
 
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					EntityWithOneToManyNotOwned retrieved = session.get( EntityWithOneToManyNotOwned.class, 1 );
 
@@ -230,7 +230,7 @@ public class EntityWithOneToManyWithoutJoinTableTest extends SessionFactoryBased
 					children.remove( toDelete );
 				} );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					EntityWithOneToManyNotOwned retrieved = session.get( EntityWithOneToManyNotOwned.class, 1 );
 					assertThat( retrieved, notNullValue() );

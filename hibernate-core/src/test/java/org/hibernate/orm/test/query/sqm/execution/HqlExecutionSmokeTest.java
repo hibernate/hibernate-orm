@@ -35,7 +35,7 @@ public class HqlExecutionSmokeTest extends SessionFactoryBasedFunctionalTest {
 	@BeforeEach
 	public void createData() {
 // currently a problem with EntityEntry -> PC
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.doWork(
 							connection -> {
@@ -59,7 +59,7 @@ public class HqlExecutionSmokeTest extends SessionFactoryBasedFunctionalTest {
 
 	@AfterEach
 	public void dropData() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> session.doWork(
 						connection -> {
 							try (Statement statement = connection.createStatement() ) {
@@ -72,7 +72,7 @@ public class HqlExecutionSmokeTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testQueryExecution() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final List result = session.createQuery( "select e.id from EntityOfBasics e" ).list();
 					assertThat( result, hasSize( 1 ) );
@@ -85,7 +85,7 @@ public class HqlExecutionSmokeTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testEntityWithSecondaryTable() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> session.createQuery( "from Vendor" ).list()
 		);
 	}

@@ -44,7 +44,7 @@ public abstract class AbstractAlterTableQuoteSchemaTest extends SessionFactoryBa
 		output = File.createTempFile( "update_script", ".sql" );
 		output.deleteOnExit();
 		try {
-			sessionFactoryScope().inTransaction(
+			inTransaction(
 					session ->
 							session.doWork( work -> {
 								work.prepareStatement( "DROP TABLE " + quote( schemaName, "my_entity" ) ).execute();
@@ -55,7 +55,7 @@ public abstract class AbstractAlterTableQuoteSchemaTest extends SessionFactoryBa
 		catch (Exception ignore) {
 		}
 		try {
-			sessionFactoryScope().inTransaction(
+			inTransaction(
 					session ->
 							session.doWork( work -> {
 								work.prepareStatement( "DROP SCHEMA " + quote( schemaName ) ).execute();
@@ -65,7 +65,7 @@ public abstract class AbstractAlterTableQuoteSchemaTest extends SessionFactoryBa
 		}
 		catch (Exception ignore) {
 		}
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session ->
 						session.doWork( work -> {
 							work.prepareStatement( "CREATE SCHEMA " + quote( schemaName ) ).execute();
@@ -76,7 +76,7 @@ public abstract class AbstractAlterTableQuoteSchemaTest extends SessionFactoryBa
 
 	protected void tearDown(String schemaName) {
 		try {
-			sessionFactoryScope().inTransaction(
+			inTransaction(
 					session ->
 							session.doWork( work -> {
 								work.prepareStatement( "DROP SCHEMA " + quote( schemaName ) ).execute();

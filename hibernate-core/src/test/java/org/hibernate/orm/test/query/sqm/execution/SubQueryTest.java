@@ -30,7 +30,7 @@ public class SubQueryTest extends SessionFactoryBasedFunctionalTest {
 
 	@BeforeAll
 	public void prepareData() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					BasicEntity entity1 = new BasicEntity( 1, "e1" );
 					BasicEntity entity2 = new BasicEntity( 2, "e2" );
@@ -44,7 +44,7 @@ public class SubQueryTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testSubQueryWithMaxFunction() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final String hql = "SELECT e FROM BasicEntity e WHERE e.id = " +
 							"(SELECT max(e1.id) FROM BasicEntity e1 WHERE e1.data = :data)";
@@ -62,7 +62,7 @@ public class SubQueryTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testSubQueryWithMinFunction() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final String hql = "SELECT e FROM BasicEntity e WHERE e.id = " +
 							"(SELECT min(e1.id) FROM BasicEntity e1 WHERE e1.data = :data)";

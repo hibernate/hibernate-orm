@@ -34,7 +34,7 @@ public class EntityWithManyToOneJoinTableTest extends SessionFactoryBasedFunctio
 
 	@AfterEach
 	public void tearDown() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityWithManyToOneJoinTable loaded = session.get( EntityWithManyToOneJoinTable.class, 1 );
 					session.delete( loaded );
@@ -58,10 +58,10 @@ public class EntityWithManyToOneJoinTableTest extends SessionFactoryBasedFunctio
 
 		entity.setOther( other );
 
-		sessionFactoryScope().inTransaction( session -> session.save( other ) );
-		sessionFactoryScope().inTransaction( session -> session.save( entity ) );
+		inTransaction( session -> session.save( other ) );
+		inTransaction( session -> session.save( entity ) );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityWithManyToOneJoinTable loaded = session.get( EntityWithManyToOneJoinTable.class, 1 );
 					assert loaded != null;
@@ -71,7 +71,7 @@ public class EntityWithManyToOneJoinTableTest extends SessionFactoryBasedFunctio
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final SimpleEntity loaded = session.get( SimpleEntity.class, 2 );
 					assert loaded != null;
@@ -95,12 +95,12 @@ public class EntityWithManyToOneJoinTableTest extends SessionFactoryBasedFunctio
 
 		entity.setOther( other );
 
-		sessionFactoryScope().inTransaction( session -> {
+		inTransaction( session -> {
 			session.save( other );
 			session.save( entity );
 		} );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final String value = session.createQuery(
 							"select e.name from EntityWithManyToOneJoinTable e where e.other.id = 2",
@@ -126,7 +126,7 @@ public class EntityWithManyToOneJoinTableTest extends SessionFactoryBasedFunctio
 
 		entity.setOther( other );
 
-		sessionFactoryScope().inTransaction( session -> {
+		inTransaction( session -> {
 			session.save( other );
 			session.save( entity );
 		} );
@@ -140,7 +140,7 @@ public class EntityWithManyToOneJoinTableTest extends SessionFactoryBasedFunctio
 				null
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityWithManyToOneJoinTable loaded = session.get( EntityWithManyToOneJoinTable.class, 1 );
 					assert loaded != null;
@@ -149,7 +149,7 @@ public class EntityWithManyToOneJoinTableTest extends SessionFactoryBasedFunctio
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityWithManyToOneJoinTable loaded = session.get( EntityWithManyToOneJoinTable.class, 1 );
 

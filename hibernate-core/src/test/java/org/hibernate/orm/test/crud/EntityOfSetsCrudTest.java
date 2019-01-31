@@ -34,7 +34,7 @@ public class EntityOfSetsCrudTest extends SessionFactoryBasedFunctionalTest {
 
 	@BeforeEach
 	public void cleanUpTestData() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					// select-and-delete to cascade deletes
 					final List<EntityOfSets> results = session.createQuery( "select e from EntityOfSets e", EntityOfSets.class ).list();
@@ -65,16 +65,16 @@ public class EntityOfSetsCrudTest extends SessionFactoryBasedFunctionalTest {
 				)
 		);
 
-		sessionFactoryScope().inTransaction( session -> session.save( entity ) );
+		inTransaction( session -> session.save( entity ) );
 
-		sessionFactoryScope().inSession(
+		inSession(
 				session -> {
 					final Integer value = session.createQuery( "select e.id from EntityOfSets e", Integer.class ).uniqueResult();
 					assert value == 1;
 				}
 		);
 
-//		sessionFactoryScope().inSession(
+//		inSession(
 //				session -> {
 //					final EntityOfSets loaded = session.get( EntityOfSets.class, 1 );
 //					assert loaded != null;
@@ -82,7 +82,7 @@ public class EntityOfSetsCrudTest extends SessionFactoryBasedFunctionalTest {
 //				}
 //		);
 
-//		sessionFactoryScope().inSession(
+//		inSession(
 //				session -> {
 //					final List<EntityOfSets> list = session.byMultipleIds( EntityOfSets.class )
 //							.multiLoad( 1, 2 );
@@ -131,16 +131,16 @@ public class EntityOfSetsCrudTest extends SessionFactoryBasedFunctionalTest {
 				)
 		);
 
-		sessionFactoryScope().inTransaction( session -> session.save( entity ) );
+		inTransaction( session -> session.save( entity ) );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final Integer value = session.createQuery( "select e.id from EntityOfSets e", Integer.class ).uniqueResult();
 					assert value == 1;
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityOfSets loaded = session.createQuery( "select e from EntityOfSets e left join fetch e.setOfBasics", EntityOfSets.class ).uniqueResult();
 					assert loaded != null;
@@ -148,7 +148,7 @@ public class EntityOfSetsCrudTest extends SessionFactoryBasedFunctionalTest {
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityOfSets loaded = session.createQuery( "select e from EntityOfSets e inner join fetch e.setOfBasics", EntityOfSets.class ).uniqueResult();
 					assert loaded != null;
@@ -156,7 +156,7 @@ public class EntityOfSetsCrudTest extends SessionFactoryBasedFunctionalTest {
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityOfSets loaded = session.createQuery( "select e from EntityOfSets e left join fetch e.setOfComponents", EntityOfSets.class ).uniqueResult();
 					assert loaded != null;
@@ -164,7 +164,7 @@ public class EntityOfSetsCrudTest extends SessionFactoryBasedFunctionalTest {
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityOfSets loaded = session.createQuery( "select e from EntityOfSets e inner join fetch e.setOfComponents", EntityOfSets.class ).uniqueResult();
 					assert loaded != null;
@@ -172,7 +172,7 @@ public class EntityOfSetsCrudTest extends SessionFactoryBasedFunctionalTest {
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final EntityOfSets loaded = session.get( EntityOfSets.class, 1 );
 					assert loaded != null;
@@ -180,7 +180,7 @@ public class EntityOfSetsCrudTest extends SessionFactoryBasedFunctionalTest {
 				}
 		);
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final List<EntityOfSets> list = session.byMultipleIds( EntityOfSets.class )
 							.multiLoad( 1, 2 );

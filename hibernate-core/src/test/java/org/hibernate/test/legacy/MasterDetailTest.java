@@ -805,6 +805,8 @@ public class MasterDetailTest extends LegacyTestCase {
 	public void testCategories() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
+
+		System.out.println("Category:" + s.createNativeQuery("SHOW TABLE Category").getSingleResult());
 		Category c = new Category();
 		c.setName(Category.ROOT_CATEGORY);
 		Category c1 = new Category();

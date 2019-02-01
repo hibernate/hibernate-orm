@@ -891,6 +891,7 @@ holding the name of the class (for that row). -->
 <!ELEMENT many-to-any (meta-value*,column, column+)>
 	<!ATTLIST many-to-any id-type CDATA #REQUIRED>
 	<!ATTLIST many-to-any meta-type CDATA #IMPLIED>			<!--- default: Hibernate.CLASS -->
+	<!ATTLIST any lazy (true|false) "false">
 
 <!ELEMENT index-many-to-any (column, column+)>
 	<!ATTLIST index-many-to-any id-type CDATA #REQUIRED>

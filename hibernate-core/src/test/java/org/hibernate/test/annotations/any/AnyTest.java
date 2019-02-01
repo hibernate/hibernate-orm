@@ -211,6 +211,57 @@ public class AnyTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
+	@Test
+	public void testManyToAnyFetchEager() {
+		doInHibernate( this::sessionFactory, s -> {
+			PropertySet set = new PropertySet( "string" );
+			Property property = new StringProperty( "name", "Alex" );
+			set.addGeneralProperty( property );
+			s.save( set );
+		} );
+
+		PropertySet result = doInHibernate( this::sessionFactory, s -> {
+			return s.createQuery( "select s from PropertySet s where name = :name", PropertySet.class )
+					.setParameter( "name", "string" )
+					.getSingleResult();
+		} );
+
+		assertNotNull( result );
+		assertNotNull( result.getGeneralProperties() );
+		assertEquals( 1, result.getGeneralProperties().size() );
+		assertEquals( "Alex", result.getGeneralProperties().get( 0 ).asString() );
+	}
+
+	@Test
+	public void testManyToAnyFetchLazy() {
+		doInHibernate( this::sessionFactory, s -> {
+			LazyPropertySet set = new LazyPropertySet( "string" );
+			Property property = new StringProperty( "name", "Alex" );
+			set.addGeneralProperty( property );
+			s.save( set );
+		} );
+
+		LazyPropertySet result = doInHibernate( this::sessionFactory, s -> {
+			return s.createQuery( "select s from LazyPropertySet s where name = :name", LazyPropertySet.class )
+					.setParameter( "name", "string" )
+					.getSingleResult();
+		} );
+
+		assertNotNull( result );
+		assertNotNull( result.getGeneralProperties() );
+
+		try {
+			result.getGeneralProperties().get( 0 );
+			fail( "should not get the property string after session closed." );
+		}
+		catch (LazyInitializationException e) {
+			// expected
+		}
+		catch (Exception e) {
+			fail( "should not throw exception other than LazyInitializationException." );
+		}
+	}
+
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {

@@ -56,6 +56,36 @@ public class AnyLazyHbmTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
+	@Test
+	public void testManyToAnyFetchLazy() {
+		doInHibernate( this::sessionFactory, s -> {
+			org.hibernate.test.annotations.any.LazyPropertySet set = new org.hibernate.test.annotations.any.LazyPropertySet( "string" );
+			Property property = new StringProperty( "name", "Alex" );
+			set.addGeneralProperty( property );
+			s.save( set );
+		} );
+
+		org.hibernate.test.annotations.any.LazyPropertySet result = doInHibernate( this::sessionFactory, s -> {
+			return s.createQuery( "select s from LazyPropertySet s where name = :name", org.hibernate.test.annotations.any.LazyPropertySet.class )
+					.setParameter( "name", "string" )
+					.getSingleResult();
+		} );
+
+		assertNotNull( result );
+		assertNotNull( result.getGeneralProperties() );
+
+		try {
+			result.getGeneralProperties().get( 0 );
+			fail( "should not get the property string after session closed." );
+		}
+		catch (LazyInitializationException e) {
+			// expected
+		}
+		catch (Exception e) {
+			fail( "should not throw exception other than LazyInitializationException." );
+		}
+	}
+
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {

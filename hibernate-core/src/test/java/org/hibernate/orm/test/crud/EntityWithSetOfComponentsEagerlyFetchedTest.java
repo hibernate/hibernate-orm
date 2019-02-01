@@ -39,7 +39,7 @@ public class EntityWithSetOfComponentsEagerlyFetchedTest extends SessionFactoryB
 	public void testOperations() {
 		final TestEntity entity = new TestEntity( 1 );
 
-		entity.getSetOfComponents().add( new Component( 5 ) );
+		entity.getSetOfComponents().add( new Component( 1 ) );
 
 		inTransaction( session -> session.save( entity ) );
 
@@ -79,6 +79,56 @@ public class EntityWithSetOfComponentsEagerlyFetchedTest extends SessionFactoryB
 					assertThat( setOfEagerComponents.size(), is( 1 ) );
 				}
 		);
+
+		// add a new element to the collection
+		inTransaction(
+				session -> {
+					final TestEntity loaded = session.get( TestEntity.class, 1 );
+					assert loaded != null;
+					loaded.getSetOfComponents().add( new Component( 2 ) );
+				}
+		);
+
+		inTransaction(
+				session -> {
+					final TestEntity loaded = session.get( TestEntity.class, 1 );
+					assert loaded != null;
+					Set<Component> setOfEagerComponents = loaded.getSetOfComponents();
+					assertTrue(
+							Hibernate.isInitialized( setOfEagerComponents ),
+							"The eager collection has not been initialized"
+					);
+					assertThat( setOfEagerComponents.size(), is( 2 ) );
+				}
+		);
+
+		//remove an element from the collection
+		inTransaction(
+				session -> {
+					final TestEntity loaded = session.get( TestEntity.class, 1 );
+					assert loaded != null;
+					Component toRemove = null;
+					for ( Component component : loaded.getSetOfComponents() ) {
+						if ( component.getIntegerField() == 1 ) {
+							toRemove = component;
+						}
+					}
+					loaded.getSetOfComponents().remove( toRemove );
+				}
+		);
+		inTransaction(
+				session -> {
+					final TestEntity loaded = session.get( TestEntity.class, 1 );
+					assert loaded != null;
+					Set<Component> setOfEagerComponents = loaded.getSetOfComponents();
+					assertTrue(
+							Hibernate.isInitialized( setOfEagerComponents ),
+							"The eager collection has not been initialized"
+					);
+					assertThat( setOfEagerComponents.size(), is( 1 ) );
+					assertThat( setOfEagerComponents.iterator().next().getIntegerField(), is( 2 ) );
+				}
+		);
 	}
 
 	@Entity(name = "TestEntity")
@@ -114,6 +164,10 @@ public class EntityWithSetOfComponentsEagerlyFetchedTest extends SessionFactoryB
 
 		public Component(Integer integerField) {
 			this.integerField = integerField;
+		}
+
+		public Integer getIntegerField() {
+			return integerField;
 		}
 	}
 }

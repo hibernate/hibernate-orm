@@ -40,7 +40,6 @@ import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.CollectionElementEmbedded;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndexEmbedded;
-import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
@@ -780,16 +779,15 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		// See HHH-9474
 
 		final CollectionIndex indexDescriptor = getCollectionDescriptor().getIndexDescriptor();
-		final CollectionElement elementDescriptor = getCollectionDescriptor().getElementDescriptor();
-
 		if ( indexDescriptor != null ) {
 			if ( indexDescriptor instanceof CollectionIndexEmbedded ) {
 				return !indexDescriptor.hasNotNullColumns();
 			}
 		}
 		else {
+			final CollectionElement elementDescriptor = getCollectionDescriptor().getElementDescriptor();
 			if ( elementDescriptor instanceof CollectionElementEmbedded ) {
-				return !getCollectionDescriptor().getElementDescriptor().hasNotNullColumns();
+				return !elementDescriptor.hasNotNullColumns();
 			}
 		}
 		return false;

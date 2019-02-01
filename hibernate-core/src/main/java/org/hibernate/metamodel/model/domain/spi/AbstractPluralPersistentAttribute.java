@@ -69,6 +69,7 @@ public class AbstractPluralPersistentAttribute<O,C,E> extends AbstractPersistent
 	private final PersistentCollectionDescriptor collectionDescriptor;
 	private final FetchStrategy fetchStrategy;
 	private final CascadeStyle cascadeStyle;
+	private final boolean isNullable;
 
 	private int stateArrayPosition;
 
@@ -86,6 +87,7 @@ public class AbstractPluralPersistentAttribute<O,C,E> extends AbstractPersistent
 
 		creationContext.registerCollectionDescriptor( collectionDescriptor, bootCollectionDescriptor );
 
+		this.isNullable = bootCollectionDescriptor.isNullable();
 		this.fetchStrategy = DomainModelHelper.determineFetchStrategy( bootCollectionDescriptor );
 		this.cascadeStyle = DomainModelHelper.determineCascadeStyle( bootProperty.getCascade() );
 	}
@@ -183,7 +185,7 @@ public class AbstractPluralPersistentAttribute<O,C,E> extends AbstractPersistent
 
 	@Override
 	public boolean isNullable() {
-		return false;
+		return isNullable;
 	}
 
 	@Override

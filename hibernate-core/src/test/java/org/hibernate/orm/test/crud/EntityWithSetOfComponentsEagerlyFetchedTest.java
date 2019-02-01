@@ -19,10 +19,12 @@ import javax.persistence.Id;
 import org.hibernate.Hibernate;
 
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -33,6 +35,37 @@ public class EntityWithSetOfComponentsEagerlyFetchedTest extends SessionFactoryB
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] { TestEntity.class };
+	}
+
+
+	@BeforeEach
+	public void clearData() {
+		inTransaction(
+				session -> {
+					session.createQuery( "select e from TestEntity e" )
+							.list().forEach( testEntity -> {
+						session.delete( testEntity );
+					} );
+				}
+		);
+	}
+
+	@Test
+	public void testSavingEntityWithEmptyCollection() {
+		final TestEntity entity = new TestEntity( 1 );
+		inTransaction( session -> session.save( entity ) );
+		inTransaction(
+				session -> {
+					final TestEntity loaded = session.get( TestEntity.class, 1 );
+					assertThat( loaded, notNullValue() );
+					Set<Component> setOfEagerComponents = loaded.getSetOfComponents();
+					assertTrue(
+							Hibernate.isInitialized( setOfEagerComponents ),
+							"The eager collection has not been initialized"
+					);
+					assertThat( setOfEagerComponents.size(), is( 0 ) );
+				}
+		);
 	}
 
 	@Test

@@ -30,6 +30,7 @@ import org.hibernate.sql.ast.tree.spi.expression.SubstrFunction;
 import org.hibernate.sql.ast.tree.spi.expression.domain.DiscriminatorReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.EntityTypeLiteral;
 import org.hibernate.sql.ast.tree.spi.expression.domain.EntityValuedNavigableReference;
+import org.hibernate.sql.ast.tree.spi.predicate.SelfRenderingPredicate;
 import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.expression.AbsFunction;
@@ -879,6 +880,11 @@ public abstract class AbstractSqlAstWalker
 			appendSql( "-" );
 		}
 		unaryOperationExpression.getOperand().accept( this );
+	}
+
+	@Override
+	public void visitSelfRenderingPredicate(SelfRenderingPredicate selfRenderingPredicate) {
+		selfRenderingPredicate.getSelfRenderingExpression().accept( this );
 	}
 
 	@Override

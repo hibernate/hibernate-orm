@@ -38,4 +38,8 @@ public interface CollectionIndex<J> extends Navigable<J>, TableReferenceContribu
 	}
 
 	boolean hasNotNullColumns();
+
+	boolean isSettable();
+
+	int getBaseIndex();
 }

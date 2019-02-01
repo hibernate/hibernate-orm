@@ -30,6 +30,7 @@ import org.hibernate.cache.spi.entry.StructuredCollectionCacheEntry;
 import org.hibernate.cache.spi.entry.StructuredMapCacheEntry;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
@@ -71,6 +72,7 @@ import org.hibernate.metamodel.model.domain.internal.collection.CollectionRemova
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionRowsDeletionExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionRowsIndexExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionRowsUpdateExecutor;
+import org.hibernate.metamodel.model.domain.internal.collection.CollectionSizeExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.FetchedTableReferenceCollectorImpl;
 import org.hibernate.metamodel.model.domain.internal.collection.JoinTableCreationExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.JoinTableRemovalExecutor;
@@ -161,9 +163,10 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 	private CollectionRowsUpdateExecutor collectionRowsUpdateExecutor;
 	private CollectionCreationExecutor collectionRowsInsertExecutor;
 	private CollectionRowsIndexExecutor collectionRowsIndexExecutor;
+	private CollectionSizeExecutor collectionSizeExecutor;
 
 	private final String mappedBy;
-
+	private final String sqlWhereString;
 
 	// todo (6.0) - rework this (and friends) per todo item...
 	//		* Redesign `org.hibernate.cache.spi.entry.CacheEntryStructure` and friends (with better names)
@@ -183,7 +186,6 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 	private final boolean extraLazy;
 	private final boolean hasOrphanDeletes;
 	private final boolean inverse;
-	private final boolean indexSettable;
 
 	private boolean isRowInsertEnabled;
 	private boolean isRowDeleteEnabled;
@@ -261,23 +263,9 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 		this.inverse = collectionBinding.isInverse();
 		this.mappedBy = collectionBinding.getMappedByProperty();
 
-		if ( collectionBinding.isIndexed() ) {
-			// todo (6.0) - how to source this from the CollectionIndex instead?
-			final IndexedCollection indexedCollection = (IndexedCollection) collectionBinding;
-			boolean indexCanBeSet = false;
-			for ( int i = 0; i < indexedCollection.getIndex().getColumnSpan(); ++i ) {
-				if ( indexedCollection.getIndex().getColumnInsertability()[i] ) {
-					indexCanBeSet = true;
-				}
-				if ( indexedCollection.getIndex().getColumnUpdateability()[i] ) {
-					indexCanBeSet = true;
-				}
-			}
-			indexSettable = indexCanBeSet;
-		}
-		else {
-			indexSettable = false;
-		}
+		this.sqlWhereString = StringHelper.isNotEmpty( collectionBinding.getWhere() )
+				? "( " + collectionBinding.getWhere() + ") "
+				: null;
 	}
 
 	protected static CollectionJavaDescriptor findJavaTypeDescriptor(
@@ -956,24 +944,33 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 
 	@Override
 	public int getSize(Object loadedKey, SharedSessionContractImplementor session) {
+		if ( collectionSizeExecutor == null ) {
+			final boolean isMap = getCollectionClassification() == CollectionClassification.MAP;
+			collectionSizeExecutor = new CollectionSizeExecutor(
+					this,
+					dmlTargetTable,
+					hasIndex() && !isMap,
+					sqlWhereString,
+					sessionFactory
+			);
+		}
+
+		int baseIndex = getIndexDescriptor() != null ? getIndexDescriptor().getBaseIndex() : 0;
+		return collectionSizeExecutor.execute( loadedKey, session ) - baseIndex;
+	}
+
+	@Override
+	public Boolean indexExists(Object loadedKey, Object index, SharedSessionContractImplementor session) {
 		throw new NotYetImplementedFor6Exception();
 	}
 
 	@Override
-	public Boolean indexExists(
-			Object loadedKey, Object index, SharedSessionContractImplementor session) {
+	public Boolean elementExists(Object loadedKey, Object element, SharedSessionContractImplementor session) {
 		throw new NotYetImplementedFor6Exception();
 	}
 
 	@Override
-	public Boolean elementExists(
-			Object loadedKey, Object element, SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception();
-	}
-
-	@Override
-	public Object getElementByIndex(
-			Object loadedKey, Object index, SharedSessionContractImplementor session, Object owner) {
+	public Object getElementByIndex(Object loadedKey, Object index, SharedSessionContractImplementor session, Object owner) {
 		throw new NotYetImplementedFor6Exception();
 	}
 
@@ -1153,7 +1150,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 	}
 
 	private CollectionRowsIndexExecutor generateCollectionRowsIndexExecutor() {
-		if ( !( isOneToMany() && isInverse() && hasIndex() && !indexContainsFormula() && indexSettable ) ){
+		if ( !( isOneToMany() && isInverse() && hasIndex() && !indexContainsFormula() && isIndexSettable() ) ){
 			return CollectionRowsIndexExecutor.NO_OP;
 		}
 
@@ -1162,6 +1159,10 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 
 	protected boolean hasIndex() {
 		return false;
+	}
+
+	protected boolean isIndexSettable() {
+		return getIndexDescriptor() != null && getIndexDescriptor().isSettable();
 	}
 
 	protected boolean indexContainsFormula() {
@@ -1277,5 +1278,4 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 			PersistentCollection collection,
 			Object id,
 			SharedSessionContractImplementor session);
-
 }

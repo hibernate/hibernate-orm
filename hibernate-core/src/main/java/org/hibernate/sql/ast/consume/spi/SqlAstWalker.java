@@ -63,6 +63,7 @@ import org.hibernate.sql.ast.tree.spi.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.spi.predicate.SelfRenderingPredicate;
 import org.hibernate.sql.ast.tree.spi.select.SelectClause;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
 import org.hibernate.sql.results.spi.SqlSelection;
@@ -148,6 +149,8 @@ public interface SqlAstWalker {
 	void visitNullnessPredicate(NullnessPredicate nullnessPredicate);
 
 	void visitRelationalPredicate(ComparisonPredicate comparisonPredicate);
+
+	void visitSelfRenderingPredicate(SelfRenderingPredicate selfRenderingPredicate);
 
 	void visitSelfRenderingExpression(SelfRenderingExpression expression);
 

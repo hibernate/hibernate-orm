@@ -57,7 +57,7 @@ public class BasicCollectionIndexImpl<J>
 			PersistentCollectionDescriptor descriptor,
 			IndexedCollection bootCollectionMapping,
 			RuntimeModelCreationContext creationContext) {
-		super( descriptor );
+		super( descriptor, bootCollectionMapping );
 
 		final BasicValueMapping valueMapping = (BasicValueMapping) bootCollectionMapping.getIndex();
 		this.column  = creationContext.getDatabaseObjectResolver().resolveColumn( valueMapping.getMappedColumn() );

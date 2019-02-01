@@ -51,7 +51,7 @@ public class CollectionIndexEmbeddedImpl<J>
 			PersistentCollectionDescriptor descriptor,
 			IndexedCollection bootCollectionMapping,
 			RuntimeModelCreationContext creationContext) {
-		super( descriptor );
+		super( descriptor, bootCollectionMapping );
 
 		this.embeddedDescriptor = creationContext.getRuntimeModelDescriptorFactory().createEmbeddedTypeDescriptor(
 				(EmbeddedValueMappingImplementor) bootCollectionMapping.getIndex(),

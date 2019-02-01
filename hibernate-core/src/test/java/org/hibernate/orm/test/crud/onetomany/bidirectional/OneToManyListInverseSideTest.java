@@ -80,15 +80,15 @@ public class OneToManyListInverseSideTest extends SessionFactoryBasedFunctionalT
 					assertThat( parent.getChildren().size(), is( 1 ) );
 				}
 		);
-//
-//		inTransaction(
-//				session -> {
-//					Child child = new Child( "Veronica" );
-//					session.save( child );
-//					Parent parent = session.get( Parent.class, parentId );
-//					parent.addChild( child );
-//				}
-//		);
+
+		inTransaction(
+				session -> {
+					Child child = new Child( "Veronica" );
+					session.save( child );
+					Parent parent = session.get( Parent.class, parentId );
+					parent.addChild( child );
+				}
+		);
 	}
 
 

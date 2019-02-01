@@ -292,7 +292,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 			final CollectionKey collectionKey = processingState.getExecutionContext().getCollectionKey();
 			if ( collectionKey != null ) {
 				// We expected to load a collection with this collection key but we found the collection
-				// contained no resulted, therefore we need to do the collection init phase here because
+				// contained no results, therefore we need to do the collection init phase here because
 				// the LoadingCollectionEntry won't finalize this for us without at least one row.
 				final PersistenceContext persistenceContext = processingState.getSession().getPersistenceContext();
 				final PersistentCollection collection = persistenceContext.getCollection( collectionKey );

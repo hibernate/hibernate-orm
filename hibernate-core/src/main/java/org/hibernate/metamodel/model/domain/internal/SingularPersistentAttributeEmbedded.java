@@ -423,7 +423,7 @@ public class SingularPersistentAttributeEmbedded<O,J>
 		// todo (6.0) : determine mutability plan based on JTD & @Immutable
 		//		for now just use the JTD MP
 
-		this.mutabilityPlan = new EmbeddedMutabilityPlanImpl( embeddedDescriptor );
+		this.mutabilityPlan = getJavaTypeDescriptor().getMutabilityPlan();
 	}
 
 	@Override

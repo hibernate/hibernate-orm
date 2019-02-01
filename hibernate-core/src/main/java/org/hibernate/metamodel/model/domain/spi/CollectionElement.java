@@ -40,4 +40,6 @@ public interface CollectionElement<J> extends Navigable<J>, CollectionDomainType
 	}
 
 	boolean hasNotNullColumns();
+
+	boolean isMutable();
 }

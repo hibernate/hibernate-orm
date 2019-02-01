@@ -361,4 +361,9 @@ public class CollectionElementEntityImpl<J>
 				.stream()
 				.anyMatch( value -> value == true );
 	}
+
+	@Override
+	public boolean isMutable() {
+		return getJavaTypeDescriptor().getMutabilityPlan().isMutable();
+	}
 }

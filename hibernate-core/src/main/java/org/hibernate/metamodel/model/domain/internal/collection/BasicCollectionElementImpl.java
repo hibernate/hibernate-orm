@@ -163,4 +163,9 @@ public class BasicCollectionElementImpl<J>
 	public boolean hasNotNullColumns() {
 		return !nullable;
 	}
+
+	@Override
+	public boolean isMutable() {
+		return getJavaTypeDescriptor().getMutabilityPlan().isMutable();
+	}
 }

@@ -153,4 +153,9 @@ public class CollectionElementEmbeddedImpl<J>
 				.stream()
 				.anyMatch( value -> value == true );
 	}
+
+	@Override
+	public boolean isMutable() {
+		return getJavaTypeDescriptor().getMutabilityPlan().isMutable();
+	}
 }

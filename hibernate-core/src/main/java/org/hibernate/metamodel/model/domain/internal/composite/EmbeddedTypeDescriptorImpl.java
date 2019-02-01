@@ -46,6 +46,7 @@ import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.internal.EmbeddableJavaDescriptorImpl;
+import org.hibernate.type.descriptor.java.internal.EmbeddedMutabilityPlanImpl;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -81,7 +82,8 @@ public class EmbeddedTypeDescriptorImpl<J>
 		);
 
 		// todo (6.0) : support for specific MutalibilityPlan and Comparator
-
+		EmbeddableJavaDescriptorImpl javaTypeDescriptor = (EmbeddableJavaDescriptorImpl) embeddedMapping.getJavaTypeMapping().getJavaTypeDescriptor();
+		javaTypeDescriptor.setMutabilityPlan( new EmbeddedMutabilityPlanImpl( this ) );
 		this.container = container;
 		this.compositeDisposition = compositeDisposition;
 		this.navigableRole = container.getNavigableRole().append( localName );

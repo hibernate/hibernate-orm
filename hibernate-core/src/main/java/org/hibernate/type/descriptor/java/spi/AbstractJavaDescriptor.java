@@ -20,9 +20,9 @@ public abstract class AbstractJavaDescriptor<T> implements JavaTypeDescriptor<T>
 	private static final Logger log = Logger.getLogger( AbstractJavaDescriptor.class );
 
 	private final String typeName;
-	private final MutabilityPlan mutabilityPlan;
 	private final Comparator comparator;
 
+	private MutabilityPlan mutabilityPlan;
 	private Class javaType;
 
 	public AbstractJavaDescriptor(
@@ -34,6 +34,10 @@ public abstract class AbstractJavaDescriptor<T> implements JavaTypeDescriptor<T>
 		this.javaType = javaType;
 		this.mutabilityPlan = mutabilityPlan;
 		this.comparator = comparator;
+	}
+
+	protected void setMutabilityPlan(MutabilityPlan mutabilityPlan){
+		this.mutabilityPlan = mutabilityPlan;
 	}
 
 	protected void setJavaType(Class javaType) {

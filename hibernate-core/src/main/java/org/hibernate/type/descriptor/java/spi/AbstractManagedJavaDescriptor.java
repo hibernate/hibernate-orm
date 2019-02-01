@@ -37,6 +37,11 @@ public abstract class AbstractManagedJavaDescriptor<J>
 	}
 
 	@Override
+	public void setMutabilityPlan(MutabilityPlan mutabilityPlan) {
+		super.setMutabilityPlan( mutabilityPlan );
+	}
+
+	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
 	}

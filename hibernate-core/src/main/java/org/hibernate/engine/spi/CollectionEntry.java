@@ -22,7 +22,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 /**
  * We need an entry to tell us all about the current state
@@ -165,17 +164,15 @@ public final class CollectionEntry implements Serializable {
 			return;
 		}
 
-		final MutabilityPlan mutabilityPlan = loadedDescriptor.getDescribedAttribute().getMutabilityPlan();
-
-		if ( ! mutabilityPlan.isMutable() ) {
+		if ( ! loadedDescriptor.getDescribedAttribute().getMutabilityPlan().isMutable() ) {
 			return;
 		}
 
-		if ( ! collection.isDirectlyAccessible() ) {
+		if ( ! (collection.isDirectlyAccessible() && loadedDescriptor.getElementDescriptor().isMutable()) ) {
 			return;
 		}
 
-		if ( collection.equalsSnapshot( loadedDescriptor ) ) {
+		if ( collection.equalsSnapshot( loadedDescriptor )  ) {
 			return;
 		}
 

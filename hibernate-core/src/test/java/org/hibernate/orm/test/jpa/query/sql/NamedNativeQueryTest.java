@@ -7,13 +7,17 @@
 package org.hibernate.orm.test.jpa.query.sql;
 
 import org.hibernate.Session;
-import org.hibernate.orm.test.jpa.EntityManagerFactoryBasedFunctionalTest;
+
+import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
+
 import org.hibernate.query.NativeQuery;
+
 import org.hibernate.testing.TestForIssue;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -31,7 +35,7 @@ import static org.junit.Assert.assertEquals;
 @Disabled("Native queries are not yet implemented in ORM 6")
 public class NamedNativeQueryTest extends EntityManagerFactoryBasedFunctionalTest {
 
-	private static final String[] GAME_TITLES = {"Halo", "Grand Theft Auto", "NetHack"};
+	private static final String[] GAME_TITLES = { "Halo", "Grand Theft Auto", "NetHack" };
 
 	@Override
 	public Class<?>[] getAnnotatedClasses() {
@@ -39,9 +43,8 @@ public class NamedNativeQueryTest extends EntityManagerFactoryBasedFunctionalTes
 	}
 
 	@BeforeEach
-	public void setUp()
-			throws Exception {
-		entityManagerFactoryScope().inTransaction( entityManager -> {
+	public void setUp() {
+		inTransaction( entityManager -> {
 			for ( String title : GAME_TITLES ) {
 				Game game = new Game( title );
 				entityManager.persist( game );
@@ -51,14 +54,14 @@ public class NamedNativeQueryTest extends EntityManagerFactoryBasedFunctionalTes
 
 	@AfterEach
 	public void tearDown() {
-		entityManagerFactoryScope().inTransaction( entityManager -> {
+		inTransaction( entityManager -> {
 			entityManager.createQuery( "delete from Game" ).executeUpdate();
 		} );
 	}
 
 	@Test
 	public void testNativeNamedQueriesOrdinalParametersAreOneBased() {
-		entityManagerFactoryScope().inTransaction( entityManager -> {
+		inTransaction( entityManager -> {
 			Query query = entityManager.createNamedQuery( "NamedNativeQuery" );
 			query.setParameter( 1, GAME_TITLES[0] );
 			List list = query.getResultList();
@@ -68,7 +71,7 @@ public class NamedNativeQueryTest extends EntityManagerFactoryBasedFunctionalTes
 
 	@Test
 	public void testNativeNamedQueriesOrdinalParametersConflict() {
-		entityManagerFactoryScope().inTransaction( entityManager -> {
+		inTransaction( entityManager -> {
 			Query query = entityManager.createNamedQuery( "NamedNativeQuery" );
 			query.setParameter( 1, GAME_TITLES[0] );
 			List list = query.getResultList();
@@ -87,7 +90,7 @@ public class NamedNativeQueryTest extends EntityManagerFactoryBasedFunctionalTes
 
 	@Test
 	public void testNativeNamedQueriesOrdinalParametersConflict2() {
-		entityManagerFactoryScope().inTransaction( entityManager -> {
+		inTransaction( entityManager -> {
 			Query query = entityManager.createNamedQuery( "NamedNativeQuery" );
 			query.setParameter( 1, GAME_TITLES[0] );
 			List list = query.getResultList();
@@ -107,7 +110,7 @@ public class NamedNativeQueryTest extends EntityManagerFactoryBasedFunctionalTes
 	@Test
 	@TestForIssue(jiraKey = "HHH-12621")
 	public void testNativeQueriesFromNamedQueriesDoNotShareQuerySpaces() {
-		entityManagerFactoryScope().inTransaction( entityManager -> {
+		inTransaction( entityManager -> {
 			Query originalQuery = entityManager.createNativeQuery( "select g from Game g where title = ?1" );
 			entityManager.getEntityManagerFactory().addNamedQuery( "myQuery", originalQuery );
 

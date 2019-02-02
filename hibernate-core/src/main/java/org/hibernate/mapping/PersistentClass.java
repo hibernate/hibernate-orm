@@ -146,6 +146,7 @@ public abstract class PersistentClass
 		this.proxyInterface = null;
 	}
 
+	@Override
 	public Class getMappedClass() throws MappingException {
 		if ( className == null ) {
 			return null;
@@ -473,6 +474,7 @@ public abstract class PersistentClass
 
 	public abstract String getWhere();
 
+	@Override
 	public int getBatchSize() {
 		return batchSize;
 	}

@@ -7,12 +7,9 @@
 package org.hibernate.orm.test.jpa.query.hql;
 
 import org.hibernate.Session;
-import org.hibernate.orm.test.jpa.EntityManagerFactoryBasedFunctionalTest;
-import org.hibernate.query.NativeQuery;
+import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.TestForIssue;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
 import javax.persistence.*;

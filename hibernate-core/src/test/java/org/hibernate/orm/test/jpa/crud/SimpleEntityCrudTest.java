@@ -9,7 +9,7 @@ package org.hibernate.orm.test.jpa.crud;
 import java.util.List;
 
 import org.hamcrest.CoreMatchers;
-import org.hibernate.orm.test.jpa.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
 import org.junit.jupiter.api.Test;
 
@@ -31,9 +31,11 @@ public class SimpleEntityCrudTest extends EntityManagerFactoryBasedFunctionalTes
 		entity.setId( 1 );
 		entity.setSomeString( "hi" );
 		entity.setSomeInteger( 2 );
-		entityManagerFactoryScope().inTransaction( entityManager -> entityManager.persist( entity ) );
+		inTransaction( entityManager -> {
+			entityManager.persist( entity );
+		} );
 
-		entityManagerFactoryScope().inTransaction(
+		inTransaction(
 				entityManager -> {
 					final String value = entityManager.createQuery( "select s.someString from SimpleEntity s", String.class )
 							.getSingleResult();
@@ -41,7 +43,7 @@ public class SimpleEntityCrudTest extends EntityManagerFactoryBasedFunctionalTes
 				}
 		);
 
-		entityManagerFactoryScope().inTransaction(
+		inTransaction(
 				entityManager -> {
 					final SimpleEntity loaded = entityManager.find( SimpleEntity.class, 1 );
 					assertThat( loaded, CoreMatchers.notNullValue() );
@@ -49,7 +51,7 @@ public class SimpleEntityCrudTest extends EntityManagerFactoryBasedFunctionalTes
 				}
 		);
 
-		entityManagerFactoryScope().inTransaction(
+		inTransaction(
 				entityManager -> {
 					final List<SimpleEntity> list = entityManager.createQuery( "FROM SimpleEntity", SimpleEntity.class ).getResultList();
 					assertThat( list.size(), CoreMatchers.is( 1 ) );
@@ -67,9 +69,11 @@ public class SimpleEntityCrudTest extends EntityManagerFactoryBasedFunctionalTes
 		entity.setSomeString( "hello world" );
 		entity.setSomeInteger( 5 );
 		entity.setSomeLong( 10L );
-		entityManagerFactoryScope().inTransaction( entityManager -> entityManager.persist( entity ) );
+		inTransaction( entityManager -> {
+			entityManager.persist( entity );
+		} );
 
-		entityManagerFactoryScope().inTransaction(
+		inTransaction(
 				entityManager -> {
 					final SimpleEntity loaded = entityManager.find( SimpleEntity.class, 2 );
 					assertThat( loaded, CoreMatchers.notNullValue() );
@@ -78,7 +82,7 @@ public class SimpleEntityCrudTest extends EntityManagerFactoryBasedFunctionalTes
 				}
 		);
 
-		entityManagerFactoryScope().inTransaction(
+		inTransaction(
 				entityManager -> {
 					final SimpleEntity loaded = entityManager.find( SimpleEntity.class, entity.getId() );
 					loaded.setSomeLong( 25L );
@@ -87,7 +91,7 @@ public class SimpleEntityCrudTest extends EntityManagerFactoryBasedFunctionalTes
 				}
 		);
 
-		entityManagerFactoryScope().inTransaction(
+		inTransaction(
 				entityManager -> {
 					final SimpleEntity loaded = entityManager.find( SimpleEntity.class, entity.getId() );
 					assertThat( loaded, CoreMatchers.notNullValue() );
@@ -104,9 +108,11 @@ public class SimpleEntityCrudTest extends EntityManagerFactoryBasedFunctionalTes
 		entity.setSomeString( "hello world" );
 		entity.setSomeInteger( 6 );
 		entity.setSomeLong( 10L );
-		entityManagerFactoryScope().inTransaction( entityManager -> entityManager.persist( entity ) );
+		inTransaction( entityManager -> {
+			entityManager.persist( entity );
+		} );
 
-		entityManagerFactoryScope().inTransaction(
+		inTransaction(
 				entityManager -> {
 					final SimpleEntity loaded = entityManager.find( SimpleEntity.class, 3 );
 					assertThat( loaded, CoreMatchers.notNullValue() );
@@ -115,13 +121,13 @@ public class SimpleEntityCrudTest extends EntityManagerFactoryBasedFunctionalTes
 				}
 		);
 
-		entityManagerFactoryScope().inTransaction(
+		inTransaction(
 				entityManager -> {
 					entityManager.remove( entityManager.find( SimpleEntity.class, entity.getId() ) );
 				}
 		);
 
-		entityManagerFactoryScope().inTransaction(
+		inTransaction(
 				entityManager -> {
 					final SimpleEntity loaded = entityManager.find( SimpleEntity.class, entity.getId() );
 					assertThat( loaded, CoreMatchers.nullValue() );

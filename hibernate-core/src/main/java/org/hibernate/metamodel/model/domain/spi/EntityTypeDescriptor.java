@@ -17,6 +17,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.annotations.Remove;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
@@ -411,7 +412,10 @@ public interface EntityTypeDescriptor<T>
 	 * @return True if this entity contains at least one property defined
 	 * as generated (including version property, but not identifier).
 	 */
-	boolean hasInsertGeneratedProperties();
+	default boolean hasInsertGeneratedProperties(){
+		//todo (6.0) to implement
+		return false;
+	}
 
 	/**
 	 * Does this entity define any properties as being database generated on update?
@@ -419,7 +423,10 @@ public interface EntityTypeDescriptor<T>
 	 * @return True if this entity contains at least one property defined
 	 * as generated (including version property, but not identifier).
 	 */
-	boolean hasUpdateGeneratedProperties();
+	default boolean hasUpdateGeneratedProperties(){
+		//todo (6.0) to implement correctly
+		return false;
+	}
 
 	/**
 	 * Does this entity contain a version property that is defined
@@ -428,7 +435,10 @@ public interface EntityTypeDescriptor<T>
 	 * @return true if this entity contains a version property and that
 	 * property has been marked as generated.
 	 */
-	boolean isVersionPropertyGenerated();
+	default boolean isVersionPropertyGenerated(){
+		//todo (6.0) to implement correctly
+		return false;
+	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -511,17 +521,6 @@ public interface EntityTypeDescriptor<T>
 	 * cast to (optional operation).
 	 */
 	Class getConcreteProxyClass();
-
-	/**
-	 * Get the identifier of an instance (throw an exception if no identifier property)
-	 *
-	 * @deprecated Use {@link #getIdentifier(Object, SharedSessionContractImplementor)} instead
-	 */
-	@Deprecated
-	@SuppressWarnings({"JavaDoc"})
-	default Object getIdentifier(Object object) throws HibernateException {
-		throw new UnsupportedOperationException(  );
-	}
 
 	/**
 	 * Get the identifier of an instance (throw an exception if no identifier property)
@@ -639,13 +638,31 @@ public interface EntityTypeDescriptor<T>
 	// todo (6.0) : legacy methods based on the legacy "decomposed attribute state" arrays
 
 	@Remove
-	Type[] getPropertyTypes();
+	default Type[] getPropertyTypes(){
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
 
 	@Remove
-	JavaTypeDescriptor[] getPropertyJavaTypeDescriptors();
+	default JavaTypeDescriptor[] getPropertyJavaTypeDescriptors() {
+		List<NonIdPersistentAttribute> persistentAttributes = getPersistentAttributes();
+		int attributesSize = persistentAttributes.size();
+		JavaTypeDescriptor[] names = new JavaTypeDescriptor[attributesSize];
+		for ( int i = 0; i < attributesSize; i++ ) {
+			names[i] = persistentAttributes.get( i ).getJavaTypeDescriptor();
+		}
+		return names;
+	}
 
 	@Remove
-	String[] getPropertyNames();
+	default String[] getPropertyNames() {
+		List<NonIdPersistentAttribute> persistentAttributes = getPersistentAttributes();
+		int attributesSize = persistentAttributes.size();
+		String[] names = new String[attributesSize];
+		for ( int i = 0; i < attributesSize; i++ ) {
+			names[i] = persistentAttributes.get( i ).getAttributeName();
+		}
+		return names;
+	}
 
 	@Remove
 	default Type getPropertyType(String propertyName) {

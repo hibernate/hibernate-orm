@@ -265,12 +265,12 @@ public class PolymorphicEntityTypeValuedExpressableTypeImpl<T> implements Entity
 
 	@Override
 	public boolean canReadFromCache() {
-		return false;
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public boolean canWriteToCache() {
-		return false;
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
@@ -598,21 +598,6 @@ public class PolymorphicEntityTypeValuedExpressableTypeImpl<T> implements Entity
 	}
 
 	@Override
-	public boolean hasInsertGeneratedProperties() {
-		throw new UnsupportedOperationException(  );
-	}
-
-	@Override
-	public boolean hasUpdateGeneratedProperties() {
-		throw new UnsupportedOperationException(  );
-	}
-
-	@Override
-	public boolean isVersionPropertyGenerated() {
-		throw new UnsupportedOperationException(  );
-	}
-
-	@Override
 	public void afterInitialize(Object entity, SharedSessionContractImplementor session) {
 		throw new UnsupportedOperationException(  );
 	}
@@ -665,11 +650,6 @@ public class PolymorphicEntityTypeValuedExpressableTypeImpl<T> implements Entity
 
 	@Override
 	public Class getConcreteProxyClass() {
-		throw new UnsupportedOperationException(  );
-	}
-
-	@Override
-	public Serializable getIdentifier(Object object) {
 		throw new UnsupportedOperationException(  );
 	}
 
@@ -739,11 +719,6 @@ public class PolymorphicEntityTypeValuedExpressableTypeImpl<T> implements Entity
 
 	@Override
 	public boolean hasCollections() {
-		throw new UnsupportedOperationException(  );
-	}
-
-	@Override
-	public Type[] getPropertyTypes() {
 		throw new UnsupportedOperationException(  );
 	}
 

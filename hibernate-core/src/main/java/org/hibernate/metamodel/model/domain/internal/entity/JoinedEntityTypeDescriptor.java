@@ -7,13 +7,12 @@
 package org.hibernate.metamodel.model.domain.internal.entity;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.spi.ManagedTypeMappingImplementor;
 import org.hibernate.cache.spi.entry.CacheEntry;
@@ -59,7 +58,7 @@ public class JoinedEntityTypeDescriptor<J> extends AbstractEntityTypeDescriptor<
 			ManagedTypeMappingImplementor bootDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		final boolean superDone = super.finishInitialization( bootDescriptor, creationContext );
-		if ( ! superDone ) {
+		if ( !superDone ) {
 			return false;
 		}
 
@@ -70,7 +69,8 @@ public class JoinedEntityTypeDescriptor<J> extends AbstractEntityTypeDescriptor<
 			// branch/leaf
 		}
 		else {
-			throw new IllegalStateException( "Expecting boot model descriptor to be RootClass or JoinedSubclass, but found : " + bootDescriptor );
+			throw new IllegalStateException(
+					"Expecting boot model descriptor to be RootClass or JoinedSubclass, but found : " + bootDescriptor );
 		}
 
 		return true;
@@ -87,12 +87,11 @@ public class JoinedEntityTypeDescriptor<J> extends AbstractEntityTypeDescriptor<
 	}
 
 
-
 	@Override
 	public void lock(
 			Object id, Object version, Object object, LockMode lockMode, SharedSessionContractImplementor session)
 			throws HibernateException {
-
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
@@ -102,49 +101,44 @@ public class JoinedEntityTypeDescriptor<J> extends AbstractEntityTypeDescriptor<
 			Object object,
 			LockOptions lockOptions,
 			SharedSessionContractImplementor session) throws HibernateException {
-
-	}
-
-	@Override
-	public Set<String> getAffectedTableNames() {
-		return Collections.emptySet();
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public boolean hasProxy() {
-		return false;
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public int[] findDirty(
 			Object[] currentState, Object[] previousState, Object owner, SharedSessionContractImplementor session) {
-		return new int[0];
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public int[] findModified(
 			Object[] old, Object[] current, Object object, SharedSessionContractImplementor session) {
-		return new int[0];
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public void insert(
 			Object id, Object[] fields, Object object, SharedSessionContractImplementor session)
 			throws HibernateException {
-
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public Object insert(
 			Object[] fields, Object object, SharedSessionContractImplementor session) throws HibernateException {
-		return null;
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public void delete(
 			Object id, Object version, Object object, SharedSessionContractImplementor session)
 			throws HibernateException {
-
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
@@ -158,112 +152,87 @@ public class JoinedEntityTypeDescriptor<J> extends AbstractEntityTypeDescriptor<
 			Object object,
 			Object rowId,
 			SharedSessionContractImplementor session) throws HibernateException {
-
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public boolean hasCascades() {
-		return false;
-	}
-
-	@Override
-	public Type getIdentifierType() {
-		return null;
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public String getIdentifierPropertyName() {
-		return null;
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public boolean isCacheInvalidationRequired() {
-		return false;
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public boolean isLazyPropertiesCacheable() {
-		return false;
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public CacheEntryStructure getCacheEntryStructure() {
-		return null;
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public CacheEntry buildCacheEntry(
 			Object entity, Object[] state, Object version, SharedSessionContractImplementor session) {
-		return null;
-	}
-
-	@Override
-	public boolean isBatchLoadable() {
-		return false;
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public boolean isSelectBeforeUpdateRequired() {
-		return false;
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public Serializable getIdByUniqueKey(
 			Serializable key, String uniquePropertyName, SharedSessionContractImplementor session) {
-		return null;
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public Object getCurrentVersion(
 			Object id, SharedSessionContractImplementor session) throws HibernateException {
-		return null;
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public Object forceVersionIncrement(
 			Object id, Object currentVersion, SharedSessionContractImplementor session)
 			throws HibernateException {
-		return null;
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public boolean isInstrumented() {
-		return false;
-	}
-
-	@Override
-	public boolean hasInsertGeneratedProperties() {
-		return false;
-	}
-
-	@Override
-	public boolean hasUpdateGeneratedProperties() {
-		return false;
-	}
-
-	@Override
-	public boolean isVersionPropertyGenerated() {
-		return false;
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public void afterInitialize(Object entity, SharedSessionContractImplementor session) {
-
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public void afterReassociate(Object entity, SharedSessionContractImplementor session) {
-
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public Object createProxy(Object id, SharedSessionContractImplementor session) throws HibernateException {
-		return null;
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public Boolean isTransient(Object object, SharedSessionContractImplementor session) throws HibernateException {
-		return null;
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
@@ -271,14 +240,16 @@ public class JoinedEntityTypeDescriptor<J> extends AbstractEntityTypeDescriptor<
 			Object object,
 			Map mergeMap,
 			SharedSessionContractImplementor session) throws HibernateException {
-		final Object[] stateArray = new Object[ getStateArrayContributors().size() ];
+		final Object[] stateArray = new Object[getStateArrayContributors().size()];
 		visitStateArrayContributors(
 				contributor -> {
-					stateArray[ contributor.getStateArrayPosition() ] = contributor.getPropertyAccess().getGetter().getForInsert(
-							object,
-							mergeMap,
-							session
-					);
+					stateArray[contributor.getStateArrayPosition()] = contributor.getPropertyAccess()
+							.getGetter()
+							.getForInsert(
+									object,
+									mergeMap,
+									session
+							);
 				}
 		);
 
@@ -288,129 +259,114 @@ public class JoinedEntityTypeDescriptor<J> extends AbstractEntityTypeDescriptor<
 	@Override
 	public void processInsertGeneratedProperties(
 			Object id, Object entity, Object[] state, SharedSessionContractImplementor session) {
-
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public void processUpdateGeneratedProperties(
 			Object id, Object entity, Object[] state, SharedSessionContractImplementor session) {
-
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public Class getMappedClass() {
-		return null;
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public boolean implementsLifecycle() {
-		return false;
-	}
-
-	@Override
-	public Class getConcreteProxyClass() {
-		return null;
-	}
-
-	@Override
-	public boolean hasUninitializedLazyProperties(Object object) {
-		return false;
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public EntityTypeDescriptor getSubclassEntityPersister(
 			Object instance,
 			SessionFactoryImplementor factory) {
-		return null;
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
-		return null;
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public int[] resolveAttributeIndexes(String[] attributeNames) {
-		return new int[0];
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public boolean canUseReferenceCacheEntries() {
-		return false;
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public void registerAffectingFetchProfile(String fetchProfileName) {
-
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public boolean hasCollections() {
-		return false;
-	}
-
-	@Override
-	public Type[] getPropertyTypes() {
-		return new Type[0];
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public JavaTypeDescriptor[] getPropertyJavaTypeDescriptors() {
-		return new JavaTypeDescriptor[0];
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public String[] getPropertyNames() {
-		return new String[0];
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public boolean[] getPropertyInsertability() {
-		return new boolean[0];
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public ValueInclusion[] getPropertyInsertGenerationInclusions() {
-		return new ValueInclusion[0];
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public ValueInclusion[] getPropertyUpdateGenerationInclusions() {
-		return new ValueInclusion[0];
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public boolean[] getPropertyUpdateability() {
-		return new boolean[0];
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public boolean[] getPropertyCheckability() {
-		return new boolean[0];
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public boolean[] getPropertyNullability() {
-		return new boolean[0];
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public boolean[] getPropertyVersionability() {
-		return new boolean[0];
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public boolean[] getPropertyLaziness() {
-		return new boolean[0];
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public CascadeStyle[] getPropertyCascadeStyles() {
-		return new CascadeStyle[0];
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public boolean isAffectedByEnabledFilters(SharedSessionContractImplementor session) {
-		return false;
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

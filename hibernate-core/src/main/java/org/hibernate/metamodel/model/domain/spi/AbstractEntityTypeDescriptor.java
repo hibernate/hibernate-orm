@@ -94,6 +94,7 @@ import org.hibernate.sql.results.internal.domain.entity.EntityResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
+import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
 
@@ -125,6 +126,7 @@ public abstract class AbstractEntityTypeDescriptor<J>
 
 	private final boolean hasProxy;
 	private final Class proxyInterface;
+	private final int batchSize;
 
 	private ProxyFactory proxyFactory;
 	private boolean canIdentityInsertBeDelayed;
@@ -194,6 +196,13 @@ public abstract class AbstractEntityTypeDescriptor<J>
 		proxyInterface = bootMapping.getProxyInterface();
 
 		creationContext.registerNavigable( this, bootMapping );
+
+		int batch = bootMapping.getBatchSize();
+		if ( batch == -1 ) {
+			batch = factory.getSessionFactoryOptions().getDefaultBatchFetchSize();
+		}
+		batchSize = batch;
+
 	}
 
 	@SuppressWarnings("unchecked")
@@ -314,6 +323,22 @@ public abstract class AbstractEntityTypeDescriptor<J>
 		}
 
 		return true;
+	}
+
+	@Override
+	public boolean isBatchLoadable() {
+		return batchSize > 1;
+	}
+
+	@Override
+	public boolean hasUninitializedLazyProperties(Object object) {
+		return bytecodeEnhancementMetadata.hasUnFetchedAttributes( object );
+	}
+
+	@Override
+	public Set<String> getAffectedTableNames() {
+		// todo (6.0) : to implement
+		return Collections.emptySet();
 	}
 
 	@Override
@@ -947,5 +972,10 @@ public abstract class AbstractEntityTypeDescriptor<J>
 			}
 		}
 		return false;
+	}
+
+	@Override
+	public Type getIdentifierType() {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

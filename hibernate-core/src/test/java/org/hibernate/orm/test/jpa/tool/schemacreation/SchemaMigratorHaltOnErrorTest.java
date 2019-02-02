@@ -15,7 +15,7 @@ import javax.persistence.Id;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.orm.test.jpa.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 
 import org.hibernate.testing.orm.junit.SkipForDialect;

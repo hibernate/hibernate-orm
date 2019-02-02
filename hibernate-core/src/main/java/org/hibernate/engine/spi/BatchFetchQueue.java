@@ -195,7 +195,7 @@ public class BatchFetchQueue {
 					//the first id found after the given id
 					return ids;
 				}
-				if ( entityDescriptor.getIdentifierType().getJavaTypeDescriptor().areEqual( id, key.getIdentifier() ) ) {
+				if ( entityDescriptor.getIdentifierDescriptor().getJavaTypeDescriptor().areEqual( id, key.getIdentifier() ) ) {
 					end = i;
 				}
 				else {

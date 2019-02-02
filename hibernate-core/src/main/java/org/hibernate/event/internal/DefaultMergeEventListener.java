@@ -273,8 +273,10 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			source.getLoadQueryInfluencers().setEnabledInternalFetchProfileType( InternalFetchProfileType.MERGE );
 			//we must clone embedded composite identifiers, or
 			//we will get back the same instance that we pass in
-			final Serializable clonedIdentifier = (Serializable) entityDescriptor.getIdentifierType().getJavaTypeDescriptor()
-					.getMutabilityPlan().deepCopy( id );
+			final Serializable clonedIdentifier = (Serializable) entityDescriptor.getIdentifierDescriptor()
+					.getJavaTypeDescriptor()
+					.getMutabilityPlan()
+					.deepCopy( id );
 			result = source.get( entityName, clonedIdentifier );
 		}
 		finally {

@@ -167,7 +167,7 @@ public abstract class EntityAction
 		}
 		else {
 			//then by id
-			return entityDescriptor.getIdentifierType().getJavaTypeDescriptor().getComparator().compare( id, action.id );
+			return entityDescriptor.getIdentifierDescriptor().getJavaTypeDescriptor().getComparator().compare( id, action.id );
 		}
 	}
 

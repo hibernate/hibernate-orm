@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.orm.test.jpa;
+package org.hibernate.testing.junit5;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -13,7 +13,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.SharedCacheMode;
 import javax.persistence.ValidationMode;
@@ -25,14 +28,9 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
-import org.hibernate.testing.junit5.BaseUnitTest;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.testing.junit5.EntityManagerFactoryProducer;
-import org.hibernate.testing.junit5.EntityManagerFactoryScope;
-import org.hibernate.testing.junit5.EntityManagerFactoryScopeContainer;
-import org.hibernate.testing.junit5.FunctionalEntityManagerFactoryTesting;
 import org.junit.jupiter.api.AfterEach;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -125,10 +123,16 @@ public class EntityManagerFactoryBasedFunctionalTest
 		classes.addAll( Arrays.asList( getAnnotatedClasses() ) );
 		config.put( org.hibernate.jpa.AvailableSettings.LOADED_CLASSES, classes );
 		for ( Map.Entry<Class, String> entry : getCachedClasses().entrySet() ) {
-			config.put( org.hibernate.jpa.AvailableSettings.CLASS_CACHE_PREFIX + "." + entry.getKey().getName(), entry.getValue() );
+			config.put(
+					org.hibernate.jpa.AvailableSettings.CLASS_CACHE_PREFIX + "." + entry.getKey().getName(),
+					entry.getValue()
+			);
 		}
 		for ( Map.Entry<String, String> entry : getCachedCollections().entrySet() ) {
-			config.put( org.hibernate.jpa.AvailableSettings.COLLECTION_CACHE_PREFIX + "." + entry.getKey(), entry.getValue() );
+			config.put(
+					org.hibernate.jpa.AvailableSettings.COLLECTION_CACHE_PREFIX + "." + entry.getKey(),
+					entry.getValue()
+			);
 		}
 		if ( getEjb3DD().length > 0 ) {
 			ArrayList<String> dds = new ArrayList<>();
@@ -156,7 +160,7 @@ public class EntityManagerFactoryBasedFunctionalTest
 	}
 
 	public String[] getEjb3DD() {
-		return new String[] { };
+		return new String[] {};
 	}
 
 	protected PersistenceUnitDescriptor buildPersistenceUnitDescriptor() {
@@ -267,10 +271,19 @@ public class EntityManagerFactoryBasedFunctionalTest
 	}
 
 	protected void cleanupTestData() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		doInJPA( this::entityManagerFactory, entityManager -> {
 			Arrays.stream( getAnnotatedClasses() ).forEach( annotatedClass ->
-																	entityManager.createQuery( "delete from " + annotatedClass.getSimpleName() ).executeUpdate()
+																	entityManager.createQuery( "delete from " + annotatedClass
+																			.getSimpleName() ).executeUpdate()
 			);
-		});
+		} );
+	}
+
+	protected void inTransaction(Consumer<EntityManager> action) {
+		entityManagerFactoryScope().inTransaction( action );
+	}
+
+	protected <T> T inTransaction(Function<EntityManager, T> action) {
+		return entityManagerFactoryScope().inTransaction( action );
 	}
 }

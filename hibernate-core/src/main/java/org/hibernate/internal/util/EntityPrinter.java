@@ -19,6 +19,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Renders entities and query parameters to a nicely readable string.
@@ -60,14 +61,14 @@ public final class EntityPrinter {
 			);
 		}
 
-		Type[] types = entityDescriptor.getPropertyTypes();
+		JavaTypeDescriptor[] propertyJavaTypeDescriptors = entityDescriptor.getPropertyJavaTypeDescriptors();
 		String[] names = entityDescriptor.getPropertyNames();
 		Object[] values = entityDescriptor.getPropertyValues( entity );
-		for ( int i = 0; i < types.length; i++ ) {
+		for ( int i = 0; i < propertyJavaTypeDescriptors.length; i++ ) {
 			if ( !names[i].startsWith( "_" ) ) {
 				String strValue = values[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ?
 						values[i].toString() :
-						types[i].toLoggableString( values[i] );
+						propertyJavaTypeDescriptors[i].extractLoggableRepresentation( values[i] );
 				result.put( names[i], strValue );
 			}
 		}

@@ -7,6 +7,7 @@
 package org.hibernate.testing.junit5;
 
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -17,10 +18,10 @@ import org.jboss.logging.Logger;
 /**
  * A scope or holder for the EntityManagerFactory instance associated with a given test class.
  * Used to:
- *
- * 		* provide lifecycle management related to the EntityManagerFactory
- * 		* access to functional programming using an EntityManager generated
- * 			from the EntityManagerFactory.
+ * <p>
+ * * provide lifecycle management related to the EntityManagerFactory
+ * * access to functional programming using an EntityManager generated
+ * from the EntityManagerFactory.
  *
  * @author Chris Cranford
  */
@@ -64,6 +65,10 @@ public class EntityManagerFactoryScope implements EntityManagerFactoryAccess {
 		inTransaction( getEntityManagerFactory(), action );
 	}
 
+	public <T> T inTransaction(Function<EntityManager, T> action) {
+		return inTransaction( getEntityManagerFactory().createEntityManager(), action );
+	}
+
 	public void inTransaction(EntityManagerFactory factory, Consumer<EntityManager> action) {
 		log.trace( "#inTransaction(factory, action)" );
 		final EntityManager entityManager = factory.createEntityManager();
@@ -76,6 +81,33 @@ public class EntityManagerFactoryScope implements EntityManagerFactoryAccess {
 			log.trace( "EntityManager close" );
 			entityManager.close();
 		}
+	}
+
+	public <T> T inTransaction(EntityManager entityManager, Function<EntityManager, T> action) {
+		log.trace( "inTransaction(entityManager, action)" );
+		final EntityTransaction trx = entityManager.getTransaction();
+		final T result;
+		try {
+			trx.begin();
+			log.trace( "Calling action in trx" );
+			result = action.apply( entityManager );
+			log.trace( "Called trx in action" );
+
+			log.trace( "Committing transaction" );
+			trx.commit();
+			log.trace( "Committed transaction" );
+		}
+		catch (Exception e) {
+			log.tracef( "Error calling action: %s (%s) - rollingback", e.getClass().getName(), e.getMessage() );
+			try {
+				trx.rollback();
+			}
+			catch (Exception ignored) {
+				log.trace( "Was unable to roll back transaction" );
+			}
+			throw e;
+		}
+		return result;
 	}
 
 	public void inTransaction(EntityManager entityManager, Consumer<EntityManager> action) {

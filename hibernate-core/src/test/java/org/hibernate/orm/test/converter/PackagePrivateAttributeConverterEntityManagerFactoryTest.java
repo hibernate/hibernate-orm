@@ -13,18 +13,17 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Tuple;
 
-import org.hibernate.orm.test.jpa.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-10778" )
+@TestForIssue(jiraKey = "HHH-10778")
 public class PackagePrivateAttributeConverterEntityManagerFactoryTest
 		extends EntityManagerFactoryBasedFunctionalTest {
 
@@ -35,7 +34,7 @@ public class PackagePrivateAttributeConverterEntityManagerFactoryTest
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		inTransaction( entityManager -> {
 			Tester tester = new Tester();
 			tester.setId( 1L );
 			tester.setCode( 123 );
@@ -43,13 +42,13 @@ public class PackagePrivateAttributeConverterEntityManagerFactoryTest
 			entityManager.persist( tester );
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		inTransaction( entityManager -> {
 			Tuple tuple = entityManager.createQuery(
-				"select t.code as code " +
-				"from Tester t " +
-				"where t.id = :id", Tuple.class )
-			.setParameter( "id", 1L )
-			.getSingleResult();
+					"select t.code as code " +
+							"from Tester t " +
+							"where t.id = :id", Tuple.class )
+					.setParameter( "id", 1L )
+					.getSingleResult();
 
 			assertEquals( "123", tuple.get( "code" ) );
 
@@ -64,7 +63,7 @@ public class PackagePrivateAttributeConverterEntityManagerFactoryTest
 		@Id
 		private Long id;
 
-		@Convert( converter = IntegerToVarcharConverter.class )
+		@Convert(converter = IntegerToVarcharConverter.class)
 		private Integer code;
 
 		public Long getId() {
@@ -84,8 +83,8 @@ public class PackagePrivateAttributeConverterEntityManagerFactoryTest
 		}
 	}
 
-	@Converter( autoApply = true )
-	static class IntegerToVarcharConverter implements AttributeConverter<Integer,String> {
+	@Converter(autoApply = true)
+	static class IntegerToVarcharConverter implements AttributeConverter<Integer, String> {
 		@Override
 		public String convertToDatabaseColumn(Integer attribute) {
 			return attribute == null ? null : attribute.toString();

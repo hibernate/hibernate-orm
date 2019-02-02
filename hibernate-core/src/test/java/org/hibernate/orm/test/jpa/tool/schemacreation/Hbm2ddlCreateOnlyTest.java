@@ -10,7 +10,7 @@ import javax.persistence.Table;
 import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.orm.test.jpa.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.logger.LoggerInspectionExtension;

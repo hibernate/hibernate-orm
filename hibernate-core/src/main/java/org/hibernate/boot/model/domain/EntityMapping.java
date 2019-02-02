@@ -36,4 +36,8 @@ public interface EntityMapping extends IdentifiableTypeMapping, Filterable {
 	Class getProxyInterface();
 
 	ExecuteUpdateResultCheckStyle getUpdateResultCheckStyle();
+
+	Class getMappedClass();
+
+	int getBatchSize();
 }

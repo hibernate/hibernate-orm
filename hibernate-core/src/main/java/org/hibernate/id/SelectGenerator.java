@@ -24,7 +24,6 @@ import org.hibernate.metamodel.model.domain.spi.NaturalIdDescriptor;
 import org.hibernate.metamodel.valuegen.ValueGenerationStrategy;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -96,8 +95,8 @@ public class SelectGenerator extends AbstractPostInsertGenerator implements Conf
 		private final Dialect dialect;
 
 		private final String uniqueKeyPropertyName;
-		private final Type uniqueKeyType;
-		private final Type idType;
+//		private final Type uniqueKeyType;
+//		private final Type idType;
 
 		private final String idSelectString;
 
@@ -111,8 +110,8 @@ public class SelectGenerator extends AbstractPostInsertGenerator implements Conf
 			this.uniqueKeyPropertyName = determineNameOfPropertyToUse( persister, suppliedUniqueKeyPropertyName );
 
 			idSelectString = persister.getSelectByUniqueKeyString( uniqueKeyPropertyName );
-			uniqueKeyType = persister.getPropertyType( uniqueKeyPropertyName );
-			idType = persister.getIdentifierType();
+//			uniqueKeyType = persister.getPropertyType( uniqueKeyPropertyName );
+//			idType = persister.getIdentifierType();
 		}
 
 		public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert() {

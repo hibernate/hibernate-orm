@@ -7,7 +7,6 @@
 package org.hibernate;
 
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
-import org.hibernate.type.Type;
 
 /**
  * During a flush cycle, Hibernate needs to determine which of the entities associated with a {@link Session}.
@@ -127,13 +126,6 @@ public interface CustomEntityDirtinessStrategy {
 		 * @return The attribute name
 		 */
 		String getName();
-
-		/**
-		 * Get the mapping type of this attribute.
-		 *
-		 * @return The mapping type.
-		 */
-		Type getType();
 
 		/**
 		 * Get the current value of this attribute.

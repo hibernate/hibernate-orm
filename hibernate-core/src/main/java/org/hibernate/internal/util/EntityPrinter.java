@@ -18,6 +18,8 @@ import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.NonIdPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -61,17 +63,19 @@ public final class EntityPrinter {
 			);
 		}
 
-		JavaTypeDescriptor[] propertyJavaTypeDescriptors = entityDescriptor.getPropertyJavaTypeDescriptors();
-		String[] names = entityDescriptor.getPropertyNames();
-		Object[] values = entityDescriptor.getPropertyValues( entity );
-		for ( int i = 0; i < propertyJavaTypeDescriptors.length; i++ ) {
-			if ( !names[i].startsWith( "_" ) ) {
-				String strValue = values[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ?
-						values[i].toString() :
-						propertyJavaTypeDescriptors[i].extractLoggableRepresentation( values[i] );
-				result.put( names[i], strValue );
-			}
-		}
+		entityDescriptor.visitStateArrayContributors(
+				attributeDescriptor -> {
+					String name = attributeDescriptor.getNavigableRole().getNavigableName();
+					if ( !name.startsWith( "_" ) ) {
+						Object value = attributeDescriptor.getPropertyAccess().getGetter().get( entity );
+						JavaTypeDescriptor javaTypeDescriptor = entityDescriptor.getJavaTypeDescriptor();
+
+						String strValue = value == LazyPropertyInitializer.UNFETCHED_PROPERTY ?
+								value.toString() :
+								javaTypeDescriptor.extractLoggableRepresentation( value );
+						result.put( name, strValue );
+					}
+				} );
 		return entityName + result.toString();
 	}
 

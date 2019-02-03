@@ -17,7 +17,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.annotations.Remove;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
@@ -638,11 +637,6 @@ public interface EntityTypeDescriptor<T>
 	// todo (6.0) : legacy methods based on the legacy "decomposed attribute state" arrays
 
 	@Remove
-	default Type[] getPropertyTypes(){
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	@Remove
 	default JavaTypeDescriptor[] getPropertyJavaTypeDescriptors() {
 		List<NonIdPersistentAttribute> persistentAttributes = getPersistentAttributes();
 		int attributesSize = persistentAttributes.size();
@@ -664,31 +658,6 @@ public interface EntityTypeDescriptor<T>
 		return names;
 	}
 
-	@Remove
-	default Type getPropertyType(String propertyName) {
-		final String[] propertyNames = getPropertyNames();
-		for ( int i = 0; i < propertyNames.length; ++i ) {
-			if ( propertyNames[i] == propertyName ) {
-				return getPropertyTypes()[i];
-			}
-		}
-		return null;
-	}
-
-	@Remove
-	default JavaTypeDescriptor getPropertyJavaTypeDescriptor(String propertyName) {
-		final String[] propertyNames = getPropertyNames();
-		for ( int i = 0; i < propertyNames.length; ++i ) {
-			if ( propertyNames[i] == propertyName ) {
-				return getPropertyJavaTypeDescriptors()[i];
-			}
-		}
-		return null;
-	}
-
-	@Remove
-	boolean[] getPropertyInsertability();
-
 	/**
 	 * @deprecated yep
 	 */
@@ -705,12 +674,6 @@ public interface EntityTypeDescriptor<T>
 
 	@Remove
 	boolean[] getPropertyUpdateability();
-
-	@Remove
-	boolean[] getPropertyCheckability();
-
-	@Remove
-	boolean[] getPropertyNullability();
 
 	@Remove
 	boolean[] getPropertyVersionability();

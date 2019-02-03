@@ -34,12 +34,11 @@ import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NaturalIdDescriptor;
+import org.hibernate.metamodel.model.domain.spi.NonIdPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.VersionSupport;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * An event that occurs for each entity instance at flush time
@@ -351,7 +350,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		boolean isDirty = false;
 		if ( entry.getStatus() != Status.DELETED ) {
 			if ( callbackRegistry.preUpdate( entity ) ) {
-				isDirty = copyState( entity, entityDescriptor.getPropertyJavaTypeDescriptors(), values, session.getFactory() );
+				isDirty = copyState( entity, entityDescriptor, values, session.getFactory() );
 			}
 		}
 
@@ -369,16 +368,18 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		);
 	}
 
-	private boolean copyState(Object entity, JavaTypeDescriptor[] javaTypeDescriptors, Object[] state, SessionFactoryImplementor sf) {
+	private <T> boolean copyState(Object entity, EntityTypeDescriptor<T> entityDescriptor, Object[] state, SessionFactoryImplementor sf) {
 		// copy the entity state into the state array and return true if the state has changed
-		EntityTypeDescriptor entityDescriptor = sf.getMetamodel().getEntityDescriptor( entity.getClass() );
+		List<NonIdPersistentAttribute> persistentAttributes = entityDescriptor.getPersistentAttributes();
 		Object[] newState = entityDescriptor.getPropertyValues( entity );
 		int size = newState.length;
 		boolean isDirty = false;
 		for ( int index = 0; index < size ; index++ ) {
 			if ( ( state[index] == LazyPropertyInitializer.UNFETCHED_PROPERTY &&
 					newState[index] != LazyPropertyInitializer.UNFETCHED_PROPERTY ) ||
-					( state[index] != newState[index] && !javaTypeDescriptors[index].areEqual( state[index], newState[index] ) ) ) {
+					( state[index] != newState[index] &&
+							!persistentAttributes.get( index ).getJavaTypeDescriptor().areEqual( state[index], newState[index] )
+					) ) {
 				isDirty = true;
 				state[index] = newState[index];
 			}
@@ -429,7 +430,6 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		else {
 			return null;
 		}
-
 	}
 
 	private boolean isVersionIncrementRequired(
@@ -471,7 +471,6 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			else {
 				return hasDirtyCollections( event, entityDescriptor, status );
 			}
-
 		}
 	}
 
@@ -637,16 +636,16 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 	}
 
-	private class DirtyCheckAttributeInfoImpl implements CustomEntityDirtinessStrategy.AttributeInformation {
+	private class DirtyCheckAttributeInfoImpl<T> implements CustomEntityDirtinessStrategy.AttributeInformation {
 		private final FlushEntityEvent event;
-		private final EntityTypeDescriptor descriptor;
+		private final EntityTypeDescriptor<T> descriptor;
 		private final int numberOfAttributes;
 		private int index;
 
 		private DirtyCheckAttributeInfoImpl(FlushEntityEvent event) {
 			this.event = event;
 			this.descriptor = event.getEntityEntry().getDescriptor();
-			this.numberOfAttributes = descriptor.getPropertyNames().length;
+			this.numberOfAttributes = descriptor.getPersistentAttributes().size();
 		}
 
 		@Override
@@ -661,12 +660,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 		@Override
 		public String getName() {
-			return descriptor.getPropertyNames()[index];
-		}
-
-		@Override
-		public Type getType() {
-			return descriptor.getPropertyTypes()[index];
+			return descriptor.getPersistentAttributes().get(index).getAttributeName();
 		}
 
 		@Override
@@ -701,10 +695,10 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 	private void logDirtyProperties(Object id, int[] dirtyProperties, EntityTypeDescriptor entityDescriptor) {
 		if ( dirtyProperties != null && dirtyProperties.length > 0 && LOG.isTraceEnabled() ) {
-			final String[] allPropertyNames = entityDescriptor.getPropertyNames();
+			List<NonIdPersistentAttribute> attributes = entityDescriptor.getPersistentAttributes();
 			final String[] dirtyPropertyNames = new String[dirtyProperties.length];
-			for ( int i = 0; i < dirtyProperties.length && i < allPropertyNames.length; i++ ) {
-				dirtyPropertyNames[i] = allPropertyNames[dirtyProperties[i]];
+			for ( int i = 0; i < dirtyProperties.length && i < attributes.size(); i++ ) {
+				dirtyPropertyNames[i] = attributes.get( dirtyProperties[i] ).getAttributeName();
 			}
 			LOG.tracev(
 					"Found dirty properties [{0}] : {1}",

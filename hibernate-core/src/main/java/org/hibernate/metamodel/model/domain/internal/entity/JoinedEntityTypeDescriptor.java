@@ -32,7 +32,6 @@ import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -321,11 +320,6 @@ public class JoinedEntityTypeDescriptor<J> extends AbstractEntityTypeDescriptor<
 	}
 
 	@Override
-	public boolean[] getPropertyInsertability() {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	@Override
 	public ValueInclusion[] getPropertyInsertGenerationInclusions() {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
@@ -337,16 +331,6 @@ public class JoinedEntityTypeDescriptor<J> extends AbstractEntityTypeDescriptor<
 
 	@Override
 	public boolean[] getPropertyUpdateability() {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	@Override
-	public boolean[] getPropertyCheckability() {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	@Override
-	public boolean[] getPropertyNullability() {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 

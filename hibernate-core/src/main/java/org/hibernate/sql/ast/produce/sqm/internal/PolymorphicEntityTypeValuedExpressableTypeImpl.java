@@ -733,11 +733,6 @@ public class PolymorphicEntityTypeValuedExpressableTypeImpl<T> implements Entity
 	}
 
 	@Override
-	public boolean[] getPropertyInsertability() {
-		throw new UnsupportedOperationException(  );
-	}
-
-	@Override
 	public ValueInclusion[] getPropertyInsertGenerationInclusions() {
 		throw new UnsupportedOperationException(  );
 	}
@@ -749,16 +744,6 @@ public class PolymorphicEntityTypeValuedExpressableTypeImpl<T> implements Entity
 
 	@Override
 	public boolean[] getPropertyUpdateability() {
-		throw new UnsupportedOperationException(  );
-	}
-
-	@Override
-	public boolean[] getPropertyCheckability() {
-		throw new UnsupportedOperationException(  );
-	}
-
-	@Override
-	public boolean[] getPropertyNullability() {
 		throw new UnsupportedOperationException(  );
 	}
 

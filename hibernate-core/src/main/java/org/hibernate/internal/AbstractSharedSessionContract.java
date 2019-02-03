@@ -972,7 +972,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public NativeQueryImplementor createSQLQuery(String queryString) {
-		return getNativeQueryImplementor( queryString, true );
+		return getNativeQueryImplementor( queryString, getFactory().getSessionFactoryOptions().jdbcStyleParamsZeroBased() );
 	}
 
 	protected NativeQueryImplementor getNativeQueryImplementor(

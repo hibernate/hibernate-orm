@@ -122,8 +122,8 @@ public class QueryPlanCache implements Serializable {
 	 * @param query The query
 	 * @return The parameter metadata
 	 */
-	public ParameterMetadata getSQLParameterMetadata(final String query, boolean isOrdinalParameterZeroBased)  {
-		final ParameterMetadataKey key = new ParameterMetadataKey( query, isOrdinalParameterZeroBased );
+	public ParameterMetadata getSQLParameterMetadata(final String query)  {
+		final ParameterMetadataKey key = new ParameterMetadataKey( query );
 		ParameterMetadataImpl value = parameterMetadataCache.get( key );
 		if ( value == null ) {
 			value = nativeQueryInterpreter.getParameterMetadata( query );
@@ -256,15 +256,11 @@ public class QueryPlanCache implements Serializable {
 
 	private static class ParameterMetadataKey implements Serializable {
 		private final String query;
-		private final boolean isOrdinalParameterZeroBased;
 		private final int hashCode;
 
-		public ParameterMetadataKey(String query, boolean isOrdinalParameterZeroBased) {
+		public ParameterMetadataKey(String query) {
 			this.query = query;
-			this.isOrdinalParameterZeroBased = isOrdinalParameterZeroBased;
-			int hash = query.hashCode();
-			hash = 29 * hash + ( isOrdinalParameterZeroBased ? 1 : 0 );
-			this.hashCode = hash;
+			this.hashCode = query.hashCode();
 		}
 
 		@Override
@@ -278,8 +274,7 @@ public class QueryPlanCache implements Serializable {
 
 			final ParameterMetadataKey that = (ParameterMetadataKey) o;
 
-			return isOrdinalParameterZeroBased == that.isOrdinalParameterZeroBased
-					&& query.equals( that.query );
+			return query.equals( that.query );
 
 		}
 

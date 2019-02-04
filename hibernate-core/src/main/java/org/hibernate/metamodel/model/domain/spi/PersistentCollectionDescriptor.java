@@ -582,7 +582,7 @@ public interface PersistentCollectionDescriptor<O,C,E>
 	Object getKeyOfOwner(Object owner, SessionImplementor session);
 
 	default Iterator getElementsIterator(Object collection, SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		return ( (java.util.Collection) collection ).iterator();
 	}
 
 	default C instantiateRaw(int anticipatedSize) {

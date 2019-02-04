@@ -7,11 +7,11 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cache.CacheException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -121,5 +121,10 @@ public class PersistentMapDescriptorImpl<O,K,E>
 	@Override
 	protected boolean indexContainsFormula(){
 		return hasFormula;
+	}
+
+	@Override
+	public Iterator getElementsIterator(Object collection, SharedSessionContractImplementor session) {
+		return ( (java.util.Map) collection ).values().iterator();
 	}
 }

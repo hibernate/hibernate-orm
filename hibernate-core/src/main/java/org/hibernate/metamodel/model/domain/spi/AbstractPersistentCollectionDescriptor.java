@@ -187,6 +187,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 	private final boolean hasOrphanDeletes;
 	private final boolean inverse;
 
+	private boolean cascadeDeleteEnabled;
 	private boolean isRowInsertEnabled;
 	private boolean isRowDeleteEnabled;
 	private boolean fullyInitialized;
@@ -391,6 +392,11 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 		if ( !isOneToMany() ) {
 			this.isRowDeleteEnabled = true;
 			this.isRowInsertEnabled = true;
+
+		}
+		else {
+			this.cascadeDeleteEnabled = bootCollectionDescriptor.getKey().isCascadeDeleteEnabled()
+					&& creationContext.getSessionFactory().getDialect().supportsCascadeDelete();
 		}
 
 		this.javaTypeDescriptor = (CollectionJavaDescriptor<C>) bootCollectionDescriptor.getJavaTypeMapping().getJavaTypeDescriptor();
@@ -1259,6 +1265,11 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 	@Override
 	public ForeignKeyDirection getForeignKeyDirection() {
 		return ForeignKeyDirection.TO_PARENT;
+	}
+
+	@Override
+	public boolean isCascadeDeleteEnabled() {
+		return cascadeDeleteEnabled;
 	}
 
 	private void writeIndex(

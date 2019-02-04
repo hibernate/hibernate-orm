@@ -7,6 +7,8 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.lang.reflect.Array;
+import java.util.Arrays;
+import java.util.Iterator;
 
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -114,5 +116,9 @@ public class PersistentArrayDescriptorImpl<O,E> extends AbstractPersistentCollec
 		return hasFormula;
 	}
 
+	@Override
+	public Iterator getElementsIterator(Object collection, SharedSessionContractImplementor session) {
+		return Arrays.asList( (Object[]) collection ).iterator();
+	}
 
 }

@@ -24,7 +24,7 @@ public interface CascadeStyle extends Serializable {
 	 *
 	 * @return True if the action should be cascaded under this style; false otherwise.
 	 */
-	public boolean doCascade(CascadingAction action);
+	boolean doCascade(CascadingAction action);
 
 	/**
 	 * Probably more aptly named something like doCascadeToCollectionElements(); it is
@@ -40,7 +40,7 @@ public interface CascadeStyle extends Serializable {
 	 * @return True if the action should be really cascaded under this style;
 	 *         false otherwise.
 	 */
-	public boolean reallyDoCascade(CascadingAction action);
+	boolean reallyDoCascade(CascadingAction action);
 
 	/**
 	 * Do we need to delete orphaned collection elements?
@@ -48,5 +48,5 @@ public interface CascadeStyle extends Serializable {
 	 * @return True if this style need to account for orphan delete
 	 *         operations; false otherwise.
 	 */
-	public boolean hasOrphanDelete();
+	boolean hasOrphanDelete();
 }

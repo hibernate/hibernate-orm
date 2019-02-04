@@ -409,7 +409,6 @@ public final class Cascade {
 		else if ( PluralPersistentAttribute.class.isInstance( attribute ) ) {
 			cascadeCollection(
 					action,
-
 					cascadePoint,
 					eventSource,
 					componentPathStackDepth,
@@ -438,7 +437,7 @@ public final class Cascade {
 		final CollectionElement collectionElement = attribute.getPersistentCollectionDescriptor().getElementDescriptor();
 		final PersistentCollectionDescriptor descriptor = eventSource.getFactory()
 				.getMetamodel()
-				.findCollectionDescriptor( attribute.getNavigableName() );
+				.findCollectionDescriptor( attribute.getNavigableRole() );
 
 		CascadePoint elementsCascadePoint = cascadePoint;
 		if ( cascadePoint == CascadePoint.AFTER_INSERT_BEFORE_DELETE ) {

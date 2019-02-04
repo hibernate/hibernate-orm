@@ -9,6 +9,7 @@ package org.hibernate.internal.util;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityKey;
@@ -61,9 +62,16 @@ public final class EntityPrinter {
 		Object[] values = entityPersister.getPropertyValues( entity );
 		for ( int i = 0; i < types.length; i++ ) {
 			if ( !names[i].startsWith( "_" ) ) {
-				String strValue = values[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ?
-						values[i].toString() :
-						types[i].toLoggableString( values[i], factory );
+				final String strValue;
+				if ( values[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+					strValue = values[i].toString();
+				}
+				else if ( !Hibernate.isInitialized( values[i] ) ) {
+					strValue = "<uninitialized>";
+				}
+				else {
+					strValue = types[i].toLoggableString( values[i], factory );
+				}
 				result.put( names[i], strValue );
 			}
 		}

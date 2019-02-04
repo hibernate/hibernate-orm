@@ -60,13 +60,15 @@ public class HqlExecutionSmokeTest extends SessionFactoryBasedFunctionalTest {
 	@AfterEach
 	public void dropData() {
 		inTransaction(
-				session -> session.doWork(
-						connection -> {
-							try (Statement statement = connection.createStatement() ) {
-								statement.execute( "delete from EntityOfBasics" );
+				session -> {
+					session.doWork(
+							connection -> {
+								try (Statement statement = connection.createStatement()) {
+									statement.execute( "delete from EntityOfBasics" );
+								}
 							}
-						}
-				)
+					);
+				}
 		);
 	}
 
@@ -86,7 +88,7 @@ public class HqlExecutionSmokeTest extends SessionFactoryBasedFunctionalTest {
 	@Test
 	public void testEntityWithSecondaryTable() {
 		inTransaction(
-				session -> session.createQuery( "from Vendor" ).list()
+				session -> {session.createQuery( "from Vendor" ).list();}
 		);
 	}
 

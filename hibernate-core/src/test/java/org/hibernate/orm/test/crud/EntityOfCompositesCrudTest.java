@@ -30,7 +30,9 @@ public class EntityOfCompositesCrudTest extends SessionFactoryBasedFunctionalTes
 
 	@Test
 	public void testOperations() {
-		inTransaction( session -> session.createQuery( "delete EntityOfComposites" ).executeUpdate() );
+		inTransaction( session -> {
+			session.createQuery( "delete EntityOfComposites" ).executeUpdate();
+		} );
 
 		final EntityOfComposites entity = new EntityOfComposites(
 				1,
@@ -46,7 +48,9 @@ public class EntityOfCompositesCrudTest extends SessionFactoryBasedFunctionalTes
 				)
 		);
 
-		inTransaction( session -> session.save( entity ) );
+		inTransaction( session -> {
+			session.save( entity );
+		} );
 		inTransaction(
 				session -> {
 					final String value = session.createQuery( "select s.component.basicString from EntityOfComposites s", String.class ).uniqueResult();

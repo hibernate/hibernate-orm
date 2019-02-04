@@ -7,6 +7,7 @@
 package org.hibernate.testing.junit5;
 
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.hibernate.Transaction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -130,4 +131,60 @@ public class SessionFactoryScope implements SessionFactoryAccess {
 			throw e;
 		}
 	}
+
+	public <R> R inTransaction(Function<SessionImplementor, R> action) {
+		return inTransaction( getSessionFactory(), action );
+	}
+
+	private <R> R inTransaction(SessionFactoryImplementor factory, Function<SessionImplementor, R> action) {
+		log.trace( "#inTransaction(factory, action)" );
+
+		R result;
+		try (SessionImplementor session = (SessionImplementor) factory.openSession()) {
+			log.trace( "Session opened, calling action" );
+			result = inTransaction( session, action );
+			log.trace( "called action" );
+		}
+		finally {
+			log.trace( "Session close - auto-close lock" );
+		}
+		return result;
+	}
+
+	private <R> R inTransaction(SessionImplementor session, Function<SessionImplementor, R> action) {
+		log.trace( "inTransaction(session,action)" );
+
+		final Transaction txn = session.beginTransaction();
+		log.trace( "Started transaction" );
+		R result;
+		try {
+			log.trace( "Calling action in txn" );
+			result = action.apply( session );
+			log.trace( "Called action - in txn" );
+
+			log.trace( "Committing transaction" );
+			txn.commit();
+			log.trace( "Committed transaction" );
+		}
+		catch (Exception e) {
+			log.tracef(
+					"Error calling action: %s (%s) - rolling back",
+					e.getClass().getName(),
+					e.getMessage()
+			);
+			try {
+				txn.rollback();
+			}
+			catch (Exception ignore) {
+				log.trace( "Was unable to roll back transaction" );
+				// really nothing else we can do here - the attempt to
+				//		rollback already failed and there is nothing else
+				// 		to clean up.
+			}
+
+			throw e;
+		}
+		return result;
+	}
+
 }

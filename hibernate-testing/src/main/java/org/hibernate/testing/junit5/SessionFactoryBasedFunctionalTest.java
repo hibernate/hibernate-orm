@@ -8,7 +8,12 @@ package org.hibernate.testing.junit5;
 
 import java.util.EnumSet;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
+import javax.persistence.SharedCacheMode;
+
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
@@ -16,6 +21,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
@@ -36,6 +42,9 @@ import org.jboss.logging.Logger;
 public abstract class SessionFactoryBasedFunctionalTest
 		extends BaseUnitTest
 		implements SessionFactoryProducer, SessionFactoryScopeContainer {
+	protected static final Class[] NO_CLASSES = new Class[0];
+	protected static final String[] NO_MAPPINGS = new String[0];
+
 	private static final Logger log = Logger.getLogger( SessionFactoryBasedFunctionalTest.class );
 
 	private SessionFactoryScope sessionFactoryScope;
@@ -57,6 +66,7 @@ public abstract class SessionFactoryBasedFunctionalTest
 		final StandardServiceRegistryBuilder ssrBuilder = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, exportSchema() ? "create-drop" : "none" );
 		applySettings( ssrBuilder );
+		applyCacheSettings( ssrBuilder );
 		final StandardServiceRegistry ssr = ssrBuilder.build();
 		try {
 			metadata = buildMetadata( ssr );
@@ -115,12 +125,23 @@ public abstract class SessionFactoryBasedFunctionalTest
 		for ( Class annotatedClass : getAnnotatedClasses() ) {
 			metadataSources.addAnnotatedClass( annotatedClass );
 		}
+		for ( String mapping : getHmbMappingFiles() ) {
+			metadataSources.addResource(
+					getBaseForMappings() + mapping
+			);
+		}
 	}
-
-	protected static final Class[] NO_CLASSES = new Class[0];
 
 	protected Class[] getAnnotatedClasses() {
 		return NO_CLASSES;
+	}
+
+	protected String[] getHmbMappingFiles() {
+		return NO_MAPPINGS;
+	}
+
+	protected String getBaseForMappings() {
+		return "org/hibernate/orm/test/";
 	}
 
 	@Override
@@ -137,6 +158,17 @@ public abstract class SessionFactoryBasedFunctionalTest
 		return  metadata;
 	}
 
+	protected String getCacheConcurrencyStrategy() {
+		return null;
+	}
+
+	protected void applyCacheSettings(StandardServiceRegistryBuilder builer) {
+		if ( getCacheConcurrencyStrategy() != null ) {
+			builer.applySetting( AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY, getCacheConcurrencyStrategy() );
+			builer.applySetting( AvailableSettings.JPA_SHARED_CACHE_MODE, SharedCacheMode.ALL.name() );
+		}
+	}
+
 	@AfterEach
 	public final void afterTest() {
 		if ( isCleanupTestDataRequired() ) {
@@ -150,12 +182,12 @@ public abstract class SessionFactoryBasedFunctionalTest
 
 	protected void cleanupTestData() {
 		inTransaction(
-				session ->
-						getMetadata().getEntityHierarchies().forEach(
-								hierarchy -> session.createQuery( "delete from " + hierarchy.getRootType().getName() )
-										.executeUpdate()
-						)
-
+				session -> {
+					getMetadata().getEntityHierarchies().forEach(
+							hierarchy -> session.createQuery( "delete from " + hierarchy.getRootType().getName() )
+									.executeUpdate()
+					);
+				}
 		);
 	}
 
@@ -163,6 +195,9 @@ public abstract class SessionFactoryBasedFunctionalTest
 		sessionFactoryScope().inTransaction( action );
 	}
 
+	protected <R> R inTransaction(Function<SessionImplementor, R> action) {
+		return sessionFactoryScope().inTransaction( action );
+	}
 	protected void inSession(Consumer<SessionImplementor> action) {
 		sessionFactoryScope().inSession( action );
 	}

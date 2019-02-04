@@ -36,7 +36,9 @@ public class EmbeddedIdEntityTest extends SessionFactoryBasedFunctionalTest {
 		entity.setId( entityId );
 		entity.setData( "test" );
 
-		inTransaction( session -> session.save( entity ) );
+		inTransaction( session -> {
+			session.save( entity );
+		} );
 
 		// select non-embeddable data
 		inTransaction(

@@ -32,14 +32,14 @@ public class SimpleEntityCrudTest extends SessionFactoryBasedFunctionalTest {
 	@Test
 	public void testEntitySaving() {
 		inTransaction(
-				session -> session.createQuery( "delete SimpleEntity" ).executeUpdate()
+				session -> {session.createQuery( "delete SimpleEntity" ).executeUpdate();}
 		);
 
 		final SimpleEntity entity = new SimpleEntity();
 		entity.setId( 1 );
 		entity.setSomeString( "hi" );
 		entity.setSomeInteger( 2 );
-		inTransaction( session -> session.save( entity ) );
+		inTransaction( session -> {session.save( entity );} );
 		inTransaction(
 				session -> {
 					final String value = session.createQuery( "select s.someString from SimpleEntity s", String.class ).uniqueResult();
@@ -80,7 +80,9 @@ public class SimpleEntityCrudTest extends SessionFactoryBasedFunctionalTest {
 		entity.setSomeString( "hello world" );
 		entity.setSomeInteger( 5 );
 		entity.setSomeLong( 10L );
-		inTransaction( session -> session.save( entity ) );
+		inTransaction( session -> {
+			session.save( entity );
+		} );
 
 		inTransaction(
 				session -> {
@@ -115,7 +117,9 @@ public class SimpleEntityCrudTest extends SessionFactoryBasedFunctionalTest {
 		entity.setSomeString( "hello world" );
 		entity.setSomeInteger( 5 );
 		entity.setSomeLong( 10L );
-		inTransaction( session -> session.save( entity ) );
+		inTransaction( session -> {
+			session.save( entity );
+		} );
 
 		inTransaction(
 				session -> {

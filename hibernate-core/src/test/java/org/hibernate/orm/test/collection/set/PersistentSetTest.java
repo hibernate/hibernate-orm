@@ -4,41 +4,38 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.collection.set;
+package org.hibernate.orm.test.collection.set;
 
 import java.util.HashSet;
-import java.util.Map;
 
 import org.hibernate.CacheMode;
-import org.hibernate.Session;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.collection.internal.PersistentSet;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.stat.CollectionStatistics;
 
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.FailureExpected;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
-public class PersistentSetTest extends BaseNonConfigCoreFunctionalTestCase {
+public class PersistentSetTest extends SessionFactoryBasedFunctionalTest {
 	@Override
-	public String[] getMappings() {
+	public String[] getHmbMappingFiles() {
 		return new String[] { "collection/set/Mappings.hbm.xml" };
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
-		super.addSettings( settings );
-		settings.put( AvailableSettings.GENERATE_STATISTICS, "true" );
-		settings.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
-		settings.put( AvailableSettings.USE_QUERY_CACHE, "true" );
+	protected void applySettings(StandardServiceRegistryBuilder builer) {
+		builer.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
+		builer.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
+		builer.applySetting( AvailableSettings.USE_QUERY_CACHE, "true" );
 	}
 
 	@Test
@@ -49,118 +46,124 @@ public class PersistentSetTest extends BaseNonConfigCoreFunctionalTestCase {
 		child.setParent( parent );
 		Child otherChild = new Child( "c2" );
 
-		Session session = openSession();
-		session.beginTransaction();
-		session.save( parent );
-		session.flush();
-		// at this point, the set on parent has now been replaced with a PersistentSet...
-		PersistentSet children = ( PersistentSet ) parent.getChildren();
+		inTransaction(
+				session -> {
+					session.save( parent );
+					session.flush();
+					// at this point, the set on parent has now been replaced with a PersistentSet...
+					PersistentSet children = (PersistentSet) parent.getChildren();
 
-		assertFalse( children.add( child ) );
-		assertFalse( children.isDirty() );
+					assertFalse( children.add( child ) );
+					assertFalse( children.isDirty() );
 
-		assertFalse( children.remove( otherChild ) );
-		assertFalse( children.isDirty() );
+					assertFalse( children.remove( otherChild ) );
+					assertFalse( children.isDirty() );
 
-		HashSet otherSet = new HashSet();
-		otherSet.add( child );
-		assertFalse( children.addAll( otherSet ) );
-		assertFalse( children.isDirty() );
+					HashSet otherSet = new HashSet();
+					otherSet.add( child );
+					assertFalse( children.addAll( otherSet ) );
+					assertFalse( children.isDirty() );
 
-		assertFalse( children.retainAll( otherSet ) );
-		assertFalse( children.isDirty() );
+					assertFalse( children.retainAll( otherSet ) );
+					assertFalse( children.isDirty() );
 
-		otherSet = new HashSet();
-		otherSet.add( otherChild );
-		assertFalse( children.removeAll( otherSet ) );
-		assertFalse( children.isDirty() );
+					otherSet = new HashSet();
+					otherSet.add( otherChild );
+					assertFalse( children.removeAll( otherSet ) );
+					assertFalse( children.isDirty() );
 
-		assertTrue( children.retainAll( otherSet ));
-		assertTrue( children.isDirty() );
-		assertTrue( children.isEmpty() );
+					assertTrue( children.retainAll( otherSet ) );
+					assertTrue( children.isDirty() );
+					assertTrue( children.isEmpty() );
 
-		children.clear();
-		session.delete( child );
-		assertTrue( children.isDirty() );
+					children.clear();
+					session.delete( child );
+					assertTrue( children.isDirty() );
 
-		session.flush();
+					session.flush();
 
-		children.clear();
-		assertFalse( children.isDirty() );
+					children.clear();
+					assertFalse( children.isDirty() );
 
-		session.delete( parent );
-		session.getTransaction().commit();
-		session.close();
+					session.delete( parent );
+				}
+		);
 	}
 
 	@Test
 	public void testCollectionMerging() {
-		Session session = openSession();
-		session.beginTransaction();
-		Parent parent = new Parent( "p1" );
+		final Parent parent = new Parent( "p1" );
 		Child child = new Child( "c1" );
-		parent.getChildren().add( child );
 		child.setParent( parent );
-		session.save( parent );
-		session.getTransaction().commit();
-		session.close();
+		parent.getChildren().add( child );
 
-		CollectionStatistics stats =  sessionFactory().getStatistics().getCollectionStatistics( Parent.class.getName() + ".children" );
+		inTransaction(
+				session -> {
+					session.save( parent );
+				}
+		);
+
+
+		CollectionStatistics stats = sessionFactory().getStatistics()
+				.getCollectionStatistics( Parent.class.getName() + ".children" );
 		long recreateCount = stats.getRecreateCount();
 		long updateCount = stats.getUpdateCount();
 
-		session = openSession();
-		session.beginTransaction();
-		parent = ( Parent ) session.merge( parent );
-		session.getTransaction().commit();
-		session.close();
+		Parent retrievedParent = inTransaction(
+				session -> {
+					return (Parent) session.merge( parent );
+				}
+		);
 
-		assertEquals( 1, parent.getChildren().size() );
+		assertEquals( 1, retrievedParent.getChildren().size() );
 		assertEquals( recreateCount, stats.getRecreateCount() );
 		assertEquals( updateCount, stats.getUpdateCount() );
 
-		session = openSession();
-		session.beginTransaction();
-		parent = ( Parent ) session.get( Parent.class, "p1" );
-		assertEquals( 1, parent.getChildren().size() );
-		session.delete( parent );
-		session.getTransaction().commit();
-		session.close();
+		inTransaction(
+				session -> {
+					Parent savedParent = session.get( Parent.class, "p1" );
+					assertEquals( 1, savedParent.getChildren().size() );
+					session.delete( savedParent );
+				}
+		);
+
 	}
 
 	@Test
 	public void testCollectiondirtyChecking() {
-		Session session = openSession();
-		session.beginTransaction();
-		Parent parent = new Parent( "p1" );
+		final Parent parent = new Parent( "p1" );
 		Child child = new Child( "c1" );
 		parent.getChildren().add( child );
 		child.setParent( parent );
-		session.save( parent );
-		session.getTransaction().commit();
-		session.close();
+		inTransaction(
+				session -> {
+					session.save( parent );
+				}
+		);
 
-		CollectionStatistics stats =  sessionFactory().getStatistics().getCollectionStatistics( Parent.class.getName() + ".children" );
+
+		CollectionStatistics stats = sessionFactory().getStatistics()
+				.getCollectionStatistics( Parent.class.getName() + ".children" );
 		long recreateCount = stats.getRecreateCount();
 		long updateCount = stats.getUpdateCount();
 
-		session = openSession();
-		session.beginTransaction();
-		parent = ( Parent ) session.get( Parent.class, "p1" );
-		assertEquals( 1, parent.getChildren().size() );
-		session.getTransaction().commit();
-		session.close();
+		inTransaction(
+				session -> {
+					Parent savedParent = session.get( Parent.class, "p1" );
+					assertEquals( 1, savedParent.getChildren().size() );
+				}
+		);
 
 		assertEquals( 1, parent.getChildren().size() );
 		assertEquals( recreateCount, stats.getRecreateCount() );
 		assertEquals( updateCount, stats.getUpdateCount() );
 
-		session = openSession();
-		session.beginTransaction();
-		assertEquals( 1, parent.getChildren().size() );
-		session.delete( parent );
-		session.getTransaction().commit();
-		session.close();
+		inTransaction(
+				session -> {
+					assertEquals( 1, parent.getChildren().size() );
+					session.delete( parent );
+				}
+		);
 	}
 
 	@Test
@@ -170,126 +173,130 @@ public class PersistentSetTest extends BaseNonConfigCoreFunctionalTestCase {
 		container.getContents().add( c1 );
 		Container.Content c2 = new Container.Content( "c2" );
 
-		Session session = openSession();
-		session.beginTransaction();
-		session.save( container );
-		session.flush();
-		// at this point, the set on container has now been replaced with a PersistentSet...
-		PersistentSet children = (PersistentSet) container.getContents();
+		inTransaction(
+				session -> {
+					session.save( container );
+					session.flush();
+					// at this point, the set on container has now been replaced with a PersistentSet...
+					PersistentSet children = (PersistentSet) container.getContents();
 
-		assertFalse( children.add( c1 ) );
-		assertFalse( children.isDirty() );
+					assertFalse( children.add( c1 ) );
+					assertFalse( children.isDirty() );
 
-		assertFalse( children.remove( c2 ) );
-		assertFalse( children.isDirty() );
+					assertFalse( children.remove( c2 ) );
+					assertFalse( children.isDirty() );
 
-		HashSet otherSet = new HashSet();
-		otherSet.add( c1 );
-		assertFalse( children.addAll( otherSet ) );
-		assertFalse( children.isDirty() );
+					HashSet otherSet = new HashSet();
+					otherSet.add( c1 );
+					assertFalse( children.addAll( otherSet ) );
+					assertFalse( children.isDirty() );
 
-		assertFalse( children.retainAll( otherSet ) );
-		assertFalse( children.isDirty() );
+					assertFalse( children.retainAll( otherSet ) );
+					assertFalse( children.isDirty() );
 
-		otherSet = new HashSet();
-		otherSet.add( c2 );
-		assertFalse( children.removeAll( otherSet ) );
-		assertFalse( children.isDirty() );
+					otherSet = new HashSet();
+					otherSet.add( c2 );
+					assertFalse( children.removeAll( otherSet ) );
+					assertFalse( children.isDirty() );
 
-		assertTrue( children.retainAll( otherSet ));
-		assertTrue( children.isDirty() );
-		assertTrue( children.isEmpty() );
+					assertTrue( children.retainAll( otherSet ) );
+					assertTrue( children.isDirty() );
+					assertTrue( children.isEmpty() );
 
-		children.clear();
-		assertTrue( children.isDirty() );
+					children.clear();
+					assertTrue( children.isDirty() );
 
-		session.flush();
+					session.flush();
 
-		children.clear();
-		assertFalse( children.isDirty() );
+					children.clear();
+					assertFalse( children.isDirty() );
 
-		session.delete( container );
-		session.getTransaction().commit();
-		session.close();
+					session.delete( container );
+				}
+		);
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-2485" )
+	@FailureExpected(jiraKey = "HHH-2485")
 	public void testCompositeElementMerging() {
-		Session session = openSession();
-		session.beginTransaction();
-		Container container = new Container( "p1" );
+		final Container container = new Container( "p1" );
 		Container.Content c1 = new Container.Content( "c1" );
 		container.getContents().add( c1 );
-		session.save( container );
-		session.getTransaction().commit();
-		session.close();
+		inTransaction(
+				session -> {
+					session.save( container );
+				}
+		);
 
-		CollectionStatistics stats =  sessionFactory().getStatistics().getCollectionStatistics( Container.class.getName() + ".contents" );
+		CollectionStatistics stats = sessionFactory().getStatistics()
+				.getCollectionStatistics( Container.class.getName() + ".contents" );
 		long recreateCount = stats.getRecreateCount();
 		long updateCount = stats.getUpdateCount();
 
 		container.setName( "another name" );
 
-		session = openSession();
-		session.beginTransaction();
-		container = ( Container ) session.merge( container );
-		session.getTransaction().commit();
-		session.close();
+		Container merged = inTransaction(
+				session -> {
+					return (Container) session.merge( container );
 
-		assertEquals( 1, container.getContents().size() );
+				}
+		);
+
+		assertEquals( 1, merged.getContents().size() );
 		assertEquals( recreateCount, stats.getRecreateCount() );
 		assertEquals( updateCount, stats.getUpdateCount() );
 
-		session = openSession();
-		session.beginTransaction();
-		container = ( Container ) session.get( Container.class, container.getId() );
-		assertEquals( 1, container.getContents().size() );
-		session.delete( container );
-		session.getTransaction().commit();
-		session.close();
+		inTransaction( session -> {
+			Container savedContainer = session.get( Container.class, container.getId() );
+			assertEquals( 1, savedContainer.getContents().size() );
+			session.delete( savedContainer );
+		} );
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-2485" )
+	@FailureExpected(jiraKey = "HHH-2485")
 	public void testCompositeElementCollectionDirtyChecking() {
-		Session session = openSession();
-		session.beginTransaction();
-		Container container = new Container( "p1" );
+		final Container container = new Container( "p1" );
 		Container.Content c1 = new Container.Content( "c1" );
 		container.getContents().add( c1 );
-		session.save( container );
-		session.getTransaction().commit();
-		session.close();
 
-		CollectionStatistics stats =  sessionFactory().getStatistics().getCollectionStatistics( Container.class.getName() + ".contents" );
+		inTransaction(
+				session -> {
+					session.save( container );
+
+				}
+		);
+
+		CollectionStatistics stats = sessionFactory().getStatistics()
+				.getCollectionStatistics( Container.class.getName() + ".contents" );
 		long recreateCount = stats.getRecreateCount();
 		long updateCount = stats.getUpdateCount();
 
-		session = openSession();
-		session.beginTransaction();
-		container = ( Container ) session.get( Container.class, container.getId() );
-		assertEquals( 1, container.getContents().size() );
-		session.getTransaction().commit();
-		session.close();
+		Container savedContainer = inTransaction(
+				session -> {
+					Container result = session.get( Container.class, container.getId() );
+					assertEquals( 1, result.getContents().size() );
+					return result;
+				}
+		);
 
-		assertEquals( 1, container.getContents().size() );
+		assertEquals( 1, savedContainer.getContents().size() );
 		assertEquals( recreateCount, stats.getRecreateCount() );
 		assertEquals( updateCount, stats.getUpdateCount() );
 
-		session = openSession();
-		session.beginTransaction();
-		container = ( Container ) session.get( Container.class, container.getId() );
-		assertEquals( 1, container.getContents().size() );
-		session.delete( container );
-		session.getTransaction().commit();
-		session.close();
+		inTransaction(
+				session -> {
+					Container result = session.get( Container.class, container.getId() );
+					assertEquals( 1, result.getContents().size() );
+					session.delete( result );
+				}
+		);
 	}
 
 	@Test
 	public void testLoadChildCheckParentContainsChildCache() {
-		Parent parent = new Parent( "p1" );
-		Child child = new Child( "c1" );
+		final Parent parent = new Parent( "p1" );
+		final Child child = new Child( "c1" );
 		child.setDescription( "desc1" );
 		parent.getChildren().add( child );
 		child.setParent( parent );
@@ -298,99 +305,97 @@ public class PersistentSetTest extends BaseNonConfigCoreFunctionalTestCase {
 		parent.getChildren().add( otherChild );
 		otherChild.setParent( parent );
 
-		Session session = openSession();
-		session.beginTransaction();
-		session.save( parent );
-		session.getTransaction().commit();
+		inTransaction(
+				session -> {
+					session.save( parent );
+				}
+		);
 
-		session = openSession();
-		session.beginTransaction();
-		parent = ( Parent ) session.get( Parent.class, parent.getName() );
-		assertTrue( parent.getChildren().contains( child ) );
-		assertTrue( parent.getChildren().contains( otherChild ) );
-		session.getTransaction().commit();
+		inTransaction(
+				session -> {
+					Parent savedParent = session.get( Parent.class, parent.getName() );
+					assertTrue( savedParent.getChildren().contains( child ) );
+					assertTrue( savedParent.getChildren().contains( otherChild ) );
+				}
+		);
 
-		session = openSession();
-		session.beginTransaction();
+		inTransaction(
+				session -> {
+					Child savedChild = session.get( Child.class, child.getName() );
+					assertTrue( savedChild.getParent().getChildren().contains( savedChild ) );
+					session.clear();
 
-		child = ( Child ) session.get( Child.class, child.getName() );
-		assertTrue( child.getParent().getChildren().contains( child ) );
-		session.clear();
+					// todo (6.0) : uncomment when criteria will be implemented
+//					savedChild = session.createCriteria( Child.class, child.getName() )
+//							.setCacheable( true )
+//							.add( Restrictions.idEq( "c1" ) )
+//							.uniqueResult();
+//					assertTrue( child.getParent().getChildren().contains( savedChild ) );
+//					assertTrue( child.getParent().getChildren().contains( otherChild ) );
+//					session.clear();
 
-		child = ( Child ) session.createCriteria( Child.class, child.getName() )
-				.setCacheable( true )
-				.add( Restrictions.idEq( "c1" ) )
-				.uniqueResult();
-		assertTrue( child.getParent().getChildren().contains( child ) );
-		assertTrue( child.getParent().getChildren().contains( otherChild ) );
-		session.clear();
+					savedChild = (Child) session.createQuery( "from Child where name = 'c1'" )
+							.setCacheable( true )
+							.uniqueResult();
+					assertTrue( child.getParent().getChildren().contains( savedChild ) );
 
-		child = ( Child ) session.createCriteria( Child.class, child.getName() )
-				.setCacheable( true )
-				.add( Restrictions.idEq( "c1" ) )
-				.uniqueResult();
-		assertTrue( child.getParent().getChildren().contains( child ) );
-		assertTrue( child.getParent().getChildren().contains( otherChild ) );
-		session.clear();
+					savedChild = (Child) session.createQuery( "from Child where name = 'c1'" )
+							.setCacheable( true )
+							.uniqueResult();
+					assertTrue( savedChild.getParent().getChildren().contains( savedChild ) );
 
-		child = ( Child ) session.createQuery( "from Child where name = 'c1'" )
-				.setCacheable( true )
-				.uniqueResult();
-		assertTrue( child.getParent().getChildren().contains( child ) );
-
-		child = ( Child ) session.createQuery( "from Child where name = 'c1'" )
-				.setCacheable( true )
-				.uniqueResult();
-		assertTrue( child.getParent().getChildren().contains( child ) );
-
-		session.delete( child.getParent() );
-		session.getTransaction().commit();
-		session.close();
+					session.delete( savedChild.getParent() );
+				}
+		);
 	}
 
 	@Test
 	public void testLoadChildCheckParentContainsChildNoCache() {
-		Parent parent = new Parent( "p1" );
-		Child child = new Child( "c1" );
+		final Parent parent = new Parent( "p1" );
+		final Child child = new Child( "c1" );
 		parent.getChildren().add( child );
 		child.setParent( parent );
 		Child otherChild = new Child( "c2" );
 		parent.getChildren().add( otherChild );
 		otherChild.setParent( parent );
 
-		Session session = openSession();
-		session.beginTransaction();
-		session.save( parent );
-		session.getTransaction().commit();
+		inTransaction(
+				session -> {
+					session.save( parent );
+				}
+		);
 
-		session = openSession();
-		session.beginTransaction();
-		session.setCacheMode( CacheMode.IGNORE );
-		parent = ( Parent ) session.get( Parent.class, parent.getName() );
-		assertTrue( parent.getChildren().contains( child ) );
-		assertTrue( parent.getChildren().contains( otherChild ) );
-		session.getTransaction().commit();
+		inTransaction(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					Parent savedParent = session.get( Parent.class, parent.getName() );
+					assertTrue( savedParent.getChildren().contains( child ) );
+					assertTrue( savedParent.getChildren().contains( otherChild ) );
+				}
+		);
 
-		session = openSession();
-		session.beginTransaction();
-		session.setCacheMode( CacheMode.IGNORE );
+		inTransaction(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
 
-		child = ( Child ) session.get( Child.class, child.getName() );
-		assertTrue( child.getParent().getChildren().contains( child ) );
-		session.clear();
+					Child savedChild = session.get( Child.class, child.getName() );
+					assertTrue( child.getParent().getChildren().contains( savedChild ) );
+					session.clear();
 
-		child = ( Child ) session.createCriteria( Child.class, child.getName() )
-				.add( Restrictions.idEq( "c1" ) )
-				.uniqueResult();
-		assertTrue( child.getParent().getChildren().contains( child ) );
-		assertTrue( child.getParent().getChildren().contains( otherChild ) );
-		session.clear();
+					// todo (6.0) : uncomment when criteria will be implemented
+//					savedChild = (Child) session.createCriteria( Child.class, child.getName() )
+//							.add( Restrictions.idEq( "c1" ) )
+//							.uniqueResult();
+//					assertTrue( savedChild.getParent().getChildren().contains( savedChild ) );
+//					assertTrue( savedChild.getParent().getChildren().contains( otherChild ) );
+//					session.clear();
 
-		child = ( Child ) session.createQuery( "from Child where name = 'c1'" ).uniqueResult();
-		assertTrue( child.getParent().getChildren().contains( child ) );
+					savedChild = (Child) session.createQuery( "from Child where name = 'c1'" ).uniqueResult();
+					assertTrue( child.getParent().getChildren().contains( savedChild ) );
 
-		session.delete( child.getParent() );
-		session.getTransaction().commit();
-		session.close();
+					session.delete( savedChild.getParent() );
+
+				}
+		);
 	}
 }

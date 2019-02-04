@@ -68,8 +68,9 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 	@Test
 	public void testDelete() {
 		sessionFactoryScope().inTransaction(
-				session ->
-						session.createQuery( "delete from Life" ).executeUpdate()
+				session -> {
+					session.createQuery( "delete from Life" ).executeUpdate();
+				}
 		);
 	}
 

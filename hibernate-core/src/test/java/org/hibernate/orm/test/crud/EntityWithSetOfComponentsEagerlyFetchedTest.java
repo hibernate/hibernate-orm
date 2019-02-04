@@ -53,7 +53,9 @@ public class EntityWithSetOfComponentsEagerlyFetchedTest extends SessionFactoryB
 	@Test
 	public void testSavingEntityWithEmptyCollection() {
 		final TestEntity entity = new TestEntity( 1 );
-		inTransaction( session -> session.save( entity ) );
+		inTransaction( session -> {
+			session.save( entity );
+		} );
 		inTransaction(
 				session -> {
 					final TestEntity loaded = session.get( TestEntity.class, 1 );
@@ -74,7 +76,9 @@ public class EntityWithSetOfComponentsEagerlyFetchedTest extends SessionFactoryB
 
 		entity.getSetOfComponents().add( new Component( 1 ) );
 
-		inTransaction( session -> session.save( entity ) );
+		inTransaction( session -> {
+			session.save( entity );
+		} );
 
 		inTransaction(
 				session -> {

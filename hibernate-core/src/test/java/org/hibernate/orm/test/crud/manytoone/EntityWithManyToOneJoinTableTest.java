@@ -58,8 +58,12 @@ public class EntityWithManyToOneJoinTableTest extends SessionFactoryBasedFunctio
 
 		entity.setOther( other );
 
-		inTransaction( session -> session.save( other ) );
-		inTransaction( session -> session.save( entity ) );
+		inTransaction( session -> {
+			session.save( other );
+		} );
+		inTransaction( session -> {
+			session.save( entity );
+		} );
 
 		inTransaction(
 				session -> {

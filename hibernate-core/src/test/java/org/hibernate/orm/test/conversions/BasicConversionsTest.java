@@ -39,13 +39,15 @@ public class BasicConversionsTest extends SessionFactoryBasedFunctionalTest {
 				Status.ACTIVE
 		);
 
-		sessionFactoryScope().inTransaction( session -> session.save( initialAccount ) );
+		sessionFactoryScope().inTransaction( session -> {session.save( initialAccount );} );
 	}
 
 	@AfterEach
 	public void cleanData() {
 		sessionFactoryScope().inTransaction(
-				session -> session.delete( session.byId( Account.class ).load( 1 ) )
+				session -> {
+					session.delete( session.byId( Account.class ).load( 1 ) );
+				}
 		);
 	}
 

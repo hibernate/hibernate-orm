@@ -45,43 +45,47 @@ public abstract class AbstractAlterTableQuoteSchemaTest extends SessionFactoryBa
 		output.deleteOnExit();
 		try {
 			inTransaction(
-					session ->
-							session.doWork( work -> {
-								work.prepareStatement( "DROP TABLE " + quote( schemaName, "my_entity" ) ).execute();
-								work.commit();
-							} )
+					session -> {
+						session.doWork( work -> {
+							work.prepareStatement( "DROP TABLE " + quote( schemaName, "my_entity" ) ).execute();
+							work.commit();
+						} );
+					}
 			);
 		}
 		catch (Exception ignore) {
 		}
 		try {
 			inTransaction(
-					session ->
-							session.doWork( work -> {
-								work.prepareStatement( "DROP SCHEMA " + quote( schemaName ) ).execute();
-								work.commit();
-							} )
+					session -> {
+						session.doWork( work -> {
+							work.prepareStatement( "DROP SCHEMA " + quote( schemaName ) ).execute();
+							work.commit();
+						} );
+					}
 			);
 		}
 		catch (Exception ignore) {
 		}
 		inTransaction(
-				session ->
-						session.doWork( work -> {
-							work.prepareStatement( "CREATE SCHEMA " + quote( schemaName ) ).execute();
-							work.commit();
-						} )
+				session -> {
+					session.doWork( work -> {
+						work.prepareStatement( "CREATE SCHEMA " + quote( schemaName ) ).execute();
+						work.commit();
+					} );
+				}
 		);
 	}
 
 	protected void tearDown(String schemaName) {
 		try {
 			inTransaction(
-					session ->
-							session.doWork( work -> {
-								work.prepareStatement( "DROP SCHEMA " + quote( schemaName ) ).execute();
-								work.commit();
-							} )
+					session -> {
+						session.doWork( work -> {
+							work.prepareStatement( "DROP SCHEMA " + quote( schemaName ) ).execute();
+							work.commit();
+						} );
+					}
 			);
 		}
 		catch (Exception ignore) {

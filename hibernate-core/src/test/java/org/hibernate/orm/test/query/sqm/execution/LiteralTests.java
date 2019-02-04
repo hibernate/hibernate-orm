@@ -25,21 +25,28 @@ public class LiteralTests extends SessionFactoryBasedFunctionalTest {
 	@Test
 	public void testTimestampLiteral() {
 		inTransaction(
-				session -> session.createQuery( "from EntityOfBasics e1 where e1.theTimestamp = {ts '2018-01-01T12:30:00'}" ).list()
+				session -> {
+					session.createQuery( "from EntityOfBasics e1 where e1.theTimestamp = {ts '2018-01-01T12:30:00'}" )
+							.list();
+				}
 		);
 	}
 
 	@Test
 	public void testDateLiteral() {
 		inTransaction(
-				session -> session.createQuery( "from EntityOfBasics e1 where e1.theDate = {d '2018-01-01'}" ).list()
+				session -> {
+					session.createQuery( "from EntityOfBasics e1 where e1.theDate = {d '2018-01-01'}" ).list();
+				}
 		);
 	}
 
 	@Test
 	public void testTimeLiteral() {
 		inTransaction(
-				session -> session.createQuery( "from EntityOfBasics e1 where e1.theTime = {t '12:30:00'}" ).list()
+				session -> {
+					session.createQuery( "from EntityOfBasics e1 where e1.theTime = {t '12:30:00'}" ).list();
+				}
 		);
 	}
 }

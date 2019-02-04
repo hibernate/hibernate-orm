@@ -45,5 +45,11 @@ public @interface FailureExpected {
 	/**
 	 * A reason why the failure is expected
 	 */
-	String value();
+	String value() default "";
+
+	/**
+	 * The key of a JIRA issue which covers this expected failure.
+	 * @return The jira issue key
+	 */
+	String jiraKey() default "";
 }

@@ -65,7 +65,9 @@ public class EntityOfSetsCrudTest extends SessionFactoryBasedFunctionalTest {
 				)
 		);
 
-		inTransaction( session -> session.save( entity ) );
+		inTransaction( session -> {
+			session.save( entity );
+		} );
 
 		inSession(
 				session -> {
@@ -131,7 +133,9 @@ public class EntityOfSetsCrudTest extends SessionFactoryBasedFunctionalTest {
 				)
 		);
 
-		inTransaction( session -> session.save( entity ) );
+		inTransaction( session -> {
+			session.save( entity );
+		} );
 
 		inTransaction(
 				session -> {

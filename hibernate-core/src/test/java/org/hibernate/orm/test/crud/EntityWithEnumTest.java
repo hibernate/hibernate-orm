@@ -31,7 +31,7 @@ public class EntityWithEnumTest extends SessionFactoryBasedFunctionalTest {
 		shirt.setColor( Shirt.Color.TAN );
 		shirt.setSize( Shirt.Size.MEDIUM );
 
-		inTransaction( session -> session.createQuery( "delete Shirt" ).executeUpdate() );
-		inTransaction( session -> session.save( shirt ) );
+		inTransaction( session -> {session.createQuery( "delete Shirt" ).executeUpdate();} );
+		inTransaction( session -> {session.save( shirt );} );
 	}
 }

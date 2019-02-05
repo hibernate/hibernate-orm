@@ -10,7 +10,6 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.collection.spi.CollectionClassification;
@@ -287,6 +286,7 @@ public interface PersistentCollectionDescriptor<O,C,E>
 		}
 	}
 
+	boolean useOwnerIndetifier();
 
 
 

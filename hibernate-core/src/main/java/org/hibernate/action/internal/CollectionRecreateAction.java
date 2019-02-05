@@ -50,7 +50,7 @@ public final class CollectionRecreateAction extends CollectionAction {
 		postRecreate();
 
 		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-			getSession().getFactory().getStatistics().recreateCollection( getPersistentCollectionDescriptor().getNavigableRole().getNavigableName() );
+			getSession().getFactory().getStatistics().recreateCollection( getPersistentCollectionDescriptor().getNavigableRole().getFullPath() );
 		}
 	}
 

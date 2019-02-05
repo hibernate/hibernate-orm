@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.event.spi.EventSource;
@@ -40,9 +38,9 @@ public class OnUpdateVisitor extends ReattachVisitor {
 		final EventSource session = getSession();
 		final PersistentCollectionDescriptor descriptor = session.getFactory()
 				.getMetamodel()
-				.findCollectionDescriptor( collectionAttribute.getNavigableName() );
+				.findCollectionDescriptor( collectionAttribute.getNavigableRole() );
 
-		final Serializable collectionKey = extractCollectionKeyFromOwner( descriptor );
+		final Object collectionKey = extractCollectionKeyFromOwner( descriptor );
 		if ( collection != null && ( collection instanceof PersistentCollection ) ) {
 			PersistentCollection wrapper = (PersistentCollection) collection;
 			if ( wrapper.setCurrentSession(session) ) {

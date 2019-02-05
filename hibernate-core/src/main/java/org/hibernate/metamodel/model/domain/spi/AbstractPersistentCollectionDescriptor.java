@@ -168,6 +168,8 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 	private final String mappedBy;
 	private final String sqlWhereString;
 
+	private boolean useOwnweIdentifier;
+
 	// todo (6.0) - rework this (and friends) per todo item...
 	//		* Redesign `org.hibernate.cache.spi.entry.CacheEntryStructure` and friends (with better names)
 	// 			and make more efficient.  At the moment, to cache, we:
@@ -322,12 +324,18 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 		return true;
 	}
 
+	@Override
+	public boolean useOwnerIndetifier(){
+		return useOwnweIdentifier;
+	}
+
 	@SuppressWarnings("WeakerAccess")
 	protected void tryFinishInitialization(
 			Collection bootCollectionDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		final String referencedPropertyName = bootCollectionDescriptor.getReferencedPropertyName();
 		if ( referencedPropertyName == null ) {
+			useOwnweIdentifier = true;
 			foreignKeyTargetNavigable = getContainer().findNavigable( EntityIdentifier.NAVIGABLE_ID );
 		}
 		else {

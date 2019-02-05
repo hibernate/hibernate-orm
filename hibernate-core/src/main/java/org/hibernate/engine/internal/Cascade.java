@@ -26,6 +26,8 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
+import org.hibernate.metamodel.model.domain.internal.entity.SingleTableEntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.BasicTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
@@ -34,6 +36,7 @@ import org.hibernate.metamodel.model.domain.spi.NonIdPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
@@ -179,6 +182,51 @@ public final class Cascade {
 
 			if ( traceEnabled ) {
 				LOG.tracev( "Done processing cascade {0} for: {1}", action, descriptor.getEntityName() );
+			}
+		}
+	}
+
+	/**
+	 * Cascade an action to the child or children
+	 */
+	private static void cascadeCollectionElementProperty(
+			final CascadingAction action,
+			final CascadePoint cascadePoint,
+			final EventSource eventSource,
+			final int componentPathStackDepth,
+			final Object parent,
+			final Object child,
+			final PluralPersistentAttribute attribute,
+			final CascadeStyle style,
+			final String propertyName,
+			final Object anything,
+			final boolean isCascadeDeleteEnabled) throws HibernateException {
+		if ( child != null ) {
+			SimpleTypeDescriptor elementType = attribute.getElementType();
+			if ( EmbeddedTypeDescriptor.class.isInstance( elementType ) ) {
+				cascadeComponent(
+						action,
+						cascadePoint,
+						eventSource,
+						componentPathStackDepth,
+						parent,
+						child,
+						(EmbeddedValuedNavigable) attribute.getCollectionDescriptor().getElementDescriptor(),
+						anything
+				);
+			}else if( !BasicTypeDescriptor.class.isInstance( elementType ) ){
+				if ( SingleTableEntityTypeDescriptor.class.isInstance( elementType ) ) {
+					cascadeToOne(
+							action,
+							eventSource,
+							parent,
+							child,
+							(SingleTableEntityTypeDescriptor) elementType,
+							style,
+							anything,
+							isCascadeDeleteEnabled
+					);
+				}
 			}
 		}
 	}
@@ -468,6 +516,33 @@ public final class Cascade {
 			final EventSource eventSource,
 			final Object parent,
 			final Object child,
+			final SingleTableEntityTypeDescriptor persistentAttribute,
+			final CascadeStyle style,
+			final Object anything,
+			final boolean isCascadeDeleteEnabled) {
+		final String entityName = persistentAttribute.getPersistenceType() == PersistenceType.ENTITY
+				? persistentAttribute.getEntityName()
+				: null;
+		if ( style.reallyDoCascade( action ) ) {
+			//not really necessary, but good for consistency...
+			eventSource.getPersistenceContext().addChildParent( child, parent );
+			try {
+				action.cascade( eventSource, child, entityName, anything, isCascadeDeleteEnabled );
+			}
+			finally {
+				eventSource.getPersistenceContext().removeChildParent( child );
+			}
+		}
+	}
+
+	/**
+	 * Cascade an action to a to-one association or any type
+	 */
+	private static void cascadeToOne(
+			final CascadingAction action,
+			final EventSource eventSource,
+			final Object parent,
+			final Object child,
 			final PersistentAttributeDescriptor persistentAttribute,
 			final CascadeStyle style,
 			final Object anything,
@@ -512,7 +587,7 @@ public final class Cascade {
 
 			final Iterator itr = action.getCascadableChildrenIterator( eventSource, descriptor, child );
 			while ( itr.hasNext() ) {
-				cascadeProperty(
+				cascadeCollectionElementProperty(
 						action,
 						cascadePoint,
 						eventSource,
@@ -523,7 +598,7 @@ public final class Cascade {
 						style,
 						null,
 						anything,
-						descriptor.getDescribedAttribute().isCascadeDeleteEnabled()
+						descriptor.isCascadeDeleteEnabled()
 				);
 			}
 

@@ -6,11 +6,9 @@
  */
 package org.hibernate.event.internal;
 
-import java.io.Serializable;
 import java.util.Collection;
 
 import org.hibernate.HibernateException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
@@ -79,7 +77,7 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 *
 	 * @throws HibernateException
 	 */
-	void removeCollection(PersistentCollectionDescriptor role, Serializable collectionKey, EventSource source)
+	void removeCollection(PersistentCollectionDescriptor role, Object collectionKey, EventSource source)
 			throws HibernateException {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev(
@@ -99,14 +97,13 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 *
 	 * @return The value from the owner that identifies the grouping into the collection
 	 */
-	final Serializable extractCollectionKeyFromOwner(PersistentCollectionDescriptor collectionDescriptor) {
-		throw new NotYetImplementedFor6Exception(  );
-//		if ( collectionDescriptor.getCollectionType().useLHSPrimaryKey() ) {
-//			return ownerIdentifier;
-//		}
-//		return (Serializable) collectionDescriptor.getOwnerEntityPersister().getPropertyValue(
-//				owner,
-//				collectionDescriptor.getCollectionType().getLHSPropertyName()
-//		);
+	final Object extractCollectionKeyFromOwner(PersistentCollectionDescriptor collectionDescriptor) {
+		if ( collectionDescriptor.useOwnerIndetifier() ) {
+			return ownerIdentifier;
+		}
+		return collectionDescriptor.findEntityOwnerDescriptor().getPropertyValue(
+				owner,
+				collectionDescriptor.getForeignKeyTargetNavigable().getNavigableName()
+		);
 	}
 }

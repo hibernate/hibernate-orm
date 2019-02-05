@@ -61,7 +61,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class AbstractPluralPersistentAttribute<O,C,E> extends AbstractPersistentAttribute<O,C> implements PluralPersistentAttribute<O,C,E> {
+public abstract class AbstractPluralPersistentAttribute<O,C,E> extends AbstractPersistentAttribute<O,C> implements PluralPersistentAttribute<O,C,E> {
 	private static final Logger log = Logger.getLogger( AbstractPluralPersistentAttribute.class );
 
 	private static final Object NOT_NULL_COLLECTION = new MarkerObject( "NOT NULL COLLECTION" );

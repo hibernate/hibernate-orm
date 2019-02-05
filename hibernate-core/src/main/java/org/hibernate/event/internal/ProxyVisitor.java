@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.event.spi.EventSource;
@@ -45,7 +43,7 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 	protected static boolean isOwnerUnchanged(
 			final PersistentCollection snapshot, 
 			final PersistentCollectionDescriptor descriptor,
-			final Serializable id
+			final Object id
 	) {
 		return isCollectionSnapshotValid(snapshot) &&
 				descriptor.getNavigableRole().getFullPath().equals( snapshot.getRole() ) &&

@@ -115,7 +115,7 @@ public interface QueryOptions extends SqlQueryOptions {
 
 		@Override
 		public CacheMode getCacheMode() {
-			return null;
+			return CacheMode.IGNORE;
 		}
 
 		@Override

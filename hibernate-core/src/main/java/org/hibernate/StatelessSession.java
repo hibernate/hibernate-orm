@@ -10,6 +10,8 @@ import java.io.Closeable;
 import java.io.Serializable;
 import java.sql.Connection;
 
+import org.hibernate.query.NativeQuery;
+
 /**
  * A command-oriented API for performing bulk operations against a database.
  * <p/>
@@ -170,4 +172,7 @@ public interface StatelessSession extends SharedSessionContract, AutoCloseable, 
 	 */
 	@Deprecated
 	Connection connection();
+
+	@Override
+	NativeQuery createSQLQuery(String queryString);
 }

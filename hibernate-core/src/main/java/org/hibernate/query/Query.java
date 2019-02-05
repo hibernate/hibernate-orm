@@ -29,12 +29,10 @@ import javax.persistence.TypedQuery;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
-import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.graph.Graph;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.transform.ResultTransformer;
@@ -69,7 +67,6 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  * @author Gavin King
  */
-@Incubating
 @SuppressWarnings("UnusedDeclaration")
 public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQueryContract {
 	/**

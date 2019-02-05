@@ -67,6 +67,12 @@ public interface SharedSessionContract extends QueryProducer, Serializable {
 	 */
 	Transaction getTransaction();
 
+	@Override
+	org.hibernate.query.Query createQuery(String queryString);
+
+	@Override
+	org.hibernate.query.Query getNamedQuery(String queryName);
+
 	/**
 	 * Gets a ProcedureCall based on a named template
 	 *

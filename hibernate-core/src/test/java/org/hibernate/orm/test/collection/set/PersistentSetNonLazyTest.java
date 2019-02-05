@@ -24,10 +24,10 @@ public class PersistentSetNonLazyTest extends PersistentSetTest {
 
 	@Test
 	@Override
-	@FailureExpected(
-			jiraKey = "HHH-3799",
-			value = "known to fail with non-lazy collection using query cache"
-	)
+//	@FailureExpected(
+//			jiraKey = "HHH-3799",
+//			value = "known to fail with non-lazy collection using query cache"
+//	)
 	public void testLoadChildCheckParentContainsChildCache() {
 		 super.testLoadChildCheckParentContainsChildCache();
 	}

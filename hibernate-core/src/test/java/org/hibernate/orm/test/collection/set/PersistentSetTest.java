@@ -254,7 +254,7 @@ public class PersistentSetTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-2485")
+//	@FailureExpected(jiraKey = "HHH-2485")
 	public void testCompositeElementCollectionDirtyChecking() {
 		final Container container = new Container( "p1" );
 		Container.Content c1 = new Container.Content( "c1" );

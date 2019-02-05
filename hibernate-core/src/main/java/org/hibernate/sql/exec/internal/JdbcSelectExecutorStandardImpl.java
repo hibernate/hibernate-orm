@@ -211,7 +211,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 		final QueryKey queryResultsCacheKey;
 
-		if ( queryCacheEnabled && executionContext.getQueryOptions().getCacheMode().isGetEnabled() ) {
+		if ( queryCacheEnabled && cacheMode.isGetEnabled() ) {
 			log.debugf( "Reading Query result cache data per CacheMode#isGetEnabled [%s]", cacheMode.name() );
 
 			final QueryResultsCache queryCache = executionContext.getSession().getFactory()

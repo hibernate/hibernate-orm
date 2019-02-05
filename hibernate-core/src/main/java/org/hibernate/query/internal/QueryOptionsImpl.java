@@ -91,7 +91,7 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	@Override
 	public void addDatabaseHint(String hint) {
 		if ( databaseHints == null ) {
-			databaseHints = new ArrayList<String>();
+			databaseHints = new ArrayList<>();
 		}
 		databaseHints.add( hint );
 	}
@@ -127,6 +127,9 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 
 	@Override
 	public CacheMode getCacheMode() {
+		if ( cacheMode == null ) {
+			return CacheMode.IGNORE;
+		}
 		return cacheMode;
 	}
 

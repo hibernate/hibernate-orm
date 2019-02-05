@@ -6,8 +6,9 @@
  */
 package org.hibernate.orm.test.collection.set;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
@@ -27,7 +28,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Gail Badner
  */
-@TestForIssue( jiraKey = "HHH-11881")
+@TestForIssue(jiraKey = "HHH-11881")
 public class SetElementNullBasicTest extends BaseCoreFunctionalTestCase {
 
 	@Override
@@ -52,7 +53,7 @@ public class SetElementNullBasicTest extends BaseCoreFunctionalTestCase {
 				this::sessionFactory, session -> {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 0, e.aCollection.size() );
-					assertEquals( 0, getCollectionElementRows( entityId ).size() );
+					assertEquals( 0, getCollectionElementRows( entityId ) );
 					session.delete( e );
 				}
 		);
@@ -72,7 +73,7 @@ public class SetElementNullBasicTest extends BaseCoreFunctionalTestCase {
 				this::sessionFactory, session -> {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 0, e.aCollection.size() );
-					assertEquals( 0, getCollectionElementRows( entityId ).size() );
+					assertEquals( 0, getCollectionElementRows( entityId ) );
 					e.aCollection.add( null );
 				}
 		);
@@ -81,7 +82,7 @@ public class SetElementNullBasicTest extends BaseCoreFunctionalTestCase {
 				this::sessionFactory, session -> {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 0, e.aCollection.size() );
-					assertEquals( 0, getCollectionElementRows( entityId ).size() );
+					assertEquals( 0, getCollectionElementRows( entityId ) );
 					session.delete( e );
 				}
 		);
@@ -102,7 +103,7 @@ public class SetElementNullBasicTest extends BaseCoreFunctionalTestCase {
 				this::sessionFactory, session -> {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 1, e.aCollection.size() );
-					assertEquals( 1, getCollectionElementRows( entityId ).size() );
+					assertEquals( 1, getCollectionElementRows( entityId ) );
 					e.aCollection.remove( "def" );
 					e.aCollection.add( null );
 				}
@@ -112,31 +113,53 @@ public class SetElementNullBasicTest extends BaseCoreFunctionalTestCase {
 				this::sessionFactory, session -> {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 0, e.aCollection.size() );
-					assertEquals( 0, getCollectionElementRows( entityId ).size() );
+					assertEquals( 0, getCollectionElementRows( entityId ) );
 					session.delete( e );
 				}
 		);
 	}
 
-	private List<?> getCollectionElementRows(int id) {
+	private int getCollectionElementRows(int id) {
 		return doInHibernate(
 				this::sessionFactory, session -> {
-					return session.createNativeQuery(
-							"SELECT aCollection FROM AnEntity_aCollection where AnEntity_id = " + id
-					).list();
+					return session.doReturningWork(
+							work -> {
+								PreparedStatement statement = null;
+								ResultSet resultSet = null;
+
+								try {
+									statement = work.prepareStatement(
+											"SELECT count(aCollection) as numberOfRows FROM AnEntity_aCollection where AnEntity_id = " + id );
+									statement.execute();
+									resultSet = statement.getResultSet();
+									if ( resultSet.next() ) {
+										return resultSet.getInt( "numberOfRows" );
+									}
+									return 0;
+								}
+								finally {
+									if ( resultSet != null ) {
+										resultSet.close();
+									}
+									if ( statement != null ) {
+										statement.close();
+									}
+								}
+							}
+					);
 				}
 		);
 	}
 
 	@Entity
-	@Table(name="AnEntity")
+	@Table(name = "AnEntity")
 	public static class AnEntity {
 		@Id
 		@GeneratedValue
 		private int id;
 
 		@ElementCollection
-		@CollectionTable(name = "AnEntity_aCollection", joinColumns = { @JoinColumn( name = "AnEntity_id" ) })
+		@CollectionTable(name = "AnEntity_aCollection", joinColumns = { @JoinColumn(name = "AnEntity_id") })
 		private Set<String> aCollection = new HashSet<>();
 	}
 }

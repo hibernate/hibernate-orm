@@ -1162,9 +1162,6 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	void addEventListeners(SessionEventListener... listeners);
 
 	@Override
-	org.hibernate.query.Query createQuery(String queryString);
-
-	@Override
 	<T> org.hibernate.query.Query<T> createQuery(String queryString, Class<T> resultType);
 
 	@Override
@@ -1176,8 +1173,6 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	@Override
 	org.hibernate.query.Query createQuery(CriteriaDelete deleteQuery);
 
-	@Override
-	org.hibernate.query.Query getNamedQuery(String queryName);
 
 	<T> org.hibernate.query.Query<T> createNamedQuery(String name, Class<T> resultType);
 

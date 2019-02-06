@@ -79,7 +79,7 @@ public class ClassFileArchiveEntryHandler implements ArchiveEntryHandler {
 	}
 
 	private ClassDescriptor toClassDescriptor(ClassFile classFile, ArchiveEntry entry) {
-		ClassDescriptor.Categorization categorization = ClassDescriptor.Categorization.OTHER;;
+		ClassDescriptor.Categorization categorization = ClassDescriptor.Categorization.OTHER;
 
 		final AnnotationsAttribute visibleAnnotations = (AnnotationsAttribute) classFile.getAttribute( AnnotationsAttribute.visibleTag );
 		if ( visibleAnnotations != null ) {

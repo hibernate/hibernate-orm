@@ -280,7 +280,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 					rollback();
 				}
 				catch (RuntimeException e2) {
-					log.debug( "Encountered failure rolling back failed commit", e2 );;
+					log.debug( "Encountered failure rolling back failed commit", e2 );
 				}
 				throw e;
 			}

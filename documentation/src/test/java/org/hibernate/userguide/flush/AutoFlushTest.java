@@ -90,7 +90,7 @@ public class AutoFlushTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testFlushAutoSQL() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			entityManager.createNativeQuery( "delete from Person" ).executeUpdate();;
+			entityManager.createNativeQuery( "delete from Person" ).executeUpdate();
 		} );
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			log.info( "testFlushAutoSQL" );
@@ -112,7 +112,7 @@ public class AutoFlushTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testFlushAutoSQLNativeSession() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			entityManager.createNativeQuery( "delete from Person" ).executeUpdate();;
+			entityManager.createNativeQuery( "delete from Person" ).executeUpdate();
 		} );
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			log.info( "testFlushAutoSQLNativeSession" );
@@ -143,7 +143,7 @@ public class AutoFlushTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testFlushAutoSQLSynchronization() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			entityManager.createNativeQuery( "delete from Person" ).executeUpdate();;
+			entityManager.createNativeQuery( "delete from Person" ).executeUpdate();
 		} );
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			log.info( "testFlushAutoSQLSynchronization" );

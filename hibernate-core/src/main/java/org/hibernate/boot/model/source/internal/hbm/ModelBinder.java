@@ -2831,7 +2831,7 @@ public class ModelBinder {
 		}
 
 		String typeName = typeSource.getName();
-		Properties typeParameters = new Properties();;
+		Properties typeParameters = new Properties();
 
 		final TypeDefinition typeDefinition = sourceDocument.getMetadataCollector().getTypeDefinition( typeName );
 		if ( typeDefinition != null ) {

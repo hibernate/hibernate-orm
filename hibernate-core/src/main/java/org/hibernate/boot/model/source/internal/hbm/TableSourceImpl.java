@@ -30,8 +30,8 @@ public class TableSourceImpl extends AbstractHbmSourceNode implements TableSourc
 			String comment,
 			String checkConstraint) {
 		super( mappingDocument );
-		this.explicitCatalog = determineCatalogName( mappingDocument, explicitCatalog );;
-		this.explicitSchema = determineSchemaName( mappingDocument, explicitSchema );;
+		this.explicitCatalog = determineCatalogName( mappingDocument, explicitCatalog );
+		this.explicitSchema = determineSchemaName( mappingDocument, explicitSchema );
 		this.explicitTableName = explicitTableName;
 		this.rowId = rowId;
 		this.comment = comment;

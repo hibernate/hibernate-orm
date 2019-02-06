@@ -214,7 +214,8 @@ public final class Cascade {
 						(EmbeddedValuedNavigable) attribute.getCollectionDescriptor().getElementDescriptor(),
 						anything
 				);
-			}else if( !BasicTypeDescriptor.class.isInstance( elementType ) ){
+			}
+			else if ( !BasicTypeDescriptor.class.isInstance( elementType ) ) {
 				if ( SingleTableEntityTypeDescriptor.class.isInstance( elementType ) ) {
 					cascadeToOne(
 							action,

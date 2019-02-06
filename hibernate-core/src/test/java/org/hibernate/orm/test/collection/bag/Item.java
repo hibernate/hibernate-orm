@@ -4,21 +4,15 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.collection.bag;
-
-import java.util.ArrayList;
-import java.util.List;
+package org.hibernate.orm.test.collection.bag;
 
 /**
  * @author Gail Badner
  */
-public class Order {
+public class Item {
 	private Long id;
-
-	private List<Item> items = new ArrayList<Item>();
-
-	public Order() {
-	}
+	private String name;
+	private Order order;
 
 	public Long getId() {
 		return id;
@@ -27,15 +21,17 @@ public class Order {
 		this.id = id;
 	}
 
-	public List<Item> getItems() {
-		return items;
+	public String getName() {
+		return name;
 	}
-	public void setItems(List<Item> items) {
-		this.items = items;
+	public void setName(String name) {
+		this.name = name;
 	}
 
-	public void addItem(Item item) {
-		items.add( item );
-		item.setOrder( this );
+	public Order getOrder() {
+		return order;
+	}
+	public void setOrder(Order order) {
+		this.order = order;
 	}
 }

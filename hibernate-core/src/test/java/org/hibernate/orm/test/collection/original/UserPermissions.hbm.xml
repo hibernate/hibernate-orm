@@ -16,7 +16,7 @@
      
 -->
 
-<hibernate-mapping  package="org.hibernate.test.collection.original">
+<hibernate-mapping  package="org.hibernate.orm.test.collection.original">
 	
 	<import class="Permission"/>
 

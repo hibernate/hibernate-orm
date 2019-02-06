@@ -126,7 +126,9 @@ public class FetchedTableReferenceCollectorImpl extends AbstractTableReferenceCo
 
 		Predicate predicate = null;
 		if ( lhs != null ) {
-			makePredicate( lhs.getColumnReferenceQualifier(), getPrimaryTableReference() );
+			for ( TableReferenceJoin referenceJoin : getTableReferenceJoins() ) {
+				makePredicate( lhs.getColumnReferenceQualifier(), referenceJoin.getJoinedTableReference() );
+			}
 		}
 
 		return new TableGroupJoin(

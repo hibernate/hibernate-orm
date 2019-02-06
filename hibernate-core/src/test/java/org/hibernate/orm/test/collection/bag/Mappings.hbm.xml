@@ -10,7 +10,7 @@
 	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 
-<hibernate-mapping package="org.hibernate.test.collection.bag">
+<hibernate-mapping package="org.hibernate.orm.test.collection.bag">
 
     <class name="BagOwner">
 		<id name="name" column="NAME" type="string" />

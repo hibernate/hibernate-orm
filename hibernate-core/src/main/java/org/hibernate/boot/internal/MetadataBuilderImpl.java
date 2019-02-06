@@ -86,9 +86,9 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	public MetadataBuilderImpl(MetadataSources sources) {
 		this(
 				sources,
-				getStandardServiceRegistry( sources.getServiceRegistry() )
-		,
-				new ClassmateContext());
+				getStandardServiceRegistry( sources.getServiceRegistry() ),
+				new ClassmateContext()
+		);
 	}
 
 	private static StandardServiceRegistry getStandardServiceRegistry(ServiceRegistry serviceRegistry) {

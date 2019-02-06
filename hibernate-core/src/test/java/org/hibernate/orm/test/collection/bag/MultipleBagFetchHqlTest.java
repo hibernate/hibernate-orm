@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.collection.bag;
+package org.hibernate.orm.test.collection.bag;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,34 +17,61 @@ import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-
 import org.hibernate.loader.MultipleBagFetchException;
 
-import org.junit.Test;
+import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class MultipleBagFetchTest {
+public class MultipleBagFetchHqlTest extends SessionFactoryBasedFunctionalTest {
+
+	@Override
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				Post.class,
+				PostComment.class,
+				Tag.class
+		};
+	}
 
 	@Test
-	public void testEntityWithMultipleJoinFetchedBags() {
-		StandardServiceRegistry standardRegistry = new StandardServiceRegistryBuilder().build();
+	public void testMultipleBagFetchHql() {
 
-		Metadata metadata = new MetadataSources( standardRegistry )
-				.addAnnotatedClass( Post.class )
-				.addAnnotatedClass( PostComment.class )
-				.addAnnotatedClass( Tag.class )
-				.getMetadataBuilder()
-				.build();
+		final Post post = new Post();
+		post.setId( 1L );
+		post.setTitle( String.format( "Post nr. %d", 1 ) );
+		PostComment comment = new PostComment();
+		comment.setId( 1L );
+		comment.setReview( "Excellent!" );
+
+		inTransaction(
+				session -> {
+					session.persist( post );
+					session.persist( comment );
+					post.comments.add( comment );
+				}
+		);
+
 		try {
-			metadata.buildSessionFactory();
-			fail( "MultipleBagFetchException should have been thrown." );
+			inTransaction( session -> {
+				session.createQuery(
+						"select p " +
+								"from Post p " +
+								"join fetch p.tags " +
+								"join fetch p.comments " +
+								"where p.id = :id"
+				)
+						.setParameter( "id", 1L )
+						.uniqueResult();
+				fail( "Should throw org.hibernate.loader.MultipleBagFetchException: cannot simultaneously fetch multiple bags" );
+			} );
+
 		}
-		catch (MultipleBagFetchException expected) {
+		catch (IllegalArgumentException expected) {
+			// MultipleBagFetchException was converted to IllegalArgumentException
+			assertTrue( MultipleBagFetchException.class.isInstance( expected.getCause() ) );
 		}
 	}
 
@@ -57,10 +84,10 @@ public class MultipleBagFetchTest {
 
 		private String title;
 
-		@OneToMany(fetch = FetchType.EAGER)
+		@OneToMany(fetch = FetchType.LAZY)
 		private List<PostComment> comments = new ArrayList<PostComment>();
 
-		@ManyToMany(fetch = FetchType.EAGER)
+		@ManyToMany(fetch = FetchType.LAZY)
 		@JoinTable(name = "post_tag",
 				joinColumns = @JoinColumn(name = "post_id"),
 				inverseJoinColumns = @JoinColumn(name = "tag_id")

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.collection.bag;
+package org.hibernate.orm.test.collection.bag;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,24 +17,23 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests related to contains operations on a PersistentBag.
  *
  * @author Vlad Mihalcea
  */
-public class PersistentBagContainsTest extends BaseCoreFunctionalTestCase {
+public class PersistentBagContainsTest extends SessionFactoryBasedFunctionalTest {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {
-			Order.class,
-			Item.class
+				Order.class,
+				Item.class
 		};
 	}
 
@@ -44,9 +43,9 @@ public class PersistentBagContainsTest extends BaseCoreFunctionalTestCase {
 	 * managed and detached entities.
 	 */
 	@Test
-	@TestForIssue( jiraKey = "HHH-5409")
+	@TestForIssue(jiraKey = "HHH-5409")
 	public void testContains() {
-		Order _order = doInHibernate( this::sessionFactory, session -> {
+		Order _order = inTransaction( session -> {
 			Order order = new Order();
 			session.persist( order );
 
@@ -60,23 +59,23 @@ public class PersistentBagContainsTest extends BaseCoreFunctionalTestCase {
 			return order;
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
+		inTransaction( session -> {
 			Item item1 = new Item();
 			item1.setName( "i1" );
 
 			Item item2 = new Item();
 			item2.setName( "i2" );
 
-			assertTrue(_order.getItems().contains( item1 ));
-			assertTrue(_order.getItems().contains( item2 ));
+			assertTrue( _order.getItems().contains( item1 ) );
+			assertTrue( _order.getItems().contains( item2 ) );
 
 			Order order = session.find( Order.class, _order.getId() );
 
-			assertTrue(order.getItems().contains( item1 ));
-			assertTrue(order.getItems().contains( item2 ));
+			assertTrue( order.getItems().contains( item1 ) );
+			assertTrue( order.getItems().contains( item2 ) );
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
+		inTransaction( session -> {
 			Order order = session.find( Order.class, _order.getId() );
 			session.delete( order );
 		} );

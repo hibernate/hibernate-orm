@@ -25,6 +25,8 @@ import org.hibernate.boot.model.domain.spi.ManagedTypeMappingImplementor;
 import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.mapping.Backref;
+import org.hibernate.mapping.IndexBackref;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
@@ -617,11 +619,16 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 			RuntimeModelCreationContext creationContext,
 			List<PersistentAttributeMapping> attributes) {
 		attributes.forEach(
-				attributeMapping -> createAttribute(
-						attributeMapping,
-						bootContainer,
-						creationContext
-				)
+				attributeMapping -> {
+					if ( !Backref.class.isInstance( attributeMapping ) &&
+							!IndexBackref.class.isInstance( attributeMapping ) ) {
+						createAttribute(
+								attributeMapping,
+								bootContainer,
+								creationContext
+						);
+					}
+				}
 		);
 	}
 

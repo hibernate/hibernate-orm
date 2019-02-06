@@ -242,11 +242,9 @@ public abstract class AbstractCollectionRowsDeletionExecutor implements Collecti
 			JdbcParameterBindingsImpl jdbcParameterBindings,
 			SharedSessionContractImplementor session,
 			Clause clause) {
-		// todo (6.0) : probably not the correct `assumedIndex`
 		if ( collectionDescriptor.getIndexDescriptor() != null ) {
-			final Object index = collection.getIndex( entry, assumedIndex, collectionDescriptor );
 			collectionDescriptor.getIndexDescriptor().dehydrate(
-					collectionDescriptor.getIndexDescriptor().unresolve( index, session ),
+					entry,
 					(jdbcValue, type, boundColumn) -> createBinding(
 							jdbcValue,
 							boundColumn,

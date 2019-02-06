@@ -66,7 +66,8 @@ public class EnversEntityManagerFactoryScope implements EntityManagerFactoryAcce
 		}
 	}
 
-	public void inTransactions(Consumer<EntityManager>... actions) {
+	@SafeVarargs
+	public final void inTransactions(Consumer<EntityManager>... actions) {
 		EntityManager entityManager = getEntityManagerFactory().createEntityManager();
 		try {
 			for ( Consumer<EntityManager> action : actions ) {
@@ -95,10 +96,36 @@ public class EnversEntityManagerFactoryScope implements EntityManagerFactoryAcce
 	public <R> R inTransaction(EntityManagerFactory factory, Function<EntityManager, R> action) {
 		EntityManager entityManager = factory.createEntityManager();
 		try {
+			return inTransaction( entityManager, action );
+		}
+		finally {
+			entityManager.close();
+		}
+	}
+
+	public <R> R inTransaction(EntityManager entityManager, Function<EntityManager, R> action) {
+		try {
 			entityManager.getTransaction().begin();
 			R result = action.apply( entityManager );
 			entityManager.getTransaction().commit();
 			return result;
+		}
+		catch ( Exception e ) {
+			if ( entityManager.getTransaction().isActive() ) {
+				entityManager.getTransaction().rollback();
+			}
+			throw e;
+		}
+	}
+
+	public void inJPA(Consumer<EntityManager> action) {
+		inJPA( getEntityManagerFactory(), action );
+	}
+
+	public void inJPA(EntityManagerFactory factory, Consumer<EntityManager> action) {
+		EntityManager entityManager = factory.createEntityManager();
+		try {
+			action.accept( entityManager );
 		}
 		catch ( Exception e ) {
 			if ( entityManager.getTransaction().isActive() ) {

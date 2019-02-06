@@ -63,6 +63,7 @@ import org.hibernate.metamodel.model.domain.internal.SqlAliasStemHelper;
 import org.hibernate.metamodel.model.domain.internal.collection.AbstractCreationExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.BasicCollectionElementImpl;
 import org.hibernate.metamodel.model.domain.internal.collection.BasicCollectionIndexImpl;
+import org.hibernate.metamodel.model.domain.internal.collection.BasicCollectionRowsUpdateExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionCreationExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionElementEmbeddedImpl;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionElementEntityImpl;
@@ -1160,7 +1161,15 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 					sessionFactory
 			);
 		}
-		throw new NotYetImplementedFor6Exception( getClass() );
+		else {
+			return new BasicCollectionRowsUpdateExecutor(
+					this,
+					dmlTargetTable,
+					hasIndex(),
+					indexContainsFormula(),
+					sessionFactory
+			);
+		}
 	}
 
 	private CollectionRowsIndexExecutor generateCollectionRowsIndexExecutor() {

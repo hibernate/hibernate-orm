@@ -145,7 +145,13 @@ public abstract class AbstractRuntimeModel implements RuntimeModel {
 		if ( importedName != null ) {
 			entityName = importedName;
 		}
-		return (EntityTypeDescriptor<T>) entityDescriptorMap.get( entityName );
+
+		EntityTypeDescriptor<T> result = (EntityTypeDescriptor<T>) entityDescriptorMap.get( entityName );
+		if ( result == null ) {
+			throw new NotNavigableException( entityName );
+		}
+
+		return result;
 	}
 
 	@Override

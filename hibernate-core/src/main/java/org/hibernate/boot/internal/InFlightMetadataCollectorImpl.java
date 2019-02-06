@@ -2044,7 +2044,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 		@Override
 		public MetadataBuildingContext getMetadataBuildingContext() {
-			return null;
+			return getBootstrapContext().getTypeConfiguration().getMetadataBuildingContext();
 		}
 	}
 

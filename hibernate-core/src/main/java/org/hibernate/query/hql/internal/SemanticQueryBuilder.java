@@ -1512,7 +1512,7 @@ public class SemanticQueryBuilder
 		final String castTargetName = ctx.dotIdentifierSequence().getText();
 		final EntityTypeDescriptor castTarget = resolveEntityReference( castTargetName ).getEntityDescriptor();
 
-		treatHandlerStack.getCurrent().addDowncast( basePathPart.getExportedFromElement(), castTarget );;
+		treatHandlerStack.getCurrent().addDowncast( basePathPart.getExportedFromElement(), castTarget );
 
 		if ( ctx.nonSyntacticNavigablePath() != null ) {
 			// we have a path continuation

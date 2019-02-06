@@ -38,7 +38,7 @@ public class SqmDiscriminatorReference extends AbstractSqmNavigableReference imp
 				.getHierarchy()
 				.getDiscriminatorDescriptor();
 
-		this.navigablePath = entityReference.getNavigablePath().append( DiscriminatorDescriptor.NAVIGABLE_NAME );;
+		this.navigablePath = entityReference.getNavigablePath().append( DiscriminatorDescriptor.NAVIGABLE_NAME );
 	}
 
 	@Override

@@ -79,8 +79,9 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 	private Map explicitLocalTypeParams;
 
 	private Function<TypeConfiguration,SqlTypeDescriptor> explicitSqlTypeAccess;
-	private Function<TypeConfiguration, BasicJavaDescriptor> explicitJavaTypeAccess;
+	private Function<TypeConfiguration, BasicJavaDescriptor<T>> explicitJavaTypeAccess;
 
+	private Class<T> explicitJavaClass;
 	private BasicJavaDescriptor<T> javaDescriptor;
 	private SqlTypeDescriptor sqlTypeDescriptor;
 	private ConverterDescriptor converterDescriptor;
@@ -257,9 +258,7 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 			switch ( kind ) {
 				case COLLECTION_ID: {
 					final XClass valueClass = navigableXProperty.getClassOrElementClass();
-					basicValue.setJavaClass(
-							buildingContext.getBootstrapContext().getReflectionManager().toClass( valueClass )
-					);
+					explicitJavaClass = buildingContext.getBootstrapContext().getReflectionManager().toClass( valueClass );
 					break;
 				}
 				case COLLECTION_INDEX: {
@@ -290,7 +289,7 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 		final Class javaType = buildingContext.getBootstrapContext()
 				.getReflectionManager()
 				.toClass( mapAttribute.getMapKey() );
-		basicValue.setJavaClass( javaType );
+		explicitJavaClass = javaType;
 
 		javaDescriptor = (BasicJavaDescriptor) buildingContext.getBootstrapContext()
 				.getTypeConfiguration()
@@ -344,9 +343,7 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 				.getJavaTypeDescriptorRegistry()
 				.getOrMakeJavaDescriptor( Integer.class );
 
-		basicValue.setExplicitSqlTypeAccess(
-				typeConfiguration -> javaDescriptor.getJdbcRecommendedSqlType( this )
-		);
+		explicitSqlTypeAccess = typeConfiguration -> javaDescriptor.getJdbcRecommendedSqlType( this );
 	}
 
 	@SuppressWarnings("unchecked")
@@ -357,7 +354,7 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 				.getReflectionManager()
 				.toClass( elementJavaType );
 
-		basicValue.setJavaClass( javaClass );
+		explicitJavaClass = javaClass;
 
 		javaDescriptor = (BasicJavaDescriptor) buildingContext.getBootstrapContext()
 				.getTypeConfiguration()
@@ -676,9 +673,11 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 		if ( isNationalized ) {
 			basicValue.makeNationalized();
 		}
+		basicValue.setExplicitJavaTypeAccess( explicitJavaTypeAccess );
 		basicValue.setExplicitSqlTypeAccess( explicitSqlTypeAccess );
 		basicValue.setJavaTypeDescriptor( javaDescriptor );
 		basicValue.setTypeUsingReflection( persistentClassName, propertyName );
 		basicValue.setJpaAttributeConverterDescriptor( converterDescriptor );
+		basicValue.setJavaClass( explicitJavaClass );
 	}
 }

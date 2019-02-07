@@ -1632,7 +1632,6 @@ public abstract class CollectionBinder {
 					column.setTable( collValue.getMappedTable() );
 				}
 				elementBinder.setColumns( elementColumns );
-				collValue.setElement( elementBinder.make() );
 				elementBinder.setType(
 						property,
 						elementClass,
@@ -1640,6 +1639,7 @@ public abstract class CollectionBinder {
 						holder.resolveElementAttributeConverterDescriptor( property, elementClass )
 				);
 				elementBinder.setPersistentClassName( propertyHolder.getEntityName() );
+				collValue.setElement( elementBinder.make() );
 				String orderBy = adjustUserSuppliedValueCollectionOrderingFragment( hqlOrderBy );
 				if ( orderBy != null ) {
 					collValue.setOrderBy( orderBy );

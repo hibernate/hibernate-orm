@@ -338,7 +338,6 @@ public class MapBinder extends CollectionBinder {
 					elementBinder.setColumns( elementColumns );
 					//do not call setType as it extract the type from @Type
 					//the algorithm generally does not apply for map key anyway
-					mapValue.setIndex( elementBinder.make() );
 					elementBinder.setType(
 							property,
 							keyXClass,
@@ -346,6 +345,7 @@ public class MapBinder extends CollectionBinder {
 							holder.mapKeyAttributeConverterDescriptor( property, keyXClass )
 					);
 					elementBinder.setPersistentClassName( propertyHolder.getEntityName() );
+					mapValue.setIndex( elementBinder.make() );
 				}
 			}
 			//FIXME pass the Index Entity JoinColumns

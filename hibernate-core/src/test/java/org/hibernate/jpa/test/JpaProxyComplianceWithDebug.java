@@ -1,3 +1,9 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
 package org.hibernate.jpa.test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -110,7 +116,7 @@ public class JpaProxyComplianceWithDebug extends BaseEntityManagerFunctionalTest
 
 		@ManyToMany
 		@JoinTable(
-				name = "mvno_billing_agreement_default_univerzalis_opcio", joinColumns = {
+				name = "mvnobillagr_def_univerzalis", joinColumns = {
 						@JoinColumn(name = "billing_agreement_id")
 				},
 				inverseJoinColumns = {
@@ -118,15 +124,15 @@ public class JpaProxyComplianceWithDebug extends BaseEntityManagerFunctionalTest
 				})
 		private Set<MvnoOpcio> mvnoDefaultUniverzalisOpcioi = new HashSet<>();
 
-		@JoinColumn(name = "behajtas_egyiranyusitas_opcio_id")
+		@JoinColumn(name = "egyiranyusitas_opcio_id")
 		@ManyToOne(fetch = FetchType.LAZY)
 		private MvnoOpcio behajtasEgyiranyusitasOpcio;
 
-		@JoinColumn(name = "behajtas_felfuggesztes_opcio_id")
+		@JoinColumn(name = "felfuggesztes_opcio_id")
 		@ManyToOne(fetch = FetchType.LAZY)
 		private MvnoOpcio behajtasFelfuggesztesOpcio;
 
-		@JoinColumn(name = "hotlimit_emeltdijas_bar_opcio_id")
+		@JoinColumn(name = "emeltdijas_bar_opcio_id")
 		@ManyToOne(fetch = FetchType.LAZY)
 		private MvnoOpcio hotlimitEmeltDijasBarOpcio;
 

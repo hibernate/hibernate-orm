@@ -505,6 +505,7 @@ public abstract class AbstractPluralPersistentAttribute<O,C,E> extends AbstractP
 			if ( wasClean ) {
 				( (PersistentCollection) targetValue ).clearDirty();;
 			}
+			result = targetValue;
 		}
 
 		return result;

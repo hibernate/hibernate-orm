@@ -217,7 +217,7 @@ public class PersistentSetTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-2485")
+//	@FailureExpected(jiraKey = "HHH-2485")
 	public void testCompositeElementMerging() {
 		final Container container = new Container( "p1" );
 		Container.Content c1 = new Container.Content( "c1" );
@@ -236,10 +236,7 @@ public class PersistentSetTest extends SessionFactoryBasedFunctionalTest {
 		container.setName( "another name" );
 
 		Container merged = inTransaction(
-				session -> {
-					return (Container) session.merge( container );
-
-				}
+				session -> (Container) session.merge( container )
 		);
 
 		assertEquals( 1, merged.getContents().size() );

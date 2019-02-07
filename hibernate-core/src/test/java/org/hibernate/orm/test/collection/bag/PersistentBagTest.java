@@ -78,6 +78,7 @@ public class PersistentBagTest extends SessionFactoryBasedFunctionalTest {
 	@Test
 	@SkipForDialect(dialectClass = AbstractHANADialect.class, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testMergePersistentEntityWithNewOneToManyElements() {
+		// todo (6.0): when post insert id generation will be managed change the id generator mapping back to "native"
 		final Order o = new Order();
 
 		inTransaction(

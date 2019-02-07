@@ -217,12 +217,16 @@ public final class Cascade {
 			}
 			else if ( !BasicTypeDescriptor.class.isInstance( elementType ) ) {
 				if ( SingleTableEntityTypeDescriptor.class.isInstance( elementType ) ) {
+					SingleTableEntityTypeDescriptor singleTableEntityTypeDescriptor = (SingleTableEntityTypeDescriptor) elementType;
+					final String entityName = singleTableEntityTypeDescriptor.getPersistenceType() == PersistenceType.ENTITY
+							? singleTableEntityTypeDescriptor.getEntityName()
+							: null;
 					cascadeToOne(
 							action,
 							eventSource,
 							parent,
 							child,
-							(SingleTableEntityTypeDescriptor) elementType,
+							entityName,
 							style,
 							anything,
 							isCascadeDeleteEnabled
@@ -451,7 +455,10 @@ public final class Cascade {
 			final Object anything,
 			final boolean isCascadeDeleteEnabled) {
 		if ( SingularPersistentAttributeEntity.class.isInstance( attribute ) ) {
-			cascadeToOne( action, eventSource, parent, child, attribute, style, anything, isCascadeDeleteEnabled );
+			final String entityName = attribute.getPersistenceType() == PersistenceType.ENTITY
+					? ( (SingularPersistentAttributeEntity) attribute ).getEntityName()
+					: null;
+			cascadeToOne( action, eventSource, parent, child, entityName, style, anything, isCascadeDeleteEnabled );
 		}
 		else if ( PluralPersistentAttribute.class.isInstance( attribute ) ) {
 			cascadeCollection(
@@ -517,40 +524,10 @@ public final class Cascade {
 			final EventSource eventSource,
 			final Object parent,
 			final Object child,
-			final SingleTableEntityTypeDescriptor persistentAttribute,
+			final String entityName,
 			final CascadeStyle style,
 			final Object anything,
 			final boolean isCascadeDeleteEnabled) {
-		final String entityName = persistentAttribute.getPersistenceType() == PersistenceType.ENTITY
-				? persistentAttribute.getEntityName()
-				: null;
-		if ( style.reallyDoCascade( action ) ) {
-			//not really necessary, but good for consistency...
-			eventSource.getPersistenceContext().addChildParent( child, parent );
-			try {
-				action.cascade( eventSource, child, entityName, anything, isCascadeDeleteEnabled );
-			}
-			finally {
-				eventSource.getPersistenceContext().removeChildParent( child );
-			}
-		}
-	}
-
-	/**
-	 * Cascade an action to a to-one association or any type
-	 */
-	private static void cascadeToOne(
-			final CascadingAction action,
-			final EventSource eventSource,
-			final Object parent,
-			final Object child,
-			final PersistentAttributeDescriptor persistentAttribute,
-			final CascadeStyle style,
-			final Object anything,
-			final boolean isCascadeDeleteEnabled) {
-		final String entityName = persistentAttribute.getPersistenceType() == PersistenceType.ENTITY
-				? ( (SingularPersistentAttributeEntity) persistentAttribute ).getEntityName()
-				: null;
 		if ( style.reallyDoCascade( action ) ) {
 			//not really necessary, but good for consistency...
 			eventSource.getPersistenceContext().addChildParent( child, parent );

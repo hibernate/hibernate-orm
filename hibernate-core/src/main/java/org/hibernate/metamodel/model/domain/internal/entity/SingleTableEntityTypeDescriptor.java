@@ -307,6 +307,7 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 
 		final InsertStatement insertStatement = new InsertStatement( tableReference );
 		// todo (6.0) : account for non-generated identifiers
+		// todo (6.0) : account for post-insert generated identifiers
 
 		getHierarchy().getIdentifierDescriptor().dehydrate(
 				// NOTE : at least according to the argument name (`unresolvedId`), the

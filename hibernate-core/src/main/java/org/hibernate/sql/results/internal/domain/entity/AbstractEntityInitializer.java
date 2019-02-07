@@ -18,6 +18,7 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -419,6 +420,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			return;
 		}
 
+
 		final Object entityIdentifier = entityKey.getIdentifier();
 
 		if ( EntityLoadingLogger.TRACE_ENABLED ) {
@@ -429,7 +431,16 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 
 		final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState().getSession();
+		PersistenceContext persistenceContext = session.getPersistenceContext();
 
+		// todo (6.0): do we really need this check ?
+		if ( persistenceContext.containsEntity( entityKey ) ) {
+			Status status = persistenceContext.getEntry( persistenceContext.getEntity( entityKey ) )
+					.getStatus();
+			if ( status == Status.DELETED || status == Status.GONE ) {
+				return;
+			}
+		}
 		final Object rowId = null;
 // todo (6.0) : rowId
 //		final Object rowId;
@@ -457,7 +468,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		entityDescriptor.setPropertyValues( entityInstance, resolvedEntityState );
 
-		session.getPersistenceContext().addEntity(
+		persistenceContext.addEntity(
 				entityKey,
 				entityInstance
 		);
@@ -470,7 +481,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			version = null;
 		}
 
-		final EntityEntry entityEntry = session.getPersistenceContext().addEntry(
+		final EntityEntry entityEntry = persistenceContext.addEntry(
 				entityInstance,
 				Status.LOADING,
 				resolvedEntityState,
@@ -508,7 +519,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			// 		2) Session#clear + some form of load
 			//
 			// we need to be careful not to clobber the lock here in the cache so that it can be rolled back if need be
-			if ( session.getPersistenceContext().wasInsertedDuringTransaction( entityDescriptor, entityIdentifier ) ) {
+			if ( persistenceContext.wasInsertedDuringTransaction( entityDescriptor, entityIdentifier ) ) {
 				cacheAccess.update(
 						session,
 						cacheKey,
@@ -541,10 +552,11 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 
 		if ( entityDescriptor.getHierarchy().getNaturalIdDescriptor() != null ) {
-			session.getPersistenceContext().getNaturalIdHelper().cacheNaturalIdCrossReferenceFromLoad(
+			persistenceContext.getNaturalIdHelper().cacheNaturalIdCrossReferenceFromLoad(
 					entityDescriptor,
 					entityIdentifier,
-					session.getPersistenceContext().getNaturalIdHelper().extractNaturalIdValues( resolvedEntityState, entityDescriptor )
+					persistenceContext
+							.getNaturalIdHelper().extractNaturalIdValues( resolvedEntityState, entityDescriptor )
 			);
 		}
 
@@ -553,7 +565,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			isReallyReadOnly = true;
 		}
 		else {
-			final Object proxy = session.getPersistenceContext().getProxy( entityKey );
+			final Object proxy = persistenceContext.getProxy( entityKey );
 			if ( proxy != null ) {
 				// there is already a proxy for this impl
 				// only set the status to read-only if the proxy is read-only
@@ -565,7 +577,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			//performance optimization, but not really
 			//important, except for entities with huge
 			//mutable property values
-			session.getPersistenceContext().setEntryStatus( entityEntry, Status.READ_ONLY );
+			persistenceContext.setEntryStatus( entityEntry, Status.READ_ONLY );
 		}
 		else {
 			//take a snapshot
@@ -575,7 +587,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					resolvedEntityState,
 					StateArrayContributor::isUpdatable
 			);
-			session.getPersistenceContext().setEntryStatus( entityEntry, Status.MANAGED );
+			persistenceContext.setEntryStatus( entityEntry, Status.MANAGED );
 		}
 
 		entityDescriptor.afterInitialize( entityInstance, session );

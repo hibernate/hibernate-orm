@@ -258,7 +258,8 @@ public class MetamodelSelectBuilderProcess
 		if ( numberOfKeysToLoad <= 1 ) {
 			rootQuerySpec.addRestriction(
 					new ComparisonPredicate(
-							keyColumnExpression, ComparisonOperator.EQUAL,
+							keyColumnExpression,
+							ComparisonOperator.EQUAL,
 							keyParameterExpression
 					)
 			);
@@ -443,7 +444,17 @@ public class MetamodelSelectBuilderProcess
 
 		final List<Fetch> fetches = new ArrayList<>();
 
-		final Consumer<Fetchable> fetchableConsumer = fetchable -> {
+		final Consumer<Fetchable> fetchableConsumer = getFetchableConsumer( fetchParent, fetches );
+
+		NavigableContainer navigableContainer = fetchParent.getNavigableContainer();
+		navigableContainer.visitKeyFetchables( fetchableConsumer );
+		navigableContainer.visitFetchables( fetchableConsumer );
+
+		return fetches;
+	}
+
+	private Consumer<Fetchable> getFetchableConsumer(FetchParent fetchParent, List<Fetch> fetches) {
+		return fetchable -> {
 
 			final Fetch biDirectionalFetch = circularFetchDetector.findBiDirectionalFetch(
 					fetchParent,
@@ -483,14 +494,7 @@ public class MetamodelSelectBuilderProcess
 			Fetch fetch = fetchable.generateFetch( fetchParent, fetchTiming, joined, lockMode, null, this, this );
 			fetches.add( fetch );
 		};
-
-		NavigableContainer navigableContainer = fetchParent.getNavigableContainer();
-		navigableContainer.visitKeyFetchables( fetchableConsumer );
-		navigableContainer.visitFetchables( fetchableConsumer );
-
-		return fetches;
 	}
-
 
 	@Override
 	public TableSpace getCurrentTableSpace() {

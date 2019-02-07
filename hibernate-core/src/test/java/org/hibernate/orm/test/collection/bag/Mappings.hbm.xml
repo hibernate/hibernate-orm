@@ -25,7 +25,8 @@
 
     <class name="Order" table="TAuction">
         <id name="id">
-            <generator class="native"/>
+            <!--<generator class="native"/>-->
+            <generator class="increment"/>
         </id>
         <bag name="items" inverse="true"
              cascade="all-delete-orphan">
@@ -36,7 +37,8 @@
 
     <class name="Item" table="TBid">
         <id name="id">
-            <generator class="native"/>
+            <!--<generator class="native"/>-->
+            <generator class="increment"/>
         </id>
         <property name="name"/>
         <many-to-one name="order" column="orderId"/>

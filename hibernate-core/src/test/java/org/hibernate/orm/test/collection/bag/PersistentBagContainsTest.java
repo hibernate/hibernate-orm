@@ -89,7 +89,7 @@ public class PersistentBagContainsTest extends SessionFactoryBasedFunctionalTest
 		private Long id;
 
 		@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-		private List<Item> items = new ArrayList<Item>();
+		private List<Item> items = new ArrayList<>();
 
 		public Long getId() {
 			return id;

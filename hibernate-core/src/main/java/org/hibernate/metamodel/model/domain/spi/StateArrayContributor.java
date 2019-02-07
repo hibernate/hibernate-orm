@@ -117,17 +117,32 @@ public interface StateArrayContributor<J> extends Navigable<J>, ExpressableType<
 			Object owner,
 			Map copyCache,
 			SessionImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		return getMutabilityPlan().replace(
+				this,
+				originalValue,
+				targetValue,
+				owner,
+				copyCache,
+				session
+		);
 	}
 
 	default Object replace(
-			Object originalValue,
-			Object targetValue,
+			J originalValue,
+			J targetValue,
 			Object owner,
 			Map copyCache,
 			ForeignKeyDirection foreignKeyDirection,
 			SessionImplementor session) {
-		throw new NotYetImplementedFor6Exception();
+		return getMutabilityPlan().replace(
+				this,
+				originalValue,
+				targetValue,
+				owner,
+				copyCache,
+				foreignKeyDirection,
+				session
+		);
 	}
 
 	default boolean isDirty(

@@ -17,6 +17,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 /**
@@ -117,22 +118,45 @@ public abstract class AbstractNonIdSingularPersistentAttribute<O,J>
 		// most implementations have nothing to do here
 	}
 
-	@Override
-	public Object replace(J originalValue, J targetValue, Object owner, Map copyCache, SessionImplementor session) {
-		if ( LazyPropertyInitializer.UNFETCHED_PROPERTY == originalValue ) {
-			return targetValue;
-		}
-		else {
-			if ( !mutabilityPlan.isMutable() ||
-					( targetValue != LazyPropertyInitializer.UNFETCHED_PROPERTY &&
-							getJavaTypeDescriptor().areEqual( originalValue, targetValue ) ) ) {
-				return originalValue;
-			}
-			else {
-				return mutabilityPlan.deepCopy( originalValue );
-			}
-		}
-	}
+//	@Override
+//	public Object replace(
+//			J originalValue,
+//			J targetValue,
+//			Object owner,
+//			Map copyCache,
+//			SessionImplementor session) {
+//		if ( LazyPropertyInitializer.UNFETCHED_PROPERTY == originalValue ) {
+//			return targetValue;
+//		}
+//		else {
+//			if ( !mutabilityPlan.isMutable() ||
+//					( targetValue != LazyPropertyInitializer.UNFETCHED_PROPERTY &&
+//							getJavaTypeDescriptor().areEqual( originalValue, targetValue ) ) ) {
+//				return originalValue;
+//			}
+//			else {
+//				return mutabilityPlan.deepCopy( originalValue );
+//			}
+//		}
+//	}
+//
+//	@Override
+//	public Object replace(
+//			J originalValue,
+//			J targetValue,
+//			Object owner,
+//			Map copyCache,
+//			ForeignKeyDirection foreignKeyDirection,
+//			SessionImplementor session) {
+//		boolean include;
+//		if ( isAssociation() ) {
+//			include = getForeignKeyDirection() == foreignKeyDirection;
+//		}
+//		else {
+//			include = ForeignKeyDirection.FROM_PARENT == foreignKeyDirection;
+//		}
+//		return include ? mutabilityPlan.replace( this, originalValue, targetValue, owner, copyCache, session ) : targetValue;
+//	}
 
 	@Override
 	public boolean isDirty(Object originalValue, Object currentValue, SharedSessionContractImplementor session) {

@@ -11,8 +11,11 @@ import java.util.Map;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -47,8 +50,8 @@ public class BasicTypeMutabilityPlanAdapter<T> implements MutabilityPlan<T> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public T replace(
+			Navigable<T> navigable,
 			T originalValue,
 			T targetValue,
 			Object owner,
@@ -57,13 +60,32 @@ public class BasicTypeMutabilityPlanAdapter<T> implements MutabilityPlan<T> {
 		if ( originalValue == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 			return targetValue;
 		}
-		else if ( !isMutable() ||
-				( targetValue == LazyPropertyInitializer.UNFETCHED_PROPERTY &&
-						basicType.getJavaTypeDescriptor().areEqual( originalValue, targetValue ) ) ) {
-			return originalValue;
+
+		return getReplacement( originalValue, targetValue );
+	}
+
+	@Override
+	public T replace(
+			Navigable<T> navigable,
+			T originalValue,
+			T targetValue,
+			Object owner,
+			Map copyCache,
+			ForeignKeyDirection foreignKeyDirection,
+			SessionImplementor session) {
+		return ForeignKeyDirection.FROM_PARENT == foreignKeyDirection
+				? getReplacement( originalValue, targetValue )
+				: targetValue;
+	}
+
+	@SuppressWarnings({"WeakerAccess", "unchecked"})
+	protected T getReplacement(T original, T target) {
+		final JavaTypeDescriptor<T> javaTypeDescriptor = (JavaTypeDescriptor<T>) basicType.getJavaTypeDescriptor();
+		if ( !isMutable() || ( target != null && javaTypeDescriptor.areEqual( original, target ) ) ) {
+			return original;
 		}
 		else {
-			return deepCopy( originalValue );
+			return deepCopy( original );
 		}
 	}
 }

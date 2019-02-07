@@ -7,11 +7,17 @@
 package org.hibernate.type.descriptor.java.internal;
 
 import java.io.Serializable;
+import java.util.Map;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.EmbeddedMutabilityPlan;
+import org.hibernate.type.internal.TypeHelper;
 
 /**
  * @author Chris Cranford
@@ -54,5 +60,67 @@ public class EmbeddedMutabilityPlanImpl implements EmbeddedMutabilityPlan {
 	@Override
 	public Object assemble(Serializable cached) {
 		throw new NotYetImplementedFor6Exception(  );
+	}
+
+	@Override
+	public Object replace(
+			Navigable navigable,
+			Object originalValue,
+			Object targetValue,
+			Object owner,
+			Map copyCache,
+			SessionImplementor session) {
+		if ( originalValue == null ) {
+			return null;
+		}
+
+		final Object result = targetValue == null
+				? embeddedTypeDescriptor.instantiate( session )
+				: targetValue;
+
+		Object[] values = TypeHelper.replace(
+				embeddedTypeDescriptor,
+				originalValue,
+				targetValue,
+				owner,
+				copyCache,
+				session
+		);
+
+		embeddedTypeDescriptor.setPropertyValues( result, values );
+
+		return result;
+	}
+
+	@Override
+	public Object replace(
+			Navigable navigable,
+			Object originalValue,
+			Object targetValue,
+			Object owner,
+			Map copyCache,
+			ForeignKeyDirection foreignKeyDirection,
+			SessionImplementor session) {
+		if ( originalValue == null ) {
+			return null;
+		}
+
+		final Object result = targetValue == null
+				? embeddedTypeDescriptor.instantiate( session )
+				: targetValue;
+
+		Object[] values = TypeHelper.replace(
+				embeddedTypeDescriptor,
+				originalValue,
+				targetValue,
+				owner,
+				copyCache,
+				foreignKeyDirection,
+				session
+		);
+
+		embeddedTypeDescriptor.setPropertyValues( result, values );
+
+		return result;
 	}
 }

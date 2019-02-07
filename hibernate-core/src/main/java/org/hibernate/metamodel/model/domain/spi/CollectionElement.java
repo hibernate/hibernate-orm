@@ -49,6 +49,7 @@ public interface CollectionElement<J> extends Navigable<J>, CollectionDomainType
 	// todo (6.0) - should this be moved into a super contract?
 	default J replace(J originalValue, J targetValue, Object owner, Map copyCache, SessionImplementor session) {
 		return getJavaTypeDescriptor().getMutabilityPlan().replace(
+				this,
 				originalValue,
 				targetValue,
 				owner,

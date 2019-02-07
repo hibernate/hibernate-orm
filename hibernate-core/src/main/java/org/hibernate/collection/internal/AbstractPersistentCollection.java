@@ -1226,16 +1226,14 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		}
 
 		public void replace(PersistentCollectionDescriptor descriptor, Map copyCache) {
-			throw new NotYetImplementedFor6Exception(  );
-//			if ( addedValue != null ) {
-//				addedValue = getReplacement( (Type) persister.getElementType(), addedValue, copyCache );
-//			}
+			if ( addedValue != null ) {
+				addedValue = getReplacement( descriptor.getElementDescriptor(), addedValue, copyCache );
+			}
 		}
 
-//		protected final Object getReplacement(Type type, Object current, Map copyCache) {
-//			throw new org.hibernate.sql.NotYetImplementedException(  );
-//			return type.replace( current, null, session, owner, copyCache );
-//		}
+		protected final E getReplacement(CollectionElement elementDescriptor, E current, Map copyCache) {
+			return (E) elementDescriptor.replace( current, null, owner, copyCache, (SessionImplementor) session );
+		}
 
 		@Override
 		public final E getAddedInstance() {

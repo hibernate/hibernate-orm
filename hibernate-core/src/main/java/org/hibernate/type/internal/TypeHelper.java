@@ -139,6 +139,108 @@ public class TypeHelper {
 
 		return assembledProps;
 	}
+
+	@SuppressWarnings("unchecked")
+	public static Object[] replace(
+			ManagedTypeDescriptor<?> managedTypeDescriptor,
+			Object original,
+			Object target,
+			Object owner,
+			Map copyCache,
+			SessionImplementor session) {
+
+		final List<StateArrayContributor<?>> contributors = managedTypeDescriptor.getStateArrayContributors();
+
+		final Object[] originalValues = original == null
+				? new Object[ contributors.size() ]
+				: managedTypeDescriptor.getPropertyValues( original );
+		final Object[] targetValues = target == null
+				? new Object[ contributors.size() ]
+				: managedTypeDescriptor.getPropertyValues( target );
+
+		final Object[] copied = new Object[ originalValues.length ];
+
+		for ( StateArrayContributor contributor : contributors ) {
+			final int position = contributor.getStateArrayPosition();
+
+			if ( originalValues[ position ] == LazyPropertyInitializer.UNFETCHED_PROPERTY
+					|| originalValues[ position ] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+				copied[ position ] = targetValues[ position ];
+			}
+			else if ( targetValues[ position ] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+				copied[ position ] = contributor.replace(
+						originalValues[ position ],
+						null,
+						owner,
+						copyCache,
+						session
+				);
+			}
+			else {
+				copied[ position ] = contributor.replace(
+						originalValues[ position ],
+						targetValues[ position ],
+						owner,
+						copyCache,
+						session
+				);
+			}
+		}
+
+		return copied;
+	}
+
+	public static Object[] replace(
+			ManagedTypeDescriptor<?> managedTypeDescriptor,
+			Object original,
+			Object target,
+			Object owner,
+			Map copyCache,
+			ForeignKeyDirection foreignKeyDirection,
+			SessionImplementor session) {
+		final List<StateArrayContributor<?>> contributors = managedTypeDescriptor.getStateArrayContributors();
+
+		final Object[] originalValues = original == null
+				? new Object[ contributors.size() ]
+				: managedTypeDescriptor.getPropertyValues( original );
+		final Object[] targetValues = target == null
+				? new Object[ contributors.size() ]
+				: managedTypeDescriptor.getPropertyValues( target );
+
+		final Object[] copied = new Object[ originalValues.length ];
+
+		for ( StateArrayContributor contributor : contributors ) {
+			final int position = contributor.getStateArrayPosition();
+
+			if ( originalValues[ position ] == LazyPropertyInitializer.UNFETCHED_PROPERTY
+					|| originalValues[ position ] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+				copied[ position ] = targetValues[ position ];
+			}
+			else if ( targetValues[ position ] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+				copied[ position ] = contributor.replace(
+						originalValues[ position ],
+						null,
+						owner,
+						copyCache,
+						foreignKeyDirection,
+						session
+				);
+			}
+			else {
+				copied[ position ] = contributor.replace(
+						originalValues[ position ],
+						targetValues[ position ],
+						owner,
+						copyCache,
+						foreignKeyDirection,
+						session
+				);
+			}
+		}
+
+		return copied;
+	}
+
 	@SuppressWarnings("unchecked")
 	public static Object[] replace(
 			EntityTypeDescriptor<?> entityDescriptor,

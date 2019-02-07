@@ -73,6 +73,7 @@ public class EntityJavaTypeMappingImpl<T> extends AbstractIdentifiableJavaTypeMa
 		if ( persistentClass.isMutable() ) {
 			return new EntityMutabilityPlanImpl(
 					MutableEntityEntryFactory.INSTANCE,
+					persistentClass.getEntityName(),
 					true
 			);
 		}
@@ -90,6 +91,7 @@ public class EntityJavaTypeMappingImpl<T> extends AbstractIdentifiableJavaTypeMa
 							disableVersionIncrement,
 							persistenceContext
 					),
+					persistentClass.getEntityName(),
 					false
 			);
 		}

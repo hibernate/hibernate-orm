@@ -471,6 +471,7 @@ public abstract class AbstractPluralPersistentAttribute<O,C,E> extends AbstractP
 
 	@Override
 	public Object replace(C originalValue, C targetValue, Object owner, Map copyCache, SessionImplementor session) {
+		// todo (6.0) - This implementation should be moved to the MutabilityPlan.
 		if ( originalValue == null ) {
 			return  null;
 		}
@@ -507,6 +508,18 @@ public abstract class AbstractPluralPersistentAttribute<O,C,E> extends AbstractP
 		}
 
 		return result;
+	}
+
+	@Override
+	public Object replace(
+			C originalValue,
+			C targetValue,
+			Object owner,
+			Map copyCache,
+			ForeignKeyDirection foreignKeyDirection,
+			SessionImplementor session) {
+		// todo (6.0) - This implementation should be moved to the MutabilityPlan.
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@SuppressWarnings("unchecked")

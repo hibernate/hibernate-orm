@@ -117,7 +117,7 @@ public interface StateArrayContributor<J> extends Navigable<J>, ExpressableType<
 			Object owner,
 			Map copyCache,
 			SessionImplementor session) {
-		throw new NotYetImplementedFor6Exception();
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	default Object replace(

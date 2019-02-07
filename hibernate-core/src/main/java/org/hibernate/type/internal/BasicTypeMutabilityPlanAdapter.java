@@ -7,7 +7,10 @@
 package org.hibernate.type.internal;
 
 import java.io.Serializable;
+import java.util.Map;
 
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
@@ -41,5 +44,26 @@ public class BasicTypeMutabilityPlanAdapter<T> implements MutabilityPlan<T> {
 	@SuppressWarnings("unchecked")
 	public T assemble(Serializable cached) {
 		return (T) basicType.assemble( cached );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public T replace(
+			T originalValue,
+			T targetValue,
+			Object owner,
+			Map copyCache,
+			SessionImplementor session) {
+		if ( originalValue == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+			return targetValue;
+		}
+		else if ( !isMutable() ||
+				( targetValue == LazyPropertyInitializer.UNFETCHED_PROPERTY &&
+						basicType.getJavaTypeDescriptor().areEqual( originalValue, targetValue ) ) ) {
+			return originalValue;
+		}
+		else {
+			return deepCopy( originalValue );
+		}
 	}
 }

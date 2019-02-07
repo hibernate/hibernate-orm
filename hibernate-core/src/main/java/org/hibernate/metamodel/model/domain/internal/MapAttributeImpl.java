@@ -8,9 +8,12 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.Map;
 
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractPluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.CollectionElement;
+import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
@@ -44,5 +47,26 @@ public class MapAttributeImpl<X, K, V> extends AbstractPluralPersistentAttribute
 	@SuppressWarnings("unchecked")
 	public SimpleTypeDescriptor<K> getKeyType() {
 		return (SimpleTypeDescriptor<K>) getPersistentCollectionDescriptor().getKeyDomainTypeDescriptor();
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	protected Map<K, V> replaceElements(
+			Map<K, V> originalValue,
+			Map<K, V> targetValue,
+			Object owner,
+			Map copyCache,
+			SessionImplementor session) {
+		targetValue.clear();
+
+		final CollectionIndex<K> indexDescriptor = getCollectionDescriptor().getIndexDescriptor();
+		final CollectionElement<V> elementDescriptor = getCollectionDescriptor().getElementDescriptor();
+		for ( Map.Entry<K, V> entry : originalValue.entrySet() ) {
+			K key = indexDescriptor.replace( entry.getKey(), null, owner, copyCache, session );
+			V value = elementDescriptor.replace( entry.getValue(), null, owner, copyCache, session );
+			targetValue.put( key, value );
+		}
+
+		return targetValue;
 	}
 }

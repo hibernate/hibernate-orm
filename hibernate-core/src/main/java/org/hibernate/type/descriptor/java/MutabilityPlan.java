@@ -7,6 +7,10 @@
 package org.hibernate.type.descriptor.java;
 
 import java.io.Serializable;
+import java.util.Map;
+
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * Describes the mutability aspects of a Java type.  The term mutability refers to the fact that generally speaking
@@ -54,4 +58,13 @@ public interface MutabilityPlan<T> extends Serializable {
 	 * @see #disassemble
 	 */
 	T assemble(Serializable cached);
+
+	default T replace(
+			T originalValue,
+			T targetValue,
+			Object owner,
+			Map copyCache,
+			SessionImplementor session) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
 }

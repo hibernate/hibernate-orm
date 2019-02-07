@@ -7,7 +7,9 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import java.util.List;
+import java.util.Map;
 
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.ast.produce.spi.TableReferenceContributor;
 
@@ -42,4 +44,15 @@ public interface CollectionIndex<J> extends Navigable<J>, TableReferenceContribu
 	boolean isSettable();
 
 	int getBaseIndex();
+
+	// todo (6.0) - should this be moved into a super contract?
+	default J replace(J originalValue, J targetValue, Object owner, Map copyCache, SessionImplementor session) {
+		return getJavaTypeDescriptor().getMutabilityPlan().replace(
+				originalValue,
+				targetValue,
+				owner,
+				copyCache,
+				session
+		);
+	}
 }

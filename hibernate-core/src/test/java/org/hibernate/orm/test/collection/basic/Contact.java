@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.collection.basic;
+package org.hibernate.orm.test.collection.basic;
 
 import java.io.Serializable;
 import java.util.HashSet;
@@ -26,8 +26,8 @@ public class Contact implements Serializable {
     private static final long serialVersionUID = 1L;
     private Long id;
     private String name;
-    private Set<EmailAddress> emailAddresses = new HashSet<EmailAddress>();
-    private Set<EmailAddress> emailAddresses2 = new HashSet<EmailAddress>();
+    private Set<EmailAddress> emailAddresses = new HashSet<>();
+    private Set<EmailAddress> emailAddresses2 = new HashSet<>();
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

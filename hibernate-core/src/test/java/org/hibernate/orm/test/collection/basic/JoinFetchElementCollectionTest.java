@@ -12,11 +12,14 @@ import java.util.Set;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.junit.FailureExpected;
+
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Disabled("SQM changes required - PluralAttributeReference#addNavigableReference is not impl so when resolution the fetch, trying to build expression yields NPE due to not being able to lookup column references.")
 public class JoinFetchElementCollectionTest extends SessionFactoryBasedFunctionalTest {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

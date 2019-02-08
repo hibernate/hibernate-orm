@@ -46,7 +46,7 @@ public class PersistentIdentifierBagDescriptorImpl<O, E>
 			LockMode lockMode,
 			DomainResultCreationState creationState,
 			DomainResultCreationContext creationContext) {
-		return null;
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override

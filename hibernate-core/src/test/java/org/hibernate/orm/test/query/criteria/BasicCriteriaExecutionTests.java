@@ -43,6 +43,21 @@ public class BasicCriteriaExecutionTests extends BaseNonConfigCoreFunctionalTest
 	}
 
 	@Test
+	public void testExecutingBasicCriteriaQueryInStatelessSession() {
+		final CriteriaBuilder criteriaBuilder = sessionFactory().getCriteriaBuilder();
+
+		final CriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
+
+		final Root<BasicEntity> root = criteria.from( BasicEntity.class );
+
+		criteria.select( root );
+
+		inStatelessSession(
+				session -> session.createQuery( criteria ).list()
+		);
+	}
+
+	@Test
 	public void testExecutingBasicCriteriaQueryLiteralPredicate() {
 		final CriteriaBuilder criteriaBuilder = sessionFactory().getCriteriaBuilder();
 
@@ -55,6 +70,23 @@ public class BasicCriteriaExecutionTests extends BaseNonConfigCoreFunctionalTest
 		criteria.where( criteriaBuilder.equal( criteriaBuilder.literal( 1 ), criteriaBuilder.literal( 1 ) ) );
 
 		inSession(
+				session -> session.createQuery( criteria ).list()
+		);
+	}
+
+	@Test
+	public void testExecutingBasicCriteriaQueryLiteralPredicateInStatelessSession() {
+		final CriteriaBuilder criteriaBuilder = sessionFactory().getCriteriaBuilder();
+
+		final CriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
+
+		final Root<BasicEntity> root = criteria.from( BasicEntity.class );
+
+		criteria.select( root );
+
+		criteria.where( criteriaBuilder.equal( criteriaBuilder.literal( 1 ), criteriaBuilder.literal( 1 ) ) );
+
+		inStatelessSession(
 				session -> session.createQuery( criteria ).list()
 		);
 	}
@@ -74,6 +106,25 @@ public class BasicCriteriaExecutionTests extends BaseNonConfigCoreFunctionalTest
 		criteria.where( criteriaBuilder.equal( param, param ) );
 
 		inSession(
+				session -> session.createQuery( criteria ).setParameter( param, 1 ).list()
+		);
+	}
+
+	@Test
+	public void testExecutingBasicCriteriaQueryParameterPredicateInStatelessSession() {
+		final CriteriaBuilder criteriaBuilder = sessionFactory().getCriteriaBuilder();
+
+		final CriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
+
+		final Root<BasicEntity> root = criteria.from( BasicEntity.class );
+
+		criteria.select( root );
+
+		final ParameterExpression<Integer> param = criteriaBuilder.parameter( Integer.class );
+
+		criteria.where( criteriaBuilder.equal( param, param ) );
+
+		inStatelessSession(
 				session -> session.createQuery( criteria ).setParameter( param, 1 ).list()
 		);
 	}

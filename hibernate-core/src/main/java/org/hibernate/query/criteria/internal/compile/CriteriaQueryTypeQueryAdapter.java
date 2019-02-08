@@ -36,7 +36,7 @@ import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.RowSelection;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.query.ParameterMetadata;
@@ -59,12 +59,12 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class CriteriaQueryTypeQueryAdapter<X> implements QueryImplementor<X> {
-	private final SessionImplementor entityManager;
+	private final SharedSessionContractImplementor entityManager;
 	private final QueryImplementor<X> jpqlQuery;
 	private final Map<ParameterExpression<?>, ExplicitParameterInfo<?>> explicitParameterInfoMap;
 
 	public CriteriaQueryTypeQueryAdapter(
-			SessionImplementor entityManager,
+			SharedSessionContractImplementor entityManager,
 			QueryImplementor<X> jpqlQuery,
 			Map<ParameterExpression<?>, ExplicitParameterInfo<?>> explicitParameterInfoMap) {
 		this.entityManager = entityManager;

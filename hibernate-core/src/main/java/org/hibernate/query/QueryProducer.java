@@ -8,6 +8,10 @@ package org.hibernate.query;
 
 import org.hibernate.SQLQuery;
 
+import javax.persistence.criteria.CriteriaDelete;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.CriteriaUpdate;
+
 /**
  * Contract for things that can produce Query instances.  Expected implementors include
  * Session and StatelessSession.
@@ -163,4 +167,10 @@ public interface QueryProducer {
 	 * @return The NativeQuery instance for manipulation and execution
 	 */
 	NativeQuery getNamedNativeQuery(String name);
+
+	<T> Query<T> createQuery(CriteriaQuery<T> criteriaQuery);
+
+	Query createQuery(CriteriaUpdate updateQuery);
+
+	Query createQuery(CriteriaDelete deleteQuery);
 }

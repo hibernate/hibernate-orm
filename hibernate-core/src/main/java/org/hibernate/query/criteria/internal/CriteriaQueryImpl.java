@@ -24,7 +24,7 @@ import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.query.criteria.internal.compile.CompilableCriteria;
 import org.hibernate.query.criteria.internal.compile.CriteriaInterpretation;
@@ -302,7 +302,7 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 			@Override
 			@SuppressWarnings("unchecked")
 			public QueryImplementor buildCompiledQuery(
-					SessionImplementor entityManager,
+					SharedSessionContractImplementor entityManager,
 					final InterpretedParameterMetadata parameterMetadata) {
 
 				final Map<String,Class> implicitParameterTypes = extractTypeMap( parameterMetadata.implicitParameterBindings() );

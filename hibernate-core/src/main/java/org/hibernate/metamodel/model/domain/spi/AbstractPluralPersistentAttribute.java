@@ -520,7 +520,15 @@ public abstract class AbstractPluralPersistentAttribute<O,C,E> extends AbstractP
 			ForeignKeyDirection foreignKeyDirection,
 			SessionImplementor session) {
 		// todo (6.0) - This implementation should be moved to the MutabilityPlan.
-		throw new NotYetImplementedFor6Exception(  );
+		boolean include;
+		if ( isAssociation() ) {
+			include = getForeignKeyDirection() == foreignKeyDirection;
+		}
+		else {
+			include = ForeignKeyDirection.FROM_PARENT == foreignKeyDirection;
+		}
+
+		return include ? replace( originalValue, targetValue, owner, copyCache, session ) : targetValue;
 	}
 
 	@SuppressWarnings("unchecked")

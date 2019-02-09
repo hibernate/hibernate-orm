@@ -31,9 +31,13 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 	
 	/* ******* TABLE QUERIES ******* */
 	private static final String SQL_TABLE_BASE = 
-		    "select  a.table_name, a.owner, b.comments, 'TABLE' "
-			+ "from all_tables a left join all_tab_comments b "
-			+ "on (a.owner=b.owner and a.table_name=b.table_name) ";
+		    "select a.table_name, a.owner, "
+						  + "(SELECT b.comments\n"
+              + "   FROM all_tab_comments b\n"
+              + "  WHERE a.owner = b.owner\n"
+              + "        AND a.table_name = b.table_name) AS comments, "
+              + "'TABLE' "
+			+ "from all_tables a ";
 
 	private static final String SQL_TABLE_VIEW = 
 		" union all select view_name, owner, NULL, 'VIEW' from all_views ";
@@ -46,9 +50,11 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 	private static final String SQL_TABLE_TABLE = SQL_TABLE_BASE
 			+ "where a.table_name like ?" + SQL_TABLE_VIEW + "where view_name like ?";
 
-	private static final String SQL_TABLE_SCHEMA_AND_TABLE = SQL_TABLE_BASE
-			+ "where a.owner like ? and a.table_name like ?" + SQL_TABLE_VIEW
-			+ "where owner like ? and view_name like ?";
+	private static final String SQL_TABLE_SCHEMA_AND_TABLE =
+        SQL_TABLE_BASE
+			+ "where a.owner like ? and a.table_name like ?"
+      + SQL_TABLE_VIEW
+      + "where owner like ? and view_name like ?";
 
 	private PreparedStatement prepTableNone;
 
@@ -61,14 +67,19 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 	/* ***************************** */
 	/* ******* INDEX QUERIES ******* */
 	/* ***************************** */
-	private static final String SQL_INDEX_BASE = "select a.column_name, "
-			+ "decode(b.uniqueness,'UNIQUE','false','true'), "
-			+ "a.index_owner, a.index_name, a.table_name "
-			+ "from all_ind_columns a left join all_indexes b on "
-			+ "(a.table_name = b.table_name "
-			+ " AND a.table_owner = b.table_owner "
-			+ " AND a.index_name  = b.index_name) "
-			+ "where b.index_type not like 'FUNCTION-BASED%' ";
+	private static final String SQL_INDEX_BASE =
+            "SELECT a.column_name\n" +
+						"      ,decode((SELECT b.uniqueness\n" +
+						"                FROM all_indexes b\n" +
+						"               WHERE a.table_name = b.table_name\n" +
+						"                     AND a.table_owner = b.table_owner\n" +
+						"                     AND a.index_name = b.index_name\n" +
+						"                     AND b.index_type NOT LIKE 'FUNCTION-BASED%'), 'UNIQUE', 'false', 'true') AS uniqueness\n" +
+						"      ,a.index_owner\n" +
+						"      ,a.index_name\n" +
+						"      ,a.table_name\n" +
+						"  FROM all_ind_columns a\n " +
+						" WHERE 1 = 1\n ";
 
 	private static final String SQL_INDEX_ORDER = " order by a.table_name, a.column_position";
 
@@ -93,29 +104,30 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 	private PreparedStatement prepIndexSchemaAndTable;
 
 	/* ****** COLUMN QUERIES ******* */	
-	private static final String SQL_COLUMN_BASE = "select a.column_name as COLUMN_NAME, a.owner as TABLE_SCHEM, "
-			+ "decode(a.nullable,'N',0,1) as NULLABLE, "
-			+ "decode(a.data_type, "
-			+ "'FLOAT', decode(a.data_precision, null, a.data_length, a.data_precision), "
-			+ "'NUMBER', decode(a.data_precision, null, a.data_length, a.data_precision), "
-			+ "'VARCHAR2', a.char_length, "
-			+ "'VARCHAR', a.char_length, "
-			+ "'NVARCHAR2', a.char_length, "
-			+ "'CHAR', a.char_length, "
-			+ "'NCHAR', a.char_length, "
-			+ "a.data_length) as COLUMN_SIZE, "
-      + "CASE\n"
-      + "  WHEN a.data_type LIKE 'TIMESTAMP%' THEN\n"
-      + "    93\n"
-      + "  ELSE\n"
-      + "    decode(a.data_type, 'CHAR', 1, 'DATE', 91, 'FLOAT', 6, 'LONG', -1, 'NUMBER', 2, 'VARCHAR2', 12, 'BFILE', -13,\n"
-      + "           'BLOB', 2004, 'CLOB', 2005, 'MLSLABEL', 1111, 'NCHAR', 1, 'NCLOB', 2005, 'NVARCHAR2', 12, 'RAW', -3,\n"
-      + "           'ROWID', 1111, 'UROWID', 1111, 'LONG RAW', -4, 'XMLTYPE', 2005, 1111)\n"
-      + "END AS data_type\n,"
-			+ "a.table_name as TABLE_NAME, a.data_type as TYPE_NAME, "
-			+ "decode(a.data_scale, null, 0 ,a.data_scale) as DECIMAL_DIGITS, b.comments "
-			+ "from all_tab_columns a left join all_col_comments b on "
-			+ "(a.owner=b.owner and a.table_name=b.table_name and a.column_name=b.column_name) ";
+	private static final String SQL_COLUMN_BASE =
+            "SELECT a.column_name AS COLUMN_NAME\n" +
+						"      ,a.owner AS TABLE_SCHEM\n" +
+						"      ,decode(a.nullable, 'N', 0, 1) AS NULLABLE\n" +
+						"      ,decode(a.data_type, 'FLOAT', decode(a.data_precision, NULL, a.data_length, a.data_precision), 'NUMBER',\n" +
+						"              decode(a.data_precision, NULL, a.data_length, a.data_precision), 'VARCHAR2', a.char_length, 'VARCHAR',\n" +
+						"              a.char_length, 'NVARCHAR2', a.char_length, 'CHAR', a.char_length, 'NCHAR', a.char_length, a.data_length) AS COLUMN_SIZE\n" +
+						"      ,CASE\n" +
+						"         WHEN a.data_type LIKE 'TIMESTAMP%' THEN\n" +
+						"          93\n" +
+						"         ELSE\n" +
+						"          decode(a.data_type, 'CHAR', 1, 'DATE', 91, 'FLOAT', 6, 'LONG', -1, 'NUMBER', 2, 'VARCHAR2', 12, 'BFILE', -13,\n" +
+						"                 'BLOB', 2004, 'CLOB', 2005, 'MLSLABEL', 1111, 'NCHAR', 1, 'NCLOB', 2005, 'NVARCHAR2', 12, 'RAW', -3,\n" +
+						"                 'ROWID', 1111, 'UROWID', 1111, 'LONG RAW', -4, 'XMLTYPE', 2005, 1111)\n" +
+						"       END AS DATA_TYPE\n" +
+						"      ,a.table_name AS TABLE_NAME\n" +
+						"      ,a.data_type AS TYPE_NAME\n" +
+						"      ,decode(a.data_scale, NULL, 0, a.data_scale) AS DECIMAL_DIGITS\n" +
+						"      ,(SELECT b.comments\n" +
+						"          FROM all_col_comments b\n" +
+						"         WHERE a.owner = b.owner\n" +
+						"               AND a.table_name = b.table_name\n" +
+						"               AND a.column_name = b.column_name) AS COMMENTS\n" +
+						"  FROM all_tab_columns a\n";
 
 	private static final String SQL_COLUMN_ORDER = " order by column_id ";
 
@@ -164,8 +176,9 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 	/* ***************************** */
 	/* ******** PK QUERIES ********* */
 	/* ***************************** */
-	private static final String SQL_PK_BASE = "select c.table_name, c.column_name, c.position,  c.constraint_name, "
-			+ "c.owner from all_cons_columns c left join all_constraints k on "
+	private static final String SQL_PK_BASE =
+            "select c.table_name, c.column_name, c.position,  c.constraint_name, "
+			+ "c.owner from all_cons_columns c join all_constraints k on "
 			+ "(k.owner = c.owner AND k.table_name = c.table_name AND k.constraint_name = c.constraint_name) "
 			+ "where  k.constraint_type = 'P' ";
 
@@ -193,16 +206,37 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 	/* ***************************** */
 	/* ******** FK QUERIES ********* */
 	/* ***************************** */
-	private static final String SQL_FK_BASE = "select p.table_name, p.owner, f.owner, f.table_name, "
-			+ "fc.column_name, pc.column_name, f.constraint_name, fc.position "
-			+ "from all_constraints p left join all_cons_columns pc on "
-			+ "(pc.owner = p.owner and pc.constraint_name = p.constraint_name and pc.table_name = p.table_name) "
-			+ "left join all_constraints f on (p.owner = f.r_owner and p.constraint_name = f.r_constraint_name) "
-			+ "left join all_cons_columns fc on "
-			+ "(fc.owner = f.owner and fc.constraint_name = f.constraint_name and fc.table_name = f.table_name and"
-			+ " fc.position = pc.position) where f.constraint_type = 'R' AND  p.constraint_type = 'P' ";
+	private static final String SQL_FK_BASE =
+            "SELECT p.table_name as p_table_name\n" +
+            "      ,p.owner as p_owner\n" +
+            "      ,f.owner as f_owner\n" +
+            "      ,f.table_name as f_table_name\n" +
+            "      ,(SELECT fc.column_name\n" +
+            "          FROM all_cons_columns fc\n" +
+            "         WHERE fc.owner = f.owner\n" +
+            "               AND fc.constraint_name = f.constraint_name\n" +
+            "               AND fc.table_name = f.table_name\n" +
+            "               AND fc.position = pc.position) AS fc_column_name\n" +
+            "      ,pc.column_name as pc_column_name\n" +
+            "      ,f.constraint_name\n" +
+            "      ,(SELECT fc.position\n" +
+            "          FROM all_cons_columns fc\n" +
+            "         WHERE fc.owner = f.owner\n" +
+            "               AND fc.constraint_name = f.constraint_name\n" +
+            "               AND fc.table_name = f.table_name\n" +
+            "               AND fc.position = pc.position) AS fc_position\n" +
+            "  FROM all_constraints p\n" +
+            "  JOIN all_cons_columns pc\n" +
+            "    ON pc.owner = p.owner\n" +
+            "       AND pc.constraint_name = p.constraint_name\n" +
+            "       AND pc.table_name = p.table_name\n" +
+            "  JOIN all_constraints f\n" +
+            "    ON p.owner = f.r_owner\n" +
+            "       AND p.constraint_name = f.r_constraint_name\n" +
+            " WHERE f.constraint_type = 'R'\n" +
+            "       AND p.constraint_type = 'P'\n";
 
-	private static final String SQL_FK_ORDER = " order by f.table_name, f.constraint_name, fc.position ";
+	private static final String SQL_FK_ORDER = " order by f.table_name, f.constraint_name, position ";
 
 	private static final String SQL_FK_NONE = SQL_FK_BASE + SQL_FK_ORDER;
 
@@ -228,8 +262,7 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 		try {
 			log.debug("getTables(" + catalog + "." + schema + "." + table + ")");
 			
-			ResultSet tableRs;
-			tableRs = getTableResultSet( schema, table );
+			ResultSet tableRs = getTableResultSet( schema, table );
 
 			return new ResultSetIterator(null, tableRs,
 					getSQLExceptionConverter()) {
@@ -244,7 +277,7 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 					element.put("TABLE_SCHEM", tableResultSet.getString(2));
 					element.put("TABLE_CAT", null);
 					element.put("TABLE_TYPE", tableResultSet.getString(4));
-					element.put("REMARKS", tableResultSet.getString(3));
+          element.put("REMARKS", tableResultSet.getString(3));
 					log.info( element.toString() );
 					return element;
 				}
@@ -312,7 +345,7 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 			throw getSQLExceptionConverter().convert(
 					e,
 					"Exception while getting index info for "
-							+ TableNameQualifier.qualify(catalog, schema, table), null);
+							+ TableNameQualifier.qualify(catalog, schema, table) + ": " + e.getMessage(), null);
 		}
 	}
 
@@ -412,8 +445,7 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 			log.debug("getExportedKeys(" + catalog + "." + schema + "." + table
 					+ ")");
 
-			ResultSet pExportRs;
-			pExportRs = getExportedKeysResultSet( schema, table );
+			ResultSet pExportRs = getExportedKeysResultSet( schema, table );
 
 			return new ResultSetIterator(null, pExportRs,
 					getSQLExceptionConverter()) {
@@ -576,8 +608,7 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 			prepFkNone = con .prepareStatement(SQL_FK_NONE);
 			prepFkSchema = con.prepareStatement(SQL_FK_SCHEMA);
 			prepFkTable = con.prepareStatement(SQL_FK_TABLE);
-			prepFkSchemaAndTable = con
-					.prepareStatement(SQL_FK_SCHEMA_AND_TABLE);
+			prepFkSchemaAndTable = con.prepareStatement(SQL_FK_SCHEMA_AND_TABLE);
 			log.debug("  foreign key queries prepared!");
 		}
 		

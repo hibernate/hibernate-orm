@@ -39,12 +39,12 @@ public class BasicConversionsTest extends SessionFactoryBasedFunctionalTest {
 				Status.ACTIVE
 		);
 
-		sessionFactoryScope().inTransaction( session -> {session.save( initialAccount );} );
+		inTransaction( session -> {session.save( initialAccount );} );
 	}
 
 	@AfterEach
 	public void cleanData() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.delete( session.byId( Account.class ).load( 1 ) );
 				}
@@ -53,7 +53,7 @@ public class BasicConversionsTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testBasicConversions() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					final Account loaded = session.get( Account.class, 1 );
 					assertThat( loaded, notNullValue() );
@@ -66,7 +66,7 @@ public class BasicConversionsTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testSqmTypeInference() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					Account loaded = session.createQuery( "from Account a where a.loginStatus = :status", Account.class )
 							.setParameter( "status", Status.CREATED )

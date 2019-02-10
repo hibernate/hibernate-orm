@@ -51,7 +51,7 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 
 	@AfterEach
 	public void tearDown() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.createQuery( "delete from Life" ).executeUpdate();
 					session.createQuery( "delete from Death" ).executeUpdate();
@@ -67,7 +67,7 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testDelete() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.createQuery( "delete from Life" ).executeUpdate();
 				}
@@ -85,7 +85,7 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 				false
 		);
 		assertTrue( joinTable.getPrimaryKey().getColumns().contains( owner ) );
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					Life life = new Life();
 					life.duration = 15;
@@ -93,7 +93,7 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 					session.persist( life );
 				} );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					Query q = session.createQuery( "from " + Life.class.getName() );
 					Life life = (Life) q.uniqueResult();
@@ -113,7 +113,7 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 		);
 		assertTrue( joinTable.getPrimaryKey().getColumns().contains( owner ) );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					Dog dog = new Dog();
 					DogPk id = new DogPk();
@@ -125,7 +125,7 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 					session.persist( dog );
 				} );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					Query q = session.createQuery( "from Dog" );
 					Dog dog = (Dog) q.uniqueResult();
@@ -135,7 +135,7 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testExplicitValue() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					Death death = new Death();
 					death.date = new Date();
@@ -143,7 +143,7 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 					session.persist( death );
 				} );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					Query q = session.createQuery( "from " + Death.class.getName() );
 					Death death = (Death) q.uniqueResult();
@@ -155,7 +155,7 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 	@Test
 	@Disabled("the generated query 'from Life l where l.owner.name = :name' is not correct")
 	public void testManyToOne() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					Life life = new Life();
 					Cat cat = new Cat();
@@ -167,7 +167,7 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 					session.persist( life );
 				} );
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					QueryImplementor query = session.createQuery( "from Life l where l.owner.name = :name" );
 					query.setParameter( "name", "kitty" );
@@ -180,7 +180,7 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testReferenceColumnWithBacktics() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					SysUserOrm u = new SysUserOrm();
 					session.save( u );
@@ -195,7 +195,7 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 		Cat cat2 = new Cat();
 		cat2.setStoryPart2( "My long story" );
 		try {
-			sessionFactoryScope().inTransaction(
+			inTransaction(
 					session -> {
 						session.persist( cat );
 						session.persist( cat2 );
@@ -207,7 +207,7 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 			//success
 		}
 
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					session.createQuery( "delete from Cat" ).executeUpdate();
 				}
@@ -218,7 +218,7 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 	public void testFetchModeOnSecondaryTable() {
 		Cat cat = new Cat();
 		cat.setStoryPart2( "My long story" );
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 
 					session.persist( cat );
@@ -236,7 +236,7 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 		final Cat cat = new Cat();
 		String storyPart2 = "My long story";
 		cat.setStoryPart2( storyPart2 );
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 
 					session.persist( cat );
@@ -252,7 +252,7 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 	@Test
 	@Disabled(value = "MappedSuperclass support has not yet been implemented ")
 	public void testMappedSuperclassAndSecondaryTable() {
-		sessionFactoryScope().inTransaction(
+		inTransaction(
 				session -> {
 					C c = new C();
 					c.setAge( 12 );

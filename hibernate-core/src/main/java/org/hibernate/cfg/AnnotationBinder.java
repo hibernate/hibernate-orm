@@ -535,8 +535,7 @@ public final class AnnotationBinder {
 
 		if ( clazzToProcess.isAnnotationPresent( Inheritance.class )
 				&&  clazzToProcess.isAnnotationPresent( MappedSuperclass.class ) ) {
-			throw new AnnotationException( "An entity cannot be annotated with both @Inheritance and @MappedSuperclass: "
-												   + clazzToProcess.getName() );
+			LOG.unsupportedMappedSuperclassWithEntityInheritance( clazzToProcess.getName() );
 		}
 
 		//TODO: be more strict with secondarytable allowance (not for ids, not for secondary table join columns etc)

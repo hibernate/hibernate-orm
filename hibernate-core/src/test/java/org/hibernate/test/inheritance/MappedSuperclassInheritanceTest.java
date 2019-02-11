@@ -13,13 +13,20 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.MappedSuperclass;
 
-import org.hibernate.AnnotationException;
+import org.hibernate.cfg.AnnotationBinder;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.logger.LoggerInspectionRule;
+import org.hibernate.testing.logger.Triggerable;
+import org.junit.Rule;
 import org.junit.Test;
 
+import org.jboss.logging.Logger;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -28,6 +35,9 @@ import static org.junit.Assert.assertTrue;
  */
 @TestForIssue(jiraKey = "HHH-12653")
 public class MappedSuperclassInheritanceTest extends BaseEntityManagerFunctionalTestCase {
+
+	@Rule
+	public LoggerInspectionRule logInspection = new LoggerInspectionRule( Logger.getMessageLogger( CoreMessageLogger.class, AnnotationBinder.class.getName() ) );
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -40,14 +50,14 @@ public class MappedSuperclassInheritanceTest extends BaseEntityManagerFunctional
 
 	@Override
 	public void buildEntityManagerFactory() {
-		try {
-			super.buildEntityManagerFactory();
+		Triggerable triggerable = logInspection.watchForLogMessages( "HHH000503:" );
+		triggerable.reset();
+		assertFalse( triggerable.wasTriggered() );
 
-			throw new IllegalStateException( "Should have thrown AnnotationException" );
-		}
-		catch (AnnotationException expected) {
-			assertTrue(expected.getMessage().startsWith( "An entity cannot be annotated with both @Inheritance and @MappedSuperclass" ));
-		}
+		super.buildEntityManagerFactory();
+
+		assertTrue( triggerable.wasTriggered() );
+		assertTrue( triggerable.triggerMessage().contains( "An entity cannot be annotated with both @Inheritance and @MappedSuperclass" ) );
 	}
 
 	@Test

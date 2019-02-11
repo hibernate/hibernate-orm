@@ -4,9 +4,10 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.inheritance;
+package org.hibernate.orm.test.inheritance;
 
 import javax.persistence.Entity;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
@@ -15,17 +16,16 @@ import javax.persistence.MappedSuperclass;
 
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.EntityManagerFactoryBasedFunctionalTest;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.jboss.logging.Logger;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -34,7 +34,7 @@ import static org.junit.Assert.assertTrue;
  * @author Vlad Mihalcea
  */
 @TestForIssue(jiraKey = "HHH-12653")
-public class MappedSuperclassInheritanceTest extends BaseEntityManagerFunctionalTestCase {
+public class MappedSuperclassInheritanceTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule( Logger.getMessageLogger( CoreMessageLogger.class, AnnotationBinder.class.getName() ) );
@@ -49,15 +49,17 @@ public class MappedSuperclassInheritanceTest extends BaseEntityManagerFunctional
 	}
 
 	@Override
-	public void buildEntityManagerFactory() {
+	public EntityManagerFactory produceEntityManagerFactory() {
 		Triggerable triggerable = logInspection.watchForLogMessages( "HHH000503:" );
 		triggerable.reset();
 		assertFalse( triggerable.wasTriggered() );
 
-		super.buildEntityManagerFactory();
+		EntityManagerFactory entityManagerFactory = super.produceEntityManagerFactory();
 
 		assertTrue( triggerable.wasTriggered() );
 		assertTrue( triggerable.triggerMessage().contains( "An entity cannot be annotated with both @Inheritance and @MappedSuperclass" ) );
+
+		return entityManagerFactory;
 	}
 
 	@Test

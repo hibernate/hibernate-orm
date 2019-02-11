@@ -1867,5 +1867,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "The [%s] property of the [%s] entity was modified, but it won't be updated because the property is immutable.", id = 502)
 	void ignoreImmutablePropertyModification(String propertyName, String entityName);
+
+	@LogMessage(level = WARN)
+	@Message(value = "An entity cannot be annotated with both @Inheritance and @MappedSuperclass: %s.", id = 503)
+	void unsupportedMappedSuperclassWithEntityInheritance(String entityName);
 }
 

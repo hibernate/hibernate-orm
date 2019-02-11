@@ -22,6 +22,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
@@ -198,7 +199,12 @@ public abstract class SessionFactoryBasedFunctionalTest
 	protected <R> R inTransaction(Function<SessionImplementor, R> action) {
 		return sessionFactoryScope().inTransaction( action );
 	}
+
 	protected void inSession(Consumer<SessionImplementor> action) {
 		sessionFactoryScope().inSession( action );
+	}
+
+	protected Dialect getDialect(){
+		return sessionFactoryScope.getDialect();
 	}
 }

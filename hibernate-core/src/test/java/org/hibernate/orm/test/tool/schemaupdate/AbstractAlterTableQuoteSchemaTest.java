@@ -155,7 +155,7 @@ public abstract class AbstractAlterTableQuoteSchemaTest extends SessionFactoryBa
 		return regexpQuote( schema ) + "\\." + regexpQuote( table );
 	}
 
-	private Dialect getDialect() {
+	protected Dialect getDialect() {
 		return sessionFactory().getDialect();
 	}
 }

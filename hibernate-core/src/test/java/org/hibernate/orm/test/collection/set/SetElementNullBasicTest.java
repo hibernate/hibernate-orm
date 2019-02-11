@@ -122,6 +122,7 @@ public class SetElementNullBasicTest extends BaseCoreFunctionalTestCase {
 	private int getCollectionElementRows(int id) {
 		return doInHibernate(
 				this::sessionFactory, session -> {
+					// todo (6.0) : use native query when native queries will be implemented
 					return session.doReturningWork(
 							work -> {
 								PreparedStatement statement = null;

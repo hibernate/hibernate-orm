@@ -600,7 +600,7 @@ include::{extrasdir}/associations-any-query-example.sql[]
 ===== `@ManyToAny` mapping
 
 While the `@Any` mapping is useful to emulate a `@ManyToOne` association when there can be multiple target entities,
-to emulate a `@OneToMany` association, the `@ManyToAny` annotation must be used.
+to emulate a `@ManyToMany` association, the `@ManyToAny` annotation must be used.
 
 In the following example, the `PropertyRepository` entity has a collection of `Property` entities.
 

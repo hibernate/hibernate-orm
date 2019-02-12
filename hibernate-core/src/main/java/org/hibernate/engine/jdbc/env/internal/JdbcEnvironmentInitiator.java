@@ -14,6 +14,7 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -21,7 +22,6 @@ import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.dialect.spi.DatabaseMetaDataDialectResolutionInfoAdapter;
 import org.hibernate.engine.jdbc.dialect.spi.DialectFactory;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfoSource;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -62,7 +62,43 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 				true
 		);
 
-		if ( useJdbcMetadata ) {
+		if ( configurationValues.containsKey( AvailableSettings.HBM2DDL_DB_NAME ) ) {
+			return new JdbcEnvironmentImpl( registry, dialectFactory.buildDialect(
+					configurationValues,
+					() -> new DialectResolutionInfo() {
+						@Override
+						public String getDatabaseName() {
+							return (String) configurationValues.get( AvailableSettings.HBM2DDL_DB_NAME );
+						}
+
+						@Override
+						public int getDatabaseMajorVersion() {
+							return (Integer) configurationValues.get( AvailableSettings.HBM2DDL_DB_MAJOR_VERSION );
+						}
+
+						@Override
+						public int getDatabaseMinorVersion() {
+							return (Integer) configurationValues.get( AvailableSettings.HBM2DDL_DB_MINOR_VERSION );
+						}
+
+						@Override
+						public String getDriverName() {
+							throw new UnsupportedOperationException();
+						}
+
+						@Override
+						public int getDriverMajorVersion() {
+							throw new UnsupportedOperationException();
+						}
+
+						@Override
+						public int getDriverMinorVersion() {
+							throw new UnsupportedOperationException();
+						}
+					}
+			) );
+		}
+		else if ( useJdbcMetadata ) {
 			final JdbcConnectionAccess jdbcConnectionAccess = buildJdbcConnectionAccess( configurationValues, registry );
 			try {
 				final Connection connection = jdbcConnectionAccess.obtainConnection();
@@ -96,18 +132,15 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 
 					Dialect dialect = dialectFactory.buildDialect(
 							configurationValues,
-							new DialectResolutionInfoSource() {
-								@Override
-								public DialectResolutionInfo getDialectResolutionInfo() {
-									try {
-										return new DatabaseMetaDataDialectResolutionInfoAdapter( connection.getMetaData() );
-									}
-									catch ( SQLException sqlException ) {
-										throw new HibernateException(
-												"Unable to access java.sql.DatabaseMetaData to determine appropriate Dialect to use",
-												sqlException
-										);
-									}
+							() -> {
+								try {
+									return new DatabaseMetaDataDialectResolutionInfoAdapter( connection.getMetaData() );
+								}
+								catch ( SQLException sqlException ) {
+									throw new HibernateException(
+											"Unable to access java.sql.DatabaseMetaData to determine appropriate Dialect to use",
+											sqlException
+									);
 								}
 							}
 					);

@@ -10,7 +10,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 
 /**
- * List all supported relational database systems.
+ * A list of relational database systems for which Hibernate can resolve a {@link Dialect}.
+ *
+ * However, Hibernate can work with other database systems that are not listed by the {@link Database} enum,
+ * as long as a {@link Dialect} implementation class is provided via the {@code hibernate.dialect} configuration property.
  *
  * @author Vlad Mihalcea
  */

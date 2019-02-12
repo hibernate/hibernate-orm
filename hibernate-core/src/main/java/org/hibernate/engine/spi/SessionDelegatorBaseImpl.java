@@ -157,6 +157,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public void checkTransactionNeededForUpdateOperation(String exceptionMessage) {
+		delegate.checkTransactionNeededForUpdateOperation( exceptionMessage );
+	}
+
+	@Override
 	public LockOptions getLockRequest(LockModeType lockModeType, Map<String, Object> properties) {
 		return delegate.getLockRequest( lockModeType, properties );
 	}

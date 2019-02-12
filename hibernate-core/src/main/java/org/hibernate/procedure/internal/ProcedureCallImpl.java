@@ -25,7 +25,6 @@ import javax.persistence.NonUniqueResultException;
 import javax.persistence.Parameter;
 import javax.persistence.ParameterMode;
 import javax.persistence.TemporalType;
-import javax.persistence.TransactionRequiredException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.ResultSetMappingDefinition;
@@ -636,9 +635,8 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public int executeUpdate() {
-		if ( ! getProducer().isTransactionInProgress() ) {
-			throw new TransactionRequiredException( "javax.persistence.Query.executeUpdate requires active transaction" );
-		}
+		getProducer().checkTransactionNeededForUpdateOperation(
+				"javax.persistence.Query.executeUpdate requires active transaction" );
 
 		// the expectation is that there is just one Output, of type UpdateCountOutput
 		try {

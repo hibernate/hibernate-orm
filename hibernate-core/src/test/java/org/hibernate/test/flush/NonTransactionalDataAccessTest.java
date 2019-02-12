@@ -8,20 +8,18 @@ package org.hibernate.test.flush;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Table;
 import javax.persistence.TransactionRequiredException;
-import java.io.Serializable;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.resource.transaction.spi.TransactionStatus;
-
-import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
+import org.junit.Test;
 
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsNull.nullValue;
@@ -50,21 +48,21 @@ public class NonTransactionalDataAccessTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected void prepareTest() throws Exception {
-		try (Session s = openSession()) {
-			final MyEntity entity = new MyEntity( "entity" );
-			s.getTransaction().begin();
-			try {
-				s.save( entity );
-
-				s.getTransaction().commit();
-			}
-			catch (Exception e) {
-				if ( s.getTransaction().getStatus() == TransactionStatus.ACTIVE ) {
-					s.getTransaction().rollback();
+		final MyEntity entity = new MyEntity( "entity" );
+		inTransaction(
+				session -> {
+					session.save( entity );
 				}
-				throw e;
-			}
-		}
+		);
+	}
+
+	@After
+	public void tearDown() {
+		inTransaction(
+				session -> {
+					session.createQuery( "delete from MyEntity" ).executeUpdate();
+				}
+		);
 	}
 
 	@Test
@@ -79,6 +77,26 @@ public class NonTransactionalDataAccessTest extends BaseCoreFunctionalTestCase {
 			assertThat( entity, not( nullValue() ) );
 			entity.setName( "changed" );
 			session.flush();
+		}
+	}
+
+	@Test
+	public void testNativeQueryAllowingOutOfTransactionUpdateOperations() throws Exception {
+		allowUpdateOperationOutsideTransaction = "true";
+		rebuildSessionFactory();
+		prepareTest();
+		try (Session s = openSession()) {
+			s.createSQLQuery( "delete from MY_ENTITY" ).executeUpdate();
+		}
+	}
+
+	@Test(expected = TransactionRequiredException.class)
+	public void testNativeQueryDisallowingOutOfTransactionUpdateOperations() throws Exception {
+		allowUpdateOperationOutsideTransaction = "false";
+		rebuildSessionFactory();
+		prepareTest();
+		try (Session s = openSession()) {
+			s.createSQLQuery( "delete from MY_ENTITY" ).executeUpdate();
 		}
 	}
 
@@ -113,6 +131,7 @@ public class NonTransactionalDataAccessTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity(name = "MyEntity")
+	@Table(name = "MY_ENTITY")
 	public static class MyEntity {
 		@Id
 		@GeneratedValue
@@ -133,22 +152,6 @@ public class NonTransactionalDataAccessTest extends BaseCoreFunctionalTestCase {
 
 		public void setName(String name) {
 			this.name = name;
-		}
-	}
-
-	public final Serializable doInsideTransaction(Session s, java.util.function.Supplier<Serializable> sp) {
-		s.getTransaction().begin();
-		try {
-			final Serializable result = sp.get();
-
-			s.getTransaction().commit();
-			return result;
-		}
-		catch (Exception e) {
-			if ( s.getTransaction().getStatus() == TransactionStatus.ACTIVE ) {
-				s.getTransaction().rollback();
-			}
-			throw e;
 		}
 	}
 }

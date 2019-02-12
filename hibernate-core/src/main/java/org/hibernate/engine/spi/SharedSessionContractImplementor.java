@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import javax.persistence.FlushModeType;
+import javax.persistence.TransactionRequiredException;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
@@ -179,6 +180,26 @@ public interface SharedSessionContractImplementor
 	 * or is there a JTA transaction in progress?
 	 */
 	boolean isTransactionInProgress();
+
+	/**
+	 * Check if an active Transaction is necessary for the update operation to be executed.
+	 * If an active Transaction is necessary but it is not then a TransactionRequiredException is raised.
+	 *
+	 * @param exceptionMessage, the message to use for the TransactionRequiredException
+	 * @param convertException, should a ExceptionConverter be used for the TransactionRequiredException
+	 */
+	default void checkTransactionNeededForUpdateOperation(String exceptionMessage, boolean convertException) {
+		if ( !isTransactionInProgress() ) {
+			if ( convertException ) {
+				throw getExceptionConverter().convert(
+						new TransactionRequiredException(
+								exceptionMessage
+						)
+				);
+			}
+			throw new TransactionRequiredException( exceptionMessage );
+		}
+	}
 
 	/**
 	 * Provides access to the underlying transaction or creates a new transaction if

@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.TimeZone;
 import java.util.UUID;
 import javax.persistence.FlushModeType;
+import javax.persistence.TransactionRequiredException;
 import javax.persistence.Tuple;
 
 import org.hibernate.AssertionFailure;
@@ -128,6 +129,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	protected boolean closed;
 	protected boolean waitingForAutoClose;
+	private transient boolean disallowOutOfTransactionUpdateOperations;
 
 	// transient & non-final for Serialization purposes - ugh
 	private transient SessionEventListenerManagerImpl sessionEventsManager = new SessionEventListenerManagerImpl();
@@ -141,6 +143,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	public AbstractSharedSessionContract(SessionFactoryImpl factory, SessionCreationOptions options) {
 		this.factory = factory;
 		this.cacheTransactionSync = factory.getCache().getRegionFactory().createTransactionContext( this );
+		this.disallowOutOfTransactionUpdateOperations = !factory.getSessionFactoryOptions().isAllowOutOfTransactionUpdateOperations();
 
 		this.flushMode = options.getInitialSessionFlushMode();
 
@@ -387,6 +390,20 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return factory.isOpen() && transactionCoordinator.isTransactionActive();
 		}
 		return !isClosed() && transactionCoordinator.isTransactionActive();
+	}
+
+	@Override
+	public void checkTransactionNeededForUpdateOperation(String exceptionMessage, boolean convertException) {
+		if ( disallowOutOfTransactionUpdateOperations && !isTransactionInProgress() ) {
+			if ( convertException ) {
+				throw getExceptionConverter().convert(
+						new TransactionRequiredException(
+								exceptionMessage
+						)
+				);
+			}
+			throw new TransactionRequiredException( exceptionMessage );
+		}
 	}
 
 	@Override
@@ -1133,5 +1150,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
 		exceptionConverter = new ExceptionConverterImpl( this );
+		this.disallowOutOfTransactionUpdateOperations = !getFactory().getSessionFactoryOptions().isAllowOutOfTransactionUpdateOperations();
+
 	}
 }

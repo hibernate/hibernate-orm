@@ -177,6 +177,17 @@ public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
 //		return element;
 	}
 
+	@SuppressWarnings("unchecked")
+	public void load(int index, Object element) {
+		assert isInitializing();
+
+		for ( int i = tempList.size(); i <= index; ++i ) {
+			tempList.add( i, null );
+		}
+
+		tempList.set( index, element );
+	}
+
 	@Override
 	@SuppressWarnings("unchecked")
 	public Iterator<E> entries(PersistentCollectionDescriptor<?, ?, E> descriptor) {

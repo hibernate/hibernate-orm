@@ -739,7 +739,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 			String resultVariable,
 			DomainResultCreationState creationState,
 			DomainResultCreationContext creationContext) {
-		if ( fetchTiming == FetchTiming.DELAYED ) {
+		if ( !isArray() && fetchTiming == FetchTiming.DELAYED ) {
 			// for delayed fetching, use a specialized Fetch impl
 			return generateDelayedFetch(
 					fetchParent,
@@ -752,12 +752,16 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 			return generateImmediateFetch(
 					fetchParent,
 					resultVariable,
-					selected,
+					isArray() || selected,
 					lockMode,
 					creationState,
 					creationContext
 			);
 		}
+	}
+
+	private boolean isArray() {
+		return getCollectionDescriptor().getCollectionClassification() == CollectionClassification.ARRAY;
 	}
 
 	@SuppressWarnings({"WeakerAccess", "unused"})

@@ -147,7 +147,10 @@ public abstract class AbstractCreationExecutor implements CollectionCreationExec
 			SharedSessionContractImplementor session) {
 		// todo (6.0) : probably not the correct `assumedIndex`
 		if ( collectionDescriptor.getIndexDescriptor() != null ) {
-			final Object index = collection.getIndex( entry, assumedIndex, collectionDescriptor );
+			Object index = collection.getIndex( entry, assumedIndex, collectionDescriptor );
+			if ( collectionDescriptor.getIndexDescriptor().getBaseIndex() != 0 ) {
+				index = (Integer) index + collectionDescriptor.getIndexDescriptor().getBaseIndex();
+			}
 			collectionDescriptor.getIndexDescriptor().dehydrate(
 					collectionDescriptor.getIndexDescriptor().unresolve( index, session ),
 					(jdbcValue, type, boundColumn) -> createBinding(

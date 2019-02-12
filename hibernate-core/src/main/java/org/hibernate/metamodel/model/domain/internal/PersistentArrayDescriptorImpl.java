@@ -11,7 +11,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 import org.hibernate.LockMode;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedCollection;
@@ -21,6 +20,8 @@ import org.hibernate.metamodel.model.domain.spi.AbstractPersistentCollectionDesc
 import org.hibernate.metamodel.model.domain.spi.AbstractPluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.results.internal.domain.collection.ArrayInitializerProducer;
 import org.hibernate.sql.results.internal.domain.collection.CollectionInitializerProducer;
 import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
@@ -75,7 +76,22 @@ public class PersistentArrayDescriptorImpl<O,E> extends AbstractPersistentCollec
 			LockMode lockMode,
 			DomainResultCreationState creationState,
 			DomainResultCreationContext creationContext) {
-		throw new NotYetImplementedFor6Exception();
+		final NavigableReference navigableReference = creationState.getNavigableReferenceStack().getCurrent();
+
+		return new ArrayInitializerProducer(
+				this,
+				selected,
+				getIndexDescriptor().createDomainResult(
+						navigableReference,
+						null,
+						creationState, creationContext
+				),
+				getElementDescriptor().createDomainResult(
+						navigableReference,
+						null,
+						creationState, creationContext
+				)
+		);
 	}
 
 	@Override

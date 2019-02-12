@@ -6,6 +6,7 @@
  */
 package org.hibernate.collection.internal;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.function.Consumer;
@@ -52,7 +53,7 @@ public class StandardArraySemantics implements CollectionSemantics<Object[]> {
 			Object key,
 			PersistentCollectionDescriptor<?, Object[], E> collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentArrayHolder<>( session, collectionDescriptor, key );
+		return new PersistentArrayHolder<>( session, collectionDescriptor, (Serializable) key );
 	}
 
 	@Override
@@ -60,7 +61,7 @@ public class StandardArraySemantics implements CollectionSemantics<Object[]> {
 			Object[] rawCollection,
 			PersistentCollectionDescriptor<?, Object[], E> collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentArrayHolder<>( session, collectionDescriptor, rawCollection );
+		return new PersistentArrayHolder<>( session, collectionDescriptor, (Object) rawCollection );
 	}
 
 	@Override

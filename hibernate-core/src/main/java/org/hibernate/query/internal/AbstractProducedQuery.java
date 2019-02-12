@@ -1606,13 +1606,8 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public int executeUpdate() throws HibernateException {
-		if ( ! getProducer().isTransactionInProgress() ) {
-			throw getProducer().getExceptionConverter().convert(
-					new TransactionRequiredException(
-							"Executing an update/delete query"
-					)
-			);
-		}
+		getProducer().checkTransactionNeededForUpdateOperation( "Executing an update/delete query" );
+
 		beforeQuery();
 		try {
 			return doExecuteUpdate();

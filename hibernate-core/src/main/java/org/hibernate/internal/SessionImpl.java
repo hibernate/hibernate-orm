@@ -242,7 +242,6 @@ public final class SessionImpl
 
 	private transient int dontFlushFromFind;
 
-	private transient boolean disallowOutOfTransactionUpdateOperations;
 	private transient ExceptionMapper exceptionMapper;
 	private transient ManagedFlushChecker managedFlushChecker;
 
@@ -266,7 +265,7 @@ public final class SessionImpl
 		this.autoClear = options.shouldAutoClear();
 		this.autoClose = options.shouldAutoClose();
 		this.queryParametersValidationEnabled = options.isQueryParametersValidationEnabled();
-		this.disallowOutOfTransactionUpdateOperations = !factory.getSessionFactoryOptions().isAllowOutOfTransactionUpdateOperations();
+
 		this.discardOnClose = getFactory().getSessionFactoryOptions().isReleaseResourcesOnCloseEnabled();
 
 		if ( options instanceof SharedSessionCreationOptions && ( (SharedSessionCreationOptions) options ).isTransactionCoordinatorShared() ) {
@@ -1471,7 +1470,7 @@ public final class SessionImpl
 	}
 
 	private void doFlush() {
-		checkTransactionNeeded();
+		checkTransactionNeededForUpdateOperation();
 		checkTransactionSynchStatus();
 
 		try {
@@ -3536,7 +3535,7 @@ public final class SessionImpl
 
 			if ( lockModeType != null ) {
 				if ( !LockModeType.NONE.equals( lockModeType) ) {
-					checkTransactionNeeded();
+					checkTransactionNeededForUpdateOperation();
 				}
 				lockOptions = buildLockOptions( lockModeType, properties );
 				loadAccess.with( lockOptions );
@@ -3608,10 +3607,8 @@ public final class SessionImpl
 		return ( CacheStoreMode ) settings.get( JPA_SHARED_CACHE_STORE_MODE );
 	}
 
-	private void checkTransactionNeeded() {
-		if ( disallowOutOfTransactionUpdateOperations && !isTransactionInProgress() ) {
-			throw new TransactionRequiredException( "no transaction is in progress" );
-		}
+	private void checkTransactionNeededForUpdateOperation() {
+		checkTransactionNeededForUpdateOperation( "no transaction is in progress" );
 	}
 
 	@Override
@@ -3637,7 +3634,7 @@ public final class SessionImpl
 	@Override
 	public void lock(Object entity, LockModeType lockModeType, Map<String, Object> properties) {
 		checkOpen();
-		checkTransactionNeeded();
+		checkTransactionNeededForUpdateOperation();
 
 		if ( !contains( entity ) ) {
 			throw new IllegalArgumentException( "entity not in the persistence context" );
@@ -3679,7 +3676,7 @@ public final class SessionImpl
 
 			if ( lockModeType != null ) {
 				if ( !LockModeType.NONE.equals( lockModeType) ) {
-					checkTransactionNeeded();
+					checkTransactionNeededForUpdateOperation();
 				}
 
 				lockOptions = buildLockOptions( lockModeType, properties );
@@ -4011,7 +4008,6 @@ public final class SessionImpl
 
 		initializeFromSessionOwner( null );
 
-		this.disallowOutOfTransactionUpdateOperations = !getFactory().getSessionFactoryOptions().isAllowOutOfTransactionUpdateOperations();
 		this.discardOnClose = getFactory().getSessionFactoryOptions().isReleaseResourcesOnCloseEnabled();
 	}
 }

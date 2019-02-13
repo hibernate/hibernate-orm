@@ -427,6 +427,7 @@ public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> 
 				.getIdentifierDescriptor();
 
 		final List<ColumnReference> columnReferences = new ArrayList();
+		final Position position = new Position();
 		identifierDescriptor.visitColumns(
 				(sqlExpressableType, column) -> {
 					final Expression expression = rootTableGroup.qualify( column );
@@ -439,11 +440,12 @@ public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> 
 					}
 					columnReferences.add( idColumnReference );
 					SqlSelection sqlSelection = new SqlSelectionImpl(
-							1,
-							0,
+							position.getJdbcPosition(),
+							position.getValuesArrayPosition(),
 							idColumnReference,
 							sqlExpressableType.getJdbcValueExtractor()
 					);
+					position.increase();
 					selectClause.addSqlSelection( sqlSelection );
 
 					domainResults.add( new BasicResultImpl(
@@ -479,13 +481,14 @@ public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> 
 									else {
 										columnReference = (ColumnReference) expression;
 									}
-									int stateArrayPosition = stateArrayContributor.getStateArrayPosition();
+
 									SqlSelection sqlSelection = new SqlSelectionImpl(
-											stateArrayPosition + 2,
-											stateArrayPosition +1,
+											position.getJdbcPosition(),
+											position.getValuesArrayPosition() ,
 											columnReference,
 											sqlExpressableType.getJdbcValueExtractor()
 									);
+									position.increase();
 
 									selectClause.addSqlSelection( sqlSelection );
 									domainResults.add( new BasicResultImpl(
@@ -517,5 +520,21 @@ public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> 
 		);
 	}
 
+	public class Position {
+		int jdbcPosition = 1;
+		int valuesArrayPosition = 0;
 
+		public void increase() {
+			jdbcPosition++;
+			valuesArrayPosition++;
+		}
+
+		public int getJdbcPosition() {
+			return jdbcPosition;
+		}
+
+		public int getValuesArrayPosition() {
+			return valuesArrayPosition;
+		}
+	}
 }

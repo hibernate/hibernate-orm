@@ -17,6 +17,7 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -94,7 +95,7 @@ public class BasicValue
 	// Resolution - resolved state; available after `#resolve`
 
 	private Resolution resolution;
-
+	private BasicValue dependentValue;
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// remove these - they serve dual purpose (in/out) in original code.  Use
@@ -106,15 +107,22 @@ public class BasicValue
 
 
 	public BasicValue(MetadataBuildingContext buildingContext, MappedTable table) {
+		this( buildingContext, table, null );
+	}
+
+	public BasicValue(MetadataBuildingContext buildingContext, MappedTable table, BasicValue dependentValue) {
 		super( buildingContext, table );
 
 		this.typeConfiguration = buildingContext.getBootstrapContext().getTypeConfiguration();
 		this.preferredJdbcTypeCodeForBoolean = buildingContext.getPreferredSqlTypeCodeForBoolean();
 
+		// When this is provided, the value mapping resolution phase will be based on the resolution
+		// performed by the specified dependentValue's resolution.
+		this.dependentValue = dependentValue;
+
 		this.javaTypeMapping = new BasicJavaTypeMapping( this );
 		buildingContext.getMetadataCollector().registerValueMappingResolver( this::resolve );
 	}
-
 
 	@Override
 	public JavaTypeMapping getJavaTypeMapping() {
@@ -189,6 +197,13 @@ public class BasicValue
 									.getTypeConfiguration()
 									.getJavaTypeDescriptorRegistry()
 									.getOrMakeJavaDescriptor( reflectedJavaType );
+						}
+						else if ( dependentValue != null ) {
+							// todo (6.0) - Can we just use the resolution directly?
+							//		In 5.x we copied the typeName and its associated parameters for this use case.
+							//		It would stand to reason we could just share the same Resolution instance
+							//		instead of constructing this BasicValue's very own here?
+							return dependentValue.getResolution().getDomainJavaDescriptor();
 						}
 
 						return null;

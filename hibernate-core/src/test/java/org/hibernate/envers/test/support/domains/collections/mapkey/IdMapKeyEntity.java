@@ -4,10 +4,12 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.integration.collection.mapkey;
+package org.hibernate.envers.test.support.domains.collections.mapkey;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -16,7 +18,8 @@ import javax.persistence.MapKey;
 import javax.persistence.Table;
 
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.test.entities.StrTestEntity;
+import org.hibernate.envers.test.support.domains.basic.StrTestEntity;
+
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -53,28 +56,28 @@ public class IdMapKeyEntity {
 		this.idmap = idmap;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
 		}
-		if ( !(o instanceof IdMapKeyEntity) ) {
+		if ( o == null || getClass() != o.getClass() ) {
 			return false;
 		}
-
 		IdMapKeyEntity that = (IdMapKeyEntity) o;
-
-		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
-			return false;
-		}
-
-		return true;
+		return Objects.equals( id, that.id );
 	}
 
+	@Override
 	public int hashCode() {
-		return (id != null ? id.hashCode() : 0);
+		return Objects.hash( id );
 	}
 
+	@Override
 	public String toString() {
-		return "IMKE(id = " + id + ", idmap = " + idmap + ")";
+		return "IdMapKeyEntity{" +
+				"id=" + id +
+				", idmap=" + idmap +
+				'}';
 	}
 }

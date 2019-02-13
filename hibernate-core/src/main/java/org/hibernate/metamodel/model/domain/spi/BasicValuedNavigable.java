@@ -49,7 +49,12 @@ public interface BasicValuedNavigable<J> extends BasicValuedExpressableType<J>, 
 			BiConsumer<SqlExpressableType, Column> action,
 			Clause clause,
 			TypeConfiguration typeConfiguration) {
-		action.accept( getBoundColumn().getExpressableType(), getBoundColumn() );
+		// todo (6.0) - formula based navigables have no bound column.
+		//		this is a simple fix for now to avoid NPE
+		//		we should more than likely make sure the boundColumn instance is a DerivedColumn?
+		if ( getBoundColumn() != null ) {
+			action.accept( getBoundColumn().getExpressableType(), getBoundColumn() );
+		}
 	}
 
 	@Override
@@ -58,6 +63,11 @@ public interface BasicValuedNavigable<J> extends BasicValuedExpressableType<J>, 
 			JdbcValueCollector jdbcValueCollector,
 			Clause clause,
 			SharedSessionContractImplementor session) {
-		jdbcValueCollector.collect( value, getBoundColumn().getExpressableType(), getBoundColumn() );
+		// todo (6.0) - formula based navigables have no bound column.
+		//		this is a simple fix for now to avoid NPE
+		//		we should more than likely make sure the boundColumn instance is a DerivedColumn?
+		if ( getBoundColumn() != null ) {
+			jdbcValueCollector.collect( value, getBoundColumn().getExpressableType(), getBoundColumn() );
+		}
 	}
 }

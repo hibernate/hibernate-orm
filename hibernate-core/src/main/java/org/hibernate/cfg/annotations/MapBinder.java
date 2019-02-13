@@ -505,9 +505,7 @@ public class MapBinder extends CollectionBinder {
 				targetValue = targetManyToOne;
 			}
 			else if ( value instanceof BasicValue ) {
-				targetValue = new BasicValue( getBuildingContext(), collection.getMappedTable()
-				);
-				targetValue.copyTypeFrom( sourceValue );
+				targetValue = new BasicValue( getBuildingContext(), collection.getMappedTable(), (BasicValue) sourceValue );
 			}
 			else {
 				throw new AssertionFailure( "Unknown type encounters for map key: " + value.getClass() );

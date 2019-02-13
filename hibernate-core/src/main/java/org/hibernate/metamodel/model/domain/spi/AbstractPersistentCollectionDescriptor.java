@@ -1144,7 +1144,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 
 	@Override
 	public void updateRows(PersistentCollection collection, Object key, SharedSessionContractImplementor session) {
-		if ( collection.isRowUpdatePossible() ) {
+		if ( !isInverse() && collection.isRowUpdatePossible() ) {
 			if ( collectionRowsUpdateExecutor == null ) {
 				collectionRowsUpdateExecutor = generateCollectionRowsUpdateExecutor();
 			}

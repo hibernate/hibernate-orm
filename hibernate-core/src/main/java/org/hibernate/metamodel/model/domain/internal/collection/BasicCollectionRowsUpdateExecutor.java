@@ -43,10 +43,14 @@ import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcUpdate;
 
+import org.jboss.logging.Logger;
+
 /**
  * @author Chris Cranford
  */
 public class BasicCollectionRowsUpdateExecutor implements CollectionRowsUpdateExecutor {
+	private static final Logger LOG = Logger.getLogger( BasicCollectionRowsUpdateExecutor.class );
+
 	private final PersistentCollectionDescriptor collectionDescriptor;
 	private final Map<Column, JdbcParameter> jdbcParameterMap;
 	private final JdbcUpdate jdbcUpdate;
@@ -66,6 +70,8 @@ public class BasicCollectionRowsUpdateExecutor implements CollectionRowsUpdateEx
 
 	@Override
 	public void execute(PersistentCollection collection, Object key, SharedSessionContractImplementor session) {
+
+		LOG.infof( "Updating rows of collection: %s#%s", collectionDescriptor.getNavigableRole().getFullPath(), key );
 
 		final List elements = new ArrayList<>();
 
@@ -110,6 +116,8 @@ public class BasicCollectionRowsUpdateExecutor implements CollectionRowsUpdateEx
 				}
 			}
 		}
+
+		LOG.infof( "Done updating rows: %s updateed", count );
 	}
 
 	protected void bindCollectionId(
@@ -285,7 +293,28 @@ public class BasicCollectionRowsUpdateExecutor implements CollectionRowsUpdateEx
 			);
 		}
 		else {
-			throw new NotYetImplementedFor6Exception(  );
+			final CollectionKey<?> key = collectionDescriptor.getCollectionKeyDescriptor();
+			key.visitColumns(
+					(sqlExpressableType, column) -> {
+						final ColumnReference columnReference = collectionTableRef.resolveColumnReference( column );
+						final PositionalParameter parameter = new PositionalParameter(
+								parameterCount.getAndIncrement(),
+								column.getExpressableType(),
+								Clause.WHERE,
+								sessionFactory.getTypeConfiguration()
+						);
+						columnCollector.accept( column, parameter );
+						junction.add(
+								new ComparisonPredicate(
+										columnReference,
+										ComparisonOperator.EQUAL,
+										parameter
+								)
+						);
+					},
+					Clause.WHERE,
+					sessionFactory.getTypeConfiguration()
+			);
 		}
 
 		return UpdateToJdbcUpdateConverter.createJdbcUpdate(

@@ -68,10 +68,12 @@ public class EnversEntityManagerFactoryScope implements EntityManagerFactoryAcce
 
 	@SafeVarargs
 	public final void inTransactions(Consumer<EntityManager>... actions) {
+		int revision = 1;
 		EntityManager entityManager = getEntityManagerFactory().createEntityManager();
 		try {
 			for ( Consumer<EntityManager> action : actions ) {
 				try {
+					System.out.println( "****** REV " + revision++ + " *******" );
 					entityManager.getTransaction().begin();
 					action.accept( entityManager );
 					entityManager.getTransaction().commit();

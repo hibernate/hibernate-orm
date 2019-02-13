@@ -7,10 +7,15 @@
 package org.hibernate.metamodel.model.domain.internal.collection;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Consumer;
 
+import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.mapping.IndexedCollection;
+import org.hibernate.mapping.ManyToOne;
+import org.hibernate.mapping.OneToMany;
+import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.AbstractCollectionIndex;
@@ -55,7 +60,7 @@ public class CollectionIndexEntityImpl<J>
 			RuntimeModelCreationContext creationContext) {
 		super( descriptor, bootCollectionMapping );
 
-		this.entityDescriptor = null;
+		this.entityDescriptor = resolveEntityDescriptor( bootCollectionMapping, creationContext );
 		this.navigableRole = descriptor.getNavigableRole().append( NAVIGABLE_NAME );
 	}
 
@@ -167,4 +172,30 @@ public class CollectionIndexEntityImpl<J>
 				.stream()
 				.anyMatch( value -> value == true );
 	}
+
+	private EntityTypeDescriptor<J> resolveEntityDescriptor(
+			IndexedCollection collection,
+			RuntimeModelCreationContext creationContext) {
+		final Value indexValueMapping = collection.getIndex();
+
+		final String indexEntityName;
+		if ( indexValueMapping instanceof OneToMany ) {
+			indexEntityName = ( (OneToMany) indexValueMapping ).getReferencedEntityName();
+		}
+		else if ( indexValueMapping instanceof ManyToOne ) {
+			indexEntityName = ( (ManyToOne) indexValueMapping ).getReferencedEntityName();
+		}
+		else {
+			throw new HibernateException(
+					String.format(
+							Locale.ROOT,
+							"Failed to resolve entity descriptor for collection index [%s]",
+							collection.getRole()
+					)
+			);
+		}
+
+		return creationContext.getInFlightRuntimeModel().findEntityDescriptor( indexEntityName );
+	}
+
 }

@@ -434,9 +434,14 @@ public abstract class SimpleValue implements KeyValue {
 		return typeParameters;
 	}
 
+	/**
+	 * @deprecated Since 6.0, with no replacement.  In 6.0, this is a no-op method since BasicValue's
+	 * 				constructor now handles this implicitly.
+	 */
+	@Deprecated
 	public void copyTypeFrom( SimpleValue sourceValue ) {
-		setExplicitTypeName( sourceValue.getTypeName() );
-		setTypeParameters( sourceValue.getTypeParameters() );
+		//setExplicitTypeName( sourceValue.getTypeName() );
+		//setTypeParameters( sourceValue.getTypeParameters() );
 	}
 
 	@Override

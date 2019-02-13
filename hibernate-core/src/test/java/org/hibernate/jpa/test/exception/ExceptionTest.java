@@ -99,7 +99,7 @@ public class ExceptionTest extends BaseEntityManagerFunctionalTestCase {
 		music.setName( "Jazz" );
 		em.persist( music );
 		Musician lui = new Musician();
-		lui.setName( "Lui Armstrong" );
+		lui.setName( "Louis Armstrong" );
 		lui.setFavouriteMusic( music );
 		em.persist( lui );
 		em.getTransaction().commit();
@@ -108,11 +108,11 @@ public class ExceptionTest extends BaseEntityManagerFunctionalTestCase {
 			String hqlDelete = "delete Music where name = :name";
 			em.createQuery( hqlDelete ).setParameter( "name", "Jazz" ).executeUpdate();
 			em.getTransaction().commit();
-			fail();
+			fail("Persistence Exception expected");
 		}
 		catch ( PersistenceException e ) {
 			Throwable t = e.getCause();
-			assertTrue( "Should be a constraint violation", t instanceof ConstraintViolationException );
+			assertTrue( "Should be a constraint violation but was a " + t.getClass(), t instanceof ConstraintViolationException );
 			em.getTransaction().rollback();
 		}
 		finally {

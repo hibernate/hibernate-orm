@@ -17,7 +17,7 @@ public class Widget {
 	private int valueThree = -1;
 	private int valueFour = -5;
 	private Integer id;
-	private String string;
+	private String str;  // String reserved in NuoDB
 
 	public int getValueOne() {
 		return valueOne;
@@ -52,11 +52,11 @@ public class Widget {
 	}
 
 	public String getString() {
-		return string;
+		return str;
 	}
 
 	public void setString(String string) {
-		this.string = string;
+		this.str = string;
 	}
 
 	public int getValueFour() {

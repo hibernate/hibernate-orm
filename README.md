@@ -46,7 +46,7 @@ To run the matrix tests for NuoDB:
 
   ```
   ./gradlew clean :hibernate-core:test --tests org.hibernate.jpa.test.packaging.PackagedEntityManagerTest
-  ./gradlew clean :hibernate-core:test --tests *.PackagedEntityManagerTes
+  ./gradlew clean :hibernate-core:test --tests *.PackagedEntityManagerTest
   ./gradlew clean :hibernate-core:test --tests org.hibernate.jpa.test.packaging.*
   ```
 

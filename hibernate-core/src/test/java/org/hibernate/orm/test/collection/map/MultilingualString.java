@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.collection.map;
+package org.hibernate.orm.test.collection.map;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,7 +27,7 @@ public class MultilingualString {
 	@ElementCollection
 	@MapKeyColumn(name = "language", insertable = false, updatable = false)
 	@CollectionTable(name = "multilingual_string_map", joinColumns = @JoinColumn(name = "string_id"))
-	private Map<String, LocalizedString> map = new HashMap<String, LocalizedString>();
+	private Map<String, LocalizedString> map = new HashMap<>();
 
 	public long getId() {
 		return id;

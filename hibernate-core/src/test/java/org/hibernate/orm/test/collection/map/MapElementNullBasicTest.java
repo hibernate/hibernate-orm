@@ -4,10 +4,11 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.collection.map;
+package org.hibernate.orm.test.collection.map;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
@@ -17,16 +18,16 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Table;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 /**
  * @author Gail Badner
  */
-public class MapElementNullBasicTest extends BaseCoreFunctionalTestCase {
+public class MapElementNullBasicTest extends SessionFactoryBasedFunctionalTest {
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
@@ -37,8 +38,8 @@ public class MapElementNullBasicTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testPersistNullValue() {
-		int entityId = doInHibernate(
-				this::sessionFactory, session -> {
+		int entityId = inTransaction(
+				session -> {
 					AnEntity e = new AnEntity();
 					e.aCollection.put( "null", null );
 					session.persist( e );
@@ -46,11 +47,11 @@ public class MapElementNullBasicTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				session -> {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 0, e.aCollection.size() );
-					assertEquals( 0, getCollectionElementRows( entityId ).size() );
+					assertEquals( 0, getCollectionElementRows( entityId ) );
 					session.delete( e );
 				}
 		);
@@ -58,28 +59,28 @@ public class MapElementNullBasicTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void addNullValue() {
-		int entityId = doInHibernate(
-				this::sessionFactory, session -> {
+		int entityId = inTransaction(
+				session -> {
 					AnEntity e = new AnEntity();
 					session.persist( e );
 					return e.id;
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				session -> {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 0, e.aCollection.size() );
-					assertEquals( 0, getCollectionElementRows( entityId ).size() );
+					assertEquals( 0, getCollectionElementRows( entityId ) );
 					e.aCollection.put( "null", null );
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				session -> {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 0, e.aCollection.size() );
-					assertEquals( 0, getCollectionElementRows( entityId ).size() );
+					assertEquals( 0, getCollectionElementRows( entityId ) );
 					session.delete( e );
 				}
 		);
@@ -87,8 +88,8 @@ public class MapElementNullBasicTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testUpdateNonNullValueToNull() {
-		int entityId = doInHibernate(
-				this::sessionFactory, session -> {
+		int entityId = inTransaction(
+				session -> {
 					AnEntity e = new AnEntity();
 					e.aCollection.put( "abc", "def" );
 					session.persist( e );
@@ -96,20 +97,20 @@ public class MapElementNullBasicTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				session -> {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 1, e.aCollection.size() );
-					assertEquals( 1, getCollectionElementRows( entityId ).size() );
+					assertEquals( 1, getCollectionElementRows( entityId ) );
 					e.aCollection.put( "abc", null );
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				session -> {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 0, e.aCollection.size() );
-					assertEquals( 0, getCollectionElementRows( entityId ).size() );
+					assertEquals( 0, getCollectionElementRows( entityId ) );
 					session.delete( e );
 				}
 		);
@@ -117,8 +118,8 @@ public class MapElementNullBasicTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testUpdateNonNullValueToNullToNonNull() {
-		int entityId = doInHibernate(
-				this::sessionFactory, session -> {
+		int entityId = inTransaction(
+				session -> {
 					AnEntity e = new AnEntity();
 					e.aCollection.put( "abc", "def" );
 					session.persist( e );
@@ -126,54 +127,77 @@ public class MapElementNullBasicTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				session -> {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 1, e.aCollection.size() );
-					assertEquals( 1, getCollectionElementRows( entityId ).size() );
+					assertEquals( 1, getCollectionElementRows( entityId ) );
 					e.aCollection.put( "abc", null );
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				session -> {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 0, e.aCollection.size() );
-					assertEquals( 0, getCollectionElementRows( entityId ).size() );
+					assertEquals( 0, getCollectionElementRows( entityId ) );
 					e.aCollection.put( "abc", "not null" );
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				session -> {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 1, e.aCollection.size() );
-					assertEquals( 1, getCollectionElementRows( entityId ).size() );
+					assertEquals( 1, getCollectionElementRows( entityId ) );
 					assertEquals( "not null", e.aCollection.get( "abc" ) );
 					session.delete( e );
 				}
 		);
 	}
 
-	private List<?> getCollectionElementRows(int id) {
-		return doInHibernate(
-				this::sessionFactory, session -> {
-					return session.createNativeQuery(
-							"SELECT aCollection FROM AnEntity_aCollection where AnEntity_id = " + id
-					).list();
+	private int getCollectionElementRows(int id) {
+		return inTransaction(
+				session -> {
+					return session.doReturningWork(
+							// todo (6.0) : use native query when native queries will be implemented
+							work -> {
+								PreparedStatement statement = null;
+								ResultSet resultSet = null;
+
+								try {
+									statement = work.prepareStatement(
+											"SELECT count(aCollection) as numberOfRows FROM AnEntity_aCollection where AnEntity_id = " + id );
+									statement.execute();
+									resultSet = statement.getResultSet();
+									if ( resultSet.next() ) {
+										return resultSet.getInt( "numberOfRows" );
+									}
+									return 0;
+								}
+								finally {
+									if ( resultSet != null && !resultSet.isClosed() ) {
+										resultSet.close();
+									}
+									if ( statement != null && !statement.isClosed() ) {
+										statement.close();
+									}
+								}
+							}
+					);
 				}
 		);
 	}
 
 	@Entity
-	@Table(name="AnEntity")
+	@Table(name = "AnEntity")
 	public static class AnEntity {
 		@Id
 		@GeneratedValue
 		private int id;
 
 		@ElementCollection
-		@CollectionTable(name = "AnEntity_aCollection", joinColumns = { @JoinColumn( name = "AnEntity_id" ) })
-		private Map<String, String> aCollection = new HashMap<String, String>();
+		@CollectionTable(name = "AnEntity_aCollection", joinColumns = { @JoinColumn(name = "AnEntity_id") })
+		private Map<String, String> aCollection = new HashMap<>();
 	}
 }

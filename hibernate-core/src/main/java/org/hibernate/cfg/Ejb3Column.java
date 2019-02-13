@@ -270,7 +270,7 @@ public class Ejb3Column {
 	}
 
 	public boolean isNameDeferred() {
-		return mappingColumn == null || StringHelper.isEmpty( mappingColumn.getText() );
+		return mappingColumn == null || mappingColumn.getName() == null  || StringHelper.isEmpty( mappingColumn.getText()  );
 	}
 
 	public Identifier redefineColumnName(Identifier columnName, String propertyName, boolean applyNamingStrategy) {

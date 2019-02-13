@@ -252,25 +252,12 @@ public class Ejb3JoinColumn extends Ejb3Column {
 				);
 			}
 			Ejb3JoinColumn joinColumn = new Ejb3JoinColumn( buildingContext );
-			if ( BinderHelper.isEmptyAnnotationValue( ann.name() ) ) {
-				final String baseName;
-				if ( StringHelper.isEmpty( suffixForDefaultColumnName ) ) {
-					baseName = propertyName;
-				}
-				else {
-					baseName = propertyName + suffixForDefaultColumnName;
-				}
-
+			if ( BinderHelper.isEmptyAnnotationValue( ann.name() ) && !StringHelper.isEmpty( suffixForDefaultColumnName ) ) {
 				joinColumn.setLogicalColumnName(
 						Ejb3Column.buildLogicalName(
 								buildingContext.getMetadataCollector().getDatabase(),
-								baseName
+								propertyName + suffixForDefaultColumnName
 						)
-				);
-			}
-			else {
-				joinColumn.setLogicalColumnName(
-						buildingContext.getMetadataCollector().getDatabase().toIdentifier( ann.name() )
 				);
 			}
 			joinColumn.setJoinAnnotation( ann, null );
@@ -940,6 +927,20 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		this.mappedByJpaEntityName = jpaEntityName;
 		this.mappedByTableName = logicalTableName;
 		this.mappedByPropertyName = mappedByProperty;
+	}
+
+	@Override
+	public Identifier redefineColumnName(Identifier columnName, String propertyName, boolean applyNamingStrategy) {
+		if ( columnName != null ) {
+			if ( applyNamingStrategy ) {
+				return columnName;
+			}
+			else {
+				final ObjectNameNormalizer normalizer = getBuildingContext().getObjectNameNormalizer();
+				return normalizer.normalizeIdentifierQuoting( columnName );
+			}
+		}
+		return null;
 	}
 
 	@Override

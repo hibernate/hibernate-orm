@@ -12,12 +12,12 @@
 
 <hibernate-mapping package="org.hibernate.orm.test.collection.list">
 
-    <class name="ListOwner">
+    <class name="ListOwner" table="LIST_OWNER">
         <id name="name" column="NAME" type="string" />
 
         <many-to-one name="parent" class="ListOwner" cascade="none" />
 
-        <list name="children" inverse="true" cascade="all">
+        <list name="children" inverse="true" cascade="all" table="">
             <key column="PARENT" />
             <list-index column="LIST_INDEX"/>
             <one-to-many class="ListOwner" />

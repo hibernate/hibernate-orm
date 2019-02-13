@@ -6,16 +6,13 @@
  */
 package org.hibernate.orm.test.collection.list;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.collection.internal.PersistentList;
-import org.hibernate.jdbc.Work;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.sql.SimpleSelect;
 
@@ -66,22 +63,24 @@ public class PersistentListTest extends SessionFactoryBasedFunctionalTest {
 		inTransaction(
 				session -> {
 					session.doWork(
-							new Work() {
-								@Override
-								public void execute(Connection connection) throws SQLException {
-									SimpleSelect select = new SimpleSelect( getDialect() )
-											.setTableName( collectionPersister.getSeparateCollectionTable()
-																   .getTableExpression() )
-											.addColumn( "NAME" )
-											.addColumn( "LIST_INDEX" )
-											.addCondition( "NAME", "<>", "?" );
-									PreparedStatement preparedStatement = session.getJdbcCoordinator()
-											.getStatementPreparer()
-											.prepareStatement( select.toStatementString() );
+							work -> {
+								PreparedStatement preparedStatement = null;
+								ResultSet resultSet = null;
+								try {
+									preparedStatement = work.prepareStatement(
+											"select o.NAME, o.LIST_INDEX from LIST_OWNER o where o.NAME <> ?" );
+//								SimpleSelect select = new SimpleSelect( getDialect() )
+//										.setTableName( "LIST_OWNER" )
+//										.addColumn( "NAME" )
+//										.addColumn( "LIST_INDEX" )
+//										.addCondition( "NAME", "<>", "?" );
+//								PreparedStatement preparedStatement = session.getJdbcCoordinator()
+//										.getStatementPreparer()
+//										.prepareStatement( select.toStatementString() );
 									preparedStatement.setString( 1, "root" );
-									ResultSet resultSet = session.getJdbcCoordinator().getResultSetReturn().extract(
-											preparedStatement );
-									Map<String, Integer> valueMap = new HashMap<String, Integer>();
+									preparedStatement.execute();
+									resultSet = preparedStatement.getResultSet();
+									Map<String, Integer> valueMap = new HashMap<>();
 									while ( resultSet.next() ) {
 										final String name = resultSet.getString( 1 );
 										assertFalse( resultSet.wasNull(), "NAME column was null" );
@@ -95,6 +94,14 @@ public class PersistentListTest extends SessionFactoryBasedFunctionalTest {
 									assertEquals( Integer.valueOf( 0 ), valueMap.get( "c1" ) );
 									// c2 should be list index 1
 									assertEquals( Integer.valueOf( 1 ), valueMap.get( "c2" ) );
+								}
+								finally {
+									if ( resultSet != null && !resultSet.isClosed() ) {
+										resultSet.close();
+									}
+									if ( preparedStatement != null && !preparedStatement.isClosed() ) {
+										preparedStatement.close();
+									}
 								}
 							}
 					);
@@ -123,24 +130,21 @@ public class PersistentListTest extends SessionFactoryBasedFunctionalTest {
 		// now, make sure the list-index column gotten written...
 		inTransaction(
 				session -> {
-
 					session.doWork(
-							new Work() {
-								@Override
-								public void execute(Connection connection) throws SQLException {
+							work -> {
+								PreparedStatement preparedStatement = null;
+								ResultSet resultSet = null;
+								try {
 									SimpleSelect select = new SimpleSelect( getDialect() )
-											.setTableName( collectionPersister.getSeparateCollectionTable()
-																   .getTableExpression() )
+											.setTableName( "T_LINE_ITEM" )
 											.addColumn( "ORDER_ID" )
 											.addColumn( "INDX" )
 											.addColumn( "PRD_CODE" );
-									PreparedStatement preparedStatement = session.getJdbcCoordinator()
-											.getStatementPreparer()
-											.prepareStatement( select.toStatementString() );
-									ResultSet resultSet = session.getJdbcCoordinator()
-											.getResultSetReturn()
-											.extract( preparedStatement );
-									Map<String, Integer> valueMap = new HashMap<String, Integer>();
+									preparedStatement = work.prepareStatement(
+											"select ORDER_ID, INDX, PRD_CODE from T_LINE_ITEM" );
+									preparedStatement.execute();
+									resultSet = preparedStatement.getResultSet();
+									Map<String, Integer> valueMap = new HashMap<>();
 									while ( resultSet.next() ) {
 										final int fk = resultSet.getInt( 1 );
 										assertFalse( resultSet.wasNull(), "Collection key (FK) column was null" );
@@ -154,6 +158,14 @@ public class PersistentListTest extends SessionFactoryBasedFunctionalTest {
 									assertEquals( Integer.valueOf( 0 ), valueMap.get( "abc" ) );
 									assertEquals( Integer.valueOf( 1 ), valueMap.get( "def" ) );
 									assertEquals( Integer.valueOf( 2 ), valueMap.get( "ghi" ) );
+								}
+								finally {
+									if ( resultSet != null && !resultSet.isClosed() ) {
+										resultSet.close();
+									}
+									if ( preparedStatement != null && !preparedStatement.isClosed() ) {
+										preparedStatement.close();
+									}
 								}
 							}
 					);

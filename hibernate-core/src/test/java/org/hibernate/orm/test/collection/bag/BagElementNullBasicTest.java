@@ -169,10 +169,10 @@ public class BagElementNullBasicTest extends SessionFactoryBasedFunctionalTest {
 									return 0;
 								}
 								finally {
-									if ( resultSet != null ) {
+									if ( resultSet != null && !resultSet.isClosed() ) {
 										resultSet.close();
 									}
-									if ( statement != null ) {
+									if ( statement != null && !statement.isClosed() ) {
 										statement.close();
 									}
 								}

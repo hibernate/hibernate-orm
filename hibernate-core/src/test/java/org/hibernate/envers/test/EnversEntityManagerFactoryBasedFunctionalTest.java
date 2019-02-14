@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -24,6 +26,7 @@ import javax.persistence.spi.PersistenceUnitTransactionType;
 import org.hibernate.SessionFactory;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.boot.AuditService;
@@ -93,6 +96,11 @@ public class EnversEntityManagerFactoryBasedFunctionalTest
 		entityManagerFactoryScope = new EnversEntityManagerFactoryScope( this, context.getStrategy() );
 	}
 
+	@Override
+	protected Dialect getDialect() {
+		return entityManagerFactoryScope().getDialect();
+	}
+
 	protected EnversEntityManagerFactoryScope entityManagerFactoryScope() {
 		return entityManagerFactoryScope;
 	}
@@ -112,6 +120,23 @@ public class EnversEntityManagerFactoryBasedFunctionalTest
 
 	protected Metamodel getMetamodel() {
 		return entityManagerFactoryScope.getEntityManagerFactory().getMetamodel();
+	}
+
+	protected void inJPA(Consumer<EntityManager> action) {
+		entityManagerFactoryScope().inJPA( action );
+	}
+
+	protected void inTransaction(Consumer<EntityManager> action) {
+		entityManagerFactoryScope().inTransaction( action );
+	}
+
+	protected <R> R inTransaction(Function<EntityManager, R> action) {
+		return entityManagerFactoryScope().inTransaction( action );
+	}
+
+	@SafeVarargs
+	protected final void inTransactions(Consumer<EntityManager>... actions) {
+		entityManagerFactoryScope().inTransactions( actions );
 	}
 
 	protected AuditService getAuditService() {

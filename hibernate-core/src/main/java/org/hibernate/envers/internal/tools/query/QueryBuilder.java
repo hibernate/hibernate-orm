@@ -21,7 +21,6 @@ import org.hibernate.envers.internal.tools.MutableInteger;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.internal.tools.Triple;
 import org.hibernate.envers.tools.Pair;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.query.Query;
 
 import org.jboss.logging.Logger;
@@ -277,10 +276,6 @@ public class QueryBuilder {
 		final Map<String, Object> queryParamValues = new HashMap<>();
 
 		build( querySb, queryParamValues );
-
-		final EntityTypeDescriptor<Object> entityDescriptor = session.getSessionFactory()
-				.getMetamodel()
-				.findEntityDescriptor( entityName );
 
 		final String hql = querySb.toString();
 		log.infof( "HQL: %s", hql );

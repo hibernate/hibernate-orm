@@ -41,7 +41,13 @@ public final class OneAuditEntityQueryGenerator extends AbstractRelationQueryGen
 			String mappedBy,
 			boolean mappedByKey,
 			String orderBy) {
-		super( options, referencedEntityName, referencingIdData, revisionTypeInId, orderBy );
+		super(
+				options,
+				options.getAuditEntityName( referencedEntityName ),
+				referencingIdData,
+				revisionTypeInId,
+				orderBy
+		);
 
 		this.mappedBy = mappedBy;
 		this.referencedIdData = referencedIdData;

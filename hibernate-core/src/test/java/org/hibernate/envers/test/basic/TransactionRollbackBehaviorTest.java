@@ -6,24 +6,22 @@
  */
 package org.hibernate.envers.test.basic;
 
-import java.util.List;
-
-import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.test.EnversSessionFactoryBasedFunctionalTest;
+import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.support.domains.basic.IntTestEntity;
 import org.junit.jupiter.api.Disabled;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.hamcrest.CollectionMatchers;
 import org.hibernate.testing.junit5.dynamictests.DynamicTest;
 
-import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
+ * @author Tomasz Dziurko (tdziurko at gmail dot com)
  * @author Chris Cranford
  */
-public class TransactionRollbackBehaviorTest extends EnversSessionFactoryBasedFunctionalTest {
+public class TransactionRollbackBehaviorTest extends EnversEntityManagerFactoryBasedFunctionalTest {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] { IntTestEntity.class };
@@ -48,41 +46,43 @@ public class TransactionRollbackBehaviorTest extends EnversSessionFactoryBasedFu
 	}
 
 	private void testRollbackBehavior(boolean flush, Boolean autoClear) {
-		Session session = openSession();
-		try {
-			if ( autoClear != null ) {
-				( (SessionImplementor) session ).setAutoClear( autoClear );
-			}
+		inJPA(
+				entityManager -> {
+					if ( autoClear != null ) {
+						entityManager.unwrap( SessionImplementor.class ).setAutoClear( autoClear );
+					}
 
-			Integer rollbackEntityId = null;
-			Integer commitEntityId = null;
+					Integer rollbackEntityId = null;
+					Integer commitEntityId = null;
 
-			session.getTransaction().begin();
-			IntTestEntity entity1 = new IntTestEntity( 30 );
-			session.persist( entity1 );
-			if ( flush ) {
-				session.flush();
-			}
-			rollbackEntityId = entity1.getId();
-			session.getTransaction().rollback();
+					entityManager.getTransaction().begin();
+					IntTestEntity entity1 = new IntTestEntity( 30 );
+					entityManager.persist( entity1 );
+					if ( flush ) {
+						entityManager.flush();
+					}
+					rollbackEntityId = entity1.getId();
+					entityManager.getTransaction().rollback();
 
-			session.getTransaction().begin();
-			IntTestEntity entity2 = new IntTestEntity( 50 );
-			session.persist( entity2 );
-			if ( flush ) {
-				session.flush();
-			}
-			commitEntityId = entity2.getId();
-			session.getTransaction().commit();
+					entityManager.getTransaction().begin();
+					IntTestEntity entity2 = new IntTestEntity( 50 );
+					entityManager.persist( entity2 );
+					if ( flush ) {
+						entityManager.flush();
+					}
+					commitEntityId = entity2.getId();
+					entityManager.getTransaction().commit();
 
-			List<Number> revisionForCommit = getAuditReader().getRevisions( IntTestEntity.class, commitEntityId );
-			assertThat( revisionForCommit.size(), is( 1 ) );
+					assertThat(
+							getAuditReader().getRevisions( IntTestEntity.class, commitEntityId ),
+							CollectionMatchers.hasSize( 1 )
+					);
 
-			List<Number> revisionsForRollback = getAuditReader().getRevisions( IntTestEntity.class, rollbackEntityId );
-			assertThat( revisionsForRollback.isEmpty(), is( true ) );
-		}
-		finally {
-			session.close();
-		}
+					assertThat(
+							getAuditReader().getRevisions( IntTestEntity.class, rollbackEntityId ),
+							CollectionMatchers.hasSize( 0 )
+					);
+				}
+		);
 	}
 }

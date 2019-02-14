@@ -13,6 +13,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
+import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.Type;
+
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
@@ -42,6 +45,7 @@ import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.InheritanceStrategy;
 import org.hibernate.metamodel.model.domain.spi.NonIdPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.query.spi.ComparisonOperator;
@@ -251,12 +255,12 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		final EntityTypeDescriptor<Object> entityDescriptor = sessionFactory.getMetamodel().findEntityDescriptor( entityName );
 		entityDescriptor.visitAttributes(
 				attribute -> {
-					if ( attribute.getName().equals( propertyName )
-							&& BagPersistentAttribute.class.isInstance( attribute ) ) {
+					if ( attribute.getName().equals( propertyName ) && attribute.isCollection() ) {
 						// Handling collection of components.
-						if ( ( (PluralPersistentAttribute) attribute ).getElementType() instanceof javax.persistence.metamodel.EmbeddableType ) {
+						final PluralPersistentAttribute pluralAttribute = (PluralPersistentAttribute) attribute;
+						// todo (6.0) - Should also account for Map<> using @Lob - e.g. MaterializedClob/MaterializedNClob
+						if ( pluralAttribute.getElementType().getPersistenceType().equals( Type.PersistenceType.EMBEDDABLE ) ) {
 							// Adding restrictions to compare data outside of primary key.
-							// todo: is it necessary that non-primary key attributes be compared?
 							for ( Map.Entry<String, Object> dataEntry : persistentCollectionChangeData.getData()
 									.entrySet() ) {
 								if ( !originalIdPropName.equals( dataEntry.getKey() ) ) {
@@ -277,6 +281,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 					}
 				}
 		);
+
 		addEndRevisionNullRestriction( options, qb.getRootParameters() );
 
 		final List<Object> l = qb.toQuery( (SharedSessionContractImplementor) session ).setLockOptions( LockOptions.UPGRADE ).list();

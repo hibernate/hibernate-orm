@@ -6,22 +6,21 @@
  */
 package org.hibernate.envers.test.basic;
 
-import java.util.Arrays;
-
-import org.hibernate.envers.test.EnversSessionFactoryBasedFunctionalTest;
+import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.support.domains.basic.BasicPartialNotAuditedEntity;
 
 import org.hibernate.testing.junit5.dynamictests.DynamicBeforeAll;
 import org.hibernate.testing.junit5.dynamictests.DynamicTest;
 
+import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 /**
+ * @author Adam Warski (adam at warski dot org)
  * @author Chris Cranford
  */
-public class NotAuditedExplicitPropertyTest extends EnversSessionFactoryBasedFunctionalTest {
+public class NotAuditedExplicitPropertyTest extends EnversEntityManagerFactoryBasedFunctionalTest {
 	private Integer id;
 
 	@Override
@@ -31,25 +30,29 @@ public class NotAuditedExplicitPropertyTest extends EnversSessionFactoryBasedFun
 
 	@DynamicBeforeAll
 	public void prepareAuditData() {
-		this.id = doInHibernate( this::sessionFactory, session -> {
-			final BasicPartialNotAuditedEntity entity = new BasicPartialNotAuditedEntity( "a1", "b1" );
-			session.save( entity );
-			return entity.getId();
-		} );
+		this.id = inTransaction(
+				entityManager -> {
+					final BasicPartialNotAuditedEntity entity = new BasicPartialNotAuditedEntity( "a1", "b1" );
+					entityManager.persist( entity );
+					return entity.getId();
+				}
+		);
 
-		doInHibernate( this::sessionFactory, session -> {
-			final BasicPartialNotAuditedEntity entity = session.find( BasicPartialNotAuditedEntity.class, this.id );
-			entity.setData1( "a2" );
-			entity.setData2( "b2" );
-		} );
+		inTransaction(
+				entityManager -> {
+					final BasicPartialNotAuditedEntity entity = entityManager.find(
+							BasicPartialNotAuditedEntity.class,
+							this.id
+					);
+					entity.setData1( "a2" );
+					entity.setData2( "b2" );
+				}
+		);
 	}
 
 	@DynamicTest
 	public void testRevisionCount() {
-		assertThat(
-				getAuditReader().getRevisions( BasicPartialNotAuditedEntity.class, id ),
-				is( Arrays.asList( 1, 2 ) )
-		);
+		assertThat( getAuditReader().getRevisions( BasicPartialNotAuditedEntity.class, id ), hasItems( 1, 2 ) );
 	}
 
 	@DynamicTest

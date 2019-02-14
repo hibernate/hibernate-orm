@@ -31,7 +31,7 @@ public class StringListTest extends EnversEntityManagerFactoryBasedFunctionalTes
 
 	@DynamicBeforeAll
 	public void prepareAuditData() {
-		entityManagerFactoryScope().inTransactions(
+		inTransactions(
 				// Revision 1 (sle1: initially empty, sle2: initially 2 elements)
 				entityManager -> {
 					StringListEntity sle1 = new StringListEntity();

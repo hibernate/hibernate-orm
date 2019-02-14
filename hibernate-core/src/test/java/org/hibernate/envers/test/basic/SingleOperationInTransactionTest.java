@@ -6,26 +6,25 @@
  */
 package org.hibernate.envers.test.basic;
 
-import java.util.Arrays;
-import java.util.Collections;
-
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
-import org.hibernate.envers.test.EnversSessionFactoryBasedFunctionalTest;
+import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.support.domains.basic.BasicAuditedEntity;
 
+import org.hibernate.testing.hamcrest.CollectionMatchers;
 import org.hibernate.testing.junit5.dynamictests.DynamicBeforeAll;
 import org.hibernate.testing.junit5.dynamictests.DynamicTest;
 
+import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.number.OrderingComparison.lessThanOrEqualTo;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 /**
+ * @author Adam Warski (adam at warski dot org)
  * @author Chris Cranford
  */
-public class SingleOperationInTransactionTest extends EnversSessionFactoryBasedFunctionalTest {
+public class SingleOperationInTransactionTest extends EnversEntityManagerFactoryBasedFunctionalTest {
 	private Integer e1Id;
 	private Integer e2Id;
 	private Integer e3Id;
@@ -38,68 +37,84 @@ public class SingleOperationInTransactionTest extends EnversSessionFactoryBasedF
 
 	@DynamicBeforeAll
 	public void prepareAuditData() {
-		this.e1Id = doInHibernate( this::sessionFactory, session -> {
-			BasicAuditedEntity entity = new BasicAuditedEntity( "x", 1 );
-			session.persist( entity );
-			return entity.getId();
-		} );
+		this.e1Id = inTransaction(
+				entityManager -> {
+					BasicAuditedEntity entity = new BasicAuditedEntity( "x", 1 );
+					entityManager.persist( entity );
+					return entity.getId();
+				}
+		);
 
-		this.e2Id = doInHibernate( this::sessionFactory, session -> {
-			BasicAuditedEntity entity = new BasicAuditedEntity( "y", 20 );
-			session.persist( entity );
-			return entity.getId();
-		} );
+		this.e2Id = inTransaction(
+				entityManager -> {
+					BasicAuditedEntity entity = new BasicAuditedEntity( "y", 20 );
+					entityManager.persist( entity );
+					return entity.getId();
+				}
+		);
 
-		this.e3Id = doInHibernate( this::sessionFactory, session -> {
-			BasicAuditedEntity entity = new BasicAuditedEntity( "z", 30 );
-			session.persist( entity );
-			return entity.getId();
-		} );
+		this.e3Id = inTransaction(
+				entityManager -> {
+					BasicAuditedEntity entity = new BasicAuditedEntity( "z", 30 );
+					entityManager.persist( entity );
+					return entity.getId();
+				}
+		);
 
-		doInHibernate( this::sessionFactory, session -> {
-			final BasicAuditedEntity entity = session.find( BasicAuditedEntity.class, e1Id );
-			entity.setStr1( "x2" );
-			entity.setLong1( 2 );
-			session.update( entity );
-		} );
+		inTransaction(
+				entityManager -> {
+					final BasicAuditedEntity entity = entityManager.find( BasicAuditedEntity.class, e1Id );
+					entity.setStr1( "x2" );
+					entity.setLong1( 2 );
+					entityManager.merge( entity );
+				}
+		);
 
-		doInHibernate( this::sessionFactory, session -> {
-			final BasicAuditedEntity entity = session.find( BasicAuditedEntity.class, e2Id );
-			entity.setStr1( "y2" );
-			entity.setLong1( 20 );
-			session.update( entity );
-		} );
+		inTransaction(
+				entityManager -> {
+					final BasicAuditedEntity entity = entityManager.find( BasicAuditedEntity.class, e2Id );
+					entity.setStr1( "y2" );
+					entity.setLong1( 20 );
+					entityManager.merge( entity );
+				}
+		);
 
-		doInHibernate( this::sessionFactory, session -> {
-			final BasicAuditedEntity entity = session.find( BasicAuditedEntity.class, e1Id );
-			entity.setStr1( "x3" );
-			entity.setLong1( 3 );
-			session.update( entity );
-		} );
+		inTransaction(
+				entityManager -> {
+					final BasicAuditedEntity entity = entityManager.find( BasicAuditedEntity.class, e1Id );
+					entity.setStr1( "x3" );
+					entity.setLong1( 3 );
+					entityManager.merge( entity );
+				}
+		);
 
 		// shouldn't trigger a revision
-		doInHibernate( this::sessionFactory, session -> {
-			final BasicAuditedEntity entity = session.find( BasicAuditedEntity.class, e1Id );
-			entity.setStr1( "x3" );
-			entity.setLong1( 3 );
-			session.update( entity );
-		} );
+		inTransaction(
+				entityManager -> {
+					final BasicAuditedEntity entity = entityManager.find( BasicAuditedEntity.class, e1Id );
+					entity.setStr1( "x3" );
+					entity.setLong1( 3 );
+					entityManager.merge( entity );
+				}
+		);
 
-		doInHibernate( this::sessionFactory, session -> {
-			final BasicAuditedEntity entity = session.find( BasicAuditedEntity.class, e2Id );
-			entity.setStr1( "y3" );
-			entity.setLong1( 21 );
-			session.update( entity );
-		} );
+		inTransaction(
+				entityManager -> {
+					final BasicAuditedEntity entity = entityManager.find( BasicAuditedEntity.class, e2Id );
+					entity.setStr1( "y3" );
+					entity.setLong1( 21 );
+					entityManager.merge( entity );
+				}
+		);
 
 		this.invalidId = e1Id + e2Id + e3Id;
 	}
 
 	@DynamicTest
 	public void testRevisionCounts() {
-		assertThat( getAuditReader().getRevisions( BasicAuditedEntity.class, e1Id ), is( Arrays.asList( 1, 4, 6 ) ) );
-		assertThat( getAuditReader().getRevisions( BasicAuditedEntity.class, e2Id ), is( Arrays.asList( 2, 5, 7 ) ) );
-		assertThat( getAuditReader().getRevisions( BasicAuditedEntity.class, e3Id ), is( Collections.singletonList( 3 ) ) );
+		assertThat( getAuditReader().getRevisions( BasicAuditedEntity.class, e1Id ), hasItems( 1, 4, 6 ) );
+		assertThat( getAuditReader().getRevisions( BasicAuditedEntity.class, e2Id ), hasItems( 2, 5, 7 ) );
+		assertThat( getAuditReader().getRevisions( BasicAuditedEntity.class, e3Id ), hasItems( 3 ) );
 	}
 
 	@DynamicTest
@@ -163,7 +178,10 @@ public class SingleOperationInTransactionTest extends EnversSessionFactoryBasedF
 
 	@DynamicTest
 	public void testRevisionsOfNotExistEntity() {
-		assertThat( getAuditReader().getRevisions( BasicAuditedEntity.class, invalidId ).size(), is( 0 ) );
+		assertThat(
+				getAuditReader().getRevisions( BasicAuditedEntity.class, invalidId ),
+				CollectionMatchers.hasSize( 0 )
+		);
 	}
 
 	@DynamicTest(expected = RevisionDoesNotExistException.class)

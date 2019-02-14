@@ -32,7 +32,7 @@ public class StringSetTest extends EnversEntityManagerFactoryBasedFunctionalTest
 
 	@DynamicBeforeAll
 	public void prepareAuditData() {
-		entityManagerFactoryScope().inTransactions(
+		inTransactions(
 				// Revision 1 (sse1: initialy empty, sse2: initialy 2 elements)
 				entityManager -> {
 					StringSetEntity sse1 = new StringSetEntity();

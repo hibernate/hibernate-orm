@@ -6,22 +6,21 @@
  */
 package org.hibernate.envers.test.basic;
 
-import java.util.Arrays;
-
-import org.hibernate.envers.test.EnversSessionFactoryBasedFunctionalTest;
+import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.support.domains.basic.BasicPartialAuditedEntity;
 
 import org.hibernate.testing.junit5.dynamictests.DynamicBeforeAll;
 import org.hibernate.testing.junit5.dynamictests.DynamicTest;
 
+import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 /**
+ * @author Adam Warski (adam at warski dot org)
  * @author Chris Cranford
  */
-public class NotAuditedPropertyChangeTest extends EnversSessionFactoryBasedFunctionalTest {
+public class NotAuditedPropertyChangeTest extends EnversEntityManagerFactoryBasedFunctionalTest {
 	private Integer id;
 
 	@Override
@@ -31,39 +30,44 @@ public class NotAuditedPropertyChangeTest extends EnversSessionFactoryBasedFunct
 
 	@DynamicBeforeAll
 	public void prepareAuditData() {
-		this.id = doInHibernate( this::sessionFactory, session -> {
-			final BasicPartialAuditedEntity entity = new BasicPartialAuditedEntity( "x", "a" );
-			session.persist( entity );
-			return entity.getId();
-		} );
+		this.id = inTransaction(
+				entityManager -> {
+					final BasicPartialAuditedEntity entity = new BasicPartialAuditedEntity( "x", "a" );
+					entityManager.persist( entity );
+					return entity.getId();
+				}
+		);
 
 		// Should not trigger a revision
-		doInHibernate( this::sessionFactory, session -> {
-			final BasicPartialAuditedEntity entity = session.find( BasicPartialAuditedEntity.class, this.id );
-			entity.setStr1( "x" );
-			entity.setStr2( "a" );
-		} );
+		inTransaction(
+				entityManager -> {
+					final BasicPartialAuditedEntity entity = entityManager.find( BasicPartialAuditedEntity.class, this.id );
+					entity.setStr1( "x" );
+					entity.setStr2( "a" );
+				}
+		);
 
-		doInHibernate( this::sessionFactory, session -> {
-			final BasicPartialAuditedEntity entity = session.find( BasicPartialAuditedEntity.class, this.id );
-			entity.setStr1( "y" );
-			entity.setStr2( "b" );
-		} );
+		inTransaction(
+				entityManager -> {
+					final BasicPartialAuditedEntity entity = entityManager.find( BasicPartialAuditedEntity.class, this.id );
+					entity.setStr1( "y" );
+					entity.setStr2( "b" );
+				}
+		);
 
 		// Should not trigger a revision
-		doInHibernate( this::sessionFactory, session -> {
-			final BasicPartialAuditedEntity entity = session.find( BasicPartialAuditedEntity.class, this.id );
-			entity.setStr1( "y" );
-			entity.setStr2( "c" );
-		} );
+		inTransaction(
+				entityManager -> {
+					final BasicPartialAuditedEntity entity = entityManager.find( BasicPartialAuditedEntity.class, this.id );
+					entity.setStr1( "y" );
+					entity.setStr2( "c" );
+				}
+		);
 	}
 
 	@DynamicTest
 	public void testRevisionCounts() {
-		assertThat(
-				getAuditReader().getRevisions( BasicPartialAuditedEntity.class, this.id ),
-				is( Arrays.asList( 1, 2 ) )
-		);
+		assertThat( getAuditReader().getRevisions( BasicPartialAuditedEntity.class, this.id ), hasItems( 1, 2 ) );
 	}
 
 	@DynamicTest

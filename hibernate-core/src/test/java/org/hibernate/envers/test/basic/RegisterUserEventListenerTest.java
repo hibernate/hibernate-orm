@@ -19,9 +19,9 @@ import org.hibernate.testing.junit5.dynamictests.DynamicTest;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 /**
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  * @author Chris Cranford
  */
 @TestForIssue(jiraKey = "HHH-7478")
@@ -42,10 +42,12 @@ public class RegisterUserEventListenerTest extends EnversSessionFactoryBasedFunc
 				.getEventListenerGroup( EventType.POST_INSERT )
 				.appendListener( listener );
 
-		doInHibernate( this::sessionFactory, session -> {
-			final StrTestEntity entity = new StrTestEntity( "str1" );
-			session.save( entity );
-		} );
+		inTransaction(
+				session -> {
+					final StrTestEntity entity = new StrTestEntity( "str1" );
+					session.save( entity );
+				}
+		);
 
 		assertThat( listener.getBeforeCounter(), is( 3 ) );
 		assertThat( listener.getAfterCounter(), is( 3 ) );

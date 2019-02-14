@@ -6,23 +6,22 @@
  */
 package org.hibernate.envers.test.basic;
 
-import java.util.Arrays;
-
-import org.hibernate.envers.test.EnversSessionFactoryBasedFunctionalTest;
+import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.support.domains.basic.BasicPartialAuditedEntity;
 
 import org.hibernate.testing.junit5.dynamictests.DynamicBeforeAll;
 import org.hibernate.testing.junit5.dynamictests.DynamicTest;
 
+import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 /**
+ * @author Adam Warski (adam at warski dot org)
  * @author Chris Cranford
  */
-public class DeleteTest extends EnversSessionFactoryBasedFunctionalTest {
+public class DeleteTest extends EnversEntityManagerFactoryBasedFunctionalTest {
 	private Integer id1;
 	private Integer id2;
 	private Integer id3;
@@ -34,44 +33,52 @@ public class DeleteTest extends EnversSessionFactoryBasedFunctionalTest {
 
 	@DynamicBeforeAll
 	public void prepareAuditData() {
-		doInHibernate( this::sessionFactory, session -> {
-			BasicPartialAuditedEntity e1 = new BasicPartialAuditedEntity( "x", "a" );
-			BasicPartialAuditedEntity e2 = new BasicPartialAuditedEntity( "y", "b" );
-			BasicPartialAuditedEntity e3 = new BasicPartialAuditedEntity( "z", "c" );
-			session.persist( e1 );
-			session.persist( e2 );
-			session.persist( e3 );
+		inTransaction(
+				entityManager -> {
+					BasicPartialAuditedEntity e1 = new BasicPartialAuditedEntity( "x", "a" );
+					BasicPartialAuditedEntity e2 = new BasicPartialAuditedEntity( "y", "b" );
+					BasicPartialAuditedEntity e3 = new BasicPartialAuditedEntity( "z", "c" );
+					entityManager.persist( e1 );
+					entityManager.persist( e2 );
+					entityManager.persist( e3 );
 
-			this.id1 = e1.getId();
-			this.id2 = e2.getId();
-			this.id3 = e3.getId();
-		} );
+					this.id1 = e1.getId();
+					this.id2 = e2.getId();
+					this.id3 = e3.getId();
+				}
+		);
 
-		doInHibernate( this::sessionFactory, session -> {
-			BasicPartialAuditedEntity e1 = session.find( BasicPartialAuditedEntity.class, this.id1 );
-			BasicPartialAuditedEntity e2 = session.find( BasicPartialAuditedEntity.class, this.id2 );
-			BasicPartialAuditedEntity e3 = session.find( BasicPartialAuditedEntity.class, this.id3 );
-			e1.setStr1( "x2" );
-			e2.setStr2( "b2" );
-			session.remove( e3 );
-		} );
+		inTransaction(
+				entityManager -> {
+					BasicPartialAuditedEntity e1 = entityManager.find( BasicPartialAuditedEntity.class, this.id1 );
+					BasicPartialAuditedEntity e2 = entityManager.find( BasicPartialAuditedEntity.class, this.id2 );
+					BasicPartialAuditedEntity e3 = entityManager.find( BasicPartialAuditedEntity.class, this.id3 );
+					e1.setStr1( "x2" );
+					e2.setStr2( "b2" );
+					entityManager.remove( e3 );
+				}
+		);
 
-		doInHibernate( this::sessionFactory, session -> {
-			BasicPartialAuditedEntity e2 = session.find( BasicPartialAuditedEntity.class, this.id2 );
-			session.remove( e2 );
-		} );
+		inTransaction(
+				entityManager -> {
+					BasicPartialAuditedEntity e2 = entityManager.find( BasicPartialAuditedEntity.class, this.id2 );
+					entityManager.remove( e2 );
+				}
+		);
 
-		doInHibernate( this::sessionFactory, session -> {
-			BasicPartialAuditedEntity e1 = session.find( BasicPartialAuditedEntity.class, this.id1 );
-			session.remove( e1 );
-		} );
+		inTransaction(
+				entityManager -> {
+					BasicPartialAuditedEntity e1 = entityManager.find( BasicPartialAuditedEntity.class, this.id1 );
+					entityManager.remove( e1 );
+				}
+		);
 	}
 
 	@DynamicTest
 	public void testRevisionCounts() {
-		assertThat( getAuditReader().getRevisions( BasicPartialAuditedEntity.class, id1 ), is( Arrays.asList( 1, 2, 4 ) ) );
-		assertThat( getAuditReader().getRevisions( BasicPartialAuditedEntity.class, id2 ), is( Arrays.asList( 1, 3 ) ) );
-		assertThat( getAuditReader().getRevisions( BasicPartialAuditedEntity.class, id3 ), is( Arrays.asList( 1, 2 ) ) );
+		assertThat( getAuditReader().getRevisions( BasicPartialAuditedEntity.class, id1 ), hasItems( 1, 2, 4 ) );
+		assertThat( getAuditReader().getRevisions( BasicPartialAuditedEntity.class, id2 ), hasItems( 1, 3 ) );
+		assertThat( getAuditReader().getRevisions( BasicPartialAuditedEntity.class, id3 ), hasItems( 1, 2 ) );
 	}
 
 	@DynamicTest

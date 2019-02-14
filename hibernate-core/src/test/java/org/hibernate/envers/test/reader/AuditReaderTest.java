@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
 import org.hibernate.envers.exception.NotAuditedException;
-import org.hibernate.envers.test.EnversSessionFactoryBasedFunctionalTest;
+import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.support.domains.basic.BasicAuditedEntity;
 import org.hibernate.envers.test.support.domains.basic.BasicNonAuditedEntity;
 
@@ -18,18 +18,18 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit5.dynamictests.DynamicBeforeAll;
 import org.hibernate.testing.junit5.dynamictests.DynamicTest;
 
-import static java.util.Arrays.asList;
+import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.hamcrest.Matchers.hasSize;
 
 /**
  * Test that checks the behavior of the {@link org.hibernate.envers.AuditReader}.
  *
  * @author Chris Cranford
  */
-public class AuditReaderTest extends EnversSessionFactoryBasedFunctionalTest {
+public class AuditReaderTest extends EnversEntityManagerFactoryBasedFunctionalTest {
 
 	// todo (6.0) - add more api tests for other AuditReader methods.
 
@@ -43,33 +43,39 @@ public class AuditReaderTest extends EnversSessionFactoryBasedFunctionalTest {
 
 	@DynamicBeforeAll
 	public void prepareAuditData() {
-		doInHibernate( this::sessionFactory, session -> {
-			final BasicAuditedEntity audited = new BasicAuditedEntity( "str1", 1L );
-			final BasicNonAuditedEntity nonAudited = new BasicNonAuditedEntity( "str1", null );
-			session.save( audited );
-			session.save( nonAudited );
+		inTransaction(
+				entityManager -> {
+					final BasicAuditedEntity audited = new BasicAuditedEntity( "str1", 1L );
+					final BasicNonAuditedEntity nonAudited = new BasicNonAuditedEntity( "str1", null );
+					entityManager.persist( audited );
+					entityManager.persist( nonAudited );
 
-			auditedId = audited.getId();
-			nonAuditedId = nonAudited.getId();
-		} );
+					auditedId = audited.getId();
+					nonAuditedId = nonAudited.getId();
+				}
+		);
 
-		doInHibernate( this::sessionFactory, session -> {
-			final BasicAuditedEntity audited = session.find( BasicAuditedEntity.class, auditedId );
-			final BasicNonAuditedEntity nonAudited = session.find( BasicNonAuditedEntity.class, nonAuditedId );
-			audited.setStr1( "str2" );
-			nonAudited.setStr1( "str2" );
-		} );
+		inTransaction(
+				entityManager -> {
+					final BasicAuditedEntity audited = entityManager.find( BasicAuditedEntity.class, auditedId );
+					final BasicNonAuditedEntity nonAudited = entityManager.find( BasicNonAuditedEntity.class, nonAuditedId );
+					audited.setStr1( "str2" );
+					nonAudited.setStr1( "str2" );
+				}
+		);
 
-		doInHibernate( this::sessionFactory, session -> {
-			final BasicAuditedEntity audited = session.find( BasicAuditedEntity.class, auditedId );
-			session.remove( audited );
-		} );
+		inTransaction(
+				entityManager -> {
+					final BasicAuditedEntity audited = entityManager.find( BasicAuditedEntity.class, auditedId );
+					entityManager.remove( audited );
+				}
+		);
 	}
 
 	@DynamicTest
 	public void testIsEntityClassAuditedForAuditedEntity() {
 		assertThat( getAuditReader().isEntityClassAudited( BasicAuditedEntity.class ), is( true ) );
-		assertThat( getAuditReader().getRevisions( BasicAuditedEntity.class, auditedId ), is( asList( 1, 2, 3 ) ) );
+		assertThat( getAuditReader().getRevisions( BasicAuditedEntity.class, auditedId ), hasItems( 1, 2, 3 ) );
 	}
 
 	@DynamicTest(expected = NotAuditedException.class)
@@ -86,7 +92,7 @@ public class AuditReaderTest extends EnversSessionFactoryBasedFunctionalTest {
 				.forRevisionsOfEntity( BasicAuditedEntity.class, false )
 				.getResultList();
 
-		assertThat( revisions.size(), is( 2 ) );
+		assertThat( revisions, hasSize( 2 ) );
 		revisions.forEach( r -> assertThat( r, instanceOf( SequenceIdRevisionEntity.class ) ) );
 	}
 
@@ -98,7 +104,7 @@ public class AuditReaderTest extends EnversSessionFactoryBasedFunctionalTest {
 				.forRevisionsOfEntity( BasicAuditedEntity.class, true )
 				.getResultList();
 
-		assertThat( revisions.size(), is( 3 ) );
+		assertThat( revisions, hasSize( 3 ) );
 		revisions.forEach( r -> assertThat( r, instanceOf( SequenceIdRevisionEntity.class ) ) );
 	}
 

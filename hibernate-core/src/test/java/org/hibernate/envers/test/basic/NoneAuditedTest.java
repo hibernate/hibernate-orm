@@ -10,13 +10,14 @@ import org.hibernate.Metamodel;
 import org.hibernate.envers.test.EnversSessionFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.support.domains.basic.BasicNonAuditedEntity;
 
+import org.hibernate.testing.hamcrest.CollectionMatchers;
 import org.hibernate.testing.junit5.dynamictests.DynamicTest;
 
-import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
+ * @author Adam Warski (adam at warski dot org)
  * @author Chris Cranford
  */
 public class NoneAuditedTest extends EnversSessionFactoryBasedFunctionalTest {
@@ -28,7 +29,7 @@ public class NoneAuditedTest extends EnversSessionFactoryBasedFunctionalTest {
 	@DynamicTest
 	public void testRevisionInfoTableNotCreated() {
 		final Metamodel metamodel = sessionFactoryScope().getSessionFactory().getMetamodel();
-		assertThat( metamodel.getEntities().size(), is( 1 ) );
+		assertThat( metamodel.getEntities(), CollectionMatchers.hasSize( 1 ) );
 		assertThat( metamodel.findEntityDescriptor( BasicNonAuditedEntity.class ), notNullValue() );
 	}
 }

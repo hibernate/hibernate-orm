@@ -15,13 +15,13 @@ import org.hibernate.envers.test.support.domains.collections.EnumSetEntity.E2;
 import org.junit.jupiter.api.Disabled;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.hamcrest.CollectionMatchers;
 import org.hibernate.testing.junit5.dynamictests.DynamicBeforeAll;
 import org.hibernate.testing.junit5.dynamictests.DynamicTest;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
-import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -38,7 +38,7 @@ public class EnumSetTest extends EnversEntityManagerFactoryBasedFunctionalTest {
 
 	@DynamicBeforeAll
 	public void prepareAuditData() {
-		entityManagerFactoryScope().inTransactions(
+		inTransactions(
 				// Revision 1 (sse1: initially 1 element)
 				entityManager -> {
 					EnumSetEntity sse1 = new EnumSetEntity();
@@ -103,7 +103,8 @@ public class EnumSetTest extends EnversEntityManagerFactoryBasedFunctionalTest {
 
 					assertThat( enums1, contains( "X", "Y", "X" ) );
 
-					assertThat( enums2, hasSize( 1 ) );
+					assertThat( enums2, CollectionMatchers.hasSize( 1 ) );
+
 					// Compare as Strings to account for Oracle returning a BigDecimal instead of int.
 					assertThat( enums2.get( 0 ).toString(), is( "0" ) );
 				}

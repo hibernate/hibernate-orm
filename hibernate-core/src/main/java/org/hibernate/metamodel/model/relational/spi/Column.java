@@ -30,7 +30,9 @@ public interface Column extends QualifiableSqlExpressable {
 	 */
 	String getExpression();
 
-	// todo : nullable, size, etc
+	Size getSize();
+
+	// todo : nullable, etc
 
 	// todo : org.hibernate.annotations.ColumnTransformer#read and org.hibernate.annotations.ColumnTransformer#write?
 

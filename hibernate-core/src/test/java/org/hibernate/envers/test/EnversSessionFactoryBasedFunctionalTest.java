@@ -9,6 +9,7 @@ package org.hibernate.envers.test;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.hibernate.Metamodel;
 import org.hibernate.Session;
@@ -17,6 +18,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.boot.AuditService;
@@ -91,6 +93,11 @@ public class EnversSessionFactoryBasedFunctionalTest
 		sessionFactoryScope = new EnversSessionFactoryScope( this, context.getStrategy() );
 	}
 
+	@Override
+	protected Dialect getDialect() {
+		return sessionFactoryScope().getDialect();
+	}
+
 	protected EnversSessionFactoryScope sessionFactoryScope() {
 		return sessionFactoryScope;
 	}
@@ -125,5 +132,18 @@ public class EnversSessionFactoryBasedFunctionalTest
 
 	protected void inTransaction(Consumer<SessionImplementor> action){
 		sessionFactoryScope().inTransaction( action );
+	}
+
+	protected <R> R inTransaction(Function<SessionImplementor, R> action) {
+		return sessionFactoryScope().inTransaction( action );
+	}
+
+	@SafeVarargs
+	protected final void inTransactions(Consumer<SessionImplementor>... actions) {
+		sessionFactoryScope().inTransactions( actions );
+	}
+
+	protected void inSession(Consumer<SessionImplementor> action) {
+		sessionFactoryScope().inSession( action );
 	}
 }

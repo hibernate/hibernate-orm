@@ -33,7 +33,7 @@ public class StringMapTest extends EnversEntityManagerFactoryBasedFunctionalTest
 
 	@DynamicBeforeAll
 	public void prepareAuditData() {
-		entityManagerFactoryScope().inTransactions(
+		inTransactions(
 				// Revision 1 (sme1: initially empty, sme2: initially 1 mapping)
 				entityManager -> {
 					StringMapEntity sme1 = new StringMapEntity();

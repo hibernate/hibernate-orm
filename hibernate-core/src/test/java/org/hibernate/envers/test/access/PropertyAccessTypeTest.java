@@ -6,22 +6,20 @@
  */
 package org.hibernate.envers.test.access;
 
-import java.util.Arrays;
-
-import org.hibernate.envers.test.EnversSessionFactoryBasedFunctionalTest;
+import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.support.domains.access.PropertyAccessTypeEntity;
 
 import org.hibernate.testing.junit5.dynamictests.DynamicBeforeAll;
 import org.hibernate.testing.junit5.dynamictests.DynamicTest;
 
+import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 /**
  * @author Chris Cranford
  */
-public class PropertyAccessTypeTest extends EnversSessionFactoryBasedFunctionalTest {
+public class PropertyAccessTypeTest extends EnversEntityManagerFactoryBasedFunctionalTest {
 	private Integer id;
 
 	@Override
@@ -31,21 +29,25 @@ public class PropertyAccessTypeTest extends EnversSessionFactoryBasedFunctionalT
 
 	@DynamicBeforeAll
 	public void prepareAuditData() {
-		this.id = doInHibernate( this::sessionFactory, session -> {
-			final PropertyAccessTypeEntity entity = new PropertyAccessTypeEntity( "data" );
-			session.save( entity );
-			return entity.getId();
-		} );
+		this.id = inTransaction(
+				entityManager -> {
+					final PropertyAccessTypeEntity entity = new PropertyAccessTypeEntity( "data" );
+					entityManager.persist( entity );
+					return entity.getId();
+				}
+		);
 
-		doInHibernate( this::sessionFactory, session -> {
-			final PropertyAccessTypeEntity entity = session.find( PropertyAccessTypeEntity.class, id );
-			entity.setDataSafe( "data2" );
-		} );
+		inTransaction(
+				entityManager -> {
+					final PropertyAccessTypeEntity entity = entityManager.find( PropertyAccessTypeEntity.class, id );
+					entity.setDataSafe( "data2" );
+				}
+		);
 	}
 
 	@DynamicTest
 	public void testRevisionCounts() {
-		assertThat( getAuditReader().getRevisions( PropertyAccessTypeEntity.class, id ), is( Arrays.asList( 1, 2 ) ) );
+		assertThat( getAuditReader().getRevisions( PropertyAccessTypeEntity.class, id ), hasItems( 1, 2 ) );
 	}
 
 	@DynamicTest

@@ -179,6 +179,7 @@ public class PhysicalColumn implements Column {
 		return comment;
 	}
 
+	@Override
 	public Size getSize() {
 		return size;
 	}

@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.internal.util.StringHelper;
 
@@ -23,7 +24,7 @@ import org.hibernate.testing.junit5.envers.Strategy;
  *
  * @author Chris Cranford
  */
-public class AbstractEnversDynamicTest extends AbstractDynamicTest<EnversDynamicExecutionContext> {
+public abstract class AbstractEnversDynamicTest extends AbstractDynamicTest<EnversDynamicExecutionContext> {
 	private static final Class<?>[] NO_CLASSES = new Class<?>[0];
 	private static final String[] NO_MAPPINGS = new String[0];
 
@@ -78,4 +79,5 @@ public class AbstractEnversDynamicTest extends AbstractDynamicTest<EnversDynamic
 		}
 	}
 
+	protected abstract Dialect getDialect();
 }

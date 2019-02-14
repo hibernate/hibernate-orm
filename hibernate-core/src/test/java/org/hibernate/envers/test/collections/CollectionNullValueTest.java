@@ -40,7 +40,7 @@ public class CollectionNullValueTest extends EnversEntityManagerFactoryBasedFunc
 	@DynamicBeforeAll
 	public void prepareAuditData() {
 		// Persist map with null values
-		mapId = entityManagerFactoryScope().inTransaction(
+		mapId = inTransaction(
 				entityManager -> {
 					final StringMapEntity sme = new StringMapEntity();
 					sme.getStrings().put( "A", "B" );
@@ -51,7 +51,7 @@ public class CollectionNullValueTest extends EnversEntityManagerFactoryBasedFunc
 				} );
 
 		// Update map with null values
-		entityManagerFactoryScope().inTransaction(
+		inTransaction(
 				entityManager -> {
 					final StringMapEntity sme = entityManager.find( StringMapEntity.class, mapId );
 					sme.getStrings().put( "C", null );
@@ -61,7 +61,7 @@ public class CollectionNullValueTest extends EnversEntityManagerFactoryBasedFunc
 				} );
 
 		// Persist list with null values
-		listId = entityManagerFactoryScope().inTransaction(
+		listId = inTransaction(
 				entityManager -> {
 					final StringListEntity sle = new StringListEntity();
 					sle.getStrings().add( "A" );
@@ -72,7 +72,7 @@ public class CollectionNullValueTest extends EnversEntityManagerFactoryBasedFunc
 				} );
 
 		// Update list with null values
-		entityManagerFactoryScope().inTransaction(
+		inTransaction(
 				entityManager -> {
 					final StringListEntity sle = entityManager.find( StringListEntity.class, listId );
 					sle.getStrings().add( null );
@@ -82,7 +82,7 @@ public class CollectionNullValueTest extends EnversEntityManagerFactoryBasedFunc
 				} );
 
 		// Persist set with null values
-		setId = entityManagerFactoryScope().inTransaction(
+		setId = inTransaction(
 				entityManager -> {
 					final StringSetEntity sse = new StringSetEntity();
 					sse.getStrings().add( "A" );
@@ -93,7 +93,7 @@ public class CollectionNullValueTest extends EnversEntityManagerFactoryBasedFunc
 				} );
 
 		// Update set with null values
-		entityManagerFactoryScope().inTransaction(
+		inTransaction(
 				entityManager -> {
 					final StringSetEntity sse = entityManager.find( StringSetEntity.class, setId );
 					sse.getStrings().add( null );

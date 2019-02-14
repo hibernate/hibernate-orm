@@ -92,7 +92,7 @@ public class BasicPartialNotAuditedEntity {
 
 	@Override
 	public String toString() {
-		return "UnversionedEntity{" +
+		return "BasicPartialNotAuditedEntity{" +
 				"id=" + id +
 				", data1='" + data1 + '\'' +
 				", data2='" + data2 + '\'' +

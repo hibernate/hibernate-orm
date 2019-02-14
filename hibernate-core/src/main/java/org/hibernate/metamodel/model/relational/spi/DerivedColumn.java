@@ -87,4 +87,8 @@ public class DerivedColumn implements Column {
 		return sqlExpressableType;
 	}
 
+	@Override
+	public Size getSize() {
+		throw new UnsupportedOperationException( );
+	}
 }

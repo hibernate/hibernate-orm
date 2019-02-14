@@ -6,8 +6,6 @@
  */
 package org.hibernate.envers.test.components.dynamic;
 
-import java.util.Arrays;
-
 import org.hibernate.envers.test.EnversSessionFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.support.domains.components.dynamic.DynamicMapComponentNotAuditedEntity;
 
@@ -15,6 +13,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit5.dynamictests.DynamicBeforeAll;
 import org.hibernate.testing.junit5.dynamictests.DynamicTest;
 
+import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -32,41 +31,49 @@ public class DynamicMapComponentNotAuditedTest extends EnversSessionFactoryBased
 
 	@DynamicBeforeAll
 	public void prepareAuditData() {
-		// Revision 1
-		inTransaction( session -> {
-			DynamicMapComponentNotAuditedEntity entity = new DynamicMapComponentNotAuditedEntity( 1L, "static field value" );
-			entity.getCustomFields().put( "prop1", 13 );
-			entity.getCustomFields().put( "prop2", 0.1f );
-			session.save( entity );
-			this.entityId = entity.getId();
-		} );
+		inTransactions(
+				// Revision 1
+				session -> {
+					DynamicMapComponentNotAuditedEntity entity = new DynamicMapComponentNotAuditedEntity(
+							1L,
+							"static field value"
+					);
+					entity.getCustomFields().put( "prop1", 13 );
+					entity.getCustomFields().put( "prop2", 0.1f );
+					session.save( entity );
+					this.entityId = entity.getId();
+				},
 
-		// No revision
-		inTransaction( session -> {
-			DynamicMapComponentNotAuditedEntity entity = session.get( DynamicMapComponentNotAuditedEntity.class, entityId );
-			entity.getCustomFields().put( "prop1", 0 );
-			session.update( entity );
-		} );
+				// No Revision
+				session -> {
+					DynamicMapComponentNotAuditedEntity entity = session.get(
+							DynamicMapComponentNotAuditedEntity.class,
+							entityId
+					);
+					entity.getCustomFields().put( "prop1", 0 );
+					session.update( entity );
+				},
 
-		// Revision 2
-		inTransaction( session -> {
-			DynamicMapComponentNotAuditedEntity entity = session.get( DynamicMapComponentNotAuditedEntity.class, entityId );
-			entity.setNote( "updated note" );
-			session.update( entity );
-		} );
+				// Revision 2
+				session -> {
+					DynamicMapComponentNotAuditedEntity entity = session.get(
+							DynamicMapComponentNotAuditedEntity.class,
+							entityId
+					);
+					entity.setNote( "updated note" );
+					session.update( entity );
+				},
 
-		// Revision 3
-		inTransaction( session -> {
-			session.delete( session.load( DynamicMapComponentNotAuditedEntity.class, entityId ) );
-		} );
+				// Revision 3
+				session -> {
+					session.delete( session.load( DynamicMapComponentNotAuditedEntity.class, entityId ) );
+				}
+		);
 	}
 
 	@DynamicTest
 	public void testRevisionCounts() {
-		assertThat(
-				getAuditReader().getRevisions( DynamicMapComponentNotAuditedEntity.class, 1L ),
-				is( Arrays.asList( 1, 2, 3 ) )
-		);
+		assertThat( getAuditReader().getRevisions( DynamicMapComponentNotAuditedEntity.class, 1L ), hasItems( 1, 2, 3 ) );
 	}
 
 	@DynamicTest

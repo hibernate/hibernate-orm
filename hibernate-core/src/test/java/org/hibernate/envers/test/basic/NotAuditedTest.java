@@ -14,9 +14,8 @@ import org.hibernate.envers.test.support.domains.basic.BasicNonAuditedEntity;
 import org.hibernate.testing.junit5.dynamictests.DynamicBeforeAll;
 import org.hibernate.testing.junit5.dynamictests.DynamicTest;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-
 /**
+ * @author Adam Warski (adam at warski dot org)
  * @author Chris Cranford
  */
 public class NotAuditedTest extends EnversSessionFactoryBasedFunctionalTest {
@@ -29,17 +28,21 @@ public class NotAuditedTest extends EnversSessionFactoryBasedFunctionalTest {
 
 	@DynamicBeforeAll
 	public void prepareAuditData() {
-		this.id = doInHibernate( this::sessionFactory, session -> {
-			BasicNonAuditedEntity entity = new BasicNonAuditedEntity( "x", "y" );
-			session.persist( entity );
-			return entity.getId();
-		} );
+		this.id = inTransaction(
+				session -> {
+					BasicNonAuditedEntity entity = new BasicNonAuditedEntity( "x", "y" );
+					session.persist( entity );
+					return entity.getId();
+				}
+		);
 
-		doInHibernate( this::sessionFactory, session -> {
-			final BasicNonAuditedEntity entity = session.find( BasicNonAuditedEntity.class, id );
-			entity.setStr1( "a" );
-			entity.setStr2( "b" );
-		} );
+		inTransaction(
+				session -> {
+					final BasicNonAuditedEntity entity = session.find( BasicNonAuditedEntity.class, id );
+					entity.setStr1( "a" );
+					entity.setStr2( "b" );
+				}
+		);
 	}
 
 	@DynamicTest(expected = NotAuditedException.class)

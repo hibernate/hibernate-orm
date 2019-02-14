@@ -6,6 +6,7 @@
  */
 package org.hibernate.envers.test.access;
 
+import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.EnversSessionFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.support.domains.access.AttributeAccessorEntity;
 import org.hibernate.envers.test.support.domains.access.SimpleAttributeAccessorImpl;
@@ -17,13 +18,12 @@ import org.hibernate.testing.junit5.dynamictests.DynamicTest;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 /**
  * @author Chris Cranford
  */
 @TestForIssue(jiraKey = "HHH-12063")
-public class AttributeAccessorTest extends EnversSessionFactoryBasedFunctionalTest {
+public class AttributeAccessorTest extends EnversEntityManagerFactoryBasedFunctionalTest {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] { AttributeAccessorEntity.class };
@@ -38,10 +38,12 @@ public class AttributeAccessorTest extends EnversSessionFactoryBasedFunctionalTe
 
 	@DynamicTest
 	public void testCreateAndQueryAuditEntityWithAttributeAccessor() {
-		doInHibernate( this::sessionFactory, session -> {
-			final AttributeAccessorEntity entity = new AttributeAccessorEntity( 1, "ABC" );
-			session.save( entity );
-		} );
+		inTransaction(
+				entityManager -> {
+					final AttributeAccessorEntity entity = new AttributeAccessorEntity( 1, "ABC" );
+					entityManager.persist( entity );
+				}
+		);
 
 		final AttributeAccessorEntity ver1 = getAuditReader().find( AttributeAccessorEntity.class, 1, 1 );
 		assertThat( ver1.getName(), is( "ABC" ) );

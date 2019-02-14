@@ -6,22 +6,20 @@
  */
 package org.hibernate.envers.test.access;
 
-import java.util.Collections;
-
-import org.hibernate.envers.test.EnversSessionFactoryBasedFunctionalTest;
+import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.support.domains.access.ClassAccessNoSettersEntity;
 
 import org.hibernate.testing.junit5.dynamictests.DynamicBeforeAll;
 import org.hibernate.testing.junit5.dynamictests.DynamicTest;
 
+import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 /**
  * @author Chris Cranford
  */
-public class ImmutableClassAccessTypeTest extends EnversSessionFactoryBasedFunctionalTest {
+public class ImmutableClassAccessTypeTest extends EnversEntityManagerFactoryBasedFunctionalTest {
 	private ClassAccessNoSettersEntity entity = ClassAccessNoSettersEntity.of( 123, "Germany" );
 
 	@Override
@@ -31,25 +29,29 @@ public class ImmutableClassAccessTypeTest extends EnversSessionFactoryBasedFunct
 
 	@DynamicBeforeAll
 	public void prepareAuditData() {
-		doInHibernate( this::sessionFactory, session -> {
-			session.save( entity );
-		} );
+		inTransaction( entityManager -> { entityManager.persist( entity ); } );
 	}
 
 	@DynamicTest
 	public void testRevisionCounts() {
 		assertThat(
 				getAuditReader().getRevisions( ClassAccessNoSettersEntity.class, entity.getCode() ),
-				is( Collections.singletonList( 1 ) )
+				hasItems( 1 )
 		);
 	}
 
 	@DynamicTest
 	public void testFindBySession() {
-		doInHibernate( this::sessionFactory, session -> {
-			ClassAccessNoSettersEntity loaded = session.find( ClassAccessNoSettersEntity.class, entity.getCode() );
-			assertThat( loaded, is( entity ) );
-		} );
+		inTransaction(
+				session -> {
+					final ClassAccessNoSettersEntity loaded = session.find(
+							ClassAccessNoSettersEntity.class,
+							entity.getCode()
+					);
+
+					assertThat( loaded, is( entity ) );
+				}
+		);
 	}
 
 	@DynamicTest

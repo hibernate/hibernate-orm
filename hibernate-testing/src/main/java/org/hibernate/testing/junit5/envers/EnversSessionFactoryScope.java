@@ -185,7 +185,8 @@ public class EnversSessionFactoryScope implements SessionFactoryAccess {
 	 *
 	 * @param actions The lambda actions to invoke.
 	 */
-	public void inTransactions(Consumer<SessionImplementor>... actions) {
+	@SafeVarargs
+	public final void inTransactions(Consumer<SessionImplementor>... actions) {
 		try( SessionImplementor session = (SessionImplementor) getSessionFactory().openSession() ) {
 			for ( Consumer<SessionImplementor> action : actions ) {
 				inTransaction( session, action );

@@ -17,13 +17,13 @@ import org.hibernate.envers.test.EnversSessionFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.support.domains.basic.Name;
 import org.hibernate.envers.test.support.domains.basic.Person;
 import org.hibernate.envers.test.support.domains.basic.StrTestEntity;
-import org.junit.jupiter.api.Disabled;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.junit5.dynamictests.DynamicTest;
 
 /**
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  * @author Chris Cranford
  */
 @TestForIssue(jiraKey = "HHH-5565")
@@ -95,7 +95,6 @@ public class OutsideTransactionTest extends EnversSessionFactoryBasedFunctionalT
 	}
 	
 	@DynamicTest(expected = TransactionRequiredException.class)
-	@Disabled("NYI")
 	public void testCollectionUpdateOutsideActiveTransaction() {
 		Session session = openSession();
 		try {
@@ -119,7 +118,6 @@ public class OutsideTransactionTest extends EnversSessionFactoryBasedFunctionalT
 	}
 
 	@DynamicTest(expected = TransactionRequiredException.class)
-	@Disabled("NYI")
 	public void testCollectionRemovalOutsideActiveTransaction() {
 		Session session = openSession();
 		try {

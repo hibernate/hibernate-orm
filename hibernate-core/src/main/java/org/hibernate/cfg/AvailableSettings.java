@@ -508,7 +508,12 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * is set to `true`.
 	 */
 	@Deprecated
-	String JDBC_TYLE_PARAMS_ZERO_BASE = "hibernate.query.sql.jdbc_style_params_base";
+	String JDBC_STYLE_PARAMS_ZERO_BASE = "hibernate.query.sql.jdbc_style_params_base";
+	/**
+	 * Misspelling of {@link #JDBC_STYLE_PARAMS_ZERO_BASE}
+	 */
+	@Deprecated
+	String JDBC_TYLE_PARAMS_ZERO_BASE = JDBC_STYLE_PARAMS_ZERO_BASE;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

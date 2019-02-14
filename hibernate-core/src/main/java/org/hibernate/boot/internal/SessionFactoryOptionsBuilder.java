@@ -63,8 +63,6 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
-import org.jboss.logging.Logger;
-
 import static org.hibernate.cfg.AvailableSettings.ACQUIRE_CONNECTIONS;
 import static org.hibernate.cfg.AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS;
 import static org.hibernate.cfg.AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY;
@@ -92,8 +90,8 @@ import static org.hibernate.cfg.AvailableSettings.HQL_BULK_ID_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE;
 import static org.hibernate.cfg.AvailableSettings.INTERCEPTOR;
 import static org.hibernate.cfg.AvailableSettings.IN_CLAUSE_PARAMETER_PADDING;
+import static org.hibernate.cfg.AvailableSettings.JDBC_STYLE_PARAMS_ZERO_BASE;
 import static org.hibernate.cfg.AvailableSettings.JDBC_TIME_ZONE;
-import static org.hibernate.cfg.AvailableSettings.JDBC_TYLE_PARAMS_ZERO_BASE;
 import static org.hibernate.cfg.AvailableSettings.JTA_TRACK_BY_THREAD;
 import static org.hibernate.cfg.AvailableSettings.LOG_SESSION_METRICS;
 import static org.hibernate.cfg.AvailableSettings.MAX_FETCH_DEPTH;
@@ -480,7 +478,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		);
 
 		this.jdbcStyleParamsZeroBased = ConfigurationHelper.getBoolean(
-				JDBC_TYLE_PARAMS_ZERO_BASE,
+				JDBC_STYLE_PARAMS_ZERO_BASE,
 				configurationSettings,
 				false
 		);

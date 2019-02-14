@@ -8,13 +8,20 @@ package org.hibernate.engine.query.spi;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
+import org.hibernate.QueryException;
 import org.hibernate.engine.query.ParameterRecognitionException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+
+import static org.hibernate.query.internal.ParameterMetadataImpl.MIXED_POSITIONAL_PARAM_STYLE_ERROR_MSG;
 
 /**
  * Implements a parameter parser recognizer specifically for the purpose
@@ -31,10 +38,16 @@ public class ParamLocationRecognizer implements ParameterParser.Recognizer {
 	private Map<Integer, InFlightOrdinalParameterState> inFlightOrdinalStateMap;
 	private Map<Integer, InFlightJpaOrdinalParameterState> inFlightJpaOrdinalStateMap;
 
+	private final String query;
 	private final int jdbcStyleOrdinalCountBase;
 	private int jdbcStyleOrdinalCount;
 
 	public ParamLocationRecognizer(int jdbcStyleOrdinalCountBase) {
+		this( null, jdbcStyleOrdinalCountBase );
+	}
+
+	public ParamLocationRecognizer(String query, int jdbcStyleOrdinalCountBase) {
+		this.query = query;
 		this.jdbcStyleOrdinalCountBase = jdbcStyleOrdinalCountBase;
 		this.jdbcStyleOrdinalCount = jdbcStyleOrdinalCountBase;
 	}
@@ -51,6 +64,7 @@ public class ParamLocationRecognizer implements ParameterParser.Recognizer {
 			String query,
 			SessionFactoryImplementor sessionFactory) {
 		final ParamLocationRecognizer recognizer = new ParamLocationRecognizer(
+				query,
 				sessionFactory.getSessionFactoryOptions().jdbcStyleParamsZeroBased() ? 0 : 1
 		);
 		ParameterParser.parse( query, recognizer );
@@ -67,6 +81,10 @@ public class ParamLocationRecognizer implements ParameterParser.Recognizer {
 
 		if ( inFlightOrdinalStateMap != null && inFlightJpaOrdinalStateMap != null ) {
 			throw mixedParamStrategy();
+		}
+
+		if ( inFlightJpaOrdinalStateMap != null ) {
+			verifyJpaPositionalParameterSequence( inFlightJpaOrdinalStateMap.keySet() );
 		}
 
 		if ( inFlightNamedStateMap != null ) {
@@ -99,6 +117,47 @@ public class ParamLocationRecognizer implements ParameterParser.Recognizer {
 		}
 	}
 
+	private void verifyJpaPositionalParameterSequence(Set<Integer> jpaPositionalParamLabels) {
+		if ( jpaPositionalParamLabels == null || jpaPositionalParamLabels.isEmpty() ) {
+			return;
+		}
+
+		final List<Integer> sortedPositions = new ArrayList<>( jpaPositionalParamLabels );
+		sortedPositions.sort( Comparator.naturalOrder() );
+
+		int lastPosition = -1;
+		for ( Integer sortedPosition : sortedPositions ) {
+			if ( lastPosition == -1 ) {
+				// first in the sequence, validate that it is `1` per JPA
+				if ( sortedPosition != 1 ) {
+					throw new QueryException(
+							String.format(
+									Locale.ROOT,
+									"Unexpected ordinal parameter label base [%s]; expecting 1",
+									sortedPosition
+							)
+					);
+				}
+			}
+			else {
+				if ( sortedPosition != lastPosition + 1 ) {
+					throw new QueryException(
+							String.format(
+									Locale.ROOT,
+									"Unexpected gap in ordinal parameter labels [%s -> %s] : [%s]",
+									lastPosition,
+									sortedPosition,
+									StringHelper.join( ",", sortedPositions )
+							)
+					);
+				}
+			}
+
+			lastPosition = sortedPosition;
+		}
+	}
+
+
 	private ParameterRecognitionException mixedParamStrategy() {
 		throw new ParameterRecognitionException( "Mixed parameter strategies - use just one of named, positional or JPA-ordinal strategy" );
 	}
@@ -121,6 +180,13 @@ public class ParamLocationRecognizer implements ParameterParser.Recognizer {
 
 	@Override
 	public void ordinalParameter(int position) {
+		if ( inFlightJpaOrdinalStateMap != null ) {
+			throw new QueryException(
+					MIXED_POSITIONAL_PARAM_STYLE_ERROR_MSG,
+					query
+			);
+		}
+
 		if ( inFlightOrdinalStateMap == null ) {
 			inFlightOrdinalStateMap = new HashMap<>();
 		}
@@ -151,8 +217,8 @@ public class ParamLocationRecognizer implements ParameterParser.Recognizer {
 	}
 
 	@Override
-	public void jpaPositionalParameter(int name, int position) {
-		getOrBuildJpaOrdinalParameterDescription( name ).add( position );
+	public void jpaPositionalParameter(int label, int position) {
+		getOrBuildJpaOrdinalParameterDescription( label ).add( position );
 	}
 
 	private InFlightJpaOrdinalParameterState getOrBuildJpaOrdinalParameterDescription(int name) {

@@ -36,7 +36,7 @@ public interface SessionFactoryBuilderImplementor extends SessionFactoryBuilder 
 	}
 
 	/**
-	 * @see org.hibernate.cfg.AvailableSettings#JDBC_TYLE_PARAMS_ZERO_BASE
+	 * @see org.hibernate.cfg.AvailableSettings#JDBC_STYLE_PARAMS_ZERO_BASE
 	 */
 	void enableJdbcStyleParamsZeroBased();
 

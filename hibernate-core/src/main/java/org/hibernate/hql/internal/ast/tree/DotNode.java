@@ -6,11 +6,6 @@
  */
 package org.hibernate.hql.internal.ast.tree;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-
 import org.hibernate.QueryException;
 import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.hql.internal.CollectionProperties;
@@ -21,7 +16,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.loader.plan.spi.EntityQuerySpace;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -504,7 +499,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 
 			JoinSequence joinSequence;
 
-			if ( joinColumns.length == 0 ) {
+			if ( joinColumns.length == 0 && lhsFromElement instanceof EntityQuerySpace ) {
 				// When no columns are available, this is a special join that involves multiple subtypes
 				String lhsTableAlias = getLhs().getFromElement().getTableAlias();
 

@@ -111,4 +111,8 @@ public class DependantValue extends SimpleValue {
 	public ForeignKey createForeignKey() throws MappingException {
 		return wrappedValue.createForeignKey();
 	}
+
+	public KeyValue getWrappedValue() {
+		return wrappedValue;
+	}
 }

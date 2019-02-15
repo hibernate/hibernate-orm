@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cache.CacheException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -126,5 +127,17 @@ public class PersistentMapDescriptorImpl<O,K,E>
 	@Override
 	public Iterator getElementsIterator(Object collection, SharedSessionContractImplementor session) {
 		return ( (java.util.Map) collection ).values().iterator();
+	}
+
+	@Override
+	public Object indexOf(Object collection, Object element) {
+		for ( Object o : ( (Map) collection ).entrySet() ) {
+			Map.Entry me = (Map.Entry) o;
+			//TODO: proxies!
+			if ( me.getValue() == element ) {
+				return me.getKey();
+			}
+		}
+		return null;
 	}
 }

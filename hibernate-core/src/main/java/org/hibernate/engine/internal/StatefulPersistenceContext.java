@@ -1280,7 +1280,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			PersistentCollectionDescriptor collectionDescriptor,
 			Object potentialParent) {
 		final NonIdPersistentAttribute attribute = entityDescriptor.findPersistentAttribute( property );
-		assert attribute instanceof BagPersistentAttribute;
+//		assert attribute instanceof BagPersistentAttribute;
 
 		final Object collection = attribute.getPropertyAccess().getGetter().get( potentialParent );
 		return collection != null

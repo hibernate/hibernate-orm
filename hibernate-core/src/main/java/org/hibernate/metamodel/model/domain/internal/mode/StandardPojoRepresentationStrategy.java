@@ -20,6 +20,8 @@ import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.Backref;
+import org.hibernate.mapping.IndexBackref;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
@@ -28,6 +30,8 @@ import org.hibernate.metamodel.model.domain.spi.Instantiator;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeRepresentationStrategy;
 import org.hibernate.metamodel.model.domain.spi.NonIdPersistentAttribute;
+import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
+import org.hibernate.property.access.internal.PropertyAccessStrategyIndexBackRefImpl;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
@@ -155,23 +159,39 @@ public class StandardPojoRepresentationStrategy implements ManagedTypeRepresenta
 			ManagedTypeDescriptor runtimeDescriptor,
 			BytecodeProvider bytecodeProvider) {
 		PropertyAccessStrategy strategy = null;
-
-		final BuiltInPropertyAccessStrategies namedStrategy = BuiltInPropertyAccessStrategies.interpret( bootAttribute.getPropertyAccessorName() );
+		final String propertyAccessorName = bootAttribute.getPropertyAccessorName();
+		final BuiltInPropertyAccessStrategies namedStrategy = BuiltInPropertyAccessStrategies.interpret(
+				propertyAccessorName );
 		if ( namedStrategy != null ) {
 			strategy = namedStrategy.getStrategy();
 		}
 
 		if ( strategy == null ) {
-			if ( StringHelper.isNotEmpty( bootAttribute.getPropertyAccessorName() ) ) {
-				// handle explicitly specified attribute accessor
-				strategy = strategySelector.resolveStrategy(
-						PropertyAccessStrategy.class,
-						bootAttribute.getPropertyAccessorName()
-				);
+
+			if ( StringHelper.isNotEmpty( propertyAccessorName ) ) {
+
+					// handle explicitly specified attribute accessor
+					strategy = strategySelector.resolveStrategy(
+							PropertyAccessStrategy.class,
+							propertyAccessorName
+					);
 			}
 			else {
-				// for now...
-				strategy = BuiltInPropertyAccessStrategies.MIXED.getStrategy();
+				if ( bootAttribute instanceof Backref ) {
+					final Backref backref = (Backref) bootAttribute;
+					strategy = new PropertyAccessStrategyBackRefImpl( backref.getCollectionRole(), backref
+							.getEntityName() );
+				}
+				else if ( bootAttribute instanceof IndexBackref ) {
+					final IndexBackref indexBackref = (IndexBackref) bootAttribute;
+					strategy = new PropertyAccessStrategyIndexBackRefImpl(
+							indexBackref.getCollectionRole(),
+							indexBackref.getEntityName()
+					);
+				}else {
+					// for now...
+					strategy = BuiltInPropertyAccessStrategies.MIXED.getStrategy();
+				}
 			}
 		}
 

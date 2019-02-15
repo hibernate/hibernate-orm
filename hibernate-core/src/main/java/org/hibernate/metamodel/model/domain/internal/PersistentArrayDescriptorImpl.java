@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 import org.hibernate.LockMode;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedCollection;
@@ -120,7 +121,7 @@ public class PersistentArrayDescriptorImpl<O,E> extends AbstractPersistentCollec
 	@Override
 	protected void doProcessQueuedOps(
 			PersistentCollection collection, Object id, SharedSessionContractImplementor session) {
-		//throw new NotYetImplementedFor6Exception( getClass() );
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
@@ -137,4 +138,8 @@ public class PersistentArrayDescriptorImpl<O,E> extends AbstractPersistentCollec
 		return Arrays.asList( (Object[]) collection ).iterator();
 	}
 
+	@Override
+	public Object indexOf(Object collection, Object element) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
 }

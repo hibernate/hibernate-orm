@@ -58,7 +58,7 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 	private List<StateArrayContributor<?>> stateArrayContributors;
 
 	// a cache to more easily find the PersistentAttribute by name
-	private Map<String,NonIdPersistentAttribute> declaredAttributesByName;
+	private Map<String, NonIdPersistentAttribute> declaredAttributesByName;
 
 	private transient InFlightAccess<J> inFlightAccess;
 
@@ -92,7 +92,7 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 	public boolean finishInitialization(
 			ManagedTypeMappingImplementor bootDescriptor,
 			RuntimeModelCreationContext creationContext) {
-		if ( ! fullyInitialized ) {
+		if ( !fullyInitialized ) {
 			tryFinishInitialization( bootDescriptor, creationContext );
 			fullyInitialized = true;
 		}
@@ -153,7 +153,7 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 			return true;
 		}
 
-		if ( ! getSubclassTypes().isEmpty() ) {
+		if ( !getSubclassTypes().isEmpty() ) {
 			for ( InheritanceCapable subclassType : getSubclassTypes() ) {
 				if ( subclassType.isSubclassTypeName( name ) ) {
 					return true;
@@ -206,7 +206,8 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 		}
 
 		if ( getSuperclassType() != null ) {
-			final NonIdPersistentAttribute<? super J, ?> superPersistentAttribute = getSuperclassType().findPersistentAttribute( name );
+			final NonIdPersistentAttribute<? super J, ?> superPersistentAttribute = getSuperclassType().findPersistentAttribute(
+					name );
 			if ( superPersistentAttribute != null ) {
 				return superPersistentAttribute;
 			}
@@ -254,7 +255,6 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 	}
 
 
-
 	// todo (6.0) : make sure we are only iterating the attributes once to do all of these kinds of initialization
 
 	private Boolean hasMutableProperties;
@@ -287,8 +287,10 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 
 	}
 
-	@SuppressWarnings({"unchecked", "WeakerAccess"})
-	protected <R extends PersistentAttributeDescriptor> void collectDeclaredAttributes(Collection<R> collection, Class<R> restrictionType) {
+	@SuppressWarnings({ "unchecked", "WeakerAccess" })
+	protected <R extends PersistentAttributeDescriptor> void collectDeclaredAttributes(
+			Collection<R> collection,
+			Class<R> restrictionType) {
 		for ( PersistentAttributeDescriptor<J, ?> declaredAttribute : declaredAttributes ) {
 			if ( restrictionType.isInstance( declaredAttribute ) ) {
 				collection.add( (R) declaredAttribute );
@@ -296,8 +298,10 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 		}
 	}
 
-	@SuppressWarnings({"unchecked", "WeakerAccess"})
-	protected <R extends PersistentAttributeDescriptor> void collectAttributes(Collection<R> collection, Class<R> restrictionType) {
+	@SuppressWarnings({ "unchecked", "WeakerAccess" })
+	protected <R extends PersistentAttributeDescriptor> void collectAttributes(
+			Collection<R> collection,
+			Class<R> restrictionType) {
 		for ( PersistentAttributeDescriptor<J, ?> attribute : attributes ) {
 			if ( restrictionType == null || restrictionType.isInstance( attribute ) ) {
 				collection.add( (R) attribute );
@@ -313,13 +317,13 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Set<javax.persistence.metamodel.Attribute<J,?>> getDeclaredAttributes() {
+	public Set<javax.persistence.metamodel.Attribute<J, ?>> getDeclaredAttributes() {
 		return new HashSet( this.declaredAttributes );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Set<javax.persistence.metamodel.SingularAttribute<? super J,?>> getSingularAttributes() {
+	public Set<javax.persistence.metamodel.SingularAttribute<? super J, ?>> getSingularAttributes() {
 		final HashSet jpaAttributes = new HashSet();
 		collectAttributes( jpaAttributes, SingularPersistentAttribute.class );
 		return jpaAttributes;
@@ -327,7 +331,7 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Set<javax.persistence.metamodel.SingularAttribute<J,?>> getDeclaredSingularAttributes() {
+	public Set<javax.persistence.metamodel.SingularAttribute<J, ?>> getDeclaredSingularAttributes() {
 		final HashSet jpaAttributes = new HashSet();
 		collectDeclaredAttributes( jpaAttributes, SingularPersistentAttribute.class );
 		return jpaAttributes;
@@ -390,7 +394,10 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 	}
 
 	protected PersistentAttributeDescriptor<? super J, ?> getAttribute(String name, Class resultType) {
-		PersistentAttributeDescriptor<? super J, ?> persistentAttribute = findDeclaredPersistentAttribute( name, resultType );
+		PersistentAttributeDescriptor<? super J, ?> persistentAttribute = findDeclaredPersistentAttribute(
+				name,
+				resultType
+		);
 		if ( persistentAttribute == null && getSuperclassType() != null ) {
 			persistentAttribute = getSuperclassType().findDeclaredPersistentAttribute( name, resultType );
 		}
@@ -422,15 +429,15 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 
 	@SuppressWarnings("WeakerAccess")
 	protected void checkAttributeType(SingularPersistentAttribute ormAttribute, Class resultType) {
-		checkType(  ormAttribute.getName(), ormAttribute.getJavaType(), resultType );
+		checkType( ormAttribute.getName(), ormAttribute.getJavaType(), resultType );
 	}
 
 	@SuppressWarnings("WeakerAccess")
 	protected void checkAttributeType(PluralPersistentAttribute ormAttribute, Class resultType) {
-		checkType(  ormAttribute.getName(), ormAttribute.getElementType().getJavaType(), resultType );
+		checkType( ormAttribute.getName(), ormAttribute.getElementType().getJavaType(), resultType );
 	}
 
-	@SuppressWarnings({"unchecked", "WeakerAccess"})
+	@SuppressWarnings({ "unchecked", "WeakerAccess" })
 	protected void checkType(String name, Class attributeType, Class resultType) {
 		if ( resultType != null && attributeType != null ) {
 			if ( !resultType.isAssignableFrom( attributeType ) ) {
@@ -544,7 +551,7 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 			return null;
 		}
 
-		checkMapKeyType( name, mapAttribute.getKeyJavaType(), keyType  );
+		checkMapKeyType( name, mapAttribute.getKeyJavaType(), keyType );
 
 		return mapAttribute;
 	}
@@ -620,14 +627,11 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 			List<PersistentAttributeMapping> attributes) {
 		attributes.forEach(
 				attributeMapping -> {
-					if ( !Backref.class.isInstance( attributeMapping ) &&
-							!IndexBackref.class.isInstance( attributeMapping ) ) {
-						createAttribute(
-								attributeMapping,
-								bootContainer,
-								creationContext
-						);
-					}
+					createAttribute(
+							attributeMapping,
+							bootContainer,
+							creationContext
+					);
 				}
 		);
 	}

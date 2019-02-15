@@ -14,10 +14,14 @@ import java.util.function.Consumer;
 import org.hibernate.LockMode;
 import org.hibernate.boot.model.domain.BasicValueMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.boot.model.domain.ValueMapping;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.mapping.Backref;
+import org.hibernate.mapping.DependantValue;
+import org.hibernate.mapping.IndexBackref;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractNonIdSingularPersistentAttribute;
@@ -83,9 +87,21 @@ public class SingularPersistentAttributeBasic<O, J>
 				disposition
 		);
 
-		final BasicValueMapping bootMapping = (BasicValueMapping) bootAttribute.getValueMapping();
+		BasicValueMapping bootMapping;
 
-		this.boundColumn = context.getDatabaseObjectResolver().resolveColumn( bootMapping.getMappedColumn() );
+		final ValueMapping valueMapping = bootAttribute.getValueMapping();
+		// todo (6.0): is there a batter way to manage DependantValue?
+		if ( valueMapping instanceof DependantValue ) {
+			DependantValue dependantValue = (DependantValue) valueMapping;
+			bootMapping = (BasicValueMapping) dependantValue.getWrappedValue();
+			this.boundColumn = context.getDatabaseObjectResolver()
+					.resolveColumn( dependantValue.getMappedColumns().get( 0 ) );
+		}
+		else {
+			bootMapping = (BasicValueMapping) valueMapping;
+			this.boundColumn = context.getDatabaseObjectResolver().resolveColumn( bootMapping.getMappedColumn() );
+		}
+
 		this.valueMapper = bootMapping.getResolution().getValueMapper();
 
 		if ( valueMapper.getValueConverter() != null ) {

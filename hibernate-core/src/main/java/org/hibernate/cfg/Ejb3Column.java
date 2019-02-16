@@ -245,7 +245,9 @@ public class Ejb3Column {
 					redefineColumnName( columnName, propertyName, applyNamingStrategy ),
 					unique
 			);
-			;
+
+			this.mappingColumn.setInsertable( isInsertable() );
+			this.mappingColumn.setUpdatable( isUpdatable() );
 			this.mappingColumn.setLength( length );
 			if ( precision != null && precision > 0 ) {  //revelent precision
 				this.mappingColumn.setPrecision( precision );

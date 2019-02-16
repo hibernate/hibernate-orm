@@ -452,14 +452,19 @@ public abstract class SimpleValue implements KeyValue {
 	public boolean[] getColumnInsertability() {
 		final boolean[] columnInsertability = new boolean[ getColumnSpan() ];
 		int i = 0;
-		for(MappedColumn column : columns){
-			columnInsertability[i++] = !column.isFormula();
+		for ( MappedColumn column : columns ) {
+			columnInsertability[i++] = column.isInsertable();
 		}
 		return columnInsertability;
 	}
 
 	public boolean[] getColumnUpdateability() {
-		return getColumnInsertability();
+		final boolean[] columnInsertability = new boolean[getColumnSpan()];
+		int i = 0;
+		for ( MappedColumn column : columns ) {
+			columnInsertability[i++] = column.isUpdatable();
+		}
+		return columnInsertability;
 	}
 
 	public interface TypeDescriptorResolver {

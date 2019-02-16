@@ -98,6 +98,16 @@ public class Formula implements Selectable, Serializable {
 	}
 
 	@Override
+	public boolean isInsertable() {
+		return false;
+	}
+
+	@Override
+	public boolean isUpdatable() {
+		return false;
+	}
+
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;

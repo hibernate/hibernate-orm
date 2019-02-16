@@ -59,6 +59,9 @@ public class Column implements Selectable, Serializable, Cloneable {
 	private String customWrite;
 	private String customRead;
 
+	private boolean isInsertable = true;
+	private boolean isUpdatable = true;
+
 	public Column(Identifier tableName, String columnName, boolean isUnique) {
 		this( Identifier.toIdentifier( columnName ), isUnique );
 		this.tableName = tableName;
@@ -72,6 +75,24 @@ public class Column implements Selectable, Serializable, Cloneable {
 	public Column(Identifier columnName, boolean isUnique) {
 		setName( columnName );
 		setUnique( isUnique );
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return isInsertable;
+	}
+
+	public void setInsertable(boolean insertable) {
+		this.isInsertable = insertable;
+	}
+
+	@Override
+	public boolean isUpdatable() {
+		return isUpdatable;
+	}
+
+	public void setUpdatable(boolean updatable) {
+		this.isUpdatable = updatable;
 	}
 
 	public Identifier getName() {

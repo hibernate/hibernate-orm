@@ -48,4 +48,8 @@ public interface MappedColumn {
 	boolean isFormula();
 
 	String getTemplate(Dialect dialect, SqmFunctionRegistry functionRegistry);
+
+	boolean isInsertable();
+
+	boolean isUpdatable();
 }

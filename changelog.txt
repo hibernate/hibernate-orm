@@ -1865,7 +1865,7 @@ https://hibernate.atlassian.net/projects/HHH/versions/22050
     * [HHH-10223] - Element 'query-param' in *.hbm.xml files causes ClassCastException
     * [HHH-10252] - Cascade delete does not work for instrumented/enhanced entities
     * [HHH-10286] - SessionFactoryImpl doesn't cache and reuse existing collection cache region access strategies
-    * [HHH-10298] - Add new configuration type hibernate.hbm2dll.extra_physical_table_types
+    * [HHH-10298] - Add new configuration type hibernate.hbm2ddl.extra_physical_table_types
     * [HHH-10331] - HSQLDialect returns supportsTupleDistinctCounts false which seems wrong
     * [HHH-10343] - Precision and scale are reversed when using decimal as element in map
     * [HHH-10344] - Bring transaction invalidation interceptor into Infinispan 2LC

@@ -71,20 +71,22 @@ public class JoinTableCreationExecutor extends AbstractCreationExecutor {
 		//noinspection RedundantCast
 		navigable.visitColumns(
 				(BiConsumer<SqlExpressableType, Column>) (sqlExpressableType, column) -> {
-					insertStatement.addTargetColumnReference(
-							insertStatement.getTargetTable().resolveColumnReference( column )
-					);
+					if ( column.isInsertable() ) {
+						insertStatement.addTargetColumnReference(
+								insertStatement.getTargetTable().resolveColumnReference( column )
+						);
 
-					final PositionalParameter parameter = new PositionalParameter(
-							parameterCount.getAndIncrement(),
-							column.getExpressableType(),
-							Clause.INSERT,
-							sessionFactory.getTypeConfiguration()
-					);
+						final PositionalParameter parameter = new PositionalParameter(
+								parameterCount.getAndIncrement(),
+								column.getExpressableType(),
+								Clause.INSERT,
+								sessionFactory.getTypeConfiguration()
+						);
 
-					insertStatement.addValue( parameter );
+						insertStatement.addValue( parameter );
 
-					columnConsumer.accept( column, parameter );
+						columnConsumer.accept( column, parameter );
+					}
 				},
 				Clause.INSERT,
 				sessionFactory.getTypeConfiguration()

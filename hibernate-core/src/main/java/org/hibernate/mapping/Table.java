@@ -756,7 +756,12 @@ public class Table implements MappedTable<Column>, Serializable {
 			runtimeTable = new DerivedTable( getUid(), getSubselect(), isAbstract() );
 		}
 		else {
-			runtimeTable = createRuntimePhysicalTable( namingStrategy, jdbcEnvironment, identifierGeneratorFactory, typeConfiguration );
+			runtimeTable = createRuntimePhysicalTable(
+					namingStrategy,
+					jdbcEnvironment,
+					identifierGeneratorFactory,
+					typeConfiguration
+			);
 		}
 
 		addColumnsToInflightTable( runtimeTable, namingStrategy, jdbcEnvironment, callback, typeConfiguration );
@@ -795,6 +800,7 @@ public class Table implements MappedTable<Column>, Serializable {
 			}
 			callback.primaryKeyBuilt( primaryKey, runtimeTable.getPrimaryKey() );
 		}
+
 		getUniqueKeys().forEach( bootUk -> {
 			final org.hibernate.metamodel.model.relational.spi.UniqueKey runtimeUk = runtimeTable.createUniqueKey(
 					bootUk.getName() );

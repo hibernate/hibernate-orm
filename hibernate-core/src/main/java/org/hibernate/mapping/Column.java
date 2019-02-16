@@ -311,7 +311,9 @@ public class Column implements Selectable, Serializable, Cloneable {
 				isNullable(),
 				isUnique(),
 				getComment(),
-				typeConfiguration
+				typeConfiguration,
+				isInsertable,
+				isUpdatable
 		);
 		column.setSize(	size );
 		column.setCheckConstraint( getCheckConstraint() );

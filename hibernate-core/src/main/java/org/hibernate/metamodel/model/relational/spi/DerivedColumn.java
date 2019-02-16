@@ -25,15 +25,22 @@ public class DerivedColumn implements Column {
 
 	private SqlExpressableType sqlExpressableType;
 
+	private boolean isInsertable;
+	private boolean isUpdatable;
+
 	public DerivedColumn(
 			Table table,
 			String expression,
 			SqlTypeDescriptor sqlTypeDescriptor,
-			TypeConfiguration typeConfiguration) {
+			TypeConfiguration typeConfiguration,
+			boolean insertable,
+			boolean updatable) {
 		this.table = table;
 		this.expression = expression;
 		this.sqlTypeDescriptor = sqlTypeDescriptor;
 		this.typeConfiguration = typeConfiguration;
+		this.isInsertable = insertable;
+		this.isUpdatable = updatable;
 	}
 
 	public String getExpression() {
@@ -90,5 +97,37 @@ public class DerivedColumn implements Column {
 	@Override
 	public Size getSize() {
 		throw new UnsupportedOperationException( );
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return isInsertable;
+	}
+
+	@Override
+	public boolean isUpdatable() {
+		return isUpdatable;
+	}
+
+	@Override
+	public void setInsertable(boolean isInsertable) {
+		this.isInsertable = isInsertable;
+	}
+
+	@Override
+	public void setUpdatable(boolean isUpdatable) {
+		this.isUpdatable = isUpdatable;
+	}
+
+	@Override
+	public Column clone() {
+		return new DerivedColumn(
+				this.table,
+				this.expression,
+				this.sqlTypeDescriptor,
+				this.typeConfiguration,
+				this.isInsertable,
+				this.isUpdatable
+		);
 	}
 }

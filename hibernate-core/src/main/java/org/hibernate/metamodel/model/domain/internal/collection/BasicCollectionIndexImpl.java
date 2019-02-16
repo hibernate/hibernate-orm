@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.boot.model.domain.BasicValueMapping;
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
@@ -60,7 +61,20 @@ public class BasicCollectionIndexImpl<J>
 		super( descriptor, bootCollectionMapping );
 
 		final BasicValueMapping valueMapping = (BasicValueMapping) bootCollectionMapping.getIndex();
-		this.column  = creationContext.getDatabaseObjectResolver().resolveColumn( valueMapping.getMappedColumn() );
+		MappedColumn mappedColumn = valueMapping.getMappedColumn();
+		Column resolvedColumn = creationContext.getDatabaseObjectResolver().resolveColumn( mappedColumn );
+
+		if ( resolvedColumn != null ) {
+
+			// todo (6.0) : ? better way to do this ?
+			this.column = resolvedColumn.clone();
+			this.column.setInsertable( mappedColumn.isInsertable() );
+			this.column.setUpdatable( mappedColumn.isUpdatable() );
+		}
+		else {
+			this.column = null;
+		}
+
 		this.valueMapper = valueMapping.getResolution().getValueMapper();
 
 		if ( valueMapper.getValueConverter() != null ) {

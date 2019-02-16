@@ -39,6 +39,9 @@ public class PhysicalColumn implements Column {
 	private final TypeConfiguration typeConfiguration;
 	private Dialect dialect;
 
+	private boolean isInsertable;
+	private boolean isUpdatable;
+
 	public PhysicalColumn(
 			Table table,
 			Identifier name,
@@ -59,7 +62,9 @@ public class PhysicalColumn implements Column {
 				isNullable,
 				isUnique,
 				null,
-				typeConfiguration
+				typeConfiguration,
+				true,
+				true
 		);
 	}
 
@@ -73,7 +78,9 @@ public class PhysicalColumn implements Column {
 			boolean isNullable,
 			boolean isUnique,
 			String comment,
-			TypeConfiguration typeConfiguration) {
+			TypeConfiguration typeConfiguration,
+			boolean insertable,
+			boolean updatable) {
 		this.table = table;
 		this.name = name;
 		this.sqlTypeDescriptorAccess = sqlTypeDescriptorAccess;
@@ -84,6 +91,8 @@ public class PhysicalColumn implements Column {
 		this.isUnique = isUnique;
 		this.comment = comment;
 		this.typeConfiguration = typeConfiguration;
+		this.isInsertable = insertable;
+		this.isUpdatable = updatable;
 	}
 
 	public Identifier getName() {
@@ -180,6 +189,16 @@ public class PhysicalColumn implements Column {
 	}
 
 	@Override
+	public boolean isInsertable() {
+		return isInsertable;
+	}
+
+	@Override
+	public boolean isUpdatable() {
+		return isUpdatable;
+	}
+
+	@Override
 	public Size getSize() {
 		return size;
 	}
@@ -220,5 +239,33 @@ public class PhysicalColumn implements Column {
 	@Override
 	public int hashCode() {
 		return Objects.hash( table, name );
+	}
+
+	@Override
+	public void setInsertable(boolean isInsertable) {
+		this.isInsertable = isInsertable;
+	}
+
+	@Override
+	public void setUpdatable(boolean isUpdatable) {
+		this.isUpdatable = isUpdatable;
+	}
+
+	@Override
+	public Column clone() {
+		return new PhysicalColumn(
+				table,
+				name,
+				sqlTypeDescriptorAccess,
+				javaTypeDescriptorAccess,
+				defaultValue,
+				sqlType,
+				isNullable,
+				isUnique,
+				comment,
+				typeConfiguration,
+				isInsertable,
+				isUpdatable
+		);
 	}
 }

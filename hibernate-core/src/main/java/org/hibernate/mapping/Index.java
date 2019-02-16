@@ -126,7 +126,8 @@ public class Index implements MappedIndex, Serializable {
 	public org.hibernate.metamodel.model.relational.spi.Index generateRuntimeIndex(
 			ExportableTable runtimeTable,
 			PhysicalNamingStrategy namingStrategy,
-			JdbcEnvironment jdbcEnvironment, TypeConfiguration typeConfiguration) {
+			JdbcEnvironment jdbcEnvironment,
+			TypeConfiguration typeConfiguration) {
 		org.hibernate.metamodel.model.relational.spi.Index index = new org.hibernate.metamodel.model.relational.spi.Index( name, runtimeTable );
 		for ( Column column : columns ) {
 			PhysicalColumn runtimeColumn = column.generateRuntimeColumn(

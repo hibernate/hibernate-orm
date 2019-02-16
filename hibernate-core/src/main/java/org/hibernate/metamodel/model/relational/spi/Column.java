@@ -67,4 +67,14 @@ public interface Column extends QualifiableSqlExpressable {
 	}
 
 	Comparator<Column> COLUMN_COMPARATOR = Comparator.comparing( Column::getExpression );
+
+	boolean isInsertable();
+
+	boolean isUpdatable();
+
+	void setInsertable(boolean isInsertable);
+
+	void setUpdatable(boolean isUpdatable);
+
+	Column clone();
 }

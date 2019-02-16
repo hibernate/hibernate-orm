@@ -15,6 +15,7 @@ import org.hibernate.boot.model.relational.MappedPrimaryKey;
 /**
  * Indexed collections include Lists, Maps, arrays and
  * primitive arrays.
+ *
  * @author Gavin King
  */
 public abstract class IndexedCollection extends Collection {
@@ -30,9 +31,11 @@ public abstract class IndexedCollection extends Collection {
 	public Value getIndex() {
 		return index;
 	}
+
 	public void setIndex(Value index) {
 		this.index = index;
 	}
+
 	public final boolean isIndexed() {
 		return true;
 	}
@@ -54,19 +57,19 @@ public abstract class IndexedCollection extends Collection {
 			pk.addColumns( getKey().getMappedColumns() );
 			// index should be last column listed
 			boolean isFormula = false;
-			for( MappedColumn selectable : (List<MappedColumn>) getIndex().getMappedColumns() ){
-				if(selectable.isFormula()){
+			for ( MappedColumn selectable : (List<MappedColumn>) getIndex().getMappedColumns() ) {
+				if ( selectable.isFormula() ) {
 					isFormula = true;
 				}
 			}
-			if (isFormula) {
+			if ( isFormula ) {
 				//if it is a formula index, use the element columns in the PK
 				pk.addColumns( getElement().getMappedColumns() );
 			}
 			else {
 				pk.addColumns( getIndex().getMappedColumns() );
 			}
-			getMappedTable().setPrimaryKey(pk);
+			getMappedTable().setPrimaryKey( pk );
 		}
 		else {
 			// don't create a unique key, 'cos some

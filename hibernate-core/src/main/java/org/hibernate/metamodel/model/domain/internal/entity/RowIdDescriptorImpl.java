@@ -48,7 +48,9 @@ public class RowIdDescriptorImpl<J> implements RowIdDescriptor<J> {
 				creationContext.getTypeConfiguration()
 						.getSqlTypeDescriptorRegistry()
 						.getDescriptor( Types.INTEGER ),
-				creationContext.getTypeConfiguration()
+				creationContext.getTypeConfiguration(),
+				true,
+				true
 		);
 		this.valueMapper = new ColumnBasedMapper( column );
 	}

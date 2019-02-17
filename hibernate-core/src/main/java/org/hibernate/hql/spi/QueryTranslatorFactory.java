@@ -30,7 +30,7 @@ public interface QueryTranslatorFactory extends Service {
 	 * @param queryString The query string to be translated
 	 * @param filters Currently enabled filters
 	 * @param factory The session factory.
-	 * @param entityGraphQueryHint
+	 * @param entityGraphQueryHint The EntityGraph provided through a JPQL query hint
 	 * @return an appropriate translator.
 	 */
 	public QueryTranslator createQueryTranslator(

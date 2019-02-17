@@ -1435,6 +1435,17 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 */
 	String HBM2DDL_CREATE_NAMESPACES = "hibernate.hbm2ddl.create_namespaces";
 
+
+	/**
+	 * Specifies whether to automatically create also the database schema/catalog.
+	 * The default is false.
+	 *
+	 * @since 5.0
+	 * @deprecated
+	 */
+	@Deprecated
+	String HBM2DLL_CREATE_NAMESPACES = "hibernate.hbm2dll.create_namespaces";
+
 	/**
 	 * The JPA variant of {@link #HBM2DDL_CREATE_NAMESPACES}
 	 * <p/>

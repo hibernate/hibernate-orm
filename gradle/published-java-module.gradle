@@ -98,6 +98,7 @@ javadoc {
 				'http://docs.jboss.org/cdi/api/2.0/',
 				'https://javaee.github.io/javaee-spec/javadocs/'
 		]
+		options.addStringOption('-source', '8')
 
 		if ( JavaVersion.current().isJava8Compatible() ) {
 			options.addStringOption( 'Xdoclint:none', '-quiet' )

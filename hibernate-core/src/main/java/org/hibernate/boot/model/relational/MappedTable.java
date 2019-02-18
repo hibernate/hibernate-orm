@@ -14,6 +14,7 @@ import java.util.UUID;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.metamodel.model.relational.internal.InflightTable;
 import org.hibernate.metamodel.model.relational.spi.Exportable;
@@ -87,6 +88,8 @@ public interface MappedTable<T extends MappedColumn> extends Loggable {
 	}
 
 	void addUniqueKey(MappedUniqueKey uk);
+
+	void addFormula(Formula formula);
 
 	void createForeignKeys();
 

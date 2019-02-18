@@ -69,6 +69,7 @@ public class Table implements MappedTable<Column>, Serializable {
 	private Map<ForeignKeyKey, MappedForeignKey> foreignKeyMap = new LinkedHashMap<>();
 	private Map<String, MappedIndex> indexes = new LinkedHashMap<>();
 	private Map<String, MappedUniqueKey> uniqueKeys = new LinkedHashMap<>();
+	private Map<String, Formula> formulas = new LinkedHashMap<>();
 	private int uniqueInteger;
 	private List<String> checkConstraints = new ArrayList<>();
 	private String rowId;
@@ -477,6 +478,11 @@ public class Table implements MappedTable<Column>, Serializable {
 	}
 
 	@Override
+	public void addFormula(Formula formula) {
+		formulas.put( formula.getFormula(), formula );
+	}
+
+	@Override
 	public MappedUniqueKey createUniqueKey(List<Column> keyColumns) {
 		List<MappedColumn> columns = JavaTypeHelper.cast( keyColumns );
 		String keyName = Constraint.generateName( "UK_", this, columns );
@@ -813,6 +819,17 @@ public class Table implements MappedTable<Column>, Serializable {
 			}
 			callback.uniqueKeyBuilt( bootUk, runtimeUk );
 		} );
+
+		formulas.values().forEach(
+				formula -> {
+					org.hibernate.metamodel.model.relational.spi.Column column = formula.generateRuntimeColumn(
+							runtimeTable,
+							namingStrategy,
+							jdbcEnvironment,
+							typeConfiguration
+					);
+					callback.columnBuilt( formula, column );
+				} );
 	}
 
 	private InflightTable createRuntimePhysicalTable(

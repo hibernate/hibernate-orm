@@ -33,12 +33,14 @@ public class DerivedColumn implements Column {
 			String expression,
 			SqlTypeDescriptor sqlTypeDescriptor,
 			TypeConfiguration typeConfiguration,
+			BasicJavaDescriptor javaTypeDescriptor,
 			boolean insertable,
 			boolean updatable) {
 		this.table = table;
 		this.expression = expression;
 		this.sqlTypeDescriptor = sqlTypeDescriptor;
 		this.typeConfiguration = typeConfiguration;
+		this.javaTypeDescriptor = javaTypeDescriptor;
 		this.isInsertable = insertable;
 		this.isUpdatable = updatable;
 	}
@@ -116,6 +118,7 @@ public class DerivedColumn implements Column {
 				this.expression,
 				this.sqlTypeDescriptor,
 				this.typeConfiguration,
+				this.javaTypeDescriptor,
 				isInsertable,
 				isUpdatable
 		);

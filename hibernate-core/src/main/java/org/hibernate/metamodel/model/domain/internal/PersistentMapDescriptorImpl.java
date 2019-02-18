@@ -12,7 +12,6 @@ import java.util.Map;
 
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cache.CacheException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -83,7 +82,8 @@ public class PersistentMapDescriptorImpl<O,K,E>
 		final DomainResult mapKeyResult = getIndexDescriptor().createDomainResult(
 				navigableReference,
 				null,
-				creationState, creationContext
+				creationState,
+				creationContext
 		);
 
 		final DomainResult mapValueResult = getElementDescriptor().createDomainResult(

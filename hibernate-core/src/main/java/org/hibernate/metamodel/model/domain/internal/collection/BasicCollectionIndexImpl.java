@@ -32,6 +32,7 @@ import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
@@ -68,7 +69,7 @@ public class BasicCollectionIndexImpl<J>
 			this.column = resolvedColumn.clone( mappedColumn.isInsertable(), mappedColumn.isUpdatable() );
 		}
 		else {
-			this.column = null;
+			this.column = resolvedColumn;
 		}
 
 		this.valueMapper = valueMapping.getResolution().getValueMapper();

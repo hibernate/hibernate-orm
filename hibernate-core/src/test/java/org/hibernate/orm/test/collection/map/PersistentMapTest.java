@@ -7,7 +7,10 @@
 package org.hibernate.orm.test.collection.map;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -22,10 +25,10 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import org.hibernate.collection.internal.PersistentMap;
-import org.hibernate.query.Query;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -57,6 +60,25 @@ public class PersistentMapTest extends SessionFactoryBasedFunctionalTest {
 				Address.class,
 				Detail.class
 		};
+	}
+
+	@AfterEach
+	public void tearDown() {
+		inTransaction(
+				session -> {
+					List<UserData> userDatas = session.createQuery( "from " + UserData.class.getName() ).list();
+					userDatas.forEach( data -> session.delete( data ) );
+
+					List<Address> addresses = session.createQuery( "from " + Address.class.getName() ).list();
+					addresses.forEach( address -> session.delete( address ) );
+
+					List<Detail> details = session.createQuery( "from " + Detail.class.getName() ).list();
+					details.forEach( detail -> session.delete( detail ) );
+
+					List<User> users = session.createQuery( "from " + User.class.getName() ).list();
+					users.forEach( user -> session.delete( user ) );
+				}
+		);
 	}
 
 	@Test
@@ -179,6 +201,7 @@ public class PersistentMapTest extends SessionFactoryBasedFunctionalTest {
 		inSession(
 				session -> {
 					try {
+						List<UserData> userDatasToDelete = new ArrayList<>();
 						session.beginTransaction();
 						User user = new User();
 						UserData userData = new UserData();
@@ -192,11 +215,18 @@ public class PersistentMapTest extends SessionFactoryBasedFunctionalTest {
 						session.beginTransaction();
 
 						user = session.get( User.class, 1 );
+						Collection<UserData> values = user.userDatas.values();
+						values.forEach( data -> userDatasToDelete.add( data ) );
 						user.userDatas.clear();
 						session.update( user );
-						Query q = session.createQuery( "DELETE FROM " + UserData.class.getName() + " d WHERE d.user = :user" );
-						q.setParameter( "user", user );
-						q.executeUpdate();
+
+						// todo (6.0) : use the commented code instead of the session.remove(data) when the delete DML with collection is fixed
+//						Query q = session.createQuery( "DELETE FROM " + UserData.class.getName() + " d WHERE d.user = :user" );
+//						q.setParameter( "user", user );
+//						q.executeUpdate();
+						userDatasToDelete.forEach( data -> {
+							session.remove( data );
+						} );
 
 						session.getTransaction().commit();
 
@@ -212,6 +242,7 @@ public class PersistentMapTest extends SessionFactoryBasedFunctionalTest {
 						if ( session.getTransaction().isActive() ) {
 							session.getTransaction().rollback();
 						}
+						throw e;
 					}
 				}
 		);
@@ -322,7 +353,11 @@ public class PersistentMapTest extends SessionFactoryBasedFunctionalTest {
 				session -> {
 					User u = session.get( User.class, user.id );
 					session.delete( u );
-					session.createQuery( "delete from " + User.class.getName() ).executeUpdate();
+
+					// todo (6.0) : use the commented code instead of the session.remove(data) when the delete DML with collection is fixed
+//					session.createQuery( "delete from " + User.class.getName() ).executeUpdate();
+					List<User> users = session.createQuery( "from " + User.class.getName() ).list();
+					users.forEach( toDelete -> session.delete( toDelete ) );
 				}
 		);
 	}

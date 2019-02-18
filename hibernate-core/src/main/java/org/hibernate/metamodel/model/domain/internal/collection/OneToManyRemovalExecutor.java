@@ -43,7 +43,6 @@ import org.hibernate.sql.exec.spi.JdbcParameter;
  */
 public class OneToManyRemovalExecutor implements CollectionRemovalExecutor {
 	private final PersistentCollectionDescriptor collectionDescriptor;
-	private final SessionFactoryImplementor sessionFactory;
 
 	private final Map<Column, JdbcParameter> jdbcParametersMap;
 	private final JdbcMutation updateMutation;
@@ -53,7 +52,6 @@ public class OneToManyRemovalExecutor implements CollectionRemovalExecutor {
 			Table dmlTargetTable,
 			SessionFactoryImplementor sessionFactory) {
 		this.collectionDescriptor = collectionDescriptor;
-		this.sessionFactory = sessionFactory;
 		this.jdbcParametersMap = new HashMap<>();
 
 		final UpdateStatement updateStatement = generateUpdateStatement(
@@ -129,26 +127,7 @@ public class OneToManyRemovalExecutor implements CollectionRemovalExecutor {
 		final Navigable<?> collectionKey = collectionDescriptor.getCollectionKeyDescriptor();
 		collectionKey.visitColumns(
 				(sqlExpressableType, column) -> {
-					final ColumnReference columnReference = dmlTableRef.resolveColumnReference( column );
-
-					final LiteralParameter parameter = new LiteralParameter(
-							null,
-							column.getExpressableType(),
-							Clause.UPDATE,
-							sessionFactory.getTypeConfiguration()
-					);
-
-					final Assignment assignment = new Assignment( columnReference, parameter );
-					assignments.add( assignment );
-				},
-				Clause.UPDATE,
-				sessionFactory.getTypeConfiguration()
-		);
-
-		if ( collectionDescriptor.getIndexDescriptor() != null ) {
-			final CollectionIndex<?> collectionIndex = collectionDescriptor.getIndexDescriptor();
-			collectionIndex.visitColumns(
-					(sqlExpressableType, column) -> {
+					if ( column.isUpdatable() ) {
 						final ColumnReference columnReference = dmlTableRef.resolveColumnReference( column );
 
 						final LiteralParameter parameter = new LiteralParameter(
@@ -160,6 +139,29 @@ public class OneToManyRemovalExecutor implements CollectionRemovalExecutor {
 
 						final Assignment assignment = new Assignment( columnReference, parameter );
 						assignments.add( assignment );
+					}
+				},
+				Clause.UPDATE,
+				sessionFactory.getTypeConfiguration()
+		);
+
+		if ( collectionDescriptor.getIndexDescriptor() != null ) {
+			final CollectionIndex<?> collectionIndex = collectionDescriptor.getIndexDescriptor();
+			collectionIndex.visitColumns(
+					(sqlExpressableType, column) -> {
+						if ( column.isUpdatable() ) {
+							final ColumnReference columnReference = dmlTableRef.resolveColumnReference( column );
+
+							final LiteralParameter parameter = new LiteralParameter(
+									null,
+									column.getExpressableType(),
+									Clause.UPDATE,
+									sessionFactory.getTypeConfiguration()
+							);
+
+							final Assignment assignment = new Assignment( columnReference, parameter );
+							assignments.add( assignment );
+						}
 					},
 					Clause.UPDATE,
 					sessionFactory.getTypeConfiguration()

@@ -97,6 +97,7 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	public void addFormula(Formula formula) {
+		getMappedTable().addFormula( formula );
 		columns.add( formula );
 	}
 

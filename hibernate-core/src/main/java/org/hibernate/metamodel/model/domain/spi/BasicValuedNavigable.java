@@ -10,6 +10,7 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
@@ -63,11 +64,9 @@ public interface BasicValuedNavigable<J> extends BasicValuedExpressableType<J>, 
 			JdbcValueCollector jdbcValueCollector,
 			Clause clause,
 			SharedSessionContractImplementor session) {
-		// todo (6.0) - formula based navigables have no bound column.
-		//		this is a simple fix for now to avoid NPE
-		//		we should more than likely make sure the boundColumn instance is a DerivedColumn?
-		if ( getBoundColumn() != null ) {
-			jdbcValueCollector.collect( value, getBoundColumn().getExpressableType(), getBoundColumn() );
+		final Column boundColumn = getBoundColumn();
+		if ( boundColumn instanceof PhysicalColumn ) {
+			jdbcValueCollector.collect( value, boundColumn.getExpressableType(), boundColumn );
 		}
 	}
 }

@@ -20,6 +20,7 @@ import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.sql.Template;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -81,7 +82,14 @@ public class Formula implements Selectable, Serializable {
 			PhysicalNamingStrategy namingStrategy,
 			JdbcEnvironment jdbcEnvironment,
 			TypeConfiguration typeConfiguration) {
-		return new DerivedColumn( runtimeTable, formula, getSqlTypeDescriptor(), typeConfiguration, false, false );
+		return new DerivedColumn( runtimeTable,
+								  formula,
+								  getSqlTypeDescriptor(),
+								  typeConfiguration,
+								  (BasicJavaDescriptor) getJavaTypeMapping().getJavaTypeDescriptor(),
+								  false,
+								  false
+		);
 	}
 
 	public String getFormula() {

@@ -65,11 +65,7 @@ public class BasicCollectionIndexImpl<J>
 		Column resolvedColumn = creationContext.getDatabaseObjectResolver().resolveColumn( mappedColumn );
 
 		if ( resolvedColumn != null ) {
-
-			// todo (6.0) : ? better way to do this ?
-			this.column = resolvedColumn.clone();
-			this.column.setInsertable( mappedColumn.isInsertable() );
-			this.column.setUpdatable( mappedColumn.isUpdatable() );
+			this.column = resolvedColumn.clone( mappedColumn.isInsertable(), mappedColumn.isUpdatable() );
 		}
 		else {
 			this.column = null;

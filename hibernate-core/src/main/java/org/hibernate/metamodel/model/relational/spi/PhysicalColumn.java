@@ -35,12 +35,11 @@ public class PhysicalColumn implements Column {
 	private String checkConstraint;
 	private final boolean isNullable;
 	private final boolean isUnique;
+	private final boolean isInsertable;
+	private final boolean isUpdatable;
 	private final String comment;
 	private final TypeConfiguration typeConfiguration;
 	private Dialect dialect;
-
-	private boolean isInsertable;
-	private boolean isUpdatable;
 
 	public PhysicalColumn(
 			Table table,
@@ -158,7 +157,7 @@ public class PhysicalColumn implements Column {
 		return render( dialect );
 	}
 
-	private String render(Dialect dialect){
+	private String render(Dialect dialect) {
 		return name.render( dialect );
 	}
 
@@ -219,7 +218,7 @@ public class PhysicalColumn implements Column {
 		return checkConstraint;
 	}
 
-	public TypeConfiguration getTypeConfiguration(){
+	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
 	}
 
@@ -242,17 +241,7 @@ public class PhysicalColumn implements Column {
 	}
 
 	@Override
-	public void setInsertable(boolean isInsertable) {
-		this.isInsertable = isInsertable;
-	}
-
-	@Override
-	public void setUpdatable(boolean isUpdatable) {
-		this.isUpdatable = isUpdatable;
-	}
-
-	@Override
-	public Column clone() {
+	public Column clone(boolean isInsertable, boolean isUpdatable) {
 		return new PhysicalColumn(
 				table,
 				name,

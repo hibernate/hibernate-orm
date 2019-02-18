@@ -72,9 +72,15 @@ public interface Column extends QualifiableSqlExpressable {
 
 	boolean isUpdatable();
 
-	void setInsertable(boolean isInsertable);
-
-	void setUpdatable(boolean isUpdatable);
-
-	Column clone();
+	// todo (6.0) : a better name for the method ?
+	/**
+	 * Create a clone of the Column setting the insertability and updability values
+	 * based on the passed parameters
+	 *
+	 * @param isInsertable, the value to set for the cloned Column insertability
+	 * @param isUpdatable, the value to set for the cloned Column updatability
+	 *
+	 * @return A clone of the object
+	 */
+	Column clone(boolean isInsertable, boolean isUpdatable);
 }

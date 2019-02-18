@@ -9,8 +9,9 @@ package org.hibernate.envers.test;
 import java.lang.reflect.Method;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.envers.strategy.AuditStrategy;
+import org.hibernate.envers.strategy.spi.AuditStrategy;
 
+import org.hibernate.testing.junit5.envers.ExcludeAuditStrategy;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.junit5.dynamictests.AbstractDynamicTest;
 import org.hibernate.testing.junit5.dynamictests.DynamicExecutionContext;
@@ -36,6 +37,9 @@ public class EnversDynamicExecutionContext implements DynamicExecutionContext {
 		if ( !isAuditStrategy( testClass.getAnnotation( RequiresAuditStrategy.class ) ) ) {
 			return false;
 		}
+		if ( isAuditStrategyExcluded( testClass.getAnnotation( ExcludeAuditStrategy.class ) ) ) {
+			return false;
+		}
 		if ( isDialectMatch( testClass.getAnnotationsByType( SkipForDialect.class ) ) ) {
 			return false;
 		}
@@ -45,6 +49,9 @@ public class EnversDynamicExecutionContext implements DynamicExecutionContext {
 	@Override
 	public boolean isExecutionAllowed(Method method) {
 		if ( !isAuditStrategy( method.getAnnotation( RequiresAuditStrategy.class ) ) ) {
+			return false;
+		}
+		if ( isAuditStrategyExcluded( method.getAnnotation( ExcludeAuditStrategy.class ) ) ) {
 			return false;
 		}
 		if ( isDialectMatch( method.getAnnotationsByType( SkipForDialect.class ) ) ) {
@@ -68,6 +75,26 @@ public class EnversDynamicExecutionContext implements DynamicExecutionContext {
 		if ( annotation == null ) {
 			// if the annotation isn't present, allow it.
 			return true;
+		}
+
+		for ( Class<? extends AuditStrategy> strategyClass : annotation.value() ) {
+			if ( strategy.isStrategy( strategyClass ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Checks whether or not this execution context matches the specified {@link AuditStrategy}.
+	 *
+	 * @param annotation The {@link ExcludeAuditStrategy} annotation.
+	 * @return boolean true if the audit strategy matches; false otherwise.
+	 */
+	private boolean isAuditStrategyExcluded(ExcludeAuditStrategy annotation) {
+		if ( annotation == null ){
+			return false;
 		}
 
 		for ( Class<? extends AuditStrategy> strategyClass : annotation.value() ) {

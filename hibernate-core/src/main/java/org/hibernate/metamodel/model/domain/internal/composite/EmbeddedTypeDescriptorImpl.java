@@ -177,6 +177,23 @@ public class EmbeddedTypeDescriptorImpl<J>
 	}
 
 	@Override
+	public boolean isDirty(Object one, Object another, SharedSessionContractImplementor session) {
+		if ( getJavaTypeDescriptor().areEqual( (J) one, (J) another ) ) {
+			return false;
+		}
+
+		for ( NonIdPersistentAttribute attribute : getPersistentAttributes() ) {
+			final Object oneValue = attribute.getPropertyAccess().getGetter().get( one );
+			final Object anotherValue = attribute.getPropertyAccess().getGetter().get( another );
+			if ( attribute.isDirty( oneValue, anotherValue, session ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
 	}
@@ -343,4 +360,5 @@ public class EmbeddedTypeDescriptorImpl<J>
 	public String toString() {
 		return getNavigableRole().getFullPath();
 	}
+
 }

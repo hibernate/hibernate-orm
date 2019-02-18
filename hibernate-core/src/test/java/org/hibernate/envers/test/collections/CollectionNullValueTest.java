@@ -12,7 +12,6 @@ import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.support.domains.collections.StringListEntity;
 import org.hibernate.envers.test.support.domains.collections.StringMapEntity;
 import org.hibernate.envers.test.support.domains.collections.StringSetEntity;
-import org.junit.jupiter.api.Disabled;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit5.dynamictests.DynamicBeforeAll;
@@ -25,7 +24,6 @@ import static org.hamcrest.Matchers.hasEntry;
 /**
  * @author Chris Cranford
  */
-@Disabled("NYI - Requires implementation of StateArrayContributor#replace")
 @TestForIssue(jiraKey = "HHH-11901")
 public class CollectionNullValueTest extends EnversEntityManagerFactoryBasedFunctionalTest {
 	private Integer mapId;

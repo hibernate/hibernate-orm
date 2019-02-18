@@ -4,9 +4,10 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.entities.onetomany;
+package org.hibernate.envers.test.support.domains.onetomany;
 
-import java.io.Serializable;
+import java.util.Objects;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
@@ -19,7 +20,7 @@ import org.hibernate.envers.Audited;
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
-public class CollectionRefIngEntity implements Serializable {
+public class CollectionRefIngEntity {
 	private static final long serialVersionUID = -9019967223928425707L;
 
 	@Id
@@ -70,34 +71,29 @@ public class CollectionRefIngEntity implements Serializable {
 		this.reference = reference;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
 		}
-		if ( !(o instanceof CollectionRefIngEntity) ) {
+		if ( o == null || getClass() != o.getClass() ) {
 			return false;
 		}
-
 		CollectionRefIngEntity that = (CollectionRefIngEntity) o;
-
-		if ( data != null ? !data.equals( that.data ) : that.data != null ) {
-			return false;
-		}
-		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
-			return false;
-		}
-
-		return true;
+		return Objects.equals( id, that.id ) &&
+				Objects.equals( data, that.data );
 	}
 
+	@Override
 	public int hashCode() {
-		int result;
-		result = (id != null ? id.hashCode() : 0);
-		result = 31 * result + (data != null ? data.hashCode() : 0);
-		return result;
+		return Objects.hash( id, data );
 	}
 
+	@Override
 	public String toString() {
-		return "CollectionRefIngEntity(id = " + id + ", data = " + data + ")";
+		return "CollectionRefIngEntity{" +
+				"id=" + id +
+				", data='" + data + '\'' +
+				'}';
 	}
 }

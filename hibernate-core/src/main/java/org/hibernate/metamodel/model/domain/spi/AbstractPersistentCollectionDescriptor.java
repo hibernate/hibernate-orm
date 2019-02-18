@@ -958,7 +958,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 
 	@Override
 	public boolean isDirty(Object old, Object value, SharedSessionContractImplementor session) {
-		return !getElementDescriptor().getJavaTypeDescriptor().areEqual( old, value );
+		return getElementDescriptor().isDirty( old, value, session );
 	}
 
 	@Override

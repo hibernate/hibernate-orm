@@ -125,12 +125,15 @@ public class MapCollectionMapper<T extends Map> extends AbstractCollectionMapper
 	protected boolean isSame(
 			PersistentCollectionDescriptor collectionDescriptor,
 			Object oldObject,
-			Object newObject) {
+			Object newObject,
+			SessionImplementor session) {
 		final Map.Entry oldEntry = Map.Entry.class.cast( oldObject );
 		final Map.Entry newEntry = Map.Entry.class.cast( newObject );
 
+		// For maps, first check whether the map key is the same.
 		if ( collectionDescriptor.getKeyJavaTypeDescriptor().areEqual( oldEntry.getKey(), newEntry.getKey() ) ) {
-			return super.isSame( collectionDescriptor, oldEntry.getValue(), newEntry.getValue() );
+			// delegate to super type which handles elements.
+			return super.isSame( collectionDescriptor, oldEntry.getValue(), newEntry.getValue(), session );
 		}
 
 		return false;
@@ -155,7 +158,7 @@ public class MapCollectionMapper<T extends Map> extends AbstractCollectionMapper
 			for ( Object oldEntry : oldCollection ) {
 				for ( Iterator itor = added.iterator(); itor.hasNext(); ) {
 					Object newEntry = itor.next();
-					if ( isSame( collectionDescriptor, oldEntry, newEntry ) ) {
+					if ( isSame( collectionDescriptor, oldEntry, newEntry, session ) ) {
 						itor.remove();
 						break;
 					}
@@ -168,7 +171,7 @@ public class MapCollectionMapper<T extends Map> extends AbstractCollectionMapper
 			for ( Object newEntry : newCollection ) {
 				for ( Iterator itor = deleted.iterator(); itor.hasNext(); ) {
 					Object deleteEntry = itor.next();
-					if ( isSame( collectionDescriptor, deleteEntry, newEntry ) ) {
+					if ( isSame( collectionDescriptor, deleteEntry, newEntry, session ) ) {
 						itor.remove();
 						break;
 					}

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.integration.collection.embeddable;
+package org.hibernate.envers.test.collections.embeddable;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -17,16 +17,21 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.strategy.ValidityAuditStrategy;
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
-import org.junit.Test;
+import org.hibernate.envers.strategy.internal.DefaultAuditStrategy;
+import org.hibernate.envers.strategy.internal.ValidityAuditStrategy;
+import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.hamcrest.CollectionMatchers;
+import org.hibernate.testing.junit5.dynamictests.DynamicBeforeAll;
+import org.hibernate.testing.junit5.dynamictests.DynamicTest;
+import org.hibernate.testing.junit5.envers.ExcludeAuditStrategy;
+import org.hibernate.testing.junit5.envers.RequiresAuditStrategy;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.notNullValue;
 
 /**
  * This test verifies that when a map-based {@link ElementCollection} of {@link Embeddable} objects
@@ -44,7 +49,7 @@ import static org.junit.Assert.assertNotNull;
  * | 2   | 2       | 1             | a         | null   | value1 |
  * +-----+---------+---------------+-----------+--------+--------+
  *
- * The {@link org.hibernate.envers.strategy.DefaultAuditStrategy} with equals/hashcode.
+ * The {@link DefaultAuditStrategy} with equals/hashcode.
  *
  * +-----+---------+---------------+-----------+--------+
  * | REV | REVTYPE | TESTENTITY_ID | EMBS1_KEY | VALUE  |
@@ -60,91 +65,95 @@ import static org.junit.Assert.assertNotNull;
  * @author Chris Cranford
  */
 @TestForIssue(jiraKey = "HHH-12607")
-public class MapEqualsHashCodeTest extends BaseEnversJPAFunctionalTestCase {
+public class MapEqualsHashCodeTest extends EnversEntityManagerFactoryBasedFunctionalTest {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] { TestEntity.class };
 	}
 
-	@Test
-	@Priority(10)
-	public void initData() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			TestEntity e = new TestEntity( 1 );
-			e.setEmbs1( new HashMap<>() );
-			e.getEmbs1().put( "a", new Emb( "value1" ) );
-			e.getEmbs1().put( "b", new Emb( "value2" ) );
-			entityManager.persist( e );
-		} );
+	@DynamicBeforeAll
+	public void prepareAuditData() {
+		inTransactions(
+				entityManager -> {
+					TestEntity e = new TestEntity( 1 );
+					e.setEmbs1( new HashMap<>() );
+					e.getEmbs1().put( "a", new Emb( "value1" ) );
+					e.getEmbs1().put( "b", new Emb( "value2" ) );
+					entityManager.persist( e );
+				},
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			TestEntity e = entityManager.find( TestEntity.class, 1 );
-			e.getEmbs1().put( "a", new Emb( "value3" ) );
-		} );
+				entityManager -> {
+					TestEntity e = entityManager.find( TestEntity.class, 1 );
+					e.getEmbs1().put( "a", new Emb( "value3" ) );
+				}
+		);
 	}
 
-	@Test
+	@DynamicTest
+	@RequiresAuditStrategy(ValidityAuditStrategy.class)
 	public void testAuditRowsForValidityAuditStrategy() {
-		if ( ValidityAuditStrategy.class.getName().equals( getAuditStrategy() ) ) {
-			doInJPA( this::entityManagerFactory, entityManager -> {
-				Long results = entityManager
-						.createQuery(
-								"SELECT COUNT(1) FROM TestEntity_embs1_AUD WHERE REVEND IS NULL",
-								Long.class
-						)
-						.getSingleResult();
+		inTransactions(
+				entityManager -> {
+					Long results = entityManager
+							.createQuery( "SELECT COUNT(1) FROM TestEntity_embs1_AUD WHERE REVEND IS NULL", Long.class )
+							.getSingleResult();
 
-				assertNotNull( results );
-				assertEquals( Long.valueOf( 3 ), results );
-			} );
+					assertThat( results, notNullValue() );
+					assertThat( results, equalTo( 3L ) );
+				},
 
-			doInJPA( this::entityManagerFactory, entityManager -> {
-				Long results = entityManager
-						.createQuery(
-								"SELECT COUNT(1) FROM TestEntity_embs1_AUD",
-								Long.class
-						)
-						.getSingleResult();
+				entityManager -> {
+					Long results = entityManager
+							.createQuery( "SELECT COUNT(1) FROM TestEntity_embs1_AUD", Long.class )
+							.getSingleResult();
 
-				assertNotNull( results );
-				assertEquals( Long.valueOf( 4 ), results );
-			} );
-		}
+					assertThat( results, notNullValue() );
+					assertThat( results, equalTo( 4L ) );
+				}
+		);
 	}
 
-	@Test
+	@DynamicTest
+	@ExcludeAuditStrategy(ValidityAuditStrategy.class)
 	public void testAuditRowsForDefaultAuditStrategy() {
-		if ( !ValidityAuditStrategy.class.getName().equals( getAuditStrategy() ) ) {
-			doInJPA( this::entityManagerFactory, entityManager -> {
-				Long results = entityManager
-						.createQuery(
-								"SELECT COUNT(1) FROM TestEntity_embs1_AUD",
-								Long.class
-						)
-						.getSingleResult();
+		inTransaction(
+				entityManager -> {
+					Long results = entityManager
+							.createQuery( "SELECT COUNT(1) FROM TestEntity_embs1_AUD", Long.class )
+							.getSingleResult();
 
-				assertNotNull( results );
-				assertEquals( Long.valueOf( 4 ), results );
-			} );
-		}
+					assertThat( results, notNullValue() );
+					assertThat( results, equalTo( 4L ) );
+				}
+		);
 	}
 
-	@Test
+	@DynamicTest
 	public void testRevisionHistory1() {
 		TestEntity e = getAuditReader().find( TestEntity.class, 1, 1 );
-		assertEquals( 2, e.getEmbs1().size() );
-		assertEquals( "value1", e.getEmbs1().get( "a" ).getValue() );
-		assertEquals( "value2", e.getEmbs1().get( "b" ).getValue() );
+		assertThatMapContains( e.getEmbs1(), "a", "value1", "b", "value2" );
 	}
 
-	@Test
+	@DynamicTest
 	public void testRevisionHistory2() {
 		TestEntity e = getAuditReader().find( TestEntity.class, 1, 2 );
-		assertEquals( 2, e.getEmbs1().size() );
-		assertEquals( "value3", e.getEmbs1().get( "a" ).getValue() );
-		assertEquals( "value2", e.getEmbs1().get( "b" ).getValue() );
+		assertThatMapContains( e.getEmbs1(), "a", "value3", "b", "value2" );
 	}
 
+	@SuppressWarnings("unchecked")
+	private static void assertThatMapContains(Map<String, Emb> map, Object... values) {
+		// assert that the map size is correct.
+		assertThat( map.entrySet(), CollectionMatchers.hasSize( values.length / 2 ) );
+
+		// assert that map contains the specified keys and Emb holding the specified string value.
+		for ( int i = 0; i < values.length; i = i + 2 ) {
+			final String key = (String) values[ i ];
+			assertThat( map, hasKey( key ) );
+
+			final Emb value = map.get( key );
+			assertThat( value.getValue(), equalTo( (String) values[ i + 1 ] ) );
+		}
+	}
 
 	@Entity(name = "TestEntity")
 	@Audited

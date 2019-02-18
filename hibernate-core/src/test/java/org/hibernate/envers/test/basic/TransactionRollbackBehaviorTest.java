@@ -80,7 +80,7 @@ public class TransactionRollbackBehaviorTest extends EnversEntityManagerFactoryB
 
 					assertThat(
 							getAuditReader().getRevisions( IntTestEntity.class, rollbackEntityId ),
-							CollectionMatchers.hasSize( 0 )
+							CollectionMatchers.isEmpty()
 					);
 				}
 		);

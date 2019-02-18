@@ -4,7 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.integration.collection.embeddable;
+package org.hibernate.envers.test.support.domains.collections.embeddable;
+
+import java.util.Objects;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -25,11 +27,11 @@ public class Type {
 
 	}
 
-	Type(Integer id) {
+	public Type(Integer id) {
 		this( id, null );
 	}
 
-	Type(Integer id, String name) {
+	public Type(Integer id, String name) {
 		this.id = id;
 		this.name = name;
 	}
@@ -51,25 +53,20 @@ public class Type {
 	}
 
 	@Override
-	public int hashCode() {
-		int result = id != null ? id.hashCode() : 0;
-		result = 31 * result + ( name != null ? name.hashCode() : 0 );
-		return result;
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+		Type type = (Type) o;
+		return Objects.equals( id, type.id ) &&
+				Objects.equals( name, type.name );
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		if ( this == object ) {
-			return true;
-		}
-		if ( object == null || getClass() != object.getClass() ) {
-			return false;
-		}
-
-		Type that = (Type) object;
-		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
-			return false;
-		}
-		return !( name != null ? !name.equals( that.name ) : that.name != null );
+	public int hashCode() {
+		return Objects.hash( id, name );
 	}
 }

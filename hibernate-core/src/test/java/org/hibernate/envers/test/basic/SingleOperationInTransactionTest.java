@@ -180,7 +180,7 @@ public class SingleOperationInTransactionTest extends EnversEntityManagerFactory
 	public void testRevisionsOfNotExistEntity() {
 		assertThat(
 				getAuditReader().getRevisions( BasicAuditedEntity.class, invalidId ),
-				CollectionMatchers.hasSize( 0 )
+				CollectionMatchers.isEmpty()
 		);
 	}
 

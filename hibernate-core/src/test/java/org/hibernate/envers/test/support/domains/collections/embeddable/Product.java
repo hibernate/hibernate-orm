@@ -4,10 +4,11 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.integration.collection.embeddable;
+package org.hibernate.envers.test.support.domains.collections.embeddable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
@@ -38,7 +39,7 @@ public class Product {
 
 	}
 
-	Product(Integer id, String name) {
+	public Product(Integer id, String name) {
 		this.id = id;
 		this.name = name;
 	}
@@ -68,29 +69,21 @@ public class Product {
 	}
 
 	@Override
-	public int hashCode() {
-		int result = id != null ? id.hashCode() : 0;
-		result = 31 * result + ( name != null ? name.hashCode() : 0 );
-		result = 31 * result + ( items != null ? items.hashCode() : 0 );
-		return result;
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+		Product product = (Product) o;
+		return Objects.equals( id, product.id ) &&
+				Objects.equals( name, product.name ) &&
+				Objects.equals( items, product.items );
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		if ( this == object ) {
-			return true;
-		}
-		if ( object == null | getClass() != object.getClass() ) {
-			return false;
-		}
-
-		Product that = (Product) object;
-		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
-			return false;
-		}
-		if ( name != null ? !name.equals( that.name ) : that.name != null ) {
-			return false;
-		}
-		return !( items != null ? !items.equals( that.items ) : that.items != null );
+	public int hashCode() {
+		return Objects.hash( id, name, items );
 	}
 }

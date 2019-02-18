@@ -12,7 +12,7 @@ import org.hibernate.boot.model.domain.NotYetResolvedException;
 import org.hibernate.boot.model.source.internal.SourceHelper;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.internal.ImmutableEntityEntry;
+import org.hibernate.engine.internal.ImmutableEntityEntryFactory;
 import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PersistentClass;
@@ -79,18 +79,7 @@ public class EntityJavaTypeMappingImpl<T> extends AbstractIdentifiableJavaTypeMa
 		}
 		else {
 			return new EntityMutabilityPlanImpl(
-					(status, loadedState, rowId, id, version, lockMode, existsInDatabase, descriptor, disableVersionIncrement, persistenceContext) -> new ImmutableEntityEntry(
-							status,
-							loadedState,
-							rowId,
-							id,
-							version,
-							lockMode,
-							existsInDatabase,
-							descriptor,
-							disableVersionIncrement,
-							persistenceContext
-					),
+					ImmutableEntityEntryFactory.INSTANCE,
 					persistentClass.getEntityName(),
 					false
 			);

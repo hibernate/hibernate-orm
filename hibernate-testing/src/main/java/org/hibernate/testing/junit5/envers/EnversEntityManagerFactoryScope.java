@@ -66,6 +66,20 @@ public class EnversEntityManagerFactoryScope implements EntityManagerFactoryAcce
 		}
 	}
 
+	public void inTransaction(EntityManager entityManager, Consumer<EntityManager> action) {
+		try {
+			entityManager.getTransaction().begin();
+			action.accept( entityManager );
+			entityManager.getTransaction().commit();
+		}
+		catch ( Exception e ) {
+			if ( entityManager.getTransaction().isActive() ) {
+				entityManager.getTransaction().rollback();
+			}
+			throw e;
+		}
+	}
+
 	@SafeVarargs
 	public final void inTransactions(Consumer<EntityManager>... actions) {
 		EntityManager entityManager = getEntityManagerFactory().createEntityManager();

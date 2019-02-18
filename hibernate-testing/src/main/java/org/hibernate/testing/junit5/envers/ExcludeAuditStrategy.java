@@ -16,30 +16,30 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Annotation used to indicate that a test should be run only for specific audit strategies.
+ * Annotation used to indicate that a test should be excluded for a specific audit strategy.
  *
  * @author Chris Cranford
  * @since 6.0
  */
 @Retention(RUNTIME)
-@Target({ METHOD, TYPE })
-public @interface RequiresAuditStrategy {
+@Target({METHOD, TYPE})
+public @interface ExcludeAuditStrategy {
 	/**
-	 * The strategies against which to run the test
+	 * The strategies against which to exclude the test.
 	 *
-	 * @return The strategies
+	 * @return The strategies.
 	 */
 	Class<? extends AuditStrategy>[] value();
 
 	/**
-	 * Comment describing the reason why the audit strategy is required.
+	 * Comment describing the reason why the audit strategy is excluded.
 	 *
-	 * @return The comment
+	 * @return The comment.
 	 */
 	String comment() default "";
 
 	/**
-	 * The key of a JIRA issue which relates to this restriction.
+	 * The key of a JIRA issue hwich relates to this restriction.
 	 *
 	 * @return The jira issue key.
 	 */

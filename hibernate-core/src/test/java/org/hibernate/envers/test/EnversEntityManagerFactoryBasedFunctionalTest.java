@@ -24,6 +24,7 @@ import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.SessionFactory;
+import org.hibernate.annotations.Remove;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
@@ -52,6 +53,7 @@ public class EnversEntityManagerFactoryBasedFunctionalTest
 
 	private EnversEntityManagerFactoryScope entityManagerFactoryScope;
 	private AuditReader auditReader;
+	private EntityManager entityManager;
 
 	protected EntityManagerFactory entityManagerFactory() {
 		return entityManagerFactoryScope.getEntityManagerFactory();
@@ -88,6 +90,11 @@ public class EnversEntityManagerFactoryBasedFunctionalTest
 			auditReader = null;
 		}
 
+		if ( entityManager != null ) {
+			entityManager.close();
+			entityManager = null;
+		}
+
 		entityManagerFactoryScope.releaseEntityManagerFactory();
 	}
 
@@ -107,6 +114,15 @@ public class EnversEntityManagerFactoryBasedFunctionalTest
 
 	protected EntityManager openEntityManager() {
 		return entityManagerFactoryScope.getEntityManagerFactory().createEntityManager();
+	}
+
+	@Remove
+	@Deprecated
+	protected EntityManager getEntityManager() {
+		if ( entityManager == null ) {
+			entityManager = entityManagerFactoryScope.getEntityManagerFactory().createEntityManager();
+		}
+		return entityManager;
 	}
 
 	protected AuditReader getAuditReader() {

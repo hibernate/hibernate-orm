@@ -4,7 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.integration.collection.embeddable;
+package org.hibernate.envers.test.support.domains.collections.embeddable;
+
+import java.util.Objects;
 
 import javax.persistence.Embeddable;
 import javax.persistence.ManyToOne;
@@ -28,7 +30,7 @@ public class Item {
 
 	}
 
-	Item(String name, Type type) {
+	public Item(String name, Type type) {
 		this.name = name;
 		this.type = type;
 	}
@@ -50,25 +52,20 @@ public class Item {
 	}
 
 	@Override
-	public int hashCode() {
-		int result = name != null ? name.hashCode() : 0;
-		result = 31 * result + ( type != null ? type.hashCode() : 0 );
-		return result;
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+		Item item = (Item) o;
+		return Objects.equals( name, item.name ) &&
+				Objects.equals( type, item.type );
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		if ( this == object ) {
-			return true;
-		}
-		if ( object == null || getClass() != object.getClass() ) {
-			return false;
-		}
-
-		Item that = (Item) object;
-		if ( name != null ? !name.equals( that.name ) : that.name != null ) {
-			return false;
-		}
-		return !( type != null ? !type.equals( that.type ) : that.type != null );
+	public int hashCode() {
+		return Objects.hash( name, type );
 	}
 }

@@ -140,7 +140,9 @@ public final class ListCollectionMapper extends AbstractCollectionMapper<List> i
 				for( Iterator itor = addedElements.iterator(); itor.hasNext(); ) {
 					Pair<Integer, ?> addedEntry = (Pair<Integer, ?>) itor.next();
 					if ( oldEntry.getFirst().equals( addedEntry.getFirst() ) ) {
-						if ( isSame( collectionDescriptor, oldEntry.getSecond(), addedEntry.getSecond() ) ) {
+						final Object oldValue = oldEntry.getSecond();
+						final Object addedValue = addedEntry.getSecond();
+						if ( isSame( collectionDescriptor, oldValue, addedValue, session ) ) {
 							itor.remove();
 							break;
 						}
@@ -156,7 +158,9 @@ public final class ListCollectionMapper extends AbstractCollectionMapper<List> i
 				for ( Iterator itor = deleteElements.iterator(); itor.hasNext(); ) {
 					Pair<Integer, ?> deletedEntry = (Pair<Integer, ?>) itor.next();
 					if ( newEntry.getFirst().equals( deletedEntry.getFirst() ) ) {
-						if ( isSame( collectionDescriptor, deletedEntry.getSecond(), newEntry.getSecond() ) ) {
+						final Object newValue = newEntry.getSecond();
+						final Object deletedValue = deletedEntry.getSecond();
+						if ( isSame( collectionDescriptor, deletedValue, newValue, session ) ) {
 							itor.remove();
 							break;
 						}

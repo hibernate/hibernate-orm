@@ -264,12 +264,17 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 	 * @param collectionDescriptor The collection descriptor.
 	 * @param oldObject The collection element from the old persistent collection.
 	 * @param newObject The collection element from the new persistent collection.
+	 * @param session The session.
 	 *
 	 * @return {@code true} if the objects are the same, {@code false} otherwise.
 	 */
 	@SuppressWarnings("unchecked")
-	protected boolean isSame(PersistentCollectionDescriptor collectionDescriptor, Object oldObject, Object newObject) {
-		return collectionDescriptor.getElementDescriptor().getJavaTypeDescriptor().areEqual( oldObject, newObject );
+	protected boolean isSame(
+			PersistentCollectionDescriptor collectionDescriptor,
+			Object oldObject,
+			Object newObject,
+			SessionImplementor session) {
+		return !collectionDescriptor.getElementDescriptor().isDirty( oldObject, newObject, session );
 	}
 
 	@Override

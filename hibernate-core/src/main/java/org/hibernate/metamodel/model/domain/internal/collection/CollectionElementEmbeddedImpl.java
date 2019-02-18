@@ -158,4 +158,9 @@ public class CollectionElementEmbeddedImpl<J>
 	public boolean isMutable() {
 		return getJavaTypeDescriptor().getMutabilityPlan().isMutable();
 	}
+
+	@Override
+	public boolean isDirty(Object one, Object another, SharedSessionContractImplementor session) {
+		return getEmbeddedDescriptor().isDirty( one, another, session );
+	}
 }

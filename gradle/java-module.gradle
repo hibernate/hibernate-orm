@@ -203,6 +203,18 @@ processTestResources {
 	}
 }
 
+// Enable the experimental features of ByteBuddy with JDK 12+
+test {
+	//Only safe to attempt to parse the version as an integer since JDK11
+	if ( JavaVersion.current().isJava11Compatible() ) {
+		int majorJVMVersionInt = Integer.valueOf(JavaVersion.current().toString());
+		//Set the -Dnet.bytebuddy.experimental=true property only when we need it:
+		if (majorJVMVersionInt >= 12) {
+			systemProperty 'net.bytebuddy.experimental', true
+		}
+	}
+}
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // IDE
 

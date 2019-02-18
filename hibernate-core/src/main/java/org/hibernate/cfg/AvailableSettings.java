@@ -1447,7 +1447,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String HBM2DLL_CREATE_NAMESPACES = "hibernate.hbm2dll.create_namespaces";
 
 	/**
-	 * The JPA variant of {@link #HBM2DDL_CREATE_NAMESPACES}
+	 * The JPA variant of {@link #HBM2DLL_CREATE_NAMESPACES}
 	 * <p/>
 	 * Specifies whether the persistence provider is to create the database schema(s) in addition to creating
 	 * database objects (tables, sequences, constraints, etc).  The value of this boolean property should be set

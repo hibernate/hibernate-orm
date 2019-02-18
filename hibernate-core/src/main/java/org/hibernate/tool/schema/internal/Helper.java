@@ -108,7 +108,7 @@ public class Helper {
 				AvailableSettings.HBM2DLL_CREATE_SCHEMAS,
 				configurationValues,
 				ConfigurationHelper.getBoolean(
-						AvailableSettings.HBM2DLL_CREATE_NAMESPACES,
+						AvailableSettings.HBM2DDL_CREATE_NAMESPACES,
 						configurationValues,
 						false
 				)

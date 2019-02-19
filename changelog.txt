@@ -4,6 +4,43 @@ Hibernate 5 Changelog
 Note: Please refer to JIRA to learn more about each issue.
 
 
+Changes in 5.3.8.final (February 19th, 2019)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31715/tab/release-report-done
+
+** Bug
+    * [HHH-10891] - Exception at bootstrap when @Any is inside an @Embeddable object
+    * [HHH-11209] - NullPointerException in EntityType.replace() with a PersistentBag
+    * [HHH-12555] - Merging a blob on an entity  results in a class cast exception
+    * [HHH-13050] - On release of batch it still contained JDBC statements logged; unable to release batch statement
+    * [HHH-13059] - OneToMany with referencedColumnName returns too many entities
+    * [HHH-13064] - Documentation of Lock and LockModeType is on two columns instead of 3
+    * [HHH-13076] - Hibernate “Transaction already active” behaviour with custom transaction manager
+    * [HHH-13084] - Querying entity with non-ID property named 'id' fails if entity has an IdClass composite key
+    * [HHH-13097] - Hibernate enhancer is superslow after upgrade to latest 5.3 or 5.4-SNAPSHOT
+    * [HHH-13114] - Query "select count(h) from Human h" fails if a subclass has a non-Id property named "id"
+    * [HHH-13129] - Cascaded merge fails for detached bytecode-enhanced entity with uninitialized  ToOne
+    * [HHH-13164] - Detecting transient state of mandatory toOne relations is broken
+    * [HHH-13169] - Table alias used instead of exact table name in multitable update query
+    * [HHH-13172] - Log a warning instead of throwing an Exception when @AttributeOverride is used in conjunction with inheritance
+    * [HHH-13194] - Some methods returning org.hibernate.query.Query are not defined for StatelessSession
+    * [HHH-13244] - setting hibernate.jpa.compliance.proxy=true and org.hibernate debug level to DEBUG breaks hibernate
+
+** Task
+    * [HHH-13099] - Update to Byte Buddy 1.9.4
+    * [HHH-13100] - All custom implementation of Byte Buddy "Implementation" s should have a proper equals and hashcode
+
+** Improvement
+    * [HHH-12917] - Interning of strings for Filter definitions
+    * [HHH-12918] - Interning of strings for Formula and Column exctraction templates
+    * [HHH-12919] - Interning of strings for EntityReferenceAliases
+    * [HHH-13005] - Upgrade ByteBuddy to 1.9.0
+    * [HHH-13057] - Prevent Byte Buddy's Advice helper to need reloading many resources from the ClassLoader
+    * [HHH-13220] - In the ByteBuddy enhancer, avoid creating a PersistentAttributeTransformer if the class is not enhanced
+
+
+
 Changes in 5.3.7.final (October 16th, 2018)
 ------------------------------------------------------------------------------------------------------------------------
 

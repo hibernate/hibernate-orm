@@ -11,6 +11,7 @@ import org.hibernate.LockMode;
 import org.hibernate.internal.util.SerializationHelper;
 
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -109,6 +110,7 @@ public class BackrefCompositeMapKeyTest extends SessionFactoryBasedFunctionalTes
 	}
 
 	@Test
+	@Disabled("lock has not yet been implemented")
 	public void testOrphanDeleteAfterLock() {
 		Product prod = new Product( "Widget" );
 		MapKey mapKey = new MapKey( "Top" );

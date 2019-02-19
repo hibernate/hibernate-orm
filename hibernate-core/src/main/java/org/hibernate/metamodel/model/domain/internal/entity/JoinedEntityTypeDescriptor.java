@@ -94,16 +94,6 @@ public class JoinedEntityTypeDescriptor<J> extends AbstractEntityTypeDescriptor<
 	}
 
 	@Override
-	public void lock(
-			Object id,
-			Object version,
-			Object object,
-			LockOptions lockOptions,
-			SharedSessionContractImplementor session) throws HibernateException {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	@Override
 	public boolean hasProxy() {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}

@@ -17,7 +17,6 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
@@ -171,16 +170,6 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 	public void lock(
 			Object id, Object version, Object object, LockMode lockMode, SharedSessionContractImplementor session)
 			throws HibernateException {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	@Override
-	public void lock(
-			Object id,
-			Object version,
-			Object object,
-			LockOptions lockOptions,
-			SharedSessionContractImplementor session) throws HibernateException {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 

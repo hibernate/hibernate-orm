@@ -41,11 +41,10 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 	 * was snapshotted and detached?
 	 */
 	protected static boolean isOwnerUnchanged(
-			final PersistentCollection snapshot, 
+			final PersistentCollection snapshot,
 			final PersistentCollectionDescriptor descriptor,
-			final Object id
-	) {
-		return isCollectionSnapshotValid(snapshot) &&
+			final Object id) {
+		return isCollectionSnapshotValid( snapshot ) &&
 				descriptor.getNavigableRole().getFullPath().equals( snapshot.getRole() ) &&
 				id.equals( snapshot.getKey() );
 	}

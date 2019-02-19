@@ -602,6 +602,16 @@ public abstract class AbstractEntityTypeDescriptor<J>
 	private Map<LockMode,EntityLocker> lockers;
 
 	@Override
+	public void lock(
+			Object id,
+			Object version,
+			Object object,
+			LockOptions lockOptions,
+			SharedSessionContractImplementor session) throws HibernateException {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
 	public EntityLocker getLocker(LockOptions lockOptions, LoadQueryInfluencers loadQueryInfluencers) {
 		EntityLocker entityLocker = null;
 		if ( lockers == null ) {

@@ -41,7 +41,7 @@ public class OnLockVisitor extends ReattachVisitor {
 			if ( persistentCollection.setCurrentSession( session ) ) {
 				final PersistentCollectionDescriptor descriptor = session.getFactory()
 						.getMetamodel()
-						.findCollectionDescriptor( collectionAttribute.getNavigableName() );
+						.findCollectionDescriptor( collectionAttribute.getNavigableRole().getFullPath() );
 				if ( isOwnerUnchanged( persistentCollection, descriptor, extractCollectionKeyFromOwner( descriptor ) ) ) {
 					// a "detached" collection that originally belonged to the same entity
 					if ( persistentCollection.isDirty() ) {

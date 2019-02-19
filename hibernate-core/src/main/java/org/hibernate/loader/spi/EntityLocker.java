@@ -45,5 +45,5 @@ public interface EntityLocker {
 	 * @param object The object logically being locked (currently not used)
 	 * @param session The session from which the lock request originated
 	 */
-	void lock(Serializable id, Object version, Object object, SharedSessionContractImplementor session, Options options);
+	void lock(Object id, Object version, Object object, SharedSessionContractImplementor session, Options options);
 }

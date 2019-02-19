@@ -35,11 +35,14 @@ import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataPojoImpl;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.internal.SubGraphImpl;
@@ -890,6 +893,22 @@ public abstract class AbstractEntityTypeDescriptor<J>
 		}
 	}
 
+	@Override
+	public void afterReassociate(Object entity, SharedSessionContractImplementor session) {
+		// todo (6.0) : need to manage bytecode enhancement
+//		if ( getEntityMetamodel().getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
+//			LazyAttributeLoadingInterceptor interceptor = getEntityMetamodel().getBytecodeEnhancementMetadata().extractInterceptor( entity );
+//			if ( interceptor == null ) {
+//				getEntityMetamodel().getBytecodeEnhancementMetadata().injectInterceptor( entity, session );
+//			}
+//			else {
+//				interceptor.setSession( session );
+//			}
+//		}
+
+		handleNaturalIdReattachment( entity, session );
+	}
+
 	private boolean isAttributeSelfReferencing(NonIdPersistentAttribute attribute) {
 		if ( attribute.isAssociation() ) {
 			if ( attribute.getPersistenceType().equals( PersistenceType.ENTITY ) ) {
@@ -976,5 +995,40 @@ public abstract class AbstractEntityTypeDescriptor<J>
 	@Override
 	public Type getIdentifierType() {
 		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	private void handleNaturalIdReattachment(Object entity, SharedSessionContractImplementor session) {
+		if ( !hasNaturalIdentifier() ) {
+			return;
+		}
+
+		if ( !getHierarchy().getNaturalIdDescriptor().isMutable() ) {
+			// we assume there were no changes to natural id during detachment for now, that is validated later
+			// during flush.
+			return;
+		}
+
+		final PersistenceContext.NaturalIdHelper naturalIdHelper = session.getPersistenceContext().getNaturalIdHelper();
+		final Object id = getIdentifier( entity, session );
+
+		// for reattachment of mutable natural-ids, we absolutely positively have to grab the snapshot from the
+		// database, because we have no other way to know if the state changed while detached.
+		final Object[] naturalIdSnapshot;
+		final Object[] entitySnapshot = session.getPersistenceContext().getDatabaseSnapshot( id, this );
+		if ( entitySnapshot == StatefulPersistenceContext.NO_ROW ) {
+			naturalIdSnapshot = null;
+		}
+		else {
+			naturalIdSnapshot = naturalIdHelper.extractNaturalIdValues( entitySnapshot, this );
+		}
+
+		naturalIdHelper.removeSharedNaturalIdCrossReference( this, id, naturalIdSnapshot );
+		naturalIdHelper.manageLocalNaturalIdCrossReference(
+				this,
+				id,
+				naturalIdHelper.extractNaturalIdValues( entity, this ),
+				naturalIdSnapshot,
+				CachedNaturalIdValueSource.UPDATE
+		);
 	}
 }

@@ -922,11 +922,6 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 	}
 
 	@Override
-	public void afterReassociate(Object entity, SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	@Override
 	public Boolean isTransient(Object object, SharedSessionContractImplementor session) throws HibernateException {
 		final Object id = getHierarchy().getIdentifierDescriptor().extractIdentifier( object, session );
 

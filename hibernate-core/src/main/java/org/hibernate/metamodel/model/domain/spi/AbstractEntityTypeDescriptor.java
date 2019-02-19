@@ -29,6 +29,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.MappedJoin;
+import org.hibernate.boot.model.domain.spi.EntityMappingImplementor;
 import org.hibernate.boot.model.domain.spi.ManagedTypeMappingImplementor;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataNonPojoImpl;
@@ -127,6 +128,7 @@ public abstract class AbstractEntityTypeDescriptor<J>
 	private final boolean canWriteToCache;
 
 	private final boolean hasProxy;
+	private final boolean selectBeforeUpdate;
 	private final Class proxyInterface;
 	private final int batchSize;
 
@@ -137,7 +139,7 @@ public abstract class AbstractEntityTypeDescriptor<J>
 
 	@SuppressWarnings("UnnecessaryBoxing")
 	public AbstractEntityTypeDescriptor(
-			EntityMapping bootMapping,
+			EntityMappingImplementor bootMapping,
 			IdentifiableTypeDescriptor<? super J> superTypeDescriptor,
 			RuntimeModelCreationContext creationContext) throws HibernateException {
 		super(
@@ -205,6 +207,7 @@ public abstract class AbstractEntityTypeDescriptor<J>
 		}
 		batchSize = batch;
 
+		selectBeforeUpdate = bootMapping.hasSelectBeforeUpdate();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -796,6 +799,11 @@ public abstract class AbstractEntityTypeDescriptor<J>
 	@Override
 	public Object createProxy(Object id, SharedSessionContractImplementor session) throws HibernateException {
 		return proxyFactory.getProxy( (Serializable) id, session );
+	}
+
+	@Override
+	public boolean isSelectBeforeUpdateRequired() {
+		return selectBeforeUpdate;
 	}
 
 	@Override

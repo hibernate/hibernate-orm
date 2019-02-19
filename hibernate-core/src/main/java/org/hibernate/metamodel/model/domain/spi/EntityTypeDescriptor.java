@@ -18,7 +18,7 @@ import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.annotations.Remove;
-import org.hibernate.boot.model.domain.EntityMapping;
+import org.hibernate.boot.model.domain.spi.EntityMappingImplementor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
@@ -74,7 +74,7 @@ public interface EntityTypeDescriptor<T>
 	 * Unless a custom {@link RuntimeModelDescriptorFactory} is used, it is expected
 	 * that implementations of EntityDescriptor define a constructor accepting the following arguments:<ol>
 	 *     <li>
-	 *         {@link EntityMapping} is the boot-model description of the entity
+	 *         {@link EntityMappingImplementor} is the boot-model description of the entity
 	 *     </li>
 	 *     <li>
 	 *         {@link IdentifiableTypeDescriptor} is the runtime-model descriptor of
@@ -87,7 +87,7 @@ public interface EntityTypeDescriptor<T>
 	 * </ol>
 	 */
 	Class[] STANDARD_CONSTRUCTOR_SIG = new Class[] {
-			EntityMapping.class,
+			EntityMappingImplementor.class,
 			IdentifiableTypeDescriptor.class,
 			RuntimeModelCreationContext.class
 	};

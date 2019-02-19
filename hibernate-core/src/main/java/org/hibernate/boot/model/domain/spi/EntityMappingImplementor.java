@@ -13,4 +13,6 @@ import org.hibernate.boot.model.domain.EntityMapping;
  */
 public interface EntityMappingImplementor extends EntityMapping, IdentifiableTypeMappingImplementor {
 	void validate();
+
+	boolean hasSelectBeforeUpdate();
 }

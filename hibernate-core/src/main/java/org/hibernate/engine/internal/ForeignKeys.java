@@ -6,9 +6,7 @@
  */
 package org.hibernate.engine.internal;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
@@ -23,6 +21,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NonIdPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute.SingularAttributeClassification;
+import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
@@ -106,11 +105,14 @@ public final class ForeignKeys<T> {
 					final SingularPersistentAttributeEmbedded embedded = (SingularPersistentAttributeEmbedded) attribute;
 					final EmbeddedTypeDescriptor<?> embeddedDescriptor = embedded.getEmbeddedDescriptor();
 
-					final Map<String, Object> embeddedValues = new LinkedHashMap<>();
-					boolean substitute = false;
-
 					for ( NonIdPersistentAttribute<?, ?> subAttribute : embeddedDescriptor.getDeclaredPersistentAttributes() ) {
-						final Object subAttributeValue = subAttribute.getPropertyAccess().getGetter().get( value );
+						Object subAttributeValue;
+						if ( value == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+							subAttributeValue = new Object();
+						}
+						else {
+							subAttributeValue = subAttribute.getPropertyAccess().getGetter().get( value );
+						}
 						final Object replacement = nullifyTransientReferences( subAttributeValue, subAttribute );
 						if ( replacement != subAttributeValue ) {
 							// todo (6.0) : grrr.. this is another place we should not have to pass in SessionFactory

@@ -13,7 +13,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.boot.model.domain.EntityMapping;
+import org.hibernate.boot.model.domain.spi.EntityMappingImplementor;
 import org.hibernate.boot.model.domain.spi.ManagedTypeMappingImplementor;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
@@ -40,7 +40,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 public class JoinedEntityTypeDescriptor<J> extends AbstractEntityTypeDescriptor<J> {
 
 	public JoinedEntityTypeDescriptor(
-			EntityMapping bootMapping,
+			EntityMappingImplementor bootMapping,
 			IdentifiableTypeDescriptor<? super J> superTypeDescriptor,
 			RuntimeModelCreationContext creationContext) throws HibernateException {
 		super( bootMapping, superTypeDescriptor, creationContext );
@@ -182,11 +182,6 @@ public class JoinedEntityTypeDescriptor<J> extends AbstractEntityTypeDescriptor<
 	@Override
 	public CacheEntry buildCacheEntry(
 			Object entity, Object[] state, Object version, SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	@Override
-	public boolean isSelectBeforeUpdateRequired() {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 

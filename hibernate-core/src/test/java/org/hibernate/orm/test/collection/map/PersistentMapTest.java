@@ -77,6 +77,21 @@ public class PersistentMapTest extends SessionFactoryBasedFunctionalTest {
 
 					List<User> users = session.createQuery( "from " + User.class.getName() ).list();
 					users.forEach( user -> session.delete( user ) );
+
+					List<Child> children = session.createQuery( "from Child" ).list();
+					children.forEach( child -> session.delete( child ) );
+
+					List<Parent> parents = session.createQuery( "from Parent" ).list();
+					parents.forEach( parent -> session.delete( parent ) );
+
+					List<MultilingualString> multilingualStrings = session.createQuery( "from MultilingualString" )
+							.list();
+					multilingualStrings.forEach( multilingualString -> session.delete( multilingualString ) );
+
+					List<MultilingualStringParent> multilingualStringParents = session.createQuery(
+							"from MultilingualStringParent" ).list();
+					multilingualStringParents.forEach( multilingualStringParent -> session.delete(
+							multilingualStringParent ) );
 				}
 		);
 	}
@@ -153,7 +168,7 @@ public class PersistentMapTest extends SessionFactoryBasedFunctionalTest {
 
 		inTransaction(
 				session -> {
-					session.delete( parent );
+					session.delete( savedParent );
 				}
 		);
 	}
@@ -214,7 +229,9 @@ public class PersistentMapTest extends SessionFactoryBasedFunctionalTest {
 
 						session.beginTransaction();
 
-						user = session.get( User.class, 1 );
+						user = session.get( User.class, user.id );
+						assertNotNull( user, "user should not be null" );
+						assertNotNull( user.userDatas, "user datas should not be null" );
 						Collection<UserData> values = user.userDatas.values();
 						values.forEach( data -> userDatasToDelete.add( data ) );
 						user.userDatas.clear();

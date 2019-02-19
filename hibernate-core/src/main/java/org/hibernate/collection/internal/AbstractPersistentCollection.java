@@ -83,6 +83,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	 * eg. SOAP libraries.
 	 */
 	public AbstractPersistentCollection() {
+
 	}
 
 	protected AbstractPersistentCollection(
@@ -701,7 +702,9 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	@Override
 	public final boolean setCurrentSession(SharedSessionContractImplementor session) throws HibernateException {
 		if ( session == this.session ) {
-			assert collectionDescriptor != null;
+			if ( collectionDescriptor == null ) {
+				this.collectionDescriptor = session.getFactory().getMetamodel().findCollectionDescriptor( getRole() );
+			}
 			return false;
 		}
 		else if ( this.session != null ) {

@@ -1027,12 +1027,6 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 			SqlAliasBase sqlAliasBase,
 			TableReferenceJoinCollector joinCollector) {
 
-		if ( getIndexDescriptor() != null ) {
-			getIndexDescriptor().applyTableReferenceJoins( lhs, joinType, sqlAliasBase, joinCollector );
-		}
-
-		getElementDescriptor().applyTableReferenceJoins( lhs, joinType, sqlAliasBase, joinCollector );
-
 		if ( separateCollectionTable != null ) {
 			/*
 			  For CollectionElementEntityImpl the previous call to getElementDescriptor().applyTableReferenceJoins(....) has already
@@ -1063,11 +1057,18 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 				) );
 			}
 		}
+
+		if ( getIndexDescriptor() != null ) {
+			getIndexDescriptor().applyTableReferenceJoins( lhs, joinType, sqlAliasBase, joinCollector );
+		}
+
+		getElementDescriptor().applyTableReferenceJoins( lhs, joinType, sqlAliasBase, joinCollector );
 	}
 
 	/*
 	 todo (6.0) : the quite same logic of this method is also in {@link FetchedTableReferenceCollectorImpl},
-	 {@link ToOneJoinCollectorImpl}, {@link AbstractEntityTypeDescriptor}
+	 {@link ToOneJoinCollectorImpl}, {@link AbstractEntityTypeDescriptor}, {@link CollectionElementEntityImpl},
+	 {@link CollectionIndexEntityImpl}
 	  */
 	private Predicate makePredicate(ColumnReferenceQualifier lhs, TableReference rhs) {
 		final Junction conjunction = new Junction( Junction.Nature.CONJUNCTION );

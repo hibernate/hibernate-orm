@@ -739,8 +739,14 @@ public abstract class AbstractEntityTypeDescriptor<J>
 			JoinType joinType,
 			SqlAliasBase sqlAliasBase,
 			TableReferenceJoinCollector joinCollector) {
-		final TableReference root = resolvePrimaryTableReference( sqlAliasBase );
-		joinCollector.addPrimaryReference( root );
+		final TableReference root;
+		if ( joinCollector.getPrimaryTableReference() == null ) {
+			root = resolvePrimaryTableReference( sqlAliasBase );
+			joinCollector.addPrimaryReference( root );
+		}
+		else {
+			root = lhs.locateTableReference( getPrimaryTable() );
+		}
 		resolveTableReferenceJoins( root, sqlAliasBase, joinType, joinCollector::addSecondaryReference );
 	}
 

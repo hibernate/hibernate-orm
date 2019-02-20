@@ -28,6 +28,7 @@ import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReferenceEntity;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
@@ -40,9 +41,15 @@ import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
+import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.EntityValuedNavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeReference;
+import org.hibernate.sql.ast.tree.spi.from.TableReference;
+import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.spi.predicate.Junction;
+import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
@@ -199,7 +206,67 @@ public class CollectionElementEntityImpl<J>
 			JoinType joinType,
 			SqlAliasBase sqlAliasBase,
 			TableReferenceJoinCollector joinCollector) {
+		// todo (6.0) - logic duplidated in CollectionIndexEntityImpl
+		if ( joinCollector.getPrimaryTableReference() != null ) {
+			final TableReference joinedTableReference = new TableReference(
+					getEntityDescriptor().getPrimaryTable(),
+					sqlAliasBase.generateNewAlias(),
+					false
+			);
+
+			joinCollector.addSecondaryReference(
+					new TableReferenceJoin(
+							joinType,
+							joinedTableReference,
+							makePredicate(
+									joinCollector.getPrimaryTableReference(),
+									joinedTableReference
+							)
+					)
+			);
+
+			lhs = joinedTableReference;
+		}
+		else {
+			joinCollector.addPrimaryReference(
+					new TableReference(
+							getEntityDescriptor().getPrimaryTable(),
+							sqlAliasBase.generateNewAlias(),
+							false
+					)
+			);
+
+			lhs = joinCollector.getPrimaryTableReference();
+		}
+
 		getEntityDescriptor().applyTableReferenceJoins( lhs, joinType, sqlAliasBase, joinCollector );
+	}
+
+	private Predicate makePredicate(ColumnReferenceQualifier lhs, TableReference rhs) {
+		final Junction conjunction = new Junction( Junction.Nature.CONJUNCTION );
+		for ( ForeignKey foreignKey : getContainer().getCollectionKeyDescriptor().getJoinForeignKey().getReferringTable().getForeignKeys() ) {
+			if ( foreignKey.getTargetTable().equals( rhs.getTable() ) ) {
+				for( ForeignKey.ColumnMappings.ColumnMapping columnMapping : foreignKey.getColumnMappings().getColumnMappings()) {
+					final ColumnReference referringColumnReference = lhs.resolveColumnReference( columnMapping.getReferringColumn() );
+					final ColumnReference targetColumnReference = rhs.resolveColumnReference( columnMapping.getTargetColumn() );
+
+					// todo (6.0) : we need some kind of validation here that the column references are properly defined
+
+					// todo (6.0) : we could also handle this using SQL row-value syntax, e.g.:
+					//		`... where ... [ (rCol1, rCol2, ...) = (tCol1, tCol2, ...) ] ...`
+
+					conjunction.add(
+							new ComparisonPredicate(
+									referringColumnReference,
+									ComparisonOperator.EQUAL,
+									targetColumnReference
+							)
+					);
+				}
+				break;
+			}
+		}
+		return conjunction;
 	}
 
 	@Override

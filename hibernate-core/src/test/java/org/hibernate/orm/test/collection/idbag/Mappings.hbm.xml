@@ -10,7 +10,7 @@
 	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 
-<hibernate-mapping package="org.hibernate.test.collection.idbag">
+<hibernate-mapping package="org.hibernate.orm.test.collection.idbag">
 
     <class name="IdbagOwner">
 		<id name="name" column="NAME" type="string" />

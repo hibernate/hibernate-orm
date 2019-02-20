@@ -12,6 +12,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -48,8 +49,9 @@ public class SubGraphImpl<J> extends AbstractGraph<J> implements SubGraphImpleme
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <AJ> AttributeNodeImplementor<AJ> addAttributeNode(Attribute<? extends J, AJ> attribute) {
-		return null;
+		return addAttributeNode( (PersistentAttributeDescriptor) attribute );
 	}
 
 	@Override

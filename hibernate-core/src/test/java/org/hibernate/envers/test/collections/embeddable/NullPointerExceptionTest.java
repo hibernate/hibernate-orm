@@ -6,7 +6,6 @@
  */
 package org.hibernate.envers.test.collections.embeddable;
 
-import java.util.Arrays;
 import java.util.Map;
 
 import org.hibernate.envers.strategy.internal.ValidityAuditStrategy;
@@ -16,11 +15,13 @@ import org.hibernate.envers.test.support.domains.collections.embeddable.Product;
 import org.hibernate.envers.test.support.domains.collections.embeddable.Type;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.hamcrest.CollectionMatchers;
 import org.hibernate.testing.junit5.dynamictests.DynamicBeforeAll;
 import org.hibernate.testing.junit5.dynamictests.DynamicTest;
 import org.hibernate.testing.junit5.envers.RequiresAuditStrategy;
 
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
 
 /**
  * @author Chris Cranford
@@ -71,34 +72,34 @@ public class NullPointerExceptionTest extends EnversEntityManagerFactoryBasedFun
 
 	@DynamicTest
 	public void testRevisionCounts() {
-		assertEquals( Arrays.asList( 1, 2, 3 ), getAuditReader().getRevisions( Product.class, productId ) );
-		assertEquals( 1, getAuditReader().find( Product.class, productId, 1 ).getItems().size() );
-		assertEquals( 2, getAuditReader().find( Product.class, productId, 2 ).getItems().size() );
-		assertEquals( 1, getAuditReader().find( Product.class, productId, 3 ).getItems().size() );
+		assertThat( getAuditReader().getRevisions( Product.class, productId ), contains( 1, 2, 3 ) );
+		assertThat( getAuditReader().find( Product.class, productId, 1 ).getItems(), CollectionMatchers.hasSize( 1 ) );
+		assertThat( getAuditReader().find( Product.class, productId, 2 ).getItems(), CollectionMatchers.hasSize( 2 ) );
+		assertThat( getAuditReader().find( Product.class, productId, 3 ).getItems(), CollectionMatchers.hasSize( 1 ) );
 	}
 
 	@DynamicTest
 	public void testRevision1() {
 		final Product product = getAuditReader().find( Product.class, productId, 1 );
-		assertEquals( 1, product.getItems().size() );
-		assertEquals( "bread", product.getItems().get( 0 ).getName() );
+		assertThat( product.getItems(), contains( new Item( "bread", null ) ) );
 	}
 
 	@DynamicTest
 	public void testRevision2() {
 		final Product product = getAuditReader().find( Product.class, productId, 2 );
-		assertEquals( 2, product.getItems().size() );
-		assertEquals( "bread", product.getItems().get( 0 ).getName() );
-		assertEquals( "bread2", product.getItems().get( 1 ).getName() );
-		assertEquals( new Type( 2, "T2" ), product.getItems().get( 1 ).getType() );
+		assertThat(
+				product.getItems(),
+				contains(
+						new Item( "bread", null ),
+						new Item( "bread2", new Type( 2, "T2" ) )
+				)
+		);
 	}
 
 	@DynamicTest
 	public void testRevision3() {
 		final Product product = getAuditReader().find( Product.class, productId, 3 );
-		assertEquals( 1, product.getItems().size() );
-		assertEquals( "bread2", product.getItems().get( 0 ).getName() );
-		assertEquals( new Type( 2, "T2" ), product.getItems().get( 0 ).getType() );
+		assertThat( product.getItems(), contains( new Item( "bread2", new Type( 2, "T2" ) ) ) );
 	}
 }
 

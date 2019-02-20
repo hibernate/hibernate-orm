@@ -73,7 +73,7 @@ allprojects {
 		// NuoDB: Default to adding our dialect explicitly
 		else {
 			flatDir {
-				dirs "${System.env.HOME}/.m2/repository/com/nuodb/hibernate/nuodb-hibernate/3.3.0-hib5"
+				dirs "${System.env.HOME}/.m2/repository/com/nuodb/hibernate/nuodb-hibernate/20.0.0-hib5"
 			}
 		}
 	}

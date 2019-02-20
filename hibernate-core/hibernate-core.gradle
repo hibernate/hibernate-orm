@@ -47,8 +47,7 @@ dependencies {
     compile( libraries.classmate )
     compile( libraries.activation )
 
-
-    compile('com.nuodb.hibernate:nuodb-hibernate:3.3.0-hib5')
+    implementation( "com.nuodb.hibernate:nuodb-hibernate:${hibernateDialect}-hib5" )
 
     // We need dom4j for a number of things temporarily:
     //      1) (unsupported) EntityMode.DOM4J support
@@ -103,8 +102,8 @@ dependencies {
     testRuntime( libraries.atomikos_jta )
     testRuntime( libraries.wildfly_transaction_client )
 
-    testRuntime( "com.nuodb.hibernate:nuodb-hibernate:3.3.0-hib5" )
-    testRuntime( "com.nuodb.jdbc:nuodb-jdbc:3.3.0" )
+    testRuntime( "com.nuodb.hibernate:nuodb-hibernate:20.0.0-hib5" )
+    testRuntime( "com.nuodb.jdbc:nuodb-jdbc:20.0.0" )
 
     testAnnotationProcessor( project( ':hibernate-jpamodelgen' ) )
 
@@ -117,7 +116,7 @@ dependencies {
     // Additional tests requiring Javassist
     // folder in src/javassist/java
     testJavassistCompile libraries.javassist
-    testCompile "com.nuodb.hibernate:nuodb-hibernate:3.3.0-hib5"
+    testCompile "com.nuodb.hibernate:nuodb-hibernate:20.0.0-hib5"
 }
 
 jar {

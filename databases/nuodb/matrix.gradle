@@ -4,5 +4,5 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-jdbcDependency 'com.nuodb.jdbc:nuodb-jdbc:3.3.0'
-jdbcDependency 'com.nuodb.hibernate:nuodb-hibernate:3.3.0-hib5'
+jdbcDependency 'com.nuodb.jdbc:nuodb-jdbc:20.0.0'
+jdbcDependency 'com.nuodb.hibernate:nuodb-hibernate:20.0.0-hib5'

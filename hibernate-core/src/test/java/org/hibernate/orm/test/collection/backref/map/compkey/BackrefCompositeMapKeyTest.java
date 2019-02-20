@@ -6,6 +6,8 @@
  */
 package org.hibernate.orm.test.collection.backref.map.compkey;
 
+import java.util.Map;
+
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.internal.util.SerializationHelper;
@@ -14,9 +16,11 @@ import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * BackrefCompositeMapKeyTest implementation.  Test access to a composite map-key
@@ -228,10 +232,11 @@ public class BackrefCompositeMapKeyTest extends SessionFactoryBasedFunctionalTes
 		inTransaction(
 				session -> {
 					Product prod = session.get( Product.class, "Widget" );
-					assertTrue( Hibernate.isInitialized( prod.getParts() ) );
-					Part part = session.get( Part.class, "Widge" );
-					prod.getParts().remove( mapKey );
-
+					assertFalse( Hibernate.isInitialized( prod.getParts() ) );
+					Map parts = prod.getParts();
+					assertThat( parts.size(), is(2) );
+					session.get( Part.class, "Widge" );
+					parts.remove( mapKey );
 				}
 		);
 
@@ -241,8 +246,10 @@ public class BackrefCompositeMapKeyTest extends SessionFactoryBasedFunctionalTes
 		inTransaction(
 				session -> {
 					Product prod = session.get( Product.class, "Widget" );
-					assertTrue( Hibernate.isInitialized( prod.getParts() ) );
-					assertNull( prod.getParts().get( new MapKey( "Top" ) ) );
+					assertFalse( Hibernate.isInitialized( prod.getParts() ) );
+					Map parts = prod.getParts();
+					assertThat( parts.size(), is( 1 ) );
+					assertNull( parts.get( new MapKey( "Top" ) ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
 					session.delete( session.get( Product.class, "Widget" ) );
 				}

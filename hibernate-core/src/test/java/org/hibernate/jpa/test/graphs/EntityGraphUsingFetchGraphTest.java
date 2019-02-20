@@ -6,11 +6,11 @@
  */
 package org.hibernate.jpa.test.graphs;
 
+import javax.persistence.AttributeNode;
 import javax.persistence.Entity;
 import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -20,15 +20,19 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
+import javax.persistence.metamodel.Attribute;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
 import org.hibernate.Hibernate;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -93,7 +97,7 @@ public class EntityGraphUsingFetchGraphTest extends BaseEntityManagerFunctionalT
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9392")
-	public void fetchAttributeNodeFromSubgraph() {
+	public void fetchAttributeNodeByStringFromSubgraph() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 
@@ -136,6 +140,70 @@ public class EntityGraphUsingFetchGraphTest extends BaseEntityManagerFunctionalT
 		query.setHint( "javax.persistence.loadgraph", entityGraph );
 		final List<CustomerOrder> results = query.getResultList();
 
+		assertEntityGraph( entityGraph );
+		assertTrue( Hibernate.isInitialized( results ) );
+
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-13233")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public void fetchAttributeNodeByAttributeFromSubgraph() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		Address address = new Address();
+		address.city = "TestCity";
+
+		CustomerOrder customerOrder = new CustomerOrder();
+		customerOrder.shippingAddress = address;
+
+		Product product = new Product();
+
+		OrderPosition orderPosition = new OrderPosition();
+		orderPosition.product = product;
+
+		customerOrder.orderPosition = orderPosition;
+		em.persist( address );
+		em.persist( orderPosition );
+		em.persist( product );
+		em.persist( customerOrder );
+
+		em.getTransaction().commit();
+		em.clear();
+
+		em.getTransaction().begin();
+
+		final EntityGraph<CustomerOrder> entityGraph = em.createEntityGraph( CustomerOrder.class );
+		EntityTypeDescriptor<CustomerOrder> customerOrderEntityType =
+			entityManagerFactory().getMetamodel().entity( CustomerOrder.class );
+		entityGraph.addAttributeNodes(
+			(Attribute) customerOrderEntityType.getAttribute( "shippingAddress" ),
+			(Attribute) customerOrderEntityType.getAttribute( "orderDate" )
+		);
+		entityGraph.addAttributeNodes( (Attribute) customerOrderEntityType.getAttribute( "shippingAddress" ) );
+
+		final Subgraph<OrderPosition> orderProductsSubgraph =
+			entityGraph.addSubgraph( (Attribute) customerOrderEntityType.getAttribute( "orderPosition" ) );
+		EntityTypeDescriptor<OrderPosition> positionEntityType =
+			entityManagerFactory().getMetamodel().entity( OrderPosition.class );
+		orderProductsSubgraph.addAttributeNodes( (Attribute) positionEntityType.getAttribute( "amount" ) );
+		orderProductsSubgraph.addAttributeNodes( (Attribute) positionEntityType.getAttribute( "product" ) );
+
+		final Subgraph<Product> productSubgraph =
+			orderProductsSubgraph.addSubgraph( (Attribute) positionEntityType.getAttribute( "product" ) );
+		EntityTypeDescriptor<Product> productEntityType = entityManagerFactory().getMetamodel().entity( Product.class );
+		productSubgraph.addAttributeNodes( (Attribute) productEntityType.getAttribute( "productName" ) );
+
+		TypedQuery<CustomerOrder> query = em.createQuery(
+			"SELECT o FROM EntityGraphUsingFetchGraphTest$CustomerOrder o", CustomerOrder.class
+		);
+		query.setHint( "javax.persistence.loadgraph", entityGraph );
+		final List<CustomerOrder> results = query.getResultList();
+
+		assertEntityGraph( entityGraph );
 		assertTrue( Hibernate.isInitialized( results ) );
 
 		em.getTransaction().commit();
@@ -182,6 +250,38 @@ public class EntityGraphUsingFetchGraphTest extends BaseEntityManagerFunctionalT
 
 		em.getTransaction().commit();
 		em.close();
+	}
+
+
+	/**
+	 * Verify that entityGraph has expected state
+	 *
+	 * customerOrder - shippingAddress
+	 *               - orderDate
+	 *               - orderPosition - amount
+	 *                               - product - productName
+	 *
+	 * @param entityGraph entityGraph
+	 */
+	private void assertEntityGraph(EntityGraph<CustomerOrder> entityGraph) {
+		assertEquals(3, entityGraph.getAttributeNodes().size());
+		for ( AttributeNode<?> entityGraphAttributeNode : entityGraph.getAttributeNodes() ) {
+			if ( "orderPosition".equals( entityGraphAttributeNode.getAttributeName() ) ) {
+				Collection<Subgraph> orderPositionGraph = entityGraphAttributeNode.getSubgraphs().values();
+				assertEquals( 1, orderPositionGraph.size() );
+				List<AttributeNode<?>> orderPositionAttributes = orderPositionGraph.iterator().next().getAttributeNodes();
+				assertEquals( 2, orderPositionAttributes.size() );
+				for ( AttributeNode<?> orderPositionAttributeNode : orderPositionAttributes ) {
+					if ( "product".equals( orderPositionAttributeNode.getAttributeName() ) ) {
+						assertEquals( 1, orderPositionAttributeNode.getSubgraphs().size() );
+					} else {
+						assertTrue( orderPositionAttributeNode.getSubgraphs().isEmpty() );
+					}
+				}
+			} else {
+				assertTrue( entityGraphAttributeNode.getSubgraphs().isEmpty() );
+			}
+		}
 	}
 
 	@Entity

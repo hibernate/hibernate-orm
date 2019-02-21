@@ -9,6 +9,7 @@ package org.hibernate.mapping;
 import org.hibernate.boot.model.domain.JavaTypeMapping;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.collection.internal.StandardArraySemantics;
+import org.hibernate.collection.internal.StandardIdentifierBagSemantics;
 import org.hibernate.collection.spi.CollectionSemantics;
 
 /**
@@ -30,7 +31,7 @@ public class IdentifierBag extends IdentifierCollection {
 	@Override
 	@SuppressWarnings("unchecked")
 	public CollectionSemantics getCollectionSemantics() {
-		return StandardArraySemantics.INSTANCE;
+		return StandardIdentifierBagSemantics.INSTANCE;
 	}
 
 	public Object accept(ValueVisitor visitor) {

@@ -19,6 +19,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
+import org.hibernate.metamodel.model.domain.spi.CollectionIdentifier;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.CollectionKey;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
@@ -244,7 +245,28 @@ public class BasicCollectionRowsUpdateExecutor implements CollectionRowsUpdateEx
 		final Junction junction = new Junction( Junction.Nature.CONJUNCTION );
 
 		if ( collectionDescriptor.getIdDescriptor() != null ) {
-			throw new NotYetImplementedFor6Exception(  );
+			CollectionIdentifier identifier = collectionDescriptor.getIdDescriptor();
+			identifier.visitColumns(
+					(sqlExpressableType, column) -> {
+						final ColumnReference columnReference = collectionTableRef.resolveColumnReference( column );
+						final PositionalParameter parameter = new PositionalParameter(
+								parameterCount.getAndIncrement(),
+								column.getExpressableType(),
+								Clause.WHERE,
+								sessionFactory.getTypeConfiguration()
+						);
+						columnCollector.accept( column, parameter );
+						junction.add(
+								new ComparisonPredicate(
+										columnReference,
+										ComparisonOperator.EQUAL,
+										parameter
+								)
+						);
+					},
+					Clause.WHERE,
+				sessionFactory.getTypeConfiguration()
+			);
 		}
 		else if ( hasIndex && !indexContainsFormula ) {
 			final CollectionIndex<?> index = collectionDescriptor.getIndexDescriptor();

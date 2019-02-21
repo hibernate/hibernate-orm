@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.model.domain.internal.collection;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -16,6 +18,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.ToOne;
+import org.hibernate.metamodel.model.creation.spi.DatabaseObjectResolver;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractCollectionElement;
 import org.hibernate.metamodel.model.domain.spi.CollectionElementEntity;
@@ -73,7 +76,6 @@ public class CollectionElementEntityImpl<J>
 	private boolean fullyInitialized;
 	private ForeignKey foreignKey;
 	private Navigable foreignKeyTargetNavigable;
-
 
 	public CollectionElementEntityImpl(
 			PersistentCollectionDescriptor runtimeDescriptor,
@@ -376,17 +378,32 @@ public class CollectionElementEntityImpl<J>
 			Collection bootDescriptor,
 			Table table,
 			RuntimeModelCreationContext creationContext) {
-		final Iterable<ForeignKey> foreignKeys = creationContext.getDatabaseObjectResolver()
+		final DatabaseObjectResolver databaseObjectResolver = creationContext.getDatabaseObjectResolver();
+		final Iterable<ForeignKey> foreignKeys = databaseObjectResolver
 				.resolveForeignKey( bootDescriptor.getForeignKey() )
 				.getReferringTable()
 				.getForeignKeys();
 
 		ForeignKey resolvedForeignKey = null;
+
 		if ( elementClassification.equals( ElementClassification.MANY_TO_MANY ) ) {
+			final List<Column> elementColumns = getElementColumns( bootDescriptor, databaseObjectResolver );
 			for ( ForeignKey foreignKey : foreignKeys ) {
 				if ( foreignKey.getTargetTable().equals( table ) ) {
-					resolvedForeignKey = foreignKey;
-					break;
+					// we can have more than one Fk targeting the same table, so we have to check if the fk referring
+					// columns match with the element ones
+					boolean columnsMatch = true;
+					final List<Column> referringColumns = foreignKey.getColumnMappings().getReferringColumns();
+					for ( Column column : elementColumns ) {
+						if ( !referringColumns.contains( column ) ) {
+							columnsMatch = false;
+							break;
+						}
+					}
+					if ( columnsMatch ) {
+						resolvedForeignKey = foreignKey;
+						break;
+					}
 				}
 			}
 		}
@@ -420,6 +437,14 @@ public class CollectionElementEntityImpl<J>
 		assert resolvedForeignKey != null;
 
 		return resolvedForeignKey;
+	}
+
+	private List<Column> getElementColumns(Collection bootDescriptor, DatabaseObjectResolver databaseObjectResolver) {
+		List<Column> elementColumns = new ArrayList<>();
+		bootDescriptor.getElement().getMappedColumns().forEach( column -> {
+			elementColumns.add( databaseObjectResolver.resolveColumn( column ) );
+		} );
+		return elementColumns;
 	}
 
 	@Override

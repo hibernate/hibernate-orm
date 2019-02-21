@@ -18,7 +18,7 @@ import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
  *
  * @author Steve Ebersole
  */
-public class StandardIdentifierBagSemantics extends AbstractBagSemantics<Collection<?>> {
+public class StandardIdentifierBagSemantics<E> extends AbstractBagSemantics<Collection<?>> {
 	/**
 	 * Singleton access
 	 */
@@ -45,6 +45,6 @@ public class StandardIdentifierBagSemantics extends AbstractBagSemantics<Collect
 			Collection<?> rawCollection,
 			PersistentCollectionDescriptor<?, Collection<?>, E> collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentIdentifierBag<>( session, collectionDescriptor, rawCollection );
+		return new PersistentIdentifierBag( session, collectionDescriptor, rawCollection );
 	}
 }

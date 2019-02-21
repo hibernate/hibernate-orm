@@ -205,6 +205,6 @@ public class IdBagElementNullBasicTest extends SessionFactoryBasedFunctionalTest
 				type = @Type(type = "long"),
 				generator = "increment"
 		)
-		private List<String> aCollection = new ArrayList<String>();
+		private List<String> aCollection = new ArrayList<>();
 	}
 }

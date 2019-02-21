@@ -8,45 +8,29 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.Collection;
 
-import org.hibernate.LockMode;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cache.CacheException;
+import org.hibernate.collection.internal.StandardIdentifierBagSemantics;
+import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.metamodel.model.domain.spi.AbstractPersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.AbstractPluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.sql.results.internal.domain.collection.CollectionInitializerProducer;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.FetchParent;
 
 /**
  * @author Andrea Boriero
  */
-public class PersistentIdentifierBagDescriptorImpl<O, E>
-		extends AbstractPersistentCollectionDescriptor<O, Collection<E>, E> {
+public class PersistentIdentifierBagDescriptorImpl<O, E> extends PersistentBagDescriptorImpl<O, E> {
+
 	public PersistentIdentifierBagDescriptorImpl(
 			Property pluralProperty,
 			ManagedTypeDescriptor runtimeContainer,
 			RuntimeModelCreationContext creationContext)
 			throws MappingException, CacheException {
 		super( pluralProperty, runtimeContainer, creationContext );
-	}
-
-	@Override
-	protected CollectionInitializerProducer createInitializerProducer(
-			FetchParent fetchParent,
-			boolean selected,
-			String resultVariable,
-			LockMode lockMode,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
-		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
@@ -61,5 +45,10 @@ public class PersistentIdentifierBagDescriptorImpl<O, E>
 	protected void doProcessQueuedOps(
 			PersistentCollection collection, Object id, SharedSessionContractImplementor session) {
 //		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public CollectionSemantics<Collection<E>> getSemantics() {
+		return StandardIdentifierBagSemantics.INSTANCE;
 	}
 }

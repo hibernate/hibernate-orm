@@ -176,6 +176,7 @@ public interface PersistentCollection<E> {
 	 * @throws HibernateException Generally indicates a problem resolving data read from the ResultSet
 	 * @throws SQLException Indicates a problem accessing the ResultSet
 	 */
+	// todo (6.0) : never used remove it ?
 	Object readFrom(
 			ResultSet rs,
 			Object owner,

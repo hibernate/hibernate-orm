@@ -46,7 +46,7 @@ public class BagInitializer extends AbstractImmediateCollectionInitializer {
 	protected void readCollectionRow(RowProcessingState rowProcessingState) {
 		if ( collectionIdAssembler != null ) {
 			( ( PersistentIdentifierBag ) getCollectionInstance() ).load(
-					(Integer) collectionIdAssembler.assemble( rowProcessingState ),
+					collectionIdAssembler.assemble( rowProcessingState ),
 					elementAssembler.assemble( rowProcessingState )
 			);
 		}

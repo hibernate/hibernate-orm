@@ -69,7 +69,7 @@ public class RowReaderStandardImpl<T> implements RowReader<T> {
 	}
 
 	@Override
-	public T readRow(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) throws SQLException {
+	public T readRow(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
 		LOG.info( "---Processing Row---" );
 		coordinateInitializers( rowProcessingState, options );
 

@@ -105,13 +105,17 @@ public abstract class AbstractCollectionRowsDeletionExecutor implements Collecti
 
 			while ( deletes.hasNext() ) {
 				Object entry = deletes.next();
-				if ( getCollectionDescriptor().getIdDescriptor() != null ) {
-					bindCollectionId( entry, passes, collection, jdbcParameterBindings, session, Clause.DELETE );
-				}
-				else {
-					bindCollectionKey( key, jdbcParameterBindings, session, Clause.DELETE );
+				bindCollectionKey( key, jdbcParameterBindings, session, Clause.DELETE );
+				if ( getCollectionDescriptor().getIdDescriptor() == null ) {
 					if ( isDeleteByIndex() ) {
-						bindCollectionIndex( entry, passes, collection, jdbcParameterBindings, session, Clause.DELETE );
+						bindCollectionIndex(
+								entry,
+								passes,
+								collection,
+								jdbcParameterBindings,
+								session,
+								Clause.DELETE
+						);
 					}
 					else {
 						bindCollectionElement( entry, collection, jdbcParameterBindings, session, Clause.DELETE );

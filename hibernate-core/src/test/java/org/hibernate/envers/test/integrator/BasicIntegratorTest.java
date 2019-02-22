@@ -12,7 +12,7 @@ import javax.persistence.Id;
 import org.hibernate.cfg.Configuration;
 
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Steve Ebersole

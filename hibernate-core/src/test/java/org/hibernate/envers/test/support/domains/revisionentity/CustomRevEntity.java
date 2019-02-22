@@ -4,7 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.entities.reventity;
+package org.hibernate.envers.test.support.domains.revisionentity;
+
+import java.util.Objects;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -55,30 +57,21 @@ public class CustomRevEntity {
 		this.customTimestamp = customTimestamp;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
 		}
-		if ( !(o instanceof CustomRevEntity) ) {
+		if ( o == null || getClass() != o.getClass() ) {
 			return false;
 		}
-
 		CustomRevEntity that = (CustomRevEntity) o;
-
-		if ( customId != that.customId ) {
-			return false;
-		}
-		if ( customTimestamp != that.customTimestamp ) {
-			return false;
-		}
-
-		return true;
+		return customId == that.customId &&
+				customTimestamp == that.customTimestamp;
 	}
 
+	@Override
 	public int hashCode() {
-		int result;
-		result = customId;
-		result = 31 * result + (int) (customTimestamp ^ (customTimestamp >>> 32));
-		return result;
+		return Objects.hash( customId, customTimestamp );
 	}
 }

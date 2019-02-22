@@ -8,6 +8,7 @@ package org.hibernate.mapping;
 
 import java.util.Collection;
 
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedPrimaryKey;
 import org.hibernate.boot.model.relational.MappedTable;
 
@@ -28,20 +29,25 @@ public class PrimaryKey extends Constraint implements MappedPrimaryKey {
 
 	@Override
 	public void addColumn(Column column) {
-		final Collection<Column> columns = getMappedTable().getMappedColumns();
-		columns.stream().filter( c -> c.getCanonicalName().equals( column.getCanonicalName() ) )
+		addColumn( (MappedColumn) column );
+	}
+
+	@Override
+	public void addColumn(MappedColumn column) {
+		final Collection<MappedColumn> columns = getMappedTable().getMappedColumns();
+		columns.stream().filter( c -> c.getText().equals( column.getText() ) )
 				.forEach( c -> {
-					c.setNullable( false );
+					( (Column) c ).setNullable( false );
 					log.debugf(
 							"Forcing column [%s] to be non-null as it is part of the primary key for table [%s]",
-							column.getCanonicalName(),
+							column.getText(),
 							getTableNameForLogging( column )
 					);
 				} );
 		super.addColumn( column );
 	}
 
-	protected String getTableNameForLogging(Column column) {
+	protected String getTableNameForLogging(MappedColumn mappedColumn) {
 		if ( getMappedTable() != null ) {
 			if ( getMappedTable().getNameIdentifier() != null ) {
 				return getMappedTable().getNameIdentifier().getCanonicalName();
@@ -50,8 +56,11 @@ public class PrimaryKey extends Constraint implements MappedPrimaryKey {
 				return "<unknown>";
 			}
 		}
-		else if ( column.getTableName() != null ) {
-			return column.getTableName().getCanonicalName();
+		else if ( mappedColumn instanceof Column ) {
+			Column column = (Column) mappedColumn;
+			if ( column.getTableName() != null ) {
+				return column.getTableName().getCanonicalName();
+			}
 		}
 		return "<unknown>";
 	}

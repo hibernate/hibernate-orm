@@ -160,7 +160,7 @@ public abstract class Constraint implements MappedConstraint, Serializable {
 
 	@Override
 	public void addColumns(List<? extends MappedColumn> columns) {
-		columns.stream().forEach( column -> addColumn( (Selectable) column ) );
+		columns.stream().forEach( this::addColumn );
 	}
 
 	/**

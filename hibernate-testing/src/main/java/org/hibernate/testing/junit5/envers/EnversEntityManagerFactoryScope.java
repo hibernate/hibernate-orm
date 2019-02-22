@@ -136,10 +136,30 @@ public class EnversEntityManagerFactoryScope implements EntityManagerFactoryAcce
 		inJPA( getEntityManagerFactory(), action );
 	}
 
+	public <R> R inJPA(Function<EntityManager, R> action) {
+		return inJPA( getEntityManagerFactory(), action );
+	}
+
 	public void inJPA(EntityManagerFactory factory, Consumer<EntityManager> action) {
 		EntityManager entityManager = factory.createEntityManager();
 		try {
 			action.accept( entityManager );
+		}
+		catch ( Exception e ) {
+			if ( entityManager.getTransaction().isActive() ) {
+				entityManager.getTransaction().rollback();
+			}
+			throw e;
+		}
+		finally {
+			entityManager.close();
+		}
+	}
+
+	public <R> R inJPA(EntityManagerFactory factory, Function<EntityManager, R> action) {
+		EntityManager entityManager = factory.createEntityManager();
+		try {
+			return action.apply( entityManager );
 		}
 		catch ( Exception e ) {
 			if ( entityManager.getTransaction().isActive() ) {

@@ -29,6 +29,11 @@ plugins {
 
 allprojects {
 	repositories {
+		// Uncomment this to pull our jar from sonatype		
+		maven {
+			name "sonatype"
+			url "https://oss.sonatype.org/content/repositories/comnuodb-1046/"
+		}
 		mavenCentral()
 		//Allow loading additional dependencies from a local path;
 		//useful to load JDBC drivers which can not be distributed in public.
@@ -44,6 +49,7 @@ allprojects {
 			}
 		}
 	}
+
 	apply plugin: 'idea'
 
 	// minimize changes, at least for now (gradle uses 'build' by default)..

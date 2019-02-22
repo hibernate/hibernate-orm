@@ -38,6 +38,7 @@ import org.junit.jupiter.api.Tag;
 
 import org.hibernate.testing.junit5.StandardTags;
 import org.hibernate.testing.junit5.dynamictests.DynamicAfterAll;
+import org.hibernate.testing.junit5.dynamictests.DynamicAfterEach;
 import org.hibernate.testing.junit5.envers.EnversEntityManagerFactoryProducer;
 import org.hibernate.testing.junit5.envers.EnversEntityManagerFactoryScope;
 
@@ -77,14 +78,19 @@ public class EnversEntityManagerFactoryBasedFunctionalTest
 
 		final String[] mappings = getMappings();
 		if ( mappings != null && mappings.length > 0 ) {
+			for ( int i = 0; i < mappings.length; ++i ) {
+				if ( !mappings[ i ].startsWith( getBaseForMappings() ) ) {
+					mappings[ i ] = getBaseForMappings() + mappings[ i ];
+				}
+			}
 			settings.put( AvailableSettings.HBXML_FILES, String.join( ",", mappings ) );
 		}
 
 		return Bootstrap.getEntityManagerFactoryBuilder( new PersistenceUnitDescriptorAdapter(), settings ).build();
 	}
 
-	@DynamicAfterAll
-	public void releaseEntityManagerFactory() {
+	@DynamicAfterEach
+	public void releaseResources() {
 		if ( auditReader != null ) {
 			auditReader.close();
 			auditReader = null;
@@ -94,7 +100,10 @@ public class EnversEntityManagerFactoryBasedFunctionalTest
 			entityManager.close();
 			entityManager = null;
 		}
+	}
 
+	@DynamicAfterAll
+	public void releaseEntityManagerFactory() {
 		entityManagerFactoryScope.releaseEntityManagerFactory();
 	}
 
@@ -119,6 +128,12 @@ public class EnversEntityManagerFactoryBasedFunctionalTest
 	@Remove
 	@Deprecated
 	protected EntityManager getEntityManager() {
+		return getOrCreateEntityManager();
+	}
+
+	@Remove
+	@Deprecated
+	protected EntityManager getOrCreateEntityManager() {
 		if ( entityManager == null ) {
 			entityManager = entityManagerFactoryScope.getEntityManagerFactory().createEntityManager();
 		}
@@ -140,6 +155,10 @@ public class EnversEntityManagerFactoryBasedFunctionalTest
 
 	protected void inJPA(Consumer<EntityManager> action) {
 		entityManagerFactoryScope().inJPA( action );
+	}
+
+	protected <R> R inJPA(Function<EntityManager, R> action) {
+		return entityManagerFactoryScope().inJPA( action );
 	}
 
 	protected void inTransaction(Consumer<EntityManager> action) {

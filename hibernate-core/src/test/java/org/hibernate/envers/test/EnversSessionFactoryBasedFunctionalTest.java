@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.hibernate.Metamodel;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
@@ -22,6 +21,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.boot.AuditService;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.junit.jupiter.api.Tag;
 
 import org.jboss.logging.Logger;
@@ -113,7 +113,7 @@ public class EnversSessionFactoryBasedFunctionalTest
 		return auditReader;
 	}
 
-	protected Metamodel getMetamodel() {
+	protected MetamodelImplementor getMetamodel() {
 		return sessionFactoryScope.getSessionFactory().getMetamodel();
 	}
 

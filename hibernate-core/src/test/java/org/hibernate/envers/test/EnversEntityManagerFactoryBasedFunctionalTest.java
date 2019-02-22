@@ -20,7 +20,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.SharedCacheMode;
 import javax.persistence.ValidationMode;
-import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.SessionFactory;
@@ -34,6 +33,7 @@ import org.hibernate.envers.boot.AuditService;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.junit.jupiter.api.Tag;
 
 import org.hibernate.testing.junit5.StandardTags;
@@ -149,8 +149,10 @@ public class EnversEntityManagerFactoryBasedFunctionalTest
 		return auditReader;
 	}
 
-	protected Metamodel getMetamodel() {
-		return entityManagerFactoryScope.getEntityManagerFactory().getMetamodel();
+	protected MetamodelImplementor getMetamodel() {
+		return entityManagerFactoryScope.getEntityManagerFactory()
+				.unwrap( SessionFactoryImplementor.class )
+				.getMetamodel();
 	}
 
 	protected void inJPA(Consumer<EntityManager> action) {

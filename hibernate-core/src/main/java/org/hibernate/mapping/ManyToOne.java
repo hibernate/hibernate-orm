@@ -127,20 +127,21 @@ public class ManyToOne extends ToOne {
 			);
 		}
 
-		ForeignKey fk = (ForeignKey) getMappedTable().createForeignKey(
+		foreignKey = (ForeignKey) getMappedTable().createForeignKey(
 				getForeignKeyName(),
 				getConstraintColumns(),
 				getReferencedEntityName(),
 				getForeignKeyDefinition(),
 				property.getMappedColumns()
 		);
-		fk.setCascadeDeleteEnabled( isCascadeDeleteEnabled() );
+
+		foreignKey.setCascadeDeleteEnabled( isCascadeDeleteEnabled() );
 
 		if ( !hasFormula() && !"none".equals( getForeignKeyName() ) ) {
-			fk.disableCreation();
+			foreignKey.disableCreation();
 		}
 
-		return fk;
+		return foreignKey;
 	}
 	
 	public Object accept(ValueVisitor visitor) {
@@ -169,13 +170,14 @@ public class ManyToOne extends ToOne {
 		final PersistentClass referencedPersistentClass = getMetadataBuildingContext()
 				.getMetadataCollector()
 				.getEntityBinding( getReferencedEntityName() );
-		if ( referenceToPrimaryKey || referencedPropertyName == null ) {
-			return referencedPersistentClass.getIdentifier().getJavaTypeMapping();
-		}
-		else {
-			return referencedPersistentClass.getReferencedProperty( getReferencedPropertyName() )
-					.getValue()
-					.getJavaTypeMapping();
-		}
+		return referencedPersistentClass.getJavaTypeMapping();
+//		if ( referenceToPrimaryKey || referencedPropertyName == null ) {
+//			return referencedPersistentClass.getIdentifier().getJavaTypeMapping();
+//		}
+//		else {
+//			return referencedPersistentClass.getReferencedProperty( getReferencedPropertyName() )
+//					.getValue()
+//					.getJavaTypeMapping();
+//		}
 	}
 }

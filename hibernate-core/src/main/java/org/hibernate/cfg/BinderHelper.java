@@ -63,6 +63,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SyntheticProperty;
+import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.naming.Identifier;
@@ -367,10 +368,18 @@ public class BinderHelper {
 		Map<Column, Set<PersistentAttributeMapping>> columnsToProperty = new HashMap<>();
 		List<Column> orderedColumns = new ArrayList<>( columns.length );
 
+		Table referencedTable;
+		if ( columnOwner instanceof PersistentClass ) {
+			referencedTable = ( (PersistentClass ) columnOwner ).getTable();
+		}
+		else {
+			referencedTable = ( (Join) columnOwner ).getTable();
+		}
+
 		//build the list of column names
 		for ( Ejb3JoinColumn ejb3JoinColumn : columns ) {
 			Column column = new Column(
-					ejb3JoinColumn.getMappedTable().getNameIdentifier(),
+					referencedTable.getNameIdentifier(),
 					ejb3JoinColumn.getReferencedColumn(),
 					false
 			);

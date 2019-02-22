@@ -126,6 +126,8 @@ public interface EnversSettings {
 	/**
 	 * Guarantees proper validity audit strategy behavior when application reuses identifiers of deleted entities.
 	 * Exactly one row with {@code null} end date exists for each identifier.
+	 * <p/>
+	 * Defaults to {@code false}.
 	 */
 	String ALLOW_IDENTIFIER_REUSE = "org.hibernate.envers.allow_identifier_reuse";
 

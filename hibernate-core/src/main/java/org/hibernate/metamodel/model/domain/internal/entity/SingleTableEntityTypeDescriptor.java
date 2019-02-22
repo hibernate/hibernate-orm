@@ -826,7 +826,14 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 
 	@Override
 	public boolean[] getPropertyVersionability() {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		boolean[] propertyVersionability = new boolean[getStateArrayContributors().size()];
+		visitStateArrayContributors(
+				contributor -> {
+					final int position = contributor.getStateArrayPosition();
+					propertyVersionability[position] = contributor.isIncludedInOptimisticLocking();
+				}
+		);
+		return propertyVersionability;
 	}
 
 	@Override

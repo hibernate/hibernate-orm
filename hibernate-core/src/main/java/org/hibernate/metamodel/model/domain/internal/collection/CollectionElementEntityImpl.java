@@ -9,10 +9,12 @@ package org.hibernate.metamodel.model.domain.internal.collection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
@@ -457,6 +459,18 @@ public class CollectionElementEntityImpl<J>
 	@Override
 	public boolean isMutable() {
 		return getJavaTypeDescriptor().getMutabilityPlan().isMutable();
+	}
+
+	@Override
+	public J replace(J originalValue, J targetValue, Object owner, Map copyCache, SessionImplementor session) {
+		return getJavaTypeDescriptor().getMutabilityPlan().replace(
+				getEntityDescriptor(),
+				originalValue,
+				targetValue,
+				owner,
+				copyCache,
+				session
+		);
 	}
 
 	@Override

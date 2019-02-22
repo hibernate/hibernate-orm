@@ -118,7 +118,7 @@ public class BasicCollectionRowsUpdateExecutor implements CollectionRowsUpdateEx
 			}
 		}
 
-		LOG.infof( "Done updating rows: %s updateed", count );
+		LOG.infof( "Done updating rows: %s updated", count );
 	}
 
 	protected void bindCollectionId(

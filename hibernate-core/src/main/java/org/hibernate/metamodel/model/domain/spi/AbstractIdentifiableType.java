@@ -67,9 +67,9 @@ public abstract class AbstractIdentifiableType<T> extends AbstractManagedType<T>
 //			consumer.accept( getHierarchy().getDiscriminatorDescriptor() );
 //		}
 
-		if ( getHierarchy().getVersionDescriptor() != null ) {
-			consumer.accept( getHierarchy().getVersionDescriptor() );
-		}
+//		if ( getHierarchy().getVersionDescriptor() != null ) {
+//			consumer.accept( getHierarchy().getVersionDescriptor() );
+//		}
 
 //		if ( getHierarchy().getTenantDiscrimination() != null ) {
 //			consumer.accept( getHierarchy().getTenantDiscrimination() );

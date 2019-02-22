@@ -339,8 +339,8 @@ public class BasicValue
 				);
 				resolutionContext.getMetadataBuildingContext().addTypeDefinition( implicitDefinition );
 				return implicitDefinition.resolve(
-						explicitJtdAccess.apply( typeConfiguration ),
-						explicitStdAccess.apply( typeConfiguration ),
+						explicitJtdAccess != null ? explicitJtdAccess.apply( typeConfiguration ) : null,
+						explicitStdAccess != null ? explicitStdAccess.apply( typeConfiguration ) : null,
 						Collections.emptyMap(),
 						explicitMutabilityPlan,
 						resolutionContext.getMetadataBuildingContext()

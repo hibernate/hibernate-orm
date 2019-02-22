@@ -9,12 +9,14 @@ package org.hibernate.metamodel.model.domain.internal.collection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.engine.internal.ForeignKeys;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.ManyToOne;
@@ -246,6 +248,18 @@ public class CollectionIndexEntityImpl<J>
 		return getEntityDescriptor().visitAndCollectStateArrayContributors( contributor -> !contributor.isNullable() )
 				.stream()
 				.anyMatch( value -> value == true );
+	}
+
+	@Override
+	public J replace(J originalValue, J targetValue, Object owner, Map copyCache, SessionImplementor session) {
+		return getJavaTypeDescriptor().getMutabilityPlan().replace(
+				getEntityDescriptor(),
+				originalValue,
+				targetValue,
+				owner,
+				copyCache,
+				session
+		);
 	}
 
 	private EntityTypeDescriptor<J> resolveEntityDescriptor(

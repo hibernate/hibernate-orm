@@ -80,7 +80,7 @@ import org.hibernate.metamodel.model.domain.internal.collection.JoinTableRemoval
 import org.hibernate.metamodel.model.domain.internal.collection.JoinTableRowsDeleletionExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.JoinTableRowsInsertExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.OneToManyCreationExecutor;
-import org.hibernate.metamodel.model.domain.internal.collection.OneToManyNonJoinTableRowsInsertExecutor;
+import org.hibernate.metamodel.model.domain.internal.collection.OneToManyRowsInsertExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.OneToManyRemovalExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.OneToManyRowsDeletionExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.OneToManyRowsIndexExecutor;
@@ -1136,7 +1136,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 			return AbstractCreationExecutor.NO_OP;
 		}
 		else if ( isOneToMany() ) {
-			return new OneToManyNonJoinTableRowsInsertExecutor( this, dmlTargetTable, getSessionFactory() );
+			return new OneToManyRowsInsertExecutor( this, dmlTargetTable, getSessionFactory() );
 		}
 		else {
 			return new JoinTableRowsInsertExecutor( this, dmlTargetTable, getSessionFactory() );

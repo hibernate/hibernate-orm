@@ -15,8 +15,8 @@ import org.hibernate.metamodel.model.relational.spi.Table;
 /**
  * @author Chris Cranford
  */
-public class OneToManyNonJoinTableRowsInsertExecutor extends OneToManyCreationExecutor {
-	public OneToManyNonJoinTableRowsInsertExecutor(
+public class OneToManyRowsInsertExecutor extends OneToManyCreationExecutor {
+	public OneToManyRowsInsertExecutor(
 			PersistentCollectionDescriptor collectionDescriptor,
 			Table dmlTargetTable,
 			SessionFactoryImplementor sessionFactory) {

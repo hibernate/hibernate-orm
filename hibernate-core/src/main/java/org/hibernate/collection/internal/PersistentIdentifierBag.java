@@ -36,7 +36,7 @@ import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
  */
 public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> implements List<E> {
 	protected List<E> values;
-	protected Map<Object, Object> identifiers;
+	protected Map<Integer, Object> identifiers;
 
 	/**
 	 * Constructs a PersistentIdentifierBag.  This form needed for SOAP libraries, etc
@@ -525,7 +525,10 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 
 	public void load(Object idValue, E element) {
 		assert isInitializing();
-		values.add( element );
-		identifiers.put( idValue, element );
+		Object old = identifiers.put( values.size(), idValue );
+		if ( old == null ) {
+			//maintain correct duplication if loaded in a cartesian product
+			values.add( element );
+		}
 	}
 }

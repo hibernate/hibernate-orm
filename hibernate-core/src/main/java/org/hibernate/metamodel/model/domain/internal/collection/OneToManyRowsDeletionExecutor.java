@@ -6,71 +6,27 @@
  */
 package org.hibernate.metamodel.model.domain.internal.collection;
 
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiConsumer;
-
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.Table;
-import org.hibernate.sql.ast.tree.spi.DeleteStatement;
-import org.hibernate.sql.ast.tree.spi.from.TableReference;
-import org.hibernate.sql.ast.tree.spi.predicate.Junction;
-import org.hibernate.sql.exec.spi.JdbcParameter;
 
 /**
  * @author Chris Cranford
  */
-public class OneToManyRowsDeletionExecutor extends AbstractCollectionRowsDeletionExecutor {
+public class OneToManyRowsDeletionExecutor implements CollectionRowsDeletionExecutor {
 	public OneToManyRowsDeletionExecutor(
 			PersistentCollectionDescriptor collectionDescriptor,
 			SessionFactoryImplementor sessionFactory,
 			Table dmlTargetTable,
 			boolean deleteByIndex) {
-		super( collectionDescriptor, sessionFactory, dmlTargetTable, deleteByIndex );
 	}
 
 	@Override
-	protected DeleteStatement generateRowsDeletionOperation(
-			TableReference collectionTableRef,
-			SessionFactoryImplementor sessionFactory,
-			BiConsumer<Column, JdbcParameter> parameterCollector) {
-
-		final AtomicInteger parameterCount = new AtomicInteger();
-		final Junction deleteRestriction = new Junction( Junction.Nature.CONJUNCTION );
-
-		applyNavigablePredicate(
-				getCollectionDescriptor().getCollectionKeyDescriptor(),
-				collectionTableRef,
-				parameterCount,
-				parameterCollector,
-				deleteRestriction::add,
-				sessionFactory
-		);
-
-		if ( getCollectionDescriptor().getIdDescriptor() == null ) {
-			if ( isDeleteByIndex() ) {
-				applyNavigablePredicate(
-						getCollectionDescriptor().getIndexDescriptor(),
-						collectionTableRef,
-						parameterCount,
-						parameterCollector,
-						deleteRestriction::add,
-						sessionFactory
-				);
-			}
-			else {
-				applyNavigablePredicate(
-						getCollectionDescriptor().getElementDescriptor(),
-						collectionTableRef,
-						parameterCount,
-						parameterCollector,
-						deleteRestriction::add,
-						sessionFactory
-				);
-			}
-		}
-
-		return new DeleteStatement( collectionTableRef, deleteRestriction );
+	public void execute(
+			PersistentCollection collection, Object key, SharedSessionContractImplementor session) {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

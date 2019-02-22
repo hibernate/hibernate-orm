@@ -62,6 +62,7 @@ To configure NuoDB
 
 1. Set the versions of NuoDB's JDBC and Dialect Jars in  [`databases/nuodb/matrix.gradle`](databases/nuodb/matrix.gradle)
 2. To configure the NuoDB data source modify [`databases/nuodb/resources/hibernate.properties`](databases/nuodb/resources/hibernate.properties)
+3. Make same modifications to [`hibernate-core/src/test/resources/hibernate.properties`](hibernate-core/src/test/resources/hibernate.properties) - this is the one that actually gets used.
 
 ## To Run in IntelliJ
 

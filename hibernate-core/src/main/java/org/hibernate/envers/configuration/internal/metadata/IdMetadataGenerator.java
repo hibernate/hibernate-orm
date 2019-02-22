@@ -133,7 +133,7 @@ public final class IdMetadataGenerator {
 				return null;
 			}
 		}
-		else if ( Component.class.isInstance( idProp ) ) {
+		else if ( Component.class.isInstance( idProp.getValueMapping() ) ) {
 			// Embedded id
 			final Component idComponent = (Component) idProp.getValueMapping();
 			final Class embeddableClass = ReflectionTools.loadClass(

@@ -17,6 +17,13 @@ import java.util.stream.Stream;
 
 import org.hibernate.HibernateException;
 
+/**
+ * This dispatcher analyzes the stack frames to detect if a particular call should be authorized.
+ * <p>
+ * Authorized classes are registered when creating the ByteBuddy proxies.
+ * <p>
+ * It should only be used when the Security Manager is enabled.
+ */
 public class HibernateMethodLookupDispatcher {
 
 	/**
@@ -93,6 +100,7 @@ public class HibernateMethodLookupDispatcher {
 			public PrivilegedAction<Class<?>[]> run() {
 				Class<?> stackWalkerClass = null;
 				try {
+					// JDK 9 introduced the StackWalker
 					stackWalkerClass = Class.forName( "java.lang.StackWalker" );
 				}
 				catch (ClassNotFoundException e) {
@@ -192,9 +200,9 @@ public class HibernateMethodLookupDispatcher {
 			}
 		}
 
+		@SuppressWarnings({ "unchecked", "rawtypes" })
 		private final Function<Stream, Object> stackFrameExtractFunction = new Function<Stream, Object>() {
 			@Override
-			@SuppressWarnings({ "unchecked", "rawtypes" })
 			public Object apply(Stream stream) {
 				return stream.map( stackFrameGetDeclaringClassFunction )
 						.limit( MAX_STACK_FRAMES )

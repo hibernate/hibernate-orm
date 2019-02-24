@@ -111,7 +111,7 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 
 		this.serviceRegistry = metadata.getMetadataBuildingOptions().getServiceRegistry();
 		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-		this.xmlHelper = new XMLHelper( classLoaderService );
+		this.xmlHelper = new XMLHelper();
 
 		doInitialize( metadata, mappingCollector, serviceRegistry );
 	}

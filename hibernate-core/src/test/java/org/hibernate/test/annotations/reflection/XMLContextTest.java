@@ -30,7 +30,7 @@ import org.hibernate.testing.boot.ClassLoaderServiceTestingImpl;
 public class XMLContextTest {
 	@Test
 	public void testAll() throws Exception {
-		final XMLHelper xmlHelper = new XMLHelper( ClassLoaderServiceTestingImpl.INSTANCE );
+		final XMLHelper xmlHelper = new XMLHelper();
 		final XMLContext context = new XMLContext( ClassLoaderAccessTestingImpl.INSTANCE );
 
 		InputStream is = ClassLoaderServiceTestingImpl.INSTANCE.locateResourceStream(

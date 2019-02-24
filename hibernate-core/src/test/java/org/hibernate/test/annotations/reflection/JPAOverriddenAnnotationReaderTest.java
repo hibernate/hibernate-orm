@@ -430,7 +430,7 @@ public class JPAOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 	}
 
 	private XMLContext buildContext(String ormfile) throws SAXException, DocumentException, IOException {
-		XMLHelper xmlHelper = new XMLHelper( ClassLoaderServiceTestingImpl.INSTANCE );
+		XMLHelper xmlHelper = new XMLHelper();
 		InputStream is = ClassLoaderServiceTestingImpl.INSTANCE.locateResourceStream( ormfile );
 		assertNotNull( "ORM.xml not found: " + ormfile, is );
 		XMLContext context = new XMLContext( ClassLoaderAccessTestingImpl.INSTANCE );

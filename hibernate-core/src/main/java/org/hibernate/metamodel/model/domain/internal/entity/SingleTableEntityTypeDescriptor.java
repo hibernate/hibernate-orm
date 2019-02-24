@@ -81,6 +81,7 @@ import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcUpdate;
 import org.hibernate.sql.exec.spi.ParameterBindingContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
+import org.hibernate.type.internal.TypeHelper;
 
 /**
  * @author Steve Ebersole
@@ -403,11 +404,18 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 			throws HibernateException {
 
 		// todo (6.0) - initial basic pass at entity deletes
+		// todo (6.0) - take into account version
 
 		final Object unresolvedId = getHierarchy().getIdentifierDescriptor().unresolve( id, session );
 		final ExecutionContext executionContext = getExecutionContext( session );
 
+		delete( unresolvedId, executionContext, session );
+	}
 
+	private void delete(
+			Object unresolvedId,
+			ExecutionContext executionContext,
+			SharedSessionContractImplementor session) {
 		deleteSecondaryTables( session, unresolvedId, executionContext );
 
 		deleteRootTable( session, unresolvedId, executionContext );
@@ -531,7 +539,7 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 
 		final TableReference tableReference = new TableReference( primaryTable, null, false );
 		if ( isTableNeedUpdate( tableReference, dirtyFields, hasDirtyCollection, true ) ) {
-			updateInternal(
+			final boolean isRowToInsert = updateInternal(
 					fields,
 					dirtyFields,
 					oldFields,
@@ -541,6 +549,17 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 					tableReference,
 					Expectations.appropriateExpectation( rootUpdateResultCheckStyle )
 			);
+			if ( isRowToInsert ) {
+				if ( isRowToInsert ) {
+					executeInsert(
+							fields,
+							session,
+							unresolvedId,
+							executionContext,
+							tableReference
+					);
+				}
+			}
 		}
 
 		getSecondaryTableBindings().forEach(
@@ -606,7 +625,7 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 		else if ( isNullableTable && isFieldsAllNull ) {
 			//if all fields are null, we might need to delete existing row
 			isRowToUpdate = true;
-			// TODO (6.0) : delete the existing row
+			delete( unresolvedId, executionContext, session );
 		}
 		else {
 			//there is probably a row there, so try to update
@@ -621,7 +640,7 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 			);
 			executeUpdate(
 					fields,
-					dirtyFields,
+					oldFields,
 					session,
 					unresolvedId,
 					executionContext,
@@ -633,21 +652,37 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 		return !isRowToUpdate && !isFieldsAllNull;
 	}
 
+	private boolean isFieldValueChanged(Object[] fields, Object[] oldFields, int position) {
+		if ( oldFields == null ) {
+			return true;
+		}
+		final Object oldField = oldFields[position];
+		final Object field = fields[position];
+
+		if ( field == null && oldField == null ) {
+			return false;
+		}
+		if ( field != null ) {
+			return !field.equals( oldField );
+		}
+		return !oldField.equals( field );
+	}
+
 	private int executeUpdate(
 			Object[] fields,
-			int[] dirtyFields,
+			Object[] oldFields,
 			SharedSessionContractImplementor session,
 			Object unresolvedId,
 			ExecutionContext executionContext,
 			TableReference tableReference,
 			RowToUpdateChecker checker) {
 		List<Assignment> assignments = new ArrayList<>();
-		for ( int dirtyField : dirtyFields ) {
-			final StateArrayContributor contributor = getStateArrayContributors().get( dirtyField );
+		for ( int i = 0; i < fields.length; i++ ) {
+			final StateArrayContributor contributor = getStateArrayContributors().get( i );
 			final Object domainValue = fields[contributor.getStateArrayPosition()];
 			List<Column> columns = contributor.getColumns();
-			if ( columns != null && !columns.isEmpty() ) {
-				if ( contributor.isUpdatable() ) {
+			if ( contributor.isUpdatable() ) {
+				if ( columns != null && !columns.isEmpty() && isFieldValueChanged( fields, oldFields, i ) ) {
 					contributor.dehydrate(
 							contributor.unresolve( domainValue, session ),
 							(jdbcValue, type, boundColumn) -> {
@@ -750,7 +785,12 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 			boolean isRootTable) {
 		if ( dirtyProperties == null ) {
 			// TODO (6.0) : isTableNeedUpdate() to implement case dirtyProperties == null
-			throw new NotYetImplementedFor6Exception( getClass() );
+			for ( Column column : tableReference.getTable().getColumns() ) {
+				if ( column.isUpdatable() ) {
+					return true;
+				}
+			}
+			return false;
 		}
 		else {
 			boolean tableNeedUpdate = false;
@@ -931,11 +971,15 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 		}
 
 		// check the id unsaved-value
-		// todo (6.0) - need to implement this behavior
+		Boolean result = getHierarchy().getIdentifierDescriptor().getUnsavedValue().isUnsaved( id );
+		if ( result != null ) {
+			return result;
+		}
 
 		// check to see if it is in the second-level cache
 		if ( session.getCacheMode().isGetEnabled() && canReadFromCache() ) {
 			// todo (6.0) - support reading from the cache
+			throw new NotYetImplementedFor6Exception( getClass() );
 		}
 
 		return null;

@@ -6,16 +6,22 @@
  */
 package org.hibernate.metamodel.model.domain.internal.entity;
 
+import java.lang.reflect.Constructor;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.boot.model.domain.BasicValueMapping;
+import org.hibernate.engine.internal.UnsavedValueFactory;
+import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.BasicTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.BasicValueMapper;
@@ -39,16 +45,17 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * @author Steve Ebersole
  */
-public class EntityIdentifierSimpleImpl<O,J>
-		extends AbstractSingularPersistentAttribute<O,J>
-		implements EntityIdentifierSimple<O,J>, BasicValuedNavigable<J> {
+public class EntityIdentifierSimpleImpl<O, J>
+		extends AbstractSingularPersistentAttribute<O, J>
+		implements EntityIdentifierSimple<O, J>, BasicValuedNavigable<J> {
 
 	private final String name;
 	private final Column column;
 	private final BasicValueMapper<J> valueMapper;
 	private final IdentifierGenerator identifierGenerator;
+	private final IdentifierValue unsavedValue;
 
-	@SuppressWarnings({"unchecked", "WeakerAccess"})
+	@SuppressWarnings({ "unchecked", "WeakerAccess" })
 	public EntityIdentifierSimpleImpl(
 			EntityHierarchyImpl runtimeModelHierarchy,
 			RootClass bootModelRootEntity,
@@ -67,10 +74,19 @@ public class EntityIdentifierSimpleImpl<O,J>
 
 		this.name = bootModelRootEntity.getIdentifierAttributeMapping().getName();
 
-		final BasicValueMapping<J> basicValueMapping = (BasicValueMapping<J>) bootModelRootEntity.getIdentifierAttributeMapping().getValueMapping();
+		final BasicValueMapping<J> basicValueMapping = (BasicValueMapping<J>) bootModelRootEntity.getIdentifierAttributeMapping()
+				.getValueMapping();
 		this.column = creationContext.getDatabaseObjectResolver().resolveColumn( basicValueMapping.getMappedColumn() );
 		this.valueMapper = basicValueMapping.getResolution().getValueMapper();
-		this.identifierGenerator = creationContext.getSessionFactory().getIdentifierGenerator( bootModelRootEntity.getEntityName() );
+		this.identifierGenerator = creationContext.getSessionFactory()
+				.getIdentifierGenerator( bootModelRootEntity.getEntityName() );
+
+		unsavedValue = UnsavedValueFactory.getUnsavedIdentifierValue(
+				bootModelRootEntity.getIdentifier().getNullValue(),
+				getPropertyAccess().getGetter(),
+				basicValueMapping.getJavaTypeMapping().getJavaTypeDescriptor(),
+				getConstructor( bootModelRootEntity )
+		);
 	}
 
 	@Override
@@ -91,6 +107,11 @@ public class EntityIdentifierSimpleImpl<O,J>
 	@Override
 	public List<Column> getColumns() {
 		return Collections.singletonList( column );
+	}
+
+	@Override
+	public IdentifierValue getUnsavedValue() {
+		return unsavedValue;
 	}
 
 	@Override
@@ -230,5 +251,18 @@ public class EntityIdentifierSimpleImpl<O,J>
 			Clause clause,
 			TypeConfiguration typeConfiguration) {
 		action.accept( getBoundColumn().getExpressableType(), getBoundColumn() );
+	}
+
+	private static Constructor getConstructor(PersistentClass persistentClass) {
+		if ( persistentClass == null || persistentClass.getExplicitRepresentationMode() != RepresentationMode.POJO ) {
+			return null;
+		}
+
+		try {
+			return ReflectHelper.getDefaultConstructor( persistentClass.getMappedClass() );
+		}
+		catch (Throwable t) {
+			return null;
+		}
 	}
 }

@@ -12,6 +12,7 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
+import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -158,5 +159,10 @@ public class EntityIdentifierCompositeNonAggregatedImpl<O,J>
 			DomainResultCreationState creationState,
 			DomainResultCreationContext creationContext) {
 		return new CompositeResultImpl( resultVariable, getEmbeddedDescriptor(), creationState );
+	}
+
+	@Override
+	public IdentifierValue getUnsavedValue() {
+		return null;
 	}
 }

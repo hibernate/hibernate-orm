@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal.entity;
 
+import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -13,11 +14,16 @@ import java.util.stream.Collectors;
 import javax.persistence.TemporalType;
 
 import org.hibernate.boot.model.domain.ValueMapping;
+import org.hibernate.engine.internal.UnsavedValueFactory;
+import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
@@ -49,6 +55,8 @@ public class EntityIdentifierCompositeAggregatedImpl<O,J>
 	private final EmbeddedTypeDescriptor<J> embeddedDescriptor;
 	private final IdentifierGenerator identifierGenerator;
 	private final List<Column> columns;
+	private final IdentifierValue unsavedValue;
+
 
 	@SuppressWarnings("unchecked")
 	public EntityIdentifierCompositeAggregatedImpl(
@@ -75,6 +83,13 @@ public class EntityIdentifierCompositeAggregatedImpl<O,J>
 		this.columns = valueMapping.getMappedColumns().stream()
 				.map( creationContext.getDatabaseObjectResolver()::resolveColumn )
 				.collect( Collectors.toList() );
+
+		unsavedValue = UnsavedValueFactory.getUnsavedIdentifierValue(
+				bootModelRootEntity.getIdentifier().getNullValue(),
+				getPropertyAccess().getGetter(),
+				embeddedDescriptor.getJavaTypeDescriptor(),
+				getConstructor( bootModelRootEntity )
+		);
 	}
 
 	@Override
@@ -183,6 +198,11 @@ public class EntityIdentifierCompositeAggregatedImpl<O,J>
 	}
 
 	@Override
+	public IdentifierValue getUnsavedValue() {
+		return unsavedValue;
+	}
+
+	@Override
 	public AllowableParameterType resolveTemporalPrecision(TemporalType temporalType, TypeConfiguration typeConfiguration) {
 		throw new ParameterMisuseException( "Cannot apply temporal precision to embeddable value" );
 	}
@@ -283,5 +303,18 @@ public class EntityIdentifierCompositeAggregatedImpl<O,J>
 	@Override
 	public SimpleTypeDescriptor<?> getKeyGraphType() {
 		return null;
+	}
+
+	private static Constructor getConstructor(PersistentClass persistentClass) {
+		if ( persistentClass == null || persistentClass.getExplicitRepresentationMode() != RepresentationMode.POJO ) {
+			return null;
+		}
+
+		try {
+			return ReflectHelper.getDefaultConstructor( persistentClass.getMappedClass() );
+		}
+		catch (Throwable t) {
+			return null;
+		}
 	}
 }

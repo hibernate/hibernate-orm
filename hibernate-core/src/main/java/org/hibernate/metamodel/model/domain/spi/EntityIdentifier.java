@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.metamodel.model.relational.spi.Column;
@@ -127,4 +128,6 @@ public interface EntityIdentifier<O,J> extends Navigable<J>, AllowableOutputPara
 	boolean matchesNavigableName(String navigableName);
 
 	boolean canContainSubGraphs();
+
+	IdentifierValue getUnsavedValue();
 }

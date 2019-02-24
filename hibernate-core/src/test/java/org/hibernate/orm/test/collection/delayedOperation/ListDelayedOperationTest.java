@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-package org.hibernate.test.collection.delayedOperation;
+package org.hibernate.orm.test.collection.delayedOperation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +17,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderColumn;
 
 import org.junit.After;
 import org.junit.Before;
@@ -24,7 +25,8 @@ import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
-import org.hibernate.collection.internal.AbstractPersistentCollection;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -33,12 +35,14 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Tests delayed operations that are queued for a PersistentBag. The Bag does not have
- * to be extra-lazy to queue the operations.
+ * Tests delayed operations that are queued for a PersistentSet. remove( Object )
+ * requires extra lazy to queue the operations.
  * @author Gail Badner
  */
-public class BagDelayedOperationTest extends BaseCoreFunctionalTestCase {
+public class ListDelayedOperationTest extends BaseCoreFunctionalTestCase {
 	private Long parentId;
+	private Long childId1;
+	private Long childId2;
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
@@ -68,6 +72,8 @@ public class BagDelayedOperationTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		parentId = parent.getId();
+		childId1 = child1.getId();
+		childId2 = child2.getId();
 	}
 
 	@After
@@ -125,7 +131,7 @@ public class BagDelayedOperationTest extends BaseCoreFunctionalTestCase {
 		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 		p.addChild( c2 );
 		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		p = (Parent) s.merge( p );
+		s.merge( p );
 		s.getTransaction().commit();
 		s.close();
 
@@ -239,49 +245,110 @@ public class BagDelayedOperationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11209")
-	public void testMergeInitializedBagAndRemerge() {
+	@TestForIssue( jiraKey = "HHH-5855")
+	public void testSimpleRemoveDetached() {
+		// Get the 2 Child entities and detach.
+		Session s = openSession();
+		s.getTransaction().begin();
+		Child c1 = s.get( Child.class, childId1 );
+		Child c2 = s.get( Child.class, childId2 );
+		s.getTransaction().commit();
+		s.close();
+
+		// Remove a detached entity element and commit
+		s = openSession();
+		s.getTransaction().begin();
+		Parent p = s.get( Parent.class, parentId );
+		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+		// remove a detached element and commit
+		Hibernate.initialize( p.getChildren() );
+		p.removeChild( c1 );
+		for ( Child c : p.getChildren() ) {
+			if ( c.equals( c1 ) ) {
+				s.evict( c );
+			}
+		}
+		assertTrue( Hibernate.isInitialized( p.getChildren() ) );
+		//s.merge( p );
+		s.getTransaction().commit();
+		s.close();
+
+		// Remove a detached entity element, merge, and commit
+		s = openSession();
+		s.getTransaction().begin();
+		p = s.get( Parent.class, parentId );
+		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+		Hibernate.initialize( p.getChildren() );
+		assertEquals( 1, p.getChildren().size() );
+		s.getTransaction().commit();
+		s.close();
+
+		// Remove a detached entity element, merge, and commit
+		s = openSession();
+		s.getTransaction().begin();
+		p = s.get( Parent.class, parentId );
+		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+		// remove a detached element and commit
+		p.removeChild( c2 );
+		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+		p = (Parent) s.merge( p );
+		Hibernate.initialize( p );
+		s.getTransaction().commit();
+		s.close();
+
+		// Remove a detached entity element, merge, and commit
+		s = openSession();
+		s.getTransaction().begin();
+		p = s.get( Parent.class, parentId );
+		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+		assertEquals( 0, p.getChildren().size() );
+		s.getTransaction().commit();
+		s.close();
+	}
+
+/* STILL WORKING ON THIS ONE...
+	@Test
+	@TestForIssue( jiraKey = "HHH-5855")
+	public void testSimpleRemoveManaged() {
+		// Remove a managed entity element and commit
 		Session s = openSession();
 		s.getTransaction().begin();
 		Parent p = s.get( Parent.class, parentId );
 		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		// initialize
-		Hibernate.initialize( p.getChildren() );
-		assertTrue( Hibernate.isInitialized( p.getChildren() ) );
+		// get c1 so it is managed, then remove and commit
+		p.removeChild( s.get( Child.class, childId1 ) );
+		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.getTransaction().begin();
-		p = (Parent) s.merge( p );
-		assertTrue( Hibernate.isInitialized( p.getChildren() ) );
-		Child c = new Child( "Zeke" );
-		c.setParent( p );
-		s.persist( c );
-		p.getChildren().size();
-		p.getChildren().add( c );
+		p = s.get( Parent.class, parentId );
+		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+		assertEquals( 1, p.getChildren().size() );
 		s.getTransaction().commit();
 		s.close();
 
-		// Merge detached Parent with initialized children
 		s = openSession();
 		s.getTransaction().begin();
-		p = (Parent) s.merge( p );
-		// after merging, p#children will be initialized
-		assertTrue( Hibernate.isInitialized( p.getChildren() ) );
-		assertFalse( ( (AbstractPersistentCollection) p.getChildren() ).hasQueuedOperations() );
+		p = s.get( Parent.class, parentId );
+		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+		// get c1 so it is managed, then remove, merge and commit
+		p.removeChild( s.get( Child.class, childId2 ) );
+		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+		s.merge( p );
 		s.getTransaction().commit();
 		s.close();
 
-		// Merge detached Parent
 		s = openSession();
 		s.getTransaction().begin();
-		p = (Parent) s.merge( p );
-		assertTrue( Hibernate.isInitialized( p.getChildren() ) );
-		assertFalse( ( (AbstractPersistentCollection) p.getChildren() ).hasQueuedOperations() );
+		p = s.get( Parent.class, parentId );
+		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+		assertEquals( 0, p.getChildren().size() );
 		s.getTransaction().commit();
 		s.close();
 	}
+*/
 
 	@Entity(name = "Parent")
 	public static class Parent {
@@ -290,8 +357,9 @@ public class BagDelayedOperationTest extends BaseCoreFunctionalTestCase {
 		@GeneratedValue(strategy = GenerationType.AUTO)
 		private Long id;
 
-		// Don't need extra-lazy to delay add operations to a bag.
 		@OneToMany(cascade = CascadeType.ALL, mappedBy = "parent", orphanRemoval = true)
+		@LazyCollection(LazyCollectionOption.EXTRA )
+		@OrderColumn
 		private List<Child> children = new ArrayList<Child>();
 
 		public Parent() {
@@ -312,6 +380,16 @@ public class BagDelayedOperationTest extends BaseCoreFunctionalTestCase {
 		public void addChild(Child child) {
 			children.add(child);
 			child.setParent(this);
+		}
+
+		public void addChild(Child child, int i) {
+			children.add(i, child );
+			child.setParent(this);
+		}
+
+		public void removeChild(Child child) {
+			children.remove(child);
+			child.setParent(null);
 		}
 	}
 

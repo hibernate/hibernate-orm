@@ -19,57 +19,50 @@ import javax.persistence.Table;
 
 import org.hibernate.Hibernate;
 import org.hibernate.LazyInitializationException;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.collection.spi.PersistentCollection;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole
  */
-public class ListAddTest extends BaseNonConfigCoreFunctionalTestCase {
+public class ListAddTest extends SessionFactoryBasedFunctionalTest {
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] { Quizz.class, Question.class };
 	}
 
-	@Before
+	@BeforeEach
 	public void before() {
-		Session session = sessionFactory().openSession();
-		Transaction transaction = session.beginTransaction();
-		try {
-			Quizz quizz = new Quizz( 1 );
-			session.persist( quizz );
-			quizz.addQuestion( new Question( 1, "question 1" ) );
-			quizz.addQuestion( new Question( 2, "question 2" ) );
-			quizz.addQuestion( new Question( 3, "question 3" ) );
-
-			transaction.commit();
-		}
-		finally {
-			session.close();
-		}
+		inTransaction(
+				session -> {
+					Quizz quizz = new Quizz( 1 );
+					session.persist( quizz );
+					quizz.addQuestion( new Question( 1, "question 1" ) );
+					quizz.addQuestion( new Question( 2, "question 2" ) );
+					quizz.addQuestion( new Question( 3, "question 3" ) );
+				}
+		);
 	}
 
-	@After
+	@AfterEach
 	public void after() {
-		Session session = sessionFactory().openSession();
-		Transaction transaction = session.beginTransaction();
-		session.createQuery( "delete Question" ).executeUpdate();
-		session.createQuery( "delete Quizz" ).executeUpdate();
-		transaction.commit();
-		session.close();
+		inTransaction(
+				session -> {
+					session.createQuery( "delete Question" ).executeUpdate();
+					session.createQuery( "delete Quizz" ).executeUpdate();
+				}
+		);
 	}
 
 	/**
@@ -77,29 +70,29 @@ public class ListAddTest extends BaseNonConfigCoreFunctionalTestCase {
 	 */
 	@Test
 	public void addQuestionWithIndexShouldAddQuestionAtSpecifiedIndex() {
-		Session session = openSession();
-		Transaction transaction = session.beginTransaction();
-		Quizz quizz = session.get( Quizz.class, 1 );
-		quizz.addQuestion( 1, new Question( 4, "question that should be at index 1" ) );
-		transaction.commit();
-		session.close();
+		inTransaction(
+				session -> {
+					Quizz quizz = session.get( Quizz.class, 1 );
+					quizz.addQuestion( 1, new Question( 4, "question that should be at index 1" ) );
+				}
+		);
 
-		session = openSession();
-		transaction = session.beginTransaction();
-		quizz = session.get( Quizz.class,  1);
-		assertEquals( 4, quizz.getQuestions().size() );
-		assertEquals( 4, quizz.getQuestions().get( 1 ).getId().longValue() );
-		transaction.commit();
-		session.close();
+		inTransaction(
+				session -> {
+					Quizz quizz = session.get( Quizz.class, 1 );
+					assertEquals( 4, quizz.getQuestions().size() );
+					assertEquals( 4, quizz.getQuestions().get( 1 ).getId().longValue() );
+				}
+		);
 	}
 
 	@Test
 	public void addQuestionToDetachedQuizz() {
-		Session session = openSession();
-		session.beginTransaction();
-		Quizz quizz = session.get( Quizz.class, 1 );
-		session.getTransaction().commit();
-		session.close();
+		Quizz quizz = inTransaction(
+				session -> {
+					return session.get( Quizz.class, 1 );
+				}
+		);
 
 		assertFalse( ( (PersistentCollection) quizz.getQuestions() ).wasInitialized() );
 
@@ -137,48 +130,48 @@ public class ListAddTest extends BaseNonConfigCoreFunctionalTestCase {
 	 */
 	@Test
 	public void addQuestionWithIndexAndInitializeTheListShouldAddQuestionAtSpecifiedIndex() {
-		Session session = openSession();
-		Transaction transaction = session.beginTransaction();
 
-		Quizz quizz = session.get( Quizz.class, 1 );
-		quizz.addQuestionAndInitializeLazyList( 1, new Question( 4, "question that should be at index 1" ) );
+		inTransaction(
+				session -> {
+					Quizz quizz = session.get( Quizz.class, 1 );
+					quizz.addQuestionAndInitializeLazyList(
+							1,
+							new Question( 4, "question that should be at index 1" )
+					);
+				}
+		);
 
-		transaction.commit();
-		session.close();
+		inTransaction(
+				session -> {
+					Quizz quizz = session.get( Quizz.class, 1 );
 
-		session = openSession();
-		transaction = session.beginTransaction();
-
-		quizz = session.get( Quizz.class, 1 );
-
-		assertEquals( 4, quizz.getQuestions().size());
-		assertEquals( 4, quizz.getQuestions().get(1).getId().longValue() );
-
-		transaction.commit();
-		session.close();
+					assertEquals( 4, quizz.getQuestions().size() );
+					assertEquals( 4, quizz.getQuestions().get( 1 ).getId().longValue() );
+				}
+		);
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10375")
-	public void testAddQuestionAfterSessionIsClosed(){
-		Session session = openSession();
-		Transaction transaction = session.beginTransaction();
+	@TestForIssue(jiraKey = "HHH-10375")
+	public void testAddQuestionAfterSessionIsClosed() {
 
-		Quizz quizz = session.get( Quizz.class, 1 );
-		assertThat(  "expected 3 questions", quizz.getQuestions().size(), is(3) );
-		transaction.commit();
-		session.close();
+		Quizz quizz = inTransaction(
+				session -> {
+					Quizz q = session.get( Quizz.class, 1 );
+					assertThat( "expected 3 questions", q.getQuestions().size(), is( 3 ) );
+					return q;
+				}
+		);
 
-		quizz.addQuestion(  new Question( 4, "question 4" ) );
-		assertThat(  "expected 4 questions", quizz.getQuestions().size(), is(4) );
+		quizz.addQuestion( new Question( 4, "question 4" ) );
+		assertThat( "expected 4 questions", quizz.getQuestions().size(), is( 4 ) );
 
-		quizz.addQuestion(  1, new Question( 5, "question 5" ) );
-		assertThat(  "expected 5 questions", quizz.getQuestions().size(), is(5) );
+		quizz.addQuestion( 1, new Question( 5, "question 5" ) );
+		assertThat( "expected 5 questions", quizz.getQuestions().size(), is( 5 ) );
 	}
 
-
-	@Entity( name = "Question" )
-	@Table( name = "Question" )
+	@Entity(name = "Question")
+	@Table(name = "Question")
 	public static class Question {
 		@Id
 		private Integer id;
@@ -228,15 +221,15 @@ public class ListAddTest extends BaseNonConfigCoreFunctionalTestCase {
 		}
 	}
 
-	@Entity( name = "Quizz" )
-	@Table( name = "Quiz" )
+	@Entity(name = "Quizz")
+	@Table(name = "Quiz")
 	public static class Quizz {
 		@Id
 		private Integer id;
 
 		@OneToMany(mappedBy = "quizz", cascade = CascadeType.ALL, orphanRemoval = true)
 		@OrderColumn(name = "position")
-		private List<Question> questions = new ArrayList<Question>();
+		private List<Question> questions = new ArrayList<>();
 
 		public Quizz() {
 		}
@@ -258,18 +251,18 @@ public class ListAddTest extends BaseNonConfigCoreFunctionalTestCase {
 		}
 
 		public void addQuestion(Question question) {
-			question.setQuizz(this);
-			questions.add(question);
+			question.setQuizz( this );
+			questions.add( question );
 		}
 
 		public void addQuestion(int index, Question question) {
-			question.setQuizz(this);
-			questions.add(index, question);
+			question.setQuizz( this );
+			questions.add( index, question );
 		}
 
 		public void addQuestionAndInitializeLazyList(int index, Question question) {
-			question.setQuizz(this);
-			questions.add(index, question);
+			question.setQuizz( this );
+			questions.add( index, question );
 			Hibernate.initialize( questions );
 		}
 	}

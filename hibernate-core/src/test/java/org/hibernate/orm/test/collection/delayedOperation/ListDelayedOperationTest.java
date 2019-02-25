@@ -19,27 +19,27 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.Hibernate;
-import org.hibernate.Session;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests delayed operations that are queued for a PersistentSet. remove( Object )
  * requires extra lazy to queue the operations.
+ *
  * @author Gail Badner
  */
-public class ListDelayedOperationTest extends BaseCoreFunctionalTestCase {
+public class ListDelayedOperationTest extends SessionFactoryBasedFunctionalTest {
 	private Long parentId;
 	private Long childId1;
 	private Long childId2;
@@ -52,7 +52,7 @@ public class ListDelayedOperationTest extends BaseCoreFunctionalTestCase {
 		};
 	}
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		// start by cleaning up in case a test fails
 		if ( parentId != null ) {
@@ -65,245 +65,251 @@ public class ListDelayedOperationTest extends BaseCoreFunctionalTestCase {
 		parent.addChild( child1 );
 		parent.addChild( child2 );
 
-		Session s = openSession();
-		s.getTransaction().begin();
-		s.persist( parent );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				session -> {
+					session.persist( parent );
+				}
+		);
 
 		parentId = parent.getId();
 		childId1 = child1.getId();
 		childId2 = child2.getId();
 	}
 
-	@After
+	@AfterEach
 	public void cleanup() {
-		Session s = openSession();
-		s.getTransaction().begin();
-		Parent parent = s.get( Parent.class, parentId );
-		parent.getChildren().clear();
-		s.delete( parent );
-		s.getTransaction().commit();
-		s.close();
-
+		inTransaction(
+				session -> {
+					Parent parent = session.get( Parent.class, parentId );
+					if ( parent != null ) {
+						parent.getChildren().clear();
+						session.delete( parent );
+					}
+				}
+		);
 		parentId = null;
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-5855")
+	@TestForIssue(jiraKey = "HHH-5855")
 	public void testSimpleAddDetached() {
 		// Create 2 detached Child objects.
-		Session s = openSession();
-		s.getTransaction().begin();
 		Child c1 = new Child( "Darwin" );
-		s.persist( c1 );
 		Child c2 = new Child( "Comet" );
-		s.persist( c2 );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				session -> {
+					session.persist( c1 );
+					session.persist( c2 );
+				}
+		);
 
 		// Now Child c is detached.
-
-		s = openSession();
-		s.getTransaction().begin();
-		Parent p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		// add detached Child c
-		p.addChild( c1 );
-		// collection should still be uninitialized
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				session -> {
+					Parent p = session.get( Parent.class, parentId );
+					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					// add detached Child c
+					p.addChild( c1 );
+					// collection should still be uninitialized
+					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+				}
+		);
 
 		// Add a detached Child and commit
-		s = openSession();
-		s.getTransaction().begin();
-		p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		assertEquals( 3, p.getChildren().size() );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				session -> {
+					Parent p = session.get( Parent.class, parentId );
+					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					assertEquals( 3, p.getChildren().size() );
+				}
+		);
 
 		// Add another detached Child, merge, and commit
-		s = openSession();
-		s.getTransaction().begin();
-		p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		p.addChild( c2 );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		s.merge( p );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				session -> {
+					Parent p = session.get( Parent.class, parentId );
+					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					p.addChild( c2 );
+					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					session.merge( p );
+				}
+		);
 
-		s = openSession();
-		s.getTransaction().begin();
-		p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		assertEquals( 4, p.getChildren().size() );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				session -> {
+					Parent p = session.get( Parent.class, parentId );
+					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					assertEquals( 4, p.getChildren().size() );
+				}
+		);
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-5855")
+	@TestForIssue(jiraKey = "HHH-5855")
 	public void testSimpleAddTransient() {
 		// Add a transient Child and commit.
-		Session s = openSession();
-		s.getTransaction().begin();
-		Parent p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		// add transient Child
-		p.addChild( new Child( "Darwin" ) );
-		// collection should still be uninitialized
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				session -> {
+					Parent p = session.get( Parent.class, parentId );
+					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					// add transient Child
+					p.addChild( new Child( "Darwin" ) );
+					// collection should still be uninitialized
+					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+				}
+		);
 
-		s = openSession();
-		s.getTransaction().begin();
-		p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		assertEquals( 3, p.getChildren().size() );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				session -> {
+					Parent p = session.get( Parent.class, parentId );
+					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					assertEquals( 3, p.getChildren().size() );
+				}
+		);
 
 		// Add another transient Child and commit again.
-		s = openSession();
-		s.getTransaction().begin();
-		p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		// add transient Child
-		p.addChild( new Child( "Comet" ) );
-		// collection should still be uninitialized
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		s.merge( p );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				session -> {
+					Parent p = session.get( Parent.class, parentId );
+					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					// add transient Child
+					p.addChild( new Child( "Comet" ) );
+					// collection should still be uninitialized
+					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					session.merge( p );
+				}
+		);
 
-		s = openSession();
-		s.getTransaction().begin();
-		p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		assertEquals( 4, p.getChildren().size() );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				session -> {
+					Parent p = session.get( Parent.class, parentId );
+					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					assertEquals( 4, p.getChildren().size() );
+				}
+		);
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-5855")
+	@TestForIssue(jiraKey = "HHH-5855")
 	public void testSimpleAddManaged() {
-		// Add 2 Child entities
-		Session s = openSession();
-		s.getTransaction().begin();
 		Child c1 = new Child( "Darwin" );
-		s.persist( c1 );
 		Child c2 = new Child( "Comet" );
-		s.persist( c2 );
-		s.getTransaction().commit();
-		s.close();
+		// Add 2 Child entities
+		inTransaction(
+				session -> {
+					session.persist( c1 );
+					session.persist( c2 );
+				}
+		);
 
 		// Add a managed Child and commit
-		s = openSession();
-		s.getTransaction().begin();
-		Parent p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		// get the first Child so it is managed; add to collection
-		p.addChild( s.get( Child.class, c1.getId() ) );
-		// collection should still be uninitialized
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				session -> {
+					Parent p = session.get( Parent.class, parentId );
+					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					// get the first Child so it is managed; add to collection
+					p.addChild( session.get( Child.class, c1.getId() ) );
+					// collection should still be uninitialized
+					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+				}
+		);
 
-		s = openSession();
-		s.getTransaction().begin();
-		p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		assertEquals( 3, p.getChildren().size() );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				session -> {
+					Parent p = session.get( Parent.class, parentId );
+					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					assertEquals( 3, p.getChildren().size() );
+				}
+		);
 
 		// Add the other managed Child, merge and commit.
-		s = openSession();
-		s.getTransaction().begin();
-		p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		// get the second Child so it is managed; add to collection
-		p.addChild( s.get( Child.class, c2.getId() ) );
-		// collection should still be uninitialized
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		s.merge( p );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				session -> {
+					Parent p = session.get( Parent.class, parentId );
+					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					// get the second Child so it is managed; add to collection
+					p.addChild( session.get( Child.class, c2.getId() ) );
+					// collection should still be uninitialized
+					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					session.merge( p );
+				}
+		);
 
-		s = openSession();
-		s.getTransaction().begin();
-		p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		assertEquals( 4, p.getChildren().size() );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				session -> {
+					Parent p = session.get( Parent.class, parentId );
+					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					assertEquals( 4, p.getChildren().size() );
+				}
+		);
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-5855")
+	@TestForIssue(jiraKey = "HHH-5855")
 	public void testSimpleRemoveDetached() {
 		// Get the 2 Child entities and detach.
-		Session s = openSession();
-		s.getTransaction().begin();
-		Child c1 = s.get( Child.class, childId1 );
-		Child c2 = s.get( Child.class, childId2 );
-		s.getTransaction().commit();
-		s.close();
+		Child c1 = inTransaction(
+				session -> {
+					return session.get( Child.class, childId1 );
+				}
+		);
+
+		Child c2 = inTransaction(
+				session -> {
+					return session.get( Child.class, childId2 );
+				}
+		);
 
 		// Remove a detached entity element and commit
-		s = openSession();
-		s.getTransaction().begin();
-		Parent p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		// remove a detached element and commit
-		Hibernate.initialize( p.getChildren() );
-		p.removeChild( c1 );
-		for ( Child c : p.getChildren() ) {
-			if ( c.equals( c1 ) ) {
-				s.evict( c );
-			}
-		}
-		assertTrue( Hibernate.isInitialized( p.getChildren() ) );
-		//s.merge( p );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				session -> {
+					Parent p = session.get( Parent.class, parentId );
+					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					// remove a detached element and commit
+					Hibernate.initialize( p.getChildren() );
+					p.removeChild( c1 );
+					for ( Child c : p.getChildren() ) {
+						if ( c.equals( c1 ) ) {
+							session.evict( c );
+						}
+					}
+					assertTrue( Hibernate.isInitialized( p.getChildren() ) );
+					//s.merge( p );
+				}
+		);
 
 		// Remove a detached entity element, merge, and commit
-		s = openSession();
-		s.getTransaction().begin();
-		p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		Hibernate.initialize( p.getChildren() );
-		assertEquals( 1, p.getChildren().size() );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				session -> {
+					Parent p = session.get( Parent.class, parentId );
+					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					Hibernate.initialize( p.getChildren() );
+					assertEquals( 1, p.getChildren().size() );
+				}
+		);
 
 		// Remove a detached entity element, merge, and commit
-		s = openSession();
-		s.getTransaction().begin();
-		p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		// remove a detached element and commit
-		p.removeChild( c2 );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		p = (Parent) s.merge( p );
-		Hibernate.initialize( p );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				session -> {
+					Parent p = session.get( Parent.class, parentId );
+					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					// remove a detached element and commit
+					p.removeChild( c2 );
+					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					p = (Parent) session.merge( p );
+					Hibernate.initialize( p );
+
+				}
+		);
 
 		// Remove a detached entity element, merge, and commit
-		s = openSession();
-		s.getTransaction().begin();
-		p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		assertEquals( 0, p.getChildren().size() );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				session -> {
+					Parent p = session.get( Parent.class, parentId );
+					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					assertEquals( 0, p.getChildren().size() );
+				}
+		);
 	}
 
 /* STILL WORKING ON THIS ONE...
@@ -358,9 +364,9 @@ public class ListDelayedOperationTest extends BaseCoreFunctionalTestCase {
 		private Long id;
 
 		@OneToMany(cascade = CascadeType.ALL, mappedBy = "parent", orphanRemoval = true)
-		@LazyCollection(LazyCollectionOption.EXTRA )
+		@LazyCollection(LazyCollectionOption.EXTRA)
 		@OrderColumn
-		private List<Child> children = new ArrayList<Child>();
+		private List<Child> children = new ArrayList<>();
 
 		public Parent() {
 		}
@@ -378,18 +384,18 @@ public class ListDelayedOperationTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public void addChild(Child child) {
-			children.add(child);
-			child.setParent(this);
+			children.add( child );
+			child.setParent( this );
 		}
 
 		public void addChild(Child child, int i) {
-			children.add(i, child );
-			child.setParent(this);
+			children.add( i, child );
+			child.setParent( this );
 		}
 
 		public void removeChild(Child child) {
-			children.remove(child);
-			child.setParent(null);
+			children.remove( child );
+			child.setParent( null );
 		}
 	}
 

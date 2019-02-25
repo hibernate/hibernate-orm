@@ -41,7 +41,6 @@ public class SimpleTest extends EnversEntityManagerFactoryBasedFunctionalTest {
 		id = inTransaction(
 				entityManager -> {
 					final StrTestEntity entity = new StrTestEntity();
-					entity.setId( 1 );
 					entity.setStr( "simple" );
 					entityManager.persist( entity );
 					return entity.getId();

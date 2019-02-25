@@ -37,9 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @author Gail Badner
  */
-public class BagDelayedOperationTest
-
-		extends SessionFactoryBasedFunctionalTest {
+public class BagDelayedOperationTest extends SessionFactoryBasedFunctionalTest {
 	private Long parentId;
 
 	@Override
@@ -77,8 +75,10 @@ public class BagDelayedOperationTest
 		inTransaction(
 				session -> {
 					Parent parent = session.get( Parent.class, parentId );
-					parent.getChildren().clear();
-					session.delete( parent );
+					if ( parent != null ) {
+						parent.getChildren().clear();
+						session.delete( parent );
+					}
 				}
 		);
 

@@ -4,6 +4,21 @@ Hibernate 5 Changelog
 Note: Please refer to JIRA to learn more about each issue.
 
 
+Changes in 5.3.9.final (February 25th, 2019)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31757/tab/release-report-done
+
+** Bug
+    * [HHH-13107] - JtaWithStatementsBatchTest fails on Oracle
+    * [HHH-13112] - Proxies on entity types in the default package lead to MappingException with JDK9+
+    * [HHH-13262] - javax.persistence.TransactionRequiredException: Executing an update/delete query
+    * [HHH-13269] - Embeddable collection regression due to HHH-11544
+    * [HHH-13281] - java.lang.ClassCastException: org.hibernate.internal.SessionImpl cannot be cast to org.hibernate.ejb.HibernateEntityManager
+    * [HHH-13285] - ClassCastException: org.dom4j.DocumentFactory cannot be cast to org.dom4j.DocumentFactory after dom4j update
+
+
+
 Changes in 5.3.8.final (February 19th, 2019)
 ------------------------------------------------------------------------------------------------------------------------
 

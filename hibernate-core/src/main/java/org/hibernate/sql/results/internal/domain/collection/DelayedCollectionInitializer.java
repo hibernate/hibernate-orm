@@ -53,34 +53,41 @@ public class DelayedCollectionInitializer extends AbstractCollectionInitializer 
 	@Override
 	public void resolveInstance(RowProcessingState rowProcessingState) {
 		final CollectionKey collectionKey = resolveCollectionKey( rowProcessingState );
+		if(collectionKey != null) {
 
-		final SharedSessionContractImplementor session = rowProcessingState.getSession();
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+			final SharedSessionContractImplementor session = rowProcessingState.getSession();
+			final PersistenceContext persistenceContext = session.getPersistenceContext();
 
-		final PersistentCollectionDescriptor collectionDescriptor = getFetchedAttribute().getPersistentCollectionDescriptor();
+			final PersistentCollectionDescriptor collectionDescriptor = getFetchedAttribute().getPersistentCollectionDescriptor();
 
-		// todo (6.0) : look for LoadingCollectionEntry?
+			// todo (6.0) : look for LoadingCollectionEntry?
 
-		final PersistentCollection existing = persistenceContext.getCollection( collectionKey );
-		if ( existing != null ) {
-			collectionInstance = existing;
-		}
-		else {
-			collectionInstance = collectionDescriptor.instantiateWrapper(
-					session,
-					collectionKey.getKey()
-			);
+			final PersistentCollection existing = persistenceContext.getCollection( collectionKey );
+			if ( existing != null ) {
+				collectionInstance = existing;
+			}
+			else {
+				collectionInstance = collectionDescriptor.instantiateWrapper(
+						session,
+						collectionKey.getKey()
+				);
 
-			getParentAccess().registerResolutionListener(
-					owner -> collectionInstance.setOwner( owner )
-			);
+				getParentAccess().registerResolutionListener(
+						owner -> collectionInstance.setOwner( owner )
+				);
 
-			persistenceContext.addUninitializedCollection( collectionDescriptor, collectionInstance, collectionKey.getKey() );
-			final CollectionEntry collectionEntry = persistenceContext.getCollectionEntry( collectionInstance );
-			collectionEntry.setCurrentKey( collectionKey.getKey() );
+				persistenceContext.addUninitializedCollection(
+						collectionDescriptor,
+						collectionInstance,
+						collectionKey.getKey()
+				);
+				final CollectionEntry collectionEntry = persistenceContext.getCollectionEntry( collectionInstance );
+				collectionEntry.setCurrentKey( collectionKey.getKey() );
 
-			if ( getCollectionDescriptor().getSemantics().getCollectionClassification() == CollectionClassification.ARRAY ) {
-				session.getPersistenceContext().addCollectionHolder( collectionInstance );
+				if ( getCollectionDescriptor().getSemantics()
+						.getCollectionClassification() == CollectionClassification.ARRAY ) {
+					session.getPersistenceContext().addCollectionHolder( collectionInstance );
+				}
 			}
 		}
 	}

@@ -120,17 +120,20 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 			);
 		}
 
-		collectionKey = new CollectionKey(
-				getFetchedAttribute().getPersistentCollectionDescriptor(),
-				getKeyContainerValue()
-		);
-
-		if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
-			CollectionLoadingLogger.INSTANCE.debugf(
-					"(%s) Current row collection key : %s",
-					StringHelper.collapse( this.getClass().getName() ),
-					LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() )
+		Object keyContainerValue = getKeyContainerValue();
+		if(keyContainerValue != null) {
+			collectionKey = new CollectionKey(
+					getFetchedAttribute().getPersistentCollectionDescriptor(),
+					keyContainerValue
 			);
+
+			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
+				CollectionLoadingLogger.INSTANCE.debugf(
+						"(%s) Current row collection key : %s",
+						StringHelper.collapse( this.getClass().getName() ),
+						LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() )
+				);
+			}
 		}
 	}
 

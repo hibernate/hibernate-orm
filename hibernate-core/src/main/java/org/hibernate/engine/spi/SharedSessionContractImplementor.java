@@ -189,7 +189,7 @@ public interface SharedSessionContractImplementor
 	 */
 	default void checkTransactionNeededForUpdateOperation(String exceptionMessage) {
 		if ( !isTransactionInProgress() ) {
-			throw getExceptionConverter().convert( new TransactionRequiredException( exceptionMessage ) );
+			throw new TransactionRequiredException( exceptionMessage );
 		}
 	}
 

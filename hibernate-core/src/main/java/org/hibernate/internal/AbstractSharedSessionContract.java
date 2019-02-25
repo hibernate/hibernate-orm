@@ -395,7 +395,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public void checkTransactionNeededForUpdateOperation(String exceptionMessage) {
 		if ( disallowOutOfTransactionUpdateOperations && !isTransactionInProgress() ) {
-			throw getExceptionConverter().convert( new TransactionRequiredException( exceptionMessage ) );
+			throw new TransactionRequiredException( exceptionMessage );
 		}
 	}
 

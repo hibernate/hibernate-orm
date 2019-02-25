@@ -8,7 +8,7 @@
 apply plugin: 'base'
 
 ext {
-	ormVersion = new HibernateVersion( '5.3.9.Final', project )
+	ormVersion = new HibernateVersion( '5.3.10-SNAPSHOT', project )
 	baselineJavaVersion = '1.8'
 	jpaVersion = new JpaVersion('2.2')
 }

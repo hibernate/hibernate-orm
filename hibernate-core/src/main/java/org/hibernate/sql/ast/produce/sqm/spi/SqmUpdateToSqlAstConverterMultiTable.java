@@ -17,9 +17,9 @@ import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
-import org.hibernate.query.sqm.tree.SqmUpdateStatement;
-import org.hibernate.query.sqm.tree.set.SqmAssignment;
-import org.hibernate.query.sqm.tree.set.SqmSetClause;
+import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.query.sqm.tree.update.SqmAssignment;
+import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
@@ -96,7 +96,7 @@ public class SqmUpdateToSqlAstConverterMultiTable
 		super( producerContext, queryOptions );
 		this.idTableSelect = idTableSelect;
 
-		this.entityDescriptor = sqmStatement.getEntityFromElement()
+		this.entityDescriptor = sqmStatement.getTarget()
 				.getNavigableReference()
 				.getExpressableType()
 				.getEntityDescriptor();
@@ -116,17 +116,17 @@ public class SqmUpdateToSqlAstConverterMultiTable
 				new TableGroupInfo() {
 					@Override
 					public String getUniqueIdentifier() {
-						return sqmStatement.getEntityFromElement().getUniqueIdentifier();
+						return sqmStatement.getTarget().getUniqueIdentifier();
 					}
 
 					@Override
 					public String getIdentificationVariable() {
-						return sqmStatement.getEntityFromElement().getIdentificationVariable();
+						return sqmStatement.getTarget().getIdentificationVariable();
 					}
 
 					@Override
 					public EntityTypeDescriptor getIntrinsicSubclassEntityMetadata() {
-						return sqmStatement.getEntityFromElement().getIntrinsicSubclassEntityMetadata();
+						return sqmStatement.getTarget().getIntrinsicSubclassEntityMetadata();
 					}
 
 					@Override
@@ -170,7 +170,7 @@ public class SqmUpdateToSqlAstConverterMultiTable
 		tableGroup.applyAffectedTableNames( affectedTableNames()::add );
 
 		primeStack( getTableGroupStack(), tableGroup );
-		getFromClauseIndex().crossReference( sqmStatement.getEntityFromElement(), tableGroup );
+		getFromClauseIndex().crossReference( sqmStatement.getTarget(), tableGroup );
 
 		this.expressionResolver = new NonSelectSqlExpressionResolver(
 				getSessionFactory(),

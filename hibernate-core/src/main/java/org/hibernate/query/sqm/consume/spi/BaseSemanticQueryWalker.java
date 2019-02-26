@@ -10,11 +10,11 @@ import java.lang.reflect.Field;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.criteria.sqm.JpaParameterSqmWrapper;
-import org.hibernate.query.sqm.tree.SqmDeleteStatement;
-import org.hibernate.query.sqm.tree.SqmInsertSelectStatement;
+import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.SqmQuerySpec;
-import org.hibernate.query.sqm.tree.SqmSelectStatement;
-import org.hibernate.query.sqm.tree.SqmUpdateStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
@@ -97,8 +97,8 @@ import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
-import org.hibernate.query.sqm.tree.set.SqmAssignment;
-import org.hibernate.query.sqm.tree.set.SqmSetClause;
+import org.hibernate.query.sqm.tree.update.SqmAssignment;
+import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.sql.ast.produce.ordering.internal.SqmColumnReference;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
 
@@ -126,7 +126,7 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 
 	@Override
 	public T visitUpdateStatement(SqmUpdateStatement statement) {
-		visitRootEntityFromElement( statement.getEntityFromElement() );
+		visitRootEntityFromElement( statement.getTarget() );
 		visitSetClause( statement.getSetClause() );
 		visitWhereClause( statement.getWhereClause() );
 		return (T) statement;
@@ -149,17 +149,17 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 
 	@Override
 	public T visitInsertSelectStatement(SqmInsertSelectStatement statement) {
-		visitRootEntityFromElement( statement.getInsertTarget() );
-		for ( SqmSingularAttributeReference stateField : statement.getStateFields() ) {
+		visitRootEntityFromElement( statement.getTarget() );
+		for ( SqmSingularAttributeReference stateField : statement.getInsertionTargetPaths() ) {
 			stateField.accept( this );
 		}
-		visitQuerySpec( statement.getSelectQuery() );
+		visitQuerySpec( statement.getSelectQuerySpec() );
 		return (T) statement;
 	}
 
 	@Override
 	public T visitDeleteStatement(SqmDeleteStatement statement) {
-		visitRootEntityFromElement( statement.getEntityFromElement() );
+		visitRootEntityFromElement( statement.getTarget() );
 		visitWhereClause( statement.getWhereClause() );
 		return (T) statement;
 	}

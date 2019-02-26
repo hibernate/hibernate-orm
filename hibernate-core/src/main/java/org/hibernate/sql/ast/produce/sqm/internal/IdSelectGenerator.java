@@ -75,12 +75,12 @@ public class IdSelectGenerator extends SqmSelectToSqlAstConverter {
 				new TableGroupInfo() {
 					@Override
 					public String getUniqueIdentifier() {
-						return sourceSqmStatement.getEntityFromElement().getUniqueIdentifier();
+						return sourceSqmStatement.getTarget().getUniqueIdentifier();
 					}
 
 					@Override
 					public String getIdentificationVariable() {
-						return sourceSqmStatement.getEntityFromElement().getIdentificationVariable();
+						return sourceSqmStatement.getTarget().getIdentificationVariable();
 					}
 
 					@Override
@@ -329,7 +329,7 @@ public class IdSelectGenerator extends SqmSelectToSqlAstConverter {
 
 		// this allows where-clause restrictions from the source query to
 		// 	resolve to this TableGroup for the entity for the id select
-		getFromClauseIndex().crossReference( sourceSqmStatement.getEntityFromElement(), idSelectTableSpace.getRootTableGroup() );
+		getFromClauseIndex().crossReference( sourceSqmStatement.getTarget(), idSelectTableSpace.getRootTableGroup() );
 	}
 
 

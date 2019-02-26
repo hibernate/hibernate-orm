@@ -14,7 +14,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
-import org.hibernate.query.sqm.tree.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.internal.NonSelectSqlExpressionResolver;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
@@ -69,7 +69,7 @@ public class SqmDeleteToSqlAstConverterMultiTable extends BaseSqmToSqlAstConvert
 		super( producerContext, queryOptions );
 		this.idTableSelect = idTableSelect;
 
-		this.entityDescriptor = sqmStatement.getEntityFromElement()
+		this.entityDescriptor = sqmStatement.getTarget()
 				.getNavigableReference()
 				.getExpressableType()
 				.getEntityDescriptor();
@@ -79,17 +79,17 @@ public class SqmDeleteToSqlAstConverterMultiTable extends BaseSqmToSqlAstConvert
 				new TableGroupInfo() {
 					@Override
 					public String getUniqueIdentifier() {
-						return sqmStatement.getEntityFromElement().getUniqueIdentifier();
+						return sqmStatement.getTarget().getUniqueIdentifier();
 					}
 
 					@Override
 					public String getIdentificationVariable() {
-						return sqmStatement.getEntityFromElement().getIdentificationVariable();
+						return sqmStatement.getTarget().getIdentificationVariable();
 					}
 
 					@Override
 					public EntityTypeDescriptor getIntrinsicSubclassEntityMetadata() {
-						return sqmStatement.getEntityFromElement().getIntrinsicSubclassEntityMetadata();
+						return sqmStatement.getTarget().getIntrinsicSubclassEntityMetadata();
 					}
 
 					@Override
@@ -129,7 +129,7 @@ public class SqmDeleteToSqlAstConverterMultiTable extends BaseSqmToSqlAstConvert
 				}
 		);
 
-		getFromClauseIndex().crossReference( sqmStatement.getEntityFromElement(), entityTableGroup );
+		getFromClauseIndex().crossReference( sqmStatement.getTarget(), entityTableGroup );
 
 		this.expressionResolver = new NonSelectSqlExpressionResolver(
 				getSessionFactory(),

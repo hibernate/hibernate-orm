@@ -10,13 +10,12 @@ import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaUpdate;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.criteria.spi.RootQuery;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.tree.SqmDeleteStatement;
-import org.hibernate.query.sqm.tree.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
-import org.hibernate.query.sqm.tree.SqmUpdateStatement;
+import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 
 /**
  * Main entry point into building semantic queries.
@@ -43,7 +42,7 @@ public interface SemanticQueryProducer {
 	 *
 	 * @return The semantic representation of the incoming criteria query.
 	 */
-	<R> SqmSelectStatement<R> interpret(RootQuery<R> query);
+	<R> SqmSelectStatement interpret(RootQuery<R> query);
 
 	/**
 	 * Interpret the JPA criteria tree into SQM

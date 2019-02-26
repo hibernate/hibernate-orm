@@ -13,7 +13,7 @@ import org.hibernate.query.sqm.consume.multitable.spi.HandlerCreationContext;
 import org.hibernate.query.sqm.consume.multitable.spi.HandlerExecutionContext;
 import org.hibernate.query.sqm.consume.multitable.spi.UpdateHandler;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
-import org.hibernate.query.sqm.tree.SqmUpdateStatement;
+import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.consume.spi.UpdateToJdbcUpdateConverter;
 import org.hibernate.sql.ast.produce.spi.SqlAstUpdateDescriptor;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmUpdateToSqlAstConverterMultiTable;
@@ -60,7 +60,7 @@ public class TableBasedUpdateHandlerImpl
 
 	@Override
 	protected void performMutations(HandlerExecutionContext executionContext) {
-		boolean hasNoSecondaryTables = getSqmDeleteOrUpdateStatement().getEntityFromElement()
+		boolean hasNoSecondaryTables = getSqmDeleteOrUpdateStatement().getTarget()
 				.getNavigableReference()
 				.getEntityDescriptor()
 				.getSecondaryTableBindings()

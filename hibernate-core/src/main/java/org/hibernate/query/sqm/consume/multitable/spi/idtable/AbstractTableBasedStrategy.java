@@ -21,8 +21,8 @@ import org.hibernate.query.sqm.consume.multitable.spi.DeleteHandler;
 import org.hibernate.query.sqm.consume.multitable.spi.HandlerCreationContext;
 import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
 import org.hibernate.query.sqm.consume.multitable.spi.UpdateHandler;
-import org.hibernate.query.sqm.tree.SqmDeleteStatement;
-import org.hibernate.query.sqm.tree.SqmUpdateStatement;
+import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 
 /**
  * @author Steve Ebersole
@@ -178,7 +178,7 @@ public abstract class AbstractTableBasedStrategy implements IdTableStrategy {
 
 	@Override
 	public UpdateHandler buildUpdateHandler(SqmUpdateStatement sqmUpdateStatement, HandlerCreationContext creationContext) {
-		final EntityTypeDescriptor entityDescriptor = sqmUpdateStatement.getEntityFromElement()
+		final EntityTypeDescriptor entityDescriptor = sqmUpdateStatement.getTarget()
 				.getNavigableReference()
 				.getReferencedNavigable()
 				.getEntityDescriptor();
@@ -212,7 +212,7 @@ public abstract class AbstractTableBasedStrategy implements IdTableStrategy {
 
 	@Override
 	public DeleteHandler buildDeleteHandler(SqmDeleteStatement sqmDeleteStatement, HandlerCreationContext creationContext) {
-		final EntityTypeDescriptor entityDescriptor = sqmDeleteStatement.getEntityFromElement()
+		final EntityTypeDescriptor entityDescriptor = sqmDeleteStatement.getTarget()
 				.getNavigableReference()
 				.getReferencedNavigable()
 				.getEntityDescriptor();

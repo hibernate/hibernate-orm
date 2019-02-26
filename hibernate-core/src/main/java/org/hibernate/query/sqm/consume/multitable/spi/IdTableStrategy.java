@@ -9,8 +9,8 @@ package org.hibernate.query.sqm.consume.multitable.spi;
 import org.hibernate.Metamodel;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
-import org.hibernate.query.sqm.tree.SqmDeleteStatement;
-import org.hibernate.query.sqm.tree.SqmUpdateStatement;
+import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 
 /**
  * Contract for pluggable strategy for defining how mutation (`UPDATE`/`DELETE`)

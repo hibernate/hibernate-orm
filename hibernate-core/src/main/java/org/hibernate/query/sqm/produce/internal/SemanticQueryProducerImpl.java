@@ -20,10 +20,10 @@ import org.hibernate.query.hql.internal.SemanticQueryBuilder;
 import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.sqm.QueryException;
 import org.hibernate.query.sqm.produce.spi.SemanticQueryProducer;
-import org.hibernate.query.sqm.tree.SqmDeleteStatement;
-import org.hibernate.query.sqm.tree.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
-import org.hibernate.query.sqm.tree.SqmUpdateStatement;
+import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 
 /**
  * Standard implementation of SemanticQueryInterpreter
@@ -60,7 +60,7 @@ public class SemanticQueryProducerImpl implements SemanticQueryProducer {
 	}
 
 	@Override
-	public <R> SqmSelectStatement<R> interpret(RootQuery<R> query) {
+	public <R> SqmSelectStatement interpret(RootQuery<R> query) {
 		return CriteriaQueryToSqmTransformer.transform( query, sessionFactory );
 	}
 

@@ -9,9 +9,8 @@ package org.hibernate.orm.test.query.sqm.basic;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
-import org.hibernate.query.sqm.tree.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
 
 import org.junit.jupiter.api.Test;

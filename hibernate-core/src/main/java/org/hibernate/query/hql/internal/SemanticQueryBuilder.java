@@ -63,13 +63,13 @@ import org.hibernate.query.sqm.produce.spi.QuerySpecProcessingState;
 import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.produce.spi.SqmFromBuilder;
 import org.hibernate.query.sqm.produce.spi.TrimSpecificationExpressionWrapper;
-import org.hibernate.query.sqm.tree.SqmDeleteStatement;
-import org.hibernate.query.sqm.tree.SqmInsertSelectStatement;
+import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.SqmQuerySpec;
-import org.hibernate.query.sqm.tree.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
-import org.hibernate.query.sqm.tree.SqmUpdateStatement;
+import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.query.sqm.tree.expression.InferableTypeSqmExpression;
 import org.hibernate.query.sqm.tree.expression.LiteralHelper;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
@@ -146,10 +146,6 @@ import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.internal.ParameterCollector;
-import org.hibernate.query.sqm.tree.internal.SqmDeleteStatementImpl;
-import org.hibernate.query.sqm.tree.internal.SqmInsertSelectStatementImpl;
-import org.hibernate.query.sqm.tree.internal.SqmSelectStatementImpl;
-import org.hibernate.query.sqm.tree.internal.SqmUpdateStatementImpl;
 import org.hibernate.query.sqm.tree.order.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.order.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.paging.SqmLimitOffsetClause;
@@ -392,16 +388,11 @@ public class SemanticQueryBuilder
 			}
 		}
 
-		final SqmSelectStatementImpl selectStatement = new SqmSelectStatementImpl();
+		final SqmSelectStatement selectStatement = new SqmSelectStatement();
 		parameterCollector = selectStatement;
 
-		try {
-			selectStatement.applyQuerySpec( visitQuerySpec( ctx.querySpec() ), fetchJoinsByParentPath );
-		}
-		finally {
-			// todo (6.0) : should this really happen on error?
-			selectStatement.wrapUp();
-		}
+		selectStatement.setQuerySpec( visitQuerySpec( ctx.querySpec() ) );
+		selectStatement.applyFetchJoinsByParentPath( fetchJoinsByParentPath );
 
 		return selectStatement;
 	}
@@ -807,19 +798,14 @@ public class SemanticQueryBuilder
 		querySpecProcessingStateStack.push( new QuerySpecProcessingStateDmlImpl( this ) );
 		try {
 			final SqmRoot root = resolveDmlRootEntityReference( ctx.mainEntityPersisterReference() );
-			final SqmDeleteStatementImpl deleteStatement = new SqmDeleteStatementImpl( root );
+			final SqmDeleteStatement deleteStatement = new SqmDeleteStatement( root );
 
 			parameterCollector = deleteStatement;
 
-			try {
-				if ( ctx.whereClause() != null && ctx.whereClause().predicate() != null ) {
-					deleteStatement.getWhereClause().setPredicate(
-							(SqmPredicate) ctx.whereClause().predicate().accept( this )
-					);
-				}
-			}
-			finally {
-				deleteStatement.wrapUp();
+			if ( ctx.whereClause() != null && ctx.whereClause().predicate() != null ) {
+				deleteStatement.getWhereClause().setPredicate(
+						(SqmPredicate) ctx.whereClause().predicate().accept( this )
+				);
 			}
 
 			return deleteStatement;
@@ -887,25 +873,20 @@ public class SemanticQueryBuilder
 		querySpecProcessingStateStack.push( new QuerySpecProcessingStateDmlImpl( this ) );
 		try {
 			final SqmRoot root = resolveDmlRootEntityReference( ctx.mainEntityPersisterReference() );
-			final SqmUpdateStatementImpl updateStatement = new SqmUpdateStatementImpl( root );
+			final SqmUpdateStatement updateStatement = new SqmUpdateStatement( root );
 
 			parameterCollector = updateStatement;
-			try {
-				updateStatement.getWhereClause().setPredicate(
-						(SqmPredicate) ctx.whereClause().predicate().accept( this )
-				);
+			updateStatement.getWhereClause().setPredicate(
+					(SqmPredicate) ctx.whereClause().predicate().accept( this )
+			);
 
-				for ( HqlParser.AssignmentContext assignmentContext : ctx.setClause().assignment() ) {
-					final SqmSingularAttributeReference stateField = (SqmSingularAttributeReference) visitDotIdentifierSequence( assignmentContext.dotIdentifierSequence() );
-					// todo : validate "state field" expression
-					updateStatement.getSetClause().addAssignment(
-							stateField,
-							(SqmExpression) assignmentContext.expression().accept( this )
-					);
-				}
-			}
-			finally {
-				updateStatement.wrapUp();
+			for ( HqlParser.AssignmentContext assignmentContext : ctx.setClause().assignment() ) {
+				final SqmSingularAttributeReference stateField = (SqmSingularAttributeReference) visitDotIdentifierSequence( assignmentContext.dotIdentifierSequence() );
+				// todo : validate "state field" expression
+				updateStatement.getSetClause().addAssignment(
+						stateField,
+						(SqmExpression) assignmentContext.expression().accept( this )
+				);
 			}
 
 			return updateStatement;
@@ -938,20 +919,15 @@ public class SemanticQueryBuilder
 			querySpecProcessingStateStack.getCurrent().getFromClause().getFromElementSpaces().get( 0 ).setRoot( root );
 
 			// for now we only support the INSERT-SELECT form
-			final SqmInsertSelectStatementImpl insertStatement = new SqmInsertSelectStatementImpl( root );
+			final SqmInsertSelectStatement insertStatement = new SqmInsertSelectStatement( root );
 			parameterCollector = insertStatement;
 
-			try {
-				insertStatement.setSelectQuery( visitQuerySpec( ctx.querySpec() ) );
+			insertStatement.setSelectQuerySpec( visitQuerySpec( ctx.querySpec() ) );
 
-				for ( HqlParser.DotIdentifierSequenceContext stateFieldCtx : ctx.insertSpec().targetFieldsSpec().dotIdentifierSequence() ) {
-					final SqmSingularAttributeReference stateField = (SqmSingularAttributeReference) visitDotIdentifierSequence( stateFieldCtx );
-					// todo : validate each resolved stateField...
-					insertStatement.addInsertTargetStateField( stateField );
-				}
-			}
-			finally {
-				insertStatement.wrapUp();
+			for ( HqlParser.DotIdentifierSequenceContext stateFieldCtx : ctx.insertSpec().targetFieldsSpec().dotIdentifierSequence() ) {
+				final SqmSingularAttributeReference stateField = (SqmSingularAttributeReference) visitDotIdentifierSequence( stateFieldCtx );
+				// todo : validate each resolved stateField...
+				insertStatement.addInsertTargetStateField( stateField );
 			}
 
 			return insertStatement;

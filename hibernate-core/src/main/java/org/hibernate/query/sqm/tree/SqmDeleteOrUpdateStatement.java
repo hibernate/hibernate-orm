@@ -6,12 +6,13 @@
  */
 package org.hibernate.query.sqm.tree;
 
-import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClauseContainer;
 
 /**
+ * In some cases it is useful to be able to handle UPDATE or DELETE SQM trees
+ * using a single contract.  This contract serves that role
+ *
  * @author Steve Ebersole
  */
-public interface SqmDeleteOrUpdateStatement<E> extends SqmNonSelectStatement, SqmWhereClauseContainer {
-	SqmRoot<E> getEntityFromElement();
+public interface SqmDeleteOrUpdateStatement<E> extends SqmDmlStatement<E>, SqmWhereClauseContainer {
 }

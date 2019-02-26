@@ -8,7 +8,7 @@ package org.hibernate.sql.ast.produce.sqm.spi;
 
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
-import org.hibernate.query.sqm.tree.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.sql.ast.produce.internal.NonSelectSqlExpressionResolver;
 import org.hibernate.sql.ast.produce.spi.SqlAstProducerContext;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
@@ -69,7 +69,7 @@ public class SqmDeleteToSqlAstConverterSimple extends BaseSqmToSqlAstConverter {
 
 		deleteStatement = new DeleteStatement(
 				new TableReference(
-						sqmStatement.getEntityFromElement()
+						sqmStatement.getTarget()
 								.getNavigableReference()
 								.getEntityDescriptor()
 								.getPrimaryTable(),

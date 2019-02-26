@@ -11,7 +11,7 @@
  * Once you have received a {@link org.hibernate.query.sqm.tree.SqmStatement} from
  * SemanticQueryInterpreter you can:<ul>
  *     <li>
- *         "Split" it (if it is a {@link org.hibernate.query.sqm.tree.SqmSelectStatement})
+ *         "Split" it (if it is a {@link org.hibernate.query.sqm.tree.select.SqmSelectStatement})
  *         using {@link org.hibernate.query.sqm.consume.spi.QuerySplitter}
  *     </li>
  *     <li>

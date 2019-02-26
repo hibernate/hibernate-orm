@@ -14,7 +14,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.internal.JpaComplianceImpl;
 import org.hibernate.orm.test.query.sqm.produce.domain.Person;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
-import org.hibernate.query.sqm.tree.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
 import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
 import org.hibernate.testing.orm.domain.gambit.EntityOfMaps;

@@ -30,7 +30,7 @@ import org.hibernate.query.criteria.spi.RootQuery;
 import org.hibernate.query.criteria.spi.SelectionImplementor;
 import org.hibernate.query.sqm.produce.internal.UniqueIdGenerator;
 import org.hibernate.query.sqm.tree.SqmQuerySpec;
-import org.hibernate.query.sqm.tree.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -39,7 +39,6 @@ import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.internal.ParameterCollector;
-import org.hibernate.query.sqm.tree.internal.SqmSelectStatementImpl;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
@@ -56,8 +55,7 @@ public class CriteriaQueryToSqmTransformer extends BaseCriteriaVisitor {
 	/**
 	 * Used to transform `SELECT` criteria tree into a SQM tree
 	 */
-	@SuppressWarnings("unchecked")
-	public static <R> SqmSelectStatement<R> transform(
+	public static <R> SqmSelectStatement transform(
 			RootQuery<R> query,
 			SessionFactoryImplementor sessionFactory) {
 		final CriteriaQueryToSqmTransformer me = new CriteriaQueryToSqmTransformer( sessionFactory );
@@ -87,15 +85,13 @@ public class CriteriaQueryToSqmTransformer extends BaseCriteriaVisitor {
 
 	@Override
 	public SqmSelectStatement visitRootQuery(RootQuery criteriaQuery) {
-		final SqmSelectStatementImpl sqmSelectStatement = new SqmSelectStatementImpl();
+		final SqmSelectStatement sqmSelectStatement = new SqmSelectStatement();
 
 		parameterCollector = sqmSelectStatement;
 
 		try {
-			sqmSelectStatement.applyQuerySpec(
-					visitQueryStructure( criteriaQuery.getQueryStructure() ),
-					fetchedJoinsByParentPath
-			);
+			sqmSelectStatement.setQuerySpec( visitQueryStructure( criteriaQuery.getQueryStructure() ) );
+			sqmSelectStatement.applyFetchJoinsByParentPath( fetchedJoinsByParentPath );
 
 			return sqmSelectStatement;
 		}

@@ -52,11 +52,11 @@ import org.hibernate.query.sqm.consume.multitable.spi.DeleteHandler;
 import org.hibernate.query.sqm.consume.multitable.spi.HandlerExecutionContext;
 import org.hibernate.query.sqm.consume.multitable.spi.UpdateHandler;
 import org.hibernate.query.sqm.consume.spi.QuerySplitter;
-import org.hibernate.query.sqm.tree.SqmDeleteStatement;
-import org.hibernate.query.sqm.tree.SqmNonSelectStatement;
-import org.hibernate.query.sqm.tree.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.SqmDmlStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
-import org.hibernate.query.sqm.tree.SqmUpdateStatement;
+import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.exec.spi.ParameterBindingContext;
@@ -89,7 +89,7 @@ public class QuerySqmImpl<R>
 		super( producer );
 
 		if ( resultType != null ) {
-			if ( sqmStatement instanceof SqmNonSelectStatement ) {
+			if ( sqmStatement instanceof SqmDmlStatement ) {
 				throw new IllegalArgumentException( "Non-select queries cannot be typed" );
 			}
 		}
@@ -414,7 +414,7 @@ public class QuerySqmImpl<R>
 
 		// If the entity to delete is multi-table we need to leverage the
 		// configured org.hibernate.hql.spi.id.MultiTableBulkIdStrategy
-		final EntityTypeDescriptor entityToDelete = sqmStatement.getEntityFromElement()
+		final EntityTypeDescriptor entityToDelete = sqmStatement.getTarget()
 				.getNavigableReference()
 				.getReferencedNavigable()
 				.getEntityDescriptor();
@@ -436,7 +436,7 @@ public class QuerySqmImpl<R>
 
 		// If the entity to update is multi-table we need to leverage the
 		// configured org.hibernate.hql.spi.id.MultiTableBulkIdStrategy
-		final EntityTypeDescriptor entityToDelete = sqmStatement.getEntityFromElement()
+		final EntityTypeDescriptor entityToDelete = sqmStatement.getTarget()
 				.getNavigableReference()
 				.getReferencedNavigable()
 				.getEntityDescriptor();

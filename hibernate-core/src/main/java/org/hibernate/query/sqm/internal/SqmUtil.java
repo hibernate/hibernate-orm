@@ -9,8 +9,8 @@ package org.hibernate.query.sqm.internal;
 import java.util.Locale;
 
 import org.hibernate.query.IllegalQueryOperationException;
-import org.hibernate.query.sqm.tree.SqmNonSelectStatement;
-import org.hibernate.query.sqm.tree.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.SqmDmlStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
 /**
@@ -37,12 +37,12 @@ public class SqmUtil {
 	}
 
 	public static void verifyIsNonSelectStatement(SqmStatement sqm) {
-		if ( !SqmNonSelectStatement.class.isInstance( sqm ) ) {
+		if ( !SqmDmlStatement.class.isInstance( sqm ) ) {
 			throw new IllegalQueryOperationException(
 					String.format(
 							Locale.ROOT,
 							"Expecting a non-SELECT Query [%s], but found %s",
-							SqmNonSelectStatement.class.getName(),
+							SqmDmlStatement.class.getName(),
 							sqm.getClass().getName()
 					)
 			);

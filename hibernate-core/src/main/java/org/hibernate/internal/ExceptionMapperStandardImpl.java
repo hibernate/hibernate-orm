@@ -36,7 +36,6 @@ public class ExceptionMapperStandardImpl implements ExceptionMapper {
 			String message,
 			RuntimeException failure,
 			SessionImplementor session) {
-		log.unableToPerformManagedFlush( failure.getMessage() );
 		return failure;
 	}
 }

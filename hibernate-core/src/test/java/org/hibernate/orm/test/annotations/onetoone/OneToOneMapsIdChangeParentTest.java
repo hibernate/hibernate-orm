@@ -13,9 +13,9 @@ import javax.persistence.OneToOne;
 
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
-import org.hibernate.orm.test.jpa.EntityManagerFactoryBasedFunctionalTest;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
 import org.junit.Rule;

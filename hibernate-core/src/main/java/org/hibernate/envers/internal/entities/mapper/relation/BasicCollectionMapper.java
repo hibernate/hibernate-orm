@@ -200,7 +200,7 @@ public class BasicCollectionMapper<T extends Collection> extends AbstractCollect
 
 			// This is a short-circuit to check for reference equality only.
 			// There is no need to delegate to the identifier if the objects are reference equal.
-			if ( isSame( collectionDescriptor, lhs, rhs ) ) {
+			if ( isSame( collectionDescriptor, lhs, rhs, session ) ) {
 				return true;
 			}
 
@@ -216,6 +216,6 @@ public class BasicCollectionMapper<T extends Collection> extends AbstractCollect
 		}
 
 		// for element types that aren't entities (aka embeddables/basic types), use legacy behavior.
-		return isSame( collectionDescriptor, lhs, rhs );
+		return isSame( collectionDescriptor, lhs, rhs, session );
 	}
 }

@@ -18,10 +18,10 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.orm.test.jpa.EntityManagerFactoryBasedFunctionalTest;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.util.ReflectionUtil;
 
 import org.junit.jupiter.api.AfterAll;

@@ -84,4 +84,9 @@ public class UnaryOperation implements Expression, SqlExpressable, DomainResultP
 				getType()
 		);
 	}
+
+	@Override
+	public SqlExpressableType getType() {
+		return type;
+	}
 }

@@ -105,12 +105,12 @@ public class PersistentArrayDescriptorImpl<O,E> extends AbstractPersistentCollec
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public boolean contains(Object collection, Object childObject) {
+	public boolean contains(Object collection, E childObject) {
 		assert collection.getClass().isArray();
 
 		final int length = Array.getLength( collection );
 		for ( int i = 0; i < length; i++ ) {
-			if ( getElementDescriptor().getJavaTypeDescriptor().areEqual( Array.get( collection, i ), childObject ) ) {
+			if ( getElementDescriptor().getJavaTypeDescriptor().areEqual( (E) Array.get( collection, i ), childObject ) ) {
 				return true;
 			}
 		}

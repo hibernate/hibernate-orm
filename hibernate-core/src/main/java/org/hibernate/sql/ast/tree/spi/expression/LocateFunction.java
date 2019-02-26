@@ -51,7 +51,7 @@ public class LocateFunction extends AbstractStandardFunction implements Standard
 
 	@Override
 	public SqlExpressableType getExpressableType() {
-		return stringToSearch.getExpressable().getExpressableType();
+		return stringToSearch.getType();
 	}
 
 	@Override

@@ -925,7 +925,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 	}
 
 	@Override
-	public boolean contains(Object collection, Object childObject) {
+	public boolean contains(Object collection, E childObject) {
 		return false;
 	}
 

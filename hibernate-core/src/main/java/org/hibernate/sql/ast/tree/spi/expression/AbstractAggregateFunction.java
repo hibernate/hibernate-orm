@@ -42,9 +42,4 @@ public abstract class AbstractAggregateFunction extends AbstractStandardFunction
 	public Expression getArgument() {
 		return argument;
 	}
-
-	@Override
-	public SqlExpressable getExpressable() {
-		return this;
-	}
 }

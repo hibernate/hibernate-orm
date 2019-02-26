@@ -49,11 +49,6 @@ public class SubstrFunction implements StandardFunction {
 	}
 
 	@Override
-	public SqlExpressable getExpressable() {
-		return this;
-	}
-
-	@Override
 	public void accept(SqlAstWalker walker) {
 		walker.visitSubstrFunction( this );
 	}

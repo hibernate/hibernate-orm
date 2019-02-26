@@ -81,11 +81,6 @@ public class ColumnReference implements Expression {
 		return column.getExpressableType();
 	}
 
-	@Override
-	public SqlExpressable getExpressable() {
-		return getColumn();
-	}
-
 	public String renderSqlFragment() {
 		return this.sqlFragment;
 	}

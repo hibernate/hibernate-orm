@@ -42,11 +42,6 @@ public class EntityTypeLiteral implements Expression {
 	}
 
 	@Override
-	public SqlExpressable getExpressable() {
-		return discriminatorDescriptor.getBoundColumn();
-	}
-
-	@Override
 	public SqlSelection createSqlSelection(
 			int jdbcPosition,
 			int valuesArrayPosition,

@@ -26,14 +26,16 @@ public interface Expression extends SqlAstNode, SqlSelectionProducer {
 	 * Access the type for this expression.  See {@link ExpressableType}
 	 * for more detailed description.
 	 */
-	default SqlExpressableType getType() {
-		return getExpressable().getExpressableType();
-	}
+	SqlExpressableType getType();
 
-	default SqlExpressable getExpressable() {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
 
+//	default SqlExpressableType getType() {
+//		return getExpressable().getExpressableType();
+//	}
+//
+//	default SqlExpressable getExpressable() {
+//		throw new NotYetImplementedFor6Exception( getClass() );
+//	}
 	/**
 	 * If this expression is used as a selection in the SQL this method
 	 * will be called to generate the corresponding SqlSelection (reader,

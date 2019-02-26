@@ -20,8 +20,8 @@ import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlExpressable;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
@@ -66,6 +66,11 @@ public class SelfRenderingFunctionSqlAstExpression
 	@Override
 	public SqlExpressableType getExpressableType() {
 		return ( (BasicValuedExpressableType) getType() ).getSqlExpressableType();
+	}
+
+	@Override
+	public SqlExpressableType getType() {
+		return sqmExpression.getExpressableType().getSqlExpressableType( typeConfiguration );
 	}
 
 	@Override

@@ -6,7 +6,9 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Marker interface for any types that are allowed as function returns
@@ -14,4 +16,7 @@ import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
  * @author Steve Ebersole
  */
 public interface AllowableFunctionReturnType<T> extends ExpressableType<T> {
+
+	SqlExpressableType getSqlExpressableType(TypeConfiguration typeConfiguration);
+
 }

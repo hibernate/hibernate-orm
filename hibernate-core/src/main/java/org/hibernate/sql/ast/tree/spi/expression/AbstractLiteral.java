@@ -104,4 +104,9 @@ public abstract class AbstractLiteral
 		getType().getJdbcValueBinder().bind( statement, startPosition, value, executionContext );
 		return 1;
 	}
+
+	@Override
+	public SqlExpressableType getType() {
+		return type;
+	}
 }

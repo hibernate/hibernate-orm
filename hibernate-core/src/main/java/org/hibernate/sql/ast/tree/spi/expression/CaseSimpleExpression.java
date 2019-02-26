@@ -49,6 +49,11 @@ public class CaseSimpleExpression implements Expression, Selectable, SqlExpressa
 	}
 
 	@Override
+	public SqlExpressableType getType() {
+		return type;
+	}
+
+	@Override
 	public SqlSelection createSqlSelection(
 			int jdbcPosition,
 			int valuesArrayPosition,

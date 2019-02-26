@@ -421,6 +421,11 @@ public class CollectionSizeExecutor {
 				}
 
 				@Override
+				public SqlExpressableType getType() {
+					return null;
+				}
+
+				@Override
 				public SqlSelection createSqlSelection(
 						int jdbcPosition,
 						int valuesArrayPosition,

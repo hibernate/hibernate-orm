@@ -22,11 +22,6 @@ public class QueryLiteral extends AbstractLiteral {
 	}
 
 	@Override
-	public SqlExpressable getExpressable() {
-		return this;
-	}
-
-	@Override
 	public int getNumberOfJdbcParametersNeeded() {
 		return 1;
 	}

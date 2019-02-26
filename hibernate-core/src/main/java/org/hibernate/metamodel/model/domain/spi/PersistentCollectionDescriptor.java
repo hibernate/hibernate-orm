@@ -601,7 +601,7 @@ public interface PersistentCollectionDescriptor<O,C,E>
 		return getSemantics().wrap( rawCollection, this, session );
 	}
 
-	boolean contains(Object collection, Object childObject);
+	boolean contains(Object collection, E childObject);
 
 	default Object indexOf(Object collection, Object element) {
 		throw new UnsupportedOperationException( "Collection type does not support indexes" );

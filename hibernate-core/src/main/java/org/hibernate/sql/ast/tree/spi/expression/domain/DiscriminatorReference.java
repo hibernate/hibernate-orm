@@ -9,6 +9,7 @@ package org.hibernate.sql.ast.tree.spi.expression.domain;
 import org.hibernate.metamodel.model.domain.spi.DiscriminatorDescriptor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.JdbcValueExtractor;
+import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
@@ -56,6 +57,11 @@ public class DiscriminatorReference implements Expression, NavigableReference {
 	@Override
 	public ColumnReferenceQualifier getColumnReferenceQualifier() {
 		return entityReference.getColumnReferenceQualifier();
+	}
+
+	@Override
+	public SqlExpressableType getType() {
+		return discriminatorDescriptor.getSqlExpressableType();
 	}
 
 	@Override

@@ -45,11 +45,6 @@ public class ConcatFunction implements StandardFunction {
 	}
 
 	@Override
-	public SqlExpressable getExpressable() {
-		return this;
-	}
-
-	@Override
 	public void accept(SqlAstWalker  walker) {
 		walker.visitConcatFunction( this );
 	}

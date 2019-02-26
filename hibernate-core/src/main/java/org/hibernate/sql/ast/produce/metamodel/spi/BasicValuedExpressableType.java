@@ -12,8 +12,6 @@ import org.hibernate.annotations.Remove;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
-import org.hibernate.metamodel.model.domain.spi.BasicTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.BasicValueMapper;
 import org.hibernate.query.internal.BindingTypeHelper;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
@@ -31,7 +29,6 @@ public interface BasicValuedExpressableType<J>
 	BasicJavaDescriptor<J> getJavaTypeDescriptor();
 
 	default SqlTypeDescriptor getSqlTypeDescriptor() {
-//		throw new NotYetImplementedFor6Exception( getClass() );
 		return getSqlExpressableType().getSqlTypeDescriptor();
 	}
 

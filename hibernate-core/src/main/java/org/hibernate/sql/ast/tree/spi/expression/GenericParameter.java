@@ -17,9 +17,4 @@ import org.hibernate.sql.results.spi.Selectable;
 public interface GenericParameter
 		extends SqlAstNode, SqlExpressable, Expression, Selectable {
 	JdbcParameterBinder getParameterBinder();
-
-	@Override
-	default SqlExpressable getExpressable() {
-		return this;
-	}
 }

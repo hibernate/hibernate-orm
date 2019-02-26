@@ -154,4 +154,9 @@ public abstract class AbstractParameter
 				( (BasicValuedExpressableType) getType() ).getSqlExpressableType()
 		);
 	}
+
+	@Override
+	public SqlExpressableType getType() {
+		return type;
+	}
 }

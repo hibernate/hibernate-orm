@@ -268,7 +268,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 				// be created even if a current session and transaction are
 				// open (ex: session.clear() was used).  We must prevent
 				// multiple transactions.
-				 session.beginTransaction();
+				session.beginTransaction();
 			}
 
 			session.getPersistenceContext().addUninitializedDetachedCollection(

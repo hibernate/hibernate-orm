@@ -82,13 +82,14 @@ public class Formula implements Selectable, Serializable {
 			PhysicalNamingStrategy namingStrategy,
 			JdbcEnvironment jdbcEnvironment,
 			TypeConfiguration typeConfiguration) {
-		return new DerivedColumn( runtimeTable,
-								  formula,
-								  getSqlTypeDescriptor(),
-								  typeConfiguration,
-								  (BasicJavaDescriptor) getJavaTypeMapping().getJavaTypeDescriptor(),
-								  false,
-								  false
+		return new DerivedColumn(
+				runtimeTable,
+				formula,
+				getSqlTypeDescriptor(),
+				typeConfiguration,
+				(BasicJavaDescriptor) getJavaTypeMapping().getJavaTypeDescriptor(),
+				false,
+				false
 		);
 	}
 

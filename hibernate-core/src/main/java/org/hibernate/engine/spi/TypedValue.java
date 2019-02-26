@@ -37,7 +37,7 @@ public final class TypedValue implements Serializable {
 	}
 
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		 return javaTypeDescriptor;
+		return javaTypeDescriptor;
 	}
 
 	@Override

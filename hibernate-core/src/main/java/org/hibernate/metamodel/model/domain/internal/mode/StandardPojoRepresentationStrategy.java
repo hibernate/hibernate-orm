@@ -188,7 +188,8 @@ public class StandardPojoRepresentationStrategy implements ManagedTypeRepresenta
 							indexBackref.getCollectionRole(),
 							indexBackref.getEntityName()
 					);
-				}else {
+				}
+				else {
 					// for now...
 					strategy = BuiltInPropertyAccessStrategies.MIXED.getStrategy();
 				}

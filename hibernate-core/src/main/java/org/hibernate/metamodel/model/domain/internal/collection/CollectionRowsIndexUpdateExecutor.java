@@ -12,8 +12,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 /**
  * @author Chris Cranford
  */
-public interface CollectionRowsIndexExecutor {
-	CollectionRowsIndexExecutor NO_OP = (collection, key, queuedOperations, resetIndex, session) -> {};
+public interface CollectionRowsIndexUpdateExecutor {
+	CollectionRowsIndexUpdateExecutor NO_OP = (collection, key, queuedOperations, resetIndex, session) -> {};
 
 	void execute(
 			PersistentCollection collection,

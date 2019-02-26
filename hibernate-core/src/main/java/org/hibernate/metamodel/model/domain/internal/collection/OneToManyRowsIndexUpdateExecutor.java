@@ -49,12 +49,12 @@ import org.hibernate.sql.exec.spi.JdbcUpdate;
 /**
  * @author Chris Cranford
  */
-public class OneToManyRowsIndexExecutor implements CollectionRowsIndexExecutor {
+public class OneToManyRowsIndexUpdateExecutor implements CollectionRowsIndexUpdateExecutor {
 	private final PersistentCollectionDescriptor collectionDescriptor;
 	private final Map<Column, JdbcParameter> jdbcParameterMap;
 	private final JdbcMutation jdbcMutation;
 
-	public OneToManyRowsIndexExecutor(
+	public OneToManyRowsIndexUpdateExecutor(
 			PersistentCollectionDescriptor collectionDescriptor,
 			Table dmlTargetTable,
 			SessionFactoryImplementor sessionFactory) {

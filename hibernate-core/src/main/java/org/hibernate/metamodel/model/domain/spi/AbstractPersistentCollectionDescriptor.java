@@ -6,7 +6,9 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -71,7 +73,7 @@ import org.hibernate.metamodel.model.domain.internal.collection.CollectionIndexE
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionIndexEntityImpl;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionRemovalExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionRowsDeletionExecutor;
-import org.hibernate.metamodel.model.domain.internal.collection.CollectionRowsIndexExecutor;
+import org.hibernate.metamodel.model.domain.internal.collection.CollectionRowsIndexUpdateExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionRowsUpdateExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionSizeExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.FetchedTableReferenceCollectorImpl;
@@ -83,7 +85,7 @@ import org.hibernate.metamodel.model.domain.internal.collection.OneToManyCreatio
 import org.hibernate.metamodel.model.domain.internal.collection.OneToManyRowsInsertExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.OneToManyRemovalExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.OneToManyRowsDeletionExecutor;
-import org.hibernate.metamodel.model.domain.internal.collection.OneToManyRowsIndexExecutor;
+import org.hibernate.metamodel.model.domain.internal.collection.OneToManyRowsIndexUpdateExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.OneToManyRowsUpdateExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.RootTableReferenceCollectorImpl;
 import org.hibernate.metamodel.model.relational.spi.Column;
@@ -94,16 +96,26 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.ComparisonOperator;
+import org.hibernate.query.sqm.produce.internal.UniqueIdGenerator;
+import org.hibernate.sql.SqlExpressableType;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
+import org.hibernate.sql.ast.produce.spi.QualifiableSqlExpressable;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
+import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
+import org.hibernate.sql.ast.tree.spi.QuerySpec;
+import org.hibernate.sql.ast.tree.spi.SelectStatement;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
@@ -114,6 +126,9 @@ import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
+import org.hibernate.sql.ast.tree.spi.select.SelectClause;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
 import org.hibernate.sql.results.internal.domain.collection.CollectionFetchImpl;
 import org.hibernate.sql.results.internal.domain.collection.CollectionInitializerProducer;
 import org.hibernate.sql.results.internal.domain.collection.CollectionResultImpl;
@@ -123,11 +138,14 @@ import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
+import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.internal.CollectionJavaDescriptor;
+import org.hibernate.type.descriptor.java.internal.IntegerJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.sql.spi.IntegerSqlDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -152,7 +170,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 	private CollectionJavaDescriptor<C> javaTypeDescriptor;
 	private CollectionMutabilityPlan mutabilityPlan;
 	private CollectionIdentifier idDescriptor;
-	private CollectionElement elementDescriptor;
+	private CollectionElement<E> elementDescriptor;
 	private CollectionIndex indexDescriptor;
 
 	private CollectionDataAccess cacheAccess;
@@ -163,7 +181,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 	private CollectionRowsDeletionExecutor collectionRowsDeletionExecutor;
 	private CollectionRowsUpdateExecutor collectionRowsUpdateExecutor;
 	private CollectionCreationExecutor collectionRowsInsertExecutor;
-	private CollectionRowsIndexExecutor collectionRowsIndexExecutor;
+	private CollectionRowsIndexUpdateExecutor collectionRowsIndexUpdateExecutor;
 	private CollectionSizeExecutor collectionSizeExecutor;
 
 	private final String mappedBy;
@@ -917,7 +935,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 	}
 
 	@Override
-	public CollectionElement getElementDescriptor() {
+	public CollectionElement<E> getElementDescriptor() {
 		return elementDescriptor;
 	}
 
@@ -985,7 +1003,114 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 
 	@Override
 	public Boolean elementExists(Object loadedKey, Object element, SharedSessionContractImplementor session) {
+		final SqlAliasBaseManager aliasBaseManager = new SqlAliasBaseManager();
+		final UniqueIdGenerator uidGenerator = new UniqueIdGenerator();
+		final String uid = uidGenerator.generateUniqueId();
+
+		final QuerySpec rootQuerySpec = new QuerySpec( true );
+		final SelectStatement selectStatement = new SelectStatement( rootQuerySpec );
+		final SelectClause selectClause = selectStatement.getQuerySpec().getSelectClause();
+
+		final TableSpace rootTableSpace = rootQuerySpec.getFromClause().makeTableSpace();
+
+		final NavigablePath path = new NavigablePath( getNavigableName() );
+
+		final TableGroup rootTableGroup = createRootTableGroup(
+				new TableGroupInfo() {
+					@Override
+					public String getUniqueIdentifier() {
+						return uid;
+					}
+
+					@Override
+					public String getIdentificationVariable() {
+						return "this";
+					}
+
+					@Override
+					public EntityTypeDescriptor getIntrinsicSubclassEntityMetadata() {
+						return null;
+					}
+
+					@Override
+					public NavigablePath getNavigablePath() {
+						return path;
+					}
+				},
+				new RootTableGroupContext() {
+					@Override
+					public void addRestriction(Predicate predicate) {
+						rootQuerySpec.addRestriction( predicate );
+					}
+
+					@Override
+					public QuerySpec getQuerySpec() {
+						return rootQuerySpec;
+					}
+
+					@Override
+					public TableSpace getTableSpace() {
+						return rootTableSpace;
+					}
+
+					@Override
+					public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
+						return aliasBaseManager;
+					}
+
+					@Override
+					public JoinType getTableReferenceJoinType() {
+						return null;
+					}
+
+					@Override
+					public LockOptions getLockOptions() {
+						return LockOptions.NONE;
+					}
+				}
+		);
+		rootTableSpace.setRootTableGroup( rootTableGroup );
+
+		final List<DomainResult> domainResults = new ArrayList<>();
+
+		final List<ColumnReference> columnReferences = new ArrayList();
+
+		final SqlExpressableType sqlExpressableType = IntegerSqlDescriptor.INSTANCE.getSqlExpressableType(
+				IntegerJavaDescriptor.INSTANCE,
+				sessionFactory.getTypeConfiguration()
+		);
+		SqlSelection sqlSelection = new SqlSelectionImpl(
+				1,
+				0,
+				new QueryLiteral(
+						1,
+						sqlExpressableType,
+						Clause.SELECT
+				),
+				sqlExpressableType
+		);
+
+
 		throw new NotYetImplementedFor6Exception();
+
+	}
+
+	public class Position {
+		int jdbcPosition = 1;
+		int valuesArrayPosition = 0;
+
+		public void increase() {
+			jdbcPosition++;
+			valuesArrayPosition++;
+		}
+
+		public int getJdbcPosition() {
+			return jdbcPosition;
+		}
+
+		public int getValuesArrayPosition() {
+			return valuesArrayPosition;
+		}
 	}
 
 	@Override
@@ -1177,12 +1302,12 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 		}
 	}
 
-	private CollectionRowsIndexExecutor generateCollectionRowsIndexExecutor() {
+	private CollectionRowsIndexUpdateExecutor generateCollectionRowsIndexExecutor() {
 		if ( !( isOneToMany() && isInverse() && hasIndex() && !indexContainsFormula() && isIndexSettable() ) ){
-			return CollectionRowsIndexExecutor.NO_OP;
+			return CollectionRowsIndexUpdateExecutor.NO_OP;
 		}
 
-		return new OneToManyRowsIndexExecutor( this, dmlTargetTable, sessionFactory );
+		return new OneToManyRowsIndexUpdateExecutor( this, dmlTargetTable, sessionFactory );
 	}
 
 	protected boolean hasIndex() {
@@ -1300,11 +1425,11 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 			boolean queuedOperations,
 			boolean resetIndex,
 			SharedSessionContractImplementor session) {
-		if ( collectionRowsIndexExecutor == null ) {
-			collectionRowsIndexExecutor = generateCollectionRowsIndexExecutor();
+		if ( collectionRowsIndexUpdateExecutor == null ) {
+			collectionRowsIndexUpdateExecutor = generateCollectionRowsIndexExecutor();
 		}
 
-		collectionRowsIndexExecutor.execute( collection, key, queuedOperations, resetIndex, session );
+		collectionRowsIndexUpdateExecutor.execute( collection, key, queuedOperations, resetIndex, session );
 	}
 
 	protected abstract void doProcessQueuedOps(

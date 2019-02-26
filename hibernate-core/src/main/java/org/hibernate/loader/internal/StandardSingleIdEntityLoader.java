@@ -431,18 +431,18 @@ public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> 
 		identifierDescriptor.visitColumns(
 				(sqlExpressableType, column) -> {
 					final Expression expression = rootTableGroup.qualify( column );
-					ColumnReference idColumnReference;
+					ColumnReference columnReference;
 					if ( !ColumnReference.class.isInstance( expression ) ) {
-						idColumnReference = (ColumnReference) ( (SqlSelectionExpression) expression ).getExpression();
+						columnReference = (ColumnReference) ( (SqlSelectionExpression) expression ).getExpression();
 					}
 					else {
-						idColumnReference = (ColumnReference) expression;
+						columnReference = (ColumnReference) expression;
 					}
-					columnReferences.add( idColumnReference );
+					columnReferences.add( columnReference );
 					SqlSelection sqlSelection = new SqlSelectionImpl(
 							position.getJdbcPosition(),
 							position.getValuesArrayPosition(),
-							idColumnReference,
+							columnReference,
 							sqlExpressableType.getJdbcValueExtractor()
 					);
 					position.increase();

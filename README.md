@@ -20,8 +20,9 @@ To run the matrix tests for NuoDB:
    Otherwise you must tell gradle where this dependency can be found. For example
    suppose you use `m2` instead of `.m2`:
    ```
-   export ADDITIONAL_REPO=~/m2/repository/com/nuodb/hibernate/nuodb-hibernate/20.0.0-hib5        (Linux/MAcOS)
-   set ADDITIONAL_REPO=c:\Users\yourname\m2\repository\com\nuodb\hibernate\nuodb-hibernate/20.0.0-hib5   (Windows)
+   export ADDITIONAL_REPO=~/m2/repository/com/nuodb/hibernate/nuodb-hibernate/20.0.0-hib5               (Linux/MacOS)
+
+   set ADDITIONAL_REPO=c:\Users\yourname\m2\repository\com\nuodb\hibernate\nuodb-hibernate/20.0.0-hib5  (Windows)
    ```
    
 1. Compile the code: `./gradlew clean compile` 
@@ -68,7 +69,9 @@ To run the matrix tests for NuoDB:
 
 Please note that even if NuoDB is not available, 3603 tests complete, 1922 fail, and 801 are skipped. So 880 tests pass without using the database because the tests are intended for testing Hibernate not the underlying database.  We are just piggybacking on them for convenience.
 
-Changes made:
+## Changes Made to Project
+
+To use NuoDB
 
 1. Added `compile('com.nuodb.hibernate:nuodb-hibernate:20.0.0-hib5')` to `hibernate-core/hibernate-core.gradle` to pick up the NuoDB dialect under test.
 2. Added `databases/nuodb` to define dependencies and configuration required to use NuoDB.

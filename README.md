@@ -43,13 +43,13 @@ To run the matrix tests for NuoDB:
 
 1. Run individual tests
 
-  Example commands:
+   Example commands:
 
-  ```
-  ./gradlew clean :hibernate-core:test --tests org.hibernate.jpa.test.packaging.PackagedEntityManagerTest
-  ./gradlew clean :hibernate-core:test --tests *.PackagedEntityManagerTest
-  ./gradlew clean :hibernate-core:test --tests org.hibernate.jpa.test.packaging.*
-  ```
+   ```
+   ./gradlew clean :hibernate-core:test --tests org.hibernate.jpa.test.packaging.PackagedEntityManagerTest
+   ./gradlew clean :hibernate-core:test --tests *.PackagedEntityManagerTest
+   ./gradlew clean :hibernate-core:test --tests org.hibernate.jpa.test.packaging.*
+   ```
 
 1. Pull Jar from Sonatype
   Once our jar is put up at Sonatype, its URL is something like https://oss.sonatype.org/content/repositories/comnuodb-1047/com/nuodb/hibernate/nuodb-hibernate/20.0.0-hib5/nuodb-hibernate-20.0.0-hib5.jar.  Note the build number - 1047. To use this

@@ -6,90 +6,66 @@
  */
 
 buildscript {
-	repositories {
-		jcenter()
-		mavenCentral()
-	}
-	dependencies {
-		classpath 'org.hibernate.build.gradle:hibernate-matrix-testing:3.0.0.Final'
-		classpath 'org.hibernate.build.gradle:version-injection-plugin:1.0.0'
-		classpath 'gradle.plugin.com.github.lburgazzoli:gradle-karaf-plugin:0.5.1'
-		classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.7'
-		classpath 'de.thetaphi:forbiddenapis:3.0.1'
-	}
+    repositories {
+        jcenter()
+        mavenCentral()
+        maven {
+            name 'jboss-snapshots'
+            url 'http://repository.jboss.org/nexus/content/repositories/snapshots/'
+        }
+    }
+    dependencies {
+        classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
+        classpath 'org.hibernate.build.gradle:hibernate-matrix-testing:2.0.0.Final'
+        classpath 'org.hibernate.build.gradle:version-injection-plugin:1.0.0'
+        classpath 'org.hibernate.build.gradle:gradle-xjc-plugin:1.0.2.Final'
+        classpath 'gradle.plugin.com.github.lburgazzoli:gradle-karaf-plugin:0.1.1'
+        classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.7'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.3'
+        classpath 'de.thetaphi:forbiddenapis:2.5'
+    }
 }
 
 plugins {
-	id 'me.champeau.buildscan-recipes' version '0.2.3'
-	id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
-	id 'nu.studer.credentials' version '2.1'
-	id 'org.hibernate.build.xjc' version '2.0.1' apply false
-	id 'org.hibernate.build.maven-repo-auth' version '3.0.3' apply false
-	id 'biz.aQute.bnd' version '5.1.1' apply false
-}
-
-ext {
-	sonatypeOssrhUser = project.findProperty( 'SONATYPE_OSSRH_USER' )
-	sonatypeOssrhPassword = project.findProperty( 'SONATYPE_OSSRH_PASSWORD' )
-}
-
-File versionFile = file( "${rootProject.projectDir}/gradle/version.properties" )
-
-ext {
-	ormVersionFile = versionFile
-	ormVersion = HibernateVersion.fromFile( versionFile, project )
-	// Override during releases
-	if ( project.hasProperty( 'releaseVersion' ) ) {
-		ormVersion = new HibernateVersion( project.releaseVersion, project )
-	}
-	jpaVersion = new JpaVersion('2.2')
-	jakartaJpaVersion = new JpaVersion('3.0.0')
-}
-
-// The Gradle Nexus Publish Plugin must be applied to the root project and requires group and version
-
-group = 'org.hibernate'
-version = project.ormVersion.fullName
-
-nexusPublishing {
-	repositories {
-		sonatype {
-			username = project.sonatypeOssrhUser
-			password = project.sonatypeOssrhPassword
-		}
-	}
+    id 'com.gradle.build-scan' version '1.16'
+    id 'me.champeau.buildscan-recipes' version '0.2.3'
 }
 
 allprojects {
-	repositories {
-		// Uncomment this to pull our jar from sonatype		
-		maven {
-			name "sonatype"
-			url "https://oss.sonatype.org/content/repositories/comnuodb-1046/"
-		}
-		mavenCentral()
-		//Allow loading additional dependencies from a local path;
-		//useful to load JDBC drivers which can not be distributed in public.
-		if (System.env['ADDITIONAL_REPO'] != null) {
-			flatDir {
-				dirs "${System.env.ADDITIONAL_REPO}"
-			}
-		}
-		// NuoDB: Default to adding our dialect explicitly
-		else {
-			flatDir {
-				dirs "${System.env.HOME}/.m2/repository/com/nuodb/hibernate/nuodb-hibernate/20.0.0-hib5"
-			}
-		}
-	}
+    repositories {
+        // Uncomment this to pull our jar from sonatype        
+        ivy {
+            url "https://oss.sonatype.org/content/repositories/comnuodb-1046/"
+            layout 'pattern', {
+                artifact '/[organisation]/[module]/[revision].[ext]'
+            }
+        }
+        mavenCentral()
+        maven {
+            name "jboss-snapshots"
+            url "http://repository.jboss.org/nexus/content/repositories/snapshots/"
+        }
+        //Allow loading additional dependencies from a local path;
+        //useful to load JDBC drivers which can not be distributed in public.
+        if (System.env['ADDITIONAL_REPO'] != null) {
+            flatDir {
+                dirs "${System.env.ADDITIONAL_REPO}"
+            }
+        }
+        // NuoDB: Default to adding our dialect explicitly
+        else {
+            flatDir {
+                dirs "${System.env.HOME}/.m2/repository/com/nuodb/hibernate/nuodb-hibernate/20.0.0-hib5"
+            }
+        }
+    }
 
-	apply plugin: 'idea'
+    apply plugin: 'idea'
 
-	// minimize changes, at least for now (gradle uses 'build' by default)..
-	buildDir = "target"
+    // minimize changes, at least for now (gradle uses 'build' by default)..
+    buildDir = "target"
 
-	group = 'org.hibernate'
-	version = project.ormVersion.fullName
+    apply from: rootProject.file( 'gradle/base-information.gradle' )
 }
 
 
@@ -114,9 +90,9 @@ task release {
 }
 
 task publish {
-	description = "The task performed when we want to just publish maven artifacts.  Relies on " +
-			"the fact that subprojects will appropriately define a release task " +
-			"themselves if they have any release-related activities to perform"
+    description = "The task performed when we want to just publish maven artifacts.  Relies on " +
+            "the fact that subprojects will have a task named pubappropriately define a release task " +
+            "themselves if they have any release-related activities to perform"
 }
 
 
@@ -125,10 +101,10 @@ task publish {
 // CI Build Task
 
 task ciBuild {
-	description = "The task performed when one of the 'main' jobs are triggered on the " +
-			"CI server.  Just as above, relies on the fact that subprojects will " +
-			"appropriately define a release task themselves if they have any tasks " +
-			"which should be performed from these CI jobs"
+    description = "The task performed when one of the 'main' jobs are triggered on the " +
+            "CI server.  Just as above, relies on the fact that subprojects will " +
+            "appropriately define a release task themselves if they have any tasks " +
+            "which should be performed from these CI jobs"
 }
 
 
@@ -145,7 +121,7 @@ buildScan {
 }
 
 buildScanRecipes {
-	recipe 'git-commit', baseUrl: 'https://github.com/hibernate/hibernate-orm/tree'
+    recipe 'git-commit', baseUrl: 'https://github.com/hibernate/hibernate-orm/tree'
 }
 
 class JpaVersion {
@@ -213,7 +189,7 @@ class HibernateVersion {
 //		jdkName = gradle.ext.baselineJavaVersion
 //		languageLevel = gradle.ext.baselineJavaVersion
 //
-//		vcs = 'Git'
+//        vcs = 'Git'
 //    }
 //    module {
 //        name = "hibernate-orm"

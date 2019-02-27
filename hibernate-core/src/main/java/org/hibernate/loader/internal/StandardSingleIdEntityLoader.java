@@ -508,7 +508,8 @@ public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> 
 		);
 		rootQuerySpec.addRestriction(
 				new ComparisonPredicate(
-						idExpression, ComparisonOperator.EQUAL,
+						idExpression,
+						ComparisonOperator.EQUAL,
 						idParameter
 				)
 		);

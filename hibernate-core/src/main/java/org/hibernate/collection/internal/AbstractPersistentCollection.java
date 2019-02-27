@@ -324,7 +324,12 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 								if ( hasQueuedOperations() ) {
 									session.flush();
 								}
-								return collectionDescriptor.indexExists( entry.getLoadedKey(), index, session );
+								return collectionDescriptor.indexExists(
+										entry.getLoadedKey(),
+										index,
+										AbstractPersistentCollection.this,
+										session
+								);
 							}
 							else {
 								read();
@@ -352,7 +357,12 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 								if ( hasQueuedOperations() ) {
 									session.flush();
 								}
-								return collectionDescriptor.elementExists( entry.getLoadedKey(), element, session );
+								return collectionDescriptor.elementExists(
+										entry.getLoadedKey(),
+										element,
+										AbstractPersistentCollection.this,
+										session
+								);
 							}
 							else {
 								read();

@@ -324,11 +324,6 @@ public class CollectionElementEntityImpl<J>
 			BiConsumer<SqlExpressableType, Column> action,
 			Clause clause,
 			TypeConfiguration typeConfiguration) {
-		// todo (6.0) : should we skip this for inverse collections?
-		if ( getCollectionDescriptor().isInverse() ) {
-			return;
-		}
-
 //		if ( clause == Clause.INSERT || clause == Clause.UPDATE ) {
 //			return;
 //		}

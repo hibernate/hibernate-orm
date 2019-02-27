@@ -251,9 +251,17 @@ public interface PersistentCollectionDescriptor<O,C,E>
 
 	int getSize(Object loadedKey, SharedSessionContractImplementor session);
 
-	Boolean indexExists(Object loadedKey, Object index, SharedSessionContractImplementor session);
+	Boolean indexExists(
+			Object loadedKey,
+			Object index,
+			PersistentCollection collection,
+			SharedSessionContractImplementor session);
 
-	Boolean elementExists(Object loadedKey, Object element, SharedSessionContractImplementor session);
+	Boolean elementExists(
+			Object loadedKey,
+			Object element,
+			PersistentCollection collection,
+			SharedSessionContractImplementor session);
 
 	Object getElementByIndex(Object loadedKey, Object index, SharedSessionContractImplementor session, Object owner);
 

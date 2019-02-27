@@ -7,10 +7,14 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
@@ -75,7 +79,7 @@ import org.hibernate.metamodel.model.domain.internal.collection.CollectionRemova
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionRowsDeletionExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionRowsIndexUpdateExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionRowsUpdateExecutor;
-import org.hibernate.metamodel.model.domain.internal.collection.CollectionSizeExecutor;
+import org.hibernate.metamodel.model.domain.internal.collection.CollectionSizeSelector;
 import org.hibernate.metamodel.model.domain.internal.collection.FetchedTableReferenceCollectorImpl;
 import org.hibernate.metamodel.model.domain.internal.collection.JoinTableCreationExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.JoinTableRemovalExecutor;
@@ -100,21 +104,22 @@ import org.hibernate.query.sqm.produce.internal.UniqueIdGenerator;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.consume.spi.SqlAstSelectToJdbcSelectConverter;
+import org.hibernate.sql.ast.produce.internal.SqlAstSelectDescriptorImpl;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
-import org.hibernate.sql.ast.produce.spi.QualifiableSqlExpressable;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.expression.LiteralParameter;
+import org.hibernate.sql.ast.tree.spi.expression.PositionalParameter;
 import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
@@ -127,6 +132,12 @@ import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.ast.tree.spi.select.SelectClause;
+import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
+import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
+import org.hibernate.sql.exec.internal.RowTransformerPassThruImpl;
+import org.hibernate.sql.exec.spi.BasicExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcParameter;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
 import org.hibernate.sql.results.internal.domain.collection.CollectionFetchImpl;
@@ -182,7 +193,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 	private CollectionRowsUpdateExecutor collectionRowsUpdateExecutor;
 	private CollectionCreationExecutor collectionRowsInsertExecutor;
 	private CollectionRowsIndexUpdateExecutor collectionRowsIndexUpdateExecutor;
-	private CollectionSizeExecutor collectionSizeExecutor;
+	private CollectionSizeSelector collectionSizeSelector;
 
 	private final String mappedBy;
 	private final String sqlWhereString;
@@ -325,7 +336,6 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 
 		return creationContext.resolve( mappedTable );
 	}
-
 
 	@Override
 	public boolean finishInitialization(Collection bootCollectionDescriptor, RuntimeModelCreationContext creationContext) {
@@ -981,9 +991,9 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 
 	@Override
 	public int getSize(Object loadedKey, SharedSessionContractImplementor session) {
-		if ( collectionSizeExecutor == null ) {
+		if ( collectionSizeSelector == null ) {
 			final boolean isMap = getCollectionClassification() == CollectionClassification.MAP;
-			collectionSizeExecutor = new CollectionSizeExecutor(
+			collectionSizeSelector = new CollectionSizeSelector(
 					this,
 					dmlTargetTable,
 					hasIndex() && !isMap,
@@ -993,16 +1003,16 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 		}
 
 		int baseIndex = getIndexDescriptor() != null ? getIndexDescriptor().getBaseIndex() : 0;
-		return collectionSizeExecutor.execute( loadedKey, session ) - baseIndex;
+		return collectionSizeSelector.execute( loadedKey, session ) - baseIndex;
 	}
 
 	@Override
-	public Boolean indexExists(Object loadedKey, Object index, SharedSessionContractImplementor session) {
+	public Boolean indexExists(Object loadedKey, Object index, PersistentCollection collection, SharedSessionContractImplementor session) {
 		throw new NotYetImplementedFor6Exception();
 	}
 
 	@Override
-	public Boolean elementExists(Object loadedKey, Object element, SharedSessionContractImplementor session) {
+	public Boolean elementExists(Object loadedKey, Object element, PersistentCollection collection, SharedSessionContractImplementor session) {
 		final SqlAliasBaseManager aliasBaseManager = new SqlAliasBaseManager();
 		final UniqueIdGenerator uidGenerator = new UniqueIdGenerator();
 		final String uid = uidGenerator.generateUniqueId();
@@ -1071,46 +1081,173 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 		);
 		rootTableSpace.setRootTableGroup( rootTableGroup );
 
-		final List<DomainResult> domainResults = new ArrayList<>();
-
-		final List<ColumnReference> columnReferences = new ArrayList();
-
 		final SqlExpressableType sqlExpressableType = IntegerSqlDescriptor.INSTANCE.getSqlExpressableType(
 				IntegerJavaDescriptor.INSTANCE,
 				sessionFactory.getTypeConfiguration()
 		);
-		SqlSelection sqlSelection = new SqlSelectionImpl(
+
+		final List<DomainResult> domainResults = new ArrayList<>();
+
+
+		final SqlSelection sqlSelection = new SqlSelectionImpl(
 				1,
 				0,
-				new QueryLiteral(
-						1,
-						sqlExpressableType,
-						Clause.SELECT
-				),
+				new QueryLiteral( 1, sqlExpressableType, Clause.SELECT ),
 				sqlExpressableType
 		);
 
+		selectClause.addSqlSelection( sqlSelection );
 
-		throw new NotYetImplementedFor6Exception();
+		domainResults.add( new BasicResultImpl( null, sqlSelection, sqlExpressableType ) );
+
+		final AtomicInteger parameterCount = new AtomicInteger();
+		Junction predicate = new Junction( Junction.Nature.CONJUNCTION );
+
+		resolvePredicate(
+				predicate,
+				getCollectionKeyDescriptor(),
+				parameterCount,
+				jdbcParameterMap::put,
+				sessionFactory
+		);
+
+		resolvePredicate(
+				predicate,
+				getCollectionDescriptor().getElementDescriptor(),
+				parameterCount,
+				jdbcParameterMap::put,
+				sessionFactory
+		);
+		// todo (6.0) : add element formulas to the predicate  and @Where
+
+		rootQuerySpec.addRestriction( predicate );
+
+		SqlAstSelectDescriptorImpl sqlAstSelectDescriptor = new SqlAstSelectDescriptorImpl(
+				selectStatement,
+				domainResults,
+				null
+		);
+
+		final JdbcSelect jdbcSelect = SqlAstSelectToJdbcSelectConverter.interpret(
+				sqlAstSelectDescriptor,
+				session.getSessionFactory()
+		);
+
+		final JdbcParameterBindingsImpl jdbcParameterBindings = new JdbcParameterBindingsImpl();
+		final BasicExecutionContext executionContext = new BasicExecutionContext( session, jdbcParameterBindings );
+		bindCollectionKey( loadedKey, jdbcParameterBindings, session );
+		bindCollectionElement(element, collection,jdbcParameterBindings, session  );
+
+		final List list = JdbcSelectExecutorStandardImpl.INSTANCE.list(
+				jdbcSelect,
+				executionContext,
+				RowTransformerPassThruImpl.instance()
+		);
+		return !list.isEmpty();
+
+
 
 	}
 
-	public class Position {
-		int jdbcPosition = 1;
-		int valuesArrayPosition = 0;
+	final Map<Column, JdbcParameter> jdbcParameterMap = new HashMap<>();
 
-		public void increase() {
-			jdbcPosition++;
-			valuesArrayPosition++;
-		}
+	protected void bindCollectionElement(
+			Object entry,
+			PersistentCollection collection,
+			JdbcParameterBindingsImpl jdbcParameterBindings,
+			SharedSessionContractImplementor session) {
+		CollectionElement elementDescriptor = getCollectionDescriptor().getElementDescriptor();
+		elementDescriptor.dehydrate(
+				elementDescriptor.unresolve(
+						collection.getElement( entry, getCollectionDescriptor() ),
+						session
+				),
+				(jdbcValue, type, boundColumn) -> createBinding(
+						jdbcValue,
+						boundColumn,
+						type,
+						jdbcParameterBindings,
+						session
+				),
+				Clause.WHERE,
+				session
+		);
+	}
 
-		public int getJdbcPosition() {
-			return jdbcPosition;
-		}
+	protected void bindCollectionKey(
+			Object key,
+			JdbcParameterBindingsImpl jdbcParameterBindings,
+			SharedSessionContractImplementor session) {
+		CollectionKey collectionKeyDescriptor = getCollectionDescriptor().getCollectionKeyDescriptor();
+		collectionKeyDescriptor.dehydrate(
+				key,
+				(jdbcValue, type, boundColumn) -> createBinding(
+						jdbcValue,
+						boundColumn,
+						type,
+						jdbcParameterBindings,
+						session
+				),
+				Clause.WHERE,
+				session
+		);
+	}
 
-		public int getValuesArrayPosition() {
-			return valuesArrayPosition;
+	protected void createBinding(
+			Object jdbcValue,
+			Column boundColumn,
+			SqlExpressableType type,
+			JdbcParameterBindingsImpl jdbcParameterBindings,
+			SharedSessionContractImplementor session) {
+		final JdbcParameter jdbcParameter = resolveJdbcParameter( boundColumn );
+
+		jdbcParameterBindings.addBinding(
+				jdbcParameter,
+				new LiteralParameter(
+						jdbcValue,
+						type,
+						Clause.WHERE,
+						session.getFactory().getTypeConfiguration()
+				)
+		);
+	}
+
+	protected JdbcParameter resolveJdbcParameter(Column boundColumn) {
+		final JdbcParameter jdbcParameter = jdbcParameterMap.get( boundColumn );
+		if ( jdbcParameter == null ) {
+			throw new IllegalStateException( "JdbcParameter not found for Column [" + boundColumn + "]" );
 		}
+		return jdbcParameter;
+	}
+
+	private void resolvePredicate(
+			Junction junction,
+			Navigable<?> navigable,
+			AtomicInteger parameterCount,
+			BiConsumer<Column, JdbcParameter> columnConsumer,
+			SessionFactoryImplementor sessionFactory) {
+		navigable.visitColumns(
+				(sqlExpressableType, column) -> {
+					final PositionalParameter parameter = new PositionalParameter(
+							parameterCount.getAndIncrement(),
+							column.getExpressableType(),
+							Clause.WHERE,
+							sessionFactory.getTypeConfiguration()
+					);
+
+					columnConsumer.accept( column, parameter );
+
+					junction.add(
+							new ComparisonPredicate(
+									new ColumnReference( column ),
+									ComparisonOperator.EQUAL,
+									parameter
+							)
+					);
+				},
+				Clause.WHERE,
+				sessionFactory.getTypeConfiguration()
+		);
 	}
 
 	@Override

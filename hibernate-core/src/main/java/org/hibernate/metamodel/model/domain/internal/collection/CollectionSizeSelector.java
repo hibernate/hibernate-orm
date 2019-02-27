@@ -79,14 +79,14 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * @author Chris Cranford
  */
-public class CollectionSizeExecutor {
+public class CollectionSizeSelector {
 	private final PersistentCollectionDescriptor collectionDescriptor;
 	private final boolean integerIndexed;
 	private final JdbcSelect jdbcSelect;
 	private final Map<Column, JdbcParameter> jdbcParameterMap;
 	private final List<JdbcParameterBinder> jdbcParameterBinders;
 
-	public CollectionSizeExecutor(
+	public CollectionSizeSelector(
 			PersistentCollectionDescriptor collectionDescriptor,
 			Table dmlTargetTable,
 			boolean isIntegerIndexed,
@@ -99,7 +99,6 @@ public class CollectionSizeExecutor {
 
 		final TableReference tableReference = new TableReference( dmlTargetTable, null, false );
 		this.jdbcSelect = generateSizeSelect(
-				tableReference,
 				sqlWhereString,
 				jdbcParameterBinders::add,
 				jdbcParameterMap::put,
@@ -124,7 +123,12 @@ public class CollectionSizeExecutor {
 			return 0;
 		}
 
-		return (int) results.get( 0 );
+		Object result = results.get( 0 );
+		if ( result == null ) {
+			return 0;
+		}
+
+		return (int) result + 1;
 	}
 
 	private void bindCollectionKey(
@@ -173,7 +177,6 @@ public class CollectionSizeExecutor {
 	}
 
 	private JdbcSelect generateSizeSelect(
-			TableReference tableReference,
 			String sqlWhereString,
 			Consumer<JdbcParameterBinder> jdbcParameterCollector,
 			BiConsumer<Column, JdbcParameter> columnCollector,
@@ -298,7 +301,7 @@ public class CollectionSizeExecutor {
 			Consumer<DomainResult> domainResultsCollector,
 			SessionFactoryImplementor sessionFactory) {
 		if ( integerIndexed ) {
-			// Build selection of "max(indexColumn[0])+1"
+			// Build selection of "max(indexColumn[0])"
 			final List<Column> indexColumns = collectionDescriptor.getIndexDescriptor().getColumns();
 			final Column column = indexColumns.get( 0 );
 
@@ -308,6 +311,11 @@ public class CollectionSizeExecutor {
 					columnExpression,
 					false,
 					column.getExpressableType()
+			);
+
+			final SqlExpressableType sqlExpressableType = IntegerSqlDescriptor.INSTANCE.getSqlExpressableType(
+					IntegerJavaDescriptor.INSTANCE,
+					sessionFactory.getTypeConfiguration()
 			);
 
 			SqlSelection sqlSelection = new SqlSelectionImpl(

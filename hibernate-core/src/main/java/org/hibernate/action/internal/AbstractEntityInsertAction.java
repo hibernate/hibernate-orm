@@ -110,8 +110,8 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 */
 	protected final void nullifyTransientReferencesIfNotAlready() {
 		if ( ! areTransientReferencesNullified ) {
-			new ForeignKeys.Nullifier( getInstance(), false, isEarlyInsert(), getSession() )
-					.nullifyTransientReferences( getState(), getPersister().getPropertyTypes() );
+			new ForeignKeys.Nullifier( getInstance(), false, isEarlyInsert(), getSession(), getPersister() )
+					.nullifyTransientReferences( getState() );
 			new Nullability( getSession() ).checkNullability( getState(), getPersister(), false );
 			areTransientReferencesNullified = true;
 		}

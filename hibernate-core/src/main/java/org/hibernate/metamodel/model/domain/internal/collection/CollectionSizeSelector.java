@@ -128,7 +128,12 @@ public class CollectionSizeSelector {
 			return 0;
 		}
 
-		return (int) result + 1;
+		if ( integerIndexed ) {
+			return (int) result + 1;
+		}
+		else {
+			return (int) result;
+		}
 	}
 
 	private void bindCollectionKey(

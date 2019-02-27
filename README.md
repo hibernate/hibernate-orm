@@ -13,14 +13,18 @@ To run the matrix tests for NuoDB:
 
    * clone https://github.com/nuodb/HibernateDialect5
    * Run `mvn install` - see [project README](https://github.com/nuodb/HibernateDialect5/blob/master/README.md)
+
+1. This project's gradle build file assumes you have your maven repository in
+   the default location (`.m2` in your home directory). If so, skip this step.
  
-1. Tell gradle where this dependency can be found:
+   Otherwise you must tell gradle where this dependency can be found. For example
+   suppose you use `m2` instead of `.m2`:
    ```
-   export ADDITIONAL_REPO=~/.m2/repository/com/nuodb/hibernate/nuodb-hibernate/20.0.0-hib5.  (Linux/MAcOS)
-   set ADDITIONAL_REPO=~/.m2/repository/com/nuodb/hibernate/nuodb-hibernate/20.0.0-hib5 (Windows)
+   export ADDITIONAL_REPO=~/m2/repository/com/nuodb/hibernate/nuodb-hibernate/20.0.0-hib5  (Linux/MAcOS)
+   set ADDITIONAL_REPO=c:\Users\yourname\m2\repository\com\nuodb\hibernate\nuodb-hibernate/20.0.0-hib5 (Windows)
    ```
    
-1. Compile the code: `./gradlew clean compile`.
+1. Compile the code: `./gradlew clean compile`
 
 1. Tell the tests about your NuoDB database:
     1. `cp databases/nuodb/resources/hibernate.properties hibernate-core/target/resources/test`.  

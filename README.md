@@ -51,6 +51,14 @@ To run the matrix tests for NuoDB:
   ./gradlew clean :hibernate-core:test --tests org.hibernate.jpa.test.packaging.*
   ```
 
+1. Pull Jar from Sonatype
+  Once our jar is put up at Sonatype, its URL is something like https://oss.sonatype.org/content/repositories/comnuodb-1047/com/nuodb/hibernate/nuodb-hibernate/20.0.0-hib5/nuodb-hibernate-20.0.0-hib5.jar.  Note the build number - 1047. To use this
+  dependency run as follows:
+
+  ```
+  SONATYPE_VERSION=1047 gradle clean ...
+  ```
+
 Please note that even if NuoDB is not available, 3603 tests complete, 1922 fail, and 801 are skipped. So 880 tests pass without using the database because the tests are intended for testing Hibernate not the underlying database.  We are just piggybacking on them for convenience.
 
 Changes made:

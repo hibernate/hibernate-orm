@@ -164,7 +164,9 @@ public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
 	@Test
 	public void testJoinedSubclassRoot() {
 		inSession(
-				session -> session.createQuery( "select p from Payment p" ).list()
+				session -> {
+					session.createQuery( "select p from Payment p" ).list();
+				}
 		);
 	}
 

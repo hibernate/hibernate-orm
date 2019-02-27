@@ -18,6 +18,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
 import org.hibernate.Hibernate;
+import org.hibernate.Transaction;
 import org.hibernate.collection.internal.AbstractPersistentCollection;
 
 import org.hibernate.testing.TestForIssue;
@@ -167,15 +168,26 @@ public class BagDelayedOperationNoCascadeTest extends SessionFactoryBasedFunctio
 		);
 
 		// Merge detached Parent with initialized children
-		Parent mergedParent = inTransaction( session -> {
-			Parent p = (Parent) session.merge( savedParent );
-			// after merging, p#children will be uninitialized
-			assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-			assertTrue( ( (AbstractPersistentCollection) p.getChildren() ).hasQueuedOperations() );
-			return p;
-
-		} );
-		assertFalse( ( (AbstractPersistentCollection) mergedParent.getChildren() ).hasQueuedOperations() );
+		Parent mergedParent =  inSession(
+				session -> {
+					Transaction transaction = session.beginTransaction();
+					Parent p;
+					try {
+						p = (Parent) session.merge( savedParent );
+						// after merging, p#children will be uninitialized
+						assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+						assertTrue( ( (AbstractPersistentCollection) p.getChildren() ).hasQueuedOperations() );
+						transaction.commit();
+					}catch (Exception e){
+						if(transaction.isActive()){
+							transaction.rollback();
+						}
+						throw e;
+					}
+					assertFalse( ( (AbstractPersistentCollection) p.getChildren() ).hasQueuedOperations() );
+					return p;
+				}
+		);
 
 		// Merge detached Parent, now with uninitialized children no queued operations
 		inTransaction(

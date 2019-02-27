@@ -200,6 +200,10 @@ public abstract class SessionFactoryBasedFunctionalTest
 		return sessionFactoryScope().inTransaction( action );
 	}
 
+	protected <R> R inSession(Function<SessionImplementor, R> action) {
+		return sessionFactoryScope.inSession( action );
+	}
+
 	protected void inSession(Consumer<SessionImplementor> action) {
 		sessionFactoryScope().inSession( action );
 	}

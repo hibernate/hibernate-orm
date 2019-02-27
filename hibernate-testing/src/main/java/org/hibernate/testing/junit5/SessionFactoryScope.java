@@ -70,6 +70,24 @@ public class SessionFactoryScope implements SessionFactoryAccess {
 		inTransaction( getSessionFactory(), action );
 	}
 
+	protected <R> R inSession(Function<SessionImplementor, R> action) {
+		return inSession( getSessionFactory(), action );
+	}
+
+	private <R> R inSession(SessionFactoryImplementor sfi, Function<SessionImplementor, R> action) {
+		log.trace( "##inSession(SF,action)" );
+
+		try (SessionImplementor session = (SessionImplementor) sfi.openSession()) {
+			log.trace( "Session opened, calling action" );
+			R result = action.apply( session );
+			log.trace( "called action" );
+			return result;
+		}
+		finally {
+			log.trace( "Session close - auto-close lock" );
+		}
+	}
+
 	private void inSession(SessionFactoryImplementor sfi, Consumer<SessionImplementor> action) {
 		log.trace( "##inSession(SF,action)" );
 

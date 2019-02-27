@@ -33,13 +33,14 @@ plugins {
 
 allprojects {
     repositories {
-        // Uncomment this to pull our jar from sonatype        
-        ivy {
-            url "https://oss.sonatype.org/content/repositories/comnuodb-1047/"
+        // Set SONATYPE_VERSION to pull our Jar from there
+        if (System.env['SONATYPE_VERSION'] != null) {
+            ivy {
+                url "https://oss.sonatype.org/content/repositories/comnuodb-${System.env.SONATYPE_VERSION}/"
 
-            layout 'pattern', {
-                //artifact '/[organisation]/[module]/[revision].[ext]'
-                artifact '/com/nuodb/hibernate/nuodb-hibernate/20.0.0-hib5/nuodb-hibernate-20.0.0-hib5.[ext]'
+                layout 'pattern', {
+                    artifact '/com/nuodb/hibernate/nuodb-hibernate/20.0.0-hib5/nuodb-hibernate-20.0.0-hib5.[ext]'
+                }
             }
         }
         mavenCentral()
@@ -55,11 +56,11 @@ allprojects {
             }
         }
         // NuoDB: Default to adding our dialect explicitly
-        //else {
-            //flatDir {
-                //dirs "${System.env.HOME}/.m2/repository/com/nuodb/hibernate/nuodb-hibernate/20.0.0-hib5"
-            //}
-        //}
+        else {
+            flatDir {
+                dirs "${System.env.HOME}/.m2/repository/com/nuodb/hibernate/nuodb-hibernate/20.0.0-hib5"
+            }
+        }
     }
 
     apply plugin: 'idea'

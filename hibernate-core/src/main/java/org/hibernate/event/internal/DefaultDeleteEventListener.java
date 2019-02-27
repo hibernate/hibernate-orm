@@ -285,8 +285,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 
 		cascadeBeforeDelete( session, persister, entity, entityEntry, transientEntities );
 
-		new ForeignKeys.Nullifier( entity, true, false, session )
-				.nullifyTransientReferences( entityEntry.getDeletedState(), propTypes );
+		new ForeignKeys.Nullifier(  entity, true, false, session, persister ).nullifyTransientReferences( entityEntry.getDeletedState() );
 		new Nullability( session ).checkNullability( entityEntry.getDeletedState(), persister, Nullability.NullabilityCheckType.DELETE );
 		persistenceContext.getNullifiableEntityKeys().add( key );
 

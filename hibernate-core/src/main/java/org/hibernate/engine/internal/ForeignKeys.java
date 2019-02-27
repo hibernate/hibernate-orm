@@ -13,7 +13,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
@@ -36,6 +38,7 @@ public final class ForeignKeys {
 		private final boolean isEarlyInsert;
 		private final SharedSessionContractImplementor session;
 		private final Object self;
+		private final EntityPersister persister;
 
 		/**
 		 * Constructs a Nullifier
@@ -44,11 +47,18 @@ public final class ForeignKeys {
 		 * @param isDelete Are we in the middle of a delete action?
 		 * @param isEarlyInsert Is this an early insert (INSERT generated id strategy)?
 		 * @param session The session
+		 * @param persister The EntityPersister for {@code self}
 		 */
-		public Nullifier(Object self, boolean isDelete, boolean isEarlyInsert, SharedSessionContractImplementor session) {
+		public Nullifier(
+				final Object self,
+				final boolean isDelete,
+				final boolean isEarlyInsert,
+				final SharedSessionContractImplementor session,
+				final EntityPersister persister) {
 			this.isDelete = isDelete;
 			this.isEarlyInsert = isEarlyInsert;
 			this.session = session;
+			this.persister = persister;
 			this.self = self;
 		}
 
@@ -57,11 +67,12 @@ public final class ForeignKeys {
 		 * points toward that entity.
 		 *
 		 * @param values The entity attribute values
-		 * @param types The entity attribute types
 		 */
-		public void nullifyTransientReferences(final Object[] values, final Type[] types) {
+		public void nullifyTransientReferences(final Object[] values) {
+			final String[] propertyNames = persister.getPropertyNames();
+			final Type[] types = persister.getPropertyTypes();
 			for ( int i = 0; i < types.length; i++ ) {
-				values[i] = nullifyTransientReferences( values[i], types[i] );
+				values[i] = nullifyTransientReferences( values[i], propertyNames[i], types[i] );
 			}
 		}
 
@@ -70,34 +81,47 @@ public final class ForeignKeys {
 		 * input argument otherwise.  This is how Hibernate avoids foreign key constraint violations.
 		 *
 		 * @param value An entity attribute value
+		 * @param propertyName An entity attribute name
 		 * @param type An entity attribute type
 		 *
 		 * @return {@code null} if the argument is an unsaved entity; otherwise return the argument.
 		 */
-		private Object nullifyTransientReferences(final Object value, final Type type) {
+		private Object nullifyTransientReferences(final Object value, final String propertyName, final Type type) {
+			final Object returnedValue;
 			if ( value == null ) {
-				return null;
+				returnedValue = null;
 			}
 			else if ( type.isEntityType() ) {
 				final EntityType entityType = (EntityType) type;
 				if ( entityType.isOneToOne() ) {
-					return value;
+					returnedValue = value;
 				}
 				else {
-					final String entityName = entityType.getAssociatedEntityName();
-					return isNullifiable( entityName, value ) ? null : value;
+					// If value is lazy, it may need to be initialized to
+					// determine if the value is nullifiable.
+					final Object possiblyInitializedValue = initializeIfNecessary( value, propertyName, entityType );
+					// If the value is not nullifiable, make sure that the
+					// possibly initialized value is returned.
+					returnedValue = isNullifiable( entityType.getAssociatedEntityName(), possiblyInitializedValue )
+							? null
+							: possiblyInitializedValue;
 				}
 			}
 			else if ( type.isAnyType() ) {
-				return isNullifiable( null, value ) ? null : value;
+				returnedValue = isNullifiable( null, value ) ? null : value;
 			}
 			else if ( type.isComponentType() ) {
 				final CompositeType actype = (CompositeType) type;
 				final Object[] subvalues = actype.getPropertyValues( value, session );
 				final Type[] subtypes = actype.getSubtypes();
+				final String[] subPropertyNames = actype.getPropertyNames();
 				boolean substitute = false;
 				for ( int i = 0; i < subvalues.length; i++ ) {
-					final Object replacement = nullifyTransientReferences( subvalues[i], subtypes[i] );
+					final Object replacement = nullifyTransientReferences(
+							subvalues[i],
+							StringHelper.qualify( propertyName, subPropertyNames[i] ),
+							subtypes[i]
+					);
 					if ( replacement != subvalues[i] ) {
 						substitute = true;
 						subvalues[i] = replacement;
@@ -107,7 +131,50 @@ public final class ForeignKeys {
 					// todo : need to account for entity mode on the CompositeType interface :(
 					actype.setPropertyValues( value, subvalues, EntityMode.POJO );
 				}
-				return value;
+				returnedValue = value;
+			}
+			else {
+				returnedValue = value;
+			}
+			// value != returnedValue if either:
+			// 1) returnedValue was nullified (set to null);
+			// or 2) returnedValue was initialized, but not nullified.
+			// When bytecode-enhancement is used for dirty-checking, the change should
+			// only be tracked when returnedValue was nullified (1)).
+			if ( value != returnedValue && returnedValue == null && SelfDirtinessTracker.class.isInstance( self ) ) {
+				( (SelfDirtinessTracker) self ).$$_hibernate_trackChange( propertyName );
+			}
+			return returnedValue;
+		}
+
+		private Object initializeIfNecessary(
+				final Object value,
+				final String propertyName,
+				final Type type) {
+			if ( isDelete &&
+					value == LazyPropertyInitializer.UNFETCHED_PROPERTY &&
+					type.isEntityType() &&
+					!session.getPersistenceContext().getNullifiableEntityKeys().isEmpty() ) {
+				// IMPLEMENTATION NOTE: If cascade-remove was mapped for the attribute,
+				// then value should have been initialized previously, when the remove operation was
+				// cascaded to the property (because CascadingAction.DELETE.performOnLazyProperty()
+				// returns true). This particular situation can only arise when cascade-remove is not
+				// mapped for the association.
+
+				// There is at least one nullifiable entity. We don't know if the lazy
+				// associated entity is one of the nullifiable entities. If it is, and
+				// the property is not nullified, then a constraint violation will result.
+				// The only way to find out if the associated entity is nullifiable is
+				// to initialize it.
+				// TODO: there may be ways to fine-tune when initialization is necessary
+				//       (e.g., only initialize when the associated entity type is a
+				//       superclass or the same as the entity type of a nullifiable entity).
+				//       It is unclear if a more complicated check would impact performance
+				//       more than just initializing the associated entity.
+				return persister
+						.getInstrumentationMetadata()
+						.extractInterceptor( self )
+						.fetchAttribute( self, propertyName );
 			}
 			else {
 				return value;
@@ -162,9 +229,7 @@ public final class ForeignKeys {
 			else {
 				return entityEntry.isNullifiable( isEarlyInsert, session );
 			}
-
 		}
-
 	}
 
 	/**
@@ -307,8 +372,8 @@ public final class ForeignKeys {
 			Object[] values,
 			boolean isEarlyInsert,
 			SharedSessionContractImplementor session) {
-		final Nullifier nullifier = new Nullifier( entity, false, isEarlyInsert, session );
 		final EntityPersister persister = session.getEntityPersister( entityName, entity );
+		final Nullifier nullifier = new Nullifier( entity, false, isEarlyInsert, session, persister );
 		final String[] propertyNames = persister.getPropertyNames();
 		final Type[] types = persister.getPropertyTypes();
 		final boolean[] nullability = persister.getPropertyNullability();

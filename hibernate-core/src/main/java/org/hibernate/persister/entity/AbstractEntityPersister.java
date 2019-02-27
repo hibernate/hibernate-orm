@@ -1179,7 +1179,6 @@ public abstract class AbstractEntityPersister
 						rs = session.getJdbcCoordinator().getResultSetReturn().extract( ps );
 						rs.next();
 					}
-					final Object[] snapshot = entry.getLoadedState();
 					for ( LazyAttributeDescriptor fetchGroupAttributeDescriptor : fetchGroupAttributeDescriptors ) {
 						final boolean previousInitialized = initializedLazyAttributeNames.contains( fetchGroupAttributeDescriptor.getName() );
 
@@ -1210,7 +1209,7 @@ public abstract class AbstractEntityPersister
 								fieldName,
 								entity,
 								session,
-								snapshot,
+								entry,
 								fetchGroupAttributeDescriptor.getLazyIndex(),
 								selectedValue
 						);
@@ -1259,7 +1258,6 @@ public abstract class AbstractEntityPersister
 
 		Object result = null;
 		Serializable[] disassembledValues = cacheEntry.getDisassembledState();
-		final Object[] snapshot = entry.getLoadedState();
 		for ( int j = 0; j < lazyPropertyNames.length; j++ ) {
 			final Serializable cachedValue = disassembledValues[lazyPropertyNumbers[j]];
 			final Type lazyPropertyType = lazyPropertyTypes[j];
@@ -1276,7 +1274,7 @@ public abstract class AbstractEntityPersister
 						session,
 						entity
 				);
-				if ( initializeLazyProperty( fieldName, entity, session, snapshot, j, propValue ) ) {
+				if ( initializeLazyProperty( fieldName, entity, session, entry, j, propValue ) ) {
 					result = propValue;
 				}
 			}
@@ -1291,13 +1289,17 @@ public abstract class AbstractEntityPersister
 			final String fieldName,
 			final Object entity,
 			final SharedSessionContractImplementor session,
-			final Object[] snapshot,
+			final EntityEntry entry,
 			final int j,
 			final Object propValue) {
 		setPropertyValue( entity, lazyPropertyNumbers[j], propValue );
-		if ( snapshot != null ) {
+		if ( entry.getLoadedState() != null ) {
 			// object have been loaded with setReadOnly(true); HHH-2236
-			snapshot[lazyPropertyNumbers[j]] = lazyPropertyTypes[j].deepCopy( propValue, factory );
+			entry.getLoadedState()[lazyPropertyNumbers[j]] = lazyPropertyTypes[j].deepCopy( propValue, factory );
+		}
+		// If the entity has deleted state, then update that as well
+		if ( entry.getDeletedState() != null ) {
+			entry.getDeletedState()[lazyPropertyNumbers[j]] = lazyPropertyTypes[j].deepCopy( propValue, factory );
 		}
 		return fieldName.equals( lazyPropertyNames[j] );
 	}

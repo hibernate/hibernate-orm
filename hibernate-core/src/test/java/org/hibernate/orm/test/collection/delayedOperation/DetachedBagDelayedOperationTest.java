@@ -84,7 +84,6 @@ public class DetachedBagDelayedOperationTest extends SessionFactoryBasedFunction
 
 		inTransaction(
 				session -> {
-
 					session.persist( child1 );
 					session.persist( child2 );
 					session.persist( parent );
@@ -140,7 +139,7 @@ public class DetachedBagDelayedOperationTest extends SessionFactoryBasedFunction
 					session.detach( p );
 					assertTrue( triggerableQueuedOperationWhenDetachFromSession.wasTriggered() );
 					assertEquals(
-							"HHH000496: Detaching an uninitialized collection with queued operations from a session: [org.hibernate.test.collection.delayedOperation.DetachedBagDelayedOperationTest$Parent.children#1]",
+							"HHH000496: Detaching an uninitialized collection with queued operations from a session: [org.hibernate.orm.test.collection.delayedOperation.DetachedBagDelayedOperationTest$Parent.children#1]",
 							triggerableQueuedOperationWhenDetachFromSession.triggerMessage()
 					);
 					triggerableQueuedOperationWhenDetachFromSession.reset();
@@ -166,7 +165,7 @@ public class DetachedBagDelayedOperationTest extends SessionFactoryBasedFunction
 					Parent p = (Parent) session.merge( pWithQueuedOperations );
 					assertTrue( triggerableIgnoreQueuedOperationsOnMerge.wasTriggered() );
 					assertEquals(
-							"HHH000494: Attempt to merge an uninitialized collection with queued operations; queued operations will be ignored: [org.hibernate.test.collection.delayedOperation.DetachedBagDelayedOperationTest$Parent.children#1]",
+							"HHH000494: Attempt to merge an uninitialized collection with queued operations; queued operations will be ignored: [org.hibernate.orm.test.collection.delayedOperation.DetachedBagDelayedOperationTest$Parent.children#1]",
 							triggerableIgnoreQueuedOperationsOnMerge.triggerMessage()
 					);
 					triggerableIgnoreQueuedOperationsOnMerge.reset();
@@ -220,7 +219,7 @@ public class DetachedBagDelayedOperationTest extends SessionFactoryBasedFunction
 					session.detach( p );
 					assertTrue( triggerableQueuedOperationWhenDetachFromSession.wasTriggered() );
 					assertEquals(
-							"HHH000496: Detaching an uninitialized collection with queued operations from a session: [org.hibernate.test.collection.delayedOperation.DetachedBagDelayedOperationTest$Parent.children#1]",
+							"HHH000496: Detaching an uninitialized collection with queued operations from a session: [org.hibernate.orm.test.collection.delayedOperation.DetachedBagDelayedOperationTest$Parent.children#1]",
 							triggerableQueuedOperationWhenDetachFromSession.triggerMessage()
 					);
 					triggerableQueuedOperationWhenDetachFromSession.reset();
@@ -246,7 +245,7 @@ public class DetachedBagDelayedOperationTest extends SessionFactoryBasedFunction
 					session.saveOrUpdate( pAfterDetachWithQueuedOperations );
 					assertTrue( triggerableQueuedOperationWhenAttachToSession.wasTriggered() );
 					assertEquals(
-							"HHH000495: Attaching an uninitialized collection with queued operations to a session: [org.hibernate.test.collection.delayedOperation.DetachedBagDelayedOperationTest$Parent.children#1]",
+							"HHH000495: Attaching an uninitialized collection with queued operations to a session: [org.hibernate.orm.test.collection.delayedOperation.DetachedBagDelayedOperationTest$Parent.children#1]",
 							triggerableQueuedOperationWhenAttachToSession.triggerMessage()
 					);
 					triggerableQueuedOperationWhenAttachToSession.reset();

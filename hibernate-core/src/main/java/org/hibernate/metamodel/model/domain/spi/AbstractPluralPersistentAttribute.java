@@ -492,8 +492,8 @@ public abstract class AbstractPluralPersistentAttribute<O,C,E> extends AbstractP
 					log.ignoreQueuedOperationsOnMerge(
 							MessageHelper.collectionInfoString(
 									collectionDescriptor,
-									( (PersistentCollection) originalValue ),
-									( (PersistentCollection) originalValue ).getKey(),
+									( (PersistentCollection) targetValue ),
+									( (PersistentCollection) targetValue ).getKey(),
 									session
 							)
 					);

@@ -25,6 +25,7 @@ import javax.persistence.OneToMany;
 import org.hibernate.Hibernate;
 import org.hibernate.collection.internal.AbstractPersistentCollection;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.model.domain.spi.AbstractPluralPersistentAttribute;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 import org.hibernate.testing.TestForIssue;
@@ -68,6 +69,11 @@ public class DetachedBagDelayedOperationTest extends SessionFactoryBasedFunction
 			Logger.getMessageLogger( CoreMessageLogger.class, AbstractPersistentCollection.class.getName() )
 	);
 
+	@Rule
+	public LoggerInspectionRule logInspectionAbstractPluralPersistentAttribute = new LoggerInspectionRule(
+			Logger.getMessageLogger( CoreMessageLogger.class, AbstractPluralPersistentAttribute.class.getName() )
+	);
+
 	private Triggerable triggerableIgnoreQueuedOperationsOnMerge;
 	private Triggerable triggerableQueuedOperationWhenAttachToSession;
 	private Triggerable triggerableQueuedOperationWhenDetachFromSession;
@@ -90,7 +96,7 @@ public class DetachedBagDelayedOperationTest extends SessionFactoryBasedFunction
 				}
 		);
 
-		triggerableIgnoreQueuedOperationsOnMerge = logInspectionCollectionType.watchForLogMessages( "HHH000494" );
+		triggerableIgnoreQueuedOperationsOnMerge = logInspectionAbstractPluralPersistentAttribute.watchForLogMessages( "HHH000494" );
 		triggerableQueuedOperationWhenAttachToSession = logInspectionAbstractPersistentCollection.watchForLogMessages(
 				"HHH000495" );
 		triggerableQueuedOperationWhenDetachFromSession = logInspectionAbstractPersistentCollection.watchForLogMessages(

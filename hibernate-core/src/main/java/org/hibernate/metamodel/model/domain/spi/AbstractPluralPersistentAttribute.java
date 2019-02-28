@@ -34,6 +34,8 @@ import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
@@ -75,8 +77,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public abstract class AbstractPluralPersistentAttribute<O,C,E> extends AbstractPersistentAttribute<O,C> implements PluralPersistentAttribute<O,C,E> {
-	private static final Logger log = Logger.getLogger( AbstractPluralPersistentAttribute.class );
-
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractPluralPersistentAttribute.class );
 	private static final Object NOT_NULL_COLLECTION = new MarkerObject( "NOT NULL COLLECTION" );
 
 	private final PersistentCollectionDescriptor collectionDescriptor;
@@ -477,9 +478,26 @@ public abstract class AbstractPluralPersistentAttribute<O,C,E> extends AbstractP
 		}
 
 		if ( !Hibernate.isInitialized( originalValue ) ) {
-			final AbstractPersistentCollection collection = (AbstractPersistentCollection) originalValue;
-			if ( collection.hasQueuedOperations() ) {
-				collection.replaceQueuedOperationValues( getCollectionDescriptor(), copyCache );
+			if ( ( (PersistentCollection) originalValue ).hasQueuedOperations() ) {
+				if ( originalValue == targetValue ) {
+					// A managed entity with an uninitialized collection is being merged,
+					// We need to replace any detached entities in the queued operations
+					// with managed copies.
+					final AbstractPersistentCollection pc = (AbstractPersistentCollection) originalValue;
+					pc.replaceQueuedOperationValues( getCollectionDescriptor(), copyCache );
+				}
+				else {
+					// original is a detached copy of the collection;
+					// it contains queued operations, which will be ignored
+					log.ignoreQueuedOperationsOnMerge(
+							MessageHelper.collectionInfoString(
+									collectionDescriptor,
+									( (PersistentCollection) originalValue ),
+									( (PersistentCollection) originalValue ).getKey(),
+									session
+							)
+					);
+				}
 			}
 			return targetValue;
 		}

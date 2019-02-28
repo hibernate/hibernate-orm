@@ -1218,11 +1218,11 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	 * Contract for operations which are part of a collection's operation queue.
 	 */
 	protected interface DelayedOperation {
-		public void operate();
+		void operate();
 
-		public Object getAddedInstance();
+		Object getAddedInstance();
 
-		public Object getOrphan();
+		Object getOrphan();
 	}
 
 	protected interface ValueDelayedOperation extends DelayedOperation {

@@ -6,6 +6,8 @@
  */
 package org.hibernate.test.type;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -155,15 +157,21 @@ public class LocalDateTimeTest extends BaseCoreFunctionalTestCase {
 				session.persist( new EntityWithLocalDateTime( 1, getExpectedLocalDateTime() ) );
 			} );
 			inTransaction( session -> {
-				Timestamp nativeRead = (Timestamp) session.createNativeQuery(
-						"SELECT thevalue FROM theentity WHERE theid = :id"
-				)
-						.setParameter( "id", 1 )
-						.uniqueResult();
-				assertEquals(
-						"Raw values written in database should match the original value (same day, hour, ...)",
-						getExpectedTimestamp(), nativeRead
-				);
+				session.doWork( connection -> {
+					final PreparedStatement statement = connection.prepareStatement(
+							"SELECT thevalue FROM theentity WHERE theid = ?"
+					);
+					statement.setInt( 1, 1 );
+					statement.execute();
+					final ResultSet resultSet = statement.getResultSet();
+					resultSet.next();
+					Timestamp nativeRead = resultSet.getTimestamp( 1 );
+					assertEquals(
+							"Raw values written in database should match the original value (same day, hour, ...)",
+							getExpectedTimestamp(),
+							nativeRead
+					);
+				} );
 			} );
 		} );
 	}

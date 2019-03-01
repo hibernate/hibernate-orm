@@ -327,7 +327,6 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 								return collectionDescriptor.indexExists(
 										entry.getLoadedKey(),
 										index,
-										AbstractPersistentCollection.this,
 										session
 								);
 							}

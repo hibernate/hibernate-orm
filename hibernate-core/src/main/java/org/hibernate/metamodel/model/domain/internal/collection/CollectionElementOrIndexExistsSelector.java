@@ -35,16 +35,16 @@ import org.hibernate.type.descriptor.sql.spi.IntegerSqlDescriptor;
 /**
  * @author Andrea Boriero
  */
-public class CollectionElementExistsSelector extends AbstractSelector {
+public class CollectionElementOrIndexExistsSelector extends AbstractSelector {
 
-	public CollectionElementExistsSelector(
+	public CollectionElementOrIndexExistsSelector(
 			PersistentCollectionDescriptor collectionDescriptor,
 			String sqlWhereString,
 			SessionFactoryImplementor sessionFactory) {
 		super( collectionDescriptor, sqlWhereString, sessionFactory );
 	}
 
-	public Boolean execute(
+	public Boolean elementExists(
 			Object loadedKey,
 			Object element,
 			PersistentCollection collection,
@@ -53,6 +53,19 @@ public class CollectionElementExistsSelector extends AbstractSelector {
 
 		bindCollectionKey( loadedKey, jdbcParameterBindings, session );
 		bindCollectionElement( element, collection, jdbcParameterBindings, session );
+
+		final List results = execute( jdbcParameterBindings, session );
+		return !results.isEmpty();
+	}
+
+	public Boolean indexExists(
+			Object loadedKey,
+			Object index,
+			SharedSessionContractImplementor session) {
+		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl();
+
+		bindCollectionKey( loadedKey, jdbcParameterBindings, session );
+		bindCollectionIndex( index, jdbcParameterBindings, session );
 
 		final List results = execute( jdbcParameterBindings, session );
 		return !results.isEmpty();

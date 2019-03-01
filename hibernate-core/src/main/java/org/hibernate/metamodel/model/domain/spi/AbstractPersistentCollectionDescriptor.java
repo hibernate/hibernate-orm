@@ -67,7 +67,7 @@ import org.hibernate.metamodel.model.domain.internal.collection.BasicCollectionR
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionCreationExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionElementEmbeddedImpl;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionElementEntityImpl;
-import org.hibernate.metamodel.model.domain.internal.collection.CollectionElementExistsSelector;
+import org.hibernate.metamodel.model.domain.internal.collection.CollectionElementOrIndexExistsSelector;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionIndexEmbeddedImpl;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionIndexEntityImpl;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionRemovalExecutor;
@@ -166,7 +166,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 	private CollectionCreationExecutor collectionRowsInsertExecutor;
 	private CollectionRowsIndexUpdateExecutor collectionRowsIndexUpdateExecutor;
 	private CollectionSizeSelector collectionSizeSelector;
-	private CollectionElementExistsSelector collectionElementExistsSelector;
+	private CollectionElementOrIndexExistsSelector collectionElementOrIndexExistsSelector;
 
 	private final String mappedBy;
 	private final String sqlWhereString;
@@ -977,20 +977,46 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 	}
 
 	@Override
-	public Boolean indexExists(Object loadedKey, Object index, PersistentCollection collection, SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception();
-	}
-
-	@Override
-	public Boolean elementExists(Object loadedKey, Object element, PersistentCollection collection, SharedSessionContractImplementor session) {
-		if ( collectionElementExistsSelector == null ) {
-			collectionElementExistsSelector = new CollectionElementExistsSelector(
+	public Boolean indexExists(
+			Object loadedKey,
+			Object index,
+			SharedSessionContractImplementor session) {
+		if ( collectionElementOrIndexExistsSelector == null ) {
+			collectionElementOrIndexExistsSelector = new CollectionElementOrIndexExistsSelector(
 					this,
 					sqlWhereString,
 					sessionFactory
 			);
 		}
-		return collectionElementExistsSelector.execute( loadedKey, element, collection, session );
+		return collectionElementOrIndexExistsSelector.indexExists(
+				loadedKey,
+				incrementIndexByBase( index ),
+				session
+		);
+	}
+
+	protected Object incrementIndexByBase(Object index) {
+		int baseIndex = getIndexDescriptor().getBaseIndex();
+		if ( baseIndex != 0 ) {
+			index = (Integer) index + baseIndex;
+		}
+		return index;
+	}
+
+	@Override
+	public Boolean elementExists(
+			Object loadedKey,
+			Object element,
+			PersistentCollection collection,
+			SharedSessionContractImplementor session) {
+		if ( collectionElementOrIndexExistsSelector == null ) {
+			collectionElementOrIndexExistsSelector = new CollectionElementOrIndexExistsSelector(
+					this,
+					sqlWhereString,
+					sessionFactory
+			);
+		}
+		return collectionElementOrIndexExistsSelector.elementExists( loadedKey, element, collection, session );
 	}
 
 	@Override

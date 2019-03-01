@@ -254,7 +254,6 @@ public interface PersistentCollectionDescriptor<O,C,E>
 	Boolean indexExists(
 			Object loadedKey,
 			Object index,
-			PersistentCollection collection,
 			SharedSessionContractImplementor session);
 
 	Boolean elementExists(
@@ -264,8 +263,6 @@ public interface PersistentCollectionDescriptor<O,C,E>
 			SharedSessionContractImplementor session);
 
 	Object getElementByIndex(Object loadedKey, Object index, SharedSessionContractImplementor session, Object owner);
-
-
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

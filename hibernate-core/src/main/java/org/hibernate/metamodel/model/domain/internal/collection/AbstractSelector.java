@@ -25,7 +25,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.CollectionElementEntity;
-import org.hibernate.metamodel.model.domain.spi.CollectionKey;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
@@ -72,6 +71,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Andrea Boriero
+ *
+ * todo (6.0) : is it an AbstractSelector or an AbstractExecutor or .... ?
  */
 public abstract class AbstractSelector {
 	private final PersistentCollectionDescriptor collectionDescriptor;
@@ -161,23 +162,18 @@ public abstract class AbstractSelector {
 		);
 	}
 
+	protected void bindCollectionIndex(
+			Object index,
+			JdbcParameterBindings jdbcParameterBindings,
+			SharedSessionContractImplementor session) {
+		bindValue( index, getCollectionDescriptor().getIndexDescriptor(), jdbcParameterBindings, session );
+	}
+
 	protected void bindCollectionKey(
 			Object key,
 			JdbcParameterBindings jdbcParameterBindings,
 			SharedSessionContractImplementor session) {
-		CollectionKey collectionKeyDescriptor = getCollectionDescriptor().getCollectionKeyDescriptor();
-		collectionKeyDescriptor.dehydrate(
-				key,
-				(jdbcValue, type, boundColumn) -> createBinding(
-						jdbcValue,
-						boundColumn,
-						type,
-						jdbcParameterBindings,
-						session
-				),
-				Clause.WHERE,
-				session
-		);
+		bindValue( key, getCollectionDescriptor().getCollectionKeyDescriptor(), jdbcParameterBindings, session );
 	}
 
 	protected void bindCollectionElement(
@@ -186,11 +182,22 @@ public abstract class AbstractSelector {
 			JdbcParameterBindings jdbcParameterBindings,
 			SharedSessionContractImplementor session) {
 		CollectionElement elementDescriptor = getCollectionDescriptor().getElementDescriptor();
-		elementDescriptor.dehydrate(
-				elementDescriptor.unresolve(
-						collection.getElement( entry, getCollectionDescriptor() ),
-						session
-				),
+
+		Object unresolved = elementDescriptor.unresolve(
+				collection.getElement( entry, getCollectionDescriptor() ),
+				session
+		);
+
+		bindValue( unresolved, elementDescriptor, jdbcParameterBindings, session );
+	}
+
+	private void bindValue(
+			Object value,
+			Navigable navigable,
+			JdbcParameterBindings jdbcParameterBindings,
+			SharedSessionContractImplementor session) {
+		navigable.dehydrate(
+				value,
 				(jdbcValue, type, boundColumn) -> createBinding(
 						jdbcValue,
 						boundColumn,

@@ -61,7 +61,13 @@ public class InstantJavaDescriptor extends AbstractTypeDescriptor<Instant> {
 		}
 
 		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
-			return (X) Timestamp.from( instant );
+			/*
+			 * Workaround for HHH-13266 (JDK-8061577).
+			 * Ideally we'd want to use Timestamp.from(), but this won't always work.
+			 * Timestamp.from() assumes the number of milliseconds since the epoch
+			 * means the same thing in Timestamp and Instant, but it doesn't, in particular before 1900.
+			 */
+			return (X) Timestamp.valueOf( instant.atZone( ZoneId.systemDefault() ).toLocalDateTime() );
 		}
 
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
@@ -95,7 +101,13 @@ public class InstantJavaDescriptor extends AbstractTypeDescriptor<Instant> {
 
 		if ( Timestamp.class.isInstance( value ) ) {
 			final Timestamp ts = (Timestamp) value;
-			return ts.toInstant();
+			/*
+			 * Workaround for HHH-13266 (JDK-8061577).
+			 * Ideally we'd want to use ts.toInstant(), but this won't always work.
+			 * ts.toInstant() assumes the number of milliseconds since the epoch
+			 * means the same thing in Timestamp and Instant, but it doesn't, in particular before 1900.
+			 */
+			return ts.toLocalDateTime().atZone( ZoneId.systemDefault() ).toInstant();
 		}
 
 		if ( Long.class.isInstance( value ) ) {

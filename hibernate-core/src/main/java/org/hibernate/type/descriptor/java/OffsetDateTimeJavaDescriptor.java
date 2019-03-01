@@ -59,7 +59,13 @@ public class OffsetDateTimeJavaDescriptor extends AbstractTypeDescriptor<OffsetD
 		}
 
 		if ( Timestamp.class.isAssignableFrom( type ) ) {
-			return (X) Timestamp.from( offsetDateTime.toInstant() );
+			/*
+			 * Workaround for HHH-13266 (JDK-8061577).
+			 * Ideally we'd want to use Timestamp.from( offsetDateTime.toInstant() ), but this won't always work.
+			 * Timestamp.from() assumes the number of milliseconds since the epoch
+			 * means the same thing in Timestamp and Instant, but it doesn't, in particular before 1900.
+			 */
+			return (X) Timestamp.valueOf( offsetDateTime.atZoneSameInstant( ZoneId.systemDefault() ).toLocalDateTime() );
 		}
 
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
@@ -93,7 +99,13 @@ public class OffsetDateTimeJavaDescriptor extends AbstractTypeDescriptor<OffsetD
 
 		if ( Timestamp.class.isInstance( value ) ) {
 			final Timestamp ts = (Timestamp) value;
-			return OffsetDateTime.ofInstant( ts.toInstant(), ZoneId.systemDefault() );
+			/*
+			 * Workaround for HHH-13266 (JDK-8061577).
+			 * Ideally we'd want to use OffsetDateTime.ofInstant( ts.toInstant(), ... ), but this won't always work.
+			 * ts.toInstant() assumes the number of milliseconds since the epoch
+			 * means the same thing in Timestamp and Instant, but it doesn't, in particular before 1900.
+			 */
+			return ts.toLocalDateTime().atZone( ZoneId.systemDefault() ).toOffsetDateTime();
 		}
 
 		if ( Date.class.isInstance( value ) ) {

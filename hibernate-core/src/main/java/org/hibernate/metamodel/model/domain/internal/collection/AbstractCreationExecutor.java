@@ -29,10 +29,14 @@ import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.internal.log.LoggingHelper;
 
+import org.jboss.logging.Logger;
+
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractCreationExecutor implements CollectionCreationExecutor {
+	private static final Logger log = Logger.getLogger( AbstractCreationExecutor.class );
+
 	private final PersistentCollectionDescriptor collectionDescriptor;
 
 	private final JdbcMutation creationOperation;
@@ -96,6 +100,7 @@ public abstract class AbstractCreationExecutor implements CollectionCreationExec
 		}
 
 		int passes = 0;
+		int count = 0;
 		collection.preInsert( collectionDescriptor );
 
 		while ( entries.hasNext() ) {
@@ -106,11 +111,14 @@ public abstract class AbstractCreationExecutor implements CollectionCreationExec
 				bindCollectionIndex( entry, passes, collection, jdbcParameterBindings, session );
 				bindCollectionElement( entry, collection, jdbcParameterBindings, session );
 
+				count++;
 				JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute( creationOperation, executionContext );
 			}
 			passes++;
 			jdbcParameterBindings.clear();
 		}
+
+		log.debugf( "Done inserting rows: %s inserted", count );
 	}
 
 	@SuppressWarnings("WeakerAccess")

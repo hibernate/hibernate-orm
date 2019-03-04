@@ -1132,6 +1132,12 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 		if ( collectionRowsDeletionExecutor == null ) {
 			collectionRowsDeletionExecutor = generateCollectionRowsDeletionExecutor();
 		}
+		if ( log.isDebugEnabled() ) {
+			log.debugf(
+					"Deleting rows of collection: %s",
+					MessageHelper.collectionInfoString( this, collection, key, session )
+			);
+		}
 		collectionRowsDeletionExecutor.execute( collection, key, session );
 	}
 
@@ -1179,6 +1185,12 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 		if ( !isInverse() && collection.isRowUpdatePossible() ) {
 			if ( collectionRowsUpdateExecutor == null ) {
 				collectionRowsUpdateExecutor = generateCollectionRowsUpdateExecutor();
+			}
+			if ( log.isDebugEnabled() ) {
+				log.debugf(
+						"Updating rows of collection: %s",
+						MessageHelper.collectionInfoString( this, collection, key, session )
+				);
 			}
 			collectionRowsUpdateExecutor.execute( collection, key, session );
 		}

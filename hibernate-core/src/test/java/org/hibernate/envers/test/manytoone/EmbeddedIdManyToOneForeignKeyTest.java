@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.integration.manytoone;
+package org.hibernate.envers.test.manytoone;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -13,7 +13,6 @@ import java.util.List;
 import javax.persistence.Embeddable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.EntityManager;
 import javax.persistence.ForeignKey;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -24,32 +23,34 @@ import javax.persistence.OneToMany;
 import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.mapping.Table;
-import org.junit.Test;
+import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.relational.spi.Table;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit5.dynamictests.DynamicTest;
 
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 
 /**
  * @author Chris Cranford
  */
 @TestForIssue(jiraKey = "HHH-11463")
-public class EmbeddedIdManyToOneForeignKeyTest extends BaseEnversJPAFunctionalTestCase {
+public class EmbeddedIdManyToOneForeignKeyTest extends EnversEntityManagerFactoryBasedFunctionalTest {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] { Customer.class, CustomerAddress.class, Address.class };
 	}
 
-	@Test
+	@DynamicTest
 	public void testJoinTableForeignKeyToNonAuditTables() {
-		// there should only be references to REVINFO and not to the Customer or Address tables
-		for ( Table table : metadata().getDatabase().getDefaultNamespace().getTables() ) {
-			if ( table.getName().equals( "CustomerAddress_AUD" ) ) {
-				for ( org.hibernate.mapping.ForeignKey foreignKey : table.getForeignKeys().values() ) {
-					assertEquals( "REVINFO", foreignKey.getReferencedTable().getName() );
-				}
+		final EntityTypeDescriptor<?> entityTypeDescriptor = getMetamodel().entity( "CustomerAddress_AUD" );
+
+		final Table primaryTable = entityTypeDescriptor.getPrimaryTable();
+		for ( org.hibernate.metamodel.model.relational.spi.ForeignKey foreignKey : primaryTable.getForeignKeys() ) {
+			if ( foreignKey.isExportationEnabled() ) {
+				assertThat( foreignKey.getTargetTable().getTableExpression(), equalTo( "REVINFO" ) );
 			}
 		}
 	}

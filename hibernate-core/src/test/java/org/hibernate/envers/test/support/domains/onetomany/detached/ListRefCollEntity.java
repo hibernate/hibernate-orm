@@ -4,18 +4,20 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.entities.onetomany.detached;
+package org.hibernate.envers.test.support.domains.onetomany.detached;
 
 import java.util.List;
+import java.util.Objects;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.test.entities.StrTestEntity;
+import org.hibernate.envers.test.support.domains.basic.StrTestEntity;
 
 /**
- * Set collection of references entity
+ * List collection of references entity
  *
  * @author Adam Warski (adam at warski dot org)
  */
@@ -67,34 +69,29 @@ public class ListRefCollEntity {
 		this.collection = collection;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
 		}
-		if ( !(o instanceof ListRefCollEntity) ) {
+		if ( o == null || getClass() != o.getClass() ) {
 			return false;
 		}
-
 		ListRefCollEntity that = (ListRefCollEntity) o;
-
-		if ( data != null ? !data.equals( that.data ) : that.data != null ) {
-			return false;
-		}
-		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
-			return false;
-		}
-
-		return true;
+		return Objects.equals( id, that.id ) &&
+				Objects.equals( data, that.data );
 	}
 
+	@Override
 	public int hashCode() {
-		int result;
-		result = (id != null ? id.hashCode() : 0);
-		result = 31 * result + (data != null ? data.hashCode() : 0);
-		return result;
+		return Objects.hash( id, data );
 	}
 
+	@Override
 	public String toString() {
-		return "SetRefEdEntity(id = " + id + ", data = " + data + ")";
+		return "ListRefCollEntity{" +
+				"id=" + id +
+				", data='" + data + '\'' +
+				'}';
 	}
 }

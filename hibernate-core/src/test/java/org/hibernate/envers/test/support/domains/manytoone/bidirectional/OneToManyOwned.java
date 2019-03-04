@@ -4,10 +4,11 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.integration.manytoone.bidirectional;
+package org.hibernate.envers.test.support.domains.manytoone.bidirectional;
 
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -45,39 +46,6 @@ public class OneToManyOwned implements Serializable {
 		this.referencing = referencing;
 	}
 
-	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
-			return true;
-		}
-		if ( !(o instanceof OneToManyOwned) ) {
-			return false;
-		}
-
-		OneToManyOwned that = (OneToManyOwned) o;
-
-		if ( data != null ? !data.equals( that.data ) : that.data != null ) {
-			return false;
-		}
-		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
-			return false;
-		}
-
-		return true;
-	}
-
-	@Override
-	public int hashCode() {
-		int result = id != null ? id.hashCode() : 0;
-		result = 31 * result + (data != null ? data.hashCode() : 0);
-		return result;
-	}
-
-	@Override
-	public String toString() {
-		return "OneToManyOwned(id = " + id + ", data = " + data + ")";
-	}
-
 	public Long getId() {
 		return id;
 	}
@@ -100,5 +68,31 @@ public class OneToManyOwned implements Serializable {
 
 	public void setReferencing(Set<ManyToOneOwning> referencing) {
 		this.referencing = referencing;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+		OneToManyOwned that = (OneToManyOwned) o;
+		return Objects.equals( id, that.id ) &&
+				Objects.equals( data, that.data );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( id, data );
+	}
+
+	@Override
+	public String toString() {
+		return "OneToManyOwned{" +
+				"id=" + id +
+				", data='" + data + '\'' +
+				'}';
 	}
 }

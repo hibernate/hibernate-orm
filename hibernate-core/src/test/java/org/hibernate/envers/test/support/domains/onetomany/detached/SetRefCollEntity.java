@@ -4,27 +4,24 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.entities.onetomany.detached;
+package org.hibernate.envers.test.support.domains.onetomany.detached;
 
+import java.util.Objects;
 import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
-import javax.persistence.Table;
 
-import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.test.entities.StrTestEntity;
+import org.hibernate.envers.test.support.domains.basic.StrTestEntity;
 
 /**
- * A detached relation to another entity, with a @OneToMany+@JoinColumn mapping.
+ * Set collection of references entity
  *
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
-@Table(name = "SetJoinColRefColl")
-public class SetJoinColumnRefCollEntity {
+public class SetRefCollEntity {
 	@Id
 	private Integer id;
 
@@ -33,19 +30,17 @@ public class SetJoinColumnRefCollEntity {
 
 	@Audited
 	@OneToMany
-	@JoinColumn(name = "SJCR_ID")
-	@AuditJoinTable(name = "SetJoinColRefColl_StrTest_AUD")
 	private Set<StrTestEntity> collection;
 
-	public SetJoinColumnRefCollEntity() {
+	public SetRefCollEntity() {
 	}
 
-	public SetJoinColumnRefCollEntity(Integer id, String data) {
+	public SetRefCollEntity(Integer id, String data) {
 		this.id = id;
 		this.data = data;
 	}
 
-	public SetJoinColumnRefCollEntity(String data) {
+	public SetRefCollEntity(String data) {
 		this.data = data;
 	}
 
@@ -73,34 +68,29 @@ public class SetJoinColumnRefCollEntity {
 		this.collection = collection;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
 		}
-		if ( !(o instanceof SetJoinColumnRefCollEntity) ) {
+		if ( o == null || getClass() != o.getClass() ) {
 			return false;
 		}
-
-		SetJoinColumnRefCollEntity that = (SetJoinColumnRefCollEntity) o;
-
-		if ( data != null ? !data.equals( that.data ) : that.data != null ) {
-			return false;
-		}
-		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
-			return false;
-		}
-
-		return true;
+		SetRefCollEntity that = (SetRefCollEntity) o;
+		return Objects.equals( id, that.id ) &&
+				Objects.equals( data, that.data );
 	}
 
+	@Override
 	public int hashCode() {
-		int result;
-		result = (id != null ? id.hashCode() : 0);
-		result = 31 * result + (data != null ? data.hashCode() : 0);
-		return result;
+		return Objects.hash( id, data );
 	}
 
+	@Override
 	public String toString() {
-		return "SetJoinColumnRefCollEntity(id = " + id + ", data = " + data + ")";
+		return "SetRefCollEntity{" +
+				"id=" + id +
+				", data='" + data + '\'' +
+				'}';
 	}
 }

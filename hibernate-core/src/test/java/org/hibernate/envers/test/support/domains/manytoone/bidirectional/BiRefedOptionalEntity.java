@@ -4,10 +4,11 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.integration.manytoone.bidirectional;
+package org.hibernate.envers.test.support.domains.manytoone.bidirectional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -46,19 +47,19 @@ public class BiRefedOptionalEntity {
 	}
 
 	@Override
-	public int hashCode() {
-		return ( id != null ? id.hashCode() : 0 );
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+		BiRefedOptionalEntity that = (BiRefedOptionalEntity) o;
+		return Objects.equals( id, that.id );
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		if ( object == this ) {
-			return true;
-		}
-		if ( !( object instanceof BiRefedOptionalEntity ) ) {
-			return false;
-		}
-		BiRefedOptionalEntity that = (BiRefedOptionalEntity) object;
-		return !( id != null ? !id.equals( that.id ) : that.id != null );
+	public int hashCode() {
+		return Objects.hash( id );
 	}
 }

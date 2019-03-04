@@ -4,7 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.entities;
+package org.hibernate.envers.test.support.domains.basic;
+
+import java.util.Objects;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -51,34 +53,29 @@ public class UnversionedStrTestEntity {
 		this.str = str;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
 		}
-		if ( !(o instanceof UnversionedStrTestEntity) ) {
+		if ( o == null || getClass() != o.getClass() ) {
 			return false;
 		}
-
 		UnversionedStrTestEntity that = (UnversionedStrTestEntity) o;
-
-		if ( id != null ? !id.equals( that.getId() ) : that.getId() != null ) {
-			return false;
-		}
-		if ( str != null ? !str.equals( that.getStr() ) : that.getStr() != null ) {
-			return false;
-		}
-
-		return true;
+		return Objects.equals( id, that.id ) &&
+				Objects.equals( str, that.str );
 	}
 
+	@Override
 	public int hashCode() {
-		int result;
-		result = (id != null ? id.hashCode() : 0);
-		result = 31 * result + (str != null ? str.hashCode() : 0);
-		return result;
+		return Objects.hash( id, str );
 	}
 
+	@Override
 	public String toString() {
-		return "USTE(id = " + id + ", str = " + str + ")";
+		return "UnversionedStrTestEntity{" +
+				"id=" + id +
+				", str='" + str + '\'' +
+				'}';
 	}
 }

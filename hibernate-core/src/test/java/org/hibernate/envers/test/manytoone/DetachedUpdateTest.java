@@ -4,10 +4,8 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.integration.manytoone;
+package org.hibernate.envers.test.manytoone;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Objects;
 
 import javax.persistence.Entity;
@@ -17,14 +15,17 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
-import org.junit.Test;
+import org.hibernate.envers.test.EnversSessionFactoryBasedFunctionalTest;
+import org.junit.jupiter.api.Disabled;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit5.dynamictests.DynamicBeforeAll;
+import org.hibernate.testing.junit5.dynamictests.DynamicTest;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
 
 /**
  * Test updating a detached audited entity using native Session API
@@ -33,7 +34,8 @@ import static org.junit.Assert.assertEquals;
  * @author Chris Cranford
  */
 @TestForIssue(jiraKey = "HHH-11859")
-public class DetachedUpdateTest extends BaseEnversFunctionalTestCase {
+@Disabled("Requires discussion about SingleIdEntityLoader#loadDatabaseSnapshot to work like 5.x")
+public class DetachedUpdateTest extends EnversSessionFactoryBasedFunctionalTest {
 	private Bank bank1;
 	private Bank bank2;
 	private BankContact contact;
@@ -43,60 +45,60 @@ public class DetachedUpdateTest extends BaseEnversFunctionalTestCase {
 		return new Class<?>[] { Bank.class, BankContact.class };
 	}
 
-	@Test
-	@Priority(10)
-	public void initData() {
+	@DynamicBeforeAll
+	public void prepareAuditData() {
 		// Revision 1
-		doInHibernate( this::sessionFactory, session -> {
-			bank1 = new Bank();
-			bank1.setDescription( "Bank of Italy" );
-			session.save( bank1 );
+		inTransaction(
+				session -> {
+					bank1 = new Bank();
+					bank1.setDescription( "Bank of Italy" );
+					session.save( bank1 );
 
-			bank2 = new Bank();
-			bank2.setDescription( "Bradesco Bank" );
-			session.save( bank2 );
+					bank2 = new Bank();
+					bank2.setDescription( "Bradesco Bank" );
+					session.save( bank2 );
 
-			contact = new BankContact();
-			contact.setBank( bank1 );
-			contact.setPhoneNumber( "1234" );
-			contact.setName( "Test" );
-			session.save( contact );
-		} );
+					contact = new BankContact();
+					contact.setBank( bank1 );
+					contact.setPhoneNumber( "1234" );
+					contact.setName( "Test" );
+					session.save( contact );
+				}
+		);
 
 		// Revision 2
-		doInHibernate( this::sessionFactory, session -> {
-			contact.setName( "Other" );
-			contact.setBank( bank2 );
-			session.update( contact );
-		} );
+		inTransaction(
+				session -> {
+					contact.setName( "Other" );
+					contact.setBank( bank2 );
+					session.update( contact );
+				}
+		);
 
 		// Revision 3
 		// Test changing the detached entity reference to Bank and delete the prior reference
 		// within the same transaction to make sure the audit history flushes properly.
-		doInHibernate( this::sessionFactory, session -> {
-			contact.setBank( bank1 );
-			session.delete( bank2 );
-			session.update( contact );
-		} );
+		inTransaction(
+				session -> {
+					contact.setBank( bank1 );
+					session.delete( bank2 );
+					session.update( contact );
+				}
+		);
 	}
 
-	@Test
+	@DynamicTest
 	public void testRevisionCounts() {
-		assertEquals( Collections.singletonList( 1 ), getAuditReader().getRevisions( Bank.class, bank1.getId() ) );
-		assertEquals( Arrays.asList( 1, 3 ), getAuditReader().getRevisions( Bank.class, bank2.getId() ) );
-		assertEquals( Arrays.asList( 1, 2, 3 ), getAuditReader().getRevisions( BankContact.class, contact.getId() ) );
+		assertThat( getAuditReader().getRevisions( Bank.class, bank1.getId() ), contains( 1 ) );
+		assertThat( getAuditReader().getRevisions( Bank.class, bank2.getId() ), contains( 1, 3 ) );
+		assertThat( getAuditReader().getRevisions( BankContact.class, contact.getId() ), contains( 1, 2, 3 ) );
 	}
 
-	@Test
+	@DynamicTest
 	public void testRevisionHistory() {
-		final BankContact rev1 = getAuditReader().find( BankContact.class, contact.getId(), 1 );
-		assertEquals( rev1.getBank(), bank1 );
-
-		final BankContact rev2 = getAuditReader().find( BankContact.class, contact.getId(), 2 );
-		assertEquals( rev2.getBank(), bank2 );
-
-		final BankContact rev3 = getAuditReader().find( BankContact.class, contact.getId(), 3 );
-		assertEquals( rev3.getBank(), bank1 );
+		assertThat( getAuditReader().find( BankContact.class, contact.getId(), 1 ).getBank(), equalTo( bank1 ) );
+		assertThat( getAuditReader().find( BankContact.class, contact.getId(), 2 ).getBank(), equalTo( bank2 ) );
+		assertThat( getAuditReader().find( BankContact.class, contact.getId(), 3 ).getBank(), equalTo( bank1 ) );
 	}
 
 	@Entity(name="Bank")

@@ -4,7 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.entities.manytoone.unidirectional;
+package org.hibernate.envers.test.support.domains.manytoone.unidirectional;
+
+import java.util.Objects;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -13,7 +15,7 @@ import javax.persistence.ManyToOne;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
-import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
+import org.hibernate.envers.test.support.domains.basic.UnversionedStrTestEntity;
 
 /**
  * Audited entity with a reference to not audited entity.
@@ -75,34 +77,29 @@ public class TargetNotAuditedEntity {
 		this.reference = reference;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
 		}
-		if ( !(o instanceof TargetNotAuditedEntity) ) {
+		if ( o == null || getClass() != o.getClass() ) {
 			return false;
 		}
-
 		TargetNotAuditedEntity that = (TargetNotAuditedEntity) o;
-
-		if ( data != null ? !data.equals( that.getData() ) : that.getData() != null ) {
-			return false;
-		}
-		if ( id != null ? !id.equals( that.getId() ) : that.getId() != null ) {
-			return false;
-		}
-
-		return true;
+		return Objects.equals( id, that.id ) &&
+				Objects.equals( data, that.data );
 	}
 
+	@Override
 	public int hashCode() {
-		int result;
-		result = (id != null ? id.hashCode() : 0);
-		result = 31 * result + (data != null ? data.hashCode() : 0);
-		return result;
+		return Objects.hash( id, data );
 	}
 
+	@Override
 	public String toString() {
-		return "TargetNotAuditedEntity(id = " + id + ", data = " + data + ")";
+		return "TargetNotAuditedEntity{" +
+				"id=" + id +
+				", data='" + data + '\'' +
+				'}';
 	}
 }

@@ -339,7 +339,7 @@ public abstract class AbstractCollectionPersister
 		boolean hasNotNullableColumns = false;
 		boolean oneToMany = collectionBinding.isOneToMany();
 		boolean[] columnInsertability = null;
-		if (!oneToMany) {
+		if ( !oneToMany ) {
 			columnInsertability = collectionBinding.getElement().getColumnInsertability();
 		}
 		int j = 0;
@@ -359,7 +359,14 @@ public abstract class AbstractCollectionPersister
 				elementColumnReaders[j] = col.getReadExpr( dialect );
 				elementColumnReaderTemplates[j] = col.getTemplate( dialect, factory.getSqlFunctionRegistry() );
 				elementColumnIsGettable[j] = true;
-				elementColumnIsSettable[j] = oneToMany || columnInsertability[j];
+				if ( elementType.isComponentType() ) {
+					// Implements desired behavior specifically for @ElementCollection mappings.
+					elementColumnIsSettable[j] = oneToMany || columnInsertability[j];
+				}
+				else {
+					// Preserves legacy non-@ElementCollection behavior
+					elementColumnIsSettable[j] = true;
+				}
 				elementColumnIsInPrimaryKey[j] = !col.isNullable();
 				if ( !col.isNullable() ) {
 					hasNotNullableColumns = true;

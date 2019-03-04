@@ -76,8 +76,6 @@ public class OneToManyRowsDeletionExecutor implements CollectionRowsDeletionExec
 		applyNavigable(
 				collectionDescriptor.getCollectionKeyDescriptor(),
 				collectionTableRef,
-				parameterCount,
-				jdbcParameterMap::put,
 				assignments,
 				sessionFactory
 		);
@@ -86,8 +84,6 @@ public class OneToManyRowsDeletionExecutor implements CollectionRowsDeletionExec
 			applyNavigable(
 					collectionDescriptor.getIndexDescriptor(),
 					collectionTableRef,
-					parameterCount,
-					jdbcParameterMap::put,
 					assignments,
 					sessionFactory
 			);
@@ -166,11 +162,10 @@ public class OneToManyRowsDeletionExecutor implements CollectionRowsDeletionExec
 	}
 
 	@Override
-	public void execute(
-			PersistentCollection collection, Object key, SharedSessionContractImplementor session) {
+	public void execute(PersistentCollection collection, Object key, SharedSessionContractImplementor session) {
 		Iterator deletes = collection.getDeletes( collectionDescriptor, !deleteByIndex );
 		if ( log.isDebugEnabled() ) {
-			log.debugf(
+			log.infof(
 					"Deleting rows of collection: %s",
 					MessageHelper.collectionInfoString( collectionDescriptor, collection, key, session )
 			);
@@ -198,11 +193,11 @@ public class OneToManyRowsDeletionExecutor implements CollectionRowsDeletionExec
 
 				passes++;
 				jdbcParameterBindings.clear();
-				log.debugf( "Done deleting collection rows: %s deleted", passes );
+				log.infof( "Done deleting collection rows: %s deleted", passes );
 			}
 		}
 		else {
-			log.debug( "No rows to delete" );
+			log.info( "No rows to delete" );
 		}
 	}
 
@@ -210,8 +205,6 @@ public class OneToManyRowsDeletionExecutor implements CollectionRowsDeletionExec
 	protected void applyNavigable(
 			Navigable navigable,
 			TableReference dmlTableRef,
-			AtomicInteger parameterCount,
-			BiConsumer<Column, JdbcParameter> columnConsumer,
 			List<Assignment> assignments,
 			SessionFactoryImplementor sessionFactory) {
 		//noinspection RedundantCast
@@ -220,8 +213,8 @@ public class OneToManyRowsDeletionExecutor implements CollectionRowsDeletionExec
 
 					final ColumnReference columnReference = dmlTableRef.resolveColumnReference( column );
 
-					final PositionalParameter parameter = new PositionalParameter(
-							parameterCount.getAndIncrement(),
+					final LiteralParameter parameter = new LiteralParameter(
+							null,
 							column.getExpressableType(),
 							Clause.INSERT,
 							sessionFactory.getTypeConfiguration()
@@ -229,8 +222,6 @@ public class OneToManyRowsDeletionExecutor implements CollectionRowsDeletionExec
 
 					final Assignment assignment = new Assignment( columnReference, parameter );
 					assignments.add( assignment );
-
-					columnConsumer.accept( column, parameter );
 				},
 				Clause.UPDATE,
 				sessionFactory.getTypeConfiguration()

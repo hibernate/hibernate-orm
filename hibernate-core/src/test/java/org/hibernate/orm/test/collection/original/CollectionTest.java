@@ -27,7 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Gavin King
  */
-@Disabled("Inheritance support not yet implemented")
 @RequiresDialectFeature(DialectChecks.SupportsNoColumnInsert.class)
 public class CollectionTest extends SessionFactoryBasedFunctionalTest {
 	@Override
@@ -253,6 +252,7 @@ public class CollectionTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
+	@Disabled("Inheritance support not yet implemented")
 	@TestForIssue(jiraKey = "HHH-3636")
 	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testCollectionInheritance() {

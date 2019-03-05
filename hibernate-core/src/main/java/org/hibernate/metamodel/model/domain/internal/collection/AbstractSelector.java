@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.model.domain.internal.collection;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -18,17 +17,16 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.LockOptions;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
-import org.hibernate.metamodel.model.domain.spi.CollectionElementEntity;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.sql.SqlExpressableType;
@@ -82,6 +80,7 @@ public abstract class AbstractSelector {
 
 	public AbstractSelector(
 			PersistentCollectionDescriptor collectionDescriptor,
+			Table table,
 			String sqlWhereString,
 			SessionFactoryImplementor sessionFactory) {
 		this.collectionDescriptor = collectionDescriptor;
@@ -89,6 +88,7 @@ public abstract class AbstractSelector {
 		this.jdbcParameterBinders = new ArrayList<>();
 
 		this.jdbcSelect = generateSelect(
+				table,
 				sqlWhereString,
 				jdbcParameterBinders::add,
 				jdbcParameterMap::put,
@@ -211,6 +211,7 @@ public abstract class AbstractSelector {
 	}
 
 	private JdbcSelect generateSelect(
+			Table table,
 			String sqlWhereString,
 			Consumer<JdbcParameterBinder> jdbcParameterCollector,
 			BiConsumer<Column, JdbcParameter> columnCollector,
@@ -218,14 +219,12 @@ public abstract class AbstractSelector {
 		final QuerySpec rootQuerySpec = new QuerySpec( true );
 		final SelectStatement selectStatement = new SelectStatement( rootQuerySpec );
 		final SelectClause selectClause = selectStatement.getQuerySpec().getSelectClause();
-		final Set<String> affectedTableNames = new HashSet<>();
 
 		final TableSpace rootTableSpace = rootQuerySpec.getFromClause().makeTableSpace();
 
 		final TableGroup rootTableGroup = resolveTableGroup(
 				rootQuerySpec,
-				rootTableSpace,
-				affectedTableNames::addAll
+				rootTableSpace
 		);
 		rootTableSpace.setRootTableGroup( rootTableGroup );
 
@@ -250,7 +249,8 @@ public abstract class AbstractSelector {
 		rootQuerySpec.addRestriction( predicate );
 		applyWhereFragment( sqlWhereString, rootQuerySpec );
 
-
+		final Set<String> affectedTableNames = new HashSet<>();
+		affectedTableNames.add( table.getTableExpression() );
 		return SqlAstSelectToJdbcSelectConverter.interpret(
 				new SqlAstSelectDescriptorImpl(
 						selectStatement,
@@ -263,22 +263,9 @@ public abstract class AbstractSelector {
 
 	private TableGroup resolveTableGroup(
 			QuerySpec querySpec,
-			TableSpace tableSpace,
-			Consumer<Collection<String>> tableNameCollector) {
-
+			TableSpace tableSpace) {
 		final SqlAliasBaseGenerator aliasBaseGenerator = new SqlAliasBaseManager();
-
-		if ( !( getCollectionDescriptor().getElementDescriptor() instanceof CollectionElementEntity ) ) {
-			throw new NotYetImplementedFor6Exception( getClass() );
-		}
-
-		final CollectionElementEntity<?> elementDescriptor = (CollectionElementEntity) getCollectionDescriptor().getElementDescriptor();
-		final EntityTypeDescriptor<?> entityDescriptor = elementDescriptor.getEntityDescriptor();
-		final NavigablePath navigablePath = new NavigablePath( entityDescriptor.getEntityName() );
-
-		tableNameCollector.accept( entityDescriptor.getAffectedTableNames() );
-
-		final TableGroup tableGroup = entityDescriptor.createRootTableGroup(
+		final TableGroup tableGroup = collectionDescriptor.createRootTableGroup(
 				new TableGroupInfo() {
 					@Override
 					public String getUniqueIdentifier() {
@@ -287,17 +274,17 @@ public abstract class AbstractSelector {
 
 					@Override
 					public String getIdentificationVariable() {
-						return null;
+						return "r";
 					}
 
 					@Override
 					public EntityTypeDescriptor getIntrinsicSubclassEntityMetadata() {
-						return entityDescriptor;
+						return null;
 					}
 
 					@Override
 					public NavigablePath getNavigablePath() {
-						return navigablePath;
+						return null;
 					}
 				},
 				new RootTableGroupContext() {

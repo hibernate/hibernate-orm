@@ -15,6 +15,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.spi.expression.CountFunction;
@@ -42,9 +43,10 @@ public class CollectionSizeSelector extends AbstractSelector {
 
 	public CollectionSizeSelector(
 			PersistentCollectionDescriptor collectionDescriptor,
+			Table table,
 			String sqlWhereString,
 			SessionFactoryImplementor sessionFactory) {
-		super( collectionDescriptor, sqlWhereString, sessionFactory );
+		super( collectionDescriptor, table, sqlWhereString, sessionFactory );
 	}
 
 	@SuppressWarnings("unchecked")

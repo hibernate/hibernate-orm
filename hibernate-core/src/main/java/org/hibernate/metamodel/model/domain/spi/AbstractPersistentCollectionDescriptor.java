@@ -67,9 +67,10 @@ import org.hibernate.metamodel.model.domain.internal.collection.BasicCollectionR
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionCreationExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionElementEmbeddedImpl;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionElementEntityImpl;
-import org.hibernate.metamodel.model.domain.internal.collection.CollectionElementOrIndexExistsSelector;
+import org.hibernate.metamodel.model.domain.internal.collection.CollectionElementExistsSelector;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionIndexEmbeddedImpl;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionIndexEntityImpl;
+import org.hibernate.metamodel.model.domain.internal.collection.CollectionIndexExistsSelector;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionRemovalExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionRowsDeletionExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionRowsIndexUpdateExecutor;
@@ -166,7 +167,8 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 	private CollectionCreationExecutor collectionRowsInsertExecutor;
 	private CollectionRowsIndexUpdateExecutor collectionRowsIndexUpdateExecutor;
 	private CollectionSizeSelector collectionSizeSelector;
-	private CollectionElementOrIndexExistsSelector collectionElementOrIndexExistsSelector;
+	private CollectionElementExistsSelector collectionElementExistsSelector;
+	private CollectionIndexExistsSelector collectionIndexExistsSelector;
 
 	private final String mappedBy;
 	private final String sqlWhereString;
@@ -967,6 +969,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 		if ( collectionSizeSelector == null ) {
 			collectionSizeSelector = new CollectionSizeSelector(
 					this,
+					dmlTargetTable,
 					sqlWhereString,
 					sessionFactory
 			);
@@ -981,14 +984,15 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 			Object loadedKey,
 			Object index,
 			SharedSessionContractImplementor session) {
-		if ( collectionElementOrIndexExistsSelector == null ) {
-			collectionElementOrIndexExistsSelector = new CollectionElementOrIndexExistsSelector(
+		if ( collectionIndexExistsSelector == null ) {
+			collectionIndexExistsSelector = new CollectionIndexExistsSelector(
 					this,
+					dmlTargetTable,
 					sqlWhereString,
 					sessionFactory
 			);
 		}
-		return collectionElementOrIndexExistsSelector.indexExists(
+		return collectionIndexExistsSelector.indexExists(
 				loadedKey,
 				incrementIndexByBase( index ),
 				session
@@ -1009,14 +1013,15 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 			Object element,
 			PersistentCollection collection,
 			SharedSessionContractImplementor session) {
-		if ( collectionElementOrIndexExistsSelector == null ) {
-			collectionElementOrIndexExistsSelector = new CollectionElementOrIndexExistsSelector(
+		if ( collectionElementExistsSelector == null ) {
+			collectionElementExistsSelector = new CollectionElementExistsSelector(
 					this,
+					dmlTargetTable,
 					sqlWhereString,
 					sessionFactory
 			);
 		}
-		return collectionElementOrIndexExistsSelector.elementExists( loadedKey, element, collection, session );
+		return collectionElementExistsSelector.elementExists( loadedKey, element, collection, session );
 	}
 
 	@Override

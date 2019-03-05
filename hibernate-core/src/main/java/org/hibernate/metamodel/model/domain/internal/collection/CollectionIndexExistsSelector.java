@@ -10,11 +10,11 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
@@ -35,27 +35,14 @@ import org.hibernate.type.descriptor.sql.spi.IntegerSqlDescriptor;
 /**
  * @author Andrea Boriero
  */
-public class CollectionElementOrIndexExistsSelector extends AbstractSelector {
+public class CollectionIndexExistsSelector extends AbstractSelector {
 
-	public CollectionElementOrIndexExistsSelector(
+	public CollectionIndexExistsSelector(
 			PersistentCollectionDescriptor collectionDescriptor,
+			Table table,
 			String sqlWhereString,
 			SessionFactoryImplementor sessionFactory) {
-		super( collectionDescriptor, sqlWhereString, sessionFactory );
-	}
-
-	public Boolean elementExists(
-			Object loadedKey,
-			Object element,
-			PersistentCollection collection,
-			SharedSessionContractImplementor session) {
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl();
-
-		bindCollectionKey( loadedKey, jdbcParameterBindings, session );
-		bindCollectionElement( element, collection, jdbcParameterBindings, session );
-
-		final List results = execute( jdbcParameterBindings, session );
-		return !results.isEmpty();
+		super( collectionDescriptor, table, sqlWhereString, sessionFactory );
 	}
 
 	public Boolean indexExists(
@@ -111,11 +98,13 @@ public class CollectionElementOrIndexExistsSelector extends AbstractSelector {
 
 		applyPredicates(
 				junction,
-				getCollectionDescriptor().getElementDescriptor(),
+				getCollectionDescriptor().getIdDescriptor(),
 				tableGroup,
 				jdbcParameterBinder,
 				columnCollector,
 				sessionFactory
 		);
 	}
+
+
 }

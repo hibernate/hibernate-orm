@@ -46,7 +46,7 @@ import org.hibernate.type.StandardBasicTypes;
 public class MySQLDialect extends Dialect {
 
 	private final UniqueDelegate uniqueDelegate;
-	private MySQLStorageEngine storageEngine;
+	private final MySQLStorageEngine storageEngine;
 
 	private static final LimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
 		@Override
@@ -68,10 +68,7 @@ public class MySQLDialect extends Dialect {
 		super();
 
 		String storageEngine = Environment.getProperties().getProperty( Environment.STORAGE_ENGINE );
-		if(storageEngine == null) {
-			storageEngine = System.getProperty( Environment.STORAGE_ENGINE );
-		}
-		if(storageEngine == null) {
+		if ( storageEngine == null ) {
 			this.storageEngine = getDefaultMySQLStorageEngine();
 		}
 		else if( "innodb".equals( storageEngine.toLowerCase() ) ) {
@@ -81,7 +78,7 @@ public class MySQLDialect extends Dialect {
 			this.storageEngine = MyISAMStorageEngine.INSTANCE;
 		}
 		else {
-			throw new UnsupportedOperationException( "The " + storageEngine + " storage engine is not supported!" );
+			throw new UnsupportedOperationException( "The storage engine '" + storageEngine + "' is not supported!" );
 		}
 
 		registerColumnType( Types.BIT, "bit" );

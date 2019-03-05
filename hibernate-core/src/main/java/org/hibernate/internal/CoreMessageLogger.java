@@ -1864,6 +1864,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	void ignoreImmutablePropertyModification(String propertyName, String entityName);
 
 	@LogMessage(level = WARN)
-	@Message(value = "An entity cannot be annotated with both @Inheritance and @MappedSuperclass: %s.", id = 503)
+	@Message(value = "A class should not be annotated with both @Inheritance and @MappedSuperclass. @Inheritance will be ignored for: %s.", id = 503)
 	void unsupportedMappedSuperclassWithEntityInheritance(String entityName);
 }

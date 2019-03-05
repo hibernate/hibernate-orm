@@ -1581,12 +1581,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			return uniqueElement( list );
 		}
 		catch ( HibernateException e ) {
-			if ( getProducer().getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
-				throw getExceptionConverter().convert( e );
-			}
-			else {
-				throw e;
-			}
+			throw getExceptionConverter().convert( e );
 		}
 	}
 

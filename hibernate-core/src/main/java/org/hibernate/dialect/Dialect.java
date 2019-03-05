@@ -249,10 +249,12 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Get an instance of the dialect specified by the current <tt>System</tt> properties.
+	 * @deprecated this static method will be removed.
 	 *
 	 * @return The specified Dialect
 	 * @throws HibernateException If no dialect was specified, or if it could not be instantiated.
 	 */
+	@Deprecated
 	public static Dialect getDialect() throws HibernateException {
 		return instantiateDialect( Environment.getProperties().getProperty( Environment.DIALECT ) );
 	}
@@ -260,11 +262,13 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Get an instance of the dialect specified by the given properties or by
 	 * the current <tt>System</tt> properties.
+	 * @deprecated this static method will be removed.
 	 *
 	 * @param props The properties to use for finding the dialect class to use.
 	 * @return The specified Dialect
 	 * @throws HibernateException If no dialect was specified, or if it could not be instantiated.
 	 */
+	@Deprecated
 	public static Dialect getDialect(Properties props) throws HibernateException {
 		final String dialectName = props.getProperty( Environment.DIALECT );
 		if ( dialectName == null ) {
@@ -273,6 +277,10 @@ public abstract class Dialect implements ConversionContext {
 		return instantiateDialect( dialectName );
 	}
 
+	/**
+	 * @deprecated such static helpers will be removed
+	 */
+	@Deprecated
 	private static Dialect instantiateDialect(String dialectName) throws HibernateException {
 		if ( dialectName == null ) {
 			throw new HibernateException( "The dialect was not set. Set the property hibernate.dialect." );

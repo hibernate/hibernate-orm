@@ -1146,7 +1146,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 			return CollectionRowsDeletionExecutor.NO_OP;
 		}
 		else if ( isOneToMany() ) {
-			return new OneToManyRowsDeletionExecutor( this, sessionFactory, dmlTargetTable, hasIndex() && !indexContainsFormula() );
+			return new OneToManyRowsDeletionExecutor( this, sessionFactory, dmlTargetTable, hasIndex(), indexContainsFormula() );
 		}
 		else {
 			return new JoinTableRowsDeleletionExecutor( this, sessionFactory, hasIndex() && !indexContainsFormula() );
@@ -1206,6 +1206,8 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 					dmlTargetTable,
 					isRowDeleteEnabled,
 					isRowInsertEnabled,
+					hasIndex(),
+					indexContainsFormula(),
 					sessionFactory
 			);
 		}

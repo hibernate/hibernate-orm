@@ -40,7 +40,6 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.BasicExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcParameter;
-import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcUpdate;
 
 /**
@@ -60,9 +59,30 @@ public class OneToManyRowsUpdateExecutor implements CollectionRowsUpdateExecutor
 			Table dmlTargetTable,
 			boolean rowDeleteEnabled,
 			boolean rowInsertEnabled,
+			boolean hasIndex,
+			boolean indexContainsFormula,
 			SessionFactoryImplementor sessionFactory) {
-		executors.add( new RowsUpdateDeleteExecutor( collectionDescriptor, dmlTargetTable, rowDeleteEnabled, sessionFactory ) );
-		executors.add( new RowsUpdateInsertExecutor( collectionDescriptor, dmlTargetTable, rowInsertEnabled, sessionFactory ) );
+		executors.add(
+				new RowsUpdateDeleteExecutor(
+						collectionDescriptor,
+						dmlTargetTable,
+						rowDeleteEnabled,
+						hasIndex,
+						indexContainsFormula,
+						sessionFactory
+				)
+		);
+
+		executors.add(
+				new RowsUpdateInsertExecutor(
+						collectionDescriptor,
+						dmlTargetTable,
+						rowInsertEnabled,
+						hasIndex,
+						indexContainsFormula,
+						sessionFactory
+				)
+		);
 	}
 
 	@Override
@@ -78,6 +98,8 @@ public class OneToManyRowsUpdateExecutor implements CollectionRowsUpdateExecutor
 	 */
 	private abstract class AbstractOneToManyRowsUpdateExecutor implements CollectionRowsUpdateExecutor {
 		private final PersistentCollectionDescriptor collectionDescriptor;
+		private final boolean hasIndex;
+		private final boolean indexContainsFormula;
 		private final SessionFactoryImplementor sessionFactory;
 		private final Map<Column, JdbcParameter> jdbcParameterMap;
 		private final JdbcUpdate jdbcUpdate;
@@ -85,8 +107,12 @@ public class OneToManyRowsUpdateExecutor implements CollectionRowsUpdateExecutor
 		AbstractOneToManyRowsUpdateExecutor(
 				PersistentCollectionDescriptor collectionDescriptor,
 				Table dmlTargetTable,
+				boolean hasIndex,
+				boolean indexContainsFormula,
 				SessionFactoryImplementor sessionFactory) {
 			this.collectionDescriptor = collectionDescriptor;
+			this.hasIndex = hasIndex;
+			this.indexContainsFormula = indexContainsFormula;
 			this.sessionFactory = sessionFactory;
 			this.jdbcParameterMap = new HashMap<>();
 
@@ -101,13 +127,14 @@ public class OneToManyRowsUpdateExecutor implements CollectionRowsUpdateExecutor
 				final BasicExecutionContext executionContext = new BasicExecutionContext( session, jdbcParameterBindings );
 
 				int i = 0;
+				int count = 0;
 				Iterator<?> entries = collection.entries( getCollectionDescriptor() );
 				while ( entries.hasNext() ) {
 					Object entry = entries.next();
-					if ( collection.needsUpdating(  entry, i ) ) {
+					if ( collection.needsUpdating( entry, i ) ) {
 						bindCollectionKey( key, jdbcParameterBindings, session, Clause.UPDATE );
-						bindCollectionIndex( entry, collection, jdbcParameterBindings, session, Clause.UPDATE );
-						bindCollectionElement( entry, collection, jdbcParameterBindings, session, Clause.UPDATE );
+						bindCollectionIndex( entry, i, collection, jdbcParameterBindings, session, Clause.UPDATE );
+						bindCollectionElement( entry, i, collection, jdbcParameterBindings, session, Clause.UPDATE );
 
 						JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute( jdbcUpdate, executionContext );
 						jdbcParameterBindings.clear();
@@ -119,6 +146,14 @@ public class OneToManyRowsUpdateExecutor implements CollectionRowsUpdateExecutor
 
 		protected PersistentCollectionDescriptor getCollectionDescriptor() {
 			return collectionDescriptor;
+		}
+
+		protected boolean hasIndex() {
+			return hasIndex;
+		}
+
+		protected boolean indexContainsFormula() {
+			return indexContainsFormula;
 		}
 
 		/**
@@ -155,23 +190,41 @@ public class OneToManyRowsUpdateExecutor implements CollectionRowsUpdateExecutor
 		@SuppressWarnings("WeakerAccess")
 		protected void bindCollectionIndex(
 				Object entry,
+				int assumedIndex,
 				PersistentCollection collection,
 				JdbcParameterBindingsImpl jdbcParameterBindings,
 				SharedSessionContractImplementor session,
 				Clause clause) {
 			if ( collectionDescriptor.getIndexDescriptor() != null ) {
-				throw new NotYetImplementedFor6Exception();
+				Object index = collection.getIndex( entry, assumedIndex, collectionDescriptor );
+				if ( collectionDescriptor.getIndexDescriptor().getBaseIndex() != 0 ) {
+					index = (Integer) index + collectionDescriptor.getIndexDescriptor().getBaseIndex();
+				}
+				collectionDescriptor.getIndexDescriptor().dehydrate(
+						collectionDescriptor.getIndexDescriptor().unresolve( index, session ),
+						(jdbcValue, type, boundColumn) -> createBinding(
+								jdbcValue,
+								boundColumn,
+								type,
+								jdbcParameterBindings,
+								session,
+								clause
+						),
+						clause,
+						session
+				);
 			}
 		}
 
-		@SuppressWarnings({"WeakerAccess","unchecked"})
+		@SuppressWarnings({"unchecked"})
 		protected void bindCollectionElement(
 				Object entry,
+				int assumedIndex,
 				PersistentCollection collection,
 				JdbcParameterBindingsImpl jdbcParameterBindings,
 				SharedSessionContractImplementor session,
 				Clause clause) {
-			final Object element = collection.getElement( entry, getCollectionDescriptor() );
+			final Object element = collection.getElement( entry, collectionDescriptor );
 			getCollectionDescriptor().getElementDescriptor().dehydrate(
 					getCollectionDescriptor().getElementDescriptor().unresolve( element, session ),
 					(jdbcValue, type, boundColumn) -> createBinding(
@@ -227,8 +280,10 @@ public class OneToManyRowsUpdateExecutor implements CollectionRowsUpdateExecutor
 				PersistentCollectionDescriptor persistentCollectionDescriptor,
 				Table dmlTargetTable,
 				boolean rowDeleteEnabled,
+				boolean hasIndex,
+				boolean indexContainsFormula,
 				SessionFactoryImplementor sessionFactory) {
-			super( persistentCollectionDescriptor, dmlTargetTable, sessionFactory );
+			super( persistentCollectionDescriptor, dmlTargetTable, hasIndex, indexContainsFormula, sessionFactory );
 			this.isRowDeleteEnabled = rowDeleteEnabled;
 		}
 
@@ -245,30 +300,73 @@ public class OneToManyRowsUpdateExecutor implements CollectionRowsUpdateExecutor
 			final AtomicInteger parameterCount = new AtomicInteger();
 			final List<Assignment> assignments = new ArrayList<>();
 
+			final CollectionKey<?> collectionKey = getCollectionDescriptor().getCollectionKeyDescriptor();
+			collectionKey.visitColumns(
+					(sqlExpressableType, column) -> {
+						final ColumnReference columnReference = dmlTableRef.resolveColumnReference( column );
+
+						final LiteralParameter parameter = new LiteralParameter(
+								null,
+								column.getExpressableType(),
+								Clause.UPDATE,
+								sessionFactory.getTypeConfiguration()
+						);
+
+						assignments.add( new Assignment( columnReference, parameter ) );
+					},
+					Clause.UPDATE,
+					sessionFactory.getTypeConfiguration()
+			);
+
 			if ( getCollectionDescriptor().getIndexDescriptor() != null ) {
-				final CollectionIndex<?> collectionIndex = getCollectionDescriptor().getIndexDescriptor();
-				collectionIndex.visitColumns(
-						(sqlExpressableType, column) -> {
-							final ColumnReference columnReference = dmlTableRef.resolveColumnReference( column );
+				if ( hasIndex() && !indexContainsFormula() ) {
+					final CollectionIndex<?> collectionIndex = getCollectionDescriptor().getIndexDescriptor();
+					collectionIndex.visitColumns(
+							(sqlExpressableType, column) -> {
+								final ColumnReference columnReference = dmlTableRef.resolveColumnReference( column );
 
-							final LiteralParameter parameter = new LiteralParameter(
-									null,
-									column.getExpressableType(),
-									Clause.UPDATE,
-									sessionFactory.getTypeConfiguration()
-							);
+								final LiteralParameter parameter = new LiteralParameter(
+										null,
+										column.getExpressableType(),
+										Clause.UPDATE,
+										sessionFactory.getTypeConfiguration()
+								);
 
-							assignments.add( new Assignment( columnReference, parameter ) );
-						},
-						Clause.UPDATE,
-						sessionFactory.getTypeConfiguration()
-				);
+								assignments.add( new Assignment( columnReference, parameter ) );
+							},
+							Clause.UPDATE,
+							sessionFactory.getTypeConfiguration()
+					);
+				}
 			}
 
 			Junction junction = new Junction( Junction.Nature.CONJUNCTION );
 
-			final CollectionKey<?> collectionKey = getCollectionDescriptor().getCollectionKeyDescriptor();
 			collectionKey.visitColumns(
+					(sqlExpressableType, column) -> {
+						final PositionalParameter parameter = new PositionalParameter(
+								parameterCount.getAndIncrement(),
+								column.getExpressableType(),
+								Clause.UPDATE,
+								sessionFactory.getTypeConfiguration()
+						);
+
+						columnCollector.accept( column, parameter );
+
+						junction.add(
+								new ComparisonPredicate(
+										new ColumnReference( column ),
+										ComparisonOperator.EQUAL,
+										parameter
+								)
+						);
+					},
+					Clause.UPDATE,
+					sessionFactory.getTypeConfiguration()
+			);
+
+			final CollectionElement<?> collectionElement = getCollectionDescriptor().getElementDescriptor();
+			collectionElement.visitColumns(
 					(sqlExpressableType, column) -> {
 						final PositionalParameter parameter = new PositionalParameter(
 								parameterCount.getAndIncrement(),
@@ -300,11 +398,36 @@ public class OneToManyRowsUpdateExecutor implements CollectionRowsUpdateExecutor
 		@Override
 		protected void bindCollectionIndex(
 				Object entry,
+				int assumedIndex,
 				PersistentCollection collection,
 				JdbcParameterBindingsImpl jdbcParameterBindings,
 				SharedSessionContractImplementor session,
 				Clause clause) {
 			// never writes the index for this scenario.
+		}
+
+		@Override
+		protected void bindCollectionElement(
+				Object entry,
+				int assumedIndex,
+				PersistentCollection collection,
+				JdbcParameterBindingsImpl jdbcParameterBindings,
+				SharedSessionContractImplementor session,
+				Clause clause) {
+			final Object element = collection.getSnapshotElement( entry, assumedIndex );
+			getCollectionDescriptor().getElementDescriptor().dehydrate(
+					getCollectionDescriptor().getElementDescriptor().unresolve( element, session ),
+					(jdbcValue, type, boundColumn) -> createBinding(
+							jdbcValue,
+							boundColumn,
+							type,
+							jdbcParameterBindings,
+							session,
+							clause
+					),
+					clause,
+					session
+			);
 		}
 	}
 
@@ -318,8 +441,10 @@ public class OneToManyRowsUpdateExecutor implements CollectionRowsUpdateExecutor
 				PersistentCollectionDescriptor persistentCollectionDescriptor,
 				Table dmlTargetTable,
 				boolean rowInsertEnabled,
+				boolean hasIndex,
+				boolean indexContainsFormula,
 				SessionFactoryImplementor sessionFactory) {
-			super( persistentCollectionDescriptor, dmlTargetTable, sessionFactory );
+			super( persistentCollectionDescriptor, dmlTargetTable, hasIndex, indexContainsFormula, sessionFactory );
 			this.isRowInsertEnabled = rowInsertEnabled;
 		}
 
@@ -337,36 +462,59 @@ public class OneToManyRowsUpdateExecutor implements CollectionRowsUpdateExecutor
 			final AtomicInteger parameterCount = new AtomicInteger();
 			final List<Assignment> assignments = new ArrayList<>();
 
+			final CollectionKey<?> collectionKey = getCollectionDescriptor().getCollectionKeyDescriptor();
+			collectionKey.visitColumns(
+					(sqlExpressableType, column) -> {
+						final ColumnReference columnReference = dmlTableRef.resolveColumnReference( column );
+
+						final PositionalParameter parameter = new PositionalParameter(
+								parameterCount.getAndIncrement(),
+								column.getExpressableType(),
+								Clause.UPDATE,
+								sessionFactory.getTypeConfiguration()
+						);
+
+						columnCollector.accept( column, parameter );
+
+						assignments.add( new Assignment( columnReference, parameter ) );
+					},
+					Clause.UPDATE,
+					sessionFactory.getTypeConfiguration()
+			);
+
 			if ( getCollectionDescriptor().getIdDescriptor() != null ) {
 				throw new NotYetImplementedFor6Exception(  );
 			}
 
+
 			if ( getCollectionDescriptor().getIndexDescriptor() != null ) {
-				final CollectionIndex<?> collectionIndex = getCollectionDescriptor().getIndexDescriptor();
-				collectionIndex.visitColumns(
-						(sqlExpressableType, column) -> {
-							final ColumnReference columnReference = dmlTableRef.resolveColumnReference( column );
+				if ( hasIndex() && !indexContainsFormula() ) {
+					final CollectionIndex<?> collectionIndex = getCollectionDescriptor().getIndexDescriptor();
+					collectionIndex.visitColumns(
+							(sqlExpressableType, column) -> {
+								final ColumnReference columnReference = dmlTableRef.resolveColumnReference( column );
 
-							final PositionalParameter parameter = new PositionalParameter(
-									parameterCount.getAndIncrement(),
-									column.getExpressableType(),
-									Clause.UPDATE,
-									sessionFactory.getTypeConfiguration()
-							);
+								final PositionalParameter parameter = new PositionalParameter(
+										parameterCount.getAndIncrement(),
+										column.getExpressableType(),
+										Clause.UPDATE,
+										sessionFactory.getTypeConfiguration()
+								);
 
-							columnCollector.accept( column, parameter );
+								columnCollector.accept( column, parameter );
 
-							assignments.add( new Assignment( columnReference, parameter ) );
-						},
-						Clause.UPDATE,
-						sessionFactory.getTypeConfiguration()
-				);
+								assignments.add( new Assignment( columnReference, parameter ) );
+							},
+							Clause.UPDATE,
+							sessionFactory.getTypeConfiguration()
+					);
+				}
 			}
 
 			Junction junction = new Junction( Junction.Nature.CONJUNCTION );
 
-			final CollectionElement<?> colllectionElement = getCollectionDescriptor().getElementDescriptor();
-			colllectionElement.visitColumns(
+			final CollectionElement<?> collectionElement = getCollectionDescriptor().getElementDescriptor();
+			collectionElement.visitColumns(
 					(sqlExpressableType, column) -> {
 						final ColumnReference columnReference = dmlTableRef.resolveColumnReference( column );
 

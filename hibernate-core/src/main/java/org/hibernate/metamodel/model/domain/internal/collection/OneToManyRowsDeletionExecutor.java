@@ -34,12 +34,11 @@ import org.hibernate.sql.ast.tree.spi.expression.PositionalParameter;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
-import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.BasicExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcMutation;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcParameter;
-import org.hibernate.sql.exec.spi.JdbcUpdate;
 
 import org.jboss.logging.Logger;
 
@@ -51,121 +50,36 @@ public class OneToManyRowsDeletionExecutor implements CollectionRowsDeletionExec
 
 
 	private final PersistentCollectionDescriptor collectionDescriptor;
-	private boolean deleteByIndex;
-	private Map<Column, JdbcParameter> jdbcParameterMap;
-	private final JdbcUpdate removalOperation;
+	private final boolean hasIndex;
+	private final boolean indexContainsFormula;
+	private final boolean deleteByIndex;
+	private final Map<Column, JdbcParameter> jdbcParameterMap;
+	private final JdbcMutation jdbcMutation;
 
 	public OneToManyRowsDeletionExecutor(
 			PersistentCollectionDescriptor collectionDescriptor,
 			SessionFactoryImplementor sessionFactory,
 			Table dmlTargetTable,
-			boolean deleteByIndex) {
+			boolean hasIndex,
+			boolean indexContainsFormula) {
 		this.collectionDescriptor = collectionDescriptor;
-		this.deleteByIndex = deleteByIndex;
-		final TableReference collectionTableRef = new TableReference(
-				dmlTargetTable,
-				null,
-				false
-		);
-		final Map<Column, JdbcParameter> jdbcParameterMap = new HashMap<>();
+		this.hasIndex = hasIndex;
+		this.indexContainsFormula = indexContainsFormula;
+		this.deleteByIndex = false;
+		this.jdbcParameterMap = new HashMap<>();
 
-		final List<Assignment> assignments = new ArrayList<>();
-		final AtomicInteger parameterCount = new AtomicInteger();
-
-
-		applyNavigable(
-				collectionDescriptor.getCollectionKeyDescriptor(),
-				collectionTableRef,
-				assignments,
-				sessionFactory
-		);
-
-		if ( deleteByIndex ) {
-			applyNavigable(
-					collectionDescriptor.getIndexDescriptor(),
-					collectionTableRef,
-					assignments,
-					sessionFactory
-			);
-		}
-
-		final Predicate predicate = resolvePredicate(
-				collectionTableRef,
-				parameterCount,
+		this.jdbcMutation = generateMutation(
+				new TableReference( dmlTargetTable, null, false ),
 				jdbcParameterMap::put,
 				sessionFactory
 		);
-
-
-		final UpdateStatement updateStatement = new UpdateStatement( collectionTableRef, assignments, predicate );
-
-		removalOperation = UpdateToJdbcUpdateConverter.createJdbcUpdate(
-				updateStatement,
-				sessionFactory
-		);
-
-		this.jdbcParameterMap = jdbcParameterMap;
-
-	}
-
-	private Predicate resolvePredicate(
-			TableReference dmltableRef,
-			AtomicInteger parameterCount,
-			BiConsumer<Column, JdbcParameter> columnConsumer,
-			SessionFactoryImplementor sessionFactory) {
-		Junction junction = new Junction( Junction.Nature.CONJUNCTION );
-		collectionDescriptor.getCollectionKeyDescriptor().visitColumns(
-				(BiConsumer<SqlExpressableType, Column>) (sqlExpressableType, column) -> {
-					final PositionalParameter parameter = new PositionalParameter(
-							parameterCount.getAndIncrement(),
-							column.getExpressableType(),
-							Clause.UPDATE,
-							sessionFactory.getTypeConfiguration()
-					);
-
-					columnConsumer.accept( column, parameter );
-
-					junction.add(
-							new ComparisonPredicate(
-									new ColumnReference( column ),
-									ComparisonOperator.EQUAL,
-									parameter
-							)
-					);
-				},
-				Clause.WHERE,
-				sessionFactory.getTypeConfiguration()
-		);
-		collectionDescriptor.getElementDescriptor().visitColumns(
-				(BiConsumer<SqlExpressableType, Column>) (sqlExpressableType, column) -> {
-					final PositionalParameter parameter = new PositionalParameter(
-							parameterCount.getAndIncrement(),
-							column.getExpressableType(),
-							Clause.UPDATE,
-							sessionFactory.getTypeConfiguration()
-					);
-
-					columnConsumer.accept( column, parameter );
-
-					junction.add(
-							new ComparisonPredicate(
-									new ColumnReference( column ),
-									ComparisonOperator.EQUAL,
-									parameter
-							)
-					);
-				},
-				Clause.WHERE,
-				sessionFactory.getTypeConfiguration()
-		);
-		return junction;
 	}
 
 	@Override
 	public void execute(PersistentCollection collection, Object key, SharedSessionContractImplementor session) {
 		Iterator deletes = collection.getDeletes( collectionDescriptor, !deleteByIndex );
 		if ( log.isDebugEnabled() ) {
-			log.infof(
+			log.debugf(
 					"Deleting rows of collection: %s",
 					MessageHelper.collectionInfoString( collectionDescriptor, collection, key, session )
 			);
@@ -189,20 +103,99 @@ public class OneToManyRowsDeletionExecutor implements CollectionRowsDeletionExec
 						bindCollectionElement( entry, collection, jdbcParameterBindings, session );
 					}
 				}
-				JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute( removalOperation, executionContext );
+				JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute( jdbcMutation, executionContext );
 
 				passes++;
 				jdbcParameterBindings.clear();
-				log.infof( "Done deleting collection rows: %s deleted", passes );
+				log.debugf( "Done deleting collection rows: %s deleted", passes );
 			}
 		}
 		else {
-			log.info( "No rows to delete" );
+			log.debug( "No rows to delete" );
 		}
 	}
 
+	private JdbcMutation generateMutation(
+			TableReference tableReference,
+			BiConsumer<Column, JdbcParameter> columnCollector,
+			SessionFactoryImplementor sessionFactory) {
+		final AtomicInteger parameterCount = new AtomicInteger();
+		final List<Assignment> assignments = new ArrayList<>();
+
+		applyNavigableLiteralNullAssignment(
+				collectionDescriptor.getCollectionKeyDescriptor(),
+				tableReference,
+				assignments,
+				sessionFactory
+		);
+
+		if ( hasIndex && !indexContainsFormula ) {
+			applyNavigableLiteralNullAssignment(
+					collectionDescriptor.getIndexDescriptor(),
+					tableReference,
+					assignments,
+					sessionFactory
+			);
+		}
+
+		Junction junction = new Junction( Junction.Nature.CONJUNCTION );
+
+		//noinspection RedundantCast
+		collectionDescriptor.getCollectionKeyDescriptor().visitColumns(
+				(BiConsumer<SqlExpressableType, Column>) (sqlExpressableType, column) -> {
+					final PositionalParameter parameter = new PositionalParameter(
+							parameterCount.getAndIncrement(),
+							column.getExpressableType(),
+							Clause.UPDATE,
+							sessionFactory.getTypeConfiguration()
+					);
+
+					columnCollector.accept( column, parameter );
+
+					junction.add(
+							new ComparisonPredicate(
+									new ColumnReference( column ),
+									ComparisonOperator.EQUAL,
+									parameter
+							)
+					);
+				},
+				Clause.WHERE,
+				sessionFactory.getTypeConfiguration()
+		);
+
+		//noinspection RedundantCast
+		collectionDescriptor.getElementDescriptor().visitColumns(
+				(BiConsumer<SqlExpressableType, Column>) (sqlExpressableType, column) -> {
+					final PositionalParameter parameter = new PositionalParameter(
+							parameterCount.getAndIncrement(),
+							column.getExpressableType(),
+							Clause.UPDATE,
+							sessionFactory.getTypeConfiguration()
+					);
+
+					columnCollector.accept( column, parameter );
+
+					junction.add(
+							new ComparisonPredicate(
+									new ColumnReference( column ),
+									ComparisonOperator.EQUAL,
+									parameter
+							)
+					);
+				},
+				Clause.WHERE,
+				sessionFactory.getTypeConfiguration()
+		);
+
+		return UpdateToJdbcUpdateConverter.createJdbcUpdate(
+				new UpdateStatement( tableReference, assignments, junction ),
+				sessionFactory
+		);
+	}
+
 	@SuppressWarnings("WeakerAccess")
-	protected void applyNavigable(
+	protected void applyNavigableLiteralNullAssignment(
 			Navigable navigable,
 			TableReference dmlTableRef,
 			List<Assignment> assignments,

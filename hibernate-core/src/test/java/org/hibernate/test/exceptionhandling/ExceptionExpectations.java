@@ -7,6 +7,7 @@
 package org.hibernate.test.exceptionhandling;
 
 import java.sql.SQLException;
+import javax.persistence.NoResultException;
 import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
@@ -52,6 +53,16 @@ interface ExceptionExpectations {
 			public void onInvalidQueryExecuted(RuntimeException e) {
 				assertThat( e, instanceOf( IllegalArgumentException.class ) );
 				assertThat( e.getCause(), instanceOf( QuerySyntaxException.class ) );
+			}
+
+			@Override
+			public void onGetSingleResultWithMultipleResults(RuntimeException e) {
+				assertThat( e, instanceOf( javax.persistence.NonUniqueResultException.class ) );
+			}
+
+			@Override
+			public void onGetSingleResultWithNoResults(RuntimeException e) {
+				assertThat( e, instanceOf( NoResultException.class ) );
 			}
 
 			@Override
@@ -116,6 +127,16 @@ interface ExceptionExpectations {
 			}
 
 			@Override
+			public void onGetSingleResultWithMultipleResults(RuntimeException e) {
+				assertThat( e, instanceOf( org.hibernate.NonUniqueResultException.class ) );
+			}
+
+			@Override
+			public void onGetSingleResultWithNoResults(RuntimeException e) {
+				assertThat( e, instanceOf( NoResultException.class ) );
+			}
+
+			@Override
 			public void onStaleObjectMergeAndUpdateFlush(RuntimeException e) {
 				assertThat( e, instanceOf( StaleObjectStateException.class ) );
 			}
@@ -175,6 +196,16 @@ interface ExceptionExpectations {
 			}
 
 			@Override
+			public void onGetSingleResultWithMultipleResults(RuntimeException e) {
+				assertThat( e, instanceOf( javax.persistence.NonUniqueResultException.class ) );
+			}
+
+			@Override
+			public void onGetSingleResultWithNoResults(RuntimeException e) {
+				assertThat( e, instanceOf( NoResultException.class ) );
+			}
+
+			@Override
 			public void onStaleObjectMergeAndUpdateFlush(RuntimeException e) {
 				assertThat( e, instanceOf( OptimisticLockException.class ) );
 				assertThat( e.getCause(), instanceOf( StaleObjectStateException.class ) );
@@ -214,6 +245,10 @@ interface ExceptionExpectations {
 	void onTransientObjectOnPersistAndMergeAndFlush(RuntimeException e);
 
 	void onInvalidQueryExecuted(RuntimeException e);
+
+	void onGetSingleResultWithMultipleResults(RuntimeException e);
+
+	void onGetSingleResultWithNoResults(RuntimeException e);
 
 	void onStaleObjectMergeAndUpdateFlush(RuntimeException e);
 

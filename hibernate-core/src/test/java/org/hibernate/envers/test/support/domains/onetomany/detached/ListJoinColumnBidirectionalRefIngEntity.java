@@ -4,11 +4,13 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.entities.onetomany.detached;
+package org.hibernate.envers.test.support.domains.onetomany.detached;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -20,7 +22,7 @@ import org.hibernate.envers.AuditMappedBy;
 import org.hibernate.envers.Audited;
 
 /**
- * Entity for {@link org.hibernate.envers.test.integration.onetomany.detached.JoinColumnBidirectionalList} test.
+ * Entity for {@link org.hibernate.envers.test.onetomany.detached.JoinColumnBidirectionalListTest} test.
  * Owning side of the relation.
  *
  * @author Adam Warski (adam at warski dot org)
@@ -49,7 +51,7 @@ public class ListJoinColumnBidirectionalRefIngEntity {
 			ListJoinColumnBidirectionalRefEdEntity... references) {
 		this.id = id;
 		this.data = data;
-		this.references = new ArrayList<ListJoinColumnBidirectionalRefEdEntity>();
+		this.references = new ArrayList<>();
 		this.references.addAll( Arrays.asList( references ) );
 	}
 
@@ -81,35 +83,29 @@ public class ListJoinColumnBidirectionalRefIngEntity {
 		this.references = references;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
 		}
-		if ( !(o instanceof ListJoinColumnBidirectionalRefIngEntity) ) {
+		if ( o == null || getClass() != o.getClass() ) {
 			return false;
 		}
-
 		ListJoinColumnBidirectionalRefIngEntity that = (ListJoinColumnBidirectionalRefIngEntity) o;
-
-		if ( data != null ? !data.equals( that.data ) : that.data != null ) {
-			return false;
-		}
-		//noinspection RedundantIfStatement
-		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
-			return false;
-		}
-
-		return true;
+		return Objects.equals( id, that.id ) &&
+				Objects.equals( data, that.data );
 	}
 
+	@Override
 	public int hashCode() {
-		int result;
-		result = (id != null ? id.hashCode() : 0);
-		result = 31 * result + (data != null ? data.hashCode() : 0);
-		return result;
+		return Objects.hash( id, data );
 	}
 
+	@Override
 	public String toString() {
-		return "ListJoinColumnBidirectionalRefIngEntity(id = " + id + ", data = " + data + ")";
+		return "ListJoinColumnBidirectionalRefIngEntity{" +
+				"id=" + id +
+				", data='" + data + '\'' +
+				'}';
 	}
 }

@@ -48,13 +48,15 @@ public class BasicDetachedListTest extends EnversEntityManagerFactoryBasedFuncti
 
 	@DynamicBeforeAll
 	public void prepareAuditData() {
-		inTransactions(
-				// Revision 1
+		inJPA(
 				entityManager -> {
 					StrTestEntity str1 = new StrTestEntity( "str1" );
 					StrTestEntity str2 = new StrTestEntity( "str2" );
 
 					ListRefCollEntity coll1 = new ListRefCollEntity( 3, "coll1" );
+
+					// Revision 1
+					entityManager.getTransaction().begin();
 
 					entityManager.persist( str1 );
 					entityManager.persist( str2 );
@@ -63,30 +65,40 @@ public class BasicDetachedListTest extends EnversEntityManagerFactoryBasedFuncti
 					coll1.getCollection().add( str1 );
 					entityManager.persist( coll1 );
 
+					entityManager.getTransaction().commit();
+
+					// Revision 2
+					entityManager.getTransaction().begin();
+
+					str2 = entityManager.find( StrTestEntity.class, str2.getId() );
+					coll1 = entityManager.find( ListRefCollEntity.class, coll1.getId() );
+
+					coll1.getCollection().add( str2 );
+
+					entityManager.getTransaction().commit();
+
+					// Revision 3
+					entityManager.getTransaction().begin();
+
+					str1 = entityManager.find( StrTestEntity.class, str1.getId() );
+					coll1 = entityManager.find( ListRefCollEntity.class, coll1.getId() );
+
+					coll1.getCollection().remove( str1 );
+
+					entityManager.getTransaction().commit();
+
+					// Revision 4
+					entityManager.getTransaction().begin();
+
+					coll1 = entityManager.find( ListRefCollEntity.class, coll1.getId() );
+
+					coll1.getCollection().clear();
+
+					entityManager.getTransaction().commit();
+
 					str1_id = str1.getId();
 					str2_id = str2.getId();
-
 					coll1_id = coll1.getId();
-				},
-
-				// Revision 2
-				entityManager -> {
-					final StrTestEntity str2 = entityManager.find( StrTestEntity.class, str2_id );
-					final ListRefCollEntity coll1 = entityManager.find( ListRefCollEntity.class, coll1_id );
-					coll1.getCollection().add( str2 );
-				},
-
-				// Revision 3
-				entityManager -> {
-					final StrTestEntity str1 = entityManager.find( StrTestEntity.class, str1_id );
-					final ListRefCollEntity coll1 = entityManager.find( ListRefCollEntity.class, coll1_id );
-					coll1.getCollection().remove( str1 );
-				},
-
-				// Revision 4
-				entityManager -> {
-					final ListRefCollEntity coll1 = entityManager.find( ListRefCollEntity.class, coll1_id );
-					coll1.getCollection().clear();
 				}
 		);
 	}

@@ -4,7 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.entities.onetomany.detached;
+package org.hibernate.envers.test.support.domains.onetomany.detached;
+
+import java.util.Objects;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -17,7 +19,7 @@ import javax.persistence.Table;
 import org.hibernate.envers.Audited;
 
 /**
- * Entity for {@link org.hibernate.envers.test.integration.onetomany.detached.IndexedJoinColumnBidirectionalList} test.
+ * Entity for {@link org.hibernate.envers.test.onetomany.detached.IndexedJoinColumnBidirectionalListTest} test.
  * Owned side of the relation.
  *
  * @author Adam Warski (adam at warski dot org)
@@ -90,35 +92,29 @@ public class IndexedListJoinColumnBidirectionalRefEdEntity {
 		this.position = position;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
 		}
-		if ( !(o instanceof IndexedListJoinColumnBidirectionalRefEdEntity) ) {
+		if ( o == null || getClass() != o.getClass() ) {
 			return false;
 		}
-
 		IndexedListJoinColumnBidirectionalRefEdEntity that = (IndexedListJoinColumnBidirectionalRefEdEntity) o;
-
-		if ( data != null ? !data.equals( that.data ) : that.data != null ) {
-			return false;
-		}
-		//noinspection RedundantIfStatement
-		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
-			return false;
-		}
-
-		return true;
+		return Objects.equals( id, that.id ) &&
+				Objects.equals( data, that.data );
 	}
 
+	@Override
 	public int hashCode() {
-		int result;
-		result = (id != null ? id.hashCode() : 0);
-		result = 31 * result + (data != null ? data.hashCode() : 0);
-		return result;
+		return Objects.hash( id, data );
 	}
 
+	@Override
 	public String toString() {
-		return "IndexedListJoinColumnBidirectionalRefEdEntity(id = " + id + ", data = " + data + ")";
+		return "IndexedListJoinColumnBidirectionalRefEdEntity{" +
+				"id=" + id +
+				", data='" + data + '\'' +
+				'}';
 	}
 }

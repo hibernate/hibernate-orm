@@ -4,10 +4,12 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.entities.onetomany.detached;
+package org.hibernate.envers.test.support.domains.onetomany.detached;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -19,7 +21,7 @@ import org.hibernate.envers.AuditMappedBy;
 import org.hibernate.envers.Audited;
 
 /**
- * Entity for {@link org.hibernate.envers.test.integration.onetomany.detached.DoubleJoinColumnBidirectionalList} test.
+ * Entity for {@link org.hibernate.envers.test.onetomany.detached.DoubleJoinColumnBidirectionalListTest} test.
  * Owning side of the relations.
  *
  * @author Adam Warski (adam at warski dot org)
@@ -37,12 +39,12 @@ public class DoubleListJoinColumnBidirectionalRefIngEntity {
 	@OneToMany
 	@JoinColumn(name = "some_join_column_1")
 	@AuditMappedBy(mappedBy = "owner")
-	private List<DoubleListJoinColumnBidirectionalRefEdEntity1> references1 = new ArrayList<DoubleListJoinColumnBidirectionalRefEdEntity1>();
+	private List<DoubleListJoinColumnBidirectionalRefEdEntity1> references1 = new ArrayList<>();
 
 	@OneToMany
 	@JoinColumn(name = "some_join_column_2")
 	@AuditMappedBy(mappedBy = "owner")
-	private List<DoubleListJoinColumnBidirectionalRefEdEntity2> references2 = new ArrayList<DoubleListJoinColumnBidirectionalRefEdEntity2>();
+	private List<DoubleListJoinColumnBidirectionalRefEdEntity2> references2 = new ArrayList<>();
 
 	public DoubleListJoinColumnBidirectionalRefIngEntity() {
 	}
@@ -88,35 +90,29 @@ public class DoubleListJoinColumnBidirectionalRefIngEntity {
 		this.references2 = references2;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
 		}
-		if ( !(o instanceof DoubleListJoinColumnBidirectionalRefIngEntity) ) {
+		if ( o == null || getClass() != o.getClass() ) {
 			return false;
 		}
-
 		DoubleListJoinColumnBidirectionalRefIngEntity that = (DoubleListJoinColumnBidirectionalRefIngEntity) o;
-
-		if ( data != null ? !data.equals( that.data ) : that.data != null ) {
-			return false;
-		}
-		//noinspection RedundantIfStatement
-		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
-			return false;
-		}
-
-		return true;
+		return Objects.equals( id, that.id ) &&
+				Objects.equals( data, that.data );
 	}
 
+	@Override
 	public int hashCode() {
-		int result;
-		result = (id != null ? id.hashCode() : 0);
-		result = 31 * result + (data != null ? data.hashCode() : 0);
-		return result;
+		return Objects.hash( id, data );
 	}
 
+	@Override
 	public String toString() {
-		return "DoubleListJoinColumnBidirectionalRefIngEntity(id = " + id + ", data = " + data + ")";
+		return "DoubleListJoinColumnBidirectionalRefIngEntity{" +
+				"id=" + id +
+				", data='" + data + '\'' +
+				'}';
 	}
 }

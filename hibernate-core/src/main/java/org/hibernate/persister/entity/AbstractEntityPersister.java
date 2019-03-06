@@ -3573,7 +3573,7 @@ public abstract class AbstractEntityPersister
 //					}
 //					// no dirty fields and no dirty collections so no update needed ???
 //				}
-				if ( fieldsPreUpdateNeeded.length != 0 && dirtyFields != null ) {
+				if ( dirtyFields != null ) {
 					dirtyFields = ArrayHelper.join( dirtyFields, ArrayHelper.trim( fieldsPreUpdateNeeded, count ) );
 				}
 			}

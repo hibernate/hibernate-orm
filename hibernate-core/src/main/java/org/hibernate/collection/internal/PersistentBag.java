@@ -7,8 +7,6 @@
 package org.hibernate.collection.internal;
 
 import java.io.Serializable;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -106,22 +104,6 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 	@Override
 	public Iterator entries(PersistentCollectionDescriptor descriptor) {
 		return bag.iterator();
-	}
-
-	@Override
-	public Object readFrom(
-			ResultSet rs,
-			Object owner,
-			PersistentCollectionDescriptor collectionDescriptor) throws SQLException {
-		throw new NotYetImplementedFor6Exception(  );
-		// todo (6.0) : this is done so much differently in this redesign - I think these metods are not going to be needed
-//		// note that if we load this collection from a cartesian product
-//		// the multiplicity would be broken ... so use an idbag instead
-//		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() ) ;
-//		if ( element != null ) {
-//			bag.add( element );
-//		}
-//		return element;
 	}
 
 	@Override

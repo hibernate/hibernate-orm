@@ -63,7 +63,7 @@ import org.hibernate.metamodel.model.domain.internal.SqlAliasStemHelper;
 import org.hibernate.metamodel.model.domain.internal.collection.AbstractCreationExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.BasicCollectionElementImpl;
 import org.hibernate.metamodel.model.domain.internal.collection.BasicCollectionIndexImpl;
-import org.hibernate.metamodel.model.domain.internal.collection.BasicCollectionRowsUpdateExecutor;
+import org.hibernate.metamodel.model.domain.internal.collection.JoinTableRowsUpdateExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionCreationExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionElementEmbeddedImpl;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionElementEntityImpl;
@@ -79,6 +79,7 @@ import org.hibernate.metamodel.model.domain.internal.collection.CollectionSizeSe
 import org.hibernate.metamodel.model.domain.internal.collection.FetchedTableReferenceCollectorImpl;
 import org.hibernate.metamodel.model.domain.internal.collection.JoinTableCreationExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.JoinTableRemovalExecutor;
+import org.hibernate.metamodel.model.domain.internal.collection.JoinTableCollectionRowByIndexSelector;
 import org.hibernate.metamodel.model.domain.internal.collection.JoinTableRowsDeleletionExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.JoinTableRowsInsertExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.OneToManyCreationExecutor;
@@ -88,6 +89,7 @@ import org.hibernate.metamodel.model.domain.internal.collection.OneToManyRowsInd
 import org.hibernate.metamodel.model.domain.internal.collection.OneToManyRowsInsertExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.OneToManyRowsUpdateExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.RootTableReferenceCollectorImpl;
+import org.hibernate.metamodel.model.domain.internal.collection.CollectionRowByIndexSelector;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.Table;
@@ -169,6 +171,8 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 	private CollectionSizeSelector collectionSizeSelector;
 	private CollectionElementExistsSelector collectionElementExistsSelector;
 	private CollectionIndexExistsSelector collectionIndexExistsSelector;
+	private CollectionRowByIndexSelector collectionRowByIndexSelector;
+
 
 	private final String mappedBy;
 	private final String sqlWhereString;
@@ -1026,7 +1030,22 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 
 	@Override
 	public Object getElementByIndex(Object loadedKey, Object index, SharedSessionContractImplementor session, Object owner) {
-		throw new NotYetImplementedFor6Exception();
+		if ( collectionRowByIndexSelector == null ) {
+			collectionRowByIndexSelector = generateRowByIndexSelector();
+		}
+		return collectionRowByIndexSelector.execute( loadedKey, incrementIndexByBase( index ), session );
+	}
+
+	CollectionRowByIndexSelector generateRowByIndexSelector() {
+		if ( isOneToMany() ) {
+			throw new NotYetImplementedFor6Exception();
+		}
+		else {
+			if ( !hasIndex() ) {
+				return CollectionRowByIndexSelector.NO_OP;
+			}
+			return new JoinTableCollectionRowByIndexSelector( this, dmlTargetTable, sqlWhereString, sessionFactory );
+		}
 	}
 
 	@Override
@@ -1217,7 +1236,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 			);
 		}
 		else {
-			return new BasicCollectionRowsUpdateExecutor(
+			return new JoinTableRowsUpdateExecutor(
 					this,
 					dmlTargetTable,
 					hasIndex(),

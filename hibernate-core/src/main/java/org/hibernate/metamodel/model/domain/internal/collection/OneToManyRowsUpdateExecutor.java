@@ -192,13 +192,14 @@ public class OneToManyRowsUpdateExecutor implements CollectionRowsUpdateExecutor
 				JdbcParameterBindingsImpl jdbcParameterBindings,
 				SharedSessionContractImplementor session,
 				Clause clause) {
-			if ( collectionDescriptor.getIndexDescriptor() != null ) {
+			final CollectionIndex indexDescriptor = collectionDescriptor.getIndexDescriptor();
+			if ( indexDescriptor != null ) {
 				Object index = collection.getIndex( entry, assumedIndex, collectionDescriptor );
-				if ( collectionDescriptor.getIndexDescriptor().getBaseIndex() != 0 ) {
-					index = (Integer) index + collectionDescriptor.getIndexDescriptor().getBaseIndex();
+				if ( indexDescriptor.getBaseIndex() != 0 ) {
+					index = (Integer) index + indexDescriptor.getBaseIndex();
 				}
-				collectionDescriptor.getIndexDescriptor().dehydrate(
-						collectionDescriptor.getIndexDescriptor().unresolve( index, session ),
+				indexDescriptor.dehydrate(
+						indexDescriptor.unresolve( index, session ),
 						(jdbcValue, type, boundColumn) -> createBinding(
 								jdbcValue,
 								boundColumn,

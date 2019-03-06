@@ -14,6 +14,7 @@ import java.util.function.BiConsumer;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
@@ -227,10 +228,14 @@ public class OneToManyCreationExecutor extends AbstractCreationExecutor {
 			PersistentCollection collection,
 			JdbcParameterBindingsImpl jdbcParameterBindings,
 			SharedSessionContractImplementor session) {
-		if ( getCollectionDescriptor().getIndexDescriptor() != null ) {
-			final Object index = collection.getIndex( entry, assumedIndex, getCollectionDescriptor() );
-			getCollectionDescriptor().getIndexDescriptor().dehydrate(
-					getCollectionDescriptor().getIndexDescriptor().unresolve( index, session ),
+		final CollectionIndex indexDescriptor = getCollectionDescriptor().getIndexDescriptor();
+		if ( indexDescriptor != null ) {
+			Object index = collection.getIndex( entry, assumedIndex, getCollectionDescriptor() );
+			if ( indexDescriptor.getBaseIndex() != 0 ) {
+				index = (Integer) index + indexDescriptor.getBaseIndex();
+			}
+			indexDescriptor.dehydrate(
+					indexDescriptor.unresolve( index, session ),
 					(jdbcValue, type, boundColumn) -> createBinding(
 							jdbcValue,
 							boundColumn,

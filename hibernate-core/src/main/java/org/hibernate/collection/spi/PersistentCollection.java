@@ -7,8 +7,6 @@
 package org.hibernate.collection.spi;
 
 import java.io.Serializable;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -169,18 +167,6 @@ public interface PersistentCollection<E> {
 			Serializable disassembled,
 			Object owner,
 			PersistentCollectionDescriptor<?, ?, E> collectionDescriptor);
-
-	/**
-	 * Read a row from the JDBC result set
-	 *
-	 * @throws HibernateException Generally indicates a problem resolving data read from the ResultSet
-	 * @throws SQLException Indicates a problem accessing the ResultSet
-	 */
-	// todo (6.0) : never used remove it ?
-	Object readFrom(
-			ResultSet rs,
-			Object owner,
-			PersistentCollectionDescriptor<?, ?, E> collectionDescriptor) throws SQLException;
 
 	/**
 	 * Get the identifier of the given collection entry.  This refers to the collection identifier, not the

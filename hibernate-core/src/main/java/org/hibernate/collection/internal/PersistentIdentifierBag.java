@@ -7,8 +7,6 @@
 package org.hibernate.collection.internal;
 
 import java.io.Serializable;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -18,7 +16,6 @@ import java.util.ListIterator;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
@@ -356,24 +353,6 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 
 		final Object old = snap.get( id );
 		return old != null && getCollectionDescriptor().isDirty( old, entry, getSession() );
-	}
-
-	@Override
-	public Object readFrom(
-			ResultSet rs,
-			Object owner, PersistentCollectionDescriptor collectionDescriptor) throws SQLException {
-		throw new NotYetImplementedFor6Exception(  );
-//		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
-//		final Object old = identifiers.put(
-//			values.size(),
-//			persister.readIdentifier( rs, descriptor.getSuffixedIdentifierAlias(), getSession() )
-//		);
-//
-//		if ( old == null ) {
-//			//maintain correct duplication if loaded in a cartesian product
-//			values.add( element );
-//		}
-//		return element;
 	}
 
 	@Override

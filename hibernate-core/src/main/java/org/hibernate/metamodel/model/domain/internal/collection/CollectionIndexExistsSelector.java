@@ -17,6 +17,7 @@ import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
@@ -60,6 +61,7 @@ public class CollectionIndexExistsSelector extends AbstractSelector {
 
 	@Override
 	protected void applySqlSelections(
+			QuerySpec querySpec,
 			TableGroup tableGroup,
 			SelectClause selectClause,
 			Consumer<DomainResult> domainResultsCollector,
@@ -98,7 +100,7 @@ public class CollectionIndexExistsSelector extends AbstractSelector {
 
 		applyPredicates(
 				junction,
-				getCollectionDescriptor().getIdDescriptor(),
+				getCollectionDescriptor().getIndexDescriptor(),
 				tableGroup,
 				jdbcParameterBinder,
 				columnCollector,

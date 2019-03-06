@@ -15,6 +15,7 @@ import java.util.function.BiConsumer;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.pretty.MessageHelper;
@@ -179,8 +180,7 @@ public class JoinTableRowsDeleletionExecutor implements CollectionRowsDeletionEx
 
 
 	@Override
-	public void execute(
-			PersistentCollection collection, Object key, SharedSessionContractImplementor session) {
+	public void execute(PersistentCollection collection, Object key, SharedSessionContractImplementor session) {
 		Iterator deletes = collection.getDeletes( collectionDescriptor, !deleteByIndex );
 		if ( log.isDebugEnabled() ) {
 			log.debugf(
@@ -245,13 +245,13 @@ public class JoinTableRowsDeleletionExecutor implements CollectionRowsDeletionEx
 			Object index,
 			JdbcParameterBindingsImpl jdbcParameterBindings,
 			SharedSessionContractImplementor session) {
-		// todo (6.0) : probably not the correct `assumedIndex`
-		if ( collectionDescriptor.getIndexDescriptor() != null ) {
-			if ( collectionDescriptor.getIndexDescriptor().getBaseIndex() != 0 ) {
-				index = (Integer) index + collectionDescriptor.getIndexDescriptor().getBaseIndex();
+		final CollectionIndex indexDescriptor = collectionDescriptor.getIndexDescriptor();
+		if ( indexDescriptor != null ) {
+			if ( indexDescriptor.getBaseIndex() != 0 ) {
+				index = (Integer) index + indexDescriptor.getBaseIndex();
 			}
-			collectionDescriptor.getIndexDescriptor().dehydrate(
-					collectionDescriptor.getIndexDescriptor().unresolve( index, session ),
+			indexDescriptor.dehydrate(
+					indexDescriptor.unresolve( index, session ),
 					(jdbcValue, type, boundColumn) -> createBinding(
 							jdbcValue,
 							boundColumn,

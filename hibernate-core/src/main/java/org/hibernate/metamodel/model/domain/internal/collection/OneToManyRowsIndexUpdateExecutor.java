@@ -224,8 +224,11 @@ public class OneToManyRowsIndexUpdateExecutor implements CollectionRowsIndexUpda
 			PersistentCollection collection,
 			JdbcParameterBindings jdbcParameterBindings,
 			SharedSessionContractImplementor session) {
-		final Object index = collection.getIndex( entry, assumedIndex, collectionDescriptor );
 		final CollectionIndex<?> collectionIndex = collectionDescriptor.getIndexDescriptor();
+		Object index = collection.getIndex( entry, assumedIndex, collectionDescriptor );
+		if ( collectionIndex.getBaseIndex() != 0 ) {
+			index = (Integer) index + collectionDescriptor.getIndexDescriptor().getBaseIndex();
+		}
 		collectionIndex.dehydrate(
 				collectionIndex.unresolve( index, session ),
 				(jdbcValue, type, boundColumn) -> createBinding(

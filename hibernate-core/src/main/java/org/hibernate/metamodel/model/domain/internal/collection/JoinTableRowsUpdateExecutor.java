@@ -49,14 +49,14 @@ import org.jboss.logging.Logger;
 /**
  * @author Chris Cranford
  */
-public class BasicCollectionRowsUpdateExecutor implements CollectionRowsUpdateExecutor {
-	private static final Logger LOG = Logger.getLogger( BasicCollectionRowsUpdateExecutor.class );
+public class JoinTableRowsUpdateExecutor implements CollectionRowsUpdateExecutor {
+	private static final Logger LOG = Logger.getLogger( JoinTableRowsUpdateExecutor.class );
 
 	private final PersistentCollectionDescriptor collectionDescriptor;
 	private final Map<Column, JdbcParameter> jdbcParameterMap;
 	private final JdbcUpdate jdbcUpdate;
 
-	public BasicCollectionRowsUpdateExecutor(
+	public JoinTableRowsUpdateExecutor(
 			PersistentCollectionDescriptor collectionDescriptor,
 			Table dmlTargetTable,
 			boolean hasIndex,
@@ -66,7 +66,13 @@ public class BasicCollectionRowsUpdateExecutor implements CollectionRowsUpdateEx
 		this.jdbcParameterMap = new HashMap<>();
 
 		final TableReference tableReference = new TableReference( dmlTargetTable, null, false );
-		this.jdbcUpdate = generateUpdateOperation( tableReference, jdbcParameterMap::put, hasIndex, indexContainsFormula, sessionFactory );
+		this.jdbcUpdate = generateUpdateOperation(
+				tableReference,
+				jdbcParameterMap::put,
+				hasIndex,
+				indexContainsFormula,
+				sessionFactory
+		);
 	}
 
 	@Override
@@ -91,7 +97,7 @@ public class BasicCollectionRowsUpdateExecutor implements CollectionRowsUpdateEx
 				if ( collection.needsUpdating( entry, i ) ) {
 					bindCollectionKey( key, jdbcParameterBindings, session );
 					bindCollectionId( entry, collection, jdbcParameterBindings, session );
-					bindCollectionIndex( entry, collection, i + 1, jdbcParameterBindings, session );
+					bindCollectionIndex( entry, collection, i, jdbcParameterBindings, session );
 					bindCollectionElement( entry, collection,jdbcParameterBindings, session );
 
 					JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute( jdbcUpdate, executionContext );
@@ -127,7 +133,7 @@ public class BasicCollectionRowsUpdateExecutor implements CollectionRowsUpdateEx
 			JdbcParameterBindings jdbcParameterBindings,
 			SharedSessionContractImplementor session) {
 		if ( collectionDescriptor.getIdDescriptor() != null ) {
-			throw new NotYetImplementedFor6Exception(  );
+			throw new NotYetImplementedFor6Exception();
 		}
 	}
 
@@ -158,10 +164,15 @@ public class BasicCollectionRowsUpdateExecutor implements CollectionRowsUpdateEx
 			int assumedIndex,
 			JdbcParameterBindings jdbcParameterBinding,
 			SharedSessionContractImplementor session) {
-		if ( collectionDescriptor.getIndexDescriptor() != null ) {
+		final CollectionIndex indexDescriptor = collectionDescriptor.getIndexDescriptor();
+		if ( indexDescriptor != null ) {
 			Object index = collection.getIndex( entry, assumedIndex, collectionDescriptor );
-			collectionDescriptor.getIndexDescriptor().dehydrate(
-					collectionDescriptor.getIndexDescriptor().unresolve( index, session ),
+			if ( indexDescriptor.getBaseIndex() != 0 ) {
+				index = (Integer) index + indexDescriptor.getBaseIndex();
+			}
+			indexDescriptor.dehydrate(
+					indexDescriptor
+							.unresolve(  index , session ),
 					(jdbcValue, type, boundColumn) -> createBinding(
 							jdbcValue,
 							boundColumn,
@@ -265,7 +276,7 @@ public class BasicCollectionRowsUpdateExecutor implements CollectionRowsUpdateEx
 						);
 					},
 					Clause.WHERE,
-				sessionFactory.getTypeConfiguration()
+					sessionFactory.getTypeConfiguration()
 			);
 		}
 		else if ( hasIndex && !indexContainsFormula ) {

@@ -7,8 +7,6 @@
 package org.hibernate.collection.internal;
 
 import java.io.Serializable;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -16,7 +14,6 @@ import java.util.List;
 import java.util.ListIterator;
 
 import org.hibernate.HibernateException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
@@ -61,17 +58,21 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 		return list;
 	}
 
-
-
-
-
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public Serializable getSnapshot(PersistentCollectionDescriptor descriptor) throws HibernateException {
 		final ArrayList clonedList = new ArrayList( list.size() );
 		for ( Object element : list ) {
-			final Object deepCopy = descriptor.getElementDescriptor().getJavaTypeDescriptor().getMutabilityPlan().deepCopy( element );
-			clonedList.add( deepCopy );
+			if ( element != null ) {
+				final Object deepCopy = descriptor.getElementDescriptor()
+						.getJavaTypeDescriptor()
+						.getMutabilityPlan()
+						.deepCopy( element );
+				clonedList.add( deepCopy );
+			}
+			else {
+				clonedList.add( element );
+			}
 		}
 		return clonedList;
 	}
@@ -85,7 +86,7 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 	@Override
 	public boolean equalsSnapshot(PersistentCollectionDescriptor collectionDescriptor) throws HibernateException {
 		final List sn = (List) getSnapshot();
-		if ( sn.size()!=this.list.size() ) {
+		if ( sn.size() != this.list.size() ) {
 			return false;
 		}
 		final Iterator itr = list.iterator();
@@ -372,25 +373,6 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 	public String toString() {
 		read();
 		return list.toString();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Object readFrom(
-			ResultSet rs,
-			Object owner,
-			PersistentCollectionDescriptor collectionDescriptor) throws SQLException {
-		throw new NotYetImplementedFor6Exception(  );
-//		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() ) ;
-//		final int index = (Integer) persister.readIndex( rs, descriptor.getSuffixedIndexAliases(), getSession() );
-//
-//		//pad with nulls from the current last element up to the new index
-//		for ( int i = list.size(); i<=index; i++) {
-//			list.add( i, null );
-//		}
-//
-//		list.set( index, element );
-//		return element;
 	}
 
 	@Override

@@ -7,8 +7,6 @@
 package org.hibernate.collection.internal;
 
 import java.io.Serializable;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -17,7 +15,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
@@ -312,19 +309,6 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 	public String toString() {
 		read();
 		return set.toString();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Object readFrom(
-			ResultSet rs,
-			Object owner, PersistentCollectionDescriptor collectionDescriptor) throws SQLException {
-		throw new NotYetImplementedFor6Exception(  );
-//		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
-//		if ( element != null ) {
-//			tempList.add( element );
-//		}
-//		return element;
 	}
 
 	@Override

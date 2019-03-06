@@ -111,6 +111,7 @@ public abstract class AbstractSelector {
 	}
 
 	protected abstract void applySqlSelections(
+			QuerySpec querySpec,
 			TableGroup tableGroup,
 			SelectClause selectClause,
 			Consumer<DomainResult> domainResultsCollector,
@@ -184,7 +185,7 @@ public abstract class AbstractSelector {
 		CollectionElement elementDescriptor = getCollectionDescriptor().getElementDescriptor();
 
 		Object unresolved = elementDescriptor.unresolve(
-				collection.getElement( entry, getCollectionDescriptor() ),
+				entry,
 				session
 		);
 
@@ -231,6 +232,7 @@ public abstract class AbstractSelector {
 		final List<DomainResult> domainResults = new ArrayList<>();
 
 		applySqlSelections(
+				rootQuerySpec,
 				rootTableGroup,
 				selectClause,
 				domainResults::add,

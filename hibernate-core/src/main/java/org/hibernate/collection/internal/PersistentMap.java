@@ -7,7 +7,6 @@
 package org.hibernate.collection.internal;
 
 import java.io.Serializable;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -17,10 +16,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-
 
 /**
  * A persistent wrapper for a <tt>java.util.Map</tt>. Underlying collection
@@ -263,23 +260,6 @@ public class PersistentMap<K,V> extends AbstractPersistentCollection<V> implemen
 	}
 
 	private transient List<Object[]> loadingEntries;
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Object readFrom(
-			ResultSet rs,
-			Object owner, PersistentCollectionDescriptor collectionDescriptor) {
-		throw new NotYetImplementedFor6Exception(  );
-//		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
-//		if ( element != null ) {
-//			final Object index = persister.readIndex( rs, descriptor.getSuffixedIndexAliases(), getSession() );
-//			if ( loadingEntries == null ) {
-//				loadingEntries = new ArrayList<>();
-//			}
-//			loadingEntries.add( new Object[] { index, element } );
-//		}
-//		return element;
-	}
 
 	@Override
 	@SuppressWarnings("unchecked")

@@ -14,6 +14,7 @@ import java.util.function.BiConsumer;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.Table;
@@ -153,14 +154,14 @@ public abstract class AbstractCreationExecutor implements CollectionCreationExec
 			PersistentCollection collection,
 			JdbcParameterBindingsImpl jdbcParameterBindings,
 			SharedSessionContractImplementor session) {
-		// todo (6.0) : probably not the correct `assumedIndex`
-		if ( collectionDescriptor.getIndexDescriptor() != null ) {
+		final CollectionIndex indexDescriptor = collectionDescriptor.getIndexDescriptor();
+		if ( indexDescriptor != null ) {
 			Object index = collection.getIndex( entry, assumedIndex, collectionDescriptor );
-			if ( collectionDescriptor.getIndexDescriptor().getBaseIndex() != 0 ) {
-				index = (Integer) index + collectionDescriptor.getIndexDescriptor().getBaseIndex();
+			if ( indexDescriptor.getBaseIndex() != 0 ) {
+				index = (Integer) index + indexDescriptor.getBaseIndex();
 			}
-			collectionDescriptor.getIndexDescriptor().dehydrate(
-					collectionDescriptor.getIndexDescriptor().unresolve( index, session ),
+			indexDescriptor.dehydrate(
+					indexDescriptor.unresolve( index, session ),
 					(jdbcValue, type, boundColumn) -> createBinding(
 							jdbcValue,
 							boundColumn,

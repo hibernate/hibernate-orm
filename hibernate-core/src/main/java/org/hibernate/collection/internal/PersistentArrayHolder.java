@@ -8,8 +8,6 @@ package org.hibernate.collection.internal;
 
 import java.io.Serializable;
 import java.lang.reflect.Array;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -159,22 +157,6 @@ public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
 	@Override
 	public boolean empty() {
 		return false;
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Object readFrom(
-			ResultSet rs,
-			Object owner,
-			PersistentCollectionDescriptor collectionDescriptor) throws SQLException {
-		throw new NotYetImplementedFor6Exception(  );
-//		final Object element = persister.readElement( rs, owner, getSession() );
-//		final int index = (Integer) persister.readIndex( rs, getSession() );
-//		for ( int i = tempList.size(); i<=index; i++) {
-//			tempList.add( i, null );
-//		}
-//		tempList.set( index, element );
-//		return element;
 	}
 
 	@SuppressWarnings("unchecked")

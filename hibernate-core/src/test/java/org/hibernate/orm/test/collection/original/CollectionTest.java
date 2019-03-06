@@ -50,7 +50,7 @@ public class CollectionTest extends SessionFactoryBasedFunctionalTest {
 					User u = session.get( User.class, "gavin" );
 
 					assertFalse( Hibernate.isInitialized( u.getPermissions() ) );
-					assertEquals( u.getPermissions().size(), 2 );
+					assertEquals( 2, u.getPermissions().size() );
 					assertTrue( u.getPermissions().contains( new Permission( "obnoxiousness" ) ) );
 					assertFalse( u.getPermissions().contains( new Permission( "silliness" ) ) );
 					assertNotNull( u.getPermissions().get( 1 ) );
@@ -58,7 +58,7 @@ public class CollectionTest extends SessionFactoryBasedFunctionalTest {
 					assertFalse( Hibernate.isInitialized( u.getPermissions() ) );
 
 					assertFalse( Hibernate.isInitialized( u.getSessionData() ) );
-					assertEquals( u.getSessionData().size(), 1 );
+					assertEquals( 1, u.getSessionData().size() );
 					assertTrue( u.getSessionData().containsKey( "foo" ) );
 					assertFalse( u.getSessionData().containsKey( "bar" ) );
 					assertTrue( u.getSessionData().containsValue( "foo value" ) );
@@ -95,6 +95,7 @@ public class CollectionTest extends SessionFactoryBasedFunctionalTest {
 					//todo (6.0) when criteria will ne implemented use criteria commented as in the original test
 //					User u2 = (User) session.createCriteria(User.class).uniqueResult()
 					User u2 = (User) session.createQuery( "from User" ).uniqueResult();
+
 					u2.setPermissions( null ); //forces one shot delete
 					session.merge( user );
 
@@ -115,9 +116,9 @@ public class CollectionTest extends SessionFactoryBasedFunctionalTest {
 //					User u2 = (User) session.createCriteria( User.class ).uniqueResult();
 					User u2 = (User) session.createQuery( "from User" ).uniqueResult();
 
-					assertEquals( u2.getPermissions().size(), 3 );
-					assertEquals( ( (Permission) u2.getPermissions().get( 0 ) ).getType(), "obnoxiousness" );
-					assertEquals( ( (Permission) u2.getPermissions().get( 2 ) ).getType(), "silliness" );
+					assertEquals( 3, u2.getPermissions().size() );
+					assertEquals( "obnoxiousness", ( (Permission) u2.getPermissions().get( 0 ) ).getType() );
+					assertEquals( "silliness", ( (Permission) u2.getPermissions().get( 2 ) ).getType() );
 					return u2;
 				}
 		);
@@ -153,7 +154,7 @@ public class CollectionTest extends SessionFactoryBasedFunctionalTest {
 					User u2 = session.get( User.class, "gavin" );
 					assertTrue( Hibernate.isInitialized( u2.getEmailAddresses() ) );
 					assertFalse( Hibernate.isInitialized( u2.getPermissions() ) );
-					assertEquals( u2.getEmailAddresses().size(), 2 );
+					assertEquals( 2, u2.getEmailAddresses().size() );
 					session.delete( u2 );
 				}
 		);
@@ -227,8 +228,8 @@ public class CollectionTest extends SessionFactoryBasedFunctionalTest {
 //					User u2 = (User) session.createCriteria( User.class ).uniqueResult();
 					User u2 = (User) session.createQuery( "from User" ).uniqueResult();
 					assertFalse( Hibernate.isInitialized( u2.getSessionData() ) );
-					assertEquals( u2.getSessionData().size(), 1 );
-					assertEquals( u2.getEmailAddresses().size(), 2 );
+					assertEquals( 1, u2.getSessionData().size() );
+					assertEquals( 2, u2.getEmailAddresses().size() );
 					u2.getSessionData().put( "foo", "new foo value" );
 					u2.getEmailAddresses().set( 1, new Email( "gavin@hibernate.org" ) );
 					//u2.getEmailAddresses().remove(3);
@@ -241,11 +242,12 @@ public class CollectionTest extends SessionFactoryBasedFunctionalTest {
 					//todo (6.0) when criteria will ne implemented use criteria commented as in the original test
 //					User u2 = (User) session.createCriteria( User.class ).uniqueResult();
 					User u2 = (User) session.createQuery( "from User" ).uniqueResult();
+					assertTrue( Hibernate.isInitialized( u2.getEmailAddresses() ) );
 					assertFalse( Hibernate.isInitialized( u2.getSessionData() ) );
-					assertEquals( u2.getSessionData().size(), 1 );
-					assertEquals( u2.getEmailAddresses().size(), 2 );
-					assertEquals( u2.getSessionData().get( "foo" ), "new foo value" );
-					assertEquals( ( (Email) u2.getEmailAddresses().get( 1 ) ).getAddress(), "gavin@hibernate.org" );
+					assertEquals( 1, u2.getSessionData().size() );
+					assertEquals( 2, u2.getEmailAddresses().size() );
+					assertEquals( "new foo value", u2.getSessionData().get( "foo" ) );
+					assertEquals( "gavin@hibernate.org", ( (Email) u2.getEmailAddresses().get( 1 ) ).getAddress() );
 					session.delete( u2 );
 				}
 		);

@@ -42,7 +42,8 @@ public interface EmbeddedValuedNavigable<J> extends EmbeddedValueExpressableType
 		return getEmbeddedDescriptor().createDomainResult(
 				navigableReference,
 				resultVariable,
-				creationState, creationContext
+				creationState,
+				creationContext
 		);
 	}
 

@@ -18,6 +18,7 @@ import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.expression.CountFunction;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.MaxFunction;
@@ -73,8 +74,9 @@ public class CollectionSizeSelector extends AbstractSelector {
 		}
 	}
 
-
+	@Override
 	protected void applySqlSelections(
+			QuerySpec querySpec,
 			TableGroup tableGroup,
 			SelectClause selectClause,
 			Consumer<DomainResult> domainResultsCollector,

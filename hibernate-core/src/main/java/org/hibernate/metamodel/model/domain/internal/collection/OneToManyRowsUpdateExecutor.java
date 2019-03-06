@@ -100,7 +100,6 @@ public class OneToManyRowsUpdateExecutor implements CollectionRowsUpdateExecutor
 		private final PersistentCollectionDescriptor collectionDescriptor;
 		private final boolean hasIndex;
 		private final boolean indexContainsFormula;
-		private final SessionFactoryImplementor sessionFactory;
 		private final Map<Column, JdbcParameter> jdbcParameterMap;
 		private final JdbcUpdate jdbcUpdate;
 
@@ -113,7 +112,6 @@ public class OneToManyRowsUpdateExecutor implements CollectionRowsUpdateExecutor
 			this.collectionDescriptor = collectionDescriptor;
 			this.hasIndex = hasIndex;
 			this.indexContainsFormula = indexContainsFormula;
-			this.sessionFactory = sessionFactory;
 			this.jdbcParameterMap = new HashMap<>();
 
 			final TableReference tableReference = new TableReference( dmlTargetTable, null, false );
@@ -127,7 +125,6 @@ public class OneToManyRowsUpdateExecutor implements CollectionRowsUpdateExecutor
 				final BasicExecutionContext executionContext = new BasicExecutionContext( session, jdbcParameterBindings );
 
 				int i = 0;
-				int count = 0;
 				Iterator<?> entries = collection.entries( getCollectionDescriptor() );
 				while ( entries.hasNext() ) {
 					Object entry = entries.next();

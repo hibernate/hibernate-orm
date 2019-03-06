@@ -676,12 +676,14 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 			TableReference tableReference,
 			RowToUpdateChecker checker) {
 		List<Assignment> assignments = new ArrayList<>();
+		boolean anyFieldToUpdate = false;
 		for ( int i = 0; i < fields.length; i++ ) {
 			final StateArrayContributor contributor = getStateArrayContributors().get( i );
 			final Object domainValue = fields[contributor.getStateArrayPosition()];
 			List<Column> columns = contributor.getColumns();
 			if ( contributor.isUpdatable() ) {
 				if ( columns != null && !columns.isEmpty() && isFieldValueChanged( fields, oldFields, i ) ) {
+					anyFieldToUpdate = true;
 					contributor.dehydrate(
 							contributor.unresolve( domainValue, session ),
 							(jdbcValue, type, boundColumn) -> {
@@ -706,36 +708,39 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 			}
 		}
 
-		Junction identifierJunction = new Junction( Junction.Nature.CONJUNCTION );
-		getHierarchy().getIdentifierDescriptor().dehydrate(
-				unresolvedId,
-				(jdbcValue, type, boundColumn) ->
-						identifierJunction.add(
-								new ComparisonPredicate(
-										new ColumnReference( boundColumn ), ComparisonOperator.EQUAL,
-										new LiteralParameter(
-												jdbcValue,
-												boundColumn.getExpressableType(),
-												Clause.WHERE,
-												session.getFactory().getTypeConfiguration()
-										)
-								)
-						)
-				,
-				Clause.WHERE,
-				session
-		);
+		if ( anyFieldToUpdate ) {
+			Junction identifierJunction = new Junction( Junction.Nature.CONJUNCTION );
+			getHierarchy().getIdentifierDescriptor().dehydrate(
+					unresolvedId,
+					(jdbcValue, type, boundColumn) ->
+							identifierJunction.add(
+									new ComparisonPredicate(
+											new ColumnReference( boundColumn ), ComparisonOperator.EQUAL,
+											new LiteralParameter(
+													jdbcValue,
+													boundColumn.getExpressableType(),
+													Clause.WHERE,
+													session.getFactory().getTypeConfiguration()
+											)
+									)
+							)
+					,
+					Clause.WHERE,
+					session
+			);
 
-		// todo (6.0) : depending on optimistic-lock strategy may need to adjust where clause
+			// todo (6.0) : depending on optimistic-lock strategy may need to adjust where clause
 
-		final UpdateStatement updateStatement = new UpdateStatement(
-				tableReference,
-				assignments,
-				identifierJunction
-		);
+			final UpdateStatement updateStatement = new UpdateStatement(
+					tableReference,
+					assignments,
+					identifierJunction
+			);
 
+			return executeUpdate( executionContext, updateStatement, checker );
+		}
 
-		return executeUpdate( executionContext, updateStatement, checker  );
+		return 0;
 	}
 
 	private int executeUpdate(ExecutionContext executionContext, UpdateStatement updateStatement,  RowToUpdateChecker checker) {

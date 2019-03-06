@@ -91,7 +91,7 @@ public class BasicCollectionRowsUpdateExecutor implements CollectionRowsUpdateEx
 				if ( collection.needsUpdating( entry, i ) ) {
 					bindCollectionKey( key, jdbcParameterBindings, session );
 					bindCollectionId( entry, collection, jdbcParameterBindings, session );
-					bindCollectionIndex( entry, collection, i, jdbcParameterBindings, session );
+					bindCollectionIndex( entry, collection, i + 1, jdbcParameterBindings, session );
 					bindCollectionElement( entry, collection,jdbcParameterBindings, session );
 
 					JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute( jdbcUpdate, executionContext );

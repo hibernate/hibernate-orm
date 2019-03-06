@@ -149,8 +149,8 @@ public class CollectionTest extends SessionFactoryBasedFunctionalTest {
 				session -> {
 					//todo (6.0) when criteria will ne implemented use criteria commented as in the original test
 //					User u2 = (User) session.createCriteria( User.class ).uniqueResult();
-					User u2 = (User) session.createQuery( "from User" ).uniqueResult();
-
+//					User u2 = (User) session.createQuery( "from User" ).uniqueResult();
+					User u2 = session.get( User.class, "gavin" );
 					assertTrue( Hibernate.isInitialized( u2.getEmailAddresses() ) );
 					assertFalse( Hibernate.isInitialized( u2.getPermissions() ) );
 					assertEquals( u2.getEmailAddresses().size(), 2 );

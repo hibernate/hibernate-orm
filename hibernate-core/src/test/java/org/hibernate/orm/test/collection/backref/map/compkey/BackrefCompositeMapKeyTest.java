@@ -18,7 +18,8 @@ import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -232,7 +233,7 @@ public class BackrefCompositeMapKeyTest extends SessionFactoryBasedFunctionalTes
 		inTransaction(
 				session -> {
 					Product prod = session.get( Product.class, "Widget" );
-					assertFalse( Hibernate.isInitialized( prod.getParts() ) );
+					assertTrue( Hibernate.isInitialized( prod.getParts() ) );
 					Map parts = prod.getParts();
 					assertThat( parts.size(), is(2) );
 					session.get( Part.class, "Widge" );
@@ -246,7 +247,7 @@ public class BackrefCompositeMapKeyTest extends SessionFactoryBasedFunctionalTes
 		inTransaction(
 				session -> {
 					Product prod = session.get( Product.class, "Widget" );
-					assertFalse( Hibernate.isInitialized( prod.getParts() ) );
+					assertTrue( Hibernate.isInitialized( prod.getParts() ) );
 					Map parts = prod.getParts();
 					assertThat( parts.size(), is( 1 ) );
 					assertNull( parts.get( new MapKey( "Top" ) ) );

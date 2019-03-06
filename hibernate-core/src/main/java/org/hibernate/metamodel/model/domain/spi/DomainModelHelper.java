@@ -86,9 +86,7 @@ public class DomainModelHelper {
 		return new FetchStrategy(
 				determineTiming(
 						style,
-						bootModelAttribute,
-						runtimeModelContainer,
-						entityDescriptor
+						runtimeModelContainer
 				),
 				style
 		);
@@ -96,9 +94,7 @@ public class DomainModelHelper {
 
 	private static FetchTiming determineTiming(
 			FetchStyle style,
-			PersistentAttributeMapping bootModelAttribute,
-			ManagedTypeDescriptor runtimeModelContainer,
-			EntityTypeDescriptor entityDescriptor) {
+			ManagedTypeDescriptor runtimeModelContainer) {
 		switch ( style ) {
 			case JOIN: {
 				return FetchTiming.IMMEDIATE;
@@ -151,18 +147,28 @@ public class DomainModelHelper {
 	}
 
 	public static FetchStrategy determineFetchStrategy(Collection bootCollectionDescriptor) {
+		FetchStyle style = determineStyle( bootCollectionDescriptor );
 		return new FetchStrategy(
-				determineTiming( bootCollectionDescriptor ),
-				determineStyle( bootCollectionDescriptor )
+				determineTiming( bootCollectionDescriptor, style ),
+				style
 		);
 	}
 
-	private static FetchTiming determineTiming(Collection bootCollectionDescriptor) {
-		if ( bootCollectionDescriptor.isLazy() || bootCollectionDescriptor.isExtraLazy() ) {
-			return FetchTiming.DELAYED;
-		}
-		else {
-			return FetchTiming.IMMEDIATE;
+	private static FetchTiming determineTiming(Collection bootCollectionDescriptor, FetchStyle style) {
+		switch ( style ) {
+			case JOIN: {
+				return FetchTiming.IMMEDIATE;
+			}
+			case BATCH:
+			case SUBSELECT: {
+				return FetchTiming.DELAYED;
+			}
+			default: {
+				// SELECT case, can be either
+				return bootCollectionDescriptor.isLazy() || bootCollectionDescriptor.isExtraLazy()
+						? FetchTiming.DELAYED
+						: FetchTiming.IMMEDIATE;
+			}
 		}
 	}
 

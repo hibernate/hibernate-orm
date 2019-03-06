@@ -134,7 +134,7 @@ public class EnversEntityManagerFactoryBasedFunctionalTest
 	@Remove
 	@Deprecated
 	protected EntityManager getOrCreateEntityManager() {
-		if ( entityManager == null ) {
+		if ( entityManager == null || !entityManager.isOpen() ) {
 			entityManager = entityManagerFactoryScope.getEntityManagerFactory().createEntityManager();
 		}
 		return entityManager;

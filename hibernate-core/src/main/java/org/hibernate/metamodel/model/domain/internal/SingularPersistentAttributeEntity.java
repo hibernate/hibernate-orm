@@ -735,7 +735,14 @@ public class SingularPersistentAttributeEntity<O, J>
 
 		if ( referencedUkAttributeName == null || classification.equals( SingularAttributeClassification.ONE_TO_ONE ) ) {
 			return getAssociatedEntityDescriptor().getIdentifierDescriptor().unresolve(
-					getAssociatedEntityDescriptor().getIdentifier( value, session ),
+					// todo (6.0) - Needed to account for to-one proxies obtained from #getReference
+					//		Should this be baked into #getIdentifier somehow?
+					ForeignKeys.getEntityIdentifierIfNotUnsaved(
+							getAssociatedEntityDescriptor().getEntityName(),
+							value,
+							session
+					),
+//					getAssociatedEntityDescriptor().getIdentifier( value, session ),
 					session
 			);
 		}

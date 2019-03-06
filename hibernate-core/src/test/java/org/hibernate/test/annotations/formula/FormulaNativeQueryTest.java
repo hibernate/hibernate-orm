@@ -9,8 +9,8 @@ package org.hibernate.test.annotations.formula;
 import org.hibernate.annotations.Formula;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.query.NativeQuery;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
@@ -18,6 +18,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import javax.persistence.*;
+
+import java.util.Collections;
 import java.util.List;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -68,11 +70,40 @@ public class FormulaNativeQueryTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-7525" )
 	public void testNativeQuery() throws Exception {
 		doInHibernate(
 				this::sessionFactory, session -> {
-					Query query = session.createNativeQuery( "SELECT ft.* FROM foo_table ft", Foo.class );
+					Query query = session.createNativeQuery( "SELECT ft.*, abs(locationEnd - locationStart) as distance FROM foo_table ft", Foo.class );
+					List<Foo> list = query.getResultList();
+					assertEquals( 3, list.size() );
+				}
+		);
+	}
+
+	@Test
+	public void testNativeQueryWithAliasProperties() throws Exception {
+		doInHibernate(
+				this::sessionFactory, session -> {
+					NativeQuery query = session.createNativeQuery( "SELECT ft.*, abs(ft.locationEnd - locationStart) as d FROM foo_table ft");
+					query.addRoot( "ft", Foo.class )
+							.addProperty( "id", "id" )
+							.addProperty( "locationStart", "locationStart" )
+							.addProperty( "locationEnd", "locationEnd" )
+							.addProperty( "distance", "d" );
+					List<Foo> list = query.getResultList();
+					assertEquals( 3, list.size() );
+				}
+		);
+	}
+
+	@Test
+	public void testNativeQueryWithAliasSyntax() throws Exception {
+		doInHibernate(
+				this::sessionFactory, session -> {
+					NativeQuery query = session.createNativeQuery(
+							"SELECT ft.id as {ft.id}, ft.locationStart as {ft.locationStart}, ft.locationEnd as {ft.locationEnd}, abs(ft.locationEnd - locationStart) as {ft.distance} FROM foo_table ft")
+							.addEntity( "ft", Foo.class );
+					query.setProperties( Collections.singletonMap( "distance", "distance" ) );
 					List<Foo> list = query.getResultList();
 					assertEquals( 3, list.size() );
 				}
@@ -81,12 +112,12 @@ public class FormulaNativeQueryTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testHql() throws Exception {
-		// Show that HQL does work
+		// Show that HQL works too
 		doInHibernate(
 				this::sessionFactory, session -> {
 					Query query = session.createQuery( "SELECT ft FROM Foo ft", Foo.class );
 					List<Foo> list = query.getResultList();
-					assertEquals(3, list.size());
+					assertEquals( 3, list.size() );
 				}
 		);
 	}

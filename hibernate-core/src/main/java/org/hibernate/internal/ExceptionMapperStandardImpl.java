@@ -16,7 +16,6 @@ import org.hibernate.resource.transaction.backend.jta.internal.synchronization.E
  * @author Steve Ebersole
  */
 public class ExceptionMapperStandardImpl implements ExceptionMapper {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( ExceptionMapperStandardImpl.class );
 
 	public static final ExceptionMapper INSTANCE = new ExceptionMapperStandardImpl();
 

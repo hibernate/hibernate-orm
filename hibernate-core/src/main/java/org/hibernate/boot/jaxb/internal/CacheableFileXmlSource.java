@@ -117,9 +117,9 @@ public class CacheableFileXmlSource extends XmlSource {
 	}
 
 	private static void writeSerFile(Serializable binding, File xmlFile, File serFile) {
-		try {
+		try (FileOutputStream fos = new FileOutputStream( serFile )){
 			log.debugf( "Writing cache file for: %s to: %s", xmlFile.getAbsolutePath(), serFile.getAbsolutePath() );
-			SerializationHelper.serialize( binding, new FileOutputStream( serFile ) );
+			SerializationHelper.serialize( binding, fos );
 			boolean success = serFile.setLastModified( System.currentTimeMillis() );
 			if ( !success ) {
 				log.warn( "Could not update cacheable hbm.xml bin file timestamp" );

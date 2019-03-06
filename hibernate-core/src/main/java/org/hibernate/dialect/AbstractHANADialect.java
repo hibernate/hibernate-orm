@@ -1036,7 +1036,7 @@ public abstract class AbstractHANADialect extends Dialect {
 				createSequenceString += " minvalue " + initialValue;
 			}
 		}
-		else if ( incrementSize < 0 ) {
+		else {
 			if ( initialValue > -1 ) {
 				// default maxvalue for a descending sequence is -1
 				createSequenceString += " maxvalue " + initialValue;

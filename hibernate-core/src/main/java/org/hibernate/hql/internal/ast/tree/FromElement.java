@@ -279,7 +279,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		if ( columns != null ) {
 			for ( int i = 0; i < columns.length; i++ ) {
 				buf.append( columns[i] );
-				if ( i < columns.length ) {
+				if ( i < columns.length - 1 ) {
 					buf.append( " " );
 				}
 			}

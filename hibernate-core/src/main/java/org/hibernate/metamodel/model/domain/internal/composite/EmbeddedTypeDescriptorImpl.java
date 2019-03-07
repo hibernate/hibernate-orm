@@ -178,7 +178,7 @@ public class EmbeddedTypeDescriptorImpl<J>
 
 	@Override
 	public boolean isDirty(Object one, Object another, SharedSessionContractImplementor session) {
-		if ( getJavaTypeDescriptor().areEqual( (J) one, (J) another ) ) {
+		if ( one == another ) {
 			return false;
 		}
 

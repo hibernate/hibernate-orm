@@ -133,8 +133,10 @@ public abstract class AbstractSqmCollectionIndexReference
 		return getPluralAttributeReference().getReferencedNavigable()
 				.getPersistentCollectionDescriptor()
 				.getIndexDescriptor()
-				.createSqmExpression( getPluralAttributeReference().getExportedFromElement(), getPluralAttributeReference(),
-									  creationState
+				.createSqmExpression(
+						getPluralAttributeReference().getExportedFromElement(),
+						getPluralAttributeReference(),
+						creationState
 				);
 	}
 

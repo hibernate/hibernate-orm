@@ -46,34 +46,58 @@ public interface SqmCreationState {
 	// happens - SqmPath, etc
 
 
+	/**
+	 * @deprecated we want to re-think in terms of how SQM creation happens
+	 */
 	@Remove
 	@Deprecated
 	ImplicitAliasGenerator getImplicitAliasGenerator();
 
+	/**
+	 * @deprecated we want to re-think in terms of how SQM creation happens
+	 */
 	@Remove
 	@Deprecated
 	QuerySpecProcessingState getCurrentQuerySpecProcessingState();
 
+	/**
+	 * @deprecated we want to re-think in terms of how SQM creation happens
+	 */
 	@Remove
 	@Deprecated
 	SqmFromElementSpace getCurrentFromElementSpace();
 
+	/**
+	 * @deprecated we want to re-think in terms of how SQM creation happens
+	 */
 	@Remove
 	@Deprecated
 	SqmFromBuilder getCurrentFromElementBuilder();
 
+	/**
+	 * @deprecated we want to re-think in terms of how SQM creation happens
+	 */
 	@Remove
 	@Deprecated
 	CurrentSqmFromElementSpaceCoordAccess getCurrentSqmFromElementSpaceCoordAccess();
 
+	/**
+	 * @deprecated we want to re-think in terms of how SQM creation happens
+	 */
 	@Remove
 	@Deprecated
 	void cacheNavigableReference(SqmNavigableReference reference);
 
+	/**
+	 * @deprecated we want to re-think in terms of how SQM creation happens
+	 */
 	@Remove
 	@Deprecated
 	SqmNavigableReference getCachedNavigableReference(SqmNavigableContainerReference source, Navigable navigable);
 
+	/**
+	 * @deprecated we want to re-think in terms of how SQM creation happens
+	 */
 	@Remove
 	@Deprecated
 	void registerFetch(SqmNavigableContainerReference sourceReference, SqmNavigableJoin navigableJoin);

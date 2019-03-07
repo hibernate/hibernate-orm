@@ -7,7 +7,7 @@
 package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
-import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
@@ -25,11 +25,13 @@ public abstract class AbstractSpecificSqmElementReference
 			String name,
 			String currentContextKey,
 			boolean isTerminal,
-			SqmCreationContext context) {
+			SqmCreationState creationState) {
 		return getPluralAttributeReference().getReferencedNavigable()
 				.getPersistentCollectionDescriptor()
 				.getElementDescriptor()
-				.createSqmExpression( getPluralAttributeReference().getExportedFromElement(), getPluralAttributeReference(), context );
+				.createSqmExpression( getPluralAttributeReference().getExportedFromElement(), getPluralAttributeReference(),
+									  creationState
+				);
 	}
 
 	@Override
@@ -37,7 +39,7 @@ public abstract class AbstractSpecificSqmElementReference
 			SqmExpression selector,
 			String currentContextKey,
 			boolean isTerminal,
-			SqmCreationContext context) {
+			SqmCreationState creationState) {
 		throw new UnsupportedOperationException(  );
 	}
 }

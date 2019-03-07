@@ -14,7 +14,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.produce.SqmProductionException;
 import org.hibernate.query.sqm.produce.spi.AbstractQuerySpecProcessingState;
-import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.produce.spi.SqmFromBuilder;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
@@ -35,11 +35,11 @@ public class QuerySpecProcessingStateDmlImpl extends AbstractQuerySpecProcessing
 
 	private final SqmFromBuilder fromElementBuilder;
 
-	public QuerySpecProcessingStateDmlImpl(SqmCreationContext creationContext) {
+	public QuerySpecProcessingStateDmlImpl(SqmCreationState creationState) {
 		// implicitly no outer query, so pass null
-		super( creationContext, null );
+		super( null, creationState );
 		this.fromClause = new DmlFromClause();
-		this.fromElementBuilder = new DmlFromElementBuilder( creationContext );
+		this.fromElementBuilder = new DmlFromElementBuilder( creationState );
 	}
 
 	@Override
@@ -113,8 +113,8 @@ public class QuerySpecProcessingStateDmlImpl extends AbstractQuerySpecProcessing
 	}
 
 	public static class DmlFromElementBuilder extends SqmFromBuilderStandard {
-		public DmlFromElementBuilder(SqmCreationContext creationContext) {
-			super( creationContext );
+		public DmlFromElementBuilder(SqmCreationState creationState) {
+			super( creationState );
 		}
 
 		@Override

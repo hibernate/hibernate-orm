@@ -37,22 +37,11 @@
  *
  *
  *
- * [NOTE]
- * ====
- * Would be nice later to be able to define our JPA Criteria impls based
- * on the SQM tree itself, meaning no walking to convert.  The conceptual
- * challenge here is that SQM is inherently "scoped" to a context
- * ({@link org.hibernate.query.sqm.produce.spi.SqmCreationContext}, which is
- * generally the Query instance). However, Criteria is inherently un-scoped -
- * it is created from the {@link javax.persistence.criteria.CriteriaBuilder}
- * which is "global" to the SessionFactory/EntityManagerFactory; it must first
- * be turned into a Query through a Session.
- * ====
- *
  * == Exceptions
  *
  * Generally, the interpretation will throw exceptions as one of 3 types:
- *  * {@link org.hibernate.query.sqm.QueryException} and derivatives represent problems with the
+ *
+ *  * {@link org.hibernate.query.sqm.SemanticException} and derivatives represent problems with the
  *  		query itself.
  *  * {@link org.hibernate.query.sqm.ParsingException} and derivatives represent errors (potential
  *  		bugs) during parsing.

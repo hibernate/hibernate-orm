@@ -9,12 +9,11 @@ package org.hibernate.query.sqm.produce.path.internal;
 
 import java.util.Locale;
 
-import org.hibernate.DotIdentifierSequence;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
-import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 
@@ -25,25 +24,20 @@ import static org.hibernate.internal.util.StringHelper.unqualify;
  */
 public class SemanticPathPartNamedPackage implements FullyQualifiedReflectivePathSource {
 	private final FullyQualifiedReflectivePathSource pathSource;
-	private final SessionFactoryImplementor sessionFactory;
 
 	private final String fullPath;
 	private final String localName;
 
-	public SemanticPathPartNamedPackage(
-			Package namedPackage,
-			SessionFactoryImplementor sessionFactory) {
-		this( null, namedPackage, sessionFactory );
+	public SemanticPathPartNamedPackage(Package namedPackage) {
+		this( null, namedPackage );
 
 		assert namedPackage.getName().indexOf( '.' ) < 0;
 	}
 
 	public SemanticPathPartNamedPackage(
 			FullyQualifiedReflectivePathSource pathSource,
-			Package namedPackage,
-			SessionFactoryImplementor sessionFactory) {
+			Package namedPackage) {
 		this.pathSource = pathSource;
-		this.sessionFactory = sessionFactory;
 
 		this.fullPath = namedPackage.getName();
 		this.localName = unqualify( namedPackage.getName() );
@@ -91,7 +85,7 @@ public class SemanticPathPartNamedPackage implements FullyQualifiedReflectivePat
 
 	@Override
 	public FullyQualifiedReflectivePathSource append(String subPathName) {
-		return new FullyQualifiedReflectivePath( this, subPathName, sessionFactory );
+		return new FullyQualifiedReflectivePath( this, subPathName );
 	}
 
 	@Override
@@ -99,7 +93,7 @@ public class SemanticPathPartNamedPackage implements FullyQualifiedReflectivePat
 			String name,
 			String currentContextKey,
 			boolean isTerminal,
-			SqmCreationContext context) {
+			SqmCreationState creationState) {
 		return append( name );
 	}
 
@@ -108,7 +102,7 @@ public class SemanticPathPartNamedPackage implements FullyQualifiedReflectivePat
 			SqmExpression selector,
 			String currentContextKey,
 			boolean isTerminal,
-			SqmCreationContext context) {
+			SqmCreationState creationState) {
 		throw new SemanticException( "Illegal attempt to dereference package name using index-access" );
 	}
 

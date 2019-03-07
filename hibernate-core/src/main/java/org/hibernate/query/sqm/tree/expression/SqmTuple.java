@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import org.hibernate.query.sqm.QueryException;
+import org.hibernate.QueryException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;

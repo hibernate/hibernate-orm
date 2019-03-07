@@ -9,6 +9,7 @@ package org.hibernate.engine.spi;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 import javax.persistence.EntityGraph;
 
@@ -40,6 +41,8 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.spi.ResultSetMappingDescriptor;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
@@ -56,7 +59,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public interface SessionFactoryImplementor
-		extends SessionFactory, QueryParameterBindingTypeResolver {
+		extends SessionFactory, QueryParameterBindingTypeResolver, SqmCreationContext {
 	/**
 	 * Get the UUID for this SessionFactory.  The value is generated as a {@link java.util.UUID}, but kept
 	 * as a String.
@@ -75,6 +78,16 @@ public interface SessionFactoryImplementor
 	String getName();
 
 	TypeConfiguration getTypeConfiguration();
+
+	@Override
+	default MetamodelImplementor getDomainModel() {
+		return getMetamodel();
+	}
+
+	@Override
+	default Function<String, SqmFunctionTemplate> getFunctionResolver() {
+		return getQueryEngine().getSqmFunctionRegistry()::findFunctionTemplate;
+	}
 
 	@Override
 	SessionBuilderImplementor withOptions();

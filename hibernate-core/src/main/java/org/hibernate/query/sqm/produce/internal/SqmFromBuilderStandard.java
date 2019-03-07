@@ -7,7 +7,7 @@
 package org.hibernate.query.sqm.produce.internal;
 
 import org.hibernate.query.sqm.produce.spi.AbstractSqmFromBuilder;
-import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
@@ -24,8 +24,8 @@ public class SqmFromBuilderStandard extends AbstractSqmFromBuilder {
 	private static final Logger log = Logger.getLogger( SqmFromBuilderStandard.class );
 	private static final boolean log_trace_enabled = log.isTraceEnabled();
 
-	public SqmFromBuilderStandard(SqmCreationContext sqmCreationContext) {
-		super( sqmCreationContext );
+	public SqmFromBuilderStandard(SqmCreationState creationState) {
+		super( creationState );
 	}
 
 	@Override
@@ -39,16 +39,16 @@ public class SqmFromBuilderStandard extends AbstractSqmFromBuilder {
 				.getContainingSpace();
 		assert fromElementSpace != null;
 
-		getSqmCreationContext().getCurrentSqmFromElementSpaceCoordAccess().setCurrentSqmFromElementSpace( fromElementSpace );
+		getCreationState().getCurrentSqmFromElementSpaceCoordAccess().setCurrentSqmFromElementSpace( fromElementSpace );
 
 		if ( log_trace_enabled ) {
 			log.tracef( "#buildNavigableJoin( %s )", navigableReference );
 		}
 
-		final String uid = getSqmCreationContext().generateUniqueIdentifier();
-		final String alias = getSqmCreationContext().getImplicitAliasGenerator().generateUniqueImplicitAlias();
+		final String uid = getCreationState().generateUniqueIdentifier();
+		final String alias = getCreationState().getImplicitAliasGenerator().generateUniqueImplicitAlias();
 
-		final SqmNavigableReference cachedNavigableReference = getSqmCreationContext().getCachedNavigableReference(
+		final SqmNavigableReference cachedNavigableReference = getCreationState().getCachedNavigableReference(
 				navigableReference.getSourceReference(),
 				navigableReference.getReferencedNavigable()
 		);
@@ -72,7 +72,7 @@ public class SqmFromBuilderStandard extends AbstractSqmFromBuilder {
 		fromElementSpace.addJoin( navigableJoin );
 		registerAlias( navigableJoin );
 
-		getSqmCreationContext().cacheNavigableReference( navigableReference );
+		getCreationState().cacheNavigableReference( navigableReference );
 
 		return navigableJoin;
 	}

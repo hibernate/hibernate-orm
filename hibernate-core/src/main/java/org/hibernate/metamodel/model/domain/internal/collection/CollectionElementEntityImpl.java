@@ -34,7 +34,7 @@ import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.query.spi.ComparisonOperator;
-import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReferenceEntity;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
@@ -277,7 +277,7 @@ public class CollectionElementEntityImpl<J>
 	public SqmNavigableReference createSqmExpression(
 			SqmFrom sourceSqmFrom,
 			SqmNavigableContainerReference containerReference,
-			SqmCreationContext creationContext) {
+			SqmCreationState creationState) {
 		return new SqmCollectionElementReferenceEntity( (SqmPluralAttributeReference) containerReference );
 	}
 

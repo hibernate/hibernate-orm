@@ -13,11 +13,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.query.criteria.spi.CriteriaNodeBuilder;
-import org.hibernate.query.criteria.spi.ExpressionImplementor;
-import org.hibernate.query.criteria.spi.PathImplementor;
-import org.hibernate.query.criteria.spi.PathSourceImplementor;
-import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -109,7 +105,7 @@ public interface Navigable<T> extends DomainTypeDescriptor<T> {
 			//		via SqmFromElementBuilder (`creationContext#getCurrent
 			SqmFrom sourceSqmFrom,
 			SqmNavigableContainerReference containerReference,
-			SqmCreationContext creationContext) {
+			SqmCreationState creationState) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 

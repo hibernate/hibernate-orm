@@ -7,7 +7,7 @@
 package org.hibernate.query.sqm.produce.internal;
 
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
-import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
@@ -18,21 +18,21 @@ public class SqmFromBuilderFromClauseStandard extends AbstractSqmFromBuilderFrom
 
 	public SqmFromBuilderFromClauseStandard(
 			String alias,
-			SqmCreationContext sqmCreationContext) {
-		super( alias, sqmCreationContext );
+			SqmCreationState creationState) {
+		super( alias, creationState );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public SqmRoot buildRoot(EntityValuedNavigable navigable) {
 		final SqmRoot root = new SqmRoot(
-				getSqmCreationContext().getCurrentFromElementSpace(),
-				getSqmCreationContext().generateUniqueIdentifier(),
+				getCreationState().getCurrentFromElementSpace(),
+				getCreationState().generateUniqueIdentifier(),
 				getAlias(),
 				navigable
 		);
 
-		getSqmCreationContext().getCurrentFromElementSpace().setRoot( root );
+		getCreationState().getCurrentFromElementSpace().setRoot( root );
 		commonHandling( root );
 
 		return root;
@@ -41,13 +41,13 @@ public class SqmFromBuilderFromClauseStandard extends AbstractSqmFromBuilderFrom
 	@Override
 	public SqmCrossJoin buildCrossJoin(EntityValuedNavigable navigable) {
 		final SqmCrossJoin join = new SqmCrossJoin(
-				getSqmCreationContext().getCurrentFromElementSpace(),
-				getSqmCreationContext().generateUniqueIdentifier(),
+				getCreationState().getCurrentFromElementSpace(),
+				getCreationState().generateUniqueIdentifier(),
 				getAlias(),
 				navigable.getEntityDescriptor()
 		);
 
-		getSqmCreationContext().getCurrentFromElementSpace().addJoin( join );
+		getCreationState().getCurrentFromElementSpace().addJoin( join );
 		commonHandling( join );
 
 		return join;

@@ -24,15 +24,15 @@ import org.jboss.logging.Logger;
  */
 public abstract class AbstractSqmFromBuilder implements SqmFromBuilder {
 	private static final Logger log = Logger.getLogger( AbstractSqmFromBuilder.class );
+	private final SqmCreationState creationState;
 
-	private final SqmCreationContext sqmCreationContext;
 
-	protected AbstractSqmFromBuilder(SqmCreationContext sqmCreationContext) {
-		this.sqmCreationContext = sqmCreationContext;
+	protected AbstractSqmFromBuilder(SqmCreationState creationState) {
+		this.creationState = creationState;
 	}
 
-	protected  SqmCreationContext getSqmCreationContext() {
-		return sqmCreationContext;
+	protected SqmCreationState getCreationState() {
+		return creationState;
 	}
 
 	@Override
@@ -66,6 +66,6 @@ public abstract class AbstractSqmFromBuilder implements SqmFromBuilder {
 			log.debug( "Alias registration for implicit FromElement alias : " + alias );
 		}
 
-		sqmCreationContext.getCurrentQuerySpecProcessingState().getAliasRegistry().registerAlias( sqmFrom );
+		creationState.getCurrentQuerySpecProcessingState().getAliasRegistry().registerAlias( sqmFrom );
 	}
 }

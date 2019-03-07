@@ -8,10 +8,9 @@ package org.hibernate.query.sqm.produce.path.internal;
 
 import java.util.Locale;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SemanticException;
-import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
@@ -22,10 +21,8 @@ import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
 public class SemanticPathPartJoinPredicate extends SemanticPathPartRoot {
 	private final SqmFromElementSpace fromElementSpace;
 
-	public SemanticPathPartJoinPredicate(
-			SqmFromElementSpace fromElementSpace,
-			SessionFactoryImplementor sessionFactory) {
-		super( sessionFactory );
+	public SemanticPathPartJoinPredicate(SqmFromElementSpace fromElementSpace) {
+		super();
 		this.fromElementSpace = fromElementSpace;
 	}
 
@@ -33,7 +30,7 @@ public class SemanticPathPartJoinPredicate extends SemanticPathPartRoot {
 	protected void validateNavigablePathRoot(
 			SqmNavigableReference navigableReference,
 			String currentContextKey,
-			SqmCreationContext context) {
+			SqmCreationState creationState) {
 		final SqmFrom sqmFrom = navigableReference.getExportedFromElement();
 		if ( sqmFrom == null ) {
 			throw new ParsingException(

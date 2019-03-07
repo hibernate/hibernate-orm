@@ -6,11 +6,10 @@
  */
 package org.hibernate.query.sqm.produce.path.internal;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
-import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 
@@ -19,22 +18,19 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionEle
  */
 public class PossiblePackageRoot implements SemanticPathPart, FullyQualifiedReflectivePathSource {
 	private final FullyQualifiedReflectivePathSource parent;
-	private final SessionFactoryImplementor sessionFactory;
 
 	private final String fullPath;
 	private final String localName;
 
-	public PossiblePackageRoot(String name, SessionFactoryImplementor sessionFactory) {
-		this( null, name, sessionFactory );
+	public PossiblePackageRoot(String name) {
+		this( null, name );
 	}
 
 	public PossiblePackageRoot(
 			FullyQualifiedReflectivePathSource parent,
-			String localName,
-			SessionFactoryImplementor sessionFactory) {
+			String localName) {
 		this.parent = parent;
 		this.localName = localName;
-		this.sessionFactory = sessionFactory;
 
 		this.fullPath = parent == null ? localName : parent.append( localName ).getFullPath();
 	}
@@ -64,11 +60,11 @@ public class PossiblePackageRoot implements SemanticPathPart, FullyQualifiedRefl
 			String subName,
 			String currentContextKey,
 			boolean isTerminal,
-			SqmCreationContext context) {
+			SqmCreationState creationState) {
 		final String combinedName = this.fullPath + '.' + subName;
 
-		final EntityTypeDescriptor entityTypeByName = context.getSessionFactory()
-				.getMetamodel()
+		final EntityTypeDescriptor entityTypeByName = creationState.getCreationContext()
+				.getDomainModel()
 				.findEntityDescriptor( combinedName );
 		if ( entityTypeByName != null ) {
 			return new SemanticPathPartNamedEntity( entityTypeByName );
@@ -76,7 +72,7 @@ public class PossiblePackageRoot implements SemanticPathPart, FullyQualifiedRefl
 
 		final Package namedPackage = Package.getPackage( combinedName );
 		if ( namedPackage != null ) {
-			return new SemanticPathPartNamedPackage( this, namedPackage, sessionFactory );
+			return new SemanticPathPartNamedPackage( this, namedPackage );
 		}
 
 		if ( ! isTerminal ) {
@@ -84,7 +80,7 @@ public class PossiblePackageRoot implements SemanticPathPart, FullyQualifiedRefl
 			// a valid package name if the package has no direct classes.  Since
 			// this is not yet the terminal the next node might still find the
 			// Package, so delay the resolution
-			return new PossiblePackageRoot( this, subName, sessionFactory );
+			return new PossiblePackageRoot( this, subName );
 		}
 
 		throw new SemanticException( "Could not resolve path terminal : " + combinedName );
@@ -95,7 +91,7 @@ public class PossiblePackageRoot implements SemanticPathPart, FullyQualifiedRefl
 			SqmExpression selector,
 			String currentContextKey,
 			boolean isTerminal,
-			SqmCreationContext context) {
+			SqmCreationState creationState) {
 		return null;
 	}
 }

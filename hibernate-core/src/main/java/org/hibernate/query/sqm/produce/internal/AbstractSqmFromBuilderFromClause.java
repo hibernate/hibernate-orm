@@ -7,7 +7,7 @@
 package org.hibernate.query.sqm.produce.internal;
 
 import org.hibernate.query.sqm.produce.spi.AbstractSqmFromBuilder;
-import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.from.MutableUsageDetails;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
@@ -21,8 +21,8 @@ public abstract class AbstractSqmFromBuilderFromClause extends AbstractSqmFromBu
 
 	public AbstractSqmFromBuilderFromClause(
 			String alias,
-			SqmCreationContext sqmCreationContext) {
-		super( sqmCreationContext );
+			SqmCreationState creationState) {
+		super( creationState );
 		this.alias = alias;
 	}
 

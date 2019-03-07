@@ -8,7 +8,7 @@ package org.hibernate.query.sqm;
 
 /**
  * The root exception for errors (potential bugs) in the sqm parser code itself, as opposed
- * to {@link QueryException} which indicates problems with the sqm.
+ * to {@link SemanticException} which indicates problems with the sqm.
  *
  * @author Steve Ebersole
  */

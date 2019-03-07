@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndexEntity;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
-import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
@@ -65,11 +65,11 @@ public class SqmCollectionIndexReferenceEntity
 			String name,
 			String currentContextKey,
 			boolean isTerminal,
-			SqmCreationContext context) {
+			SqmCreationState creationState) {
 		return getPluralAttributeReference().getReferencedNavigable()
 				.getPersistentCollectionDescriptor()
 				.getIndexDescriptor()
-				.createSqmExpression( exportedFromElement, getPluralAttributeReference(), context );
+				.createSqmExpression( exportedFromElement, getPluralAttributeReference(), creationState );
 	}
 
 	@Override
@@ -77,7 +77,7 @@ public class SqmCollectionIndexReferenceEntity
 			SqmExpression selector,
 			String currentContextKey,
 			boolean isTerminal,
-			SqmCreationContext context) {
+			SqmCreationState creationState) {
 		throw new UnsupportedOperationException(  );
 	}
 }

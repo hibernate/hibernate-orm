@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-import org.hibernate.query.sqm.QueryException;
+import org.hibernate.QueryException;
 
 /**
  * @author Steve Ebersole

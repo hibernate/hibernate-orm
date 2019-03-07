@@ -12,7 +12,7 @@ import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
-import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
@@ -52,7 +52,7 @@ public abstract class AbstractSqmSingularAttributeReference
 			String name,
 			String currentContextKey,
 			boolean isTerminal,
-			SqmCreationContext context) {
+			SqmCreationState creationState) {
 		if ( ! NavigableContainer.class.isInstance( getReferencedNavigable() ) ) {
 			throw new SemanticException(
 					"Cannot dereference non-container Navigable [" +
@@ -73,7 +73,7 @@ public abstract class AbstractSqmSingularAttributeReference
 		return navigable.createSqmExpression(
 				getExportedFromElement(),
 				(SqmNavigableContainerReference) this,
-				context
+				creationState
 		);
 	}
 
@@ -82,7 +82,7 @@ public abstract class AbstractSqmSingularAttributeReference
 			SqmExpression selector,
 			String currentContextKey,
 			boolean isTerminal,
-			SqmCreationContext context) {
+			SqmCreationState creationState) {
 		throw new UnsupportedOperationException(  );
 	}
 }

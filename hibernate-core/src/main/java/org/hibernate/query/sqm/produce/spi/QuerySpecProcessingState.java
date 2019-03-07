@@ -6,15 +6,15 @@
  */
 package org.hibernate.query.sqm.produce.spi;
 
-import java.util.List;
-
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 
 /**
  * @author Steve Ebersole
  */
 public interface QuerySpecProcessingState extends RootSqmNavigableReferenceLocator {
-	SqmCreationContext getSqmCreationContext();
+	QuerySpecProcessingState getContainingQueryState();
+
+	SqmCreationState getCreationState();
 
 	AliasRegistry getAliasRegistry();
 
@@ -24,6 +24,4 @@ public interface QuerySpecProcessingState extends RootSqmNavigableReferenceLocat
 	SqmFromClause getFromClause();
 
 
-	QuerySpecProcessingState getContainingQueryState();
-	List<QuerySpecProcessingState> getSubQueryStateList();
 }

@@ -12,7 +12,7 @@ package org.hibernate.query.sqm;
  *
  * @author Steve Ebersole
  */
-public class SemanticException extends QueryException {
+public class SemanticException extends org.hibernate.QueryException {
 	public SemanticException(String message) {
 		super( message );
 	}

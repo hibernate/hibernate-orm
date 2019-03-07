@@ -64,7 +64,7 @@ import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey.ColumnMappings;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceEntity;
@@ -418,11 +418,11 @@ public class SingularPersistentAttributeEntity<O, J>
 	public SqmNavigableReference createSqmExpression(
 			SqmFrom sourceSqmFrom,
 			SqmNavigableContainerReference containerReference,
-			SqmCreationContext creationContext) {
+			SqmCreationState creationState) {
 		return new SqmSingularAttributeReferenceEntity(
 				containerReference,
 				this,
-				creationContext
+				creationState
 		);
 	}
 

@@ -23,6 +23,8 @@ import org.hibernate.query.sqm.produce.spi.CurrentSqmFromElementSpaceCoordAccess
 import org.hibernate.query.sqm.produce.spi.ImplicitAliasGenerator;
 import org.hibernate.query.sqm.produce.spi.QuerySpecProcessingState;
 import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationOptions;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.produce.spi.SqmFromBuilder;
 import org.hibernate.query.sqm.tree.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -130,7 +132,7 @@ public class QuerySplitter {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static class UnmappedPolymorphismReplacer extends BaseSemanticQueryWalker implements SqmCreationContext {
+	private static class UnmappedPolymorphismReplacer extends BaseSemanticQueryWalker implements SqmCreationState {
 		private final SqmRoot unmappedPolymorphicFromElement;
 		private final EntityTypeDescriptor mappedDescriptor;
 
@@ -795,6 +797,16 @@ public class QuerySplitter {
 		public CurrentSqmFromElementSpaceCoordAccess getCurrentSqmFromElementSpaceCoordAccess() {
 			// todo (6.0) : not sure these are needed
 			throw new NotYetImplementedFor6Exception(  );
+		}
+
+		@Override
+		public SqmCreationContext getCreationContext() {
+			return getSessionFactory();
+		}
+
+		@Override
+		public SqmCreationOptions getCreationOptions() {
+			return () -> false;
 		}
 
 		@Override

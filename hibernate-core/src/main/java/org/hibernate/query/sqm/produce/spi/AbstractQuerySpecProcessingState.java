@@ -6,45 +6,32 @@
  */
 package org.hibernate.query.sqm.produce.spi;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractQuerySpecProcessingState implements QuerySpecProcessingState {
-	private final SqmCreationContext creationContext;
-	private final AliasRegistry aliasRegistry;
 	private final QuerySpecProcessingState containingQueryState;
-	private List<QuerySpecProcessingState> subQueryStateList;
+	private final SqmCreationState creationState;
 
-	public AbstractQuerySpecProcessingState(SqmCreationContext creationContext, QuerySpecProcessingState containingQueryState) {
-		this.creationContext = creationContext;
+	private final AliasRegistry aliasRegistry;
+
+	public AbstractQuerySpecProcessingState(
+			QuerySpecProcessingState containingQueryState,
+			SqmCreationState creationState) {
 		this.containingQueryState = containingQueryState;
+		this.creationState = creationState;
 
 		if ( containingQueryState == null ) {
 			this.aliasRegistry = new AliasRegistry();
 		}
 		else {
 			this.aliasRegistry = new AliasRegistry( containingQueryState.getAliasRegistry() );
-			( (AbstractQuerySpecProcessingState) containingQueryState ).registerSubQueryState( this );
 		}
-	}
-
-
-	private void registerSubQueryState(QuerySpecProcessingState subQueryState) {
-		if ( subQueryStateList == null ) {
-			// this is the first subquery we have encountered for this processing state
-			subQueryStateList = new ArrayList<>();
-		}
-
-		subQueryStateList.add( subQueryState );
 	}
 
 	@Override
-	public SqmCreationContext getSqmCreationContext() {
-		return creationContext;
+	public SqmCreationState getCreationState() {
+		return creationState;
 	}
 
 	@Override
@@ -55,12 +42,5 @@ public abstract class AbstractQuerySpecProcessingState implements QuerySpecProce
 	@Override
 	public QuerySpecProcessingState getContainingQueryState() {
 		return containingQueryState;
-	}
-
-	@Override
-	public List<QuerySpecProcessingState> getSubQueryStateList() {
-		return subQueryStateList == null
-				? Collections.emptyList()
-				: Collections.unmodifiableList( subQueryStateList );
 	}
 }

@@ -9,7 +9,7 @@ package org.hibernate.query.sqm.produce.internal;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.sqm.produce.spi.AbstractQuerySpecProcessingState;
 import org.hibernate.query.sqm.produce.spi.QuerySpecProcessingState;
-import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
@@ -30,8 +30,10 @@ public class QuerySpecProcessingStateStandardImpl extends AbstractQuerySpecProce
 
 	private final SqmFromClause fromClause;
 
-	public QuerySpecProcessingStateStandardImpl(SqmCreationContext creationContext, QuerySpecProcessingState containingQueryState) {
-		super( creationContext, containingQueryState );
+	public QuerySpecProcessingStateStandardImpl(
+			QuerySpecProcessingState containingQueryState,
+			SqmCreationState creationState) {
+		super( containingQueryState, creationState );
 
 		this.fromClause = new SqmFromClause();
 
@@ -43,7 +45,7 @@ public class QuerySpecProcessingStateStandardImpl extends AbstractQuerySpecProce
 
 	@Override
 	public SqmNavigableReference findNavigableReferenceByIdentificationVariable(String identificationVariable) {
-		return getSqmCreationContext().getCurrentQuerySpecProcessingState().getAliasRegistry().findFromElementByAlias( identificationVariable );
+		return getCreationState().getCurrentQuerySpecProcessingState().getAliasRegistry().findFromElementByAlias( identificationVariable );
 	}
 
 	@Override

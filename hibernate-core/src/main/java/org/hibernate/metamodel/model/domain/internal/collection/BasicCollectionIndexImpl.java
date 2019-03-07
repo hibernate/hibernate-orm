@@ -22,7 +22,7 @@ import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionIndexReferenceBasic;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
@@ -32,7 +32,6 @@ import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
@@ -124,7 +123,7 @@ public class BasicCollectionIndexImpl<J>
 	public SqmNavigableReference createSqmExpression(
 			SqmFrom sourceSqmFrom,
 			SqmNavigableContainerReference containerReference,
-			SqmCreationContext creationContext) {
+			SqmCreationState creationState) {
 		return new SqmCollectionIndexReferenceBasic( (SqmPluralAttributeReference) containerReference );
 	}
 

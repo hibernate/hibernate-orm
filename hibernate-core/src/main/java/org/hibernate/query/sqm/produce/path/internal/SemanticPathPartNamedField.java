@@ -11,7 +11,7 @@ import java.util.Locale;
 
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
-import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 
@@ -33,7 +33,7 @@ public class SemanticPathPartNamedField implements SemanticPathPart {
 			String name,
 			String currentContextKey,
 			boolean isTerminal,
-			SqmCreationContext context) {
+			SqmCreationState creationState) {
 		throw new SemanticException(
 				String.format(
 						Locale.ROOT,
@@ -49,7 +49,7 @@ public class SemanticPathPartNamedField implements SemanticPathPart {
 			SqmExpression selector,
 			String currentContextKey,
 			boolean isTerminal,
-			SqmCreationContext context) {
+			SqmCreationState creationState) {
 		throw new SemanticException(
 				String.format(
 						Locale.ROOT,

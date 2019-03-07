@@ -6,13 +6,12 @@
  */
 package org.hibernate.query.sqm.produce.spi;
 
+import java.util.function.Function;
+
 import org.hibernate.Incubating;
-import org.hibernate.annotations.Remove;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * The "context" object for creation of SQM objects
@@ -20,36 +19,10 @@ import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
  * @author Steve Ebersole
  */
 @Incubating
-public interface SqmCreationContext extends SqmCreationState {
-	SessionFactoryImplementor getSessionFactory();
+public interface SqmCreationContext {
+	MetamodelImplementor getDomainModel();
 
-	String generateUniqueIdentifier();
+	ServiceRegistry getServiceRegistry();
 
-	ImplicitAliasGenerator getImplicitAliasGenerator();
-
-	/**
-	 * todo (6.0) : Remove this and the other state methods, pass the state into `Navigable#createSqmExpression` directly in addition to `SqmCreationContext`
-	 */
-	@Remove
-	default SqmCreationState getCreationState() {
-		return this;
-	}
-
-	@Remove
-	QuerySpecProcessingState getCurrentQuerySpecProcessingState();
-
-	@Remove
-	SqmFromElementSpace getCurrentFromElementSpace();
-
-	@Remove
-	SqmFromBuilder getCurrentFromElementBuilder();
-
-	@Remove
-	CurrentSqmFromElementSpaceCoordAccess getCurrentSqmFromElementSpaceCoordAccess();
-
-	@Remove
-	void cacheNavigableReference(SqmNavigableReference reference);
-
-	@Remove
-	SqmNavigableReference getCachedNavigableReference(SqmNavigableContainerReference source, Navigable navigable);
+	Function<String, SqmFunctionTemplate> getFunctionResolver();
 }

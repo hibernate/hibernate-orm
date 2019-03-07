@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
-import org.hibernate.query.sqm.QueryException;
+import org.hibernate.QueryException;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.spi.AbstractSelfRenderingFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.spi.SelfRenderingFunctionSupport;

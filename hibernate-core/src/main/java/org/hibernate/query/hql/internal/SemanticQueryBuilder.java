@@ -26,7 +26,6 @@ import org.hibernate.SortOrder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.collection.spi.CollectionClassification;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
@@ -61,15 +60,14 @@ import org.hibernate.query.sqm.produce.spi.ImplicitAliasGenerator;
 import org.hibernate.query.sqm.produce.spi.ParameterDeclarationContext;
 import org.hibernate.query.sqm.produce.spi.QuerySpecProcessingState;
 import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationOptions;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.produce.spi.SqmFromBuilder;
 import org.hibernate.query.sqm.produce.spi.TrimSpecificationExpressionWrapper;
-import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
-import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.SqmQuerySpec;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
-import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.InferableTypeSqmExpression;
 import org.hibernate.query.sqm.tree.expression.LiteralHelper;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
@@ -145,6 +143,7 @@ import org.hibernate.query.sqm.tree.from.SqmFromExporter;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.internal.ParameterCollector;
 import org.hibernate.query.sqm.tree.order.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.order.SqmSortSpecification;
@@ -167,8 +166,10 @@ import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
+import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
@@ -192,7 +193,7 @@ import org.antlr.v4.runtime.Token;
  */
 public class SemanticQueryBuilder
 		extends HqlParserBaseVisitor
-		implements SqmCreationContext, CurrentSqmFromElementSpaceCoordAccess {
+		implements SqmCreationState, CurrentSqmFromElementSpaceCoordAccess {
 
 	private static final Logger log = Logger.getLogger( SemanticQueryBuilder.class );
 
@@ -201,15 +202,20 @@ public class SemanticQueryBuilder
 	 * query.
 	 *
 	 * @param statement The statement to analyze.
-	 * @param sessionFactory Access to things needed to perform the analysis
+	 * @param creationContext Access to things needed to perform the analysis
 	 *
 	 * @return The semantic query model
 	 */
-	public static SqmStatement buildSemanticModel(HqlParser.StatementContext statement, SessionFactoryImplementor sessionFactory) {
-		return new SemanticQueryBuilder( sessionFactory ).visitStatement( statement );
+	public static SqmStatement buildSemanticModel(
+			HqlParser.StatementContext statement,
+			SqmCreationOptions creationOptions,
+			SqmCreationContext creationContext) {
+		return new SemanticQueryBuilder( creationOptions, creationContext ).visitStatement( statement );
 	}
 
-	private final SessionFactoryImplementor sessionFactory;
+	private final SqmCreationOptions creationOptions;
+	private final SqmCreationContext creationContext;
+
 	private final ImplicitAliasGenerator implicitAliasGenerator;
 	private final UniqueIdGenerator uidGenerator;
 
@@ -230,18 +236,24 @@ public class SemanticQueryBuilder
 	private ParameterCollector parameterCollector;
 
 
-	protected SemanticQueryBuilder(SessionFactoryImplementor sessionFactory) {
-		this.sessionFactory = sessionFactory;
+	protected SemanticQueryBuilder(SqmCreationOptions creationOptions, SqmCreationContext creationContext) {
+		this.creationOptions = creationOptions;
+		this.creationContext = creationContext;
 
 		this.implicitAliasGenerator = new ImplicitAliasGenerator();
 		this.uidGenerator = new UniqueIdGenerator();
 
-		this.semanticPathPartStack = new StandardStack<>( new SemanticPathPartRoot( sessionFactory ) );
+		this.semanticPathPartStack = new StandardStack<>( new SemanticPathPartRoot() );
 	}
 
 	@Override
-	public SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory;
+	public SqmCreationContext getCreationContext() {
+		return creationContext;
+	}
+
+	@Override
+	public SqmCreationOptions getCreationOptions() {
+		return creationOptions;
 	}
 
 	@Override
@@ -379,7 +391,7 @@ public class SemanticQueryBuilder
 
 	@Override
 	public SqmSelectStatement visitSelectStatement(HqlParser.SelectStatementContext ctx) {
-		if ( getSessionFactory().getSessionFactoryOptions().isStrictJpaQueryLanguageCompliance() ) {
+		if ( creationOptions.useStrictJpaCompliance() ) {
 			if ( ctx.querySpec().selectClause() == null ) {
 				throw new StrictJpaComplianceViolation(
 						"Encountered implicit select-clause, but strict JPQL compliance was requested",
@@ -401,8 +413,8 @@ public class SemanticQueryBuilder
 	public SqmQuerySpec visitQuerySpec(HqlParser.QuerySpecContext ctx) {
 		querySpecProcessingStateStack.push(
 				new QuerySpecProcessingStateStandardImpl(
-						this,
-						querySpecProcessingStateStack.getCurrent()
+						querySpecProcessingStateStack.getCurrent(),
+						this
 				)
 		);
 
@@ -442,7 +454,7 @@ public class SemanticQueryBuilder
 
 			final SqmOrderByClause orderByClause;
 			if ( ctx.orderByClause() != null ) {
-				if ( getSessionFactory().getSessionFactoryOptions().isStrictJpaQueryLanguageCompliance()
+				if ( creationOptions.useStrictJpaCompliance()
 						&& querySpecProcessingStateStack.getCurrent().getContainingQueryState() != null ) {
 					throw new StrictJpaComplianceViolation(
 							StrictJpaComplianceViolation.Type.SUBQUERY_ORDER_BY
@@ -457,7 +469,7 @@ public class SemanticQueryBuilder
 
 			final SqmLimitOffsetClause limitOffsetClause;
 			if ( ctx.limitClause() != null || ctx.offsetClause() != null ) {
-				if ( getSessionFactory().getSessionFactoryOptions().isStrictJpaQueryLanguageCompliance() ) {
+				if ( creationOptions.useStrictJpaCompliance() ) {
 					throw new StrictJpaComplianceViolation(
 							StrictJpaComplianceViolation.Type.LIMIT_OFFSET_CLAUSE
 					);
@@ -583,7 +595,7 @@ public class SemanticQueryBuilder
 
 				if ( aliasToken.getType() != HqlParser.IDENTIFIER ) {
 					// we have a reserved word used as an identification variable.
-					if ( getSessionFactory().getSessionFactoryOptions().isStrictJpaQueryLanguageCompliance() ) {
+					if ( creationOptions.useStrictJpaCompliance() ) {
 						throw new StrictJpaComplianceViolation(
 								String.format(
 										Locale.ROOT,
@@ -614,7 +626,7 @@ public class SemanticQueryBuilder
 
 		if ( ctx.dynamicInstantiationTarget().MAP() != null ) {
 			if ( mapJavaTypeDescriptor == null ) {
-				mapJavaTypeDescriptor = getSessionFactory()
+				mapJavaTypeDescriptor = creationContext.getDomainModel()
 						.getTypeConfiguration()
 						.getJavaTypeDescriptorRegistry()
 						.getDescriptor( Map.class );
@@ -623,7 +635,7 @@ public class SemanticQueryBuilder
 		}
 		else if ( ctx.dynamicInstantiationTarget().LIST() != null ) {
 			if ( listJavaTypeDescriptor == null ) {
-				listJavaTypeDescriptor = getSessionFactory()
+				listJavaTypeDescriptor = creationContext.getDomainModel()
 						.getTypeConfiguration()
 						.getJavaTypeDescriptorRegistry()
 						.getDescriptor( List.class );
@@ -634,7 +646,7 @@ public class SemanticQueryBuilder
 			final String className = ctx.dynamicInstantiationTarget().dotIdentifierSequence().getText();
 			try {
 				final Class<?> targetJavaType = classForName( className );
-				final JavaTypeDescriptor jtd = getSessionFactory()
+				final JavaTypeDescriptor jtd = creationContext.getDomainModel()
 						.getTypeConfiguration()
 						.getJavaTypeDescriptorRegistry()
 						.getOrMakeJavaDescriptor( targetJavaType );
@@ -653,10 +665,7 @@ public class SemanticQueryBuilder
 	}
 
 	private Class classForName(String className) {
-		return getSessionFactory()
-							.getServiceRegistry()
-							.getService( ClassLoaderService.class )
-							.classForName( className );
+		return creationContext.getServiceRegistry().getService( ClassLoaderService.class ).classForName( className );
 	}
 
 	@Override
@@ -845,7 +854,7 @@ public class SemanticQueryBuilder
 				final Token identificationVariableToken = identificationVariableDef.identificationVariable().identifier().getStart();
 				if ( identificationVariableToken.getType() != HqlParser.IDENTIFIER ) {
 					// we have a reserved word used as an identification variable.
-					if ( getSessionFactory().getSessionFactoryOptions().isStrictJpaQueryLanguageCompliance() ) {
+					if ( creationOptions.useStrictJpaCompliance() ) {
 						throw new StrictJpaComplianceViolation(
 								String.format(
 										Locale.ROOT,
@@ -985,7 +994,7 @@ public class SemanticQueryBuilder
 			}
 
 			if ( PolymorphicEntityValuedExpressableType.class.isInstance( entityReference ) ) {
-				if ( getSessionFactory().getSessionFactoryOptions().isStrictJpaQueryLanguageCompliance() ) {
+				if ( creationOptions.useStrictJpaCompliance() ) {
 					throw new StrictJpaComplianceViolation(
 							"Encountered unmapped polymorphic reference [" + entityReference.getEntityName()
 									+ "], but strict JPQL compliance was requested",
@@ -1007,9 +1016,7 @@ public class SemanticQueryBuilder
 		log.debugf( "Attempting to resolve path [%s] as entity reference...", entityName );
 		EntityValuedExpressableType reference = null;
 		try {
-			reference = getSessionFactory()
-					.getMetamodel()
-					.resolveEntityReference( entityName );
+			reference = creationContext.getDomainModel().resolveEntityReference( entityName );
 		}
 		catch (Exception ignore) {
 		}
@@ -1118,7 +1125,7 @@ public class SemanticQueryBuilder
 			final SqmQualifiedJoin joinedFromElement = (SqmQualifiedJoin) navigableReference.getExportedFromElement();
 			currentJoinRhs = joinedFromElement;
 
-			if ( getSessionFactory().getSessionFactoryOptions().isStrictJpaQueryLanguageCompliance() ) {
+			if ( creationOptions.useStrictJpaCompliance() ) {
 				if ( !ImplicitAliasGenerator.isImplicitAlias( joinedFromElement.getIdentificationVariable() ) ) {
 					if ( SqmSingularAttributeReference.class.isInstance( joinedFromElement.getNavigableReference() )
 							&& SqmFromExporter.class.isInstance( joinedFromElement.getNavigableReference() ) ) {
@@ -1159,7 +1166,7 @@ public class SemanticQueryBuilder
 			throw new ParsingException( "Expecting join RHS to be set" );
 		}
 
-		semanticPathPartStack.push( new SemanticPathPartJoinPredicate( currentFromElementSpace, sessionFactory ) );
+		semanticPathPartStack.push( new SemanticPathPartJoinPredicate( currentFromElementSpace ) );
 
 		try {
 			return (SqmPredicate) ctx.predicate().accept( this );
@@ -1438,7 +1445,7 @@ public class SemanticQueryBuilder
 
 		return new SqmMapEntryBinding(
 				pathResolution,
-				(BasicJavaDescriptor) getSessionFactory().getTypeConfiguration()
+				(BasicJavaDescriptor) creationContext.getDomainModel().getTypeConfiguration()
 						.getJavaTypeDescriptorRegistry()
 						.getDescriptor( Map.Entry.class )
 		);
@@ -1515,7 +1522,7 @@ public class SemanticQueryBuilder
 	public Object visitCollectionElementNavigablePath(HqlParser.CollectionElementNavigablePathContext ctx) {
 		final SqmPluralAttributeReference collectionReference = (SqmPluralAttributeReference) ctx.path().accept( this );
 
-		if ( getSessionFactory().getSessionFactoryOptions().isStrictJpaQueryLanguageCompliance() ) {
+		if ( creationOptions.useStrictJpaCompliance() ) {
 			if ( collectionReference.getReferencedNavigable().getPersistentCollectionDescriptor().getCollectionClassification() != CollectionClassification.MAP ) {
 				throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.VALUE_FUNCTION_ON_NON_MAP );
 			}
@@ -1704,7 +1711,7 @@ public class SemanticQueryBuilder
 				firstOperand,
 				BinaryArithmeticOperator.ADD,
 				secondOperand,
-				getSessionFactory().getTypeConfiguration().resolveArithmeticType(
+				creationContext.getDomainModel().getTypeConfiguration().resolveArithmeticType(
 						(BasicValuedExpressableType) firstOperand.getExpressableType(),
 						(BasicValuedExpressableType) secondOperand.getExpressableType(),
 						BinaryArithmeticOperator.ADD
@@ -1724,7 +1731,7 @@ public class SemanticQueryBuilder
 				firstOperand,
 				BinaryArithmeticOperator.SUBTRACT,
 				secondOperand,
-				getSessionFactory().getTypeConfiguration().resolveArithmeticType(
+				creationContext.getDomainModel().getTypeConfiguration().resolveArithmeticType(
 						(BasicValuedExpressableType) firstOperand.getExpressableType(),
 						(BasicValuedExpressableType) secondOperand.getExpressableType(),
 						BinaryArithmeticOperator.SUBTRACT
@@ -1744,7 +1751,7 @@ public class SemanticQueryBuilder
 				firstOperand,
 				BinaryArithmeticOperator.MULTIPLY,
 				secondOperand,
-				getSessionFactory().getTypeConfiguration().resolveArithmeticType(
+				creationContext.getDomainModel().getTypeConfiguration().resolveArithmeticType(
 						(BasicValuedExpressableType) firstOperand.getExpressableType(),
 						(BasicValuedExpressableType) secondOperand.getExpressableType(),
 						BinaryArithmeticOperator.MULTIPLY
@@ -1764,7 +1771,7 @@ public class SemanticQueryBuilder
 				firstOperand,
 				BinaryArithmeticOperator.DIVIDE,
 				secondOperand,
-				getSessionFactory().getTypeConfiguration().resolveArithmeticType(
+				creationContext.getDomainModel().getTypeConfiguration().resolveArithmeticType(
 						(BasicValuedExpressableType) firstOperand.getExpressableType(),
 						(BasicValuedExpressableType) secondOperand.getExpressableType(),
 						BinaryArithmeticOperator.DIVIDE
@@ -1784,7 +1791,7 @@ public class SemanticQueryBuilder
 				firstOperand,
 				BinaryArithmeticOperator.MODULO,
 				secondOperand,
-				getSessionFactory().getTypeConfiguration().resolveArithmeticType(
+				creationContext.getDomainModel().getTypeConfiguration().resolveArithmeticType(
 						(BasicValuedExpressableType) firstOperand.getExpressableType(),
 						(BasicValuedExpressableType) secondOperand.getExpressableType(),
 						BinaryArithmeticOperator.MODULO
@@ -1949,7 +1956,7 @@ public class SemanticQueryBuilder
 	private SqmLiteral<String> stringLiteral(String text) {
 		return new SqmLiteral<>(
 				text,
-				getSessionFactory().getTypeConfiguration().resolveStandardBasicType( StandardBasicTypes.STRING )
+				creationContext.getDomainModel().getTypeConfiguration().resolveStandardBasicType( StandardBasicTypes.STRING )
 		);
 	}
 
@@ -2065,7 +2072,7 @@ public class SemanticQueryBuilder
 
 	@SuppressWarnings("unchecked")
 	private <J> BasicValuedExpressableType<J> resolveExpressableTypeBasic(Class<J> javaType) {
-		return getSessionFactory().getTypeConfiguration().standardExpressableTypeForJavaType( javaType );
+		return creationContext.getDomainModel().getTypeConfiguration().standardExpressableTypeForJavaType( javaType );
 	}
 
 	@Override
@@ -2111,7 +2118,7 @@ public class SemanticQueryBuilder
 
 	@Override
 	public SqmGenericFunction visitNonStandardFunction(HqlParser.NonStandardFunctionContext ctx) {
-		if ( getSessionFactory().getSessionFactoryOptions().isStrictJpaQueryLanguageCompliance() ) {
+		if ( creationOptions.useStrictJpaCompliance() ) {
 			throw new StrictJpaComplianceViolation(
 					"Encountered non-compliant non-standard function call [" +
 							ctx.nonStandardFunctionName() + "], but strict JPQL compliance was requested; use JPA's FUNCTION(functionName[,...]) syntax name instead",
@@ -2146,7 +2153,7 @@ public class SemanticQueryBuilder
 	private SqmExpression visitFinalFunctionArgument(HqlParser.ExpressionContext expression) {
 		// the final argument to a function may accept multi-value parameter (varargs),
 		// 		but only if we are operating in non-strict JPA mode
-		parameterDeclarationContextStack.push( () -> getSessionFactory().getSessionFactoryOptions().isStrictJpaQueryLanguageCompliance() );
+		parameterDeclarationContextStack.push( () -> creationOptions.useStrictJpaCompliance() );
 		try {
 			return (SqmExpression) expression.accept( this );
 		}
@@ -2192,10 +2199,7 @@ public class SemanticQueryBuilder
 
 	@Override
 	public SqmExpression visitCastFunction(HqlParser.CastFunctionContext ctx) {
-		final SqmFunctionTemplate template = getSessionFactory()
-				.getQueryEngine()
-				.getSqmFunctionRegistry()
-				.findFunctionTemplate( SqmCastFunction.NAME );
+		final SqmFunctionTemplate template = creationContext.getFunctionResolver().apply( SqmCastFunction.NAME );
 
 		final SqmExpression expressionToCast = (SqmExpression) ctx.expression().accept( this );
 		final SqmExpression castTargetExpression = interpretCastTarget( ctx.castTarget() );
@@ -2307,10 +2311,7 @@ public class SemanticQueryBuilder
 			String name,
 			boolean isDistinct,
 			HqlParser.ExpressionContext antlrArgumentExpression) {
-		final SqmFunctionTemplate template = getSessionFactory()
-				.getQueryEngine()
-				.getSqmFunctionRegistry()
-				.findFunctionTemplate( name );
+		final SqmFunctionTemplate template = creationContext.getFunctionResolver().apply( name );
 
 		final SqmExpression sqmArgument = (SqmExpression) antlrArgumentExpression.accept( this );
 
@@ -2343,10 +2344,7 @@ public class SemanticQueryBuilder
 			Function<SqmExpression, SqmExpression> nonTemplatedGenerator,
 			String name,
 			HqlParser.ExpressionContext antlrArgument) {
-		final SqmFunctionTemplate template = getSessionFactory()
-				.getQueryEngine()
-				.getSqmFunctionRegistry()
-				.findFunctionTemplate( name );
+		final SqmFunctionTemplate template = creationContext.getFunctionResolver().apply( name );
 
 		final SqmExpression sqmArgument = (SqmExpression) antlrArgument.accept( this );
 
@@ -2406,10 +2404,7 @@ public class SemanticQueryBuilder
 	public SqmExpression visitTrimFunction(HqlParser.TrimFunctionContext ctx) {
 		final SqmExpression source = (SqmExpression) ctx.expression().accept( this );
 
-		final SqmFunctionTemplate trimFunctionTemplate = getSessionFactory()
-				.getQueryEngine()
-				.getSqmFunctionRegistry()
-				.findFunctionTemplate( "trim" );
+		final SqmFunctionTemplate trimFunctionTemplate = creationContext.getFunctionResolver().apply( "trim" );
 
 		if ( trimFunctionTemplate != null ) {
 			return trimFunctionTemplate.makeSqmFunctionExpression(
@@ -2538,7 +2533,7 @@ public class SemanticQueryBuilder
 
 	@Override
 	public SqmMaxElementReference visitMaxElementFunction(HqlParser.MaxElementFunctionContext ctx) {
-		if ( getSessionFactory().getSessionFactoryOptions().isStrictJpaQueryLanguageCompliance() ) {
+		if ( creationOptions.useStrictJpaCompliance() ) {
 			throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.HQL_COLLECTION_FUNCTION );
 		}
 
@@ -2563,7 +2558,7 @@ public class SemanticQueryBuilder
 
 	@Override
 	public SqmMinElementReference visitMinElementFunction(HqlParser.MinElementFunctionContext ctx) {
-		if ( getSessionFactory().getSessionFactoryOptions().isStrictJpaQueryLanguageCompliance() ) {
+		if ( creationOptions.useStrictJpaCompliance() ) {
 			throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.HQL_COLLECTION_FUNCTION );
 		}
 
@@ -2587,7 +2582,7 @@ public class SemanticQueryBuilder
 
 	@Override
 	public SqmMaxIndexReference visitMaxIndexFunction(HqlParser.MaxIndexFunctionContext ctx) {
-		if ( getSessionFactory().getSessionFactoryOptions().isStrictJpaQueryLanguageCompliance() ) {
+		if ( creationOptions.useStrictJpaCompliance() ) {
 			throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.HQL_COLLECTION_FUNCTION );
 		}
 
@@ -2619,7 +2614,7 @@ public class SemanticQueryBuilder
 
 	@Override
 	public SqmMinIndexReference visitMinIndexFunction(HqlParser.MinIndexFunctionContext ctx) {
-		if ( getSessionFactory().getSessionFactoryOptions().isStrictJpaQueryLanguageCompliance() ) {
+		if ( creationOptions.useStrictJpaCompliance() ) {
 			throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.HQL_COLLECTION_FUNCTION );
 		}
 

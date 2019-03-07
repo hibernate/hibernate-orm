@@ -13,7 +13,7 @@ import org.hibernate.query.sqm.produce.path.internal.SemanticPathPartNamedEntity
 import org.hibernate.query.sqm.produce.path.internal.SemanticPathPartNamedPackage;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.RootSqmNavigableReferenceLocator;
-import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
@@ -37,11 +37,11 @@ public class SemanticPathPartRoot implements SemanticPathPart {
 			String name,
 			String currentContextKey,
 			boolean isTerminal,
-			SqmCreationContext context) {
+			SqmCreationState creationState) {
 		// At this point we have a "root reference"... the first path part in
 		// a potential series of path parts
 
-		final RootSqmNavigableReferenceLocator fromElementLocator = context.getCurrentQuerySpecProcessingState();
+		final RootSqmNavigableReferenceLocator fromElementLocator = creationState.getCurrentQuerySpecProcessingState();
 
 		// this root reference could be any of:
 		// 		1) a from-element alias
@@ -58,13 +58,11 @@ public class SemanticPathPartRoot implements SemanticPathPart {
 		// #2
 		final SqmNavigableReference unqualifiedAttributeOwner = fromElementLocator.findNavigableReferenceExposingNavigable( name );
 		if ( unqualifiedAttributeOwner != null ) {
-			return unqualifiedAttributeOwner.resolvePathPart( name, currentContextKey, false, context );
+			return unqualifiedAttributeOwner.resolvePathPart( name, currentContextKey, false, creationState );
 		}
 
 		// #3
-		final EntityTypeDescriptor entityByName = context.getSessionFactory()
-				.getMetamodel()
-				.findEntityDescriptor( name );
+		final EntityTypeDescriptor entityByName = creationState.getCreationContext().getDomainModel().findEntityDescriptor( name );
 		if ( entityByName != null ) {
 			return new SemanticPathPartNamedEntity( entityByName );
 		}
@@ -72,7 +70,7 @@ public class SemanticPathPartRoot implements SemanticPathPart {
 		// #4
 		final Package namedPackageRoot = Package.getPackage( name );
 		if ( namedPackageRoot != null ) {
-			return new SemanticPathPartNamedPackage( namedPackageRoot, sessionFactory );
+			return new SemanticPathPartNamedPackage( namedPackageRoot );
 		}
 
 		if ( isTerminal ) {
@@ -89,7 +87,7 @@ public class SemanticPathPartRoot implements SemanticPathPart {
 			SqmExpression selector,
 			String currentContextKey,
 			boolean isTerminal,
-			SqmCreationContext context) {
+			SqmCreationState creationState) {
 		throw new UnsupportedOperationException(  );
 	}
 }

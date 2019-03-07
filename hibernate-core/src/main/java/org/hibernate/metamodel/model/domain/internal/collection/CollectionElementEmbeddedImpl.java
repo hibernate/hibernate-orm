@@ -25,7 +25,7 @@ import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.procedure.ParameterMisuseException;
-import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReferenceEmbedded;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
@@ -91,7 +91,7 @@ public class CollectionElementEmbeddedImpl<J>
 	public SqmNavigableReference createSqmExpression(
 			SqmFrom sourceSqmFrom,
 			SqmNavigableContainerReference containerReference,
-			SqmCreationContext creationContext) {
+			SqmCreationState creationState) {
 		return new SqmCollectionElementReferenceEmbedded( (SqmPluralAttributeReference) containerReference );
 	}
 

@@ -9,13 +9,12 @@ package org.hibernate.query.sqm.produce.internal;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
 import org.hibernate.query.sqm.produce.spi.ImplicitAliasGenerator;
-import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
-import org.hibernate.query.sqm.tree.from.SqmFromExporter;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 
 /**
@@ -29,18 +28,18 @@ public class SqmFromBuilderFromClauseQualifiedJoin extends AbstractSqmFromBuilde
 			SqmJoinType joinType,
 			boolean fetched,
 			String alias,
-			SqmCreationContext sqmCreationContext) {
-		super( alias, sqmCreationContext );
+			SqmCreationState creationState) {
+		super( alias, creationState );
 		this.joinType = joinType;
 		this.fetched = fetched;
 	}
 
 	@Override
 	public SqmEntityJoin buildEntityJoin(EntityValuedNavigable navigable) {
-		final SqmFromElementSpace fromElementSpace = getSqmCreationContext().getCurrentFromElementSpace();
+		final SqmFromElementSpace fromElementSpace = getCreationState().getCurrentFromElementSpace();
 		final SqmEntityJoin join = new SqmEntityJoin(
 				fromElementSpace,
-				getSqmCreationContext().generateUniqueIdentifier(),
+				getCreationState().generateUniqueIdentifier(),
 				getAlias(),
 				navigable.getEntityDescriptor(),
 				joinType
@@ -54,10 +53,9 @@ public class SqmFromBuilderFromClauseQualifiedJoin extends AbstractSqmFromBuilde
 
 	@Override
 	public SqmNavigableJoin buildNavigableJoin(SqmNavigableReference navigableReference) {
-		if ( getSqmCreationContext().getSessionFactory().getSessionFactoryOptions().isStrictJpaQueryLanguageCompliance() ) {
+		if ( getCreationState().getCreationOptions().useStrictJpaCompliance() ) {
 			if ( !ImplicitAliasGenerator.isImplicitAlias( getAlias() ) ) {
-				if ( SqmSingularAttributeReference.class.isInstance( navigableReference )
-						&& SqmFromExporter.class.isInstance( navigableReference ) ) {
+				if ( navigableReference instanceof SqmSingularAttributeReference ) {
 					if ( fetched ) {
 						throw new StrictJpaComplianceViolation(
 								"Encountered aliased fetch join, but strict JPQL compliance was requested",
@@ -71,17 +69,17 @@ public class SqmFromBuilderFromClauseQualifiedJoin extends AbstractSqmFromBuilde
 		final SqmNavigableJoin navigableJoin = new SqmNavigableJoin(
 				navigableReference.getSourceReference().getExportedFromElement(),
 				navigableReference,
-				getSqmCreationContext().generateUniqueIdentifier(),
+				getCreationState().generateUniqueIdentifier(),
 				getAlias(),
 				joinType,
 				fetched
 		);
 
-		getSqmCreationContext().getCurrentFromElementSpace().addJoin( navigableJoin );
+		getCreationState().getCurrentFromElementSpace().addJoin( navigableJoin );
 		commonHandling( navigableJoin );
 
 		if ( fetched ) {
-			getSqmCreationContext().registerFetch( navigableReference.getSourceReference(), navigableJoin );
+			getCreationState().registerFetch( navigableReference.getSourceReference(), navigableJoin );
 		}
 
 		return navigableJoin;

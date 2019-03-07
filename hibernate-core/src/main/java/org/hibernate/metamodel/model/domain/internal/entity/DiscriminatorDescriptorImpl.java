@@ -16,7 +16,7 @@ import org.hibernate.metamodel.model.domain.spi.DiscriminatorMappings;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.domain.SqmDiscriminatorReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityTypedReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
@@ -132,7 +132,7 @@ public class DiscriminatorDescriptorImpl<O,J> implements DiscriminatorDescriptor
 	public SqmDiscriminatorReference createSqmExpression(
 			SqmFrom sourceSqmFrom,
 			SqmNavigableContainerReference containerReference,
-			SqmCreationContext creationContext) {
+			SqmCreationState creationState) {
 		return new SqmDiscriminatorReference( (SqmEntityTypedReference) containerReference );
 	}
 }

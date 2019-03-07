@@ -10,6 +10,7 @@ import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaUpdate;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.criteria.spi.RootQuery;
 import org.hibernate.query.criteria.sqm.CriteriaQueryToSqmTransformer;
@@ -18,11 +19,11 @@ import org.hibernate.query.hql.internal.HqlParseTreePrinter;
 import org.hibernate.query.hql.internal.HqlParser;
 import org.hibernate.query.hql.internal.SemanticQueryBuilder;
 import org.hibernate.query.sqm.InterpretationException;
-import org.hibernate.query.sqm.QueryException;
 import org.hibernate.query.sqm.produce.spi.SemanticQueryProducer;
+import org.hibernate.query.sqm.produce.spi.SqmCreationOptions;
+import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
-import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 
 /**
@@ -49,7 +50,11 @@ public class SemanticQueryProducerImpl implements SemanticQueryProducer {
 
 		// then we perform semantic analysis and build the semantic representation...
 		try {
-			return SemanticQueryBuilder.buildSemanticModel( parser.statement(), sessionFactory );
+			return SemanticQueryBuilder.buildSemanticModel(
+					parser.statement(),
+					new SqmCreationOptionsStandard( sessionFactory ),
+					sessionFactory
+			);
 		}
 		catch (QueryException e) {
 			throw e;

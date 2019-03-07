@@ -6,12 +6,11 @@
  */
 package org.hibernate.query.sqm.produce.path.internal;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.RootSqmNavigableReferenceLocator;
-import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
@@ -20,10 +19,7 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionEle
  * @author Steve Ebersole
  */
 public class SemanticPathPartRoot implements SemanticPathPart {
-	private final SessionFactoryImplementor sessionFactory;
-
-	public SemanticPathPartRoot(SessionFactoryImplementor sessionFactory) {
-		this.sessionFactory = sessionFactory;
+	public SemanticPathPartRoot() {
 	}
 
 	@Override
@@ -31,11 +27,11 @@ public class SemanticPathPartRoot implements SemanticPathPart {
 			String name,
 			String currentContextKey,
 			boolean isTerminal,
-			SqmCreationContext context) {
+			SqmCreationState creationState) {
 		// At this point we have a "root reference"... the first path part in
 		// a potential series of path parts
 
-		final RootSqmNavigableReferenceLocator fromElementLocator = context.getCurrentQuerySpecProcessingState();
+		final RootSqmNavigableReferenceLocator fromElementLocator = creationState.getCurrentQuerySpecProcessingState();
 
 		// this root reference could be any of:
 		// 		1) a from-element alias
@@ -46,23 +42,21 @@ public class SemanticPathPartRoot implements SemanticPathPart {
 		// #1
 		final SqmNavigableReference aliasedFromElement = fromElementLocator.findNavigableReferenceByIdentificationVariable( name );
 		if ( aliasedFromElement != null ) {
-			validateNavigablePathRoot( aliasedFromElement,currentContextKey, context );
-			context.getCurrentSqmFromElementSpaceCoordAccess().setCurrentSqmFromElementSpace( aliasedFromElement.getExportedFromElement().getContainingSpace() );
+			validateNavigablePathRoot( aliasedFromElement, currentContextKey, creationState );
+			creationState.getCurrentSqmFromElementSpaceCoordAccess().setCurrentSqmFromElementSpace( aliasedFromElement.getExportedFromElement().getContainingSpace() );
 			return aliasedFromElement;
 		}
 
 		// #2
 		final SqmNavigableReference unqualifiedAttributeOwner = fromElementLocator.findNavigableReferenceExposingNavigable( name );
 		if ( unqualifiedAttributeOwner != null ) {
-			validateNavigablePathRoot( unqualifiedAttributeOwner,currentContextKey, context );
-			context.getCurrentSqmFromElementSpaceCoordAccess().setCurrentSqmFromElementSpace( unqualifiedAttributeOwner.getExportedFromElement().getContainingSpace() );
-			return unqualifiedAttributeOwner.resolvePathPart( name, currentContextKey, false, context );
+			validateNavigablePathRoot( unqualifiedAttributeOwner, currentContextKey, creationState );
+			creationState.getCurrentSqmFromElementSpaceCoordAccess().setCurrentSqmFromElementSpace( unqualifiedAttributeOwner.getExportedFromElement().getContainingSpace() );
+			return unqualifiedAttributeOwner.resolvePathPart( name, currentContextKey, false, creationState );
 		}
 
 		// #3
-		final EntityTypeDescriptor entityTypeByName = context.getSessionFactory()
-				.getMetamodel()
-				.findEntityDescriptor( name );
+		final EntityTypeDescriptor entityTypeByName = creationState.getCreationContext().getDomainModel().findEntityDescriptor( name );
 		if ( entityTypeByName != null ) {
 			return new SemanticPathPartNamedEntity( entityTypeByName );
 		}
@@ -70,7 +64,7 @@ public class SemanticPathPartRoot implements SemanticPathPart {
 		// #4
 		final Package namedPackage = Package.getPackage( name );
 		if ( namedPackage != null ) {
-			return new SemanticPathPartNamedPackage( namedPackage, sessionFactory );
+			return new SemanticPathPartNamedPackage( namedPackage );
 		}
 
 		if ( ! isTerminal ) {
@@ -78,7 +72,7 @@ public class SemanticPathPartRoot implements SemanticPathPart {
 			// a valid package name if the package has no direct classes.  Since
 			// this is not yet the terminal the next node might still find the
 			// Package, so delay the resolution
-			return new PossiblePackageRoot( name, sessionFactory );
+			return new PossiblePackageRoot( name );
 		}
 
 		throw new SemanticException( "Could not resolve path root : " + name );
@@ -87,7 +81,7 @@ public class SemanticPathPartRoot implements SemanticPathPart {
 	protected void validateNavigablePathRoot(
 			SqmNavigableReference unqualifiedAttributeOwner,
 			String currentContextKey,
-			SqmCreationContext context) {
+			SqmCreationState creationState) {
 		// here for inheritors
 	}
 
@@ -96,7 +90,7 @@ public class SemanticPathPartRoot implements SemanticPathPart {
 			SqmExpression selector,
 			String currentContextKey,
 			boolean isTerminal,
-			SqmCreationContext context) {
+			SqmCreationState creationState) {
 		throw new SemanticException( "Path cannot start with index-access" );
 	}
 }

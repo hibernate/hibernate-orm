@@ -11,7 +11,7 @@ import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
-import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 
@@ -29,10 +29,10 @@ public class SqmPluralAttributeReference
 	public SqmPluralAttributeReference(
 			SqmNavigableContainerReference containerReference,
 			PluralPersistentAttribute attribute,
-			SqmCreationContext creationContext) {
+			SqmCreationState creationState) {
 		super( containerReference, attribute );
 
-		this.join = creationContext.getCurrentFromElementBuilder().buildNavigableJoin( this );
+		this.join = creationState.getCurrentFromElementBuilder().buildNavigableJoin( this );
 	}
 
 	@Override
@@ -70,10 +70,10 @@ public class SqmPluralAttributeReference
 			String name,
 			String currentContextKey,
 			boolean isTerminal,
-			SqmCreationContext context) {
+			SqmCreationState creationState) {
 		return getReferencedNavigable().getPersistentCollectionDescriptor()
 				.findNavigable( name )
-				.createSqmExpression( getExportedFromElement(), this, context );
+				.createSqmExpression( getExportedFromElement(), this, creationState );
 	}
 
 	@Override
@@ -81,7 +81,7 @@ public class SqmPluralAttributeReference
 			SqmExpression selector,
 			String currentContextKey,
 			boolean isTerminal,
-			SqmCreationContext context) {
+			SqmCreationState creationState) {
 		return null;
 	}
 }

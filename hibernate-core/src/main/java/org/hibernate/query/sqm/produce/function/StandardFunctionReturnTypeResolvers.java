@@ -11,7 +11,7 @@ import java.util.Locale;
 import java.util.Optional;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
-import org.hibernate.query.sqm.QueryException;
+import org.hibernate.QueryException;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 

@@ -19,9 +19,7 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.DependantValue;
-import org.hibernate.mapping.IndexBackref;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractNonIdSingularPersistentAttribute;
@@ -34,7 +32,7 @@ import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceBasic;
@@ -139,8 +137,8 @@ public class SingularPersistentAttributeBasic<O, J>
 	public SqmNavigableReference createSqmExpression(
 			SqmFrom sourceSqmFrom,
 			SqmNavigableContainerReference containerReference,
-			SqmCreationContext creationContext) {
-		return new SqmSingularAttributeReferenceBasic( containerReference, this, creationContext );
+			SqmCreationState creationState) {
+		return new SqmSingularAttributeReferenceBasic( containerReference, this, creationState );
 	}
 
 	@Override

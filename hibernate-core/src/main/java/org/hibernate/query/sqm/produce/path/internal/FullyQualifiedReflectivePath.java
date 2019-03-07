@@ -6,9 +6,8 @@
  */
 package org.hibernate.query.sqm.produce.path.internal;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
-import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 
@@ -20,20 +19,12 @@ public class FullyQualifiedReflectivePath
 	private final FullyQualifiedReflectivePathSource pathSource;
 	private final String localName;
 
-	private final SessionFactoryImplementor sessionFactory;
-
 	@SuppressWarnings("WeakerAccess")
 	public FullyQualifiedReflectivePath(
 			FullyQualifiedReflectivePathSource pathSource,
-			String localName,
-			SessionFactoryImplementor sessionFactory) {
+			String localName) {
 		this.pathSource = pathSource;
 		this.localName = localName;
-		this.sessionFactory = sessionFactory;
-	}
-
-	protected SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory;
 	}
 
 	@Override
@@ -41,12 +32,12 @@ public class FullyQualifiedReflectivePath
 			String name,
 			String currentContextKey,
 			boolean isTerminal,
-			SqmCreationContext context) {
+			SqmCreationState creationState) {
 		if ( isTerminal ) {
-			return new FullyQualifiedReflectivePathTerminal( this, name, sessionFactory );
+			return new FullyQualifiedReflectivePathTerminal( this, name, creationState );
 		}
 		else {
-			return new FullyQualifiedReflectivePath( this, name, sessionFactory );
+			return new FullyQualifiedReflectivePath( this, name );
 		}
 	}
 
@@ -55,7 +46,7 @@ public class FullyQualifiedReflectivePath
 			SqmExpression selector,
 			String currentContextKey,
 			boolean isTerminal,
-			SqmCreationContext context) {
+			SqmCreationState creationState) {
 		throw new UnsupportedOperationException( "Fully qualified reflective paths cannot contain indexed access" );
 	}
 
@@ -76,6 +67,6 @@ public class FullyQualifiedReflectivePath
 
 	@Override
 	public FullyQualifiedReflectivePath append(String subPathName) {
-		return new FullyQualifiedReflectivePath( this, subPathName, sessionFactory );
+		return new FullyQualifiedReflectivePath( this, subPathName );
 	}
 }

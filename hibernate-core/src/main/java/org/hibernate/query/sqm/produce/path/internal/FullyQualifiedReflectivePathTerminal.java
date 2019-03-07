@@ -12,10 +12,10 @@ import java.util.function.Supplier;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.SqmProductionException;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.tree.spi.expression.domain.EntityTypeLiteral;
@@ -28,6 +28,7 @@ public class FullyQualifiedReflectivePathTerminal
 		extends FullyQualifiedReflectivePath
 		implements SqmExpression {
 	private final ExpressableType expressableType;
+	private final SqmCreationState creationState;
 
 	private final Function<SemanticQueryWalker,?> handler;
 
@@ -35,8 +36,9 @@ public class FullyQualifiedReflectivePathTerminal
 	public FullyQualifiedReflectivePathTerminal(
 			FullyQualifiedReflectivePathSource pathSource,
 			String subPathName,
-			SessionFactoryImplementor sessionFactory) {
-		super( pathSource, subPathName, sessionFactory );
+			SqmCreationState creationState) {
+		super( pathSource, subPathName );
+		this.creationState = creationState;
 
 		this.handler = resolveTerminalSemantic();
 
@@ -47,13 +49,13 @@ public class FullyQualifiedReflectivePathTerminal
 	@SuppressWarnings("unchecked")
 	private Function<SemanticQueryWalker, ?> resolveTerminalSemantic() {
 		return semanticQueryWalker -> {
-			final ClassLoaderService cls = getSessionFactory().getServiceRegistry().getService( ClassLoaderService.class );
+			final ClassLoaderService cls = creationState.getCreationContext().getServiceRegistry().getService( ClassLoaderService.class );
 			final String fullPath = getFullPath();
 
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			// See if it is an entity-type literal
 
-			final EntityTypeDescriptor<Object> entityDescriptor = getSessionFactory().getMetamodel().findEntityDescriptor( fullPath );
+			final EntityTypeDescriptor<Object> entityDescriptor = creationState.getCreationContext().getDomainModel().findEntityDescriptor( fullPath );
 			if ( entityDescriptor != null ) {
 				return new EntityTypeLiteral( entityDescriptor );
 			}

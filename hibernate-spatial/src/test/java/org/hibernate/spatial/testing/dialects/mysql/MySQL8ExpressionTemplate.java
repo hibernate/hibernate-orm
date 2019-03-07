@@ -6,19 +6,15 @@
  */
 package org.hibernate.spatial.testing.dialects.mysql;
 
-
-import org.hibernate.spatial.testing.SQLExpressionTemplate;
 import org.hibernate.spatial.testing.TestDataElement;
 import org.hibernate.spatial.testing.WktUtility;
 
 /**
- * This is the template for insert SQL statements into the geomtest test table for MySQL.
- *
- * @author Karel Maesen, Geovise BVBA
+ * Created by Karel Maesen, Geovise BVBA on 2019-03-07.
  */
-public class MySQLExpressionTemplate implements SQLExpressionTemplate {
+public class MySQL8ExpressionTemplate extends MySQLExpressionTemplate {
 
-	static final String SQL_TEMPLATE = "insert into geomtest (id, type, geom) values (%d, '%s', GeomFromText('%s', %d))";
+	static final String SQL_TEMPLATE = "insert into geomtest (id, type, geom) values (%d, '%s', ST_GeomFromText('%s', %d))";
 
 	public String toInsertSql(TestDataElement testDataElement) {
 		String wkt = WktUtility.getWkt( testDataElement.wkt );

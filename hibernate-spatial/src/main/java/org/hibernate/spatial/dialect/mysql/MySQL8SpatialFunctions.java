@@ -11,56 +11,56 @@ import org.hibernate.spatial.dialect.SpatialFunctionsRegistry;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
- * An {@code Iterable} over the spatial functions supported by MySQL.
+ * An {@code Iterable} over the spatial functions supported by MySQL 8.
  *
  * @author Karel Maesen, Geovise BVBA
  */
-class MySQLSpatialFunctions extends SpatialFunctionsRegistry {
+class MySQL8SpatialFunctions extends SpatialFunctionsRegistry {
 
-	MySQLSpatialFunctions() {
+	MySQL8SpatialFunctions() {
 		functionMap.put(
 				"dimension", new StandardSQLFunction(
-						"dimension",
+						"ST_Dimension",
 						StandardBasicTypes.INTEGER
 				)
 		);
 		functionMap.put(
 				"geometrytype", new StandardSQLFunction(
-						"geometrytype", StandardBasicTypes.STRING
+						"ST_GeometryType", StandardBasicTypes.STRING
 				)
 		);
 		functionMap.put(
 				"srid", new StandardSQLFunction(
-						"srid",
+						"ST_SRID",
 						StandardBasicTypes.INTEGER
 				)
 		);
 		functionMap.put(
 				"envelope", new StandardSQLFunction(
-						"envelope"
+						"ST_Envelope"
 				)
 		);
 		functionMap.put(
 				"astext", new StandardSQLFunction(
-						"astext",
+						"ST_Astext",
 						StandardBasicTypes.STRING
 				)
 		);
 		functionMap.put(
 				"asbinary", new StandardSQLFunction(
-						"asbinary",
+						"ST_Asbinary",
 						StandardBasicTypes.BINARY
 				)
 		);
 		functionMap.put(
 				"isempty", new StandardSQLFunction(
-						"isempty",
+						"ST_IsEmpty",
 						StandardBasicTypes.BOOLEAN
 				)
 		);
 		functionMap.put(
 				"issimple", new StandardSQLFunction(
-						"issimple",
+						"ST_IsSimple",
 						StandardBasicTypes.BOOLEAN
 				)
 		);
@@ -73,49 +73,49 @@ class MySQLSpatialFunctions extends SpatialFunctionsRegistry {
 		// Register functions for spatial relation constructs
 		functionMap.put(
 				"overlaps", new StandardSQLFunction(
-						"overlaps",
+						"ST_Overlaps",
 						StandardBasicTypes.BOOLEAN
 				)
 		);
 		functionMap.put(
 				"intersects", new StandardSQLFunction(
-						"intersects",
+						"ST_Intersects",
 						StandardBasicTypes.BOOLEAN
 				)
 		);
 		functionMap.put(
 				"equals", new StandardSQLFunction(
-						"equals",
+						"ST_Equals",
 						StandardBasicTypes.BOOLEAN
 				)
 		);
 		functionMap.put(
 				"contains", new StandardSQLFunction(
-						"contains",
+						"ST_Contains",
 						StandardBasicTypes.BOOLEAN
 				)
 		);
 		functionMap.put(
 				"crosses", new StandardSQLFunction(
-						"crosses",
+						"ST_Crosses",
 						StandardBasicTypes.BOOLEAN
 				)
 		);
 		functionMap.put(
 				"disjoint", new StandardSQLFunction(
-						"disjoint",
+						"ST_Disjoint",
 						StandardBasicTypes.BOOLEAN
 				)
 		);
 		functionMap.put(
 				"touches", new StandardSQLFunction(
-						"touches",
+						"ST_Touches",
 						StandardBasicTypes.BOOLEAN
 				)
 		);
 		functionMap.put(
 				"within", new StandardSQLFunction(
-						"within",
+						"ST_Within",
 						StandardBasicTypes.BOOLEAN
 				)
 		);
@@ -126,43 +126,49 @@ class MySQLSpatialFunctions extends SpatialFunctionsRegistry {
 //		)
 //		);
 //
-//		// register the spatial analysis functions
-//		functionMap.put(
-//				"distance", new StandardSQLFunction(
-//				"distance",
-//				StandardBasicTypes.DOUBLE
-//		)
-//		);
-//		functionMap.put(
-//				"buffer", new StandardSQLFunction(
-//				"buffer"
-//		)
-//		);
-//		functionMap.put(
-//				"convexhull", new StandardSQLFunction(
-//				"convexhull"
-//		)
-//		);
-//		functionMap.put(
-//				"difference", new StandardSQLFunction(
-//				"difference"
-//		)
-//		);
-//		functionMap.put(
-//				"intersection", new StandardSQLFunction(
-//				"intersection"
-//		)
-//		);
-//		functionMap.put(
-//				"symdifference", new StandardSQLFunction(
-//				"symdifference"
-//		)
-//		);
-//		functionMap.put(
-//				"geomunion", new StandardSQLFunction(
-//				"union"
-//		)
-//		);
+		// register the spatial analysis functions
+		functionMap.put(
+				"distance", new StandardSQLFunction(
+						"ST_Distance",
+						StandardBasicTypes.DOUBLE
+				)
+		);
+
+		functionMap.put(
+				"buffer", new StandardSQLFunction(
+						"ST_Buffer"
+				)
+		);
+
+		functionMap.put(
+				"convexhull", new StandardSQLFunction(
+						"ST_ConvexHull"
+				)
+		);
+
+		functionMap.put(
+				"difference", new StandardSQLFunction(
+						"ST_Difference"
+				)
+		);
+
+		functionMap.put(
+				"intersection", new StandardSQLFunction(
+						"ST_Intersection"
+				)
+		);
+
+		functionMap.put(
+				"symdifference", new StandardSQLFunction(
+						"ST_SymDifference"
+				)
+		);
+
+		functionMap.put(
+				"geomunion", new StandardSQLFunction(
+						"ST_Union"
+				)
+		);
 	}
 
 }

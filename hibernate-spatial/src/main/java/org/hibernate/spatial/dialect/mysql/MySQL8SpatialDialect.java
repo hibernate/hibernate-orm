@@ -10,34 +10,36 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.dialect.InnoDBStorageEngine;
-import org.hibernate.dialect.MySQL5Dialect;
-import org.hibernate.dialect.MySQLStorageEngine;
+import org.hibernate.dialect.MySQL8Dialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
+import org.hibernate.spatial.GeolatteGeometryType;
+import org.hibernate.spatial.JTSGeometryJavaTypeDescriptor;
+import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
+import org.hibernate.spatial.SpatialRelation;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
- * A Dialect for MySQL 5 using InnoDB engine, with support for its spatial features
- *
- * @author Karel Maesen, Geovise BVBA
+ * Created by Karel Maesen, Geovise BVBA on 2019-03-07.
  */
-public class MySQL5SpatialDialect extends MySQL5Dialect implements SpatialDialect {
+public class MySQL8SpatialDialect extends MySQL8Dialect implements SpatialDialect {
 
 	private MySQLSpatialDialect dialectDelegate = new MySQLSpatialDialect();
+	private MySQL8SpatialFunctions spatialFunctions = new MySQL8SpatialFunctions();
 
 	/**
 	 * Constructs an instance
 	 */
-	public MySQL5SpatialDialect() {
+	public MySQL8SpatialDialect() {
 		super();
 		registerColumnType(
 				MySQLGeometryTypeDescriptor.INSTANCE.getSqlType(),
 				"GEOMETRY"
 		);
-		for ( Map.Entry<String, SQLFunction> entry : new MySQL5SpatialFunctions() ) {
+		for ( Map.Entry<String, SQLFunction> entry : spatialFunctions ) {
 			registerFunction( entry.getKey(), entry.getValue() );
 		}
 	}
@@ -48,6 +50,33 @@ public class MySQL5SpatialDialect extends MySQL5Dialect implements SpatialDialec
 	}
 
 	@Override
+	public String getSpatialRelateSQL(String columnName, int spatialRelation) {
+		switch ( spatialRelation ) {
+			case SpatialRelation.WITHIN:
+				return " ST_within(" + columnName + ",?)";
+			case SpatialRelation.CONTAINS:
+				return " ST_contains(" + columnName + ", ?)";
+			case SpatialRelation.CROSSES:
+				return " ST_crosses(" + columnName + ", ?)";
+			case SpatialRelation.OVERLAPS:
+				return " ST_overlaps(" + columnName + ", ?)";
+			case SpatialRelation.DISJOINT:
+				return " ST_disjoint(" + columnName + ", ?)";
+			case SpatialRelation.INTERSECTS:
+				return " ST_intersects(" + columnName
+						+ ", ?)";
+			case SpatialRelation.TOUCHES:
+				return " ST_touches(" + columnName + ", ?)";
+			case SpatialRelation.EQUALS:
+				return " ST_equals(" + columnName + ", ?)";
+			default:
+				throw new IllegalArgumentException(
+						"Spatial relation is not known by this dialect"
+				);
+		}
+	}
+
+	@Override
 	public String getTypeName(int code, long length, int precision, int scale) throws HibernateException {
 		return dialectDelegate.getTypeName( code, length, precision, scale );
 	}
@@ -55,11 +84,6 @@ public class MySQL5SpatialDialect extends MySQL5Dialect implements SpatialDialec
 	@Override
 	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
 		return dialectDelegate.remapSqlTypeDescriptor( sqlTypeDescriptor );
-	}
-
-	@Override
-	public String getSpatialRelateSQL(String columnName, int spatialRelation) {
-		return dialectDelegate.getSpatialRelateSQL( columnName, spatialRelation );
 	}
 
 	@Override
@@ -79,26 +103,22 @@ public class MySQL5SpatialDialect extends MySQL5Dialect implements SpatialDialec
 
 	@Override
 	public String getHavingSridSQL(String columnName) {
-		return dialectDelegate.getHavingSridSQL( columnName );
+		return " (ST_SRID(" + columnName + ") = ?) ";
 	}
 
 	@Override
 	public String getIsEmptySQL(String columnName, boolean isEmpty) {
-		return dialectDelegate.getIsEmptySQL( columnName, isEmpty );
+		final String emptyExpr = " ST_IsEmpty(" + columnName + ") ";
+		return isEmpty ? emptyExpr : "( NOT " + emptyExpr + ")";
 	}
 
 	@Override
 	public boolean supportsFiltering() {
-		return dialectDelegate.supportsFiltering();
+		return true;
 	}
 
 	@Override
 	public boolean supports(SpatialFunction function) {
-		return dialectDelegate.supports( function );
-	}
-
-	@Override
-	protected MySQLStorageEngine getDefaultMySQLStorageEngine() {
-		return InnoDBStorageEngine.INSTANCE;
+		return spatialFunctions.get( function.toString() ) != null;
 	}
 }

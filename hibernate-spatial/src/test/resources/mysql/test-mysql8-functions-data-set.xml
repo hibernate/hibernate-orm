@@ -1,0 +1,132 @@
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+
+<!--
+
+Tests for MySQL spatial functions should not contain empty geometries.
+In MySQL these are stored as null objects.
+
+  -->
+
+<TestData>
+    <Element>
+        <id>1</id>
+        <type>POINT</type>
+        <wkt>SRID=31370;POINT(10 5)</wkt>
+    </Element>
+    <Element>
+        <id>2</id>
+        <type>POINT</type>
+        <wkt>SRID=31370;POINT(52.25 2.53)</wkt>
+    </Element>
+
+    <Element>
+        <id>3</id>
+        <type>POINT</type>
+        <wkt>SRID=31370;POINT(51 12)</wkt>
+    </Element>
+    <Element>
+        <id>4</id>
+        <type>POINT</type>
+        <wkt>SRID=31370;POINT(10.0 2.0)</wkt>
+    </Element>
+
+    <Element>
+        <id>5</id>
+        <type>LINESTRING</type>
+        <wkt>SRID=31370;LINESTRING(10.0 5.0, 20.0 15.0)</wkt>
+    </Element>
+
+    <Element>
+        <id>6</id>
+        <type>LINESTRING</type>
+        <wkt>SRID=31370;LINESTRING(10.0 5.0, 20.0 15.0, 30.3 22.4, 10 30.0)</wkt>
+    </Element>
+
+
+    <Element>
+        <id>11</id>
+        <type>MULTILINESTRING</type>
+        <wkt>SRID=31370;MULTILINESTRING((10.0 5.0, 20.0 15.0),( 25.0 30.0, 30.0 20.0))</wkt>
+    </Element>
+
+    <Element>
+        <id>12</id>
+        <type>MULTILINESTRING</type>
+        <wkt>SRID=31370;MULTILINESTRING((10.0 5.0, 20.0 15.0, 30.3 22.4, 10 30.0), (40.0 20.0, 42.0 18.0, 43.0 16.0, 40 14.0))
+        </wkt>
+    </Element>
+
+
+    <Element>
+        <id>16</id>
+        <type>POLYGON</type>
+        <wkt>SRID=31370;POLYGON( (0 0, 0 10, 10 10, 10 0, 0 0) )</wkt>
+    </Element>
+    <Element>
+        <id>18</id>
+        <type>POLYGON</type>
+        <wkt>SRID=31370;POLYGON( (0 0, 0 10, 10 10, 10 0, 0 0), (2 2, 2 5, 5 5,5 2, 2 2))</wkt>
+    </Element>
+    <Element>
+        <id>19</id>
+        <type>POLYGON</type>
+        <wkt>SRID=31370;POLYGON( (50 50, 50 70, 70 70, 70 50, 50 50) )</wkt>
+    </Element>
+
+    <Element>
+        <id>20</id>
+        <type>MULTIPOLYGON</type>
+        <wkt>SRID=31370;MULTIPOLYGON( ((10 20, 30 40, 44 50, 10 20)), ((55 50, 60 70, 70 78, 55 50)) )</wkt>
+    </Element>
+    <Element>
+        <id>22</id>
+        <type>MULTIPOLYGON</type>
+        <wkt>SRID=31370;MULTIPOLYGON(( (0 0, 0 50, 50 50, 50 0, 0 0), (10 10, 10 20, 20 20, 20 10, 10 10) ),((15 10, 12 14, 13
+            14, 15 10)) )
+        </wkt>
+    </Element>
+
+
+    <Element>
+        <id>25</id>
+        <type>MULTIPOINT</type>
+        <wkt>SRID=31370;MULTIPOINT(21 2, 25 5, 30 3)</wkt>
+    </Element>
+    <Element>
+        <id>26</id>
+        <type>MULTIPOINT</type>
+        <wkt>SRID=31370;MULTIPOINT(21 2)</wkt>
+    </Element>
+
+    <Element>
+        <id>30</id>
+        <type>GEOMETRYCOLLECTION</type>
+        <wkt>SRID=31370;GEOMETRYCOLLECTION(POINT(4 0), LINESTRING(4 2, 5 3))</wkt>
+    </Element>
+    <Element>
+        <id>31</id>
+        <type>GEOMETRYCOLLECTION</type>
+        <wkt>SRID=31370;GEOMETRYCOLLECTION(POINT(4 0), LINESTRING(4 2, 5 3), POLYGON((0 0, 3 0, 3 3,0 3, 0 0)))</wkt>
+    </Element>
+    <Element>
+        <id>32</id>
+        <type>GEOMETRYCOLLECTION</type>
+        <wkt>SRID=31370;GEOMETRYCOLLECTION(POINT(4 0), LINESTRING(4 2, 5 3), POLYGON((0 0, 3 0, 3 3,0 3, 0 0),(1 1, 2 1, 2 2, 1 2,
+            1 1)))
+        </wkt>
+    </Element>
+    <Element>
+        <id>33</id>
+        <type>GEOMETRYCOLLECTION</type>
+        <wkt>SRID=31370;GEOMETRYCOLLECTION( MULTIPOINT(21 2, 25 5, 30 3), MULTIPOLYGON( ((10 20, 30 40, 44 50, 10 20)), ((15 10,
+            12 14, 13 14, 15 10)) ), MULTILINESTRING((10.0 5.0, 20.0 15.0),( 25.0 30.0, 30.0 20.0)))
+        </wkt>
+    </Element>
+
+
+</TestData>

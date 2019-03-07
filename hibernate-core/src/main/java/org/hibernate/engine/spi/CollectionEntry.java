@@ -75,7 +75,7 @@ public final class CollectionEntry implements Serializable {
 				? collection.getSnapshot(collectionDescriptor)
 				: null;
 
-		collection.setSnapshot( null, collectionDescriptor.getNavigableRole(), snapshot );
+		collection.setSnapshot( null, role, snapshot );
 	}
 
 	/**
@@ -93,7 +93,7 @@ public final class CollectionEntry implements Serializable {
 		this.loadedKey = loadedKey;
 		setLoadedDescriptor( loadedDescriptor);
 
-		collection.setSnapshot( loadedKey, loadedDescriptor.getNavigableRole(), null );
+		collection.setSnapshot( loadedKey, role, null );
 
 		//postInitialize() will be called after initialization
 	}

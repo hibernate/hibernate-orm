@@ -46,7 +46,7 @@ public abstract class SessionFactoryBasedFunctionalTest
 	protected static final Class[] NO_CLASSES = new Class[0];
 	protected static final String[] NO_MAPPINGS = new String[0];
 
-	private static final Logger log = Logger.getLogger( SessionFactoryBasedFunctionalTest.class );
+	protected static final Logger log = Logger.getLogger( SessionFactoryBasedFunctionalTest.class );
 
 	private SessionFactoryScope sessionFactoryScope;
 

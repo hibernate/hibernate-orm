@@ -106,6 +106,9 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 	@Override
 	public String getRole() {
+		if ( role == null ) {
+			return null;
+		}
 		return role.getFullPath();
 	}
 
@@ -726,7 +729,6 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 			}
 			else {
 				LOG.logUnexpectedSessionInCollectionNotConnected( msg );
-				this.collectionDescriptor = session.getFactory().getMetamodel().findCollectionDescriptor( getRole() );
 			}
 		}
 		if ( hasQueuedOperations() ) {

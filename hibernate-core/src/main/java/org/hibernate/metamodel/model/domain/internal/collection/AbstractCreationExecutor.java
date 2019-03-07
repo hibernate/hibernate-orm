@@ -114,6 +114,7 @@ public abstract class AbstractCreationExecutor implements CollectionCreationExec
 
 				count++;
 				JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute( creationOperation, executionContext );
+				collection.afterRowInsert( collectionDescriptor, entry, passes );
 			}
 			passes++;
 			jdbcParameterBindings.clear();

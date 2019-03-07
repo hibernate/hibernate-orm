@@ -302,6 +302,7 @@ https://hibernate.atlassian.net/projects/HHH/versions/31691/tab/release-report-d
     * [HHH-12361] - In the User Guide, omit constructors and equals/hashCode for brevity
     * [HHH-12368] - java.sql.SQLFeatureNotSupportedException in LobCreatorBuilderImpl
     * [HHH-12608] - Add the ST_DWithin() function  in DB2 Spatial Dialect
+    * [HHH-12653] - Throw MappingException if both @MappedSuperclass and @Inheritance are used
     * [HHH-12713] - Make EntityGraph creation more convenient
     * [HHH-12763] - Log which JtaPlatform implementation is used at startup on info level.
     * [HHH-12770] - HHH-12770 - Document @NotFound(action = NotFoundAction.IGNORE) and FetchType.LAZY behavior

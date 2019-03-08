@@ -6,12 +6,13 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import java.util.Comparator;
 import java.util.Set;
 
 import org.hibernate.LockMode;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractPersistentCollectionDescriptor;
@@ -32,11 +33,26 @@ import org.hibernate.sql.results.spi.FetchParent;
  * @author Steve Ebersole
  */
 public class PersistentSetDescriptorImpl<O,E> extends AbstractPersistentCollectionDescriptor<O,Set<E>,E> {
+	private final Comparator<E> comparator;
+
+	@SuppressWarnings("unchecked")
 	public PersistentSetDescriptorImpl(
 			Property bootProperty,
 			ManagedTypeDescriptor runtimeContainer,
 			RuntimeModelCreationContext context) {
 		super( bootProperty, runtimeContainer, context );
+
+		if ( bootProperty.getValue() instanceof Collection ) {
+			this.comparator = ( (Collection) bootProperty.getValue() ).getComparator();
+		}
+		else {
+			this.comparator = null;
+		}
+	}
+
+	@Override
+	public Comparator<?> getSortingComparator() {
+		return comparator;
 	}
 
 	@Override

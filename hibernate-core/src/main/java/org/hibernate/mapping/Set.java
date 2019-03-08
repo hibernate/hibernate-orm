@@ -23,15 +23,10 @@ import org.hibernate.collection.spi.CollectionSemantics;
  * @author Gavin King
  */
 public class Set extends Collection {
-	private final CollectionJavaTypeMapping javaTypeMapping;
+	private CollectionJavaTypeMapping javaTypeMapping;
 
 	public Set(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
-
-		javaTypeMapping = new CollectionJavaTypeMapping(
-				buildingContext.getBootstrapContext().getTypeConfiguration(),
-				java.util.Set.class
-		);
 	}
 
 	public void validate() throws MappingException {
@@ -87,6 +82,9 @@ public class Set extends Collection {
 
 	@Override
 	public JavaTypeMapping getJavaTypeMapping() {
+		if ( javaTypeMapping == null ) {
+			javaTypeMapping = resolveJavaTypeMapping();
+		}
 		return javaTypeMapping;
 	}
 
@@ -103,5 +101,24 @@ public class Set extends Collection {
 		}
 
 		return StandardSetSemantics.INSTANCE;
+	}
+
+	private CollectionJavaTypeMapping resolveJavaTypeMapping() {
+		final Class<? extends java.util.Set> javaTypeMappingClass;
+
+		if ( getComparator() != null ) {
+			javaTypeMappingClass = java.util.SortedSet.class;
+		}
+		else if ( hasOrder() ) {
+			javaTypeMappingClass = java.util.TreeSet.class;
+		}
+		else {
+			javaTypeMappingClass = java.util.Set.class;
+		}
+
+		return new CollectionJavaTypeMapping(
+				getMetadataBuildingContext().getBootstrapContext().getTypeConfiguration(),
+				javaTypeMappingClass
+		);
 	}
 }

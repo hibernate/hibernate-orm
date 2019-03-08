@@ -58,7 +58,7 @@ public class PersistentSortedMap<K,V> extends PersistentMap<K,V> implements Sort
 			SharedSessionContractImplementor session,
 			PersistentCollectionDescriptor<?,?,V> descriptor,
 			SortedMap map) {
-		super( session, descriptor );
+		super( session, descriptor, map );
 		comparator = map.comparator();
 	}
 

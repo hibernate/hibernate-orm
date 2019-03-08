@@ -35,10 +35,11 @@ public class StandardSortedMapSemantics extends AbstractMapSemantics<SortedMap<?
 	public TreeMap<?, ?> instantiateRaw(
 			int anticipatedSize,
 			PersistentCollectionDescriptor collectionDescriptor) {
-		return new TreeMap<>();
+		return new TreeMap<>( collectionDescriptor.getSortingComparator() );
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public PersistentCollection instantiateWrapper(
 			Object key,
 			PersistentCollectionDescriptor collectionDescriptor,
@@ -47,6 +48,7 @@ public class StandardSortedMapSemantics extends AbstractMapSemantics<SortedMap<?
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public PersistentCollection wrap(
 			SortedMap rawCollection,
 			PersistentCollectionDescriptor collectionDescriptor,

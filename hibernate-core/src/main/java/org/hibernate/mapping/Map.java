@@ -21,15 +21,10 @@ import org.hibernate.collection.spi.CollectionSemantics;
  * the key columns + index columns.
  */
 public class Map extends IndexedCollection {
-	private final CollectionJavaTypeMapping javaTypeMapping;
+	private CollectionJavaTypeMapping javaTypeMapping;
 
 	public Map(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
-
-		javaTypeMapping = new CollectionJavaTypeMapping(
-				buildingContext.getBootstrapContext().getTypeConfiguration(),
-				java.util.Map.class
-		);
 	}
 
 	public boolean isMap() {
@@ -49,6 +44,9 @@ public class Map extends IndexedCollection {
 
 	@Override
 	public JavaTypeMapping getJavaTypeMapping() {
+		if ( javaTypeMapping == null ) {
+			javaTypeMapping = resolveJavaTypeMapping();
+		}
 		return javaTypeMapping;
 	}
 
@@ -65,5 +63,24 @@ public class Map extends IndexedCollection {
 		}
 
 		return StandardMapSemantics.INSTANCE;
+	}
+
+	private CollectionJavaTypeMapping resolveJavaTypeMapping() {
+		final Class<? extends java.util.Map> javaTypeMappingClass;
+
+		if ( getComparator() != null ) {
+			javaTypeMappingClass = java.util.SortedMap.class;
+		}
+		else if ( hasOrder() ) {
+			javaTypeMappingClass = java.util.TreeMap.class;
+		}
+		else {
+			javaTypeMappingClass = java.util.Map.class;
+		}
+
+		return new CollectionJavaTypeMapping(
+				getMetadataBuildingContext().getBootstrapContext().getTypeConfiguration(),
+				javaTypeMappingClass
+		);
 	}
 }

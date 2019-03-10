@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- monitorInterval = If set > 0 seconds a configuration change is reconfigured -->
+<Configuration monitorInterval="0" status="warn"
+	name="hibernate" packages="">
+	<Appenders>
+		<Console name="ConsoleAppender" target="SYSTEM_OUT">
+			<PatternLayout pattern="%highlight{%-5p} %l - %m%n"
+				disableAnsi="false" />
+		</Console>
+	</Appenders>
+	<Loggers>
+		<Logger name="org.hibernate" level="info" />
+		<Root level="info" includeLocation="true">
+			<AppenderRef ref="ConsoleAppender" />
+		</Root>
+	</Loggers>
+</Configuration>

@@ -9,7 +9,6 @@ package org.hibernate.sql.ast.tree.spi.expression;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import org.hibernate.metamodel.model.domain.spi.Writeable;
 import org.hibernate.sql.JdbcValueBinder;
 import org.hibernate.sql.JdbcValueExtractor;
 import org.hibernate.sql.SqlExpressableType;
@@ -20,10 +19,9 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
-import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.sql.results.spi.SqlSelection;
@@ -122,14 +120,13 @@ public abstract class AbstractParameter
 	@Override
 	public DomainResult createDomainResult(
 			String resultVariable,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
+			DomainResultCreationState creationState) {
 		return new BasicResultImpl(
 				resultVariable,
 				creationState.getSqlExpressionResolver().resolveSqlSelection(
 						this,
 						type.getJavaTypeDescriptor(),
-						creationContext.getSessionFactory().getTypeConfiguration()
+						creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 				),
 				getExpressableType()
 		);

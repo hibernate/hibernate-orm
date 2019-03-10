@@ -23,9 +23,9 @@ import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.internal.StandardSqlExpressionResolver;
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.exec.spi.JdbcParameter;
@@ -74,8 +74,8 @@ public class Helper {
 					}
 
 					@Override
-					public ColumnReferenceQualifier getCurrentColumnReferenceQualifier() {
-						return null;
+					public SqlAstCreationContext getSqlAstCreationContext() {
+						return sessionFactory;
 					}
 
 					@Override
@@ -87,8 +87,12 @@ public class Helper {
 					public boolean shouldCreateShallowEntityResult() {
 						return false;
 					}
-				},
-				() -> sessionFactory
+
+					@Override
+					public ColumnReferenceQualifier getCurrentColumnReferenceQualifier() {
+						throw new UnsupportedOperationException(  );
+					}
+				}
 		);
 
 		return new RowReaderStandardImpl<>(

@@ -8,25 +8,20 @@ package org.hibernate.sql.ast.produce.sqm.spi;
 
 import java.util.List;
 
-import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.metamodel.model.domain.internal.entity.EntityTableGroup;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
-import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.internal.NonSelectSqlExpressionResolver;
-import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
-import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
-import org.hibernate.sql.ast.produce.spi.SqlAstProducerContext;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstUpdateDescriptor;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
-import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableSpace;
-import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 
 /**
  * @author Steve Ebersole
@@ -42,13 +37,13 @@ public class SqmDeleteToSqlAstConverterMultiTable extends BaseSqmToSqlAstConvert
 			SqmDeleteStatement sqmStatement,
 			QuerySpec idTableSelect,
 			QueryOptions queryOptions,
-			SqlAstProducerContext producerContext) {
+			SqlAstCreationContext creationContext) {
 
 		final SqmDeleteToSqlAstConverterMultiTable walker = new SqmDeleteToSqlAstConverterMultiTable(
 				sqmStatement,
 				idTableSelect,
 				queryOptions,
-				producerContext
+				creationContext
 		);
 
 		walker.visitDeleteStatement( sqmStatement );
@@ -65,74 +60,27 @@ public class SqmDeleteToSqlAstConverterMultiTable extends BaseSqmToSqlAstConvert
 			SqmDeleteStatement sqmStatement,
 			QuerySpec idTableSelect,
 			QueryOptions queryOptions,
-			SqlAstProducerContext producerContext) {
-		super( producerContext, queryOptions );
+			SqlAstCreationContext creationContext) {
+		super( creationContext, queryOptions, LoadQueryInfluencers.NONE, afterLoadAction -> {} );
 		this.idTableSelect = idTableSelect;
 
-		this.entityDescriptor = sqmStatement.getTarget()
-				.getNavigableReference()
-				.getExpressableType()
-				.getEntityDescriptor();
+		final SqmRoot deleteTarget = sqmStatement.getTarget();
 
-		final NavigablePath path = new NavigablePath( entityDescriptor.getEntityName() );
+		this.entityDescriptor = deleteTarget.getReferencedNavigable().getEntityDescriptor();
+
 		this.entityTableGroup = entityDescriptor.createRootTableGroup(
-				new TableGroupInfo() {
-					@Override
-					public String getUniqueIdentifier() {
-						return sqmStatement.getTarget().getUniqueIdentifier();
-					}
-
-					@Override
-					public String getIdentificationVariable() {
-						return sqmStatement.getTarget().getIdentificationVariable();
-					}
-
-					@Override
-					public EntityTypeDescriptor getIntrinsicSubclassEntityMetadata() {
-						return sqmStatement.getTarget().getIntrinsicSubclassEntityMetadata();
-					}
-
-					@Override
-					public NavigablePath getNavigablePath() {
-						return path;
-					}
-				},
-				new RootTableGroupContext() {
-					@Override
-					public void addRestriction(Predicate predicate) {
-					}
-
-					@Override
-					public QuerySpec getQuerySpec() {
-						return null;
-					}
-
-					@Override
-					public TableSpace getTableSpace() {
-						return null;
-					}
-
-					@Override
-					public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
-						return getSqlAliasBaseManager();
-					}
-
-					@Override
-					public JoinType getTableReferenceJoinType() {
-						return JoinType.INNER;
-					}
-
-					@Override
-					public LockOptions getLockOptions() {
-						return queryOptions.getLockOptions();
-					}
-				}
+				deleteTarget.getUniqueIdentifier(),
+				deleteTarget.getNavigablePath(),
+				deleteTarget.getExplicitAlias(),
+				JoinType.INNER,
+				queryOptions.getLockOptions().getLockMode(),
+				this
 		);
 
-		getFromClauseIndex().crossReference( sqmStatement.getTarget(), entityTableGroup );
+		getFromClauseIndex().crossReference( deleteTarget, entityTableGroup );
 
 		this.expressionResolver = new NonSelectSqlExpressionResolver(
-				getSessionFactory(),
+				getCreationContext(),
 				() -> getQuerySpecStack().getCurrent(),
 				this::normalizeSqlExpression,
 				this::collectSelection
@@ -140,12 +88,7 @@ public class SqmDeleteToSqlAstConverterMultiTable extends BaseSqmToSqlAstConvert
 	}
 
 	@Override
-	public SqlExpressionResolver getSqlSelectionResolver() {
-		return expressionResolver;
-	}
-
-	@Override
-	protected SqlExpressionResolver getSqlExpressionResolver() {
+	public SqlExpressionResolver getSqlExpressionResolver() {
 		return expressionResolver;
 	}
 }

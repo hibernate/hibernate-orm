@@ -6,15 +6,15 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
-import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
+import java.util.function.Supplier;
+
+import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.produce.SqmCreationHelper;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.expression.domain.SqmAttributeReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
-import org.hibernate.sql.ast.produce.ConversionException;
-import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
@@ -30,43 +30,55 @@ public class SqmNavigableJoin
 	private static final Logger log = Logger.getLogger( SqmNavigableJoin.class );
 
 	private final SqmFrom lhs;
-	private final SqmNavigableReference navigableReference;
 	private final boolean fetched;
 
 	private SqmPredicate onClausePredicate;
 
 	public SqmNavigableJoin(
-			SqmFrom lhs,
-			SqmNavigableReference navigableReference,
 			String uid,
+			SqmFrom lhs,
+			NavigableContainer joinedNavigable,
 			String alias,
 			SqmJoinType joinType,
-			boolean fetched) {
+			boolean fetched,
+			SqmCreationState creationState) {
 		super(
-				navigableReference.getSourceReference().getExportedFromElement().getContainingSpace(),
 				uid,
+				SqmCreationHelper.buildSubNavigablePath(
+						lhs.getNavigablePath(),
+						joinedNavigable.getNavigableName(),
+						alias
+				),
+				joinedNavigable,
 				alias,
 				joinType
 		);
 		this.lhs = lhs;
-
-		this.navigableReference = navigableReference;
 		this.fetched = fetched;
 	}
 
-
-
+	@Override
 	public SqmFrom getLhs() {
 		return lhs;
 	}
 
 	public SqmAttributeReference getAttributeReference() {
-		return (SqmAttributeReference) navigableReference;
+		return (SqmAttributeReference) getReferencedNavigable();
 	}
 
 	@Override
-	public SqmNavigableReference getNavigableReference() {
-		return getAttributeReference();
+	public NavigableContainer getExpressableType() {
+		return getReferencedNavigable();
+	}
+
+	@Override
+	public Supplier<? extends NavigableContainer> getInferableType() {
+		return this::getReferencedNavigable;
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return getReferencedNavigable().getJavaTypeDescriptor();
 	}
 
 	public boolean isFetched() {
@@ -74,11 +86,11 @@ public class SqmNavigableJoin
 	}
 
 	@Override
-	public SqmPredicate getOnClausePredicate() {
+	public SqmPredicate getJoinPredicate() {
 		return onClausePredicate;
 	}
 
-	public void setOnClausePredicate(SqmPredicate predicate) {
+	public void setJoinPredicate(SqmPredicate predicate) {
 		log.tracef(
 				"Setting join predicate [%s] (was [%s])",
 				predicate.toString(),
@@ -91,25 +103,5 @@ public class SqmNavigableJoin
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitQualifiedAttributeJoinFromElement( this );
-	}
-
-	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return navigableReference.getJavaTypeDescriptor();
-	}
-
-	@Override
-	public TableGroup locateMapping(FromClauseIndex fromClauseIndex) {
-		if ( getNavigableReference().getReferencedNavigable() instanceof EmbeddedValuedNavigable ) {
-			return fromClauseIndex.findResolvedTableGroup( getLhs() );
-		}
-
-		try {
-			return fromClauseIndex.resolveTableGroup( getUniqueIdentifier() );
-		}
-		catch (ConversionException e) {
-			// our uid is not yet known.. we should create the TableGroup here - at least initiate it
-			return null;
-		}
 	}
 }

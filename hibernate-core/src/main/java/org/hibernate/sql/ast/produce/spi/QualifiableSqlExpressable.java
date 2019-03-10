@@ -20,5 +20,5 @@ public interface QualifiableSqlExpressable extends SqlExpressable {
 	// todo (6.0) : do we need this method ?
 	Expression createSqlExpression(
 			ColumnReferenceQualifier qualifier,
-			SqlAstProducerContext creationContext);
+			SqlAstCreationState creationState);
 }

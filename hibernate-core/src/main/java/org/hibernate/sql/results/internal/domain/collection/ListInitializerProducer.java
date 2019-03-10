@@ -11,7 +11,6 @@ import java.util.function.Consumer;
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.model.domain.internal.PersistentListDescriptorImpl;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.CollectionInitializer;
 import org.hibernate.sql.results.spi.DomainResult;
@@ -46,8 +45,7 @@ public class ListInitializerProducer implements CollectionInitializerProducer {
 			DomainResultAssembler keyContainerAssembler,
 			DomainResultAssembler keyCollectionAssembler,
 			Consumer<Initializer> initializerConsumer,
-			AssemblerCreationState creationState,
-			AssemblerCreationContext creationContext) {
+			AssemblerCreationState creationState) {
 
 		return new ListInitializer(
 				listDescriptor,
@@ -59,13 +57,11 @@ public class ListInitializerProducer implements CollectionInitializerProducer {
 				keyCollectionAssembler,
 				listIndexResult.createResultAssembler(
 						initializerConsumer,
-						creationState,
-						creationContext
+						creationState
 				),
 				elementResult.createResultAssembler(
 						initializerConsumer,
-						creationState,
-						creationContext
+						creationState
 				)
 		);
 	}

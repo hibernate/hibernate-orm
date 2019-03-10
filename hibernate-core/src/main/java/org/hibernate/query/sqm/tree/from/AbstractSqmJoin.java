@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 
 /**
@@ -15,11 +17,12 @@ public abstract class AbstractSqmJoin extends AbstractSqmFrom implements SqmJoin
 	private final SqmJoinType joinType;
 
 	public AbstractSqmJoin(
-			SqmFromElementSpace fromElementSpace,
 			String uid,
+			NavigablePath navigablePath,
+			NavigableContainer referencedNavigable,
 			String alias,
 			SqmJoinType joinType) {
-		super( fromElementSpace, uid, alias );
+		super( uid, navigablePath, referencedNavigable, alias );
 		this.joinType = joinType;
 	}
 

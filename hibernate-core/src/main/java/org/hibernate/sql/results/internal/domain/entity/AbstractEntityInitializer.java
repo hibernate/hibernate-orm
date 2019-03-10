@@ -37,7 +37,6 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.spi.AbstractFetchParentAccess;
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
@@ -93,7 +92,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			DomainResult discriminatorResult,
 			DomainResult versionResult,
 			Consumer<Initializer> initializerConsumer,
-			AssemblerCreationContext context,
 			AssemblerCreationState creationState) {
 		super( );
 		this.entityDescriptor = resultDescriptor.getEntityValuedNavigable().getEntityDescriptor();
@@ -102,8 +100,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		this.identifierAssembler = identifierResult.createResultAssembler(
 				identifierInitializers::add,
-				creationState,
-				context
+				creationState
 		);
 
 		if ( entityDescriptor.getHierarchy().getDiscriminatorDescriptor() != null ) {
@@ -113,8 +110,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 						throw new UnsupportedOperationException(
 								"Registering an Initializer as part of Entity discriminator is illegal" );
 					},
-					creationState,
-					context
+					creationState
 			);
 		}
 		else {
@@ -128,8 +124,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 						throw new UnsupportedOperationException(
 								"Registering an Initializer as part of Entity version is illegal" );
 					},
-					creationState,
-					context
+					creationState
 			);
 		}
 		else {
@@ -154,7 +149,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 						stateAssembler = fetch.createAssembler(
 								this,
 								subInitializerConsumer,
-								context,
 								creationState
 						);
 					}

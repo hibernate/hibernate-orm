@@ -11,7 +11,6 @@ import java.util.function.Consumer;
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.model.domain.internal.PersistentMapDescriptorImpl;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.CollectionInitializer;
 import org.hibernate.sql.results.spi.DomainResult;
@@ -47,18 +46,15 @@ public class MapInitializerProducer implements CollectionInitializerProducer {
 			DomainResultAssembler keyContainerAssembler,
 			DomainResultAssembler keyCollectionAssembler,
 			Consumer<Initializer> initializerConsumer,
-			AssemblerCreationState creationState,
-			AssemblerCreationContext creationContext) {
+			AssemblerCreationState creationState) {
 		final DomainResultAssembler mapKeyAssembler = mapKeyResult.createResultAssembler(
 				initializerConsumer,
-				creationState,
-				creationContext
+				creationState
 		);
 
 		final DomainResultAssembler mapValueAssembler = mapValueResult.createResultAssembler(
 				initializerConsumer,
-				creationState,
-				creationContext
+				creationState
 		);
 
 		return new MapInitializer(

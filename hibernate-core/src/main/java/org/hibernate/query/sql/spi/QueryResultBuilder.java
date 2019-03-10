@@ -7,7 +7,6 @@
 package org.hibernate.query.sql.spi;
 
 import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
@@ -39,7 +38,5 @@ public interface QueryResultBuilder {
 
 	JavaTypeDescriptor getResultType();
 
-	DomainResult buildReturn(
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext);
+	DomainResult buildReturn(DomainResultCreationState creationState);
 }

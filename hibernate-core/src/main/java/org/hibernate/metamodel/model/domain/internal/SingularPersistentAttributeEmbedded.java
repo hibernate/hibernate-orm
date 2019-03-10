@@ -40,25 +40,23 @@ import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.procedure.ParameterMisuseException;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.produce.SqmPathRegistry;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
+import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceEmbedded;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
+import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
-import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.EmbeddableValuedNavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.internal.domain.embedded.CompositeFetchImpl;
-import org.hibernate.sql.results.internal.domain.embedded.CompositeResultImpl;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
@@ -70,7 +68,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class SingularPersistentAttributeEmbedded<O,J>
 		extends AbstractNonIdSingularPersistentAttribute<O,J>
-		implements EmbeddedValuedNavigable<J>, Fetchable<J> {
+		implements EmbeddedValuedNavigable<J>, Joinable<J>, Fetchable<J> {
 
 	private final EmbeddedTypeDescriptor<J> embeddedDescriptor;
 
@@ -162,10 +160,19 @@ public class SingularPersistentAttributeEmbedded<O,J>
 
 	@Override
 	public SqmNavigableReference createSqmExpression(
-			SqmFrom sourceSqmFrom,
-			SqmNavigableContainerReference containerReference,
+			SqmPath lhs,
 			SqmCreationState creationState) {
-		return new SqmSingularAttributeReferenceEmbedded( containerReference, this, creationState );
+		final NavigablePath navigablePath = lhs.getNavigablePath().append( getNavigableName() );
+		final SqmPathRegistry pathRegistry = creationState.getProcessingStateStack().getCurrent().getPathRegistry();
+		return (SqmNavigableReference) pathRegistry.resolvePath(
+				navigablePath,
+				np -> new SqmEmbeddedValuedSimplePath(
+						creationState.generateUniqueIdentifier(),
+						navigablePath,
+						this,
+						lhs
+				)
+		);
 	}
 
 	@Override
@@ -174,10 +181,10 @@ public class SingularPersistentAttributeEmbedded<O,J>
 			FetchTiming fetchTiming,
 			boolean selected,
 			LockMode lockMode, String resultVariable,
-			DomainResultCreationState creationState, DomainResultCreationContext creationContext) {
+			DomainResultCreationState creationState) {
 		final Stack<NavigableReference> navigableReferenceStack = creationState.getNavigableReferenceStack();
 
-		if ( navigableReferenceStack.depth() > creationContext.getSessionFactory().getSessionFactoryOptions().getMaximumFetchDepth() ) {
+		if ( navigableReferenceStack.depth() > creationState.getSqlAstCreationState().getCreationContext().getMaximumFetchDepth() ) {
 			selected = false;
 		}
 
@@ -423,13 +430,13 @@ public class SingularPersistentAttributeEmbedded<O,J>
 
 	@Override
 	public List<ColumnReference> resolveColumnReferences(
-			ColumnReferenceQualifier qualifier, SqlAstCreationContext resolutionContext) {
+			ColumnReferenceQualifier qualifier, SqlAstCreationState creationState) {
 		final List<ColumnReference> columnReferences = new ArrayList<>();
 		getEmbeddedDescriptor().visitStateArrayContributors(
 				contributor ->
 						columnReferences.addAll( contributor.resolveColumnReferences(
 								qualifier,
-								resolutionContext
+								creationState
 						) )
 		);
 		return columnReferences;
@@ -442,13 +449,5 @@ public class SingularPersistentAttributeEmbedded<O,J>
 				contributor -> contributor.visitColumns( action, clause, typeConfiguration )
 
 		);
-	}
-
-	@Override
-	public DomainResult createDomainResult(
-			String resultVariable,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
-		return new CompositeResultImpl( resultVariable, getEmbeddedDescriptor(), creationState );
 	}
 }

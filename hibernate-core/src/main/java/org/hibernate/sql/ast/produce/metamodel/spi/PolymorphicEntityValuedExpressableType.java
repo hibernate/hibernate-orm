@@ -9,7 +9,9 @@ package org.hibernate.sql.ast.produce.metamodel.spi;
 import java.util.Set;
 
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.query.sqm.consume.spi.QuerySplitter;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
  * A specialized EntityValuedExpressableType for cases where the entity reference named
@@ -26,7 +28,7 @@ import org.hibernate.query.sqm.consume.spi.QuerySplitter;
  *
  * @see QuerySplitter
  */
-public interface PolymorphicEntityValuedExpressableType<T> extends EntityValuedExpressableType<T> {
+public interface PolymorphicEntityValuedExpressableType<T> extends EntityValuedNavigable<T> {
 
 	// todo (6.0) : should producing an SQM just automatically pass the tree through QuerySplitter?
 	//		that works for ORM usage, but what about others (OGM, Search, etc)?  There is an overhead
@@ -40,4 +42,20 @@ public interface PolymorphicEntityValuedExpressableType<T> extends EntityValuedE
 	 * @return All concrete implementors.
 	 */
 	Set<EntityTypeDescriptor<?>> getImplementors();
+
+	@Override
+	default PersistenceType getPersistenceType() {
+		return PersistenceType.ENTITY;
+	}
+
+	@Override
+	EntityJavaDescriptor<T> getJavaTypeDescriptor();
+
+	@Override
+	boolean isNullable();
+
+	@Override
+	default String getMappedBy() {
+		return null;
+	}
 }

@@ -9,7 +9,9 @@ package org.hibernate.sql.ast.tree.spi.from;
 import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.annotations.Remove;
 import org.hibernate.internal.util.Loggable;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
@@ -27,8 +29,18 @@ public interface TableGroup extends ColumnReferenceQualifier, SqlAstNode, Loggab
 	 * Get the TableSpace that contains this group.  Allows walking "up"
 	 * the tree.
 	 */
-	TableSpace getTableSpace();
+	@Remove
+	@Deprecated
+	default TableSpace getTableSpace() {
+		throw new UnsupportedOperationException();
+	}
 
+	default NavigablePath getNavigablePath() {
+		return getNavigableReference().getNavigablePath();
+	}
+
+	@Remove
+	@Deprecated
 	NavigableReference getNavigableReference();
 
 	/**

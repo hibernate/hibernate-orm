@@ -6,6 +6,9 @@
  */
 package org.hibernate.sql.ast.produce.spi;
 
+import org.hibernate.LockMode;
+import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
@@ -18,6 +21,17 @@ import org.hibernate.sql.ast.tree.spi.from.TableSpace;
  */
 public interface RootTableGroupProducer extends TableGroupProducer {
 	/**
+	 * Create a root TableGroup as defined by this producer
+	 */
+	TableGroup createRootTableGroup(
+			String uid,
+			NavigablePath navigablePath,
+			String explicitSourceAlias,
+			JoinType tableReferenceJoinType,
+			LockMode lockMode,
+			SqlAstCreationState creationState);
+
+	/**
 	 * Create the root TableGroup as defined by this producer given the
 	 * NavigableReferenceInfo, being sure to add it to the passed
 	 * RootTableGroupContext.
@@ -26,5 +40,7 @@ public interface RootTableGroupProducer extends TableGroupProducer {
 	 *
 	 * @return The generated EntityTableGroup
 	 */
-	TableGroup createRootTableGroup(TableGroupInfo tableGroupInfo, RootTableGroupContext tableGroupContext);
+	default TableGroup createRootTableGroup(TableGroupInfo tableGroupInfo, RootTableGroupContext tableGroupContext) {
+		throw new UnsupportedOperationException(  );
+	}
 }

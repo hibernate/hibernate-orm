@@ -16,6 +16,5 @@ package org.hibernate.sql.results.spi;
 public interface DomainResultProducer {
 	DomainResult createDomainResult(
 			String resultVariable,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext);
+			DomainResultCreationState creationState);
 }

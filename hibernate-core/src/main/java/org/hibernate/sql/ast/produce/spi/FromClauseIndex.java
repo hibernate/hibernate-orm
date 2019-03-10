@@ -22,6 +22,7 @@ import org.hibernate.sql.ast.produce.ConversionException;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
+import org.hibernate.sql.results.spi.DomainResultCreationState;
 
 import org.jboss.logging.Logger;
 
@@ -32,7 +33,60 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class FromClauseIndex implements TableGroupResolver {
+public class FromClauseIndex
+		extends DomainResultCreationState.SimpleFromClauseAccessImpl implements TableGroupResolver {
+	public FromClauseIndex() {
+	}
+
+	private final Map<String, TableGroup> tableGroupByAliasXref = new HashMap<>();
+
+	private Map<NavigablePath,SqmNavigableJoin> fetchesByPath;
+	private Map<NavigablePath, Map<NavigablePath, SqmNavigableJoin>> fetchesByParentPath;
+
+
+	private void newCrossReferencing(SqmFrom fromElement, TableGroup tableGroup) {
+		register( fromElement, tableGroup );
+	}
+
+	@Override
+	public TableGroup resolveTableGroup(NavigablePath navigablePath) {
+		return findTableGroup( navigablePath );
+	}
+
+	public void register(SqmFrom sqmPath, TableGroup tableGroup) {
+		registerTableGroup( sqmPath.getNavigablePath(), tableGroup );
+
+		if ( sqmPath instanceof SqmNavigableJoin ) {
+			final SqmNavigableJoin join = (SqmNavigableJoin) sqmPath;
+			if ( join.isFetched() ) {
+				if ( fetchesByPath == null ) {
+					fetchesByPath = new HashMap<>();
+				}
+				fetchesByPath.put( join.getNavigablePath(), join );
+
+				if ( fetchesByParentPath == null ) {
+					fetchesByParentPath = new HashMap<>();
+				}
+				final Map<NavigablePath, SqmNavigableJoin> fetchesForParent = fetchesByParentPath.computeIfAbsent(
+						join.getNavigablePath().getParent(),
+						navigablePath -> new HashMap<>()
+				);
+				fetchesForParent.put( join.getNavigablePath(), join );
+			}
+		}
+
+		if ( sqmPath.getExplicitAlias() != null ) {
+			final TableGroup previousAliasReg = tableGroupByAliasXref.put( sqmPath.getExplicitAlias(), tableGroup );
+			if ( previousAliasReg != null ) {
+				log.debugf(
+						"Encountered previous TableGroup registration [%s] for alias : %s",
+						previousAliasReg,
+						sqmPath.getExplicitAlias()
+				);
+			}
+		}
+	}
+
 
 
 	// todo (6.0) : Need to reconsider the cross referencing done here and decide how to index stuff:
@@ -51,6 +105,7 @@ public class FromClauseIndex implements TableGroupResolver {
 	private final Map<String,SqmFrom> sqmFromByUid = new HashMap<>();
 	private final Map<SqmFrom, TableGroup> tableGroupBySqmFromXref = new HashMap<>();
 	private Map<String, List<SqmNavigableJoin>> sqmFetchesByParentUid;
+
 
 	@Override
 	public TableGroup resolveTableGroup(String uid) {
@@ -76,7 +131,7 @@ public class FromClauseIndex implements TableGroupResolver {
 			}
 		}
 
-		uidBySourceNavigableReference.put( tableGroup.getNavigableReference(), tableGroup.getUniqueIdentifier() );
+//		uidBySourceNavigableReference.put( tableGroup.getNavigableReference(), tableGroup.getUniqueIdentifier() );
 
 		TableGroup old = tableGroupBySqmFromXref.put( fromElement, tableGroup );
 		if ( old != null ) {
@@ -91,7 +146,7 @@ public class FromClauseIndex implements TableGroupResolver {
 		if ( fromElement instanceof SqmNavigableJoin ) {
 			final SqmNavigableJoin sqmAttributeJoin = (SqmNavigableJoin) fromElement;
 			if ( sqmAttributeJoin.isFetched() ) {
-				final String fetchParentUid = sqmAttributeJoin.getNavigableReference().getNavigableContainerReferenceInfo().getUniqueIdentifier();
+				final String fetchParentUid = sqmAttributeJoin.getLhs().getUniqueIdentifier();
 
 				if ( sqmFetchesByParentUid == null ) {
 					sqmFetchesByParentUid = new HashMap<>();
@@ -104,10 +159,12 @@ public class FromClauseIndex implements TableGroupResolver {
 				fetches.add( sqmAttributeJoin );
 			}
 		}
+
+		newCrossReferencing( fromElement, tableGroup );
 	}
 
 	public TableGroup findResolvedTableGroup(SqmFrom fromElement) {
-		return fromElement.locateMapping( this );
+		return resolveTableGroup( fromElement.getUniqueIdentifier() );
 
 //		// todo (6.0) : this is a hacky solution/workaround to the fact that SQM creates joins for composites/embeddables whereas we do not in the SQL-AST
 //		//		so the cross referencing is off

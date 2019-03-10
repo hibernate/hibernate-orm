@@ -11,17 +11,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.Stack;
-import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.criteria.spi.BaseCriteriaVisitor;
 import org.hibernate.query.criteria.spi.ComparisonPredicate;
 import org.hibernate.query.criteria.spi.CompoundSelection;
 import org.hibernate.query.criteria.spi.ConstructorSelection;
 import org.hibernate.query.criteria.spi.FromImplementor;
-import org.hibernate.query.criteria.spi.JoinImplementor;
 import org.hibernate.query.criteria.spi.LiteralExpression;
 import org.hibernate.query.criteria.spi.ParameterExpression;
 import org.hibernate.query.criteria.spi.QueryStructure;
@@ -29,13 +25,10 @@ import org.hibernate.query.criteria.spi.RootImplementor;
 import org.hibernate.query.criteria.spi.RootQuery;
 import org.hibernate.query.criteria.spi.SelectionImplementor;
 import org.hibernate.query.sqm.produce.internal.UniqueIdGenerator;
-import org.hibernate.query.sqm.tree.SqmQuerySpec;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
-import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.internal.ParameterCollector;
@@ -44,7 +37,9 @@ import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
+import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 
 /**
@@ -102,24 +97,18 @@ public class CriteriaQueryToSqmTransformer extends BaseCriteriaVisitor {
 
 	@Override
 	public SqmQuerySpec visitQueryStructure(QueryStructure<?> queryStructure) {
-		return new SqmQuerySpec(
-				visitFromClause( queryStructure ),
-				visitSelectClause( queryStructure ),
-				visitWhereClause( queryStructure ),
-				null,
-				null
-		);
+		final SqmQuerySpec sqmQuerySpec = new SqmQuerySpec();
+
+		sqmQuerySpec.setFromClause( visitFromClause( queryStructure ) );
+		sqmQuerySpec.setSelectClause( visitSelectClause( queryStructure ) );
+		sqmQuerySpec.setWhereClause( visitWhereClause( queryStructure ) );
+
+		return sqmQuerySpec;
 	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// From clause
-
-	protected interface FromClauseElementConsumer {
-		SqmFrom consume(FromImplementor fromElement);
-	}
-
-	private FromClauseElementConsumer fromClauseElementConsumer;
 
 	private final Map<FromImplementor<?,?>, SqmFrom> fromElementMapping = new IdentityHashMap<>();
 
@@ -127,64 +116,35 @@ public class CriteriaQueryToSqmTransformer extends BaseCriteriaVisitor {
 	protected SqmFromClause visitFromClause(QueryStructure<?> querySpec) {
 		final SqmFromClause sqmFromClause = new SqmFromClause();
 
-		final Stack<SqmFromElementSpace> rootsStack = new StandardStack<>();
-
-		fromClauseElementConsumer = fromElement -> {
-			if ( fromElement instanceof RootImplementor ) {
-				final SqmFromElementSpace sqmFromElementSpace = sqmFromClause.makeFromElementSpace();
-				rootsStack.push( sqmFromElementSpace );
-
-				final RootImplementor<?> root = (RootImplementor) fromElement;
-				final SqmRoot<?> sqmRoot = new SqmRoot<>(
-						sqmFromElementSpace,
-						uidGenerator.generateUniqueId(),
-						root.getAlias(),
-						root.getModel()
-				);
-				sqmFromElementSpace.setRoot( sqmRoot );
-				fromElementMapping.put( fromElement, sqmRoot );
-
-				// as part of the from-clause we want to visit joins and fetches as
-				// well though not in other clauses - so we handle that here
-
-				root.visitJoins( join -> join.accept( this ) );
-				root.visitFetches( fetch -> fetch.accept( this ) );
-
-				return sqmRoot;
-			}
-			else if ( fromElement instanceof JoinImplementor ) {
-				// because we unify the JPA Join and Fetch hierarchies both
-				// will match here, which is perfect...
-				throw new NotYetImplementedFor6Exception( "Criteria Join/Fetch handling not yet implemented" );
-			}
-
-			throw new IllegalArgumentException( "Unanticipated criteria From type - " + fromElement );
-		};
-
-		try {
-			for ( RootImplementor<?> root : querySpec.getRoots() ) {
-				root.accept( this );
-			}
-		}
-		finally {
-			fromClauseElementConsumer = null;
+		for ( RootImplementor<?> root : querySpec.getRoots() ) {
+			final SqmRoot<?> sqmRoot = new SqmRoot<>(
+					uidGenerator.generateUniqueId(),
+					root.getAlias(),
+					root.getModel()
+			);
+			sqmFromClause.addRoot( sqmRoot );
+			fromElementMapping.put( root, sqmRoot );
+			consumeJoins( root, sqmRoot );
 		}
 
 		return sqmFromClause;
 	}
 
-	@Override
-	public Object visitRoot(RootImplementor<?> root) {
-		if ( fromClauseElementConsumer != null ) {
-			// we are processing the from-clause
-			return fromClauseElementConsumer.consume( root );
-		}
+	private void consumeJoins(FromImplementor<?, ?> fromImplementor, SqmFrom sqmFrom) {
+		fromImplementor.visitJoins(
+				join -> sqmFrom.addJoin( join.accept( this ) )
+		);
+		fromImplementor.visitFetches(
+				join -> sqmFrom.addJoin( join.accept( this ) )
+		);
+	}
 
+	@Override
+	public SqmRoot visitRoot(RootImplementor<?> root) {
 		// otherwise, we should already have processed root - so find its
 		// corresponding SqmRoot and return its NavigableReference
 
-		final SqmRoot sqmRoot = (SqmRoot) fromElementMapping.get( root );
-		return sqmRoot.getNavigableReference();
+		return (SqmRoot) fromElementMapping.get( root );
 	}
 
 

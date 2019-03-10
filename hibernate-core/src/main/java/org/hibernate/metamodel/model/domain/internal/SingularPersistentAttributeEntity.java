@@ -20,7 +20,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.engine.FetchStrategy;
@@ -32,7 +31,6 @@ import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.loader.internal.StandardSingleUniqueKeyEntityLoader;
 import org.hibernate.loader.spi.SingleEntityLoader;
 import org.hibernate.loader.spi.SingleUniqueKeyEntityLoader;
@@ -64,27 +62,23 @@ import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey.ColumnMappings;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.produce.spi.SqmCreationState;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceEntity;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
+import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
-import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -92,8 +86,6 @@ import org.hibernate.sql.results.internal.domain.entity.DelayedEntityFetch;
 import org.hibernate.sql.results.internal.domain.entity.EntityFetchImpl;
 import org.hibernate.sql.results.internal.domain.entity.ImmediatePkEntityFetch;
 import org.hibernate.sql.results.internal.domain.entity.ImmediateUkEntityFetch;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.EntityFetch;
 import org.hibernate.sql.results.spi.Fetch;
@@ -115,6 +107,7 @@ public class SingularPersistentAttributeEntity<O, J>
 		extends AbstractNonIdSingularPersistentAttribute<O, J>
 		implements JoinablePersistentAttribute<O, J>,
 		EntityValuedNavigable<J>,
+		Joinable<J>,
 		Fetchable<J>,
 		AllowableParameterType<J>,
 		TableGroupJoinProducer {
@@ -415,30 +408,6 @@ public class SingularPersistentAttributeEntity<O, J>
 	}
 
 	@Override
-	public SqmNavigableReference createSqmExpression(
-			SqmFrom sourceSqmFrom,
-			SqmNavigableContainerReference containerReference,
-			SqmCreationState creationState) {
-		return new SqmSingularAttributeReferenceEntity(
-				containerReference,
-				this,
-				creationState
-		);
-	}
-
-	@Override
-	public DomainResult createDomainResult(
-			NavigableReference navigableReference,
-			String resultVariable,
-			DomainResultCreationState creationState, DomainResultCreationContext creationContext) {
-		return entityDescriptor.createDomainResult(
-				navigableReference,
-				resultVariable,
-				creationState, creationContext
-		);
-	}
-
-	@Override
 	public FetchStrategy getMappedFetchStrategy() {
 		return fetchStrategy;
 	}
@@ -477,15 +446,12 @@ public class SingularPersistentAttributeEntity<O, J>
 			boolean selected,
 			LockMode lockMode,
 			String resultVariable,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
+			DomainResultCreationState creationState) {
 
 		// types of entity fetches:
 		//		1) joined
 		//		2) lazy
 		//		3) selected
-
-		final Stack<NavigableReference> navigableReferenceStack = creationState.getNavigableReferenceStack();
 
 		if ( fetchTiming == FetchTiming.DELAYED ) {
 			// todo (6.0) : need general laziness metadata - currently only done for entity
@@ -496,10 +462,10 @@ public class SingularPersistentAttributeEntity<O, J>
 			final boolean cannotBeLazy = ( getAttributeTypeClassification() == ONE_TO_ONE && isOptional() ) || isContainerEnhancedForLazy;
 
 			if ( cannotBeLazy ) {
-				return generateImmediateFetch( fetchParent, creationState, creationContext );
+				return generateImmediateFetch( fetchParent, creationState );
 			}
 			else {
-				return generateDelayedFetch( fetchParent, creationState, creationContext );
+				return generateDelayedFetch( fetchParent, creationState );
 			}
 		}
 		else {
@@ -508,31 +474,26 @@ public class SingularPersistentAttributeEntity<O, J>
 						fetchParent,
 						lockMode,
 						resultVariable,
-						creationState,
-						creationContext,
-						navigableReferenceStack
+						creationState
 				);
 			}
 			else {
-				return generateImmediateFetch( fetchParent, creationState, creationContext );
+				return generateImmediateFetch( fetchParent, creationState );
 			}
 		}
 	}
 
 	private Fetch generateDelayedFetch(
 			FetchParent fetchParent,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
+			DomainResultCreationState creationState) {
 		return new DelayedEntityFetch(
 				fetchParent,
 				this,
-				createKeyDomainResult( creationState, creationContext )
+				createKeyDomainResult( creationState )
 		);
 	}
 
-	private ForeignKeyDomainResult createKeyDomainResult(
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
+	private ForeignKeyDomainResult createKeyDomainResult(DomainResultCreationState creationState) {
 		// make sure columns for the FK, if one, are added to the SQL AST as selections
 		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
 		final List<SqlSelection> sqlSelections = new ArrayList<>();
@@ -550,7 +511,7 @@ public class SingularPersistentAttributeEntity<O, J>
 									column
 							),
 							column.getJavaTypeDescriptor(),
-							creationContext.getSessionFactory().getTypeConfiguration()
+							creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 					)
 			);
 		}
@@ -560,8 +521,7 @@ public class SingularPersistentAttributeEntity<O, J>
 
 	private Fetch generateImmediateFetch(
 			FetchParent fetchParent,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
+			DomainResultCreationState creationState) {
 		if ( referencedUkAttributeName == null
 				|| referencedUkAttributeName.equals( EntityIdentifier.NAVIGABLE_ID )
 				|| referencedUkAttributeName.equals( EntityIdentifier.LEGACY_NAVIGABLE_ID ) ) {
@@ -569,7 +529,7 @@ public class SingularPersistentAttributeEntity<O, J>
 					fetchParent,
 					this,
 					singleEntityLoader,
-					createKeyDomainResult( creationState, creationContext ),
+					createKeyDomainResult( creationState ),
 					notFoundAction
 			);
 		}
@@ -585,15 +545,14 @@ public class SingularPersistentAttributeEntity<O, J>
 					fetchParent,
 					this,
 					singleEntityLoader,
-					createKeyDomainResult( creationState, creationContext ),
+					createKeyDomainResult( creationState ),
 					(key, sessionContractImplementor) -> new EntityUniqueKey(
 							getAssociatedEntityDescriptor().getEntityName(),
 							referencedUkAttributeName,
 							key,
 							getAssociatedEntityDescriptor().getIdentifierDescriptor().getJavaTypeDescriptor(),
 							ukTargetNavigable.getJavaTypeDescriptor(),
-							getAssociatedEntityDescriptor().getHierarchy().getRepresentation(),
-							creationContext.getSessionFactory()
+							getAssociatedEntityDescriptor().getHierarchy().getRepresentation()
 					),
 					notFoundAction
 			);
@@ -604,35 +563,45 @@ public class SingularPersistentAttributeEntity<O, J>
 			FetchParent fetchParent,
 			LockMode lockMode,
 			String resultVariable,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext,
-			Stack<NavigableReference> navigableReferenceStack) {
-		final NavigableContainerReference parentReference = (NavigableContainerReference) navigableReferenceStack.getCurrent();
+			DomainResultCreationState creationState) {
+//		final NavigableContainerReference parentReference = (NavigableContainerReference) navigableReferenceStack.getCurrent();
 
 		final String navigableName = getNavigableName();
 		final NavigablePath navigablePath = fetchParent.getNavigablePath().append( navigableName );
 
-		// if there is an existing NavigableReference this fetch can use, use it.  otherwise create one
-		NavigableReference navigableReference = parentReference.findNavigableReference( navigableName );
-		if ( navigableReference == null ) {
-			// this creates the SQL AST join(s) in the from clause
-			final TableGroupJoin tableGroupJoin = createTableGroupJoin(
-					creationState.getSqlAliasBaseGenerator(),
-					parentReference,
-					creationState.getSqlExpressionResolver(),
-					navigablePath,
-					isNullable() ? JoinType.LEFT : JoinType.INNER,
-					resultVariable,
-					lockMode,
-					creationState.getCurrentTableSpace()
-			);
-			creationState.getCurrentTableSpace().addJoinedTableGroup( tableGroupJoin );
-			navigableReference = tableGroupJoin.getJoinedGroup().getNavigableReference();
-			parentReference.addNavigableReference( navigableReference );
-		}
+		final TableGroupJoin tableGroupJoin = createTableGroupJoin(
+				null,
+				navigablePath,
+				creationState.getFromClauseAccess().getTableGroup( fetchParent.getNavigablePath() ),
+				resultVariable,
+				isNullable() ? JoinType.LEFT : JoinType.INNER,
+				lockMode,
+				creationState.getSqlAstCreationState()
+		);
+		creationState.getCurrentTableSpace().addJoinedTableGroup( tableGroupJoin );
+		creationState.getFromClauseAccess().registerTableGroup( navigablePath, tableGroupJoin.getJoinedGroup() );
 
-		creationState.getNavigableReferenceStack().push( navigableReference );
-		creationState.getColumnReferenceQualifierStack().push( navigableReference.getColumnReferenceQualifier() );
+//		// if there is an existing NavigableReference this fetch can use, use it.  otherwise create one
+//		NavigableReference navigableReference = parentReference.findNavigableReference( navigableName );
+//		if ( navigableReference == null ) {
+//			// this creates the SQL AST join(s) in the from clause
+//			final TableGroupJoin tableGroupJoin = createTableGroupJoin(
+//					creationState.getSqlAliasBaseGenerator(),
+//					parentReference,
+//					creationState.getSqlExpressionResolver(),
+//					navigablePath,
+//					isNullable() ? JoinType.LEFT : JoinType.INNER,
+//					resultVariable,
+//					lockMode,
+//					creationState.getCurrentTableSpace()
+//			);
+//			creationState.getCurrentTableSpace().addJoinedTableGroup( tableGroupJoin );
+//			navigableReference = tableGroupJoin.getJoinedGroup().getNavigableReference();
+//			parentReference.addNavigableReference( navigableReference );
+//		}
+//
+//		creationState.getNavigableReferenceStack().push( navigableReference );
+//		creationState.getColumnReferenceQualifierStack().push( navigableReference.getColumnReferenceQualifier() );
 
 		try {
 			return new EntityFetchImpl(
@@ -640,13 +609,12 @@ public class SingularPersistentAttributeEntity<O, J>
 					this,
 					lockMode,
 					navigablePath,
-					creationContext,
 					creationState
 			);
 		}
 		finally {
-			creationState.getColumnReferenceQualifierStack().pop();
-			creationState.getNavigableReferenceStack().pop();
+//			creationState.getColumnReferenceQualifierStack().pop();
+//			creationState.getNavigableReferenceStack().pop();
 		}
 	}
 
@@ -666,25 +634,65 @@ public class SingularPersistentAttributeEntity<O, J>
 
 	@Override
 	public TableGroupJoin createTableGroupJoin(
-			TableGroupInfo tableGroupInfoSource,
+			String uid,
+			NavigablePath navigablePath,
+			TableGroup lhs,
+			String explicitSourceAlias,
 			JoinType joinType,
-			JoinedTableGroupContext tableGroupJoinContext) {
+			LockMode lockMode,
+			SqlAstCreationState creationState) {
+		final SqlAliasBase sqlAliasBase = creationState.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() );
+
+		final ToOneJoinCollectorImpl joinCollector = new ToOneJoinCollectorImpl(
+				navigablePath,
+				this,
+				lhs,
+				explicitSourceAlias,
+				lockMode
+		);
+
 		// handle optional entity references to be outer joins.
 		if ( isNullable() && JoinType.INNER.equals( joinType ) ) {
 			joinType = JoinType.LEFT;
 		}
 
-		return createTableGroupJoin(
-				tableGroupJoinContext.getSqlAliasBaseGenerator(),
-				tableGroupJoinContext.getLhs(),
-				tableGroupJoinContext.getSqlExpressionResolver(),
-				tableGroupJoinContext.getNavigablePath(),
+		getEntityDescriptor().applyTableReferenceJoins(
+				lhs,
 				joinType,
-				tableGroupInfoSource.getIdentificationVariable(),
-				tableGroupJoinContext.getLockOptions()
-						.getEffectiveLockMode( tableGroupInfoSource.getIdentificationVariable() ),
-				tableGroupJoinContext.getTableSpace()
+				sqlAliasBase,
+				joinCollector
 		);
+
+		// handle optional entity references to be outer joins.
+		if ( isNullable() && JoinType.INNER.equals( joinType ) ) {
+			joinType = JoinType.LEFT;
+		}
+
+		return joinCollector.generateTableGroup( joinType, navigablePath.getFullPath() );
+	}
+
+	@Override
+	public TableGroupJoin createTableGroupJoin(
+			TableGroupInfo tableGroupInfoSource,
+			JoinType joinType,
+			JoinedTableGroupContext tableGroupJoinContext) {
+		throw new UnsupportedOperationException(  );
+//		// handle optional entity references to be outer joins.
+//		if ( isNullable() && JoinType.INNER.equals( joinType ) ) {
+//			joinType = JoinType.LEFT;
+//		}
+//
+//		return createTableGroupJoin(
+//				tableGroupJoinContext.getSqlAliasBaseGenerator(),
+//				tableGroupJoinContext.getLhs(),
+//				tableGroupJoinContext.getSqlExpressionResolver(),
+//				tableGroupJoinContext.getNavigablePath(),
+//				joinType,
+//				tableGroupInfoSource.getIdentificationVariable(),
+//				tableGroupJoinContext.getLockOptions()
+//						.getEffectiveLockMode( tableGroupInfoSource.getIdentificationVariable() ),
+//				tableGroupJoinContext.getTableSpace()
+//		);
 	}
 
 	@Override
@@ -697,30 +705,31 @@ public class SingularPersistentAttributeEntity<O, J>
 			String identificationVariable,
 			LockMode lockMode,
 			TableSpace tableSpace) {
-		final SqlAliasBase sqlAliasBase = sqlAliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
-		final ToOneJoinCollectorImpl joinCollector = new ToOneJoinCollectorImpl(
-				this,
-				tableSpace,
-				lhs,
-				navigablePath,
-				identificationVariable,
-				lockMode
-		);
-
-		getEntityDescriptor().applyTableReferenceJoins(
-				lhs.getColumnReferenceQualifier(),
-				joinType,
-				sqlAliasBase,
-				joinCollector
-		);
-
-		// handle optional entity references to be outer joins.
-		if ( isNullable() && JoinType.INNER.equals( joinType ) ) {
-			joinType = JoinType.LEFT;
-		}
-
-		return joinCollector.generateTableGroup( joinType, navigablePath.getFullPath() );
-
+		throw new UnsupportedOperationException(  );
+//		final SqlAliasBase sqlAliasBase = sqlAliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
+//		final ToOneJoinCollectorImpl joinCollector = new ToOneJoinCollectorImpl(
+//				this,
+//				tableSpace,
+//				lhs,
+//				navigablePath,
+//				identificationVariable,
+//				lockMode
+//		);
+//
+//		getEntityDescriptor().applyTableReferenceJoins(
+//				lhs.getColumnReferenceQualifier(),
+//				joinType,
+//				sqlAliasBase,
+//				joinCollector
+//		);
+//
+//		// handle optional entity references to be outer joins.
+//		if ( isNullable() && JoinType.INNER.equals( joinType ) ) {
+//			joinType = JoinType.LEFT;
+//		}
+//
+//		return joinCollector.generateTableGroup( joinType, navigablePath.getFullPath() );
+//
 	}
 
 	@Override
@@ -809,14 +818,6 @@ public class SingularPersistentAttributeEntity<O, J>
 	}
 
 	@Override
-	public DomainResult createDomainResult(
-			String resultVariable,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
-		throw new NotYetImplementedFor6Exception();
-	}
-
-	@Override
 	public SimpleTypeDescriptor<?> getValueGraphType() {
 		return getEntityDescriptor();
 	}
@@ -899,8 +900,7 @@ public class SingularPersistentAttributeEntity<O, J>
 					hydratedForm,
 					getAssociatedEntityDescriptor().getIdentifierDescriptor().getJavaTypeDescriptor(),
 					referencedUkAttribute.getJavaTypeDescriptor(),
-					getEntityDescriptor().getHierarchy().getRepresentation(),
-					session.getFactory()
+					getEntityDescriptor().getHierarchy().getRepresentation()
 			);
 			// todo (6.0) : look into resolutionContext
 			J loaded = loader.load( hydratedForm, LockOptions.READ, session );
@@ -974,7 +974,7 @@ public class SingularPersistentAttributeEntity<O, J>
 	@Override
 	public List<ColumnReference> resolveColumnReferences(
 			ColumnReferenceQualifier qualifier,
-			SqlAstCreationContext resolutionContext) {
+			SqlAstCreationState creationState) {
 		List<ColumnReference> columnReferences = new ArrayList<>();
 		for ( Column column : foreignKey.getColumnMappings().getReferringColumns() ) {
 			columnReferences.add( new ColumnReference( qualifier, column ) );

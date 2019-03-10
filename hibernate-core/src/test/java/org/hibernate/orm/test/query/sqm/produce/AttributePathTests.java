@@ -10,12 +10,12 @@ import java.util.List;
 
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.orm.test.query.sqm.produce.domain.Person;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
-import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 
 import org.junit.jupiter.api.Test;
@@ -42,10 +42,10 @@ public class AttributePathTests extends BaseSqmUnitTest {
 	public void testImplicitJoinReuse() {
 		final SqmSelectStatement statement = interpretSelect( "select s.mate.dob, s.mate.numberOfToes from Person s" );
 
-		assertThat( statement.getQuerySpec().getFromClause().getFromElementSpaces().size(), is(1) );
-		final SqmFromElementSpace space = statement.getQuerySpec().getFromClause().getFromElementSpaces().get( 0 );
+		assertThat( statement.getQuerySpec().getFromClause().getRoots().size(), is(1) );
+		final SqmRoot sqmRoot = statement.getQuerySpec().getFromClause().getRoots().get( 0 );
 
-		assertThat( space.getJoins().size(), is(1) );
+		assertThat( sqmRoot.getJoins().size(), is(1) );
 
 		// from-clause paths
 //		assertPropertyPath( space.getRoot(), "com.acme.Something(s)" );
@@ -69,10 +69,10 @@ public class AttributePathTests extends BaseSqmUnitTest {
 	public void testImplicitJoinReuse2() {
 		final SqmSelectStatement statement = interpretSelect( "select s.mate from Person s where s.mate.dob = ?1" );
 
-		assertThat( statement.getQuerySpec().getFromClause().getFromElementSpaces().size(), is(1) );
-		final SqmFromElementSpace space = statement.getQuerySpec().getFromClause().getFromElementSpaces().get( 0 );
+		assertThat( statement.getQuerySpec().getFromClause().getRoots().size(), is(1) );
+		final SqmRoot sqmRoot = statement.getQuerySpec().getFromClause().getRoots().get( 0 );
 
-		assertThat( space.getJoins().size(), is(1) );
+		assertThat( sqmRoot.getJoins().size(), is(1) );
 
 		final SqmSelection selection = statement.getQuerySpec().getSelectClause().getSelections().get( 0 );
 		assertThat( selection.getSelectableNode(), instanceOf( SqmSingularAttributeReference.class ) );
@@ -81,7 +81,7 @@ public class AttributePathTests extends BaseSqmUnitTest {
 
 		final SqmComparisonPredicate predicate = (SqmComparisonPredicate) statement.getQuerySpec().getWhereClause().getPredicate();
 		final SqmSingularAttributeReference predicateLhs = (SqmSingularAttributeReference) predicate.getLeftHandExpression();
-		assertThat( predicateLhs.getSourceReference().getExportedFromElement(), notNullValue() );
+		assertThat( predicateLhs.getLhs(), notNullValue() );
 
 
 		// from-clause paths

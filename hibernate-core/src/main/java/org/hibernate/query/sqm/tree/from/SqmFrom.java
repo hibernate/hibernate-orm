@@ -6,46 +6,46 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
-import org.hibernate.query.NavigablePath;
+import java.util.List;
+import java.util.function.Consumer;
+
+import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
-import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 
 /**
  * Models a Bindable's inclusion in the {@code FROM} clause.
  *
  * @author Steve Ebersole
  */
-public interface SqmFrom extends TableGroupInfo, SqmVisitableNode, SqmTypedNode {
+public interface SqmFrom extends TableGroupInfo, SqmVisitableNode, SqmTypedNode, SqmPath {
 	/**
-	 * Obtain reference to the FromElementSpace that this FromElement belongs to.
-	 */
-	SqmFromElementSpace getContainingSpace();
-
-	/**
-	 * The Navigable reference (SqmExpression) that can be used to represent this
-	 * from-element in other clauses.
+	 * The Navigable for an SqmFrom will always be a NavigableContainer
 	 *
-	 * E.g. in a query like `select p from Person p` this SqmNavigableReference
-	 * would represent the `p` reference in the SELECT clause.
+	 * {@inheritDoc}
 	 */
-	SqmNavigableReference getNavigableReference();
-
 	@Override
-	default NavigablePath getNavigablePath() {
-		return getNavigableReference().getNavigablePath();
-	}
+	NavigableContainer<?> getReferencedNavigable();
+
+	/**
+	 * The joins associated with this SqmFrom
+	 */
+	List<SqmJoin> getJoins();
+
+	/**
+	 * Add an associated join
+	 */
+	void addJoin(SqmJoin join);
+
+	/**
+	 * Visit all associated joins
+	 */
+	void visitJoins(Consumer<SqmJoin> consumer);
 
 	/**
 	 * Details about how this SqmFrom is used in the query.
 	 */
 	UsageDetails getUsageDetails();
-
-	default TableGroup locateMapping(FromClauseIndex fromClauseIndex) {
-		// todo (6.0) : re-look at FromClauseIndex and what  it exposes (to avoid recursions here)
-		return fromClauseIndex.resolveTableGroup( getUniqueIdentifier() );
-	}
 }

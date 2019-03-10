@@ -22,21 +22,10 @@ import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.query.sqm.produce.spi.SqmCreationState;
-import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionIndexReferenceBasic;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 
 import org.jboss.logging.Logger;
@@ -117,33 +106,6 @@ public class BasicCollectionIndexImpl<J>
 	@Override
 	public List<Column> getColumns() {
 		return Collections.singletonList( getBoundColumn() );
-	}
-
-	@Override
-	public SqmNavigableReference createSqmExpression(
-			SqmFrom sourceSqmFrom,
-			SqmNavigableContainerReference containerReference,
-			SqmCreationState creationState) {
-		return new SqmCollectionIndexReferenceBasic( (SqmPluralAttributeReference) containerReference );
-	}
-
-	@Override
-	public DomainResult createDomainResult(
-			NavigableReference navigableReference,
-			String resultVariable,
-			DomainResultCreationState creationState, DomainResultCreationContext creationContext) {
-		return new BasicResultImpl(
-				resultVariable,
-				creationState.getSqlExpressionResolver().resolveSqlSelection(
-						creationState.getSqlExpressionResolver().resolveSqlExpression(
-								navigableReference.getColumnReferenceQualifier(),
-								getBoundColumn()
-						),
-						getJavaTypeDescriptor(),
-						creationContext.getSessionFactory().getTypeConfiguration()
-				),
-				getBoundColumn().getExpressableType()
-		);
 	}
 
 	@Override

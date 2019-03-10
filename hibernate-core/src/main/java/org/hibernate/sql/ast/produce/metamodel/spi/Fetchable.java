@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.produce.metamodel.spi;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
@@ -17,7 +17,7 @@ import org.hibernate.sql.results.spi.FetchParent;
 /**
  * @author Steve Ebersole
  */
-public interface Fetchable<T> extends Joinable<T> {
+public interface Fetchable<T> extends Navigable<T> {
 	FetchStrategy getMappedFetchStrategy();
 
 	// todo (6.0) : all we need here is (1) FetchTiming and (2) whether the values are available in the current JdbcValuesSource
@@ -31,8 +31,7 @@ public interface Fetchable<T> extends Joinable<T> {
 			boolean selected,
 			LockMode lockMode,
 			String resultVariable,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext);
+			DomainResultCreationState creationState);
 
 	default boolean isCircular(FetchParent fetchParent){
 		return false;

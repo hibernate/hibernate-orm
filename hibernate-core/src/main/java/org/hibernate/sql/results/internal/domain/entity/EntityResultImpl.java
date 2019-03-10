@@ -9,11 +9,9 @@ package org.hibernate.sql.results.internal.domain.entity;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
-import org.hibernate.sql.ast.tree.spi.expression.domain.EntityValuedNavigableReference;
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.EntityResult;
 import org.hibernate.sql.results.spi.Initializer;
@@ -25,34 +23,26 @@ import org.hibernate.sql.results.spi.Initializer;
  */
 public class EntityResultImpl extends AbstractEntityMappingNode implements EntityResult {
 	private final String resultVariable;
-	private final EntityValuedNavigableReference entityReference;
-
 
 	public EntityResultImpl(
-			EntityValuedNavigableReference entityReference,
+			NavigablePath navigablePath,
+			EntityValuedNavigable referencedEntity,
 			String resultVariable,
-			DomainResultCreationContext creationContext,
 			DomainResultCreationState creationState) {
 		super(
-				entityReference.getNavigable(),
-				entityReference.getLockMode(),
-				entityReference.getNavigablePath(),
-				creationContext,
+				referencedEntity,
+				creationState.determineLockMode( resultVariable ),
+				navigablePath,
 				creationState
 		);
 
 		this.resultVariable = resultVariable;
-		this.entityReference = entityReference;
 
 		afterInitialize( creationState );
 	}
 
 	public EntityValuedNavigable getNavigable() {
 		return getEntityValuedNavigable();
-	}
-
-	public EntityValuedNavigableReference getEntityReference() {
-		return entityReference;
 	}
 
 	@Override
@@ -63,8 +53,7 @@ public class EntityResultImpl extends AbstractEntityMappingNode implements Entit
 	@Override
 	public DomainResultAssembler createResultAssembler(
 			Consumer<Initializer> collector,
-			AssemblerCreationState creationOptions,
-			AssemblerCreationContext creationContext) {
+			AssemblerCreationState creationState) {
 
 		// todo (6.0) : seems like here is where we ought to determine the SQL selection mappings
 
@@ -76,8 +65,7 @@ public class EntityResultImpl extends AbstractEntityMappingNode implements Entit
 				getDiscriminatorResult(),
 				getVersionResult(),
 				collector,
-				creationContext,
-				creationOptions
+				creationState
 		);
 
 		return new EntityAssembler(

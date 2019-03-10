@@ -6,9 +6,11 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import org.hibernate.annotations.Remove;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmFromExporter;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
@@ -25,7 +27,7 @@ import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
  *
  * @author Steve Ebersole
  */
-public interface SqmNavigableReference extends SqmExpression, NavigableReferenceInfo, SqmFromExporter, SemanticPathPart {
+public interface SqmNavigableReference extends SqmExpression, SqmPath, NavigableReferenceInfo, SqmFromExporter, SemanticPathPart {
 	// todo (6.0) : does NavigableReferenceInfo serve any purpose?
 	//		considering that NavigableReference is not really part of the SQL AST
 	//		not sure of the benefit of having a contract that serves to expose the
@@ -34,7 +36,14 @@ public interface SqmNavigableReference extends SqmExpression, NavigableReference
 	/**
 	 * Get the Navigable reference that is the source ("lhs") of this reference.
 	 */
-	SqmNavigableContainerReference getSourceReference();
+	@Deprecated
+	@Remove
+	SqmPath getSourceReference();
+
+	@Override
+	default SqmPath getLhs() {
+		return getSourceReference();
+	}
 
 	/**
 	 * The Navigable represented by this reference.

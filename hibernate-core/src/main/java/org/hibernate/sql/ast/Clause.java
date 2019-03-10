@@ -29,6 +29,7 @@ public enum Clause {
 	HAVING( stateArrayContributor -> true ),
 	ORDER( stateArrayContributor -> true ),
 	LIMIT( stateArrayContributor -> true ),
+	OFFSET( stateArrayContributor -> true ),
 	CALL( stateArrayContributor -> true ),
 	IRRELEVANT( stateArrayContributor -> true );
 

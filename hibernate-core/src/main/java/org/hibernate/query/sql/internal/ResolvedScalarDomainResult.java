@@ -9,7 +9,6 @@ package org.hibernate.query.sql.internal;
 import java.util.function.Consumer;
 
 import org.hibernate.sql.results.internal.domain.basic.BasicResultAssembler;
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
@@ -48,8 +47,7 @@ public class ResolvedScalarDomainResult implements DomainResult {
 	@Override
 	public DomainResultAssembler createResultAssembler(
 			Consumer<Initializer> initializerCollector,
-			AssemblerCreationState creationOptions,
-			AssemblerCreationContext creationContext) {
+			AssemblerCreationState creationState) {
 		return new BasicResultAssembler(
 				sqlSelection,
 				null,

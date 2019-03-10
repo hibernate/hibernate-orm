@@ -17,7 +17,6 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.sql.results.spi.SqlSelection;
@@ -79,8 +78,7 @@ public abstract class AbstractLiteral
 	@Override
 	public DomainResult createDomainResult(
 			String resultVariable,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
+			DomainResultCreationState creationState) {
 
 		// todo (6.0) : consider just returning the literal value back directly
 
@@ -89,7 +87,7 @@ public abstract class AbstractLiteral
 				creationState.getSqlExpressionResolver().resolveSqlSelection(
 						this,
 						getType().getJavaTypeDescriptor(),
-						creationContext.getSessionFactory().getTypeConfiguration()
+						creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 				),
 				getType()
 		);

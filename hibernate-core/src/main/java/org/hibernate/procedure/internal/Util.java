@@ -12,20 +12,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.procedure.UnknownSqlResultSetMappingException;
-import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.ResultSetMappingDescriptor;
 import org.hibernate.query.sql.spi.ResolvingSqlSelectionImpl;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
-import org.hibernate.sql.results.internal.domain.entity.EntityResultImpl;
 import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
+import org.hibernate.sql.results.internal.domain.entity.EntityResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.SqlSelection;
@@ -74,15 +71,6 @@ public class Util {
 	 * Context for resolving result-set-mapping definitions
 	 */
 	public static interface ResultSetMappingResolutionContext {
-		/**
-		 * Access to the SessionFactory
-		 *
-		 * @return SessionFactory
-		 */
-		default SessionFactoryImplementor getSessionFactory() {
-			return getSqlAstCreationContext().getSessionFactory();
-		}
-
 		SqlAstCreationContext getSqlAstCreationContext();
 
 		/**
@@ -116,20 +104,6 @@ public class Util {
 			Consumer<DomainResult> resultConsumer,
 			SessionFactoryImplementor sessionFactory) {
 		new QueryReturnResolver( sessionFactory, querySpacesConsumer, resultConsumer ).resolve( resultSetMappingName );
-	}
-
-	/**
-	 * Context for resolving result-class definitions
-	 */
-	public interface ResultClassesResolutionContext extends AssemblerCreationContext {
-
-		/**
-		 * Access to the SessionFactory
-		 *
-		 * @return SessionFactory
-		 */
-		SessionFactoryImplementor getSessionFactory();
-
 	}
 
 	@SuppressWarnings("unchecked")

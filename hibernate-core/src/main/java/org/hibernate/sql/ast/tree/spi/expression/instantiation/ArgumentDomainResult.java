@@ -9,7 +9,6 @@ package org.hibernate.sql.ast.tree.spi.expression.instantiation;
 import java.util.function.Consumer;
 
 import org.hibernate.sql.results.internal.instantiation.ArgumentReader;
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.Initializer;
@@ -38,10 +37,9 @@ public class ArgumentDomainResult implements DomainResult {
 	@Override
 	public ArgumentReader createResultAssembler(
 			Consumer<Initializer> initializerCollector,
-			AssemblerCreationState creationOptions,
-			AssemblerCreationContext creationContext) {
+			AssemblerCreationState creationState) {
 		return new ArgumentReader(
-				realDomainResult.createResultAssembler( initializerCollector, creationOptions, creationContext ),
+				realDomainResult.createResultAssembler( initializerCollector, creationState ),
 				getResultVariable()
 		);
 	}

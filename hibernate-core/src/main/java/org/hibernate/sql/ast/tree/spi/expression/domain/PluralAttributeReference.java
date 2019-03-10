@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.tree.spi.expression.domain;
 
 import org.hibernate.LockMode;
-import org.hibernate.metamodel.model.domain.spi.CollectionValuedNavigable;
+import org.hibernate.metamodel.model.domain.spi.PluralValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
@@ -21,7 +21,7 @@ public class PluralAttributeReference extends AbstractNavigableContainerReferenc
 	 * Ctor for a collection domain result
 	 */
 	public PluralAttributeReference(
-			CollectionValuedNavigable navigable,
+			PluralValuedNavigable navigable,
 			NavigablePath navigablePath,
 			ColumnReferenceQualifier columnReferenceQualifier,
 			LockMode lockMode) {
@@ -34,7 +34,7 @@ public class PluralAttributeReference extends AbstractNavigableContainerReferenc
 	 */
 	public PluralAttributeReference(
 			NavigableContainerReference containerReference,
-			CollectionValuedNavigable navigable,
+			PluralValuedNavigable navigable,
 			NavigablePath navigablePath,
 			ColumnReferenceQualifier valuesQualifier,
 			LockMode lockMode) {

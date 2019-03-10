@@ -10,7 +10,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * The base contract for any kind of expression node in the SQM tree.

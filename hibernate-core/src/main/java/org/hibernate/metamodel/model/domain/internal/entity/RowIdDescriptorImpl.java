@@ -9,7 +9,6 @@ package org.hibernate.metamodel.model.domain.internal.entity;
 
 import java.sql.Types;
 
-import org.hibernate.HibernateException;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -20,10 +19,6 @@ import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.RowIdDescriptor;
 import org.hibernate.metamodel.model.relational.spi.DerivedColumn;
 import org.hibernate.sql.SqlExpressableType;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.internal.ColumnBasedMapper;
 import org.hibernate.type.spi.BasicType;
@@ -92,16 +87,6 @@ public class RowIdDescriptorImpl<J> implements RowIdDescriptor<J> {
 	@Override
 	public PersistenceType getPersistenceType() {
 		return PersistenceType.BASIC;
-	}
-
-	@Override
-	public DomainResult createDomainResult(
-			NavigableReference navigableReference,
-			String resultVariable,
-			DomainResultCreationState creationState, DomainResultCreationContext creationContext) {
-		// todo (6.0) : but like with discriminator, etc we *could* if we wanted to
-		//		exposed as a "virtual attribute" such as `select p.{type} from Person p`
-		throw new HibernateException( "Selection of ROW_ID from domain query is not supported" );
 	}
 
 	@Override

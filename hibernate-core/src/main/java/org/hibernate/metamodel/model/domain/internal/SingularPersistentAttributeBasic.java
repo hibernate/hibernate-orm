@@ -32,23 +32,14 @@ import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.query.sqm.produce.spi.SqmCreationState;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceBasic;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
-import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.internal.domain.basic.BasicFetch;
-import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
@@ -134,33 +125,6 @@ public class SingularPersistentAttributeBasic<O, J>
 	}
 
 	@Override
-	public SqmNavigableReference createSqmExpression(
-			SqmFrom sourceSqmFrom,
-			SqmNavigableContainerReference containerReference,
-			SqmCreationState creationState) {
-		return new SqmSingularAttributeReferenceBasic( containerReference, this, creationState );
-	}
-
-	@Override
-	public DomainResult createDomainResult(
-			NavigableReference navigableReference,
-			String resultVariable,
-			DomainResultCreationState creationState, DomainResultCreationContext creationContext) {
-		return new BasicResultImpl(
-				resultVariable,
-				creationState.getSqlExpressionResolver().resolveSqlSelection(
-						creationState.getSqlExpressionResolver().resolveSqlExpression(
-								navigableReference.getColumnReferenceQualifier(),
-								boundColumn
-						),
-						getJavaTypeDescriptor(),
-						creationContext.getSessionFactory().getTypeConfiguration()
-				),
-				getBoundColumn().getExpressableType()
-		);
-	}
-
-	@Override
 	public Column getBoundColumn() {
 		return boundColumn;
 	}
@@ -216,7 +180,7 @@ public class SingularPersistentAttributeBasic<O, J>
 	@Override
 	public List<ColumnReference> resolveColumnReferences(
 			ColumnReferenceQualifier qualifier,
-			SqlAstCreationContext resolutionContext) {
+			SqlAstCreationState creationState) {
 		return Collections.singletonList(
 				qualifier.resolveColumnReference( getBoundColumn() )
 		);
@@ -273,32 +237,13 @@ public class SingularPersistentAttributeBasic<O, J>
 			FetchTiming fetchTiming,
 			boolean selected, LockMode lockMode,
 			String resultVariable,
-			DomainResultCreationState creationState, DomainResultCreationContext creationContext) {
-		return new BasicFetch( fetchParent, this, fetchTiming, creationContext, creationState );
+			DomainResultCreationState creationState) {
+		return new BasicFetch( fetchParent, this, fetchTiming, creationState );
 	}
 
 	@Override
 	public FetchStrategy getMappedFetchStrategy() {
 		return fetchStrategy;
-	}
-
-	@Override
-	public DomainResult createDomainResult(
-			String resultVariable,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
-		return new BasicResultImpl(
-				resultVariable,
-				creationState.getSqlExpressionResolver().resolveSqlSelection(
-						creationState.getSqlExpressionResolver().resolveSqlExpression(
-								creationState.getNavigableReferenceStack().getCurrent().getColumnReferenceQualifier(),
-								getBoundColumn()
-						),
-						getJavaTypeDescriptor(),
-						creationContext.getSessionFactory().getTypeConfiguration()
-				),
-				getBoundColumn().getExpressableType()
-		);
 	}
 
 	@Override

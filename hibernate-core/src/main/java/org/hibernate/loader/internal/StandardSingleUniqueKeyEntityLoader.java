@@ -75,8 +75,7 @@ public class StandardSingleUniqueKeyEntityLoader<T> implements SingleUniqueKeyEn
 				uk,
 				getLoadedNavigable().getIdentifierDescriptor().getJavaTypeDescriptor(),
 				fkTargetAttribute.getJavaTypeDescriptor(),
-				getLoadedNavigable().getHierarchy().getRepresentation(),
-				getLoadedNavigable().getFactory()
+				getLoadedNavigable().getHierarchy().getRepresentation()
 		);
 
 

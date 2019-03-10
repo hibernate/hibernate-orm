@@ -22,11 +22,21 @@ public interface CollectionElement<J> extends Navigable<J>, CollectionDomainType
 	boolean canContainSubGraphs();
 
 	enum ElementClassification {
-		BASIC,
-		EMBEDDABLE,
-		ANY,
-		ONE_TO_MANY,
-		MANY_TO_MANY;
+		BASIC( PersistenceType.BASIC ),
+		EMBEDDABLE( PersistenceType.EMBEDDABLE ),
+		ANY( null ),
+		ONE_TO_MANY( PersistenceType.ENTITY ),
+		MANY_TO_MANY( PersistenceType.ENTITY );
+
+		private final PersistenceType correspondingJpaPersistenceType;
+
+		ElementClassification(PersistenceType correspondingJpaPersistenceType) {
+			this.correspondingJpaPersistenceType = correspondingJpaPersistenceType;
+		}
+
+		public PersistenceType getCorrespondingJpaPersistenceType() {
+			return correspondingJpaPersistenceType;
+		}
 	}
 
 	ElementClassification getClassification();

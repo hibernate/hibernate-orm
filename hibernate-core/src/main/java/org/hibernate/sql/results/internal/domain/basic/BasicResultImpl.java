@@ -14,7 +14,6 @@ import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.Initializer;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
 import org.hibernate.sql.results.spi.ScalarResult;
 import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
@@ -60,8 +59,7 @@ public class BasicResultImpl implements ScalarResult {
 	@Override
 	public DomainResultAssembler createResultAssembler(
 			Consumer<Initializer> initializerCollector,
-			AssemblerCreationState creationOptions,
-			AssemblerCreationContext creationContext) {
+			AssemblerCreationState creationState) {
 		return assembler;
 	}
 }

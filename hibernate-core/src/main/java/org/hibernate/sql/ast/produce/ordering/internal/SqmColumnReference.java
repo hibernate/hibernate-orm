@@ -14,8 +14,8 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -41,6 +41,16 @@ public class SqmColumnReference implements SqmExpression, SqmNavigableReference 
 
 	public String getColumnName() {
 		return columnName;
+	}
+
+	@Override
+	public SqmPath getLhs() {
+		return sqmFromBase;
+	}
+
+	@Override
+	public SqmPath getSourceReference() {
+		return getLhs();
 	}
 
 	@Override
@@ -76,13 +86,8 @@ public class SqmColumnReference implements SqmExpression, SqmNavigableReference 
 
 
 	@Override
-	public SqmNavigableContainerReference getSourceReference() {
-		return (SqmNavigableContainerReference) sqmFromBase.getNavigableReference();
-	}
-
-	@Override
 	public NavigableContainerReferenceInfo getNavigableContainerReferenceInfo() {
-		return getSourceReference();
+		return (NavigableContainerReferenceInfo) getSourceReference();
 	}
 
 	@Override
@@ -108,6 +113,16 @@ public class SqmColumnReference implements SqmExpression, SqmNavigableReference 
 	@Override
 	public String getUniqueIdentifier() {
 		return null;
+	}
+
+	@Override
+	public String getExplicitAlias() {
+		return null;
+	}
+
+	@Override
+	public void setExplicitAlias(String explicitAlias) {
+
 	}
 
 	@Override

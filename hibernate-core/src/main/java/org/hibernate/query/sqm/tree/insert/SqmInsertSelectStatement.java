@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.insert;
 
-import org.hibernate.query.sqm.tree.SqmQuerySpec;
+import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
 /**

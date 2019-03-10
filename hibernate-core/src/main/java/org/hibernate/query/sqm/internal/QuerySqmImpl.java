@@ -415,7 +415,6 @@ public class QuerySqmImpl<R>
 		// If the entity to delete is multi-table we need to leverage the
 		// configured org.hibernate.hql.spi.id.MultiTableBulkIdStrategy
 		final EntityTypeDescriptor entityToDelete = sqmStatement.getTarget()
-				.getNavigableReference()
 				.getReferencedNavigable()
 				.getEntityDescriptor();
 
@@ -437,7 +436,6 @@ public class QuerySqmImpl<R>
 		// If the entity to update is multi-table we need to leverage the
 		// configured org.hibernate.hql.spi.id.MultiTableBulkIdStrategy
 		final EntityTypeDescriptor entityToDelete = sqmStatement.getTarget()
-				.getNavigableReference()
 				.getReferencedNavigable()
 				.getEntityDescriptor();
 

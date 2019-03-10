@@ -14,18 +14,15 @@ import org.hibernate.metamodel.model.domain.spi.BasicValueMapper;
 import org.hibernate.metamodel.model.domain.spi.DiscriminatorDescriptor;
 import org.hibernate.metamodel.model.domain.spi.DiscriminatorMappings;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
-import org.hibernate.query.sqm.tree.expression.domain.SqmDiscriminatorReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmEntityTypedReference;
+import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.SqlExpressableType;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.spi.BasicType;
 
@@ -58,7 +55,7 @@ public class DiscriminatorDescriptorImpl<O,J> implements DiscriminatorDescriptor
 	}
 
 	@Override
-	public ManagedTypeDescriptor<O> getContainer() {
+	public EntityTypeDescriptor<O> getContainer() {
 		return hierarchy.getRootEntityType();
 	}
 
@@ -109,30 +106,15 @@ public class DiscriminatorDescriptorImpl<O,J> implements DiscriminatorDescriptor
 	}
 
 	@Override
-	public DomainResult createDomainResult(
-			NavigableReference navigableReferenceIn,
-			String resultVariable,
-			DomainResultCreationState creationState, DomainResultCreationContext creationContext) {
-		return new DiscriminatorDomainResult(
-				this,
-				creationState.getSqlExpressionResolver().resolveSqlSelection(
-						creationState.getSqlExpressionResolver().resolveSqlExpression(
-								creationState.getColumnReferenceQualifierStack().getCurrent(),
-								getBoundColumn()
-						),
-						getJavaTypeDescriptor(),
-						creationContext.getSessionFactory().getTypeConfiguration()
-				),
-				creationState.getNavigableReferenceStack().getCurrent().getNavigablePath().append( getNavigableName() ),
-				resultVariable
-		);
-	}
-
-	@Override
-	public SqmDiscriminatorReference createSqmExpression(
+	public SqmNavigableReference createSqmExpression(
 			SqmFrom sourceSqmFrom,
 			SqmNavigableContainerReference containerReference,
 			SqmCreationState creationState) {
-		return new SqmDiscriminatorReference( (SqmEntityTypedReference) containerReference );
+		return new SqmBasicValuedSimplePath(
+				creationState.generateUniqueIdentifier(),
+				new NavigablePath( getContainer().getNavigableName() + NAVIGABLE_NAME ),
+				this,
+				null
+		);
 	}
 }

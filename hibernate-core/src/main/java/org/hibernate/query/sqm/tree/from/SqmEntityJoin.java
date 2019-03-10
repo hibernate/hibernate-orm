@@ -6,62 +6,77 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import java.util.function.Supplier;
+
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.produce.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
-import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmEntityJoin
-		extends AbstractSqmJoin
-		implements SqmQualifiedJoin {
-	private final SqmEntityReference joinedEntityReference;
-	private SqmPredicate onClausePredicate;
+public class SqmEntityJoin extends AbstractSqmJoin implements SqmQualifiedJoin {
+	private SqmPredicate joinPredicate;
 
 	public SqmEntityJoin(
-			SqmFromElementSpace fromElementSpace,
 			String uid,
 			String alias,
 			EntityTypeDescriptor joinedEntityDescriptor,
 			SqmJoinType joinType) {
 		super(
-				fromElementSpace,
 				uid,
+				SqmCreationHelper.buildRootNavigablePath( joinedEntityDescriptor.getEntityName(), alias ),
+				joinedEntityDescriptor,
 				alias,
 				joinType
 		);
-		this.joinedEntityReference = new SqmEntityReference( joinedEntityDescriptor, this );
 	}
 
 	@Override
-	public SqmEntityReference getNavigableReference() {
-		return joinedEntityReference;
+	public SqmPath getLhs() {
+		// An entity-join has no LHS
+		return null;
+	}
+
+	@Override
+	public EntityTypeDescriptor<?> getReferencedNavigable() {
+		return (EntityTypeDescriptor<?>) super.getReferencedNavigable();
+	}
+
+	@Override
+	public EntityTypeDescriptor getExpressableType() {
+		return getReferencedNavigable();
+	}
+
+	@Override
+	public Supplier<? extends EntityTypeDescriptor> getInferableType() {
+		return this::getReferencedNavigable;
+	}
+
+	@Override
+	public EntityJavaDescriptor getJavaTypeDescriptor() {
+		return getReferencedNavigable().getJavaTypeDescriptor();
 	}
 
 	public String getEntityName() {
-		return getNavigableReference().getReferencedNavigable().getEntityName();
+		return getReferencedNavigable().getEntityName();
 	}
 
 	@Override
-	public SqmPredicate getOnClausePredicate() {
-		return onClausePredicate;
+	public SqmPredicate getJoinPredicate() {
+		return joinPredicate;
 	}
 
-	public void setOnClausePredicate(SqmPredicate predicate) {
-		this.onClausePredicate = predicate;
+	public void setJoinPredicate(SqmPredicate predicate) {
+		this.joinPredicate = predicate;
 	}
 
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitQualifiedEntityJoinFromElement( this );
-	}
-
-	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return getNavigableReference().getJavaTypeDescriptor();
 	}
 }

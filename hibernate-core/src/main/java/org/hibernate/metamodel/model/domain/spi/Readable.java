@@ -24,7 +24,7 @@ import org.hibernate.sql.results.spi.DomainResultProducer;
  *
  * @author Steve Ebersole
  */
-public interface Readable extends DomainResultProducer {
+public interface Readable {
 
 	/**
 	 * An array shaping method.

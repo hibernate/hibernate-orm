@@ -13,7 +13,6 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.tree.AbstractSqmStatement;
-import org.hibernate.query.sqm.tree.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 
 /**

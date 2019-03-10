@@ -13,18 +13,22 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
-import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -99,14 +103,67 @@ public interface Navigable<T> extends DomainTypeDescriptor<T> {
 		return true;
 	}
 
+	/**
+	 * todo (6.0) : these calls should assume we are handling "implicit paths".  SqmFrom-paths are handled separately.
+	 *
+	 * todo (6.0) : would be really nice to have access to the "next token" as well
+	 *
+	 * todo (6.0) : is anything needed in place of `SqmNavigableContainerReference` argument?
+	 * 		it ^^ should go away - the passed SqmFrom (should be SqmPath) is the LHS
+	 */
 	default SqmNavigableReference createSqmExpression(
-			// todo (6.0) : remove `sourceSqmFrom` - we should be able to deduce this based on the `containerReference` and this implementation
-			//		and passing it in here makes it impossible for the SqmNavigableReference to create these as proper
-			//		via SqmFromElementBuilder (`creationContext#getCurrent
 			SqmFrom sourceSqmFrom,
 			SqmNavigableContainerReference containerReference,
 			SqmCreationState creationState) {
 		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	default SqmNavigableReference createSqmExpression(
+			SqmPath lhs,
+			SqmCreationState creationState) {
+		assert lhs.getReferencedNavigable() == getContainer();
+
+		final NavigablePath navigablePath = lhs.getNavigablePath().append( getNavigableName() );
+
+		if ( this instanceof BasicValuedNavigable ) {
+			return (SqmNavigableReference) creationState.getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
+					navigablePath,
+					np -> new SqmBasicValuedSimplePath(
+							creationState.generateUniqueIdentifier(),
+							navigablePath,
+							(BasicValuedNavigable) this,
+							lhs,
+							null
+					)
+			);
+		}
+		else if ( this instanceof EmbeddedValuedNavigable ) {
+			return (SqmNavigableReference) creationState.getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
+					navigablePath,
+					np -> new SqmEmbeddedValuedSimplePath(
+							creationState.generateUniqueIdentifier(),
+							navigablePath,
+							(EmbeddedValuedNavigable) this,
+							lhs,
+							null
+					)
+			);
+		}
+		else if ( this instanceof EntityValuedNavigable ) {
+			return (SqmNavigableReference) creationState.getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
+					navigablePath,
+					np -> new SqmEntityValuedSimplePath(
+							creationState.generateUniqueIdentifier(),
+							navigablePath,
+							(EntityValuedNavigable) this,
+							lhs,
+							null
+					)
+			);
+		}
+		else {
+			throw new SemanticException( "Cannot de-reference path : " + lhs + " -> " + getNavigableName() );
+		}
 	}
 
 	/**
@@ -131,14 +188,11 @@ public interface Navigable<T> extends DomainTypeDescriptor<T> {
 	 *
 	 * Ultimately this is called by the `QueryResultProducer#createDomainResult
 	 * for the `NavigableReference` specialization of `QueryResultProducer`
-	 *
-	 * todo (6.0) : a complete NavigableReference is often difficult here.  Determine what exactly we need from NavigableReference and come up with a replacement plan
 	 */
 	default DomainResult createDomainResult(
-			NavigableReference navigableReference,
+			NavigablePath navigablePath,
 			String resultVariable,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
+			DomainResultCreationState creationState) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
@@ -147,7 +201,7 @@ public interface Navigable<T> extends DomainTypeDescriptor<T> {
 	 */
 	default List<ColumnReference> resolveColumnReferences(
 			ColumnReferenceQualifier qualifier,
-			SqlAstCreationContext resolutionContext) {
+			SqlAstCreationState creationState) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

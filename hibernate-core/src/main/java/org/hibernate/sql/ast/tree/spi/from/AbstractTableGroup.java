@@ -7,10 +7,12 @@
 package org.hibernate.sql.ast.tree.spi.from;
 
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.AbstractColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 
 /**
  * @author Steve Ebersole
@@ -19,16 +21,21 @@ public abstract class AbstractTableGroup
 		extends AbstractColumnReferenceQualifier
 		implements TableGroup {
 
-	private final TableSpace tableSpace;
+	private final NavigablePath navigablePath;
 
-	public AbstractTableGroup(TableSpace tableSpace, String uid) {
+	public AbstractTableGroup(String uid, NavigablePath navigablePath) {
 		super( uid );
-		this.tableSpace = tableSpace;
+		this.navigablePath = navigablePath;
 	}
 
 	@Override
-	public TableSpace getTableSpace() {
-		return tableSpace;
+	public NavigablePath getNavigablePath() {
+		return navigablePath;
+	}
+
+	@Override
+	public NavigableReference getNavigableReference() {
+		throw new UnsupportedOperationException();
 	}
 
 	protected void renderTableReference(TableReference tableBinding, SqlAppender sqlAppender, SqlAstWalker walker) {

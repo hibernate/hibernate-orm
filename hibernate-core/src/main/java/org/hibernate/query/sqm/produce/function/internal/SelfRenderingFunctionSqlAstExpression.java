@@ -23,7 +23,6 @@ import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.sql.results.spi.Selectable;
@@ -48,7 +47,7 @@ public class SelfRenderingFunctionSqlAstExpression
 			SqmToSqlAstConverter walker) {
 		this.sqmExpression = sqmExpression;
 		this.sqlAstArguments = resolveSqlAstArguments( sqmExpression.getSqmArguments(), walker );
-		this.typeConfiguration = walker.getSessionFactory().getTypeConfiguration();
+		this.typeConfiguration = walker.getCreationContext().getDomainModel().getTypeConfiguration();
 	}
 
 	private static List<Expression> resolveSqlAstArguments(List<SqmExpression> sqmArguments, SqmToSqlAstConverter walker) {
@@ -91,14 +90,13 @@ public class SelfRenderingFunctionSqlAstExpression
 	@Override
 	public DomainResult createDomainResult(
 			String resultVariable,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
+			DomainResultCreationState creationState) {
 		return new BasicResultImpl(
 				resultVariable,
 				creationState.getSqlExpressionResolver().resolveSqlSelection(
 						this,
 						getExpressableType().getJavaTypeDescriptor(),
-						creationContext.getSessionFactory().getTypeConfiguration()
+						creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 				),
 				getExpressableType()
 		);

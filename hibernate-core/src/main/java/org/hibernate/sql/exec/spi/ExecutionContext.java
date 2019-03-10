@@ -9,6 +9,7 @@ package org.hibernate.sql.exec.spi;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
@@ -31,17 +32,11 @@ public interface ExecutionContext {
 
 	SharedSessionContractImplementor getSession();
 
-//	@Override
-//	default SessionFactoryImplementor getSessionFactory() {
-//		return getSession().getSessionFactory();
-//	}
-
 	QueryOptions getQueryOptions();
 
-//	@Override
-//	default LoadQueryInfluencers getLoadQueryInfluencers() {
-//		return getSession().getLoadQueryInfluencers();
-//	}
+	default LoadQueryInfluencers getLoadQueryInfluencers() {
+		return getSession().getLoadQueryInfluencers();
+	}
 
 	// todo (6.0) : ParameterBindingContext is not needed here, although should be available via SqlAstCreationContext
 	//		here, should just be JdbcParameterBindings and possibly a list of JdbcParameters

@@ -11,15 +11,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.hibernate.LockOptions;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.metamodel.model.domain.internal.entity.EntityTableGroup;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Table;
-import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
-import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
+import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
@@ -27,10 +28,7 @@ import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.ConversionException;
 import org.hibernate.sql.ast.produce.SqlTreeException;
 import org.hibernate.sql.ast.produce.internal.NonSelectSqlExpressionResolver;
-import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
-import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
-import org.hibernate.sql.ast.produce.spi.SqlAstProducerContext;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstUpdateDescriptor;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
@@ -39,22 +37,17 @@ import org.hibernate.sql.ast.tree.spi.assign.Assignment;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.AbstractTableGroup;
-import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.InSubQueryPredicate;
-import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
-import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 
 import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmUpdateToSqlAstConverterMultiTable
-		extends BaseSqmToSqlAstConverter implements SqlAstCreationContext {
+public class SqmUpdateToSqlAstConverterMultiTable extends BaseSqmToSqlAstConverter {
 	private static final Logger log = Logger.getLogger( SqmUpdateToSqlAstConverterMultiTable.class );
 
 
@@ -62,13 +55,13 @@ public class SqmUpdateToSqlAstConverterMultiTable
 			SqmUpdateStatement sqmStatement,
 			QuerySpec idTableSelect,
 			QueryOptions queryOptions,
-			SqlAstProducerContext producerContext) {
+			SqlAstCreationContext creationContext) {
 
 		final SqmUpdateToSqlAstConverterMultiTable walker = new SqmUpdateToSqlAstConverterMultiTable(
 				sqmStatement,
 				idTableSelect,
 				queryOptions,
-				producerContext
+				creationContext
 		);
 
 		walker.visitUpdateStatement( sqmStatement );
@@ -92,14 +85,12 @@ public class SqmUpdateToSqlAstConverterMultiTable
 			SqmUpdateStatement sqmStatement,
 			QuerySpec idTableSelect,
 			QueryOptions queryOptions,
-			SqlAstProducerContext producerContext) {
-		super( producerContext, queryOptions );
+			SqlAstCreationContext creationContext) {
+		super( creationContext, queryOptions, LoadQueryInfluencers.NONE, afterLoadAction -> {} );
 		this.idTableSelect = idTableSelect;
 
-		this.entityDescriptor = sqmStatement.getTarget()
-				.getNavigableReference()
-				.getExpressableType()
-				.getEntityDescriptor();
+		final SqmRoot deleteTarget = sqmStatement.getTarget();
+		this.entityDescriptor = deleteTarget.getReferencedNavigable().getEntityDescriptor();
 
 		// Ask the entity descriptor to create a TableGroup.  This TableGroup
 		//		will contain all the individual TableReferences we need..
@@ -110,70 +101,26 @@ public class SqmUpdateToSqlAstConverterMultiTable
 		//		statements which keeps track of the table of the attribute being assigned
 		//		in the query so that we know some context for these assigned values.
 
-		final NavigablePath path = new NavigablePath( entityDescriptor.getEntityName() );
 
 		this.entityTableGroup = entityDescriptor.createRootTableGroup(
-				new TableGroupInfo() {
-					@Override
-					public String getUniqueIdentifier() {
-						return sqmStatement.getTarget().getUniqueIdentifier();
-					}
-
-					@Override
-					public String getIdentificationVariable() {
-						return sqmStatement.getTarget().getIdentificationVariable();
-					}
-
-					@Override
-					public EntityTypeDescriptor getIntrinsicSubclassEntityMetadata() {
-						return sqmStatement.getTarget().getIntrinsicSubclassEntityMetadata();
-					}
-
-					@Override
-					public NavigablePath getNavigablePath() {
-						return path;
-					}
-				},
-				new RootTableGroupContext() {
-					@Override
-					public void addRestriction(Predicate predicate) {
-					}
-
-					@Override
-					public QuerySpec getQuerySpec() {
-						return null;
-					}
-
-					@Override
-					public TableSpace getTableSpace() {
-						return null;
-					}
-
-					@Override
-					public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
-						return getSqlAliasBaseManager();
-					}
-
-					@Override
-					public JoinType getTableReferenceJoinType() {
-						return JoinType.INNER;
-					}
-
-					@Override
-					public LockOptions getLockOptions() {
-						return queryOptions.getLockOptions();
-					}
-				}
+				deleteTarget.getUniqueIdentifier(),
+				deleteTarget.getNavigablePath(),
+				deleteTarget.getExplicitAlias(),
+				JoinType.INNER,
+				queryOptions.getLockOptions().getLockMode(),
+				this
 		);
+
+		getFromClauseIndex().crossReference( deleteTarget, entityTableGroup );
 
 		final TableGroupMock tableGroup = new TableGroupMock( entityTableGroup );
 		tableGroup.applyAffectedTableNames( affectedTableNames()::add );
 
 		primeStack( getTableGroupStack(), tableGroup );
-		getFromClauseIndex().crossReference( sqmStatement.getTarget(), tableGroup );
+		getFromClauseIndex().crossReference( deleteTarget, tableGroup );
 
 		this.expressionResolver = new NonSelectSqlExpressionResolver(
-				getSessionFactory(),
+				getCreationContext(),
 				() -> getQuerySpecStack().getCurrent(),
 				this::normalizeSqlExpression,
 				this::collectSelection
@@ -243,18 +190,7 @@ public class SqmUpdateToSqlAstConverterMultiTable
 	}
 
 	@Override
-	public SqlExpressionResolver getSqlSelectionResolver() {
-		return expressionResolver;
-	}
-
-	@Override
-	public LockOptions getLockOptions() {
-		// todo (6.) : is this correct?
-		return LockOptions.NONE;
-	}
-
-	@Override
-	protected SqlExpressionResolver getSqlExpressionResolver() {
+	public SqlExpressionResolver getSqlExpressionResolver() {
 		return expressionResolver;
 	}
 
@@ -262,7 +198,7 @@ public class SqmUpdateToSqlAstConverterMultiTable
 		private final EntityTableGroup entityTableGroup;
 
 		private TableGroupMock(EntityTableGroup entityTableGroup) {
-			super( entityTableGroup.getTableSpace(), entityTableGroup.getUniqueIdentifier() );
+			super( entityTableGroup.getUniqueIdentifier(), entityTableGroup.getNavigablePath() );
 			this.entityTableGroup = entityTableGroup;
 		}
 

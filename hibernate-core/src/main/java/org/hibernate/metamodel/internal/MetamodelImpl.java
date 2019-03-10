@@ -16,7 +16,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
 import javax.persistence.EntityGraph;
 import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
@@ -41,9 +40,7 @@ import org.hibernate.metamodel.model.domain.spi.MappedSuperclassTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.spi.AbstractRuntimeModel;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
-import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.PolymorphicEntityValuedExpressableType;
-import org.hibernate.sql.ast.produce.sqm.internal.PolymorphicEntityTypeValuedExpressableTypeImpl;
+import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -72,7 +69,7 @@ public class MetamodelImpl extends AbstractRuntimeModel implements MetamodelImpl
 	private final Map<String,Set<PersistentCollectionDescriptor<?,?,?>>> collectionDescriptorsByEntityParticipant = new ConcurrentHashMap<>();
 
 	// modifiable
-	private final Map<JavaTypeDescriptor, PolymorphicEntityValuedExpressableType<?>> polymorphicEntityReferenceMap = new HashMap<>();
+	private final Map<JavaTypeDescriptor, SqmPolymorphicRootDescriptor<?>> polymorphicEntityReferenceMap = new HashMap<>();
 
 	public MetamodelImpl(
 			SessionFactoryImplementor sessionFactory,
@@ -262,7 +259,7 @@ public class MetamodelImpl extends AbstractRuntimeModel implements MetamodelImpl
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public EntityValuedExpressableType resolveEntityReference(String name) {
+	public EntityTypeDescriptor resolveEntityReference(String name) {
 		final String rename = getImportedName( name );
 		if ( rename != null ) {
 			name = rename;
@@ -330,11 +327,11 @@ public class MetamodelImpl extends AbstractRuntimeModel implements MetamodelImpl
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> EntityValuedExpressableType<T> resolveEntityReference(Class<T> javaType) {
+	public <T> EntityTypeDescriptor<T> resolveEntityReference(Class<T> javaType) {
 		// see if we know of this Class by name as an EntityDescriptor key
 		if ( getEntityDescriptorMap().containsKey( javaType.getName() ) ) {
 			// and if so, return that descriptor
-			return (EntityValuedExpressableType<T>) getEntityDescriptorMap().get( javaType.getName() );
+			return (EntityTypeDescriptor<T>) getEntityDescriptorMap().get( javaType.getName() );
 		}
 
 		final JavaTypeDescriptor<T> jtd = typeConfiguration.getJavaTypeDescriptorRegistry().getOrMakeJavaDescriptor( javaType );
@@ -345,22 +342,19 @@ public class MetamodelImpl extends AbstractRuntimeModel implements MetamodelImpl
 		// next check entityProxyInterfaceMap
 		final String proxyEntityName = entityProxyInterfaceMap.get( jtd );
 		if ( proxyEntityName != null ) {
-			return (EntityValuedExpressableType<T>) getEntityDescriptorMap().get( proxyEntityName );
+			return (EntityTypeDescriptor<T>) getEntityDescriptorMap().get( proxyEntityName );
 		}
 
 		// otherwise, trye to handle it as a polymorphic reference
 		if ( polymorphicEntityReferenceMap.containsKey( jtd ) ) {
-			return (EntityValuedExpressableType<T>) polymorphicEntityReferenceMap.get( jtd );
+			return (EntityTypeDescriptor<T>) polymorphicEntityReferenceMap.get( jtd );
 		}
 
 		final Set<EntityTypeDescriptor<?>> implementors = getImplementors( javaType );
 		if ( !implementors.isEmpty() ) {
-			final PolymorphicEntityTypeValuedExpressableTypeImpl entityReference = new PolymorphicEntityTypeValuedExpressableTypeImpl(
-					jtd,
-					implementors
-			);
-			polymorphicEntityReferenceMap.put( jtd, entityReference );
-			return entityReference;
+			final SqmPolymorphicRootDescriptor descriptor = new SqmPolymorphicRootDescriptor( jtd, implementors );
+			polymorphicEntityReferenceMap.put( jtd, descriptor );
+			return descriptor;
 		}
 
 		throw new IllegalArgumentException( "Could not resolve entity reference : " + javaType.getName() );

@@ -8,10 +8,14 @@ package org.hibernate.metamodel.model.domain.spi;
 
 import javax.persistence.metamodel.Type;
 
+import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.sql.ast.produce.metamodel.spi.EmbeddedValueExpressableType;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.results.internal.domain.embedded.CompositeResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 
@@ -35,15 +39,30 @@ public interface EmbeddedValuedNavigable<J> extends EmbeddedValueExpressableType
 	}
 
 	@Override
+	default SqmNavigableReference createSqmExpression(SqmPath lhs, SqmCreationState creationState) {
+		return new SqmEmbeddedValuedSimplePath(
+				creationState.generateUniqueIdentifier(),
+				lhs.getNavigablePath().append( getNavigableName() ),
+				this,
+				lhs
+		);
+	}
+
+	@Override
 	default DomainResult createDomainResult(
-			NavigableReference navigableReference,
+			NavigablePath navigablePath,
 			String resultVariable,
-			DomainResultCreationState creationState, DomainResultCreationContext creationContext) {
-		return getEmbeddedDescriptor().createDomainResult(
-				navigableReference,
+			DomainResultCreationState creationState) {
+		creationState.getFromClauseAccess().resolveTableGroup(
+				navigablePath,
+				np -> creationState.getFromClauseAccess().getTableGroup( navigablePath.getParent() )
+		);
+
+		return new CompositeResultImpl(
+				navigablePath,
+				this,
 				resultVariable,
-				creationState,
-				creationContext
+				creationState
 		);
 	}
 

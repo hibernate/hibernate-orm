@@ -12,7 +12,6 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
 import org.hibernate.sql.results.internal.domain.AbstractFetchParent;
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.CompositeFetch;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
@@ -43,6 +42,11 @@ public class CompositeFetchImpl extends AbstractFetchParent implements Composite
 		this.fetchParent = fetchParent;
 		this.fetchedNavigable = fetchedNavigable;
 		this.fetchTiming = fetchTiming;
+
+		creationState.getFromClauseAccess().registerTableGroup(
+				getNavigablePath(),
+				creationState.getFromClauseAccess().findTableGroup( fetchParent.getNavigablePath() )
+		);
 
 		afterInitialize( creationState );
 	}
@@ -78,15 +82,14 @@ public class CompositeFetchImpl extends AbstractFetchParent implements Composite
 	public DomainResultAssembler createAssembler(
 			FetchParentAccess parentAccess,
 			Consumer<Initializer> collector,
-			AssemblerCreationContext context,
 			AssemblerCreationState creationState) {
 		final CompositeFetchInitializerImpl initializer = new CompositeFetchInitializerImpl(
 				parentAccess,
 				this,
 				collector,
-				context,
 				creationState
 		);
+
 
 		collector.accept( initializer );
 

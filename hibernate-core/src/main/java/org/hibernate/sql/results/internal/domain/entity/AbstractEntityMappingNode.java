@@ -8,13 +8,13 @@ package org.hibernate.sql.results.internal.domain.entity;
 
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.model.domain.spi.DiscriminatorDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.internal.domain.AbstractFetchParent;
 import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.EntityMappingNode;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
@@ -33,7 +33,6 @@ public abstract class AbstractEntityMappingNode extends AbstractFetchParent impl
 			EntityValuedNavigable entityValuedNavigable,
 			LockMode lockMode,
 			NavigablePath navigablePath,
-			DomainResultCreationContext creationContext,
 			DomainResultCreationState creationState) {
 		super( entityValuedNavigable, navigablePath );
 		this.entityValuedNavigable = entityValuedNavigable;
@@ -42,9 +41,9 @@ public abstract class AbstractEntityMappingNode extends AbstractFetchParent impl
 		final EntityTypeDescriptor entityDescriptor = entityValuedNavigable.getEntityDescriptor();
 
 		identifierResult = entityDescriptor.getIdentifierDescriptor().createDomainResult(
+				navigablePath.append( EntityIdentifier.NAVIGABLE_ID ),
 				null,
-				creationState,
-				creationContext
+				creationState
 		);
 
 		final DiscriminatorDescriptor<Object> discriminatorDescriptor = entityDescriptor.getHierarchy()
@@ -57,8 +56,7 @@ public abstract class AbstractEntityMappingNode extends AbstractFetchParent impl
 			discriminatorResult = discriminatorDescriptor.createDomainResult(
 					null,
 					null,
-					creationState,
-					creationContext
+					creationState
 			);
 		}
 
@@ -68,8 +66,9 @@ public abstract class AbstractEntityMappingNode extends AbstractFetchParent impl
 		}
 		else {
 			versionResult = versionDescriptor.createDomainResult(
+					navigablePath.append( versionDescriptor.getNavigableName() ),
 					null,
-					creationState, creationContext
+					creationState
 			);
 		}
 

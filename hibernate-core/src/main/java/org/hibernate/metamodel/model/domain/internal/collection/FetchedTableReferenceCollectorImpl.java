@@ -9,7 +9,6 @@ package org.hibernate.metamodel.model.domain.internal.collection;
 import java.util.List;
 
 import org.hibernate.LockMode;
-import org.hibernate.metamodel.model.domain.spi.AbstractPersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.AbstractTableReferenceCollector;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
@@ -17,44 +16,37 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
-import org.hibernate.sql.ast.tree.spi.from.CollectionTableGroup;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.spi.from.TableSpace;
+import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
-import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 
 /**
  * @author Steve Ebersole
  */
 public class FetchedTableReferenceCollectorImpl extends AbstractTableReferenceCollector {
-	private final PersistentCollectionDescriptor collectionDescriptor;
-	private final TableSpace tableSpace;
-	private final NavigableContainerReference lhs;
-	private final SqlExpressionResolver sqlExpressionResolver;
 	private final NavigablePath navigablePath;
+
+	private final PersistentCollectionDescriptor collectionDescriptor;
+	private final TableGroup lhs;
+
+	private final String explicitSourceAlias;
 	private final LockMode lockMode;
 
-	private Predicate predicate;
-
-	@SuppressWarnings("WeakerAccess")
 	public FetchedTableReferenceCollectorImpl(
-			AbstractPersistentCollectionDescriptor collectionDescriptor,
-			TableSpace tableSpace,
-			NavigableContainerReference lhs,
-			SqlExpressionResolver sqlExpressionResolver,
 			NavigablePath navigablePath,
+			PersistentCollectionDescriptor collectionDescriptor,
+			TableGroup lhs,
+			String explicitSourceAlias,
 			LockMode lockMode) {
-		this.collectionDescriptor = collectionDescriptor;
-		this.tableSpace = tableSpace;
-		this.lhs = lhs;
-		this.sqlExpressionResolver = sqlExpressionResolver;
 		this.navigablePath = navigablePath;
+		this.collectionDescriptor = collectionDescriptor;
+		this.lhs = lhs;
+		this.explicitSourceAlias = explicitSourceAlias;
 		this.lockMode = lockMode;
 	}
 
@@ -68,7 +60,7 @@ public class FetchedTableReferenceCollectorImpl extends AbstractTableReferenceCo
 		// if we have a lhs, try to add the collection's primary table ref as a
 		// secondary ref
 		if ( lhs != null ) {
-			addSecondaryReference( makeJoin( lhs.getColumnReferenceQualifier(), rootTableReference ) );
+			addSecondaryReference( makeJoin( lhs, rootTableReference ) );
 		}
 
 	}
@@ -111,30 +103,48 @@ public class FetchedTableReferenceCollectorImpl extends AbstractTableReferenceCo
 		return conjunction;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public TableGroupJoin generateTableGroup(JoinType joinType, String uid) {
 		final CollectionTableGroup joinedTableGroup = new CollectionTableGroup(
 				uid,
-				tableSpace,
-				lhs,
-				collectionDescriptor,
-				lockMode,
 				navigablePath,
+				collectionDescriptor,
+				explicitSourceAlias,
+				lockMode,
 				getPrimaryTableReference(),
-				getTableReferenceJoins()
+				getTableReferenceJoins(),
+				lhs
 		);
 
-		Predicate predicate = null;
+		Predicate joinPredicate = null;
 		if ( lhs != null ) {
 			for ( TableReferenceJoin referenceJoin : getTableReferenceJoins() ) {
-				makePredicate( lhs.getColumnReferenceQualifier(), referenceJoin.getJoinedTableReference() );
+				final Predicate predicate = makePredicate( lhs, referenceJoin.getJoinedTableReference() );
+				if ( predicate != null ) {
+					if ( joinPredicate == null ) {
+						joinPredicate = predicate;
+					}
+					else {
+						final Junction joinPredicateJunction;
+						if ( joinPredicate instanceof Junction ) {
+							joinPredicateJunction = (Junction) joinPredicate;
+						}
+						else {
+							Predicate previous = joinPredicate;
+							joinPredicateJunction = new Junction( Junction.Nature.CONJUNCTION );
+							joinPredicateJunction.add( previous );
+							joinPredicate = joinPredicateJunction;
+						}
+
+						joinPredicateJunction.add( predicate );
+					}
+				}
 			}
 		}
 
 		return new TableGroupJoin(
 				joinType,
 				joinedTableGroup,
-				predicate
+				joinPredicate
 		);
 	}
 }

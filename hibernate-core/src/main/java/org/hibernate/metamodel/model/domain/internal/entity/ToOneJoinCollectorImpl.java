@@ -15,42 +15,37 @@ import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
-import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.spi.from.TableSpace;
+import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
-import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 
 /**
  * @author Steve Ebersole
  */
 public class ToOneJoinCollectorImpl extends AbstractTableReferenceCollector {
-	private SingularPersistentAttributeEntity attribute;
-	private final TableSpace tableSpace;
-	private final NavigableContainerReference lhs;
 	private final NavigablePath navigablePath;
-	private final String identificationVariable;
+	private final SingularPersistentAttributeEntity attribute;
+	private final TableGroup lhs;
+	private final String explicitSourceAlias;
 	private final LockMode lockMode;
 
 	private Predicate predicate;
 
 	@SuppressWarnings("WeakerAccess")
 	public ToOneJoinCollectorImpl(
-			SingularPersistentAttributeEntity attribute,
-			TableSpace tableSpace,
-			NavigableContainerReference lhs,
 			NavigablePath navigablePath,
-			String identificationVariable,
+			SingularPersistentAttributeEntity attribute,
+			TableGroup lhs,
+			String explicitSourceAlias,
 			LockMode lockMode) {
-		this.attribute = attribute;
-		this.tableSpace = tableSpace;
-		this.lhs = lhs;
 		this.navigablePath = navigablePath;
-		this.identificationVariable = identificationVariable;
+		this.attribute = attribute;
+		this.lhs = lhs;
+		this.explicitSourceAlias = explicitSourceAlias;
 		this.lockMode = lockMode;
 	}
 
@@ -67,7 +62,7 @@ public class ToOneJoinCollectorImpl extends AbstractTableReferenceCollector {
 
 		// if we have a lhs, try to add the primary ref as a secondary ref
 		if ( lhs != null ) {
-			addSecondaryReference( makeJoin( lhs.getColumnReferenceQualifier(), primaryTableReference ) );
+			addSecondaryReference( makeJoin( lhs, primaryTableReference ) );
 		}
 	}
 
@@ -102,24 +97,22 @@ public class ToOneJoinCollectorImpl extends AbstractTableReferenceCollector {
 		return conjunction;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public TableGroupJoin generateTableGroup(JoinType joinType, String uid) {
 		final EntityTableGroup joinedTableGroup = new EntityTableGroup(
 				uid,
-				tableSpace,
-				lhs,
-				attribute,
-				lockMode,
 				navigablePath,
+				attribute,
+				explicitSourceAlias,
+				lockMode,
 				getPrimaryTableReference(),
 				getTableReferenceJoins(),
-				lhs == null ? null : lhs.getColumnReferenceQualifier()
+				lhs
 		);
 
 		Predicate predicate = null;
 
 		if ( lhs != null ) {
-			predicate = makePredicate( lhs.getColumnReferenceQualifier(), getPrimaryTableReference() );
+			predicate = makePredicate( lhs, getPrimaryTableReference() );
 		}
 
 

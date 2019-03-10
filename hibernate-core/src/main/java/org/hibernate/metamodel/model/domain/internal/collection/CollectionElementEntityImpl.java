@@ -47,17 +47,11 @@ import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.EntityValuedNavigableReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeReference;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -336,29 +330,6 @@ public class CollectionElementEntityImpl<J>
 					column -> action.accept( column.getExpressableType(), column )
 			);
 		}
-	}
-
-	@Override
-	public DomainResult createDomainResult(
-			NavigableReference navigableReference,
-			String resultVariable,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
-		// delegate to the persister because here we are returning
-		// 		the entities that make up the referenced collection's elements
-		// we need to pass an EntityValuedNavigableReference
-		EntityValuedNavigableReference entityValuedNavigableReference = new EntityValuedNavigableReference(
-				navigableReference.getNavigableContainerReference(),
-				getEntityDescriptor(),
-				navigableReference.getNavigablePath(),
-				navigableReference.getColumnReferenceQualifier(),
-				( (PluralAttributeReference) navigableReference ).getLockMode()
-		);
-		return getEntityDescriptor().createDomainResult(
-				entityValuedNavigableReference,
-				resultVariable,
-				creationState, creationContext
-		);
 	}
 
 	@Override

@@ -10,18 +10,19 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
@@ -29,23 +30,24 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
-import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
-import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.domain.SqmDiscriminatorReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityTypedReference;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
+import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationTarget;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
+import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.produce.internal.PerQuerySpecSqlExpressionResolver;
 import org.hibernate.sql.ast.produce.internal.SqlAstSelectDescriptorImpl;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
-import org.hibernate.sql.ast.produce.spi.SqlAstProducerContext;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.produce.spi.SqlAstSelectDescriptor;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
@@ -61,7 +63,6 @@ import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.results.spi.CircularFetchDetector;
 import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.sql.results.spi.Fetch;
@@ -80,12 +81,10 @@ import org.jboss.logging.Logger;
 @SuppressWarnings("unchecked")
 public class SqmSelectToSqlAstConverter
 		extends BaseSqmToSqlAstConverter
-		implements DomainResultCreationContext, DomainResultCreationState {
+		implements DomainResultCreationState {
 	private static final Logger log = Logger.getLogger( SqmSelectToSqlAstConverter.class );
 
 	private final PerQuerySpecSqlExpressionResolver expressionResolver;
-
-	private final LoadQueryInfluencers loadQueryInfluencers;
 
 	private final Stack<Shallowness> shallownessStack = new StandardStack<>( Shallowness.NONE );
 
@@ -101,13 +100,13 @@ public class SqmSelectToSqlAstConverter
 
 	public SqmSelectToSqlAstConverter(
 			QueryOptions queryOptions,
-			SqlAstProducerContext producerContext) {
-		super( producerContext, queryOptions );
-
-		this.loadQueryInfluencers = producerContext.getLoadQueryInfluencers();
+			LoadQueryInfluencers influencers,
+			Callback callback,
+			SqlAstCreationContext creationContext) {
+		super( creationContext, queryOptions, influencers, callback );
 
 		this.expressionResolver = new PerQuerySpecSqlExpressionResolver(
-				producerContext.getSessionFactory(),
+				getCreationContext(),
 				() -> getQuerySpecStack().getCurrent(),
 				this::normalizeSqlExpression,
 				this::collectSelection
@@ -154,30 +153,14 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	@Override
-	public LockOptions getLockOptions() {
-		return getQueryOptions().getLockOptions();
+	public SqlAstCreationState getSqlAstCreationState() {
+		return this;
 	}
 
-	@Override
-	public SessionFactoryImplementor getSessionFactory() {
-		return getProducerContext().getSessionFactory();
-	}
-
-	@Override
-	public LoadQueryInfluencers getLoadQueryInfluencers() {
-		return loadQueryInfluencers;
-	}
-
-	@Override
-	public boolean shouldCreateShallowEntityResult() {
-		// todo (6.0) : we also need to vary this for ctor result based on ctor sigs + user option
-		return shallownessStack.getCurrent() != Shallowness.NONE;
-	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// walker
-
 
 	@Override
 	public Object visitUpdateStatement(SqmUpdateStatement statement) {
@@ -212,17 +195,17 @@ public class SqmSelectToSqlAstConverter
 		if ( getQuerySpecStack().depth() > 1 && Expression.class.isInstance( resultProducer ) ) {
 			// we only need the QueryResults if we are in the top-level select-clause.
 			// but we do need to at least resolve the sql selections
-			getSqlSelectionResolver().resolveSqlSelection(
+			getSqlExpressionResolver().resolveSqlSelection(
 					(Expression) resultProducer,
 					(BasicJavaDescriptor) sqmSelection.getJavaTypeDescriptor(),
-					getProducerContext().getSessionFactory().getTypeConfiguration()
+					getCreationContext().getDomainModel().getTypeConfiguration()
 			);
 			return null;
 		}
 
 		final DomainResult domainResult = resultProducer.createDomainResult(
 				sqmSelection.getAlias(),
-				this, this
+				this
 		);
 
 		domainResults.add( domainResult );
@@ -250,7 +233,7 @@ public class SqmSelectToSqlAstConverter
 			LockMode lockMode = LockMode.READ;
 			FetchTiming fetchTiming = fetchable.getMappedFetchStrategy().getTiming();
 
-			final Integer maximumFetchDepth = getSessionFactory().getSessionFactoryOptions().getMaximumFetchDepth();
+			final Integer maximumFetchDepth = getCreationContext().getMaximumFetchDepth();
 			// minus one because the root is not a fetch
 			final int fetchDepth = getNavigableReferenceStack().depth() - 1;
 
@@ -265,7 +248,7 @@ public class SqmSelectToSqlAstConverter
 				fetchTiming = FetchTiming.IMMEDIATE;
 				joined = true;
 
-				lockMode = SqmSelectToSqlAstConverter.this.getLockOptions().getEffectiveLockMode(
+				lockMode = getQueryOptions().getLockOptions().getEffectiveLockMode(
 						fetchedJoin.getIdentificationVariable()
 				);
 
@@ -292,18 +275,29 @@ public class SqmSelectToSqlAstConverter
 				}
 			}
 
-			final Fetch fetch = fetchable.generateFetch(
-					fetchParent,
-					fetchTiming,
-					joined,
-					lockMode,
-					alias,
-					SqmSelectToSqlAstConverter.this,
-					SqmSelectToSqlAstConverter.this
-			);
+			try {
+				final Fetch fetch = fetchable.generateFetch(
+						fetchParent,
+						fetchTiming,
+						joined,
+						lockMode,
+						alias,
+						SqmSelectToSqlAstConverter.this
+				);
 
-			fetches.add( fetch );
-
+				fetches.add( fetch );
+			}
+			catch (RuntimeException e) {
+				throw new HibernateException(
+						String.format(
+								Locale.ROOT,
+								"Could not generate fetch : %s -> %s",
+								fetchParent.getNavigablePath(),
+								fetchable.getNavigableName()
+						),
+						e
+				);
+			}
 		};
 
 		NavigableContainer<?> navigableContainer = fetchParent.getNavigableContainer();
@@ -314,17 +308,21 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	@Override
+	public FromClauseAccess getFromClauseAccess() {
+		return getFromClauseIndex();
+	}
+
+	@Override
 	public TableSpace getCurrentTableSpace() {
-		// todo (6.0) : not sure this is a great impl given subqueries
-		return getTableGroupStack().getCurrent().getTableSpace();
+		return super.getCurrentTableSpace();
 	}
 
 	@Override
 	public LockMode determineLockMode(String identificationVariable) {
-		final LockOptions lockOptions = getLockOptions();
+		final LockOptions lockOptions = getQueryOptions().getLockOptions();
 		return lockOptions.getScope() || identificationVariable == null
-				? getLockOptions().getLockMode()
-				: getLockOptions().getEffectiveLockMode( identificationVariable );
+				? lockOptions.getLockMode()
+				: lockOptions.getEffectiveLockMode( identificationVariable );
 	}
 
 	private SqmNavigableJoin findFetchedJoin(FetchParent fetchParent, Fetchable fetchable) {
@@ -353,10 +351,7 @@ public class SqmSelectToSqlAstConverter
 	public DynamicInstantiation visitDynamicInstantiation(SqmDynamicInstantiation sqmDynamicInstantiation) {
 		final SqmDynamicInstantiationTarget instantiationTarget = sqmDynamicInstantiation.getInstantiationTarget();
 		final DynamicInstantiationNature instantiationNature = instantiationTarget.getNature();
-		final JavaTypeDescriptor<Object> targetTypeDescriptor = interpretInstantiationTarget(
-				instantiationTarget,
-				getSessionFactory()
-		);
+		final JavaTypeDescriptor<Object> targetTypeDescriptor = interpretInstantiationTarget( instantiationTarget );
 
 		final DynamicInstantiation dynamicInstantiation = new DynamicInstantiation(
 				instantiationNature,
@@ -377,9 +372,7 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T> JavaTypeDescriptor<T> interpretInstantiationTarget(
-			SqmDynamicInstantiationTarget instantiationTarget,
-			SessionFactoryImplementor sessionFactory) {
+	private <T> JavaTypeDescriptor<T> interpretInstantiationTarget(SqmDynamicInstantiationTarget instantiationTarget) {
 		final Class<T> targetJavaType;
 
 		if ( instantiationTarget.getNature() == DynamicInstantiationNature.LIST ) {
@@ -392,14 +385,10 @@ public class SqmSelectToSqlAstConverter
 			targetJavaType = instantiationTarget.getJavaType();
 		}
 
-		return sessionFactory.getTypeConfiguration()
+		return getCreationContext().getDomainModel()
+				.getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry()
 				.getDescriptor( targetJavaType );
-	}
-
-	@Override
-	public SqlExpressionResolver getSqlSelectionResolver() {
-		return expressionResolver;
 	}
 
 	@Override
@@ -441,7 +430,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitFullyQualifiedEnum(Enum value) {
 		return new QueryLiteral(
 				value,
-				getSessionFactory().getTypeConfiguration()
+				getTypeConfiguration()
 						.standardExpressableTypeForJavaType( value.getClass() )
 						.getSqlExpressableType(),
 				getCurrentClauseStack().getCurrent()
@@ -454,7 +443,7 @@ public class SqmSelectToSqlAstConverter
 			final Object value = field.get( null );
 			return new QueryLiteral(
 					value,
-					getSessionFactory().getTypeConfiguration()
+					getTypeConfiguration()
 							.standardExpressableTypeForJavaType( value.getClass() )
 							.getSqlExpressableType(),
 					getCurrentClauseStack().getCurrent()

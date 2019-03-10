@@ -10,6 +10,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 
 /**
@@ -21,6 +22,8 @@ import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
  * @author Steve Ebersole
  */
 public interface AssemblerCreationState {
+	SqlAstCreationContext getSqlAstCreationContext();
+
 	default ColumnReferenceQualifier getCurrentColumnReferenceQualifier() {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}

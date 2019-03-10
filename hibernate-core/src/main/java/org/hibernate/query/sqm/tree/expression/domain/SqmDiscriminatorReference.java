@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.tree.expression.domain;
 
 import java.util.function.Supplier;
 
+import org.hibernate.annotations.Remove;
 import org.hibernate.metamodel.model.domain.spi.DiscriminatorDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
@@ -15,6 +16,7 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
@@ -24,6 +26,8 @@ import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 /**
  * @author Steve Ebersole
  */
+@Remove
+@Deprecated
 public class SqmDiscriminatorReference extends AbstractSqmNavigableReference implements SqmNavigableReference {
 	private final SqmEntityTypedReference entityReference;
 
@@ -54,6 +58,11 @@ public class SqmDiscriminatorReference extends AbstractSqmNavigableReference imp
 	@Override
 	public Navigable getReferencedNavigable() {
 		return discriminatorDescriptor;
+	}
+
+	@Override
+	public SqmPath getLhs() {
+		return entityReference;
 	}
 
 	@Override

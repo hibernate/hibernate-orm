@@ -13,7 +13,6 @@ import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
@@ -61,8 +60,7 @@ public class CollectionIdentifier implements DomainResultProducer, BasicValuedNa
 	@Override
 	public DomainResult createDomainResult(
 			String resultVariable,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
+			DomainResultCreationState creationState) {
 		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
 
 		return new BasicResultImpl(
@@ -73,7 +71,7 @@ public class CollectionIdentifier implements DomainResultProducer, BasicValuedNa
 								column
 						),
 						column.getJavaTypeDescriptor(),
-						creationContext.getSessionFactory().getTypeConfiguration()
+						creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 				),
 				column.getExpressableType()
 		);

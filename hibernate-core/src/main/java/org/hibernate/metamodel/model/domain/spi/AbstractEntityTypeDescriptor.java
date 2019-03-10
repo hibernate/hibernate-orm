@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
-
 import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.EntityNameResolver;
@@ -68,10 +67,11 @@ import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
+import org.hibernate.metamodel.model.domain.internal.SqlAliasStemHelper;
 import org.hibernate.metamodel.model.domain.internal.entity.EntityHierarchyImpl;
 import org.hibernate.metamodel.model.domain.internal.entity.EntityIdentifierCompositeAggregatedImpl;
 import org.hibernate.metamodel.model.domain.internal.entity.EntityIdentifierSimpleImpl;
-import org.hibernate.metamodel.model.domain.internal.SqlAliasStemHelper;
+import org.hibernate.metamodel.model.domain.internal.entity.EntityTableGroup;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
@@ -79,24 +79,17 @@ import org.hibernate.metamodel.model.relational.spi.PhysicalTable;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.ProxyFactory;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.sql.ast.JoinType;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
-import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
-import org.hibernate.sql.ast.tree.spi.expression.domain.EntityValuedNavigableReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
-import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
-import org.hibernate.sql.results.internal.domain.entity.EntityResultImpl;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
@@ -649,30 +642,29 @@ public abstract class AbstractEntityTypeDescriptor<J>
 	}
 
 	@Override
-	public EntityTableGroup createRootTableGroup(TableGroupInfo info, RootTableGroupContext tableGroupContext) {
-		final SqlAliasBase sqlAliasBase = tableGroupContext.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() );
+	public EntityTableGroup createRootTableGroup(
+			String uid,
+			NavigablePath navigablePath,
+			String explicitSourceAlias,
+			JoinType tableReferenceJoinType,
+			LockMode lockMode,
+			SqlAstCreationState creationState) {
+		final SqlAliasBase sqlAliasBase = creationState.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() );
 
 		final TableReference primaryTableReference = resolvePrimaryTableReference( sqlAliasBase );
 
 		final List<TableReferenceJoin> joins = new ArrayList<>(  );
-		resolveTableReferenceJoins( primaryTableReference, sqlAliasBase, tableGroupContext.getTableReferenceJoinType(), joins::add );
+		resolveTableReferenceJoins( primaryTableReference, sqlAliasBase, tableReferenceJoinType, joins::add );
 
-		final EntityTableGroup group = new EntityTableGroup(
-				info.getUniqueIdentifier(),
-				tableGroupContext.getTableSpace(),
+		return new EntityTableGroup(
+				uid,
+				navigablePath,
 				this,
-				tableGroupContext.getLockOptions().getEffectiveLockMode( info.getIdentificationVariable() ),
-				info.getNavigablePath(),
+				explicitSourceAlias,
+				lockMode,
 				primaryTableReference,
 				joins
 		);
-
-		// todo (6.0) - apply filters - which needs access to Session, or at least its LoadQueryInfluencers
-		//		the filter conditions would be added to the SQL-AST's where-clause via tableGroupContext
-		//		for now, add null, this is just here as a placeholder
-		tableGroupContext.addRestriction( null );
-
-		return group;
 	}
 
 	protected TableReference resolvePrimaryTableReference(SqlAliasBase sqlAliasBase) {
@@ -748,23 +740,6 @@ public abstract class AbstractEntityTypeDescriptor<J>
 			root = lhs.locateTableReference( getPrimaryTable() );
 		}
 		resolveTableReferenceJoins( root, sqlAliasBase, joinType, joinCollector::addSecondaryReference );
-	}
-
-	@Override
-	public DomainResult createDomainResult(
-			NavigableReference navigableReference,
-			String resultVariable,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
-		assert navigableReference instanceof EntityValuedNavigableReference;
-		final EntityValuedNavigableReference entityValuedReference = (EntityValuedNavigableReference) navigableReference;
-
-		return new EntityResultImpl(
-				entityValuedReference,
-				resultVariable,
-				creationContext,
-				creationState
-		);
 	}
 
 	@Override

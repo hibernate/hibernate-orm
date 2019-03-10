@@ -15,10 +15,9 @@ import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
@@ -43,26 +42,26 @@ public class BasicFetch implements Fetch {
 			FetchParent fetchParent,
 			BasicValuedNavigable<?> navigable,
 			FetchTiming fetchTiming,
-			DomainResultCreationContext creationContext,
 			DomainResultCreationState creationState) {
 		this.fetchParent = fetchParent;
 		this.navigable = navigable;
 		this.fetchTiming = fetchTiming;
 
+		this.path = fetchParent.getNavigablePath().append( navigable.getNavigableName() );
+
 		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
 
+		final TableGroup tableGroup = creationState.getFromClauseAccess().findTableGroup( fetchParent.getNavigablePath() );
 		final Expression expression = sqlExpressionResolver.resolveSqlExpression(
-				creationState.getColumnReferenceQualifierStack().getCurrent(),
+				tableGroup,
 				getFetchedNavigable().getBoundColumn()
 		);
 
 		sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				expression,
 				getFetchedNavigable().getSqlExpressableType().getJavaTypeDescriptor(),
-				creationContext.getSessionFactory().getTypeConfiguration()
+				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 		);
-
-		this.path = fetchParent.getNavigablePath().append( navigable.getNavigableName() );
 	}
 
 	@Override
@@ -89,7 +88,6 @@ public class BasicFetch implements Fetch {
 	public DomainResultAssembler createAssembler(
 			FetchParentAccess parentAccess,
 			Consumer<Initializer> collector,
-			AssemblerCreationContext creationContext,
 			AssemblerCreationState creationState) {
 
 		BasicValueConverter valueConverter = null;

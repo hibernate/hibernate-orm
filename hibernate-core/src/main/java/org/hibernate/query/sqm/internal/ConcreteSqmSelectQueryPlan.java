@@ -14,8 +14,6 @@ import javax.persistence.Tuple;
 import javax.persistence.TupleElement;
 
 import org.hibernate.ScrollMode;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.streams.StingArrayCollector;
 import org.hibernate.query.IllegalQueryOperationException;
@@ -24,11 +22,10 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.consume.spi.SqlAstSelectToJdbcSelectConverter;
-import org.hibernate.sql.ast.produce.spi.SqlAstProducerContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstSelectDescriptor;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
@@ -225,23 +222,10 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private SqmSelectToSqlAstConverter getSqmSelectToSqlAstConverter(ExecutionContext executionContext) {
 		// todo (6.0) : for cases where we have no "load query influencers" we could use a cached SQL AST
 		return new SqmSelectToSqlAstConverter(
-					executionContext.getQueryOptions(),
-					new SqlAstProducerContext() {
-						@Override
-						public SessionFactoryImplementor getSessionFactory() {
-							return executionContext.getSession().getFactory();
-						}
-
-						@Override
-						public LoadQueryInfluencers getLoadQueryInfluencers() {
-							return executionContext.getSession().getLoadQueryInfluencers();
-						}
-
-						@Override
-						public Callback getCallback() {
-							return executionContext.getCallback();
-						}
-					}
+				executionContext.getQueryOptions(),
+				executionContext.getLoadQueryInfluencers(),
+				afterLoadAction -> {},
+				executionContext.getSession().getFactory()
 			);
 	}
 

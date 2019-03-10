@@ -31,7 +31,9 @@ public class TrimFunction extends AbstractStandardFunction {
 				specification,
 				trimCharacter,
 				source,
-				StandardSpiBasicTypes.STRING.getSqlExpressableType( creationContext.getSessionFactory().getTypeConfiguration() ),
+				StandardSpiBasicTypes.STRING.getSqlExpressableType(
+						creationContext.getDomainModel().getTypeConfiguration()
+				),
 				creationContext
 		);
 	}

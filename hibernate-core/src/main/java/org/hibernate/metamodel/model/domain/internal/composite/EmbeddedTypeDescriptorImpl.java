@@ -38,13 +38,14 @@ import org.hibernate.metamodel.model.domain.spi.NonIdPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.procedure.ParameterMisuseException;
+import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.produce.SqmPathRegistry;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.results.internal.domain.embedded.CompositeResultImpl;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.internal.EmbeddableJavaDescriptorImpl;
 import org.hibernate.type.descriptor.java.internal.EmbeddedMutabilityPlanImpl;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
@@ -220,12 +221,18 @@ public class EmbeddedTypeDescriptorImpl<J>
 	}
 
 	@Override
-	public DomainResult createDomainResult(
-			NavigableReference navigableReference,
-			String resultVariable,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
-		return new CompositeResultImpl( resultVariable, this, creationState );
+	public SqmNavigableReference createSqmExpression(SqmPath lhs, SqmCreationState creationState) {
+		final NavigablePath navigablePath = lhs.getNavigablePath().append( getNavigableName() );
+		final SqmPathRegistry pathRegistry = creationState.getProcessingStateStack().getCurrent().getPathRegistry();
+		return (SqmNavigableReference) pathRegistry.resolvePath(
+				navigablePath,
+				np -> new SqmEmbeddedValuedSimplePath(
+						creationState.generateUniqueIdentifier(),
+						navigablePath,
+						this,
+						lhs
+				)
+		);
 	}
 
 	@Override

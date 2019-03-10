@@ -44,6 +44,7 @@ import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -59,7 +60,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public interface SessionFactoryImplementor
-		extends SessionFactory, QueryParameterBindingTypeResolver, SqmCreationContext {
+		extends SessionFactory, QueryParameterBindingTypeResolver, SqmCreationContext, SqlAstCreationContext {
 	/**
 	 * Get the UUID for this SessionFactory.  The value is generated as a {@link java.util.UUID}, but kept
 	 * as a String.
@@ -87,6 +88,11 @@ public interface SessionFactoryImplementor
 	@Override
 	default Function<String, SqmFunctionTemplate> getFunctionResolver() {
 		return getQueryEngine().getSqmFunctionRegistry()::findFunctionTemplate;
+	}
+
+	@Override
+	default Integer getMaximumFetchDepth() {
+		return getSessionFactoryOptions().getMaximumFetchDepth();
 	}
 
 	@Override

@@ -12,6 +12,7 @@ import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 
@@ -19,6 +20,23 @@ import org.hibernate.sql.ast.tree.spi.from.TableSpace;
  * @author Steve Ebersole
  */
 public interface TableGroupJoinProducer extends TableGroupProducer {
+	interface CreationContext {
+		SqlAliasBaseGenerator getSqlAliasBaseGenerator();
+		SqlExpressionResolver getSqlExpressionResolver();
+	}
+
+	/**
+	 * Create a TableGroupJoin as defined for this producer
+	 */
+	TableGroupJoin createTableGroupJoin(
+			String uid,
+			NavigablePath navigablePath,
+			TableGroup lhs,
+			String explicitSourceAlias,
+			JoinType joinType,
+			LockMode lockMode,
+			SqlAstCreationState creationState);
+
 	/**
 	 * Create the TableGroupJoin as defined for this producer and given
 	 * arguments, being sure to add the created TableGroupJoin to the

@@ -10,10 +10,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
+import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
@@ -26,7 +25,7 @@ import org.hibernate.sql.results.spi.Initializer;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
- * The Fetch generated for {@link SingularPersistentAttributeEntity#generateFetch}
+ * The Fetch generated for {@link Fetchable#generateFetch}
  * for lazy loading
  *
  * @author Steve Ebersole
@@ -69,14 +68,13 @@ public class DelayedEntityFetch implements EntityFetch {
 	public DomainResultAssembler createAssembler(
 			FetchParentAccess parentAccess,
 			Consumer<Initializer> collector,
-			AssemblerCreationContext creationContext,
 			AssemblerCreationState creationState) {
 		// todo (6.0) : create and register an Initializer that generates proper lazy representation for a specific entity of the given type
 		//		generally a proxy.  should handle registering batch / subselect fetch
 		final EntityInitializer initializer = new DelayedEntityFetchInitializer(
 				fetchedNavigable,
 				parentAccess,
-				fkResult.createResultAssembler( collector, creationState, creationContext )
+				fkResult.createResultAssembler( collector, creationState )
 		);
 
 		collector.accept( initializer );

@@ -22,7 +22,6 @@ import org.hibernate.sql.results.internal.instantiation.DynamicInstantiationCons
 import org.hibernate.sql.results.internal.instantiation.DynamicInstantiationInjectionAssemblerImpl;
 import org.hibernate.sql.results.internal.instantiation.DynamicInstantiationListAssemblerImpl;
 import org.hibernate.sql.results.internal.instantiation.DynamicInstantiationMapAssemblerImpl;
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
 import org.hibernate.sql.results.spi.DynamicInstantiationResult;
@@ -68,9 +67,7 @@ public class DynamicInstantiationResultImpl implements DynamicInstantiationResul
 	@Override
 	public DomainResultAssembler createResultAssembler(
 			Consumer<Initializer> initializerConsumer,
-			AssemblerCreationState creationOptions,
-			AssemblerCreationContext creationContext) {
-
+			AssemblerCreationState creationState) {
 		boolean areAllArgumentsAliased = true;
 		boolean areAnyArgumentsAliased = false;
 		final Set<String> aliases = new HashSet<>();
@@ -94,7 +91,7 @@ public class DynamicInstantiationResultImpl implements DynamicInstantiationResul
 				}
 
 				argumentReaders.add(
-						argumentResult.createResultAssembler( initializerConsumer, creationOptions, creationContext )
+						argumentResult.createResultAssembler( initializerConsumer, creationState )
 				);
 			}
 		}
@@ -104,7 +101,7 @@ public class DynamicInstantiationResultImpl implements DynamicInstantiationResul
 				areAnyArgumentsAliased,
 				duplicatedAliases,
 				argumentReaders,
-				creationContext
+				creationState
 		);
 
 		return assembler;
@@ -115,8 +112,7 @@ public class DynamicInstantiationResultImpl implements DynamicInstantiationResul
 			boolean areAllArgumentsAliased,
 			boolean areAnyArgumentsAliased,
 			List<String> duplicatedAliases,
-			List<ArgumentReader> argumentReaders,
-			AssemblerCreationContext creationContext) {
+			List<ArgumentReader> argumentReaders, AssemblerCreationState creationState) {
 
 		if ( nature == DynamicInstantiationNature.LIST ) {
 			if ( log.isDebugEnabled() && areAnyArgumentsAliased ) {
@@ -151,7 +147,8 @@ public class DynamicInstantiationResultImpl implements DynamicInstantiationResul
 
 				for ( int i = 0; i < argumentReaders.size(); i++ ) {
 					final ArgumentReader argumentReader = argumentReaders.get( i );
-					final JavaTypeDescriptor argumentTypeDescriptor = creationContext.getSessionFactory()
+					final JavaTypeDescriptor argumentTypeDescriptor = creationState.getSqlAstCreationContext()
+							.getDomainModel()
 							.getTypeConfiguration()
 							.getJavaTypeDescriptorRegistry()
 							.getOrMakeJavaDescriptor( constructor.getParameterTypes()[i] );

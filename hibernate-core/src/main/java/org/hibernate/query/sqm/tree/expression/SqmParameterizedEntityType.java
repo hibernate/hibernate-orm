@@ -11,7 +11,6 @@ import java.util.function.Supplier;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -51,8 +50,7 @@ public class SqmParameterizedEntityType implements SqmExpression, DomainResultPr
 	@Override
 	public DomainResult createDomainResult(
 			String resultVariable,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
+			DomainResultCreationState creationState) {
 		throw new UnsupportedOperationException( "At the moment, selection of an entity's type as a QueryResult is not supported" );
 		// todo (6.0) : but could be ^^ - consider adding support for this (returning Class)
 	}

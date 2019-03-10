@@ -9,7 +9,6 @@ package org.hibernate.sql.results.internal.domain.collection;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.CollectionFetch;
 import org.hibernate.sql.results.spi.CollectionInitializer;
@@ -57,12 +56,10 @@ public class DelayedCollectionFetch extends AbstractCollectionMappingNode implem
 	public DomainResultAssembler createAssembler(
 			FetchParentAccess parentAccess,
 			Consumer<Initializer> collector,
-			AssemblerCreationContext creationContext,
 			AssemblerCreationState creationState) {
 		final DomainResultAssembler keyAssembler = getKeyContainerResult().createResultAssembler(
 				collector,
-				creationState,
-				creationContext
+				creationState
 		);
 		final CollectionInitializer collectionInitializer = new DelayedCollectionInitializer(
 				parentAccess,

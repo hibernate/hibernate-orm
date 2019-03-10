@@ -18,8 +18,9 @@ import org.hibernate.engine.spi.LoadQueryInfluencers.InternalFetchProfileType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.spi.SingleIdEntityLoader;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.internal.entity.EntityTableGroup;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.ComparisonOperator;
@@ -27,7 +28,6 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.consume.spi.SqlAstSelectToJdbcSelectConverter;
 import org.hibernate.sql.ast.produce.internal.SqlAstSelectDescriptorImpl;
 import org.hibernate.sql.ast.produce.metamodel.internal.LoadIdParameter;
@@ -35,10 +35,11 @@ import org.hibernate.sql.ast.produce.metamodel.internal.SelectByEntityIdentifier
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.MetamodelSelectBuilder;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
-import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.produce.spi.SqlAstSelectDescriptor;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
@@ -46,9 +47,7 @@ import org.hibernate.sql.ast.tree.spi.SelectStatement;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
-import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.spi.select.SelectClause;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
@@ -65,6 +64,8 @@ import org.hibernate.sql.exec.spi.ParameterBindingContext;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
+import org.hibernate.sql.results.spi.Fetch;
+import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
@@ -358,66 +359,100 @@ public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> 
 		final SelectStatement selectStatement = new SelectStatement( rootQuerySpec );
 		final SelectClause selectClause = selectStatement.getQuerySpec().getSelectClause();
 
+		final SqlAliasBaseGenerator aliasBaseGenerator = new SqlAliasBaseManager();
+
+		SqlAstCreationState creationState = new SqlAstCreationState() {
+			@Override
+			public SqlAstCreationContext getCreationContext() {
+				return (SqlAstCreationContext) entityDescriptor.getFactory();
+			}
+
+			@Override
+			public SqlExpressionResolver getSqlExpressionResolver() {
+				return null;
+			}
+
+			@Override
+			public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
+				return aliasBaseGenerator;
+			}
+
+			@Override
+			public LockMode determineLockMode(String identificationVariable) {
+				return null;
+			}
+
+			@Override
+			public List<Fetch> visitFetches(FetchParent fetchParent) {
+				return Collections.emptyList();
+			}
+		};
 
 		final TableSpace rootTableSpace = rootQuerySpec.getFromClause().makeTableSpace();
 
-		final SqlAliasBaseGenerator aliasBaseGenerator = new SqlAliasBaseManager();
-
 		final NavigablePath path = new NavigablePath( entityDescriptor.getEntityName() );
 		final EntityTableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
-				new TableGroupInfo() {
-					@Override
-					public String getUniqueIdentifier() {
-						return "root";
-					}
-
-					@Override
-					public String getIdentificationVariable() {
-						return null;
-					}
-
-					@Override
-					public EntityTypeDescriptor getIntrinsicSubclassEntityMetadata() {
-						return entityDescriptor;
-					}
-
-					@Override
-					public NavigablePath getNavigablePath() {
-						return path;
-					}
-				},
-				new RootTableGroupContext() {
-					@Override
-					public void addRestriction(Predicate predicate) {
-						rootQuerySpec.addRestriction( predicate );
-					}
-
-					@Override
-					public QuerySpec getQuerySpec() {
-						return rootQuerySpec;
-					}
-
-					@Override
-					public TableSpace getTableSpace() {
-						return rootTableSpace;
-					}
-
-					@Override
-					public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
-						return aliasBaseGenerator;
-					}
-
-					@Override
-					public JoinType getTableReferenceJoinType() {
-						return null;
-					}
-
-					@Override
-					public LockOptions getLockOptions() {
-						return LockOptions.NONE;
-					}
-				}
+				null,
+				path,
+				null,
+				null,
+				LockMode.NONE,
+				creationState
 		);
+//		final EntityTableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
+//				new TableGroupInfo() {
+//					@Override
+//					public String getUniqueIdentifier() {
+//						return "root";
+//					}
+//
+//					@Override
+//					public String getIdentificationVariable() {
+//						return null;
+//					}
+//
+//					@Override
+//					public EntityTypeDescriptor getIntrinsicSubclassEntityMetadata() {
+//						return entityDescriptor;
+//					}
+//
+//					@Override
+//					public NavigablePath getNavigablePath() {
+//						return path;
+//					}
+//				},
+//				new RootTableGroupContext() {
+//					@Override
+//					public void addRestriction(Predicate predicate) {
+//						rootQuerySpec.addRestriction( predicate );
+//					}
+//
+//					@Override
+//					public QuerySpec getQuerySpec() {
+//						return rootQuerySpec;
+//					}
+//
+//					@Override
+//					public TableSpace getTableSpace() {
+//						return rootTableSpace;
+//					}
+//
+//					@Override
+//					public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
+//						return aliasBaseGenerator;
+//					}
+//
+//					@Override
+//					public JoinType getTableReferenceJoinType() {
+//						return null;
+//					}
+//
+//					@Override
+//					public LockOptions getLockOptions() {
+//						return LockOptions.NONE;
+//					}
+//				}
+//		);
 
 		rootTableSpace.setRootTableGroup( rootTableGroup );
 

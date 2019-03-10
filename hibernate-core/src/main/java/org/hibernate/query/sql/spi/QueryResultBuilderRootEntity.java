@@ -29,11 +29,9 @@ import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.results.internal.domain.entity.AbstractEntityMappingNode;
 import org.hibernate.sql.results.internal.domain.entity.EntityAssembler;
 import org.hibernate.sql.results.internal.domain.entity.EntityRootInitializer;
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.EntityResult;
 import org.hibernate.sql.results.spi.Initializer;
@@ -120,15 +118,12 @@ public class QueryResultBuilderRootEntity
 	// NativeQueryReturnBuilder
 
 	@Override
-	public EntityResult buildReturn(
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
+	public EntityResult buildReturn(DomainResultCreationState creationState) {
 		return new EntityResultImpl(
 				entityDescriptor,
 				tableAlias,
 				lockMode,
-				creationState,
-				creationContext
+				creationState
 		);
 	}
 
@@ -160,13 +155,11 @@ public class QueryResultBuilderRootEntity
 				EntityTypeDescriptor entityDescriptor,
 				String queryResultVariable,
 				LockMode lockMode,
-				DomainResultCreationState creationState,
-				DomainResultCreationContext creationContext) {
+				DomainResultCreationState creationState) {
 			super(
 					entityDescriptor,
 					lockMode,
 					new NavigablePath( entityDescriptor.getEntityName() ),
-					creationContext,
 					creationState
 			);
 
@@ -189,8 +182,7 @@ public class QueryResultBuilderRootEntity
 		@Override
 		public DomainResultAssembler createResultAssembler(
 				Consumer<Initializer> initializerCollector,
-				AssemblerCreationState creationState,
-				AssemblerCreationContext creationContext) {
+				AssemblerCreationState creationState) {
 			final DiscriminatorDescriptor<?> discriminatorDescriptor = entityDescriptor.getHierarchy().getDiscriminatorDescriptor();
 
 			final DomainResult discriminatorResult = null;
@@ -207,7 +199,6 @@ public class QueryResultBuilderRootEntity
 					discriminatorResult,
 					null,
 					initializerCollector,
-					creationContext,
 					creationState
 			);
 

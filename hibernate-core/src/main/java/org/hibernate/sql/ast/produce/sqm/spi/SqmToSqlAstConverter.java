@@ -7,6 +7,7 @@
 package org.hibernate.sql.ast.produce.sqm.spi;
 
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 
 /**
  * Specialized SemanticQueryWalker (SQM visitor) for producing
@@ -14,5 +15,5 @@ import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
  *
  * @author Steve Ebersole
  */
-public interface SqmToSqlAstConverter<T> extends SemanticQueryWalker<T> {
+public interface SqmToSqlAstConverter<T> extends SemanticQueryWalker<T>, SqlAstCreationState {
 }

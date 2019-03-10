@@ -19,14 +19,14 @@ public interface SqmQualifiedJoin extends SqmJoin {
 	 *
 	 * @return The join predicate
 	 */
-	SqmPredicate getOnClausePredicate();
+	SqmPredicate getJoinPredicate();
 
 	/**
 	 * Inject the join predicate
 	 *
 	 * @param predicate The join predicate
 	 */
-	void setOnClausePredicate(SqmPredicate predicate);
+	void setJoinPredicate(SqmPredicate predicate);
 
 	// todo : specialized Predicate for "mapped attribute join" conditions
 }

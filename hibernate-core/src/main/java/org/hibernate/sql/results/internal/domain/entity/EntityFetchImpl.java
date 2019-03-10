@@ -12,10 +12,8 @@ import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.EntityFetch;
 import org.hibernate.sql.results.spi.FetchParent;
@@ -37,9 +35,8 @@ public class EntityFetchImpl extends AbstractEntityMappingNode implements Entity
 			EntityValuedNavigable fetchedNavigable,
 			LockMode lockMode,
 			NavigablePath navigablePath,
-			DomainResultCreationContext creationContext,
 			DomainResultCreationState creationState) {
-		super( fetchedNavigable, lockMode, navigablePath, creationContext, creationState );
+		super( fetchedNavigable, lockMode, navigablePath, creationState );
 
 		this.fetchParent = fetchParent;
 
@@ -65,7 +62,6 @@ public class EntityFetchImpl extends AbstractEntityMappingNode implements Entity
 	public DomainResultAssembler createAssembler(
 			FetchParentAccess parentAccess,
 			Consumer<Initializer> collector,
-			AssemblerCreationContext creationContext,
 			AssemblerCreationState creationState) {
 		final EntityFetchInitializer initializer = new EntityFetchInitializer(
 				parentAccess,
@@ -76,7 +72,6 @@ public class EntityFetchImpl extends AbstractEntityMappingNode implements Entity
 				getDiscriminatorResult(),
 				getVersionResult(),
 				collector,
-				creationContext,
 				creationState
 		);
 

@@ -11,7 +11,6 @@ import java.util.function.Consumer;
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.CollectionInitializer;
 import org.hibernate.sql.results.spi.DomainResult;
@@ -43,12 +42,10 @@ public class SetInitializerProducer implements CollectionInitializerProducer {
 			DomainResultAssembler keyContainerAssembler,
 			DomainResultAssembler keyCollectionAssembler,
 			Consumer<Initializer> initializerConsumer,
-			AssemblerCreationState creationState,
-			AssemblerCreationContext creationContext) {
+			AssemblerCreationState creationState) {
 		final DomainResultAssembler elementAssembler = elementResult.createResultAssembler(
 				initializerConsumer,
-				creationState,
-				creationContext
+				creationState
 		);
 
 		return new SetInitializer(

@@ -19,12 +19,12 @@ import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
+import org.hibernate.metamodel.model.domain.internal.entity.EntityTableGroup;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierComposite;
@@ -38,7 +38,6 @@ import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.criteria.sqm.JpaParameterSqmWrapper;
 import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.sqm.tree.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
@@ -85,13 +84,8 @@ import org.hibernate.query.sqm.tree.expression.function.SqmUpperFunction;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
-import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
-import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
-import org.hibernate.query.sqm.tree.order.SqmOrderByClause;
-import org.hibernate.query.sqm.tree.order.SqmSortSpecification;
-import org.hibernate.query.sqm.tree.paging.SqmLimitOffsetClause;
 import org.hibernate.query.sqm.tree.predicate.AndSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.BetweenSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.GroupedSqmPredicate;
@@ -103,7 +97,10 @@ import org.hibernate.query.sqm.tree.predicate.NullnessSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.OrSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
+import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
+import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
+import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
@@ -111,17 +108,14 @@ import org.hibernate.sql.ast.produce.ConversionException;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.ordering.internal.SqmColumnReference;
-import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
-import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
-import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
-import org.hibernate.sql.ast.produce.spi.SqlAstProducerContext;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
+import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
@@ -167,7 +161,6 @@ import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerRefere
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.SimpleIdentifierReference;
-import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.FromClause;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
@@ -189,6 +182,8 @@ import org.hibernate.sql.exec.internal.StandardJdbcParameterImpl;
 import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameters;
 import org.hibernate.sql.results.spi.DomainResultProducer;
+import org.hibernate.sql.results.spi.Fetch;
+import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.SqlSelection;
 
 import org.jboss.logging.Logger;
@@ -205,7 +200,7 @@ import static org.hibernate.query.BinaryArithmeticOperator.SUBTRACT;
  */
 public abstract class BaseSqmToSqlAstConverter
 		extends BaseSemanticQueryWalker
-		implements SqmToSqlAstConverter, SqlAstCreationContext {
+		implements SqmToSqlAstConverter, SqlAstCreationState {
 
 	private static final Logger log = Logger.getLogger( BaseSqmToSqlAstConverter.class );
 
@@ -216,8 +211,10 @@ public abstract class BaseSqmToSqlAstConverter
 		SUBQUERY
 	}
 
-	private final SqlAstProducerContext producerContext;
+	private final SqlAstCreationContext creationContext;
 	private final QueryOptions queryOptions;
+	private final LoadQueryInfluencers loadQueryInfluencers;
+	private final Callback callback;
 
 	private final SqlAliasBaseManager sqlAliasBaseManager = new SqlAliasBaseManager();
 
@@ -241,20 +238,38 @@ public abstract class BaseSqmToSqlAstConverter
 	private Map<QuerySpec,Map<Expression, SqlSelection>> sqlExpressionToSqlSelectionMapByQuerySpec;
 
 	public BaseSqmToSqlAstConverter(
-			SqlAstProducerContext producerContext,
-			QueryOptions queryOptions) {
-		super( producerContext.getSessionFactory() );
-		this.producerContext = producerContext;
+			SqlAstCreationContext creationContext,
+			QueryOptions queryOptions,
+			LoadQueryInfluencers loadQueryInfluencers,
+			Callback callback) {
+		super( creationContext.getDomainModel().getTypeConfiguration(), creationContext.getServiceRegistry() );
+		this.creationContext = creationContext;
 		this.queryOptions = queryOptions;
+		this.loadQueryInfluencers = loadQueryInfluencers;
+		this.callback = callback;
 	}
 
-	public SqlAstProducerContext getProducerContext() {
-		return producerContext;
+	public SqlAstCreationContext getCreationContext() {
+		return creationContext;
+	}
+
+	protected TableSpace getCurrentTableSpace() {
+		return tableSpace;
 	}
 
 	@Override
-	public LoadQueryInfluencers getLoadQueryInfluencers() {
-		return getProducerContext().getLoadQueryInfluencers();
+	public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
+		return sqlAliasBaseManager;
+	}
+
+	@Override
+	public LockMode determineLockMode(String identificationVariable) {
+		return queryOptions.getLockOptions().getEffectiveLockMode( identificationVariable );
+	}
+
+	@Override
+	public List<Fetch> visitFetches(FetchParent fetchParent) {
+		return Collections.emptyList();
 	}
 
 	protected Set<String> affectedTableNames() {
@@ -267,11 +282,6 @@ public abstract class BaseSqmToSqlAstConverter
 
 	public QueryOptions getQueryOptions() {
 		return queryOptions;
-	}
-
-	@Override
-	public LockOptions getLockOptions() {
-		return getQueryOptions().getLockOptions();
 	}
 
 	public SqlAliasBaseManager getSqlAliasBaseManager() {
@@ -319,10 +329,6 @@ public abstract class BaseSqmToSqlAstConverter
 		if ( !stack.isEmpty() ) {
 			throw new IllegalStateException( "Cannot prime an already populated Stack" );
 		}
-	}
-
-	protected void primeNavigableReferenceStack(NavigableReference initial) {
-		primeStack( navigableReferenceStack, initial );
 	}
 
 	// todo (6.0) : is there ever a time when resolving a sqlSelectable relative to a qualifier ought to return different expressions for multiple references?
@@ -388,25 +394,25 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public QuerySpec visitQuerySpec(SqmQuerySpec querySpec) {
-		final QuerySpec astQuerySpec = new QuerySpec( querySpecStack.isEmpty() );
-		querySpecStack.push( astQuerySpec );
-		fromClauseStack.push( astQuerySpec.getFromClause() );
+	public QuerySpec visitQuerySpec(SqmQuerySpec sqmQuerySpec) {
+		final QuerySpec sqlQuerySpec = new QuerySpec( querySpecStack.isEmpty() );
+		querySpecStack.push( sqlQuerySpec );
+		fromClauseStack.push( sqlQuerySpec.getFromClause() );
 
 		try {
 			// we want to visit the from-clause first
-			visitFromClause( querySpec.getFromClause() );
+			visitFromClause( sqmQuerySpec.getFromClause() );
 
-			final SqmSelectClause selectClause = querySpec.getSelectClause();
+			final SqmSelectClause selectClause = sqmQuerySpec.getSelectClause();
 			if ( selectClause != null ) {
 				visitSelectClause( selectClause );
 			}
 
-			final SqmWhereClause whereClause = querySpec.getWhereClause();
+			final SqmWhereClause whereClause = sqmQuerySpec.getWhereClause();
 			if ( whereClause != null && whereClause.getPredicate() != null ) {
 				currentClauseStack.push( Clause.WHERE );
 				try {
-					astQuerySpec.setWhereClauseRestrictions(
+					sqlQuerySpec.setWhereClauseRestrictions(
 							(Predicate) whereClause.getPredicate().accept( this )
 					);
 				}
@@ -418,11 +424,11 @@ public abstract class BaseSqmToSqlAstConverter
 			// todo : group-by
 			// todo : having
 
-			if ( querySpec.getOrderByClause() != null ) {
+			if ( sqmQuerySpec.getOrderByClause() != null ) {
 				currentClauseStack.push( Clause.ORDER );
 				try {
-					for ( SqmSortSpecification sortSpecification : querySpec.getOrderByClause().getSortSpecifications() ) {
-						astQuerySpec.addSortSpecification( visitSortSpecification( sortSpecification ) );
+					for ( SqmSortSpecification sortSpecification : sqmQuerySpec.getOrderByClause().getSortSpecifications() ) {
+						sqlQuerySpec.addSortSpecification( visitSortSpecification( sortSpecification ) );
 					}
 				}
 				finally {
@@ -430,39 +436,67 @@ public abstract class BaseSqmToSqlAstConverter
 				}
 			}
 
-			final SqmLimitOffsetClause limitOffsetClause = querySpec.getLimitOffsetClause();
-			if ( limitOffsetClause != null ) {
-				currentClauseStack.push( Clause.LIMIT );
-				try {
-					if ( limitOffsetClause.getLimitExpression() != null ) {
-						astQuerySpec.setLimitClauseExpression(
-								(Expression) limitOffsetClause.getLimitExpression().accept( this )
-						);
-					}
-					if ( limitOffsetClause.getOffsetExpression() != null ) {
-						astQuerySpec.setOffsetClauseExpression(
-								(Expression) limitOffsetClause.getOffsetExpression().accept( this )
-						);
-					}
-				}
-				finally {
-					currentClauseStack.pop();
-				}
-			}
+			sqlQuerySpec.setLimitClauseExpression( visitLimitExpression( sqmQuerySpec.getLimitExpression() ) );
+			sqlQuerySpec.setOffsetClauseExpression( visitOffsetExpression( sqmQuerySpec.getOffsetExpression() ) );
 
-			return astQuerySpec;
+			return sqlQuerySpec;
 		}
 		finally {
-			assert querySpecStack.pop() == astQuerySpec;
-			assert fromClauseStack.pop() == astQuerySpec.getFromClause();
+			assert querySpecStack.pop() == sqlQuerySpec;
+			assert fromClauseStack.pop() == sqlQuerySpec.getFromClause();
 		}
 	}
+
+	@Override
+	public Expression visitOffsetExpression(SqmExpression expression) {
+		if ( expression == null ) {
+			return null;
+		}
+
+		currentClauseStack.push( Clause.OFFSET );
+		try {
+			return (Expression) expression.accept( this );
+		}
+		finally {
+			currentClauseStack.pop();
+		}
+	}
+
+	@Override
+	public Expression visitLimitExpression(SqmExpression expression) {
+		if ( expression == null ) {
+			return null;
+		}
+
+		currentClauseStack.push( Clause.LIMIT );
+		try {
+			return (Expression) expression.accept( this );
+		}
+		finally {
+			currentClauseStack.pop();
+		}
+	}
+
 
 	@Override
 	public Void visitFromClause(SqmFromClause fromClause) {
 		currentClauseStack.push( Clause.FROM );
 		try {
-			fromClause.getFromElementSpaces().forEach( this::visitFromElementSpace );
+			fromClause.visitRoots(
+					sqmRoot -> {
+						try {
+							tableSpace = fromClauseStack.getCurrent().makeTableSpace();
+							visitRootEntityFromElement( sqmRoot );
+
+							sqmRoot.visitJoins(
+									sqmJoin -> sqmJoin.accept( this )
+							);
+						}
+						finally {
+							tableSpace = null;
+						}
+					}
+			);
 		}
 		finally {
 			currentClauseStack.pop();
@@ -470,20 +504,6 @@ public abstract class BaseSqmToSqlAstConverter
 		return null;
 	}
 
-	@Override
-	public TableSpace visitFromElementSpace(SqmFromElementSpace fromElementSpace) {
-		tableSpace = fromClauseStack.getCurrent().makeTableSpace();
-		try {
-			visitRootEntityFromElement( fromElementSpace.getRoot() );
-			for ( SqmJoin sqmJoin : fromElementSpace.getJoins() ) {
-				sqmJoin.accept( this );
-			}
-			return tableSpace;
-		}
-		finally {
-			tableSpace = null;
-		}
-	}
 
 	@Override
 	public Object visitRootEntityFromElement(SqmRoot sqmRoot) {
@@ -495,45 +515,55 @@ public abstract class BaseSqmToSqlAstConverter
 			return resolvedTableGroup;
 		}
 
-		final SqmEntityReference binding = sqmRoot.getNavigableReference();
-		final EntityTypeDescriptor entityMetadata = (EntityTypeDescriptor) binding.getReferencedNavigable();
+		final EntityTypeDescriptor entityMetadata = sqmRoot.getReferencedNavigable().getEntityDescriptor();
 		final EntityTableGroup group = entityMetadata.createRootTableGroup(
-				sqmRoot,
-				new RootTableGroupContext() {
-					@Override
-					public QuerySpec getQuerySpec() {
-						return currentQuerySpec();
-					}
-
-					@Override
-					public TableSpace getTableSpace() {
-						return tableSpace;
-					}
-
-					@Override
-					public void addRestriction(Predicate predicate) {
-						currentQuerySpec().addRestriction( predicate );
-					}
-
-					@Override
-					public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
-						return BaseSqmToSqlAstConverter.this.getSqlAliasBaseManager();
-					}
-
-					@Override
-					public JoinType getTableReferenceJoinType() {
-						// TableReferences within the TableGroup can be
-						// inner-joined (unless they are optional, which is handled
-						// inside the producers)
-						return JoinType.INNER;
-					}
-
-					@Override
-					public LockOptions getLockOptions() {
-						return queryOptions.getLockOptions();
-					}
-				}
+				sqmRoot.getUniqueIdentifier(),
+				sqmRoot.getNavigablePath(),
+				sqmRoot.getExplicitAlias(),
+				JoinType.INNER,
+				LockMode.NONE,
+				this
 		);
+
+		fromClauseIndex.crossReference( sqmRoot, group );
+
+//		final EntityTableGroup group = entityMetadata.createRootTableGroup(
+//				sqmRoot,
+//				new RootTableGroupContext() {
+//					@Override
+//					public QuerySpec getQuerySpec() {
+//						return currentQuerySpec();
+//					}
+//
+//					@Override
+//					public TableSpace getTableSpace() {
+//						return tableSpace;
+//					}
+//
+//					@Override
+//					public void addRestriction(Predicate predicate) {
+//						currentQuerySpec().addRestriction( predicate );
+//					}
+//
+//					@Override
+//					public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
+//						return BaseSqmToSqlAstConverter.this.getSqlAliasBaseManager();
+//					}
+//
+//					@Override
+//					public JoinType getTableReferenceJoinType() {
+//						// TableReferences within the TableGroup can be
+//						// inner-joined (unless they are optional, which is handled
+//						// inside the producers)
+//						return JoinType.INNER;
+//					}
+//
+//					@Override
+//					public LockOptions getLockOptions() {
+//						return queryOptions.getLockOptions();
+//					}
+//				}
+//		);
 
 		tableSpace.setRootTableGroup( group );
 		tableGroupStack.push( group );
@@ -541,7 +571,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 		group.applyAffectedTableNames( affectedTableNames::add );
 
-		navigableReferenceStack.push( group.getNavigableReference() );
+//		navigableReferenceStack.push( group.getNavigableReference() );
 
 		log.tracef( "Resolved SqmRoot [%s] to new TableGroup [%s]", sqmRoot, group );
 
@@ -555,16 +585,15 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public Object visitQualifiedAttributeJoinFromElement(SqmNavigableJoin joinedFromElement) {
-		final TableGroup existing = fromClauseIndex.findResolvedTableGroup( joinedFromElement );
+	public Object visitQualifiedAttributeJoinFromElement(SqmNavigableJoin sqmJoin) {
+		final TableGroup existing = fromClauseIndex.findResolvedTableGroup( sqmJoin );
 		if ( existing != null ) {
 			return existing;
 		}
 
-		final QuerySpec querySpec = currentQuerySpec();
-		final TableGroup lhsTableGroup = fromClauseIndex.findResolvedTableGroup( joinedFromElement.getLhs() );
+		final TableGroup lhsTableGroup = fromClauseIndex.findResolvedTableGroup( sqmJoin.getLhs() );
 
-		final PersistentAttributeDescriptor joinedAttribute = joinedFromElement.getAttributeReference().getReferencedNavigable();
+		final PersistentAttributeDescriptor joinedAttribute = sqmJoin.getAttributeReference().getReferencedNavigable();
 		if ( joinedAttribute instanceof SingularPersistentAttributeEmbedded ) {
 			return lhsTableGroup;
 		}
@@ -572,139 +601,105 @@ public abstract class BaseSqmToSqlAstConverter
 		final TableGroupJoinProducer joinProducer = (TableGroupJoinProducer) joinedAttribute;
 
 		final TableGroupJoin tableGroupJoin = joinProducer.createTableGroupJoin(
-				joinedFromElement,
-				joinedFromElement.getJoinType().getCorrespondingSqlJoinType(),
-				new JoinedTableGroupContext() {
-					@Override
-					public NavigableContainerReference getLhs() {
-						return (NavigableContainerReference) lhsTableGroup.getNavigableReference();
-					}
-
-					@Override
-					public ColumnReferenceQualifier getColumnReferenceQualifier() {
-						return lhsTableGroup;
-					}
-
-					@Override
-					public SqlExpressionResolver getSqlExpressionResolver() {
-						return BaseSqmToSqlAstConverter.this.getSqlExpressionResolver();
-					}
-
-					@Override
-					public NavigablePath getNavigablePath() {
-						return joinedFromElement.getNavigableReference().getNavigablePath();
-					}
-
-					@Override
-					public QuerySpec getQuerySpec() {
-						return querySpec;
-					}
-
-					@Override
-					public TableSpace getTableSpace() {
-						return tableSpace;
-					}
-
-					@Override
-					public JoinType getTableReferenceJoinType() {
-						// TableReferences within the joined TableGroup can be
-						// inner-joined (unless they are optional, which is handled
-						// inside the producers)
-						return JoinType.INNER;
-					}
-
-					@Override
-					public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
-						return BaseSqmToSqlAstConverter.this.getSqlAliasBaseManager();
-					}
-
-					@Override
-					public LockOptions getLockOptions() {
-						return queryOptions.getLockOptions();
-					}
-				}
+				sqmJoin.getUniqueIdentifier(),
+				sqmJoin.getNavigablePath(),
+				fromClauseIndex.getTableGroup( sqmJoin.getLhs().getNavigablePath() ),
+				sqmJoin.getExplicitAlias(),
+				sqmJoin.getJoinType().getCorrespondingSqlJoinType(),
+				LockMode.NONE,
+				this
 		);
 
 		// add any additional join restrictions
-		if ( joinedFromElement.getOnClausePredicate() != null ) {
+		if ( sqmJoin.getJoinPredicate() != null ) {
 			currentQuerySpec().addRestriction(
-					(Predicate) joinedFromElement.getOnClausePredicate().accept( this )
+					(Predicate) sqmJoin.getJoinPredicate().accept( this )
 			);
 		}
 
 		tableSpace.addJoinedTableGroup( tableGroupJoin );
-
-		tableGroupStack.push( tableGroupJoin.getJoinedGroup() );
-		fromClauseIndex.crossReference( joinedFromElement, tableGroupJoin.getJoinedGroup() );
-
-		final NavigableReference navigableReference = tableGroupJoin.getJoinedGroup().getNavigableReference();
-		if ( ! navigableReferenceStack.isEmpty() ) {
-			final NavigableReference parent = navigableReferenceStack.getCurrent();
-			assert parent instanceof NavigableContainerReference;
-			( (NavigableContainerReference) parent ).addNavigableReference( navigableReference );
-			navigableReferenceStack.push( navigableReference );
-		}
+//
+//		tableGroupStack.push( tableGroupJoin.getJoinedGroup() );
+//		fromClauseIndex.crossReference( sqmJoin, tableGroupJoin.getJoinedGroup() );
+//
+//		final NavigableReference navigableReference = tableGroupJoin.getJoinedGroup().getNavigableReference();
+//		if ( ! navigableReferenceStack.isEmpty() ) {
+//			final NavigableReference parent = navigableReferenceStack.getCurrent();
+//			assert parent instanceof NavigableContainerReference;
+//			( (NavigableContainerReference) parent ).addNavigableReference( navigableReference );
+//			navigableReferenceStack.push( navigableReference );
+//		}
 
 		return tableGroupJoin;
 	}
 
-	protected abstract SqlExpressionResolver getSqlExpressionResolver();
-
 	@Override
-	public TableGroupJoin visitCrossJoinedFromElement(SqmCrossJoin joinedFromElement) {
-		final QuerySpec querySpec = currentQuerySpec();
-		final EntityTypeDescriptor entityDescriptor = joinedFromElement.getIntrinsicSubclassEntityMetadata();
-		final EntityTableGroup group = entityDescriptor.createRootTableGroup(
-				joinedFromElement,
-				new RootTableGroupContext() {
-					@Override
-					public QuerySpec getQuerySpec() {
-						return querySpec;
-					}
-
-					@Override
-					public TableSpace getTableSpace() {
-						return tableSpace;
-					}
-
-					@Override
-					public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
-						return BaseSqmToSqlAstConverter.this.getSqlAliasBaseManager();
-					}
-
-					@Override
-					public JoinType getTableReferenceJoinType() {
-						// TableReferences within the cross-joined TableGroup can be
-						// inner-joined (unless they are optional, which is handled
-						// inside the producers)
-						return JoinType.INNER;
-					}
-
-					@Override
-					public void addRestriction(Predicate predicate) {
-						log.debugf(
-								"Adding restriction [%s] to where-clause for cross-join [%s]",
-								predicate,
-								joinedFromElement.getNavigableReference()
-						);
-						querySpec.addRestriction( predicate );
-					}
-
-					@Override
-					public LockOptions getLockOptions() {
-						return queryOptions.getLockOptions();
-					}
-				}
+	public TableGroupJoin visitCrossJoinedFromElement(SqmCrossJoin sqmJoin) {
+		final EntityTypeDescriptor entityMetadata = sqmJoin.getReferencedNavigable().getEntityDescriptor();
+		final EntityTableGroup group = entityMetadata.createRootTableGroup(
+				sqmJoin.getUniqueIdentifier(),
+				sqmJoin.getNavigablePath(),
+				sqmJoin.getExplicitAlias(),
+				JoinType.INNER,
+				LockMode.NONE,
+				this
 		);
+
+//
+//
+//		final QuerySpec querySpec = currentQuerySpec();
+//		final EntityTypeDescriptor entityDescriptor = sqmJoin.getIntrinsicSubclassEntityMetadata();
+//		final EntityTableGroup group = entityDescriptor.createRootTableGroup(
+//				sqmJoin,
+//				new RootTableGroupContext() {
+//					@Override
+//					public QuerySpec getQuerySpec() {
+//						return querySpec;
+//					}
+//
+//					@Override
+//					public TableSpace getTableSpace() {
+//						return tableSpace;
+//					}
+//
+//					@Override
+//					public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
+//						return BaseSqmToSqlAstConverter.this.getSqlAliasBaseManager();
+//					}
+//
+//					@Override
+//					public JoinType getTableReferenceJoinType() {
+//						// TableReferences within the cross-joined TableGroup can be
+//						// inner-joined (unless they are optional, which is handled
+//						// inside the producers)
+//						return JoinType.INNER;
+//					}
+//
+//					@Override
+//					public void addRestriction(Predicate predicate) {
+//						log.debugf(
+//								"Adding restriction [%s] to where-clause for cross-join [%s]",
+//								predicate,
+//								sqmJoin
+//						);
+//						querySpec.addRestriction( predicate );
+//					}
+//
+//					@Override
+//					public LockOptions getLockOptions() {
+//						return queryOptions.getLockOptions();
+//					}
+//				}
+//		);
 
 		group.applyAffectedTableNames( affectedTableNames::add );
 
-		tableGroupStack.push( group );
-		fromClauseIndex.crossReference( joinedFromElement, group );
+//		tableGroupStack.push( group );
+		fromClauseIndex.crossReference( sqmJoin, group );
 
-		TableGroupJoin tableGroupJoin = new TableGroupJoin( JoinType.CROSS, group, null );
+		final TableGroupJoin tableGroupJoin = new TableGroupJoin( JoinType.CROSS, group, null );
 
-		navigableReferenceStack.push( tableGroupJoin.getJoinedGroup().getNavigableReference() );
+//		navigableReferenceStack.push( tableGroupJoin.getJoinedGroup().getNavigableReference() );
 
 		return tableGroupJoin;
 	}
@@ -854,7 +849,7 @@ public abstract class BaseSqmToSqlAstConverter
 					referencedCollection,
 					navigablePath,
 					containerReference.getColumnReferenceQualifier(),
-					getLockOptions().getEffectiveLockMode( reference.getIdentificationVariable() )
+					getQueryOptions().getLockOptions().getEffectiveLockMode( reference.getIdentificationVariable() )
 			);
 		}
 
@@ -930,7 +925,7 @@ public abstract class BaseSqmToSqlAstConverter
 								jdbcParameters.getJdbcParameters().size(),
 								null,
 								currentClauseStack.getCurrent(),
-								getProducerContext().getSessionFactory().getTypeConfiguration()
+								getCreationContext().getDomainModel().getTypeConfiguration()
 						)
 				);
 			}
@@ -945,13 +940,13 @@ public abstract class BaseSqmToSqlAstConverter
 												jdbcParameters.getJdbcParameters().size(),
 												type,
 												currentClauseStack.getCurrent(),
-												getProducerContext().getSessionFactory().getTypeConfiguration()
+												getCreationContext().getDomainModel().getTypeConfiguration()
 										)
 								);
 							}
 						},
 						currentClauseStack.getCurrent(),
-						getProducerContext().getSessionFactory().getTypeConfiguration()
+						getCreationContext().getDomainModel().getTypeConfiguration()
 				);
 			}
 
@@ -990,13 +985,13 @@ public abstract class BaseSqmToSqlAstConverter
 											jdbcParameters.getJdbcParameters().size(),
 											type,
 											currentClauseStack.getCurrent(),
-											getProducerContext().getSessionFactory().getTypeConfiguration()
+											getCreationContext().getDomainModel().getTypeConfiguration()
 									)
 							);
 						}
 					},
 					currentClauseStack.getCurrent(),
-					getProducerContext().getSessionFactory().getTypeConfiguration()
+					getCreationContext().getDomainModel().getTypeConfiguration()
 			);
 
 			jdbcParamsBySqmParam.put( expression, jdbcParameterList );
@@ -1034,13 +1029,13 @@ public abstract class BaseSqmToSqlAstConverter
 											jdbcParameters.getJdbcParameters().size(),
 											type,
 											currentClauseStack.getCurrent(),
-											getProducerContext().getSessionFactory().getTypeConfiguration()
+											getCreationContext().getDomainModel().getTypeConfiguration()
 									)
 							);
 						}
 					},
 					currentClauseStack.getCurrent(),
-					getProducerContext().getSessionFactory().getTypeConfiguration()
+					getCreationContext().getDomainModel().getTypeConfiguration()
 			);
 
 			jdbcParamsBySqmParam.put( expression, jdbcParameterList );
@@ -1169,10 +1164,10 @@ public abstract class BaseSqmToSqlAstConverter
 			return new CountFunction(
 					toExpression( expression.getArgument().accept( this ) ),
 					expression.isDistinct(),
-					getSessionFactory().getTypeConfiguration()
+					getCreationContext().getDomainModel().getTypeConfiguration()
 							.getBasicTypeRegistry()
 							.getBasicType( Long.class )
-							.getSqlExpressableType( getSessionFactory().getTypeConfiguration() )
+							.getSqlExpressableType( getCreationContext().getDomainModel().getTypeConfiguration() )
 			);
 		}
 		finally {
@@ -1184,10 +1179,10 @@ public abstract class BaseSqmToSqlAstConverter
 	public ConcatFunction visitConcatFunction(SqmConcatFunction function) {
 		return new ConcatFunction(
 				collectionExpressions( function.getExpressions() ),
-				getSessionFactory().getTypeConfiguration()
+				getCreationContext().getDomainModel().getTypeConfiguration()
 						.getBasicTypeRegistry()
 						.getBasicType( String.class )
-						.getSqlExpressableType( getSessionFactory().getTypeConfiguration() )
+						.getSqlExpressableType( getCreationContext().getDomainModel().getTypeConfiguration() )
 		);
 	}
 
@@ -1207,10 +1202,11 @@ public abstract class BaseSqmToSqlAstConverter
 			final Object expression = sqmExpression.accept( this );
 			if ( BasicValuedNavigableReference.class.isInstance( expression ) ) {
 				final BasicValuedNavigableReference navigableReference = (BasicValuedNavigableReference) expression;
-				results.add( getSqlSelectionResolver().resolveSqlExpression(
-						navigableReference.getColumnReferenceQualifier(),
-						navigableReference.getNavigable().getBoundColumn()
-							)
+				results.add(
+						getSqlExpressionResolver().resolveSqlExpression(
+								navigableReference.getColumnReferenceQualifier(),
+								navigableReference.getNavigable().getBoundColumn()
+						)
 				);
 			}
 			else {
@@ -1264,10 +1260,10 @@ public abstract class BaseSqmToSqlAstConverter
 		try {
 			return new CountStarFunction(
 					expression.isDistinct(),
-					getSessionFactory().getTypeConfiguration()
+					getCreationContext().getDomainModel().getTypeConfiguration()
 							.getBasicTypeRegistry()
 							.getBasicType( Long.class )
-							.getSqlExpressableType( getSessionFactory().getTypeConfiguration() )
+							.getSqlExpressableType( getCreationContext().getDomainModel().getTypeConfiguration() )
 			);
 		}
 		finally {
@@ -1282,10 +1278,10 @@ public abstract class BaseSqmToSqlAstConverter
 		try {
 			return new LengthFunction(
 					toExpression( function.getArgument().accept( this ) ),
-					getSessionFactory().getTypeConfiguration()
+					getCreationContext().getDomainModel().getTypeConfiguration()
 							.getBasicTypeRegistry()
 							.getBasicType( Long.class )
-							.getSqlExpressableType( getSessionFactory().getTypeConfiguration() )
+							.getSqlExpressableType( getCreationContext().getDomainModel().getTypeConfiguration() )
 
 			);
 		}
@@ -1560,7 +1556,7 @@ public abstract class BaseSqmToSqlAstConverter
 				expression.getSpecification(),
 				(Expression) expression.getTrimCharacter().accept( this ),
 				(Expression) expression.getSource().accept( this ),
-				this
+				getCreationContext()
 		);
 	}
 

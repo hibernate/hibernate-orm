@@ -11,9 +11,21 @@ import java.util.function.BiConsumer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
+import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
+import org.hibernate.sql.results.DomainResultCreationException;
+import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
+import org.hibernate.sql.results.spi.DomainResult;
+import org.hibernate.sql.results.spi.DomainResultCreationState;
+import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -68,5 +80,40 @@ public interface BasicValuedNavigable<J> extends BasicValuedExpressableType<J>, 
 		if ( boundColumn instanceof PhysicalColumn ) {
 			jdbcValueCollector.collect( value, boundColumn.getExpressableType(), boundColumn );
 		}
+	}
+
+	@Override
+	default SqmNavigableReference createSqmExpression(SqmPath lhs, SqmCreationState creationState) {
+		return new SqmBasicValuedSimplePath(
+				creationState.generateUniqueIdentifier(),
+				lhs.getNavigablePath().append( getNavigableName() ),
+				this,
+				lhs
+		);
+	}
+
+	@Override
+	default DomainResult createDomainResult(
+			NavigablePath navigablePath,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		final TableGroup lhs = creationState.getFromClauseAccess().findTableGroup( navigablePath.getParent() );
+		if ( lhs == null ) {
+			throw new DomainResultCreationException(
+					"Could not locate LHS TableGroup[" + navigablePath.getParent() + "] : " + navigablePath );
+		}
+
+		// resolve the SqlSelection
+		final SqlExpressionResolver resolver = creationState.getSqlExpressionResolver();
+		final SqlSelection sqlSelection = resolver.resolveSqlSelection(
+				resolver.resolveSqlExpression(
+						lhs,
+						getBoundColumn()
+				),
+				getJavaTypeDescriptor(),
+				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
+		);
+
+		return new BasicResultImpl( resultVariable, sqlSelection, getBoundColumn().getExpressableType() );
 	}
 }

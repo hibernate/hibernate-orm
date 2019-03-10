@@ -51,10 +51,13 @@ import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -64,6 +67,7 @@ import org.hibernate.sql.ast.consume.spi.InsertToJdbcInsertConverter;
 import org.hibernate.sql.ast.consume.spi.SqlDeleteToJdbcDeleteConverter;
 import org.hibernate.sql.ast.consume.spi.UpdateToJdbcUpdateConverter;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.produce.spi.SqlAstDeleteDescriptor;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.tree.spi.DeleteStatement;
@@ -80,7 +84,6 @@ import org.hibernate.sql.exec.spi.JdbcMutation;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcUpdate;
 import org.hibernate.sql.exec.spi.ParameterBindingContext;
-import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 
 /**
  * @author Steve Ebersole
@@ -110,19 +113,31 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 
 
 	// `select ... from Person p order by p`
+
+
+	@Override
+	public SqmNavigableReference createSqmExpression(SqmPath lhs, SqmCreationState creationState) {
+		return new SqmBasicValuedSimplePath(
+				creationState.generateUniqueIdentifier(),
+				new NavigablePath( getNavigableName() + DiscriminatorDescriptor.NAVIGABLE_NAME ),
+				getHierarchy().getDiscriminatorDescriptor(),
+				null
+		);
+	}
+
 	@Override
 	public SqmNavigableReference createSqmExpression(
 			SqmFrom sourceSqmFrom,
 			SqmNavigableContainerReference containerReference,
 			SqmCreationState creationState) {
-		return sourceSqmFrom.getNavigableReference();
+		return createSqmExpression( sourceSqmFrom, creationState );
 	}
 
 	@Override
 	public List<ColumnReference> resolveColumnReferences(
 			ColumnReferenceQualifier qualifier,
-			SqlAstCreationContext resolutionContext) {
-		return getIdentifierDescriptor().resolveColumnReferences( qualifier, resolutionContext );
+			SqlAstCreationState creationState) {
+		return getIdentifierDescriptor().resolveColumnReferences( qualifier, creationState );
 	}
 
 	@Override

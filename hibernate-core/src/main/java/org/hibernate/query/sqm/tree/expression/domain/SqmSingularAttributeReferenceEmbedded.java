@@ -18,14 +18,15 @@ import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 public class SqmSingularAttributeReferenceEmbedded
 		extends AbstractSqmSingularAttributeReference
 		implements SqmEmbeddableTypedReference {
-	private final SqmNavigableJoin join;
+	private final SqmNavigableJoin navigableJoin;
 
 	public SqmSingularAttributeReferenceEmbedded(
 			SqmNavigableContainerReference domainReferenceBinding,
+			SqmNavigableJoin navigableJoin,
 			SingularPersistentAttributeEmbedded boundNavigable,
 			SqmCreationState creationState) {
 		super( domainReferenceBinding, boundNavigable );
-		this.join = creationState.getCurrentFromElementBuilder().buildNavigableJoin( this );
+		this.navigableJoin = navigableJoin;
 	}
 
 	@Override
@@ -40,7 +41,7 @@ public class SqmSingularAttributeReferenceEmbedded
 
 	@Override
 	public SqmFrom getExportedFromElement() {
-		return join;
+		return navigableJoin;
 	}
 
 	@Override

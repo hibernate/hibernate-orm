@@ -30,7 +30,6 @@ import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.results.internal.values.DirectResultSetAccess;
 import org.hibernate.sql.results.internal.values.JdbcValuesResultSetImpl;
 import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingOptions;
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
 import org.hibernate.sql.results.spi.ResultSetMapping;
 import org.hibernate.sql.results.spi.ResultSetMappingDescriptor;
 import org.hibernate.sql.results.spi.RowReader;
@@ -41,7 +40,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public abstract class OutputsImpl
-		implements Outputs, ExecutionContext, AssemblerCreationContext, ParameterBindingContext, Callback {
+		implements Outputs, ExecutionContext, ParameterBindingContext, Callback {
 	private static final Logger log = CoreLogging.logger( OutputsImpl.class );
 
 	private final ResultContext context;

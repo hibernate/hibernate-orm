@@ -31,11 +31,6 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -126,28 +121,6 @@ public class BasicCollectionElementImpl<J>
 	@Override
 	public SqlExpressableType getSqlExpressableType() {
 		return valueMapper.getSqlExpressableType();
-	}
-
-
-	@Override
-	public DomainResult createDomainResult(
-			NavigableReference navigableReference,
-			String resultVariable,
-			DomainResultCreationState creationState, DomainResultCreationContext creationContext) {
-		assert getCollectionDescriptor().equals( navigableReference.getNavigable() )
-				|| getCollectionDescriptor().getDescribedAttribute().equals( navigableReference.getNavigable() );
-		return new BasicResultImpl(
-				resultVariable,
-				creationState.getSqlExpressionResolver().resolveSqlSelection(
-						creationState.getSqlExpressionResolver().resolveSqlExpression(
-								navigableReference.getColumnReferenceQualifier(),
-								getBoundColumn()
-						),
-						getJavaTypeDescriptor(),
-						creationContext.getSessionFactory().getTypeConfiguration()
-				),
-				getBoundColumn().getExpressableType()
-		);
 	}
 
 	@Override

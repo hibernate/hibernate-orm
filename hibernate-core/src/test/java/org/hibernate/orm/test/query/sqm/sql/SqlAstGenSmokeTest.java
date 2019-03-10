@@ -42,7 +42,7 @@ public class SqlAstGenSmokeTest extends BaseSqmSqlTest {
 
 	@Test
 	public void testSqlAstGeneration() {
-		final SharedSessionContractImplementor session = (SharedSessionContractImplementor) getSessionFactory().openSession();
+		final SharedSessionContractImplementor session = (SharedSessionContractImplementor) sessionFactory().openSession();
 
 		try {
 			final JdbcSelect jdbcSelect = buildJdbcSelect(

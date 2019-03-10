@@ -8,21 +8,20 @@ package org.hibernate.orm.test.query.sqm.produce;
 
 import java.util.List;
 
-import org.hibernate.testing.orm.domain.gambit.EntityWithManyToOneSelfReference;
-import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
-import org.hibernate.testing.orm.junit.ExpectedException;
-
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.query.sqm.AliasCollisionException;
 import org.hibernate.query.sqm.produce.spi.ImplicitAliasGenerator;
-import org.hibernate.query.sqm.tree.SqmQuerySpec;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.InSubQuerySqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
+import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 
+import org.hibernate.testing.orm.domain.gambit.EntityWithManyToOneSelfReference;
+import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
+import org.hibernate.testing.orm.junit.ExpectedException;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -99,21 +98,21 @@ public class AliasCollisionTest extends BaseSqmUnitTest {
 		assertThat( selections, hasSize( 1 ) );
 		assertTrue( ImplicitAliasGenerator.isImplicitAlias( selections.get( 0 ).getAlias() ) );
 
-		final List<SqmFromElementSpace> spaces = querySpec.getFromClause().getFromElementSpaces();
-		assertThat( spaces, hasSize( 1 ) );
-		assertThat( spaces.get( 0 ).getJoins(), isEmpty() );
-		assertThat( spaces.get( 0 ).getRoot().getIdentificationVariable(), is( "a" ) );
+		final List<SqmRoot> roots = querySpec.getFromClause().getRoots();
+		assertThat( roots, hasSize( 1 ) );
+		assertThat( roots.get( 0 ).getJoins(), isEmpty() );
+		assertThat( roots.get( 0 ).getIdentificationVariable(), is( "a" ) );
 
 		assertThat( querySpec.getWhereClause().getPredicate(), instanceOf( InSubQuerySqmPredicate.class ) );
 		final InSubQuerySqmPredicate predicate = (InSubQuerySqmPredicate) querySpec.getWhereClause().getPredicate();
 
-		final SqmFromElementSpace subQuerySpace = predicate.getSubQueryExpression()
+		final SqmRoot subQueryRoot = predicate.getSubQueryExpression()
 				.getQuerySpec()
 				.getFromClause()
-				.getFromElementSpaces()
+				.getRoots()
 				.get( 0 );
 
-		assertThat( subQuerySpace.getRoot().getIdentificationVariable(), is( "a" ) );
+		assertThat( subQueryRoot.getIdentificationVariable(), is( "a" ) );
 	}
 
 	@Test
@@ -128,10 +127,10 @@ public class AliasCollisionTest extends BaseSqmUnitTest {
 		assertThat( selections, hasSize( 1 ) );
 		assertTrue( ImplicitAliasGenerator.isImplicitAlias( selections.get( 0 ).getAlias() ) );
 
-		final List<SqmFromElementSpace> spaces = querySpec.getFromClause().getFromElementSpaces();
-		assertThat( spaces, hasSize( 1 ) );
-		assertThat( spaces.get( 0 ).getJoins(), isEmpty() );
-		assertThat( spaces.get( 0 ).getRoot().getIdentificationVariable(), is( "a" ) );
+		final List<SqmRoot> roots = querySpec.getFromClause().getRoots();
+		assertThat( roots, hasSize( 1 ) );
+		assertThat( roots.get( 0 ).getJoins(), isEmpty() );
+		assertThat( roots.get( 0 ).getIdentificationVariable(), is( "a" ) );
 
 		assertThat( querySpec.getWhereClause().getPredicate(), instanceOf( InSubQuerySqmPredicate.class ) );
 		final InSubQuerySqmPredicate predicate = (InSubQuerySqmPredicate) querySpec.getWhereClause().getPredicate();
@@ -139,19 +138,19 @@ public class AliasCollisionTest extends BaseSqmUnitTest {
 		final SqmQuerySpec subQuerySpec = predicate.getSubQueryExpression().getQuerySpec();
 
 		assertThat(
-				subQuerySpec.getFromClause().getFromElementSpaces().get( 0 ).getRoot().getIdentificationVariable(),
+				subQuerySpec.getFromClause().getRoots().get( 0 ).getIdentificationVariable(),
 				is( "b" )
 		);
 
 		final SqmComparisonPredicate correlation = (SqmComparisonPredicate) subQuerySpec.getWhereClause().getPredicate();
 		final SqmNavigableReference leftHandExpression = (SqmNavigableReference) correlation.getLeftHandExpression();
 		assertThat(
-				leftHandExpression.getSourceReference().getIdentificationVariable(),
+				leftHandExpression.getSourceReference().getExplicitAlias(),
 				is( "a" )
 		);
 		final SqmNavigableReference rightHandExpression = (SqmNavigableReference) correlation.getRightHandExpression();
 		assertThat(
-				rightHandExpression.getSourceReference().getIdentificationVariable(),
+				rightHandExpression.getSourceReference().getExplicitAlias(),
 				is( "b" )
 		);
 	}

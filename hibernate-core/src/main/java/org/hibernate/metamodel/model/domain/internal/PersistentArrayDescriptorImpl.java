@@ -21,10 +21,10 @@ import org.hibernate.metamodel.model.domain.spi.AbstractPersistentCollectionDesc
 import org.hibernate.metamodel.model.domain.spi.AbstractPluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.internal.domain.collection.ArrayInitializerProducer;
 import org.hibernate.sql.results.internal.domain.collection.CollectionInitializerProducer;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
+import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.FetchParent;
 
@@ -71,27 +71,35 @@ public class PersistentArrayDescriptorImpl<O,E> extends AbstractPersistentCollec
 
 	@Override
 	protected CollectionInitializerProducer createInitializerProducer(
+			NavigablePath navigablePath,
 			FetchParent fetchParent,
 			boolean selected,
 			String resultVariable,
 			LockMode lockMode,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
-		final NavigableReference navigableReference = creationState.getNavigableReferenceStack().getCurrent();
+			DomainResultCreationState creationState) {
+		// todo (6.0) : an array can never be lazy
+		//  	- do we force the TableGroup creation here?  or rely on it being done "upstream"?
+
+		final NavigablePath indexNavigablePath = navigablePath.append( getIndexDescriptor().getNavigableName() );
+		final DomainResult indexDomainResult = getIndexDescriptor().createDomainResult(
+				indexNavigablePath,
+				null,
+				creationState
+		);
+
+		final NavigablePath elementNavigablePath = navigablePath.append( getElementDescriptor().getNavigableName() );
+		final DomainResult elementDomainResult = getElementDescriptor().createDomainResult(
+				elementNavigablePath,
+				null,
+				creationState
+		);
 
 		return new ArrayInitializerProducer(
 				this,
 				selected,
-				getIndexDescriptor().createDomainResult(
-						navigableReference,
-						null,
-						creationState, creationContext
-				),
-				getElementDescriptor().createDomainResult(
-						navigableReference,
-						null,
-						creationState, creationContext
-				)
+				indexDomainResult,
+
+				elementDomainResult
 		);
 	}
 

@@ -16,18 +16,13 @@ import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.EmptyStack;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
-import org.hibernate.loader.spi.AfterLoadAction;
-import org.hibernate.metamodel.model.domain.spi.BasicValuedNavigable;
-import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.relational.spi.Column;
@@ -41,33 +36,24 @@ import org.hibernate.sql.ast.produce.internal.SqlAstSelectDescriptorImpl;
 import org.hibernate.sql.ast.produce.internal.StandardSqlExpressionResolver;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
-import org.hibernate.sql.ast.produce.spi.NavigablePathStack;
-import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupProducer;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.produce.spi.SqlAstProducerContext;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.produce.spi.SqlAstSelectDescriptor;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.spi.SqlQueryOptions;
-import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.spi.expression.domain.BasicValuedNavigableReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.EmbeddableValuedNavigableReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.EntityValuedNavigableReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
-import org.hibernate.sql.ast.tree.spi.predicate.InListPredicate;
-import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.spi.predicate.InListPredicate;
 import org.hibernate.sql.exec.internal.StandardJdbcParameterImpl;
 import org.hibernate.sql.results.spi.CircularFetchDetector;
 import org.hibernate.sql.results.spi.DomainResult;
@@ -81,7 +67,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class MetamodelSelectBuilderProcess
-		implements SqlAstProducerContext, SqlAstCreationContext, SqlQueryOptions, DomainResultCreationState {
+		implements SqlAstCreationState, DomainResultCreationState, SqlQueryOptions {
 
 	private static final Logger log = Logger.getLogger( MetamodelSelectBuilderProcess.class );
 
@@ -109,7 +95,7 @@ public class MetamodelSelectBuilderProcess
 		return process.execute();
 	}
 
-	private final SessionFactoryImplementor sessionFactory;
+	private final SqlAstCreationContext creationContext;
 	private final NavigableContainer rootNavigableContainer;
 	private final List<Navigable<?>> navigablesToSelect;
 	private final Navigable restrictedNavigable;
@@ -120,9 +106,9 @@ public class MetamodelSelectBuilderProcess
 
 
 	private final Stack<TableSpace> tableSpaceStack = new StandardStack<>();
-	private final Stack<TableGroup> tableGroupStack = new StandardStack<>();
-	private final NavigablePathStack navigablePathStack = new NavigablePathStack();
-	private final Stack<NavigableReference> navigableReferenceStack = new StandardStack<>();
+//	private final Stack<TableGroup> tableGroupStack = new StandardStack<>();
+//	private final NavigablePathStack navigablePathStack = new NavigablePathStack();
+//	private final Stack<NavigableReference> navigableReferenceStack = new StandardStack<>();
 
 	private final Set<String> affectedTables = new HashSet<>();
 
@@ -132,10 +118,12 @@ public class MetamodelSelectBuilderProcess
 
 	private final StandardSqlExpressionResolver sqlExpressionResolver;
 
-	private final Stack<ColumnReferenceQualifier> columnReferenceQualifierStack = new StandardStack<>();
+	private final DomainResultCreationState.FromClauseAccess fromClauseAccess = new DomainResultCreationState.SimpleFromClauseAccessImpl();
+
+//	private final Stack<ColumnReferenceQualifier> columnReferenceQualifierStack = new StandardStack<>();
 
 	private MetamodelSelectBuilderProcess(
-			SessionFactoryImplementor sessionFactory,
+			SqlAstCreationContext creationContext,
 			NavigableContainer rootNavigableContainer,
 			List<Navigable<?>> navigablesToSelect,
 			Navigable restrictedNavigable,
@@ -143,7 +131,7 @@ public class MetamodelSelectBuilderProcess
 			int numberOfKeysToLoad,
 			LoadQueryInfluencers loadQueryInfluencers,
 			LockOptions lockOptions) {
-		this.sessionFactory = sessionFactory;
+		this.creationContext = creationContext;
 		this.rootNavigableContainer = rootNavigableContainer;
 		this.navigablesToSelect = navigablesToSelect;
 		this.restrictedNavigable = restrictedNavigable;
@@ -159,8 +147,15 @@ public class MetamodelSelectBuilderProcess
 		);
 	}
 
+	@Override
+	public SqlAstCreationContext getCreationContext() {
+		return creationContext;
+	}
+
 	private SqlAstSelectDescriptor execute() {
-		navigablePathStack.push( rootNavigableContainer );
+//		navigablePathStack.push( rootNavigableContainer );
+
+		final NavigablePath rootNavigablePath = new NavigablePath( rootNavigableContainer.getNavigableName() );
 
 		final SelectStatement selectStatement = new SelectStatement( rootQuerySpec );
 
@@ -170,24 +165,36 @@ public class MetamodelSelectBuilderProcess
 		final TableSpace rootTableSpace = rootQuerySpec.getFromClause().makeTableSpace();
 		tableSpaceStack.push( rootTableSpace );
 
-		final TableGroup rootTableGroup = makeRootTableGroup( uid, rootQuerySpec, rootTableSpace, getSqlAliasBaseGenerator() );
-		rootTableSpace.setRootTableGroup( rootTableGroup );
-		tableGroupStack.push( rootTableGroup );
 
-		columnReferenceQualifierStack.push( rootTableGroup );
-		navigableReferenceStack.push( rootTableGroup.getNavigableReference() );
+		final RootTableGroupProducer tableGroupProducer = (RootTableGroupProducer) rootNavigableContainer;
+		final TableGroup rootTableGroup = tableGroupProducer.createRootTableGroup(
+				uid,
+				rootNavigablePath,
+				// mimic old behavior
+				"this",
+				JoinType.INNER,
+				lockOptions.getLockMode(),
+				this
+
+		);
+		getFromClauseAccess().registerTableGroup( rootNavigablePath, rootTableGroup );
+		rootTableSpace.setRootTableGroup( rootTableGroup );
+
+//		tableGroupStack.push( rootTableGroup );
+//		columnReferenceQualifierStack.push( rootTableGroup );
+//		navigableReferenceStack.push( rootTableGroup.getNavigableReference() );
 
 		final List<DomainResult> domainResults;
 
 		if ( navigablesToSelect != null && ! navigablesToSelect.isEmpty() ) {
 			domainResults = new ArrayList<>();
 			for ( Navigable navigable : navigablesToSelect ) {
-				final NavigableReference navigableReference = makeNavigableReference( rootTableGroup, navigable );
+				final NavigablePath navigablePath = rootNavigablePath.append( navigable.getNavigableName() );
 				domainResults.add(
 						navigable.createDomainResult(
-								navigableReference,
+								navigablePath,
 								null,
-								this, this
+								this
 						)
 				);
 			}
@@ -203,11 +210,9 @@ public class MetamodelSelectBuilderProcess
 			}
 			else {
 				// create one
-				final NavigableReference rootNavigableReference = rootTableGroup.getNavigableReference();
 				domainResult = rootNavigableContainer.createDomainResult(
-						rootNavigableReference,
+						rootNavigablePath,
 						null,
-						this,
 						this
 				);
 			}
@@ -234,13 +239,13 @@ public class MetamodelSelectBuilderProcess
 										keyParameterReferences.size(),
 										type,
 										Clause.WHERE,
-										getSessionFactory().getTypeConfiguration()
+										getCreationContext().getDomainModel().getTypeConfiguration()
 								)
 						);
 					}
 				},
 				Clause.WHERE,
-				getSessionFactory().getTypeConfiguration()
+				getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 
 		final Expression keyColumnExpression;
@@ -280,102 +285,6 @@ public class MetamodelSelectBuilderProcess
 		);
 	}
 
-	public static NavigableReference makeNavigableReference(TableGroup rootTableGroup, Navigable navigable) {
-		if ( navigable instanceof BasicValuedNavigable ) {
-			return new BasicValuedNavigableReference(
-					(NavigableContainerReference) rootTableGroup.getNavigableReference(),
-					(BasicValuedNavigable) navigable,
-					rootTableGroup.getNavigableReference().getNavigablePath().append( navigable.getNavigableName() )
-			);
-		}
-
-		if ( navigable instanceof EmbeddedValuedNavigable ) {
-			// todo (6.0) : join?
-			return new EmbeddableValuedNavigableReference(
-					(NavigableContainerReference) rootTableGroup.getNavigableReference(),
-					(EmbeddedValuedNavigable) navigable,
-					rootTableGroup.getNavigableReference().getNavigablePath().append( navigable.getNavigableName() ),
-					LockMode.NONE
-			);
-		}
-
-		if ( navigable instanceof EntityValuedNavigable ) {
-			// todo (6.0) : join?
-			return new EntityValuedNavigableReference(
-					(NavigableContainerReference) rootTableGroup.getNavigableReference(),
-					(EntityValuedNavigable) navigable,
-					rootTableGroup.getNavigableReference().getNavigablePath().append( navigable.getNavigableName() ),
-					rootTableGroup,
-					LockMode.NONE
-			);
-		}
-
-		throw new NotYetImplementedFor6Exception();
-	}
-
-	private TableGroup makeRootTableGroup(
-			String uid,
-			QuerySpec querySpec,
-			TableSpace rootTableSpace,
-			SqlAliasBaseGenerator aliasBaseManager) {
-		// todo (6.0) : alias?
-		final NavigablePath path = new NavigablePath( rootNavigableContainer.getNavigableName() );
-		return ( (RootTableGroupProducer) rootNavigableContainer ).createRootTableGroup(
-				new TableGroupInfo() {
-					@Override
-					public String getUniqueIdentifier() {
-						return uid;
-					}
-
-					@Override
-					public String getIdentificationVariable() {
-						return "this";
-					}
-
-					@Override
-					public EntityTypeDescriptor getIntrinsicSubclassEntityMetadata() {
-						return null;
-					}
-
-					@Override
-					public NavigablePath getNavigablePath() {
-						return path;
-					}
-				},
-				new RootTableGroupContext() {
-					@Override
-					public void addRestriction(Predicate predicate) {
-						querySpec.addRestriction( predicate );
-					}
-
-					@Override
-					public QuerySpec getQuerySpec() {
-						return querySpec;
-					}
-
-					@Override
-					public TableSpace getTableSpace() {
-						return rootTableSpace;
-					}
-
-					@Override
-					public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
-						return aliasBaseManager;
-					}
-
-					@Override
-					public JoinType getTableReferenceJoinType() {
-						return JoinType.INNER;
-					}
-
-					@Override
-					public LockOptions getLockOptions() {
-						return lockOptions;
-					}
-				}
-		);
-	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// DomainResultCreationState
@@ -386,17 +295,22 @@ public class MetamodelSelectBuilderProcess
 	 */
 	@Override
 	public Stack<ColumnReferenceQualifier> getColumnReferenceQualifierStack() {
-		return columnReferenceQualifierStack;
+		return EmptyStack.instance();
 	}
 
 	@Override
 	public Stack<NavigableReference> getNavigableReferenceStack() {
-		return navigableReferenceStack;
+		return EmptyStack.instance();
 	}
 
 	@Override
 	public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
 		return sqlAliasBaseManager;
+	}
+
+	@Override
+	public SqlAstCreationState getSqlAstCreationState() {
+		return this;
 	}
 
 	// todo (6.0) : seems like this entire thing can be centralized and used in all SQL AST generation processes to handle fetches
@@ -453,6 +367,11 @@ public class MetamodelSelectBuilderProcess
 		return fetches;
 	}
 
+	@Override
+	public FromClauseAccess getFromClauseAccess() {
+		return fromClauseAccess;
+	}
+
 	private Consumer<Fetchable> getFetchableConsumer(FetchParent fetchParent, List<Fetch> fetches) {
 		return fetchable -> {
 
@@ -478,7 +397,7 @@ public class MetamodelSelectBuilderProcess
 			FetchTiming fetchTiming = fetchable.getMappedFetchStrategy().getTiming();
 			boolean joined = fetchable.getMappedFetchStrategy().getStyle() == FetchStyle.JOIN;
 
-			final Integer maximumFetchDepth = getSessionFactory().getSessionFactoryOptions().getMaximumFetchDepth();
+			final Integer maximumFetchDepth = getCreationContext().getMaximumFetchDepth();
 			// minus one because the root is not a fetch
 			final int fetchDepth = getNavigableReferenceStack().depth() - 1;
 
@@ -491,7 +410,7 @@ public class MetamodelSelectBuilderProcess
 				}
 			}
 
-			Fetch fetch = fetchable.generateFetch( fetchParent, fetchTiming, joined, lockMode, null, this, this );
+			Fetch fetch = fetchable.generateFetch( fetchParent, fetchTiming, joined, lockMode, null, this );
 			fetches.add( fetch );
 		};
 	}
@@ -506,47 +425,6 @@ public class MetamodelSelectBuilderProcess
 		return identificationVariable == null
 				? getLockOptions().getLockMode()
 				: getLockOptions().getEffectiveLockMode( identificationVariable );
-	}
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// SqlAstBuildingContext
-
-	private List<AfterLoadAction> afterLoadActions;
-
-	private final Callback sqlAstCreationCallback = new Callback() {
-		@Override
-		public void registerAfterLoadAction(AfterLoadAction afterLoadAction) {
-			if ( afterLoadActions == null ) {
-				afterLoadActions = new ArrayList<>();
-			}
-			afterLoadActions.add( afterLoadAction );
-		}
-	};
-
-	@Override
-	public Callback getCallback() {
-		return sqlAstCreationCallback;
-	}
-
-	@Override
-	public SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory;
-	}
-
-	@Override
-	public LoadQueryInfluencers getLoadQueryInfluencers() {
-		return loadQueryInfluencers;
-	}
-
-	@Override
-	public SqlExpressionResolver getSqlSelectionResolver() {
-		return sqlExpressionResolver;
-	}
-
-	@Override
-	public boolean shouldCreateShallowEntityResult() {
-		return false;
 	}
 
 

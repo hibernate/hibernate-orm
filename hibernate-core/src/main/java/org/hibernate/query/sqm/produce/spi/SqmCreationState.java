@@ -8,10 +8,12 @@ package org.hibernate.query.sqm.produce.spi;
 
 import org.hibernate.Incubating;
 import org.hibernate.annotations.Remove;
+import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.query.sqm.produce.SqmQuerySpecCreationProcessingState;
+import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 
 /**
@@ -31,6 +33,7 @@ public interface SqmCreationState {
 	 */
 	SqmCreationOptions getCreationOptions();
 
+	Stack<SqmCreationProcessingState> getProcessingStateStack();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -58,28 +61,7 @@ public interface SqmCreationState {
 	 */
 	@Remove
 	@Deprecated
-	QuerySpecProcessingState getCurrentQuerySpecProcessingState();
-
-	/**
-	 * @deprecated we want to re-think in terms of how SQM creation happens
-	 */
-	@Remove
-	@Deprecated
-	SqmFromElementSpace getCurrentFromElementSpace();
-
-	/**
-	 * @deprecated we want to re-think in terms of how SQM creation happens
-	 */
-	@Remove
-	@Deprecated
-	SqmFromBuilder getCurrentFromElementBuilder();
-
-	/**
-	 * @deprecated we want to re-think in terms of how SQM creation happens
-	 */
-	@Remove
-	@Deprecated
-	CurrentSqmFromElementSpaceCoordAccess getCurrentSqmFromElementSpaceCoordAccess();
+	SqmQuerySpecCreationProcessingState getCurrentQuerySpecProcessingState();
 
 	/**
 	 * @deprecated we want to re-think in terms of how SQM creation happens

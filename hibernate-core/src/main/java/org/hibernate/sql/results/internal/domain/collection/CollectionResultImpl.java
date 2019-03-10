@@ -11,7 +11,6 @@ import java.util.function.Consumer;
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.CollectionInitializer;
 import org.hibernate.sql.results.spi.DomainResult;
@@ -56,17 +55,15 @@ public class CollectionResultImpl
 	@Override
 	public DomainResultAssembler createResultAssembler(
 			Consumer<Initializer> initializerCollector,
-			AssemblerCreationState creationOptions,
-			AssemblerCreationContext creationContext) {
+			AssemblerCreationState creationState) {
 		final CollectionInitializer initializer = initializerProducer.produceInitializer(
 				null,
 				navigablePath,
 				getLockMode(),
-				getKeyContainerResult().createResultAssembler( initializerCollector, creationOptions, creationContext ),
+				getKeyContainerResult().createResultAssembler( initializerCollector, creationState ),
 				null,
 				initializerCollector,
-				creationOptions,
-				creationContext
+				creationState
 		);
 
 		initializerCollector.accept( initializer );

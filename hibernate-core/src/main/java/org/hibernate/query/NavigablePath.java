@@ -28,6 +28,8 @@ public class NavigablePath implements DotIdentifierSequence, Loggable {
 	private final String localName;
 	private final String fullPath;
 
+	private final int hashCode;
+
 	public NavigablePath(NavigablePath parent, String navigableName) {
 		this.parent = parent;
 		this.localName = navigableName;
@@ -55,6 +57,8 @@ public class NavigablePath implements DotIdentifierSequence, Loggable {
 
 			this.fullPath = prefix + navigableName;
 		}
+
+		this.hashCode = fullPath.hashCode();
 	}
 
 	public NavigablePath(String localName) {
@@ -88,7 +92,7 @@ public class NavigablePath implements DotIdentifierSequence, Loggable {
 
 	@Override
 	public int hashCode() {
-		return fullPath.hashCode();
+		return hashCode;
 	}
 
 	@Override
@@ -99,7 +103,8 @@ public class NavigablePath implements DotIdentifierSequence, Loggable {
 		if ( o == null || getClass() != o.getClass() ) {
 			return false;
 		}
-		NavigablePath path = (NavigablePath) o;
-		return Objects.equals( getFullPath(), path.getFullPath() );
+
+		final NavigablePath other = (NavigablePath) o;
+		return Objects.equals( getFullPath(), other.getFullPath() );
 	}
 }

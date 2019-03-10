@@ -40,15 +40,14 @@ public class EntityUniqueKey implements EntityKeyCommon, Serializable {
 			final Object semiResolvedKey,
 			final JavaTypeDescriptor identifierJavaTypeDescriptor,
 			final JavaTypeDescriptor ukJavaTypeDescriptor,
-			final RepresentationMode representationMode,
-			final SessionFactoryImplementor factory) {
+			final RepresentationMode representationMode) {
 		this.uniqueKeyName = uniqueKeyName;
 		this.entityName = entityName;
 		this.key = semiResolvedKey;
 		this.identifierJavaTypeDescriptor = identifierJavaTypeDescriptor;
 		this.ukJavaTypeDescriptor = ukJavaTypeDescriptor;
 		this.representationMode = representationMode;
-		this.hashCode = generateHashCode( factory );
+		this.hashCode = generateHashCode();
 	}
 
 	public String getEntityName() {
@@ -74,7 +73,7 @@ public class EntityUniqueKey implements EntityKeyCommon, Serializable {
 	}
 
 	@SuppressWarnings("unchecked")
-	private int generateHashCode(SessionFactoryImplementor factory) {
+	private int generateHashCode() {
 		int result = 17;
 		result = 37 * result + entityName.hashCode();
 		result = 37 * result + uniqueKeyName.hashCode();
@@ -157,8 +156,7 @@ public class EntityUniqueKey implements EntityKeyCommon, Serializable {
 				ois.readObject(),
 				(JavaTypeDescriptor) ois.readObject(),
 				(JavaTypeDescriptor) ois.readObject(),
-				(RepresentationMode) ois.readObject(),
-				session.getFactory()
+				(RepresentationMode) ois.readObject()
 		);
 	}
 }

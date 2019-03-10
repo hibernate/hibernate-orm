@@ -9,15 +9,12 @@ package org.hibernate.query.sqm.internal;
 import java.util.Collections;
 import java.util.Set;
 
-import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.sql.ast.consume.spi.SqlDeleteToJdbcDeleteConverter;
 import org.hibernate.sql.ast.produce.spi.SqlAstDeleteDescriptor;
-import org.hibernate.sql.ast.produce.spi.SqlAstProducerContext;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmDeleteToSqlAstConverterSimple;
 import org.hibernate.sql.ast.tree.spi.DeleteStatement;
@@ -46,23 +43,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 		final DeleteStatement deleteStatement = SqmDeleteToSqlAstConverterSimple.interpret(
 				sqmStatement,
 				queryOptions,
-				new SqlAstProducerContext() {
-					@Override
-					public SessionFactoryImplementor getSessionFactory() {
-						return session.getFactory();
-					}
-
-					@Override
-					public LoadQueryInfluencers getLoadQueryInfluencers() {
-						return session.getLoadQueryInfluencers();
-					}
-
-					@Override
-					public Callback getCallback() {
-						return afterLoadAction -> {
-						};
-					}
-				}
+				session
 		);
 
 

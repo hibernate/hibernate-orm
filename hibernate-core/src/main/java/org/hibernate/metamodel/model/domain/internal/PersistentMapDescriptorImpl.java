@@ -23,11 +23,11 @@ import org.hibernate.metamodel.model.domain.spi.AbstractPersistentCollectionDesc
 import org.hibernate.metamodel.model.domain.spi.AbstractPluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.internal.domain.collection.CollectionInitializerProducer;
 import org.hibernate.sql.results.internal.domain.collection.MapInitializerProducer;
 import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.FetchParent;
 
@@ -71,25 +71,24 @@ public class PersistentMapDescriptorImpl<O,K,E>
 
 	@Override
 	protected CollectionInitializerProducer createInitializerProducer(
+			NavigablePath navigablePath,
 			FetchParent fetchParent,
 			boolean selected,
 			String resultVariable,
 			LockMode lockMode,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
+			DomainResultCreationState creationState) {
 		final NavigableReference navigableReference = creationState.getNavigableReferenceStack().getCurrent();
 
 		final DomainResult mapKeyResult = getIndexDescriptor().createDomainResult(
-				navigableReference,
+				navigablePath,
 				null,
-				creationState,
-				creationContext
+				creationState
 		);
 
 		final DomainResult mapValueResult = getElementDescriptor().createDomainResult(
-				navigableReference,
+				navigablePath,
 				resultVariable,
-				creationState, creationContext
+				creationState
 		);
 
 		return new MapInitializerProducer(

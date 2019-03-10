@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression.instantiation;
 
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 
@@ -27,11 +26,9 @@ public class DynamicInstantiationArgument {
 		return alias;
 	}
 
-	public ArgumentDomainResult buildArgumentDomainResult(
-			DomainResultCreationContext creationContext,
-			DomainResultCreationState creationState) {
+	public ArgumentDomainResult buildArgumentDomainResult(DomainResultCreationState creationState) {
 		return new ArgumentDomainResult(
-				argumentResultProducer.createDomainResult( alias, creationState, creationContext )
+				argumentResultProducer.createDomainResult( alias, creationState )
 		);
 	}
 }

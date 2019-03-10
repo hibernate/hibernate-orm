@@ -72,6 +72,5 @@ public interface Fetch extends ResultSetMappingNode {
 	DomainResultAssembler createAssembler(
 			FetchParentAccess parentAccess,
 			Consumer<Initializer> collector,
-			AssemblerCreationContext creationContext,
 			AssemblerCreationState creationState);
 }

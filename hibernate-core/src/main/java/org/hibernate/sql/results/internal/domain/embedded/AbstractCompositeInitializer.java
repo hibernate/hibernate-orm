@@ -10,14 +10,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.StateArrayContributor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.internal.NullValueAssembler;
-import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.sql.results.spi.AbstractFetchParentAccess;
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.CompositeInitializer;
 import org.hibernate.sql.results.spi.CompositeMappingNode;
@@ -46,7 +45,6 @@ public abstract class AbstractCompositeInitializer extends AbstractFetchParentAc
 			CompositeMappingNode resultDescriptor,
 			FetchParentAccess fetchParentAccess,
 			Consumer<Initializer> initializerConsumer,
-			AssemblerCreationContext context,
 			AssemblerCreationState creationState) {
 		this.embeddedTypeDescriptor = resultDescriptor.getCompositeNavigableDescriptor().getEmbeddedDescriptor();
 		this.fetchParentAccess = fetchParentAccess;
@@ -58,7 +56,7 @@ public abstract class AbstractCompositeInitializer extends AbstractFetchParentAc
 
 					final DomainResultAssembler stateAssembler = fetch == null
 							? new NullValueAssembler( stateArrayContributor.getJavaTypeDescriptor() )
-							: fetch.createAssembler( this, initializerConsumer, context, creationState );
+							: fetch.createAssembler( this, initializerConsumer, creationState );
 
 					assemblerMap.put( stateArrayContributor, stateAssembler );
 				}

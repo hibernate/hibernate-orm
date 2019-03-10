@@ -12,7 +12,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
@@ -24,9 +23,8 @@ import org.hibernate.query.sql.internal.ResolvedScalarDomainResult;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -65,7 +63,7 @@ public class CollectionKey<T> implements Navigable<T> {
 
 	public Navigable getForeignKeyTargetNavigable() {
 		if ( foreignKeyTargetNavigable == null ) {
-			createForeignKeyTargteNavigable();
+			createForeignKeyTargetNavigable();
 		}
 		return foreignKeyTargetNavigable;
 	}
@@ -75,37 +73,17 @@ public class CollectionKey<T> implements Navigable<T> {
 	 */
 	public DomainResult createContainerResult(
 			ColumnReferenceQualifier containerReferenceQualifier,
-			SqlExpressionResolver sqlExpressionResolver) {
-		return createDomainResult(
-				joinForeignKey.getColumnMappings().getTargetColumns(),
-				containerReferenceQualifier,
-				sqlExpressionResolver
-		);
-	}
-
-	/**
-	 * Create a DomainResult for reading the owner/container side of the collection's FK
-	 */
-	public DomainResult createContainerResult(
-			ColumnReferenceQualifier containerReferenceQualifier,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
-
-		// todo (6.0) previous instead of current?
-		//		in conjunction with comment above about which columns...  which qualifier to use
-		//		may be as simple as this.
+			DomainResultCreationState creationState) {
 
 		return createDomainResult(
 				joinForeignKey.getColumnMappings().getTargetColumns(),
 				containerReferenceQualifier,
-				creationState.getSqlExpressionResolver(),
-				creationState,
-				creationContext
+				creationState
 		);
 	}
 
 
-	void createForeignKeyTargteNavigable() {
+	void createForeignKeyTargetNavigable() {
 		if ( isEmpty( collectionDescriptor.getMappedByProperty() ) ) {
 			foreignKeyTargetNavigable = collectionDescriptor.findEntityOwnerDescriptor().getIdentifierDescriptor();
 		}
@@ -118,14 +96,13 @@ public class CollectionKey<T> implements Navigable<T> {
 	private DomainResult createDomainResult(
 			List<Column> columns,
 			ColumnReferenceQualifier referenceQualifier,
-			SqlExpressionResolver sqlExpressionResolver) {
+			DomainResultCreationState creationState) {
 		if ( columns.size() == 1 ) {
 			return new ResolvedScalarDomainResult(
 					resolveSqlSelection(
 							referenceQualifier,
-							sqlExpressionResolver,
 							columns.get( 0 ),
-							collectionDescriptor.getSessionFactory()
+							creationState.getSqlAstCreationState()
 					),
 					null,
 					columns.get( 0 ).getJavaTypeDescriptor()
@@ -138,9 +115,8 @@ public class CollectionKey<T> implements Navigable<T> {
 				sqlSelections.add(
 						resolveSqlSelection(
 								referenceQualifier,
-								sqlExpressionResolver,
 								column,
-								collectionDescriptor.getSessionFactory()
+								creationState.getSqlAstCreationState()
 						)
 				);
 			}
@@ -154,66 +130,26 @@ public class CollectionKey<T> implements Navigable<T> {
 
 	private SqlSelection resolveSqlSelection(
 			ColumnReferenceQualifier referenceQualifier,
-			SqlExpressionResolver sqlExpressionResolver, Column column, SessionFactoryImplementor sessionFactory) {
-		return sqlExpressionResolver.resolveSqlSelection(
-				sqlExpressionResolver.resolveSqlExpression( referenceQualifier, column ),
+			Column column,
+			SqlAstCreationState creationState) {
+		return creationState.getSqlExpressionResolver().resolveSqlSelection(
+				creationState.getSqlExpressionResolver().resolveSqlExpression( referenceQualifier, column ),
 				column.getJavaTypeDescriptor(),
-				sessionFactory.getTypeConfiguration()
+				creationState.getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 	}
 
-	private DomainResult createDomainResult(
-			List<Column> keyColumns,
-			ColumnReferenceQualifier referenceQualifier,
-			SqlExpressionResolver expressionResolver,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
-		if ( keyColumns.size() == 1 ) {
-			return new ResolvedScalarDomainResult(
-					resolveSqlSelection(
-							referenceQualifier,
-							expressionResolver,
-							keyColumns.get( 0 ),
-							creationContext.getSessionFactory()
-					),
-					null,
-					keyColumns.get( 0 ).getJavaTypeDescriptor()
-			);
-		}
-		else {
-			final List<SqlSelection> sqlSelections = new ArrayList<>();
-
-			for ( Column column : keyColumns ) {
-				sqlSelections.add(
-						resolveSqlSelection(
-								creationState.getColumnReferenceQualifierStack().getCurrent(),
-								expressionResolver,
-								column,
-								creationContext.getSessionFactory()
-						)
-				);
-			}
-
-			return new ForeignKeyDomainResult(
-					getJavaTypeDescriptor(),
-					sqlSelections
-			);
-		}
-	}
 
 	/**
 	 * Create a DomainResult for reading the collection (elements) side of the collection's FK
 	 */
 	public DomainResult createCollectionResult(
 			ColumnReferenceQualifier referenceQualifier,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
+			DomainResultCreationState creationState) {
 		return createDomainResult(
 				joinForeignKey.getColumnMappings().getReferringColumns(),
 				referenceQualifier,
-				creationState.getSqlExpressionResolver(),
-				creationState,
-				creationContext
+				creationState
 		);
 	}
 

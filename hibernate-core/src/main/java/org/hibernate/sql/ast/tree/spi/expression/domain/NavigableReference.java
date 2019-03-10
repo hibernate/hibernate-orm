@@ -11,7 +11,6 @@ import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 
@@ -59,15 +58,14 @@ public interface NavigableReference extends DomainResultProducer, Loggable {
 	@Override
 	default DomainResult createDomainResult(
 			String resultVariable,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
+			DomainResultCreationState creationState) {
 		creationState.getColumnReferenceQualifierStack().push( getColumnReferenceQualifier() );
 		creationState.getNavigableReferenceStack().push( this );
 		try {
 			return getNavigable().createDomainResult(
-					this,
+					getNavigablePath(),
 					resultVariable,
-					creationState, creationContext
+					creationState
 			);
 		}
 		finally {

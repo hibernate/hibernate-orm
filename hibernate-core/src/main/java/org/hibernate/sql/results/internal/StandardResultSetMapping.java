@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
@@ -46,15 +45,13 @@ public class StandardResultSetMapping implements ResultSetMapping {
 	@Override
 	public List<DomainResultAssembler> resolveAssemblers(
 			Consumer<Initializer> initializerConsumer,
-			AssemblerCreationState creationState,
-			AssemblerCreationContext creationContext) {
+			AssemblerCreationState creationState) {
 		final List<DomainResultAssembler> assemblers = CollectionHelper.arrayList( domainResults.size() );
 
 		for ( DomainResult domainResult : domainResults ) {
 			final DomainResultAssembler resultAssembler = domainResult.createResultAssembler(
 					initializerConsumer,
-					creationState,
-					creationContext
+					creationState
 			);
 
 			assemblers.add( resultAssembler );

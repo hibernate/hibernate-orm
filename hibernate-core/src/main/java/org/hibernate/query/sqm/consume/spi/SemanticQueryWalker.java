@@ -8,18 +8,19 @@ package org.hibernate.query.sqm.consume.spi;
 
 import java.lang.reflect.Field;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.criteria.sqm.JpaParameterSqmWrapper;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
-import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
-import org.hibernate.query.sqm.tree.SqmQuerySpec;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
-import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.SqmConcat;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
@@ -71,12 +72,9 @@ import org.hibernate.query.sqm.tree.expression.function.SqmUpperFunction;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
-import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
-import org.hibernate.query.sqm.tree.order.SqmOrderByClause;
-import org.hibernate.query.sqm.tree.order.SqmSortSpecification;
-import org.hibernate.query.sqm.tree.paging.SqmLimitOffsetClause;
+import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.predicate.AndSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.BetweenSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.BooleanExpressionSqmPredicate;
@@ -92,10 +90,17 @@ import org.hibernate.query.sqm.tree.predicate.OrSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
+import org.hibernate.query.sqm.tree.select.SqmGroupByClause;
+import org.hibernate.query.sqm.tree.select.SqmHavingClause;
+import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
+import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
+import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
+import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.produce.ordering.internal.SqmColumnReference;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
 
@@ -103,8 +108,6 @@ import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
  * @author Steve Ebersole
  */
 public interface SemanticQueryWalker<T> {
-	SessionFactoryImplementor getSessionFactory();
-
 	T visitUpdateStatement(SqmUpdateStatement statement);
 
 	T visitSetClause(SqmSetClause setClause);
@@ -121,11 +124,9 @@ public interface SemanticQueryWalker<T> {
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// from-clause
+	// from-clause / domain paths
 
 	T visitFromClause(SqmFromClause fromClause);
-
-	T visitFromElementSpace(SqmFromElementSpace fromElementSpace);
 
 	T visitRootEntityFromElement(SqmRoot rootEntityFromElement);
 
@@ -138,12 +139,29 @@ public interface SemanticQueryWalker<T> {
 	T visitQualifiedAttributeJoinFromElement(SqmNavigableJoin joinedFromElement);
 
 
+	T visitBasicValuedPath(SqmBasicValuedSimplePath path);
+
+	T visitEmbeddableValuedPath(SqmEmbeddedValuedSimplePath path);
+
+	T visitEntityValuedPath(SqmEntityValuedSimplePath path);
+
+	T visitPluralValuedPath(SqmPluralValuedSimplePath path);
+
+
+
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// selections
 
 	T visitSelectClause(SqmSelectClause selectClause);
 
 	T visitSelection(SqmSelection selection);
+
+	T visitGroupByClause(SqmGroupByClause clause);
+
+	T visitGrouping(SqmGroupByClause.SqmGrouping grouping);
+
+	T visitHavingClause(SqmHavingClause clause);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -166,6 +184,8 @@ public interface SemanticQueryWalker<T> {
 	//			#visit
 
 	T visitPluralAttributeElementBinding(SqmCollectionElementReference binding);
+
+	T visitTreatedPath(SqmTreatedPath sqmTreatedPath);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -289,7 +309,8 @@ public interface SemanticQueryWalker<T> {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// paging
 
-	T visitLimitOffsetClause(SqmLimitOffsetClause limitOffsetClause);
+	T visitOffsetExpression(SqmExpression expression);
+	T visitLimitExpression(SqmExpression expression);
 
 
 

@@ -7,7 +7,11 @@
 package org.hibernate.sql.ast.produce.metamodel.spi;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.type.ForeignKeyDirection;
 
 /**
@@ -15,7 +19,7 @@ import org.hibernate.type.ForeignKeyDirection;
  *
  * @author Steve Ebersole
  */
-public interface Joinable<T> extends Navigable<T> {
+public interface Joinable<T> extends NavigableContainer<T> {
 	// todo (6.0) : #createSqmJoin ?
 
 	default ForeignKeyDirection getForeignKeyDirection() {
@@ -24,5 +28,22 @@ public interface Joinable<T> extends Navigable<T> {
 
 	default boolean isCascadeDeleteEnabled() {
 		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	default SqmNavigableJoin createJoin(
+			SqmFrom lhs,
+			SqmJoinType joinType,
+			String alias,
+			boolean fetched,
+			SqmCreationState creationState) {
+		return new SqmNavigableJoin(
+				creationState.generateUniqueIdentifier(),
+				lhs,
+				this,
+				alias,
+				joinType,
+				fetched,
+				creationState
+		);
 	}
 }

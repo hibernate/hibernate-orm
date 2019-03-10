@@ -11,7 +11,7 @@ import java.util.Comparator;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.QualifiableSqlExpressable;
-import org.hibernate.sql.ast.produce.spi.SqlAstProducerContext;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
@@ -62,7 +62,7 @@ public interface Column extends QualifiableSqlExpressable {
 	@Override
 	default Expression createSqlExpression(
 			ColumnReferenceQualifier qualifier,
-			SqlAstProducerContext creationContext) {
+			SqlAstCreationState creationState) {
 		return new ColumnReference( qualifier, this );
 	}
 

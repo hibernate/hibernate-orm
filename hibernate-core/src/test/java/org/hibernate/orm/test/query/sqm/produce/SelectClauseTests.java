@@ -13,14 +13,7 @@ import org.hibernate.metamodel.model.domain.spi.CollectionIndex.IndexClassificat
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.orm.test.query.sqm.produce.domain.Person;
-import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
-import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
-import org.hibernate.testing.orm.domain.gambit.EntityOfMaps;
-import org.hibernate.testing.orm.domain.gambit.EntityOfSets;
-import org.hibernate.testing.orm.junit.TestingUtil;
-
-import org.hibernate.query.sqm.tree.SqmQuerySpec;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.domain.AbstractSqmCollectionIndexReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReference;
@@ -28,10 +21,16 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMapEntryBinding;
 import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
-import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 
+import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
+import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
+import org.hibernate.testing.orm.domain.gambit.EntityOfMaps;
+import org.hibernate.testing.orm.domain.gambit.EntityOfSets;
+import org.hibernate.testing.orm.junit.TestingUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.endsWith;
@@ -103,21 +102,20 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 		final SqmQuerySpec querySpec = selectStatement.getQuerySpec();
 		final SqmSelection selection = querySpec.getSelectClause().getSelections().get( 0 );
 
-		assertThat( querySpec.getFromClause().getFromElementSpaces().size(), is(1) );
-		final SqmFromElementSpace fromElementSpace = querySpec.getFromClause().getFromElementSpaces().get( 0 );
-		final SqmRoot root = fromElementSpace.getRoot();
-		assertThat( root.getNavigableReference().getReferencedNavigable().getEntityName(), endsWith( "Person" ) );
-		assertThat( fromElementSpace.getJoins().size(), is(0) );
+		assertThat( querySpec.getFromClause().getRoots().size(), is(1) );
+		final SqmRoot root = querySpec.getFromClause().getRoots().get( 0 );
+		assertThat( root.getReferencedNavigable().getEntityName(), endsWith( "Person" ) );
+		assertThat( root.getJoins().size(), is(0) );
 
 		SqmBinaryArithmetic expression = (SqmBinaryArithmetic) selection.getSelectableNode();
-		SqmSingularAttributeReference leftHandOperand = (SqmSingularAttributeReference) expression.getLeftHandOperand();
-		assertThat( leftHandOperand.getSourceReference().getExportedFromElement(), sameInstance( root ) );
-		assertThat( leftHandOperand.getReferencedNavigable().getAttributeName(), is( "numberOfToes" ) );
+		SqmPath leftHandOperand = (SqmPath) expression.getLeftHandOperand();
+		assertThat( leftHandOperand.getLhs(), sameInstance( root ) );
+		assertThat( leftHandOperand.getReferencedNavigable().getNavigableName(), is( "numberOfToes" ) );
 //		assertThat( leftHandOperand.getFromElement(), nullValue() );
 
-		SqmSingularAttributeReference rightHandOperand = (SqmSingularAttributeReference) expression.getRightHandOperand();
-		assertThat( rightHandOperand.getSourceReference().getExportedFromElement(), sameInstance( root ) );
-		assertThat( rightHandOperand.getReferencedNavigable().getAttributeName(), is( "numberOfToes" ) );
+		SqmPath rightHandOperand = (SqmPath) expression.getRightHandOperand();
+		assertThat( rightHandOperand.getLhs(), sameInstance( root ) );
+		assertThat( rightHandOperand.getReferencedNavigable().getNavigableName(), is( "numberOfToes" ) );
 //		assertThat( leftHandOperand.getFromElement(), nullValue() );
 	}
 
@@ -129,23 +127,23 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 		final SqmQuerySpec querySpec = selectStatement.getQuerySpec();
 		final SqmSelection selection = querySpec.getSelectClause().getSelections().get( 0 );
 
-		assertThat( querySpec.getFromClause().getFromElementSpaces().size(), is(2) );
+		assertThat( querySpec.getFromClause().getRoots().size(), is(2) );
 
-		final SqmRoot entityRoot = querySpec.getFromClause().getFromElementSpaces().get( 0 ).getRoot();
-		assertThat( entityRoot.getNavigableReference().getReferencedNavigable().getEntityName(), endsWith( "Person" ) );
+		final SqmRoot entityRoot = querySpec.getFromClause().getRoots().get( 0 );
+		assertThat( entityRoot.getReferencedNavigable().getEntityName(), endsWith( "Person" ) );
 
-		final SqmRoot entity2Root = querySpec.getFromClause().getFromElementSpaces().get( 1 ).getRoot();
-		assertThat( entity2Root.getNavigableReference().getReferencedNavigable().getEntityName(), endsWith( "Person" ) );
+		final SqmRoot entity2Root = querySpec.getFromClause().getRoots().get( 1 );
+		assertThat( entity2Root.getReferencedNavigable().getEntityName(), endsWith( "Person" ) );
 
 		SqmBinaryArithmetic addExpression = (SqmBinaryArithmetic) selection.getSelectableNode();
 
-		SqmSingularAttributeReference leftHandOperand = (SqmSingularAttributeReference) addExpression.getLeftHandOperand();
-		assertThat( leftHandOperand.getSourceReference().getExportedFromElement(), sameInstance( entityRoot ) );
-		assertThat( leftHandOperand.getReferencedNavigable().getAttributeName(), is( "numberOfToes" ) );
+		SqmPath leftHandOperand = (SqmSingularAttributeReference) addExpression.getLeftHandOperand();
+		assertThat( leftHandOperand.getLhs(), sameInstance( entityRoot ) );
+		assertThat( leftHandOperand.getReferencedNavigable().getNavigableName(), is( "numberOfToes" ) );
 
-		SqmSingularAttributeReference rightHandOperand = (SqmSingularAttributeReference) addExpression.getRightHandOperand();
-		assertThat( rightHandOperand.getSourceReference().getExportedFromElement(), sameInstance( entity2Root ) );
-		assertThat( rightHandOperand.getReferencedNavigable().getAttributeName(), is( "numberOfToes" ) );
+		SqmPath rightHandOperand = (SqmSingularAttributeReference) addExpression.getRightHandOperand();
+		assertThat( rightHandOperand.getLhs(), sameInstance( entity2Root ) );
+		assertThat( rightHandOperand.getReferencedNavigable().getNavigableName(), is( "numberOfToes" ) );
 	}
 
 	@Test

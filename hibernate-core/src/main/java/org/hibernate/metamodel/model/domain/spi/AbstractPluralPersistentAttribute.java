@@ -46,15 +46,10 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.query.sqm.produce.spi.SqmCreationState;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
@@ -256,13 +251,18 @@ public abstract class AbstractPluralPersistentAttribute<O,C,E> extends AbstractP
 		return collectionDescriptor.getJavaTypeDescriptor();
 	}
 
-	@Override
-	public SqmPluralAttributeReference createSqmExpression(
-			SqmFrom sourceSqmFrom,
-			SqmNavigableContainerReference containerReference,
-			SqmCreationState creationState) {
-		return new SqmPluralAttributeReference( containerReference, this, creationState );
-	}
+//	@Override
+//	public SqmPluralAttributeReference createSqmExpression(
+//			SqmFrom sourceSqmFrom,
+//			SqmNavigableContainerReference containerReference,
+//			SqmCreationState creationState) {
+//		return new SqmPluralAttributeReference(
+//				containerReference,
+//				(SqmNavigableJoin) sourceSqmFrom,
+//				this,
+//				creationState
+//		);
+//	}
 
 	@Override
 	public boolean isIncludedInDirtyChecking() {
@@ -275,13 +275,13 @@ public abstract class AbstractPluralPersistentAttribute<O,C,E> extends AbstractP
 
 	@Override
 	public DomainResult createDomainResult(
-			NavigableReference navigableReference,
+			NavigablePath navigablePath,
 			String resultVariable,
-			DomainResultCreationState creationState, DomainResultCreationContext creationContext) {
+			DomainResultCreationState creationState) {
 		return getPersistentCollectionDescriptor().createDomainResult(
-				navigableReference,
+				navigablePath,
 				resultVariable,
-				creationState, creationContext
+				creationState
 		);
 	}
 
@@ -292,16 +292,14 @@ public abstract class AbstractPluralPersistentAttribute<O,C,E> extends AbstractP
 			boolean selected,
 			LockMode lockMode,
 			String resultVariable,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
+			DomainResultCreationState creationState) {
 		return getPersistentCollectionDescriptor().generateFetch(
 				fetchParent,
 				fetchTiming,
 				selected,
 				lockMode,
 				resultVariable,
-				creationState,
-				creationContext
+				creationState
 		);
 	}
 
@@ -443,27 +441,6 @@ public abstract class AbstractPluralPersistentAttribute<O,C,E> extends AbstractP
 	@Override
 	public String toString() {
 		return "PluralPersistentAttribute(" + getNavigableRole() + ")";
-	}
-
-	@Override
-	public DomainResult createDomainResult(
-			String resultVariable,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
-		throw new NotYetImplementedFor6Exception();
-
-		// todo (6.0) : implement - need to build CollectionTableGroup, etc
-
-//		DomainResult collectionKeyResult = getCollectionDescriptor().getCollectionKeyDescriptor().createCollectionResult(
-//				creationState.
-//		);
-//		return new CollectionResultImpl(
-//				this,
-//				new NavigablePath( getNavigableRole().getFullPath() ),
-//				resultVariable,
-//				creationState.determineLockMode( resultVariable ),
-//				createDomainResult(  ),
-//		);
 	}
 
 	@Override

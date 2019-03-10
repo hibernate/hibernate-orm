@@ -13,10 +13,10 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.NonQualifiableSqlExpressable;
 import org.hibernate.sql.ast.produce.spi.QualifiableSqlExpressable;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
@@ -31,7 +31,7 @@ public class PerQuerySpecSqlExpressionResolver implements SqlExpressionResolver 
 
 	// todo (6.0) : allow sql expression/selection resolution up into containing QuerySpecs?
 
-	private final SessionFactoryImplementor sessionFactory;
+	private final SqlAstCreationContext creationContext;
 	private final Supplier<QuerySpec> querySpecSupplier;
 	private final Function<Expression, Expression> normalizer;
 	private final BiConsumer<Expression,SqlSelection> selectionConsumer;
@@ -39,11 +39,11 @@ public class PerQuerySpecSqlExpressionResolver implements SqlExpressionResolver 
 	private final Map<QuerySpec,StandardSqlExpressionResolver> subResolverByQuerySpec = new HashMap<>();
 
 	public PerQuerySpecSqlExpressionResolver(
-			SessionFactoryImplementor sessionFactory,
+			SqlAstCreationContext creationContext,
 			Supplier<QuerySpec> querySpecSupplier,
 			Function<Expression,Expression> normalizer,
 			BiConsumer<Expression,SqlSelection> selectionConsumer) {
-		this.sessionFactory = sessionFactory;
+		this.creationContext = creationContext;
 		this.querySpecSupplier = querySpecSupplier;
 		this.normalizer = normalizer;
 		this.selectionConsumer = selectionConsumer;

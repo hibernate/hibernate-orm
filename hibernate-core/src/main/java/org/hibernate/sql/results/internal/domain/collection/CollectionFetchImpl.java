@@ -12,18 +12,17 @@ import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.model.domain.spi.CollectionKey;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
-import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
+import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
+import org.hibernate.sql.results.spi.CollectionFetch;
+import org.hibernate.sql.results.spi.CollectionInitializer;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.FetchParentAccess;
 import org.hibernate.sql.results.spi.Initializer;
-import org.hibernate.sql.results.spi.CollectionFetch;
-import org.hibernate.sql.results.spi.CollectionInitializer;
 
 /**
  * An {@link FetchTiming#IMMEDIATE} collection fetch
@@ -32,14 +31,15 @@ import org.hibernate.sql.results.spi.CollectionInitializer;
  */
 public class CollectionFetchImpl extends AbstractCollectionMappingNode implements CollectionFetch {
 	public static CollectionFetchImpl create(
+			NavigablePath navigablePath,
+			TableGroup containerTableGroup,
+			TableGroup collectionTableGroup,
 			FetchParent fetchParent,
 			PluralPersistentAttribute describedAttribute,
-			boolean selected,
 			String resultVariable,
 			LockMode lockMode,
 			CollectionInitializerProducer initializerProducer,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
+			DomainResultCreationState creationState) {
 		DomainResult keyContainerResult;
 		DomainResult keyCollectionResult = null;
 
@@ -47,31 +47,25 @@ public class CollectionFetchImpl extends AbstractCollectionMappingNode implement
 			throw new IllegalStateException( "FetchParent cannot be null when creating a CollectionFetch" );
 		}
 
-		if ( selected ) {
+		if ( collectionTableGroup != null ) {
 			// join fetch
-			final CollectionKey collectionKey = describedAttribute.getPersistentCollectionDescriptor()
-					.getCollectionKeyDescriptor();
+			final CollectionKey collectionKey = describedAttribute.getPersistentCollectionDescriptor().getCollectionKeyDescriptor();
 
-			final ColumnReferenceQualifier containerQualifier = creationState.getColumnReferenceQualifierStack().getPrevious();
-			assert containerQualifier != null;
-
-			final ColumnReferenceQualifier  collectionQualifier = creationState.getColumnReferenceQualifierStack().getCurrent();
-			assert collectionQualifier != null;
-
-			keyContainerResult = collectionKey.createContainerResult( containerQualifier, creationState, creationContext );
-			keyCollectionResult = collectionKey.createCollectionResult( collectionQualifier, creationState, creationContext );
+			keyContainerResult = collectionKey.createContainerResult( containerTableGroup, creationState );
+			keyCollectionResult = collectionKey.createCollectionResult( collectionTableGroup, creationState );
 		}
 		else {
 			// select fetch
 			// todo (6.0) : we could potentially leverage batch fetching for performance
 			keyContainerResult = describedAttribute.getPersistentCollectionDescriptor()
 					.getCollectionKeyDescriptor()
-					.createContainerResult( creationState.getColumnReferenceQualifierStack().getCurrent(), creationState, creationContext );
+					.createContainerResult( containerTableGroup, creationState );
 			// use null for `keyCollectionResult`... the initializer will see that as trigger to use
 			// the assembled container-key value as the collection-key value.
 		}
 
 		return new CollectionFetchImpl(
+				navigablePath,
 				fetchParent,
 				describedAttribute,
 				resultVariable,
@@ -82,11 +76,12 @@ public class CollectionFetchImpl extends AbstractCollectionMappingNode implement
 		);
 	}
 
+	private final NavigablePath navigablePath;
 	private final LockMode lockMode;
-
 	private final CollectionInitializerProducer initializerProducer;
 
 	public CollectionFetchImpl(
+			NavigablePath navigablePath,
 			FetchParent fetchParent,
 			PluralPersistentAttribute describedAttribute,
 			String resultVariable,
@@ -95,6 +90,7 @@ public class CollectionFetchImpl extends AbstractCollectionMappingNode implement
 			DomainResult keyCollectionResult,
 			CollectionInitializerProducer initializerProducer) {
 		super( fetchParent, describedAttribute, resultVariable, keyContainerResult, keyCollectionResult );
+		this.navigablePath = navigablePath;
 		this.lockMode = lockMode;
 		this.initializerProducer = initializerProducer;
 	}
@@ -103,12 +99,10 @@ public class CollectionFetchImpl extends AbstractCollectionMappingNode implement
 	public DomainResultAssembler createAssembler(
 			FetchParentAccess parentAccess,
 			Consumer<Initializer> collector,
-			AssemblerCreationContext context,
 			AssemblerCreationState creationState) {
 		final DomainResultAssembler keyContainerAssembler = getKeyContainerResult().createResultAssembler(
 				collector,
-				creationState,
-				context
+				creationState
 		);
 
 		final DomainResultAssembler keyCollectionAssembler;
@@ -118,8 +112,7 @@ public class CollectionFetchImpl extends AbstractCollectionMappingNode implement
 		else {
 			keyCollectionAssembler = getKeyCollectionResult().createResultAssembler(
 					collector,
-					creationState,
-					context
+					creationState
 			);
 		}
 
@@ -130,8 +123,7 @@ public class CollectionFetchImpl extends AbstractCollectionMappingNode implement
 				keyContainerAssembler,
 				keyCollectionAssembler,
 				collector,
-				creationState,
-				context
+				creationState
 		);
 
 		collector.accept( initializer );

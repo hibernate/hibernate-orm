@@ -6,11 +6,11 @@
  */
 package org.hibernate.sql.ast.produce.sqm.spi;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.sql.ast.produce.internal.NonSelectSqlExpressionResolver;
-import org.hibernate.sql.ast.produce.spi.SqlAstProducerContext;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.spi.DeleteStatement;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
@@ -23,10 +23,10 @@ public class SqmDeleteToSqlAstConverterSimple extends BaseSqmToSqlAstConverter {
 	public static DeleteStatement interpret(
 			SqmDeleteStatement sqmStatement,
 			QueryOptions queryOptions,
-			SqlAstProducerContext buildingContext) {
+			SharedSessionContractImplementor session) {
 		final SqmDeleteToSqlAstConverterSimple walker = new SqmDeleteToSqlAstConverterSimple(
-				buildingContext,
-				queryOptions
+				queryOptions,
+				session
 		);
 		walker.visitDeleteStatement( sqmStatement );
 		return walker.deleteStatement;
@@ -36,11 +36,11 @@ public class SqmDeleteToSqlAstConverterSimple extends BaseSqmToSqlAstConverter {
 	private DeleteStatement deleteStatement;
 
 	private SqmDeleteToSqlAstConverterSimple(
-			SqlAstProducerContext producerContext,
-			QueryOptions queryOptions) {
-		super( producerContext, queryOptions );
+			QueryOptions queryOptions,
+			SharedSessionContractImplementor session) {
+		super( session.getFactory(), queryOptions, session.getLoadQueryInfluencers(), afterLoadAction -> {} );
 		this.expressionResolver = new NonSelectSqlExpressionResolver(
-				producerContext.getSessionFactory(),
+				session.getSessionFactory(),
 				() -> getQuerySpecStack().getCurrent(),
 				this::normalizeSqlExpression,
 				this::collectSelection
@@ -48,12 +48,7 @@ public class SqmDeleteToSqlAstConverterSimple extends BaseSqmToSqlAstConverter {
 	}
 
 	@Override
-	protected SqlExpressionResolver getSqlExpressionResolver() {
-		return expressionResolver;
-	}
-
-	@Override
-	public SqlExpressionResolver getSqlSelectionResolver() {
+	public SqlExpressionResolver getSqlExpressionResolver() {
 		return expressionResolver;
 	}
 
@@ -69,10 +64,7 @@ public class SqmDeleteToSqlAstConverterSimple extends BaseSqmToSqlAstConverter {
 
 		deleteStatement = new DeleteStatement(
 				new TableReference(
-						sqmStatement.getTarget()
-								.getNavigableReference()
-								.getEntityDescriptor()
-								.getPrimaryTable(),
+						sqmStatement.getTarget().getReferencedNavigable().getEntityDescriptor().getPrimaryTable(),
 						null,
 						false
 				),

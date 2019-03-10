@@ -6,40 +6,66 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import java.util.function.Supplier;
+
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
-import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmRoot<E> extends AbstractSqmFrom {
-	private final SqmEntityReference entityReference;
-
 	public SqmRoot(
-			SqmFromElementSpace fromElementSpace,
 			String uid,
 			String alias,
-			EntityValuedExpressableType<E> entityReference) {
-		super( fromElementSpace, uid, alias );
-		this.entityReference = new SqmEntityReference( entityReference.getEntityDescriptor(), this );
+			EntityTypeDescriptor entityTypeDescriptor) {
+		super(
+				uid,
+				alias == null
+						? new NavigablePath( entityTypeDescriptor.getEntityName() )
+						: new NavigablePath( entityTypeDescriptor.getEntityName() + '(' + alias + ')' ),
+				entityTypeDescriptor,
+				alias
+		);
 	}
 
 	@Override
-	public SqmEntityReference getNavigableReference() {
-		return entityReference;
+	public SqmPath getLhs() {
+		// a root has no LHS
+		return null;
+	}
+
+	@Override
+	public EntityTypeDescriptor<?> getReferencedNavigable() {
+		return (EntityTypeDescriptor<?>) super.getReferencedNavigable();
+	}
+
+	@Override
+	public EntityTypeDescriptor getExpressableType() {
+		return getReferencedNavigable();
+	}
+
+	@Override
+	public Supplier<? extends EntityTypeDescriptor> getInferableType() {
+		return this::getReferencedNavigable;
 	}
 
 	public String getEntityName() {
-		return getNavigableReference().getReferencedNavigable().getEntityName();
+		return getReferencedNavigable().getEntityName();
 	}
 
 	@Override
 	public EntityTypeDescriptor<E> getIntrinsicSubclassEntityMetadata() {
 		// a root FromElement cannot indicate a subclass intrinsically (as part of its declaration)
 		return null;
+	}
+
+	@Override
+	public EntityJavaDescriptor getJavaTypeDescriptor() {
+		return getReferencedNavigable().getJavaTypeDescriptor();
 	}
 
 	@Override
@@ -50,10 +76,5 @@ public class SqmRoot<E> extends AbstractSqmFrom {
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitRootEntityFromElement( this );
-	}
-
-	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return getNavigableReference().getJavaTypeDescriptor();
 	}
 }

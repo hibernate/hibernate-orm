@@ -24,20 +24,21 @@ public class SqmPluralAttributeReference
 		extends AbstractSqmAttributeReference<PluralPersistentAttribute>
 		implements SqmNavigableContainerReference {
 
-	private final SqmNavigableJoin join;
+	private final SqmNavigableJoin navigableJoin;
 
 	public SqmPluralAttributeReference(
 			SqmNavigableContainerReference containerReference,
+			SqmNavigableJoin navigableJoin,
 			PluralPersistentAttribute attribute,
 			SqmCreationState creationState) {
 		super( containerReference, attribute );
 
-		this.join = creationState.getCurrentFromElementBuilder().buildNavigableJoin( this );
+		this.navigableJoin = navigableJoin;
 	}
 
 	@Override
 	public SqmNavigableJoin getExportedFromElement() {
-		return join;
+		return navigableJoin;
 	}
 
 	@Override

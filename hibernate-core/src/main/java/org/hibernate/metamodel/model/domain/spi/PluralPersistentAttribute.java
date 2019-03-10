@@ -10,12 +10,9 @@ import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.produce.spi.SqmCreationState;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
+import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
@@ -35,8 +32,8 @@ import org.hibernate.type.descriptor.java.internal.CollectionJavaDescriptor;
  * @author Steve Ebersole
  */
 public interface PluralPersistentAttribute<O,C,E>
-		extends NonIdPersistentAttribute<O,C>, CollectionValuedNavigable<C>,
-		javax.persistence.metamodel.PluralAttribute<O,C,E>, Fetchable<C>, RootTableGroupProducer, TableGroupJoinProducer {
+		extends NonIdPersistentAttribute<O,C>, PluralValuedNavigable<C>,
+		javax.persistence.metamodel.PluralAttribute<O,C,E>, Joinable<C>, Fetchable<C> {
 
 	PersistentCollectionDescriptor<O,C,E> getPersistentCollectionDescriptor();
 
@@ -103,12 +100,6 @@ public interface PluralPersistentAttribute<O,C,E>
 	default SimpleTypeDescriptor<E> getElementType() {
 		return (SimpleTypeDescriptor<E>) getPersistentCollectionDescriptor().getElementDescriptor();
 	}
-
-	@Override
-	SqmPluralAttributeReference createSqmExpression(
-			SqmFrom sourceSqmFrom,
-			SqmNavigableContainerReference containerReference,
-			SqmCreationState creationState);
 
 	@Override
 	default TableGroupJoin createTableGroupJoin(

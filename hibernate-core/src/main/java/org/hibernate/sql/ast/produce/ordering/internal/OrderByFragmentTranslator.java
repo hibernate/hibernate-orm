@@ -9,16 +9,12 @@ package org.hibernate.sql.ast.produce.ordering.internal;
 import java.util.List;
 
 import org.hibernate.LockOptions;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.query.hql.internal.HqlParseTreeBuilder;
 import org.hibernate.query.hql.internal.HqlParseTreePrinter;
 import org.hibernate.query.hql.internal.HqlParser;
-import org.hibernate.query.sqm.tree.order.SqmOrderByClause;
-import org.hibernate.sql.ast.produce.spi.SqlAstProducerContext;
+import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.sql.ast.produce.spi.SqlQueryOptions;
-import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
 
 import org.jboss.logging.Logger;
@@ -29,7 +25,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class OrderByFragmentTranslator implements SqlAstProducerContext, SqlQueryOptions {
+public class OrderByFragmentTranslator implements SqlQueryOptions {
 	private static final Logger LOG = Logger.getLogger( OrderByFragmentTranslator.class.getName() );
 
 	/**
@@ -69,21 +65,6 @@ public class OrderByFragmentTranslator implements SqlAstProducerContext, SqlQuer
 		this.collectionDescriptor = collectionDescriptor;
 	}
 
-	@Override
-	public SessionFactoryImplementor getSessionFactory() {
-		return translationContext.getSessionFactory();
-	}
-
-	@Override
-	public LoadQueryInfluencers getLoadQueryInfluencers() {
-		return LoadQueryInfluencers.NONE;
-	}
-
-	@Override
-	public Callback getCallback() {
-		return afterLoadAction -> {};
-	}
-
 	private OrderByTranslation translateFragment(String fragment) {
 		final HqlParser parseTree = HqlParseTreeBuilder.INSTANCE.parseHql( fragment );
 
@@ -96,7 +77,7 @@ public class OrderByFragmentTranslator implements SqlAstProducerContext, SqlQuer
 		);
 
 		final List<SortSpecification> sortSpecifications = OrderByFragmentConverter.convertOrderByFragmentSqmTree(
-				this,
+				translationContext.getSessionFactory(),
 				sqmOrderByClause
 		);
 

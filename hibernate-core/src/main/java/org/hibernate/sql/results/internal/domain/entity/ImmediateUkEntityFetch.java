@@ -15,7 +15,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.spi.SingleEntityLoader;
 import org.hibernate.metamodel.model.domain.internal.ForeignKeyDomainResult;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
 import org.hibernate.sql.results.spi.EntityInitializer;
@@ -52,7 +51,6 @@ public class ImmediateUkEntityFetch extends AbstractImmediateEntityFetch {
 	public DomainResultAssembler createAssembler(
 			FetchParentAccess parentAccess,
 			Consumer<Initializer> initializerConsumer,
-			AssemblerCreationContext creationContext,
 			AssemblerCreationState creationState) {
 		final ManagedTypeSubInitializerConsumer subInitializerConsumer = new ManagedTypeSubInitializerConsumer( initializerConsumer );
 
@@ -61,7 +59,7 @@ public class ImmediateUkEntityFetch extends AbstractImmediateEntityFetch {
 				getNavigablePath(),
 				loader,
 				parentAccess,
-				keyResult.createResultAssembler( subInitializerConsumer, creationState, creationContext ),
+				keyResult.createResultAssembler( subInitializerConsumer, creationState ),
 				notFoundAction,
 				uniqueKeyGenerator
 		);

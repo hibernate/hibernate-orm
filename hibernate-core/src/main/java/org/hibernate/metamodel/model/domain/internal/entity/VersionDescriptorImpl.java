@@ -22,11 +22,7 @@ import org.hibernate.metamodel.model.domain.spi.VersionSupport;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.internal.domain.basic.BasicFetch;
-import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
@@ -132,56 +128,18 @@ public class VersionDescriptorImpl<O,J>
 	}
 
 	@Override
-	public DomainResult createDomainResult(
-			NavigableReference navigableReference,
-			String resultVariable,
-			DomainResultCreationState creationState, DomainResultCreationContext creationContext) {
-		return new BasicResultImpl(
-				resultVariable,
-				creationState.getSqlExpressionResolver().resolveSqlSelection(
-						creationState.getSqlExpressionResolver().resolveSqlExpression(
-								navigableReference.getColumnReferenceQualifier(),
-								VersionDescriptorImpl.this.column
-						),
-						getJavaTypeDescriptor(),
-						creationContext.getSessionFactory().getTypeConfiguration()
-				),
-				getBoundColumn().getExpressableType()
-		);
-	}
-
-	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,
 			FetchTiming fetchTiming,
 			boolean selected, LockMode lockMode,
 			String resultVariable,
-			DomainResultCreationState creationState, DomainResultCreationContext creationContext) {
-		return new BasicFetch( fetchParent, this, fetchTiming, creationContext, creationState );
+			DomainResultCreationState creationState) {
+		return new BasicFetch( fetchParent, this, fetchTiming, creationState );
 	}
 
 	@Override
 	public FetchStrategy getMappedFetchStrategy() {
 		return null;
-	}
-
-	@Override
-	public DomainResult createDomainResult(
-			String resultVariable,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
-		return new BasicResultImpl(
-				resultVariable,
-				creationState.getSqlExpressionResolver().resolveSqlSelection(
-						creationState.getSqlExpressionResolver().resolveSqlExpression(
-								creationState.getNavigableReferenceStack().getCurrent().getColumnReferenceQualifier(),
-								getBoundColumn()
-						),
-						getJavaTypeDescriptor(),
-						creationContext.getSessionFactory().getTypeConfiguration()
-				),
-				getBoundColumn().getExpressableType()
-		);
 	}
 
 	@Override
@@ -193,4 +151,5 @@ public class VersionDescriptorImpl<O,J>
 	public SimpleTypeDescriptor<?> getKeyGraphType() {
 		return null;
 	}
+
 }

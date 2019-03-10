@@ -11,7 +11,6 @@ import java.util.function.Consumer;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.BiDirectionalFetch;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
@@ -71,7 +70,6 @@ public class BiDirectionalFetchImpl implements BiDirectionalFetch {
 	public DomainResultAssembler createAssembler(
 			FetchParentAccess parentAccess,
 			Consumer<Initializer> collector,
-			AssemblerCreationContext creationContext,
 			AssemblerCreationState creationState) {
 		return new CircularFetchAssembler(
 				referencedFetchParent.getNavigablePath(),

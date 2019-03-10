@@ -11,7 +11,6 @@ import java.util.function.Consumer;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.internal.domain.AbstractFetchParent;
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.CompositeResult;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
@@ -23,15 +22,18 @@ import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
  * @author Steve Ebersole
  */
 public class CompositeResultImpl extends AbstractFetchParent implements CompositeResult {
-	private final String resultVariable;
+	private final NavigablePath navigablePath;
 	private final EmbeddedValuedNavigable navigable;
+	private final String resultVariable;
 
 	public CompositeResultImpl(
-			String resultVariable,
+			NavigablePath navigablePath,
 			EmbeddedValuedNavigable navigable,
+			String resultVariable,
 			DomainResultCreationState creationState) {
-		super( navigable, new NavigablePath( navigable.getEmbeddedDescriptor().getRoleName() ) );
+		super( navigable, navigablePath );
 		this.resultVariable = resultVariable;
+		this.navigablePath = navigablePath;
 		this.navigable = navigable;
 
 		afterInitialize( creationState );
@@ -46,14 +48,12 @@ public class CompositeResultImpl extends AbstractFetchParent implements Composit
 	@Override
 	public DomainResultAssembler createResultAssembler(
 			Consumer<Initializer> initializerCollector,
-			AssemblerCreationState creationOptions,
-			AssemblerCreationContext creationContext) {
+			AssemblerCreationState creationState) {
 		final CompositeRootInitializerImpl initializer = new CompositeRootInitializerImpl(
 				null,
 				this,
 				initializerCollector,
-				creationOptions,
-				creationContext
+				creationState
 		);
 
 		initializerCollector.accept( initializer );

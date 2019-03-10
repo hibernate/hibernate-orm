@@ -179,7 +179,6 @@ public abstract class AbstractTableBasedStrategy implements IdTableStrategy {
 	@Override
 	public UpdateHandler buildUpdateHandler(SqmUpdateStatement sqmUpdateStatement, HandlerCreationContext creationContext) {
 		final EntityTypeDescriptor entityDescriptor = sqmUpdateStatement.getTarget()
-				.getNavigableReference()
 				.getReferencedNavigable()
 				.getEntityDescriptor();
 
@@ -213,7 +212,6 @@ public abstract class AbstractTableBasedStrategy implements IdTableStrategy {
 	@Override
 	public DeleteHandler buildDeleteHandler(SqmDeleteStatement sqmDeleteStatement, HandlerCreationContext creationContext) {
 		final EntityTypeDescriptor entityDescriptor = sqmDeleteStatement.getTarget()
-				.getNavigableReference()
 				.getReferencedNavigable()
 				.getEntityDescriptor();
 

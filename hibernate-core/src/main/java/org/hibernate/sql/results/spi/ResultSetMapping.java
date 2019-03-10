@@ -30,6 +30,5 @@ public interface ResultSetMapping {
 
 	List<DomainResultAssembler> resolveAssemblers(
 			Consumer<Initializer> initializerConsumer,
-			AssemblerCreationState creationState,
-			AssemblerCreationContext creationContext);
+			AssemblerCreationState creationState);
 }

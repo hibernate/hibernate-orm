@@ -19,6 +19,10 @@ package org.hibernate.query.hql.internal;
 	}
 }
 
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Statements
+
 statement
 	: ( selectStatement | updateStatement | deleteStatement | insertStatement ) EOF
 	;
@@ -27,8 +31,12 @@ selectStatement
 	: querySpec
 	;
 
+deleteStatement
+	: DELETE FROM? entityName identificationVariableDef? whereClause?
+	;
+
 updateStatement
-	: UPDATE FROM? mainEntityPersisterReference setClause whereClause?
+	: UPDATE FROM? entityName identificationVariableDef? setClause whereClause?
 	;
 
 setClause
@@ -37,10 +45,6 @@ setClause
 
 assignment
 	: dotIdentifierSequence EQUAL expression
-	;
-
-deleteStatement
-	: DELETE FROM? mainEntityPersisterReference whereClause?
 	;
 
 insertStatement
@@ -53,55 +57,12 @@ insertSpec
 	;
 
 intoSpec
-	: INTO dotIdentifierSequence
+	: INTO entityName
 	;
 
 targetFieldsSpec
-	: LEFT_PAREN dotIdentifierSequence (COMMA dotIdentifierSequence)* RIGHT_PAREN
-
-	;
-
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// ORDER BY clause
-
-orderByClause
-// todo (6.0) : null precedence
-	: ORDER BY sortSpecification (COMMA sortSpecification)*
-	;
-
-sortSpecification
-	: expression collationSpecification? orderingSpecification?
-	;
-
-collationSpecification
-	:	COLLATE collateName
-	;
-
-collateName
-	:	dotIdentifierSequence
-	;
-
-orderingSpecification
-	:	ASC
-	|	DESC
-	;
-
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// LIMIT/OFFSET clause
-
-limitClause
-	: LIMIT parameterOrNumberLiteral
-	;
-
-offsetClause
-	: OFFSET parameterOrNumberLiteral
-	;
-
-parameterOrNumberLiteral
-	: parameter
-	| INTEGER_LITERAL
+	:
+	LEFT_PAREN dotIdentifierSequence (COMMA dotIdentifierSequence)* RIGHT_PAREN
 	;
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -110,6 +71,62 @@ parameterOrNumberLiteral
 querySpec
 	:	selectClause? fromClause whereClause? ( groupByClause havingClause? )? orderByClause? limitClause? offsetClause?
 	;
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// FROM clause
+
+fromClause
+	: FROM fromClauseSpace (COMMA fromClauseSpace)*
+	;
+
+fromClauseSpace
+	:	pathRoot ( crossJoin | jpaCollectionJoin | qualifiedJoin )*
+	;
+
+pathRoot
+	: entityName (identificationVariableDef)?
+	;
+
+/**
+ * Rule for dotIdentifierSequence where we expect an entity-name.  The extra
+ * "rule layer" allows the walker to specially handle such a case (to use a special
+ * org.hibernate.query.hql.DotIdentifierConsumer, etc)
+ */
+entityName
+	: dotIdentifierSequence
+	;
+
+identificationVariableDef
+	: (AS identifier)
+	| IDENTIFIER
+	;
+
+crossJoin
+	: CROSS JOIN pathRoot (identificationVariableDef)?
+	;
+
+jpaCollectionJoin
+	:	COMMA IN LEFT_PAREN path RIGHT_PAREN (identificationVariableDef)?
+	;
+
+qualifiedJoin
+	: joinTypeQualifier JOIN FETCH? qualifiedJoinRhs (qualifiedJoinPredicate)?
+	;
+
+joinTypeQualifier
+	: INNER?
+	| (LEFT|RIGHT|FULL)? OUTER?
+	;
+
+qualifiedJoinRhs
+	: path (identificationVariableDef)?
+	;
+
+qualifiedJoinPredicate
+	: (ON | WITH) predicate
+	;
+
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -178,27 +195,46 @@ jpaSelectObjectSyntax
 // Path structures
 
 dotIdentifierSequence
-	: identifier (DOT dotIdentifierSequence)?
+	: identifier dotIdentifierSequenceContinuation*
 	;
 
+dotIdentifierSequenceContinuation
+	: DOT identifier
+	;
+
+
 /**
- * A path which needs to be resolved semantically
+ * A path which needs to be resolved semantically.  This recognizes
+ * any path-like structure.  Generally, the path is semantically
+ * interpreted by the consumer of the parse-tree.  However, there
+ * are certain cases where we can syntactically recognize a navigable
+ * path; see `syntacticNavigablePath` rule
+ *
  */
 path
-	: syntacticNavigablePath
-	| nonSyntacticNavigablePath
+	: syntacticNavigablePath (syntacticNavigablePathContinuation)?
+	| generalPathFragment
+	;
+
+syntacticNavigablePathContinuation
+	: DOT dotIdentifierSequence (DOT syntacticNavigablePathContinuation)?
 	;
 
 /**
- * Rule for path case where we syntactically know that a path is a
- * navigable path because it starts with one of the special cases:
+ * Rule for cases where we syntactically know that the path is a
+ * navigable path because it is one of these special cases:
  *
- * 		* TREAT
- * 		* ELEMENTS or VALUE (collection)
- * 		* KEY (map)
+ * 		* TREAT( path )
+ * 		* ELEMENTS( path )
+ *		* VALUE( path )
+ * 		* KEY( path )
+ * 		* path[ selector ]
  */
 syntacticNavigablePath
-	: (treatedNavigablePath | collectionElementNavigablePath | mapKeyNavigablePath)
+	: treatedNavigablePath
+	| collectionElementNavigablePath
+	| mapKeyNavigablePath
+	| dotIdentifierSequence indexedPathAccessFragment
 	;
 
 /**
@@ -208,81 +244,28 @@ syntacticNavigablePath
  * NOTE : this rule does *not* cover the special syntactic navigable path
  * cases: TREAT, KEY, ELEMENTS, VALUES
  */
-nonSyntacticNavigablePath
-	: dotIdentifierSequence (semanticNavigablePathFragment)?
+generalPathFragment
+	: dotIdentifierSequence (indexedPathAccessFragment)?
 	;
 
+indexedPathAccessFragment
+	: LEFT_BRACKET expression RIGHT_BRACKET (DOT generalPathFragment)?
+	;
+
+
+
 treatedNavigablePath
-	: TREAT LEFT_PAREN path AS dotIdentifierSequence RIGHT_PAREN ( (AS identifier) | (DOT nonSyntacticNavigablePath) )?
+	: TREAT LEFT_PAREN path AS dotIdentifierSequence RIGHT_PAREN (syntacticNavigablePathContinuation)?
 	;
 
 
 collectionElementNavigablePath
-	: (VALUE | ELEMENTS) LEFT_PAREN path RIGHT_PAREN (DOT nonSyntacticNavigablePath)?
+	: (VALUE | ELEMENTS) LEFT_PAREN path RIGHT_PAREN (syntacticNavigablePathContinuation)?
 	;
 
 mapKeyNavigablePath
-	: KEY LEFT_PAREN path RIGHT_PAREN (DOT nonSyntacticNavigablePath)?
+	: KEY LEFT_PAREN path RIGHT_PAREN (syntacticNavigablePathContinuation)?
 	;
-
-semanticNavigablePathFragment
-	: LEFT_BRACKET expression RIGHT_BRACKET (DOT nonSyntacticNavigablePath)?
-	;
-
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// FROM clause
-
-fromClause
-	: FROM fromElementSpace (COMMA fromElementSpace)*
-	;
-
-fromElementSpace
-	:	fromElementSpaceRoot ( crossJoin | jpaCollectionJoin | qualifiedJoin )*
-	;
-
-fromElementSpaceRoot
-	: mainEntityPersisterReference
-	;
-
-mainEntityPersisterReference
-	: dotIdentifierSequence (identificationVariableDef)?
-	;
-
-identificationVariableDef
-	: (AS identificationVariable)
-	| IDENTIFIER
-	;
-
-identificationVariable
-	: identifier
-	;
-
-crossJoin
-	: CROSS JOIN mainEntityPersisterReference
-	;
-
-jpaCollectionJoin
-	:	COMMA IN LEFT_PAREN path RIGHT_PAREN (identificationVariableDef)?
-	;
-
-qualifiedJoin
-	: joinTypeQualifier JOIN FETCH? qualifiedJoinRhs (qualifiedJoinPredicate)?
-	;
-
-joinTypeQualifier
-	: INNER?
-	| (LEFT|RIGHT|FULL)? OUTER?
-	;
-
-qualifiedJoinRhs
-	: path (identificationVariableDef)?
-	;
-
-qualifiedJoinPredicate
-	: (ON | WITH) predicate
-	;
-
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -310,7 +293,50 @@ havingClause
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// WHERE clause
+// ORDER BY clause
+
+orderByClause
+// todo (6.0) : null precedence
+	: ORDER BY sortSpecification (COMMA sortSpecification)*
+	;
+
+sortSpecification
+	: expression collationSpecification? orderingSpecification?
+	;
+
+collationSpecification
+	:	COLLATE collateName
+	;
+
+collateName
+	:	dotIdentifierSequence
+	;
+
+orderingSpecification
+	:	ASC
+	|	DESC
+	;
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// LIMIT/OFFSET clause
+
+limitClause
+	: LIMIT parameterOrNumberLiteral
+	;
+
+offsetClause
+	: OFFSET parameterOrNumberLiteral
+	;
+
+parameterOrNumberLiteral
+	: parameter
+	| INTEGER_LITERAL
+	;
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// WHERE clause & Predicates
 
 whereClause
 	:	WHERE predicate

@@ -15,7 +15,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
-import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
@@ -110,11 +110,11 @@ public interface EntityIdentifier<O,J> extends Navigable<J>, AllowableOutputPara
 	@Override
 	default List<ColumnReference> resolveColumnReferences(
 			ColumnReferenceQualifier qualifier,
-			SqlAstCreationContext resolutionContext) {
+			SqlAstCreationState creationState) {
 		final ArrayList<ColumnReference> columnRefs = new ArrayList<>();
 		for ( Column column : getColumns() ) {
 			// todo (6.0) - this there a better way to deal with this in the design?
-			Expression expression = resolutionContext.getSqlSelectionResolver().resolveSqlExpression( qualifier, column );
+			Expression expression = creationState.getSqlExpressionResolver().resolveSqlExpression( qualifier, column );
 			if ( !ColumnReference.class.isInstance( expression ) ) {
 				columnRefs.add( (ColumnReference) ( (SqlSelectionExpression) expression ).getExpression() );
 			}

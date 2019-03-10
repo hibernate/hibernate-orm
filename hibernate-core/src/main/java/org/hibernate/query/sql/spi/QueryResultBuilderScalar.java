@@ -10,7 +10,6 @@ import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlExpressable;
 import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
@@ -48,8 +47,7 @@ public class QueryResultBuilderScalar
 
 	@Override
 	public DomainResult buildReturn(
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
+			DomainResultCreationState creationState) {
 		return new BasicResultImpl(
 				columnName,
 				new ResolvingSqlSelectionImpl( columnName ),

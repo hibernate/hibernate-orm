@@ -6,24 +6,18 @@
  */
 package org.hibernate.sql.ast.produce.spi;
 
-import org.hibernate.LockOptions;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * The "context" in which creation of SQL AST occurs.
  *
  * @author Steve Ebersole
  */
-public interface SqlAstCreationContext extends AssemblerCreationContext, DomainResultCreationContext {
-	SqlExpressionResolver getSqlSelectionResolver();
+public interface SqlAstCreationContext {
+	MetamodelImplementor getDomainModel();
 
-	LoadQueryInfluencers getLoadQueryInfluencers();
+	ServiceRegistry getServiceRegistry();
 
-	default boolean shouldCreateShallowEntityResult() {
-		return false;
-	}
-
-	LockOptions getLockOptions();
+	Integer getMaximumFetchDepth();
 }

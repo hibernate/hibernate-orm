@@ -47,12 +47,12 @@ public class FirstSqmUnitTest extends BaseSqmUnitTest {
 
 		assertThat( sqm, notNullValue() );
 		assertThat(
-				sqm.getQuerySpec().getFromClause().getFromElementSpaces().size(),
+				sqm.getQuerySpec().getFromClause().getRoots().size(),
 				is( 1 )
 		);
 		assertThat(
-				sqm.getQuerySpec().getFromClause().getFromElementSpaces().get( 0 ).getRoot().getEntityName(),
-				is( getSessionFactory().getMetamodel().findEntityDescriptor( Person.class ).getEntityName() )
+				sqm.getQuerySpec().getFromClause().getRoots().get( 0 ).getEntityName(),
+				is( sessionFactory().getMetamodel().findEntityDescriptor( Person.class ).getEntityName() )
 		);
 	}
 }

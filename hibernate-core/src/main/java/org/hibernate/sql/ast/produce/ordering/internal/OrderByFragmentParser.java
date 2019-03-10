@@ -10,12 +10,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.query.hql.internal.BasicDotIdentifierConsumer;
 import org.hibernate.query.hql.internal.HqlParser;
 import org.hibernate.query.hql.internal.SemanticQueryBuilder;
 import org.hibernate.query.sqm.produce.internal.SqmCreationOptionsStandard;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.query.sqm.tree.order.SqmOrderByClause;
-import org.hibernate.query.sqm.tree.order.SqmSortSpecification;
+import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
+import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 
 import org.jboss.logging.Logger;
 
@@ -46,9 +47,9 @@ public class OrderByFragmentParser extends SemanticQueryBuilder {
 				translationContext.getSessionFactory()
 		);
 
-		final SqmFrom sqmFromBase = new SqmFromImpl( collectionDescriptor, this );
-
-		getSemanticPathPartStack().push( new SemanticPathPartRoot( sqmFromBase, translationContext.getSessionFactory() ) );
+		getIdentifierConsumerStack().push(
+				new BasicDotIdentifierConsumer( getProcessingStateStack()::getCurrent )
+		);
 
 		primeStack( getParameterDeclarationContextStack(), () -> false );
 	}

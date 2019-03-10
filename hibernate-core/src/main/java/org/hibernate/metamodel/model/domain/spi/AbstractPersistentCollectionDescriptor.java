@@ -44,7 +44,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.loader.internal.CollectionLoaderImpl;
 import org.hibernate.loader.spi.CollectionLoader;
 import org.hibernate.mapping.Any;
@@ -63,7 +62,6 @@ import org.hibernate.metamodel.model.domain.internal.SqlAliasStemHelper;
 import org.hibernate.metamodel.model.domain.internal.collection.AbstractCreationExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.BasicCollectionElementImpl;
 import org.hibernate.metamodel.model.domain.internal.collection.BasicCollectionIndexImpl;
-import org.hibernate.metamodel.model.domain.internal.collection.JoinTableRowsUpdateExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionCreationExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionElementEmbeddedImpl;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionElementEntityImpl;
@@ -72,16 +70,18 @@ import org.hibernate.metamodel.model.domain.internal.collection.CollectionIndexE
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionIndexEntityImpl;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionIndexExistsSelector;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionRemovalExecutor;
+import org.hibernate.metamodel.model.domain.internal.collection.CollectionRowByIndexSelector;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionRowsDeletionExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionRowsIndexUpdateExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionRowsUpdateExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.CollectionSizeSelector;
 import org.hibernate.metamodel.model.domain.internal.collection.FetchedTableReferenceCollectorImpl;
+import org.hibernate.metamodel.model.domain.internal.collection.JoinTableCollectionRowByIndexSelector;
 import org.hibernate.metamodel.model.domain.internal.collection.JoinTableCreationExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.JoinTableRemovalExecutor;
-import org.hibernate.metamodel.model.domain.internal.collection.JoinTableCollectionRowByIndexSelector;
 import org.hibernate.metamodel.model.domain.internal.collection.JoinTableRowsDeleletionExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.JoinTableRowsInsertExecutor;
+import org.hibernate.metamodel.model.domain.internal.collection.JoinTableRowsUpdateExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.OneToManyCreationExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.OneToManyRemovalExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.OneToManyRowsDeletionExecutor;
@@ -89,7 +89,6 @@ import org.hibernate.metamodel.model.domain.internal.collection.OneToManyRowsInd
 import org.hibernate.metamodel.model.domain.internal.collection.OneToManyRowsInsertExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.OneToManyRowsUpdateExecutor;
 import org.hibernate.metamodel.model.domain.internal.collection.RootTableReferenceCollectorImpl;
-import org.hibernate.metamodel.model.domain.internal.collection.CollectionRowByIndexSelector;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.Table;
@@ -104,12 +103,11 @@ import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
-import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
@@ -118,12 +116,10 @@ import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
+import org.hibernate.sql.results.DomainResultCreationException;
 import org.hibernate.sql.results.internal.domain.collection.CollectionFetchImpl;
 import org.hibernate.sql.results.internal.domain.collection.CollectionInitializerProducer;
-import org.hibernate.sql.results.internal.domain.collection.CollectionResultImpl;
 import org.hibernate.sql.results.internal.domain.collection.DelayedCollectionFetch;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
@@ -583,23 +579,25 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 
 	@Override
 	public TableGroup createRootTableGroup(
-			TableGroupInfo tableGroupInfo,
-			RootTableGroupContext tableGroupContext) {
-		final SqlAliasBase sqlAliasBase = tableGroupContext.getSqlAliasBaseGenerator().createSqlAliasBase(
-				getSqlAliasStem()
-		);
+			String uid,
+			NavigablePath navigablePath,
+			String explicitSourceAlias,
+			JoinType tableReferenceJoinType,
+			LockMode lockMode,
+			SqlAstCreationState creationState) {
+		final SqlAliasBase sqlAliasBase = creationState.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() );
 
 		RootTableReferenceCollectorImpl collector = new RootTableReferenceCollectorImpl(
-				tableGroupContext.getTableSpace(),
+				uid,
+				navigablePath,
 				this,
-				tableGroupInfo.getNavigablePath(),
-				tableGroupInfo.getUniqueIdentifier(),
-				tableGroupContext.getLockOptions().getEffectiveLockMode( tableGroupInfo.getIdentificationVariable() )
+				explicitSourceAlias,
+				lockMode
 		);
 
 		applyTableReferenceJoins(
 				null,
-				tableGroupContext.getTableReferenceJoinType(),
+				tableReferenceJoinType,
 				sqlAliasBase,
 				collector
 		);
@@ -612,8 +610,42 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 		return this;
 	}
 
+	@Override
+	public TableGroupJoin createTableGroupJoin(
+			String uid,
+			NavigablePath navigablePath,
+			TableGroup lhs,
+			String explicitSourceAlias,
+			JoinType joinType,
+			LockMode lockMode,
+			SqlAstCreationState creationState) {
+		final SqlAliasBase sqlAliasBase = creationState.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() );
 
-	// ultimately, "inclusion" in a collection must defined through a single table whether
+		final FetchedTableReferenceCollectorImpl joinCollector = new FetchedTableReferenceCollectorImpl(
+				navigablePath,
+				this,
+				lhs,
+				explicitSourceAlias,
+				lockMode
+		);
+
+		applyTableReferenceJoins(
+				lhs,
+				joinType,
+				sqlAliasBase,
+				joinCollector
+		);
+
+		// handle optional entity references to be outer joins.
+		if ( getDescribedAttribute().isNullable() && JoinType.INNER.equals( joinType ) ) {
+			joinType = JoinType.LEFT;
+		}
+
+		return joinCollector.generateTableGroup( joinType, navigablePath.getFullPath() );
+	}
+
+
+// ultimately, "inclusion" in a collection must defined through a single table whether
 	// that be:
 	//		1) a "separate" collection table (@JoinTable) - could be either:
 	//			a) an @ElementCollection - element/index value are contained on this separate table
@@ -634,16 +666,17 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 			TableGroupInfo tableGroupInfoSource,
 			JoinType joinType,
 			JoinedTableGroupContext tableGroupJoinContext) {
-		return createTableGroupJoin(
-				tableGroupJoinContext.getSqlAliasBaseGenerator(),
-				tableGroupJoinContext.getLhs(),
-				tableGroupJoinContext.getSqlExpressionResolver(),
-				tableGroupJoinContext.getNavigablePath(),
-				joinType,
-				tableGroupInfoSource.getIdentificationVariable(),
-				tableGroupJoinContext.getLockOptions().getEffectiveLockMode( tableGroupInfoSource.getIdentificationVariable() ),
-				tableGroupJoinContext.getTableSpace()
-		);
+		throw new UnsupportedOperationException(  );
+//		return createTableGroupJoin(
+//				tableGroupJoinContext.getSqlAliasBaseGenerator(),
+//				tableGroupJoinContext.getLhs(),
+//				tableGroupJoinContext.getSqlExpressionResolver(),
+//				tableGroupJoinContext.getNavigablePath(),
+//				joinType,
+//				tableGroupInfoSource.getIdentificationVariable(),
+//				tableGroupJoinContext.getLockOptions().getEffectiveLockMode( tableGroupInfoSource.getIdentificationVariable() ),
+//				tableGroupJoinContext.getTableSpace()
+//		);
 	}
 
 	@Override
@@ -656,30 +689,31 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 			String identificationVariable,
 			LockMode lockMode,
 			TableSpace tableSpace) {
-		final SqlAliasBase sqlAliasBase = sqlAliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
-
-		final FetchedTableReferenceCollectorImpl joinCollector = new FetchedTableReferenceCollectorImpl(
-				this,
-				tableSpace,
-				lhs,
-				sqlExpressionResolver,
-				navigablePath,
-				lockMode
-		);
-
-		applyTableReferenceJoins(
-				lhs.getColumnReferenceQualifier(),
-				joinType,
-				sqlAliasBase,
-				joinCollector
-		);
-
-		// handle optional entity references to be outer joins.
-		if ( getDescribedAttribute().isNullable() && JoinType.INNER.equals( joinType ) ) {
-			joinType = JoinType.LEFT;
-		}
-
-		return joinCollector.generateTableGroup( joinType, navigablePath.getFullPath() );
+		throw new UnsupportedOperationException(  );
+//		final SqlAliasBase sqlAliasBase = sqlAliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
+//
+//		final FetchedTableReferenceCollectorImpl joinCollector = new FetchedTableReferenceCollectorImpl(
+//				this,
+//				tableSpace,
+//				lhs,
+//				sqlExpressionResolver,
+//				navigablePath,
+//				lockMode
+//		);
+//
+//		applyTableReferenceJoins(
+//				lhs.getColumnReferenceQualifier(),
+//				joinType,
+//				sqlAliasBase,
+//				joinCollector
+//		);
+//
+//		// handle optional entity references to be outer joins.
+//		if ( getDescribedAttribute().isNullable() && JoinType.INNER.equals( joinType ) ) {
+//			joinType = JoinType.LEFT;
+//		}
+//
+//		return joinCollector.generateTableGroup( joinType, navigablePath.getFullPath() );
 	}
 
 	@Override
@@ -687,45 +721,13 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 		return findFirstEntityDescriptor();
 	}
 
-	@Override
-	public DomainResult createDomainResult(
-			NavigableReference navigableReference,
-			String resultVariable,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
-
-		final DomainResult keyCollectionResult = getCollectionKeyDescriptor().createCollectionResult(
-				navigableReference.getColumnReferenceQualifier(),
-				creationState,
-				creationContext
-		);
-
-		final LockMode lockMode = creationState.determineLockMode( resultVariable );
-
-		return new CollectionResultImpl(
-				getDescribedAttribute(),
-				navigableReference.getNavigablePath(),
-				resultVariable,
-				lockMode,
-				keyCollectionResult,
-				createInitializerProducer(
-						null,
-						true,
-						resultVariable,
-						lockMode,
-						creationState,
-						creationContext
-				)
-		);
-	}
-
 	protected abstract CollectionInitializerProducer createInitializerProducer(
+			NavigablePath navigablePath,
 			FetchParent fetchParent,
 			boolean selected,
 			String resultVariable,
 			LockMode lockMode,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext);
+			DomainResultCreationState creationState);
 
 	protected abstract AbstractPluralPersistentAttribute createAttribute(
 			Property pluralProperty,
@@ -744,25 +746,21 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 			boolean selected,
 			LockMode lockMode,
 			String resultVariable,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
+			DomainResultCreationState creationState) {
 		if ( !isArray() && fetchTiming == FetchTiming.DELAYED ) {
 			// for delayed fetching, use a specialized Fetch impl
 			return generateDelayedFetch(
 					fetchParent,
 					resultVariable,
-					creationState,
-					creationContext
+					creationState
 			);
 		}
 		else {
 			return generateImmediateFetch(
 					fetchParent,
 					resultVariable,
-					isArray() || selected,
 					lockMode,
-					creationState,
-					creationContext
+					creationState
 			);
 		}
 	}
@@ -775,16 +773,14 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 	protected Fetch generateDelayedFetch(
 			FetchParent fetchParent,
 			String resultVariable,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
+			DomainResultCreationState creationState) {
 		return new DelayedCollectionFetch(
 				fetchParent,
 				getDescribedAttribute(),
 				resultVariable,
 				getCollectionKeyDescriptor().createContainerResult(
 						creationState.getColumnReferenceQualifierStack().getCurrent(),
-						creationState,
-						creationContext
+						creationState
 				)
 		);
 	}
@@ -792,64 +788,52 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 	private Fetch generateImmediateFetch(
 			FetchParent fetchParent,
 			String resultVariable,
-			boolean selected,
 			LockMode lockMode,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
-		final Stack<NavigableReference> navigableReferenceStack = creationState.getNavigableReferenceStack();
-		final NavigableContainerReference parentReference = (NavigableContainerReference) navigableReferenceStack.getCurrent();
+			DomainResultCreationState creationState) {
+		final NavigablePath navigablePath = fetchParent.getNavigablePath().append( getNavigableName() );
 
-		// if there is an existing NavigableReference this fetch can use, use it.  otherwise create one
-		NavigableReference navigableReference = parentReference.findNavigableReference( getNavigableName() );
-		if ( navigableReference == null ) {
-			if ( selected ) {
-				// this creates the SQL AST join(s) in the from clause
-				final TableGroupJoin tableGroupJoin = createTableGroupJoin(
-						creationState.getSqlAliasBaseGenerator(),
-						parentReference,
-						creationState.getSqlExpressionResolver(),
-						fetchParent.getNavigablePath().append( getNavigableName() ),
-						getDescribedAttribute().isNullable() ? JoinType.LEFT : JoinType.INNER,
+		final TableGroup lhs = creationState.getFromClauseAccess().getTableGroup( navigablePath.getParent() );
+
+		final TableGroup tableGroup = creationState.getFromClauseAccess().resolveTableGroup(
+				navigablePath,
+				np -> {
+					if ( lhs == null ) {
+						throw new DomainResultCreationException( "Could not locate LHS TableGroup for collection fetch : " + navigablePath );
+					}
+
+					creationState.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() );
+					final TableGroupJoin tableGroupJoin = createTableGroupJoin(
+							null,
+							navigablePath,
+							lhs,
+							resultVariable,
+							JoinType.INNER,
+							lockMode,
+							creationState.getSqlAstCreationState()
+					);
+
+					return tableGroupJoin.getJoinedGroup();
+				}
+		);
+
+		return CollectionFetchImpl.create(
+				navigablePath,
+				tableGroup,
+				lhs,
+				fetchParent,
+				getDescribedAttribute(),
+				resultVariable,
+				lockMode,
+				createInitializerProducer(
+						navigablePath,
+						fetchParent,
+						true,
 						resultVariable,
 						lockMode,
-						creationState.getCurrentTableSpace()
-				);
-				creationState.getCurrentTableSpace().addJoinedTableGroup( tableGroupJoin );
-				navigableReference = tableGroupJoin.getJoinedGroup().getNavigableReference();
-			}
-		}
-
-		if ( navigableReference != null ) {
-			assert navigableReference.getNavigable() instanceof CollectionValuedNavigable;
-			creationState.getNavigableReferenceStack().push( navigableReference );
-			creationState.getColumnReferenceQualifierStack().push( navigableReference.getColumnReferenceQualifier() );
-		}
-
-		try {
-			return CollectionFetchImpl.create(
-					fetchParent,
-					getDescribedAttribute(),
-					selected,
-					resultVariable,
-					lockMode,
-					createInitializerProducer(
-							fetchParent,
-							selected,
-							resultVariable,
-							lockMode,
-							creationState,
-							creationContext
-					),
-					creationState,
-					creationContext
-			);
-		}
-		finally {
-			if ( navigableReference != null ) {
-				creationState.getColumnReferenceQualifierStack().pop();
-				creationState.getNavigableReferenceStack().pop();
-			}
-		}
+						creationState
+				),
+				creationState
+		);
 	}
 
 	@Override

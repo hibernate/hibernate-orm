@@ -61,7 +61,7 @@ public class TableBasedUpdateHandlerImpl
 	@Override
 	protected void performMutations(HandlerExecutionContext executionContext) {
 		boolean hasNoSecondaryTables = getSqmDeleteOrUpdateStatement().getTarget()
-				.getNavigableReference()
+				.getReferencedNavigable()
 				.getEntityDescriptor()
 				.getSecondaryTableBindings()
 				.isEmpty();

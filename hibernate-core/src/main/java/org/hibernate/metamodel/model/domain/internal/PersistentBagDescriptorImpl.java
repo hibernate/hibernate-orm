@@ -17,11 +17,10 @@ import org.hibernate.metamodel.model.domain.spi.AbstractPersistentCollectionDesc
 import org.hibernate.metamodel.model.domain.spi.AbstractPluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.internal.domain.collection.BagInitializerProducer;
 import org.hibernate.sql.results.internal.domain.collection.CollectionInitializerProducer;
 import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.FetchParent;
 
@@ -38,20 +37,17 @@ public class PersistentBagDescriptorImpl<O,E> extends AbstractPersistentCollecti
 
 	@Override
 	protected CollectionInitializerProducer createInitializerProducer(
+			NavigablePath navigablePath,
 			FetchParent fetchParent,
 			boolean selected,
 			String resultVariable,
 			LockMode lockMode,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
-		final NavigableReference navigableReference = creationState.getNavigableReferenceStack().getCurrent();
-
+			DomainResultCreationState creationState) {
 		final DomainResult collectionIdResult;
 		if ( getIdDescriptor() != null ) {
 			collectionIdResult = getIdDescriptor().createDomainResult(
 					null,
-					creationState,
-					creationContext
+					creationState
 			);
 		}
 		else {
@@ -59,10 +55,9 @@ public class PersistentBagDescriptorImpl<O,E> extends AbstractPersistentCollecti
 		}
 
 		final DomainResult elementResult = getElementDescriptor().createDomainResult(
-				navigableReference,
-				null,
-				creationState,
-				creationContext
+				navigablePath,
+				resultVariable,
+				creationState
 		);
 
 		return new BagInitializerProducer(

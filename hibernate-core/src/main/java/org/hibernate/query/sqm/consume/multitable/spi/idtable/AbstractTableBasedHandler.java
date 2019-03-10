@@ -12,6 +12,7 @@ import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.sqm.consume.multitable.spi.Handler;
 import org.hibernate.query.sqm.consume.multitable.spi.HandlerCreationContext;
@@ -243,7 +244,13 @@ public abstract class AbstractTableBasedHandler implements Handler {
 	protected QuerySpec generateIdTableSelect(HandlerExecutionContext executionContext) {
 		QuerySpec idTableSelect = new QuerySpec( false );
 		final TableSpace tableSpace = idTableSelect.getFromClause().makeTableSpace();
-		tableSpace.setRootTableGroup( createTableGroupForIdTable( idTableInfo, tableSpace ) );
+		tableSpace.setRootTableGroup(
+				createTableGroupForIdTable(
+						new NavigablePath( entityDescriptor.getNavigableName() ),
+						idTableInfo,
+						tableSpace
+				)
+		);
 
 		Collection<Column> columns = idTableInfo.getColumns();
 		columns.forEach( column -> {
@@ -274,9 +281,10 @@ public abstract class AbstractTableBasedHandler implements Handler {
 	}
 
 	private TableGroup createTableGroupForIdTable(
+			NavigablePath navigablePath,
 			IdTable idTableInfo,
 			TableSpace tableSpace) {
-		return new IdTableGroup( tableSpace, new IdTableReference( idTableInfo, null ) );
+		return new IdTableGroup( tableSpace, navigablePath, new IdTableReference( idTableInfo, null ) );
 	}
 
 	private static class IdTableGroup extends AbstractTableGroup {
@@ -284,8 +292,9 @@ public abstract class AbstractTableBasedHandler implements Handler {
 
 		public IdTableGroup(
 				TableSpace tableSpace,
+				NavigablePath navigablePath,
 				IdTableReference idTableReference) {
-			super( tableSpace, "id_table" );
+			super( "id_table", navigablePath );
 			this.idTableReference = idTableReference;
 		}
 

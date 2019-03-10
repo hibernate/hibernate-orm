@@ -6,28 +6,16 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression.instantiation;
 
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.query.sqm.tree.expression.Compatibility;
 import org.hibernate.sql.ast.produce.ConversionException;
 import org.hibernate.sql.results.internal.domain.DynamicInstantiationResultImpl;
-import org.hibernate.sql.results.internal.instantiation.ArgumentReader;
-import org.hibernate.sql.results.internal.instantiation.DynamicInstantiationConstructorAssemblerImpl;
-import org.hibernate.sql.results.internal.instantiation.DynamicInstantiationInjectionAssemblerImpl;
-import org.hibernate.sql.results.internal.instantiation.DynamicInstantiationListAssemblerImpl;
-import org.hibernate.sql.results.internal.instantiation.DynamicInstantiationMapAssemblerImpl;
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
 import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultAssembler;
-import org.hibernate.sql.results.spi.DomainResultCreationContext;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
-import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
@@ -121,109 +109,108 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 	@SuppressWarnings("unchecked")
 	public DomainResult createDomainResult(
 			String resultVariable,
-			DomainResultCreationState creationState,
-			DomainResultCreationContext creationContext) {
+			DomainResultCreationState creationState) {
 		return new DynamicInstantiationResultImpl(
 				resultVariable,
 				getNature(),
 				(JavaTypeDescriptor) getTargetJavaTypeDescriptor(),
 				getArguments().stream()
-						.map( argument -> argument.buildArgumentDomainResult( creationContext, creationState ) )
+						.map( argument -> argument.buildArgumentDomainResult( creationState ) )
 						.collect( Collectors.toList() )
 		);
 	}
-
-	@SuppressWarnings("unchecked")
-	private static DomainResultAssembler resolveAssembler(
-			DynamicInstantiation dynamicInstantiation,
-			boolean areAllArgumentsAliased,
-			boolean areAnyArgumentsAliased,
-			List<String> duplicatedAliases,
-			List<ArgumentReader> argumentReaders,
-			AssemblerCreationContext creationContext) {
-
-		if ( dynamicInstantiation.getNature() == DynamicInstantiationNature.LIST ) {
-			if ( log.isDebugEnabled() && areAnyArgumentsAliased ) {
-				log.debug( "One or more arguments for List dynamic instantiation (`new list(...)`) specified an alias; ignoring" );
-			}
-			return new DynamicInstantiationListAssemblerImpl(
-					(BasicJavaDescriptor<List>) dynamicInstantiation.getTargetJavaTypeDescriptor(),
-					argumentReaders
-			);
-		}
-		else if ( dynamicInstantiation.getNature() == DynamicInstantiationNature.MAP ) {
-			if ( ! areAllArgumentsAliased ) {
-				throw new IllegalStateException( "Map dynamic instantiation contained one or more arguments with no alias" );
-			}
-			if ( !duplicatedAliases.isEmpty() ) {
-				throw new IllegalStateException(
-						"Map dynamic instantiation contained arguments with duplicated aliases [" + StringHelper.join( ",", duplicatedAliases ) + "]"
-				);
-			}
-			return new DynamicInstantiationMapAssemblerImpl(
-					(BasicJavaDescriptor<Map>) dynamicInstantiation.getTargetJavaTypeDescriptor(),
-					argumentReaders
-			);
-		}
-		else {
-			// find a constructor matching argument types
-			constructor_loop:
-			for ( Constructor constructor : dynamicInstantiation.getTargetJavaType().getDeclaredConstructors() ) {
-				if ( constructor.getParameterTypes().length != dynamicInstantiation.arguments.size() ) {
-					continue;
-				}
-
-				for ( int i = 0; i < dynamicInstantiation.arguments.size(); i++ ) {
-					final ArgumentReader argumentReader = argumentReaders.get( i );
-					final JavaTypeDescriptor argumentTypeDescriptor = creationContext.getSessionFactory()
-							.getTypeConfiguration()
-							.getJavaTypeDescriptorRegistry()
-							.getOrMakeJavaDescriptor( constructor.getParameterTypes()[i] );
-
-					final boolean assignmentCompatible = Compatibility.areAssignmentCompatible(
-							argumentTypeDescriptor,
-							argumentReader.getJavaTypeDescriptor()
-					);
-					if ( !assignmentCompatible ) {
-						log.debugf(
-								"Skipping constructor for dynamic-instantiation match due to argument mismatch [%s] : %s -> %s",
-								i,
-								constructor.getParameterTypes()[i].getName(),
-								argumentTypeDescriptor.getJavaType().getName()
-						);
-						continue constructor_loop;
-					}
-				}
-
-				constructor.setAccessible( true );
-				return new DynamicInstantiationConstructorAssemblerImpl(
-						constructor,
-						dynamicInstantiation.getTargetJavaTypeDescriptor(),
-						argumentReaders
-				);
-			}
-
-			log.debugf(
-					"Could not locate appropriate constructor for dynamic instantiation of [%s]; attempting bean-injection instantiation",
-					dynamicInstantiation.getTargetJavaType().getName()
-			);
-
-
-			if ( ! areAllArgumentsAliased ) {
-				throw new IllegalStateException(
-						"Could not determine appropriate instantiation strategy - no matching constructor found and one or more arguments did not define alias for bean-injection"
-				);
-			}
-			if ( !duplicatedAliases.isEmpty() ) {
-				throw new IllegalStateException(
-						"Could not determine appropriate instantiation strategy - no matching constructor found and arguments defined duplicated aliases [" +
-								StringHelper.join( ",", duplicatedAliases ) + "] for bean-injection"
-				);
-			}
-
-			return new DynamicInstantiationInjectionAssemblerImpl( dynamicInstantiation.getTargetJavaTypeDescriptor(), argumentReaders );
-		}
-	}
+//
+//	@SuppressWarnings("unchecked")
+//	private static DomainResultAssembler resolveAssembler(
+//			DynamicInstantiation dynamicInstantiation,
+//			boolean areAllArgumentsAliased,
+//			boolean areAnyArgumentsAliased,
+//			List<String> duplicatedAliases,
+//			List<ArgumentReader> argumentReaders,
+//			AssemblerCreationContext creationContext) {
+//
+//		if ( dynamicInstantiation.getNature() == DynamicInstantiationNature.LIST ) {
+//			if ( log.isDebugEnabled() && areAnyArgumentsAliased ) {
+//				log.debug( "One or more arguments for List dynamic instantiation (`new list(...)`) specified an alias; ignoring" );
+//			}
+//			return new DynamicInstantiationListAssemblerImpl(
+//					(BasicJavaDescriptor<List>) dynamicInstantiation.getTargetJavaTypeDescriptor(),
+//					argumentReaders
+//			);
+//		}
+//		else if ( dynamicInstantiation.getNature() == DynamicInstantiationNature.MAP ) {
+//			if ( ! areAllArgumentsAliased ) {
+//				throw new IllegalStateException( "Map dynamic instantiation contained one or more arguments with no alias" );
+//			}
+//			if ( !duplicatedAliases.isEmpty() ) {
+//				throw new IllegalStateException(
+//						"Map dynamic instantiation contained arguments with duplicated aliases [" + StringHelper.join( ",", duplicatedAliases ) + "]"
+//				);
+//			}
+//			return new DynamicInstantiationMapAssemblerImpl(
+//					(BasicJavaDescriptor<Map>) dynamicInstantiation.getTargetJavaTypeDescriptor(),
+//					argumentReaders
+//			);
+//		}
+//		else {
+//			// find a constructor matching argument types
+//			constructor_loop:
+//			for ( Constructor constructor : dynamicInstantiation.getTargetJavaType().getDeclaredConstructors() ) {
+//				if ( constructor.getParameterTypes().length != dynamicInstantiation.arguments.size() ) {
+//					continue;
+//				}
+//
+//				for ( int i = 0; i < dynamicInstantiation.arguments.size(); i++ ) {
+//					final ArgumentReader argumentReader = argumentReaders.get( i );
+//					final JavaTypeDescriptor argumentTypeDescriptor = creationContext.getSessionFactory()
+//							.getTypeConfiguration()
+//							.getJavaTypeDescriptorRegistry()
+//							.getOrMakeJavaDescriptor( constructor.getParameterTypes()[i] );
+//
+//					final boolean assignmentCompatible = Compatibility.areAssignmentCompatible(
+//							argumentTypeDescriptor,
+//							argumentReader.getJavaTypeDescriptor()
+//					);
+//					if ( !assignmentCompatible ) {
+//						log.debugf(
+//								"Skipping constructor for dynamic-instantiation match due to argument mismatch [%s] : %s -> %s",
+//								i,
+//								constructor.getParameterTypes()[i].getName(),
+//								argumentTypeDescriptor.getJavaType().getName()
+//						);
+//						continue constructor_loop;
+//					}
+//				}
+//
+//				constructor.setAccessible( true );
+//				return new DynamicInstantiationConstructorAssemblerImpl(
+//						constructor,
+//						dynamicInstantiation.getTargetJavaTypeDescriptor(),
+//						argumentReaders
+//				);
+//			}
+//
+//			log.debugf(
+//					"Could not locate appropriate constructor for dynamic instantiation of [%s]; attempting bean-injection instantiation",
+//					dynamicInstantiation.getTargetJavaType().getName()
+//			);
+//
+//
+//			if ( ! areAllArgumentsAliased ) {
+//				throw new IllegalStateException(
+//						"Could not determine appropriate instantiation strategy - no matching constructor found and one or more arguments did not define alias for bean-injection"
+//				);
+//			}
+//			if ( !duplicatedAliases.isEmpty() ) {
+//				throw new IllegalStateException(
+//						"Could not determine appropriate instantiation strategy - no matching constructor found and arguments defined duplicated aliases [" +
+//								StringHelper.join( ",", duplicatedAliases ) + "] for bean-injection"
+//				);
+//			}
+//
+//			return new DynamicInstantiationInjectionAssemblerImpl( dynamicInstantiation.getTargetJavaTypeDescriptor(), argumentReaders );
+//		}
+//	}
 
 	class Builder {
 		private final DynamicInstantiationNature nature;

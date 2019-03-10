@@ -52,10 +52,11 @@ public class SqmSingularAttributeReferenceEntity
 
 	public SqmSingularAttributeReferenceEntity(
 			SqmNavigableContainerReference containerReference,
+			SqmNavigableJoin navigableJoin,
 			SingularPersistentAttributeEntity referencedAttribute,
 			SqmCreationState creationState) {
 		super( containerReference, referencedAttribute );
-		this.navigableJoin = creationState.getCurrentFromElementBuilder().buildNavigableJoin( this );
+		this.navigableJoin = navigableJoin;
 	}
 
 	@Override

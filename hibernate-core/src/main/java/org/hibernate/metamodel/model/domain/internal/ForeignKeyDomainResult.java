@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
@@ -47,8 +46,7 @@ public class ForeignKeyDomainResult implements DomainResult {
 	@Override
 	public DomainResultAssembler createResultAssembler(
 			Consumer<Initializer> initializerCollector,
-			AssemblerCreationState creationOptions,
-			AssemblerCreationContext creationContext) {
+			AssemblerCreationState creationState) {
 		return new DomainResultAssembler() {
 			@Override
 			public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {

@@ -44,6 +44,5 @@ public interface DomainResult extends ResultSetMappingNode {
 	 */
 	DomainResultAssembler createResultAssembler(
 			Consumer<Initializer> initializerCollector,
-			AssemblerCreationState creationOptions,
-			AssemblerCreationContext creationContext);
+			AssemblerCreationState creationState);
 }

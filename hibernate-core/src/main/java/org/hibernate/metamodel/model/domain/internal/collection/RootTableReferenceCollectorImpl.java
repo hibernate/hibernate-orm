@@ -7,12 +7,9 @@
 package org.hibernate.metamodel.model.domain.internal.collection;
 
 import org.hibernate.LockMode;
-import org.hibernate.metamodel.model.domain.spi.AbstractPersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.AbstractTableReferenceCollector;
+import org.hibernate.metamodel.model.domain.spi.PluralValuedNavigable;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.JoinType;
-import org.hibernate.sql.ast.tree.spi.from.CollectionTableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 
 /**
  * @author Steve Ebersole
@@ -21,32 +18,31 @@ public class RootTableReferenceCollectorImpl extends AbstractTableReferenceColle
 	private final String uniqueIdentifier;
 	private final NavigablePath navigablePath;
 
-	private final AbstractPersistentCollectionDescriptor collectionDescriptor;
+	private final PluralValuedNavigable navigable;
 
-	private final TableSpace tableSpace;
+	private final String explicitSourceAlias;
 	private final LockMode effectiveLockMode;
 
 	public RootTableReferenceCollectorImpl(
-			TableSpace tableSpace,
-			AbstractPersistentCollectionDescriptor collectionDescriptor,
-			NavigablePath navigablePath,
 			String uniqueIdentifier,
+			NavigablePath navigablePath,
+			PluralValuedNavigable navigable,
+			String explicitSourceAlias,
 			LockMode effectiveLockMode) {
-		this.tableSpace = tableSpace;
-		this.collectionDescriptor = collectionDescriptor;
-		this.navigablePath = navigablePath;
 		this.uniqueIdentifier = uniqueIdentifier;
+		this.navigable = navigable;
+		this.navigablePath = navigablePath;
+		this.explicitSourceAlias = explicitSourceAlias;
 		this.effectiveLockMode = effectiveLockMode;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public CollectionTableGroup generateTableGroup() {
 		return new CollectionTableGroup(
 				uniqueIdentifier,
-				tableSpace,
-				collectionDescriptor,
-				effectiveLockMode,
 				navigablePath,
+				navigable,
+				explicitSourceAlias,
+				effectiveLockMode,
 				getPrimaryTableReference(),
 				getTableReferenceJoins()
 		);

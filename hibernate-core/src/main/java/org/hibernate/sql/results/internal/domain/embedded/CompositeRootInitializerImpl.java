@@ -8,7 +8,6 @@ package org.hibernate.sql.results.internal.domain.embedded;
 
 import java.util.function.Consumer;
 
-import org.hibernate.sql.results.spi.AssemblerCreationContext;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.CompositeMappingNode;
 import org.hibernate.sql.results.spi.FetchParentAccess;
@@ -22,8 +21,7 @@ public class CompositeRootInitializerImpl extends AbstractCompositeInitializer {
 			FetchParentAccess fetchParentAccess,
 			CompositeMappingNode resultDescriptor,
 			Consumer<Initializer> initializerConsumer,
-			AssemblerCreationState creationOptions,
-			AssemblerCreationContext creationContext) {
-		super( resultDescriptor, fetchParentAccess, initializerConsumer, creationContext, creationOptions );
+			AssemblerCreationState creationState) {
+		super( resultDescriptor, fetchParentAccess, initializerConsumer, creationState );
 	}
 }

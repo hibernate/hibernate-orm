@@ -11,21 +11,20 @@ import java.util.List;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.orm.test.query.sqm.produce.domain.Person;
 import org.hibernate.query.sqm.SemanticException;
-import org.hibernate.query.sqm.produce.spi.ImplicitAliasGenerator;
 import org.hibernate.query.sqm.tree.SqmJoinType;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
-import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
-import org.hibernate.query.sqm.tree.order.SqmSortSpecification;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
+import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -33,7 +32,6 @@ import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.isEmpty;
 import static org.hibernate.testing.hamcrest.sqm.SqmAliasMatchers.isImplicitAlias;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -57,15 +55,12 @@ public class FromClauseTests extends BaseSqmUnitTest {
 
 		final SqmFromClause fromClause = selectStatement.getQuerySpec().getFromClause();
 		assertThat( fromClause, notNullValue() );
-		assertThat( fromClause.getFromElementSpaces(), hasSize( 1 ) );
+		assertThat( fromClause.getRoots(), hasSize( 1 ) );
 
-		final SqmFromElementSpace firstSpace = fromClause.getFromElementSpaces().get( 0 );
-		assertThat( firstSpace, notNullValue() );
-		assertThat( firstSpace.getJoins(), isEmpty() );
-
-		final SqmRoot firstSpaceRoot = firstSpace.getRoot();
-		assertThat( firstSpaceRoot, notNullValue() );
-		assertThat( firstSpaceRoot.getIdentificationVariable(), is( "p") );
+		final SqmRoot firstRoot = fromClause.getRoots().get( 0 );
+		assertThat( firstRoot, notNullValue() );
+		assertThat( firstRoot.getJoins(), isEmpty() );
+		assertThat( firstRoot.getIdentificationVariable(), is( "p") );
 	}
 
 	@Test
@@ -78,19 +73,18 @@ public class FromClauseTests extends BaseSqmUnitTest {
 
 		assertNotNull( fromClause );
 		assertThat( fromClause, notNullValue() );
-		assertThat( fromClause.getFromElementSpaces(), hasSize( 2 ) );
 
-		final SqmFromElementSpace firstSpace = fromClause.getFromElementSpaces().get( 0 );
-		assertThat( firstSpace, notNullValue() );
-		assertThat( firstSpace.getJoins(), isEmpty() );
-		assertThat( firstSpace.getRoot(), notNullValue() );
-		assertThat( firstSpace.getRoot().getIdentificationVariable(), is( "p")  );
+		assertThat( fromClause.getRoots(), hasSize( 2 ) );
 
-		final SqmFromElementSpace secondSpace = fromClause.getFromElementSpaces().get( 1 );
-		assertThat( secondSpace, notNullValue() );
-		assertThat( secondSpace.getJoins(), isEmpty() );
-		assertThat( secondSpace.getRoot(), notNullValue() );
-		assertThat( secondSpace.getRoot().getIdentificationVariable(), is( "p2")  );
+		final SqmRoot firstRoot = fromClause.getRoots().get( 0 );
+		assertThat( firstRoot, notNullValue() );
+		assertThat( firstRoot.getJoins(), isEmpty() );
+		assertThat( firstRoot.getIdentificationVariable(), is( "p") );
+
+		final SqmRoot secondRoot = fromClause.getRoots().get( 0 );
+		assertThat( secondRoot, notNullValue() );
+		assertThat( secondRoot.getJoins(), isEmpty() );
+		assertThat( secondRoot.getIdentificationVariable(), is( "p") );
 	}
 
 	@Test
@@ -99,13 +93,12 @@ public class FromClauseTests extends BaseSqmUnitTest {
 
 		final SqmFromClause fromClause = selectStatement.getQuerySpec().getFromClause();
 		assertThat( fromClause, notNullValue() );
-		assertThat( fromClause.getFromElementSpaces(), hasSize( 1 ) );
+		assertThat( fromClause.getRoots(), hasSize( 1 ) );
 
-		final SqmFromElementSpace firstSpace = fromClause.getFromElementSpaces().get( 0 );
-		assertThat( firstSpace, notNullValue() );
-		assertThat( firstSpace.getJoins(), isEmpty() );
-		assertThat( firstSpace.getRoot(), notNullValue() );
-		assertTrue( ImplicitAliasGenerator.isImplicitAlias( firstSpace.getRoot().getIdentificationVariable() ) );
+		final SqmRoot sqmRoot = fromClause.getRoots().get( 0 );
+		assertThat( sqmRoot, notNullValue() );
+		assertThat( sqmRoot.getJoins(), isEmpty() );
+		assertThat( sqmRoot.getIdentificationVariable(), nullValue() );
 	}
 
 	@Test
@@ -116,15 +109,13 @@ public class FromClauseTests extends BaseSqmUnitTest {
 
 		final SqmFromClause fromClause = selectStatement.getQuerySpec().getFromClause();
 		assertThat( fromClause, notNullValue() );
-		assertThat( fromClause.getFromElementSpaces(), hasSize( 1 ) );
+		assertThat( fromClause.getRoots(), hasSize( 1 ) );
 
-		final SqmFromElementSpace firstSpace = fromClause.getFromElementSpaces().get( 0 );
-		assertThat( firstSpace, notNullValue() );
-		assertThat( firstSpace.getJoins(), hasSize( 1 ) );
-		assertThat( firstSpace.getRoot(), notNullValue() );
-
-		assertThat( firstSpace.getRoot().getIdentificationVariable(), is( "p" )  );
-		assertThat( firstSpace.getJoins().get( 0 ).getIdentificationVariable(), is( "p2" )  );
+		final SqmRoot sqmRoot = fromClause.getRoots().get( 0 );
+		assertThat( sqmRoot, notNullValue() );
+		assertThat( sqmRoot.getIdentificationVariable(), is( "p" )  );
+		assertThat( sqmRoot.getJoins(), hasSize( 1 ) );
+		assertThat( sqmRoot.getJoins().get( 0 ).getIdentificationVariable(), is( "p2" )  );
 	}
 
 	@Test
@@ -144,17 +135,15 @@ public class FromClauseTests extends BaseSqmUnitTest {
 			String joinAlias) {
 		final SqmFromClause fromClause = selectStatement.getQuerySpec().getFromClause();
 		assertThat( fromClause, notNullValue() );
-		assertThat( fromClause.getFromElementSpaces(), hasSize( 1 ) );
+		assertThat( fromClause.getRoots(), hasSize( 1 ) );
 
-		final SqmFromElementSpace firstSpace = fromClause.getFromElementSpaces().get( 0 );
-		assertThat( firstSpace, notNullValue() );
+		final SqmRoot sqmRoot = fromClause.getRoots().get( 0 );
+		assertThat( sqmRoot, notNullValue() );
+		assertThat( sqmRoot.getIdentificationVariable(), is( rootAlias )  );
 
-		assertThat( firstSpace.getRoot(), notNullValue() );
-		assertThat( firstSpace.getRoot().getIdentificationVariable(), is( rootAlias )  );
-
-		assertThat( firstSpace.getJoins(), hasSize( 1 ) );
-		assertThat( firstSpace.getJoins().get( 0 ).getIdentificationVariable(), is( joinAlias )  );
-		assertThat( firstSpace.getJoins().get( 0 ).getJoinType(), is( joinType ) );
+		assertThat( sqmRoot.getJoins(), hasSize( 1 ) );
+		assertThat( sqmRoot.getJoins().get( 0 ).getIdentificationVariable(), is( joinAlias )  );
+		assertThat( sqmRoot.getJoins().get( 0 ).getJoinType(), is( joinType ) );
 	}
 
 	@Test
@@ -219,16 +208,13 @@ public class FromClauseTests extends BaseSqmUnitTest {
 
 		final SqmFromClause fromClause = selectStatement.getQuerySpec().getFromClause();
 		assertThat( fromClause, notNullValue() );
-		assertThat( fromClause.getFromElementSpaces(), hasSize( 1 ) );
+		assertThat( fromClause.getRoots(), hasSize( 1 ) );
 
-		final SqmFromElementSpace firstSpace = fromClause.getFromElementSpaces().get( 0 );
-		assertThat( firstSpace, notNullValue() );
-
-		assertThat( firstSpace.getRoot(), notNullValue() );
-		assertThat( firstSpace.getRoot().getIdentificationVariable(), is( "p" )  );
-
-		assertThat( firstSpace.getJoins(), hasSize( 1 ) );
-		assertThat( firstSpace.getJoins().get( 0 ).getIdentificationVariable(), isImplicitAlias() );
+		final SqmRoot sqmRoot = fromClause.getRoots().get( 0 );
+		assertThat( sqmRoot, notNullValue() );
+		assertThat( sqmRoot.getIdentificationVariable(), is( "p" )  );
+		assertThat( sqmRoot.getJoins(), hasSize( 1 ) );
+		assertThat( sqmRoot.getJoins().get( 0 ).getIdentificationVariable(), isImplicitAlias() );
 	}
 
 	@Test
@@ -238,10 +224,10 @@ public class FromClauseTests extends BaseSqmUnitTest {
 
 		final SqmFromClause fromClause = selectStatement.getQuerySpec().getFromClause();
 		assertThat( fromClause, notNullValue() );
-		assertThat( fromClause.getFromElementSpaces(), hasSize( 1 ) );
+		assertThat( fromClause.getRoots(), hasSize( 1 ) );
 
-		final SqmFromElementSpace firstSpace = fromClause.getFromElementSpaces().get( 0 );
-		assertThat( firstSpace, notNullValue() );
+		final SqmRoot sqmRoot = fromClause.getRoots().get( 0 );
+		assertThat( sqmRoot, notNullValue() );
 
 		assertThat( selectStatement.getQuerySpec().getSelectClause().getSelections(), hasSize( 1 ) );
 		final SqmSelection sqmSelection = selectStatement.getQuerySpec().getSelectClause().getSelections().get( 0 );
@@ -256,7 +242,7 @@ public class FromClauseTests extends BaseSqmUnitTest {
 
 		final SqmFromClause fromClause = selectStatement.getQuerySpec().getFromClause();
 		assertThat( fromClause, notNullValue() );
-		assertThat( fromClause.getFromElementSpaces(), hasSize( 1 ) );
+		assertThat( fromClause.getRoots(), hasSize( 1 ) );
 
 		final List<SqmSortSpecification> orderBy = selectStatement.getQuerySpec()
 				.getOrderByClause()

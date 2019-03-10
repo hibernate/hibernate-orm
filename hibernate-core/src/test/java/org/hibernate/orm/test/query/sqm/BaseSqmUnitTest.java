@@ -8,11 +8,11 @@ package org.hibernate.orm.test.query.sqm;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.spi.AfterLoadAction;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
-import org.hibernate.sql.ast.produce.spi.SqlAstProducerContext;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 
 import org.hibernate.testing.junit5.StandardTags;
@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Tag;
 @Tag(StandardTags.SQM)
 public abstract class BaseSqmUnitTest
 		extends BaseSessionFactoryFunctionalTest
-		implements SqlAstProducerContext, Callback {
+		implements SqlAstCreationContext, Callback {
 
 	@Override
 	protected void applySettings(StandardServiceRegistryBuilder builder) {
@@ -47,25 +47,25 @@ public abstract class BaseSqmUnitTest
 	}
 
 	@Override
-	public Callback getCallback() {
-		return this;
-	}
-
-	@Override
 	public void registerAfterLoadAction(AfterLoadAction afterLoadAction) {
 	}
 
-	@Override
-	public LoadQueryInfluencers getLoadQueryInfluencers() {
-		return LoadQueryInfluencers.NONE;
-	}
-
-	@Override
-	public SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory();
-	}
-
 	protected SqmSelectStatement interpretSelect(String hql) {
-		return (SqmSelectStatement) getSessionFactory().getQueryEngine().getSemanticQueryProducer().interpret( hql );
+		return (SqmSelectStatement) sessionFactory().getQueryEngine().getSemanticQueryProducer().interpret( hql );
+	}
+
+	@Override
+	public MetamodelImplementor getDomainModel() {
+		return sessionFactory().getMetamodel();
+	}
+
+	@Override
+	public ServiceRegistry getServiceRegistry() {
+		return sessionFactory().getServiceRegistry();
+	}
+
+	@Override
+	public Integer getMaximumFetchDepth() {
+		return sessionFactory().getMaximumFetchDepth();
 	}
 }

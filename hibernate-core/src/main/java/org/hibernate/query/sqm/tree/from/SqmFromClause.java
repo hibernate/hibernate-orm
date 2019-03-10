@@ -7,7 +7,9 @@
 package org.hibernate.query.sqm.tree.from;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Contract representing a from clause.
@@ -18,19 +20,40 @@ import java.util.List;
  * @author Steve Ebersole
  */
 public class SqmFromClause {
-	private List<SqmFromElementSpace> fromElementSpaces = new ArrayList<>();
+	private List<SqmRoot> domainRoots;
 
-	public List<SqmFromElementSpace> getFromElementSpaces() {
-		return fromElementSpaces;
+	/**
+	 * Immutable view of the domain roots.  Use {@link #setRoots} or {@link #addRoot} to
+	 * mutate the roots
+	 */
+	public List<SqmRoot> getRoots() {
+		return domainRoots == null ? Collections.emptyList() : Collections.unmodifiableList( domainRoots );
 	}
 
-	public SqmFromElementSpace makeFromElementSpace() {
-		final SqmFromElementSpace space = new SqmFromElementSpace( this );
-		addFromElementSpace( space );
-		return space;
+	/**
+	 * Inject the complete set of domain roots
+	 */
+	public void setRoots(List<SqmRoot> domainRoots) {
+		this.domainRoots = domainRoots;
 	}
 
-	public void addFromElementSpace(SqmFromElementSpace space) {
-		fromElementSpaces.add( space );
+	/**
+	 * Add roots incrementally
+	 */
+	public void addRoot(SqmRoot root) {
+		if ( domainRoots == null ) {
+			domainRoots = new ArrayList<>();
+		}
+
+		domainRoots.add( root );
+	}
+
+	/**
+	 * Visit the domain roots
+	 */
+	public void visitRoots(Consumer<SqmRoot> consumer) {
+		if ( domainRoots != null ) {
+			domainRoots.forEach( consumer );
+		}
 	}
 }

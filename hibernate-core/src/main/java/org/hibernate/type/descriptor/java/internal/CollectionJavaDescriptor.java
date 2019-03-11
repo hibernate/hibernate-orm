@@ -7,6 +7,7 @@
 package org.hibernate.type.descriptor.java.internal;
 
 import org.hibernate.collection.spi.CollectionSemantics;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.CollectionMutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
@@ -64,5 +65,20 @@ public class CollectionJavaDescriptor<C> extends AbstractBasicJavaDescriptor<C> 
 
 	public CollectionSemantics<C> getSemantics() {
 		return semantics;
+	}
+
+	@Override
+	public boolean areEqual(C one, C another) {
+		return one == another ||
+				(
+						one instanceof PersistentCollection &&
+						( (PersistentCollection) one ).wasInitialized() &&
+						( (PersistentCollection) one ).isWrapper( another )
+				) ||
+				(
+						another instanceof PersistentCollection &&
+								( (PersistentCollection) another ).wasInitialized() &&
+								( (PersistentCollection) another ).isWrapper( one )
+				);
 	}
 }

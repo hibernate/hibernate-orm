@@ -157,8 +157,8 @@ public final class EntityUpdateAction extends EntityAction {
 		if ( entry == null ) {
 			throw new AssertionFailure( "possible nonthreadsafe access to session" );
 		}
-		
-		if ( entry.getStatus()==Status.MANAGED || entityDescriptor.isVersionPropertyGenerated() ) {
+
+		if ( entry.getStatus() == Status.MANAGED || entityDescriptor.isVersionPropertyGenerated() ) {
 			// get the updated snapshot of the entity state by cloning current state;
 			// it is safe to copy in place, since by this time no-one else (should have)2
 			// has a reference  to the array

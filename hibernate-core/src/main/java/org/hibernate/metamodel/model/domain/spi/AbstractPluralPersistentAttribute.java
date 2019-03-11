@@ -269,8 +269,8 @@ public abstract class AbstractPluralPersistentAttribute<O,C,E> extends AbstractP
 		// todo (6.0) : depends how we want to handle dirty collections marking container as dirty
 		//		this is only important for versioned entities
 		//
-		// for now return false
-		return false;
+		// for now return true
+		return true;
 	}
 
 	@Override

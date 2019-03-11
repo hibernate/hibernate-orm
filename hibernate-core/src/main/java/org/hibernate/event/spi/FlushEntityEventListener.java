@@ -14,5 +14,5 @@ import org.hibernate.HibernateException;
  * @author Gavin King
  */
 public interface FlushEntityEventListener extends Serializable {
-	public void onFlushEntity(FlushEntityEvent event) throws HibernateException;
+	void onFlushEntity(FlushEntityEvent event) throws HibernateException;
 }

@@ -59,17 +59,11 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 		setDirectlyAccessible( true );
 	}
 
-	private void setSet(Set set) {
-		this.set = set;
-		setInitialized();
-	}
-
 	public PersistentSet(
 			SharedSessionContractImplementor session,
 			PersistentCollectionDescriptor<?,?,E> descriptor,
 			Object key) {
 		super( session, descriptor, key );
-
 	}
 
 
@@ -456,6 +450,11 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 	public void load(E element) {
 		assert isInitializing();
 		tempList.add( element );
+	}
+
+	private void setSet(Set set) {
+		this.set = set;
+		setInitialized();
 	}
 
 	final class Clear implements DelayedOperation {

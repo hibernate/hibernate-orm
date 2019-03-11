@@ -30,11 +30,6 @@ import java.util.concurrent.TimeUnit;
 @OutputTimeUnit(value = TimeUnit.MILLISECONDS)
 public class BaseBenchmark extends BaseCoreFunctionalTestCase {
 	
-	public BaseBenchmark() {
-		buildSessionFactory();
-		buildConfiguration();
-	}
-	
 	@Benchmark
 	@BenchmarkMode(value = { Mode.AverageTime })
 	public void testInsertobject() {
@@ -50,8 +45,7 @@ public class BaseBenchmark extends BaseCoreFunctionalTestCase {
 	}
 
 	/**
-	 * ============================== HOW TO RUN THIS TEST:
-	 * ====================================
+	 * ============================== HOW TO RUN THIS TEST: ====================================
 	 * 
 	 * You can see the benchmark runs as usual.
 	 * 
@@ -110,6 +104,11 @@ public class BaseBenchmark extends BaseCoreFunctionalTestCase {
 		super.configure(configuration);
 		configuration.setProperty(AvailableSettings.SHOW_SQL, Boolean.TRUE.toString());
 		configuration.setProperty(AvailableSettings.FORMAT_SQL, Boolean.TRUE.toString());
-		// configuration.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
+		configuration.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
+	}
+	
+	public BaseBenchmark() {
+		buildSessionFactory();
+		buildConfiguration();
 	}
 }

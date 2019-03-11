@@ -21,6 +21,7 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openjdk.jmh.annotations.Scope;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
 
 @State(Scope.Benchmark)
@@ -39,6 +40,29 @@ public class BaseBenchmark extends BaseCoreFunctionalTestCase {
 		Transaction tx = s.beginTransaction();
 		Foo foo=new Foo();
 		foo.setMessage("payload");
+		s.save(foo);
+		tx.commit();
+		s.close();
+	}
+	
+	@Benchmark
+	@BenchmarkMode(value = { Mode.AverageTime })
+	public void testInsertAndUpdateobject() {
+		// BaseCoreFunctionalTestCase automatically creates the SessionFactory and
+		// provides the Session.
+		Serializable id;
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		Foo foo=new Foo();
+		foo.setMessage("payload2");
+		id=s.save(foo);
+		tx.commit();
+		s.close();
+		
+		s = openSession();
+		tx = s.beginTransaction();
+		Foo foo2=s.get(Foo.class, id);
+		foo2.setMessage("oh,no");
 		s.save(foo);
 		tx.commit();
 		s.close();
@@ -102,8 +126,8 @@ public class BaseBenchmark extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration configuration) {
 		super.configure(configuration);
-		configuration.setProperty(AvailableSettings.SHOW_SQL, Boolean.TRUE.toString());
-		configuration.setProperty(AvailableSettings.FORMAT_SQL, Boolean.TRUE.toString());
+//		configuration.setProperty(AvailableSettings.SHOW_SQL, Boolean.TRUE.toString());
+//		configuration.setProperty(AvailableSettings.FORMAT_SQL, Boolean.TRUE.toString());
 		configuration.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
 	}
 	

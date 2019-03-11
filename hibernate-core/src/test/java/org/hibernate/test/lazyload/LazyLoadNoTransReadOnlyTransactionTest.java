@@ -21,6 +21,8 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
 import org.hibernate.Hibernate;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.TestForIssue;
@@ -109,6 +111,7 @@ public class LazyLoadNoTransReadOnlyTransactionTest extends BaseNonConfigCoreFun
 		private List<Item> boughtItems = new ArrayList<>();
 
 		@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+		@Fetch(FetchMode.SELECT)
 		private List<Tag> tags = new ArrayList<>();
 
 		@OneToOne(mappedBy = "customer")

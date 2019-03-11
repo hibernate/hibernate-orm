@@ -14,15 +14,9 @@ import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
-import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
@@ -103,67 +97,19 @@ public interface Navigable<T> extends DomainTypeDescriptor<T> {
 		return true;
 	}
 
+	SqmNavigableReference createSqmExpression(SqmPath lhs, SqmCreationState creationState);
+
 	/**
-	 * todo (6.0) : these calls should assume we are handling "implicit paths".  SqmFrom-paths are handled separately.
+	 * Create a QueryResult for a specific reference to this Navigable.
 	 *
-	 * todo (6.0) : would be really nice to have access to the "next token" as well
-	 *
-	 * todo (6.0) : is anything needed in place of `SqmNavigableContainerReference` argument?
-	 * 		it ^^ should go away - the passed SqmFrom (should be SqmPath) is the LHS
+	 * Ultimately this is called by the `QueryResultProducer#createDomainResult
+	 * for the `NavigableReference` specialization of `QueryResultProducer`
 	 */
-	default SqmNavigableReference createSqmExpression(
-			SqmFrom sourceSqmFrom,
-			SqmNavigableContainerReference containerReference,
-			SqmCreationState creationState) {
+	default DomainResult createDomainResult(
+			NavigablePath navigablePath,
+			String resultVariable,
+			DomainResultCreationState creationState) {
 		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	default SqmNavigableReference createSqmExpression(
-			SqmPath lhs,
-			SqmCreationState creationState) {
-		assert lhs.getReferencedNavigable() == getContainer();
-
-		final NavigablePath navigablePath = lhs.getNavigablePath().append( getNavigableName() );
-
-		if ( this instanceof BasicValuedNavigable ) {
-			return (SqmNavigableReference) creationState.getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
-					navigablePath,
-					np -> new SqmBasicValuedSimplePath(
-							creationState.generateUniqueIdentifier(),
-							navigablePath,
-							(BasicValuedNavigable) this,
-							lhs,
-							null
-					)
-			);
-		}
-		else if ( this instanceof EmbeddedValuedNavigable ) {
-			return (SqmNavigableReference) creationState.getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
-					navigablePath,
-					np -> new SqmEmbeddedValuedSimplePath(
-							creationState.generateUniqueIdentifier(),
-							navigablePath,
-							(EmbeddedValuedNavigable) this,
-							lhs,
-							null
-					)
-			);
-		}
-		else if ( this instanceof EntityValuedNavigable ) {
-			return (SqmNavigableReference) creationState.getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
-					navigablePath,
-					np -> new SqmEntityValuedSimplePath(
-							creationState.generateUniqueIdentifier(),
-							navigablePath,
-							(EntityValuedNavigable) this,
-							lhs,
-							null
-					)
-			);
-		}
-		else {
-			throw new SemanticException( "Cannot de-reference path : " + lhs + " -> " + getNavigableName() );
-		}
 	}
 
 	/**
@@ -180,19 +126,6 @@ public interface Navigable<T> extends DomainTypeDescriptor<T> {
 			BiConsumer<SqlExpressableType,Column> action,
 			Clause clause,
 			TypeConfiguration typeConfiguration) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	/**
-	 * Create a QueryResult for a specific reference to this Navigable.
-	 *
-	 * Ultimately this is called by the `QueryResultProducer#createDomainResult
-	 * for the `NavigableReference` specialization of `QueryResultProducer`
-	 */
-	default DomainResult createDomainResult(
-			NavigablePath navigablePath,
-			String resultVariable,
-			DomainResultCreationState creationState) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 

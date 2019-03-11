@@ -27,12 +27,6 @@ import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.procedure.ParameterMisuseException;
-import org.hibernate.query.sqm.produce.spi.SqmCreationState;
-import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionIndexReferenceEmbedded;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
@@ -96,14 +90,6 @@ public class CollectionIndexEmbeddedImpl<J>
 	@Override
 	public List<Column> getColumns() {
 		return getEmbeddedDescriptor().collectColumns();
-	}
-
-	@Override
-	public SqmNavigableReference createSqmExpression(
-			SqmFrom sourceSqmFrom,
-			SqmNavigableContainerReference containerReference,
-			SqmCreationState creationState) {
-		return new SqmCollectionIndexReferenceEmbedded( (SqmPluralAttributeReference) containerReference );
 	}
 
 	@Override

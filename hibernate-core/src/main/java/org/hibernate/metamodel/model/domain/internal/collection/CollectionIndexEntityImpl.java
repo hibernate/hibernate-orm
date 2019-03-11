@@ -35,12 +35,6 @@ import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.query.spi.ComparisonOperator;
-import org.hibernate.query.sqm.produce.spi.SqmCreationState;
-import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionIndexReferenceEntity;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
@@ -127,14 +121,6 @@ public class CollectionIndexEntityImpl<J>
 	@Override
 	public EntityJavaDescriptor<J> getJavaTypeDescriptor() {
 		return getEntityDescriptor().getJavaTypeDescriptor();
-	}
-
-	@Override
-	public SqmNavigableReference createSqmExpression(
-			SqmFrom sourceSqmFrom,
-			SqmNavigableContainerReference containerReference,
-			SqmCreationState creationState) {
-		return new SqmCollectionIndexReferenceEntity( (SqmPluralAttributeReference) containerReference );
 	}
 
 	@Override

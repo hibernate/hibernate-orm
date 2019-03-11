@@ -81,23 +81,4 @@ public class SqmBasicValuedSimplePath extends AbstractSqmSimplePath {
 	public BasicJavaDescriptor getJavaTypeDescriptor() {
 		return (BasicJavaDescriptor) super.getJavaTypeDescriptor();
 	}
-
-//	@Override
-//	public DomainResult createDomainResult(
-//			String resultVariable,
-//			DomainResultCreationState creationState,
-//			DomainResultCreationContext creationContext) {
-//		return new BasicResultImpl(
-//				resultVariable,
-//				creationState.getSqlExpressionResolver().resolveSqlSelection(
-//						creationState.getSqlExpressionResolver().resolveSqlExpression(
-//								creationState.getFromClauseAccess().findTableGroup( getLhs().getNavigablePath() ),
-//								getReferencedNavigable().getBoundColumn()
-//						),
-//						getJavaTypeDescriptor(),
-//						creationContext.getSessionFactory().getTypeConfiguration()
-//				),
-//				getReferencedNavigable().getBoundColumn().getExpressableType()
-//		);
-//	}
 }

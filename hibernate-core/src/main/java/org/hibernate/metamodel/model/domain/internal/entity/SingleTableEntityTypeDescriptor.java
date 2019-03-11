@@ -58,9 +58,7 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.consume.spi.InsertToJdbcInsertConverter;
@@ -77,8 +75,8 @@ import org.hibernate.sql.ast.tree.spi.assign.Assignment;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.LiteralParameter;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
-import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutation;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
@@ -123,14 +121,6 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 				getHierarchy().getDiscriminatorDescriptor(),
 				null
 		);
-	}
-
-	@Override
-	public SqmNavigableReference createSqmExpression(
-			SqmFrom sourceSqmFrom,
-			SqmNavigableContainerReference containerReference,
-			SqmCreationState creationState) {
-		return createSqmExpression( sourceSqmFrom, creationState );
 	}
 
 	@Override

@@ -70,11 +70,7 @@ public abstract class AbstractSqmSingularAttributeReference
 							" (" + getSourceReference().getClass().getName() + ")"
 			);
 		}
-		return navigable.createSqmExpression(
-				getExportedFromElement(),
-				(SqmNavigableContainerReference) this,
-				creationState
-		);
+		return navigable.createSqmExpression( this, creationState );
 	}
 
 	@Override

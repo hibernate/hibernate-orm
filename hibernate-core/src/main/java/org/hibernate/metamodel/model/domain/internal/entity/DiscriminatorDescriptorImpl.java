@@ -16,12 +16,6 @@ import org.hibernate.metamodel.model.domain.spi.DiscriminatorMappings;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.produce.spi.SqmCreationState;
-import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.spi.BasicType;
@@ -105,16 +99,4 @@ public class DiscriminatorDescriptorImpl<O,J> implements DiscriminatorDescriptor
 		return valueMapper.getSqlExpressableType();
 	}
 
-	@Override
-	public SqmNavigableReference createSqmExpression(
-			SqmFrom sourceSqmFrom,
-			SqmNavigableContainerReference containerReference,
-			SqmCreationState creationState) {
-		return new SqmBasicValuedSimplePath(
-				creationState.generateUniqueIdentifier(),
-				new NavigablePath( getContainer().getNavigableName() + NAVIGABLE_NAME ),
-				this,
-				null
-		);
-	}
 }

@@ -52,8 +52,8 @@ import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.BetweenPredicate;
+import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.GroupedPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.InListPredicate;
@@ -62,7 +62,6 @@ import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.NullnessPredicate;
-import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.SelfRenderingPredicate;
 import org.hibernate.sql.ast.tree.spi.select.SelectClause;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
@@ -89,8 +88,6 @@ public interface SqlAstWalker {
 	void visitSqlSelection(SqlSelection sqlSelection);
 
 	void visitFromClause(FromClause fromClause);
-
-	void visitTableSpace(TableSpace tableSpace);
 
 	void visitTableGroup(TableGroup tableGroup);
 

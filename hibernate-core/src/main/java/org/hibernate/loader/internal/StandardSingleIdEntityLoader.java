@@ -18,7 +18,6 @@ import org.hibernate.engine.spi.LoadQueryInfluencers.InternalFetchProfileType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.spi.SingleIdEntityLoader;
-import org.hibernate.metamodel.model.domain.internal.entity.EntityTableGroup;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
@@ -29,6 +28,7 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.consume.spi.SqlAstSelectToJdbcSelectConverter;
+import org.hibernate.sql.ast.produce.internal.SqlAstQuerySpecProcessingStateImpl;
 import org.hibernate.sql.ast.produce.internal.SqlAstSelectDescriptorImpl;
 import org.hibernate.sql.ast.produce.metamodel.internal.LoadIdParameter;
 import org.hibernate.sql.ast.produce.metamodel.internal.SelectByEntityIdentifierBuilder;
@@ -38,6 +38,7 @@ import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.produce.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.produce.spi.SqlAstSelectDescriptor;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
@@ -47,7 +48,7 @@ import org.hibernate.sql.ast.tree.spi.SelectStatement;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.spi.from.TableSpace;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.spi.select.SelectClause;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
@@ -362,14 +363,28 @@ public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> 
 		final SqlAliasBaseGenerator aliasBaseGenerator = new SqlAliasBaseManager();
 
 		SqlAstCreationState creationState = new SqlAstCreationState() {
+			final SqlAstQuerySpecProcessingStateImpl processingState = new SqlAstQuerySpecProcessingStateImpl(
+					rootQuerySpec,
+					null,
+					this,
+					() -> null,
+					() -> expression -> {},
+					() -> sqlSelection -> {}
+			);
+
 			@Override
 			public SqlAstCreationContext getCreationContext() {
-				return (SqlAstCreationContext) entityDescriptor.getFactory();
+				return entityDescriptor.getFactory();
 			}
 
 			@Override
 			public SqlExpressionResolver getSqlExpressionResolver() {
-				return null;
+				return processingState;
+			}
+
+			@Override
+			public SqlAstProcessingState getCurrentProcessingState() {
+				return processingState;
 			}
 
 			@Override
@@ -388,10 +403,8 @@ public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> 
 			}
 		};
 
-		final TableSpace rootTableSpace = rootQuerySpec.getFromClause().makeTableSpace();
-
 		final NavigablePath path = new NavigablePath( entityDescriptor.getEntityName() );
-		final EntityTableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
+		final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
 				null,
 				path,
 				null,
@@ -454,7 +467,7 @@ public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> 
 //				}
 //		);
 
-		rootTableSpace.setRootTableGroup( rootTableGroup );
+		selectStatement.getQuerySpec().getFromClause().addRoot( rootTableGroup );
 
 		final List<DomainResult> domainResults = new ArrayList<>();
 

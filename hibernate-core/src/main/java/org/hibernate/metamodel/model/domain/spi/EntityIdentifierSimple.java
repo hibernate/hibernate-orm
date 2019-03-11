@@ -9,12 +9,6 @@ package org.hibernate.metamodel.model.domain.spi;
 import javax.persistence.TemporalType;
 
 import org.hibernate.query.internal.BindingTypeHelper;
-import org.hibernate.query.sqm.produce.spi.SqmCreationState;
-import org.hibernate.query.sqm.tree.expression.domain.SqmEntityIdentifierReferenceSimple;
-import org.hibernate.query.sqm.tree.expression.domain.SqmEntityTypedReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -47,17 +41,6 @@ public interface EntityIdentifierSimple<O,J>
 		return LEGACY_NAVIGABLE_ID.equals( navigableName )
 				|| NAVIGABLE_ID.equals( navigableName )
 				|| getAttributeName().equals( navigableName );
-	}
-
-	@Override
-	default SqmNavigableReference createSqmExpression(
-			SqmFrom sourceSqmFrom,
-			SqmNavigableContainerReference containerReference,
-			SqmCreationState creationState) {
-		return new SqmEntityIdentifierReferenceSimple(
-				(SqmEntityTypedReference) containerReference,
-				this
-		);
 	}
 
 	@Override

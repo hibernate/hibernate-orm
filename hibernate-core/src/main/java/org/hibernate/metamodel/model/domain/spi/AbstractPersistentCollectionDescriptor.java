@@ -99,20 +99,14 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
-import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
-import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
@@ -120,6 +114,7 @@ import org.hibernate.sql.results.DomainResultCreationException;
 import org.hibernate.sql.results.internal.domain.collection.CollectionFetchImpl;
 import org.hibernate.sql.results.internal.domain.collection.CollectionInitializerProducer;
 import org.hibernate.sql.results.internal.domain.collection.DelayedCollectionFetch;
+import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
@@ -645,77 +640,6 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 	}
 
 
-// ultimately, "inclusion" in a collection must defined through a single table whether
-	// that be:
-	//		1) a "separate" collection table (@JoinTable) - could be either:
-	//			a) an @ElementCollection - element/index value are contained on this separate table
-	//			b) @ManyToMany - the separate table is an association table with column(s) that define the
-	//				FK to an entity table.  NOTE that this is true for element and/or index -
-	//				The element must be defined via the FK.  In this model, the index could be:
-	// 					1) column(s) on the collection table pointing to the tables for
-	// 						the entity that defines the index - only valid for map-keys that
-	// 						are entities
-	//					2) a basic/embedded value on the collection table
-	//					3) a basic/embedded value on the element entity table
-	//			c) @OneToMany with join table - essentially the same as (b) but with
-	//				UKs defined on link table restricting cardinality
-	//		2) no separate collection table - @OneToMany w/o join table
-
-	@Override
-	public TableGroupJoin createTableGroupJoin(
-			TableGroupInfo tableGroupInfoSource,
-			JoinType joinType,
-			JoinedTableGroupContext tableGroupJoinContext) {
-		throw new UnsupportedOperationException(  );
-//		return createTableGroupJoin(
-//				tableGroupJoinContext.getSqlAliasBaseGenerator(),
-//				tableGroupJoinContext.getLhs(),
-//				tableGroupJoinContext.getSqlExpressionResolver(),
-//				tableGroupJoinContext.getNavigablePath(),
-//				joinType,
-//				tableGroupInfoSource.getIdentificationVariable(),
-//				tableGroupJoinContext.getLockOptions().getEffectiveLockMode( tableGroupInfoSource.getIdentificationVariable() ),
-//				tableGroupJoinContext.getTableSpace()
-//		);
-	}
-
-	@Override
-	public TableGroupJoin createTableGroupJoin(
-			SqlAliasBaseGenerator sqlAliasBaseGenerator,
-			NavigableContainerReference lhs,
-			SqlExpressionResolver sqlExpressionResolver,
-			NavigablePath navigablePath,
-			JoinType joinType,
-			String identificationVariable,
-			LockMode lockMode,
-			TableSpace tableSpace) {
-		throw new UnsupportedOperationException(  );
-//		final SqlAliasBase sqlAliasBase = sqlAliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
-//
-//		final FetchedTableReferenceCollectorImpl joinCollector = new FetchedTableReferenceCollectorImpl(
-//				this,
-//				tableSpace,
-//				lhs,
-//				sqlExpressionResolver,
-//				navigablePath,
-//				lockMode
-//		);
-//
-//		applyTableReferenceJoins(
-//				lhs.getColumnReferenceQualifier(),
-//				joinType,
-//				sqlAliasBase,
-//				joinCollector
-//		);
-//
-//		// handle optional entity references to be outer joins.
-//		if ( getDescribedAttribute().isNullable() && JoinType.INNER.equals( joinType ) ) {
-//			joinType = JoinType.LEFT;
-//		}
-//
-//		return joinCollector.generateTableGroup( joinType, navigablePath.getFullPath() );
-	}
-
 	@Override
 	public EntityTypeDescriptor findEntityOwnerDescriptor() {
 		return findFirstEntityDescriptor();
@@ -737,6 +661,24 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 	@Override
 	public FetchStrategy getMappedFetchStrategy() {
 		return getDescribedAttribute().getMappedFetchStrategy();
+	}
+
+	@Override
+	public DomainResult createDomainResult(
+			NavigablePath navigablePath,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		// NOTE : "selecting the collection" really means selecting its elements...
+
+		final NavigablePath elementPath = navigablePath.append( CollectionElement.NAVIGABLE_NAME );
+
+		// associate the collection TableGroup with the elements path
+		creationState.getFromClauseAccess().resolveTableGroup(
+				elementPath,
+				np -> creationState.getFromClauseAccess().getTableGroup( navigablePath )
+		);
+
+		return getElementDescriptor().createDomainResult( elementPath, resultVariable, creationState );
 	}
 
 	@Override
@@ -779,7 +721,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 				getDescribedAttribute(),
 				resultVariable,
 				getCollectionKeyDescriptor().createContainerResult(
-						creationState.getColumnReferenceQualifierStack().getCurrent(),
+						creationState.getFromClauseAccess().getTableGroup( fetchParent.getNavigablePath() ),
 						creationState
 				)
 		);

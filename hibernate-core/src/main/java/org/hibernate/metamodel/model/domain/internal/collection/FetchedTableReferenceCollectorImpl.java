@@ -17,6 +17,7 @@ import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.spi.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
@@ -104,15 +105,13 @@ public class FetchedTableReferenceCollectorImpl extends AbstractTableReferenceCo
 	}
 
 	public TableGroupJoin generateTableGroup(JoinType joinType, String uid) {
-		final CollectionTableGroup joinedTableGroup = new CollectionTableGroup(
+		final TableGroup joinedTableGroup = new StandardTableGroup(
 				uid,
 				navigablePath,
 				collectionDescriptor,
-				explicitSourceAlias,
 				lockMode,
 				getPrimaryTableReference(),
-				getTableReferenceJoins(),
-				lhs
+				getTableReferenceJoins()
 		);
 
 		Predicate joinPredicate = null;

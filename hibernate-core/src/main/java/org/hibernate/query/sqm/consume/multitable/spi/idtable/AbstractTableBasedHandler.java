@@ -9,7 +9,9 @@ package org.hibernate.query.sqm.consume.multitable.spi.idtable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
+import org.hibernate.LockMode;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.query.NavigablePath;
@@ -32,7 +34,6 @@ import org.hibernate.sql.ast.tree.spi.from.AbstractTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.exec.spi.JdbcInsertSelect;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
@@ -242,15 +243,10 @@ public abstract class AbstractTableBasedHandler implements Handler {
 	protected abstract void performMutations(HandlerExecutionContext executionContext);
 
 	protected QuerySpec generateIdTableSelect(HandlerExecutionContext executionContext) {
-		QuerySpec idTableSelect = new QuerySpec( false );
-		final TableSpace tableSpace = idTableSelect.getFromClause().makeTableSpace();
-		tableSpace.setRootTableGroup(
-				createTableGroupForIdTable(
-						new NavigablePath( entityDescriptor.getNavigableName() ),
-						idTableInfo,
-						tableSpace
-				)
-		);
+		final QuerySpec idTableSelect = new QuerySpec( false );
+
+		TableGroup rootTableGroup = createTableGroupForIdTable( entityDescriptor, idTableInfo );
+		idTableSelect.getFromClause().addRoot( rootTableGroup );
 
 		Collection<Column> columns = idTableInfo.getColumns();
 		columns.forEach( column -> {
@@ -268,10 +264,8 @@ public abstract class AbstractTableBasedHandler implements Handler {
 			final IdTableColumn sessUidColumn = (IdTableColumn) idTableInfo.getColumn( SessionUidSupport.SESSION_ID_COLUMN_NAME );
 			idTableSelect.addRestriction(
 					new ComparisonPredicate(
-							new ColumnReference(
-									tableSpace.getRootTableGroup(),
-									sessUidColumn
-							), ComparisonOperator.EQUAL,
+							new ColumnReference( rootTableGroup, sessUidColumn ),
+							ComparisonOperator.EQUAL,
 							generateSessionUidLiteralExpression( executionContext )
 					)
 			);
@@ -281,20 +275,26 @@ public abstract class AbstractTableBasedHandler implements Handler {
 	}
 
 	private TableGroup createTableGroupForIdTable(
-			NavigablePath navigablePath,
-			IdTable idTableInfo,
-			TableSpace tableSpace) {
-		return new IdTableGroup( tableSpace, navigablePath, new IdTableReference( idTableInfo, null ) );
+			EntityTypeDescriptor entityTypeDescriptor,
+			IdTable idTableInfo) {
+		return new IdTableGroup(
+				entityTypeDescriptor,
+				new IdTableReference( idTableInfo, null )
+		);
 	}
 
 	private static class IdTableGroup extends AbstractTableGroup {
 		private final IdTableReference idTableReference;
 
 		public IdTableGroup(
-				TableSpace tableSpace,
-				NavigablePath navigablePath,
+				EntityTypeDescriptor entityTypeDescriptor,
 				IdTableReference idTableReference) {
-			super( "id_table", navigablePath );
+			super(
+					"id_table",
+					new NavigablePath( entityTypeDescriptor.getEntityName() ),
+					entityTypeDescriptor,
+					LockMode.NONE
+			);
 			this.idTableReference = idTableReference;
 		}
 
@@ -316,6 +316,11 @@ public abstract class AbstractTableBasedHandler implements Handler {
 		@Override
 		public void render(SqlAppender sqlAppender, SqlAstWalker walker) {
 			renderTableReference( getPrimaryTableReference(), sqlAppender, walker );
+		}
+
+		@Override
+		public void applyAffectedTableNames(Consumer<String> nameCollector) {
+			nameCollector.accept( idTableReference.getTable().getTableExpression() );
 		}
 	}
 }

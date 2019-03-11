@@ -6,11 +6,12 @@
  */
 package org.hibernate.sql.ast.tree.spi.from;
 
+import java.util.Set;
 import java.util.function.Consumer;
 
-import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.annotations.Remove;
+import org.hibernate.LockMode;
 import org.hibernate.internal.util.Loggable;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
@@ -18,48 +19,58 @@ import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.SqlAstNode;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.results.spi.DomainResult;
+import org.hibernate.sql.results.spi.DomainResultCreationState;
+import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**
- * Group together related {@link TableReference} references (generally related by EntityPersister or CollectionPersister),
+ * Group together {@link TableReference} references related to a single entity or
+ * collection, along with joins to other TableGroups
  *
  * @author Steve Ebersole
  */
-public interface TableGroup extends ColumnReferenceQualifier, SqlAstNode, Loggable {
-	/**
-	 * Get the TableSpace that contains this group.  Allows walking "up"
-	 * the tree.
-	 */
-	@Remove
-	@Deprecated
-	default TableSpace getTableSpace() {
-		throw new UnsupportedOperationException();
-	}
+public interface TableGroup extends SqlAstNode, DomainResultProducer, ColumnReferenceQualifier, Loggable {
+	NavigablePath getNavigablePath();
 
-	default NavigablePath getNavigablePath() {
-		return getNavigableReference().getNavigablePath();
-	}
+	Navigable<?> getNavigable();
 
-	@Remove
-	@Deprecated
-	NavigableReference getNavigableReference();
+	LockMode getLockMode();
 
-	/**
-	 * Perform rendering of this group into the passed SQL appender.
-	 */
+	Set<TableGroupJoin> getTableGroupJoins();
+
+	boolean hasTableGroupJoins();
+
+	void setTableGroupJoins(Set<TableGroupJoin> joins);
+
+	void addTableGroupJoin(TableGroupJoin join);
+
+	void visitTableGroupJoins(Consumer<TableGroupJoin> consumer);
+
 	void render(SqlAppender sqlAppender, SqlAstWalker walker);
 
-	@Override
-	default void accept(SqlAstWalker  sqlTreeWalker) {
-		sqlTreeWalker.visitTableGroup( this );
-	}
+	void applyAffectedTableNames(Consumer<String> nameCollector);
 
-	default void applyAffectedTableNames(Consumer<String> nameCollector) {
-		throw new NotYetImplementedFor6Exception();
+	@Override
+	default DomainResult createDomainResult(String resultVariable, DomainResultCreationState creationState) {
+		return getNavigable().createDomainResult(
+				getNavigablePath(),
+				resultVariable,
+				creationState
+		);
 	}
 
 	default ColumnReference locateColumnReferenceByName(String name) {
 		throw new UnsupportedOperationException(
 				"Cannot call #locateColumnReferenceByName on this type of TableGroup"
 		);
+	}
+
+	@Override
+	default void accept(SqlAstWalker sqlTreeWalker) {
+		sqlTreeWalker.visitTableGroup( this );
+	}
+
+	default NavigableReference getNavigableReference() {
+		throw new UnsupportedOperationException(  );
 	}
 }

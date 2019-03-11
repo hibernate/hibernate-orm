@@ -86,7 +86,6 @@ import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReferenceBasic;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReferenceEmbedded;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReferenceEntity;
-import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionIndexReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityTypedReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMapEntryBinding;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMaxElementReference;
@@ -2730,7 +2729,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		SqmPath result = collectionReference.getReferencedNavigable()
 				.getPersistentCollectionDescriptor()
 				.getElementDescriptor()
-				.createSqmExpression( collectionReference.getExportedFromElement(), collectionReference, this );
+				.createSqmExpression( collectionReference, this );
 
 		if ( ctx.syntacticNavigablePathContinuation() != null ) {
 			result = consumeDomainPath( ctx.path() );
@@ -2747,7 +2746,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		final SqmNavigableReference mapKeyReference = navigableReference.getReferencedNavigable()
 				.getPersistentCollectionDescriptor()
 				.getIndexDescriptor()
-				.createSqmExpression( navigableReference.getExportedFromElement(), navigableReference, this );
+				.createSqmExpression( navigableReference, this );
 
 		SqmPath result = (SqmPath) mapKeyReference;
 

@@ -21,6 +21,8 @@ import org.hibernate.sql.results.spi.FetchParent;
 public interface SqlAstCreationState {
 	SqlAstCreationContext getCreationContext();
 
+	SqlAstProcessingState getCurrentProcessingState();
+
 	SqlExpressionResolver getSqlExpressionResolver();
 
 	SqlAliasBaseGenerator getSqlAliasBaseGenerator();

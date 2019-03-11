@@ -9,7 +9,6 @@ package org.hibernate.query.sqm.consume.spi;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -17,18 +16,16 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Consumer;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.annotations.Remove;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
-import org.hibernate.metamodel.model.domain.internal.entity.EntityTableGroup;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
-import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
-import org.hibernate.metamodel.model.domain.spi.EntityIdentifierComposite;
-import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
@@ -38,6 +35,7 @@ import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.criteria.sqm.JpaParameterSqmWrapper;
 import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
@@ -49,13 +47,8 @@ import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmSubQuery;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
-import org.hibernate.query.sqm.tree.expression.domain.SqmEntityIdentifierReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceAny;
-import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceBasic;
-import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceEmbedded;
-import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceEntity;
 import org.hibernate.query.sqm.tree.expression.function.SqmAbsFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmBitLengthFunction;
@@ -86,6 +79,7 @@ import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.predicate.AndSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.BetweenSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.GroupedSqmPredicate;
@@ -100,11 +94,13 @@ import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
+import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
-import org.hibernate.sql.ast.produce.ConversionException;
+import org.hibernate.sql.ast.produce.internal.SqlAstQuerySpecProcessingStateImpl;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.ordering.internal.SqmColumnReference;
@@ -113,12 +109,16 @@ import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
+import org.hibernate.sql.ast.produce.spi.SqlAstProcessingState;
+import org.hibernate.sql.ast.produce.spi.SqlAstQuerySpecProcessingState;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
+import org.hibernate.sql.ast.tree.spi.SelectStatement;
 import org.hibernate.sql.ast.tree.spi.expression.AbsFunction;
 import org.hibernate.sql.ast.tree.spi.expression.AvgFunction;
 import org.hibernate.sql.ast.tree.spi.expression.BinaryArithmeticExpression;
@@ -152,19 +152,12 @@ import org.hibernate.sql.ast.tree.spi.expression.SumFunction;
 import org.hibernate.sql.ast.tree.spi.expression.TrimFunction;
 import org.hibernate.sql.ast.tree.spi.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.spi.expression.UpperFunction;
-import org.hibernate.sql.ast.tree.spi.expression.domain.AnyValuedNavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.BasicValuedNavigableReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.CompositeIdentifierReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.EmbeddableValuedNavigableReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.EntityValuedNavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.SimpleIdentifierReference;
-import org.hibernate.sql.ast.tree.spi.from.FromClause;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.BetweenPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.GroupedPredicate;
@@ -181,7 +174,6 @@ import org.hibernate.sql.exec.internal.JdbcParametersImpl;
 import org.hibernate.sql.exec.internal.StandardJdbcParameterImpl;
 import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameters;
-import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.SqlSelection;
@@ -220,21 +212,27 @@ public abstract class BaseSqmToSqlAstConverter
 
 	private final FromClauseIndex fromClauseIndex = new FromClauseIndex();
 
-	private TableSpace tableSpace;
-
-	private final Stack<QuerySpec> querySpecStack = new StandardStack<>();
-	private final Stack<FromClause> fromClauseStack = new StandardStack<>();
-	private final Stack<TableGroup> tableGroupStack = new StandardStack<>();
-	private final Stack<NavigableReference> navigableReferenceStack = new StandardStack<>();
+	private final Stack<SqlAstProcessingState> processingStateStack = new StandardStack<>();
 
 	private final Stack<Clause> currentClauseStack = new StandardStack<>();
 	private final Stack<SqmSelectToSqlAstConverter.Shallowness> shallownessStack = new StandardStack<>( SqmSelectToSqlAstConverter.Shallowness.NONE );
 
 	private final Set<String> affectedTableNames = new HashSet<>();
 
-	// todo (6.0) : decide if we want to do the caching/unique-ing of Expressions here.
-	//		its really only needed for top-level select clauses, not sub-queries.
-	//		its "ok" to do it for sub-queries as well - just wondering about the overhead.
+
+	@Remove
+	private final Stack<TableGroup> tableGroupStack = new StandardStack<>();
+	@Remove
+	private final Stack<NavigableReference> navigableReferenceStack = new StandardStack<>();
+
+	/**
+	 * I *think* this can be (and is) handled via `processingStateStack` - specifically its expression-resolver
+	 *
+	 * todo (6.0) : decide if we want to do the caching/unique-ing of Expressions here.
+	 * 		its really only needed for top-level select clauses, not sub-queries.
+	 * 		its "ok" to do it for sub-queries as well - just wondering about the overhead.
+	 */
+	@Remove
 	private Map<QuerySpec,Map<Expression, SqlSelection>> sqlExpressionToSqlSelectionMapByQuerySpec;
 
 	public BaseSqmToSqlAstConverter(
@@ -249,12 +247,27 @@ public abstract class BaseSqmToSqlAstConverter
 		this.callback = callback;
 	}
 
+	protected Stack<SqlAstProcessingState> getProcessingStateStack() {
+		return processingStateStack;
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// SqlAstCreationState
+
+	@Override
 	public SqlAstCreationContext getCreationContext() {
 		return creationContext;
 	}
 
-	protected TableSpace getCurrentTableSpace() {
-		return tableSpace;
+	@Override
+	public SqlAstProcessingState getCurrentProcessingState() {
+		return processingStateStack.getCurrent();
+	}
+
+	@Override
+	public SqlExpressionResolver getSqlExpressionResolver() {
+		return getCurrentProcessingState().getSqlExpressionResolver();
 	}
 
 	@Override
@@ -277,15 +290,11 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	protected QuerySpec currentQuerySpec() {
-		return querySpecStack.getCurrent();
+		return ( (SqlAstQuerySpecProcessingState) processingStateStack.getCurrent() ).getInflightQuerySpec();
 	}
 
 	public QueryOptions getQueryOptions() {
 		return queryOptions;
-	}
-
-	public SqlAliasBaseManager getSqlAliasBaseManager() {
-		return sqlAliasBaseManager;
 	}
 
 	public FromClauseIndex getFromClauseIndex() {
@@ -294,10 +303,6 @@ public abstract class BaseSqmToSqlAstConverter
 
 	public Stack<Clause> getCurrentClauseStack() {
 		return currentClauseStack;
-	}
-
-	public Stack<QuerySpec> getQuerySpecStack() {
-		return querySpecStack;
 	}
 
 	public Stack<TableGroup> getTableGroupStack() {
@@ -310,14 +315,6 @@ public abstract class BaseSqmToSqlAstConverter
 
 	public Stack<NavigableReference> getNavigableReferenceStack() {
 		return navigableReferenceStack;
-	}
-
-	public Stack<FromClause> getFromClauseStack() {
-		return fromClauseStack;
-	}
-
-	protected void primeQuerySpecStack(QuerySpec querySpec) {
-		primeStack( querySpecStack, querySpec );
 	}
 
 	protected <T> void primeStack(Stack<T> stack, T initialValue) {
@@ -359,45 +356,46 @@ public abstract class BaseSqmToSqlAstConverter
 		return expression;
 	}
 
-	protected void collectSelection(Expression expression, SqlSelection selection) {
-		final QuerySpec current = querySpecStack.getCurrent();
-		if ( current == null ) {
-			// should indicate a DML SQM - nothing to do
-			return;
-		}
 
-		if ( sqlExpressionToSqlSelectionMapByQuerySpec == null ) {
-			sqlExpressionToSqlSelectionMapByQuerySpec = new HashMap<>();
-		}
 
-		final Map<Expression, SqlSelection> selectionMap = sqlExpressionToSqlSelectionMapByQuerySpec.computeIfAbsent(
-				currentQuerySpec(),
-				querySpec -> new HashMap<>()
-		);
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Statements
 
-		selectionMap.putIfAbsent( expression, selection );
+	@Override
+	public Object visitUpdateStatement(SqmUpdateStatement statement) {
+		throw new AssertionFailure( "UpdateStatement not supported" );
 	}
 
 	@Override
-	public Void visitOrderByClause(SqmOrderByClause orderByClause) {
-		super.visitOrderByClause( orderByClause );
-		return null;
+	public Object visitDeleteStatement(SqmDeleteStatement statement) {
+		throw new AssertionFailure( "DeleteStatement not supported" );
 	}
 
 	@Override
-	public SortSpecification visitSortSpecification(SqmSortSpecification sortSpecification) {
-		return new SortSpecification(
-				toExpression( sortSpecification.getSortExpression().accept( this ) ),
-				sortSpecification.getCollation(),
-				sortSpecification.getSortOrder()
-		);
+	public Object visitInsertSelectStatement(SqmInsertSelectStatement statement) {
+		throw new AssertionFailure( "InsertStatement not supported" );
 	}
+
+	@Override
+	public SelectStatement visitSelectStatement(SqmSelectStatement statement) {
+		throw new AssertionFailure( "SelectStatement not supported" );
+	}
+
 
 	@Override
 	public QuerySpec visitQuerySpec(SqmQuerySpec sqmQuerySpec) {
-		final QuerySpec sqlQuerySpec = new QuerySpec( querySpecStack.isEmpty() );
-		querySpecStack.push( sqlQuerySpec );
-		fromClauseStack.push( sqlQuerySpec.getFromClause() );
+		final QuerySpec sqlQuerySpec = new QuerySpec( processingStateStack.isEmpty() );
+
+		processingStateStack.push(
+				new SqlAstQuerySpecProcessingStateImpl(
+						sqlQuerySpec,
+						processingStateStack.getCurrent(),
+						this,
+						currentClauseStack::getCurrent,
+						() -> (expression) -> {},
+						() -> sqlQuerySpec.getSelectClause()::addSqlSelection
+				)
+		);
 
 		try {
 			// we want to visit the from-clause first
@@ -442,9 +440,23 @@ public abstract class BaseSqmToSqlAstConverter
 			return sqlQuerySpec;
 		}
 		finally {
-			assert querySpecStack.pop() == sqlQuerySpec;
-			assert fromClauseStack.pop() == sqlQuerySpec.getFromClause();
+			processingStateStack.pop();
 		}
+	}
+
+	@Override
+	public Void visitOrderByClause(SqmOrderByClause orderByClause) {
+		super.visitOrderByClause( orderByClause );
+		return null;
+	}
+
+	@Override
+	public SortSpecification visitSortSpecification(SqmSortSpecification sortSpecification) {
+		return new SortSpecification(
+				toExpression( sortSpecification.getSortExpression().accept( this ) ),
+				sortSpecification.getCollation(),
+				sortSpecification.getSortOrder()
+		);
 	}
 
 	@Override
@@ -479,23 +491,12 @@ public abstract class BaseSqmToSqlAstConverter
 
 
 	@Override
-	public Void visitFromClause(SqmFromClause fromClause) {
+	public Void visitFromClause(SqmFromClause sqmFromClause) {
 		currentClauseStack.push( Clause.FROM );
-		try {
-			fromClause.visitRoots(
-					sqmRoot -> {
-						try {
-							tableSpace = fromClauseStack.getCurrent().makeTableSpace();
-							visitRootEntityFromElement( sqmRoot );
 
-							sqmRoot.visitJoins(
-									sqmJoin -> sqmJoin.accept( this )
-							);
-						}
-						finally {
-							tableSpace = null;
-						}
-					}
+		try {
+			sqmFromClause.visitRoots(
+					sqmRoot -> currentQuerySpec().getFromClause().addRoot( visitRootEntityFromElement( sqmRoot ) )
 			);
 		}
 		finally {
@@ -506,7 +507,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 
 	@Override
-	public Object visitRootEntityFromElement(SqmRoot sqmRoot) {
+	public TableGroup visitRootEntityFromElement(SqmRoot sqmRoot) {
 		log.tracef( "Starting resolution of SqmRoot [%s] to TableGroup", sqmRoot );
 
 		if ( fromClauseIndex.isResolved( sqmRoot ) ) {
@@ -515,8 +516,8 @@ public abstract class BaseSqmToSqlAstConverter
 			return resolvedTableGroup;
 		}
 
-		final EntityTypeDescriptor entityMetadata = sqmRoot.getReferencedNavigable().getEntityDescriptor();
-		final EntityTableGroup group = entityMetadata.createRootTableGroup(
+		final EntityTypeDescriptor entityDescriptor = sqmRoot.getReferencedNavigable().getEntityDescriptor();
+		final TableGroup group = entityDescriptor.createRootTableGroup(
 				sqmRoot.getUniqueIdentifier(),
 				sqmRoot.getNavigablePath(),
 				sqmRoot.getExplicitAlias(),
@@ -527,53 +528,13 @@ public abstract class BaseSqmToSqlAstConverter
 
 		fromClauseIndex.crossReference( sqmRoot, group );
 
-//		final EntityTableGroup group = entityMetadata.createRootTableGroup(
-//				sqmRoot,
-//				new RootTableGroupContext() {
-//					@Override
-//					public QuerySpec getQuerySpec() {
-//						return currentQuerySpec();
-//					}
-//
-//					@Override
-//					public TableSpace getTableSpace() {
-//						return tableSpace;
-//					}
-//
-//					@Override
-//					public void addRestriction(Predicate predicate) {
-//						currentQuerySpec().addRestriction( predicate );
-//					}
-//
-//					@Override
-//					public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
-//						return BaseSqmToSqlAstConverter.this.getSqlAliasBaseManager();
-//					}
-//
-//					@Override
-//					public JoinType getTableReferenceJoinType() {
-//						// TableReferences within the TableGroup can be
-//						// inner-joined (unless they are optional, which is handled
-//						// inside the producers)
-//						return JoinType.INNER;
-//					}
-//
-//					@Override
-//					public LockOptions getLockOptions() {
-//						return queryOptions.getLockOptions();
-//					}
-//				}
-//		);
-
-		tableSpace.setRootTableGroup( group );
-		tableGroupStack.push( group );
-		fromClauseIndex.crossReference( sqmRoot, group );
-
 		group.applyAffectedTableNames( affectedTableNames::add );
 
-//		navigableReferenceStack.push( group.getNavigableReference() );
-
 		log.tracef( "Resolved SqmRoot [%s] to new TableGroup [%s]", sqmRoot, group );
+
+		sqmRoot.visitJoins(
+				sqmJoin -> group.addTableGroupJoin( (TableGroupJoin) sqmJoin.accept( this ) )
+		);
 
 		return group;
 	}
@@ -617,18 +578,11 @@ public abstract class BaseSqmToSqlAstConverter
 			);
 		}
 
-		tableSpace.addJoinedTableGroup( tableGroupJoin );
-//
-//		tableGroupStack.push( tableGroupJoin.getJoinedGroup() );
-//		fromClauseIndex.crossReference( sqmJoin, tableGroupJoin.getJoinedGroup() );
-//
-//		final NavigableReference navigableReference = tableGroupJoin.getJoinedGroup().getNavigableReference();
-//		if ( ! navigableReferenceStack.isEmpty() ) {
-//			final NavigableReference parent = navigableReferenceStack.getCurrent();
-//			assert parent instanceof NavigableContainerReference;
-//			( (NavigableContainerReference) parent ).addNavigableReference( navigableReference );
-//			navigableReferenceStack.push( navigableReference );
-//		}
+		lhsTableGroup.addTableGroupJoin( tableGroupJoin );
+
+		sqmJoin.visitJoins(
+				sqmJoinJoin -> tableGroupJoin.getJoinedGroup().addTableGroupJoin( (TableGroupJoin) sqmJoinJoin.accept( this ) )
+		);
 
 		return tableGroupJoin;
 	}
@@ -636,7 +590,7 @@ public abstract class BaseSqmToSqlAstConverter
 	@Override
 	public TableGroupJoin visitCrossJoinedFromElement(SqmCrossJoin sqmJoin) {
 		final EntityTypeDescriptor entityMetadata = sqmJoin.getReferencedNavigable().getEntityDescriptor();
-		final EntityTableGroup group = entityMetadata.createRootTableGroup(
+		final TableGroup group = entityMetadata.createRootTableGroup(
 				sqmJoin.getUniqueIdentifier(),
 				sqmJoin.getNavigablePath(),
 				sqmJoin.getExplicitAlias(),
@@ -645,63 +599,15 @@ public abstract class BaseSqmToSqlAstConverter
 				this
 		);
 
-//
-//
-//		final QuerySpec querySpec = currentQuerySpec();
-//		final EntityTypeDescriptor entityDescriptor = sqmJoin.getIntrinsicSubclassEntityMetadata();
-//		final EntityTableGroup group = entityDescriptor.createRootTableGroup(
-//				sqmJoin,
-//				new RootTableGroupContext() {
-//					@Override
-//					public QuerySpec getQuerySpec() {
-//						return querySpec;
-//					}
-//
-//					@Override
-//					public TableSpace getTableSpace() {
-//						return tableSpace;
-//					}
-//
-//					@Override
-//					public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
-//						return BaseSqmToSqlAstConverter.this.getSqlAliasBaseManager();
-//					}
-//
-//					@Override
-//					public JoinType getTableReferenceJoinType() {
-//						// TableReferences within the cross-joined TableGroup can be
-//						// inner-joined (unless they are optional, which is handled
-//						// inside the producers)
-//						return JoinType.INNER;
-//					}
-//
-//					@Override
-//					public void addRestriction(Predicate predicate) {
-//						log.debugf(
-//								"Adding restriction [%s] to where-clause for cross-join [%s]",
-//								predicate,
-//								sqmJoin
-//						);
-//						querySpec.addRestriction( predicate );
-//					}
-//
-//					@Override
-//					public LockOptions getLockOptions() {
-//						return queryOptions.getLockOptions();
-//					}
-//				}
-//		);
-
 		group.applyAffectedTableNames( affectedTableNames::add );
 
-//		tableGroupStack.push( group );
 		fromClauseIndex.crossReference( sqmJoin, group );
 
-		final TableGroupJoin tableGroupJoin = new TableGroupJoin( JoinType.CROSS, group, null );
+		sqmJoin.visitJoins(
+				sqmJoinJoin -> group.addTableGroupJoin( (TableGroupJoin) sqmJoinJoin.accept( this ) )
+		);
 
-//		navigableReferenceStack.push( tableGroupJoin.getJoinedGroup().getNavigableReference() );
-
-		return tableGroupJoin;
+		return new TableGroupJoin( JoinType.CROSS, group, null );
 	}
 
 	@Override
@@ -729,101 +635,7 @@ public abstract class BaseSqmToSqlAstConverter
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Expressions
 
-	@Override
-	public DomainResultProducer visitEntityIdentifierReference(SqmEntityIdentifierReference expression) {
-		final TableGroup resolvedTableGroup = getFromClauseIndex().findResolvedTableGroup( expression.getExportedFromElement() );
-		if ( resolvedTableGroup == null ) {
-			throw new ConversionException( "Could not find matching resolved TableGroup : " + expression.getExportedFromElement() );
-		}
 
-		final EntityValuedNavigableReference entityReference = (EntityValuedNavigableReference) resolvedTableGroup.getNavigableReference();
-
-		final EntityIdentifier identifierDescriptor = entityReference.getNavigable()
-				.getEntityDescriptor()
-				.getIdentifierDescriptor();
-
-		if ( identifierDescriptor instanceof EntityIdentifierSimple ) {
-			return new SimpleIdentifierReference(
-					entityReference,
-					expression.getReferencedNavigable(),
-					expression.getNavigablePath()
-			);
-		}
-		else {
-			assert identifierDescriptor instanceof EntityIdentifierComposite;
-			return new CompositeIdentifierReference(
-					entityReference,
-					(EntityIdentifierComposite) expression.getReferencedNavigable(),
-					expression.getNavigablePath()
-			);
-		}
-	}
-
-	@Override
-	public BasicValuedNavigableReference visitBasicValuedSingularAttribute(SqmSingularAttributeReferenceBasic sqmAttributeReference) {
-		final TableGroup resolvedTableGroup = getFromClauseIndex().findResolvedTableGroup( sqmAttributeReference.getExportedFromElement() );
-		if ( resolvedTableGroup == null ) {
-			throw new ConversionException(
-					"Could not find matching resolved TableGroup for " + sqmAttributeReference + " : " + sqmAttributeReference.getExportedFromElement().getUniqueIdentifier()
-			);
-		}
-
-		return new BasicValuedNavigableReference(
-				(NavigableContainerReference) resolvedTableGroup.getNavigableReference(),
-				sqmAttributeReference.getReferencedNavigable(),
-				sqmAttributeReference.getNavigablePath()
-		);
-	}
-
-	@Override
-	public EntityValuedNavigableReference visitEntityValuedSingularAttribute(SqmSingularAttributeReferenceEntity sqmAttributeReference) {
-		final TableGroup resolvedTableGroup = fromClauseIndex.findResolvedTableGroup( sqmAttributeReference.getExportedFromElement() );
-		if ( resolvedTableGroup != null ) {
-			return (EntityValuedNavigableReference) resolvedTableGroup.getNavigableReference();
-		}
-
-		final NavigableContainerReference containerReference = (NavigableContainerReference) navigableReferenceStack.getCurrent();
-		return new EntityValuedNavigableReference(
-				containerReference,
-				sqmAttributeReference.getReferencedNavigable(),
-				sqmAttributeReference.getNavigablePath(),
-				// todo (6.0) : need the qualifier covering both FK tables
-				containerReference.getColumnReferenceQualifier(),
-				queryOptions.getLockOptions().getEffectiveLockMode( sqmAttributeReference.getIdentificationVariable() )
-		);
-	}
-
-	@Override
-	public EmbeddableValuedNavigableReference visitEmbeddableValuedSingularAttribute(SqmSingularAttributeReferenceEmbedded sqmAttributeReference) {
-		final TableGroup resolvedTableGroup = getFromClauseIndex().findResolvedTableGroup( sqmAttributeReference.getExportedFromElement() );
-		if ( resolvedTableGroup == null ) {
-			throw new ConversionException( "Could not find matching resolved TableGroup : " + sqmAttributeReference.getExportedFromElement() );
-		}
-
-		// todo (6.0) : this may not be correct in all situations
-		//		may need n "embeddable TableGroup"
-		return new EmbeddableValuedNavigableReference(
-				(NavigableContainerReference) resolvedTableGroup.getNavigableReference(),
-				sqmAttributeReference.getReferencedNavigable(),
-				sqmAttributeReference.getNavigablePath(),
-				LockMode.READ
-		);
-	}
-
-	@Override
-	public AnyValuedNavigableReference visitAnyValuedSingularAttribute(SqmSingularAttributeReferenceAny sqmAttributeReference) {
-		final TableGroup resolvedTableGroup = getFromClauseIndex().findResolvedTableGroup( sqmAttributeReference.getExportedFromElement() );
-		if ( resolvedTableGroup == null ) {
-			throw new ConversionException( "Could not find matching resolved TableGroup : " + sqmAttributeReference.getExportedFromElement() );
-		}
-
-		return new AnyValuedNavigableReference(
-				(NavigableContainerReference) resolvedTableGroup.getNavigableReference(),
-				sqmAttributeReference.getReferencedNavigable(),
-				sqmAttributeReference.getNavigablePath(),
-				resolvedTableGroup
-		);
-	}
 
 	@Override
 	public PluralAttributeReference visitPluralAttribute(SqmPluralAttributeReference reference) {

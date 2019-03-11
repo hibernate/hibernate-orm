@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.SortOrder;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
@@ -18,20 +19,12 @@ import org.hibernate.metamodel.model.domain.spi.DiscriminatorDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.query.QueryLiteralRendering;
-import org.hibernate.SortOrder;
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.SqlTreeException;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
-import org.hibernate.sql.ast.tree.spi.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.spi.expression.SubstrFunction;
-import org.hibernate.sql.ast.tree.spi.expression.domain.DiscriminatorReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.EntityTypeLiteral;
-import org.hibernate.sql.ast.tree.spi.expression.domain.EntityValuedNavigableReference;
-import org.hibernate.sql.ast.tree.spi.predicate.SelfRenderingPredicate;
-import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.expression.AbsFunction;
 import org.hibernate.sql.ast.tree.spi.expression.AvgFunction;
@@ -62,18 +55,23 @@ import org.hibernate.sql.ast.tree.spi.expression.NonStandardFunction;
 import org.hibernate.sql.ast.tree.spi.expression.NullifFunction;
 import org.hibernate.sql.ast.tree.spi.expression.PositionalParameter;
 import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.spi.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.spi.expression.SqrtFunction;
+import org.hibernate.sql.ast.tree.spi.expression.SubstrFunction;
 import org.hibernate.sql.ast.tree.spi.expression.SumFunction;
 import org.hibernate.sql.ast.tree.spi.expression.TrimFunction;
 import org.hibernate.sql.ast.tree.spi.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.spi.expression.UpperFunction;
+import org.hibernate.sql.ast.tree.spi.expression.domain.DiscriminatorReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.EntityTypeLiteral;
+import org.hibernate.sql.ast.tree.spi.expression.domain.EntityValuedNavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.FromClause;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.BetweenPredicate;
+import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.GroupedPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.InListPredicate;
@@ -83,10 +81,11 @@ import org.hibernate.sql.ast.tree.spi.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
-import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.spi.predicate.SelfRenderingPredicate;
 import org.hibernate.sql.ast.tree.spi.select.SelectClause;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
+import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.results.internal.EmptySqlSelection;
 import org.hibernate.sql.results.spi.SqlSelection;
@@ -294,52 +293,41 @@ public abstract class AbstractSqlAstWalker
 		appendSql( FROM_KEYWORD );
 
 		String separator = NO_SEPARATOR;
-		for ( TableSpace tableSpace : fromClause.getTableSpaces() ) {
+		for ( TableGroup root : fromClause.getRoots() ) {
 			appendSql( separator );
-			visitTableSpace( tableSpace );
+			visitTableGroup( root );
 			separator = COMA_SEPARATOR;
 		}
 	}
 
 	@Override
-	public void visitTableSpace(TableSpace tableSpace) {
-		// todo (6.0) : possibly have a way for Dialect to influence rendering the from-clause nodes.
-		//		at what level?  FromClause?  TableSpace?
-		TableGroup rootTableGroup = tableSpace.getRootTableGroup();
-		visitTableGroup( rootTableGroup );
-
-		for ( TableGroupJoin tableGroupJoin : tableSpace.getJoinedTableGroups() ) {
-			TableGroup joinedGroup = tableGroupJoin.getJoinedGroup();
-			if ( !joinedGroup.equals( rootTableGroup ) ) {
-				appendSql( EMPTY_STRING_SEPARATOR );
-				appendSql( tableGroupJoin.getJoinType().getText() );
-				appendSql( " join (" );
-				visitTableGroup( joinedGroup );
-				appendSql( CLOSE_PARENTHESIS );
-
-				clauseStack.push( Clause.WHERE );
-				try {
-					if ( tableGroupJoin.getPredicate() != null && !tableGroupJoin.getPredicate().isEmpty() ) {
-						appendSql( " on " );
-						tableGroupJoin.getPredicate().accept( this );
-					}
-				}
-				finally {
-					clauseStack.pop();
-				}
-			}
-		}
-
-	}
-
-	@Override
 	public void visitTableGroup(TableGroup tableGroup) {
 		tableGroup.render( sqlAppender, this );
+
+		tableGroup.visitTableGroupJoins( this::visitTableGroupJoin );
 	}
 
 	@Override
 	public void visitTableGroupJoin(TableGroupJoin tableGroupJoin) {
-		// nothing to do... this is handled in visitTableSpace
+		TableGroup joinedGroup = tableGroupJoin.getJoinedGroup();
+		appendSql( EMPTY_STRING_SEPARATOR );
+		appendSql( tableGroupJoin.getJoinType().getText() );
+		appendSql( " join (" );
+		visitTableGroup( joinedGroup );
+		appendSql( CLOSE_PARENTHESIS );
+
+		clauseStack.push( Clause.WHERE );
+		try {
+			if ( tableGroupJoin.getPredicate() != null && !tableGroupJoin.getPredicate().isEmpty() ) {
+				appendSql( " on " );
+				tableGroupJoin.getPredicate().accept( this );
+			}
+		}
+		finally {
+			clauseStack.pop();
+		}
+
+		joinedGroup.visitTableGroupJoins( this::visitTableGroupJoin );
 	}
 
 	@Override

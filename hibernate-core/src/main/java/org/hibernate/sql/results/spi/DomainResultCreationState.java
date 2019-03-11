@@ -20,12 +20,10 @@ import org.hibernate.sql.ast.produce.SqlAstCreationLogger;
 import org.hibernate.sql.ast.produce.SqlTreeException;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.results.internal.values.JdbcValues;
 
 /**
@@ -141,17 +139,7 @@ public interface DomainResultCreationState {
 	// Things to go away
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	default Stack<ColumnReferenceQualifier> getColumnReferenceQualifierStack() {
-		return EmptyStack.instance();
-	}
-
-	default Stack<NavigableReference> getNavigableReferenceStack() {
-		return EmptyStack.instance();
-	}
-
 	boolean fetchAllAttributes();
-
-	TableSpace getCurrentTableSpace();
 
 	LockMode determineLockMode(String identificationVariable);
 }

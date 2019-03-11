@@ -48,7 +48,6 @@ import org.hibernate.loader.spi.SingleIdEntityLoader;
 import org.hibernate.loader.spi.SingleUniqueKeyEntityLoader;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.metamodel.model.domain.internal.entity.EntityTableGroup;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
@@ -68,11 +67,10 @@ import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
-import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.type.Type;
@@ -336,7 +334,7 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityTypeDescriptor<T> 
 	}
 
 	@Override
-	public EntityTableGroup createRootTableGroup(
+	public TableGroup createRootTableGroup(
 			String uid,
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
@@ -483,12 +481,6 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityTypeDescriptor<T> 
 			Object object,
 			LockOptions lockOptions,
 			SharedSessionContractImplementor session) {
-		throw new UnsupportedOperationException(  );
-	}
-
-	@Override
-	public EntityTableGroup createRootTableGroup(
-			TableGroupInfo info, RootTableGroupContext tableGroupContext) {
 		throw new UnsupportedOperationException(  );
 	}
 

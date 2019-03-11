@@ -182,42 +182,12 @@ public class SingularPersistentAttributeEmbedded<O,J>
 			boolean selected,
 			LockMode lockMode, String resultVariable,
 			DomainResultCreationState creationState) {
-		final Stack<NavigableReference> navigableReferenceStack = creationState.getNavigableReferenceStack();
-
-		if ( navigableReferenceStack.depth() > creationState.getSqlAstCreationState().getCreationContext().getMaximumFetchDepth() ) {
-			selected = false;
-		}
-
-		final NavigableContainerReference parentReference = (NavigableContainerReference) navigableReferenceStack.getCurrent();
-
-		final NavigablePath navigablePath = fetchParent.getNavigablePath().append( getNavigableName() );
-
-		// if there is an existing NavigableReference this fetch can use, use it.  otherwise create one
-		NavigableReference navigableReference = parentReference.findNavigableReference( getNavigableName() );
-		if ( navigableReference == null ) {
-			navigableReference = new EmbeddableValuedNavigableReference(
-					parentReference,
-					this,
-					navigablePath,
-					lockMode
-			);
-		}
-
-		creationState.getNavigableReferenceStack().push( navigableReference );
-		creationState.getColumnReferenceQualifierStack().push( navigableReference.getColumnReferenceQualifier() );
-
-		try {
-			return new CompositeFetchImpl(
-					fetchParent,
-					this,
-					fetchTiming,
-					creationState
-			);
-		}
-		finally {
-			creationState.getColumnReferenceQualifierStack().pop();
-			creationState.getNavigableReferenceStack().pop();
-		}
+		return new CompositeFetchImpl(
+				fetchParent,
+				this,
+				fetchTiming,
+				creationState
+		);
 	}
 
 	@Override

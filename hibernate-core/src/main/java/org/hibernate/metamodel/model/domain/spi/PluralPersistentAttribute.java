@@ -8,24 +8,11 @@ package org.hibernate.metamodel.model.domain.spi;
 
 import java.util.function.Consumer;
 
-import org.hibernate.LockMode;
-import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
-import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
-import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
-import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
-import org.hibernate.sql.ast.produce.spi.RootTableGroupProducer;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.type.descriptor.java.internal.CollectionJavaDescriptor;
 
 /**
@@ -102,42 +89,7 @@ public interface PluralPersistentAttribute<O,C,E>
 	}
 
 	@Override
-	default TableGroupJoin createTableGroupJoin(
-			TableGroupInfo tableGroupInfoSource,
-			JoinType joinType,
-			JoinedTableGroupContext tableGroupJoinContext) {
-		return getPersistentCollectionDescriptor().createTableGroupJoin( tableGroupInfoSource, joinType, tableGroupJoinContext );
-	}
-
-	@Override
-	default TableGroupJoin createTableGroupJoin(
-			SqlAliasBaseGenerator sqlAliasBaseGenerator,
-			NavigableContainerReference lhs,
-			SqlExpressionResolver sqlExpressionResolver,
-			NavigablePath navigablePath,
-			JoinType joinType,
-			String identificationVariable,
-			LockMode lockMode,
-			TableSpace tableSpace) {
-		return getPersistentCollectionDescriptor().createTableGroupJoin(
-				sqlAliasBaseGenerator,
-				lhs,
-				sqlExpressionResolver,
-				navigablePath,
-				joinType,
-				identificationVariable,
-				lockMode,
-				tableSpace
-		);
-	}
-
-	@Override
 	default String getSqlAliasStem() {
 		return getPersistentCollectionDescriptor().getSqlAliasStem();
-	}
-
-	@Override
-	default TableGroup createRootTableGroup(TableGroupInfo tableGroupInfo, RootTableGroupContext tableGroupContext) {
-		return getPersistentCollectionDescriptor().createRootTableGroup( tableGroupInfo, tableGroupContext );
 	}
 }

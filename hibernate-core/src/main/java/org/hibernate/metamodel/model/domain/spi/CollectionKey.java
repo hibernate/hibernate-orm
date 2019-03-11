@@ -20,6 +20,9 @@ import org.hibernate.metamodel.model.domain.internal.ForeignKeyDomainResult;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.query.sql.internal.ResolvedScalarDomainResult;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
@@ -74,6 +77,7 @@ public class CollectionKey<T> implements Navigable<T> {
 	public DomainResult createContainerResult(
 			ColumnReferenceQualifier containerReferenceQualifier,
 			DomainResultCreationState creationState) {
+		assert containerReferenceQualifier != null;
 
 		return createDomainResult(
 				joinForeignKey.getColumnMappings().getTargetColumns(),
@@ -126,6 +130,11 @@ public class CollectionKey<T> implements Navigable<T> {
 					sqlSelections
 			);
 		}
+	}
+
+	@Override
+	public SqmNavigableReference createSqmExpression(SqmPath lhs, SqmCreationState creationState) {
+		throw new UnsupportedOperationException(  );
 	}
 
 	private SqlSelection resolveSqlSelection(

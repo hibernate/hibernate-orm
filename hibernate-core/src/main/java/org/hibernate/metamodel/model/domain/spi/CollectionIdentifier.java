@@ -10,18 +10,18 @@ package org.hibernate.metamodel.model.domain.spi;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.internal.ColumnBasedMapper;
 
 /**
  * @author Steve Ebersole
  */
-public class CollectionIdentifier implements DomainResultProducer, BasicValuedNavigable<Object> {
+public class CollectionIdentifier implements BasicValuedNavigable<Object> {
 	public static final String NAVIGABLE_NAME = "{collection-id}";
 
 	private final PersistentCollectionDescriptor collectionDescriptor;
@@ -55,30 +55,6 @@ public class CollectionIdentifier implements DomainResultProducer, BasicValuedNa
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// DomainResultProducer
-
-	@Override
-	public DomainResult createDomainResult(
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
-
-		return new BasicResultImpl(
-				resultVariable,
-				sqlExpressionResolver.resolveSqlSelection(
-						sqlExpressionResolver.resolveSqlExpression(
-								creationState.getColumnReferenceQualifierStack().getCurrent(),
-								column
-						),
-						column.getJavaTypeDescriptor(),
-						creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
-				),
-				column.getExpressableType()
-		);
-	}
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Navigable
 
 	@Override
@@ -94,6 +70,27 @@ public class CollectionIdentifier implements DomainResultProducer, BasicValuedNa
 	@Override
 	public void visitNavigable(NavigableVisitationStrategy visitor) {
 		visitor.visitCollectionIdentifier( this );
+	}
+
+	@Override
+	public DomainResult createDomainResult(
+			NavigablePath navigablePath,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
+
+		return new BasicResultImpl(
+				resultVariable,
+				sqlExpressionResolver.resolveSqlSelection(
+						sqlExpressionResolver.resolveSqlExpression(
+								creationState.getFromClauseAccess().getTableGroup( navigablePath.getParent() ),
+								column
+						),
+						column.getJavaTypeDescriptor(),
+						creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
+				),
+				column.getExpressableType()
+		);
 	}
 
 	@Override

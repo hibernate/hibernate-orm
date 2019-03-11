@@ -19,7 +19,6 @@ import org.hibernate.metamodel.model.domain.spi.AbstractPluralPersistentAttribut
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.internal.domain.collection.CollectionInitializerProducer;
 import org.hibernate.sql.results.internal.domain.collection.ListInitializerProducer;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
@@ -51,8 +50,6 @@ public class PersistentListDescriptorImpl<O,E> extends AbstractPersistentCollect
 			String resultVariable,
 			LockMode lockMode,
 			DomainResultCreationState creationState) {
-		final NavigableReference navigableReference = creationState.getNavigableReferenceStack().getCurrent();
-
 		return new ListInitializerProducer(
 				this,
 				selected,

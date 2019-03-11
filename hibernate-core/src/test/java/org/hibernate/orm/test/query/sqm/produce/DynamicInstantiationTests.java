@@ -16,8 +16,8 @@ import org.hibernate.orm.test.query.sqm.produce.domain.NestedCtorLookupListItem;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.TestingUtil;
 
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
-import org.hibernate.query.sqm.tree.expression.domain.SqmEntityIdentifierReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationNature;
@@ -150,15 +150,15 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 		);
 		assertThat( instantiation.getArguments(), hasSize( 3 ) );
 
-		final SqmEntityIdentifierReference firstArg = TestingUtil.cast(
+		final SqmPath firstArg = TestingUtil.cast(
 				instantiation.getArguments().get( 0 ).getSelectableNode(),
-				SqmEntityIdentifierReference.class
+				SqmPath.class
 		);
 		assertThat( firstArg.getReferencedNavigable().getNavigableName(), is( "id" ) );
 
-		final SqmSingularAttributeReference secondArg = TestingUtil.cast(
+		final SqmPath secondArg = TestingUtil.cast(
 				instantiation.getArguments().get( 1 ).getSelectableNode(),
-				SqmSingularAttributeReference.class
+				SqmPath.class
 		);
 		assertThat( secondArg.getReferencedNavigable().getNavigableName(), is( "theString" ) );
 
@@ -197,7 +197,7 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 
 		assertThat(
 				instantiation.getArguments().get( 0 ).getSelectableNode(),
-				instanceOf( SqmEntityIdentifierReference.class )
+				instanceOf( SqmPath.class )
 		);
 		assertThat( instantiation.getArguments().get( 0 ).getAlias(), is( nullValue() ) );
 
@@ -231,7 +231,7 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 
 		assertThat(
 				instantiation.getArguments().get( 0 ).getSelectableNode(),
-				instanceOf( SqmEntityIdentifierReference.class )
+				instanceOf( SqmPath.class )
 		);
 		assertThat( instantiation.getArguments().get( 0 ).getAlias(), is( "id" ) );
 

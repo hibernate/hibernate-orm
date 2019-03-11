@@ -10,6 +10,8 @@ import org.hibernate.LockMode;
 import org.hibernate.metamodel.model.domain.spi.AbstractTableReferenceCollector;
 import org.hibernate.metamodel.model.domain.spi.PluralValuedNavigable;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.tree.spi.from.StandardTableGroup;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 
 /**
  * @author Steve Ebersole
@@ -36,12 +38,11 @@ public class RootTableReferenceCollectorImpl extends AbstractTableReferenceColle
 		this.effectiveLockMode = effectiveLockMode;
 	}
 
-	public CollectionTableGroup generateTableGroup() {
-		return new CollectionTableGroup(
+	public TableGroup generateTableGroup() {
+		return new StandardTableGroup(
 				uniqueIdentifier,
 				navigablePath,
 				navigable,
-				explicitSourceAlias,
 				effectiveLockMode,
 				getPrimaryTableReference(),
 				getTableReferenceJoins()

@@ -14,6 +14,8 @@ import java.util.function.Consumer;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
@@ -21,18 +23,18 @@ import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.produce.internal.PerQuerySpecSqlExpressionResolver;
+import org.hibernate.sql.ast.produce.internal.SqlAstQuerySpecProcessingStateImpl;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.produce.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.select.SelectClause;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
@@ -162,20 +164,23 @@ public class JoinTableCollectionRowByIndexSelector extends AbstractSelector impl
 
 
 	private class CreationState implements DomainResultCreationState, SqlAstCreationState {
-		private final SqlAliasBaseManager sqlAliasBaseManager = new SqlAliasBaseManager();
+		private final SessionFactoryImplementor sessionFactory;
+		private final SqlAliasBaseGenerator sqlAliasBaseGenerator = new SqlAliasBaseManager();
 		private final DomainResultCreationState.FromClauseAccess fromClauseAccess = new DomainResultCreationState.SimpleFromClauseAccessImpl();
 
-		private final PerQuerySpecSqlExpressionResolver sqlExpressionResolver;
-		private final SessionFactoryImplementor sessionFactory;
+		private final Stack<SqlAstProcessingState> processingStateStack = new StandardStack<>();
 
 		public CreationState(SessionFactoryImplementor sessionFactory, QuerySpec querySpec) {
 			this.sessionFactory = sessionFactory;
-			this.sqlExpressionResolver = new PerQuerySpecSqlExpressionResolver(
-					sessionFactory,
-					() -> querySpec,
-					expression -> expression,
-					(expression, selection) -> {
-					}
+			processingStateStack.push(
+					new SqlAstQuerySpecProcessingStateImpl(
+							querySpec,
+							null,
+							this,
+							() -> null,
+							() -> expression -> {},
+							() -> sqlSelection -> {}
+					)
 			);
 		}
 
@@ -185,18 +190,23 @@ public class JoinTableCollectionRowByIndexSelector extends AbstractSelector impl
 		}
 
 		@Override
-		public SqlExpressionResolver getSqlExpressionResolver() {
-			return sqlExpressionResolver;
+		public SqlAstCreationState getSqlAstCreationState() {
+			return this;
+		}
+
+		@Override
+		public SqlAstProcessingState getCurrentProcessingState() {
+			return processingStateStack.getCurrent();
 		}
 
 		@Override
 		public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
-			return sqlAliasBaseManager;
+			return sqlAliasBaseGenerator;
 		}
 
 		@Override
-		public SqlAstCreationState getSqlAstCreationState() {
-			return null;
+		public SqlExpressionResolver getSqlExpressionResolver() {
+			return getCurrentProcessingState().getSqlExpressionResolver();
 		}
 
 		@Override
@@ -215,13 +225,8 @@ public class JoinTableCollectionRowByIndexSelector extends AbstractSelector impl
 		}
 
 		@Override
-		public TableSpace getCurrentTableSpace() {
-			throw new UnsupportedOperationException(  );
-		}
-
-		@Override
 		public LockMode determineLockMode(String identificationVariable) {
-			return null;
+			return LockMode.NONE;
 		}
 	}
 }

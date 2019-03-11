@@ -74,7 +74,7 @@ public class SqmPluralAttributeReference
 			SqmCreationState creationState) {
 		return getReferencedNavigable().getPersistentCollectionDescriptor()
 				.findNavigable( name )
-				.createSqmExpression( getExportedFromElement(), this, creationState );
+				.createSqmExpression( this, creationState );
 	}
 
 	@Override

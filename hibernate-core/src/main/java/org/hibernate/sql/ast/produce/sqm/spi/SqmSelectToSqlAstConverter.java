@@ -15,41 +15,32 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.annotations.Remove;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.internal.util.collections.Stack;
-import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
-import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.domain.SqmDiscriminatorReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityTypedReference;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
-import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationTarget;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
-import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.sql.ast.produce.internal.PerQuerySpecSqlExpressionResolver;
 import org.hibernate.sql.ast.produce.internal.SqlAstSelectDescriptorImpl;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
-import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.produce.spi.SqlAstSelectDescriptor;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
@@ -60,7 +51,6 @@ import org.hibernate.sql.ast.tree.spi.expression.domain.EntityValuedNavigableRef
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiation;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationNature;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.results.spi.CircularFetchDetector;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
@@ -84,19 +74,17 @@ public class SqmSelectToSqlAstConverter
 		implements DomainResultCreationState {
 	private static final Logger log = Logger.getLogger( SqmSelectToSqlAstConverter.class );
 
-	private final PerQuerySpecSqlExpressionResolver expressionResolver;
-
-	private final Stack<Shallowness> shallownessStack = new StandardStack<>( Shallowness.NONE );
-
 	private final List<DomainResult> domainResults = new ArrayList<>();
+	private final CircularFetchDetector circularFetchDetector = new CircularFetchDetector();
 
+	/**
+	 * @deprecated See {@link FromClauseAccess}
+	 */
+	@Remove
+	@Deprecated
 	private Map<NavigablePath, Set<SqmNavigableJoin>> fetchJoinsByParentPath;
 
 	private int counter;
-
-	public String generateSqlAstNodeUid() {
-		return "<uid(fetchgraph):" + counter++ + ">";
-	}
 
 	public SqmSelectToSqlAstConverter(
 			QueryOptions queryOptions,
@@ -104,13 +92,6 @@ public class SqmSelectToSqlAstConverter
 			Callback callback,
 			SqlAstCreationContext creationContext) {
 		super( creationContext, queryOptions, influencers, callback );
-
-		this.expressionResolver = new PerQuerySpecSqlExpressionResolver(
-				getCreationContext(),
-				() -> getQuerySpecStack().getCurrent(),
-				this::normalizeSqlExpression,
-				this::collectSelection
-		);
 	}
 
 	public SqlAstSelectDescriptor interpret(SqmSelectStatement statement) {
@@ -135,23 +116,6 @@ public class SqmSelectToSqlAstConverter
 		return false;
 	}
 
-	private Stack<ColumnReferenceQualifier> resultCreationColumnReferenceQualifierStack = new StandardStack<>();
-
-	@Override
-	public Stack<ColumnReferenceQualifier> getColumnReferenceQualifierStack() {
-		return resultCreationColumnReferenceQualifierStack;
-	}
-
-	@Override
-	public SqlExpressionResolver getSqlExpressionResolver() {
-		return expressionResolver;
-	}
-
-	@Override
-	public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
-		return getSqlAliasBaseManager();
-	}
-
 	@Override
 	public SqlAstCreationState getSqlAstCreationState() {
 		return this;
@@ -163,21 +127,6 @@ public class SqmSelectToSqlAstConverter
 	// walker
 
 	@Override
-	public Object visitUpdateStatement(SqmUpdateStatement statement) {
-		throw new AssertionFailure( "Not expecting UpdateStatement" );
-	}
-
-	@Override
-	public Object visitDeleteStatement(SqmDeleteStatement statement) {
-		throw new AssertionFailure( "Not expecting DeleteStatement" );
-	}
-
-	@Override
-	public Object visitInsertSelectStatement(SqmInsertSelectStatement statement) {
-		throw new AssertionFailure( "Not expecting DeleteStatement" );
-	}
-
-	@Override
 	public SelectStatement visitSelectStatement(SqmSelectStatement statement) {
 		final QuerySpec querySpec = visitQuerySpec( statement.getQuerySpec() );
 
@@ -185,14 +134,12 @@ public class SqmSelectToSqlAstConverter
 	}
 
 
-	// select o from Order o join fetch o.customer
-
 	@Override
 	public Void visitSelection(SqmSelection sqmSelection) {
 		// todo (6.0) : this should actually be able to generate multiple SqlSelections
 		final DomainResultProducer resultProducer = (DomainResultProducer) sqmSelection.getSelectableNode().accept( this );
 
-		if ( getQuerySpecStack().depth() > 1 && Expression.class.isInstance( resultProducer ) ) {
+		if ( getProcessingStateStack().depth() > 1 && Expression.class.isInstance( resultProducer ) ) {
 			// we only need the QueryResults if we are in the top-level select-clause.
 			// but we do need to at least resolve the sql selections
 			getSqlExpressionResolver().resolveSqlSelection(
@@ -213,7 +160,11 @@ public class SqmSelectToSqlAstConverter
 		return null;
 	}
 
-	private final CircularFetchDetector circularFetchDetector = new CircularFetchDetector();
+	private int fetchDepth = 0;
+
+	private int currentFetchDepth() {
+		return fetchDepth;
+	}
 
 	@Override
 	public List<Fetch> visitFetches(FetchParent fetchParent) {
@@ -230,73 +181,15 @@ public class SqmSelectToSqlAstConverter
 				return;
 			}
 
-			LockMode lockMode = LockMode.READ;
-			FetchTiming fetchTiming = fetchable.getMappedFetchStrategy().getTiming();
-
-			final Integer maximumFetchDepth = getCreationContext().getMaximumFetchDepth();
-			// minus one because the root is not a fetch
-			final int fetchDepth = getNavigableReferenceStack().depth() - 1;
-
-			final SqmNavigableJoin fetchedJoin = findFetchedJoin(
-					fetchParent,
-					fetchable
-			);
-
-			final String alias;
-			boolean joined;
-			if ( fetchedJoin != null ) {
-				fetchTiming = FetchTiming.IMMEDIATE;
-				joined = true;
-
-				lockMode = getQueryOptions().getLockOptions().getEffectiveLockMode(
-						fetchedJoin.getIdentificationVariable()
-				);
-
-				alias = fetchedJoin.getIdentificationVariable();
-			}
-			else {
-				// todo (6.0) : account for EntityGraph
-
-
-				// Note that legacy Hibernate behavior for HQL processing was to stop here
-				// in terms of defining immediate join fetches - they had to be
-				// explicitly defined in the query (although we did add some support for
-				// using JPA EntityGraphs to influence the fetches to be JPA compliant)
-				joined = fetchTiming == FetchTiming.IMMEDIATE && fetchable.getMappedFetchStrategy().getStyle() == FetchStyle.JOIN;
-				alias = null;
-			}
-
-			if ( maximumFetchDepth != null ) {
-				if ( fetchDepth == maximumFetchDepth ) {
-					joined = false;
-				}
-				else if ( fetchDepth > maximumFetchDepth ) {
-					return;
-				}
-			}
-
 			try {
-				final Fetch fetch = fetchable.generateFetch(
-						fetchParent,
-						fetchTiming,
-						joined,
-						lockMode,
-						alias,
-						SqmSelectToSqlAstConverter.this
-				);
-
-				fetches.add( fetch );
+				fetchDepth++;
+				final Fetch fetch = buildFetch( fetchParent, fetchable );
+				if ( fetch != null ) {
+					fetches.add( fetch );
+				}
 			}
-			catch (RuntimeException e) {
-				throw new HibernateException(
-						String.format(
-								Locale.ROOT,
-								"Could not generate fetch : %s -> %s",
-								fetchParent.getNavigablePath(),
-								fetchable.getNavigableName()
-						),
-						e
-				);
+			finally {
+				fetchDepth--;
 			}
 		};
 
@@ -307,14 +200,74 @@ public class SqmSelectToSqlAstConverter
 		return fetches;
 	}
 
-	@Override
-	public FromClauseAccess getFromClauseAccess() {
-		return getFromClauseIndex();
+	private Fetch buildFetch(FetchParent fetchParent, Fetchable fetchable) {
+		LockMode lockMode = LockMode.READ;
+		FetchTiming fetchTiming = fetchable.getMappedFetchStrategy().getTiming();
+
+		final SqmNavigableJoin fetchedJoin = findFetchedJoin( fetchParent, fetchable );
+
+		final String alias;
+		boolean joined;
+		if ( fetchedJoin != null ) {
+			fetchTiming = FetchTiming.IMMEDIATE;
+			joined = true;
+
+			lockMode = getQueryOptions().getLockOptions().getEffectiveLockMode(
+					fetchedJoin.getIdentificationVariable()
+			);
+
+			alias = fetchedJoin.getIdentificationVariable();
+		}
+		else {
+			// todo (6.0) : account for EntityGraph
+
+
+			// Note that legacy Hibernate behavior for HQL processing was to stop here
+			// in terms of defining immediate join fetches - they had to be
+			// explicitly defined in the query (although we did add some support for
+			// using JPA EntityGraphs to influence the fetches to be JPA compliant)
+			joined = fetchTiming == FetchTiming.IMMEDIATE && fetchable.getMappedFetchStrategy().getStyle() == FetchStyle.JOIN;
+			alias = null;
+		}
+
+		final Integer maximumFetchDepth = getCreationContext().getMaximumFetchDepth();
+
+		if ( maximumFetchDepth != null ) {
+			if ( fetchDepth == maximumFetchDepth ) {
+				joined = false;
+			}
+			else if ( fetchDepth > maximumFetchDepth ) {
+				return null;
+			}
+		}
+
+		try {
+			return fetchable.generateFetch(
+					fetchParent,
+					fetchTiming,
+					joined,
+					lockMode,
+					alias,
+					SqmSelectToSqlAstConverter.this
+			);
+
+		}
+		catch (RuntimeException e) {
+			throw new HibernateException(
+					String.format(
+							Locale.ROOT,
+							"Could not generate fetch : %s -> %s",
+							fetchParent.getNavigablePath(),
+							fetchable.getNavigableName()
+					),
+					e
+			);
+		}
 	}
 
 	@Override
-	public TableSpace getCurrentTableSpace() {
-		return super.getCurrentTableSpace();
+	public FromClauseAccess getFromClauseAccess() {
+		return getFromClauseIndex();
 	}
 
 	@Override

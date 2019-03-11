@@ -10,8 +10,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
-import org.hibernate.sql.ast.produce.internal.NonSelectSqlExpressionResolver;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.produce.internal.SqlAstProcessingStateImpl;
 import org.hibernate.sql.ast.tree.spi.DeleteStatement;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
@@ -32,44 +31,47 @@ public class SqmDeleteToSqlAstConverterSimple extends BaseSqmToSqlAstConverter {
 		return walker.deleteStatement;
 	}
 
-	private NonSelectSqlExpressionResolver expressionResolver;
 	private DeleteStatement deleteStatement;
 
 	private SqmDeleteToSqlAstConverterSimple(
 			QueryOptions queryOptions,
 			SharedSessionContractImplementor session) {
 		super( session.getFactory(), queryOptions, session.getLoadQueryInfluencers(), afterLoadAction -> {} );
-		this.expressionResolver = new NonSelectSqlExpressionResolver(
-				session.getSessionFactory(),
-				() -> getQuerySpecStack().getCurrent(),
-				this::normalizeSqlExpression,
-				this::collectSelection
-		);
-	}
-
-	@Override
-	public SqlExpressionResolver getSqlExpressionResolver() {
-		return expressionResolver;
 	}
 
 	@Override
 	public Object visitDeleteStatement(SqmDeleteStatement sqmStatement) {
-		final Predicate restriction;
-		if ( sqmStatement.getWhereClause() != null && sqmStatement.getWhereClause().getPredicate() != null ) {
-			restriction = (Predicate) sqmStatement.getWhereClause().getPredicate().accept( this );
-		}
-		else {
-			restriction = null;
-		}
-
-		deleteStatement = new DeleteStatement(
-				new TableReference(
-						sqmStatement.getTarget().getReferencedNavigable().getEntityDescriptor().getPrimaryTable(),
+		getProcessingStateStack().push(
+				new SqlAstProcessingStateImpl(
 						null,
-						false
-				),
-				restriction
+						this,
+						getCurrentClauseStack()::getCurrent,
+						() -> (expression) -> {}
+				)
 		);
-		return deleteStatement;
+
+		try {
+			final Predicate restriction;
+			if ( sqmStatement.getWhereClause() != null && sqmStatement.getWhereClause().getPredicate() != null ) {
+				restriction = (Predicate) sqmStatement.getWhereClause().getPredicate().accept( this );
+			}
+			else {
+				restriction = null;
+			}
+
+			deleteStatement = new DeleteStatement(
+					new TableReference(
+							sqmStatement.getTarget().getReferencedNavigable().getEntityDescriptor().getPrimaryTable(),
+							null,
+							false
+					),
+					restriction
+			);
+
+			return deleteStatement;
+		}
+		finally {
+			getProcessingStateStack().pop();
+		}
 	}
 }

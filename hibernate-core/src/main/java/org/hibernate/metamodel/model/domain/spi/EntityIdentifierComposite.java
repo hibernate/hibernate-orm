@@ -6,12 +6,6 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import org.hibernate.query.sqm.produce.spi.SqmCreationState;
-import org.hibernate.query.sqm.tree.expression.domain.SqmEntityIdentifierReferenceComposite;
-import org.hibernate.query.sqm.tree.expression.domain.SqmEntityTypedReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.metamodel.spi.EmbeddedValueExpressableType;
 
 /**
@@ -24,17 +18,6 @@ public interface EntityIdentifierComposite<O,J>
 		return getNavigableName().equals( navigableName )
 				|| LEGACY_NAVIGABLE_ID.equals( navigableName )
 				|| NAVIGABLE_ID.equals( navigableName );
-	}
-
-	@Override
-	default SqmNavigableReference createSqmExpression(
-			SqmFrom sourceSqmFrom,
-			SqmNavigableContainerReference containerReference,
-			SqmCreationState creationState) {
-		return new SqmEntityIdentifierReferenceComposite(
-				(SqmEntityTypedReference) containerReference,
-				this
-		);
 	}
 
 	@Override

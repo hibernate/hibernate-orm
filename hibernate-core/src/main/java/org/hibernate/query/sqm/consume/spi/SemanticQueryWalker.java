@@ -32,17 +32,12 @@ import org.hibernate.query.sqm.tree.expression.domain.AbstractSpecificSqmCollect
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionIndexReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmDiscriminatorReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmEntityIdentifierReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMapEntryBinding;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMaxElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMinElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMinIndexReferenceBasic;
 import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceAny;
-import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceBasic;
-import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceEmbedded;
-import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceEntity;
 import org.hibernate.query.sqm.tree.expression.function.SqmAbsFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmBitLengthFunction;
@@ -138,7 +133,6 @@ public interface SemanticQueryWalker<T> {
 
 	T visitQualifiedAttributeJoinFromElement(SqmNavigableJoin joinedFromElement);
 
-
 	T visitBasicValuedPath(SqmBasicValuedSimplePath path);
 
 	T visitEmbeddableValuedPath(SqmEmbeddedValuedSimplePath path);
@@ -166,16 +160,6 @@ public interface SemanticQueryWalker<T> {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// expressions - navigable
-
-	T visitEntityIdentifierReference(SqmEntityIdentifierReference sqmEntityIdentifierBinding);
-
-	T visitBasicValuedSingularAttribute(SqmSingularAttributeReferenceBasic sqmAttributeReference);
-
-	T visitEntityValuedSingularAttribute(SqmSingularAttributeReferenceEntity sqmAttributeReference);
-
-	T visitEmbeddableValuedSingularAttribute(SqmSingularAttributeReferenceEmbedded sqmAttributeReference);
-
-	T visitAnyValuedSingularAttribute(SqmSingularAttributeReferenceAny sqmAttributeReference);
 
 	T visitPluralAttribute(SqmPluralAttributeReference reference);
 

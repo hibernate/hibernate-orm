@@ -546,7 +546,6 @@ public class QuerySplitter {
 			}
 
 			final SqmAttributeReference attributeBindingCopy = (SqmAttributeReference) sourceNavRef.getReferencedNavigable().createSqmExpression(
-					sourceNavRef.getExportedFromElement(),
 					sourceNavRef,
 					this
 			);

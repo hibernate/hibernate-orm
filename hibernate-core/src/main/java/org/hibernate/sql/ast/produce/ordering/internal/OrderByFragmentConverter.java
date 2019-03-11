@@ -15,9 +15,9 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
-import org.hibernate.sql.ast.produce.internal.NonSelectSqlExpressionResolver;
+import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.produce.internal.SqlAstProcessingStateImpl;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
 
 /**
@@ -35,12 +35,6 @@ public class OrderByFragmentConverter extends BaseSqmToSqlAstConverter {
 	}
 
 	private final List<SortSpecification> collectedSortSpecs = new ArrayList<>();
-	private final NonSelectSqlExpressionResolver sqlExpressionResolver = new NonSelectSqlExpressionResolver(
-			getCreationContext(),
-			() -> null,
-			expression -> expression,
-			(expression, selection) -> {}
-	);
 
 
 	@SuppressWarnings("WeakerAccess")
@@ -51,6 +45,17 @@ public class OrderByFragmentConverter extends BaseSqmToSqlAstConverter {
 				LoadQueryInfluencers.NONE,
 				afterLoadAction -> {}
 		);
+
+		getCurrentClauseStack().push( Clause.ORDER );
+
+		getProcessingStateStack().push(
+				new SqlAstProcessingStateImpl(
+						null,
+						this,
+						getCurrentClauseStack()::getCurrent,
+						() -> (expr) -> {}
+				)
+		);
 	}
 
 	private List<SortSpecification> doConversion(SqmOrderByClause sqmOrderByClause) {
@@ -59,10 +64,5 @@ public class OrderByFragmentConverter extends BaseSqmToSqlAstConverter {
 		}
 
 		return collectedSortSpecs;
-	}
-
-	@Override
-	public SqlExpressionResolver getSqlExpressionResolver() {
-		return sqlExpressionResolver;
 	}
 }

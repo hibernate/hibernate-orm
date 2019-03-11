@@ -71,7 +71,6 @@ import org.hibernate.metamodel.model.domain.internal.SqlAliasStemHelper;
 import org.hibernate.metamodel.model.domain.internal.entity.EntityHierarchyImpl;
 import org.hibernate.metamodel.model.domain.internal.entity.EntityIdentifierCompositeAggregatedImpl;
 import org.hibernate.metamodel.model.domain.internal.entity.EntityIdentifierSimpleImpl;
-import org.hibernate.metamodel.model.domain.internal.entity.EntityTableGroup;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
@@ -85,6 +84,8 @@ import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.tree.spi.from.StandardTableGroup;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
@@ -642,7 +643,7 @@ public abstract class AbstractEntityTypeDescriptor<J>
 	}
 
 	@Override
-	public EntityTableGroup createRootTableGroup(
+	public TableGroup createRootTableGroup(
 			String uid,
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
@@ -656,11 +657,10 @@ public abstract class AbstractEntityTypeDescriptor<J>
 		final List<TableReferenceJoin> joins = new ArrayList<>(  );
 		resolveTableReferenceJoins( primaryTableReference, sqlAliasBase, tableReferenceJoinType, joins::add );
 
-		return new EntityTableGroup(
+		return new StandardTableGroup(
 				uid,
 				navigablePath,
 				this,
-				explicitSourceAlias,
 				lockMode,
 				primaryTableReference,
 				joins

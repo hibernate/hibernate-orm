@@ -9,6 +9,7 @@ package org.hibernate.sql.ast.tree.spi.from;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.spi.SqlAstNode;
@@ -17,23 +18,21 @@ import org.hibernate.sql.ast.tree.spi.SqlAstNode;
  * @author Steve Ebersole
  */
 public class FromClause implements SqlAstNode {
-	private final List<TableSpace> tableSpaces = new ArrayList<>();
+	private final List<TableGroup> roots = new ArrayList<>();
 
 	public FromClause() {
 	}
 
-	public List<TableSpace> getTableSpaces() {
-		return Collections.unmodifiableList( tableSpaces );
+	public List<TableGroup> getRoots() {
+		return Collections.unmodifiableList( roots );
 	}
 
-	public TableSpace makeTableSpace() {
-		final TableSpace tableSpace = new TableSpace( this );
-		addTableSpace( tableSpace );
-		return tableSpace;
+	public void addRoot(TableGroup root) {
+		this.roots.add( root );
 	}
 
-	public void addTableSpace(TableSpace tableSpace) {
-		tableSpaces.add( tableSpace );
+	public void visitRoots(Consumer<TableGroup> consumer) {
+		roots.forEach( consumer );
 	}
 
 	@Override

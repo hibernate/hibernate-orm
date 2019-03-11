@@ -14,9 +14,6 @@ import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.EmptyStack;
-import org.hibernate.internal.util.collections.Stack;
-import org.hibernate.metamodel.model.domain.internal.entity.EntityTableGroup;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
@@ -26,19 +23,18 @@ import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.sql.ast.JoinType;
-import org.hibernate.sql.ast.produce.internal.StandardSqlExpressionResolver;
+import org.hibernate.sql.ast.produce.internal.SqlAstQuerySpecProcessingStateImpl;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
-import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.ast.tree.spi.from.TableSpace;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
+
+import org.jboss.logging.Logger;
 
 /**
  * Specialized SqmSelectToSqlAstConverter extension to help in generating the
@@ -48,6 +44,7 @@ import org.hibernate.sql.results.spi.FetchParent;
  * @author Steve Ebersole
  */
 public class IdSelectGenerator extends SqmSelectToSqlAstConverter {
+	private static final Logger log = Logger.getLogger( IdSelectGenerator.class );
 
 	public static QuerySpec generateEntityIdSelect(
 			EntityTypeDescriptor entityDescriptor,
@@ -70,9 +67,7 @@ public class IdSelectGenerator extends SqmSelectToSqlAstConverter {
 	private final EntityTypeDescriptor entityDescriptor;
 
 	private final QuerySpec idSelectQuerySpec;
-	private final TableSpace idSelectTableSpace;
-
-	private final StandardSqlExpressionResolver expressionResolver;
+	private final TableGroup rootTableGroup;
 
 	public IdSelectGenerator(
 			SqmDeleteOrUpdateStatement sourceSqmStatement,
@@ -87,7 +82,19 @@ public class IdSelectGenerator extends SqmSelectToSqlAstConverter {
 
 		this.idSelectQuerySpec = new QuerySpec( true );
 
-		final EntityTableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
+		SqlAstQuerySpecProcessingStateImpl processingState = new SqlAstQuerySpecProcessingStateImpl(
+				idSelectQuerySpec,
+				null,
+				this,
+				getCurrentClauseStack()::getCurrent,
+				() -> expr -> {
+				},
+				() -> sqlSelection -> log.debugf( "Notified of SqlSelection [%s] via SqlAstProcessingState" )
+		);
+
+		getProcessingStateStack().push( processingState );
+
+		this.rootTableGroup = entityDescriptor.createRootTableGroup(
 				sourceSqmStatement.getTarget().getUniqueIdentifier(),
 				sourceSqmStatement.getTarget().getNavigablePath(),
 				sourceSqmStatement.getTarget().getExplicitAlias(),
@@ -100,16 +107,7 @@ public class IdSelectGenerator extends SqmSelectToSqlAstConverter {
 		// 	resolve to this TableGroup for the entity for the id select
 		getFromClauseIndex().crossReference( sourceSqmStatement.getTarget(), rootTableGroup );
 
-//		getFromClauseIndex().registerTableGroup( rootTableGroup.getNavigablePath(), rootTableGroup );
-
-		this.idSelectTableSpace = idSelectQuerySpec.getFromClause().makeTableSpace();
-		idSelectTableSpace.setRootTableGroup( rootTableGroup );
-
-		this.expressionResolver = new StandardSqlExpressionResolver(
-				() -> idSelectQuerySpec,
-				expression -> expression,
-				(expression, sqlSelection) -> {}
-		);
+		idSelectQuerySpec.getFromClause().addRoot( rootTableGroup );
 	}
 
 
@@ -117,33 +115,8 @@ public class IdSelectGenerator extends SqmSelectToSqlAstConverter {
 	// DomainResultCreationState
 
 	@Override
-	public Stack<ColumnReferenceQualifier> getColumnReferenceQualifierStack() {
-		return EmptyStack.instance();
-	}
-
-	@Override
-	public Stack<NavigableReference> getNavigableReferenceStack() {
-		return EmptyStack.instance();
-	}
-
-	@Override
-	public boolean fetchAllAttributes() {
-		return false;
-	}
-
-	@Override
-	public SqlExpressionResolver getSqlExpressionResolver() {
-		return expressionResolver;
-	}
-
-	@Override
 	protected QuerySpec currentQuerySpec() {
 		return idSelectQuerySpec;
-	}
-
-	@Override
-	public TableSpace getCurrentTableSpace() {
-		return idSelectTableSpace;
 	}
 
 	@Override

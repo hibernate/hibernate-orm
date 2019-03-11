@@ -33,11 +33,7 @@ public abstract class AbstractSpecificSqmCollectionIndexReference extends Abstra
 		return getPluralAttributeReference().getReferencedNavigable()
 				.getPersistentCollectionDescriptor()
 				.getIndexDescriptor()
-				.createSqmExpression(
-						getPluralAttributeReference().getExportedFromElement(),
-						getPluralAttributeReference(),
-						creationState
-				);
+				.createSqmExpression( this, creationState );
 	}
 
 	@Override

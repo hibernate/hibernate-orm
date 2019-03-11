@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.model.domain.internal.collection;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -16,13 +17,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import org.hibernate.LockOptions;
+import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
@@ -31,16 +31,18 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.consume.spi.SelfRenderingExpression;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstSelectToJdbcSelectConverter;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.produce.internal.SqlAstQuerySpecProcessingStateImpl;
 import org.hibernate.sql.ast.produce.internal.SqlAstSelectDescriptorImpl;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
-import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.produce.spi.SqlAstProcessingState;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
@@ -49,10 +51,8 @@ import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.LiteralParameter;
 import org.hibernate.sql.ast.tree.spi.expression.PositionalParameter;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
-import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.ast.tree.spi.predicate.SelfRenderingPredicate;
 import org.hibernate.sql.ast.tree.spi.select.SelectClause;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
@@ -63,6 +63,8 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.spi.DomainResult;
+import org.hibernate.sql.results.spi.Fetch;
+import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -219,16 +221,11 @@ public abstract class AbstractSelector {
 			SessionFactoryImplementor sessionFactory) {
 		final QuerySpec rootQuerySpec = new QuerySpec( true );
 		final SelectStatement selectStatement = new SelectStatement( rootQuerySpec );
+
+		final TableGroup rootTableGroup = createTableGroup( rootQuerySpec, sessionFactory );
+		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
+
 		final SelectClause selectClause = selectStatement.getQuerySpec().getSelectClause();
-
-		final TableSpace rootTableSpace = rootQuerySpec.getFromClause().makeTableSpace();
-
-		final TableGroup rootTableGroup = resolveTableGroup(
-				rootQuerySpec,
-				rootTableSpace
-		);
-		rootTableSpace.setRootTableGroup( rootTableGroup );
-
 		final List<DomainResult> domainResults = new ArrayList<>();
 
 		applySqlSelections(
@@ -263,66 +260,60 @@ public abstract class AbstractSelector {
 		);
 	}
 
-	private TableGroup resolveTableGroup(
+	private TableGroup createTableGroup(
 			QuerySpec querySpec,
-			TableSpace tableSpace) {
-		final SqlAliasBaseGenerator aliasBaseGenerator = new SqlAliasBaseManager();
-		final TableGroup tableGroup = collectionDescriptor.createRootTableGroup(
-				new TableGroupInfo() {
-					@Override
-					public String getUniqueIdentifier() {
-						return "root";
-					}
+			SessionFactoryImplementor sessionFactory) {
 
-					@Override
-					public String getIdentificationVariable() {
-						return "r";
-					}
+		final SqlAstCreationState creationState = new SqlAstCreationState() {
+			final SqlAliasBaseGenerator aliasBaseGenerator = new SqlAliasBaseManager();
+			final SqlAstProcessingState processingState = new SqlAstQuerySpecProcessingStateImpl(
+					querySpec,
+					null,
+					this,
+					() -> null,
+					() -> expression -> {},
+					() -> sqlSelection -> {}
+			);
 
-					@Override
-					public EntityTypeDescriptor getIntrinsicSubclassEntityMetadata() {
-						return null;
-					}
+			@Override
+			public SqlAstCreationContext getCreationContext() {
+				return sessionFactory;
+			}
 
-					@Override
-					public NavigablePath getNavigablePath() {
-						return null;
-					}
-				},
-				new RootTableGroupContext() {
-					@Override
-					public void addRestriction(Predicate predicate) {
-						querySpec.addRestriction( predicate );
-					}
+			@Override
+			public SqlAstProcessingState getCurrentProcessingState() {
+				return processingState;
+			}
 
-					@Override
-					public QuerySpec getQuerySpec() {
-						return querySpec;
-					}
+			@Override
+			public SqlExpressionResolver getSqlExpressionResolver() {
+				return processingState.getSqlExpressionResolver();
+			}
 
-					@Override
-					public TableSpace getTableSpace() {
-						return tableSpace;
-					}
+			@Override
+			public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
+				return aliasBaseGenerator;
+			}
 
-					@Override
-					public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
-						return aliasBaseGenerator;
-					}
+			@Override
+			public LockMode determineLockMode(String identificationVariable) {
+				return LockMode.NONE;
+			}
 
-					@Override
-					public JoinType getTableReferenceJoinType() {
-						return null;
-					}
+			@Override
+			public List<Fetch> visitFetches(FetchParent fetchParent) {
+				return Collections.emptyList();
+			}
+		};
 
-					@Override
-					public LockOptions getLockOptions() {
-						return LockOptions.NONE;
-					}
-				}
+		return collectionDescriptor.createRootTableGroup(
+				null,
+				new NavigablePath( collectionDescriptor.getNavigableRole().getFullPath() ),
+				null,
+				null,
+				LockMode.NONE,
+				creationState
 		);
-
-		return tableGroup;
 	}
 
 	private void applyWhereFragment(String sqlWhereString, QuerySpec querySpec) {

@@ -15,6 +15,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractPersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.AbstractPluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.CollectionIdentifier;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
@@ -46,6 +47,7 @@ public class PersistentBagDescriptorImpl<O,E> extends AbstractPersistentCollecti
 		final DomainResult collectionIdResult;
 		if ( getIdDescriptor() != null ) {
 			collectionIdResult = getIdDescriptor().createDomainResult(
+					navigablePath.append( CollectionIdentifier.NAVIGABLE_NAME ),
 					null,
 					creationState
 			);

@@ -20,7 +20,6 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.EmptyStack;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
@@ -32,15 +31,15 @@ import org.hibernate.query.sqm.produce.internal.UniqueIdGenerator;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.produce.internal.SqlAstQuerySpecProcessingStateImpl;
 import org.hibernate.sql.ast.produce.internal.SqlAstSelectDescriptorImpl;
-import org.hibernate.sql.ast.produce.internal.StandardSqlExpressionResolver;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupProducer;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.produce.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.produce.spi.SqlAstSelectDescriptor;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.spi.SqlQueryOptions;
@@ -49,9 +48,7 @@ import org.hibernate.sql.ast.tree.spi.SelectStatement;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.InListPredicate;
 import org.hibernate.sql.exec.internal.StandardJdbcParameterImpl;
@@ -104,11 +101,7 @@ public class MetamodelSelectBuilderProcess
 	private final LoadQueryInfluencers loadQueryInfluencers;
 	private final LockOptions lockOptions;
 
-
-	private final Stack<TableSpace> tableSpaceStack = new StandardStack<>();
-//	private final Stack<TableGroup> tableGroupStack = new StandardStack<>();
-//	private final NavigablePathStack navigablePathStack = new NavigablePathStack();
-//	private final Stack<NavigableReference> navigableReferenceStack = new StandardStack<>();
+	private final Stack<SqlAstProcessingState> processingStateStack = new StandardStack<>();
 
 	private final Set<String> affectedTables = new HashSet<>();
 
@@ -116,11 +109,8 @@ public class MetamodelSelectBuilderProcess
 
 	private final SqlAliasBaseManager sqlAliasBaseManager = new SqlAliasBaseManager();
 
-	private final StandardSqlExpressionResolver sqlExpressionResolver;
-
 	private final DomainResultCreationState.FromClauseAccess fromClauseAccess = new DomainResultCreationState.SimpleFromClauseAccessImpl();
 
-//	private final Stack<ColumnReferenceQualifier> columnReferenceQualifierStack = new StandardStack<>();
 
 	private MetamodelSelectBuilderProcess(
 			SqlAstCreationContext creationContext,
@@ -139,12 +129,6 @@ public class MetamodelSelectBuilderProcess
 		this.numberOfKeysToLoad = numberOfKeysToLoad;
 		this.loadQueryInfluencers = loadQueryInfluencers;
 		this.lockOptions = lockOptions != null ? lockOptions : LockOptions.NONE;
-
-		this.sqlExpressionResolver = new StandardSqlExpressionResolver(
-				() -> rootQuerySpec,
-				expression -> expression,
-				(expression, selection) -> {}
-		);
 	}
 
 	@Override
@@ -152,8 +136,24 @@ public class MetamodelSelectBuilderProcess
 		return creationContext;
 	}
 
+	@Override
+	public SqlAstProcessingState getCurrentProcessingState() {
+		return processingStateStack.getCurrent();
+	}
+
 	private SqlAstSelectDescriptor execute() {
 //		navigablePathStack.push( rootNavigableContainer );
+
+		processingStateStack.push(
+				new SqlAstQuerySpecProcessingStateImpl(
+						rootQuerySpec,
+						null,
+						this,
+						() -> null,
+						() -> expression -> {},
+						() -> sqlSelection -> {}
+				)
+		);
 
 		final NavigablePath rootNavigablePath = new NavigablePath( rootNavigableContainer.getNavigableName() );
 
@@ -161,10 +161,6 @@ public class MetamodelSelectBuilderProcess
 
 		final UniqueIdGenerator uidGenerator = new UniqueIdGenerator();
 		final String uid = uidGenerator.generateUniqueId();
-
-		final TableSpace rootTableSpace = rootQuerySpec.getFromClause().makeTableSpace();
-		tableSpaceStack.push( rootTableSpace );
-
 
 		final RootTableGroupProducer tableGroupProducer = (RootTableGroupProducer) rootNavigableContainer;
 		final TableGroup rootTableGroup = tableGroupProducer.createRootTableGroup(
@@ -178,11 +174,7 @@ public class MetamodelSelectBuilderProcess
 
 		);
 		getFromClauseAccess().registerTableGroup( rootNavigablePath, rootTableGroup );
-		rootTableSpace.setRootTableGroup( rootTableGroup );
-
-//		tableGroupStack.push( rootTableGroup );
-//		columnReferenceQualifierStack.push( rootTableGroup );
-//		navigableReferenceStack.push( rootTableGroup.getNavigableReference() );
+		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
 
 		final List<DomainResult> domainResults;
 
@@ -231,7 +223,7 @@ public class MetamodelSelectBuilderProcess
 					@Override
 					public void accept(SqlExpressableType type, Column column) {
 						keyColumnReferences.add(
-								(ColumnReference) sqlExpressionResolver.resolveSqlExpression( rootTableGroup, column )
+								(ColumnReference) getCurrentProcessingState().getSqlExpressionResolver().resolveSqlExpression( rootTableGroup, column )
 						);
 
 						keyParameterReferences.add(
@@ -288,20 +280,6 @@ public class MetamodelSelectBuilderProcess
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// DomainResultCreationState
-
-	/**
-	 * todo (6.0) : consider removing - I believe this can be handled using `#navigableReferenceStack` + `NavigableReference#getColumnReferenceQualifier`
-	 * 		save runtime memory.  of course see note below about simply passing NavigableReference
-	 */
-	@Override
-	public Stack<ColumnReferenceQualifier> getColumnReferenceQualifierStack() {
-		return EmptyStack.instance();
-	}
-
-	@Override
-	public Stack<NavigableReference> getNavigableReferenceStack() {
-		return EmptyStack.instance();
-	}
 
 	@Override
 	public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
@@ -372,6 +350,8 @@ public class MetamodelSelectBuilderProcess
 		return fromClauseAccess;
 	}
 
+	private int fetchDepth = 0;
+
 	private Consumer<Fetchable> getFetchableConsumer(FetchParent fetchParent, List<Fetch> fetches) {
 		return fetchable -> {
 
@@ -385,21 +365,12 @@ public class MetamodelSelectBuilderProcess
 				return;
 			}
 
-
-			// todo (6.0) : move this code into `fetchable.generateFetch` call
-			//		this can mean duplicated code, but is more appropriate
-			//		because returning null is actually inaccurate, it should
-			//		so a "later" fetch (lazy, n+1, ...) - and those would
-			//		be specific to each Fetchable anyway (DelayedEntityFetch,
-			//		DelayedCollectionFetch, ...)
-
 			LockMode lockMode = LockMode.READ;
 			FetchTiming fetchTiming = fetchable.getMappedFetchStrategy().getTiming();
 			boolean joined = fetchable.getMappedFetchStrategy().getStyle() == FetchStyle.JOIN;
 
 			final Integer maximumFetchDepth = getCreationContext().getMaximumFetchDepth();
 			// minus one because the root is not a fetch
-			final int fetchDepth = getNavigableReferenceStack().depth() - 1;
 
 			if ( maximumFetchDepth != null ) {
 				if ( fetchDepth == maximumFetchDepth ) {
@@ -410,14 +381,15 @@ public class MetamodelSelectBuilderProcess
 				}
 			}
 
-			Fetch fetch = fetchable.generateFetch( fetchParent, fetchTiming, joined, lockMode, null, this );
-			fetches.add( fetch );
+			try {
+				fetchDepth++;
+				Fetch fetch = fetchable.generateFetch( fetchParent, fetchTiming, joined, lockMode, null, this );
+				fetches.add( fetch );
+			}
+			finally {
+				fetchDepth--;
+			}
 		};
-	}
-
-	@Override
-	public TableSpace getCurrentTableSpace() {
-		return tableSpaceStack.getCurrent();
 	}
 
 	@Override
@@ -463,7 +435,7 @@ public class MetamodelSelectBuilderProcess
 
 	@Override
 	public SqlExpressionResolver getSqlExpressionResolver() {
-		return sqlExpressionResolver;
+		return getCurrentProcessingState().getSqlExpressionResolver();
 	}
 
 	@Override

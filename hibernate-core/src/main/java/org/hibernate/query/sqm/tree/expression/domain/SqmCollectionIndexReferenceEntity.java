@@ -69,7 +69,7 @@ public class SqmCollectionIndexReferenceEntity
 		return getPluralAttributeReference().getReferencedNavigable()
 				.getPersistentCollectionDescriptor()
 				.getIndexDescriptor()
-				.createSqmExpression( exportedFromElement, getPluralAttributeReference(), creationState );
+				.createSqmExpression( this, creationState );
 	}
 
 	@Override

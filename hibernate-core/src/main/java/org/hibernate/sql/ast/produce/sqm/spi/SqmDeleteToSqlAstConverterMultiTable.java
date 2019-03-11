@@ -10,18 +10,16 @@ import java.util.List;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.metamodel.model.domain.internal.entity.EntityTableGroup;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.sql.ast.JoinType;
-import org.hibernate.sql.ast.produce.internal.NonSelectSqlExpressionResolver;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstUpdateDescriptor;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 
 /**
  * @author Steve Ebersole
@@ -30,30 +28,28 @@ public class SqmDeleteToSqlAstConverterMultiTable extends BaseSqmToSqlAstConvert
 
 	private final QuerySpec idTableSelect;
 	private final EntityTypeDescriptor entityDescriptor;
-	private final EntityTableGroup entityTableGroup;
-	private final NonSelectSqlExpressionResolver expressionResolver;
+	private final TableGroup entityTableGroup;
 
 	public static List<SqlAstUpdateDescriptor> interpret(
 			SqmDeleteStatement sqmStatement,
 			QuerySpec idTableSelect,
 			QueryOptions queryOptions,
 			SqlAstCreationContext creationContext) {
+		throw new NotYetImplementedFor6Exception();
 
-		final SqmDeleteToSqlAstConverterMultiTable walker = new SqmDeleteToSqlAstConverterMultiTable(
-				sqmStatement,
-				idTableSelect,
-				queryOptions,
-				creationContext
-		);
-
-		walker.visitDeleteStatement( sqmStatement );
-
-		// todo (6.0) : finish this code
-		// see SqmUpdateToSqlAstConverterMultiTable#interpret
+//		final SqmDeleteToSqlAstConverterMultiTable walker = new SqmDeleteToSqlAstConverterMultiTable(
+//				sqmStatement,
+//				idTableSelect,
+//				queryOptions,
+//				creationContext
+//		);
+//
+//		walker.visitDeleteStatement( sqmStatement );
+//
+//		// see SqmUpdateToSqlAstConverterMultiTable#interpret
 //		return walker.updateStatementBuilderMap.entrySet().stream()
 //				.map( entry -> entry.getValue().createUpdateDescriptor() )
 //				.collect( Collectors.toList() );
-		throw new NotYetImplementedFor6Exception();
 	}
 
 	public SqmDeleteToSqlAstConverterMultiTable(
@@ -78,17 +74,10 @@ public class SqmDeleteToSqlAstConverterMultiTable extends BaseSqmToSqlAstConvert
 		);
 
 		getFromClauseIndex().crossReference( deleteTarget, entityTableGroup );
-
-		this.expressionResolver = new NonSelectSqlExpressionResolver(
-				getCreationContext(),
-				() -> getQuerySpecStack().getCurrent(),
-				this::normalizeSqlExpression,
-				this::collectSelection
-		);
 	}
 
 	@Override
-	public SqlExpressionResolver getSqlExpressionResolver() {
-		return expressionResolver;
+	public Object visitDeleteStatement(SqmDeleteStatement statement) {
+		return super.visitDeleteStatement( statement );
 	}
 }

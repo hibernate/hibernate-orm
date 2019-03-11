@@ -133,7 +133,7 @@ public class SqmEntityReference extends AbstractSqmNavigableReference
 			SqmCreationState creationState) {
 		return entityDescriptor.getEntityDescriptor()
 				.findNavigable( name )
-				.createSqmExpression( exportedFromElement, this, creationState );
+				.createSqmExpression( this, creationState );
 	}
 
 	@Override

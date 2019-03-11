@@ -2849,7 +2849,7 @@ public final class SessionImpl
 
 			try {
 				if ( graphSemantic != null ) {
-					if ( rootGraph != null ) {
+					if ( rootGraph == null ) {
 						throw new IllegalArgumentException( "Graph semantic specified, but no RootGraph was supplied" );
 					}
 					loadQueryInfluencers.getEffectiveEntityGraph().applyGraph( rootGraph, graphSemantic );
@@ -3048,7 +3048,7 @@ public final class SessionImpl
 
 			try {
 				if ( graphSemantic != null ) {
-					if ( rootGraph != null ) {
+					if ( rootGraph == null ) {
 						throw new IllegalArgumentException( "Graph semantic specified, but no RootGraph was supplied" );
 					}
 					loadQueryInfluencers.getEffectiveEntityGraph().applyGraph( rootGraph, graphSemantic );

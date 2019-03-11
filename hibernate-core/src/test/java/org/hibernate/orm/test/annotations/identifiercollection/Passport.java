@@ -6,7 +6,7 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations.identifiercollection;
+package org.hibernate.orm.test.annotations.identifiercollection;
 import java.util.ArrayList;
 import java.util.Collection;
 import javax.persistence.CascadeType;

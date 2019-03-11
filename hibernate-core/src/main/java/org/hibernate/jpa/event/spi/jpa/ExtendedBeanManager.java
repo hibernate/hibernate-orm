@@ -6,6 +6,8 @@
  */
 package org.hibernate.jpa.event.spi.jpa;
 
+import javax.enterprise.inject.spi.BeanManager;
+
 /**
  * @deprecated Use {@link org.hibernate.resource.beans.container.spi.ExtendedBeanManager} instead
  */
@@ -15,7 +17,22 @@ public interface ExtendedBeanManager extends org.hibernate.resource.beans.contai
 
 	@Override
 	default void registerLifecycleListener(org.hibernate.resource.beans.container.spi.ExtendedBeanManager.LifecycleListener lifecycleListener) {
-		registerLifecycleListener( (LifecycleListener) lifecycleListener );
+		/*
+		 * Casting the argument to our own LifecycleListener interface won't work here,
+		 * since we would be down-casting and the argument may not implement the correct interface.
+		 * Just use an adaptor.
+		 */
+		registerLifecycleListener( new LifecycleListener() {
+			@Override
+			public void beanManagerInitialized(BeanManager beanManager) {
+				lifecycleListener.beanManagerInitialized( beanManager );
+			}
+
+			@Override
+			public void beforeBeanManagerDestroyed(BeanManager beanManager) {
+				lifecycleListener.beforeBeanManagerDestroyed( beanManager );
+			}
+		} );
 	}
 
 	/**

@@ -8,6 +8,7 @@ package org.hibernate.metamodel.model.domain.internal.entity;
 
 import java.lang.reflect.Constructor;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -260,9 +261,10 @@ public class EntityIdentifierCompositeAggregatedImpl<O,J>
 			Clause clause,
 			SharedSessionContractImplementor session) {
 		final Object[] values = (Object[]) value;
+		final AtomicInteger position = new AtomicInteger();
 		getEmbeddedDescriptor().visitStateArrayContributors(
 				contributor -> contributor.dehydrate(
-						values[ contributor.getStateArrayPosition() ],
+						values[position.getAndIncrement()],
 						jdbcValueCollector,
 						clause,
 						session

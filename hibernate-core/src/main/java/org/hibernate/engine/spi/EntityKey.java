@@ -60,7 +60,6 @@ public final class EntityKey implements EntityKeyCommon, Serializable {
 		final String rootEntityName = entityDescriptor.getHierarchy().getRootEntityType().getEntityName();
 		result = 37 * result + ( rootEntityName != null ? rootEntityName.hashCode() : 0 );
 		result = 37 * result + entityDescriptor.getHierarchy().getIdentifierDescriptor()
-				.getJavaTypeDescriptor()
 				.extractHashCode( identifier );
 		return result;
 	}
@@ -103,7 +102,7 @@ public final class EntityKey implements EntityKeyCommon, Serializable {
 	}
 
 	private boolean sameIdentifier(final EntityKey otherKey) {
-		return entityDescriptor.getHierarchy().getIdentifierDescriptor().getJavaTypeDescriptor().areEqual(
+		return entityDescriptor.getHierarchy().getIdentifierDescriptor().areEqual(
 				otherKey.identifier,
 				this.identifier
 		);

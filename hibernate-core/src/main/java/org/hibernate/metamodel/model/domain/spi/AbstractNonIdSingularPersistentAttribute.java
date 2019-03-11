@@ -6,18 +6,13 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import java.util.Map;
-
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
-import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
 import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 /**
@@ -158,8 +153,4 @@ public abstract class AbstractNonIdSingularPersistentAttribute<O,J>
 //		return include ? mutabilityPlan.replace( this, originalValue, targetValue, owner, copyCache, session ) : targetValue;
 //	}
 
-	@Override
-	public boolean isDirty(Object originalValue, Object currentValue, SharedSessionContractImplementor session) {
-		return !getJavaTypeDescriptor().areEqual( (J) originalValue, (J) currentValue );
-	}
 }

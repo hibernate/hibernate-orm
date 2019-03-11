@@ -8,7 +8,6 @@ package org.hibernate.metamodel.model.domain.spi;
 
 import java.util.List;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
 import org.hibernate.boot.model.domain.spi.ManagedTypeMappingImplementor;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -111,10 +110,7 @@ public interface EmbeddedTypeDescriptor<T>
 		return false;
 	}
 
-	default T instantiate(SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
+	T instantiate(SharedSessionContractImplementor session);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// todo (6.0) : everything below relates to the "attribute position" discussion
@@ -129,6 +125,4 @@ public interface EmbeddedTypeDescriptor<T>
 	 * Get the cascade style of a particular property
 	 */
 	CascadeStyle getCascadeStyle(int i);
-
-
 }

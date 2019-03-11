@@ -849,8 +849,17 @@ public class SingularPersistentAttributeEntity<O, J>
 
 		return !getEntityDescriptor()
 				.getIdentifierDescriptor()
-				.getJavaTypeDescriptor()
 				.areEqual( oldIdentifier, newIdentifier );
+	}
+
+	@Override
+	public boolean areEqual(J x, J y) throws HibernateException {
+		return getEntityDescriptor().getIdentifierDescriptor().areEqual( x, y );
+	}
+
+	@Override
+	public int extractHashCode(J o) {
+		return getEntityDescriptor().getIdentifierDescriptor().extractHashCode( o );
 	}
 
 	public Object extractFkValue(Object value, SharedSessionContractImplementor session) {

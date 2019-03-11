@@ -46,6 +46,16 @@ public interface Type<T> extends Serializable {
 	 */
 	boolean areEqual(T x, T y) throws HibernateException;
 
+
+	/**
+	 * Extract a proper hash code for this value.
+	 *
+	 * @param x The value for which to extract a hash code.
+	 *
+	 * @return The extracted hash code.
+	 */
+	int extractHashCode( T x );
+
 	/**
 	 * Return a String representation of the given value for use in Hibernate logging.
 	 */

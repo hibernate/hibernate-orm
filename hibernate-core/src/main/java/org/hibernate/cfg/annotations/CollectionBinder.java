@@ -1440,8 +1440,8 @@ public abstract class CollectionBinder {
 			}
 
 			final ForeignKey fk = property.getAnnotation( ForeignKey.class );
-			if ( fk != null && !BinderHelper.isEmptyAnnotationValue( fk.name() ) ) {
-				element.setForeignKeyName( fk.name() );
+			if ( fk != null && !BinderHelper.isEmptyAnnotationValue( fk.inverseName() ) ) {
+				element.setForeignKeyName( fk.inverseName() );
 			}
 			else {
 				final JoinTable joinTableAnn = property.getAnnotation( JoinTable.class );

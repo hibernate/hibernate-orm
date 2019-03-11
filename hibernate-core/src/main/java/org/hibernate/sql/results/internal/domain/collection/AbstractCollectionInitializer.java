@@ -121,7 +121,7 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 		}
 
 		Object keyContainerValue = getKeyContainerValue();
-		if(keyContainerValue != null) {
+		if ( keyContainerValue != null ) {
 			collectionKey = new CollectionKey(
 					getFetchedAttribute().getPersistentCollectionDescriptor(),
 					keyContainerValue

@@ -124,10 +124,9 @@ public class CollectionElementEntityImpl<J>
 		return true;
 	}
 
-	protected boolean tryFinishInitialize(
-			Collection bootDescriptor,
-			RuntimeModelCreationContext creationContext) {
+	protected boolean tryFinishInitialize(Collection bootDescriptor, RuntimeModelCreationContext creationContext) {
 		final String mappedBy = bootDescriptor.getMappedByProperty();
+
 		if ( StringHelper.isEmpty( mappedBy ) ) {
 			foreignKeyTargetNavigable = getEntityDescriptor().getIdentifierDescriptor();
 		}
@@ -272,7 +271,11 @@ public class CollectionElementEntityImpl<J>
 
 	@Override
 	public Object unresolve(Object value, SharedSessionContractImplementor session) {
-		return getEntityDescriptor().getIdentifier( value, session );
+		return getEntityDescriptor().getIdentifierDescriptor()
+				.unresolve(
+						getEntityDescriptor().getIdentifier( value, session ),
+						session
+				);
 	}
 
 	@Override
@@ -428,5 +431,15 @@ public class CollectionElementEntityImpl<J>
 	@Override
 	public boolean isDirty(Object one, Object another, SharedSessionContractImplementor session) {
 		return getEntityDescriptor().isDirty( one, another, session );
+	}
+
+	@Override
+	public boolean areEqual(J x, J y) throws HibernateException {
+		return getEntityDescriptor().areEqual( x,y );
+	}
+
+	@Override
+	public int extractHashCode(J o) {
+		return getEntityDescriptor().extractHashCode( o );
 	}
 }

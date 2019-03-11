@@ -9,11 +9,8 @@ package org.hibernate.testing.junit5;
 import java.util.EnumSet;
 import java.util.function.Consumer;
 import java.util.function.Function;
-
 import javax.persistence.SharedCacheMode;
 
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
@@ -21,7 +18,6 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;

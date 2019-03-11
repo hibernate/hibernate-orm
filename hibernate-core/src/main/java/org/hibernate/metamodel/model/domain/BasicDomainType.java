@@ -6,10 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain;
 
-import java.util.Objects;
 import javax.persistence.metamodel.BasicType;
-
-import org.hibernate.HibernateException;
 
 /**
  * Hibernate extension to the JPA {@link BasicType} contract.
@@ -26,9 +23,5 @@ public interface BasicDomainType<J> extends SimpleDomainType<J>, BasicType<J> {
 	@Override
 	default PersistenceType getPersistenceType() {
 		return PersistenceType.BASIC;
-	}
-
-	default boolean areEqual(J x, J y) throws HibernateException {
-		return Objects.equals( x, y );
 	}
 }

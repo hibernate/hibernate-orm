@@ -381,6 +381,16 @@ public class SingularPersistentAttributeEmbedded<O,J>
 	}
 
 	@Override
+	public boolean areEqual(J x, J y) throws HibernateException {
+		return getEmbeddedDescriptor().areEqual( x,y );
+	}
+
+	@Override
+	public int extractHashCode(J o) {
+		return getEmbeddedDescriptor().extractHashCode( o );
+	}
+
+	@Override
 	@SuppressWarnings("unchecked")
 	protected void instantiationComplete(
 			PersistentAttributeMapping bootModelAttribute,

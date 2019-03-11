@@ -195,6 +195,34 @@ public class EmbeddedTypeDescriptorImpl<J>
 	}
 
 	@Override
+	public boolean areEqual(Object x, Object y) {
+		if ( x == y ) {
+			return true;
+		}
+		for ( NonIdPersistentAttribute attribute : getPersistentAttributes() ) {
+			final Object oneValue = attribute.getPropertyAccess().getGetter().get( x );
+			final Object anotherValue = attribute.getPropertyAccess().getGetter().get( y );
+			if ( !attribute.areEqual( oneValue, anotherValue ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	@Override
+	public int extractHashCode(Object value) {
+		int result = 17;
+		for ( NonIdPersistentAttribute attribute : getPersistentAttributes() ) {
+			final Object oneValue = attribute.getPropertyAccess().getGetter().get( value );
+			result *= 37;
+			if ( oneValue != null ) {
+				result += attribute.extractHashCode( oneValue );
+			}
+		}
+		return result;
+	}
+
+	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
 	}

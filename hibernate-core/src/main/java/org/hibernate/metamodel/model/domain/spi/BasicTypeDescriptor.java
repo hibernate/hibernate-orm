@@ -6,6 +6,9 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import java.util.Objects;
+
+import org.hibernate.HibernateException;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 
 /**
@@ -15,4 +18,9 @@ import org.hibernate.metamodel.model.domain.BasicDomainType;
  */
 public interface BasicTypeDescriptor<J>
 		extends BasicDomainType<J>, SimpleTypeDescriptor<J>, AllowableParameterType<J>, AllowableFunctionReturnType<J> {
+
+	default boolean areEqual(J x, J y) throws HibernateException {
+		return Objects.equals( x, y );
+	}
+
 }

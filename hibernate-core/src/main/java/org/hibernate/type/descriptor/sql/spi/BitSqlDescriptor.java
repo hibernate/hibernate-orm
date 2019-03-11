@@ -62,9 +62,13 @@ public class BitSqlDescriptor extends AbstractTemplateSqlTypeDescriptor {
 			@Override
 			protected void doBind(
 					PreparedStatement st,
-					int index, X value,
+					int index,
+					X value,
 					ExecutionContext executionContext) throws SQLException {
-				st.setBoolean( index, javaTypeDescriptor.unwrap( value, Boolean.class, executionContext.getSession() ) );
+				st.setBoolean(
+						index,
+						javaTypeDescriptor.unwrap( value, Boolean.class, executionContext.getSession() )
+				);
 			}
 
 			@Override

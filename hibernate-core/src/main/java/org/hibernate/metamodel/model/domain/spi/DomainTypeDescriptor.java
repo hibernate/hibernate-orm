@@ -6,18 +6,27 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 
 /**
  * @author Steve Ebersole
  */
-public interface DomainTypeDescriptor<J> extends DomainType<J>, ExpressableType<J> {
+public interface DomainTypeDescriptor<J> extends DomainType<J> {
 	/**
 	 * Return whether any of the managed type's persistent attribute state is dirty.
 	 */
 	default boolean isDirty(Object one, Object another, SharedSessionContractImplementor session) {
 		return !getJavaTypeDescriptor().areEqual( (J) one, (J) another );
+	}
+
+	@Override
+	default boolean areEqual(J x, J y) throws HibernateException{
+		return getJavaTypeDescriptor().areEqual( x,y );
+	}
+
+	default int extractHashCode( J o ){
+		return getJavaTypeDescriptor().extractHashCode( o );
 	}
 }

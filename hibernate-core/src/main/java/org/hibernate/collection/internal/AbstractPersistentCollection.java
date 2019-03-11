@@ -98,9 +98,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 			SharedSessionContractImplementor session,
 			PersistentCollectionDescriptor<?, ?, E> collectionDescriptor,
 			Object key) {
-		this.session = session;
-		this.collectionDescriptor = collectionDescriptor;
-		this.role = collectionDescriptor.getNavigableRole();
+		this(session,collectionDescriptor);
 		this.key = key;
 	}
 

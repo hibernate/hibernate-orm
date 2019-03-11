@@ -81,4 +81,9 @@ public class CollectionJavaDescriptor<C> extends AbstractBasicJavaDescriptor<C> 
 								( (PersistentCollection) another ).isWrapper( one )
 				);
 	}
+
+	@Override
+	public int extractHashCode(C x) {
+		throw new UnsupportedOperationException( "cannot doAfterTransactionCompletion lookups on collections" );
+	}
 }

@@ -89,12 +89,12 @@ public class CollectionKey<T> implements Navigable<T> {
 
 
 	void createForeignKeyTargetNavigable() {
-		if ( isEmpty( collectionDescriptor.getMappedByProperty() ) ) {
-			foreignKeyTargetNavigable = collectionDescriptor.findEntityOwnerDescriptor().getIdentifierDescriptor();
-		}
-		else {
+		if ( !isEmpty( collectionDescriptor.getMappedByProperty() ) && collectionDescriptor.isOneToMany() ) {
 			foreignKeyTargetNavigable = ( (NavigableContainer) collectionDescriptor.getElementDescriptor() ).findNavigable(
 					collectionDescriptor.getMappedByProperty() );
+		}
+		else {
+			foreignKeyTargetNavigable = collectionDescriptor.findEntityOwnerDescriptor().getIdentifierDescriptor();
 		}
 	}
 

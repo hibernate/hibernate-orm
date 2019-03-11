@@ -10,6 +10,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import javax.persistence.TemporalType;
 
+import org.hibernate.HibernateException;
 import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Collection;
@@ -148,5 +149,15 @@ public class CollectionElementEmbeddedImpl<J>
 	@Override
 	public boolean isDirty(Object one, Object another, SharedSessionContractImplementor session) {
 		return getEmbeddedDescriptor().isDirty( one, another, session );
+	}
+
+	@Override
+	public boolean areEqual(J x, J y) throws HibernateException {
+		return getEmbeddedDescriptor().areEqual( x,y );
+	}
+
+	@Override
+	public int extractHashCode(J o) {
+		return getEmbeddedDescriptor().extractHashCode( o );
 	}
 }

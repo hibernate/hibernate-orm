@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.model.domain;
 
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
@@ -29,7 +30,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  * @author Steve Ebersole
  * @author Andrea Boriero
  */
-public interface DomainType<J> extends ExpressableType<J> {
+public interface DomainType<J> extends ExpressableType<J>, Type<J> {
 	JavaTypeDescriptor<J> getJavaTypeDescriptor();
 
 	@Override

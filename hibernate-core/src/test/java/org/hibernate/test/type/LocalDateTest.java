@@ -7,6 +7,7 @@
 package org.hibernate.test.type;
 
 import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -68,12 +69,12 @@ public class LocalDateTest extends AbstractJavaTimeTypeTest<LocalDate, LocalDate
 	}
 
 	@Override
-	protected EntityWithLocalDate createEntity(int id) {
-		return new EntityWithLocalDate( id, getExpectedPropertyValue() );
+	protected EntityWithLocalDate createEntityForHibernateWrite(int id) {
+		return new EntityWithLocalDate( id, getExpectedPropertyValueAfterHibernateRead() );
 	}
 
 	@Override
-	protected LocalDate getExpectedPropertyValue() {
+	protected LocalDate getExpectedPropertyValueAfterHibernateRead() {
 		return LocalDate.of( year, month, day );
 	}
 
@@ -83,7 +84,12 @@ public class LocalDateTest extends AbstractJavaTimeTypeTest<LocalDate, LocalDate
 	}
 
 	@Override
-	protected Object getExpectedJdbcValue() {
+	protected void setJdbcValueForNonHibernateWrite(PreparedStatement statement, int parameterIndex) throws SQLException {
+		statement.setDate( parameterIndex, getExpectedJdbcValueAfterHibernateWrite() );
+	}
+
+	@Override
+	protected Date getExpectedJdbcValueAfterHibernateWrite() {
 		return new Date( year - 1900, month - 1, day );
 	}
 

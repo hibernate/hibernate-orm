@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.type;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -126,7 +127,7 @@ public class ZonedDateTimeTest extends AbstractJavaTimeTypeTest<ZonedDateTime, Z
 	}
 
 	@Override
-	protected EntityWithZonedDateTime createEntity(int id) {
+	protected EntityWithZonedDateTime createEntityForHibernateWrite(int id) {
 		return new EntityWithZonedDateTime(
 				id,
 				getOriginalZonedDateTime()
@@ -138,7 +139,7 @@ public class ZonedDateTimeTest extends AbstractJavaTimeTypeTest<ZonedDateTime, Z
 	}
 
 	@Override
-	protected ZonedDateTime getExpectedPropertyValue() {
+	protected ZonedDateTime getExpectedPropertyValueAfterHibernateRead() {
 		return getOriginalZonedDateTime().withZoneSameInstant( ZoneId.systemDefault() );
 	}
 
@@ -148,7 +149,12 @@ public class ZonedDateTimeTest extends AbstractJavaTimeTypeTest<ZonedDateTime, Z
 	}
 
 	@Override
-	protected Object getExpectedJdbcValue() {
+	protected void setJdbcValueForNonHibernateWrite(PreparedStatement statement, int parameterIndex) throws SQLException {
+		statement.setTimestamp( parameterIndex, getExpectedJdbcValueAfterHibernateWrite() );
+	}
+
+	@Override
+	protected Timestamp getExpectedJdbcValueAfterHibernateWrite() {
 		LocalDateTime dateTimeInDefaultTimeZone = getOriginalZonedDateTime().withZoneSameInstant( ZoneId.systemDefault() )
 				.toLocalDateTime();
 		return new Timestamp(
@@ -178,8 +184,8 @@ public class ZonedDateTimeTest extends AbstractJavaTimeTypeTest<ZonedDateTime, Z
 				assertThat( list.size(), is( 1 ) );
 			} );
 			checkOneMatch.accept( getOriginalZonedDateTime() );
-			checkOneMatch.accept( getExpectedPropertyValue() );
-			checkOneMatch.accept( getExpectedPropertyValue().withZoneSameInstant( ZoneOffset.UTC ) );
+			checkOneMatch.accept( getExpectedPropertyValueAfterHibernateRead() );
+			checkOneMatch.accept( getExpectedPropertyValueAfterHibernateRead().withZoneSameInstant( ZoneOffset.UTC ) );
 		} );
 	}
 

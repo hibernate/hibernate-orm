@@ -19,8 +19,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -69,6 +73,14 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 	@Override
 	protected final Class<?>[] getAnnotatedClasses() {
 		return new Class[] { getEntityType() };
+	}
+
+	@Override
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
+		if ( env.remappingDialectClass != null ) {
+			configuration.setProperty( AvailableSettings.DIALECT, env.remappingDialectClass.getName() );
+		}
 	}
 
 	protected abstract Class<E> getEntityType();
@@ -195,14 +207,30 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 		}
 	}
 
+	protected final Class<? extends AbstractRemappingH2Dialect> getRemappingDialectClass() {
+		return env.remappingDialectClass;
+	}
+
 	protected static abstract class AbstractParametersBuilder<S extends AbstractParametersBuilder<S>> {
 
 		private final Dialect dialect;
 
 		private final List<Object[]> result = new ArrayList<>();
 
+		private final List<Class<? extends AbstractRemappingH2Dialect>> remappingDialectClasses = new ArrayList<>();
+
 		protected AbstractParametersBuilder() {
 			dialect = determineDialect();
+			remappingDialectClasses.add( null ); // Always test without remapping
+		}
+
+		@SafeVarargs
+		public final S alsoTestRemappingsWithH2(Class<? extends AbstractRemappingH2Dialect> ... dialectClasses) {
+			if ( dialect instanceof H2Dialect ) {
+				// Only test remappings with H2
+				Collections.addAll( remappingDialectClasses, dialectClasses );
+			}
+			return thisAsS();
 		}
 
 		protected final boolean isNanosecondPrecisionSupported() {
@@ -211,10 +239,12 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 		}
 
 		protected final S add(ZoneId defaultJvmTimeZone, Object ... subClassParameters) {
-			List<Object> parameters = new ArrayList<>();
-			parameters.add( new EnvironmentParameters( defaultJvmTimeZone ) );
-			Collections.addAll( parameters, subClassParameters );
-			result.add( parameters.toArray() );
+			for ( Class<? extends AbstractRemappingH2Dialect> remappingDialectClass : remappingDialectClasses ) {
+				List<Object> parameters = new ArrayList<>();
+				parameters.add( new EnvironmentParameters( defaultJvmTimeZone, remappingDialectClass ) );
+				Collections.addAll( parameters, subClassParameters );
+				result.add( parameters.toArray() );
+			}
 			return thisAsS();
 		}
 
@@ -236,13 +266,41 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 		 */
 		private final ZoneId defaultJvmTimeZone;
 
-		private EnvironmentParameters(ZoneId defaultJvmTimeZone) {
+		private final Class<? extends AbstractRemappingH2Dialect> remappingDialectClass;
+
+		private EnvironmentParameters(ZoneId defaultJvmTimeZone,
+				Class<? extends AbstractRemappingH2Dialect> remappingDialectClass) {
 			this.defaultJvmTimeZone = defaultJvmTimeZone;
+			this.remappingDialectClass = remappingDialectClass;
 		}
 
 		@Override
 		public String toString() {
-			return String.format( "[JVM TZ: %s]", defaultJvmTimeZone );
+			return String.format(
+					"[JVM TZ: %s, remapping dialect: %s]",
+					defaultJvmTimeZone,
+					remappingDialectClass == null ? null : remappingDialectClass.getSimpleName()
+			);
+		}
+	}
+
+	protected static class AbstractRemappingH2Dialect extends H2Dialect {
+		private final int overriddenSqlTypeCode;
+		private final SqlTypeDescriptor overriddenSqlTypeDescriptor;
+
+		public AbstractRemappingH2Dialect(int overriddenSqlTypeCode, SqlTypeDescriptor overriddenSqlTypeDescriptor) {
+			this.overriddenSqlTypeCode = overriddenSqlTypeCode;
+			this.overriddenSqlTypeDescriptor = overriddenSqlTypeDescriptor;
+		}
+
+		@Override
+		protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+			if ( overriddenSqlTypeCode == sqlCode ) {
+				return overriddenSqlTypeDescriptor;
+			}
+			else {
+				return super.getSqlTypeDescriptorOverride( sqlCode );
+			}
 		}
 	}
 

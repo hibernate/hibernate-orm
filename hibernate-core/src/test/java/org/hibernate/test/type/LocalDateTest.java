@@ -10,6 +10,8 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
@@ -17,6 +19,8 @@ import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+
+import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.runners.Parameterized;
@@ -36,6 +40,7 @@ public class LocalDateTest extends AbstractJavaTimeTypeTest<LocalDate, LocalDate
 	@Parameterized.Parameters(name = "{1}-{2}-{3} {0}")
 	public static List<Object[]> data() {
 		return new ParametersBuilder()
+				.alsoTestRemappingsWithH2( DateAsTimestampRemappingH2Dialect.class )
 				// Not affected by HHH-13266 (JDK-8061577)
 				.add( 2017, 11, 6, ZONE_UTC_MINUS_8 )
 				.add( 2017, 11, 6, ZONE_PARIS )
@@ -44,7 +49,7 @@ public class LocalDateTest extends AbstractJavaTimeTypeTest<LocalDate, LocalDate
 				.add( 1900, 1, 1, ZONE_OSLO )
 				.add( 1900, 1, 2, ZONE_PARIS )
 				.add( 1900, 1, 2, ZONE_AMSTERDAM )
-				// Could have been affected by HHH-13266 (JDK-8061577), but was not
+				// Affected by HHH-13266 (JDK-8061577), but only when remapping dates as timestamps
 				.add( 1892, 1, 1, ZONE_OSLO )
 				.add( 1900, 1, 1, ZONE_PARIS )
 				.add( 1900, 1, 1, ZONE_AMSTERDAM )
@@ -85,17 +90,32 @@ public class LocalDateTest extends AbstractJavaTimeTypeTest<LocalDate, LocalDate
 
 	@Override
 	protected void setJdbcValueForNonHibernateWrite(PreparedStatement statement, int parameterIndex) throws SQLException {
-		statement.setDate( parameterIndex, getExpectedJdbcValueAfterHibernateWrite() );
+		if ( DateAsTimestampRemappingH2Dialect.class.equals( getRemappingDialectClass() ) ) {
+			statement.setTimestamp( parameterIndex, new Timestamp( year - 1900, month - 1, day, 0, 0, 0, 0 ) );
+		}
+		else {
+			statement.setDate( parameterIndex, new Date( year - 1900, month - 1, day ) );
+		}
 	}
 
 	@Override
-	protected Date getExpectedJdbcValueAfterHibernateWrite() {
-		return new Date( year - 1900, month - 1, day );
+	protected Object getExpectedJdbcValueAfterHibernateWrite() {
+		if ( DateAsTimestampRemappingH2Dialect.class.equals( getRemappingDialectClass() ) ) {
+			return new Timestamp( year - 1900, month - 1, day, 0, 0, 0, 0 );
+		}
+		else {
+			return new Date( year - 1900, month - 1, day );
+		}
 	}
 
 	@Override
 	protected Object getActualJdbcValue(ResultSet resultSet, int columnIndex) throws SQLException {
-		return resultSet.getDate( columnIndex );
+		if ( DateAsTimestampRemappingH2Dialect.class.equals( getRemappingDialectClass() ) ) {
+			return resultSet.getTimestamp( columnIndex );
+		}
+		else {
+			return resultSet.getDate( columnIndex );
+		}
 	}
 
 	@Entity(name = ENTITY_NAME)
@@ -114,6 +134,12 @@ public class LocalDateTest extends AbstractJavaTimeTypeTest<LocalDate, LocalDate
 		private EntityWithLocalDate(int id, LocalDate value) {
 			this.id = id;
 			this.value = value;
+		}
+	}
+
+	public static class DateAsTimestampRemappingH2Dialect extends AbstractRemappingH2Dialect {
+		public DateAsTimestampRemappingH2Dialect() {
+			super( Types.DATE, TimestampTypeDescriptor.INSTANCE );
 		}
 	}
 }

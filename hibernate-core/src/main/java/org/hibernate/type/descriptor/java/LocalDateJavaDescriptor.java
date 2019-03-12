@@ -63,6 +63,13 @@ public class LocalDateJavaDescriptor extends AbstractTypeDescriptor<LocalDate> {
 		final LocalDateTime localDateTime = value.atStartOfDay();
 
 		if ( Timestamp.class.isAssignableFrom( type ) ) {
+			/*
+			 * Workaround for HHH-13266 (JDK-8061577).
+			 * We could have done Timestamp.from( localDateTime.atZone( ZoneId.systemDefault() ).toInstant() ),
+			 * but on top of being more complex than the line below, it won't always work.
+			 * Timestamp.from() assumes the number of milliseconds since the epoch
+			 * means the same thing in Timestamp and Instant, but it doesn't, in particular before 1900.
+			 */
 			return (X) Timestamp.valueOf( localDateTime );
 		}
 
@@ -97,7 +104,14 @@ public class LocalDateJavaDescriptor extends AbstractTypeDescriptor<LocalDate> {
 
 		if ( Timestamp.class.isInstance( value ) ) {
 			final Timestamp ts = (Timestamp) value;
-			return LocalDateTime.ofInstant( ts.toInstant(), ZoneId.systemDefault() ).toLocalDate();
+			/*
+			 * Workaround for HHH-13266 (JDK-8061577).
+			 * We used to do LocalDateTime.ofInstant( ts.toInstant(), ZoneId.systemDefault() ).toLocalDate(),
+			 * but on top of being more complex than the line below, it won't always work.
+			 * ts.toInstant() assumes the number of milliseconds since the epoch
+			 * means the same thing in Timestamp and Instant, but it doesn't, in particular before 1900.
+			 */
+			return ts.toLocalDateTime().toLocalDate();
 		}
 
 		if ( Long.class.isInstance( value ) ) {

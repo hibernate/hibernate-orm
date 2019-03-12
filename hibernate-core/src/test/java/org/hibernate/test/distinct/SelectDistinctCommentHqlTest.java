@@ -77,13 +77,122 @@ public class SelectDistinctCommentHqlTest extends BaseNonConfigCoreFunctionalTes
 					.getResultList();
 			assertEquals(1, persons.size());
 			String sqlQuery = sqlStatementInterceptor.getSqlQueries().getLast();
-			assertFalse(sqlQuery.contains(" distinct "));
-		});
+			assertFalse( removeCommentFromQuery( sqlQuery ).contains( " distinct " ) );
+			assertTrue( getCommentFromQuery( sqlQuery ).contains( "/* PersonWithPhones */" ) );
+		} );
 
 		doInHibernate( this::sessionFactory, session -> {
 			Person person = session.find( Person.class, 1L );
 			session.remove( person );
 		} );
+	}
+
+	@Test
+	public void testDefaultComment() {
+		doInHibernate( this::sessionFactory, session -> {
+			Person person = new Person();
+			person.id = 1L;
+			session.persist( person );
+
+			person.addPhone( new Phone( "027-123-4567" ) );
+			person.addPhone( new Phone( "028-234-9876" ) );
+		} );
+
+		doInHibernate( this::sessionFactory, session -> {
+			sqlStatementInterceptor.getSqlQueries().clear();
+			List<Person> persons = session.createQuery(
+					"select distinct p from Person p left join fetch p.phones ", Person.class)
+					.setHint( QueryHints.HINT_PASS_DISTINCT_THROUGH, false )
+					.setMaxResults( 5 )
+					.getResultList();
+			assertEquals( 1, persons.size() );
+			String sqlQuery = sqlStatementInterceptor.getSqlQueries().getLast();
+			// "distinct" should have been removed from the (non-comment) SQL.
+			assertFalse( removeCommentFromQuery( sqlQuery ).contains( " distinct ") );
+			// The default comment should be the HQL. Shouldn't it contain "distinct"???
+			assertTrue( getCommentFromQuery( sqlQuery ).contains( " distinct " ) );
+		} );
+
+		doInHibernate( this::sessionFactory, session -> {
+			Person person = session.find( Person.class, 1L );
+			session.remove( person );
+		} );
+	}
+
+	@Test
+	public void testExplicitComment() {
+		doInHibernate( this::sessionFactory, session -> {
+			Person person = new Person();
+			person.id = 1L;
+			session.persist( person );
+
+			person.addPhone( new Phone( "027-123-4567" ) );
+			person.addPhone( new Phone( "028-234-9876" ) );
+		} );
+
+		doInHibernate( this::sessionFactory, session -> {
+			sqlStatementInterceptor.getSqlQueries().clear();
+			List<Person> persons = session.createQuery(
+					"select distinct p from Person p left join fetch p.phones ", Person.class)
+					.setHint( QueryHints.HINT_PASS_DISTINCT_THROUGH, false )
+					.setComment( "select distinct in comment" )
+					.setMaxResults( 5 )
+					.getResultList();
+			assertEquals( 1, persons.size() );
+			String sqlQuery = sqlStatementInterceptor.getSqlQueries().getLast();
+			assertFalse( removeCommentFromQuery( sqlQuery ).contains( " distinct " ) );
+			// An explicit comment shouldn't be changed
+			assertTrue( getCommentFromQuery( sqlQuery ).contains( "select distinct in comment" ) );
+		} );
+
+		doInHibernate(
+			this::sessionFactory, session -> {
+				Person person = session.find( Person.class, 1L );
+				session.remove( person );
+			}
+		);
+	}
+
+	@Test
+	public void testSelectDistinctInSubquery() {
+		doInHibernate( this::sessionFactory, session -> {
+			Person person = new Person();
+			person.id = 1L;
+			session.persist( person );
+
+			person.addPhone( new Phone( "027-123-4567" ) );
+			person.addPhone( new Phone( "028-234-9876" ) );
+		} );
+
+		doInHibernate( this::sessionFactory, session -> {
+			sqlStatementInterceptor.getSqlQueries().clear();
+			List<Person> persons = session.createQuery(
+					"select p from Person p where p.id in " +
+							"( select distinct ph.person.id from Phone ph where locate( '027', ph.number ) > 0 )",
+					Person.class)
+					.setHint( QueryHints.HINT_PASS_DISTINCT_THROUGH, false )
+					.setComment( "a comment" )
+					.setMaxResults( 5 )
+					.getResultList();
+			String sqlQuery = sqlStatementInterceptor.getSqlQueries().getLast();
+			// "distinct" in a subquery shouldn't be removed
+			assertTrue( removeCommentFromQuery( sqlQuery ).contains( "select distinct" ) );
+		} );
+
+		doInHibernate( this::sessionFactory, session -> {
+			Person person = session.find( Person.class, 1L );
+			session.remove( person );
+		} );
+	}
+
+	final String removeCommentFromQuery(String sql) {
+		final int positionEndComment = sql.lastIndexOf( "*/" );
+		return sql.substring( positionEndComment + 2 );
+	}
+
+	final String getCommentFromQuery(String sql) {
+		final int positionEndComment = sql.lastIndexOf( "*/" );
+		return sql.substring( 0, positionEndComment + 2 );
 	}
 
 	@Entity(name = "Person")

@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.TimeZone;
@@ -18,6 +19,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
@@ -29,6 +32,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.CustomParameterized;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -78,6 +82,9 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 	@Override
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
+		if ( env.hibernateJdbcTimeZone != null ) {
+			configuration.setProperty( AvailableSettings.JDBC_TIME_ZONE, env.hibernateJdbcTimeZone.getId() );
+		}
 		if ( env.remappingDialectClass != null ) {
 			configuration.setProperty( AvailableSettings.DIALECT, env.remappingDialectClass.getName() );
 		}
@@ -124,6 +131,8 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 	@Test
 	@TestForIssue(jiraKey = "HHH-13266")
 	public void writeThenNativeRead() {
+		assumeNoJdbcTimeZone();
+
 		withDefaultTimeZone( () -> {
 			inTransaction( session -> {
 				session.persist( createEntityForHibernateWrite( 1 ) );
@@ -151,6 +160,8 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 	@Test
 	@TestForIssue(jiraKey = "HHH-13266")
 	public void nativeWriteThenRead() {
+		assumeNoJdbcTimeZone();
+
 		withDefaultTimeZone( () -> {
 			inTransaction( session -> {
 				session.doWork( connection -> {
@@ -211,6 +222,16 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 		return env.remappingDialectClass;
 	}
 
+	protected void assumeNoJdbcTimeZone() {
+		Assume.assumeTrue(
+				"Tests with native read/writes are only relevant when not using " + AvailableSettings.JDBC_TIME_ZONE
+						+ ", because the expectations do not take that time zone into account."
+						+ " When this property is set, we only test that a write by Hibernate followed by "
+						+ " a read by Hibernate returns the same value.",
+				env.hibernateJdbcTimeZone == null
+		);
+	}
+
 	protected static abstract class AbstractParametersBuilder<S extends AbstractParametersBuilder<S>> {
 
 		private final Dialect dialect;
@@ -241,11 +262,33 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 		protected final S add(ZoneId defaultJvmTimeZone, Object ... subClassParameters) {
 			for ( Class<? extends AbstractRemappingH2Dialect> remappingDialectClass : remappingDialectClasses ) {
 				List<Object> parameters = new ArrayList<>();
-				parameters.add( new EnvironmentParameters( defaultJvmTimeZone, remappingDialectClass ) );
+				parameters.add(
+						new EnvironmentParameters(
+								defaultJvmTimeZone,
+								null,
+								remappingDialectClass
+						)
+				);
+				Collections.addAll( parameters, subClassParameters );
+				result.add( parameters.toArray() );
+			}
+			for ( ZoneId hibernateJdbcTimeZone : getHibernateJdbcTimeZonesToTest() ) {
+				List<Object> parameters = new ArrayList<>();
+				parameters.add(
+						new EnvironmentParameters(
+								defaultJvmTimeZone,
+								hibernateJdbcTimeZone,
+								null
+						)
+				);
 				Collections.addAll( parameters, subClassParameters );
 				result.add( parameters.toArray() );
 			}
 			return thisAsS();
+		}
+
+		protected Iterable<? extends ZoneId> getHibernateJdbcTimeZonesToTest() {
+			return Arrays.asList( ZONE_GMT, ZONE_OSLO );
 		}
 
 		private S thisAsS() {
@@ -266,19 +309,28 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 		 */
 		private final ZoneId defaultJvmTimeZone;
 
+		/**
+		 * The Hibernate setting, {@link AvailableSettings#JDBC_TIME_ZONE},
+		 * may affect a lot of time-related types,
+		 * which is why we take it into account even with timezone-independent types such as Instant.
+		 */
+		private final ZoneId hibernateJdbcTimeZone;
+
 		private final Class<? extends AbstractRemappingH2Dialect> remappingDialectClass;
 
-		private EnvironmentParameters(ZoneId defaultJvmTimeZone,
+		private EnvironmentParameters(ZoneId defaultJvmTimeZone, ZoneId hibernateJdbcTimeZone,
 				Class<? extends AbstractRemappingH2Dialect> remappingDialectClass) {
 			this.defaultJvmTimeZone = defaultJvmTimeZone;
+			this.hibernateJdbcTimeZone = hibernateJdbcTimeZone;
 			this.remappingDialectClass = remappingDialectClass;
 		}
 
 		@Override
 		public String toString() {
 			return String.format(
-					"[JVM TZ: %s, remapping dialect: %s]",
+					"[JVM TZ: %s, JDBC TZ: %s, remapping dialect: %s]",
 					defaultJvmTimeZone,
+					hibernateJdbcTimeZone,
 					remappingDialectClass == null ? null : remappingDialectClass.getSimpleName()
 			);
 		}

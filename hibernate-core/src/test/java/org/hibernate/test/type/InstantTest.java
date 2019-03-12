@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.type;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -85,12 +86,12 @@ public class InstantTest extends AbstractJavaTimeTypeTest<Instant, InstantTest.E
 	}
 
 	@Override
-	protected EntityWithInstant createEntity(int id) {
-		return new EntityWithInstant( id, getExpectedPropertyValue() );
+	protected EntityWithInstant createEntityForHibernateWrite(int id) {
+		return new EntityWithInstant( id, getExpectedPropertyValueAfterHibernateRead() );
 	}
 
 	@Override
-	protected Instant getExpectedPropertyValue() {
+	protected Instant getExpectedPropertyValueAfterHibernateRead() {
 		return OffsetDateTime.of( year, month, day, hour, minute, second, nanosecond, ZoneOffset.UTC ).toInstant();
 	}
 
@@ -100,8 +101,13 @@ public class InstantTest extends AbstractJavaTimeTypeTest<Instant, InstantTest.E
 	}
 
 	@Override
-	protected Object getExpectedJdbcValue() {
-		LocalDateTime dateTimeInDefaultTimeZone = getExpectedPropertyValue().atZone( ZoneId.systemDefault() )
+	protected void setJdbcValueForNonHibernateWrite(PreparedStatement statement, int parameterIndex) throws SQLException {
+		statement.setTimestamp( parameterIndex, getExpectedJdbcValueAfterHibernateWrite() );
+	}
+
+	@Override
+	protected Timestamp getExpectedJdbcValueAfterHibernateWrite() {
+		LocalDateTime dateTimeInDefaultTimeZone = getExpectedPropertyValueAfterHibernateRead().atZone( ZoneId.systemDefault() )
 				.toLocalDateTime();
 		return new Timestamp(
 				dateTimeInDefaultTimeZone.getYear() - 1900, dateTimeInDefaultTimeZone.getMonthValue() - 1,

@@ -73,13 +73,15 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 
 	protected abstract Class<E> getEntityType();
 
-	protected abstract E createEntity(int id);
+	protected abstract E createEntityForHibernateWrite(int id);
 
-	protected abstract T getExpectedPropertyValue();
+	protected abstract T getExpectedPropertyValueAfterHibernateRead();
 
 	protected abstract T getActualPropertyValue(E entity);
 
-	protected abstract Object getExpectedJdbcValue();
+	protected abstract void setJdbcValueForNonHibernateWrite(PreparedStatement statement, int parameterIndex) throws SQLException;
+
+	protected abstract Object getExpectedJdbcValueAfterHibernateWrite();
 
 	protected abstract Object getActualJdbcValue(ResultSet resultSet, int columnIndex) throws SQLException;
 
@@ -95,13 +97,13 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 	public void writeThenRead() {
 		withDefaultTimeZone( () -> {
 			inTransaction( session -> {
-				session.persist( createEntity( 1 ) );
+				session.persist( createEntityForHibernateWrite( 1 ) );
 			} );
 			inTransaction( session -> {
 				T read = getActualPropertyValue( session.find( getEntityType(), 1 ) );
 				assertEquals(
 						"Writing then reading a value should return the original value",
-						getExpectedPropertyValue(), read
+						getExpectedPropertyValueAfterHibernateRead(), read
 				);
 			} );
 		} );
@@ -112,7 +114,7 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 	public void writeThenNativeRead() {
 		withDefaultTimeZone( () -> {
 			inTransaction( session -> {
-				session.persist( createEntity( 1 ) );
+				session.persist( createEntityForHibernateWrite( 1 ) );
 			} );
 			inTransaction( session -> {
 				session.doWork( connection -> {
@@ -126,10 +128,35 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 					Object nativeRead = getActualJdbcValue( resultSet, 1 );
 					assertEquals(
 							"Values written by Hibernate ORM should match the original value (same day, hour, ...)",
-							getExpectedJdbcValue(),
+							getExpectedJdbcValueAfterHibernateWrite(),
 							nativeRead
 					);
 				} );
+			} );
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-13266")
+	public void nativeWriteThenRead() {
+		withDefaultTimeZone( () -> {
+			inTransaction( session -> {
+				session.doWork( connection -> {
+					final PreparedStatement statement = connection.prepareStatement(
+							"INSERT INTO " + ENTITY_NAME + " (" + ID_COLUMN_NAME + ", " + PROPERTY_COLUMN_NAME + ") "
+							+ " VALUES ( ? , ? )"
+					);
+					statement.setInt( 1, 1 );
+					setJdbcValueForNonHibernateWrite( statement, 2 );
+					statement.execute();
+				} );
+			} );
+			inTransaction( session -> {
+				T read = getActualPropertyValue( session.find( getEntityType(), 1 ) );
+				assertEquals(
+						"Values written without Hibernate ORM should be read correctly by Hibernate ORM",
+						getExpectedPropertyValueAfterHibernateRead(), read
+				);
 			} );
 		} );
 	}

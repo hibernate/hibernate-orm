@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.type;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -114,7 +115,7 @@ public class OffsetDateTimeTest extends AbstractJavaTimeTypeTest<OffsetDateTime,
 	}
 
 	@Override
-	protected EntityWithOffsetDateTime createEntity(int id) {
+	protected EntityWithOffsetDateTime createEntityForHibernateWrite(int id) {
 		return new EntityWithOffsetDateTime( id, getOriginalOffsetDateTime() );
 	}
 
@@ -123,7 +124,7 @@ public class OffsetDateTimeTest extends AbstractJavaTimeTypeTest<OffsetDateTime,
 	}
 
 	@Override
-	protected OffsetDateTime getExpectedPropertyValue() {
+	protected OffsetDateTime getExpectedPropertyValueAfterHibernateRead() {
 		return getOriginalOffsetDateTime().atZoneSameInstant( ZoneId.systemDefault() ).toOffsetDateTime();
 	}
 
@@ -133,7 +134,12 @@ public class OffsetDateTimeTest extends AbstractJavaTimeTypeTest<OffsetDateTime,
 	}
 
 	@Override
-	protected Object getExpectedJdbcValue() {
+	protected void setJdbcValueForNonHibernateWrite(PreparedStatement statement, int parameterIndex) throws SQLException {
+		statement.setTimestamp( parameterIndex, getExpectedJdbcValueAfterHibernateWrite() );
+	}
+
+	@Override
+	protected Timestamp getExpectedJdbcValueAfterHibernateWrite() {
 		LocalDateTime dateTimeInDefaultTimeZone = getOriginalOffsetDateTime().atZoneSameInstant( ZoneId.systemDefault() )
 				.toLocalDateTime();
 		return new Timestamp(
@@ -163,8 +169,8 @@ public class OffsetDateTimeTest extends AbstractJavaTimeTypeTest<OffsetDateTime,
 				assertThat( list.size(), is( 1 ) );
 			} );
 			checkOneMatch.accept( getOriginalOffsetDateTime() );
-			checkOneMatch.accept( getExpectedPropertyValue() );
-			checkOneMatch.accept( getExpectedPropertyValue().withOffsetSameInstant( ZoneOffset.UTC ) );
+			checkOneMatch.accept( getExpectedPropertyValueAfterHibernateRead() );
+			checkOneMatch.accept( getExpectedPropertyValueAfterHibernateRead().withOffsetSameInstant( ZoneOffset.UTC ) );
 		} );
 	}
 

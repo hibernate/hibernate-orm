@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.type;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -80,12 +81,12 @@ public class LocalDateTimeTest extends AbstractJavaTimeTypeTest<LocalDateTime, L
 	}
 
 	@Override
-	protected EntityWithLocalDateTime createEntity(int id) {
-		return new EntityWithLocalDateTime( id, getExpectedPropertyValue() );
+	protected EntityWithLocalDateTime createEntityForHibernateWrite(int id) {
+		return new EntityWithLocalDateTime( id, getExpectedPropertyValueAfterHibernateRead() );
 	}
 
 	@Override
-	protected LocalDateTime getExpectedPropertyValue() {
+	protected LocalDateTime getExpectedPropertyValueAfterHibernateRead() {
 		return LocalDateTime.of( year, month, day, hour, minute, second, nanosecond );
 	}
 
@@ -95,7 +96,12 @@ public class LocalDateTimeTest extends AbstractJavaTimeTypeTest<LocalDateTime, L
 	}
 
 	@Override
-	protected Object getExpectedJdbcValue() {
+	protected void setJdbcValueForNonHibernateWrite(PreparedStatement statement, int parameterIndex) throws SQLException {
+		statement.setTimestamp( parameterIndex, getExpectedJdbcValueAfterHibernateWrite() );
+	}
+
+	@Override
+	protected Timestamp getExpectedJdbcValueAfterHibernateWrite() {
 		return new Timestamp(
 				year - 1900, month - 1, day,
 				hour, minute, second, nanosecond

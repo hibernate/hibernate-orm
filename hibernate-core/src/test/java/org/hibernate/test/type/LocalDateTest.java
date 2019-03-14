@@ -21,10 +21,12 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.runners.Parameterized;
 
@@ -32,6 +34,7 @@ import org.junit.runners.Parameterized;
  * Tests for storage of LocalDate properties.
  */
 @TestForIssue(jiraKey = "HHH-10371")
+@SkipForDialect(value = AbstractHANADialect.class, comment = "HANA systematically returns the wrong date when the JVM default timezone is not UTC")
 public class LocalDateTest extends AbstractJavaTimeTypeTest<LocalDate, LocalDateTest.EntityWithLocalDate> {
 
 	private static class ParametersBuilder extends AbstractParametersBuilder<ParametersBuilder> {

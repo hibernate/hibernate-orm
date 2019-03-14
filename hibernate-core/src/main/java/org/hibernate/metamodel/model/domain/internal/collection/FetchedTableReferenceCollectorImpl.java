@@ -25,6 +25,7 @@ import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
+import org.hibernate.type.ForeignKeyDirection;
 
 /**
  * @author Steve Ebersole
@@ -52,39 +53,80 @@ public class FetchedTableReferenceCollectorImpl extends AbstractTableReferenceCo
 	}
 
 	@Override
-	public void addPrimaryReference(TableReference rootTableReference) {
-		if ( getPrimaryTableReference() == null ) {
-			super.addPrimaryReference( rootTableReference );
-			return;
-		}
-
-		// if we have a lhs, try to add the collection's primary table ref as a
-		// secondary ref
-		if ( lhs != null ) {
-			addSecondaryReference( makeJoin( lhs, rootTableReference ) );
-		}
-
+	public void addPrimaryReference(TableReference primaryReference) {
+		super.addPrimaryReference( primaryReference );
 	}
 
-	private TableReferenceJoin makeJoin(ColumnReferenceQualifier lhs, TableReference rootTableReference) {
-		return new TableReferenceJoin(
-				JoinType.LEFT,
-				rootTableReference,
-				makePredicate( lhs, rootTableReference )
+	@Override
+	public void addSecondaryReference(TableReferenceJoin secondaryReference) {
+		super.addSecondaryReference( secondaryReference );
+	}
+
+	public TableGroupJoin generateTableGroup(JoinType joinType, String uid) {
+		final TableGroup joinedTableGroup = new StandardTableGroup(
+				uid,
+				navigablePath,
+				collectionDescriptor,
+				lockMode,
+				getPrimaryTableReference(),
+				getTableReferenceJoins(),
+				lhs
+		);
+
+//		Predicate joinPredicate = null;
+//		if ( lhs != null ) {
+//			for ( TableReferenceJoin referenceJoin : getTableReferenceJoins() ) {
+//				final Predicate predicate = makePredicate( lhs, referenceJoin.getJoinedTableReference() );
+//				if ( predicate != null ) {
+//					if ( joinPredicate == null ) {
+//						joinPredicate = predicate;
+//					}
+//					else {
+//						final Junction joinPredicateJunction;
+//						if ( joinPredicate instanceof Junction ) {
+//							joinPredicateJunction = (Junction) joinPredicate;
+//						}
+//						else {
+//							Predicate previous = joinPredicate;
+//							joinPredicateJunction = new Junction( Junction.Nature.CONJUNCTION );
+//							joinPredicateJunction.add( previous );
+//							joinPredicate = joinPredicateJunction;
+//						}
+//
+//						joinPredicateJunction.add( predicate );
+//					}
+//				}
+//			}
+//		}
+
+		final Predicate joinPredicate = makePredicate( lhs, joinedTableGroup );
+
+		return new TableGroupJoin(
+				joinType,
+				joinedTableGroup,
+				joinPredicate
 		);
 	}
 
-	private Predicate makePredicate(ColumnReferenceQualifier lhs, TableReference rhs) {
+	private Predicate makePredicate(TableGroup lhs, TableGroup rhs) {
 		final Junction conjunction = new Junction( Junction.Nature.CONJUNCTION );
 
 		final ForeignKey joinForeignKey = collectionDescriptor.getCollectionKeyDescriptor().getJoinForeignKey();
-		final List<ForeignKey.ColumnMappings.ColumnMapping> columnMappings = joinForeignKey.getColumnMappings()
-				.getColumnMappings();
+		final ForeignKeyDirection keyDirection = collectionDescriptor.getForeignKeyDirection();
+
+		final List<ForeignKey.ColumnMappings.ColumnMapping> columnMappings = joinForeignKey.getColumnMappings().getColumnMappings();
 
 		for ( ForeignKey.ColumnMappings.ColumnMapping columnMapping : columnMappings ) {
-			final ColumnReference keyContainerColumnReference = lhs.resolveColumnReference( columnMapping.getTargetColumn() );
-			;
-			final ColumnReference keyCollectionColumnReference = rhs.resolveColumnReference( columnMapping.getReferringColumn() );
+			final ColumnReference keyContainerColumnReference;
+			final ColumnReference keyCollectionColumnReference;
+			if ( keyDirection == ForeignKeyDirection.TO_PARENT ) {
+				keyContainerColumnReference = lhs.resolveColumnReference( columnMapping.getTargetColumn() );
+				keyCollectionColumnReference = rhs.resolveColumnReference( columnMapping.getReferringColumn() );
+			}
+			else {
+				keyContainerColumnReference = lhs.resolveColumnReference( columnMapping.getReferringColumn() );
+				keyCollectionColumnReference = rhs.resolveColumnReference( columnMapping.getTargetColumn() );
+			}
 
 			// todo (6.0) : we need some kind of validation here that the column references are properly defined
 
@@ -95,55 +137,13 @@ public class FetchedTableReferenceCollectorImpl extends AbstractTableReferenceCo
 
 			conjunction.add(
 					new ComparisonPredicate(
-							keyContainerColumnReference, ComparisonOperator.EQUAL,
+							keyContainerColumnReference,
+							ComparisonOperator.EQUAL,
 							keyCollectionColumnReference
 					)
 			);
 		}
 
 		return conjunction;
-	}
-
-	public TableGroupJoin generateTableGroup(JoinType joinType, String uid) {
-		final TableGroup joinedTableGroup = new StandardTableGroup(
-				uid,
-				navigablePath,
-				collectionDescriptor,
-				lockMode,
-				getPrimaryTableReference(),
-				getTableReferenceJoins()
-		);
-
-		Predicate joinPredicate = null;
-		if ( lhs != null ) {
-			for ( TableReferenceJoin referenceJoin : getTableReferenceJoins() ) {
-				final Predicate predicate = makePredicate( lhs, referenceJoin.getJoinedTableReference() );
-				if ( predicate != null ) {
-					if ( joinPredicate == null ) {
-						joinPredicate = predicate;
-					}
-					else {
-						final Junction joinPredicateJunction;
-						if ( joinPredicate instanceof Junction ) {
-							joinPredicateJunction = (Junction) joinPredicate;
-						}
-						else {
-							Predicate previous = joinPredicate;
-							joinPredicateJunction = new Junction( Junction.Nature.CONJUNCTION );
-							joinPredicateJunction.add( previous );
-							joinPredicate = joinPredicateJunction;
-						}
-
-						joinPredicateJunction.add( predicate );
-					}
-				}
-			}
-		}
-
-		return new TableGroupJoin(
-				joinType,
-				joinedTableGroup,
-				joinPredicate
-		);
 	}
 }

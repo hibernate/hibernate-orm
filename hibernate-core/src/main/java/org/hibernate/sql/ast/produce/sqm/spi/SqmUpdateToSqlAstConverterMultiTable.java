@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
+import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
@@ -215,9 +216,8 @@ public class SqmUpdateToSqlAstConverterMultiTable extends BaseSqmToSqlAstConvert
 		}
 
 		@Override
-		public NavigableReference getNavigableReference() {
-			// todo (6.0) : is this proper?
-			return entityTableGroup.getNavigableReference();
+		public Column resolveColumn(String columnName) {
+			return entityTableGroup.resolveColumn( columnName );
 		}
 
 		@Override

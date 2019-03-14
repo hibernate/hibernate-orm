@@ -35,6 +35,8 @@ import org.hibernate.sql.ast.produce.metamodel.internal.SelectByEntityIdentifier
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.MetamodelSelectBuilder;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.produce.spi.FromClauseAccess;
+import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
@@ -362,6 +364,8 @@ public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> 
 
 		final SqlAliasBaseGenerator aliasBaseGenerator = new SqlAliasBaseManager();
 
+		final FromClauseIndex fromClauseIndex = new FromClauseIndex();
+
 		SqlAstCreationState creationState = new SqlAstCreationState() {
 			final SqlAstQuerySpecProcessingStateImpl processingState = new SqlAstQuerySpecProcessingStateImpl(
 					rootQuerySpec,
@@ -385,6 +389,11 @@ public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> 
 			@Override
 			public SqlAstProcessingState getCurrentProcessingState() {
 				return processingState;
+			}
+
+			@Override
+			public FromClauseAccess getFromClauseAccess() {
+				return fromClauseIndex;
 			}
 
 			@Override

@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -22,6 +23,7 @@ import org.hibernate.sql.ast.produce.ConversionException;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
+import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 
 import org.jboss.logging.Logger;
@@ -38,8 +40,12 @@ public class FromClauseIndex
 	public FromClauseIndex() {
 	}
 
+	private Map<NavigablePath,TableGroupJoin> tableGroupJoinMap;
 	private final Map<String, TableGroup> tableGroupByAliasXref = new HashMap<>();
 
+	/**
+	 * Holds *explicitly* fetched joins
+	 */
 	private Map<NavigablePath,SqmNavigableJoin> fetchesByPath;
 	private Map<NavigablePath, Map<NavigablePath, SqmNavigableJoin>> fetchesByParentPath;
 
@@ -48,32 +54,18 @@ public class FromClauseIndex
 		register( fromElement, tableGroup );
 	}
 
-	@Override
-	public TableGroup resolveTableGroup(NavigablePath navigablePath) {
-		return findTableGroup( navigablePath );
+	public void register(SqmFrom sqmPath, TableGroup tableGroup) {
+		if ( sqmPath instanceof SqmNavigableJoin ) {
+			throw new IllegalArgumentException(
+					"Passed SqmPath [" + sqmPath + "] is a SqmNavigableJoin - use the form of #register specific to joins"
+			);
+		}
+
+		performRegistration( sqmPath, tableGroup );
 	}
 
-	public void register(SqmFrom sqmPath, TableGroup tableGroup) {
+	private void performRegistration(SqmFrom sqmPath, TableGroup tableGroup) {
 		registerTableGroup( sqmPath.getNavigablePath(), tableGroup );
-
-		if ( sqmPath instanceof SqmNavigableJoin ) {
-			final SqmNavigableJoin join = (SqmNavigableJoin) sqmPath;
-			if ( join.isFetched() ) {
-				if ( fetchesByPath == null ) {
-					fetchesByPath = new HashMap<>();
-				}
-				fetchesByPath.put( join.getNavigablePath(), join );
-
-				if ( fetchesByParentPath == null ) {
-					fetchesByParentPath = new HashMap<>();
-				}
-				final Map<NavigablePath, SqmNavigableJoin> fetchesForParent = fetchesByParentPath.computeIfAbsent(
-						join.getNavigablePath().getParent(),
-						navigablePath -> new HashMap<>()
-				);
-				fetchesForParent.put( join.getNavigablePath(), join );
-			}
-		}
 
 		if ( sqmPath.getExplicitAlias() != null ) {
 			final TableGroup previousAliasReg = tableGroupByAliasXref.put( sqmPath.getExplicitAlias(), tableGroup );
@@ -86,6 +78,37 @@ public class FromClauseIndex
 			}
 		}
 	}
+
+	public void register(SqmNavigableJoin join, TableGroupJoin tableGroupJoin) {
+		performRegistration( join, tableGroupJoin.getJoinedGroup() );
+
+		if ( join.isFetched() ) {
+			if ( fetchesByPath == null ) {
+				fetchesByPath = new HashMap<>();
+			}
+			fetchesByPath.put( join.getNavigablePath(), join );
+
+			if ( fetchesByParentPath == null ) {
+				fetchesByParentPath = new HashMap<>();
+			}
+			final Map<NavigablePath, SqmNavigableJoin> fetchesForParent = fetchesByParentPath.computeIfAbsent(
+					join.getNavigablePath().getParent(),
+					navigablePath -> new HashMap<>()
+			);
+			fetchesForParent.put( join.getNavigablePath(), join );
+		}
+	}
+
+	public TableGroupJoin findTableJoinJoin(NavigablePath navigablePath) {
+		return tableGroupJoinMap == null ? null : tableGroupJoinMap.get( navigablePath );
+	}
+
+	public SqmNavigableJoin findFetchedJoinByPath(NavigablePath path) {
+		return fetchesByPath == null ? null : fetchesByPath.get( path );
+	}
+
+
+
 
 
 
@@ -112,8 +135,9 @@ public class FromClauseIndex
 		return findResolvedTableGroupByUniqueIdentifier( uid );
 	}
 
-	public String getTableGroupUidForNavigableReference(NavigableReference navigableReference) {
-		return uidBySourceNavigableReference.get( navigableReference );
+	@Override
+	public TableGroup resolveTableGroup(NavigablePath navigablePath) {
+		return findTableGroup( navigablePath );
 	}
 
 	public void crossReference(
@@ -226,5 +250,4 @@ public class FromClauseIndex
 	public NavigableReference findResolvedNavigableReference(NavigablePath navigablePath) {
 		return null;
 	}
-
 }

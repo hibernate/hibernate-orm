@@ -57,9 +57,7 @@ public class EntityWithOneToOneTest extends SessionFactoryBasedFunctionalTest {
 
 	@AfterEach
 	public void tearDown() {
-		inTransaction( session -> {
-			deleteAll();
-		} );
+		deleteAll();
 	}
 
 	@Test

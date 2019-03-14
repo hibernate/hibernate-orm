@@ -10,6 +10,7 @@ import org.hibernate.annotations.Remove;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmFromExporter;
@@ -55,4 +56,5 @@ public interface SqmNavigableReference extends SqmExpression, SqmPath, Navigable
 	 * relative to a "query root".
 	 */
 	NavigablePath getNavigablePath();
+
 }

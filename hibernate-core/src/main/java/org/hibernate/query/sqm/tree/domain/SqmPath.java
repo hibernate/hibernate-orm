@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import java.util.Locale;
 import java.util.function.Supplier;
 
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -20,9 +21,11 @@ import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PluralValuedNavigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SemanticException;
+import org.hibernate.query.sqm.produce.SqmCreationHelper;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 
 /**
@@ -72,6 +75,65 @@ public interface SqmPath extends SqmExpression, SemanticPathPart {
 
 	void setExplicitAlias(String explicitAlias);
 
+	@Override
+	default SqmRestrictedCollectionElementReference resolveIndexedAccess(
+			SqmExpression selector,
+			String currentContextKey,
+			boolean isTerminal,
+			SqmCreationState creationState) {
+		if ( getReferencedNavigable() instanceof PluralValuedNavigable<?> ) {
+			throw new NotYetImplementedFor6Exception();
+		}
+
+		throw new SemanticException( "Non-plural path [" + currentContextKey + "] cannot be index-accessed" );
+	}
+
+	/**
+	 * Perform any preparations needed to process the named Navigable.  Create joins?
+	 *
+	 * This should equate to resolution of implicit joins.  Given
+	 * `select p.address.city from Person p ....`, e.g.,  we'd end up with the following:
+	 *
+	 * 		1) 	Because we process the from-clause first, `Person p` is already available as an
+	 * 		   	SqmRoot with NavigablePath[Person(p)]
+	 * 		2) 	As we process the select-clause, the `p.address.city` dot-ident sequence is processed
+	 * 		   	by the registered `DotIdentifierConsumer`
+	 *
+	 *			1)	the first part (`p`) is resolved, internally, as the registered SqmRoot as an alias
+	 *				which is tracked there as its "current `SemanticPathPart`"
+	 *			2)	each "continuation"	(here `address` and then `city`) is handled by applying that
+	 *				name to the "current `SemanticPathPart`", assigning its result back as the new
+	 *				"current `SemanticPathPart`"
+	 *
+	 *					1) `address` is resolved against SqmRoot, producing a `SqmEmbeddedValuedSimplePath`
+	 *						with NavigablePath[Person(p).address].  That is registered in the PathRegistry
+	 *						in `#sqmPathMap`, but not (yet) in `#sqmFromPath`.
+	 *					2)	`city` is resolved against the SqmEmbeddedValuedSimplePath(NavigablePath[Person(p).address]).
+	 *						This triggers a few things:
+	 *
+	 *						1) 	SqmEmbeddedValuedSimplePath( Person(p).address ) is given a
+	 *							chance to prepare itself to be used as the LHS via this `#prepareForSubNavigableReference`
+	 *							method.  Here, we use that opportunity to create the implicit SqmNavigableJoin for
+	 *							the same `Person(p).address` path.  We register this join form with the PathRegistry
+	 *							which "over-writes" the previous `SqmEmbeddedValuedSimplePath` registration
+	 *						2)	Processing `city` produces a `SqmBasicValuedSimplePath( Person(p).address.city )`
+	 *							which is registered in the PathRegistry, again just in `#sqmPathMap`, but not (yet)
+	 *							in `#sqmFromPath`
+	 *
+	 * 		At this point processing would return from `DotIdentifierConsumer` back to `SemanticQueryBuilder`
+	 * 		where we call `DotIdentifierConsumer#getConsumedPart` to get the last "current part"
+	 * 		`SqmBasicValuedSimplePath( Person(p).address.city )` as the result for the fully resolved
+	 * 		dot-ident-sequence
+	 *
+	 * 	todo (6.0) : ideally we'd delay this until SQM -> SQL AST conversion : criteria-as-SQM
+	 */
+	default void prepareForSubNavigableReference(
+			SqmPath subReference,
+			boolean isSubReferenceTerminal,
+			SqmCreationState creationState) {
+		SqmCreationHelper.resolveAsLhs( getLhs(), this, subReference, isSubReferenceTerminal, creationState );
+	}
+
 	/**
 	 * Treat this path as the given type.  "Cast it" to the target type.
 	 *
@@ -89,57 +151,25 @@ public interface SqmPath extends SqmExpression, SemanticPathPart {
 		}
 
 		if ( Navigable.class.isAssignableFrom( targetType ) ) {
-			final Navigable<?> referencedNavigable = getReferencedNavigable();
-
-			if ( EntityTypeDescriptor.class.isAssignableFrom( targetType ) ) {
-				return (T) ( (EntityValuedNavigable) referencedNavigable ).getEntityDescriptor();
-			}
-
-			if ( EmbeddedTypeDescriptor.class.isAssignableFrom( targetType ) ) {
-				return (T) ( (EmbeddedValuedNavigable<?>) referencedNavigable ).getEmbeddedDescriptor();
-			}
-
-			if ( PersistentCollectionDescriptor.class.isAssignableFrom( targetType ) ) {
-				return (T) ( (PluralValuedNavigable) referencedNavigable ).getCollectionDescriptor();
-			}
-
-			if ( ManagedDomainType.class.isAssignableFrom( targetType ) ) {
-				if ( referencedNavigable instanceof EntityValuedNavigable<?> ) {
-					return (T) ( (EntityValuedNavigable) referencedNavigable ).getEntityDescriptor();
-				}
-				if ( referencedNavigable instanceof EmbeddedValuedNavigable<?> ) {
-					return (T) ( (EmbeddedValuedNavigable) referencedNavigable ).getEmbeddedDescriptor();
-				}
-			}
-
-			if ( targetType.isInstance( referencedNavigable ) ) {
-				return (T) referencedNavigable;
-			}
+			return (T) ( (Navigable) getReferencedNavigable() ).as( targetType );
 		}
 
-		throw new ClassCastException( "Don't know how to treat `" + getClass().getName() + "` as `" + targetType.getName() + '`' );
+		throw new IllegalArgumentException(
+				String.format(
+						Locale.ROOT,
+						"`%s` cannot be treated as `%s`",
+						getClass().getName(),
+						targetType.getName()
+				)
+		);
 	}
 
 	default <T> T as(Class<T> targetType, Supplier<RuntimeException> exceptionSupplier) {
 		try {
 			return as( targetType );
 		}
-		catch (ClassCastException e) {
+		catch (IllegalArgumentException e) {
 			throw exceptionSupplier.get();
 		}
-	}
-
-
-	@Override
-	default SqmRestrictedCollectionElementReference resolveIndexedAccess(
-			SqmExpression selector,
-			String currentContextKey,
-			boolean isTerminal,
-			SqmCreationState creationState) {
-		if ( getReferencedNavigable() instanceof PluralValuedNavigable<?> ) {
-			throw new NotYetImplementedFor6Exception();
-		}
-
-		throw new SemanticException( "Non-plural path [" + currentContextKey + "] cannot be index-accessed" );
 	}
 }

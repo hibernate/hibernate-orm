@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
-import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
 /**
@@ -21,7 +21,7 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
  * @author Steve Ebersole
  */
 public abstract class AbstractSqmInsertStatement extends AbstractSqmDmlStatement implements SqmInsertStatement {
-	private List<SqmSingularAttributeReference> insertionTargetPaths;
+	private List<SqmPath> insertionTargetPaths;
 
 	@SuppressWarnings("WeakerAccess")
 	protected AbstractSqmInsertStatement() {
@@ -34,16 +34,17 @@ public abstract class AbstractSqmInsertStatement extends AbstractSqmDmlStatement
 	}
 
 	@Override
-	public List<SqmSingularAttributeReference> getInsertionTargetPaths() {
-		return insertionTargetPaths == null ? Collections.emptyList() : Collections.unmodifiableList(
-				insertionTargetPaths );
+	public List<SqmPath> getInsertionTargetPaths() {
+		return insertionTargetPaths == null
+				? Collections.emptyList()
+				: Collections.unmodifiableList( insertionTargetPaths );
 	}
 
-	public void setInsertionTargetPaths(List<SqmSingularAttributeReference> insertionTargetPaths) {
+	public void setInsertionTargetPaths(List<SqmPath> insertionTargetPaths) {
 		this.insertionTargetPaths = insertionTargetPaths;
 	}
 
-	public void addInsertTargetStateField(SqmSingularAttributeReference stateField) {
+	public void addInsertTargetStateField(SqmPath stateField) {
 		if ( insertionTargetPaths == null ) {
 			insertionTargetPaths = new ArrayList<>();
 		}
@@ -51,7 +52,7 @@ public abstract class AbstractSqmInsertStatement extends AbstractSqmDmlStatement
 	}
 
 	@Override
-	public void visitInsertionTargetPaths(Consumer<SqmSingularAttributeReference> consumer) {
+	public void visitInsertionTargetPaths(Consumer<SqmPath> consumer) {
 		if ( insertionTargetPaths != null ) {
 			insertionTargetPaths.forEach( consumer );
 		}

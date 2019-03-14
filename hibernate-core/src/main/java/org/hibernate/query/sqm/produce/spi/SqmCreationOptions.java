@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.produce.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
 
 /**
@@ -13,6 +14,7 @@ import org.hibernate.query.sqm.StrictJpaComplianceViolation;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface SqmCreationOptions {
 	/**
 	 * Should we interpret the query strictly according to the JPA specification?  In

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -48,4 +49,12 @@ public interface SqmFrom extends TableGroupInfo, SqmVisitableNode, SqmTypedNode,
 	 * Details about how this SqmFrom is used in the query.
 	 */
 	UsageDetails getUsageDetails();
+
+	@Override
+	default void prepareForSubNavigableReference(
+			SqmPath subReference,
+			boolean isSubReferenceTerminal,
+			SqmCreationState creationState) {
+		// nothing to do, already prepared
+	}
 }

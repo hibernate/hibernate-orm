@@ -16,7 +16,7 @@ import org.hibernate.query.criteria.spi.CriteriaNodeBuilder;
 import org.hibernate.query.internal.QueryPlanCacheImpl;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.internal.SemanticQueryProducerImpl;
-import org.hibernate.query.sqm.produce.spi.SemanticQueryProducer;
+import org.hibernate.query.sqm.produce.SemanticQueryProducer;
 
 /**
  * Aggregation and encapsulation of the components Hibernate uses

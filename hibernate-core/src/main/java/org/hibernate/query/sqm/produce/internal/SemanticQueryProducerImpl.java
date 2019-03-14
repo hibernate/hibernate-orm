@@ -19,7 +19,7 @@ import org.hibernate.query.hql.internal.HqlParseTreePrinter;
 import org.hibernate.query.hql.internal.HqlParser;
 import org.hibernate.query.hql.internal.SemanticQueryBuilder;
 import org.hibernate.query.sqm.InterpretationException;
-import org.hibernate.query.sqm.produce.spi.SemanticQueryProducer;
+import org.hibernate.query.sqm.produce.SemanticQueryProducer;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -49,11 +49,15 @@ public class SemanticQueryProducerImpl implements SemanticQueryProducer {
 
 		// then we perform semantic analysis and build the semantic representation...
 		try {
-			return SemanticQueryBuilder.buildSemanticModel(
+			final SqmStatement sqmStatement = SemanticQueryBuilder.buildSemanticModel(
 					parser.statement(),
 					new SqmCreationOptionsStandard( sessionFactory ),
 					sessionFactory
 			);
+
+			SqmTreePrinter.logTree( sqmStatement );
+
+			return sqmStatement;
 		}
 		catch (QueryException e) {
 			throw e;

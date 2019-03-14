@@ -14,6 +14,7 @@ import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
@@ -158,7 +159,7 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	@Override
 	public T visitInsertSelectStatement(SqmInsertSelectStatement statement) {
 		visitRootEntityFromElement( statement.getTarget() );
-		for ( SqmSingularAttributeReference stateField : statement.getInsertionTargetPaths() ) {
+		for ( SqmPath stateField : statement.getInsertionTargetPaths() ) {
 			stateField.accept( this );
 		}
 		visitQuerySpec( statement.getSelectQuerySpec() );

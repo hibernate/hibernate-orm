@@ -25,6 +25,8 @@ public interface SqlAstCreationState {
 
 	SqlExpressionResolver getSqlExpressionResolver();
 
+	FromClauseAccess getFromClauseAccess();
+
 	SqlAliasBaseGenerator getSqlAliasBaseGenerator();
 
 	default GraphImplementor getCurrentResultGraphNode() {

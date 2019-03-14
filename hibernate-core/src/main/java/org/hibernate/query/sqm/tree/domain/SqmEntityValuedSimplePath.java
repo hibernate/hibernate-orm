@@ -8,12 +8,18 @@ package org.hibernate.query.sqm.tree.domain;
 
 import java.util.function.Supplier;
 
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.produce.SqmCreationHelper;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
+import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
@@ -47,7 +53,17 @@ public class SqmEntityValuedSimplePath extends AbstractSqmSimplePath {
 			String currentContextKey,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		return null;
+		final EntityValuedNavigable referencedNavigable = getReferencedNavigable();
+		final Navigable navigable = referencedNavigable.findNavigable( name );
+
+		prepareForSubNavigableReference( getLhs(), isTerminal, creationState );
+
+		assert getLhs() == null || creationState.getProcessingStateStack()
+				.getCurrent()
+				.getPathRegistry()
+				.findPath( getLhs().getNavigablePath() ) != null;
+
+		return navigable.createSqmExpression( this, creationState );
 	}
 
 	@Override
@@ -63,6 +79,23 @@ public class SqmEntityValuedSimplePath extends AbstractSqmSimplePath {
 	@Override
 	public EntityValuedNavigable getReferencedNavigable() {
 		return (EntityValuedNavigable) super.getReferencedNavigable();
+	}
+
+	private boolean dereferenced;
+
+	@Override
+	public void prepareForSubNavigableReference(
+			SqmPath subReference,
+			boolean isSubReferenceTerminal,
+			SqmCreationState creationState) {
+		if ( dereferenced ) {
+			// nothing to do, already dereferenced
+			return;
+		}
+
+		SqmCreationHelper.resolveAsLhs( getLhs(), this, subReference, isSubReferenceTerminal, creationState );
+
+		dereferenced = true;
 	}
 
 	@Override

@@ -26,7 +26,7 @@ public class SqmBasicValuedSimplePath extends AbstractSqmSimplePath {
 			NavigablePath navigablePath,
 			BasicValuedNavigable referencedNavigable,
 			SqmPath lhs) {
-		super( uid, navigablePath, referencedNavigable, lhs );
+		this( uid, navigablePath, referencedNavigable, lhs, null );
 	}
 
 	public SqmBasicValuedSimplePath(

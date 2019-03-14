@@ -13,8 +13,10 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.internal.collection.SqlAstHelper;
 import org.hibernate.metamodel.model.domain.spi.AbstractPersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.AbstractPluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.CollectionIdentifier;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -56,9 +58,11 @@ public class PersistentBagDescriptorImpl<O,E> extends AbstractPersistentCollecti
 			collectionIdResult = null;
 		}
 
-		final DomainResult elementResult = getElementDescriptor().createDomainResult(
-				navigablePath,
-				resultVariable,
+		final DomainResult elementResult = SqlAstHelper.generateCollectionElementDomainResult(
+				navigablePath.append( CollectionElement.NAVIGABLE_NAME ),
+				getElementDescriptor(),
+				selected,
+				null,
 				creationState
 		);
 

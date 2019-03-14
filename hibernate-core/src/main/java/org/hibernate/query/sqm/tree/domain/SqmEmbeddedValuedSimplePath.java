@@ -10,8 +10,10 @@ import java.util.function.Supplier;
 
 import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.produce.SqmCreationHelper;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -50,25 +52,40 @@ public class SqmEmbeddedValuedSimplePath extends AbstractSqmSimplePath {
 			String currentContextKey,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final NavigablePath navigablePath = getNavigablePath().append( name );
+		final Navigable subNavigable = getReferencedNavigable().findNavigable( name );
+		final NavigablePath subNavigablePath = getNavigablePath().append( name );
+
+		getLhs().prepareForSubNavigableReference(
+				this,
+				false,
+				creationState
+		);
+
 		return creationState.getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
-				navigablePath,
-				np -> {
-					if ( ! isTerminal && getLhs() instanceof SqmFrom ) {
-						// create the implicit "join"
-						return new SqmNavigableJoin(
-								creationState.generateUniqueIdentifier(),
-								(SqmFrom) getLhs(),
-								getReferencedNavigable(),
-								null,
-								SqmJoinType.INNER,
-								false,
-								creationState
-						);
-					}
-					else {
-						return getReferencedNavigable().createSqmExpression( this, creationState );
-					}
+				subNavigablePath,
+				snp -> {
+					// Create the join for the embeddable
+					final SqmFrom embedJoinLhs = creationState.getProcessingStateStack()
+							.getCurrent()
+							.getPathRegistry()
+							.findFromByPath( getLhs().getNavigablePath() );
+
+					final SqmNavigableJoin join = getReferencedNavigable().createJoin(
+							embedJoinLhs,
+							// implicit joins are always INNER
+							SqmJoinType.INNER,
+							null,
+							false,
+							creationState
+					);
+					embedJoinLhs.addJoin( join );
+
+					creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( join );
+
+					return subNavigable.createSqmExpression(
+							join,
+							creationState
+					);
 				}
 		);
 	}
@@ -101,6 +118,22 @@ public class SqmEmbeddedValuedSimplePath extends AbstractSqmSimplePath {
 	@Override
 	public EntityTypeDescriptor getIntrinsicSubclassEntityMetadata() {
 		return null;
+	}
+
+	private boolean dereferenced;
+
+	@Override
+	public void prepareForSubNavigableReference(
+			SqmPath subReference,
+			boolean isSubReferenceTerminal,
+			SqmCreationState creationState) {
+		if ( dereferenced ) {
+			// nothing to do
+			return;
+		}
+
+		SqmCreationHelper.resolveAsLhs( getLhs(), this, subReference, isSubReferenceTerminal, creationState );
+		dereferenced = true;
 	}
 
 //	@Override

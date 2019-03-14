@@ -62,4 +62,9 @@ public interface EntityValuedNavigable<J>
 				creationState
 		);
 	}
+
+	@Override
+	default <X> X as(Class<X> type) {
+		return TreatAsHelper.handleEntityTreat( this, type );
+	}
 }

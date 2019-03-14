@@ -25,6 +25,7 @@ import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.internal.SqlAstQuerySpecProcessingStateImpl;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.produce.spi.FromClauseAccess;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
@@ -87,7 +88,7 @@ public class JoinTableCollectionRowByIndexSelector extends AbstractSelector impl
 		final CreationState creationState = new CreationState( sessionFactory, querySpec );
 
 		final DomainResult domainResult = elementDescriptor.createDomainResult(
-				collectionNavigablePath.append( elementDescriptor.getNavigableName() ),
+				collectionNavigablePath.append( CollectionElement.NAVIGABLE_NAME ),
 				null,
 				creationState
 		);
@@ -166,7 +167,7 @@ public class JoinTableCollectionRowByIndexSelector extends AbstractSelector impl
 	private class CreationState implements DomainResultCreationState, SqlAstCreationState {
 		private final SessionFactoryImplementor sessionFactory;
 		private final SqlAliasBaseGenerator sqlAliasBaseGenerator = new SqlAliasBaseManager();
-		private final DomainResultCreationState.FromClauseAccess fromClauseAccess = new DomainResultCreationState.SimpleFromClauseAccessImpl();
+		private final FromClauseAccess fromClauseAccess = new DomainResultCreationState.SimpleFromClauseAccessImpl();
 
 		private final Stack<SqlAstProcessingState> processingStateStack = new StandardStack<>();
 

@@ -10,8 +10,10 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.produce.SqmCreationHelper;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 
@@ -84,5 +86,22 @@ public class SqmPluralAttributeReference
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		return null;
+	}
+
+	private boolean dereferenced;
+
+	@Override
+	public void prepareForSubNavigableReference(
+			SqmPath subReference,
+			boolean isSubReferenceTerminal,
+			SqmCreationState creationState) {
+		if ( dereferenced ) {
+			// nothing to do, already dereferenced
+			return;
+		}
+
+		SqmCreationHelper.resolveAsLhs( getLhs(), this, subReference, isSubReferenceTerminal, creationState );
+
+		dereferenced = true;
 	}
 }

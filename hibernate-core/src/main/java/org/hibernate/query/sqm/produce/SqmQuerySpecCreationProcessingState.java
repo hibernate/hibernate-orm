@@ -6,11 +6,13 @@
  */
 package org.hibernate.query.sqm.produce;
 
+import org.hibernate.Incubating;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 
 /**
  * @author Steve Ebersole
  */
+@Incubating
 public interface SqmQuerySpecCreationProcessingState extends SqmCreationProcessingState {
 	void registerSelection(SqmSelection selection);
 	SqmSelection findSelectionByAlias(String alias);

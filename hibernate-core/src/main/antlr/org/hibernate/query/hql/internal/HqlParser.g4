@@ -209,20 +209,19 @@ dotIdentifierSequenceContinuation
  * interpreted by the consumer of the parse-tree.  However, there
  * are certain cases where we can syntactically recognize a navigable
  * path; see `syntacticNavigablePath` rule
- *
  */
 path
-	: syntacticNavigablePath (syntacticNavigablePathContinuation)?
+	: syntacticDomainPath (pathContinuation)?
 	| generalPathFragment
 	;
 
-syntacticNavigablePathContinuation
-	: DOT dotIdentifierSequence (DOT syntacticNavigablePathContinuation)?
+pathContinuation
+	: DOT dotIdentifierSequence (DOT pathContinuation)?
 	;
 
 /**
  * Rule for cases where we syntactically know that the path is a
- * navigable path because it is one of these special cases:
+ * "domain path" because it is one of these special cases:
  *
  * 		* TREAT( path )
  * 		* ELEMENTS( path )
@@ -230,7 +229,7 @@ syntacticNavigablePathContinuation
  * 		* KEY( path )
  * 		* path[ selector ]
  */
-syntacticNavigablePath
+syntacticDomainPath
 	: treatedNavigablePath
 	| collectionElementNavigablePath
 	| mapKeyNavigablePath
@@ -252,19 +251,16 @@ indexedPathAccessFragment
 	: LEFT_BRACKET expression RIGHT_BRACKET (DOT generalPathFragment)?
 	;
 
-
-
 treatedNavigablePath
-	: TREAT LEFT_PAREN path AS dotIdentifierSequence RIGHT_PAREN (syntacticNavigablePathContinuation)?
+	: TREAT LEFT_PAREN path AS dotIdentifierSequence RIGHT_PAREN (pathContinuation)?
 	;
 
-
 collectionElementNavigablePath
-	: (VALUE | ELEMENTS) LEFT_PAREN path RIGHT_PAREN (syntacticNavigablePathContinuation)?
+	: (VALUE | ELEMENTS) LEFT_PAREN path RIGHT_PAREN (pathContinuation)?
 	;
 
 mapKeyNavigablePath
-	: KEY LEFT_PAREN path RIGHT_PAREN (syntacticNavigablePathContinuation)?
+	: KEY LEFT_PAREN path RIGHT_PAREN (pathContinuation)?
 	;
 
 
@@ -371,6 +367,10 @@ likeEscape
 	: ESCAPE expression
 	;
 
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Expression
+
 expression
 	: expression DOUBLE_PIPE expression			# ConcatenationExpression
 	| expression PLUS expression				# AdditionExpression
@@ -396,10 +396,6 @@ expression
 
 entityTypeReference
 	: TYPE LEFT_PAREN (path | parameter) RIGHT_PAREN
-	;
-
-entityLiteralReference
-	:
 	;
 
 caseStatement
@@ -466,8 +462,6 @@ literal
 // Few things:
 //		1) the markers above are just initial thoughts.  They are obviously verbose.  Maybe acronyms or shortened forms would be better
 //		2) we may want to stay away from all of the timezone headaches by not supporting local, zoned and offset forms
-
-
 
 timestampLiteral
 	: TIMESTAMP_ESCAPE_START dateTimeLiteralText RIGHT_BRACE

@@ -19,8 +19,11 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.internal.collection.SqlAstHelper;
 import org.hibernate.metamodel.model.domain.spi.AbstractPersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.AbstractPluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.CollectionElement;
+import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
@@ -76,23 +79,25 @@ public class PersistentMapDescriptorImpl<O,K,E>
 			String resultVariable,
 			LockMode lockMode,
 			DomainResultCreationState creationState) {
-		final DomainResult mapKeyResult = getIndexDescriptor().createDomainResult(
-				navigablePath,
-				null,
-				creationState
-		);
-
-		final DomainResult mapValueResult = getElementDescriptor().createDomainResult(
-				navigablePath,
-				resultVariable,
-				creationState
-		);
-
 		return new MapInitializerProducer(
 				this,
 				selected,
-				mapKeyResult,
-				mapValueResult
+				// map-key
+				SqlAstHelper.generateCollectionIndexDomainResult(
+						navigablePath.append( CollectionIndex.NAVIGABLE_NAME ),
+						getIndexDescriptor(),
+						selected,
+						null,
+						creationState
+				),
+				// map-value
+				SqlAstHelper.generateCollectionElementDomainResult(
+						navigablePath.append( CollectionElement.NAVIGABLE_NAME ),
+						getElementDescriptor(),
+						selected,
+						null,
+						creationState
+				)
 		);
 	}
 

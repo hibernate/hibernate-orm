@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
-import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 
 /**
  * The general contract for INSERT statements.  At the moment only the INSERT-SELECT
@@ -19,6 +19,6 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeRefere
  * @author Steve Ebersole
  */
 public interface SqmInsertStatement extends SqmDmlStatement {
-	List<SqmSingularAttributeReference> getInsertionTargetPaths();
-	void visitInsertionTargetPaths(Consumer<SqmSingularAttributeReference> consumer);
+	List<SqmPath> getInsertionTargetPaths();
+	void visitInsertionTargetPaths(Consumer<SqmPath> consumer);
 }

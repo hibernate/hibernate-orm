@@ -99,6 +99,12 @@ public abstract class AbstractColumnReferenceQualifier implements ColumnReferenc
 		return columnBinding;
 	}
 
+	@Override
+	public ColumnReference resolveColumnReference(String columnName) {
+		final Column column = resolveColumn( columnName );
+		return resolveColumnReference( column );
+	}
+
 	private String loggableString() {
 		return "primary table = ` " + getPrimaryTableReference().getTable() + '`';
 	}

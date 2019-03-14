@@ -125,6 +125,7 @@ BOTH        		: [bB] [oO] [tT] [hH];
 CASE        		: [cC] [aA] [sS] [eE];
 CAST        		: [cC] [aA] [sS] [tT];
 CHARACTER_LENGTH	: [cC] [hH] [aA] [rR] [aA] [cC] [tT] [eE] [rR] '_' [lL] [eE] [nN] [gG] [tT] [hH];
+CLASS				: [cC] [lL] [aA] [sS] [sS];
 COALESCE			: [cC] [oO] [aA] [lL] [eE] [sS] [cC] [eE];
 COLLATE				: [cC] [oO] [lL] [lL] [aA] [tT] [eE];
 CONCAT				: [cC] [oO] [nN] [cC] [aA] [tT];

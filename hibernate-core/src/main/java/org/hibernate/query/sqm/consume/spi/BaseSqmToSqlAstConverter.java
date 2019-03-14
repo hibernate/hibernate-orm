@@ -24,10 +24,10 @@ import org.hibernate.annotations.Remove;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
-import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.NavigablePath;
@@ -36,6 +36,10 @@ import org.hibernate.query.criteria.sqm.JpaParameterSqmWrapper;
 import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
@@ -104,6 +108,7 @@ import org.hibernate.sql.ast.produce.internal.SqlAstQuerySpecProcessingStateImpl
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.ordering.internal.SqmColumnReference;
+import org.hibernate.sql.ast.produce.spi.FromClauseAccess;
 import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
@@ -153,6 +158,8 @@ import org.hibernate.sql.ast.tree.spi.expression.TrimFunction;
 import org.hibernate.sql.ast.tree.spi.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.spi.expression.UpperFunction;
 import org.hibernate.sql.ast.tree.spi.expression.domain.BasicValuedNavigableReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.EmbeddableValuedNavigableReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.EntityValuedNavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeReference;
@@ -268,6 +275,11 @@ public abstract class BaseSqmToSqlAstConverter
 	@Override
 	public SqlExpressionResolver getSqlExpressionResolver() {
 		return getCurrentProcessingState().getSqlExpressionResolver();
+	}
+
+	@Override
+	public FromClauseAccess getFromClauseAccess() {
+		return fromClauseIndex;
 	}
 
 	@Override
@@ -533,7 +545,12 @@ public abstract class BaseSqmToSqlAstConverter
 		log.tracef( "Resolved SqmRoot [%s] to new TableGroup [%s]", sqmRoot, group );
 
 		sqmRoot.visitJoins(
-				sqmJoin -> group.addTableGroupJoin( (TableGroupJoin) sqmJoin.accept( this ) )
+				sqmJoin -> {
+					final TableGroupJoin tableGroupJoin = (TableGroupJoin) sqmJoin.accept( this );
+					if ( tableGroupJoin != null ) {
+						group.addTableGroupJoin( tableGroupJoin );
+					}
+				}
 		);
 
 		return group;
@@ -541,25 +558,43 @@ public abstract class BaseSqmToSqlAstConverter
 
 	@Override
 	public NavigableReference visitRootEntityReference(SqmEntityReference sqmEntityReference) {
-		return fromClauseIndex.findResolvedTableGroup( sqmEntityReference.getExportedFromElement() )
-				.getNavigableReference();
+		return fromClauseIndex.getTableGroup( sqmEntityReference.getNavigablePath() );
 	}
 
 	@Override
-	public Object visitQualifiedAttributeJoinFromElement(SqmNavigableJoin sqmJoin) {
-		final TableGroup existing = fromClauseIndex.findResolvedTableGroup( sqmJoin );
-		if ( existing != null ) {
-			return existing;
+	public TableGroupJoin visitQualifiedAttributeJoinFromElement(SqmNavigableJoin sqmJoin) {
+		final TableGroupJoin tableJoinJoin = fromClauseIndex.findTableJoinJoin( sqmJoin.getNavigablePath() );
+		if ( tableJoinJoin != null ) {
+			return tableJoinJoin;
 		}
 
-		final TableGroup lhsTableGroup = fromClauseIndex.findResolvedTableGroup( sqmJoin.getLhs() );
+		final TableGroup lhsTableGroup = fromClauseIndex.findTableGroup( sqmJoin.getLhs().getNavigablePath() );
+		final NavigableContainer<?> joinedNavigable = sqmJoin.as( NavigableContainer.class );
 
-		final PersistentAttributeDescriptor joinedAttribute = sqmJoin.getAttributeReference().getReferencedNavigable();
-		if ( joinedAttribute instanceof SingularPersistentAttributeEmbedded ) {
-			return lhsTableGroup;
+		if ( joinedNavigable instanceof EmbeddedValuedNavigable ) {
+			// we don't want an actual TableGroup/TableGroupJoin created just for the
+			// embeddable.
+			//
+			// However, we do need to register a TableGroup against its NavigablePath.
+			// Specifically the TableGroup associated with the embeddable's LHS
+			fromClauseIndex.registerTableGroup( sqmJoin.getNavigablePath(), lhsTableGroup );
+
+			// we also still want to process its joins, adding them to the LHS TableGroup
+			sqmJoin.visitJoins(
+					sqmJoinJoin -> {
+						final TableGroupJoin tableGroupJoin = (TableGroupJoin) sqmJoinJoin.accept( this );
+						if ( tableGroupJoin != null ) {
+							lhsTableGroup.addTableGroupJoin( tableGroupJoin );
+						}
+					}
+			);
+
+			// return null - there is no TableGroupJoin that needs to be added
+			return null;
 		}
 
-		final TableGroupJoinProducer joinProducer = (TableGroupJoinProducer) joinedAttribute;
+
+		final TableGroupJoinProducer joinProducer = joinedNavigable.as( TableGroupJoinProducer.class );
 
 		final TableGroupJoin tableGroupJoin = joinProducer.createTableGroupJoin(
 				sqmJoin.getUniqueIdentifier(),
@@ -571,6 +606,9 @@ public abstract class BaseSqmToSqlAstConverter
 				this
 		);
 
+		fromClauseIndex.register( sqmJoin, tableGroupJoin );
+		lhsTableGroup.addTableGroupJoin( tableGroupJoin );
+
 		// add any additional join restrictions
 		if ( sqmJoin.getJoinPredicate() != null ) {
 			currentQuerySpec().addRestriction(
@@ -578,17 +616,12 @@ public abstract class BaseSqmToSqlAstConverter
 			);
 		}
 
-		lhsTableGroup.addTableGroupJoin( tableGroupJoin );
-
-		sqmJoin.visitJoins(
-				sqmJoinJoin -> tableGroupJoin.getJoinedGroup().addTableGroupJoin( (TableGroupJoin) sqmJoinJoin.accept( this ) )
-		);
 
 		return tableGroupJoin;
 	}
 
 	@Override
-	public TableGroupJoin visitCrossJoinedFromElement(SqmCrossJoin sqmJoin) {
+	public TableGroup visitCrossJoinedFromElement(SqmCrossJoin sqmJoin) {
 		final EntityTypeDescriptor entityMetadata = sqmJoin.getReferencedNavigable().getEntityDescriptor();
 		final TableGroup group = entityMetadata.createRootTableGroup(
 				sqmJoin.getUniqueIdentifier(),
@@ -604,10 +637,15 @@ public abstract class BaseSqmToSqlAstConverter
 		fromClauseIndex.crossReference( sqmJoin, group );
 
 		sqmJoin.visitJoins(
-				sqmJoinJoin -> group.addTableGroupJoin( (TableGroupJoin) sqmJoinJoin.accept( this ) )
+				sqmJoinJoin -> {
+					final TableGroupJoin tableGroupJoin = (TableGroupJoin) sqmJoinJoin.accept( this );
+					if ( tableGroupJoin != null ) {
+						group.addTableGroupJoin( tableGroupJoin );
+					}
+				}
 		);
 
-		return new TableGroupJoin( JoinType.CROSS, group, null );
+		return new TableGroupJoin( JoinType.CROSS, group, null ).getJoinedGroup();
 	}
 
 	@Override
@@ -631,11 +669,43 @@ public abstract class BaseSqmToSqlAstConverter
 		}
 	}
 
+	@Override
+	public BasicValuedNavigableReference visitBasicValuedPath(SqmBasicValuedSimplePath path) {
+		return new BasicValuedNavigableReference(
+				path.getNavigablePath(),
+				path.getReferencedNavigable(),
+				this
+		);
+	}
+
+	@Override
+	public EmbeddableValuedNavigableReference visitEmbeddableValuedPath(SqmEmbeddedValuedSimplePath path) {
+		return new EmbeddableValuedNavigableReference(
+				path.getNavigablePath(),
+				path.getReferencedNavigable(),
+				determineLockMode( path.getIdentificationVariable() ),
+				this
+		);
+	}
+
+	@Override
+	public Object visitEntityValuedPath(SqmEntityValuedSimplePath path) {
+		return new EntityValuedNavigableReference(
+				path.getNavigablePath(),
+				path.getReferencedNavigable(),
+				determineLockMode( path.getIdentificationVariable() ),
+				this
+		);
+	}
+
+	@Override
+	public Object visitPluralValuedPath(SqmPluralValuedSimplePath path) {
+		return super.visitPluralValuedPath( path );
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Expressions
-
-
 
 	@Override
 	public PluralAttributeReference visitPluralAttribute(SqmPluralAttributeReference reference) {
@@ -1467,7 +1537,7 @@ public abstract class BaseSqmToSqlAstConverter
 		if ( value instanceof NavigableReference ) {
 			final NavigableReference navigableReference = (NavigableReference) value;
 			final List list = navigableReference.getNavigable().resolveColumnReferences(
-					navigableReference.getColumnReferenceQualifier(),
+					navigableReference.getAssociatedTableGroup(),
 					this
 			);
 			if ( list.size() == 1 ) {

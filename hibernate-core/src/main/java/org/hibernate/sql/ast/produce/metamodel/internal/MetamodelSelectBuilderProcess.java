@@ -24,6 +24,7 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
+import org.hibernate.metamodel.model.domain.spi.PluralValuedNavigable;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.ComparisonOperator;
@@ -35,6 +36,7 @@ import org.hibernate.sql.ast.produce.internal.SqlAstQuerySpecProcessingStateImpl
 import org.hibernate.sql.ast.produce.internal.SqlAstSelectDescriptorImpl;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.produce.spi.FromClauseAccess;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupProducer;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
@@ -109,7 +111,7 @@ public class MetamodelSelectBuilderProcess
 
 	private final SqlAliasBaseManager sqlAliasBaseManager = new SqlAliasBaseManager();
 
-	private final DomainResultCreationState.FromClauseAccess fromClauseAccess = new DomainResultCreationState.SimpleFromClauseAccessImpl();
+	private final FromClauseAccess fromClauseAccess = new DomainResultCreationState.SimpleFromClauseAccessImpl();
 
 
 	private MetamodelSelectBuilderProcess(
@@ -155,7 +157,9 @@ public class MetamodelSelectBuilderProcess
 				)
 		);
 
-		final NavigablePath rootNavigablePath = new NavigablePath( rootNavigableContainer.getNavigableName() );
+		final NavigablePath rootNavigablePath = new NavigablePath(
+				rootNavigableContainer.getNavigableRole().getFullPath()
+		);
 
 		final SelectStatement selectStatement = new SelectStatement( rootQuerySpec );
 
@@ -368,6 +372,16 @@ public class MetamodelSelectBuilderProcess
 			LockMode lockMode = LockMode.READ;
 			FetchTiming fetchTiming = fetchable.getMappedFetchStrategy().getTiming();
 			boolean joined = fetchable.getMappedFetchStrategy().getStyle() == FetchStyle.JOIN;
+
+			if ( rootNavigableContainer instanceof PluralValuedNavigable ) {
+				// processing a collection-loader
+
+				// if the `fetachable` is the "collection owner" and the collection owner is available in Session - don't join
+				final String collectionMappedByProperty = ( (PluralValuedNavigable) rootNavigableContainer ).getCollectionDescriptor().getMappedByProperty();
+				if ( collectionMappedByProperty.equals( fetchable.getNavigableName() ) ) {
+					joined = false;
+				}
+			}
 
 			final Integer maximumFetchDepth = getCreationContext().getMaximumFetchDepth();
 			// minus one because the root is not a fetch

@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import java.util.Locale;
+
 import org.hibernate.LockMode;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
@@ -76,5 +78,10 @@ public interface PluralValuedNavigable<J>
 				lockMode,
 				creationState
 		);
+	}
+
+	@Override
+	default <X> X as(Class<X> type) {
+		return TreatAsHelper.handlePluralTreat( this, type );
 	}
 }

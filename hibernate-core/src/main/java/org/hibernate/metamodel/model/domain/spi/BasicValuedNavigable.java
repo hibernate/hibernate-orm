@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import java.util.Locale;
 import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -18,6 +19,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.produce.SqlTreeException;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
@@ -97,19 +99,27 @@ public interface BasicValuedNavigable<J> extends BasicValuedExpressableType<J>, 
 			NavigablePath navigablePath,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final TableGroup lhs = creationState.getFromClauseAccess().findTableGroup( navigablePath.getParent() );
-		if ( lhs == null ) {
-			throw new DomainResultCreationException(
-					"Could not locate LHS TableGroup[" + navigablePath.getParent() + "] : " + navigablePath );
+		final NavigablePath parentNavigablePath = navigablePath.getParent();
+		if ( parentNavigablePath == null ) {
+			throw new DomainResultCreationException( "Parent NavigablePath cannot be null for basic path" );
+		}
+
+		final TableGroup tableGroup = creationState.getFromClauseAccess().findTableGroup( parentNavigablePath );
+		if ( tableGroup == null ) {
+			throw new SqlTreeException(
+					String.format(
+							Locale.ROOT,
+							"Could not locate TableGroup for basic path : %s -> %s",
+							navigablePath,
+							this
+					)
+			);
 		}
 
 		// resolve the SqlSelection
 		final SqlExpressionResolver resolver = creationState.getSqlExpressionResolver();
 		final SqlSelection sqlSelection = resolver.resolveSqlSelection(
-				resolver.resolveSqlExpression(
-						lhs,
-						getBoundColumn()
-				),
+				resolver.resolveSqlExpression( tableGroup, getBoundColumn() ),
 				getJavaTypeDescriptor(),
 				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 		);

@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.produce;
 
+import org.hibernate.Incubating;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 
 /**
@@ -15,6 +16,7 @@ import org.hibernate.query.sqm.produce.spi.SqmCreationState;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface SqmCreationProcessingState {
 	/**
 	 * The parent processing state.  May be null for the top-level processing.

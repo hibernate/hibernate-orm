@@ -8,22 +8,63 @@ package org.hibernate.sql.ast.tree.spi.expression.domain;
 
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
+import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 
 /**
  * @author Steve Ebersole
  */
-public class EmbeddableValuedNavigableReference extends AbstractNavigableContainerReference {
+public class EmbeddableValuedNavigableReference implements NavigableContainerReference {
+	private final NavigablePath navigablePath;
+	private final EmbeddedValuedNavigable navigable;
+	private final TableGroup ownerTableGroup;
+	private final LockMode lockMode;
+
 	public EmbeddableValuedNavigableReference(
-			NavigableContainerReference containerReference,
-			EmbeddedValuedNavigable navigable,
 			NavigablePath navigablePath,
-			LockMode lockMode) {
-		super( containerReference, navigable, navigablePath, containerReference.getColumnReferenceQualifier(), lockMode );
+			EmbeddedValuedNavigable navigable,
+			LockMode lockMode,
+			SqlAstCreationState creationState) {
+		this.navigablePath = navigablePath;
+		this.navigable = navigable;
+		this.lockMode = lockMode;
+
+		// the TableGroup for any embeddable value is defined by its container/parent
+		this.ownerTableGroup = creationState.getFromClauseAccess().findTableGroup( navigablePath.getParent() );
+
+		// but we also want to make sure it is registered under our NavigablePath as well for any de-references from the embedded
+		creationState.getFromClauseAccess().registerTableGroup( navigablePath, ownerTableGroup );
 	}
 
 	@Override
-	public EmbeddedValuedNavigable getNavigable() {
-		return (EmbeddedValuedNavigable) super.getNavigable();
+	public NavigablePath getNavigablePath() {
+		return navigablePath;
+	}
+
+	@Override
+	public NavigableContainer getNavigable() {
+		return navigable;
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// These were meant to help with re-usable implicit joins.
+
+	@Override
+	public NavigableReference findNavigableReference(String navigableName) {
+		return null;
+	}
+
+	@Override
+	public void addNavigableReference(NavigableReference reference) {
+
+	}
+
+	@Override
+	public ColumnReferenceQualifier getColumnReferenceQualifier() {
+		return ownerTableGroup;
 	}
 }

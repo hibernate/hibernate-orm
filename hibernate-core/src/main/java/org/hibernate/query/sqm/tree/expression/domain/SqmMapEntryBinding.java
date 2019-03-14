@@ -9,7 +9,9 @@ package org.hibernate.query.sqm.tree.expression.domain;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import org.hibernate.metamodel.model.domain.spi.PluralValuedNavigable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
@@ -21,18 +23,22 @@ import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
  * @author Steve Ebersole
  */
 public class SqmMapEntryBinding implements SqmExpression, ExpressableType {
-	private final SqmPluralAttributeReference attributeBinding;
+	private final SqmPath mapPath;
 	private final BasicJavaDescriptor<Map.Entry> mapEntryTypeDescriptor;
 
 	public SqmMapEntryBinding(
-			SqmPluralAttributeReference attributeBinding,
+			SqmPath mapPath,
 			BasicJavaDescriptor<Map.Entry> mapEntryTypeDescriptor) {
-		this.attributeBinding = attributeBinding;
+		this.mapPath = mapPath;
 		this.mapEntryTypeDescriptor = mapEntryTypeDescriptor;
 	}
 
-	public SqmPluralAttributeReference getAttributeAttributeReference() {
-		return attributeBinding;
+	public SqmPath getMapPath() {
+		return mapPath;
+	}
+
+	public PluralValuedNavigable getMapNavigable() {
+		return mapPath.as( PluralValuedNavigable.class );
 	}
 
 	@Override
@@ -57,7 +63,7 @@ public class SqmMapEntryBinding implements SqmExpression, ExpressableType {
 
 	@Override
 	public String asLoggableText() {
-		return "MAP_ENTRY(" + attributeBinding.asLoggableText() + ")";
+		return "MAP_ENTRY(" + getMapNavigable().asLoggableText() + ")";
 	}
 
 	@Override

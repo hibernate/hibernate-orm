@@ -18,10 +18,10 @@ import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.SqlAstNode;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**
  * Group together {@link TableReference} references related to a single entity or
@@ -29,11 +29,7 @@ import org.hibernate.sql.results.spi.DomainResultProducer;
  *
  * @author Steve Ebersole
  */
-public interface TableGroup extends SqlAstNode, DomainResultProducer, ColumnReferenceQualifier, Loggable {
-	NavigablePath getNavigablePath();
-
-	Navigable<?> getNavigable();
-
+public interface TableGroup extends SqlAstNode, NavigableReference, ColumnReferenceQualifier, Loggable {
 	LockMode getLockMode();
 
 	Set<TableGroupJoin> getTableGroupJoins();
@@ -70,7 +66,13 @@ public interface TableGroup extends SqlAstNode, DomainResultProducer, ColumnRefe
 		sqlTreeWalker.visitTableGroup( this );
 	}
 
-	default NavigableReference getNavigableReference() {
-		throw new UnsupportedOperationException(  );
+	@Override
+	default NavigableContainerReference getNavigableContainerReference() {
+		return null;
+	}
+
+	@Override
+	default ColumnReferenceQualifier getColumnReferenceQualifier() {
+		return this;
 	}
 }

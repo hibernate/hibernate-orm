@@ -367,5 +367,4 @@ public class EmbeddedTypeDescriptorImpl<J>
 	public String toString() {
 		return getNavigableRole().getFullPath();
 	}
-
 }

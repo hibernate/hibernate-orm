@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.produce;
 
 import java.util.function.Function;
 
+import org.hibernate.Incubating;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -19,6 +20,7 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
  * @author Andrea Boriero
  * @author Steve Ebersole
  */
+@Incubating
 public interface SqmPathRegistry {
 	void register(SqmPath sqmPath);
 	void register(NavigablePath alternatePath, SqmPath sqmPath);

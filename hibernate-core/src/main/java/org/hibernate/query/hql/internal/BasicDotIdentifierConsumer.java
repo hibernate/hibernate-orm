@@ -47,6 +47,11 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 		this.processingStateSupplier = processingStateSupplier;
 	}
 
+	public BasicDotIdentifierConsumer(SemanticPathPart initialState, Supplier<SqmCreationProcessingState> processingStateSupplier) {
+		this.currentPart = initialState;
+		this.processingStateSupplier = processingStateSupplier;
+	}
+
 	@Override
 	public SemanticPathPart getConsumedPart() {
 		return currentPart;
@@ -82,7 +87,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 		);
 	}
 
-	private void reset() {
+	protected void reset() {
 		pathSoFar = null;
 		currentPart = new BaseLocalSequencePart();
 	}

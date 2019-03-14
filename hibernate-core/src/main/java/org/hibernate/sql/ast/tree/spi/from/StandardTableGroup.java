@@ -16,6 +16,7 @@ import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 
 /**
@@ -25,6 +26,8 @@ public class StandardTableGroup extends AbstractTableGroup {
 	private final TableReference primaryTableReference;
 	private final List<TableReferenceJoin> tableReferenceJoins;
 
+	private final ColumnReferenceQualifier additionalQualifier;
+
 	public StandardTableGroup(
 			String uid,
 			NavigablePath navigablePath,
@@ -32,9 +35,22 @@ public class StandardTableGroup extends AbstractTableGroup {
 			LockMode lockMode,
 			TableReference primaryTableReference,
 			List<TableReferenceJoin> tableReferenceJoins) {
+		this( uid, navigablePath, navigable, lockMode, primaryTableReference, tableReferenceJoins, null );
+	}
+
+	public StandardTableGroup(
+			String uid,
+			NavigablePath navigablePath,
+			Navigable navigable,
+			LockMode lockMode,
+			TableReference primaryTableReference,
+			List<TableReferenceJoin> tableReferenceJoins,
+			ColumnReferenceQualifier additionalQualifier) {
 		super( uid, navigablePath, navigable, lockMode );
+
 		this.primaryTableReference = primaryTableReference;
 		this.tableReferenceJoins = tableReferenceJoins;
+		this.additionalQualifier = additionalQualifier;
 	}
 
 	@Override
@@ -70,7 +86,7 @@ public class StandardTableGroup extends AbstractTableGroup {
 //			}
 //		}
 
-		if( tableReferenceJoins != null ) {
+		if ( tableReferenceJoins != null ) {
 			for ( TableReferenceJoin tableJoin : tableReferenceJoins ) {
 				if ( tableJoin.getJoinedTableReference().getTable() == table ) {
 					return tableJoin.getJoinedTableReference();
@@ -78,14 +94,26 @@ public class StandardTableGroup extends AbstractTableGroup {
 			}
 		}
 
+		if ( additionalQualifier != null ) {
+			return additionalQualifier.locateTableReference( table );
+		}
+
 		return null;
 //		throw new IllegalStateException( "Could not resolve binding for table : " + table );
 	}
 
 	@Override
-	public ColumnReference locateColumnReferenceByName(String name) {
+	public ColumnReference resolveColumnReference(Column column) {
+		return super.resolveColumnReference( column );
+	}
+
+	@Override
+	public Column resolveColumn(String name) {
+		// check the primary table first
 		Column column = getPrimaryTableReference().getTable().getColumn( name );
+
 		if ( column == null ) {
+			// not found - check joined tables
 			for ( TableReferenceJoin join : getTableReferenceJoins() ) {
 				column = join.getJoinedTableReference().getTable().getColumn( name );
 				if ( column != null ) {
@@ -93,6 +121,17 @@ public class StandardTableGroup extends AbstractTableGroup {
 				}
 			}
 		}
+
+		if ( column == null && additionalQualifier != null ) {
+			column = additionalQualifier.resolveColumn( name );
+		}
+
+		return column;
+	}
+
+	@Override
+	public ColumnReference locateColumnReferenceByName(String name) {
+		final Column column = resolveColumn( name );
 
 		if ( column == null ) {
 			return null;

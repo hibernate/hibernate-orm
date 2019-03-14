@@ -13,8 +13,8 @@ import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.SqmCreationHelper;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
-import org.hibernate.query.sqm.tree.expression.domain.SqmAttributeReference;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
@@ -37,7 +37,7 @@ public class SqmNavigableJoin
 	public SqmNavigableJoin(
 			String uid,
 			SqmFrom lhs,
-			NavigableContainer joinedNavigable,
+			Joinable joinedNavigable,
 			String alias,
 			SqmJoinType joinType,
 			boolean fetched,
@@ -62,8 +62,9 @@ public class SqmNavigableJoin
 		return lhs;
 	}
 
-	public SqmAttributeReference getAttributeReference() {
-		return (SqmAttributeReference) getReferencedNavigable();
+	@Override
+	public Joinable<?> getReferencedNavigable() {
+		return (Joinable<?>) super.getReferencedNavigable();
 	}
 
 	@Override

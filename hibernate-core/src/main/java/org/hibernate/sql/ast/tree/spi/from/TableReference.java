@@ -78,6 +78,16 @@ public class TableReference implements SqlAstNode, ColumnReferenceQualifier, Log
 	}
 
 	@Override
+	public ColumnReference resolveColumnReference(String columnName) {
+		return resolveColumnReference( getTable().getColumn( columnName ) );
+	}
+
+	@Override
+	public Column resolveColumn(String columnName) {
+		return getTable().getColumn( columnName );
+	}
+
+	@Override
 	public void accept(SqlAstWalker  sqlTreeWalker) {
 		sqlTreeWalker.visitTableReference( this );
 	}

@@ -21,9 +21,11 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMapEntryBinding;
 import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -262,13 +264,16 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
 
-		final SqmMapEntryBinding sqmMapEntryBinding = TestingUtil.cast(
-				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
-				SqmMapEntryBinding.class
-		);
+		final SqmSelectableNode selectableNode = statement.getQuerySpec()
+				.getSelectClause()
+				.getSelections()
+				.get( 0 )
+				.getSelectableNode();
 
-		assertThat( sqmMapEntryBinding.getAttributeAttributeReference().getExportedFromElement(), notNullValue() );
-		assertThat( sqmMapEntryBinding.getAttributeAttributeReference().getExportedFromElement().getIdentificationVariable(), is( "m") );
+		final SqmFrom sqmMapEntryBinding = TestingUtil.cast( selectableNode, SqmFrom.class );
+
+		assertThat( sqmMapEntryBinding, notNullValue() );
+		assertThat( sqmMapEntryBinding.getExplicitAlias(), is( "m") );
 
 		assertThat( sqmMapEntryBinding.getJavaTypeDescriptor().getJavaType(), is( equalTo( Map.Entry.class ) ) );
 	}

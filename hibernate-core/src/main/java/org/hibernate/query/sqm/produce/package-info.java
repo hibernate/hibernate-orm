@@ -12,7 +12,7 @@
  *
  * This package defines support for producing SQM trees (see {@link org.hibernate.query.sqm.tree}).
  * The main entry point into producing an SQM tree is
- * {@link org.hibernate.query.sqm.produce.spi.SemanticQueryProducer}, which
+ * {@link org.hibernate.query.sqm.produce.SemanticQueryProducer}, which
  * can be obtained via
  * {@link org.hibernate.query.spi.QueryEngine} which in turn is obtained via
  * {@link org.hibernate.engine.spi.SessionFactoryImplementor#getQueryEngine()}.
@@ -21,7 +21,7 @@
  * == From HQL/JPQL
  *
  * `SemanticQueryProducer` defines just a single method for producing SQM based on HQL:
- * {@link org.hibernate.query.sqm.produce.spi.SemanticQueryProducer#interpret}.
+ * {@link org.hibernate.query.sqm.produce.SemanticQueryProducer#interpret}.
  * See {@link org.hibernate.query.hql.internal} for details
  *
  *

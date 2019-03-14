@@ -6,10 +6,12 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression.domain;
 
+import org.hibernate.annotations.Remove;
 import org.hibernate.internal.util.Loggable;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
@@ -23,14 +25,14 @@ import org.hibernate.sql.results.spi.DomainResultProducer;
  * @author Steve Ebersole
  */
 public interface NavigableReference extends DomainResultProducer, Loggable {
+	NavigablePath getNavigablePath();
 
-	// todo (6.0) : I think it might be better to distinguish NavigableReference based on "classification".
-	//		E.g.:
-	//			* BasicValuedNavigableReference (basic attributes, simple ids, "element collection" elements, etc)
-	//			* EntityValuedNavigableReference (root reference, many-to-one, one-to-one, elements of one-to-many, etc)
-	//			* CompositeValuedNavigableReference (embedded, composite ids, etc)
-	//			* AnyValuedNavigableReference (any, many-to-any, etc)
-
+	/**
+	 * Get the Navigable referenced by this expression
+	 *
+	 * @return The Navigable
+	 */
+	Navigable getNavigable();
 
 
 	@Override
@@ -40,20 +42,25 @@ public interface NavigableReference extends DomainResultProducer, Loggable {
 	}
 
 	/**
-	 * Get the Navigable referenced by this expression
-	 *
-	 * @return The Navigable
-	 */
-	Navigable getNavigable();
-
-	NavigablePath getNavigablePath();
-
-	/**
 	 * Corollary to {@link Navigable#getContainer()} on the reference/expression side
 	 */
-	NavigableContainerReference getNavigableContainerReference();
+	@Deprecated
+	@Remove
+	default NavigableContainerReference getNavigableContainerReference() {
+		throw new UnsupportedOperationException(  );
+	}
 
+	/**
+	 * @deprecated Prefer {@link #getAssociatedTableGroup()} instead
+	 * @return
+	 */
+	@Deprecated
+	@Remove
 	ColumnReferenceQualifier getColumnReferenceQualifier();
+
+	default TableGroup getAssociatedTableGroup() {
+		return (TableGroup) getColumnReferenceQualifier();
+	}
 
 	@Override
 	default DomainResult createDomainResult(

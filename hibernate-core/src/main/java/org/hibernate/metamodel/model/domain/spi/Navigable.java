@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.function.BiConsumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -136,5 +137,20 @@ public interface Navigable<T> extends DomainTypeDescriptor<T> {
 			ColumnReferenceQualifier qualifier,
 			SqlAstCreationState creationState) {
 		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	default <X> X as(Class<X> type) {
+		if ( type.isInstance( this ) ) {
+			return (X) this;
+		}
+
+		throw new UnsupportedOperationException(
+				String.format(
+						Locale.ROOT,
+						"`%s` cannot be treated as `%s`",
+						getClass().getName(),
+						type.getName()
+				)
+		);
 	}
 }

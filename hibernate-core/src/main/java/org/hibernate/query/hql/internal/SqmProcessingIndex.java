@@ -18,6 +18,7 @@ import org.hibernate.query.sqm.AliasCollisionException;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
 import org.hibernate.query.sqm.produce.SqmPathRegistry;
+import org.hibernate.query.sqm.produce.SqmTreeCreationLogger;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
@@ -43,6 +44,8 @@ public class SqmProcessingIndex implements SqmPathRegistry {
 
 	@Override
 	public void register(SqmPath sqmPath) {
+		SqmTreeCreationLogger.LOGGER.tracef( "#register(SqmPath) : %s", sqmPath );
+
 		// Generally we:
 		//		1) add the path to the path-by-path map
 		//		2) if the path is a from, we add it to the from-by-path map
@@ -105,10 +108,15 @@ public class SqmProcessingIndex implements SqmPathRegistry {
 
 	@Override
 	public void register(NavigablePath alternatePath, SqmPath sqmPath) {
+		SqmTreeCreationLogger.LOGGER.tracef( "#register(NavigablePath, SqmPath) : %s -> %s", sqmPath.getNavigablePath(), sqmPath );
+
+		// NOTE : this is not always (ever)
 		final SqmPath previousPath = sqmPathByPath.put( alternatePath, sqmPath );
 
 		if ( previousPath != null ) {
-			// this should never happen
+			// this should never happen, however its "ok" if:
+			//		1) incoming SqmPath is a SqmFrom
+			//		2) previous SqmPath is not
 			throw new ParsingException(
 					String.format(
 							Locale.ROOT,
@@ -192,15 +200,17 @@ public class SqmProcessingIndex implements SqmPathRegistry {
 	}
 
 	@Override
-	public SqmPath resolvePath(NavigablePath path, Function<NavigablePath, SqmPath> creator) {
-		return sqmPathByPath.computeIfAbsent(
-				path,
-				navigablePath -> {
-					final SqmPath sqmPath = creator.apply( navigablePath );
-					register( sqmPath );
-					return sqmPath;
-				}
-		);
+	public SqmPath resolvePath(NavigablePath navigablePath, Function<NavigablePath, SqmPath> creator) {
+		SqmTreeCreationLogger.LOGGER.tracef( "#resolvePath(NavigablePath) : %s", navigablePath );
+
+		final SqmPath existing = sqmPathByPath.get( navigablePath );
+		if ( existing != null ) {
+			return existing;
+		}
+
+		final SqmPath sqmPath = creator.apply( navigablePath );
+		register( sqmPath );
+		return sqmPath;
 	}
 
 	private boolean definesAttribute(NavigableContainer containerType, String name) {

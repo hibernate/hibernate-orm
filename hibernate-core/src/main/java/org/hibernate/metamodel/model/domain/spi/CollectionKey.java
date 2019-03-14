@@ -19,6 +19,7 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.internal.ForeignKeyDomainResult;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sql.internal.ResolvedScalarDomainResult;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -95,6 +96,21 @@ public class CollectionKey<T> implements Navigable<T> {
 			foreignKeyTargetNavigable = ( (NavigableContainer) collectionDescriptor.getElementDescriptor() ).findNavigable(
 					collectionDescriptor.getMappedByProperty() );
 		}
+	}
+
+	@Override
+	public DomainResult createDomainResult(
+			NavigablePath navigablePath,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		final NavigablePath tableGroupPath = navigablePath.getParent() == null
+				? navigablePath
+				: navigablePath.getParent();
+
+		return createCollectionResult(
+				creationState.getFromClauseAccess().getTableGroup( tableGroupPath ),
+				creationState
+		);
 	}
 
 	private DomainResult createDomainResult(

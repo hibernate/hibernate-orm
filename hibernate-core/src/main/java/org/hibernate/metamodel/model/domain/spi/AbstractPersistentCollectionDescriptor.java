@@ -113,6 +113,7 @@ import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.results.DomainResultCreationException;
 import org.hibernate.sql.results.internal.domain.collection.CollectionFetchImpl;
 import org.hibernate.sql.results.internal.domain.collection.CollectionInitializerProducer;
+import org.hibernate.sql.results.internal.domain.collection.CollectionResultImpl;
 import org.hibernate.sql.results.internal.domain.collection.DelayedCollectionFetch;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
@@ -668,17 +669,27 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 			NavigablePath navigablePath,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		// NOTE : "selecting the collection" really means selecting its elements...
+		final LockMode lockMode = creationState.determineLockMode( resultVariable );
+		return new CollectionResultImpl(
+				attribute,
+				navigablePath,
+				resultVariable,
+				lockMode,
+				getCollectionKeyDescriptor().createDomainResult(
+						navigablePath.append( "{key}" ),
+						null,
+						creationState
+				),
+				createInitializerProducer(
+						navigablePath,
+						null,
+						true,
+						resultVariable,
+						lockMode,
+						creationState
+				)
 
-		final NavigablePath elementPath = navigablePath.append( CollectionElement.NAVIGABLE_NAME );
-
-		// associate the collection TableGroup with the elements path
-		creationState.getFromClauseAccess().resolveTableGroup(
-				elementPath,
-				np -> creationState.getFromClauseAccess().getTableGroup( navigablePath )
 		);
-
-		return getElementDescriptor().createDomainResult( elementPath, resultVariable, creationState );
 	}
 
 	@Override

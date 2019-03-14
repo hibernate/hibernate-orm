@@ -29,7 +29,6 @@ import org.hibernate.sql.ast.tree.spi.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.AbstractTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
@@ -309,11 +308,6 @@ public abstract class AbstractTableBasedHandler implements Handler {
 		}
 
 		@Override
-		public NavigableReference getNavigableReference() {
-			throw new UnsupportedOperationException( "IdTable cannot be used as an Expression" );
-		}
-
-		@Override
 		public void render(SqlAppender sqlAppender, SqlAstWalker walker) {
 			renderTableReference( getPrimaryTableReference(), sqlAppender, walker );
 		}
@@ -321,6 +315,11 @@ public abstract class AbstractTableBasedHandler implements Handler {
 		@Override
 		public void applyAffectedTableNames(Consumer<String> nameCollector) {
 			nameCollector.accept( idTableReference.getTable().getTableExpression() );
+		}
+
+		@Override
+		public Column resolveColumn(String columnName) {
+			return idTableReference.resolveColumn( columnName );
 		}
 	}
 }

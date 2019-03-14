@@ -9,20 +9,15 @@ package org.hibernate.sql.results.spi;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 import org.hibernate.LockMode;
-import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.internal.util.collections.EmptyStack;
-import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.produce.SqlAstCreationLogger;
-import org.hibernate.sql.ast.produce.SqlTreeException;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.produce.spi.FromClauseAccess;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.results.internal.values.JdbcValues;
 
@@ -60,6 +55,12 @@ public interface DomainResultCreationState {
 	 * whether the values for the generated assembler/initializers are or should be available in
 	 * the {@link JdbcValues} being processed.  For {@link org.hibernate.engine.FetchTiming#DELAYED} this
 	 * parameter has no effect
+	 *
+	 * todo (6.0) : wrt the "trickiness" of `selected[1]`, that may no longer be an issue given how TableGroups
+	 * 		are built/accessed.  Comes down to how we'd know whether to join fetch or select fetch.  Simply pass
+	 * 		along FetchStyle?
+	 *
+	 *
 	 */
 	List<Fetch> visitFetches(FetchParent fetchParent);
 
@@ -67,51 +68,6 @@ public interface DomainResultCreationState {
 	// todo (6.0) : better to define FromClauseAccess on SqlAstCreationState?
 
 	FromClauseAccess getFromClauseAccess();
-
-	interface FromClauseAccess {
-		default TableGroup findTableGroup(NavigablePath navigablePath) {
-			throw new NotYetImplementedFor6Exception();
-		}
-
-		default TableGroup getTableGroup(NavigablePath navigablePath) {
-			final TableGroup tableGroup = findTableGroup( navigablePath );
-			if ( tableGroup == null ) {
-				throw new SqlTreeException( "Could not locate TableGroup - " + navigablePath );
-			}
-			return tableGroup;
-		}
-
-		default TableGroup locateTableGroup(NavigablePath navigablePath) {
-			NavigablePath navigablePathToCheck = navigablePath;
-
-			while ( navigablePathToCheck != null ) {
-				final TableGroup tableGroup = findTableGroup( navigablePathToCheck );
-				if ( tableGroup != null ) {
-					return tableGroup;
-				}
-
-				navigablePathToCheck = navigablePathToCheck.getParent();
-			}
-
-			return null;
-
-		}
-
-		default void registerTableGroup(NavigablePath navigablePath, TableGroup tableGroup) {
-			throw new NotYetImplementedFor6Exception();
-		}
-
-		default TableGroup resolveTableGroup(
-				NavigablePath navigablePath,
-				Function<NavigablePath, TableGroup> creator) {
-			TableGroup tableGroup = findTableGroup( navigablePath );
-			if ( tableGroup == null ) {
-				tableGroup = creator.apply( navigablePath );
-				registerTableGroup( navigablePath, tableGroup );
-			}
-			return tableGroup;
-		}
-	}
 
 	class SimpleFromClauseAccessImpl implements FromClauseAccess {
 		private final Map<NavigablePath, TableGroup> tableGroupMap = new HashMap<>();

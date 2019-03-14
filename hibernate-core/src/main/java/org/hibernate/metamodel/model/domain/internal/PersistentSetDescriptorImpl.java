@@ -15,8 +15,10 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.internal.collection.SqlAstHelper;
 import org.hibernate.metamodel.model.domain.spi.AbstractPersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.AbstractPluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
@@ -65,8 +67,10 @@ public class PersistentSetDescriptorImpl<O,E> extends AbstractPersistentCollecti
 		return new SetInitializerProducer(
 				this,
 				selected,
-				getElementDescriptor().createDomainResult(
-						navigablePath,
+				SqlAstHelper.generateCollectionElementDomainResult(
+						navigablePath.append( CollectionElement.NAVIGABLE_NAME ),
+						getElementDescriptor(),
+						selected,
 						null,
 						creationState
 				)

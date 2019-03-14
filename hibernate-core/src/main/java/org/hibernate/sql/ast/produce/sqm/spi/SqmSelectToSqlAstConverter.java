@@ -23,31 +23,34 @@ import org.hibernate.annotations.Remove;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.domain.SqmDiscriminatorReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmEntityTypedReference;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationTarget;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
+import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.internal.SqlAstSelectDescriptorImpl;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
+import org.hibernate.sql.ast.produce.spi.FromClauseAccess;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.produce.spi.SqlAstSelectDescriptor;
+import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
-import org.hibernate.sql.ast.tree.spi.expression.domain.DiscriminatorReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.BasicValuedNavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.EntityTypeLiteral;
-import org.hibernate.sql.ast.tree.spi.expression.domain.EntityValuedNavigableReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiation;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationNature;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
@@ -201,43 +204,77 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	private Fetch buildFetch(FetchParent fetchParent, Fetchable fetchable) {
+		final NavigablePath fetchablePath = fetchParent.getNavigablePath().append( fetchable.getNavigableName() );
+
 		LockMode lockMode = LockMode.READ;
 		FetchTiming fetchTiming = fetchable.getMappedFetchStrategy().getTiming();
 
-		final SqmNavigableJoin fetchedJoin = findFetchedJoin( fetchParent, fetchable );
-
+		final SqmNavigableJoin fetchedJoin = getFromClauseIndex().findFetchedJoinByPath( fetchablePath );
 		final String alias;
 		boolean joined;
+
 		if ( fetchedJoin != null ) {
+			// there was an explicit fetch in the SQM
+			//		there should be a TableGroupJoin registered n SqmJoin registered for this `fetchablePath` already
+			//		because it
+			assert getFromClauseIndex().getTableGroup( fetchablePath ) != null;
+
 			fetchTiming = FetchTiming.IMMEDIATE;
 			joined = true;
-
-			lockMode = getQueryOptions().getLockOptions().getEffectiveLockMode(
-					fetchedJoin.getIdentificationVariable()
-			);
-
 			alias = fetchedJoin.getIdentificationVariable();
+			lockMode = determineLockMode( alias );
 		}
 		else {
+			// there was not an explicit fetch in the SQM
+
 			// todo (6.0) : account for EntityGraph
+			//		it would adjust:
+			//			* fetchTiming - make it IMMEDIATE
+			//
+			// todo (6.0) : how to handle
+			//			* joined ? - sh
 
+			// `joined` is really just FetchStrategy right?
 
-			// Note that legacy Hibernate behavior for HQL processing was to stop here
-			// in terms of defining immediate join fetches - they had to be
-			// explicitly defined in the query (although we did add some support for
-			// using JPA EntityGraphs to influence the fetches to be JPA compliant)
+			final TableGroup existingJoinedGroup = getFromClauseIndex().findTableGroup( fetchablePath );
+			if ( existingJoinedGroup !=  null ) {
+				// we can use this to trigger the fetch from the joined group.
+
+				// todo (6.0) : do we want to do this though?
+				//  	On the positive side it would allow EntityGraph to use the existing TableGroup.  But that ties in
+				//  	to the discussion above regarding how to handle eager and EntityGraph (JOIN versus SELECT).
+				//		Can be problematic if the existing one is restricted
+				//fetchTiming = FetchTiming.IMMEDIATE;
+			}
+			// todo (6.0) : treat `fetchable` as a `TableGroupJoinProducer` and use it to create the `SqmJoin` "on the fly"?
+
 			joined = fetchTiming == FetchTiming.IMMEDIATE && fetchable.getMappedFetchStrategy().getStyle() == FetchStyle.JOIN;
 			alias = null;
-		}
 
-		final Integer maximumFetchDepth = getCreationContext().getMaximumFetchDepth();
-
-		if ( maximumFetchDepth != null ) {
-			if ( fetchDepth == maximumFetchDepth ) {
-				joined = false;
+			if ( fetchable instanceof TableGroupJoinProducer ) {
+				// generate the join
+				final TableGroup lhs = getFromClauseIndex().getTableGroup( fetchParent.getNavigablePath() );
+				( (TableGroupJoinProducer) fetchable ).createTableGroupJoin(
+						null,
+						fetchablePath,
+						lhs,
+						null,
+						JoinType.LEFT,
+						LockMode.NONE,
+						this
+				);
 			}
-			else if ( fetchDepth > maximumFetchDepth ) {
-				return null;
+
+			// lastly, account for any app-defined max-fetch-depth
+			final Integer maxDepth = getCreationContext().getMaximumFetchDepth();
+			if ( maxDepth != null ) {
+				if ( fetchDepth == maxDepth ) {
+					joined = false;
+				}
+				else if ( fetchDepth > maxDepth ) {
+					joined = false;
+					return null;
+				}
 			}
 		}
 
@@ -283,9 +320,7 @@ public class SqmSelectToSqlAstConverter
 
 		if ( explicitFetchJoins != null ) {
 			for ( SqmNavigableJoin explicitFetchJoin : explicitFetchJoins ) {
-				final String fetchedAttributeName = explicitFetchJoin.getAttributeReference()
-						.getReferencedNavigable()
-						.getAttributeName();
+				final String fetchedAttributeName = explicitFetchJoin.getReferencedNavigable().getNavigableName();
 				if ( fetchable.getNavigableName().equals( fetchedAttributeName ) ) {
 					if ( explicitFetchJoin.isFetched() ) {
 						return explicitFetchJoin;
@@ -350,12 +385,13 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	@Override
-	public Expression visitDiscriminatorReference(SqmDiscriminatorReference expression) {
-		final SqmEntityTypedReference binding = expression.getSourceReference();
-		final TableGroup resolvedTableGroup = getFromClauseIndex().findResolvedTableGroup( binding.getExportedFromElement() );
-		final EntityValuedNavigableReference entityReference = (EntityValuedNavigableReference) resolvedTableGroup.getNavigableReference();
-
-		return new DiscriminatorReference( entityReference );
+	public NavigableReference visitDiscriminatorReference(SqmDiscriminatorReference expression) {
+		final TableGroup entityTableGroup = getFromClauseIndex().getTableGroup( expression.getNavigablePath().getParent() );
+		return new BasicValuedNavigableReference(
+				expression.getNavigablePath(),
+				( (EntityValuedNavigable) entityTableGroup.getNavigable() ).getEntityDescriptor().getHierarchy().getDiscriminatorDescriptor(),
+				this
+		);
 	}
 
 	@Override

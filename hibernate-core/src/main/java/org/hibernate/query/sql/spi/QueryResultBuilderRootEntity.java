@@ -127,6 +127,10 @@ public class QueryResultBuilderRootEntity
 		);
 	}
 
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ColumnReferenceQualifier
+
 	@Override
 	public String getUniqueIdentifier() {
 		return tableAlias;
@@ -139,6 +143,16 @@ public class QueryResultBuilderRootEntity
 
 	@Override
 	public ColumnReference resolveColumnReference(Column column) {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public ColumnReference resolveColumnReference(String columnName) {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public Column resolveColumn(String columnName) {
 		throw new NotYetImplementedFor6Exception();
 	}
 

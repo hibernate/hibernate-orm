@@ -105,7 +105,8 @@ public class ToOneJoinCollectorImpl extends AbstractTableReferenceCollector {
 				attribute,
 				lockMode,
 				getPrimaryTableReference(),
-				getTableReferenceJoins()
+				getTableReferenceJoins(),
+				lhs
 		);
 
 		Predicate predicate = null;

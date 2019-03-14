@@ -38,6 +38,7 @@ import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.internal.SqlAstQuerySpecProcessingStateImpl;
 import org.hibernate.sql.ast.produce.internal.SqlAstSelectDescriptorImpl;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.produce.spi.FromClauseAccess;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
@@ -293,6 +294,11 @@ public abstract class AbstractSelector {
 			@Override
 			public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
 				return aliasBaseGenerator;
+			}
+
+			@Override
+			public FromClauseAccess getFromClauseAccess() {
+				return null;
 			}
 
 			@Override

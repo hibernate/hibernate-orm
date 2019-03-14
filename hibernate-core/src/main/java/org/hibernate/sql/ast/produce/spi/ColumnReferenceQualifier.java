@@ -33,5 +33,10 @@ public interface ColumnReferenceQualifier {
 
 	ColumnReference resolveColumnReference(Column column);
 
+	ColumnReference resolveColumnReference(String columnName);
+
+
+	Column resolveColumn(String columnName);
+
 	Expression qualify(QualifiableSqlExpressable sqlSelectable);
 }

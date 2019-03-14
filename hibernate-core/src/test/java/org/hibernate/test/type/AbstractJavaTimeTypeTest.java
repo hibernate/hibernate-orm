@@ -26,6 +26,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
@@ -255,8 +256,8 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 		}
 
 		protected final boolean isNanosecondPrecisionSupported() {
-			// PostgreSQL apparently doesn't support nanosecond precision correctly
-			return !( dialect instanceof PostgreSQL81Dialect );
+			// Most databases apparently don't support nanosecond precision correctly
+			return dialect instanceof H2Dialect;
 		}
 
 		protected final S add(ZoneId defaultJvmTimeZone, Object ... subClassParameters) {

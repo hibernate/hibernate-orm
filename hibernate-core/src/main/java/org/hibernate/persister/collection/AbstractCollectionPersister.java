@@ -361,7 +361,7 @@ public abstract class AbstractCollectionPersister
 				elementColumnIsGettable[j] = true;
 				if ( elementType.isComponentType() ) {
 					// Implements desired behavior specifically for @ElementCollection mappings.
-					elementColumnIsSettable[j] = oneToMany || columnInsertability[j];
+					elementColumnIsSettable[j] = columnInsertability[j];
 				}
 				else {
 					// Preserves legacy non-@ElementCollection behavior

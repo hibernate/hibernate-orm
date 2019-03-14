@@ -14,12 +14,15 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.util.Arrays;
 import java.util.List;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
 
 import org.junit.runners.Parameterized;
@@ -59,18 +62,23 @@ public class LocalTimeTest extends AbstractJavaTimeTypeTest<LocalTime, LocalTime
 				.add( 19, 19, 1, 0, ZONE_UTC_MINUS_8 )
 				.add( 19, 19, 1, 0, ZONE_PARIS )
 				.add( 19, 19, 1, 500, ZONE_PARIS )
-				.add( 0, 0, 0, 0, ZONE_GMT )
-				.add( 0, 0, 0, 0, ZONE_OSLO )
 				.add( 0, 9, 20, 0, ZONE_PARIS )
 				.add( 0, 19, 31, 0, ZONE_AMSTERDAM )
-				.add( 0, 0, 0, 0, ZONE_AMSTERDAM )
-				.addPersistedWithoutHibernate( 1900, 1, 1, 0, 0, 0, 0, ZONE_OSLO )
-				.addPersistedWithoutHibernate( 1900, 1, 2, 0, 9, 21, 0, ZONE_PARIS )
-				.addPersistedWithoutHibernate( 1900, 1, 2, 0, 19, 32, 0, ZONE_AMSTERDAM )
-				.addPersistedWithoutHibernate( 1892, 1, 1, 0, 0, 0, 0, ZONE_OSLO )
-				.addPersistedWithoutHibernate( 1900, 1, 1, 0, 9, 20, 0, ZONE_PARIS )
-				.addPersistedWithoutHibernate( 1900, 1, 1, 0, 19, 31, 0, ZONE_AMSTERDAM )
-				.addPersistedWithoutHibernate( 1600, 1, 1, 0, 0, 0, 0, ZONE_AMSTERDAM )
+				.skippedForDialects(
+						// MySQL/Mariadb cannot store values equal to epoch exactly, or less, in a timestamp.
+						Arrays.asList( MySQLDialect.class, MariaDBDialect.class ),
+						b -> b
+								.add( 0, 0, 0, 0, ZONE_GMT )
+								.add( 0, 0, 0, 0, ZONE_OSLO )
+								.add( 0, 0, 0, 0, ZONE_AMSTERDAM )
+								.addPersistedWithoutHibernate( 1900, 1, 1, 0, 0, 0, 0, ZONE_OSLO )
+								.addPersistedWithoutHibernate( 1900, 1, 2, 0, 9, 21, 0, ZONE_PARIS )
+								.addPersistedWithoutHibernate( 1900, 1, 2, 0, 19, 32, 0, ZONE_AMSTERDAM )
+								.addPersistedWithoutHibernate( 1892, 1, 1, 0, 0, 0, 0, ZONE_OSLO )
+								.addPersistedWithoutHibernate( 1900, 1, 1, 0, 9, 20, 0, ZONE_PARIS )
+								.addPersistedWithoutHibernate( 1900, 1, 1, 0, 19, 31, 0, ZONE_AMSTERDAM )
+								.addPersistedWithoutHibernate( 1600, 1, 1, 0, 0, 0, 0, ZONE_AMSTERDAM )
+				)
 				.build();
 	}
 

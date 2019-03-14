@@ -14,12 +14,15 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Arrays;
 import java.util.List;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
 
 import org.hibernate.testing.TestForIssue;
@@ -44,16 +47,21 @@ public class LocalDateTest extends AbstractJavaTimeTypeTest<LocalDate, LocalDate
 				// Not affected by HHH-13266 (JDK-8061577)
 				.add( 2017, 11, 6, ZONE_UTC_MINUS_8 )
 				.add( 2017, 11, 6, ZONE_PARIS )
-				.add( 1970, 1, 1, ZONE_GMT )
-				.add( 1900, 1, 1, ZONE_GMT )
-				.add( 1900, 1, 1, ZONE_OSLO )
-				.add( 1900, 1, 2, ZONE_PARIS )
-				.add( 1900, 1, 2, ZONE_AMSTERDAM )
-				// Affected by HHH-13266 (JDK-8061577), but only when remapping dates as timestamps
-				.add( 1892, 1, 1, ZONE_OSLO )
-				.add( 1900, 1, 1, ZONE_PARIS )
-				.add( 1900, 1, 1, ZONE_AMSTERDAM )
-				.add( 1600, 1, 1, ZONE_AMSTERDAM )
+				.skippedForDialects(
+						// MySQL/Mariadb cannot store values equal to epoch exactly, or less, in a timestamp.
+						Arrays.asList( MySQLDialect.class, MariaDBDialect.class ),
+						b -> b
+								.add( 1970, 1, 1, ZONE_GMT )
+								.add( 1900, 1, 1, ZONE_GMT )
+								.add( 1900, 1, 1, ZONE_OSLO )
+								.add( 1900, 1, 2, ZONE_PARIS )
+								.add( 1900, 1, 2, ZONE_AMSTERDAM )
+								// Affected by HHH-13266 (JDK-8061577), but only when remapping dates as timestamps
+								.add( 1892, 1, 1, ZONE_OSLO )
+								.add( 1900, 1, 1, ZONE_PARIS )
+								.add( 1900, 1, 1, ZONE_AMSTERDAM )
+								.add( 1600, 1, 1, ZONE_AMSTERDAM )
+				)
 				.build();
 	}
 

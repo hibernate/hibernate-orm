@@ -15,11 +15,15 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.Arrays;
 import java.util.List;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+
+import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.MySQLDialect;
 
 import org.junit.runners.Parameterized;
 
@@ -45,18 +49,23 @@ public class InstantTest extends AbstractJavaTimeTypeTest<Instant, InstantTest.E
 				.add( 2017, 11, 6, 19, 19, 1, 0, ZONE_UTC_MINUS_8 )
 				.add( 2017, 11, 6, 19, 19, 1, 0, ZONE_PARIS )
 				.add( 2017, 11, 6, 19, 19, 1, 500, ZONE_PARIS )
-				.add( 1970, 1, 1, 0, 0, 0, 0, ZONE_GMT )
-				.add( 1900, 1, 1, 0, 0, 0, 0, ZONE_GMT )
-				.add( 1900, 1, 1, 0, 0, 0, 0, ZONE_OSLO )
-				.add( 1900, 1, 1, 0, 0, 0, 0, ZONE_PARIS )
-				.add( 1900, 1, 2, 0, 9, 21, 0, ZONE_PARIS )
-				.add( 1900, 1, 1, 0, 0, 0, 0, ZONE_AMSTERDAM )
-				.add( 1900, 1, 2, 0, 19, 32, 0, ZONE_AMSTERDAM )
-				// Affected by HHH-13266 (JDK-8061577)
-				.add( 1892, 1, 1, 0, 0, 0, 0, ZONE_OSLO )
-				.add( 1899, 12, 31, 23, 59, 59, 999_999_999, ZONE_PARIS )
-				.add( 1899, 12, 31, 23, 59, 59, 999_999_999, ZONE_AMSTERDAM )
-				.add( 1600, 1, 1, 0, 0, 0, 0, ZONE_AMSTERDAM )
+				.skippedForDialects(
+						// MySQL/Mariadb cannot store values equal to epoch exactly, or less, in a timestamp.
+						Arrays.asList( MySQLDialect.class, MariaDBDialect.class ),
+						b -> b
+								.add( 1970, 1, 1, 0, 0, 0, 0, ZONE_GMT )
+								.add( 1900, 1, 1, 0, 0, 0, 0, ZONE_GMT )
+								.add( 1900, 1, 1, 0, 0, 0, 0, ZONE_OSLO )
+								.add( 1900, 1, 1, 0, 0, 0, 0, ZONE_PARIS )
+								.add( 1900, 1, 2, 0, 9, 21, 0, ZONE_PARIS )
+								.add( 1900, 1, 1, 0, 0, 0, 0, ZONE_AMSTERDAM )
+								.add( 1900, 1, 2, 0, 19, 32, 0, ZONE_AMSTERDAM )
+								// Affected by HHH-13266 (JDK-8061577)
+								.add( 1892, 1, 1, 0, 0, 0, 0, ZONE_OSLO )
+								.add( 1899, 12, 31, 23, 59, 59, 999_999_999, ZONE_PARIS )
+								.add( 1899, 12, 31, 23, 59, 59, 999_999_999, ZONE_AMSTERDAM )
+								.add( 1600, 1, 1, 0, 0, 0, 0, ZONE_AMSTERDAM )
+				)
 				.build();
 	}
 

@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import javax.persistence.Basic;
@@ -22,6 +23,8 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.Query;
+import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.type.OffsetDateTimeType;
 
 import org.hibernate.testing.TestForIssue;
@@ -68,22 +71,27 @@ public class OffsetDateTimeTest extends AbstractJavaTimeTypeTest<OffsetDateTime,
 				.add( 2017, 11, 6, 19, 19, 1, 0, "-02:00", ZONE_PARIS )
 				.add( 2017, 11, 6, 19, 19, 1, 0, "-06:00", ZONE_PARIS )
 				.add( 2017, 11, 6, 19, 19, 1, 0, "-08:00", ZONE_PARIS )
-				.add( 1970, 1, 1, 0, 0, 0, 0, "+01:00", ZONE_GMT )
-				.add( 1970, 1, 1, 0, 0, 0, 0, "+00:00", ZONE_GMT )
-				.add( 1970, 1, 1, 0, 0, 0, 0, "-01:00", ZONE_GMT )
-				.add( 1900, 1, 1, 0, 0, 0, 0, "+01:00", ZONE_GMT )
-				.add( 1900, 1, 1, 0, 0, 0, 0, "+00:00", ZONE_GMT )
-				.add( 1900, 1, 1, 0, 0, 0, 0, "-01:00", ZONE_GMT )
-				.add( 1900, 1, 1, 0, 0, 0, 0, "+00:00", ZONE_OSLO )
-				.add( 1900, 1, 1, 0, 9, 21, 0, "+00:09:21", ZONE_PARIS )
-				.add( 1900, 1, 1, 0, 19, 32, 0, "+00:19:32", ZONE_PARIS )
-				.add( 1900, 1, 1, 0, 19, 32, 0, "+00:19:32", ZONE_AMSTERDAM )
-				// Affected by HHH-13266
-				.add( 1892, 1, 1, 0, 0, 0, 0, "+00:00", ZONE_OSLO )
-				.add( 1900, 1, 1, 0, 9, 20, 0, "+00:09:21", ZONE_PARIS )
-				.add( 1900, 1, 1, 0, 19, 31, 0, "+00:19:32", ZONE_PARIS )
-				.add( 1900, 1, 1, 0, 19, 31, 0, "+00:19:32", ZONE_AMSTERDAM )
-				.add( 1600, 1, 1, 0, 0, 0, 0, "+00:19:32", ZONE_AMSTERDAM )
+				.skippedForDialects(
+						// MySQL/Mariadb cannot store values equal to epoch exactly, or less, in a timestamp.
+						Arrays.asList( MySQLDialect.class, MariaDBDialect.class ),
+						b -> b
+								.add( 1970, 1, 1, 0, 0, 0, 0, "+01:00", ZONE_GMT )
+								.add( 1970, 1, 1, 0, 0, 0, 0, "+00:00", ZONE_GMT )
+								.add( 1970, 1, 1, 0, 0, 0, 0, "-01:00", ZONE_GMT )
+								.add( 1900, 1, 1, 0, 0, 0, 0, "+01:00", ZONE_GMT )
+								.add( 1900, 1, 1, 0, 0, 0, 0, "+00:00", ZONE_GMT )
+								.add( 1900, 1, 1, 0, 0, 0, 0, "-01:00", ZONE_GMT )
+								.add( 1900, 1, 1, 0, 0, 0, 0, "+00:00", ZONE_OSLO )
+								.add( 1900, 1, 1, 0, 9, 21, 0, "+00:09:21", ZONE_PARIS )
+								.add( 1900, 1, 1, 0, 19, 32, 0, "+00:19:32", ZONE_PARIS )
+								.add( 1900, 1, 1, 0, 19, 32, 0, "+00:19:32", ZONE_AMSTERDAM )
+								// Affected by HHH-13266
+								.add( 1892, 1, 1, 0, 0, 0, 0, "+00:00", ZONE_OSLO )
+								.add( 1900, 1, 1, 0, 9, 20, 0, "+00:09:21", ZONE_PARIS )
+								.add( 1900, 1, 1, 0, 19, 31, 0, "+00:19:32", ZONE_PARIS )
+								.add( 1900, 1, 1, 0, 19, 31, 0, "+00:19:32", ZONE_AMSTERDAM )
+								.add( 1600, 1, 1, 0, 0, 0, 0, "+00:19:32", ZONE_AMSTERDAM )
+				)
 				.build();
 	}
 

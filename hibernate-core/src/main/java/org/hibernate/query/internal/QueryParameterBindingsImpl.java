@@ -547,6 +547,9 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 		for ( Map.Entry<QueryParameter, QueryParameterListBinding> entry : parameterListBindingMap.entrySet() ) {
 			final NamedParameterDescriptor sourceParam = (NamedParameterDescriptor) entry.getKey();
+			//HHH-13319
+			parameterBindingMap.entrySet()
+                    		.removeIf(e->e.getKey().getName().startsWith(( sourceParam.isJpaPositionalParameter() ? 'x' : "" ) + sourceParam.getName()+"_"));
 			final Collection bindValues = entry.getValue().getBindValues();
 
 			int bindValueCount = bindValues.size();

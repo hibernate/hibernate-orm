@@ -17,12 +17,22 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
 
+import org.hibernate.dialect.H2Dialect;
+
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.RequiresDialect;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Rabin Banerjee
  */
+@TestForIssue( jiraKey = "HHH-13319" )
+@RequiresDialect(H2Dialect.class)
 public class NativeQueryParameterUpdateTest extends BaseEntityManagerFunctionalTestCase {
+
+	public static final int MAX_COUNT = 20;
 
 	@Override
 	public Class[] getAnnotatedClasses() {
@@ -31,21 +41,34 @@ public class NativeQueryParameterUpdateTest extends BaseEntityManagerFunctionalT
 		};
 	}
 
+	@Override
+	protected void afterEntityManagerFactoryBuilt() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			for ( int i = 0; i < MAX_COUNT; i++ ) {
+				Person person = new Person();
+				person.setId( i );
+				person.setName( String.format( "Person nr %d", i ) );
+
+				entityManager.persist( person );
+			}
+		} );
+	}
+
 	@Test
 	public void testhhh13319() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Query query = entityManager.createNativeQuery(
 				"SELECT * from person where id in (:ids)");
-			query.setParameter("ids",Arrays.asList(1,2,5,10));
-			query.getResultList();
+			query.setParameter("ids",Arrays.asList(1,2,3,4));
+			assertEquals(query.getResultList().size(),4);
 			
 			//Now query with another set of ids having more length than last
-			query.setParameter("ids",Arrays.asList(15,278,58,110,98,53,29,25));
-			query.getResultList();
+			query.setParameter("ids",Arrays.asList(6,7,8,9,10,11,12,13));
+			assertEquals(query.getResultList().size(),8);
 
 			//Now query with another set of ids having less length than last
-			query.setParameter("ids",Arrays.asList(91,26));
-			query.getResultList();
+			query.setParameter("ids",Arrays.asList(14,15));
+			assertEquals(query.getResultList().size(),2);
 		} );
 	}
 

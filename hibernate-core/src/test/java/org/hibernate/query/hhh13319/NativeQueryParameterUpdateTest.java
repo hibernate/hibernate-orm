@@ -12,6 +12,7 @@ import javax.persistence.Table;
 import javax.persistence.Query;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
@@ -24,6 +25,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.RequiresDialect;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Rabin Banerjee
@@ -58,18 +60,43 @@ public class NativeQueryParameterUpdateTest extends BaseEntityManagerFunctionalT
 	public void testhhh13319() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Query query = entityManager.createNativeQuery(
-				"SELECT * from person where id in (:ids)");
-			query.setParameter("ids",Arrays.asList(1,2,3,4));
-			assertEquals(query.getResultList().size(),4);
+				"SELECT * from person where id in (:ids)",Person.class);
+			
+			List<Integer> inp = Arrays.asList(1,2,3,4);
+			doTest(query,inp);			
 			
 			//Now query with another set of ids having more length than last
-			query.setParameter("ids",Arrays.asList(6,7,8,9,10,11,12,13));
-			assertEquals(query.getResultList().size(),8);
+			inp = Arrays.asList(6,7,8,9,10,11,12,13);
+			doTest(query,inp);
 
 			//Now query with another set of ids having less length than last
-			query.setParameter("ids",Arrays.asList(14,15));
-			assertEquals(query.getResultList().size(),2);
+			inp = Arrays.asList(14,15);
+			doTest(query,inp);
+
+			//Again query with 2 element
+			query.setParameter("ids",Arrays.asList(16,17));
+			doTest(query,inp);
+
+			//Again query with more element
+                        query.setParameter("ids",Arrays.asList(13,14,19,20));
+                        doTest(query,inp);
+
+			//Again query with less element
+                        query.setParameter("ids",Arrays.asList(12,17));
+                        doTest(query,inp);
+
+			//Again query with element which doesn not exist
+                        query.setParameter("ids",Arrays.asList(MAX_COUNT+100,MAX_COUNT+200));
+			assertEquals(query.getResultList().size(),0);
+
 		} );
+	}
+
+	public void doTest(Query query,List<Integer> inp) {
+		query.setParameter("ids",inp);
+                List<Person> persons = query.getResultList();
+       	        assertEquals(persons.size(),inp.size());
+                persons.forEach(p->assertTrue(inp.contains(p.getId())));
 	}
 
 	@Entity

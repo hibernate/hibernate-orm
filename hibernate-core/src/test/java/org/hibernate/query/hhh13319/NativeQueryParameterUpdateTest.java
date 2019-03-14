@@ -74,15 +74,15 @@ public class NativeQueryParameterUpdateTest extends BaseEntityManagerFunctionalT
 			doTest(query,inp);
 
 			//Again query with 2 element
-			query.setParameter("ids",Arrays.asList(16,17));
+			inp = Arrays.asList(16,17);
 			doTest(query,inp);
 
 			//Again query with more element
-                        query.setParameter("ids",Arrays.asList(13,14,19,20));
+			inp = Arrays.asList(13,14,8,12);
                         doTest(query,inp);
 
 			//Again query with less element
-                        query.setParameter("ids",Arrays.asList(12,17));
+			inp = Arrays.asList(12,17,15);
                         doTest(query,inp);
 
 			//Again query with element which doesn not exist

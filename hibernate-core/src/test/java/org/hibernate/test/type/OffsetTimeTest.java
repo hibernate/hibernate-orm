@@ -23,11 +23,14 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.type.descriptor.sql.BigIntTypeDescriptor;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
 
+import org.hibernate.testing.SkipForDialect;
+import org.junit.Test;
 import org.junit.runners.Parameterized;
 
 /**
@@ -176,6 +179,13 @@ public class OffsetTimeTest extends AbstractJavaTimeTypeTest<OffsetTime, OffsetT
 	@Override
 	protected Object getActualJdbcValue(ResultSet resultSet, int columnIndex) throws SQLException {
 		return resultSet.getTimestamp( columnIndex );
+	}
+
+	@Override
+	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = "HANA seems to return a java.sql.Timestamp instead of a java.sql.Time")
+	public void writeThenNativeRead() {
+		super.writeThenNativeRead();
 	}
 
 	@Entity(name = ENTITY_NAME)

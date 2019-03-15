@@ -978,12 +978,12 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 		if ( isOneToMany() ) {
 			throw new NotYetImplementedFor6Exception();
 		}
-		else {
-			if ( !hasIndex() ) {
-				return CollectionRowByIndexSelector.NO_OP;
-			}
-			return new JoinTableCollectionRowByIndexSelector( this, dmlTargetTable, sqlWhereString, sessionFactory );
+
+		if ( !hasIndex() ) {
+			return CollectionRowByIndexSelector.NO_OP;
 		}
+
+		return new JoinTableCollectionRowByIndexSelector( this, dmlTargetTable, sqlWhereString, sessionFactory );
 	}
 
 	@Override

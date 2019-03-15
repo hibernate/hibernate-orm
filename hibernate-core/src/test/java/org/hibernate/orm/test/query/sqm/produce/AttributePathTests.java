@@ -83,7 +83,7 @@ public class AttributePathTests extends BaseSqmUnitTest {
 		selectExpression.as( EntityValuedNavigable.class );
 
 		final SqmComparisonPredicate predicate = (SqmComparisonPredicate) statement.getQuerySpec().getWhereClause().getPredicate();
-		final SqmEntityValuedSimplePath predicateLhs = (SqmEntityValuedSimplePath) predicate.getLeftHandExpression();
+		final SqmPath predicateLhs = (SqmPath) predicate.getLeftHandExpression();
 		assertThat( predicateLhs.getLhs(), notNullValue() );
 
 

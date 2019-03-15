@@ -18,6 +18,7 @@ import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.expression.CountFunction;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
@@ -28,11 +29,11 @@ import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.select.SelectClause;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcParameter;
-import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
+import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.descriptor.java.internal.IntegerJavaDescriptor;
 import org.hibernate.type.descriptor.sql.spi.IntegerSqlDescriptor;
@@ -80,7 +81,7 @@ public class CollectionSizeSelector extends AbstractSelector {
 			TableGroup tableGroup,
 			SelectClause selectClause,
 			Consumer<DomainResult> domainResultsCollector,
-			SessionFactoryImplementor sessionFactory) {
+			DomainResultCreationState creationState) {
 		if ( isIntegerIndexed() ) {
 			// Build selection of "max(indexColumn[0])"
 			final List<Column> indexColumns = getCollectionDescriptor().getIndexDescriptor().getColumns();
@@ -115,7 +116,7 @@ public class CollectionSizeSelector extends AbstractSelector {
 			// Build selection of "count(1)"
 			final SqlExpressableType sqlExpressableType = IntegerSqlDescriptor.INSTANCE.getSqlExpressableType(
 					IntegerJavaDescriptor.INSTANCE,
-					sessionFactory.getTypeConfiguration()
+					creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 			);
 
 			final Expression countExpression = new CountFunction(
@@ -151,16 +152,14 @@ public class CollectionSizeSelector extends AbstractSelector {
 	protected void applyPredicates(
 			Junction junction,
 			TableGroup tableGroup,
-			Consumer<JdbcParameterBinder> jdbcParameterBinder,
 			BiConsumer<Column, JdbcParameter> columnCollector,
-			SessionFactoryImplementor sessionFactory) {
+			SqlAstCreationState creationState) {
 		applyPredicates(
 				junction,
 				getCollectionDescriptor().getCollectionKeyDescriptor(),
 				tableGroup,
-				jdbcParameterBinder,
 				columnCollector,
-				sessionFactory
+				creationState
 		);
 	}
 

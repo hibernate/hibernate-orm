@@ -17,6 +17,7 @@ import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
@@ -24,11 +25,11 @@ import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.select.SelectClause;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcParameter;
-import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
+import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.descriptor.java.internal.IntegerJavaDescriptor;
 import org.hibernate.type.descriptor.sql.spi.IntegerSqlDescriptor;
@@ -65,10 +66,10 @@ public class CollectionIndexExistsSelector extends AbstractSelector {
 			TableGroup tableGroup,
 			SelectClause selectClause,
 			Consumer<DomainResult> domainResultsCollector,
-			SessionFactoryImplementor sessionFactory) {
+			DomainResultCreationState creationState) {
 		final SqlExpressableType sqlExpressableType = IntegerSqlDescriptor.INSTANCE.getSqlExpressableType(
 				IntegerJavaDescriptor.INSTANCE,
-				sessionFactory.getTypeConfiguration()
+				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 		final SqlSelection sqlSelection = new SqlSelectionImpl(
 				1,
@@ -86,25 +87,22 @@ public class CollectionIndexExistsSelector extends AbstractSelector {
 	protected void applyPredicates(
 			Junction junction,
 			TableGroup tableGroup,
-			Consumer<JdbcParameterBinder> jdbcParameterBinder,
 			BiConsumer<Column, JdbcParameter> columnCollector,
-			SessionFactoryImplementor sessionFactory) {
+			SqlAstCreationState creationState) {
 		applyPredicates(
 				junction,
 				getCollectionDescriptor().getCollectionKeyDescriptor(),
 				tableGroup,
-				jdbcParameterBinder,
 				columnCollector,
-				sessionFactory
+				creationState
 		);
 
 		applyPredicates(
 				junction,
 				getCollectionDescriptor().getIndexDescriptor(),
 				tableGroup,
-				jdbcParameterBinder,
 				columnCollector,
-				sessionFactory
+				creationState
 		);
 	}
 

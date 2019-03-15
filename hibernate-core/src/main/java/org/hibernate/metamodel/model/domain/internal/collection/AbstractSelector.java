@@ -64,6 +64,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.spi.DomainResult;
+import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.SqlSelection;
@@ -79,7 +80,6 @@ public abstract class AbstractSelector {
 	private final PersistentCollectionDescriptor collectionDescriptor;
 	private final JdbcSelect jdbcSelect;
 	private final Map<Column, JdbcParameter> jdbcParameterMap;
-	private final List<JdbcParameterBinder> jdbcParameterBinders;
 
 	public AbstractSelector(
 			PersistentCollectionDescriptor collectionDescriptor,
@@ -88,15 +88,17 @@ public abstract class AbstractSelector {
 			SessionFactoryImplementor sessionFactory) {
 		this.collectionDescriptor = collectionDescriptor;
 		this.jdbcParameterMap = new HashMap<>();
-		this.jdbcParameterBinders = new ArrayList<>();
 
 		this.jdbcSelect = generateSelect(
 				table,
 				sqlWhereString,
-				jdbcParameterBinders::add,
 				jdbcParameterMap::put,
 				sessionFactory
 		);
+	}
+
+	protected PersistentCollectionDescriptor getCollectionDescriptor() {
+		return collectionDescriptor;
 	}
 
 	protected List execute(JdbcParameterBindings jdbcParameterBindings, SharedSessionContractImplementor session) {
@@ -109,145 +111,42 @@ public abstract class AbstractSelector {
 		);
 	}
 
-	protected PersistentCollectionDescriptor getCollectionDescriptor() {
-		return collectionDescriptor;
-	}
-
-	protected abstract void applySqlSelections(
-			QuerySpec querySpec,
-			TableGroup tableGroup,
-			SelectClause selectClause,
-			Consumer<DomainResult> domainResultsCollector,
-			SessionFactoryImplementor sessionFactory);
-
-	protected abstract void applyPredicates(
-			Junction junction,
-			TableGroup tableGroup,
-			Consumer<JdbcParameterBinder> jdbcParameterBinder,
-			BiConsumer<Column, JdbcParameter> columnCollector,
-			SessionFactoryImplementor sessionFactory);
-
-	protected <T> void applyPredicates(
-			Junction junction,
-			Navigable<T> navigable,
-			TableGroup tableGroup,
-			Consumer<JdbcParameterBinder> jdbcParameterBinder,
-			BiConsumer<Column, JdbcParameter> columnCollector,
-			SessionFactoryImplementor sessionFactory) {
-		final AtomicInteger parameterCount = new AtomicInteger();
-		navigable.visitColumns(
-				(sqlExpressableType, column) -> {
-					final PositionalParameter parameter = new PositionalParameter(
-							parameterCount.getAndIncrement(),
-							column.getExpressableType(),
-							Clause.WHERE,
-							sessionFactory.getTypeConfiguration()
-					);
-
-					jdbcParameterBinder.accept( parameter );
-					columnCollector.accept( column, parameter );
-
-					final Expression expression = tableGroup.qualify( column );
-					final ColumnReference columnReference;
-					if ( !( expression instanceof ColumnReference ) ) {
-						columnReference = (ColumnReference) ( (SqlSelectionExpression) expression ).getExpression();
-					}
-					else {
-						columnReference = (ColumnReference) expression;
-					}
-					junction.add( new ComparisonPredicate(
-							columnReference,
-							ComparisonOperator.EQUAL,
-							parameter
-					) );
-				},
-				Clause.WHERE,
-				sessionFactory.getTypeConfiguration()
-		);
-	}
-
-	protected void bindCollectionIndex(
-			Object index,
-			JdbcParameterBindings jdbcParameterBindings,
-			SharedSessionContractImplementor session) {
-		bindValue( index, getCollectionDescriptor().getIndexDescriptor(), jdbcParameterBindings, session );
-	}
-
-	protected void bindCollectionKey(
-			Object key,
-			JdbcParameterBindings jdbcParameterBindings,
-			SharedSessionContractImplementor session) {
-		bindValue( key, getCollectionDescriptor().getCollectionKeyDescriptor(), jdbcParameterBindings, session );
-	}
-
-	protected void bindCollectionElement(
-			Object entry,
-			PersistentCollection collection,
-			JdbcParameterBindings jdbcParameterBindings,
-			SharedSessionContractImplementor session) {
-		CollectionElement elementDescriptor = getCollectionDescriptor().getElementDescriptor();
-
-		Object unresolved = elementDescriptor.unresolve(
-				entry,
-				session
-		);
-
-		bindValue( unresolved, elementDescriptor, jdbcParameterBindings, session );
-	}
-
-	private void bindValue(
-			Object value,
-			Navigable navigable,
-			JdbcParameterBindings jdbcParameterBindings,
-			SharedSessionContractImplementor session) {
-		navigable.dehydrate(
-				value,
-				(jdbcValue, type, boundColumn) -> createBinding(
-						jdbcValue,
-						boundColumn,
-						type,
-						jdbcParameterBindings,
-						session
-				),
-				Clause.WHERE,
-				session
-		);
-	}
-
 	private JdbcSelect generateSelect(
 			Table table,
 			String sqlWhereString,
-			Consumer<JdbcParameterBinder> jdbcParameterCollector,
 			BiConsumer<Column, JdbcParameter> columnCollector,
 			SessionFactoryImplementor sessionFactory) {
-		final QuerySpec rootQuerySpec = new QuerySpec( true );
-		final SelectStatement selectStatement = new SelectStatement( rootQuerySpec );
 
-		final TableGroup rootTableGroup = createTableGroup( rootQuerySpec, sessionFactory );
-		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
+		final QuerySpec querySpec = new QuerySpec( true );
+		final SelectStatement selectStatement = new SelectStatement( querySpec );
+
+		final SqlAstCreationStateImpl creationState = new SqlAstCreationStateImpl( sessionFactory, querySpec );
+
+		final TableGroup rootTableGroup = createTableGroup( querySpec, sessionFactory );
+		querySpec.getFromClause().addRoot( rootTableGroup );
+		creationState.getFromClauseAccess().registerTableGroup( rootTableGroup.getNavigablePath(), rootTableGroup );
 
 		final SelectClause selectClause = selectStatement.getQuerySpec().getSelectClause();
 		final List<DomainResult> domainResults = new ArrayList<>();
 
 		applySqlSelections(
-				rootQuerySpec,
+				querySpec,
 				rootTableGroup,
 				selectClause,
 				domainResults::add,
-				sessionFactory
+				creationState
 		);
 
 		Junction predicate = new Junction( Junction.Nature.CONJUNCTION );
 		applyPredicates(
 				predicate,
 				rootTableGroup,
-				jdbcParameterCollector,
 				columnCollector,
-				sessionFactory
+				creationState
 		);
 
-		rootQuerySpec.addRestriction( predicate );
-		applyWhereFragment( sqlWhereString, rootQuerySpec );
+		querySpec.addRestriction( predicate );
+		applyWhereFragment( sqlWhereString, querySpec );
 
 		final Set<String> affectedTableNames = new HashSet<>();
 		affectedTableNames.add( table.getTableExpression() );
@@ -319,6 +218,107 @@ public abstract class AbstractSelector {
 				null,
 				LockMode.NONE,
 				creationState
+		);
+	}
+
+	protected abstract void applySqlSelections(
+			QuerySpec querySpec,
+			TableGroup tableGroup,
+			SelectClause selectClause,
+			Consumer<DomainResult> domainResultsCollector,
+			DomainResultCreationState creationState);
+
+	protected abstract void applyPredicates(
+			Junction junction,
+			TableGroup tableGroup,
+			BiConsumer<Column, JdbcParameter> columnCollector,
+			SqlAstCreationState creationState);
+
+	protected <T> void applyPredicates(
+			Junction junction,
+			Navigable<T> navigable,
+			TableGroup tableGroup,
+			BiConsumer<Column, JdbcParameter> columnCollector,
+			SqlAstCreationState creationState) {
+		final TypeConfiguration typeConfiguration = creationState.getCreationContext()
+				.getDomainModel()
+				.getTypeConfiguration();
+		final AtomicInteger parameterCount = new AtomicInteger();
+		navigable.visitColumns(
+				(sqlExpressableType, column) -> {
+					final PositionalParameter parameter = new PositionalParameter(
+							parameterCount.getAndIncrement(),
+							column.getExpressableType(),
+							Clause.WHERE,
+							typeConfiguration
+					);
+
+					columnCollector.accept( column, parameter );
+
+					final Expression expression = tableGroup.qualify( column );
+					final ColumnReference columnReference;
+					if ( !( expression instanceof ColumnReference ) ) {
+						columnReference = (ColumnReference) ( (SqlSelectionExpression) expression ).getExpression();
+					}
+					else {
+						columnReference = (ColumnReference) expression;
+					}
+					junction.add( new ComparisonPredicate(
+							columnReference,
+							ComparisonOperator.EQUAL,
+							parameter
+					) );
+				},
+				Clause.WHERE,
+				typeConfiguration
+		);
+	}
+
+	protected void bindCollectionIndex(
+			Object index,
+			JdbcParameterBindings jdbcParameterBindings,
+			SharedSessionContractImplementor session) {
+		bindValue( index, getCollectionDescriptor().getIndexDescriptor(), jdbcParameterBindings, session );
+	}
+
+	protected void bindCollectionKey(
+			Object key,
+			JdbcParameterBindings jdbcParameterBindings,
+			SharedSessionContractImplementor session) {
+		bindValue( key, getCollectionDescriptor().getCollectionKeyDescriptor(), jdbcParameterBindings, session );
+	}
+
+	protected void bindCollectionElement(
+			Object entry,
+			PersistentCollection collection,
+			JdbcParameterBindings jdbcParameterBindings,
+			SharedSessionContractImplementor session) {
+		CollectionElement elementDescriptor = getCollectionDescriptor().getElementDescriptor();
+
+		Object unresolved = elementDescriptor.unresolve(
+				entry,
+				session
+		);
+
+		bindValue( unresolved, elementDescriptor, jdbcParameterBindings, session );
+	}
+
+	private void bindValue(
+			Object value,
+			Navigable navigable,
+			JdbcParameterBindings jdbcParameterBindings,
+			SharedSessionContractImplementor session) {
+		navigable.dehydrate(
+				value,
+				(jdbcValue, type, boundColumn) -> createBinding(
+						jdbcValue,
+						boundColumn,
+						type,
+						jdbcParameterBindings,
+						session
+				),
+				Clause.WHERE,
+				session
 		);
 	}
 

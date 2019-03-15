@@ -100,4 +100,13 @@ public abstract class AbstractModifiedFlagsEntityTest extends EnversEntityManage
 
 		return results;
 	}
+
+	@SuppressWarnings("WeakerAccess")
+	protected static List<Integer> extractRevisions(List queryResults) {
+		final List<Integer> results = new ArrayList<>();
+		for ( Object queryResult : queryResults ) {
+			results.add( ( (SequenceIdRevisionEntity) ( (Object[]) queryResult )[ 1 ] ).getId() );
+		}
+		return results;
+	}
 }

@@ -7,16 +7,13 @@
 package org.hibernate.envers.test.revisionentity;
 
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.support.domains.basic.StrTestEntity;
-import org.hibernate.envers.test.support.domains.revisionentity.CustomRevEntity;
+import org.hibernate.envers.test.support.domains.revisionentity.CustomPropertyAccessRevEntity;
 import org.junit.jupiter.api.Disabled;
 
 import org.hibernate.testing.hamcrest.CollectionMatchers;
@@ -27,33 +24,32 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class CustomRevisionEntityPrimitiveTypesTest extends EnversEntityManagerFactoryBasedFunctionalTest {
+public class CustomPropertyAccessTest extends EnversEntityManagerFactoryBasedFunctionalTest {
 	private Integer id;
 	private long timestamp1;
 	private long timestamp2;
 	private long timestamp3;
 
-	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { StrTestEntity.class, CustomRevEntity.class };
+		return new Class[] { StrTestEntity.class, CustomPropertyAccessRevEntity.class };
 	}
 
 	@DynamicBeforeAll
 	public void prepareAuditData() {
 		final List<Long> timestamps = inTransactionsWithTimeouts(
 				100,
+				// Revision 1
 				entityManager -> {
 					final StrTestEntity entity = new StrTestEntity( "x" );
 					entityManager.persist( entity );
 					id = entity.getId();
 				},
-
+				// Revision 2
 				entityManager -> {
 					final StrTestEntity entity = entityManager.find( StrTestEntity.class, id );
 					entity.setStr( "y" );
@@ -89,12 +85,12 @@ public class CustomRevisionEntityPrimitiveTypesTest extends EnversEntityManagerF
 	public void testRevisionsForDates() {
 		final AuditReader reader = getAuditReader();
 
-		final Number revisionNumberTimestamp2 = reader.getRevisionNumberForDate( new Date( timestamp2 ) );
-		assertThat( reader.getRevisionDate( revisionNumberTimestamp2 ).getTime(), lessThanOrEqualTo( timestamp2 ) );
-		assertThat( reader.getRevisionDate( revisionNumberTimestamp2.intValue() + 1).getTime(), greaterThan( timestamp2 ) );
+		final Number timestamp2Revision = reader.getRevisionNumberForDate( new Date( timestamp2 ) );
+		assertThat( reader.getRevisionDate( timestamp2Revision ).getTime(), lessThanOrEqualTo( timestamp2 ) );
+		assertThat( reader.getRevisionDate( timestamp2Revision.intValue() + 1 ).getTime(), greaterThan( timestamp2 ) );
 
-		final Number revisionNumberTimestamp3 = reader.getRevisionNumberForDate( new Date( timestamp3 ) );
-		assertThat( reader.getRevisionDate( revisionNumberTimestamp3 ).getTime(), lessThanOrEqualTo( timestamp3 ) );
+		final Number timestamp3Revision = reader.getRevisionNumberForDate( new Date( timestamp3 ) );
+		assertThat( reader.getRevisionDate( timestamp3Revision ).getTime(), lessThanOrEqualTo( timestamp3 ) );
 	}
 
 	@DynamicTest
@@ -102,32 +98,13 @@ public class CustomRevisionEntityPrimitiveTypesTest extends EnversEntityManagerF
 	public void testFindRevision() {
 		final AuditReader reader = getAuditReader();
 
-		final long rev1Timestamp = reader.findRevision( CustomRevEntity.class, 1 ).getCustomTimestamp();
+		long rev1Timestamp = reader.findRevision( CustomPropertyAccessRevEntity.class, 1 ).getCustomTimestamp();
 		assertThat( rev1Timestamp, greaterThan( timestamp1 ) );
 		assertThat( rev1Timestamp, lessThanOrEqualTo( timestamp2 ) );
 
-		final long rev2Timestamp = reader.findRevision( CustomRevEntity.class, 2 ).getCustomTimestamp();
+		long rev2Timestamp = reader.findRevision( CustomPropertyAccessRevEntity.class, 2 ).getCustomTimestamp();
 		assertThat( rev2Timestamp, greaterThan( timestamp2 ) );
 		assertThat( rev2Timestamp, lessThanOrEqualTo( timestamp3 ) );
-	}
-
-	@DynamicTest
-	@Disabled("Predicate `IN(:someCollection)` does not yet properly expand to account for number of bind values")
-	public void testFindRevisions() {
-		final AuditReader reader = getAuditReader();
-
-		Set<Number> revNumbers = new HashSet<Number>();
-		revNumbers.add( 1 );
-		revNumbers.add( 2 );
-
-		Map<Number, CustomRevEntity> revisionMap = reader.findRevisions( CustomRevEntity.class, revNumbers );
-		assertThat( revisionMap.entrySet(), CollectionMatchers.hasSize( 2 ) );
-
-		final CustomRevEntity rev1 = reader.findRevision( CustomRevEntity.class, 1 );
-		assertThat( revisionMap, hasEntry( 1, rev1 ) );
-
-		final CustomRevEntity rev2 = reader.findRevision( CustomRevEntity.class, 2 );
-		assertThat( revisionMap, hasEntry( 2, rev2 ) );
 	}
 
 	@DynamicTest

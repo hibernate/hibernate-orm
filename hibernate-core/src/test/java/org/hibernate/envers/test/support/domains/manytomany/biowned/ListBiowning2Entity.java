@@ -4,49 +4,52 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.support.domains.onetomany;
+package org.hibernate.envers.test.support.domains.manytomany.biowned;
 
-import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 
 import org.hibernate.envers.Audited;
 
 /**
- * ReferencIng entity
+ * Entity owning a many-to-many relation, where the other entity also owns the relation.
  *
  * @author Adam Warski (adam at warski dot org)
- *
- * @see org.hibernate.envers.test.serialization.SerializingCollectionTest
  */
 @Entity
-public class CollectionRefIngEntity implements Serializable {
-	private static final long serialVersionUID = -9019967223928425707L;
-
+@Audited
+public class ListBiowning2Entity {
 	@Id
+	@GeneratedValue
 	private Integer id;
 
-	@Audited
 	private String data;
 
-	@Audited
-	@ManyToOne
-	private CollectionRefEdEntity reference;
+	@ManyToMany
+	@JoinTable(
+			name = "biowning",
+			joinColumns = @JoinColumn(name = "biowning2_id"),
+			inverseJoinColumns = @JoinColumn(name = "biowning1_id", insertable = false, updatable = false)
+	)
+	private List<ListBiowning1Entity> references = new ArrayList<>();
 
-	public CollectionRefIngEntity() {
+	public ListBiowning2Entity() {
 	}
 
-	public CollectionRefIngEntity(Integer id, String data, CollectionRefEdEntity reference) {
+	public ListBiowning2Entity(Integer id, String data) {
 		this.id = id;
 		this.data = data;
-		this.reference = reference;
 	}
 
-	public CollectionRefIngEntity(Integer id, String data) {
-		this.id = id;
+	public ListBiowning2Entity(String data) {
 		this.data = data;
 	}
 
@@ -66,12 +69,12 @@ public class CollectionRefIngEntity implements Serializable {
 		this.data = data;
 	}
 
-	public CollectionRefEdEntity getReference() {
-		return reference;
+	public List<ListBiowning1Entity> getReferences() {
+		return references;
 	}
 
-	public void setReference(CollectionRefEdEntity reference) {
-		this.reference = reference;
+	public void setReferences(List<ListBiowning1Entity> references) {
+		this.references = references;
 	}
 
 	@Override
@@ -82,7 +85,7 @@ public class CollectionRefIngEntity implements Serializable {
 		if ( o == null || getClass() != o.getClass() ) {
 			return false;
 		}
-		CollectionRefIngEntity that = (CollectionRefIngEntity) o;
+		ListBiowning2Entity that = (ListBiowning2Entity) o;
 		return Objects.equals( id, that.id ) &&
 				Objects.equals( data, that.data );
 	}
@@ -94,7 +97,7 @@ public class CollectionRefIngEntity implements Serializable {
 
 	@Override
 	public String toString() {
-		return "CollectionRefIngEntity{" +
+		return "ListBiowning2Entity{" +
 				"id=" + id +
 				", data='" + data + '\'' +
 				'}';

@@ -6,6 +6,8 @@
  */
 package org.hibernate.testing.junit5.envers;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -97,6 +99,42 @@ public class EnversEntityManagerFactoryScope implements EntityManagerFactoryAcce
 					throw e;
 				}
 			}
+		}
+		finally {
+			entityManager.close();
+		}
+	}
+
+	@SafeVarargs
+	public final List<Long> inTransactionsWithTimeouts(int timeout, Consumer<EntityManager>... actions) {
+		EntityManager entityManager = getEntityManagerFactory().createEntityManager();
+		try {
+			final List<Long> timestamps = new ArrayList<>();
+
+			timestamps.add( System.currentTimeMillis() );
+			for ( Consumer<EntityManager> action : actions ) {
+				try {
+					Thread.sleep( 100 );
+					entityManager.getTransaction().begin();
+					action.accept( entityManager );
+					entityManager.getTransaction().commit();
+					timestamps.add( System.currentTimeMillis() );
+				}
+				catch ( InterruptedException e ) {
+					if ( entityManager.getTransaction().isActive() ) {
+						entityManager.getTransaction().rollback();
+					}
+					throw new RuntimeException( "Failed to wait on timeout", e );
+				}
+				catch ( Exception e ) {
+					if ( entityManager.getTransaction().isActive() ) {
+						entityManager.getTransaction().rollback();
+					}
+					throw e;
+				}
+			}
+
+			return timestamps;
 		}
 		finally {
 			entityManager.close();

@@ -16,7 +16,7 @@ import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.support.domains.basic.StrTestEntity;
-import org.hibernate.envers.test.support.domains.revisionentity.CustomRevEntity;
+import org.hibernate.envers.test.support.domains.revisionentity.CustomBoxedRevEntity;
 import org.junit.jupiter.api.Disabled;
 
 import org.hibernate.testing.hamcrest.CollectionMatchers;
@@ -33,7 +33,7 @@ import static org.hamcrest.Matchers.lessThanOrEqualTo;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class CustomRevisionEntityPrimitiveTypesTest extends EnversEntityManagerFactoryBasedFunctionalTest {
+public class CustomBoxedTest extends EnversEntityManagerFactoryBasedFunctionalTest {
 	private Integer id;
 	private long timestamp1;
 	private long timestamp2;
@@ -41,7 +41,7 @@ public class CustomRevisionEntityPrimitiveTypesTest extends EnversEntityManagerF
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { StrTestEntity.class, CustomRevEntity.class };
+		return new Class[] { StrTestEntity.class, CustomBoxedRevEntity.class };
 	}
 
 	@DynamicBeforeAll
@@ -51,9 +51,9 @@ public class CustomRevisionEntityPrimitiveTypesTest extends EnversEntityManagerF
 				entityManager -> {
 					final StrTestEntity entity = new StrTestEntity( "x" );
 					entityManager.persist( entity );
-					id = entity.getId();
-				},
 
+					this.id = entity.getId();
+				},
 				entityManager -> {
 					final StrTestEntity entity = entityManager.find( StrTestEntity.class, id );
 					entity.setStr( "y" );
@@ -89,45 +89,39 @@ public class CustomRevisionEntityPrimitiveTypesTest extends EnversEntityManagerF
 	public void testRevisionsForDates() {
 		final AuditReader reader = getAuditReader();
 
-		final Number revisionNumberTimestamp2 = reader.getRevisionNumberForDate( new Date( timestamp2 ) );
-		assertThat( reader.getRevisionDate( revisionNumberTimestamp2 ).getTime(), lessThanOrEqualTo( timestamp2 ) );
-		assertThat( reader.getRevisionDate( revisionNumberTimestamp2.intValue() + 1).getTime(), greaterThan( timestamp2 ) );
+		final Number timestamp2Revision = reader.getRevisionNumberForDate( new Date( timestamp2 ) );
+		assertThat( reader.getRevisionDate( timestamp2Revision ).getTime(), lessThanOrEqualTo( timestamp2 ) );
+		assertThat( reader.getRevisionDate( timestamp2Revision.intValue() + 1 ).getTime(), greaterThan( timestamp2 ) );
 
-		final Number revisionNumberTimestamp3 = reader.getRevisionNumberForDate( new Date( timestamp3 ) );
-		assertThat( reader.getRevisionDate( revisionNumberTimestamp3 ).getTime(), lessThanOrEqualTo( timestamp3 ) );
+		final Number timestamp3Revision = reader.getRevisionNumberForDate( new Date( timestamp3 ) );
+		assertThat( reader.getRevisionDate( timestamp3Revision ).getTime(), lessThanOrEqualTo( timestamp3 ) );
 	}
 
 	@DynamicTest
 	@Disabled("BaseSqmToSqlAstConverter#visitInListPredicate() ClassCastException - should use toExpression() rather than (Expression)")
 	public void testFindRevision() {
-		final AuditReader reader = getAuditReader();
-
-		final long rev1Timestamp = reader.findRevision( CustomRevEntity.class, 1 ).getCustomTimestamp();
+		long rev1Timestamp = getAuditReader().findRevision( CustomBoxedRevEntity.class, 1 ).getCustomTimestamp();
 		assertThat( rev1Timestamp, greaterThan( timestamp1 ) );
 		assertThat( rev1Timestamp, lessThanOrEqualTo( timestamp2 ) );
 
-		final long rev2Timestamp = reader.findRevision( CustomRevEntity.class, 2 ).getCustomTimestamp();
+		long rev2Timestamp = getAuditReader().findRevision( CustomBoxedRevEntity.class, 2 ).getCustomTimestamp();
 		assertThat( rev2Timestamp, greaterThan( timestamp2 ) );
 		assertThat( rev2Timestamp, lessThanOrEqualTo( timestamp3 ) );
 	}
 
 	@DynamicTest
-	@Disabled("Predicate `IN(:someCollection)` does not yet properly expand to account for number of bind values")
+	@Disabled("BaseSqmToSqlAstConverter#visitInListPredicate() ClassCastException - should use toExpression() rather than (Expression)")
 	public void testFindRevisions() {
 		final AuditReader reader = getAuditReader();
 
-		Set<Number> revNumbers = new HashSet<Number>();
+		Set<Number> revNumbers = new HashSet<>();
 		revNumbers.add( 1 );
 		revNumbers.add( 2 );
 
-		Map<Number, CustomRevEntity> revisionMap = reader.findRevisions( CustomRevEntity.class, revNumbers );
+		Map<Number, CustomBoxedRevEntity> revisionMap = reader.findRevisions( CustomBoxedRevEntity.class, revNumbers );
 		assertThat( revisionMap.entrySet(), CollectionMatchers.hasSize( 2 ) );
-
-		final CustomRevEntity rev1 = reader.findRevision( CustomRevEntity.class, 1 );
-		assertThat( revisionMap, hasEntry( 1, rev1 ) );
-
-		final CustomRevEntity rev2 = reader.findRevision( CustomRevEntity.class, 2 );
-		assertThat( revisionMap, hasEntry( 2, rev2 ) );
+		assertThat( revisionMap, hasEntry( 1, reader.findRevision( CustomBoxedRevEntity.class, 1 ) ) );
+		assertThat( revisionMap, hasEntry( 2, reader.findRevision( CustomBoxedRevEntity.class, 2 ) ) );
 	}
 
 	@DynamicTest

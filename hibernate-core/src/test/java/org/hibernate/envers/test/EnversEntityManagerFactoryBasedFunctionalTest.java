@@ -27,15 +27,18 @@ import org.hibernate.annotations.Remove;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.boot.AuditService;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.junit.jupiter.api.Tag;
 
+import org.hibernate.testing.junit4.Helper;
 import org.hibernate.testing.junit5.StandardTags;
 import org.hibernate.testing.junit5.dynamictests.DynamicAfterAll;
 import org.hibernate.testing.junit5.dynamictests.DynamicAfterEach;
@@ -70,6 +73,19 @@ public class EnversEntityManagerFactoryBasedFunctionalTest
 		settings.put( AvailableSettings.HBM2DDL_AUTO, exportSchema() ? "create-drop" : "none" );
 
 		addSettings( settings );
+
+		if ( exportSchema() ) {
+			final String secondSchemaName = secondSchema();
+			if ( StringHelper.isNotEmpty( secondSchemaName ) ) {
+				if ( !H2Dialect.class.isInstance( Dialect.getDialect() ) ) {
+					throw new UnsupportedOperationException(
+							"Only H2 dialect supports creation of second schema."
+					);
+				}
+
+				Helper.createH2Schema( secondSchemaName, settings );
+			}
+		}
 
 		final Class<?>[] classes = getAnnotatedClasses();
 		if ( classes != null && classes.length > 0 ) {
@@ -174,6 +190,11 @@ public class EnversEntityManagerFactoryBasedFunctionalTest
 	@SafeVarargs
 	protected final void inTransactions(Consumer<EntityManager>... actions) {
 		entityManagerFactoryScope().inTransactions( actions );
+	}
+
+	@SafeVarargs
+	protected final List<Long> inTransactionsWithTimeouts(int timeout, Consumer<EntityManager>... actions) {
+		return entityManagerFactoryScope().inTransactionsWithTimeouts( timeout, actions );
 	}
 
 	protected AuditService getAuditService() {

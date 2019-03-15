@@ -6,6 +6,7 @@
  */
 package org.hibernate.envers.test.support.domains.onetomany;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Objects;
 
@@ -19,9 +20,11 @@ import org.hibernate.envers.Audited;
  * ReferencEd entity
  *
  * @author Adam Warski (adam at warski dot org)
+ *
+ * @see org.hibernate.envers.test.serialization.SerializingCollectionTest
  */
 @Entity
-public class CollectionRefEdEntity {
+public class CollectionRefEdEntity implements Serializable {
 	private static final long serialVersionUID = -1694020123633796683L;
 
 	@Id

@@ -4,28 +4,26 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.support.domains.onetomany;
+package org.hibernate.envers.test.support.domains.manytomany;
 
-import java.io.Serializable;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.ManyToMany;
+import javax.persistence.Table;
 
 import org.hibernate.envers.Audited;
 
 /**
- * ReferencIng entity
+ * Many-to-many not-owning entity
  *
  * @author Adam Warski (adam at warski dot org)
- *
- * @see org.hibernate.envers.test.serialization.SerializingCollectionTest
  */
 @Entity
-public class CollectionRefIngEntity implements Serializable {
-	private static final long serialVersionUID = -9019967223928425707L;
-
+@Table(name = "MapOwned")
+public class MapOwnedEntity {
 	@Id
 	private Integer id;
 
@@ -33,20 +31,18 @@ public class CollectionRefIngEntity implements Serializable {
 	private String data;
 
 	@Audited
-	@ManyToOne
-	private CollectionRefEdEntity reference;
+	@ManyToMany(mappedBy = "references")
+	private Set<MapOwningEntity> referencing;
 
-	public CollectionRefIngEntity() {
+	public MapOwnedEntity() {
 	}
 
-	public CollectionRefIngEntity(Integer id, String data, CollectionRefEdEntity reference) {
+	public MapOwnedEntity(Integer id, String data) {
 		this.id = id;
 		this.data = data;
-		this.reference = reference;
 	}
 
-	public CollectionRefIngEntity(Integer id, String data) {
-		this.id = id;
+	public MapOwnedEntity(String data) {
 		this.data = data;
 	}
 
@@ -66,12 +62,12 @@ public class CollectionRefIngEntity implements Serializable {
 		this.data = data;
 	}
 
-	public CollectionRefEdEntity getReference() {
-		return reference;
+	public Set<MapOwningEntity> getReferencing() {
+		return referencing;
 	}
 
-	public void setReference(CollectionRefEdEntity reference) {
-		this.reference = reference;
+	public void setReferencing(Set<MapOwningEntity> referencing) {
+		this.referencing = referencing;
 	}
 
 	@Override
@@ -82,7 +78,7 @@ public class CollectionRefIngEntity implements Serializable {
 		if ( o == null || getClass() != o.getClass() ) {
 			return false;
 		}
-		CollectionRefIngEntity that = (CollectionRefIngEntity) o;
+		MapOwnedEntity that = (MapOwnedEntity) o;
 		return Objects.equals( id, that.id ) &&
 				Objects.equals( data, that.data );
 	}
@@ -94,7 +90,7 @@ public class CollectionRefIngEntity implements Serializable {
 
 	@Override
 	public String toString() {
-		return "CollectionRefIngEntity{" +
+		return "MapOwnedEntity{" +
 				"id=" + id +
 				", data='" + data + '\'' +
 				'}';

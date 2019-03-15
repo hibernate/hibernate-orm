@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.envers.configuration.EnversSettings;
@@ -68,6 +69,13 @@ public abstract class AbstractEnversDynamicTest extends AbstractDynamicTest<Enve
 	}
 
 	/**
+	 * Returns the second schema to be created.
+	 */
+	protected String secondSchema() {
+		return null;
+	}
+
+	/**
 	 * Add additional configuration settings to configure the test.
 	 *
 	 * @param settings A map of string-based configuration parameters.
@@ -76,6 +84,14 @@ public abstract class AbstractEnversDynamicTest extends AbstractDynamicTest<Enve
 		settings.put( EnversSettings.USE_REVISION_ENTITY_WITH_NATIVE_ID, Boolean.FALSE.toString() );
 		if ( !StringHelper.isEmpty( auditStrategyName ) ) {
 			settings.put( EnversSettings.AUDIT_STRATEGY, auditStrategyName );
+		}
+	}
+
+	protected void injectProperties(Map<String, Object> settings, Properties properties) {
+		for ( Map.Entry<Object, Object> entry : properties.entrySet() ) {
+			if ( entry.getKey() instanceof String ) {
+				settings.put( (String) entry.getKey(), entry.getValue() );
+			}
 		}
 	}
 

@@ -7,12 +7,14 @@
 package org.hibernate.envers.test.revfordate;
 
 import java.util.Date;
+import java.util.List;
 
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.support.domains.basic.StrTestEntity;
 
+import org.hibernate.testing.hamcrest.CollectionMatchers;
 import org.hibernate.testing.junit5.dynamictests.DynamicBeforeAll;
 import org.hibernate.testing.junit5.dynamictests.DynamicTest;
 
@@ -37,11 +39,11 @@ public class RevisionForDateTest extends EnversEntityManagerFactoryBasedFunction
 	}
 
 	@DynamicBeforeAll
-	public void prepareAuditData() throws Exception {
-		inTransactions(
+	public void prepareAuditData() {
+		final List<Long> timestamps = inTransactionsWithTimeouts(
+				100,
 				// Revision 1
 				entityManager -> {
-					timestamp1 = getTimestamp();
 					StrTestEntity entity = new StrTestEntity( "x" );
 					entityManager.persist( entity );
 
@@ -50,23 +52,23 @@ public class RevisionForDateTest extends EnversEntityManagerFactoryBasedFunction
 
 				// Revision 2
 				entityManager -> {
-					timestamp2 = getTimestamp();
 					StrTestEntity entity = entityManager.find( StrTestEntity.class, id );
 					entity.setStr( "y" );
 				},
 
 				// Revision 3
 				entityManager -> {
-					timestamp3 = getTimestamp();
 					StrTestEntity entity = entityManager.find( StrTestEntity.class, id );
 					entity.setStr( "z" );
-				},
-
-				// No revision
-				entityManager -> {
-					timestamp4 = getTimestamp();
 				}
 		);
+
+		assertThat( timestamps, CollectionMatchers.hasSize( 4 ) );
+
+		this.timestamp1 = timestamps.get( 0 );
+		this.timestamp2 = timestamps.get( 1 );
+		this.timestamp3 = timestamps.get( 2 );
+		this.timestamp4 = timestamps.get( 3 );
 	}
 
 	@DynamicTest(expected = RevisionDoesNotExistException.class)
@@ -115,18 +117,5 @@ public class RevisionForDateTest extends EnversEntityManagerFactoryBasedFunction
 
 		final Number revisionForTimestamp4 = reader.getRevisionNumberForDate( new Date( timestamp4 ) );
 		assertThat( reader.getRevisionDate( revisionForTimestamp4 ).getTime(), lessThanOrEqualTo( timestamp4 ) );
-	}
-
-	private long getTimestamp() {
-		long timestamp = System.currentTimeMillis();
-		try {
-			// This is used to guarantee that there is a gap between the timestamps assigned
-			// to each unique revision to guarantee that the test queries return expected hits.
-			Thread.sleep( 100 );
-		}
-		catch ( InterruptedException e ) {
-			throw new RuntimeException( "Failed to wait for defined time slice", e );
-		}
-		return timestamp;
 	}
 }

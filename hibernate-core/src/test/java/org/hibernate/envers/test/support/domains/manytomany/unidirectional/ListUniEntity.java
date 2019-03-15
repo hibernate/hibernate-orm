@@ -4,28 +4,25 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.support.domains.onetomany;
+package org.hibernate.envers.test.support.domains.manytomany.unidirectional;
 
-import java.io.Serializable;
+import java.util.List;
 import java.util.Objects;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.ManyToMany;
 
 import org.hibernate.envers.Audited;
+import org.hibernate.envers.test.support.domains.basic.StrTestEntity;
 
 /**
- * ReferencIng entity
+ * Entity owning the many-to-many relation
  *
  * @author Adam Warski (adam at warski dot org)
- *
- * @see org.hibernate.envers.test.serialization.SerializingCollectionTest
  */
 @Entity
-public class CollectionRefIngEntity implements Serializable {
-	private static final long serialVersionUID = -9019967223928425707L;
-
+public class ListUniEntity {
 	@Id
 	private Integer id;
 
@@ -33,20 +30,18 @@ public class CollectionRefIngEntity implements Serializable {
 	private String data;
 
 	@Audited
-	@ManyToOne
-	private CollectionRefEdEntity reference;
+	@ManyToMany
+	private List<StrTestEntity> references;
 
-	public CollectionRefIngEntity() {
+	public ListUniEntity() {
 	}
 
-	public CollectionRefIngEntity(Integer id, String data, CollectionRefEdEntity reference) {
+	public ListUniEntity(Integer id, String data) {
 		this.id = id;
 		this.data = data;
-		this.reference = reference;
 	}
 
-	public CollectionRefIngEntity(Integer id, String data) {
-		this.id = id;
+	public ListUniEntity(String data) {
 		this.data = data;
 	}
 
@@ -66,12 +61,12 @@ public class CollectionRefIngEntity implements Serializable {
 		this.data = data;
 	}
 
-	public CollectionRefEdEntity getReference() {
-		return reference;
+	public List<StrTestEntity> getReferences() {
+		return references;
 	}
 
-	public void setReference(CollectionRefEdEntity reference) {
-		this.reference = reference;
+	public void setReferences(List<StrTestEntity> references) {
+		this.references = references;
 	}
 
 	@Override
@@ -82,7 +77,7 @@ public class CollectionRefIngEntity implements Serializable {
 		if ( o == null || getClass() != o.getClass() ) {
 			return false;
 		}
-		CollectionRefIngEntity that = (CollectionRefIngEntity) o;
+		ListUniEntity that = (ListUniEntity) o;
 		return Objects.equals( id, that.id ) &&
 				Objects.equals( data, that.data );
 	}
@@ -94,7 +89,7 @@ public class CollectionRefIngEntity implements Serializable {
 
 	@Override
 	public String toString() {
-		return "CollectionRefIngEntity{" +
+		return "ListUniEntity{" +
 				"id=" + id +
 				", data='" + data + '\'' +
 				'}';

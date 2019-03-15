@@ -17,7 +17,6 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -193,6 +192,17 @@ public class BasicValue
 									propertyName,
 									classLoaderService
 							);
+
+							// First resolve from the BasicTypeRegistry.
+							// If it does resolve, we can use the JTD instead of delegating to the JTD Regsitry.
+							final BasicType basicType = context.getBootstrapContext()
+									.getTypeConfiguration()
+									.getBasicTypeRegistry()
+									.getBasicTypeByName( reflectedJavaType.getName() );
+							if ( basicType != null ) {
+								return basicType.getJavaTypeDescriptor();
+							}
+
 							return (BasicJavaDescriptor) context.getBootstrapContext()
 									.getTypeConfiguration()
 									.getJavaTypeDescriptorRegistry()

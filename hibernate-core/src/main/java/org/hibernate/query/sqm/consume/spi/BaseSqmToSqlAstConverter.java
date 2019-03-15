@@ -1745,7 +1745,7 @@ public abstract class BaseSqmToSqlAstConverter
 	@Override
 	public InListPredicate visitInListPredicate(InListSqmPredicate predicate) {
 		final InListPredicate inPredicate = new InListPredicate(
-				(Expression) predicate.getTestExpression().accept( this ),
+				toExpression( predicate.getTestExpression().accept( this ) ),
 				predicate.isNegated()
 		);
 		for ( SqmExpression expression : predicate.getListExpressions() ) {

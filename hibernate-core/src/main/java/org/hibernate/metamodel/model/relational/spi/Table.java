@@ -11,6 +11,7 @@ import java.util.UUID;
 
 import org.hibernate.dialect.Dialect;
 
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.Loggable;
 
 
@@ -26,7 +27,7 @@ public interface Table extends Loggable {
 
 	String getTableExpression();
 
-	String render(Dialect dialect);
+	String render(Dialect dialect, JdbcEnvironment jdbcEnvironment);
 
 	PrimaryKey getPrimaryKey();
 

@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.UUID;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
@@ -45,8 +46,8 @@ public class IdTable extends PhysicalTable {
 	}
 
 	@Override
-	public String render(Dialect dialect) {
-		return getQualifiedTableName().getTableName().render( dialect );
+	public String render(Dialect dialect, JdbcEnvironment jdbcEnvironment) {
+		return jdbcEnvironment.getQualifiedObjectNameFormatter().format( getQualifiedTableName(), dialect );
 	}
 
 	@Override

@@ -9,6 +9,7 @@ package org.hibernate.metamodel.model.relational.spi;
 import java.util.UUID;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
 /**
  * Represents a TableSpecification derived from a subquery (inline view), as opposed to a PhysicalTableSpecification
@@ -29,7 +30,7 @@ public class DerivedTable extends AbstractTable {
 	}
 
 	@Override
-	public String render(Dialect dialect) {
+	public String render(Dialect dialect, JdbcEnvironment jdbcEnvironment) {
 		return expression;
 	}
 

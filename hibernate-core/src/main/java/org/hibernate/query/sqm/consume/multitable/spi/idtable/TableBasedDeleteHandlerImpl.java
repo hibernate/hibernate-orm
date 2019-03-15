@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
@@ -86,9 +87,10 @@ public class TableBasedDeleteHandlerImpl
 
 	private void deleteFrom(Table table, String idTableSelectSubQuery, HandlerExecutionContext executionContext) {
 		final Dialect dialect = executionContext.getSessionFactory().getJdbcServices().getDialect();
+		final JdbcEnvironment jdbcEnvironment = executionContext.getSessionFactory().getJdbcServices().getJdbcEnvironment();
 		final StringBuilder sqlBuffer = new StringBuilder(  );
 		sqlBuffer.append( "delete from " )
-				.append( table.render( dialect ) )
+				.append( table.render( dialect, jdbcEnvironment ) )
 				.append( " where " );
 
 		if ( table.getPrimaryKey().getColumns().size() == 1 ) {

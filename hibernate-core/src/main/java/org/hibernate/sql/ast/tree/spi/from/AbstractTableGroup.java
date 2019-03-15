@@ -37,8 +37,12 @@ public abstract class AbstractTableGroup
 		if ( identificationVariable != null ) {
 			aliasString = " as " + identificationVariable;
 		}
-		sqlAppender
-				.appendSql( tableBinding.getTable().render( walker.getSessionFactory().getDialect() ) + aliasString );
+		sqlAppender.appendSql(
+				tableBinding.getTable().render(
+						walker.getSessionFactory().getDialect(),
+						walker.getSessionFactory().getJdbcServices().getJdbcEnvironment()
+				) + aliasString
+		);
 	}
 
 	@Override

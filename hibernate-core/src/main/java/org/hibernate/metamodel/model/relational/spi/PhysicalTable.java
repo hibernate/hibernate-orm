@@ -90,8 +90,8 @@ public class PhysicalTable extends AbstractTable implements ExportableTable {
 	}
 
 	@Override
-	public String render(Dialect dialect) {
-		return getQualifiedTableName().getTableName().render( dialect );
+	public String render(Dialect dialect, JdbcEnvironment jdbcEnvironment) {
+		return jdbcEnvironment.getQualifiedObjectNameFormatter().format( getQualifiedTableName(), dialect );
 	}
 
 	@Override

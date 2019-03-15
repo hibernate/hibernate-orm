@@ -58,7 +58,12 @@ public class SqlInsertSelectToJdbcInsertSelectConverter
 
 	private void visitInsertSelectStatement(InsertSelectStatement sqlAst) {
 		appendSql( "insert into " );
-		appendSql( sqlAst.getTargetTable().getTable().render( getSessionFactory().getDialect() ) );
+		appendSql(
+				sqlAst.getTargetTable().getTable().render(
+						getSessionFactory().getDialect(),
+						getSessionFactory().getJdbcServices().getJdbcEnvironment()
+				)
+		);
 		appendSql(" ");
 		// todo (6.0) : for now we do not provide an explicit target columns (VALUES) list - we should...
 

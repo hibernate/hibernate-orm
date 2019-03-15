@@ -6,8 +6,6 @@
  */
 package org.hibernate.envers;
 
-import java.io.Serializable;
-
 /**
  * Extension of standard {@link RevisionListener} that notifies whenever an entity instance has been
  * added, modified or removed within current revision boundaries.
@@ -30,17 +28,6 @@ public interface EntityTrackingRevisionListener extends RevisionListener {
 			Class entityClass,
 			String entityName,
 			Object entityId,
-			RevisionType revisionType,
-			Object revisionEntity);
-
-	/**
-	 * @deprecated (since 6.0) - Use {@link #entityChanged(Class, String, Object, RevisionType, Object)} instead
-	 */
-	@Deprecated
-	void entityChanged(
-			Class entityClass,
-			String entityName,
-			Serializable entityId,
 			RevisionType revisionType,
 			Object revisionEntity);
 }

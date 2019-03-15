@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.tree.from;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -29,6 +30,8 @@ public interface SqmFrom extends TableGroupInfo, SqmVisitableNode, SqmTypedNode,
 	 */
 	@Override
 	NavigableContainer<?> getReferencedNavigable();
+
+	boolean hasJoins();
 
 	/**
 	 * The joins associated with this SqmFrom
@@ -52,7 +55,7 @@ public interface SqmFrom extends TableGroupInfo, SqmVisitableNode, SqmTypedNode,
 
 	@Override
 	default void prepareForSubNavigableReference(
-			SqmPath subReference,
+			Navigable subNavigable,
 			boolean isSubReferenceTerminal,
 			SqmCreationState creationState) {
 		// nothing to do, already prepared

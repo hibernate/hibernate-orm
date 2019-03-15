@@ -98,6 +98,11 @@ public abstract class AbstractSqmFrom implements SqmFrom {
 	}
 
 	@Override
+	public boolean hasJoins() {
+		return ! (joins == null || joins.isEmpty() );
+	}
+
+	@Override
 	public List<SqmJoin> getJoins() {
 		return joins == null ? Collections.emptyList() : Collections.unmodifiableList( joins );
 	}

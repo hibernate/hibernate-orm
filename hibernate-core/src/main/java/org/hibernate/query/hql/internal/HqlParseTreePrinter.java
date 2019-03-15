@@ -27,7 +27,11 @@ public class HqlParseTreePrinter extends HqlParserBaseListener {
 			return;
 		}
 
-		ParseTreeWalker.DEFAULT.walk( new HqlParseTreePrinter( parser ), parser.statement() );
+		final HqlParseTreePrinter walker = new HqlParseTreePrinter( parser );
+		ParseTreeWalker.DEFAULT.walk( walker, parser.statement() );
+
+		HQL_LOGGER.debugf( "HQL parse-tree:\n%s", walker.buffer.toString() );
+
 		parser.reset();
 	}
 
@@ -36,16 +40,25 @@ public class HqlParseTreePrinter extends HqlParserBaseListener {
 			return;
 		}
 
-		ParseTreeWalker.DEFAULT.walk( new HqlParseTreePrinter( parser ), parser.orderByClause() );
+		final HqlParseTreePrinter walker = new HqlParseTreePrinter( parser );
+		ParseTreeWalker.DEFAULT.walk( walker, parser.orderByClause() );
+
+		HQL_LOGGER.debugf( "Mapping order-by parse-tree:\n%s", walker.buffer.toString() );
+
 		parser.reset();
 	}
 
 	private final HqlParser parser;
-
-	private int depth = 0;
+	private final StringBuffer buffer = new StringBuffer();
+	private int depth = 2;
 
 	public HqlParseTreePrinter(HqlParser parser) {
 		this.parser = parser;
+	}
+
+	private enum LineType {
+		ENTER,
+		EXIT
 	}
 
 	@Override
@@ -53,27 +66,36 @@ public class HqlParseTreePrinter extends HqlParserBaseListener {
 		final String ruleName = parser.getRuleNames()[ctx.getRuleIndex()];
 
 		if ( !ruleName.endsWith( "Keyword" ) ) {
-			HQL_LOGGER.debugf(
-					"%s %s (%s) [`%s`]",
-					enterRulePadding(),
-					ctx.getClass().getSimpleName(),
-					ruleName,
-					ctx.getText()
-			);
+			applyLine( LineType.ENTER, ruleName, ctx.getText() );
 		}
 		super.enterEveryRule( ctx );
 	}
 
-	private String enterRulePadding() {
-		return pad( depth++ ) + "->";
+	private void applyLine(LineType lineType, String ruleName, String ctxText) {
+		applyLinePadding( lineType );
+
+		buffer.append( '[' ).append( ruleName ).append( ']' )
+				.append( " (`" ).append( ctxText ).append( "`)" )
+				.append( '\n' );
+	}
+
+	private void applyLinePadding(LineType lineType) {
+		if ( lineType == LineType.ENTER ) {
+			pad( depth++ );
+			buffer.append( "-> " );
+		}
+		else {
+			pad( --depth );
+			buffer.append( "<- " );
+		}
+
 	}
 
 	private String pad(int depth) {
-		StringBuilder buf = new StringBuilder( 2 * depth );
 		for ( int i = 0; i < depth; i++ ) {
-			buf.append( "  " );
+			buffer.append( "  " );
 		}
-		return buf.toString();
+		return buffer.toString();
 	}
 
 	@Override
@@ -82,18 +104,6 @@ public class HqlParseTreePrinter extends HqlParserBaseListener {
 
 		final String ruleName = parser.getRuleNames()[ctx.getRuleIndex()];
 
-		if ( !ruleName.endsWith( "Keyword" ) ) {
-			HQL_LOGGER.debugf(
-					"%s %s (%s) [`%s`]",
-					exitRulePadding(),
-					ctx.getClass().getSimpleName(),
-					parser.getRuleNames()[ctx.getRuleIndex()],
-					ctx.getText()
-			);
-		}
-	}
-
-	private String exitRulePadding() {
-		return pad( --depth ) + "<-";
+		applyLine( LineType.EXIT, ruleName, ctx.getText() );
 	}
 }

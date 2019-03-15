@@ -8,13 +8,17 @@ package org.hibernate.metamodel.model.domain.spi;
 
 import javax.persistence.metamodel.Type;
 
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
+import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.spi.TableReferenceContributor;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
+import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.results.internal.domain.entity.EntityResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
@@ -55,6 +59,39 @@ public interface EntityValuedNavigable<J>
 			NavigablePath navigablePath,
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		// its possible we have an implicit join and need to make sure the joined TableGroup gets created.
+		// e.g., `select p.address from Person p`
+		//
+		// another option would be a specialized DotIdentifierConsumer for the select-clause
+
+		// todo (6.0) : account for "shallow entity selection" (historical)
+
+		if ( this instanceof SingularPersistentAttributeEntity ) {
+			if ( navigablePath.getParent() != null ) {
+				creationState.getFromClauseAccess().resolveTableGroup(
+						navigablePath,
+						np -> {
+							final TableGroup lhsTableGroup = creationState.getFromClauseAccess().getTableGroup( navigablePath.getParent() );
+							final TableGroupJoin tableGroupJoin = ( (SingularPersistentAttributeEntity) this ).createTableGroupJoin(
+									null,
+									navigablePath,
+									lhsTableGroup,
+									null,
+									JoinType.INNER,
+									creationState.determineLockMode( null ),
+									creationState.getSqlAstCreationState()
+							);
+							lhsTableGroup.addTableGroupJoin( tableGroupJoin );
+							return tableGroupJoin.getJoinedGroup();
+						}
+				);
+			}
+			else {
+				// this means the TableGroup should already exist
+				assert creationState.getFromClauseAccess().getTableGroup( navigablePath ) != null;
+			}
+		}
+
 		return new EntityResultImpl(
 				navigablePath,
 				this,

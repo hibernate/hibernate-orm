@@ -104,6 +104,11 @@ public class TableReference implements SqlAstNode, ColumnReferenceQualifier, Log
 	}
 
 	@Override
+	public String toString() {
+		return toLoggableFragment();
+	}
+
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;

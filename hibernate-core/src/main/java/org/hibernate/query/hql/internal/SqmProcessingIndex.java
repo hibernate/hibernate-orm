@@ -54,23 +54,25 @@ public class SqmProcessingIndex implements SqmPathRegistry {
 		// Regarding part #1 (add to the path-by-path map), it is ok for a SqmFrom to replace a
 		// 		non-SqmFrom.  This should equate to, e.g., an implicit join.
 
-		final SqmPath previousPath = sqmPathByPath.put( sqmPath.getNavigablePath(), sqmPath );
-
-		if ( previousPath instanceof SqmFrom ) {
-			// this should never happen
-			throw new ParsingException(
-					String.format(
-							Locale.ROOT,
-							"Registration for path [%s] overrode previous registration: %s -> %s",
-							sqmPath.getNavigablePath(),
-							previousPath,
-							sqmPath
-					)
-			);
-		}
-
 		if ( sqmPath instanceof SqmFrom ) {
 			final SqmFrom sqmFrom = (SqmFrom) sqmPath;
+
+			final String alias = sqmPath.getExplicitAlias();
+			if ( alias != null ) {
+				final SqmFrom previousFrom = sqmFromByAlias.put( alias, sqmFrom );
+				if ( previousFrom != null ) {
+					throw new AliasCollisionException(
+							String.format(
+									Locale.ENGLISH,
+									"Alias [%s] used for multiple from-clause elements : %s, %s",
+									alias,
+									previousFrom,
+									sqmPath
+							)
+					);
+				}
+			}
+
 			final SqmFrom previousFromByPath = sqmFromByPath.put( sqmPath.getNavigablePath(), sqmFrom );
 
 			if ( previousFromByPath != null ) {
@@ -85,24 +87,21 @@ public class SqmProcessingIndex implements SqmPathRegistry {
 						)
 				);
 			}
+		}
 
-			final String alias = sqmPath.getExplicitAlias();
-			if ( alias == null ) {
-				return;
-			}
+		final SqmPath previousPath = sqmPathByPath.put( sqmPath.getNavigablePath(), sqmPath );
 
-			final SqmFrom previousFrom = sqmFromByAlias.put( alias, sqmFrom );
-			if ( previousFrom != null ) {
-				throw new AliasCollisionException(
-						String.format(
-								Locale.ENGLISH,
-								"Alias [%s] used for multiple from-clause elements : %s, %s",
-								alias,
-								previousFrom,
-								sqmPath
-						)
-				);
-			}
+		if ( previousPath instanceof SqmFrom ) {
+			// this should never happen
+			throw new ParsingException(
+					String.format(
+							Locale.ROOT,
+							"Registration for path [%s] overrode previous registration: %s -> %s",
+							sqmPath.getNavigablePath(),
+							previousPath,
+							sqmPath
+					)
+			);
 		}
 	}
 

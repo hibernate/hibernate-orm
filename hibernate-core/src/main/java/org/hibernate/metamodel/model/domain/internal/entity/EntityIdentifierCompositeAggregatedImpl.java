@@ -282,15 +282,11 @@ public class EntityIdentifierCompositeAggregatedImpl<O,J>
 	@Override
 	public SqmNavigableReference createSqmExpression(SqmPath lhs, SqmCreationState creationState) {
 		final NavigablePath navigablePath = lhs.getNavigablePath().append( getNavigableName() );
-		final SqmPathRegistry pathRegistry = creationState.getProcessingStateStack().getCurrent().getPathRegistry();
-		return (SqmNavigableReference) pathRegistry.resolvePath(
+		return new SqmEmbeddedValuedSimplePath(
+				creationState.generateUniqueIdentifier(),
 				navigablePath,
-				np -> new SqmEmbeddedValuedSimplePath(
-						creationState.generateUniqueIdentifier(),
-						navigablePath,
-						this,
-						lhs
-				)
+				this,
+				lhs
 		);
 	}
 

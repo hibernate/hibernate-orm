@@ -25,6 +25,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
+import org.hibernate.metamodel.model.domain.spi.BasicValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
@@ -1536,10 +1537,18 @@ public abstract class BaseSqmToSqlAstConverter
 	private Expression toExpression(Object value) {
 		if ( value instanceof NavigableReference ) {
 			final NavigableReference navigableReference = (NavigableReference) value;
-			final List list = navigableReference.getNavigable().resolveColumnReferences(
-					navigableReference.getAssociatedTableGroup(),
-					this
-			);
+			final TableGroup tableGroup;
+
+			if ( navigableReference.getNavigable() instanceof BasicValuedNavigable ) {
+				// maybe we should register the LHS TableGroup for the basic value
+				// under its NavigablePath, similar to what we do for embeddables
+				tableGroup = fromClauseIndex.resolveTableGroup( navigableReference.getNavigablePath().getParent() );
+			}
+			else {
+				tableGroup = fromClauseIndex.resolveTableGroup( navigableReference.getNavigablePath() );
+			}
+
+			final List list = navigableReference.getNavigable().resolveColumnReferences( tableGroup, this );
 			if ( list.size() == 1 ) {
 				assert list.get( 0 ) instanceof Expression;
 				return (Expression) list.get( 0 );

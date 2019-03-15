@@ -31,14 +31,18 @@ public class EntityValuedNavigableReference implements NavigableContainerReferen
 		this.navigable = navigable;
 		this.lockMode = lockMode;
 
-		this.tableGroup = creationState.getFromClauseAccess().resolveTableGroup(
-				navigablePath,
-				no -> {
-					final TableGroup parentTableGroup = creationState.getFromClauseAccess().getTableGroup( navigablePath.getParent() );
-					creationState.getFromClauseAccess().registerTableGroup( navigablePath, parentTableGroup );
-					return parentTableGroup;
-				}
-		);
+		// generally speaking this should indicate a "simple" reference to a to-one.
+
+		this.tableGroup = null;
+//
+//		this.tableGroup = creationState.getFromClauseAccess().resolveTableGroup(
+//				navigablePath,
+//				no -> {
+//					final TableGroup parentTableGroup = creationState.getFromClauseAccess().getTableGroup( navigablePath.getParent() );
+//					creationState.getFromClauseAccess().registerTableGroup( navigablePath, parentTableGroup );
+//					return parentTableGroup;
+//				}
+//		);
 	}
 
 

@@ -7,8 +7,7 @@
 package org.hibernate.query.sqm.produce.internal;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Locale;
 
 import org.hibernate.query.criteria.sqm.JpaParameterSqmWrapper;
 import org.hibernate.query.spi.QueryMessageLogger;
@@ -19,6 +18,7 @@ import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
+import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
@@ -39,7 +39,6 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementRefere
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionIndexReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmDiscriminatorReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
-import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMaxElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMinElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMinIndexReferenceBasic;
@@ -124,7 +123,6 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 	private static final Logger LOGGER = Logger.getLogger( QueryMessageLogger.LOGGER_NAME + ".sqm.sqmTree" );
 	private static final boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();
 
-
 	public static void logTree(SqmStatement sqmStatement) {
 		final SqmTreePrinter printer = new SqmTreePrinter();
 
@@ -140,24 +138,16 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 		else if ( sqmStatement instanceof SqmInsertSelectStatement ) {
 			printer.visitInsertSelectStatement( (SqmInsertSelectStatement) sqmStatement );
 		}
+
+		LOGGER.debugf( "Semantic Query (SQM) Tree :\n%s", printer.buffer.toString() );
 	}
 
-	/**
-	 * Start with 2 to get a nice initial indentation
-	 */
-	private int indentation = 1;
-
-	private void increaseIndentation() {
-		indentation += 1;
-	}
-
-	private void decreaseIndentation() {
-		indentation -= 1;
-	}
+	private final StringBuffer buffer = new StringBuffer();
+	private int depth = 2;
 
 	private void processStanza(String name, Runnable processor) {
-		logWithIndentation( "{%s}", name );
-		increaseIndentation();
+		logWithIndentation( "-> [%s]", name );
+		depth++;
 
 		try {
 			processor.run();
@@ -166,51 +156,55 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 			log.debugf( e, "Error processing stanza {%s}", name );
 		}
 
-		decreaseIndentation();
-		logWithIndentation( "{/%s}", name );
-	}
-
-	private String indentation() {
-		StringBuilder buf = new StringBuilder( 2 * indentation );
-		for ( int i = 0; i < indentation; i++ ) {
-			buf.append( "  " );
-		}
-		return buf.toString();
+		depth--;
+		logWithIndentation( "<- [%s]", name );
 	}
 
 	private void logWithIndentation(Object line) {
-		LOGGER.debugf(
-				"%s %s",
-				indentation(),
-				line
-		);
+		pad( depth );
+		buffer.append( line ).append( '\n' );
+	}
+
+	private void pad(int depth) {
+		for ( int i = 0; i < depth; i++ ) {
+			buffer.append( "  " );
+		}
 	}
 
 	private void logWithIndentation(String pattern, Object arg1) {
-		LOGGER.debugf(
-				"%s" + pattern,
-				indentation(),
-				arg1
-		);
+		logWithIndentation(  String.format( pattern, arg1 ) );
 	}
 
 	private void logWithIndentation(String pattern, Object arg1, Object arg2) {
-		LOGGER.debugf(
-				"%s" + pattern,
-				indentation(),
-				arg1,
-				arg2
-		);
+		logWithIndentation(  String.format( pattern, arg1, arg2 ) );
 	}
 
 	private void logWithIndentation(String pattern, Object... args) {
-		final List<Object> argsList = Arrays.asList( args );
-		argsList.add( 0, indentation() );
+		logWithIndentation(  String.format( pattern, args ) );
+	}
 
-		LOGGER.debugf(
-				"%s " + pattern,
-				argsList.toArray()
-		);
+	private void logIndented(String line) {
+		depth++;
+		logWithIndentation( line );
+		depth--;
+	}
+
+	private void logIndented(String pattern, Object arg) {
+		depth++;
+		logWithIndentation( String.format( Locale.ROOT, pattern, arg ) );
+		depth--;
+	}
+
+	private void logIndented(String pattern, Object arg1, Object arg2) {
+		depth++;
+		logWithIndentation( String.format( Locale.ROOT, pattern, arg1, arg2 ) );
+		depth--;
+	}
+
+	private void logIndented(String pattern, Object... args) {
+		depth++;
+		logWithIndentation( String.format( Locale.ROOT, pattern, args ) );
+		depth--;
 	}
 
 
@@ -223,7 +217,7 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 			processStanza(
 					"delete",
 					() -> {
-						logWithIndentation( "{target}%s{/target}", statement.getTarget().getEntityName() );
+						logWithIndentation( "[target = %s]", statement.getTarget().getNavigablePath().getFullPath() );
 						visitWhereClause( statement.getWhereClause() );
 					}
 			);
@@ -236,16 +230,14 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 	public Object visitInsertSelectStatement(SqmInsertSelectStatement statement) {
 		if ( DEBUG_ENABLED ) {
 			processStanza(
-					"insert - " + statement.getTarget().getEntityName(),
+					"insert",
 					() -> {
+						logWithIndentation( "[target = %s]", statement.getTarget().getNavigablePath().getFullPath() );
 						processStanza(
-								"targets",
+								"into",
 								() -> statement.getInsertionTargetPaths().forEach( sqmPath -> sqmPath.accept( this ) )
 						);
-
-						increaseIndentation();
 						visitQuerySpec( statement.getSelectQuerySpec() );
-						decreaseIndentation();
 					}
 			);
 		}
@@ -256,7 +248,10 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 	@Override
 	public Object visitSelectStatement(SqmSelectStatement statement) {
 		if ( DEBUG_ENABLED ) {
-			visitQuerySpec( statement.getQuerySpec() );
+			processStanza(
+					"select",
+					() -> visitQuerySpec( statement.getQuerySpec() )
+			);
 		}
 
 		return null;
@@ -266,8 +261,10 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 	public Object visitUpdateStatement(SqmUpdateStatement statement) {
 		if ( DEBUG_ENABLED ) {
 			processStanza(
-					"update - " + statement.getTarget().getEntityName(),
+					"update",
 					() -> {
+						logWithIndentation( "[target = %s]", statement.getTarget().getNavigablePath().getFullPath() );
+
 						visitSetClause( statement.getSetClause() );
 
 						visitWhereClause( statement.getWhereClause() );
@@ -293,9 +290,11 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 		processStanza(
 				"assignment",
 				() -> {
-					logWithIndentation( "`%s`", assignment.getStateField().getNavigablePath() );
 					logWithIndentation( "=" );
+					depth++;
+					logWithIndentation( "[%s]", assignment.getStateField().getNavigablePath() );
 					assignment.getValue().accept( this );
+					depth--;
 				}
 		);
 
@@ -355,10 +354,12 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 
 	@Override
 	public Object visitHavingClause(SqmHavingClause clause) {
-		processStanza(
-				"having",
-				() -> clause.getPredicate().accept( this )
-		);
+		if ( clause != null ) {
+			processStanza(
+					"having",
+					() -> clause.getPredicate().accept( this )
+			);
+		}
 
 		return null;
 	}
@@ -376,17 +377,18 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 	@Override
 	public Object visitRootEntityFromElement(SqmRoot root) {
 		processStanza(
-				"root",
-				() -> {
-					logWithIndentation( "{path - " + root.getNavigablePath() + '}' );
-					processJoins( root );
-				}
+				"root (" + root.getNavigablePath().getFullPath() + ")",
+				() -> processJoins( root )
 		);
 
 		return null;
 	}
 
 	private void processJoins(SqmFrom sqmFrom) {
+		if ( !sqmFrom.hasJoins() ) {
+			return;
+		}
+
 		processStanza(
 				"joins",
 				() -> sqmFrom.visitJoins( sqmJoin -> sqmJoin.accept( this ) )
@@ -402,11 +404,8 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 	@Override
 	public Object visitCrossJoinedFromElement(SqmCrossJoin joinedFromElement) {
 		processStanza(
-				"cross",
-				() -> {
-					logWithIndentation( joinedFromElement.getNavigablePath() );
-					processJoins( joinedFromElement );
-				}
+				"cross (" + joinedFromElement.getNavigablePath().getFullPath() + ")",
+				() -> processJoins( joinedFromElement )
 		);
 
 		return null;
@@ -415,13 +414,14 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 	@Override
 	public Object visitQualifiedEntityJoinFromElement(SqmEntityJoin joinedFromElement) {
 		processStanza(
-				"entity",
+				"entity (" + joinedFromElement.getNavigablePath().getFullPath() + ")",
 				() -> {
-					logWithIndentation( joinedFromElement.getNavigablePath() );
-					processStanza(
-							"on",
-							() -> joinedFromElement.getJoinPredicate().accept( this )
-					);
+					if ( joinedFromElement.getJoinPredicate() != null ) {
+						processStanza(
+								"on",
+								() -> joinedFromElement.getJoinPredicate().accept( this )
+						);
+					}
 					processJoins( joinedFromElement );
 				}
 		);
@@ -432,10 +432,9 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 	@Override
 	public Object visitQualifiedAttributeJoinFromElement(SqmNavigableJoin joinedFromElement) {
 		processStanza(
-				"attribute(fetched=" + joinedFromElement.isFetched() + ")",
+				"attribute (" + joinedFromElement.getNavigablePath().getFullPath() + ")",
 				() -> {
-					logWithIndentation( joinedFromElement.getNavigablePath() );
-					logWithIndentation( "fetched - %s", joinedFromElement.isFetched() );
+					logIndented( "[fetched = " + joinedFromElement.isFetched() + ']' );
 					processStanza(
 							"on",
 							() -> joinedFromElement.getJoinPredicate().accept( this )
@@ -449,28 +448,28 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 
 	@Override
 	public Object visitBasicValuedPath(SqmBasicValuedSimplePath path) {
-		logWithIndentation( path.getNavigablePath() );
+		logWithIndentation( "[basic-path - %s]", path.getNavigablePath().getFullPath() );
 
 		return null;
 	}
 
 	@Override
 	public Object visitEmbeddableValuedPath(SqmEmbeddedValuedSimplePath path) {
-		logWithIndentation( path.getNavigablePath() );
+		logWithIndentation( "[embedded-path - %s]", path.getNavigablePath().getFullPath() );
 
 		return null;
 	}
 
 	@Override
 	public Object visitEntityValuedPath(SqmEntityValuedSimplePath path) {
-		logWithIndentation( path.getNavigablePath() );
+		logWithIndentation( "[entity-path - %s]", path.getNavigablePath().getFullPath() );
 
 		return null;
 	}
 
 	@Override
 	public Object visitPluralValuedPath(SqmPluralValuedSimplePath path) {
-		logWithIndentation( path.getNavigablePath() );
+		logWithIndentation( "[plural-path - %s]", path.getNavigablePath().getFullPath() );
 
 		return null;
 	}
@@ -686,10 +685,12 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 
 	@Override
 	public Object visitWhereClause(SqmWhereClause whereClause) {
-		processStanza(
-				"where",
-				() -> whereClause.getPredicate().accept( this )
-		);
+		if ( whereClause != null && whereClause.getPredicate() != null ) {
+			processStanza(
+					"where",
+					() -> whereClause.getPredicate().accept( this )
+			);
+		}
 
 		return null;
 	}
@@ -916,6 +917,23 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 
 	@Override
 	public Object visitDynamicInstantiation(SqmDynamicInstantiation sqmDynamicInstantiation) {
+		processStanza(
+				"dynamic-instantiation (" + sqmDynamicInstantiation.getInstantiationTarget().getJavaType() + ')',
+				() -> processStanza(
+						"arguments",
+						() -> sqmDynamicInstantiation.getArguments().forEach(
+								argument -> processStanza(
+										"argument (" + argument.getAlias() + ')',
+										() -> {
+											depth++;
+											argument.getSelectableNode().accept( this );
+											depth--;
+										}
+								)
+						)
+				)
+		);
+
 		return null;
 	}
 

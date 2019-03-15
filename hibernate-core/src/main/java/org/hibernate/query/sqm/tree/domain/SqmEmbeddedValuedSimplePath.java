@@ -53,40 +53,11 @@ public class SqmEmbeddedValuedSimplePath extends AbstractSqmSimplePath {
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		final Navigable subNavigable = getReferencedNavigable().findNavigable( name );
-		final NavigablePath subNavigablePath = getNavigablePath().append( name );
 
-		getLhs().prepareForSubNavigableReference(
+		prepareForSubNavigableReference( subNavigable, isTerminal, creationState );
+		return subNavigable.createSqmExpression(
 				this,
-				false,
 				creationState
-		);
-
-		return creationState.getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
-				subNavigablePath,
-				snp -> {
-					// Create the join for the embeddable
-					final SqmFrom embedJoinLhs = creationState.getProcessingStateStack()
-							.getCurrent()
-							.getPathRegistry()
-							.findFromByPath( getLhs().getNavigablePath() );
-
-					final SqmNavigableJoin join = getReferencedNavigable().createJoin(
-							embedJoinLhs,
-							// implicit joins are always INNER
-							SqmJoinType.INNER,
-							null,
-							false,
-							creationState
-					);
-					embedJoinLhs.addJoin( join );
-
-					creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( join );
-
-					return subNavigable.createSqmExpression(
-							join,
-							creationState
-					);
-				}
 		);
 	}
 
@@ -124,7 +95,7 @@ public class SqmEmbeddedValuedSimplePath extends AbstractSqmSimplePath {
 
 	@Override
 	public void prepareForSubNavigableReference(
-			SqmPath subReference,
+			Navigable subNavigable,
 			boolean isSubReferenceTerminal,
 			SqmCreationState creationState) {
 		if ( dereferenced ) {
@@ -132,7 +103,7 @@ public class SqmEmbeddedValuedSimplePath extends AbstractSqmSimplePath {
 			return;
 		}
 
-		SqmCreationHelper.resolveAsLhs( getLhs(), this, subReference, isSubReferenceTerminal, creationState );
+		SqmCreationHelper.resolveAsLhs( getLhs(), this, subNavigable, isSubReferenceTerminal, creationState );
 		dereferenced = true;
 	}
 

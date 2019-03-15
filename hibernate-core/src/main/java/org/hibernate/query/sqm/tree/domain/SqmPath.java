@@ -121,10 +121,10 @@ public interface SqmPath extends SqmExpression, SemanticPathPart {
 	 * 	todo (6.0) : ideally we'd delay this until SQM -> SQL AST conversion : criteria-as-SQM
 	 */
 	default void prepareForSubNavigableReference(
-			SqmPath subReference,
+			Navigable subNavigable,
 			boolean isSubReferenceTerminal,
 			SqmCreationState creationState) {
-		SqmCreationHelper.resolveAsLhs( getLhs(), this, subReference, isSubReferenceTerminal, creationState );
+		SqmCreationHelper.resolveAsLhs( getLhs(), this, subNavigable, isSubReferenceTerminal, creationState );
 	}
 
 	/**

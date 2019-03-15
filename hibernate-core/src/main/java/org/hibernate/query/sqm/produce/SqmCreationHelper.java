@@ -7,7 +7,7 @@
 package org.hibernate.query.sqm.produce;
 
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
-import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -39,29 +39,34 @@ public class SqmCreationHelper {
 	public static void resolveAsLhs(
 			SqmPath lhs,
 			SqmPath processingPath,
-			SqmPath subReference,
+			Navigable subNavigable,
 			boolean isSubRefTerminal,
 			SqmCreationState creationState) {
-		assert lhs == null || processingPath.getLhs().getNavigablePath().equals( lhs.getNavigablePath() );
+		if ( lhs == null ) {
+			// this should mean that `processingPath` is an `SqmRoot` and really does not need resolution.
+			//		- just skip it
+			return;
+		}
 
 		final SqmCreationProcessingState processingState = creationState.getProcessingStateStack().getCurrent();
 
-		SqmFrom lhsFrom = null;
-		if ( lhs != null ) {
-			lhs.prepareForSubNavigableReference( processingPath, false, creationState );
-			lhsFrom = processingState.getPathRegistry().findFromByPath( lhs.getNavigablePath() );
-		}
+		lhs.prepareForSubNavigableReference( processingPath.getReferencedNavigable(), false, creationState );
 
-		if ( subReference.getReferencedNavigable() instanceof EntityIdentifier && isSubRefTerminal ) {
+		// now we should be able to access the SqmFrom node for the `lhs`...
+		final SqmFrom lhsFrom = processingState.getPathRegistry().findFromByPath( lhs.getNavigablePath() );
+
+		if ( subNavigable instanceof EntityIdentifier && isSubRefTerminal ) {
+			// do not create the join if the subNavigable reference is an entity identifier and is the path terminal
+			// 		e.g., `select p.address.id from Person p ...`
 			return;
 		}
 
 		// create the join if not already
 
-		final SqmFrom fromByPath = processingState.getPathRegistry().findFromByPath( processingPath.getNavigablePath() );
-		if ( fromByPath == null ) {
-			final SqmNavigableJoin entityFrom = new SqmNavigableJoin(
-					"",
+		final SqmFrom existingJoin = processingState.getPathRegistry().findFromByPath( processingPath.getNavigablePath() );
+		if ( existingJoin == null ) {
+			final SqmNavigableJoin sqmJoin = new SqmNavigableJoin(
+					processingPath.getNavigablePath().getFullPath(),
 					lhsFrom,
 					(Joinable) processingPath.getReferencedNavigable(),
 					// a non-terminal should never have an alias
@@ -70,11 +75,8 @@ public class SqmCreationHelper {
 					false,
 					creationState
 			);
-			if ( lhsFrom != null ) {
-				lhsFrom.addJoin( entityFrom );
-			}
-
-			processingState.getPathRegistry().register( entityFrom );
+			lhsFrom.addJoin( sqmJoin );
+			processingState.getPathRegistry().register( sqmJoin );
 		}
 	}
 }

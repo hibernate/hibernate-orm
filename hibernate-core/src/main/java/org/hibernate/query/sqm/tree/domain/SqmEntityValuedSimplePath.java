@@ -8,7 +8,6 @@ package org.hibernate.query.sqm.tree.domain;
 
 import java.util.function.Supplier;
 
-import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
@@ -17,9 +16,6 @@ import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.SqmCreationHelper;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
-import org.hibernate.query.sqm.tree.SqmJoinType;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
@@ -56,7 +52,7 @@ public class SqmEntityValuedSimplePath extends AbstractSqmSimplePath {
 		final EntityValuedNavigable referencedNavigable = getReferencedNavigable();
 		final Navigable navigable = referencedNavigable.findNavigable( name );
 
-		prepareForSubNavigableReference( getLhs(), isTerminal, creationState );
+		prepareForSubNavigableReference( referencedNavigable, isTerminal, creationState );
 
 		assert getLhs() == null || creationState.getProcessingStateStack()
 				.getCurrent()
@@ -85,7 +81,7 @@ public class SqmEntityValuedSimplePath extends AbstractSqmSimplePath {
 
 	@Override
 	public void prepareForSubNavigableReference(
-			SqmPath subReference,
+			Navigable subNavigable,
 			boolean isSubReferenceTerminal,
 			SqmCreationState creationState) {
 		if ( dereferenced ) {
@@ -93,7 +89,7 @@ public class SqmEntityValuedSimplePath extends AbstractSqmSimplePath {
 			return;
 		}
 
-		SqmCreationHelper.resolveAsLhs( getLhs(), this, subReference, isSubReferenceTerminal, creationState );
+		SqmCreationHelper.resolveAsLhs( getLhs(), this, subNavigable, isSubReferenceTerminal, creationState );
 
 		dereferenced = true;
 	}

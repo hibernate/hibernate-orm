@@ -1167,7 +1167,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 		try {
 			return new CountFunction(
-					(Expression) expression.getArgument().accept( this ),
+					toExpression( expression.getArgument().accept( this ) ),
 					expression.isDistinct(),
 					getSessionFactory().getTypeConfiguration()
 							.getBasicTypeRegistry()

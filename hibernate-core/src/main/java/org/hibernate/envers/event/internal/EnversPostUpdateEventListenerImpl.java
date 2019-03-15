@@ -57,7 +57,7 @@ public class EnversPostUpdateEventListenerImpl extends AbstractEnversUpdateEvent
 						event.getDescriptor(),
 						entityName,
 						newDbState,
-						event.getOldState(),
+						oldState,
 						event.getSession()
 				);
 			}

@@ -16,6 +16,7 @@ import java.util.List;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DynamicNode;
 import org.junit.jupiter.api.TestFactory;
+import org.opentest4j.TestAbortedException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.DynamicContainer.dynamicContainer;
@@ -165,6 +166,26 @@ public abstract class AbstractDynamicTest<T extends DynamicExecutionContext> {
 													throw t;
 												}
 											}
+										}
+									}
+							)
+					);
+				}
+				// todo (6.0) - Be able to mark DynamicTest as skipped.
+				//
+				//		After discussing with smoyer64 with junit5 team, we determined that it would be nice
+				//		to mark DynamicTest instances as skipped.  The proposal is to throw a black-listesd
+				//		exception that Junit will catch and handle internally.
+				//
+				//		See	https://github.com/junit-team/junit5/issues/1816
+				else {
+					tests.add(
+							dynamicTest(
+									method.getName(),
+									() -> {
+										final Disabled annotation  = method.getAnnotation( Disabled.class );
+										if ( annotation != null && annotation.value().length() > 0 ) {
+											throw new TestAbortedException( annotation.value() );
 										}
 									}
 							)

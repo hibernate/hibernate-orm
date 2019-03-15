@@ -80,7 +80,7 @@ public class LazyAttributeLoadingInterceptor
 						final EntityTypeDescriptor entityDescriptor = session.getFactory().getMetamodel().findEntityDescriptor( getEntityName() );
 
 						if ( isTemporarySession ) {
-							final Object id = entityDescriptor.getIdentifier( target, null );
+							final Object id = entityDescriptor.getIdentifier( target );
 
 							// Add an entry for this entity in the PC of the temp Session
 							// NOTE : a few arguments that would be nice to pass along here...

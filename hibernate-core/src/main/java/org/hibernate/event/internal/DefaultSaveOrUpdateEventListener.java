@@ -242,7 +242,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 			Object requestedId,
 			SessionImplementor session) {
 		// use the id assigned to the instance
-		Object id = descriptor.getIdentifier( entity, session );
+		Object id = descriptor.getIdentifier( entity );
 		if ( id == null ) {
 			// assume this is a newly instantiated transient object
 			// which should be saved rather than updated

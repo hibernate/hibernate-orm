@@ -54,7 +54,7 @@ public interface EntityIdentifier<O,J> extends Navigable<J>, AllowableOutputPara
 	}
 
 	@SuppressWarnings("unchecked")
-	default <E extends O> J extractIdentifier(E entityInstance, SharedSessionContractImplementor session) {
+	default <E extends O> J extractIdentifier(E entityInstance) {
 		// todo (6.0) : EntityIdentifierCompositeNonAggregated is not a PersistentAttribute
 		return (J) asAttribute( getJavaType() ).getPropertyAccess().getGetter().get( entityInstance );
 	}

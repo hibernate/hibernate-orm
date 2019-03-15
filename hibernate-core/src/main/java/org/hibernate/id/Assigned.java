@@ -33,7 +33,7 @@ public class Assigned implements IdentifierGenerator, Configurable {
 			entityDescriptor = session.getEntityDescriptor( entityName, object );
 		}
 
-		final Object id = entityDescriptor.getIdentifier( object, session );
+		final Object id = entityDescriptor.getIdentifier( object );
 		if ( id == null ) {
 			throw new IdentifierGenerationException(
 					"ids for this class must be manually assigned before calling save(): " + entityName

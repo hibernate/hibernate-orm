@@ -73,8 +73,10 @@ public class CollectionLoaderImpl implements CollectionLoader {
 
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl();
 
-		pluralAttribute.getPersistentCollectionDescriptor().getCollectionKeyDescriptor().dehydrate(
-				key,
+		org.hibernate.metamodel.model.domain.spi.CollectionKey collectionKeyDescriptor = pluralAttribute.getPersistentCollectionDescriptor()
+				.getCollectionKeyDescriptor();
+		collectionKeyDescriptor.dehydrate(
+				collectionKeyDescriptor.unresolve( key, session),
 				new Writeable.JdbcValueCollector() {
 					private int count = 0;
 

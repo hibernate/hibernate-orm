@@ -60,7 +60,6 @@ import org.hibernate.metamodel.model.domain.spi.NaturalIdDescriptor.NaturalIdAtt
 import org.hibernate.metamodel.model.domain.spi.NonIdPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.metamodel.model.domain.spi.BagPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.StateArrayContributor;
 import org.hibernate.pretty.MessageHelper;
@@ -1653,7 +1652,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 			rtn.collectionsByKey = new HashMap<>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
-				rtn.collectionsByKey.put( CollectionKey.deserialize( ois ), (PersistentCollection) ois.readObject() );
+				rtn.collectionsByKey.put(
+						CollectionKey.deserialize( ois, session ),
+						(PersistentCollection) ois.readObject()
+				);
 			}
 
 			count = ois.readInt();

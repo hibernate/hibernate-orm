@@ -273,7 +273,7 @@ public class CollectionElementEntityImpl<J>
 	public Object unresolve(Object value, SharedSessionContractImplementor session) {
 		return getEntityDescriptor().getIdentifierDescriptor()
 				.unresolve(
-						getEntityDescriptor().getIdentifier( value, session ),
+						getEntityDescriptor().getIdentifier( value ),
 						session
 				);
 	}
@@ -431,15 +431,5 @@ public class CollectionElementEntityImpl<J>
 	@Override
 	public boolean isDirty(Object one, Object another, SharedSessionContractImplementor session) {
 		return getEntityDescriptor().isDirty( one, another, session );
-	}
-
-	@Override
-	public boolean areEqual(J x, J y) throws HibernateException {
-		return getEntityDescriptor().areEqual( x,y );
-	}
-
-	@Override
-	public int extractHashCode(J o) {
-		return getEntityDescriptor().extractHashCode( o );
 	}
 }

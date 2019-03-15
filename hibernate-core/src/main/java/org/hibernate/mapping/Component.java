@@ -488,7 +488,7 @@ public class Component extends SimpleValue
 			return session.getEntityDescriptor( entityName, incomingObject )
 					.getHierarchy()
 					.getIdentifierDescriptor()
-					.extractIdentifier( incomingObject, session );
+					.extractIdentifier( incomingObject );
 		}
 	}
 

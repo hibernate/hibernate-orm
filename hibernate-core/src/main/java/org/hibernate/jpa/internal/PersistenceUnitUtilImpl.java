@@ -103,7 +103,7 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 		catch (MappingException ex) {
 			throw new IllegalArgumentException( entityClass.getName() + " is not an entity", ex );
 		}
-		return descriptor.getIdentifier( entity, null );
+		return descriptor.getIdentifier( entity );
 	}
 
 }

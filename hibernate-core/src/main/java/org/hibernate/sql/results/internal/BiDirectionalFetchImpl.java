@@ -73,13 +73,8 @@ public class BiDirectionalFetchImpl implements BiDirectionalFetch {
 			AssemblerCreationState creationState) {
 		return new CircularFetchAssembler(
 				referencedFetchParent.getNavigablePath(),
-				getJavaTypeDescriptor()
+				referencedFetchParent.getNavigableContainer().getJavaTypeDescriptor()
 		);
-	}
-
-	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return referencedFetchParent.getNavigableContainer().getJavaTypeDescriptor();
 	}
 
 	private static class CircularFetchAssembler implements DomainResultAssembler {

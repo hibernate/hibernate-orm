@@ -105,9 +105,15 @@ public abstract class AbstractIdentifiableType<T> extends AbstractManagedType<T>
 	@Override
 	@SuppressWarnings("unchecked")
 	public Navigable findNavigable(String navigableName) {
-		Navigable<Object> navigable = super.findDeclaredNavigable( navigableName );
+		// todo (6.0) : not sure this is the correct way to manage navigable names containing . (see the mapped by in org.hibernate.orm.test.annotations.ci.keymanytoone.Card )
+		String[] navigableNames = navigableName.split( "\\." );
+		String name = navigableNames[0];
+		Navigable navigable = super.findDeclaredNavigable( name );
 		if ( navigable == null ) {
-			navigable = getHierarchy().findNavigable( navigableName );
+			navigable = getHierarchy().findNavigable( name );
+		}
+		for ( int i = 1; i < navigableNames.length; i++ ) {
+			navigable = ( (NavigableContainer) navigable ).findNavigable( navigableNames[i] );
 		}
 
 		return navigable;

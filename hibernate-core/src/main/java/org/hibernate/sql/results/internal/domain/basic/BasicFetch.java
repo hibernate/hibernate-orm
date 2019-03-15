@@ -24,7 +24,6 @@ import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.FetchParentAccess;
 import org.hibernate.sql.results.spi.Initializer;
 import org.hibernate.sql.results.spi.SqlSelection;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -102,8 +101,4 @@ public class BasicFetch implements Fetch {
 		);
 	}
 
-	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return getFetchedNavigable().getJavaTypeDescriptor();
-	}
 }

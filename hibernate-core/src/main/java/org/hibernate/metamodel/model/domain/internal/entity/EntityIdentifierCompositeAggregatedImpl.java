@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.persistence.TemporalType;
 
+import org.hibernate.HibernateException;
 import org.hibernate.boot.model.domain.ValueMapping;
 import org.hibernate.engine.internal.UnsavedValueFactory;
 import org.hibernate.engine.spi.IdentifierValue;
@@ -321,5 +322,15 @@ public class EntityIdentifierCompositeAggregatedImpl<O,J>
 		catch (Throwable t) {
 			return null;
 		}
+	}
+
+	@Override
+	public boolean areEqual(J x, J y) throws HibernateException {
+		return getEmbeddedDescriptor().areEqual( x,y );
+	}
+
+	@Override
+	public int extractHashCode(J o) {
+		return getEmbeddedDescriptor().extractHashCode( o );
 	}
 }

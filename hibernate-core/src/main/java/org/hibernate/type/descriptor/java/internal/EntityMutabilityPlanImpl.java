@@ -105,7 +105,7 @@ public class EntityMutabilityPlanImpl implements EntityMutabilityPlan {
 			assert navigable instanceof EntityTypeDescriptor;
 
 			EntityTypeDescriptor entityDescriptor = (EntityTypeDescriptor) navigable;
-			Object id = entityDescriptor.getIdentifier( originalValue, session );
+			Object id = entityDescriptor.getIdentifier( originalValue );
 			if ( id == null ) {
 				throw new AssertionFailure(
 						"non-transient entity has a null id: " + originalValue.getClass().getName()

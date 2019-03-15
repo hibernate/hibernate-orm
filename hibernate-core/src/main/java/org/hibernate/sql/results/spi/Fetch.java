@@ -25,7 +25,7 @@ import org.hibernate.query.NavigablePath;
  *
  * @author Steve Ebersole
  */
-public interface Fetch extends ResultSetMappingNode {
+public interface Fetch {
 	/**
 	 * Obtain the owner of this fetch.  Ultimately used to identify
 	 * the thing that "owns" this fetched navigable for the purpose of:

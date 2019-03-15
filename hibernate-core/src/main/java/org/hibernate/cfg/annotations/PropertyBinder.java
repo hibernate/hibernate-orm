@@ -226,6 +226,8 @@ public class PropertyBinder {
 					);
 					rootClass.setIdentifier( identifier );
 					identifier.setNullValue( "undefined" );
+					// todo (6.0) : later we are going to build an EntityJavaTypeDescriptor for the entity represented by the identifier, if we have the same roleName the EmbeddableJavaDescriptor is going to clash with the EntityJavaTypeDescriptor in JavaTypeDescriptorRegistry, the following setRoleName should fix this issue, not sure it is the correct solution
+					identifier.setRoleName( rootClass.getName() + "_component" );
 					rootClass.setEmbeddedIdentifier( true );
 					rootClass.setIdentifierMapper( identifier );
 				}

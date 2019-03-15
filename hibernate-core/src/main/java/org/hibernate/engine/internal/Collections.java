@@ -73,7 +73,7 @@ public final class Collections {
 					session.getSessionFactory()
 			);
 
-			Object ownerId = ownerEntityDescriptor.getIdentifier( coll.getOwner(), session );
+			Object ownerId = ownerEntityDescriptor.getIdentifier( coll.getOwner() );
 			if ( ownerId == null ) {
 				// the owning entity may have been deleted and its identifier unset due to
 				// identifier-rollback; in which case, try to look up its identifier from

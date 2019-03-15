@@ -13,6 +13,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -57,9 +58,10 @@ public final class EntityKey implements EntityKeyCommon, Serializable {
 
 	private int generateHashCode() {
 		int result = 17;
-		final String rootEntityName = entityDescriptor.getHierarchy().getRootEntityType().getEntityName();
+		EntityHierarchy hierarchy = entityDescriptor.getHierarchy();
+		final String rootEntityName = hierarchy.getRootEntityType().getEntityName();
 		result = 37 * result + ( rootEntityName != null ? rootEntityName.hashCode() : 0 );
-		result = 37 * result + entityDescriptor.getHierarchy().getIdentifierDescriptor()
+		result = 37 * result + hierarchy.getIdentifierDescriptor()
 				.extractHashCode( identifier );
 		return result;
 	}
@@ -160,7 +162,7 @@ public final class EntityKey implements EntityKeyCommon, Serializable {
 			throws IOException, ClassNotFoundException {
 		final Serializable id = (Serializable) ois.readObject();
 		final String entityName = (String) ois.readObject();
-		final EntityTypeDescriptor entityDescriptor = sessionFactory.getEntityPersister( entityName );
+		final EntityTypeDescriptor entityDescriptor = sessionFactory.getMetamodel().getEntityDescriptor( entityName );
 		return new EntityKey( id, entityDescriptor );
 	}
 }

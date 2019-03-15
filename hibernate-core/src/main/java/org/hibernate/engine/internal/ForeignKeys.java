@@ -247,7 +247,7 @@ public final class ForeignKeys<T> {
 
 		// hit the database, after checking the session cache for a snapshot
 		final Object[] snapshot = session.getPersistenceContext().getDatabaseSnapshot(
-				descriptor.getIdentifier( entity, session ),
+				descriptor.getIdentifier( entity ),
 				descriptor
 		);
 		return snapshot == null;
@@ -292,7 +292,7 @@ public final class ForeignKeys<T> {
 				}
 				id = session.getEntityDescriptor( entityName, object ).getHierarchy()
 						.getIdentifierDescriptor()
-						.extractIdentifier( object, session );
+						.extractIdentifier( object );
 			}
 			return id;
 		}

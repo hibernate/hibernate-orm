@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Andrea Boriero
  */
-@Disabled( "issues with non-aggregated composite-id" )
+@Disabled("non-aggregated composite-id not yet implemented")
 public class OneToOneWithDerivedIdentityTest extends SessionFactoryBasedFunctionalTest {
 
 	private static final Integer PERSON_ID = 1;

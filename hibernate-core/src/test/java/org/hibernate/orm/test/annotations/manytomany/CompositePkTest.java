@@ -44,6 +44,7 @@ public class CompositePkTest extends SessionFactoryBasedFunctionalTest {
 		inTransaction(
 				session -> {
 					session.persist( woman );
+					session.persist( cat );
 				}
 		);
 
@@ -57,7 +58,6 @@ public class CompositePkTest extends SessionFactoryBasedFunctionalTest {
 					assertEquals( sameWoman.getId().getLastName(), woman.getId().getLastName() );
 				}
 		);
-
 
 		inTransaction(
 				session -> {

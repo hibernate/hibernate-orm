@@ -200,7 +200,7 @@ public class StateArrayShapingTest extends SessionFactoryBasedFunctionalTest {
 			Object entityInstance,
 			SharedSessionContractImplementor session) {
 		// just to  make sure it works
-		entityDescriptor.getIdentifier( entityInstance, session );
+		entityDescriptor.getIdentifier( entityInstance );
 
 //		final ArrayList<Object> stateValues = new ArrayList<>();
 //		entityDescriptor.dehydrate(

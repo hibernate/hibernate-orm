@@ -129,7 +129,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 				EntityEntry entry = source.getPersistenceContext().getEntry( entity );
 				if ( entry == null ) {
 					EntityTypeDescriptor entityDescriptor = source.getEntityDescriptor( event.getEntityName(), entity );
-					Object id = entityDescriptor.getIdentifier( entity, source );
+					Object id = entityDescriptor.getIdentifier( entity );
 					if ( id != null ) {
 						final EntityKey key = source.generateEntityKey( id, entityDescriptor );
 						final Object managedEntity = source.getPersistenceContext().getEntity( key );
@@ -200,7 +200,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		final EntityTypeDescriptor entityDescriptor = source.getEntityDescriptor( entityName, entity );
 
 		final Object id = EntityIdentifierSimple.class.isInstance( entityDescriptor.getHierarchy().getIdentifierDescriptor() ) ?
-				entityDescriptor.getIdentifier( entity, source ) :
+				entityDescriptor.getIdentifier( entity ) :
 				null;
 		if ( copyCache.containsKey( entity ) ) {
 			entityDescriptor.setIdentifier( copyCache.get( entity ), id, source );
@@ -255,11 +255,11 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 
 		Object id = event.getRequestedId();
 		if ( id == null ) {
-			id = entityDescriptor.getIdentifier( entity, source );
+			id = entityDescriptor.getIdentifier( entity );
 		}
 		else {
 			// check that entity id = requestedId
-			Object entityId = entityDescriptor.getIdentifier( entity, source );
+			Object entityId = entityDescriptor.getIdentifier( entity );
 			if ( !entityDescriptor.getHierarchy().getIdentifierDescriptor().getJavaTypeDescriptor().areEqual( id, entityId ) ) {
 				throw new HibernateException( "merge requested with id not matching id of passed entity" );
 			}
@@ -369,7 +369,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	private boolean existsInDatabase(Object entity, EventSource source, EntityTypeDescriptor entityDescriptor) {
 		EntityEntry entry = source.getPersistenceContext().getEntry( entity );
 		if ( entry == null ) {
-			Object id = entityDescriptor.getIdentifier( entity, source );
+			Object id = entityDescriptor.getIdentifier( entity );
 			if ( id != null ) {
 				final EntityKey key = source.generateEntityKey( id, entityDescriptor );
 				final Object managedEntity = source.getPersistenceContext().getEntity( key );

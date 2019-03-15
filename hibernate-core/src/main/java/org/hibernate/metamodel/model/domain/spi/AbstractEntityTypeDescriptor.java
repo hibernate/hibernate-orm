@@ -47,6 +47,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
+import org.hibernate.id.Assigned;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -77,6 +78,7 @@ import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.metamodel.model.relational.spi.PhysicalTable;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.ComparisonOperator;
@@ -817,12 +819,34 @@ public abstract class AbstractEntityTypeDescriptor<J>
 			Object currentId,
 			Object currentVersion,
 			SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception();
+		if ( getHierarchy().getIdentifierDescriptor().getIdentifierValueGenerator() instanceof Assigned ) {
+		}
+		else {
+			// reset the id
+			setIdentifier(
+					entity,
+					getHierarchy().getIdentifierDescriptor().getUnsavedValue().getDefaultValue( currentId ),
+					session
+			);
+			//reset the version
+
+			if ( getHierarchy().getVersionDescriptor() != null ) {
+				getHierarchy().getVersionDescriptor().getUnsavedValue();
+				getHierarchy().getVersionDescriptor().getPropertyAccess().getSetter().set(
+						entity,
+						getHierarchy().getVersionDescriptor().getUnsavedValue(),
+						session.getFactory()
+				);
+			}
+		}
 	}
 
 	@Override
 	public Object getVersion(Object object) throws HibernateException {
-		return null;
+		if ( getHierarchy().getVersionDescriptor() == null ) {
+			return null;
+		}
+		return getHierarchy().getVersionDescriptor().getPropertyAccess().getGetter().get( object );
 	}
 
 	@Override
@@ -944,7 +968,70 @@ public abstract class AbstractEntityTypeDescriptor<J>
 		return false;
 	}
 
+	@Override
+	public boolean areEqual(J x, J y) throws HibernateException {
+		// associations (many-to-one and one-to-one) can be null...
+		if ( x == null || y == null ) {
+			return x == y;
+		}
 
+		if ( getHierarchy().getIdentifierDescriptor() == null ) {
+			return super.areEqual( x, y );
+		}
+
+		final Class mappedClass = getMappedClass();
+		Object xid;
+		if ( x instanceof HibernateProxy ) {
+			xid = ( (HibernateProxy) x ).getHibernateLazyInitializer().getIdentifier();
+		}
+		else {
+			if ( mappedClass.isAssignableFrom( x.getClass() ) ) {
+				xid = getIdentifier( x );
+			}
+			else {
+				//JPA 2 case where @IdClass contains the id and not the associated entity
+				xid = x;
+			}
+		}
+
+		Object yid;
+		if ( y instanceof HibernateProxy ) {
+			yid = ( (HibernateProxy) y ).getHibernateLazyInitializer().getIdentifier();
+		}
+		else {
+			if ( mappedClass.isAssignableFrom( y.getClass() ) ) {
+				yid = getIdentifier( y );
+			}
+			else {
+				//JPA 2 case where @IdClass contains the id and not the associated entity
+				yid = y;
+			}
+		}
+
+		return getIdentifierType().areEqual( xid, yid );
+	}
+
+	@Override
+	public int extractHashCode(J o) {
+		if ( getHierarchy().getIdentifierDescriptor() == null ) {
+			return super.extractHashCode(o );
+		}
+
+		final Object id;
+		if ( o instanceof HibernateProxy ) {
+			id = ( (HibernateProxy) o ).getHibernateLazyInitializer().getIdentifier();
+		}
+		else {
+			final Class mappedClass = getMappedClass();
+			if ( mappedClass.isAssignableFrom( o.getClass() ) ) {
+				id = getIdentifier( o );
+			}
+			else {
+				id = o;
+			}
+		}
+		return getIdentifierType().extractHashCode( id );
+	}
 
 	@Override
 	public EntityTypeDescriptor getSubclassEntityPersister(
@@ -991,7 +1078,7 @@ public abstract class AbstractEntityTypeDescriptor<J>
 
 	@Override
 	public Type getIdentifierType() {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		return getHierarchy().getIdentifierDescriptor().getNavigableType();
 	}
 
 	private void handleNaturalIdReattachment(Object entity, SharedSessionContractImplementor session) {
@@ -1006,7 +1093,7 @@ public abstract class AbstractEntityTypeDescriptor<J>
 		}
 
 		final PersistenceContext.NaturalIdHelper naturalIdHelper = session.getPersistenceContext().getNaturalIdHelper();
-		final Object id = getIdentifier( entity, session );
+		final Object id = getIdentifier( entity );
 
 		// for reattachment of mutable natural-ids, we absolutely positively have to grab the snapshot from the
 		// database, because we have no other way to know if the state changed while detached.

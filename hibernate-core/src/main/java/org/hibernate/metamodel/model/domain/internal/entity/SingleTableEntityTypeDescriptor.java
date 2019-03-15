@@ -962,7 +962,7 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 
 	@Override
 	public Boolean isTransient(Object object, SharedSessionContractImplementor session) throws HibernateException {
-		final Object id = getHierarchy().getIdentifierDescriptor().extractIdentifier( object, session );
+		final Object id = getHierarchy().getIdentifierDescriptor().extractIdentifier( object );
 
 		// we *always* assume an instance with a null
 		// identifier or no identifier property is unsaved.

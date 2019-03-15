@@ -70,7 +70,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		// todo (6.0) : iirc we removed the ability to define an entity whose class does not contain the id
 		//		so `canExtractIdOutOfEntity` should always be true
 		//if ( entityDescriptor.canExtractIdOutOfEntity() ) {
-			Object oid = entityDescriptor.getIdentifier( object, session );
+			Object oid = entityDescriptor.getIdentifier( object );
 			if ( id == null ) {
 				throw new AssertionFailure( "null id in " + entityDescriptor.getEntityName() + " entry (don't flush the Session after an exception occurs)" );
 			}

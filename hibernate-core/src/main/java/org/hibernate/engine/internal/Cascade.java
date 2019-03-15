@@ -363,7 +363,7 @@ public final class Cascade {
 						if ( valueEntry != null ) {
 							final String entityName = valueEntry.getDescriptor().getEntityName();
 							if ( LOG.isTraceEnabled() ) {
-								final Object id = valueEntry.getDescriptor().getIdentifier( loadedValue, eventSource );
+								final Object id = valueEntry.getDescriptor().getIdentifier( loadedValue );
 								final String description = MessageHelper.infoString( entityName, id );
 								LOG.tracev( "Deleting orphaned entity instance: {0}", description );
 							}

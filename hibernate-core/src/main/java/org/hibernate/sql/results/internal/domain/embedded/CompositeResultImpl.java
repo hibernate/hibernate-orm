@@ -22,8 +22,6 @@ import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
  * @author Steve Ebersole
  */
 public class CompositeResultImpl extends AbstractFetchParent implements CompositeResult {
-	private final NavigablePath navigablePath;
-	private final EmbeddedValuedNavigable navigable;
 	private final String resultVariable;
 
 	public CompositeResultImpl(
@@ -33,8 +31,6 @@ public class CompositeResultImpl extends AbstractFetchParent implements Composit
 			DomainResultCreationState creationState) {
 		super( navigable, navigablePath );
 		this.resultVariable = resultVariable;
-		this.navigablePath = navigablePath;
-		this.navigable = navigable;
 
 		afterInitialize( creationState );
 	}

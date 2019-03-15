@@ -109,7 +109,7 @@ public class DefaultPersistEventListener extends AbstractSaveEventListener imple
 			// NOTE: entityEntry must be null to get here, so we cannot use any of its values
 			EntityTypeDescriptor descriptor = source.getFactory().getEntityPersister( entityName );
 			if ( ForeignGenerator.class.isInstance( descriptor.getHierarchy().getIdentifierDescriptor().getIdentifierValueGenerator() ) ) {
-				if ( LOG.isDebugEnabled() && descriptor.getIdentifier( entity, source ) != null ) {
+				if ( LOG.isDebugEnabled() && descriptor.getIdentifier( entity ) != null ) {
 					LOG.debug( "Resetting entity id attribute to null for foreign generator" );
 				}
 				descriptor.setIdentifier( entity, null, source );
@@ -201,7 +201,7 @@ public class DefaultPersistEventListener extends AbstractSaveEventListener imple
 				"un-scheduling entity deletion [%s]",
 				MessageHelper.infoString(
 						descriptor,
-						descriptor.getIdentifier( entity, source ),
+						descriptor.getIdentifier( entity ),
 						source.getFactory()
 				)
 		);

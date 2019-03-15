@@ -844,8 +844,8 @@ public class SingularPersistentAttributeEntity<O, J>
 			return false;
 		}
 
-		Object oldIdentifier = extractFkValue( originalValue, session );
-		Object newIdentifier = extractFkValue( currentValue, session );
+		Object oldIdentifier = extractFkValue( originalValue );
+		Object newIdentifier = extractFkValue( currentValue );
 
 		return !getEntityDescriptor()
 				.getIdentifierDescriptor()
@@ -854,15 +854,15 @@ public class SingularPersistentAttributeEntity<O, J>
 
 	@Override
 	public boolean areEqual(J x, J y) throws HibernateException {
-		return getEntityDescriptor().getIdentifierDescriptor().areEqual( x, y );
+		return getEntityDescriptor().areEqual( x, y );
 	}
 
 	@Override
 	public int extractHashCode(J o) {
-		return getEntityDescriptor().getIdentifierDescriptor().extractHashCode( o );
+		return getEntityDescriptor().extractHashCode( o );
 	}
 
-	public Object extractFkValue(Object value, SharedSessionContractImplementor session) {
+	public Object extractFkValue(Object value) {
 		if ( value == null ) {
 			return null;
 		}
@@ -872,7 +872,7 @@ public class SingularPersistentAttributeEntity<O, J>
 		}
 
 		if ( referencedUkAttributeName == null || classification.equals( SingularAttributeClassification.ONE_TO_ONE ) ) {
-			return getAssociatedEntityDescriptor().getIdentifier( value, session );
+			return getAssociatedEntityDescriptor().getIdentifier( value );
 		}
 		else {
 			return getAssociatedEntityDescriptor()

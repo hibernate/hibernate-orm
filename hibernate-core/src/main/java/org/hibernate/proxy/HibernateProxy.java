@@ -18,12 +18,12 @@ public interface HibernateProxy extends Serializable {
 	 *
 	 * @return The serializable proxy replacement.
 	 */
-	public Object writeReplace();
+	Object writeReplace();
 
 	/**
 	 * Get the underlying lazy initialization handler.
 	 *
 	 * @return The lazy initializer.
 	 */
-	public LazyInitializer getHibernateLazyInitializer();
+	LazyInitializer getHibernateLazyInitializer();
 }

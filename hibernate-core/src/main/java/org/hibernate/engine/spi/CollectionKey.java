@@ -26,6 +26,7 @@ public final class CollectionKey implements Serializable {
 	private final NavigableRole role;
 	private final Object key;
 	private final JavaTypeDescriptor keyType;
+	private transient PersistentCollectionDescriptor collectionDescriptor;
 	private final int hashCode;
 
 	public CollectionKey(
@@ -34,29 +35,37 @@ public final class CollectionKey implements Serializable {
 		this(
 				collectionDescriptor.getNavigableRole(),
 				key,
-				collectionDescriptor.getKeyJavaTypeDescriptor()
+				collectionDescriptor.getKeyJavaTypeDescriptor(),
+				collectionDescriptor
 		);
 	}
 
 	public CollectionKey(PersistentCollectionDescriptor collectionDescriptor, Object key, EntityMode em) {
-		this( collectionDescriptor.getNavigableRole(), key, collectionDescriptor.getKeyJavaTypeDescriptor());
+		this(
+				collectionDescriptor.getNavigableRole(),
+				key,
+				collectionDescriptor.getKeyJavaTypeDescriptor(),
+				collectionDescriptor
+		);
 	}
 
 	private CollectionKey(
 			NavigableRole role,
 			Object key,
-			JavaTypeDescriptor keyType) {
+			JavaTypeDescriptor keyType,
+			PersistentCollectionDescriptor collectionDescriptor) {
 		this.role = role;
 		this.key = key;
 		this.keyType = keyType;
+		this.collectionDescriptor = collectionDescriptor;
 		//cache the hash-code
-		this.hashCode = generateHashCode();
+		this.hashCode = generateHashCode(collectionDescriptor);
 	}
 
-	private int generateHashCode() {
+	private int generateHashCode(PersistentCollectionDescriptor collectionDescriptor) {
 		int result = 17;
 		result = 37 * result + role.hashCode();
-		result = 37 * result + keyType.extractHashCode( key );
+		result = 37 * result + collectionDescriptor.getCollectionKeyDescriptor().extractHashCode( key );
 		return result;
 	}
 
@@ -97,7 +106,7 @@ public final class CollectionKey implements Serializable {
 
 		final CollectionKey that = (CollectionKey) other;
 		return that.role.equals( role )
-				&& keyType.areEqual( that.key, key );
+				&& collectionDescriptor.getCollectionKeyDescriptor().areEqual( that.key, key );
 	}
 
 	@Override
@@ -132,11 +141,13 @@ public final class CollectionKey implements Serializable {
 	 * @throws ClassNotFoundException
 	 */
 	public static CollectionKey deserialize(
-			ObjectInputStream ois) throws IOException, ClassNotFoundException {
+			ObjectInputStream ois, SessionImplementor session) throws IOException, ClassNotFoundException {
+		final NavigableRole role = (NavigableRole) ois.readObject();
 		return new CollectionKey(
-				(NavigableRole) ois.readObject(),
+				role,
 				ois.readObject(),
-				(JavaTypeDescriptor) ois.readObject()
+				(JavaTypeDescriptor) ois.readObject(),
+				session.getSessionFactory().getMetamodel().findCollectionDescriptor( role )
 		);
 	}
 }

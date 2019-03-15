@@ -72,7 +72,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 		/*if ( entityDescriptor.isUnsaved(entity, source) ) {
 			throw new TransientObjectException("transient instance passed to replicate()");
 		}*/
-		Object id = entityDescriptor.getIdentifier( entity, source );
+		Object id = entityDescriptor.getIdentifier( entity );
 		if ( id == null ) {
 			throw new TransientObjectException( "instance with null id passed to replicate()" );
 		}

@@ -116,7 +116,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public void delete(String entityName, Object entity) {
 		checkOpen();
 		EntityTypeDescriptor descriptor = getEntityDescriptor( entityName, entity );
-		Object id = descriptor.getIdentifier( entity, this );
+		Object id = descriptor.getIdentifier( entity );
 		Object version = descriptor.getVersion( entity );
 		descriptor.delete( id, version, entity, this );
 	}
@@ -134,7 +134,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public void update(String entityName, Object entity) {
 		checkOpen();
 		EntityTypeDescriptor entityDescriptor = getEntityDescriptor( entityName, entity );
-		Object id = entityDescriptor.getHierarchy().getIdentifierDescriptor().extractIdentifier( entity, this );
+		Object id = entityDescriptor.getHierarchy().getIdentifierDescriptor().extractIdentifier( entity );
 		Object[] state = entityDescriptor.getPropertyValues( entity );
 		Object oldVersion;
 		final VersionDescriptor<Object, Object> versionDescriptor = entityDescriptor.getHierarchy().getVersionDescriptor();
@@ -205,7 +205,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public void refresh(String entityName, Object entity, LockMode lockMode) {
 		final EntityTypeDescriptor entityDescriptor = this.getEntityDescriptor( entityName, entity );
-		final Object id = entityDescriptor.getIdentifier( entity, this );
+		final Object id = entityDescriptor.getIdentifier( entity );
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Refreshing transient {0}", MessageHelper.infoString( entityDescriptor, id, this.getFactory() ) );
 		}

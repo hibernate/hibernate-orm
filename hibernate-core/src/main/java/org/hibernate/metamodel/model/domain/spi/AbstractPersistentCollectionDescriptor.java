@@ -1282,7 +1282,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 			return entityEntry.getId();
 		}
 		else if ( foreignKeyTargetNavigable instanceof EntityIdentifier ) {
-			return getContainer().findFirstEntityDescriptor().getIdentifier( owner, session );
+			return getContainer().findFirstEntityDescriptor().getIdentifier( owner );
 		}
 		else {
 			return ( (SingularPersistentAttribute) foreignKeyTargetNavigable ).getPropertyAccess()

@@ -58,7 +58,7 @@ public final class EntityPrinter {
 			result.put(
 					entityDescriptor.getIdentifierPropertyName(),
 					entityDescriptor.getIdentifierDescriptor().getJavaTypeDescriptor().extractLoggableRepresentation(
-							entityDescriptor.getIdentifierDescriptor().extractIdentifier( entity, session )
+							entityDescriptor.getIdentifierDescriptor().extractIdentifier( entity )
 					)
 			);
 		}

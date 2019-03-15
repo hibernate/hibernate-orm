@@ -104,7 +104,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener, Callback
 			}
 			performDetachedEntityDeletionCheck( event );
 
-			id = descriptor.getIdentifier( entity, source );
+			id = descriptor.getIdentifier( entity );
 
 			if ( id == null ) {
 				throw new TransientObjectException(
@@ -191,7 +191,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener, Callback
 		EventSource source = event.getSession();
 		String entityName = event.getEntityName();
 		EntityTypeDescriptor descriptor = source.getEntityDescriptor( entityName, event.getObject() );
-		Object id =  descriptor.getIdentifier( event.getObject(), source );
+		Object id =  descriptor.getIdentifier( event.getObject() );
 		entityName = entityName == null ? source.guessEntityName( event.getObject() ) : entityName;
 		throw new IllegalArgumentException( "Removing a detached instance " + entityName + "#" + id );
 	}

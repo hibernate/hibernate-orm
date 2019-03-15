@@ -208,8 +208,8 @@ public class BasicCollectionMapper<T extends Collection> extends AbstractCollect
 					.getMetamodel()
 					.findEntityDescriptor( element.getJavaType() );
 
-			final Object lhsId = entityDescriptor.getIdentifier( lhs, session );
-			final Object rhsId = entityDescriptor.getIdentifier( rhs, session );
+			final Object lhsId = entityDescriptor.getIdentifier( lhs );
+			final Object rhsId = entityDescriptor.getIdentifier( rhs );
 
 			// Since the two instances aren't reference equal, delegate to identifier now.
 			return entityDescriptor.getIdentifierDescriptor().getJavaTypeDescriptor().areEqual( lhsId, rhsId );

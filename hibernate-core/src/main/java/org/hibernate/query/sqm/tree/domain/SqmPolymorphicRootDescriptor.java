@@ -693,7 +693,7 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityTypeDescriptor<T> 
 	}
 
 	@Override
-	public Serializable getIdentifier(Object entity, SharedSessionContractImplementor session) {
+	public Serializable getIdentifier(Object entity) {
 		throw new UnsupportedOperationException(  );
 	}
 

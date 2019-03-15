@@ -530,13 +530,12 @@ public interface EntityTypeDescriptor<T>
 	 * Get the identifier of an instance (throw an exception if no identifier property)
 	 *
 	 * @param entity The entity for which to get the identifier
-	 * @param session The session from which the request originated
 	 *
 	 * @return The identifier
 	 */
 	@Remove
-	default Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		return getHierarchy().getIdentifierDescriptor().extractIdentifier( entity, session );
+	default Object getIdentifier(Object entity) {
+		return getHierarchy().getIdentifierDescriptor().extractIdentifier( entity );
 	}
 
 	/**

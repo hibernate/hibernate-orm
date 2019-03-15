@@ -419,6 +419,14 @@ public abstract class AbstractPluralPersistentAttribute<O,C,E> extends AbstractP
 			JdbcValueCollector jdbcValueCollector,
 			Clause clause,
 			SharedSessionContractImplementor session) {
+		if ( value != null && value != NOT_NULL_COLLECTION ) {
+			getPersistentCollectionDescriptor().getElementDescriptor().dehydrate(
+					value,
+					jdbcValueCollector,
+					clause,
+					session
+			);
+		}
 	}
 
 	@Override

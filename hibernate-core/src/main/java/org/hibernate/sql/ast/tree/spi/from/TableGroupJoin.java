@@ -10,11 +10,14 @@ import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.ast.tree.spi.SqlAstNode;
+import org.hibernate.sql.results.spi.DomainResult;
+import org.hibernate.sql.results.spi.DomainResultCreationState;
+import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**
  * @author Steve Ebersole
  */
-public class TableGroupJoin implements SqlAstNode {
+public class TableGroupJoin implements SqlAstNode, DomainResultProducer {
 	private final JoinType joinType;
 	private final TableGroup joinedGroup;
 	private final Predicate predicate;
@@ -43,5 +46,10 @@ public class TableGroupJoin implements SqlAstNode {
 	@Override
 	public void accept(SqlAstWalker  sqlTreeWalker) {
 		sqlTreeWalker.visitTableGroupJoin( this );
+	}
+
+	@Override
+	public DomainResult createDomainResult( String resultVariable, DomainResultCreationState creationState) {
+		return getJoinedGroup().createDomainResult( resultVariable, creationState );
 	}
 }

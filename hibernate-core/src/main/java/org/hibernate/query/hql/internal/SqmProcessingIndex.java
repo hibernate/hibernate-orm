@@ -32,8 +32,8 @@ public class SqmProcessingIndex implements SqmPathRegistry {
 	private final SqmCreationProcessingState associatedProcessingState;
 
 	private final Map<NavigablePath, SqmPath> sqmPathByPath = new HashMap<>();
-
 	private final Map<NavigablePath, SqmFrom> sqmFromByPath = new HashMap<>();
+
 	private final Map<String, SqmFrom> sqmFromByAlias = new HashMap<>();
 
 	private final Map<String, SqmSelection> sqmSelectionsByAlias = new HashMap<>();
@@ -98,46 +98,6 @@ public class SqmProcessingIndex implements SqmPathRegistry {
 								Locale.ENGLISH,
 								"Alias [%s] used for multiple from-clause elements : %s, %s",
 								alias,
-								previousFrom,
-								sqmPath
-						)
-				);
-			}
-		}
-	}
-
-	@Override
-	public void register(NavigablePath alternatePath, SqmPath sqmPath) {
-		SqmTreeCreationLogger.LOGGER.tracef( "#register(NavigablePath, SqmPath) : %s -> %s", sqmPath.getNavigablePath(), sqmPath );
-
-		// NOTE : this is not always (ever)
-		final SqmPath previousPath = sqmPathByPath.put( alternatePath, sqmPath );
-
-		if ( previousPath != null ) {
-			// this should never happen, however its "ok" if:
-			//		1) incoming SqmPath is a SqmFrom
-			//		2) previous SqmPath is not
-			throw new ParsingException(
-					String.format(
-							Locale.ROOT,
-							"Registration for path (alt) [%s] overrode previous registration: %s -> %s",
-							alternatePath,
-							previousPath,
-							sqmPath
-					)
-			);
-		}
-
-		if ( sqmPath instanceof SqmFrom ) {
-			final SqmPath previousFrom = sqmFromByPath.put( alternatePath, (SqmFrom) sqmPath );
-
-			if ( previousFrom != null ) {
-				// this should never happen
-				throw new ParsingException(
-						String.format(
-								Locale.ROOT,
-								"Registration for SqmFrom (alt) [%s] overrode previous registration: %s -> %s",
-								alternatePath,
 								previousFrom,
 								sqmPath
 						)

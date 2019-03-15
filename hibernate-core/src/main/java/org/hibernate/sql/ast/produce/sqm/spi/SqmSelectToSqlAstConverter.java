@@ -9,6 +9,7 @@ package org.hibernate.sql.ast.produce.sqm.spi;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -39,6 +40,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.internal.SqlAstSelectDescriptorImpl;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
+import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
 import org.hibernate.sql.ast.produce.spi.FromClauseAccess;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
@@ -54,6 +56,7 @@ import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiation;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationNature;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
+import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.results.spi.CircularFetchDetector;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
@@ -203,7 +206,15 @@ public class SqmSelectToSqlAstConverter
 		return fetches;
 	}
 
+	private Set<Fetchable> processedFetchables;
+
 	private Fetch buildFetch(FetchParent fetchParent, Fetchable fetchable) {
+		// fetch has access to its parent in addition to the parent having its fetches.
+		//
+		// we could sever the parent -> fetch link ... it would not be "seen" while walking
+		// but it would still have access to its parent info - and be able to access its
+		// "initializing" state as part of AfterLoadAction
+
 		final NavigablePath fetchablePath = fetchParent.getNavigablePath().append( fetchable.getNavigableName() );
 
 		LockMode lockMode = LockMode.READ;
@@ -227,6 +238,26 @@ public class SqmSelectToSqlAstConverter
 		else {
 			// there was not an explicit fetch in the SQM
 
+			alias = null;
+
+			if ( fetchable instanceof Joinable ) {
+				if ( processedFetchables == null ) {
+					processedFetchables = new HashSet<>();
+				}
+
+				final boolean added = processedFetchables.add( fetchable );
+
+				if ( ! added ) {
+					joined = false;
+				}
+				else {
+					joined = fetchTiming == FetchTiming.IMMEDIATE && fetchable.getMappedFetchStrategy().getStyle() == FetchStyle.JOIN;
+				}
+			}
+			else {
+				joined = true;
+			}
+
 			// todo (6.0) : account for EntityGraph
 			//		it would adjust:
 			//			* fetchTiming - make it IMMEDIATE
@@ -234,7 +265,6 @@ public class SqmSelectToSqlAstConverter
 			// todo (6.0) : how to handle
 			//			* joined ? - sh
 
-			// `joined` is really just FetchStrategy right?
 
 			final TableGroup existingJoinedGroup = getFromClauseIndex().findTableGroup( fetchablePath );
 			if ( existingJoinedGroup !=  null ) {
@@ -246,24 +276,6 @@ public class SqmSelectToSqlAstConverter
 				//		Can be problematic if the existing one is restricted
 				//fetchTiming = FetchTiming.IMMEDIATE;
 			}
-			// todo (6.0) : treat `fetchable` as a `TableGroupJoinProducer` and use it to create the `SqmJoin` "on the fly"?
-
-			joined = fetchTiming == FetchTiming.IMMEDIATE && fetchable.getMappedFetchStrategy().getStyle() == FetchStyle.JOIN;
-			alias = null;
-
-			if ( fetchable instanceof TableGroupJoinProducer ) {
-				// generate the join
-				final TableGroup lhs = getFromClauseIndex().getTableGroup( fetchParent.getNavigablePath() );
-				( (TableGroupJoinProducer) fetchable ).createTableGroupJoin(
-						null,
-						fetchablePath,
-						lhs,
-						null,
-						JoinType.LEFT,
-						LockMode.NONE,
-						this
-				);
-			}
 
 			// lastly, account for any app-defined max-fetch-depth
 			final Integer maxDepth = getCreationContext().getMaximumFetchDepth();
@@ -272,9 +284,30 @@ public class SqmSelectToSqlAstConverter
 					joined = false;
 				}
 				else if ( fetchDepth > maxDepth ) {
-					joined = false;
 					return null;
 				}
+			}
+
+			if ( joined && fetchable instanceof TableGroupJoinProducer ) {
+				getFromClauseIndex().resolveTableGroup(
+						fetchablePath,
+						np -> {
+							// generate the join
+							final TableGroup lhs = getFromClauseIndex().getTableGroup( fetchParent.getNavigablePath() );
+							final TableGroupJoin tableGroupJoin = ( (TableGroupJoinProducer) fetchable ).createTableGroupJoin(
+									null,
+									fetchablePath,
+									lhs,
+									null,
+									JoinType.LEFT,
+									LockMode.NONE,
+									this
+							);
+							lhs.addTableGroupJoin(  tableGroupJoin );
+							return tableGroupJoin.getJoinedGroup();
+						}
+				);
+
 			}
 		}
 

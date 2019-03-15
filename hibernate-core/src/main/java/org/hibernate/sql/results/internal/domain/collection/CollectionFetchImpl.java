@@ -32,8 +32,8 @@ import org.hibernate.sql.results.spi.Initializer;
 public class CollectionFetchImpl extends AbstractCollectionMappingNode implements CollectionFetch {
 	public static CollectionFetchImpl create(
 			NavigablePath navigablePath,
-			TableGroup containerTableGroup,
 			TableGroup collectionTableGroup,
+			TableGroup containerTableGroup,
 			FetchParent fetchParent,
 			PluralPersistentAttribute describedAttribute,
 			String resultVariable,

@@ -745,12 +745,12 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 			DomainResultCreationState creationState) {
 		final NavigablePath navigablePath = fetchParent.getNavigablePath().append( getNavigableName() );
 
-		final TableGroup lhs = creationState.getFromClauseAccess().getTableGroup( navigablePath.getParent() );
+		final TableGroup parentTableGroup = creationState.getFromClauseAccess().getTableGroup( navigablePath.getParent() );
 
-		final TableGroup tableGroup = creationState.getFromClauseAccess().resolveTableGroup(
+		final TableGroup collectionTableGroup = creationState.getFromClauseAccess().resolveTableGroup(
 				navigablePath,
 				np -> {
-					if ( lhs == null ) {
+					if ( parentTableGroup == null ) {
 						throw new DomainResultCreationException( "Could not locate LHS TableGroup for collection fetch : " + navigablePath );
 					}
 
@@ -758,12 +758,13 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 					final TableGroupJoin tableGroupJoin = createTableGroupJoin(
 							null,
 							navigablePath,
-							lhs,
+							parentTableGroup,
 							resultVariable,
 							JoinType.INNER,
 							lockMode,
 							creationState.getSqlAstCreationState()
 					);
+					parentTableGroup.addTableGroupJoin( tableGroupJoin );
 
 					return tableGroupJoin.getJoinedGroup();
 				}
@@ -771,8 +772,8 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 
 		return CollectionFetchImpl.create(
 				navigablePath,
-				tableGroup,
-				lhs,
+				collectionTableGroup,
+				parentTableGroup,
 				fetchParent,
 				getDescribedAttribute(),
 				resultVariable,

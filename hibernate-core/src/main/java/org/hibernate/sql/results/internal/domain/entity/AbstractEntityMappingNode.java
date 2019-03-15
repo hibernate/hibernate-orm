@@ -46,21 +46,19 @@ public abstract class AbstractEntityMappingNode extends AbstractFetchParent impl
 				creationState
 		);
 
-		final DiscriminatorDescriptor<Object> discriminatorDescriptor = entityDescriptor.getHierarchy()
-				.getDiscriminatorDescriptor();
-
+		final DiscriminatorDescriptor<?> discriminatorDescriptor = entityDescriptor.getHierarchy().getDiscriminatorDescriptor();
 		if ( discriminatorDescriptor == null ) {
 			discriminatorResult = null;
 		}
 		else {
 			discriminatorResult = discriminatorDescriptor.createDomainResult(
-					null,
+					navigablePath.append( DiscriminatorDescriptor.NAVIGABLE_NAME ),
 					null,
 					creationState
 			);
 		}
 
-		final VersionDescriptor<Object, Object> versionDescriptor = entityDescriptor.getHierarchy().getVersionDescriptor();
+		final VersionDescriptor<?, ?> versionDescriptor = entityDescriptor.getHierarchy().getVersionDescriptor();
 		if ( versionDescriptor == null ) {
 			versionResult = null;
 		}

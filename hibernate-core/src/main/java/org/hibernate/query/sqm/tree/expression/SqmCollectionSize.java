@@ -10,7 +10,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
@@ -24,16 +24,16 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  * @author Gunnar Morling
  */
 public class SqmCollectionSize implements SqmExpression, DomainResultProducer {
-	private final SqmPluralAttributeReference pluralAttributeBinding;
+	private final SqmPath pluralPath;
 	private final BasicValuedExpressableType sizeType;
 
-	public SqmCollectionSize(SqmPluralAttributeReference pluralAttributeBinding, BasicValuedExpressableType sizeType) {
-		this.pluralAttributeBinding = pluralAttributeBinding;
+	public SqmCollectionSize(SqmPath pluralPath, BasicValuedExpressableType sizeType) {
+		this.pluralPath = pluralPath;
 		this.sizeType = sizeType;
 	}
 
-	public SqmPluralAttributeReference getPluralAttributeBinding() {
-		return pluralAttributeBinding;
+	public SqmPath getPluralPath() {
+		return pluralPath;
 	}
 
 	@Override
@@ -53,7 +53,7 @@ public class SqmCollectionSize implements SqmExpression, DomainResultProducer {
 
 	@Override
 	public String asLoggableText() {
-		return "SIZE(" + pluralAttributeBinding.asLoggableText() + ")";
+		return "SIZE(" + pluralPath.asLoggableText() + ")";
 	}
 
 	@Override

@@ -295,16 +295,23 @@ public abstract class AbstractSqlAstWalker
 		String separator = NO_SEPARATOR;
 		for ( TableGroup root : fromClause.getRoots() ) {
 			appendSql( separator );
-			visitTableGroup( root );
+			visitRoot( root );
 			separator = COMA_SEPARATOR;
 		}
+	}
+
+	protected void visitRoot(TableGroup root) {
+		visitTableGroup( root );
+		consumeJoins( root );
+	}
+
+	private void consumeJoins(TableGroup tableGroup) {
+		tableGroup.visitTableGroupJoins( this::visitTableGroupJoin );
 	}
 
 	@Override
 	public void visitTableGroup(TableGroup tableGroup) {
 		tableGroup.render( sqlAppender, this );
-
-		tableGroup.visitTableGroupJoins( this::visitTableGroupJoin );
 	}
 
 	@Override

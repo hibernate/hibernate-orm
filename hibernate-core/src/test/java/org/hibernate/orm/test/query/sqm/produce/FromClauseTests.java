@@ -213,8 +213,7 @@ public class FromClauseTests extends BaseSqmUnitTest {
 		final SqmRoot sqmRoot = fromClause.getRoots().get( 0 );
 		assertThat( sqmRoot, notNullValue() );
 		assertThat( sqmRoot.getIdentificationVariable(), is( "p" )  );
-		assertThat( sqmRoot.getJoins(), hasSize( 1 ) );
-		assertThat( sqmRoot.getJoins().get( 0 ).getIdentificationVariable(), isImplicitAlias() );
+		assertThat( sqmRoot.getJoins(), hasSize( 0 ) );
 	}
 
 	@Test
@@ -232,7 +231,7 @@ public class FromClauseTests extends BaseSqmUnitTest {
 		assertThat( selectStatement.getQuerySpec().getSelectClause().getSelections(), hasSize( 1 ) );
 		final SqmSelection sqmSelection = selectStatement.getQuerySpec().getSelectClause().getSelections().get( 0 );
 
-		assertThat( sqmSelection.getSelectableNode(), instanceOf( SqmEntityReference.class ) );
+		assertThat( sqmSelection.getSelectableNode(), instanceOf( SqmRoot.class ) );
 	}
 
 	@Test
@@ -249,7 +248,7 @@ public class FromClauseTests extends BaseSqmUnitTest {
 				.getSortSpecifications();
 		assertThat( orderBy, hasSize( 1 ) );
 
-		assertThat( orderBy.get( 0 ).getSortExpression(), instanceOf( SqmEntityReference.class ) );
+		assertThat( orderBy.get( 0 ).getSortExpression(), instanceOf( SqmRoot.class ) );
 	}
 
 	@Test

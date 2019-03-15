@@ -10,6 +10,8 @@ import org.hibernate.Incubating;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 
 /**
+ * SqmCreationProcessingState specialization for processing a SQM query-spec
+ *
  * @author Steve Ebersole
  */
 @Incubating

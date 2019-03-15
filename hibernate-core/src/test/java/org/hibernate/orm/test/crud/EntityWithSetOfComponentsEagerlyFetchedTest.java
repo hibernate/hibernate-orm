@@ -10,11 +10,15 @@ package org.hibernate.orm.test.crud;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.Table;
 
 import org.hibernate.Hibernate;
 
@@ -169,10 +173,12 @@ public class EntityWithSetOfComponentsEagerlyFetchedTest extends SessionFactoryB
 	}
 
 	@Entity(name = "TestEntity")
+	@Table( name = "test_entity")
 	public static class TestEntity {
 		@Id
 		private Integer id;
 
+		@CollectionTable( name = "test_components", joinColumns = @JoinColumn( name = "entity_id" ) )
 		@ElementCollection(fetch = FetchType.EAGER)
 		private Set<Component> setOfComponents = new HashSet<>();
 

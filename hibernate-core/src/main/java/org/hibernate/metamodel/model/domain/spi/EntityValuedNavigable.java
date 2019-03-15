@@ -26,7 +26,7 @@ import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
  * @author Steve Ebersole
  */
 public interface EntityValuedNavigable<J>
-		extends EntityValuedExpressableType<J>, NavigableContainer<J>, TableReferenceContributor {
+		extends EntityValuedExpressableType<J>, NavigableContainer<J>, TableReferenceContributor, AllowableParameterType<J> {
 	@Override
 	default Type.PersistenceType getPersistenceType() {
 		return Type.PersistenceType.ENTITY;
@@ -66,5 +66,10 @@ public interface EntityValuedNavigable<J>
 	@Override
 	default <X> X as(Class<X> type) {
 		return TreatAsHelper.handleEntityTreat( this, type );
+	}
+
+	@Override
+	default int getNumberOfJdbcParametersNeeded() {
+		return getEntityDescriptor().getIdentifierDescriptor().getNumberOfJdbcParametersNeeded();
 	}
 }

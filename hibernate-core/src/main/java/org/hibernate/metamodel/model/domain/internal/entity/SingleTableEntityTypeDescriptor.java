@@ -115,6 +115,10 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 
 	@Override
 	public SqmNavigableReference createSqmExpression(SqmPath lhs, SqmCreationState creationState) {
+		if ( getHierarchy().getDiscriminatorDescriptor() == null ) {
+			throw new UnsupportedOperationException( "Entity [" + getEntityName() + "] is not inherited" );
+		}
+
 		return new SqmBasicValuedSimplePath(
 				creationState.generateUniqueIdentifier(),
 				new NavigablePath( getNavigableName() + DiscriminatorDescriptor.NAVIGABLE_NAME ),

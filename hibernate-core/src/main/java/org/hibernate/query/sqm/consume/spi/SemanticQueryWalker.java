@@ -13,6 +13,7 @@ import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
@@ -33,7 +34,7 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementRefere
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionIndexReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmDiscriminatorReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmMapEntryBinding;
+import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMaxElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMinElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMinIndexReferenceBasic;
@@ -140,6 +141,8 @@ public interface SemanticQueryWalker<T> {
 	T visitEntityValuedPath(SqmEntityValuedSimplePath path);
 
 	T visitPluralValuedPath(SqmPluralValuedSimplePath path);
+
+	T visitIndexedPluralAccessPath(SqmIndexedCollectionAccessPath path);
 
 
 
@@ -306,7 +309,7 @@ public interface SemanticQueryWalker<T> {
 
 	T visitMapKeyBinding(SqmCollectionIndexReference binding);
 
-	T visitMapEntryFunction(SqmMapEntryBinding function);
+	T visitMapEntryFunction(SqmMapEntryReference function);
 
 	T visitMaxElementBinding(SqmMaxElementReference binding);
 

@@ -8,11 +8,13 @@ package org.hibernate.orm.test.query.sqm.produce;
 
 import java.util.List;
 
+import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.orm.test.query.sqm.produce.domain.Person;
+import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -75,12 +77,13 @@ public class AttributePathTests extends BaseSqmUnitTest {
 		assertThat( sqmRoot.getJoins().size(), is(1) );
 
 		final SqmSelection selection = statement.getQuerySpec().getSelectClause().getSelections().get( 0 );
-		assertThat( selection.getSelectableNode(), instanceOf( SqmSingularAttributeReference.class ) );
-		final SqmSingularAttributeReference selectExpression = (SqmSingularAttributeReference) selection.getSelectableNode();
-		assertThat( selectExpression.getExportedFromElement(), notNullValue() );
+		assertThat( selection.getSelectableNode(), instanceOf( SqmEntityValuedSimplePath.class ) );
+
+		final SqmPath selectExpression = (SqmPath) selection.getSelectableNode();
+		selectExpression.as( EntityValuedNavigable.class );
 
 		final SqmComparisonPredicate predicate = (SqmComparisonPredicate) statement.getQuerySpec().getWhereClause().getPredicate();
-		final SqmSingularAttributeReference predicateLhs = (SqmSingularAttributeReference) predicate.getLeftHandExpression();
+		final SqmEntityValuedSimplePath predicateLhs = (SqmEntityValuedSimplePath) predicate.getLeftHandExpression();
 		assertThat( predicateLhs.getLhs(), notNullValue() );
 
 

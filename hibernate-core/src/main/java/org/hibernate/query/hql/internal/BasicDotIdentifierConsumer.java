@@ -6,16 +6,27 @@
  */
 package org.hibernate.query.hql.internal;
 
+import java.lang.reflect.Field;
 import java.util.function.Supplier;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.hql.DotIdentifierConsumer;
+import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
 import org.hibernate.query.sqm.produce.SqmPathRegistry;
+import org.hibernate.query.sqm.produce.path.internal.SqmStaticEnumReference;
+import org.hibernate.query.sqm.produce.path.internal.SqmStaticFieldReference;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.EnumJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -117,7 +128,24 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 				final SqmFrom pathRootByExposedNavigable = sqmPathRegistry.findFromExposing( identifier );
 				if ( pathRootByExposedNavigable != null ) {
 					// identifier is an "unqualified attribute reference"
-					return pathRootByExposedNavigable;
+					final Navigable referencedNavigable = pathRootByExposedNavigable.getReferencedNavigable().findNavigable( identifier );
+					if ( isTerminal ) {
+						return referencedNavigable.createSqmExpression(
+								pathRootByExposedNavigable,
+								creationState
+						);
+					}
+					else {
+						if ( referencedNavigable instanceof Joinable ) {
+							return ( (Joinable) referencedNavigable ).createJoin(
+									pathRootByExposedNavigable,
+									SqmJoinType.INNER,
+									null,
+									false,
+									creationState
+							);
+						}
+					}
 				}
 			}
 
@@ -137,7 +165,63 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 				return this;
 			}
 
-			throw new UnsupportedOperationException( "Not yet implemented" );
+//			// see if it is a Class name...
+//			try {
+//				final Class<?> namedClass = creationState.getCreationContext()
+//						.getServiceRegistry()
+//						.getService( ClassLoaderService.class )
+//						.classForName( pathSoFar );
+//				if ( namedClass != null ) {
+//					return new
+//				}
+//			}
+//			catch (Exception ignore) {
+//			}
+
+			// see if it is a named field/enum reference
+			final int splitPosition = pathSoFar.lastIndexOf( '.' );
+			if ( splitPosition > 0 ) {
+				final String prefix = pathSoFar.substring( 0, splitPosition );
+				final String terminal = pathSoFar.substring( splitPosition + 1 );
+
+				try {
+					final Class<?> namedClass = creationState.getCreationContext()
+							.getServiceRegistry()
+							.getService( ClassLoaderService.class )
+							.classForName( prefix );
+					if ( namedClass != null ) {
+						try {
+							final Field referencedField = namedClass.getDeclaredField( terminal );
+							if ( referencedField != null ) {
+								final JavaTypeDescriptor<?> fieldJtd = creationState.getCreationContext()
+										.getDomainModel()
+										.getTypeConfiguration()
+										.getJavaTypeDescriptorRegistry()
+										.getDescriptor( referencedField.getType() );
+								return new SqmStaticFieldReference( referencedField, (BasicJavaDescriptor) fieldJtd );
+							}
+						}
+						catch (Exception ignore) {
+						}
+
+						if ( namedClass.isEnum() ) {
+							final Enum referencedEnum = Enum.valueOf( (Class) namedClass, terminal );
+							if ( referencedEnum != null ) {
+								final JavaTypeDescriptor<?> enumJtd = creationState.getCreationContext()
+										.getDomainModel()
+										.getTypeConfiguration()
+										.getJavaTypeDescriptorRegistry()
+										.getDescriptor( namedClass );
+								return new SqmStaticEnumReference( referencedEnum, (EnumJavaDescriptor) enumJtd );
+							}
+						}
+					}
+				}
+				catch (Exception ignore) {
+				}
+			}
+
+			throw new ParsingException( "Could not interpret dot-ident : " + pathSoFar );
 		}
 
 		@Override
@@ -146,7 +230,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 				String currentContextKey,
 				boolean isTerminal,
 				SqmCreationState processingState) {
-			throw new UnsupportedOperationException();
+			return currentPart.resolveIndexedAccess( selector, currentContextKey, isTerminal, processingState );
 		}
 	}
 }

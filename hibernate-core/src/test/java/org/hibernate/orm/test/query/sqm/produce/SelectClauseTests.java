@@ -9,19 +9,19 @@ package org.hibernate.orm.test.query.sqm.produce;
 import java.util.Map;
 
 import org.hibernate.collection.spi.CollectionClassification;
+import org.hibernate.metamodel.model.domain.spi.CollectionElement;
+import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndex.IndexClassification;
-import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PluralValuedNavigable;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.orm.test.query.sqm.produce.domain.Person;
+import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
-import org.hibernate.query.sqm.tree.expression.domain.AbstractSqmCollectionIndexReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmMapEntryBinding;
-import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -38,7 +38,6 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -57,7 +56,7 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 		SqmSelectStatement statement = interpretSelect( "select p from Person p" );
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
 		SqmSelection selection = statement.getQuerySpec().getSelectClause().getSelections().get( 0 );
-		assertThat( selection.getSelectableNode(), instanceOf( SqmEntityReference.class ) );
+		assertThat( selection.getSelectableNode(), instanceOf( SqmRoot.class ) );
 	}
 
 	@Test
@@ -65,7 +64,7 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 		SqmSelectStatement statement = interpretSelect( "select p.nickName from Person p" );
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
 		SqmSelection selection = statement.getQuerySpec().getSelectClause().getSelections().get( 0 );
-		assertThat( selection.getSelectableNode(), instanceOf( SqmSingularAttributeReference.class ) );
+		assertThat( selection.getSelectableNode(), instanceOf( SqmNavigableReference.class ) );
 	}
 
 	@Test
@@ -74,11 +73,11 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 		assertEquals( 2, statement.getQuerySpec().getSelectClause().getSelections().size() );
 		assertThat(
 				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
-				instanceOf( SqmSingularAttributeReference.class )
+				instanceOf( SqmNavigableReference.class )
 		);
 		assertThat(
 				statement.getQuerySpec().getSelectClause().getSelections().get( 1 ).getSelectableNode(),
-				instanceOf( SqmSingularAttributeReference.class )
+				instanceOf( SqmNavigableReference.class )
 		);
 	}
 
@@ -88,11 +87,11 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 		assertEquals( 2, statement.getQuerySpec().getSelectClause().getSelections().size() );
 		assertThat(
 				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
-				instanceOf( SqmEntityReference.class )
+				instanceOf( SqmRoot.class )
 		);
 		assertThat(
 				statement.getQuerySpec().getSelectClause().getSelections().get( 1 ).getSelectableNode(),
-				instanceOf( SqmSingularAttributeReference.class )
+				instanceOf( SqmNavigableReference.class )
 		);
 	}
 
@@ -139,11 +138,11 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 
 		SqmBinaryArithmetic addExpression = (SqmBinaryArithmetic) selection.getSelectableNode();
 
-		SqmPath leftHandOperand = (SqmSingularAttributeReference) addExpression.getLeftHandOperand();
+		SqmPath leftHandOperand = (SqmPath) addExpression.getLeftHandOperand();
 		assertThat( leftHandOperand.getLhs(), sameInstance( entityRoot ) );
 		assertThat( leftHandOperand.getReferencedNavigable().getNavigableName(), is( "numberOfToes" ) );
 
-		SqmPath rightHandOperand = (SqmSingularAttributeReference) addExpression.getRightHandOperand();
+		SqmPath rightHandOperand = (SqmPath) addExpression.getRightHandOperand();
 		assertThat( rightHandOperand.getLhs(), sameInstance( entity2Root ) );
 		assertThat( rightHandOperand.getReferencedNavigable().getNavigableName(), is( "numberOfToes" ) );
 	}
@@ -170,16 +169,23 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 			IndexClassification indexClassification,
 			String collectionAlias) {
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
-		assertThat(
-				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
-				instanceOf( AbstractSqmCollectionIndexReference.class )
-		);
 
-		final AbstractSqmCollectionIndexReference mapKeyPathExpression = (AbstractSqmCollectionIndexReference) statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode();
-		final PluralPersistentAttribute attribute = mapKeyPathExpression.getPluralAttributeReference().getReferencedNavigable();
-		assertThat( attribute.getPersistentCollectionDescriptor().getCollectionClassification(), is( collectionClassification ) );
-		assertThat( attribute.getPersistentCollectionDescriptor().getIndexDescriptor().getClassification(), is( indexClassification) );
-		assertThat( mapKeyPathExpression.getExpressableType(), sameInstance( attribute.getPersistentCollectionDescriptor().getIndexDescriptor() ) );
+		final SqmSelectableNode selectedExpr = statement.getQuerySpec()
+				.getSelectClause()
+				.getSelections()
+				.get( 0 )
+				.getSelectableNode();
+
+		assertThat( selectedExpr, instanceOf( SqmNavigableReference.class ) );
+		final SqmNavigableReference selectedPath = (SqmNavigableReference) selectedExpr;
+
+		final PersistentCollectionDescriptor collectionDescriptor = selectedPath.getLhs()
+				.as( PluralValuedNavigable.class )
+				.getCollectionDescriptor();
+
+		assertThat( collectionDescriptor.getCollectionClassification(), is( collectionClassification ) );
+		assertThat( collectionDescriptor.getIndexDescriptor().getClassification(), is( indexClassification) );
+		assertThat( selectedPath.getExpressableType(), sameInstance( collectionDescriptor.getIndexDescriptor() ) );
 	}
 
 	@Test
@@ -246,16 +252,20 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 			SqmSelectStatement statement,
 			String collectionIdentificationVariable) {
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
-		assertThat(
-				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
-				instanceOf( SqmCollectionElementReference.class )
-		);
 
-		final SqmCollectionElementReference elementBinding = (SqmCollectionElementReference) statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode();
-		final SqmPluralAttributeReference attrRef = elementBinding.getSourceReference();
+		final SqmSelectableNode selectedExpression = statement.getQuerySpec()
+				.getSelectClause()
+				.getSelections()
+				.get( 0 )
+				.getSelectableNode();
 
-		assertThat( elementBinding.getExpressableType(), sameInstance( attrRef.getReferencedNavigable().getPersistentCollectionDescriptor().getElementDescriptor() ) );
-		assertThat( attrRef.getExportedFromElement().getIdentificationVariable(), is( collectionIdentificationVariable ) );
+		assertThat( selectedExpression, instanceOf( SqmPath.class ) );
+		final SqmPath selectedPath = (SqmPath) selectedExpression;
+
+		assertThat( selectedPath.getReferencedNavigable(), instanceOf( CollectionElement.class ) );
+		assertThat( selectedPath.getLhs().getReferencedNavigable(), instanceOf( PluralValuedNavigable.class ) );
+
+		assertThat( selectedPath.getLhs().getExplicitAlias(), is( collectionIdentificationVariable ) );
 	}
 
 	@Test
@@ -264,18 +274,16 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
 
-		final SqmSelectableNode selectableNode = statement.getQuerySpec()
+		final SqmMapEntryReference mapEntryPath = (SqmMapEntryReference) statement.getQuerySpec()
 				.getSelectClause()
 				.getSelections()
 				.get( 0 )
 				.getSelectableNode();
 
-		final SqmFrom sqmMapEntryBinding = TestingUtil.cast( selectableNode, SqmFrom.class );
+		assertThat( mapEntryPath.getJavaTypeDescriptor().getJavaType(), is( equalTo( Map.Entry.class ) ) );
 
-		assertThat( sqmMapEntryBinding, notNullValue() );
-		assertThat( sqmMapEntryBinding.getExplicitAlias(), is( "m") );
-
-		assertThat( sqmMapEntryBinding.getJavaTypeDescriptor().getJavaType(), is( equalTo( Map.Entry.class ) ) );
+		final SqmPath selectedPathLhs = mapEntryPath.getMapPath();
+		assertThat( selectedPathLhs.getExplicitAlias(), is( "m" ) );
 	}
 
 	@Test
@@ -283,9 +291,9 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 		SqmSelectStatement statement = interpretSelect( "select e from EntityOfBasics e" );
 
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
-		final SqmEntityReference sqmEntityReference = TestingUtil.cast(
+		final SqmPath sqmEntityReference = TestingUtil.cast(
 				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
-				SqmEntityReference.class
+				SqmPath.class
 		);
 
 		assertThat( sqmEntityReference.getJavaTypeDescriptor().getJavaType(), equalTo( EntityOfBasics.class ));

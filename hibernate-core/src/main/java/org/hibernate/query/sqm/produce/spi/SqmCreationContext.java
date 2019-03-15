@@ -14,15 +14,24 @@ import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.service.ServiceRegistry;
 
 /**
- * The "context" object for creation of SQM objects
+ * The context in which all SQM creations occur (think SessionFactory).
  *
  * @author Steve Ebersole
  */
 @Incubating
 public interface SqmCreationContext {
+	/**
+	 * Access to the domain model metadata
+	 */
 	MetamodelImplementor getDomainModel();
 
+	/**
+	 * Access to the ServiceRegistry for the context
+	 */
 	ServiceRegistry getServiceRegistry();
 
+	/**
+	 * Access to function name resolution
+	 */
 	Function<String, SqmFunctionTemplate> getFunctionResolver();
 }

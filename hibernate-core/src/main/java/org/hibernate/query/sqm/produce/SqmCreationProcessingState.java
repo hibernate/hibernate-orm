@@ -20,6 +20,9 @@ import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 public interface SqmCreationProcessingState {
 	/**
 	 * The parent processing state.  May be null for the top-level processing.
+	 *
+	 * Intended to be used while processing a sub-query to access the processing
+	 * state of the context in which the sub-query occurs.
 	 */
 	SqmCreationProcessingState getParentProcessingState();
 

@@ -13,15 +13,13 @@ import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.orm.test.query.sqm.produce.domain.ConstructedLookupListItem;
 import org.hibernate.orm.test.query.sqm.produce.domain.InjectedLookupListItem;
 import org.hibernate.orm.test.query.sqm.produce.domain.NestedCtorLookupListItem;
-import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
-import org.hibernate.testing.orm.junit.TestingUtil;
-
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
-import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationNature;
 
+import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
+import org.hibernate.testing.orm.junit.TestingUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -119,12 +117,12 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 		assertThat( instantiation.getArguments(), hasSize( 2 ) );
 
 
-		final SqmSingularAttributeReference attrRef = TestingUtil.cast(
+		final SqmPath theIntegerPath = TestingUtil.cast(
 				statement.getQuerySpec().getSelectClause().getSelections().get( 1 ).getSelectableNode(),
-				SqmSingularAttributeReference.class
+				SqmPath.class
 		);
-		assertThat( attrRef.getReferencedNavigable().getAttributeName(), is( "theInteger" ) );
-		assertThat( attrRef.getReferencedNavigable().getJavaType(), is( equalTo( Integer.class ) ) );
+		assertThat( theIntegerPath.getReferencedNavigable().getNavigableName(), is( "theInteger" ) );
+		assertThat( theIntegerPath.getReferencedNavigable().getJavaType(), is( equalTo( Integer.class ) ) );
 	}
 
 	@Test
@@ -203,7 +201,7 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 
 		assertThat(
 				instantiation.getArguments().get( 1 ).getSelectableNode(),
-				instanceOf( SqmSingularAttributeReference.class )
+				instanceOf( SqmPath.class )
 		);
 		assertThat( instantiation.getArguments().get( 1 ).getAlias(), is( nullValue() ) );
 	}
@@ -237,7 +235,7 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 
 		assertThat(
 				instantiation.getArguments().get( 1 ).getSelectableNode(),
-				instanceOf( SqmSingularAttributeReference.class )
+				instanceOf( SqmPath.class )
 		);
 		assertThat( instantiation.getArguments().get( 1 ).getAlias(), is( "ts" ) );
 	}

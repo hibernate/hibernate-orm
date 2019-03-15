@@ -17,7 +17,7 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 
 /**
- * Access to the current state for SQM tree creation
+ * Models the state pertaining to the creation of a single SQM.
  *
  * @author Steve Ebersole
  */
@@ -33,6 +33,13 @@ public interface SqmCreationState {
 	 */
 	SqmCreationOptions getCreationOptions();
 
+	/**
+	 * Access to the stack of current creation processing state.
+	 *
+	 * New items are pushed to this stack as we cross certain
+	 * boundaries while creating the SQM.  Generally these boundaries
+	 * are specific to top-level statements and sub-queries.
+	 */
 	Stack<SqmCreationProcessingState> getProcessingStateStack();
 
 

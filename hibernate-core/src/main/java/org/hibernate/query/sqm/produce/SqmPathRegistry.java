@@ -23,7 +23,6 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 @Incubating
 public interface SqmPathRegistry {
 	void register(SqmPath sqmPath);
-	void register(NavigablePath alternatePath, SqmPath sqmPath);
 
 	/**
 	 * Find a SqmFrom by its identification variable (alias).  Will search any

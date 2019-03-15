@@ -8,6 +8,7 @@ package org.hibernate.orm.test.query.sqm.produce;
 
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.orm.test.query.sqm.produce.domain.Person;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
@@ -57,7 +58,7 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 		);
 
 		assertThat( caseStatement.getFixture(), notNullValue() );
-		assertThat( caseStatement.getFixture(), instanceOf( SqmSingularAttributeReference.class ) );
+		assertThat( caseStatement.getFixture(), instanceOf( SqmPath.class ) );
 
 		assertThat( caseStatement.getOtherwise(), notNullValue() );
 		assertThat( caseStatement.getOtherwise(), instanceOf( SqmLiteral.class ) );

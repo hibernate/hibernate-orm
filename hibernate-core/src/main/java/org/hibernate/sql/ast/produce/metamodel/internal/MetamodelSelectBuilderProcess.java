@@ -35,6 +35,7 @@ import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.internal.SqlAstQuerySpecProcessingStateImpl;
 import org.hibernate.sql.ast.produce.internal.SqlAstSelectDescriptorImpl;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
+import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.spi.FromClauseAccess;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupProducer;
@@ -326,25 +327,12 @@ public class MetamodelSelectBuilderProcess
 	public List<Fetch> visitFetches(FetchParent fetchParent) {
 		log.tracef( "Starting visitation of FetchParent's Fetchables : %s", fetchParent.getNavigablePath() );
 
-		// will hold both:
-		//
-		// ... join fetch a.parent.child.parent
-		//
-		// and
-		//
-		// ... join fetch a.parent
-		//
-		// but `a.parent` points to the "real" `Fetch`, while `a.parent.child.parent` points to
-		// the `BiDirFetchReference`
-		//
-
 		final List<Fetch> fetches = new ArrayList<>();
 
-		final Consumer<Fetchable> fetchableConsumer = getFetchableConsumer( fetchParent, fetches );
+		final NavigableContainer navigableContainer = fetchParent.getNavigableContainer();
 
-		NavigableContainer navigableContainer = fetchParent.getNavigableContainer();
-		navigableContainer.visitKeyFetchables( fetchableConsumer );
-		navigableContainer.visitFetchables( fetchableConsumer );
+		navigableContainer.visitKeyFetchables( getFetchableConsumer( fetchParent, fetches ) );
+		navigableContainer.visitFetchables( getFetchableConsumer( fetchParent, fetches ) );
 
 		return fetches;
 	}
@@ -357,51 +345,77 @@ public class MetamodelSelectBuilderProcess
 	private int fetchDepth = 0;
 
 	private Consumer<Fetchable> getFetchableConsumer(FetchParent fetchParent, List<Fetch> fetches) {
-		return fetchable -> {
+		return new Consumer<Fetchable>() {
+			private Set<Joinable> processedFetchables;
 
-			final Fetch biDirectionalFetch = circularFetchDetector.findBiDirectionalFetch(
-					fetchParent,
-					fetchable
-			);
+			@Override
+			public void accept(Fetchable fetchable) {
+				final boolean isJoinable = fetchable instanceof Joinable;
 
-			if ( biDirectionalFetch != null ) {
-				fetches.add( biDirectionalFetch );
-				return;
-			}
+				if ( isJoinable ) {
+					if ( processedFetchables == null ) {
+						processedFetchables = new HashSet<>();
+					}
 
-			LockMode lockMode = LockMode.READ;
-			FetchTiming fetchTiming = fetchable.getMappedFetchStrategy().getTiming();
-			boolean joined = fetchable.getMappedFetchStrategy().getStyle() == FetchStyle.JOIN;
-
-			if ( rootNavigableContainer instanceof PluralValuedNavigable ) {
-				// processing a collection-loader
-
-				// if the `fetachable` is the "collection owner" and the collection owner is available in Session - don't join
-				final String collectionMappedByProperty = ( (PluralValuedNavigable) rootNavigableContainer ).getCollectionDescriptor().getMappedByProperty();
-				if ( collectionMappedByProperty.equals( fetchable.getNavigableName() ) ) {
-					joined = false;
+					final boolean alreadySeen = processedFetchables.add( (Joinable) fetchable );
+					if ( !alreadySeen ) {
+						return;
+					}
 				}
-			}
 
-			final Integer maximumFetchDepth = getCreationContext().getMaximumFetchDepth();
-			// minus one because the root is not a fetch
+				final Fetch biDirectionalFetch = circularFetchDetector.findBiDirectionalFetch(
+						fetchParent,
+						fetchable
+				);
 
-			if ( maximumFetchDepth != null ) {
-				if ( fetchDepth == maximumFetchDepth ) {
-					joined = false;
-				}
-				else if ( fetchDepth > maximumFetchDepth ) {
+				if ( biDirectionalFetch != null ) {
+					fetches.add( biDirectionalFetch );
 					return;
 				}
-			}
 
-			try {
-				fetchDepth++;
-				Fetch fetch = fetchable.generateFetch( fetchParent, fetchTiming, joined, lockMode, null, this );
-				fetches.add( fetch );
-			}
-			finally {
-				fetchDepth--;
+				LockMode lockMode = LockMode.READ;
+				FetchTiming fetchTiming = fetchable.getMappedFetchStrategy().getTiming();
+				boolean joined = fetchable.getMappedFetchStrategy().getStyle() == FetchStyle.JOIN;
+
+				if ( rootNavigableContainer instanceof PluralValuedNavigable ) {
+					// processing a collection-loader
+
+					// if the `fetchable` is the "collection owner" and the collection owner is available in Session - don't join
+					final String collectionMappedByProperty = ( (PluralValuedNavigable) rootNavigableContainer ).getCollectionDescriptor()
+							.getMappedByProperty();
+					if ( collectionMappedByProperty != null && collectionMappedByProperty.equals( fetchable.getNavigableName() ) ) {
+						joined = false;
+					}
+				}
+
+				final Integer maximumFetchDepth = MetamodelSelectBuilderProcess.this.getCreationContext()
+						.getMaximumFetchDepth();
+				// minus one because the root is not a fetch
+
+				if ( maximumFetchDepth != null ) {
+					if ( fetchDepth == maximumFetchDepth ) {
+						joined = false;
+					}
+					else if ( fetchDepth > maximumFetchDepth ) {
+						return;
+					}
+				}
+
+				try {
+					fetchDepth++;
+					Fetch fetch = fetchable.generateFetch(
+							fetchParent,
+							fetchTiming,
+							joined,
+							lockMode,
+							null,
+							MetamodelSelectBuilderProcess.this
+					);
+					fetches.add( fetch );
+				}
+				finally {
+					fetchDepth--;
+				}
 			}
 		};
 	}

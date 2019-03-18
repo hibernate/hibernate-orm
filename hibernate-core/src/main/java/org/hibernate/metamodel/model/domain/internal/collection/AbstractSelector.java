@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.model.domain.internal.collection;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -35,15 +34,8 @@ import org.hibernate.sql.ast.consume.spi.SelfRenderingExpression;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstSelectToJdbcSelectConverter;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.produce.internal.SqlAstQuerySpecProcessingStateImpl;
 import org.hibernate.sql.ast.produce.internal.SqlAstSelectDescriptorImpl;
-import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.produce.spi.FromClauseAccess;
-import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
-import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.produce.spi.SqlAstProcessingState;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
@@ -60,13 +52,10 @@ import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.internal.RowTransformerSingularReturnImpl;
 import org.hibernate.sql.exec.spi.BasicExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameter;
-import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.Fetch;
-import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -120,9 +109,10 @@ public abstract class AbstractSelector {
 		final QuerySpec querySpec = new QuerySpec( true );
 		final SelectStatement selectStatement = new SelectStatement( querySpec );
 
-		final SqlAstCreationStateImpl creationState = new SqlAstCreationStateImpl( sessionFactory, querySpec );
+		final SqlAstCreationStateImpl creationState = getCreationState( sessionFactory, querySpec );
 
-		final TableGroup rootTableGroup = createTableGroup( querySpec, sessionFactory );
+		final TableGroup rootTableGroup = createTableGroup( creationState );
+
 		querySpec.getFromClause().addRoot( rootTableGroup );
 		creationState.getFromClauseAccess().registerTableGroup( rootTableGroup.getNavigablePath(), rootTableGroup );
 
@@ -160,56 +150,11 @@ public abstract class AbstractSelector {
 		);
 	}
 
-	private TableGroup createTableGroup(
-			QuerySpec querySpec,
-			SessionFactoryImplementor sessionFactory) {
+	protected SqlAstCreationStateImpl getCreationState(SessionFactoryImplementor sessionFactory, QuerySpec querySpec) {
+		return new SqlAstCreationStateImpl( sessionFactory, querySpec );
+	}
 
-		final SqlAstCreationState creationState = new SqlAstCreationState() {
-			final SqlAliasBaseGenerator aliasBaseGenerator = new SqlAliasBaseManager();
-			final SqlAstProcessingState processingState = new SqlAstQuerySpecProcessingStateImpl(
-					querySpec,
-					null,
-					this,
-					() -> null,
-					() -> expression -> {},
-					() -> sqlSelection -> {}
-			);
-
-			@Override
-			public SqlAstCreationContext getCreationContext() {
-				return sessionFactory;
-			}
-
-			@Override
-			public SqlAstProcessingState getCurrentProcessingState() {
-				return processingState;
-			}
-
-			@Override
-			public SqlExpressionResolver getSqlExpressionResolver() {
-				return processingState.getSqlExpressionResolver();
-			}
-
-			@Override
-			public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
-				return aliasBaseGenerator;
-			}
-
-			@Override
-			public FromClauseAccess getFromClauseAccess() {
-				return null;
-			}
-
-			@Override
-			public LockMode determineLockMode(String identificationVariable) {
-				return LockMode.NONE;
-			}
-
-			@Override
-			public List<Fetch> visitFetches(FetchParent fetchParent) {
-				return Collections.emptyList();
-			}
-		};
+	private TableGroup createTableGroup(SqlAstCreationStateImpl creationState) {
 
 		return collectionDescriptor.createRootTableGroup(
 				null,

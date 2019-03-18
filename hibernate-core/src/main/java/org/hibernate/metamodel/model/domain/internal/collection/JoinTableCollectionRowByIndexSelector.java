@@ -6,19 +6,24 @@
  */
 package org.hibernate.metamodel.model.domain.internal.collection;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import org.hibernate.LockMode;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
+import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
@@ -33,6 +38,8 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
+import org.hibernate.sql.results.spi.Fetch;
+import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
@@ -104,6 +111,12 @@ public class JoinTableCollectionRowByIndexSelector extends AbstractSelector impl
 
 	}
 
+	@Override
+	protected SqlAstCreationStateImpl getCreationState(
+			SessionFactoryImplementor sessionFactory, QuerySpec querySpec) {
+		return new IndexSqlAstCreationStateImpl( sessionFactory, querySpec );
+	}
+
 	public class Position {
 		int jdbcPosition = 1;
 		int valuesArrayPosition = 0;
@@ -144,4 +157,39 @@ public class JoinTableCollectionRowByIndexSelector extends AbstractSelector impl
 		);
 	}
 
+	public class IndexSqlAstCreationStateImpl extends SqlAstCreationStateImpl {
+
+		public IndexSqlAstCreationStateImpl(
+				SessionFactoryImplementor sessionFactory,
+				QuerySpec querySpec) {
+			super( sessionFactory, querySpec );
+		}
+
+		@Override
+		public List<Fetch> visitFetches(FetchParent fetchParent) {
+			final List<Fetch> fetches = new ArrayList<>();
+			final Consumer<Fetchable> fetchableConsumer = fetchable -> {
+				if ( fetchParent.findFetch( fetchable.getNavigableName() ) != null ) {
+					return;
+				}
+
+				fetches.add(
+						fetchable.generateFetch(
+								fetchParent,
+								FetchTiming.IMMEDIATE,
+								true,
+								LockMode.NONE,
+								null,
+								this
+						)
+				);
+			};
+
+			NavigableContainer navigableContainer = (NavigableContainer) getCollectionDescriptor().getElementDescriptor();
+			navigableContainer.visitKeyFetchables( fetchableConsumer );
+			navigableContainer.visitFetchables( fetchableConsumer );
+
+			return fetches;
+		}
+	}
 }

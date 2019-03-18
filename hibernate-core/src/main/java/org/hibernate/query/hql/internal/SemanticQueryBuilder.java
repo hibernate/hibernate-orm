@@ -576,7 +576,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		// select the root
 		final SqmSelectClause selectClause = new SqmSelectClause( false );
 		fromClause.visitRoots(
-				sqmRoot -> selectClause.addSelection( new SqmSelection( sqmRoot ) )
+				sqmRoot -> selectClause.addSelection( new SqmSelection( sqmRoot, sqmRoot.getExplicitAlias() ) )
 		);
 		return selectClause;
 	}
@@ -599,7 +599,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@Override
 	public SqmSelection visitSelection(HqlParser.SelectionContext ctx) {
-		final String resultIdentifier = interpretResultIdentifier( ctx.resultIdentifier() );
+		final String resultIdentifier = visitResultIdentifier( ctx.resultIdentifier() );
 		SqmSelectableNode selectableNode = visitSelectableNode( ctx );
 
 		if ( selectableNode instanceof SqmPluralAttributeReference ) {
@@ -647,12 +647,12 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		throw new ParsingException( "Unexpected selection rule type : " + ctx.getText() );
 	}
 
-	private String interpretResultIdentifier(HqlParser.ResultIdentifierContext resultIdentifierContext) {
+	@Override
+	public String visitResultIdentifier(HqlParser.ResultIdentifierContext resultIdentifierContext) {
 		if ( resultIdentifierContext != null ) {
-			final String explicitAlias;
 			if ( resultIdentifierContext.AS() != null ) {
 				final Token aliasToken = resultIdentifierContext.identifier().getStart();
-				explicitAlias = aliasToken.getText();
+				final String explicitAlias = aliasToken.getText();
 
 				if ( aliasToken.getType() != HqlParser.IDENTIFIER ) {
 					// we have a reserved word used as an identification variable.
@@ -668,14 +668,14 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 						);
 					}
 				}
+				return explicitAlias;
 			}
 			else {
-				explicitAlias = resultIdentifierContext.getText();
+				return  resultIdentifierContext.getText();
 			}
-			return explicitAlias;
 		}
 
-		return getImplicitAliasGenerator().generateUniqueImplicitAlias();
+		return null;
 	}
 
 	private JavaTypeDescriptor<List> listJavaTypeDescriptor;

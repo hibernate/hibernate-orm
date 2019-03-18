@@ -10,10 +10,12 @@ package org.hibernate.sql.ast.produce.spi;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.hibernate.query.NavigablePath;
@@ -31,12 +33,15 @@ import org.jboss.logging.Logger;
 /**
  * An index of various FROM CLAUSE resolutions.
  *
- * todo (6.0) : but the problem is that this only works for SQM building of a SQL AST but is passed around to the generic
- *
  * @author Steve Ebersole
  */
 public class FromClauseIndex
-		extends DomainResultCreationState.SimpleFromClauseAccessImpl implements TableGroupResolver {
+		extends DomainResultCreationState.SimpleFromClauseAccessImpl
+		implements TableGroupResolver {
+
+	// todo (6.0) : this could also act as the "affected table name" collecter
+	//		- as we cross-ref TableGroups, add their table names
+
 	public FromClauseIndex() {
 	}
 
@@ -49,6 +54,11 @@ public class FromClauseIndex
 	private Map<NavigablePath,SqmNavigableJoin> fetchesByPath;
 	private Map<NavigablePath, Map<NavigablePath, SqmNavigableJoin>> fetchesByParentPath;
 
+	private final Set<String> affectedTableNames = new HashSet<>();
+
+	public Set<String> getAffectedTableNames() {
+		return affectedTableNames;
+	}
 
 	private void newCrossReferencing(SqmFrom fromElement, TableGroup tableGroup) {
 		register( fromElement, tableGroup );
@@ -79,8 +89,19 @@ public class FromClauseIndex
 		}
 	}
 
+	@Override
+	public void registerTableGroup(NavigablePath navigablePath, TableGroup tableGroup) {
+		super.registerTableGroup( navigablePath, tableGroup );
+		tableGroup.applyAffectedTableNames( affectedTableNames::add );
+	}
+
 	public void register(SqmNavigableJoin join, TableGroupJoin tableGroupJoin) {
 		performRegistration( join, tableGroupJoin.getJoinedGroup() );
+
+		if ( tableGroupJoinMap == null ) {
+			tableGroupJoinMap = new HashMap<>();
+		}
+		tableGroupJoinMap.put( join.getNavigablePath(), tableGroupJoin );
 
 		if ( join.isFetched() ) {
 			if ( fetchesByPath == null ) {
@@ -99,7 +120,7 @@ public class FromClauseIndex
 		}
 	}
 
-	public TableGroupJoin findTableJoinJoin(NavigablePath navigablePath) {
+	public TableGroupJoin findTableGroupJoin(NavigablePath navigablePath) {
 		return tableGroupJoinMap == null ? null : tableGroupJoinMap.get( navigablePath );
 	}
 
@@ -140,10 +161,8 @@ public class FromClauseIndex
 		return findTableGroup( navigablePath );
 	}
 
-	public void crossReference(
-			SqmFrom fromElement,
-			TableGroup tableGroup) {
-		SqmFrom existing = sqmFromByUid.put( fromElement.getUniqueIdentifier(), fromElement );
+	public void crossReference(SqmFrom fromElement, TableGroup tableGroup) {
+		final SqmFrom existing = sqmFromByUid.put( fromElement.getUniqueIdentifier(), fromElement );
 		if ( existing != null ) {
 			if ( existing != fromElement ) {
 				log.debugf(
@@ -155,9 +174,7 @@ public class FromClauseIndex
 			}
 		}
 
-//		uidBySourceNavigableReference.put( tableGroup.getNavigableReference(), tableGroup.getUniqueIdentifier() );
-
-		TableGroup old = tableGroupBySqmFromXref.put( fromElement, tableGroup );
+		final TableGroup old = tableGroupBySqmFromXref.put( fromElement, tableGroup );
 		if ( old != null ) {
 			log.debugf(
 					"FromElement [%s] was already cross-referenced to TableSpecificationGroup - old : [%s]; new : [%s]",

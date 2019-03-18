@@ -145,6 +145,11 @@ public class SingularPersistentAttributeBasic<O, J>
 	}
 
 	@Override
+	public String toString() {
+		return getNavigableRole().getFullPath() + " (basic)";
+	}
+
+	@Override
 	public BasicValueConverter getValueConverter() {
 		return valueMapper.getValueConverter();
 	}

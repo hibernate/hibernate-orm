@@ -32,7 +32,11 @@ public class ColumnReference implements Expression {
 	private String sqlFragment;
 
 	public ColumnReference(ColumnReferenceQualifier qualifier, Column column) {
-		assert qualifier != null;
+		// the assumption with this assertion is that callers are expecting there
+		// to be a qualifier; otherwise, they would call the overload ctor form
+		// not accepting a qualifier
+		assert qualifier != null : "ColumnReferenceQualifier is null";
+
 		this.column = column;
 		this.sqlFragment = renderSqlFragment( qualifier, column );
 	}

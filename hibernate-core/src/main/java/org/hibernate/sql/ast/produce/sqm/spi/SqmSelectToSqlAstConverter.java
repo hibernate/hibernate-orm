@@ -108,7 +108,7 @@ public class SqmSelectToSqlAstConverter
 		return new SqlAstSelectDescriptorImpl(
 				visitSelectStatement( statement ),
 				domainResults,
-				affectedTableNames()
+				getFromClauseIndex().getAffectedTableNames()
 		);
 	}
 

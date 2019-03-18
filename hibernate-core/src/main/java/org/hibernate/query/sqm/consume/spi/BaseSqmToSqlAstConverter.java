@@ -9,10 +9,8 @@ package org.hibernate.query.sqm.consume.spi;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Consumer;
 
@@ -36,6 +34,7 @@ import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.criteria.sqm.JpaParameterSqmWrapper;
 import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
@@ -118,7 +117,6 @@ import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
 import org.hibernate.sql.ast.produce.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.produce.spi.SqlAstQuerySpecProcessingState;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
@@ -184,7 +182,6 @@ import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameters;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
-import org.hibernate.sql.results.spi.SqlSelection;
 
 import org.jboss.logging.Logger;
 
@@ -225,23 +222,11 @@ public abstract class BaseSqmToSqlAstConverter
 	private final Stack<Clause> currentClauseStack = new StandardStack<>();
 	private final Stack<SqmSelectToSqlAstConverter.Shallowness> shallownessStack = new StandardStack<>( SqmSelectToSqlAstConverter.Shallowness.NONE );
 
-	private final Set<String> affectedTableNames = new HashSet<>();
-
 
 	@Remove
 	private final Stack<TableGroup> tableGroupStack = new StandardStack<>();
 	@Remove
 	private final Stack<NavigableReference> navigableReferenceStack = new StandardStack<>();
-
-	/**
-	 * I *think* this can be (and is) handled via `processingStateStack` - specifically its expression-resolver
-	 *
-	 * todo (6.0) : decide if we want to do the caching/unique-ing of Expressions here.
-	 * 		its really only needed for top-level select clauses, not sub-queries.
-	 * 		its "ok" to do it for sub-queries as well - just wondering about the overhead.
-	 */
-	@Remove
-	private Map<QuerySpec,Map<Expression, SqlSelection>> sqlExpressionToSqlSelectionMapByQuerySpec;
 
 	public BaseSqmToSqlAstConverter(
 			SqlAstCreationContext creationContext,
@@ -298,10 +283,6 @@ public abstract class BaseSqmToSqlAstConverter
 		return Collections.emptyList();
 	}
 
-	protected Set<String> affectedTableNames() {
-		return affectedTableNames;
-	}
-
 	protected QuerySpec currentQuerySpec() {
 		return ( (SqlAstQuerySpecProcessingState) processingStateStack.getCurrent() ).getInflightQuerySpec();
 	}
@@ -322,10 +303,6 @@ public abstract class BaseSqmToSqlAstConverter
 		return tableGroupStack;
 	}
 
-	public Stack<Shallowness> getShallownessStack() {
-		return shallownessStack;
-	}
-
 	public Stack<NavigableReference> getNavigableReferenceStack() {
 		return navigableReferenceStack;
 	}
@@ -339,34 +316,6 @@ public abstract class BaseSqmToSqlAstConverter
 		if ( !stack.isEmpty() ) {
 			throw new IllegalStateException( "Cannot prime an already populated Stack" );
 		}
-	}
-
-	// todo (6.0) : is there ever a time when resolving a sqlSelectable relative to a qualifier ought to return different expressions for multiple references?
-
-	protected Expression normalizeSqlExpression(Expression expression) {
-		if ( getCurrentClauseStack().getCurrent() == Clause.ORDER
-				|| getCurrentClauseStack().getCurrent() == Clause.GROUP
-				|| getCurrentClauseStack().getCurrent() == Clause.HAVING ) {
-			// see if this (Sql)Expression is used as a selection, and if so
-			// wrap the (Sql)Expression in a special wrapper with access to both
-			// the (Sql)Expression and the SqlSelection.
-			//
-			// This is used for databases which prefer to use the position of a
-			// selected expression (within the select-clause) as the
-			// order-by, group-by or having expression
-			if ( sqlExpressionToSqlSelectionMapByQuerySpec != null ) {
-				final Map<Expression, SqlSelection> sqlExpressionToSqlSelectionMap =
-						sqlExpressionToSqlSelectionMapByQuerySpec.get( currentQuerySpec() );
-				if ( sqlExpressionToSqlSelectionMap != null ) {
-					final SqlSelection selection = sqlExpressionToSqlSelectionMap.get( expression );
-					if ( selection != null ) {
-						return new SqlSelectionExpression( selection, expression );
-					}
-				}
-			}
-		}
-
-		return expression;
 	}
 
 
@@ -509,7 +458,11 @@ public abstract class BaseSqmToSqlAstConverter
 
 		try {
 			sqmFromClause.visitRoots(
-					sqmRoot -> currentQuerySpec().getFromClause().addRoot( visitRootEntityFromElement( sqmRoot ) )
+					sqmRoot -> {
+						final NavigableReference rootReference = visitRootEntityFromElement( sqmRoot );
+						assert rootReference instanceof TableGroup;
+						currentQuerySpec().getFromClause().addRoot( (TableGroup) rootReference );
+					}
 			);
 		}
 		finally {
@@ -520,7 +473,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 
 	@Override
-	public TableGroup visitRootEntityFromElement(SqmRoot sqmRoot) {
+	public NavigableReference visitRootEntityFromElement(SqmRoot sqmRoot) {
 		log.tracef( "Starting resolution of SqmRoot [%s] to TableGroup", sqmRoot );
 
 		if ( fromClauseIndex.isResolved( sqmRoot ) ) {
@@ -540,8 +493,6 @@ public abstract class BaseSqmToSqlAstConverter
 		);
 
 		fromClauseIndex.crossReference( sqmRoot, group );
-
-		group.applyAffectedTableNames( affectedTableNames::add );
 
 		log.tracef( "Resolved SqmRoot [%s] to new TableGroup [%s]", sqmRoot, group );
 
@@ -564,19 +515,28 @@ public abstract class BaseSqmToSqlAstConverter
 
 	@Override
 	public TableGroupJoin visitQualifiedAttributeJoinFromElement(SqmNavigableJoin sqmJoin) {
-		final TableGroupJoin tableJoinJoin = fromClauseIndex.findTableJoinJoin( sqmJoin.getNavigablePath() );
+		final NavigableContainer<?> joinedNavigable = sqmJoin.as( NavigableContainer.class );
+
+		final TableGroupJoin tableJoinJoin = fromClauseIndex.findTableGroupJoin( sqmJoin.getNavigablePath() );
 		if ( tableJoinJoin != null ) {
 			return tableJoinJoin;
 		}
 
 		final TableGroup lhsTableGroup = fromClauseIndex.findTableGroup( sqmJoin.getLhs().getNavigablePath() );
-		final NavigableContainer<?> joinedNavigable = sqmJoin.as( NavigableContainer.class );
 
 		if ( joinedNavigable instanceof EmbeddedValuedNavigable ) {
-			// we don't want an actual TableGroup/TableGroupJoin created just for the
-			// embeddable.
-			//
-			// However, we do need to register a TableGroup against its NavigablePath.
+			// we need some special handling for embeddables...
+
+			// Above we checked for a TableGroupJoin associated with the `sqmJoin` path - but for
+			// an embeddable, check for its LHS too
+			final TableGroupJoin lhsTableGroupJoin = fromClauseIndex.findTableGroupJoin( sqmJoin.getNavigablePath() );
+			if ( lhsTableGroupJoin != null ) {
+				fromClauseIndex.register( sqmJoin, lhsTableGroupJoin );
+				return lhsTableGroupJoin;
+			}
+
+			// Next, although we don't want an actual TableGroup/TableGroupJoin created just for the
+			// embeddable, we do need to register a TableGroup against its NavigablePath.
 			// Specifically the TableGroup associated with the embeddable's LHS
 			fromClauseIndex.registerTableGroup( sqmJoin.getNavigablePath(), lhsTableGroup );
 
@@ -632,8 +592,6 @@ public abstract class BaseSqmToSqlAstConverter
 				LockMode.NONE,
 				this
 		);
-
-		group.applyAffectedTableNames( affectedTableNames::add );
 
 		fromClauseIndex.crossReference( sqmJoin, group );
 
@@ -1545,7 +1503,18 @@ public abstract class BaseSqmToSqlAstConverter
 				tableGroup = fromClauseIndex.resolveTableGroup( navigableReference.getNavigablePath().getParent() );
 			}
 			else {
-				tableGroup = fromClauseIndex.resolveTableGroup( navigableReference.getNavigablePath() );
+				// for embeddable-, entity- and plural-valued Navigables we maybe do not have a TableGroup
+				final TableGroup thisTableGroup = fromClauseIndex.resolveTableGroup( navigableReference.getNavigablePath() );
+				if ( thisTableGroup != null ) {
+					tableGroup = thisTableGroup;
+				}
+				else {
+					final NavigablePath lhsNavigablePath = navigableReference.getNavigablePath().getParent();
+					if ( lhsNavigablePath == null ) {
+						throw new ParsingException( "Could not find TableGroup to use - " + navigableReference.getNavigablePath().getFullPath() );
+					}
+					tableGroup = fromClauseIndex.resolveTableGroup( lhsNavigablePath );
+				}
 			}
 
 			final List list = navigableReference.getNavigable().resolveColumnReferences( tableGroup, this );

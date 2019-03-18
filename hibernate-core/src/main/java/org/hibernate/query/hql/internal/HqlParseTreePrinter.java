@@ -66,16 +66,40 @@ public class HqlParseTreePrinter extends HqlParserBaseListener {
 		final String ruleName = parser.getRuleNames()[ctx.getRuleIndex()];
 
 		if ( !ruleName.endsWith( "Keyword" ) ) {
-			applyLine( LineType.ENTER, ruleName, ctx.getText() );
+			applyLine( LineType.ENTER, ruleName, ruleTypeName( ctx.getClass() ), ctx.getText() );
 		}
+
 		super.enterEveryRule( ctx );
 	}
 
-	private void applyLine(LineType lineType, String ruleName, String ctxText) {
+	private String ruleTypeName(Class<? extends ParserRuleContext> ruleCtxClass) {
+		final String name = ruleCtxClass.getSimpleName();
+
+		final int position = name.lastIndexOf( "Context" );
+		if ( position > 1 ) {
+			return name.substring( 0, position );
+		}
+		else {
+			// todo (6.0) : does this ever happen?
+			return name;
+		}
+	}
+
+	private void applyLine(
+			LineType lineType,
+			String ruleName,
+			String ruleTypeName,
+			String ctxText) {
 		applyLinePadding( lineType );
 
-		buffer.append( '[' ).append( ruleName ).append( ']' )
-				.append( " (`" ).append( ctxText ).append( "`)" )
+		buffer.append( '[' ).append( ruleName );
+
+		if ( ! ruleTypeName.equalsIgnoreCase( ruleName ) ) {
+			buffer.append( " (" ).append( ruleTypeName ).append( ')' );
+		}
+
+		buffer.append( ']' )
+				.append( " - `" ).append( ctxText ).append( '`' )
 				.append( '\n' );
 	}
 
@@ -104,6 +128,6 @@ public class HqlParseTreePrinter extends HqlParserBaseListener {
 
 		final String ruleName = parser.getRuleNames()[ctx.getRuleIndex()];
 
-		applyLine( LineType.EXIT, ruleName, ctx.getText() );
+		applyLine( LineType.EXIT, ruleName, ruleTypeName( ctx.getClass() ), ctx.getText() );
 	}
 }

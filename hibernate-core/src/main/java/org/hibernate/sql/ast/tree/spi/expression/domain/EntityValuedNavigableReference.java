@@ -68,7 +68,7 @@ public class EntityValuedNavigableReference implements NavigableContainerReferen
 
 	@Override
 	public String toString() {
-		return "EntityValuedNavigableReference(" + getNavigable().getEntityName() + ")";
+		return '`' + getNavigablePath().getFullPath() + '`';
 	}
 
 

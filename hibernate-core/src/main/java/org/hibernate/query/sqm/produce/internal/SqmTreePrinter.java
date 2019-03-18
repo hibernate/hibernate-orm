@@ -145,19 +145,65 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 	private final StringBuffer buffer = new StringBuffer();
 	private int depth = 2;
 
-	private void processStanza(String name, Runnable processor) {
+	private void processStanza(String name, Runnable continuation) {
+		processStanza( name, false, continuation );
+	}
+
+	private void processStanza(String name, String description, Runnable continuation) {
+		processStanza( name, description, false, continuation );
+	}
+
+	private void processStanza(String name, boolean indentContinuation, Runnable continuation) {
 		logWithIndentation( "-> [%s]", name );
 		depth++;
 
 		try {
-			processor.run();
+			if ( indentContinuation ) {
+				depth++;
+			}
+			continuation.run();
 		}
 		catch (Exception e) {
 			log.debugf( e, "Error processing stanza {%s}", name );
 		}
+		finally {
+			if ( indentContinuation ) {
+				depth--;
+			}
+		}
 
 		depth--;
 		logWithIndentation( "<- [%s]", name );
+	}
+
+	private void processStanza(
+			String name,
+			String description,
+			boolean indentContinuation,
+			Runnable continuation) {
+		final String stanzaLabel = description == null
+				? "[" + name + ']'
+				: "[" + name + "] - " + description;
+		logWithIndentation( "-> " + stanzaLabel );
+		depth++;
+
+		try {
+			if ( indentContinuation ) {
+				depth++;
+			}
+			continuation.run();
+		}
+		catch (Exception e) {
+			log.debugf( e, "Error processing stanza {%s}", name );
+		}
+		finally {
+			if ( indentContinuation ) {
+				depth--;
+			}
+		}
+
+		depth--;
+		logWithIndentation( "<- " + stanzaLabel );
 	}
 
 	private void logWithIndentation(Object line) {
@@ -377,7 +423,8 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 	@Override
 	public Object visitRootEntityFromElement(SqmRoot root) {
 		processStanza(
-				"root (" + root.getNavigablePath().getFullPath() + ")",
+				"root",
+				'`' + root.getNavigablePath().getFullPath() + '`',
 				() -> processJoins( root )
 		);
 
@@ -404,7 +451,8 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 	@Override
 	public Object visitCrossJoinedFromElement(SqmCrossJoin joinedFromElement) {
 		processStanza(
-				"cross (" + joinedFromElement.getNavigablePath().getFullPath() + ")",
+				"cross",
+				'`' + joinedFromElement.getNavigablePath().getFullPath() + '`',
 				() -> processJoins( joinedFromElement )
 		);
 
@@ -414,7 +462,8 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 	@Override
 	public Object visitQualifiedEntityJoinFromElement(SqmEntityJoin joinedFromElement) {
 		processStanza(
-				"entity (" + joinedFromElement.getNavigablePath().getFullPath() + ")",
+				"entity",
+				'`' + joinedFromElement.getNavigablePath().getFullPath() + '`',
 				() -> {
 					if ( joinedFromElement.getJoinPredicate() != null ) {
 						processStanza(
@@ -422,6 +471,7 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 								() -> joinedFromElement.getJoinPredicate().accept( this )
 						);
 					}
+
 					processJoins( joinedFromElement );
 				}
 		);
@@ -432,13 +482,18 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 	@Override
 	public Object visitQualifiedAttributeJoinFromElement(SqmNavigableJoin joinedFromElement) {
 		processStanza(
-				"attribute (" + joinedFromElement.getNavigablePath().getFullPath() + ")",
+				"attribute",
+				'`' + joinedFromElement.getNavigablePath().getFullPath() + '`',
 				() -> {
 					logIndented( "[fetched = " + joinedFromElement.isFetched() + ']' );
-					processStanza(
-							"on",
-							() -> joinedFromElement.getJoinPredicate().accept( this )
-					);
+
+					if ( joinedFromElement.getJoinPredicate() != null ) {
+						processStanza(
+								"on",
+								() -> joinedFromElement.getJoinPredicate().accept( this )
+						);
+					}
+
 					processJoins( joinedFromElement );
 				}
 		);
@@ -448,28 +503,28 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 
 	@Override
 	public Object visitBasicValuedPath(SqmBasicValuedSimplePath path) {
-		logWithIndentation( "[basic-path - %s]", path.getNavigablePath().getFullPath() );
+		logWithIndentation( "-> [basic-path] - `%s`", path.getNavigablePath().getFullPath() );
 
 		return null;
 	}
 
 	@Override
 	public Object visitEmbeddableValuedPath(SqmEmbeddedValuedSimplePath path) {
-		logWithIndentation( "[embedded-path - %s]", path.getNavigablePath().getFullPath() );
+		logWithIndentation( "-> [embedded-path] - `%s`", path.getNavigablePath().getFullPath() );
 
 		return null;
 	}
 
 	@Override
 	public Object visitEntityValuedPath(SqmEntityValuedSimplePath path) {
-		logWithIndentation( "[entity-path - %s]", path.getNavigablePath().getFullPath() );
+		logWithIndentation( "-> [entity-path] - `%s`", path.getNavigablePath().getFullPath() );
 
 		return null;
 	}
 
 	@Override
 	public Object visitPluralValuedPath(SqmPluralValuedSimplePath path) {
-		logWithIndentation( "[plural-path - %s]", path.getNavigablePath().getFullPath() );
+		logWithIndentation( "-> [plural-path] - `%s`", path.getNavigablePath().getFullPath() );
 
 		return null;
 	}
@@ -492,7 +547,7 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 	@Override
 	public Object visitSelection(SqmSelection selection) {
 		processStanza(
-				selection.getAlias() == null ? "selection" : "selection:" + selection.getAlias(),
+				selection.getAlias() == null ? "selection" : "selection(" + selection.getAlias() + ")",
 				() -> selection.getSelectableNode().accept( this )
 		);
 
@@ -699,7 +754,11 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 	public Object visitGroupedPredicate(GroupedSqmPredicate predicate) {
 		processStanza(
 				"grouped",
-				() -> predicate.getSubPredicate().accept( this )
+				() -> {
+					depth++;
+					predicate.getSubPredicate().accept( this );
+					depth--;
+				}
 		);
 
 		return null;
@@ -736,8 +795,14 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 		processStanza(
 				predicate.isNegated() ? predicate.getOperator().negated().name() : predicate.getOperator().name(),
 				() -> {
-					predicate.getLeftHandExpression().accept( this );
-					predicate.getRightHandExpression().accept( this );
+					depth++;
+					try {
+						predicate.getLeftHandExpression().accept( this );
+						predicate.getRightHandExpression().accept( this );
+					}
+					finally {
+						depth--;
+					}
 				}
 		);
 
@@ -748,7 +813,11 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 	public Object visitIsEmptyPredicate(EmptinessSqmPredicate predicate) {
 		processStanza(
 				predicate.isNegated() ? "is-not-empty" : "is-empty",
-				() -> predicate.getExpression().accept( this )
+				() -> {
+					depth++;
+					predicate.getExpression().accept( this );
+					depth--;
+				}
 		);
 
 		return null;
@@ -758,6 +827,7 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 	public Object visitIsNullPredicate(NullnessSqmPredicate predicate) {
 		processStanza(
 				predicate.isNegated() ? "is-not-null" : "is-null",
+				true,
 				() -> predicate.getExpression().accept( this )
 		);
 

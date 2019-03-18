@@ -114,7 +114,7 @@ public class SqmUpdateToSqlAstConverterMultiTable extends BaseSqmToSqlAstConvert
 		getFromClauseIndex().crossReference( deleteTarget, entityTableGroup );
 
 		final TableGroupMock tableGroup = new TableGroupMock( entityTableGroup );
-		tableGroup.applyAffectedTableNames( affectedTableNames()::add );
+		tableGroup.applyAffectedTableNames( getFromClauseIndex().getAffectedTableNames()::add );
 
 		primeStack( getTableGroupStack(), tableGroup );
 		getFromClauseIndex().crossReference( deleteTarget, tableGroup );

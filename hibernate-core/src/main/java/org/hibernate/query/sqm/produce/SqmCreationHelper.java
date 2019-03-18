@@ -15,6 +15,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 
 /**
  * @author Steve Ebersole
@@ -50,10 +51,16 @@ public class SqmCreationHelper {
 
 		final SqmCreationProcessingState processingState = creationState.getProcessingStateStack().getCurrent();
 
-		lhs.prepareForSubNavigableReference( processingPath.getReferencedNavigable(), false, creationState );
+		final SqmFrom lhsFrom;
+		if ( lhs instanceof SqmFrom ) {
+			lhsFrom = (SqmFrom) lhs;
+		}
+		else {
+			lhs.prepareForSubNavigableReference( processingPath.getReferencedNavigable(), false, creationState );
 
-		// now we should be able to access the SqmFrom node for the `lhs`...
-		final SqmFrom lhsFrom = processingState.getPathRegistry().findFromByPath( lhs.getNavigablePath() );
+			// now we should be able to access the SqmFrom node for the `lhs`...
+			lhsFrom = processingState.getPathRegistry().findFromByPath( lhs.getNavigablePath() );
+		}
 
 		if ( subNavigable instanceof EntityIdentifier && isSubRefTerminal ) {
 			// do not create the join if the subNavigable reference is an entity identifier and is the path terminal

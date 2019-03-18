@@ -12,8 +12,10 @@ import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.SqmCreationHelper;
+import org.hibernate.query.sqm.produce.SqmPathRegistry;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -104,6 +106,21 @@ public class SqmEmbeddedValuedSimplePath extends AbstractSqmSimplePath {
 		}
 
 		SqmCreationHelper.resolveAsLhs( getLhs(), this, subNavigable, isSubReferenceTerminal, creationState );
+
+		final SqmPathRegistry pathRegistry = creationState.getProcessingStateStack().getCurrent().getPathRegistry();
+
+		pathRegistry.resolvePath(
+				getNavigablePath(),
+				navigablePath -> {
+					final NavigablePath lhsNavigablePath = getLhs().getNavigablePath();
+					final SqmFrom lhsFrom = pathRegistry.findFromByPath( lhsNavigablePath );
+					if ( lhsFrom == null ) {
+						throw new ParsingException( "Unable to resolve SqmFrom : `" + lhsNavigablePath.getFullPath() + '`' );
+					}
+					return lhsFrom;
+				}
+		);
+
 		dereferenced = true;
 	}
 

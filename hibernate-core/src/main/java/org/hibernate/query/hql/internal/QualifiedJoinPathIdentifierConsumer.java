@@ -20,6 +20,7 @@ import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
 
 /**
@@ -29,6 +30,7 @@ public class QualifiedJoinPathIdentifierConsumer implements DotIdentifierConsume
 	private final SqmJoinType joinType;
 	private final boolean fetch;
 	private final String alias;
+	private final SqmRoot sqmRoot;
 
 	private final SqmCreationProcessingState processingState;
 	private final SqmCreationContext sqmCreationContext;
@@ -40,10 +42,12 @@ public class QualifiedJoinPathIdentifierConsumer implements DotIdentifierConsume
 			SqmJoinType joinType,
 			boolean fetch,
 			String alias,
+			SqmRoot sqmRoot,
 			SqmCreationProcessingState processingState) {
 		this.joinType = joinType;
 		this.fetch = fetch;
 		this.alias = alias;
+		this.sqmRoot = sqmRoot;
 		this.processingState = processingState;
 		this.sqmCreationContext = processingState.getCreationState().getCreationContext();
 	}
@@ -90,7 +94,8 @@ public class QualifiedJoinPathIdentifierConsumer implements DotIdentifierConsume
 								processingState.getCreationState().generateUniqueIdentifier(),
 								alias,
 								entityDescriptor,
-								joinType
+								joinType,
+								sqmRoot
 						);
 						return;
 					}

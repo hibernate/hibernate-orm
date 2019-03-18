@@ -21,6 +21,7 @@ import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -259,8 +260,8 @@ public class FromClauseTests extends BaseSqmUnitTest {
 			fail( "Expecting failure" );
 		}
 		catch (SemanticException e) {
-			assertThat( e.getMessage(), startsWith( "Qualified join predicate referred to FromElement [" ) );
-			assertThat( e.getMessage(), endsWith( "] outside the FromElementSpace containing the join" ) );
+			assertThat( e.getMessage(), startsWith( "SqmQualifiedJoin predicate referred to SqmRoot [" ) );
+			assertThat( e.getMessage(), containsString( "] other than the join's root [" ) );
 		}
 	}
 

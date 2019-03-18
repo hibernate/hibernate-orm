@@ -20,13 +20,15 @@ import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
  * @author Steve Ebersole
  */
 public class SqmEntityJoin extends AbstractSqmJoin implements SqmQualifiedJoin {
+	private final SqmRoot sqmRoot;
 	private SqmPredicate joinPredicate;
 
 	public SqmEntityJoin(
 			String uid,
 			String alias,
 			EntityTypeDescriptor joinedEntityDescriptor,
-			SqmJoinType joinType) {
+			SqmJoinType joinType,
+			SqmRoot sqmRoot) {
 		super(
 				uid,
 				SqmCreationHelper.buildRootNavigablePath( joinedEntityDescriptor.getEntityName(), alias ),
@@ -34,6 +36,16 @@ public class SqmEntityJoin extends AbstractSqmJoin implements SqmQualifiedJoin {
 				alias,
 				joinType
 		);
+		this.sqmRoot = sqmRoot;
+	}
+
+	public SqmRoot getRoot() {
+		return sqmRoot;
+	}
+
+	@Override
+	public SqmRoot findRoot() {
+		return getRoot();
 	}
 
 	@Override

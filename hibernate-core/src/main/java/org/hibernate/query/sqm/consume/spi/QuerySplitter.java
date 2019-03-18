@@ -275,7 +275,8 @@ public class QuerySplitter {
 					navigablePath -> new SqmCrossJoin(
 							join.getUniqueIdentifier(),
 							join.getIdentificationVariable(),
-							join.getReferencedNavigable().getEntityDescriptor()
+							join.getReferencedNavigable().getEntityDescriptor(),
+							(SqmRoot) sqmFromCopyMap.get( join.findRoot() )
 					)
 			);
 		}
@@ -288,7 +289,8 @@ public class QuerySplitter {
 							join.getUniqueIdentifier(),
 							join.getIdentificationVariable(),
 							join.getReferencedNavigable().getEntityDescriptor(),
-							join.getJoinType()
+							join.getJoinType(),
+							(SqmRoot) sqmFromCopyMap.get( join.findRoot() )
 					)
 			);
 		}

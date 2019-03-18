@@ -39,6 +39,11 @@ public class SqmRoot<E> extends AbstractSqmFrom {
 	}
 
 	@Override
+	public SqmRoot findRoot() {
+		return this;
+	}
+
+	@Override
 	public EntityTypeDescriptor<?> getReferencedNavigable() {
 		return (EntityTypeDescriptor<?>) super.getReferencedNavigable();
 	}

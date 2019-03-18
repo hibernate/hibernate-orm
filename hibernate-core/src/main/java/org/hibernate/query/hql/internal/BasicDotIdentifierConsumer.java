@@ -23,6 +23,7 @@ import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.EnumJavaDescriptor;
@@ -68,6 +69,10 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 		return currentPart;
 	}
 
+	protected SqmCreationProcessingState getCreationProcessingState() {
+		return processingStateSupplier.get();
+	}
+
 	@Override
 	public void consumeIdentifier(String identifier, boolean isBase, boolean isTerminal) {
 		if ( isBase ) {
@@ -100,7 +105,11 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 
 	protected void reset() {
 		pathSoFar = null;
-		currentPart = new BaseLocalSequencePart();
+		currentPart = createBasePart();
+	}
+
+	protected SemanticPathPart createBasePart() {
+		return new BaseLocalSequencePart();
 	}
 
 	public class BaseLocalSequencePart implements SemanticPathPart {
@@ -122,12 +131,14 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 				final SqmFrom pathRootByAlias = sqmPathRegistry.findFromByAlias( identifier );
 				if ( pathRootByAlias != null ) {
 					// identifier is an alias (identification variable)
+					validateAsRoot( pathRootByAlias );
 					return pathRootByAlias;
 				}
 
 				final SqmFrom pathRootByExposedNavigable = sqmPathRegistry.findFromExposing( identifier );
 				if ( pathRootByExposedNavigable != null ) {
 					// identifier is an "unqualified attribute reference"
+					validateAsRoot( pathRootByExposedNavigable );
 					final Navigable referencedNavigable = pathRootByExposedNavigable.getReferencedNavigable().findNavigable( identifier );
 					if ( isTerminal ) {
 						return referencedNavigable.createSqmExpression(
@@ -222,6 +233,10 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 			}
 
 			throw new ParsingException( "Could not interpret dot-ident : " + pathSoFar );
+		}
+
+		protected void validateAsRoot(SqmFrom pathRoot) {
+
 		}
 
 		@Override

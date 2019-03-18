@@ -21,16 +21,24 @@ import static org.hibernate.query.sqm.produce.SqmCreationHelper.buildRootNavigab
  * @author Steve Ebersole
  */
 public class SqmCrossJoin extends AbstractSqmFrom implements SqmJoin {
+	private final SqmRoot sqmRoot;
+
 	public SqmCrossJoin(
 			String uid,
 			String alias,
-			EntityTypeDescriptor joinedEntityDescriptor) {
+			EntityTypeDescriptor joinedEntityDescriptor,
+			SqmRoot sqmRoot) {
 		super(
 				uid,
 				buildRootNavigablePath( alias, joinedEntityDescriptor.getEntityName() ),
 				joinedEntityDescriptor,
 				alias
 		);
+		this.sqmRoot = sqmRoot;
+	}
+
+	public SqmRoot getRoot() {
+		return sqmRoot;
 	}
 
 	@Override
@@ -71,5 +79,10 @@ public class SqmCrossJoin extends AbstractSqmFrom implements SqmJoin {
 	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
 		return getReferencedNavigable().getJavaTypeDescriptor();
+	}
+
+	@Override
+	public SqmRoot findRoot() {
+		return getRoot();
 	}
 }

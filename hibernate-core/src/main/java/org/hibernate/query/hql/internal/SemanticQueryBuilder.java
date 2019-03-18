@@ -28,6 +28,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
+import org.hibernate.metamodel.model.domain.internal.collection.JoinTableCollectionRowByIndexSelector;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
@@ -911,24 +912,22 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@Override
 	public SqmRoot visitFromClauseSpace(HqlParser.FromClauseSpaceContext parserSpace) {
-		final SqmRoot sqmPathRoot = visitPathRoot( parserSpace.pathRoot() );
+		final SqmRoot sqmRoot = visitPathRoot( parserSpace.pathRoot() );
 
 		for ( HqlParser.CrossJoinContext parserJoin : parserSpace.crossJoin() ) {
-			// CROSS joins are always added to the root
-			sqmPathRoot.addJoin( visitCrossJoin( parserJoin ) );
+			consumeCrossJoin( parserJoin, sqmRoot );
 		}
 
 		for ( HqlParser.QualifiedJoinContext parserJoin : parserSpace.qualifiedJoin() ) {
-			consumeQualifiedJoin( parserJoin, sqmPathRoot );
+			consumeQualifiedJoin( parserJoin, sqmRoot );
 		}
 
 		for ( HqlParser.JpaCollectionJoinContext parserJoin : parserSpace.jpaCollectionJoin() ) {
 			consumeJpaCollectionJoin( parserJoin );
 		}
 
-		return sqmPathRoot;
+		return sqmRoot;
 	}
-
 
 	@Override
 	public SqmRoot visitPathRoot(HqlParser.PathRootContext ctx) {
@@ -1001,8 +1000,12 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
-	public SqmCrossJoin visitCrossJoin(HqlParser.CrossJoinContext ctx) {
-		final String name = ctx.pathRoot().entityName().getText();
+	public final SqmCrossJoin visitCrossJoin(HqlParser.CrossJoinContext ctx) {
+		throw new UnsupportedOperationException( "Unexpected call to #visitCrossJoin, see #consumeCrossJoin" );
+	}
+
+	private void consumeCrossJoin(HqlParser.CrossJoinContext parserJoin, SqmRoot sqmRoot) {
+		final String name = parserJoin.pathRoot().entityName().getText();
 
 		SqmTreeCreationLogger.LOGGER.debugf( "Handling root path - %s", name );
 
@@ -1016,24 +1019,25 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		final SqmCrossJoin join = new SqmCrossJoin(
 				generateUniqueIdentifier(),
-				visitIdentificationVariableDef( ctx.pathRoot().identificationVariableDef() ), entityDescriptor
+				visitIdentificationVariableDef( parserJoin.pathRoot().identificationVariableDef() ),
+				entityDescriptor,
+				sqmRoot
 		);
 
 		processingStateStack.getCurrent().getPathRegistry().register( join );
 
-		return join;
+		// CROSS joins are always added to the root
+		sqmRoot.addJoin( join );
 
 	}
 
 	@Override
-	public SqmQualifiedJoin visitQualifiedJoin(HqlParser.QualifiedJoinContext parserJoin) {
-		throw new UnsupportedOperationException( "Unexpected call to #visitQualifiedJoin, see #handleQUalifiedJoin" );
+	public final SqmQualifiedJoin visitQualifiedJoin(HqlParser.QualifiedJoinContext parserJoin) {
+		throw new UnsupportedOperationException( "Unexpected call to #visitQualifiedJoin, see #consumeQualifiedJoin" );
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected void consumeQualifiedJoin(
-			HqlParser.QualifiedJoinContext parserJoin,
-			SqmRoot sqmPathRoot) {
+	protected void consumeQualifiedJoin(HqlParser.QualifiedJoinContext parserJoin, SqmRoot sqmRoot) {
 		final SqmJoinType joinType;
 		final HqlParser.JoinTypeQualifierContext joinTypeQualifier = parserJoin.joinTypeQualifier();
 		if ( joinTypeQualifier.OUTER() != null ) {
@@ -1051,74 +1055,61 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			joinType = SqmJoinType.INNER;
 		}
 
-
-		final SqmQualifiedJoin join = consumeQualifiedJoinRhs(
-				parserJoin.qualifiedJoinRhs(),
-				joinType,
-				parserJoin.FETCH() != null
-		);
-
-		if ( join instanceof SqmEntityJoin ) {
-			sqmPathRoot.addJoin( join );
-		}
-		else {
-			if ( getCreationOptions().useStrictJpaCompliance() ) {
-				if ( join.getExplicitAlias() != null ){
-					if ( ( (SqmNavigableJoin) join ).isFetched() ) {
-						throw new StrictJpaComplianceViolation(
-								"Encountered aliased fetch join, but strict JPQL compliance was requested",
-								StrictJpaComplianceViolation.Type.ALIASED_FETCH_JOIN
-						);
-					}
-				}
-			}
-		}
-
-		// IMPORTANT : register before processing the join-predicate so that handling the
-		// predicate has access to it...
-
-		processingStateStack.getCurrent().getPathRegistry().register( join );
-
-		if ( parserJoin.qualifiedJoinPredicate() != null ) {
-			join.setJoinPredicate( visitQualifiedJoinPredicate( parserJoin.qualifiedJoinPredicate() ) );
-		}
-
-	}
-
-	private SqmQualifiedJoin consumeQualifiedJoinRhs(
-			HqlParser.QualifiedJoinRhsContext qualifiedJoinRhs,
-			SqmJoinType joinType,
-			boolean fetched) {
-		final String alias = visitIdentificationVariableDef( qualifiedJoinRhs.identificationVariableDef() );
+		final String alias = visitIdentificationVariableDef( parserJoin.qualifiedJoinRhs().identificationVariableDef() );
 
 		final DotIdentifierConsumer identifierConsumer = new QualifiedJoinPathIdentifierConsumer(
 				joinType,
-				fetched,
+				parserJoin.FETCH() != null,
 				alias,
+				sqmRoot,
 				processingStateStack.getCurrent()
 		);
 
 		identifierConsumerStack.push( identifierConsumer );
 
 		try {
-			 final SqmQualifiedJoin join = (SqmQualifiedJoin) qualifiedJoinRhs.path().accept( this );
+			final SqmQualifiedJoin join = (SqmQualifiedJoin) parserJoin.qualifiedJoinRhs().path().accept( this );
 
 			// we need to set the alias here because the path could be treated - the treat operator is
 			// not consumed by the identifierConsumer
 			join.setExplicitAlias( alias );
 
-			return join;
-		}
-		finally {
-			identifierConsumerStack.pop();
-		}
-	}
+			if ( join instanceof SqmEntityJoin ) {
+				sqmRoot.addJoin( join );
+			}
+			else {
+				if ( getCreationOptions().useStrictJpaCompliance() ) {
+					if ( join.getExplicitAlias() != null ){
+						if ( ( (SqmNavigableJoin) join ).isFetched() ) {
+							throw new StrictJpaComplianceViolation(
+									"Encountered aliased fetch join, but strict JPQL compliance was requested",
+									StrictJpaComplianceViolation.Type.ALIASED_FETCH_JOIN
+							);
+						}
+					}
+				}
+			}
 
-	@Override
-	public SqmPredicate visitQualifiedJoinPredicate(HqlParser.QualifiedJoinPredicateContext ctx) {
-		identifierConsumerStack.push( new BasicDotIdentifierConsumer( processingStateStack::getCurrent ) );
-		try {
-			return (SqmPredicate) ctx.predicate().accept( this );
+			// IMPORTANT : register before processing the join-predicate so that handling the
+			// predicate has access to it...
+
+			processingStateStack.getCurrent().getPathRegistry().register( join );
+
+			if ( parserJoin.qualifiedJoinPredicate() != null ) {
+				identifierConsumerStack.push(
+						new QualifiedJoinPredicateDotIdentifierConsumer(
+								processingStateStack::getCurrent,
+								join,
+								parserJoin.qualifiedJoinPredicate().getText()
+						)
+				);
+				try {
+					join.setJoinPredicate( (SqmPredicate) parserJoin.qualifiedJoinPredicate().predicate().accept( this ) );
+				}
+				finally {
+					identifierConsumerStack.pop();
+				}
+			}
 		}
 		finally {
 			identifierConsumerStack.pop();

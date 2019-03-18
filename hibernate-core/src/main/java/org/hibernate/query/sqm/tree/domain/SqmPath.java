@@ -14,12 +14,14 @@ import org.hibernate.annotations.Remove;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PluralValuedNavigable;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.SqmCreationHelper;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
 
 /**
  * Models a reference to a part of the application's domain model (a Navigable)
@@ -60,6 +62,14 @@ public interface SqmPath extends SqmExpression, SemanticPathPart {
 	 * root, cross-join or entity-join
 	 */
 	SqmPath getLhs();
+
+	default SqmRoot findRoot() {
+		final SqmPath lhs = getLhs();
+		if ( lhs != null ) {
+			return lhs.findRoot();
+		}
+		throw new ParsingException( "Could not find root" );
+	}
 
 	/**
 	 * Retrieve the explicit alias, if one.  May return null

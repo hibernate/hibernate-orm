@@ -24,13 +24,11 @@ import org.hibernate.annotations.Remove;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
-import org.hibernate.query.sqm.tree.expression.domain.SqmDiscriminatorReference;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
@@ -50,9 +48,7 @@ import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
-import org.hibernate.sql.ast.tree.spi.expression.domain.BasicValuedNavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.EntityTypeLiteral;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiation;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationNature;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
@@ -415,16 +411,6 @@ public class SqmSelectToSqlAstConverter
 	@Override
 	public Expression visitEntityTypeLiteralExpression(SqmLiteralEntityType expression) {
 		return new EntityTypeLiteral( expression.getExpressableType().getEntityDescriptor() );
-	}
-
-	@Override
-	public NavigableReference visitDiscriminatorReference(SqmDiscriminatorReference expression) {
-		final TableGroup entityTableGroup = getFromClauseIndex().getTableGroup( expression.getNavigablePath().getParent() );
-		return new BasicValuedNavigableReference(
-				expression.getNavigablePath(),
-				( (EntityValuedNavigable) entityTableGroup.getNavigable() ).getEntityDescriptor().getHierarchy().getDiscriminatorDescriptor(),
-				this
-		);
 	}
 
 	@Override

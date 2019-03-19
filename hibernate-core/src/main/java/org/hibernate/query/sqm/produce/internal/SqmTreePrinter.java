@@ -37,7 +37,6 @@ import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.expression.domain.AbstractSpecificSqmCollectionIndexReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionIndexReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmDiscriminatorReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMaxElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMinElementReference;
@@ -590,11 +589,6 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 
 	@Override
 	public Object visitEntityTypeLiteralExpression(SqmLiteralEntityType expression) {
-		return null;
-	}
-
-	@Override
-	public Object visitDiscriminatorReference(SqmDiscriminatorReference expression) {
 		return null;
 	}
 

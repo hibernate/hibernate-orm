@@ -9,8 +9,11 @@ package org.hibernate.query.sqm.tree.from;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Consumer;
 
+import org.hibernate.QueryException;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
@@ -72,10 +75,18 @@ public abstract class AbstractSqmFrom implements SqmFrom {
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		// these calls to
-		return getReferencedNavigable().findNavigable( name ).createSqmExpression(
-				this,
-				creationState
-		);
+		final Navigable navigable = getReferencedNavigable().findNavigable( name );
+		if ( navigable == null ) {
+			throw new QueryException(
+					String.format(
+							Locale.ROOT,
+							"could not resolve property: %s of: %s",
+							name,
+							getReferencedNavigable().getNavigableName()
+					)
+			);
+		}
+		return navigable.createSqmExpression( this, creationState );
 	}
 
 	@Override

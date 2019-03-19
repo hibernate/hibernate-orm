@@ -11,7 +11,6 @@ import java.util.List;
 import org.hibernate.envers.test.support.domains.components.Component1;
 import org.hibernate.envers.test.support.domains.components.Component2;
 import org.hibernate.envers.test.support.domains.components.ComponentTestEntity;
-import org.junit.jupiter.api.Disabled;
 
 import org.hibernate.testing.hamcrest.CollectionMatchers;
 import org.hibernate.testing.junit5.dynamictests.DynamicBeforeAll;
@@ -114,7 +113,6 @@ public class HasChangedComponentsTest extends AbstractModifiedFlagsEntityTest {
 	}
 
 	@DynamicTest(expected = IllegalArgumentException.class)
-	@Disabled("NullPointerException is thrown in SQM - unable to resolvePathPart")
 	public void testHasChangedNotAudited() {
 		queryForPropertyHasChanged( ComponentTestEntity.class, id1, "comp2" );
 	}

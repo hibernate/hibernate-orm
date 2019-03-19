@@ -9,7 +9,6 @@ package org.hibernate.envers.test.modifiedflags;
 import java.util.List;
 
 import org.hibernate.envers.test.support.domains.basic.BasicPartialAuditedEntity;
-import org.junit.jupiter.api.Disabled;
 
 import org.hibernate.testing.junit5.dynamictests.DynamicBeforeAll;
 import org.hibernate.testing.junit5.dynamictests.DynamicTest;
@@ -69,7 +68,6 @@ public class HasChangedUnversionedPropertiesTest extends AbstractModifiedFlagsEn
 	}
 
 	@DynamicTest(expected = IllegalArgumentException.class)
-	@Disabled("NullPointerException is thrown in SQM - unable to resolvePathPart")
 	public void testExceptionOnHasChangedQuery() throws Exception {
 		queryForPropertyHasChangedWithDeleted( BasicPartialAuditedEntity.class, id1, "str2" );
 	}

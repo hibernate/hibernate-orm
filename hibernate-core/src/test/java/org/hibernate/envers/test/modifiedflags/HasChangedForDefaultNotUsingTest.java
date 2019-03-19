@@ -13,7 +13,6 @@ import org.hibernate.envers.test.support.domains.components.Component1;
 import org.hibernate.envers.test.support.domains.components.Component2;
 import org.hibernate.envers.test.support.domains.modifiedflags.PartialModifiedFlagsEntity;
 import org.hibernate.envers.test.support.domains.modifiedflags.WithModifiedFlagReferencingEntity;
-import org.junit.jupiter.api.Disabled;
 
 import org.hibernate.testing.junit5.dynamictests.DynamicBeforeAll;
 import org.hibernate.testing.junit5.dynamictests.DynamicTest;
@@ -150,7 +149,6 @@ public class HasChangedForDefaultNotUsingTest extends AbstractModifiedFlagsEntit
 	}
 
 	@DynamicTest(expected = IllegalArgumentException.class)
-	@Disabled("NullPointerException is thrown in SQM - unable to resolvePathPart")
 	public void testHasChangedComp2() {
 		queryForPropertyHasChanged( PartialModifiedFlagsEntity.class, entityId, "comp2" );
 	}
@@ -162,7 +160,6 @@ public class HasChangedForDefaultNotUsingTest extends AbstractModifiedFlagsEntit
 	}
 
 	@DynamicTest(expected = IllegalArgumentException.class)
-	@Disabled("NullPointerException is thrown in SQM - unable to resolvePathPart")
 	public void testHasChangedReferencing2() {
 		queryForPropertyHasChanged( PartialModifiedFlagsEntity.class, entityId, "referencing2" );
 	}

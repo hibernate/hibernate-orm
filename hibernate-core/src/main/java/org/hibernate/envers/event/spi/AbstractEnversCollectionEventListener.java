@@ -57,7 +57,7 @@ public abstract class AbstractEnversCollectionEventListener extends AbstractEnve
 			final AuditProcess auditProcess = getAuditService().getAuditProcess( event.getSession() );
 
 			final String entityName = event.getAffectedOwnerEntityName();
-			final String referencingPropertyName = resolveReferencingPropertyName( collectionEntry );
+			final String referencingPropertyName = resolveReferencingPropertyName( entityName, collectionEntry );
 
 			// Checking if this is not a "fake" many-to-one bidirectional relation. The relation description may be
 			// null in case of collections of non-entities.
@@ -112,7 +112,7 @@ public abstract class AbstractEnversCollectionEventListener extends AbstractEnve
 			CollectionEntry collectionEntry) {
 		if ( shouldGenerateRevision( event ) ) {
 			final String entityName = event.getAffectedOwnerEntityName();
-			final String referencingPropertyName = resolveReferencingPropertyName( collectionEntry );
+			final String referencingPropertyName = resolveReferencingPropertyName( entityName, collectionEntry );
 			final RelationDescription rd = searchForRelationDescription( entityName, referencingPropertyName );
 			if ( rd != null ) {
 				if ( rd.getRelationType().equals( RelationType.TO_MANY_NOT_OWNING ) && rd.isIndexed() ) {
@@ -305,12 +305,8 @@ public abstract class AbstractEnversCollectionEventListener extends AbstractEnve
 		}
 	}
 
-	private String resolveReferencingPropertyName(CollectionEntry collectionEntry) {
-		final String ownerEntityName = collectionEntry.getLoadedCollectionDescriptor()
-				.getContainer()
-				.getNavigableName();
-
-		return collectionEntry.getNavigableRole().getFullPath().substring( ownerEntityName.length() + 1 );
+	private String resolveReferencingPropertyName(String entityName, CollectionEntry collectionEntry) {
+		return collectionEntry.getNavigableRole().getFullPath().substring( entityName.length() + 1 );
 	}
 
 	private boolean isInverse(CollectionEntry collectionEntry) {

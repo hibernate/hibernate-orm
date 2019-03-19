@@ -12,6 +12,8 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
@@ -106,11 +108,17 @@ public abstract class AbstractVisitor {
 		if ( attribute instanceof PluralPersistentAttribute ) {
 			return processCollection( value, (PluralPersistentAttribute) attribute );
 		}
-		if ( attribute instanceof EntityTypeDescriptor ) {
-			return processEntity( value, (EntityTypeDescriptor) attribute );
+		if ( attribute instanceof SingularPersistentAttributeEntity ) {
+			return processEntity(
+					value,
+					( (SingularPersistentAttributeEntity) attribute ).getEntityDescriptor()
+			);
 		}
-		else if ( attribute instanceof EmbeddedTypeDescriptor ) {
-			return processComponent( value, (EmbeddedTypeDescriptor) attribute );
+		else if ( attribute instanceof SingularPersistentAttributeEmbedded ) {
+			return processComponent(
+					value,
+					( (SingularPersistentAttributeEmbedded) attribute ).getEmbeddedDescriptor()
+			);
 		}
 		else {
 			return null;

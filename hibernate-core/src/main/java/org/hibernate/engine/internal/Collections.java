@@ -230,7 +230,8 @@ public final class Collections {
 	private static EntityTypeDescriptor getOwnerEntityDescriptor(
 			PersistentCollectionDescriptor descriptor,
 			SessionFactoryImplementor factory) {
-		return factory.getMetamodel().findEntityDescriptor(  descriptor.getContainer().getNavigableName() );
+		return descriptor.findFirstEntityDescriptor();
+//		return factory.getMetamodel().findEntityDescriptor(  descriptor.getContainer().getNavigableName() );
 	}
 
 	/**

@@ -38,6 +38,7 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -1271,11 +1272,22 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 
 	@Override
 	public Object getKeyOfOwner(Object owner, SessionImplementor session) {
-		if ( getForeignKeyTargetNavigable() instanceof EntityIdentifier ) {
+		EntityEntry entityEntry = session.getPersistenceContext().getEntry( owner );
+		if ( entityEntry == null ) {
+			return null;
+		}
+
+		final Navigable foreignKeyTargetNavigable = getForeignKeyTargetNavigable();
+		if ( foreignKeyTargetNavigable == null ) {
+			return entityEntry.getId();
+		}
+		else if ( foreignKeyTargetNavigable instanceof EntityIdentifier ) {
 			return getContainer().findFirstEntityDescriptor().getIdentifier( owner, session );
 		}
 		else {
-			return ( (SingularPersistentAttribute) getForeignKeyTargetNavigable() ).getPropertyAccess().getGetter().get( owner );
+			return ( (SingularPersistentAttribute) foreignKeyTargetNavigable ).getPropertyAccess()
+					.getGetter()
+					.get( owner );
 		}
 	}
 

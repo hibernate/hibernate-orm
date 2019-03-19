@@ -40,6 +40,7 @@ import org.hibernate.jdbc.TooManyRowsAffectedException;
 import org.hibernate.loader.internal.TemplateParameterBindingContext;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.RepresentationMode;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.metamodel.model.domain.spi.AbstractEntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.DiscriminatorDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
@@ -1074,6 +1075,17 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 						if ( attr instanceof PluralPersistentAttribute ) {
 							hasCollections = true;
 							return false;
+						}
+						else if ( attr instanceof SingularPersistentAttributeEmbedded ) {
+							( (SingularPersistentAttributeEmbedded) attr ).getEmbeddedDescriptor().controlledVisitAttributes(
+									embeddedAttribute -> {
+										if ( embeddedAttribute instanceof PluralPersistentAttribute ) {
+											hasCollections = true;
+											return false;
+										}
+										return true;
+									}
+							);
 						}
 
 						return true;

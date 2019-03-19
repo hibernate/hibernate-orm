@@ -21,7 +21,7 @@ import org.hibernate.graph.Graph;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.metamodel.model.domain.PersistentAttribute;
+import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -146,7 +146,7 @@ public interface ManagedTypeDescriptor<T>
 	default Object[] getPropertyValues(Object object) {
 		// todo (6.0) : hook in BytecodeProvider's ReflectionOptimizer (if one) for this managed-type
 		final Object[] values = new Object[getStateArrayContributors().size()];
-		if ( object != null ) {
+		if ( object != null && object != PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 			visitStateArrayContributors(
 					contributor ->
 							values[ contributor.getStateArrayPosition() ] = contributor

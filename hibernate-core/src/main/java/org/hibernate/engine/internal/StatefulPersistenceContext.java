@@ -750,7 +750,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public Object getCollectionOwner(Object key, PersistentCollectionDescriptor descriptor) throws MappingException {
 		// todo (6.0) : assumes collection is defined on entity, not composite
 		// todo (6.0) : also assumes PK FK mapping
-		return getEntity( session.generateEntityKey( key, (EntityTypeDescriptor) descriptor.getContainer() ) );
+		return getEntity( session.generateEntityKey( key, descriptor.findEntityOwnerDescriptor() ) );
+//		return getEntity( session.generateEntityKey( key, (EntityTypeDescriptor) descriptor.getContainer() ) );
 
 //		// todo : we really just need to add a split in the notions of:
 //		//		1) collection key

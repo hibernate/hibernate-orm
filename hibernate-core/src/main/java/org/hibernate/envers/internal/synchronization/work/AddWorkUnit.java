@@ -12,6 +12,8 @@ import java.util.Map;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.AuditService;
+import org.hibernate.envers.internal.entities.PropertyData;
+import org.hibernate.envers.internal.entities.mapper.ExtendedPropertyMapper;
 import org.hibernate.envers.internal.tools.ArraysTools;
 import org.hibernate.envers.internal.tools.EntityTools;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
@@ -82,7 +84,13 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 
 	@Override
 	public AuditWorkUnit merge(ModWorkUnit second) {
-		return new AddWorkUnit( sessionImplementor, entityName, auditService, id, second.getData() );
+		return new AddWorkUnit(
+				sessionImplementor,
+				entityName,
+				auditService,
+				id,
+				mergeModifiedFlags( data, second.getData() )
+		);
 	}
 
 	@Override
@@ -104,5 +112,24 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 	@Override
 	public AuditWorkUnit dispatch(WorkUnitMergeVisitor first) {
 		return first.merge( this );
+	}
+
+	private Map<String, Object> mergeModifiedFlags(Map<String, Object> lhs, Map<String, Object> rhs) {
+		final ExtendedPropertyMapper mapper = auditService.getEntityBindings().get( getEntityName() ).getPropertyMapper();
+		// Designed to take any lhs modified flag values of true and merge those into the data set for the rhs
+		// This makes sure that when merging ModAuditWork with AddWorkUnit within the same transaction for the
+		// same entity that the modified flags are tracked correctly.
+		for ( PropertyData propertyData : mapper.getProperties().keySet() ) {
+			if ( propertyData.isUsingModifiedFlag() && !propertyData.isSynthetic() ) {
+				Boolean lhsValue = (Boolean) lhs.get( propertyData.getModifiedFlagPropertyName() );
+				if ( lhsValue != null && lhsValue ) {
+					Boolean rhsValue = (Boolean) rhs.get( propertyData.getModifiedFlagPropertyName() );
+					if ( rhsValue == null || !rhsValue ) {
+						rhs.put( propertyData.getModifiedFlagPropertyName(), true );
+					}
+				}
+			}
+		}
+		return rhs;
 	}
 }

@@ -9,12 +9,15 @@ package org.hibernate.envers.test.modifiedflags;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.query.AuditQuery;
 import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.NonIdPersistentAttribute;
 
 /**
  * Base test for modified flags feature
@@ -99,6 +102,23 @@ public abstract class AbstractModifiedFlagsEntityTest extends EnversEntityManage
 		}
 
 		return results;
+	}
+
+	/**
+	 * Extract all persistent attributes of the specified entity that end with the specified suffix.
+	 *
+	 * @param entityName The entity name.
+	 * @param suffix The suffix to filter persistent attributes by.
+	 *
+	 * @return List of persistent attributes that match the specified suffix.
+	 */
+	protected List<String> extractModifiedPropertyNames(String entityName, String suffix) {
+		return getMetamodel().getEntityDescriptor( entityName )
+				.getPersistentAttributes()
+				.stream()
+				.map( NonIdPersistentAttribute::getName )
+				.filter( name -> name.endsWith( suffix ) )
+				.collect( Collectors.toList() );
 	}
 
 	@SuppressWarnings("WeakerAccess")

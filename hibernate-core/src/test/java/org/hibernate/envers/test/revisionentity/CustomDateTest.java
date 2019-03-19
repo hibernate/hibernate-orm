@@ -95,7 +95,7 @@ public class CustomDateTest extends EnversEntityManagerFactoryBasedFunctionalTes
 	}
 
 	@DynamicTest
-	@Disabled("BaseSqmToSqlAstConverter#visitInListPredicate() ClassCastException - should use toExpression() rather than (Expression)")
+	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testFindRevision() {
 		final AuditReader vr = getAuditReader();
 

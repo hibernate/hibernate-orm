@@ -103,7 +103,7 @@ public class ListenerTest extends EnversEntityManagerFactoryBasedFunctionalTest 
 	}
 
 	@DynamicTest
-	@Disabled("BaseSqmToSqlAstConverter#visitInListPredicate() ClassCastException - should use toExpression() rather than (Expression)")
+	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testFindRevision() {
 		final AuditReader reader = getAuditReader();
 
@@ -122,7 +122,7 @@ public class ListenerTest extends EnversEntityManagerFactoryBasedFunctionalTest 
 	}
 
 	@DynamicTest
-	@Disabled("BaseSqmToSqlAstConverter#visitInListPredicate() ClassCastException - should use toExpression() rather than (Expression)")
+	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testFindRevisions() {
 		final AuditReader reader = getAuditReader();
 

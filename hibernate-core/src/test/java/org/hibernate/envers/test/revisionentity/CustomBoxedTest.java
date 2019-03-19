@@ -98,7 +98,7 @@ public class CustomBoxedTest extends EnversEntityManagerFactoryBasedFunctionalTe
 	}
 
 	@DynamicTest
-	@Disabled("BaseSqmToSqlAstConverter#visitInListPredicate() ClassCastException - should use toExpression() rather than (Expression)")
+	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testFindRevision() {
 		long rev1Timestamp = getAuditReader().findRevision( CustomBoxedRevEntity.class, 1 ).getCustomTimestamp();
 		assertThat( rev1Timestamp, greaterThan( timestamp1 ) );
@@ -110,7 +110,7 @@ public class CustomBoxedTest extends EnversEntityManagerFactoryBasedFunctionalTe
 	}
 
 	@DynamicTest
-	@Disabled("BaseSqmToSqlAstConverter#visitInListPredicate() ClassCastException - should use toExpression() rather than (Expression)")
+	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testFindRevisions() {
 		final AuditReader reader = getAuditReader();
 

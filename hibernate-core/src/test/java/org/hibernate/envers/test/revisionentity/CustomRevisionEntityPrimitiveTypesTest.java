@@ -98,7 +98,7 @@ public class CustomRevisionEntityPrimitiveTypesTest extends EnversEntityManagerF
 	}
 
 	@DynamicTest
-	@Disabled("BaseSqmToSqlAstConverter#visitInListPredicate() ClassCastException - should use toExpression() rather than (Expression)")
+	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testFindRevision() {
 		final AuditReader reader = getAuditReader();
 
@@ -112,7 +112,7 @@ public class CustomRevisionEntityPrimitiveTypesTest extends EnversEntityManagerF
 	}
 
 	@DynamicTest
-	@Disabled("Predicate `IN(:someCollection)` does not yet properly expand to account for number of bind values")
+	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testFindRevisions() {
 		final AuditReader reader = getAuditReader();
 

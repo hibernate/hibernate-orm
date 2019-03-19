@@ -8,7 +8,6 @@ package org.hibernate.query.sqm.tree.domain;
 
 import java.util.function.Supplier;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
@@ -23,19 +22,10 @@ import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
  */
 public class SqmEntityValuedSimplePath extends AbstractSqmSimplePath {
 	public SqmEntityValuedSimplePath(
-			String uid,
 			NavigablePath navigablePath,
 			EntityValuedNavigable<?> referencedNavigable,
 			SqmPath lhs) {
-		super( uid, navigablePath, referencedNavigable, lhs );
-	}
-
-	public SqmEntityValuedSimplePath(
-			String uid,
-			NavigablePath navigablePath,
-			EntityValuedNavigable<?> referencedNavigable,
-			SqmPath lhs, String explicitAlias) {
-		super( uid, navigablePath, referencedNavigable, lhs, explicitAlias );
+		super( navigablePath, referencedNavigable, lhs );
 	}
 
 	@Override

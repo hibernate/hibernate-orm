@@ -289,7 +289,6 @@ public abstract class AbstractTableBasedHandler implements Handler {
 				EntityTypeDescriptor entityTypeDescriptor,
 				IdTableReference idTableReference) {
 			super(
-					"id_table",
 					new NavigablePath( entityTypeDescriptor.getEntityName() ),
 					entityTypeDescriptor,
 					LockMode.NONE

@@ -563,7 +563,6 @@ public class SingularPersistentAttributeEntity<O, J>
 		final NavigablePath navigablePath = fetchParent.getNavigablePath().append( navigableName );
 
 		final TableGroupJoin tableGroupJoin = createTableGroupJoin(
-				null,
 				navigablePath,
 				creationState.getFromClauseAccess().getTableGroup( fetchParent.getNavigablePath() ),
 				resultVariable,
@@ -600,7 +599,6 @@ public class SingularPersistentAttributeEntity<O, J>
 
 	@Override
 	public TableGroupJoin createTableGroupJoin(
-			String uid,
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
@@ -634,7 +632,7 @@ public class SingularPersistentAttributeEntity<O, J>
 			joinType = JoinType.LEFT;
 		}
 
-		return joinCollector.generateTableGroup( joinType, navigablePath.getFullPath() );
+		return joinCollector.generateTableGroup( joinType );
 	}
 
 	@Override

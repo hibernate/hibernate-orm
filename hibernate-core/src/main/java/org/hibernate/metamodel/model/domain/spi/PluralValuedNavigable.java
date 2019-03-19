@@ -30,7 +30,6 @@ public interface PluralValuedNavigable<J>
 	@Override
 	default SqmNavigableReference createSqmExpression(SqmPath lhs, SqmCreationState creationState) {
 		return new SqmPluralValuedSimplePath(
-				creationState.generateUniqueIdentifier(),
 				lhs.getNavigablePath().append( getNavigableName() ),
 				this,
 				lhs,
@@ -40,7 +39,6 @@ public interface PluralValuedNavigable<J>
 
 	@Override
 	default TableGroup createRootTableGroup(
-			String uid,
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
 			JoinType tableReferenceJoinType,
@@ -48,7 +46,6 @@ public interface PluralValuedNavigable<J>
 			SqlAstCreationState creationState) {
 		// the root form can be safely delegated to the collection descriptor
 		return getCollectionDescriptor().createRootTableGroup(
-				uid,
 				navigablePath,
 				explicitSourceAlias,
 				tableReferenceJoinType,
@@ -59,7 +56,6 @@ public interface PluralValuedNavigable<J>
 
 	@Override
 	default TableGroupJoin createTableGroupJoin(
-			String uid,
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
@@ -68,7 +64,6 @@ public interface PluralValuedNavigable<J>
 			SqlAstCreationState creationState) {
 		// the root form can be safely delegated to the collection descriptor
 		return getCollectionDescriptor().createTableGroupJoin(
-				uid,
 				navigablePath,
 				lhs,
 				explicitSourceAlias,

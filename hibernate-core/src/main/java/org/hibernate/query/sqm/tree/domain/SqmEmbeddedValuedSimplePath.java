@@ -25,19 +25,17 @@ import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
  */
 public class SqmEmbeddedValuedSimplePath extends AbstractSqmSimplePath {
 	public SqmEmbeddedValuedSimplePath(
-			String uid,
 			NavigablePath navigablePath,
 			EmbeddedValuedNavigable referencedNavigable,
 			SqmPath lhs) {
-		super( uid, navigablePath, referencedNavigable, lhs );
+		super( navigablePath, referencedNavigable, lhs );
 	}
 
 	public SqmEmbeddedValuedSimplePath(
-			String uid,
 			NavigablePath navigablePath,
 			EmbeddedValuedNavigable referencedNavigable,
 			SqmPath lhs, String explicitAlias) {
-		super( uid, navigablePath, referencedNavigable, lhs, explicitAlias );
+		super( navigablePath, referencedNavigable, lhs, explicitAlias );
 	}
 
 	@Override

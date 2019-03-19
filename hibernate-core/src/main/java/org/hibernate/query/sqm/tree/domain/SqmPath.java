@@ -10,7 +10,6 @@ import java.util.Locale;
 import java.util.function.Supplier;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.annotations.Remove;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PluralValuedNavigable;
 import org.hibernate.query.NavigablePath;
@@ -40,12 +39,6 @@ import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
  * @author Steve Ebersole
  */
 public interface SqmPath extends SqmExpression, SemanticPathPart, ExpressableType {
-	/**
-	 * @deprecated Prefer {@link #getNavigablePath()} as the unique identifier
-	 */
-	@Deprecated
-	@Remove
-	String getUniqueIdentifier();
 
 	/**
 	 * Returns the NavigablePath.

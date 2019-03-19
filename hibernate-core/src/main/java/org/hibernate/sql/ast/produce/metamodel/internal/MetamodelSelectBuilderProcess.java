@@ -169,7 +169,6 @@ public class MetamodelSelectBuilderProcess
 
 		final RootTableGroupProducer tableGroupProducer = (RootTableGroupProducer) rootNavigableContainer;
 		final TableGroup rootTableGroup = tableGroupProducer.createRootTableGroup(
-				uid,
 				rootNavigablePath,
 				// mimic old behavior
 				"this",

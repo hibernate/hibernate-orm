@@ -20,7 +20,6 @@ public interface TableGroupJoinProducer extends TableGroupProducer {
 	 * Create a TableGroupJoin as defined for this producer
 	 */
 	TableGroupJoin createTableGroupJoin(
-			String uid,
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,

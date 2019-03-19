@@ -237,18 +237,10 @@ public class QuerySplitter {
 					navigablePath -> {
 						final SqmRoot copy;
 						if ( sqmRoot == unmappedPolymorphicFromElement ) {
-							copy = new SqmRoot(
-									sqmRoot.getUniqueIdentifier(),
-									sqmRoot.getExplicitAlias(),
-									mappedDescriptor
-							);
+							copy = new SqmRoot( mappedDescriptor, sqmRoot.getExplicitAlias() );
 						}
 						else {
-							copy = new SqmRoot(
-									sqmRoot.getUniqueIdentifier(),
-									sqmRoot.getExplicitAlias(),
-									sqmRoot.getReferencedNavigable().getEntityDescriptor()
-							);
+							copy = new SqmRoot( sqmRoot.getReferencedNavigable().getEntityDescriptor(), sqmRoot.getExplicitAlias() );
 						}
 						sqmFromCopyMap.put( sqmRoot, copy );
 						sqmPathCopyMap.put( sqmRoot.getNavigablePath(), copy );
@@ -263,9 +255,8 @@ public class QuerySplitter {
 					join.getNavigablePath(),
 					navigablePath -> {
 						final SqmCrossJoin copy = new SqmCrossJoin(
-								join.getUniqueIdentifier(),
-								join.getExplicitAlias(),
 								join.getReferencedNavigable().getEntityDescriptor(),
+								join.getExplicitAlias(),
 								(SqmRoot) sqmFromCopyMap.get( join.findRoot() )
 						);
 						sqmFromCopyMap.put( join, copy );
@@ -281,9 +272,7 @@ public class QuerySplitter {
 					join.getNavigablePath(),
 					navigablePath -> {
 						final SqmEntityJoin copy = new SqmEntityJoin(
-								join.getUniqueIdentifier(),
-								join.getExplicitAlias(),
-								join.getReferencedNavigable().getEntityDescriptor(),
+								join.getReferencedNavigable().getEntityDescriptor(), join.getExplicitAlias(),
 								join.getJoinType(),
 								(SqmRoot) sqmFromCopyMap.get( join.findRoot() )
 						);
@@ -300,7 +289,6 @@ public class QuerySplitter {
 					join.getNavigablePath(),
 					navigablePath -> {
 						final SqmNavigableJoin copy = new SqmNavigableJoin(
-								join.getUniqueIdentifier(),
 								getProcessingStateStack().getCurrent()
 										.getPathRegistry()
 										.findFromByPath( join.getLhs().getNavigablePath() ),
@@ -325,7 +313,6 @@ public class QuerySplitter {
 					path.getNavigablePath(),
 					navigablePath -> {
 						final SqmBasicValuedSimplePath copy = new SqmBasicValuedSimplePath(
-								path.getUniqueIdentifier(),
 								navigablePath,
 								path.getReferencedNavigable(),
 								pathRegistry.findFromByPath( path.getLhs().getNavigablePath() )
@@ -344,7 +331,6 @@ public class QuerySplitter {
 					path.getNavigablePath(),
 					navigablePath -> {
 						final SqmEmbeddedValuedSimplePath copy = new SqmEmbeddedValuedSimplePath(
-								path.getUniqueIdentifier(),
 								navigablePath,
 								path.getReferencedNavigable(),
 								pathRegistry.findFromByPath( path.getLhs().getNavigablePath() )
@@ -363,7 +349,6 @@ public class QuerySplitter {
 					path.getNavigablePath(),
 					navigablePath -> {
 						final SqmEntityValuedSimplePath copy = new SqmEntityValuedSimplePath(
-								path.getUniqueIdentifier(),
 								navigablePath,
 								path.getReferencedNavigable(),
 								pathRegistry.findFromByPath( path.getLhs().getNavigablePath() )
@@ -382,7 +367,6 @@ public class QuerySplitter {
 					path.getNavigablePath(),
 					navigablePath -> {
 						final SqmPluralValuedSimplePath copy = new SqmPluralValuedSimplePath(
-								path.getUniqueIdentifier(),
 								navigablePath,
 								path.getReferencedNavigable(),
 								pathRegistry.findFromByPath( path.getLhs().getNavigablePath() )

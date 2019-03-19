@@ -132,11 +132,6 @@ public class QueryResultBuilderRootEntity
 	// ColumnReferenceQualifier
 
 	@Override
-	public String getUniqueIdentifier() {
-		return tableAlias;
-	}
-
-	@Override
 	public TableReference locateTableReference(Table table) {
 		throw new NotYetImplementedFor6Exception();
 	}

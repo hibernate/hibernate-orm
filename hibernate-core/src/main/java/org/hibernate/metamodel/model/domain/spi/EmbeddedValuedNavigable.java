@@ -45,7 +45,6 @@ public interface EmbeddedValuedNavigable<J> extends EmbeddedValueExpressableType
 	@Override
 	default SqmNavigableReference createSqmExpression(SqmPath lhs, SqmCreationState creationState) {
 		return new SqmEmbeddedValuedSimplePath(
-				creationState.generateUniqueIdentifier(),
 				lhs.getNavigablePath().append( getNavigableName() ),
 				this,
 				lhs

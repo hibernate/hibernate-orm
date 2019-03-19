@@ -95,7 +95,6 @@ public class IdSelectGenerator extends SqmSelectToSqlAstConverter {
 		getProcessingStateStack().push( processingState );
 
 		this.rootTableGroup = entityDescriptor.createRootTableGroup(
-				sourceSqmStatement.getTarget().getUniqueIdentifier(),
 				sourceSqmStatement.getTarget().getNavigablePath(),
 				sourceSqmStatement.getTarget().getExplicitAlias(),
 				JoinType.INNER,
@@ -105,7 +104,7 @@ public class IdSelectGenerator extends SqmSelectToSqlAstConverter {
 
 		// this allows where-clause restrictions from the source query to
 		// 	resolve to this TableGroup for the entity for the id select
-		getFromClauseIndex().crossReference( sourceSqmStatement.getTarget(), rootTableGroup );
+		getFromClauseIndex().register( sourceSqmStatement.getTarget(), rootTableGroup );
 
 		idSelectQuerySpec.getFromClause().addRoot( rootTableGroup );
 	}

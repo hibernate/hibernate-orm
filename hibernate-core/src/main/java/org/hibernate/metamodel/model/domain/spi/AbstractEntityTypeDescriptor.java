@@ -644,7 +644,6 @@ public abstract class AbstractEntityTypeDescriptor<J>
 
 	@Override
 	public TableGroup createRootTableGroup(
-			String uid,
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
 			JoinType tableReferenceJoinType,
@@ -658,7 +657,6 @@ public abstract class AbstractEntityTypeDescriptor<J>
 		resolveTableReferenceJoins( primaryTableReference, sqlAliasBase, tableReferenceJoinType, joins::add );
 
 		return new StandardTableGroup(
-				uid,
 				navigablePath,
 				this,
 				lockMode,

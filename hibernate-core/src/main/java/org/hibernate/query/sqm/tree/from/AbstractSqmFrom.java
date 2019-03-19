@@ -22,7 +22,6 @@ import org.hibernate.query.sqm.produce.spi.SqmCreationState;
  * @author Steve Ebersole
  */
 public abstract class AbstractSqmFrom implements SqmFrom {
-	private final String uid;
 	private final NavigablePath navigablePath;
 	private final NavigableContainer referencedNavigable;
 
@@ -33,11 +32,9 @@ public abstract class AbstractSqmFrom implements SqmFrom {
 	private final UsageDetailsImpl usageDetails = new UsageDetailsImpl( this );
 
 	protected AbstractSqmFrom(
-			String uid,
 			NavigablePath navigablePath,
 			NavigableContainer referencedNavigable,
 			String alias) {
-		this.uid = uid;
 		this.navigablePath = navigablePath;
 		this.referencedNavigable = referencedNavigable;
 		this.alias = alias;
@@ -46,11 +43,6 @@ public abstract class AbstractSqmFrom implements SqmFrom {
 	@Override
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
-	}
-
-	@Override
-	public String getUniqueIdentifier() {
-		return uid;
 	}
 
 	@Override

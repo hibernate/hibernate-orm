@@ -240,7 +240,6 @@ public interface EntityTypeDescriptor<T>
 
 	@Override
 	TableGroup createRootTableGroup(
-			String uid,
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
 			JoinType tableReferenceJoinType,

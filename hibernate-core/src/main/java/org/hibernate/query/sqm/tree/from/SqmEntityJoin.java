@@ -24,13 +24,11 @@ public class SqmEntityJoin extends AbstractSqmJoin implements SqmQualifiedJoin {
 	private SqmPredicate joinPredicate;
 
 	public SqmEntityJoin(
-			String uid,
-			String alias,
 			EntityTypeDescriptor joinedEntityDescriptor,
+			String alias,
 			SqmJoinType joinType,
 			SqmRoot sqmRoot) {
 		super(
-				uid,
 				SqmCreationHelper.buildRootNavigablePath( joinedEntityDescriptor.getEntityName(), alias ),
 				joinedEntityDescriptor,
 				alias,

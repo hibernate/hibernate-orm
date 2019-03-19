@@ -17,7 +17,6 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
  * @author Steve Ebersole
  */
 public class RootTableReferenceCollectorImpl extends AbstractTableReferenceCollector {
-	private final String uniqueIdentifier;
 	private final NavigablePath navigablePath;
 
 	private final PluralValuedNavigable navigable;
@@ -26,12 +25,10 @@ public class RootTableReferenceCollectorImpl extends AbstractTableReferenceColle
 	private final LockMode effectiveLockMode;
 
 	public RootTableReferenceCollectorImpl(
-			String uniqueIdentifier,
 			NavigablePath navigablePath,
 			PluralValuedNavigable navigable,
 			String explicitSourceAlias,
 			LockMode effectiveLockMode) {
-		this.uniqueIdentifier = uniqueIdentifier;
 		this.navigable = navigable;
 		this.navigablePath = navigablePath;
 		this.explicitSourceAlias = explicitSourceAlias;
@@ -40,7 +37,6 @@ public class RootTableReferenceCollectorImpl extends AbstractTableReferenceColle
 
 	public TableGroup generateTableGroup() {
 		return new StandardTableGroup(
-				uniqueIdentifier,
 				navigablePath,
 				navigable,
 				effectiveLockMode,

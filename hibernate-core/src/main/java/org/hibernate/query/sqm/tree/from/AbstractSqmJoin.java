@@ -17,12 +17,11 @@ public abstract class AbstractSqmJoin extends AbstractSqmFrom implements SqmJoin
 	private final SqmJoinType joinType;
 
 	public AbstractSqmJoin(
-			String uid,
 			NavigablePath navigablePath,
 			NavigableContainer referencedNavigable,
 			String alias,
 			SqmJoinType joinType) {
-		super( uid, navigablePath, referencedNavigable, alias );
+		super( navigablePath, referencedNavigable, alias );
 		this.joinType = joinType;
 	}
 

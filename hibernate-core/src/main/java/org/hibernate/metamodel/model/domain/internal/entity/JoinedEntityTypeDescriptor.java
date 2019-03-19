@@ -80,7 +80,6 @@ public class JoinedEntityTypeDescriptor<J> extends AbstractEntityTypeDescriptor<
 	@Override
 	public SqmNavigableReference createSqmExpression(SqmPath lhs, SqmCreationState creationState) {
 		return new SqmBasicValuedSimplePath(
-				creationState.generateUniqueIdentifier(),
 				new NavigablePath( getNavigableName() + DiscriminatorDescriptor.NAVIGABLE_NAME ),
 				this.getHierarchy().getDiscriminatorDescriptor(),
 				null

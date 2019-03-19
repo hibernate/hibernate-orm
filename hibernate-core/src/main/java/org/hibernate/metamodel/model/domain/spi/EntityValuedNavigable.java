@@ -47,7 +47,6 @@ public interface EntityValuedNavigable<J>
 	@Override
 	default SqmNavigableReference createSqmExpression(SqmPath lhs, SqmCreationState creationState) {
 		return new SqmEntityValuedSimplePath(
-				creationState.generateUniqueIdentifier(),
 				lhs.getNavigablePath().append( getNavigableName() ),
 				this,
 				lhs
@@ -73,7 +72,6 @@ public interface EntityValuedNavigable<J>
 						np -> {
 							final TableGroup lhsTableGroup = creationState.getFromClauseAccess().getTableGroup( navigablePath.getParent() );
 							final TableGroupJoin tableGroupJoin = ( (SingularPersistentAttributeEntity) this ).createTableGroupJoin(
-									null,
 									navigablePath,
 									lhsTableGroup,
 									null,

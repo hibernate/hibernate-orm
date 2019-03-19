@@ -227,7 +227,6 @@ public class EmbeddedTypeDescriptorImpl<J>
 		return (SqmNavigableReference) pathRegistry.resolvePath(
 				navigablePath,
 				np -> new SqmEmbeddedValuedSimplePath(
-						creationState.generateUniqueIdentifier(),
 						navigablePath,
 						this,
 						lhs

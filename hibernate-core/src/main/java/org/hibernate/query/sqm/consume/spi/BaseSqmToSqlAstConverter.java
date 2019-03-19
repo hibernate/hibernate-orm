@@ -472,14 +472,13 @@ public abstract class BaseSqmToSqlAstConverter
 		log.tracef( "Starting resolution of SqmRoot [%s] to TableGroup", sqmRoot );
 
 		if ( fromClauseIndex.isResolved( sqmRoot ) ) {
-			final TableGroup resolvedTableGroup = fromClauseIndex.findResolvedTableGroup( sqmRoot );
+			final TableGroup resolvedTableGroup = fromClauseIndex.findTableGroup( sqmRoot.getNavigablePath() );
 			log.tracef( "SqmRoot [%s] resolved to existing TableGroup [%s]", sqmRoot, resolvedTableGroup );
 			return resolvedTableGroup;
 		}
 
 		final EntityTypeDescriptor entityDescriptor = sqmRoot.getReferencedNavigable().getEntityDescriptor();
 		final TableGroup group = entityDescriptor.createRootTableGroup(
-				sqmRoot.getUniqueIdentifier(),
 				sqmRoot.getNavigablePath(),
 				sqmRoot.getExplicitAlias(),
 				JoinType.INNER,
@@ -487,7 +486,7 @@ public abstract class BaseSqmToSqlAstConverter
 				this
 		);
 
-		fromClauseIndex.crossReference( sqmRoot, group );
+		fromClauseIndex.register( sqmRoot, group );
 
 		log.tracef( "Resolved SqmRoot [%s] to new TableGroup [%s]", sqmRoot, group );
 
@@ -548,7 +547,6 @@ public abstract class BaseSqmToSqlAstConverter
 		final TableGroupJoinProducer joinProducer = joinedNavigable.as( TableGroupJoinProducer.class );
 
 		final TableGroupJoin tableGroupJoin = joinProducer.createTableGroupJoin(
-				sqmJoin.getUniqueIdentifier(),
 				sqmJoin.getNavigablePath(),
 				fromClauseIndex.getTableGroup( sqmJoin.getLhs().getNavigablePath() ),
 				sqmJoin.getExplicitAlias(),
@@ -575,7 +573,6 @@ public abstract class BaseSqmToSqlAstConverter
 	public TableGroup visitCrossJoinedFromElement(SqmCrossJoin sqmJoin) {
 		final EntityTypeDescriptor entityMetadata = sqmJoin.getReferencedNavigable().getEntityDescriptor();
 		final TableGroup group = entityMetadata.createRootTableGroup(
-				sqmJoin.getUniqueIdentifier(),
 				sqmJoin.getNavigablePath(),
 				sqmJoin.getExplicitAlias(),
 				JoinType.INNER,
@@ -583,7 +580,7 @@ public abstract class BaseSqmToSqlAstConverter
 				this
 		);
 
-		fromClauseIndex.crossReference( sqmJoin, group );
+		fromClauseIndex.register( sqmJoin, group );
 
 		sqmJoin.visitJoins(
 				sqmJoinJoin -> {
@@ -1391,8 +1388,8 @@ public abstract class BaseSqmToSqlAstConverter
 
 	@Override
 	public ColumnReference visitExplicitColumnReference(SqmColumnReference sqmColumnReference) {
-		final TableGroup tableGroup = fromClauseIndex.findResolvedTableGroup(
-				sqmColumnReference.getSqmFromBase()
+		final TableGroup tableGroup = fromClauseIndex.findTableGroup(
+				sqmColumnReference.getSqmFromBase().getNavigablePath()
 		);
 
 		final ColumnReference columnReference = tableGroup.locateColumnReferenceByName( sqmColumnReference.getColumnName() );
@@ -1457,11 +1454,11 @@ public abstract class BaseSqmToSqlAstConverter
 			if ( navigableReference.getNavigable() instanceof BasicValuedNavigable ) {
 				// maybe we should register the LHS TableGroup for the basic value
 				// under its NavigablePath, similar to what we do for embeddables
-				tableGroup = fromClauseIndex.resolveTableGroup( navigableReference.getNavigablePath().getParent() );
+				tableGroup = fromClauseIndex.findTableGroup( navigableReference.getNavigablePath().getParent() );
 			}
 			else {
 				// for embeddable-, entity- and plural-valued Navigables we maybe do not have a TableGroup
-				final TableGroup thisTableGroup = fromClauseIndex.resolveTableGroup( navigableReference.getNavigablePath() );
+				final TableGroup thisTableGroup = fromClauseIndex.findTableGroup( navigableReference.getNavigablePath() );
 				if ( thisTableGroup != null ) {
 					tableGroup = thisTableGroup;
 				}
@@ -1470,7 +1467,7 @@ public abstract class BaseSqmToSqlAstConverter
 					if ( lhsNavigablePath == null ) {
 						throw new ParsingException( "Could not find TableGroup to use - " + navigableReference.getNavigablePath().getFullPath() );
 					}
-					tableGroup = fromClauseIndex.resolveTableGroup( lhsNavigablePath );
+					tableGroup = fromClauseIndex.findTableGroup( lhsNavigablePath );
 				}
 			}
 

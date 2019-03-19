@@ -23,17 +23,6 @@ import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
  * @author Steve Ebersole
  */
 public abstract class AbstractColumnReferenceQualifier implements ColumnReferenceQualifier {
-	private final String uniqueIdentifier;
-
-	public AbstractColumnReferenceQualifier(String uniqueIdentifier) {
-		this.uniqueIdentifier = uniqueIdentifier;
-	}
-
-	@Override
-	public String getUniqueIdentifier() {
-		return uniqueIdentifier;
-	}
-
 	protected abstract TableReference getPrimaryTableReference();
 
 	protected abstract List<TableReferenceJoin> getTableReferenceJoins();

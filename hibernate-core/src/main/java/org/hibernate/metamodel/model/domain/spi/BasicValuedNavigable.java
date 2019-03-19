@@ -87,7 +87,6 @@ public interface BasicValuedNavigable<J> extends BasicValuedExpressableType<J>, 
 	@Override
 	default SqmNavigableReference createSqmExpression(SqmPath lhs, SqmCreationState creationState) {
 		return new SqmBasicValuedSimplePath(
-				creationState.generateUniqueIdentifier(),
 				lhs.getNavigablePath().append( getNavigableName() ),
 				this,
 				lhs

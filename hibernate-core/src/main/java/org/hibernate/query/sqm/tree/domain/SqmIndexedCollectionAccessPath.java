@@ -44,11 +44,6 @@ public class SqmIndexedCollectionAccessPath implements SqmPath {
 	}
 
 	@Override
-	public String getUniqueIdentifier() {
-		return null;
-	}
-
-	@Override
 	public NavigablePath getNavigablePath() {
 		// todo (6.0) : this would require some String-ified form of the selector
 		return null;

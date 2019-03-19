@@ -70,7 +70,7 @@ public interface DomainResultCreationState {
 	FromClauseAccess getFromClauseAccess();
 
 	class SimpleFromClauseAccessImpl implements FromClauseAccess {
-		private final Map<NavigablePath, TableGroup> tableGroupMap = new HashMap<>();
+		protected final Map<NavigablePath, TableGroup> tableGroupMap = new HashMap<>();
 
 		@Override
 		public TableGroup findTableGroup(NavigablePath navigablePath) {

@@ -72,7 +72,6 @@ public class SqmCreationHelper {
 		final SqmFrom existingJoin = processingState.getPathRegistry().findFromByPath( processingPath.getNavigablePath() );
 		if ( existingJoin == null ) {
 			final SqmNavigableJoin sqmJoin = new SqmNavigableJoin(
-					processingPath.getNavigablePath().getFullPath(),
 					lhsFrom,
 					(Joinable) processingPath.getReferencedNavigable(),
 					// a non-terminal should never have an alias

@@ -118,9 +118,7 @@ public class CriteriaQueryToSqmTransformer extends BaseCriteriaVisitor {
 
 		for ( RootImplementor<?> root : querySpec.getRoots() ) {
 			final SqmRoot<?> sqmRoot = new SqmRoot<>(
-					uidGenerator.generateUniqueId(),
-					root.getAlias(),
-					root.getModel()
+					root.getModel(), root.getAlias()
 			);
 			sqmFromClause.addRoot( sqmRoot );
 			fromElementMapping.put( root, sqmRoot );

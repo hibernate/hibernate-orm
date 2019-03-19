@@ -37,7 +37,6 @@ public interface Joinable<T> extends NavigableContainer<T> {
 			boolean fetched,
 			SqmCreationState creationState) {
 		return new SqmNavigableJoin(
-				creationState.generateUniqueIdentifier(),
 				lhs,
 				this,
 				alias,

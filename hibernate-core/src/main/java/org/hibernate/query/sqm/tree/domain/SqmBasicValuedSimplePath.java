@@ -21,20 +21,18 @@ import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
  */
 public class SqmBasicValuedSimplePath extends AbstractSqmSimplePath {
 	public SqmBasicValuedSimplePath(
-			String uid,
 			NavigablePath navigablePath,
 			BasicValuedNavigable referencedNavigable,
 			SqmPath lhs) {
-		this( uid, navigablePath, referencedNavigable, lhs, null );
+		this( navigablePath, referencedNavigable, lhs, null );
 	}
 
 	public SqmBasicValuedSimplePath(
-			String uid,
 			NavigablePath navigablePath,
 			BasicValuedNavigable referencedNavigable,
 			SqmPath lhs,
 			String explicitAlias) {
-		super( uid, navigablePath, referencedNavigable, lhs, explicitAlias );
+		super( navigablePath, referencedNavigable, lhs, explicitAlias );
 	}
 
 	@Override

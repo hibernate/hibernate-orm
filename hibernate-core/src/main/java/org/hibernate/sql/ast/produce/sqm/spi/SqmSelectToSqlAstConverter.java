@@ -276,7 +276,6 @@ public class SqmSelectToSqlAstConverter
 							// generate the join
 							final TableGroup lhs = getFromClauseIndex().getTableGroup( fetchParent.getNavigablePath() );
 							final TableGroupJoin tableGroupJoin = ( (TableGroupJoinProducer) fetchable ).createTableGroupJoin(
-									null,
 									fetchablePath,
 									lhs,
 									null,

@@ -414,7 +414,6 @@ public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> 
 
 		final NavigablePath path = new NavigablePath( entityDescriptor.getEntityName() );
 		final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
-				null,
 				path,
 				null,
 				null,

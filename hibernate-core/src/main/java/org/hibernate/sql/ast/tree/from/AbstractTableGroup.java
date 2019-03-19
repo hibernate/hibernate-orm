@@ -32,11 +32,10 @@ public abstract class AbstractTableGroup
 	private Set<TableGroupJoin> tableGroupJoins;
 
 	public AbstractTableGroup(
-			String uid,
 			NavigablePath navigablePath,
 			Navigable<?> navigable,
 			LockMode lockMode) {
-		super( uid );
+		super();
 		this.navigablePath = navigablePath;
 		this.navigable = navigable;
 		this.lockMode = lockMode;

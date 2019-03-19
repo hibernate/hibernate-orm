@@ -35,7 +35,6 @@ public class SqmNavigableJoin
 	private SqmPredicate onClausePredicate;
 
 	public SqmNavigableJoin(
-			String uid,
 			SqmFrom lhs,
 			Joinable joinedNavigable,
 			String alias,
@@ -43,7 +42,6 @@ public class SqmNavigableJoin
 			boolean fetched,
 			@SuppressWarnings("unused") SqmCreationState creationState) {
 		super(
-				uid,
 				SqmCreationHelper.buildSubNavigablePath(
 						lhs.getNavigablePath(),
 						joinedNavigable.getNavigableName(),

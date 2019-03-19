@@ -29,24 +29,22 @@ public class StandardTableGroup extends AbstractTableGroup {
 	private final ColumnReferenceQualifier additionalQualifier;
 
 	public StandardTableGroup(
-			String uid,
 			NavigablePath navigablePath,
 			Navigable<?> navigable,
 			LockMode lockMode,
 			TableReference primaryTableReference,
 			List<TableReferenceJoin> tableReferenceJoins) {
-		this( uid, navigablePath, navigable, lockMode, primaryTableReference, tableReferenceJoins, null );
+		this( navigablePath, navigable, lockMode, primaryTableReference, tableReferenceJoins, null );
 	}
 
 	public StandardTableGroup(
-			String uid,
 			NavigablePath navigablePath,
 			Navigable navigable,
 			LockMode lockMode,
 			TableReference primaryTableReference,
 			List<TableReferenceJoin> tableReferenceJoins,
 			ColumnReferenceQualifier additionalQualifier) {
-		super( uid, navigablePath, navigable, lockMode );
+		super( navigablePath, navigable, lockMode );
 
 		this.primaryTableReference = primaryTableReference;
 		this.tableReferenceJoins = tableReferenceJoins;

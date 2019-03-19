@@ -61,9 +61,8 @@ public class FetchedTableReferenceCollectorImpl extends AbstractTableReferenceCo
 		super.addSecondaryReference( secondaryReference );
 	}
 
-	public TableGroupJoin generateTableGroup(JoinType joinType, String uid) {
+	public TableGroupJoin generateTableGroup(JoinType joinType) {
 		final TableGroup joinedTableGroup = new StandardTableGroup(
-				uid,
 				navigablePath,
 				collectionDescriptor,
 				lockMode,

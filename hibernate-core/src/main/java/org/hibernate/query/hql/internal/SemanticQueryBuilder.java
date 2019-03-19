@@ -326,7 +326,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 					targetType.getEntityName()
 			);
 
-			final SqmRoot root = new SqmRoot( generateUniqueIdentifier(), null, targetType );
+			final SqmRoot root = new SqmRoot( targetType, null );
 			processingStateStack.getCurrent().getPathRegistry().register( root );
 
 			// for now we only support the INSERT-SELECT form
@@ -353,9 +353,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		processingStateStack.push( new SqmDmlCreationProcessingState( this ) );
 		try {
 			final SqmRoot root = new SqmRoot(
-					generateUniqueIdentifier(),
-					visitIdentificationVariableDef( ctx.identificationVariableDef() ),
-					visitEntityName( ctx.entityName() )
+					visitEntityName( ctx.entityName() ), visitIdentificationVariableDef( ctx.identificationVariableDef() )
 			);
 			final SqmUpdateStatement updateStatement = new SqmUpdateStatement( root );
 
@@ -385,9 +383,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		processingStateStack.push( new SqmDmlCreationProcessingState( this ) );
 		try {
 			final SqmRoot root = new SqmRoot(
-					generateUniqueIdentifier(),
-					visitIdentificationVariableDef( ctx.identificationVariableDef() ),
-					visitEntityName( ctx.entityName() )
+					visitEntityName( ctx.entityName() ), visitIdentificationVariableDef( ctx.identificationVariableDef() )
 			);
 
 			final SqmDeleteStatement deleteStatement = new SqmDeleteStatement( root );
@@ -855,9 +851,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		final String alias = visitIdentificationVariableDef( ctx.identificationVariableDef() );
 
 		final SqmRoot sqmRoot = new SqmRoot(
-				generateUniqueIdentifier(),
-				alias,
-				entityDescriptor
+				entityDescriptor, alias
 		);
 
 		processingStateStack.getCurrent().getPathRegistry().register( sqmRoot );
@@ -917,9 +911,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		final EntityTypeDescriptor entityDescriptor = entityType.getEntityDescriptor();
 
 		final SqmCrossJoin join = new SqmCrossJoin(
-				generateUniqueIdentifier(),
-				visitIdentificationVariableDef( parserJoin.pathRoot().identificationVariableDef() ),
-				entityDescriptor,
+				entityDescriptor, visitIdentificationVariableDef( parserJoin.pathRoot().identificationVariableDef() ),
 				sqmRoot
 		);
 

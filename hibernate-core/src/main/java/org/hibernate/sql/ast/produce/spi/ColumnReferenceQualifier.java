@@ -24,7 +24,6 @@ import org.hibernate.sql.ast.tree.from.TableReference;
  * @author Steve Ebersole
  */
 public interface ColumnReferenceQualifier {
-	String getUniqueIdentifier();
 
 	/**
 	 * todo (6.0) : currently implementors can (and do) return null - either change that to throw exception or make sure all callers implement null checks

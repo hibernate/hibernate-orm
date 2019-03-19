@@ -10,7 +10,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PluralValuedNavigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
@@ -23,20 +22,18 @@ import org.hibernate.type.descriptor.java.internal.CollectionJavaDescriptor;
  */
 public class SqmPluralValuedSimplePath extends AbstractSqmSimplePath {
 	public SqmPluralValuedSimplePath(
-			String uid,
 			NavigablePath navigablePath,
 			PluralValuedNavigable referencedNavigable,
 			SqmPath lhs) {
-		this( uid, navigablePath, referencedNavigable, lhs, null );
+		this( navigablePath, referencedNavigable, lhs, null );
 	}
 
 	public SqmPluralValuedSimplePath(
-			String uid,
 			NavigablePath navigablePath,
 			PluralValuedNavigable referencedNavigable,
 			SqmPath lhs,
 			String explicitAlias) {
-		super( uid, navigablePath, referencedNavigable, lhs, explicitAlias );
+		super( navigablePath, referencedNavigable, lhs, explicitAlias );
 	}
 
 	@Override

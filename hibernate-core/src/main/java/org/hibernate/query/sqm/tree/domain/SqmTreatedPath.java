@@ -60,11 +60,6 @@ public class SqmTreatedPath implements SqmPathWrapper {
 	}
 
 	@Override
-	public String getUniqueIdentifier() {
-		return wrappedPath.getUniqueIdentifier();
-	}
-
-	@Override
 	public String getExplicitAlias() {
 		return wrappedPath.getExplicitAlias();
 	}

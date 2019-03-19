@@ -157,7 +157,6 @@ public abstract class AbstractSelector {
 	private TableGroup createTableGroup(SqlAstCreationStateImpl creationState) {
 
 		return collectionDescriptor.createRootTableGroup(
-				null,
 				new NavigablePath( collectionDescriptor.getNavigableRole().getFullPath() ),
 				null,
 				null,

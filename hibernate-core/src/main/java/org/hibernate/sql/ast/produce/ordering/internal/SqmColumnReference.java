@@ -88,11 +88,6 @@ public class SqmColumnReference implements SqmExpression, SqmNavigableReference 
 	}
 
 	@Override
-	public String getUniqueIdentifier() {
-		return null;
-	}
-
-	@Override
 	public String getExplicitAlias() {
 		return null;
 	}

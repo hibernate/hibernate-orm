@@ -91,9 +91,7 @@ public class QualifiedJoinPathIdentifierConsumer implements DotIdentifierConsume
 							.findEntityDescriptor( completePath );
 					if ( entityDescriptor != null ) {
 						current = new SqmEntityJoin(
-								processingState.getCreationState().generateUniqueIdentifier(),
-								alias,
-								entityDescriptor,
+								entityDescriptor, alias,
 								joinType,
 								sqmRoot
 						);

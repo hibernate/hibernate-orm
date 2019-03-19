@@ -36,7 +36,6 @@ import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.procedure.ParameterMisuseException;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.produce.SqmPathRegistry;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -283,7 +282,6 @@ public class EntityIdentifierCompositeAggregatedImpl<O,J>
 	public SqmNavigableReference createSqmExpression(SqmPath lhs, SqmCreationState creationState) {
 		final NavigablePath navigablePath = lhs.getNavigablePath().append( getNavigableName() );
 		return new SqmEmbeddedValuedSimplePath(
-				creationState.generateUniqueIdentifier(),
 				navigablePath,
 				this,
 				lhs

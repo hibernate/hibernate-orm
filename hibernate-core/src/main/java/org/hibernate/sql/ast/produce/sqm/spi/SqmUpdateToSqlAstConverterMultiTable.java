@@ -32,9 +32,6 @@ import org.hibernate.sql.ast.produce.SqlTreeException;
 import org.hibernate.sql.ast.produce.internal.SqlAstProcessingStateImpl;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstUpdateDescriptor;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.update.UpdateStatement.UpdateStatementBuilder;
-import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.from.AbstractTableGroup;
@@ -42,6 +39,9 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.update.Assignment;
+import org.hibernate.sql.ast.tree.update.UpdateStatement.UpdateStatementBuilder;
 
 import org.jboss.logging.Logger;
 
@@ -103,7 +103,6 @@ public class SqmUpdateToSqlAstConverterMultiTable extends BaseSqmToSqlAstConvert
 
 
 		this.entityTableGroup = entityDescriptor.createRootTableGroup(
-				deleteTarget.getUniqueIdentifier(),
 				deleteTarget.getNavigablePath(),
 				deleteTarget.getExplicitAlias(),
 				JoinType.INNER,
@@ -111,13 +110,13 @@ public class SqmUpdateToSqlAstConverterMultiTable extends BaseSqmToSqlAstConvert
 				this
 		);
 
-		getFromClauseIndex().crossReference( deleteTarget, entityTableGroup );
+		getFromClauseIndex().register( deleteTarget, entityTableGroup );
 
 		final TableGroupMock tableGroup = new TableGroupMock( entityTableGroup );
 		tableGroup.applyAffectedTableNames( getFromClauseIndex().getAffectedTableNames()::add );
 
 		primeStack( getTableGroupStack(), tableGroup );
-		getFromClauseIndex().crossReference( deleteTarget, tableGroup );
+		getFromClauseIndex().register( deleteTarget, tableGroup );
 
 		getProcessingStateStack().push(
 				new SqlAstProcessingStateImpl(
@@ -196,7 +195,6 @@ public class SqmUpdateToSqlAstConverterMultiTable extends BaseSqmToSqlAstConvert
 
 		private TableGroupMock(TableGroup entityTableGroup) {
 			super(
-					entityTableGroup.getUniqueIdentifier(),
 					entityTableGroup.getNavigablePath(),
 					entityTableGroup.getNavigable(),
 					entityTableGroup.getLockMode()

@@ -98,9 +98,8 @@ public class ToOneJoinCollectorImpl extends AbstractTableReferenceCollector {
 		return conjunction;
 	}
 
-	public TableGroupJoin generateTableGroup(JoinType joinType, String uid) {
+	public TableGroupJoin generateTableGroup(JoinType joinType) {
 		final StandardTableGroup joinedTableGroup = new StandardTableGroup(
-				uid,
 				navigablePath,
 				attribute,
 				lockMode,

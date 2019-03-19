@@ -22,7 +22,6 @@ public interface RootTableGroupProducer extends TableGroupProducer {
 	 * Create a root TableGroup as defined by this producer
 	 */
 	TableGroup createRootTableGroup(
-			String uid,
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
 			JoinType tableReferenceJoinType,

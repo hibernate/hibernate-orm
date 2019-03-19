@@ -65,7 +65,6 @@ public class SqmDeleteToSqlAstConverterMultiTable extends BaseSqmToSqlAstConvert
 		this.entityDescriptor = deleteTarget.getReferencedNavigable().getEntityDescriptor();
 
 		this.entityTableGroup = entityDescriptor.createRootTableGroup(
-				deleteTarget.getUniqueIdentifier(),
 				deleteTarget.getNavigablePath(),
 				deleteTarget.getExplicitAlias(),
 				JoinType.INNER,
@@ -73,7 +72,7 @@ public class SqmDeleteToSqlAstConverterMultiTable extends BaseSqmToSqlAstConvert
 				this
 		);
 
-		getFromClauseIndex().crossReference( deleteTarget, entityTableGroup );
+		getFromClauseIndex().register( deleteTarget, entityTableGroup );
 	}
 
 	@Override

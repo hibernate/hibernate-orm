@@ -52,12 +52,6 @@ public class TableReference implements SqlAstNode, ColumnReferenceQualifier, Log
 	}
 
 	@Override
-	public String getUniqueIdentifier() {
-		// the uid is for TableGroups
-		return null;
-	}
-
-	@Override
 	public TableReference locateTableReference(Table table) {
 		if ( table.equals( getTable() ) ) {
 			return this;

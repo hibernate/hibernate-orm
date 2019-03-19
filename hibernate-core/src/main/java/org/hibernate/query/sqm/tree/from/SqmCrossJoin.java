@@ -24,12 +24,9 @@ public class SqmCrossJoin extends AbstractSqmFrom implements SqmJoin {
 	private final SqmRoot sqmRoot;
 
 	public SqmCrossJoin(
-			String uid,
-			String alias,
-			EntityTypeDescriptor joinedEntityDescriptor,
+			EntityTypeDescriptor joinedEntityDescriptor, String alias,
 			SqmRoot sqmRoot) {
 		super(
-				uid,
 				buildRootNavigablePath( alias, joinedEntityDescriptor.getEntityName() ),
 				joinedEntityDescriptor,
 				alias

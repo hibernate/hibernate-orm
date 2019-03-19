@@ -335,7 +335,6 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityTypeDescriptor<T> 
 
 	@Override
 	public TableGroup createRootTableGroup(
-			String uid,
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
 			JoinType tableReferenceJoinType,

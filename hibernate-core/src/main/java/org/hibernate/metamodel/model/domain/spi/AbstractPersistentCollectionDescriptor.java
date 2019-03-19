@@ -575,7 +575,6 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 
 	@Override
 	public TableGroup createRootTableGroup(
-			String uid,
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
 			JoinType tableReferenceJoinType,
@@ -584,7 +583,6 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 		final SqlAliasBase sqlAliasBase = creationState.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() );
 
 		RootTableReferenceCollectorImpl collector = new RootTableReferenceCollectorImpl(
-				uid,
 				navigablePath,
 				this,
 				explicitSourceAlias,
@@ -608,7 +606,6 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 
 	@Override
 	public TableGroupJoin createTableGroupJoin(
-			String uid,
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
@@ -637,7 +634,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 			joinType = JoinType.LEFT;
 		}
 
-		return joinCollector.generateTableGroup( joinType, navigablePath.getFullPath() );
+		return joinCollector.generateTableGroup( joinType );
 	}
 
 
@@ -756,7 +753,6 @@ public abstract class AbstractPersistentCollectionDescriptor<O, C, E>
 
 					creationState.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() );
 					final TableGroupJoin tableGroupJoin = createTableGroupJoin(
-							null,
 							navigablePath,
 							parentTableGroup,
 							resultVariable,

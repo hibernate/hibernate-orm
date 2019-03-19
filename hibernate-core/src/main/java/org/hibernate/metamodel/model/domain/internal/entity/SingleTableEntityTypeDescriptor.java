@@ -120,7 +120,6 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 		}
 
 		return new SqmBasicValuedSimplePath(
-				creationState.generateUniqueIdentifier(),
 				new NavigablePath( getNavigableName() + DiscriminatorDescriptor.NAVIGABLE_NAME ),
 				getHierarchy().getDiscriminatorDescriptor(),
 				null

@@ -18,12 +18,8 @@ import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
  * @author Steve Ebersole
  */
 public class SqmRoot<E> extends AbstractSqmFrom {
-	public SqmRoot(
-			String uid,
-			String alias,
-			EntityTypeDescriptor entityTypeDescriptor) {
+	public SqmRoot(EntityTypeDescriptor entityTypeDescriptor, String alias) {
 		super(
-				uid,
 				alias == null
 						? new NavigablePath( entityTypeDescriptor.getEntityName() )
 						: new NavigablePath( entityTypeDescriptor.getEntityName() + '(' + alias + ')' ),

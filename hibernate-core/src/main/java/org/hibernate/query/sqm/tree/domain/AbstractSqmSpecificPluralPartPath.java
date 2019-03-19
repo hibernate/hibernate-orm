@@ -34,11 +34,6 @@ public abstract class AbstractSqmSpecificPluralPartPath implements SqmPath {
 	}
 
 	@Override
-	public String getUniqueIdentifier() {
-		return null;
-	}
-
-	@Override
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
 	}

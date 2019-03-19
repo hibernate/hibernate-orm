@@ -17,7 +17,6 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public abstract class AbstractSqmSimplePath implements SqmNavigableReference {
-	private final String uid;
 	private final NavigablePath navigablePath;
 	private final Navigable referencedNavigable;
 	private final SqmPath lhs;
@@ -25,20 +24,17 @@ public abstract class AbstractSqmSimplePath implements SqmNavigableReference {
 	private String explicitAlias;
 
 	public AbstractSqmSimplePath(
-			String uid,
 			NavigablePath navigablePath,
 			Navigable referencedNavigable,
 			SqmPath lhs) {
-		this( uid, navigablePath, referencedNavigable, lhs, null );
+		this( navigablePath, referencedNavigable, lhs, null );
 	}
 
 	public AbstractSqmSimplePath(
-			String uid,
 			NavigablePath navigablePath,
 			Navigable referencedNavigable,
 			SqmPath lhs,
 			String explicitAlias) {
-		this.uid = uid;
 		this.navigablePath = navigablePath;
 		this.referencedNavigable = referencedNavigable;
 		this.lhs = lhs;
@@ -85,8 +81,4 @@ public abstract class AbstractSqmSimplePath implements SqmNavigableReference {
 		return getReferencedNavigable().getJavaTypeDescriptor();
 	}
 
-	@Override
-	public String getUniqueIdentifier() {
-		return uid;
-	}
 }

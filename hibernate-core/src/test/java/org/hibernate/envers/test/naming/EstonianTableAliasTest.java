@@ -6,9 +6,6 @@
  */
 package org.hibernate.envers.test.naming;
 
-import java.util.Map;
-
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 
 import org.hibernate.testing.TestForIssue;
@@ -33,15 +30,6 @@ public class EstonianTableAliasTest extends EnversEntityManagerFactoryBasedFunct
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { Parent.class, Child.class };
-	}
-
-	@Override
-	protected void addSettings(Map<String, Object> settings) {
-		super.addSettings( settings );
-
-		// todo (6.0) - This should be fixed in ORM and this requirement of maximum-fetch depth removed.
-		//		This is currently a workaround to get the test to pass.
-		settings.put( AvailableSettings.MAX_FETCH_DEPTH, 10 );
 	}
 
 	@DynamicBeforeAll

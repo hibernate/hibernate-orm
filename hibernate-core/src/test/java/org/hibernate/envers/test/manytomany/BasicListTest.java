@@ -8,9 +8,7 @@ package org.hibernate.envers.test.manytomany;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Map;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.support.domains.manytomany.ListOwnedEntity;
 import org.hibernate.envers.test.support.domains.manytomany.ListOwningEntity;
@@ -36,15 +34,6 @@ public class BasicListTest extends EnversEntityManagerFactoryBasedFunctionalTest
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { ListOwningEntity.class, ListOwnedEntity.class };
-	}
-
-	@Override
-	protected void addSettings(Map<String, Object> settings) {
-		super.addSettings( settings );
-
-		// todo (6.0) - This should be fixed in ORM and this requirement of maximum-fetch depth removed.
-		//		This is currently a workaround to get the test to pass.
-		settings.put( AvailableSettings.MAX_FETCH_DEPTH, 10 );
 	}
 
 	@DynamicBeforeAll

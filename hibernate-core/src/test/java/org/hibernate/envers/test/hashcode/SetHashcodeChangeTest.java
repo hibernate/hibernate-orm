@@ -8,7 +8,6 @@ package org.hibernate.envers.test.hashcode;
 
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -21,7 +20,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.NotAudited;
 import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
@@ -45,15 +43,6 @@ public class SetHashcodeChangeTest extends EnversEntityManagerFactoryBasedFuncti
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] { Author.class, Book.class };
-	}
-
-	@Override
-	protected void addSettings(Map<String, Object> settings) {
-		super.addSettings( settings );
-
-		// todo (6.0) - This should be fixed in ORM and this requirement of maximum-fetch depth removed.
-		//		This is currently a workaround to get the test to pass.
-		settings.put( AvailableSettings.MAX_FETCH_DEPTH, 10 );
 	}
 
 	@DynamicBeforeAll

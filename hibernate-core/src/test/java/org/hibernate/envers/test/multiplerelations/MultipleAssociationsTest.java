@@ -6,9 +6,6 @@
  */
 package org.hibernate.envers.test.multiplerelations;
 
-import java.util.Map;
-
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.support.domains.multiplerelations.Address;
 import org.hibernate.envers.test.support.domains.multiplerelations.Person;
@@ -34,15 +31,6 @@ public class MultipleAssociationsTest extends EnversEntityManagerFactoryBasedFun
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { Person.class, Address.class };
-	}
-
-	@Override
-	protected void addSettings(Map<String, Object> settings) {
-		super.addSettings( settings );
-
-		// todo (6.0) - This should be fixed in ORM and this requirement of maximum-fetch depth removed.
-		//		This is currently a workaround to get the test to pass.
-		settings.put( AvailableSettings.MAX_FETCH_DEPTH, 10 );
 	}
 
 	@DynamicBeforeAll

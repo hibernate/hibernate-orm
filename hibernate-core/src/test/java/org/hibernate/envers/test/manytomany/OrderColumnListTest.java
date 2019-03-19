@@ -9,7 +9,6 @@ package org.hibernate.envers.test.manytomany;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import javax.persistence.Entity;
@@ -17,7 +16,6 @@ import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.OrderColumn;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 
@@ -37,15 +35,6 @@ public class OrderColumnListTest extends EnversEntityManagerFactoryBasedFunction
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] { Parent.class, Child.class };
-	}
-
-	@Override
-	protected void addSettings(Map<String, Object> settings) {
-		super.addSettings( settings );
-
-		// todo (6.0) - This should be fixed in ORM and this requirement of maximum-fetch depth removed.
-		//		This is currently a workaround to get the test to pass.
-		settings.put( AvailableSettings.MAX_FETCH_DEPTH, 10 );
 	}
 
 	@DynamicBeforeAll

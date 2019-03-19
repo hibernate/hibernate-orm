@@ -6,10 +6,6 @@
  */
 package org.hibernate.envers.test.collections.mapkey;
 
-import java.util.Arrays;
-import java.util.Map;
-
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.support.domains.collections.mapkey.ComponentMapKeyEntity;
 import org.hibernate.envers.test.support.domains.components.Component1;
@@ -21,6 +17,7 @@ import org.hibernate.testing.junit5.dynamictests.DynamicBeforeAll;
 import org.hibernate.testing.junit5.dynamictests.DynamicTest;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasEntry;
 
 /**
@@ -35,21 +32,6 @@ public class ComponentMapKeyTest extends EnversEntityManagerFactoryBasedFunction
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { ComponentMapKeyEntity.class, ComponentTestEntity.class };
-	}
-
-	@Override
-	protected void addSettings(Map<String, Object> settings) {
-		super.addSettings( settings );
-
-		// todo (6.0) - Maxmimum fetch depth handling seems to be problematic with ValidityAuditStrategy.
-		//		At line 92, this test would fail without the following configuration property because the
-		//		navigableReferenceStack depth is 7 which exceeds the maximumDepth default of 5.
-		//		This lead to the sqlSelections not being resolved and therefore a select-clause that had
-		//		absolutely no selectables; thus a SQL syntax exception.
-		//
-
-		// todo (6.0) - This should be fixed in ORM and this requirement of maximum-fetch depth removed.
-		settings.put( AvailableSettings.MAX_FETCH_DEPTH, 10 );
 	}
 
 	@DynamicBeforeAll
@@ -93,7 +75,7 @@ public class ComponentMapKeyTest extends EnversEntityManagerFactoryBasedFunction
 
 	@DynamicTest
 	public void testRevisionsCounts() {
-		assert Arrays.asList( 1, 2 ).equals( getAuditReader().getRevisions( ComponentMapKeyEntity.class, cmke_id ) );
+		assertThat( getAuditReader().getRevisions( ComponentMapKeyEntity.class, cmke_id ), contains( 1, 2 ) );
 	}
 
 	@DynamicTest

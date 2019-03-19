@@ -8,11 +8,9 @@ package org.hibernate.envers.test.naming;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.support.domains.basic.StrTestEntity;
 import org.hibernate.envers.test.support.domains.naming.VersionsJoinTableTestEntity;
@@ -26,7 +24,6 @@ import org.hibernate.testing.junit5.dynamictests.DynamicTest;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
 
@@ -42,15 +39,6 @@ public class VersionsJoinTableNamingTest extends EnversEntityManagerFactoryBased
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { VersionsJoinTableTestEntity.class, StrTestEntity.class };
-	}
-
-	@Override
-	protected void addSettings(Map<String, Object> settings) {
-		super.addSettings( settings );
-
-		// todo (6.0) - This should be fixed in ORM and this requirement of maximum-fetch depth removed.
-		//		This is currently a workaround to get the test to pass.
-		settings.put( AvailableSettings.MAX_FETCH_DEPTH, 10 );
 	}
 
 	@DynamicBeforeAll

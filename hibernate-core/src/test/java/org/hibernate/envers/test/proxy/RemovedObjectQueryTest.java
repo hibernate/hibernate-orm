@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.Hibernate;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
@@ -89,10 +88,6 @@ public class RemovedObjectQueryTest extends EnversEntityManagerFactoryBasedFunct
 		super.addSettings( settings );
 
 		settings.put( EnversSettings.STORE_DATA_AT_DELETE, "true" );
-
-		// todo (6.0) - This should be fixed in ORM and this requirement of maximum-fetch depth removed.
-		//		This is currently a workaround to get the test to pass.
-		settings.put( AvailableSettings.MAX_FETCH_DEPTH, 10 );
 	}
 
 	@DynamicBeforeAll

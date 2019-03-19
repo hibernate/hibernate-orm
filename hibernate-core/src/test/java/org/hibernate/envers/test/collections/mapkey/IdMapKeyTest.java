@@ -6,9 +6,6 @@
  */
 package org.hibernate.envers.test.collections.mapkey;
 
-import java.util.Map;
-
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.support.domains.basic.StrTestEntity;
 import org.hibernate.envers.test.support.domains.collections.mapkey.IdMapKeyEntity;
@@ -33,21 +30,6 @@ public class IdMapKeyTest extends EnversEntityManagerFactoryBasedFunctionalTest 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { IdMapKeyEntity.class, StrTestEntity.class };
-	}
-
-	@Override
-	protected void addSettings(Map<String, Object> settings) {
-		super.addSettings( settings );
-
-		// todo (6.0) - Maxmimum fetch depth handling seems to be problematic with ValidityAuditStrategy.
-		//		At line 92, this test would fail without the following configuration property because the
-		//		navigableReferenceStack depth is 7 which exceeds the maximumDepth default of 5.
-		//		This lead to the sqlSelections not being resolved and therefore a select-clause that had
-		//		absolutely no selectables; thus a SQL syntax exception.
-		//
-
-		// todo (6.0) - This should be fixed in ORM and this requirement of maximum-fetch depth removed.
-		settings.put( AvailableSettings.MAX_FETCH_DEPTH, 10 );
 	}
 
 	@DynamicBeforeAll

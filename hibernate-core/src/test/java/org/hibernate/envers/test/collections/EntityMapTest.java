@@ -16,7 +16,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 
@@ -52,21 +51,6 @@ public class EntityMapTest extends EnversEntityManagerFactoryBasedFunctionalTest
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] { A.class, B.class, C.class };
-	}
-
-	@Override
-	protected void addSettings(Map<String, Object> settings) {
-		super.addSettings( settings );
-
-		// todo (6.0) - Maxmimum fetch depth handling seems to be problematic with ValidityAuditStrategy.
-		//		At line 92, this test would fail without the following configuration property because the
-		//		navigableReferenceStack depth is 7 which exceeds the maximumDepth default of 5.
-		//		This lead to the sqlSelections not being resolved and therefore a select-clause that had
-		//		absolutely no selectables; thus a SQL syntax exception.
-		//
-
-		// todo (6.0) - This should be fixed in ORM and this requirement of maximum-fetch depth removed.
-		settings.put( AvailableSettings.MAX_FETCH_DEPTH, 10 );
 	}
 
 	@MappedSuperclass

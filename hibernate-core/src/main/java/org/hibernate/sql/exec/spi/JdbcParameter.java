@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.exec.spi;
 
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.Expression;
 
 /**
  * @author Steve Ebersole

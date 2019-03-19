@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.produce.spi;
 
-import org.hibernate.sql.ast.tree.spi.UpdateStatement;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
 
 /**
  * SqlAstDescriptor specialization for update queries

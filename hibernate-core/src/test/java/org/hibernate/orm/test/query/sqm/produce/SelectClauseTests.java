@@ -10,7 +10,6 @@ import java.util.Map;
 
 import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
-import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndex.IndexClassification;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PluralValuedNavigable;
@@ -19,9 +18,7 @@ import org.hibernate.orm.test.query.sqm.produce.domain.Person;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
-import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;

@@ -13,8 +13,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.hibernate.metamodel.model.relational.spi.Table;
-import org.hibernate.sql.ast.tree.spi.from.TableReference;
-import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 
 /**
  * Support class for {@link TableReferenceJoinCollector} implementations

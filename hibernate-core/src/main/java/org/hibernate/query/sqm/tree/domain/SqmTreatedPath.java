@@ -16,7 +16,6 @@ import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
@@ -85,7 +84,7 @@ public class SqmTreatedPath implements SqmPathWrapper {
 	}
 
 	@Override
-	public SqmRestrictedCollectionElementReference resolveIndexedAccess(
+	public SqmPath resolveIndexedAccess(
 			SqmExpression selector,
 			String currentContextKey,
 			boolean isTerminal,
@@ -111,5 +110,15 @@ public class SqmTreatedPath implements SqmPathWrapper {
 	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
 		return wrappedPath.getJavaTypeDescriptor();
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.ENTITY;
+	}
+
+	@Override
+	public Class getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
 	}
 }

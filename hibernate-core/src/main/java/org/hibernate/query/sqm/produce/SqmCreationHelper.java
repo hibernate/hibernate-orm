@@ -15,7 +15,6 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 
 /**
  * @author Steve Ebersole

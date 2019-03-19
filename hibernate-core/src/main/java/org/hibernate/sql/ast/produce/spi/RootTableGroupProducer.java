@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.produce.spi;
 import org.hibernate.LockMode;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.JoinType;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 
 /**
  * Contract for things that can produce the {@link TableGroup} that is the root of a

@@ -11,9 +11,9 @@ import java.util.Set;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.relational.spi.PhysicalTable;
-import org.hibernate.sql.ast.tree.spi.InsertStatement;
-import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.exec.spi.JdbcInsert;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 

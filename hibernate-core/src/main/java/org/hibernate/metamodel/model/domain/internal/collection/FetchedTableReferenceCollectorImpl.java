@@ -15,16 +15,15 @@ import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.sql.ast.JoinType;
-import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
-import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.spi.from.StandardTableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.spi.from.TableReference;
-import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.spi.predicate.Junction;
-import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.from.StandardTableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.predicate.Junction;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.ForeignKeyDirection;
 
 /**

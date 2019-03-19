@@ -11,8 +11,8 @@ import java.util.Set;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.consume.SyntaxException;
-import org.hibernate.sql.ast.tree.spi.InsertSelectStatement;
-import org.hibernate.sql.ast.tree.spi.assign.Assignment;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
+import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.exec.spi.JdbcInsertSelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 

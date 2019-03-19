@@ -11,8 +11,8 @@ import java.util.function.Supplier;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.EnumJavaDescriptor;
@@ -40,7 +40,7 @@ public class SqmStaticEnumReference<T> implements SemanticPathPart, SqmExpressio
 	}
 
 	@Override
-	public SqmRestrictedCollectionElementReference resolveIndexedAccess(
+	public SqmPath resolveIndexedAccess(
 			SqmExpression selector,
 			String currentContextKey,
 			boolean isTerminal,

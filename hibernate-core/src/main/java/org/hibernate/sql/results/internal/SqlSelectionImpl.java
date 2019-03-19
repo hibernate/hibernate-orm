@@ -11,7 +11,7 @@ import java.util.Objects;
 import org.hibernate.sql.JdbcValueExtractor;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.results.spi.SqlSelection;
 
 /**

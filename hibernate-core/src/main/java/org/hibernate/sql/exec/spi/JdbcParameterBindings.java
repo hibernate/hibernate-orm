@@ -15,7 +15,7 @@ import java.util.function.BiConsumer;
  * @apiNote "Externalized" because some JDBC parameter values are
  * intrinsically part of the parameter itself and we do not need to
  * locate a JdbcParameterBinding.  E.g., consider a
- * {@link org.hibernate.sql.ast.tree.spi.expression.LiteralParameter}
+ * {@link org.hibernate.sql.ast.tree.expression.LiteralParameter}
  * which actually encapsulates the actually literal value inside
  * itself - to create the binder and actually perform the binding
  * is only dependent on the LiteralParameter

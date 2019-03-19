@@ -138,14 +138,14 @@ There is a 3rd source for JDBC
 
 === FromClause - Tables and Groups and Spaces (oh my)
 
-Modeling the from-clause is central to SQL (and to SQM as we will see later).  The FromClause (`org.hibernate.sql.ast.tree.spi.from.FromClause`)
-is logically contained on a QuerySpec (`org.hibernate.sql.ast.tree.spi.QuerySpec`) meant to capture the commonality between
+Modeling the from-clause is central to SQL (and to SQM as we will see later).  The FromClause (`org.hibernate.sql.ast.tree.from.FromClause`)
+is logically contained on a QuerySpec (`org.hibernate.sql.ast.tree.select.QuerySpec`) meant to capture the commonality between
 a top-level select and a sub-query select.  The FromClause is made up of the following parts, bottom-up:
 
-TableReference:: `org.hibernate.sql.ast.tree.spi.from.TableReference` - Models a single Table
+TableReference:: `org.hibernate.sql.ast.tree.from.TableReference` - Models a single Table
 (`org.hibernate.metamodel.model.relational.spi.Table`) reference.
 
-TableGroup:: `org.hibernate.sql.ast.tree.spi.from.TableGroup` - Represents a related group of TableReference instances,
+TableGroup:: `org.hibernate.sql.ast.tree.from.TableGroup` - Represents a related group of TableReference instances,
 generally grouped by a common Navigable reference.  E.g. The EntityTableGroup includes TableReferences for all of the
 Tables that the entity is mapped to.
 
@@ -276,7 +276,7 @@ as the basis for the selection
 
 === SelectClause
 
-`org.hibernate.sql.ast.tree.spi.select.SelectClause` contains one or more
+`org.hibernate.sql.ast.tree.select.SelectClause` contains one or more
 `org.hibernate.sql.results.spi.SqlSelection` references.  These `SqlSelection`
 references describe a single result in the domain query.  Here is a visualization
 of the process used to produce `Selection` references:
@@ -331,7 +331,7 @@ Ultimately, the consumption of the SQL AST is execution of some JDBC call.  Here
 SELECT queries as they are the most complicated due to the select-clause.  The other statement types are logically
 similar.
 
-The main actor in consuming SQL AST for a SELECT query (`org.hibernate.sql.ast.tree.spi.SelectStatement`) is
+The main actor in consuming SQL AST for a SELECT query (`org.hibernate.sql.ast.tree.select.SelectStatement`) is
 `org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter` which consumes the `SelectStatement` and
 transforms it into a `org.hibernate.sql.exec.spi.JdbcSelect` which encapsulates:
 

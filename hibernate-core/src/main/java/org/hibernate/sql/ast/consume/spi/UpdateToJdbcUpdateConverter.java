@@ -11,8 +11,8 @@ import java.util.Set;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.relational.spi.PhysicalTable;
-import org.hibernate.sql.ast.tree.spi.UpdateStatement;
-import org.hibernate.sql.ast.tree.spi.assign.Assignment;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcUpdate;
 

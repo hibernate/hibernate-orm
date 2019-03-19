@@ -17,73 +17,69 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.model.domain.spi.DiscriminatorDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
-import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.SqlTreeException;
-import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
-import org.hibernate.sql.ast.tree.spi.QuerySpec;
-import org.hibernate.sql.ast.tree.spi.expression.AbsFunction;
-import org.hibernate.sql.ast.tree.spi.expression.AvgFunction;
-import org.hibernate.sql.ast.tree.spi.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.spi.expression.BitLengthFunction;
-import org.hibernate.sql.ast.tree.spi.expression.CaseSearchedExpression;
-import org.hibernate.sql.ast.tree.spi.expression.CaseSimpleExpression;
-import org.hibernate.sql.ast.tree.spi.expression.CastFunction;
-import org.hibernate.sql.ast.tree.spi.expression.CoalesceFunction;
-import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.spi.expression.ConcatFunction;
-import org.hibernate.sql.ast.tree.spi.expression.CountFunction;
-import org.hibernate.sql.ast.tree.spi.expression.CountStarFunction;
-import org.hibernate.sql.ast.tree.spi.expression.CurrentDateFunction;
-import org.hibernate.sql.ast.tree.spi.expression.CurrentTimeFunction;
-import org.hibernate.sql.ast.tree.spi.expression.CurrentTimestampFunction;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.expression.ExtractFunction;
-import org.hibernate.sql.ast.tree.spi.expression.GenericParameter;
-import org.hibernate.sql.ast.tree.spi.expression.LengthFunction;
-import org.hibernate.sql.ast.tree.spi.expression.LocateFunction;
-import org.hibernate.sql.ast.tree.spi.expression.LowerFunction;
-import org.hibernate.sql.ast.tree.spi.expression.MaxFunction;
-import org.hibernate.sql.ast.tree.spi.expression.MinFunction;
-import org.hibernate.sql.ast.tree.spi.expression.ModFunction;
-import org.hibernate.sql.ast.tree.spi.expression.NamedParameter;
-import org.hibernate.sql.ast.tree.spi.expression.NonStandardFunction;
-import org.hibernate.sql.ast.tree.spi.expression.NullifFunction;
-import org.hibernate.sql.ast.tree.spi.expression.PositionalParameter;
-import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
-import org.hibernate.sql.ast.tree.spi.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.spi.expression.SqrtFunction;
-import org.hibernate.sql.ast.tree.spi.expression.SubstrFunction;
-import org.hibernate.sql.ast.tree.spi.expression.SumFunction;
-import org.hibernate.sql.ast.tree.spi.expression.TrimFunction;
-import org.hibernate.sql.ast.tree.spi.expression.UnaryOperation;
-import org.hibernate.sql.ast.tree.spi.expression.UpperFunction;
-import org.hibernate.sql.ast.tree.spi.expression.domain.DiscriminatorReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.EntityTypeLiteral;
-import org.hibernate.sql.ast.tree.spi.expression.domain.EntityValuedNavigableReference;
-import org.hibernate.sql.ast.tree.spi.from.FromClause;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.spi.from.TableReference;
-import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.spi.predicate.BetweenPredicate;
-import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.spi.predicate.FilterPredicate;
-import org.hibernate.sql.ast.tree.spi.predicate.GroupedPredicate;
-import org.hibernate.sql.ast.tree.spi.predicate.InListPredicate;
-import org.hibernate.sql.ast.tree.spi.predicate.InSubQueryPredicate;
-import org.hibernate.sql.ast.tree.spi.predicate.Junction;
-import org.hibernate.sql.ast.tree.spi.predicate.LikePredicate;
-import org.hibernate.sql.ast.tree.spi.predicate.NegatedPredicate;
-import org.hibernate.sql.ast.tree.spi.predicate.NullnessPredicate;
-import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
-import org.hibernate.sql.ast.tree.spi.predicate.SelfRenderingPredicate;
-import org.hibernate.sql.ast.tree.spi.select.SelectClause;
-import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.expression.AbsFunction;
+import org.hibernate.sql.ast.tree.expression.AvgFunction;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.tree.expression.BitLengthFunction;
+import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
+import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
+import org.hibernate.sql.ast.tree.expression.CastFunction;
+import org.hibernate.sql.ast.tree.expression.CoalesceFunction;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.ConcatFunction;
+import org.hibernate.sql.ast.tree.expression.CountFunction;
+import org.hibernate.sql.ast.tree.expression.CountStarFunction;
+import org.hibernate.sql.ast.tree.expression.CurrentDateFunction;
+import org.hibernate.sql.ast.tree.expression.CurrentTimeFunction;
+import org.hibernate.sql.ast.tree.expression.CurrentTimestampFunction;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.ExtractFunction;
+import org.hibernate.sql.ast.tree.expression.GenericParameter;
+import org.hibernate.sql.ast.tree.expression.LengthFunction;
+import org.hibernate.sql.ast.tree.expression.LocateFunction;
+import org.hibernate.sql.ast.tree.expression.LowerFunction;
+import org.hibernate.sql.ast.tree.expression.MaxFunction;
+import org.hibernate.sql.ast.tree.expression.MinFunction;
+import org.hibernate.sql.ast.tree.expression.ModFunction;
+import org.hibernate.sql.ast.tree.expression.NamedParameter;
+import org.hibernate.sql.ast.tree.expression.NonStandardFunction;
+import org.hibernate.sql.ast.tree.expression.NullifFunction;
+import org.hibernate.sql.ast.tree.expression.PositionalParameter;
+import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.expression.SqrtFunction;
+import org.hibernate.sql.ast.tree.expression.SubstrFunction;
+import org.hibernate.sql.ast.tree.expression.SumFunction;
+import org.hibernate.sql.ast.tree.expression.TrimFunction;
+import org.hibernate.sql.ast.tree.expression.UnaryOperation;
+import org.hibernate.sql.ast.tree.expression.UpperFunction;
+import org.hibernate.sql.ast.tree.expression.domain.EntityTypeLiteral;
+import org.hibernate.sql.ast.tree.from.FromClause;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
+import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
+import org.hibernate.sql.ast.tree.predicate.GroupedPredicate;
+import org.hibernate.sql.ast.tree.predicate.InListPredicate;
+import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
+import org.hibernate.sql.ast.tree.predicate.Junction;
+import org.hibernate.sql.ast.tree.predicate.LikePredicate;
+import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
+import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
+import org.hibernate.sql.ast.tree.select.SelectClause;
+import org.hibernate.sql.ast.tree.sort.SortSpecification;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
 import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
@@ -694,23 +690,6 @@ public abstract class AbstractSqlAstWalker
 				.entityNameToDiscriminatorValue( referencedSubType.getEntityName() );
 
 		appendSql( discriminatorValue.toString() );
-	}
-
-	@Override
-	public void visitDiscriminatorReference(DiscriminatorReference reference) {
-		final EntityValuedNavigableReference entityReference = reference.getNavigableContainerReference();
-		final ColumnReferenceQualifier qualifier = entityReference.getColumnReferenceQualifier();
-
-		final DiscriminatorDescriptor discriminatorDescriptor = reference.getNavigable();
-		final Column column = discriminatorDescriptor.getBoundColumn();
-
-		if ( qualifier == null ) {
-			appendSql( column.render() );
-		}
-		else {
-			final TableReference tableReference = qualifier.locateTableReference( column.getSourceTable() );
-			appendSql( column.render( tableReference.getIdentificationVariable() ) );
-		}
 	}
 
 	@Override

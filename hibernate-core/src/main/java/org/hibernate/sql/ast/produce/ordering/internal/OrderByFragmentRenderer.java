@@ -15,9 +15,9 @@ import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.sql.ast.consume.SyntaxException;
 import org.hibernate.sql.ast.consume.spi.AbstractSqlAstWalker;
-import org.hibernate.sql.ast.tree.spi.assign.Assignment;
-import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
+import org.hibernate.sql.ast.tree.update.Assignment;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.sort.SortSpecification;
 
 import org.jboss.logging.Logger;
 

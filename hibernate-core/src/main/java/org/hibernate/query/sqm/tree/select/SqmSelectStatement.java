@@ -41,12 +41,6 @@ public class SqmSelectStatement extends AbstractSqmStatement {
 		return fetchJoinsByParentPath == null ? Collections.emptyMap() : Collections.unmodifiableMap( fetchJoinsByParentPath );
 	}
 
-	public void visitFetchJoinsByParentPath(BiConsumer<NavigablePath, Set<SqmNavigableJoin>> action) {
-		if ( fetchJoinsByParentPath != null ) {
-			fetchJoinsByParentPath.forEach( action );
-		}
-	}
-
 	public void applyFetchJoinsByParentPath(Map<NavigablePath, Set<SqmNavigableJoin>> fetchJoinsByParentPath) {
 		this.fetchJoinsByParentPath = fetchJoinsByParentPath;
 	}

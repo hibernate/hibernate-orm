@@ -10,7 +10,7 @@ import org.hibernate.sql.EmptyJdbcValueExtractor;
 import org.hibernate.sql.JdbcValueExtractor;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.results.spi.SqlSelection;
 
 /**

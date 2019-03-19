@@ -15,6 +15,10 @@ import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
+import org.hibernate.query.sqm.tree.domain.SqmMaxElementPath;
+import org.hibernate.query.sqm.tree.domain.SqmMaxIndexPath;
+import org.hibernate.query.sqm.tree.domain.SqmMinElementPath;
+import org.hibernate.query.sqm.tree.domain.SqmMinIndexPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
@@ -30,14 +34,6 @@ import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmSubQuery;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
-import org.hibernate.query.sqm.tree.expression.domain.AbstractSpecificSqmCollectionIndexReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionIndexReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmMaxElementReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmMinElementReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmMinIndexReferenceBasic;
-import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
 import org.hibernate.query.sqm.tree.expression.function.SqmAbsFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmBitLengthFunction;
@@ -115,17 +111,13 @@ public interface SemanticQueryWalker<T> {
 
 	T visitSelectStatement(SqmSelectStatement statement);
 
-	T visitQuerySpec(SqmQuerySpec querySpec);
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// from-clause / domain paths
 
 	T visitFromClause(SqmFromClause fromClause);
 
-	T visitRootEntityFromElement(SqmRoot rootEntityFromElement);
-
-	T visitRootEntityReference(SqmEntityReference sqmEntityReference);
+	T visitRootPath(SqmRoot sqmRoot);
 
 	T visitCrossJoinedFromElement(SqmCrossJoin joinedFromElement);
 
@@ -143,11 +135,21 @@ public interface SemanticQueryWalker<T> {
 
 	T visitIndexedPluralAccessPath(SqmIndexedCollectionAccessPath path);
 
+	T visitMaxElementPath(SqmMaxElementPath path);
 
+	T visitMinElementPath(SqmMinElementPath path);
+
+	T visitMaxIndexPath(SqmMaxIndexPath path);
+
+	T visitMinIndexPath(SqmMinIndexPath path);
+
+	T visitTreatedPath(SqmTreatedPath sqmTreatedPath);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// selections
+	// Query spec
+
+	T visitQuerySpec(SqmQuerySpec querySpec);
 
 	T visitSelectClause(SqmSelectClause selectClause);
 
@@ -159,19 +161,6 @@ public interface SemanticQueryWalker<T> {
 
 	T visitHavingClause(SqmHavingClause clause);
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// expressions - navigable
-
-	T visitPluralAttribute(SqmPluralAttributeReference reference);
-
-	// todo (6.0) : split this based on the element type like we did for singular attributes
-	//		aka:
-	//			#visit
-
-	T visitPluralAttributeElementBinding(SqmCollectionElementReference binding);
-
-	T visitTreatedPath(SqmTreatedPath sqmTreatedPath);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -301,20 +290,7 @@ public interface SemanticQueryWalker<T> {
 
 	T visitPluralAttributeSizeFunction(SqmCollectionSize function);
 
-
-	T visitPluralAttributeIndexFunction(SqmCollectionIndexReference function);
-
-	T visitMapKeyBinding(SqmCollectionIndexReference binding);
-
 	T visitMapEntryFunction(SqmMapEntryReference function);
-
-	T visitMaxElementBinding(SqmMaxElementReference binding);
-
-	T visitMinElementBinding(SqmMinElementReference binding);
-
-	T visitMaxIndexFunction(AbstractSpecificSqmCollectionIndexReference function);
-
-	T visitMinIndexFunction(SqmMinIndexReferenceBasic function);
 
 	T visitLiteral(SqmLiteral literal);
 

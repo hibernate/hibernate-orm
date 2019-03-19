@@ -45,7 +45,7 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupProducer;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;

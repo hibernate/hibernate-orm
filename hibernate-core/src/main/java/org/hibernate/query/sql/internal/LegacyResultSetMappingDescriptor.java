@@ -15,7 +15,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
-import org.hibernate.sql.ast.tree.spi.from.TableReference;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.spi.DynamicInstantiationResult;
 import org.hibernate.sql.results.spi.EntityResult;
 import org.hibernate.sql.results.spi.Fetch;

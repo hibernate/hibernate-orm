@@ -18,7 +18,7 @@ import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.internal.SqlAstProcessingStateImpl;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
+import org.hibernate.sql.ast.tree.sort.SortSpecification;
 
 /**
  * @author Steve Ebersole

@@ -16,6 +16,10 @@ import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
+import org.hibernate.query.sqm.tree.domain.SqmMaxElementPath;
+import org.hibernate.query.sqm.tree.domain.SqmMaxIndexPath;
+import org.hibernate.query.sqm.tree.domain.SqmMinElementPath;
+import org.hibernate.query.sqm.tree.domain.SqmMinIndexPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
@@ -32,14 +36,6 @@ import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmSubQuery;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
-import org.hibernate.query.sqm.tree.expression.domain.AbstractSpecificSqmCollectionIndexReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionIndexReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmMaxElementReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmMinElementReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmMinIndexReferenceBasic;
-import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
 import org.hibernate.query.sqm.tree.expression.function.SqmAbsFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmBitLengthFunction;
@@ -134,7 +130,7 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 
 	@Override
 	public T visitUpdateStatement(SqmUpdateStatement statement) {
-		visitRootEntityFromElement( statement.getTarget() );
+		visitRootPath( statement.getTarget() );
 		visitSetClause( statement.getSetClause() );
 		visitWhereClause( statement.getWhereClause() );
 		return (T) statement;
@@ -157,7 +153,7 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 
 	@Override
 	public T visitInsertSelectStatement(SqmInsertSelectStatement statement) {
-		visitRootEntityFromElement( statement.getTarget() );
+		visitRootPath( statement.getTarget() );
 		for ( SqmPath stateField : statement.getInsertionTargetPaths() ) {
 			stateField.accept( this );
 		}
@@ -167,7 +163,7 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 
 	@Override
 	public T visitDeleteStatement(SqmDeleteStatement statement) {
-		visitRootEntityFromElement( statement.getTarget() );
+		visitRootPath( statement.getTarget() );
 		visitWhereClause( statement.getWhereClause() );
 		return (T) statement;
 	}
@@ -185,14 +181,14 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 
 	@Override
 	public T visitFromClause(SqmFromClause fromClause) {
-		fromClause.visitRoots( this::visitRootEntityFromElement );
+		fromClause.visitRoots( this::visitRootPath );
 		return (T) fromClause;
 	}
 
 	@Override
-	public T visitRootEntityFromElement(SqmRoot rootEntityFromElement) {
-		rootEntityFromElement.visitJoins( sqmJoin -> sqmJoin.accept( this ) );
-		return (T) rootEntityFromElement;
+	public T visitRootPath(SqmRoot sqmRoot) {
+		sqmRoot.visitJoins( sqmJoin -> sqmJoin.accept( this ) );
+		return (T) sqmRoot;
 	}
 
 
@@ -240,8 +236,23 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitRootEntityReference(SqmEntityReference sqmEntityReference) {
-		return (T) sqmEntityReference;
+	public T visitMaxElementPath(SqmMaxElementPath path) {
+		return (T) path;
+	}
+
+	@Override
+	public T visitMinElementPath(SqmMinElementPath path) {
+		return (T) path;
+	}
+
+	@Override
+	public T visitMaxIndexPath(SqmMaxIndexPath path) {
+		return (T) path;
+	}
+
+	@Override
+	public T visitMinIndexPath(SqmMinIndexPath path) {
+		return (T) path;
 	}
 
 	@Override
@@ -300,7 +311,7 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 
 	@Override
 	public T visitIsEmptyPredicate(EmptinessSqmPredicate predicate) {
-		predicate.getExpression().accept( this );
+		predicate.getPluralPath().accept( this );
 		return (T) predicate;
 	}
 
@@ -328,7 +339,7 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 
 	@Override
 	public T visitMemberOfPredicate(MemberOfSqmPredicate predicate) {
-		predicate.getPluralAttributeReference().accept( this );
+		predicate.getPluralPath().accept( this );
 		return (T) predicate;
 	}
 
@@ -592,43 +603,8 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitPluralAttributeElementBinding(SqmCollectionElementReference binding) {
-		return (T) binding;
-	}
-
-	@Override
-	public T visitPluralAttributeIndexFunction(SqmCollectionIndexReference binding) {
-		return (T) binding;
-	}
-
-	@Override
-	public T visitMapKeyBinding(SqmCollectionIndexReference binding) {
-		return (T) binding;
-	}
-
-	@Override
 	public T visitMapEntryFunction(SqmMapEntryReference binding) {
 		return (T) binding;
-	}
-
-	@Override
-	public T visitMaxElementBinding(SqmMaxElementReference binding) {
-		return (T) binding;
-	}
-
-	@Override
-	public T visitMinElementBinding(SqmMinElementReference binding) {
-		return (T) binding;
-	}
-
-	@Override
-	public T visitMaxIndexFunction(AbstractSpecificSqmCollectionIndexReference function) {
-		return (T) function;
-	}
-
-	@Override
-	public T visitMinIndexFunction(SqmMinIndexReferenceBasic function) {
-		return (T) function;
 	}
 
 	@Override
@@ -692,10 +668,5 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	@Override
 	public T visitCoalesceFunction(SqmCoalesceFunction expression) {
 		return (T) expression;
-	}
-
-	@Override
-	public T visitPluralAttribute(SqmPluralAttributeReference reference) {
-		return (T) reference;
 	}
 }

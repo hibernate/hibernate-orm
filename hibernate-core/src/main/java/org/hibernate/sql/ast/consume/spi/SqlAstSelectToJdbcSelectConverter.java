@@ -10,8 +10,8 @@ import java.util.Collections;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.produce.spi.SqlAstSelectDescriptor;
-import org.hibernate.sql.ast.tree.spi.QuerySpec;
-import org.hibernate.sql.ast.tree.spi.SelectStatement;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcSelectImpl;
 import org.hibernate.sql.exec.internal.StandardResultSetMappingDescriptor;
 import org.hibernate.sql.exec.spi.JdbcSelect;

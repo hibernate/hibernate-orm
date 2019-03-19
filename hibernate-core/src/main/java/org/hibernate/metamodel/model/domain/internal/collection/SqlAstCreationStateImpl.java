@@ -21,7 +21,7 @@ import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.produce.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.tree.spi.QuerySpec;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;

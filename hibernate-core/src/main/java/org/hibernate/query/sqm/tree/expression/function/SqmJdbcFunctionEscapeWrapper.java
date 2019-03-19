@@ -17,7 +17,7 @@ import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.SqlTreeException;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**

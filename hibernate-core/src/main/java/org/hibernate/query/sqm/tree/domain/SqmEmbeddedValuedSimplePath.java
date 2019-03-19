@@ -9,7 +9,6 @@ package org.hibernate.query.sqm.tree.domain;
 import java.util.function.Supplier;
 
 import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.ParsingException;
@@ -18,9 +17,7 @@ import org.hibernate.query.sqm.produce.SqmCreationHelper;
 import org.hibernate.query.sqm.produce.SqmPathRegistry;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
-import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 
 /**
@@ -46,6 +43,11 @@ public class SqmEmbeddedValuedSimplePath extends AbstractSqmSimplePath {
 	@Override
 	public PersistenceType getPersistenceType() {
 		return PersistenceType.EMBEDDABLE;
+	}
+
+	@Override
+	public Class getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
 	}
 
 	@Override
@@ -86,11 +88,6 @@ public class SqmEmbeddedValuedSimplePath extends AbstractSqmSimplePath {
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitEmbeddableValuedPath( this );
-	}
-
-	@Override
-	public EntityTypeDescriptor getIntrinsicSubclassEntityMetadata() {
-		return null;
 	}
 
 	private boolean dereferenced;

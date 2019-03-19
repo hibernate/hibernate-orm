@@ -8,7 +8,7 @@ package org.hibernate.sql.ast.produce.metamodel.spi;
 
 import org.hibernate.annotations.Remove;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 
 /**
  * @author Steve Ebersole

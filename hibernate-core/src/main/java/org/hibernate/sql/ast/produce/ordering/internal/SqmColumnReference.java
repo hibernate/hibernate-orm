@@ -8,7 +8,6 @@ package org.hibernate.sql.ast.produce.ordering.internal;
 
 import java.util.function.Supplier;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
@@ -17,10 +16,8 @@ import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
@@ -46,11 +43,6 @@ public class SqmColumnReference implements SqmExpression, SqmNavigableReference 
 	@Override
 	public SqmPath getLhs() {
 		return sqmFromBase;
-	}
-
-	@Override
-	public SqmPath getSourceReference() {
-		return getLhs();
 	}
 
 	@Override
@@ -86,27 +78,12 @@ public class SqmColumnReference implements SqmExpression, SqmNavigableReference 
 
 
 	@Override
-	public NavigableContainerReferenceInfo getNavigableContainerReferenceInfo() {
-		return (NavigableContainerReferenceInfo) getSourceReference();
-	}
-
-	@Override
 	public Navigable getReferencedNavigable() {
 		return null;
 	}
 
 	@Override
 	public NavigablePath getNavigablePath() {
-		return null;
-	}
-
-	@Override
-	public PersistenceType getPersistenceType() {
-		return PersistenceType.BASIC;
-	}
-
-	@Override
-	public Class getJavaType() {
 		return null;
 	}
 
@@ -126,16 +103,6 @@ public class SqmColumnReference implements SqmExpression, SqmNavigableReference 
 	}
 
 	@Override
-	public String getIdentificationVariable() {
-		return null;
-	}
-
-	@Override
-	public EntityTypeDescriptor getIntrinsicSubclassEntityMetadata() {
-		return null;
-	}
-
-	@Override
 	public SemanticPathPart resolvePathPart(
 			String name,
 			String currentContextKey,
@@ -145,7 +112,7 @@ public class SqmColumnReference implements SqmExpression, SqmNavigableReference 
 	}
 
 	@Override
-	public SqmRestrictedCollectionElementReference resolveIndexedAccess(
+	public SqmPath resolveIndexedAccess(
 			SqmExpression selector,
 			String currentContextKey,
 			boolean isTerminal,
@@ -154,7 +121,12 @@ public class SqmColumnReference implements SqmExpression, SqmNavigableReference 
 	}
 
 	@Override
-	public SqmFrom getExportedFromElement() {
-		return sqmFromBase;
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.BASIC;
+	}
+
+	@Override
+	public Class getJavaType() {
+		return null;
 	}
 }

@@ -8,18 +8,14 @@ package org.hibernate.query.sqm.consume.spi;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
 import org.hibernate.query.sqm.produce.SqmPathRegistry;
 import org.hibernate.query.sqm.produce.SqmQuerySpecCreationProcessingState;
@@ -43,10 +39,6 @@ import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmSubQuery;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
-import org.hibernate.query.sqm.tree.expression.domain.SqmAttributeReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
 import org.hibernate.query.sqm.tree.expression.function.Distinctable;
 import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmConcatFunction;
@@ -140,14 +132,8 @@ public class QuerySplitter {
 		private final SqmRoot unmappedPolymorphicFromElement;
 		private final EntityTypeDescriptor mappedDescriptor;
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// `sqmPathCopyMap` ought to be able to replace `sqmFromCopyMap` and `navigableBindingCopyMap`
 		private Map<NavigablePath, SqmPath> sqmPathCopyMap = new HashMap<>();
-
 		private Map<SqmFrom,SqmFrom> sqmFromCopyMap = new HashMap<>();
-		private Map<SqmNavigableReference, SqmNavigableReference> navigableBindingCopyMap = new HashMap<>();
-		private Map<NavigablePath, Set<SqmNavigableJoin>> fetchJoinsByParentPathCopy;
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		private UnmappedPolymorphismReplacer(
 				SqmRoot unmappedPolymorphicFromElement,
@@ -182,7 +168,6 @@ public class QuerySplitter {
 		public SqmSelectStatement visitSelectStatement(SqmSelectStatement statement) {
 			final SqmSelectStatement copy = new SqmSelectStatement();
 			copy.setQuerySpec( visitQuerySpec( statement.getQuerySpec() ) );
-			copy.applyFetchJoinsByParentPath( fetchJoinsByParentPathCopy );
 			return copy;
 		}
 
@@ -246,24 +231,28 @@ public class QuerySplitter {
 		}
 
 		@Override
-		public SqmRoot visitRootEntityFromElement(SqmRoot rootEntityFromElement) {
+		public SqmRoot visitRootPath(SqmRoot sqmRoot) {
 			return (SqmRoot) getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
-					rootEntityFromElement.getNavigablePath(),
+					sqmRoot.getNavigablePath(),
 					navigablePath -> {
-						if ( rootEntityFromElement == unmappedPolymorphicFromElement ) {
-							return new SqmRoot(
-									rootEntityFromElement.getUniqueIdentifier(),
-									rootEntityFromElement.getIdentificationVariable(),
+						final SqmRoot copy;
+						if ( sqmRoot == unmappedPolymorphicFromElement ) {
+							copy = new SqmRoot(
+									sqmRoot.getUniqueIdentifier(),
+									sqmRoot.getExplicitAlias(),
 									mappedDescriptor
 							);
 						}
 						else {
-							return new SqmRoot(
-									rootEntityFromElement.getUniqueIdentifier(),
-									rootEntityFromElement.getIdentificationVariable(),
-									rootEntityFromElement.getReferencedNavigable().getEntityDescriptor()
+							copy = new SqmRoot(
+									sqmRoot.getUniqueIdentifier(),
+									sqmRoot.getExplicitAlias(),
+									sqmRoot.getReferencedNavigable().getEntityDescriptor()
 							);
 						}
+						sqmFromCopyMap.put( sqmRoot, copy );
+						sqmPathCopyMap.put( sqmRoot.getNavigablePath(), copy );
+						return copy;
 					}
 			);
 		}
@@ -272,12 +261,17 @@ public class QuerySplitter {
 		public SqmCrossJoin visitCrossJoinedFromElement(SqmCrossJoin join) {
 			return (SqmCrossJoin) getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
 					join.getNavigablePath(),
-					navigablePath -> new SqmCrossJoin(
-							join.getUniqueIdentifier(),
-							join.getIdentificationVariable(),
-							join.getReferencedNavigable().getEntityDescriptor(),
-							(SqmRoot) sqmFromCopyMap.get( join.findRoot() )
-					)
+					navigablePath -> {
+						final SqmCrossJoin copy = new SqmCrossJoin(
+								join.getUniqueIdentifier(),
+								join.getExplicitAlias(),
+								join.getReferencedNavigable().getEntityDescriptor(),
+								(SqmRoot) sqmFromCopyMap.get( join.findRoot() )
+						);
+						sqmFromCopyMap.put( join, copy );
+						sqmPathCopyMap.put( join.getNavigablePath(), copy );
+						return copy;
+					}
 			);
 		}
 
@@ -285,13 +279,18 @@ public class QuerySplitter {
 		public SqmEntityJoin visitQualifiedEntityJoinFromElement(SqmEntityJoin join) {
 			return (SqmEntityJoin) getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
 					join.getNavigablePath(),
-					navigablePath -> new SqmEntityJoin(
-							join.getUniqueIdentifier(),
-							join.getIdentificationVariable(),
-							join.getReferencedNavigable().getEntityDescriptor(),
-							join.getJoinType(),
-							(SqmRoot) sqmFromCopyMap.get( join.findRoot() )
-					)
+					navigablePath -> {
+						final SqmEntityJoin copy = new SqmEntityJoin(
+								join.getUniqueIdentifier(),
+								join.getExplicitAlias(),
+								join.getReferencedNavigable().getEntityDescriptor(),
+								join.getJoinType(),
+								(SqmRoot) sqmFromCopyMap.get( join.findRoot() )
+						);
+						sqmFromCopyMap.put( join, copy );
+						sqmPathCopyMap.put( join.getNavigablePath(), copy );
+						return copy;
+					}
 			);
 		}
 
@@ -299,15 +298,22 @@ public class QuerySplitter {
 		public SqmNavigableJoin visitQualifiedAttributeJoinFromElement(SqmNavigableJoin join) {
 			return (SqmNavigableJoin) getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
 					join.getNavigablePath(),
-					navigablePath -> new SqmNavigableJoin(
-							join.getUniqueIdentifier(),
-							getProcessingStateStack().getCurrent().getPathRegistry().findFromByPath( join.getLhs().getNavigablePath() ),
-							join.getReferencedNavigable(),
-							join.getIdentificationVariable(),
-							join.getJoinType(),
-							join.isFetched(),
-							this
-					)
+					navigablePath -> {
+						final SqmNavigableJoin copy = new SqmNavigableJoin(
+								join.getUniqueIdentifier(),
+								getProcessingStateStack().getCurrent()
+										.getPathRegistry()
+										.findFromByPath( join.getLhs().getNavigablePath() ),
+								join.getReferencedNavigable(),
+								join.getExplicitAlias(),
+								join.getJoinType(),
+								join.isFetched(),
+								this
+						);
+						sqmFromCopyMap.put( join, copy );
+						sqmPathCopyMap.put( join.getNavigablePath(), copy );
+						return copy;
+					}
 			);
 		}
 
@@ -317,12 +323,16 @@ public class QuerySplitter {
 
 			return (SqmBasicValuedSimplePath) pathRegistry.resolvePath(
 					path.getNavigablePath(),
-					navigablePath -> new SqmBasicValuedSimplePath(
-							path.getUniqueIdentifier(),
-							navigablePath,
-							path.getReferencedNavigable(),
-							pathRegistry.findFromByPath( path.getLhs().getNavigablePath() )
-					)
+					navigablePath -> {
+						final SqmBasicValuedSimplePath copy = new SqmBasicValuedSimplePath(
+								path.getUniqueIdentifier(),
+								navigablePath,
+								path.getReferencedNavigable(),
+								pathRegistry.findFromByPath( path.getLhs().getNavigablePath() )
+						);
+						sqmPathCopyMap.put( path.getNavigablePath(), copy );
+						return copy;
+					}
 			);
 		}
 
@@ -332,12 +342,16 @@ public class QuerySplitter {
 
 			return (SqmEmbeddedValuedSimplePath) pathRegistry.resolvePath(
 					path.getNavigablePath(),
-					navigablePath -> new SqmEmbeddedValuedSimplePath(
-							path.getUniqueIdentifier(),
-							navigablePath,
-							path.getReferencedNavigable(),
-							pathRegistry.findFromByPath( path.getLhs().getNavigablePath() )
-					)
+					navigablePath -> {
+						final SqmEmbeddedValuedSimplePath copy = new SqmEmbeddedValuedSimplePath(
+								path.getUniqueIdentifier(),
+								navigablePath,
+								path.getReferencedNavigable(),
+								pathRegistry.findFromByPath( path.getLhs().getNavigablePath() )
+						);
+						sqmPathCopyMap.put( path.getNavigablePath(), copy );
+						return copy;
+					}
 			);
 		}
 
@@ -347,12 +361,16 @@ public class QuerySplitter {
 
 			return (SqmEntityValuedSimplePath) pathRegistry.resolvePath(
 					path.getNavigablePath(),
-					navigablePath -> new SqmEntityValuedSimplePath(
-							path.getUniqueIdentifier(),
-							navigablePath,
-							path.getReferencedNavigable(),
-							pathRegistry.findFromByPath( path.getLhs().getNavigablePath() )
-					)
+					navigablePath -> {
+						final SqmEntityValuedSimplePath copy = new SqmEntityValuedSimplePath(
+								path.getUniqueIdentifier(),
+								navigablePath,
+								path.getReferencedNavigable(),
+								pathRegistry.findFromByPath( path.getLhs().getNavigablePath() )
+						);
+						sqmPathCopyMap.put( path.getNavigablePath(), copy );
+						return copy;
+					}
 			);
 		}
 
@@ -362,12 +380,16 @@ public class QuerySplitter {
 
 			return (SqmPluralValuedSimplePath) pathRegistry.resolvePath(
 					path.getNavigablePath(),
-					navigablePath -> new SqmPluralValuedSimplePath(
-							path.getUniqueIdentifier(),
-							navigablePath,
-							path.getReferencedNavigable(),
-							pathRegistry.findFromByPath( path.getLhs().getNavigablePath() )
-					)
+					navigablePath -> {
+						final SqmPluralValuedSimplePath copy = new SqmPluralValuedSimplePath(
+								path.getUniqueIdentifier(),
+								navigablePath,
+								path.getReferencedNavigable(),
+								pathRegistry.findFromByPath( path.getLhs().getNavigablePath() )
+						);
+						sqmPathCopyMap.put( path.getNavigablePath(), copy );
+						return copy;
+					}
 			);
 		}
 
@@ -456,7 +478,7 @@ public class QuerySplitter {
 		@Override
 		public EmptinessSqmPredicate visitIsEmptyPredicate(EmptinessSqmPredicate predicate) {
 			return new EmptinessSqmPredicate(
-					(SqmPluralAttributeReference) predicate.getExpression().accept( this ),
+					(SqmPath) predicate.getPluralPath().accept( this ),
 					predicate.isNegated()
 			);
 		}
@@ -490,69 +512,8 @@ public class QuerySplitter {
 
 		@Override
 		public MemberOfSqmPredicate visitMemberOfPredicate(MemberOfSqmPredicate predicate) {
-			final SqmAttributeReference attributeReferenceCopy = resolveAttributeReference( predicate.getPluralAttributeReference() );
-			// NOTE : no type check b4 cast as it is assumed that the initial SQM producer
-			//		already verified that the path resolves to a plural attribute
-			return new MemberOfSqmPredicate( (SqmPluralAttributeReference) attributeReferenceCopy );
-		}
-
-//		private DomainReferenceBinding resolveDomainReferenceBinding(DomainReferenceBinding binding) {
-//			DomainReferenceBinding copy = navigableBindingCopyMap.get( binding );
-//			if ( copy == null ) {
-//				copy = makeDomainReferenceBindingCopy( binding );
-//				navigableBindingCopyMap.put( binding, copy );
-//			}
-//			return copy;
-//		}
-
-//		private DomainReferenceBinding makeDomainReferenceBindingCopy(DomainReferenceBinding binding) {
-//			if ( binding instanceof AttributeBinding ) {
-//				final AttributeBinding attributeBinding = (AttributeBinding) binding;
-//				return new AttributeBinding(
-//						resolveDomainReferenceBinding( attributeBinding.getLhs() ),
-//						attributeBinding.getBoundDomainReference(),
-//						attributeBinding.getFromElement()
-//				);
-//			}
-//			else if ( binding instanceof )
-//		}
-
-
-		// todo (6.0) : broker in SqmNavigableReference instead?
-
-		private SqmAttributeReference resolveAttributeReference(SqmAttributeReference attributeBinding) {
-			// its an attribute join... there has to be a source
-			assert attributeBinding.getSourceReference() != null;
-
-			SqmAttributeReference attributeBindingCopy = (SqmAttributeReference) navigableBindingCopyMap.get( attributeBinding );
-			if ( attributeBindingCopy == null ) {
-				attributeBindingCopy = makeCopy( attributeBinding );
-			}
-
-			return attributeBindingCopy;
-		}
-
-		private SqmAttributeReference makeCopy(SqmAttributeReference attributeReference) {
-			// its an attribute join... there has to be a source
-			assert attributeReference.getSourceReference() != null;
-
-			assert !navigableBindingCopyMap.containsKey( attributeReference );
-
-			final SqmNavigableJoin originalJoin = (SqmNavigableJoin) sqmFromCopyMap.get( attributeReference.getExportedFromElement() );
-			final SqmNavigableContainerReference sourceNavRef = (SqmNavigableContainerReference) navigableBindingCopyMap.get(
-					attributeReference.getSourceReference()
-			);
-
-			if ( sourceNavRef == null ) {
-				throw new ParsingException( "Could not resolve NavigableSourceBinding copy during query splitting" );
-			}
-
-			final SqmAttributeReference attributeBindingCopy = (SqmAttributeReference) sourceNavRef.getReferencedNavigable().createSqmExpression(
-					sourceNavRef,
-					this
-			);
-			navigableBindingCopyMap.put( attributeReference, attributeBindingCopy );
-			return attributeBindingCopy;
+			final SqmPath pathCopy = sqmPathCopyMap.get( predicate.getPluralPath().getNavigablePath() );
+			return new MemberOfSqmPredicate( pathCopy );
 		}
 
 		@Override
@@ -801,37 +762,6 @@ public class QuerySplitter {
 		public ImplicitAliasGenerator getImplicitAliasGenerator() {
 			// todo (6.0) : not sure these are needed
 			throw new NotYetImplementedFor6Exception(  );
-		}
-
-		@Override
-		public void cacheNavigableReference(SqmNavigableReference reference) {
-			// todo (6.0) : not sure these are needed
-			throw new NotYetImplementedFor6Exception(  );
-		}
-
-		@Override
-		public SqmNavigableReference getCachedNavigableReference(
-				SqmNavigableContainerReference source, Navigable navigable) {
-			// todo (6.0) : not sure these are needed
-			throw new NotYetImplementedFor6Exception(  );
-		}
-
-		@Override
-		public void registerFetch(SqmNavigableContainerReference sourceReference, SqmNavigableJoin navigableJoin) {
-			Set<SqmNavigableJoin> joins = null;
-			if ( fetchJoinsByParentPathCopy == null ) {
-				fetchJoinsByParentPathCopy = new HashMap<>();
-			}
-			else {
-				joins = fetchJoinsByParentPathCopy.get( sourceReference.getNavigablePath() );
-			}
-
-			if ( joins == null ) {
-				joins = new HashSet<>();
-				fetchJoinsByParentPathCopy.put( sourceReference.getNavigablePath(), joins );
-			}
-
-			joins.add( navigableJoin );
 		}
 	}
 

@@ -122,7 +122,7 @@ MutationStatement <|-- InsertStatement
 @startuml
 skinparam handwritten true
 
-package org.hibernate.sql.ast.tree.spi.expression.domain {
+package org.hibernate.sql.ast.tree.expression.domain {
 	interface NavigableReference
 }
 
@@ -139,7 +139,7 @@ package org.hibernate.sql.ast.tree.spi {
 
 }
 
-package org.hibernate.sql.ast.tree.spi.from {
+package org.hibernate.sql.ast.tree.from {
 
 	class FromClause
 
@@ -190,7 +190,7 @@ package org.hibernate.sql.results.spi{
 
 }
 
-package org.hibernate.sql.ast.tree.spi.expression.domain {
+package org.hibernate.sql.ast.tree.expression.domain {
 	interface NavigableReference
 }
 

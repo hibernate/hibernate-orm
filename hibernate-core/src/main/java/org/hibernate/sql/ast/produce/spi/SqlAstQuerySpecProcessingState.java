@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.produce.spi;
 
-import org.hibernate.sql.ast.tree.spi.QuerySpec;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 
 /**
  * @author Steve Ebersole

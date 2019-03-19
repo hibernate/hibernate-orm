@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.produce.metamodel.internal;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.tree.spi.expression.AbstractParameter;
+import org.hibernate.sql.ast.tree.expression.AbstractParameter;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**

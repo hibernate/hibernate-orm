@@ -32,16 +32,16 @@ import org.hibernate.sql.ast.produce.SqlTreeException;
 import org.hibernate.sql.ast.produce.internal.SqlAstProcessingStateImpl;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstUpdateDescriptor;
-import org.hibernate.sql.ast.tree.spi.QuerySpec;
-import org.hibernate.sql.ast.tree.spi.UpdateStatement.UpdateStatementBuilder;
-import org.hibernate.sql.ast.tree.spi.assign.Assignment;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.ast.tree.spi.from.AbstractTableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableReference;
-import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.spi.predicate.InSubQueryPredicate;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.update.UpdateStatement.UpdateStatementBuilder;
+import org.hibernate.sql.ast.tree.update.Assignment;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.domain.NavigableReference;
+import org.hibernate.sql.ast.tree.from.AbstractTableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 
 import org.jboss.logging.Logger;
 

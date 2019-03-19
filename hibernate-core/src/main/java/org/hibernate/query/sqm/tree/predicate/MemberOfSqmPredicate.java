@@ -7,27 +7,26 @@
 package org.hibernate.query.sqm.tree.predicate;
 
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 
 /**
  * @author Steve Ebersole
  */
 public class MemberOfSqmPredicate extends AbstractNegatableSqmPredicate {
-	private final SqmPluralAttributeReference pluralAttributeReference;
+	private final SqmPath pluralPath;
 
-	public MemberOfSqmPredicate(SqmPluralAttributeReference pluralAttributeReference) {
-		this( pluralAttributeReference, false );
+	public MemberOfSqmPredicate(SqmPath pluralPath) {
+		this( pluralPath, false );
 	}
 
-	public MemberOfSqmPredicate(SqmPluralAttributeReference pluralAttributeReference, boolean negated) {
+	public MemberOfSqmPredicate(SqmPath pluralPath, boolean negated) {
 		super( negated );
 
-		assert pluralAttributeReference != null;
-		this.pluralAttributeReference = pluralAttributeReference;
+		this.pluralPath = pluralPath;
 	}
 
-	public SqmPluralAttributeReference getPluralAttributeReference() {
-		return pluralAttributeReference;
+	public SqmPath getPluralPath() {
+		return pluralPath;
 	}
 
 	@Override

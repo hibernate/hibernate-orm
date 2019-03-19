@@ -20,8 +20,8 @@ import org.hibernate.query.sqm.produce.SqmCreationHelper;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 
 /**
  * Models a reference to a part of the application's domain model (a Navigable)
@@ -39,7 +39,7 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
  *
  * @author Steve Ebersole
  */
-public interface SqmPath extends SqmExpression, SemanticPathPart {
+public interface SqmPath extends SqmExpression, SemanticPathPart, ExpressableType {
 	/**
 	 * @deprecated Prefer {@link #getNavigablePath()} as the unique identifier
 	 */
@@ -79,7 +79,7 @@ public interface SqmPath extends SqmExpression, SemanticPathPart {
 	void setExplicitAlias(String explicitAlias);
 
 	@Override
-	default SqmRestrictedCollectionElementReference resolveIndexedAccess(
+	default SqmPath resolveIndexedAccess(
 			SqmExpression selector,
 			String currentContextKey,
 			boolean isTerminal,

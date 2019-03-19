@@ -16,7 +16,7 @@ import org.hibernate.orm.test.query.sqm.produce.domain.NestedCtorLookupListItem;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
-import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationNature;
+import org.hibernate.sql.ast.tree.expression.instantiation.DynamicInstantiationNature;
 
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.TestingUtil;

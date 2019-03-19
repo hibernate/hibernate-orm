@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.produce;
 
-import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 
 /**
  * Indicates a problem in the definition of a {@link TableReferenceJoin}

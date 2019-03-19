@@ -9,7 +9,7 @@ package org.hibernate.query.sqm.tree.expression.function;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.sql.ast.tree.spi.TrimSpecification;
+import org.hibernate.sql.TrimSpecification;
 
 /**
  * @author Steve Ebersole

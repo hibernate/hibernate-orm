@@ -88,6 +88,6 @@
 
 |90005401
 |90005500
-|org.hibernate.sql.ast.tree.spi.SqlAstTreeLogger
+|org.hibernate.sql.ast.tree.SqlAstTreeLogger
 
 |===

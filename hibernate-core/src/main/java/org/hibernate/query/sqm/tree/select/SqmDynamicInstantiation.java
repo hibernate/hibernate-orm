@@ -12,14 +12,14 @@ import java.util.Map;
 
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationNature;
+import org.hibernate.sql.ast.tree.expression.instantiation.DynamicInstantiationNature;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationNature.CLASS;
-import static org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationNature.LIST;
-import static org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationNature.MAP;
+import static org.hibernate.sql.ast.tree.expression.instantiation.DynamicInstantiationNature.CLASS;
+import static org.hibernate.sql.ast.tree.expression.instantiation.DynamicInstantiationNature.LIST;
+import static org.hibernate.sql.ast.tree.expression.instantiation.DynamicInstantiationNature.MAP;
 
 /**
  * Represents a dynamic instantiation ({@code select new XYZ(...) ...}) as part of the SQM.

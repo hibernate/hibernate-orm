@@ -6,8 +6,6 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import java.util.Locale;
-
 import org.hibernate.LockMode;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
@@ -19,8 +17,8 @@ import org.hibernate.sql.ast.produce.spi.RootTableGroupProducer;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
 import org.hibernate.sql.ast.produce.spi.TableReferenceContributor;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 
 /**
  * @author Steve Ebersole

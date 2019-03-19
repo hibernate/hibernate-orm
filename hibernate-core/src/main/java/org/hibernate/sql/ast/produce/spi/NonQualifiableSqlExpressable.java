@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.produce.spi;
 
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.Expression;
 
 /**
  * Specialization for SqlSelectables that do not need to be

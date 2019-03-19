@@ -10,8 +10,8 @@ import org.hibernate.LockMode;
 import org.hibernate.metamodel.model.domain.spi.AbstractTableReferenceCollector;
 import org.hibernate.metamodel.model.domain.spi.PluralValuedNavigable;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.tree.spi.from.StandardTableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.StandardTableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 
 /**
  * @author Steve Ebersole

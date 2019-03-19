@@ -11,7 +11,7 @@ import java.util.function.Function;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.produce.SqlTreeException;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 
 /**
  * @author Steve Ebersole

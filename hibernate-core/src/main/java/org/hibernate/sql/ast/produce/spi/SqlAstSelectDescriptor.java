@@ -8,7 +8,7 @@ package org.hibernate.sql.ast.produce.spi;
 
 import java.util.List;
 
-import org.hibernate.sql.ast.tree.spi.SelectStatement;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.results.spi.DomainResult;
 
 /**

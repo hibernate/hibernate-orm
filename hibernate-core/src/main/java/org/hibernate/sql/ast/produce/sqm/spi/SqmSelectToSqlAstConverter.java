@@ -8,7 +8,6 @@ package org.hibernate.sql.ast.produce.sqm.spi;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -20,7 +19,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.annotations.Remove;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -44,15 +42,15 @@ import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.produce.spi.SqlAstSelectDescriptor;
 import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
-import org.hibernate.sql.ast.tree.spi.QuerySpec;
-import org.hibernate.sql.ast.tree.spi.SelectStatement;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
-import org.hibernate.sql.ast.tree.spi.expression.domain.EntityTypeLiteral;
-import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiation;
-import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationNature;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.expression.domain.EntityTypeLiteral;
+import org.hibernate.sql.ast.tree.expression.instantiation.DynamicInstantiation;
+import org.hibernate.sql.ast.tree.expression.instantiation.DynamicInstantiationNature;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.results.spi.CircularFetchDetector;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
@@ -79,15 +77,6 @@ public class SqmSelectToSqlAstConverter
 	private final List<DomainResult> domainResults = new ArrayList<>();
 	private final CircularFetchDetector circularFetchDetector = new CircularFetchDetector();
 
-	/**
-	 * @deprecated See {@link FromClauseAccess}
-	 */
-	@Remove
-	@Deprecated
-	private Map<NavigablePath, Set<SqmNavigableJoin>> fetchJoinsByParentPath;
-
-	private int counter;
-
 	public SqmSelectToSqlAstConverter(
 			QueryOptions queryOptions,
 			LoadQueryInfluencers influencers,
@@ -97,10 +86,6 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	public SqlAstSelectDescriptor interpret(SqmSelectStatement statement) {
-		fetchJoinsByParentPath = statement.getFetchJoinsByParentPath();
-		if ( fetchJoinsByParentPath == null ) {
-			fetchJoinsByParentPath = Collections.emptyMap();
-		}
 		return new SqlAstSelectDescriptorImpl(
 				visitSelectStatement( statement ),
 				domainResults,
@@ -228,7 +213,7 @@ public class SqmSelectToSqlAstConverter
 
 			fetchTiming = FetchTiming.IMMEDIATE;
 			joined = true;
-			alias = fetchedJoin.getIdentificationVariable();
+			alias = fetchedJoin.getExplicitAlias();
 			lockMode = determineLockMode( alias );
 		}
 		else {
@@ -342,26 +327,6 @@ public class SqmSelectToSqlAstConverter
 		return lockOptions.getScope() || identificationVariable == null
 				? lockOptions.getLockMode()
 				: lockOptions.getEffectiveLockMode( identificationVariable );
-	}
-
-	private SqmNavigableJoin findFetchedJoin(FetchParent fetchParent, Fetchable fetchable) {
-		final Set<SqmNavigableJoin> explicitFetchJoins = fetchJoinsByParentPath.get( fetchParent.getNavigablePath() );
-
-		if ( explicitFetchJoins != null ) {
-			for ( SqmNavigableJoin explicitFetchJoin : explicitFetchJoins ) {
-				final String fetchedAttributeName = explicitFetchJoin.getReferencedNavigable().getNavigableName();
-				if ( fetchable.getNavigableName().equals( fetchedAttributeName ) ) {
-					if ( explicitFetchJoin.isFetched() ) {
-						return explicitFetchJoin;
-					}
-					else {
-						return null;
-					}
-				}
-			}
-		}
-
-		return null;
 	}
 
 	@Override

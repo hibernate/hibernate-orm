@@ -27,7 +27,6 @@ import org.hibernate.metamodel.model.domain.spi.BasicValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
-import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.UnaryArithmeticOperator;
@@ -51,8 +50,6 @@ import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmSubQuery;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
-import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
 import org.hibernate.query.sqm.tree.expression.function.SqmAbsFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmBitLengthFunction;
@@ -121,61 +118,59 @@ import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
-import org.hibernate.sql.ast.tree.spi.QuerySpec;
-import org.hibernate.sql.ast.tree.spi.SelectStatement;
-import org.hibernate.sql.ast.tree.spi.expression.AbsFunction;
-import org.hibernate.sql.ast.tree.spi.expression.AvgFunction;
-import org.hibernate.sql.ast.tree.spi.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.spi.expression.BitLengthFunction;
-import org.hibernate.sql.ast.tree.spi.expression.CaseSearchedExpression;
-import org.hibernate.sql.ast.tree.spi.expression.CaseSimpleExpression;
-import org.hibernate.sql.ast.tree.spi.expression.CastFunction;
-import org.hibernate.sql.ast.tree.spi.expression.CoalesceFunction;
-import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.spi.expression.ConcatFunction;
-import org.hibernate.sql.ast.tree.spi.expression.CountFunction;
-import org.hibernate.sql.ast.tree.spi.expression.CountStarFunction;
-import org.hibernate.sql.ast.tree.spi.expression.CurrentDateFunction;
-import org.hibernate.sql.ast.tree.spi.expression.CurrentTimeFunction;
-import org.hibernate.sql.ast.tree.spi.expression.CurrentTimestampFunction;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.expression.ExtractFunction;
-import org.hibernate.sql.ast.tree.spi.expression.LengthFunction;
-import org.hibernate.sql.ast.tree.spi.expression.LocateFunction;
-import org.hibernate.sql.ast.tree.spi.expression.LowerFunction;
-import org.hibernate.sql.ast.tree.spi.expression.MaxFunction;
-import org.hibernate.sql.ast.tree.spi.expression.MinFunction;
-import org.hibernate.sql.ast.tree.spi.expression.ModFunction;
-import org.hibernate.sql.ast.tree.spi.expression.NonStandardFunction;
-import org.hibernate.sql.ast.tree.spi.expression.NullifFunction;
-import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
-import org.hibernate.sql.ast.tree.spi.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.spi.expression.SubQuery;
-import org.hibernate.sql.ast.tree.spi.expression.SubstrFunction;
-import org.hibernate.sql.ast.tree.spi.expression.SumFunction;
-import org.hibernate.sql.ast.tree.spi.expression.TrimFunction;
-import org.hibernate.sql.ast.tree.spi.expression.UnaryOperation;
-import org.hibernate.sql.ast.tree.spi.expression.UpperFunction;
-import org.hibernate.sql.ast.tree.spi.expression.domain.BasicValuedNavigableReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.EmbeddableValuedNavigableReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.EntityValuedNavigableReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeReference;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.spi.predicate.BetweenPredicate;
-import org.hibernate.sql.ast.tree.spi.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.spi.predicate.GroupedPredicate;
-import org.hibernate.sql.ast.tree.spi.predicate.InListPredicate;
-import org.hibernate.sql.ast.tree.spi.predicate.InSubQueryPredicate;
-import org.hibernate.sql.ast.tree.spi.predicate.Junction;
-import org.hibernate.sql.ast.tree.spi.predicate.LikePredicate;
-import org.hibernate.sql.ast.tree.spi.predicate.NegatedPredicate;
-import org.hibernate.sql.ast.tree.spi.predicate.NullnessPredicate;
-import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
-import org.hibernate.sql.ast.tree.spi.select.SelectClause;
-import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.tree.expression.AbsFunction;
+import org.hibernate.sql.ast.tree.expression.AvgFunction;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.tree.expression.BitLengthFunction;
+import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
+import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
+import org.hibernate.sql.ast.tree.expression.CastFunction;
+import org.hibernate.sql.ast.tree.expression.CoalesceFunction;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.ConcatFunction;
+import org.hibernate.sql.ast.tree.expression.CountFunction;
+import org.hibernate.sql.ast.tree.expression.CountStarFunction;
+import org.hibernate.sql.ast.tree.expression.CurrentDateFunction;
+import org.hibernate.sql.ast.tree.expression.CurrentTimeFunction;
+import org.hibernate.sql.ast.tree.expression.CurrentTimestampFunction;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.ExtractFunction;
+import org.hibernate.sql.ast.tree.expression.LengthFunction;
+import org.hibernate.sql.ast.tree.expression.LocateFunction;
+import org.hibernate.sql.ast.tree.expression.LowerFunction;
+import org.hibernate.sql.ast.tree.expression.MaxFunction;
+import org.hibernate.sql.ast.tree.expression.MinFunction;
+import org.hibernate.sql.ast.tree.expression.ModFunction;
+import org.hibernate.sql.ast.tree.expression.NonStandardFunction;
+import org.hibernate.sql.ast.tree.expression.NullifFunction;
+import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.expression.SubQuery;
+import org.hibernate.sql.ast.tree.expression.SubstrFunction;
+import org.hibernate.sql.ast.tree.expression.SumFunction;
+import org.hibernate.sql.ast.tree.expression.TrimFunction;
+import org.hibernate.sql.ast.tree.expression.UnaryOperation;
+import org.hibernate.sql.ast.tree.expression.UpperFunction;
+import org.hibernate.sql.ast.tree.expression.domain.BasicValuedNavigableReference;
+import org.hibernate.sql.ast.tree.expression.domain.EmbeddableValuedNavigableReference;
+import org.hibernate.sql.ast.tree.expression.domain.EntityValuedNavigableReference;
+import org.hibernate.sql.ast.tree.expression.domain.NavigableReference;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
+import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.predicate.GroupedPredicate;
+import org.hibernate.sql.ast.tree.predicate.InListPredicate;
+import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
+import org.hibernate.sql.ast.tree.predicate.Junction;
+import org.hibernate.sql.ast.tree.predicate.LikePredicate;
+import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
+import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.select.SelectClause;
+import org.hibernate.sql.ast.tree.sort.SortSpecification;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
 import org.hibernate.sql.exec.internal.StandardJdbcParameterImpl;
 import org.hibernate.sql.exec.spi.JdbcParameter;
@@ -459,7 +454,7 @@ public abstract class BaseSqmToSqlAstConverter
 		try {
 			sqmFromClause.visitRoots(
 					sqmRoot -> {
-						final NavigableReference rootReference = visitRootEntityFromElement( sqmRoot );
+						final NavigableReference rootReference = visitRootPath( sqmRoot );
 						assert rootReference instanceof TableGroup;
 						currentQuerySpec().getFromClause().addRoot( (TableGroup) rootReference );
 					}
@@ -473,7 +468,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 
 	@Override
-	public NavigableReference visitRootEntityFromElement(SqmRoot sqmRoot) {
+	public NavigableReference visitRootPath(SqmRoot sqmRoot) {
 		log.tracef( "Starting resolution of SqmRoot [%s] to TableGroup", sqmRoot );
 
 		if ( fromClauseIndex.isResolved( sqmRoot ) ) {
@@ -506,11 +501,6 @@ public abstract class BaseSqmToSqlAstConverter
 		);
 
 		return group;
-	}
-
-	@Override
-	public NavigableReference visitRootEntityReference(SqmEntityReference sqmEntityReference) {
-		return fromClauseIndex.getTableGroup( sqmEntityReference.getNavigablePath() );
 	}
 
 	@Override
@@ -642,7 +632,7 @@ public abstract class BaseSqmToSqlAstConverter
 		return new EmbeddableValuedNavigableReference(
 				path.getNavigablePath(),
 				path.getReferencedNavigable(),
-				determineLockMode( path.getIdentificationVariable() ),
+				determineLockMode( path.getExplicitAlias() ),
 				this
 		);
 	}
@@ -652,52 +642,19 @@ public abstract class BaseSqmToSqlAstConverter
 		return new EntityValuedNavigableReference(
 				path.getNavigablePath(),
 				path.getReferencedNavigable(),
-				determineLockMode( path.getIdentificationVariable() ),
+				determineLockMode( path.getExplicitAlias() ),
 				this
 		);
 	}
 
 	@Override
 	public Object visitPluralValuedPath(SqmPluralValuedSimplePath path) {
-		return super.visitPluralValuedPath( path );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Expressions
-
-	@Override
-	public PluralAttributeReference visitPluralAttribute(SqmPluralAttributeReference reference) {
-
-		// todo (6.0) : most likely how we execute this depends on the context - where is it used?
-
-		final PluralPersistentAttribute referencedCollection = reference.getReferencedNavigable();
-
-		final NavigableContainerReference containerReference = (NavigableContainerReference) getNavigableReferenceStack().getCurrent();
-
-		final NavigablePath navigablePath = containerReference.getNavigablePath().append( referencedCollection.getNavigableName() );
-
-		final PluralAttributeReference result;
-
-		final NavigableReference resolvedNavigableReference = fromClauseIndex.findResolvedNavigableReference( navigablePath );
-		if ( resolvedNavigableReference != null ) {
-			assert resolvedNavigableReference instanceof PluralAttributeReference;
-			result = ( PluralAttributeReference ) resolvedNavigableReference;
-		}
-		else {
-			result = new PluralAttributeReference(
-					containerReference,
-					referencedCollection,
-					navigablePath,
-					containerReference.getColumnReferenceQualifier(),
-					getQueryOptions().getLockOptions().getEffectiveLockMode( reference.getIdentificationVariable() )
-			);
-		}
-
-		navigableReferenceStack.push( result );
-
-		return result;
-	}
 
 	@Override
 	public Object visitLiteral(SqmLiteral literal) {
@@ -1041,11 +998,11 @@ public abstract class BaseSqmToSqlAstConverter
 		sqmExpressions.forEach( sqmExpression -> {
 
 			final Object expression = sqmExpression.accept( this );
-			if ( BasicValuedNavigableReference.class.isInstance( expression ) ) {
+			if ( expression instanceof BasicValuedNavigableReference ) {
 				final BasicValuedNavigableReference navigableReference = (BasicValuedNavigableReference) expression;
 				results.add(
 						getSqlExpressionResolver().resolveSqlExpression(
-								navigableReference.getColumnReferenceQualifier(),
+								fromClauseIndex.getTableGroup( navigableReference.getNavigablePath().getParent() ),
 								navigableReference.getNavigable().getBoundColumn()
 						)
 				);

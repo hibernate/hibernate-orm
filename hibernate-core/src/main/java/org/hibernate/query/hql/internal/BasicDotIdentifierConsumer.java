@@ -20,10 +20,9 @@ import org.hibernate.query.sqm.produce.path.internal.SqmStaticFieldReference;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.EnumJavaDescriptor;
@@ -240,7 +239,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 		}
 
 		@Override
-		public SqmRestrictedCollectionElementReference resolveIndexedAccess(
+		public SqmPath resolveIndexedAccess(
 				SqmExpression selector,
 				String currentContextKey,
 				boolean isTerminal,

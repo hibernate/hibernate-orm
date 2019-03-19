@@ -41,7 +41,7 @@ public class SqmNavigableJoin
 			String alias,
 			SqmJoinType joinType,
 			boolean fetched,
-			SqmCreationState creationState) {
+			@SuppressWarnings("unused") SqmCreationState creationState) {
 		super(
 				uid,
 				SqmCreationHelper.buildSubNavigablePath(
@@ -104,5 +104,15 @@ public class SqmNavigableJoin
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitQualifiedAttributeJoinFromElement( this );
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return getReferencedNavigable().getPersistenceType();
+	}
+
+	@Override
+	public Class getJavaType() {
+		return getReferencedNavigable().getJavaType();
 	}
 }

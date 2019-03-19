@@ -19,6 +19,10 @@ import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
+import org.hibernate.query.sqm.tree.domain.SqmMaxElementPath;
+import org.hibernate.query.sqm.tree.domain.SqmMaxIndexPath;
+import org.hibernate.query.sqm.tree.domain.SqmMinElementPath;
+import org.hibernate.query.sqm.tree.domain.SqmMinIndexPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
@@ -34,14 +38,6 @@ import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmSubQuery;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
-import org.hibernate.query.sqm.tree.expression.domain.AbstractSpecificSqmCollectionIndexReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionIndexReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmMaxElementReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmMinElementReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmMinIndexReferenceBasic;
-import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
 import org.hibernate.query.sqm.tree.expression.function.SqmAbsFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmBitLengthFunction;
@@ -413,18 +409,18 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 	public Object visitFromClause(SqmFromClause fromClause) {
 		processStanza(
 				"from",
-				() -> fromClause.visitRoots( this::visitRootEntityFromElement )
+				() -> fromClause.visitRoots( this::visitRootPath )
 		);
 
 		return null;
 	}
 
 	@Override
-	public Object visitRootEntityFromElement(SqmRoot root) {
+	public Object visitRootPath(SqmRoot sqmRoot) {
 		processStanza(
 				"root",
-				'`' + root.getNavigablePath().getFullPath() + '`',
-				() -> processJoins( root )
+				'`' + sqmRoot.getNavigablePath().getFullPath() + '`',
+				() -> processJoins( sqmRoot )
 		);
 
 		return null;
@@ -439,12 +435,6 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 				"joins",
 				() -> sqmFrom.visitJoins( sqmJoin -> sqmJoin.accept( this ) )
 		);
-	}
-
-
-	@Override
-	public Object visitRootEntityReference(SqmEntityReference sqmEntityReference) {
-		return null;
 	}
 
 	@Override
@@ -550,16 +540,6 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 				() -> selection.getSelectableNode().accept( this )
 		);
 
-		return null;
-	}
-
-	@Override
-	public Object visitPluralAttribute(SqmPluralAttributeReference reference) {
-		return null;
-	}
-
-	@Override
-	public Object visitPluralAttributeElementBinding(SqmCollectionElementReference binding) {
 		return null;
 	}
 
@@ -809,7 +789,7 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 				predicate.isNegated() ? "is-not-empty" : "is-empty",
 				() -> {
 					depth++;
-					predicate.getExpression().accept( this );
+					predicate.getPluralPath().accept( this );
 					depth--;
 				}
 		);
@@ -905,37 +885,27 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 	}
 
 	@Override
-	public Object visitPluralAttributeIndexFunction(SqmCollectionIndexReference function) {
-		return null;
-	}
-
-	@Override
-	public Object visitMapKeyBinding(SqmCollectionIndexReference binding) {
-		return null;
-	}
-
-	@Override
 	public Object visitMapEntryFunction(SqmMapEntryReference function) {
 		return null;
 	}
 
 	@Override
-	public Object visitMaxElementBinding(SqmMaxElementReference binding) {
+	public Object visitMaxElementPath(SqmMaxElementPath binding) {
 		return null;
 	}
 
 	@Override
-	public Object visitMinElementBinding(SqmMinElementReference binding) {
+	public Object visitMinElementPath(SqmMinElementPath path) {
 		return null;
 	}
 
 	@Override
-	public Object visitMaxIndexFunction(AbstractSpecificSqmCollectionIndexReference function) {
+	public Object visitMaxIndexPath(SqmMaxIndexPath path) {
 		return null;
 	}
 
 	@Override
-	public Object visitMinIndexFunction(SqmMinIndexReferenceBasic function) {
+	public Object visitMinIndexPath(SqmMinIndexPath path) {
 		return null;
 	}
 

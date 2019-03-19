@@ -6,8 +6,8 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import org.hibernate.sql.ast.tree.spi.from.TableReference;
-import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 
 /**
  * @author Steve Ebersole

@@ -7,25 +7,21 @@
 package org.hibernate.query.sqm.tree.predicate;
 
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 
 /**
  * @author Steve Ebersole
  */
 public class EmptinessSqmPredicate extends AbstractNegatableSqmPredicate {
-	private final SqmPluralAttributeReference expression;
+	private final SqmPath pluralPath;
 
-	public EmptinessSqmPredicate(SqmPluralAttributeReference expression) {
-		this( expression, false );
-	}
-
-	public EmptinessSqmPredicate(SqmPluralAttributeReference expression, boolean negated) {
+	public EmptinessSqmPredicate(SqmPath pluralPath, boolean negated) {
 		super( negated );
-		this.expression = expression;
+		this.pluralPath = pluralPath;
 	}
 
-	public SqmPluralAttributeReference getExpression() {
-		return expression;
+	public SqmPath getPluralPath() {
+		return pluralPath;
 	}
 
 	@Override

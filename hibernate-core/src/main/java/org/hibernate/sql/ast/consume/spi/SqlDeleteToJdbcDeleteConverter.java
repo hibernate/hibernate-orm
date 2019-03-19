@@ -12,7 +12,7 @@ import java.util.Set;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.relational.spi.PhysicalTable;
 import org.hibernate.sql.ast.produce.spi.SqlAstDeleteDescriptor;
-import org.hibernate.sql.ast.tree.spi.DeleteStatement;
+import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.exec.spi.JdbcDelete;
 import org.hibernate.sql.exec.spi.JdbcMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;

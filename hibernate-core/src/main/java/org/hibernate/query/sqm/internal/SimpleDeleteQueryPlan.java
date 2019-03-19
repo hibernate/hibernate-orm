@@ -17,7 +17,7 @@ import org.hibernate.sql.ast.consume.spi.SqlDeleteToJdbcDeleteConverter;
 import org.hibernate.sql.ast.produce.spi.SqlAstDeleteDescriptor;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmDeleteToSqlAstConverterSimple;
-import org.hibernate.sql.ast.tree.spi.DeleteStatement;
+import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.exec.internal.JdbcMutationExecutorImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutation;

@@ -17,7 +17,7 @@ import org.hibernate.query.sqm.produce.function.spi.SelfRenderingFunctionSupport
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.Expression;
 
 /**
  * A Cach&eacute; defintion of a convert function.

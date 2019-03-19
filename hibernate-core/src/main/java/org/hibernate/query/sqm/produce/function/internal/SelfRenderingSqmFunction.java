@@ -13,7 +13,7 @@ import org.hibernate.query.sqm.produce.function.spi.SelfRenderingFunctionSupport
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**

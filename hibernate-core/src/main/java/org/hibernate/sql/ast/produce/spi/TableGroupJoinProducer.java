@@ -9,8 +9,8 @@ package org.hibernate.sql.ast.produce.spi;
 import org.hibernate.LockMode;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.JoinType;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 
 /**
  * @author Steve Ebersole

@@ -13,7 +13,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.model.domain.spi.CollectionKey;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.CollectionFetch;
 import org.hibernate.sql.results.spi.CollectionInitializer;

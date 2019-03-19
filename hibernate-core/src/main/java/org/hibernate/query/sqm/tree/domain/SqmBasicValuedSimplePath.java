@@ -9,7 +9,6 @@ package org.hibernate.query.sqm.tree.domain;
 import java.util.function.Supplier;
 
 import org.hibernate.metamodel.model.domain.spi.BasicValuedNavigable;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
@@ -44,6 +43,11 @@ public class SqmBasicValuedSimplePath extends AbstractSqmSimplePath {
 	}
 
 	@Override
+	public Class getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
+	}
+
+	@Override
 	public SemanticPathPart resolvePathPart(
 			String name,
 			String currentContextKey,
@@ -55,11 +59,6 @@ public class SqmBasicValuedSimplePath extends AbstractSqmSimplePath {
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitBasicValuedPath( this );
-	}
-
-	@Override
-	public EntityTypeDescriptor getIntrinsicSubclassEntityMetadata() {
-		return null;
 	}
 
 	@Override

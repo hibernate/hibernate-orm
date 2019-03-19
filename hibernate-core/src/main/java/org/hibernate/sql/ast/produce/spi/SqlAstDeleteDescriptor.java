@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.produce.spi;
 
-import org.hibernate.sql.ast.tree.spi.DeleteStatement;
+import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 
 /**
  * @author Steve Ebersole

@@ -12,10 +12,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.hibernate.query.NavigablePath;
@@ -23,9 +21,9 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.sql.ast.produce.ConversionException;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.expression.domain.NavigableReference;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 
 import org.jboss.logging.Logger;
@@ -205,19 +203,7 @@ public class FromClauseIndex
 	}
 
 	public TableGroup findResolvedTableGroup(SqmFrom fromElement) {
-		return resolveTableGroup( fromElement.getUniqueIdentifier() );
-
-//		// todo (6.0) : this is a hacky solution/workaround to the fact that SQM creates joins for composites/embeddables whereas we do not in the SQL-AST
-//		//		so the cross referencing is off
-//
-//		TableGroup tableGroup = tableGroupBySqmFromXref.get( fromElement );
-//		while ( tableGroup == null
-//				&& fromElement != null
-//				&& fromElement.getNavigableReference().getReferencedNavigable() instanceof EmbeddedValuedNavigable ) {
-//			fromElement = fromElement.getNavigableReference().getSourceReference().getExportedFromElement();
-//			tableGroup = tableGroupBySqmFromXref.get( fromElement );
-//		}
-//		return tableGroup;
+		return resolveTableGroup( fromElement.getNavigablePath() );
 	}
 
 	public SqmFrom findSqmFromByUniqueIdentifier(String uniqueIdentifier) {

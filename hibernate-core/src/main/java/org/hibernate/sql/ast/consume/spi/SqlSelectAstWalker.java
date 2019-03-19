@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.consume.spi;
 
-import org.hibernate.sql.ast.tree.spi.SelectStatement;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 
 /**
  * @author Steve Ebersole

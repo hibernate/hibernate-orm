@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.consume.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.Expression;
 
 /**
  * @author Steve Ebersole

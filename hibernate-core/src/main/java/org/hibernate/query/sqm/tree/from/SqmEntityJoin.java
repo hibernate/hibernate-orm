@@ -91,4 +91,14 @@ public class SqmEntityJoin extends AbstractSqmJoin implements SqmQualifiedJoin {
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitQualifiedEntityJoinFromElement( this );
 	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.ENTITY;
+	}
+
+	@Override
+	public Class getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
+	}
 }

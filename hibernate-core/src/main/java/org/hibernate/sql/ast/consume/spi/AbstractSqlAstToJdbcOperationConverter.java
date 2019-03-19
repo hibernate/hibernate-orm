@@ -12,7 +12,7 @@ import java.util.Set;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.ast.consume.SyntaxException;
-import org.hibernate.sql.ast.tree.spi.assign.Assignment;
+import org.hibernate.sql.ast.tree.update.Assignment;
 
 /**
  * @author Steve Ebersole

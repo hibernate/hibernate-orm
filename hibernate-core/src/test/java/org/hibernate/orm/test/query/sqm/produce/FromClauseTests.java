@@ -12,7 +12,6 @@ import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.orm.test.query.sqm.produce.domain.Person;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.tree.SqmJoinType;
-import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -22,7 +21,6 @@ import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -31,7 +29,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.isEmpty;
-import static org.hibernate.testing.hamcrest.sqm.SqmAliasMatchers.isImplicitAlias;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -61,7 +58,7 @@ public class FromClauseTests extends BaseSqmUnitTest {
 		final SqmRoot firstRoot = fromClause.getRoots().get( 0 );
 		assertThat( firstRoot, notNullValue() );
 		assertThat( firstRoot.getJoins(), isEmpty() );
-		assertThat( firstRoot.getIdentificationVariable(), is( "p") );
+		assertThat( firstRoot.getExplicitAlias(), is( "p") );
 	}
 
 	@Test
@@ -80,12 +77,12 @@ public class FromClauseTests extends BaseSqmUnitTest {
 		final SqmRoot firstRoot = fromClause.getRoots().get( 0 );
 		assertThat( firstRoot, notNullValue() );
 		assertThat( firstRoot.getJoins(), isEmpty() );
-		assertThat( firstRoot.getIdentificationVariable(), is( "p") );
+		assertThat( firstRoot.getExplicitAlias(), is( "p") );
 
 		final SqmRoot secondRoot = fromClause.getRoots().get( 0 );
 		assertThat( secondRoot, notNullValue() );
 		assertThat( secondRoot.getJoins(), isEmpty() );
-		assertThat( secondRoot.getIdentificationVariable(), is( "p") );
+		assertThat( secondRoot.getExplicitAlias(), is( "p") );
 	}
 
 	@Test
@@ -99,7 +96,7 @@ public class FromClauseTests extends BaseSqmUnitTest {
 		final SqmRoot sqmRoot = fromClause.getRoots().get( 0 );
 		assertThat( sqmRoot, notNullValue() );
 		assertThat( sqmRoot.getJoins(), isEmpty() );
-		assertThat( sqmRoot.getIdentificationVariable(), nullValue() );
+		assertThat( sqmRoot.getExplicitAlias(), nullValue() );
 	}
 
 	@Test
@@ -114,9 +111,9 @@ public class FromClauseTests extends BaseSqmUnitTest {
 
 		final SqmRoot sqmRoot = fromClause.getRoots().get( 0 );
 		assertThat( sqmRoot, notNullValue() );
-		assertThat( sqmRoot.getIdentificationVariable(), is( "p" )  );
+		assertThat( sqmRoot.getExplicitAlias(), is( "p" )  );
 		assertThat( sqmRoot.getJoins(), hasSize( 1 ) );
-		assertThat( sqmRoot.getJoins().get( 0 ).getIdentificationVariable(), is( "p2" )  );
+		assertThat( sqmRoot.getJoins().get( 0 ).getExplicitAlias(), is( "p2" )  );
 	}
 
 	@Test
@@ -140,10 +137,10 @@ public class FromClauseTests extends BaseSqmUnitTest {
 
 		final SqmRoot sqmRoot = fromClause.getRoots().get( 0 );
 		assertThat( sqmRoot, notNullValue() );
-		assertThat( sqmRoot.getIdentificationVariable(), is( rootAlias )  );
+		assertThat( sqmRoot.getExplicitAlias(), is( rootAlias )  );
 
 		assertThat( sqmRoot.getJoins(), hasSize( 1 ) );
-		assertThat( sqmRoot.getJoins().get( 0 ).getIdentificationVariable(), is( joinAlias )  );
+		assertThat( sqmRoot.getJoins().get( 0 ).getExplicitAlias(), is( joinAlias )  );
 		assertThat( sqmRoot.getJoins().get( 0 ).getJoinType(), is( joinType ) );
 	}
 
@@ -213,7 +210,7 @@ public class FromClauseTests extends BaseSqmUnitTest {
 
 		final SqmRoot sqmRoot = fromClause.getRoots().get( 0 );
 		assertThat( sqmRoot, notNullValue() );
-		assertThat( sqmRoot.getIdentificationVariable(), is( "p" )  );
+		assertThat( sqmRoot.getExplicitAlias(), is( "p" )  );
 		assertThat( sqmRoot.getJoins(), hasSize( 0 ) );
 	}
 

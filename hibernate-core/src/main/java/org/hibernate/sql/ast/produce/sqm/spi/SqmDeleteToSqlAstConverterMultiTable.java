@@ -18,8 +18,8 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstUpdateDescriptor;
-import org.hibernate.sql.ast.tree.spi.QuerySpec;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 
 /**
  * @author Steve Ebersole

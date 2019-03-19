@@ -85,4 +85,14 @@ public class SqmCrossJoin extends AbstractSqmFrom implements SqmJoin {
 	public SqmRoot findRoot() {
 		return getRoot();
 	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.ENTITY;
+	}
+
+	@Override
+	public Class getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
+	}
 }

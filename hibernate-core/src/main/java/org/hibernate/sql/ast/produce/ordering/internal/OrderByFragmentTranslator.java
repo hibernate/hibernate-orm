@@ -15,7 +15,7 @@ import org.hibernate.query.hql.internal.HqlParseTreePrinter;
 import org.hibernate.query.hql.internal.HqlParser;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.sql.ast.produce.spi.SqlQueryOptions;
-import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
+import org.hibernate.sql.ast.tree.sort.SortSpecification;
 
 import org.jboss.logging.Logger;
 

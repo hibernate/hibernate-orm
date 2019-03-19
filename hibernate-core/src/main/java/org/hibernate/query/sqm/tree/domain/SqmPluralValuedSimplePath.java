@@ -48,6 +48,11 @@ public class SqmPluralValuedSimplePath extends AbstractSqmSimplePath {
 	}
 
 	@Override
+	public Class getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
+	}
+
+	@Override
 	public SemanticPathPart resolvePathPart(
 			String name,
 			String currentContextKey,
@@ -113,11 +118,6 @@ public class SqmPluralValuedSimplePath extends AbstractSqmSimplePath {
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitPluralValuedPath( this );
-	}
-
-	@Override
-	public EntityTypeDescriptor getIntrinsicSubclassEntityMetadata() {
-		return null;
 	}
 
 	@Override

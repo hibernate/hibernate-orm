@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
@@ -60,11 +59,6 @@ public abstract class AbstractSqmFrom implements SqmFrom {
 	}
 
 	@Override
-	public String getIdentificationVariable() {
-		return alias;
-	}
-
-	@Override
 	public String getExplicitAlias() {
 		return alias;
 	}
@@ -77,11 +71,6 @@ public abstract class AbstractSqmFrom implements SqmFrom {
 	@Override
 	public UsageDetails getUsageDetails() {
 		return usageDetails;
-	}
-
-	@Override
-	public EntityTypeDescriptor getIntrinsicSubclassEntityMetadata() {
-		return (EntityTypeDescriptor) getUsageDetails().getIntrinsicSubclassIndicator();
 	}
 
 	@Override

@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.produce.internal;
 import java.util.Set;
 
 import org.hibernate.sql.ast.produce.spi.SqlAstUpdateDescriptor;
-import org.hibernate.sql.ast.tree.spi.UpdateStatement;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
 
 /**
  * The standard Hibernate implementation of SqlAstUpdateDescriptor

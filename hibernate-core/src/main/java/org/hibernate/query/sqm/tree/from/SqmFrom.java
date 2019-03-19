@@ -15,14 +15,13 @@ import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 
 /**
  * Models a Bindable's inclusion in the {@code FROM} clause.
  *
  * @author Steve Ebersole
  */
-public interface SqmFrom extends TableGroupInfo, SqmVisitableNode, SqmTypedNode, SqmPath {
+public interface SqmFrom extends SqmVisitableNode, SqmTypedNode, SqmPath {
 	/**
 	 * The Navigable for an SqmFrom will always be a NavigableContainer
 	 *

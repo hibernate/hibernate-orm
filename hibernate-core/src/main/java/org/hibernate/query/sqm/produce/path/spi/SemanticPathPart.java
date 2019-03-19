@@ -7,9 +7,9 @@
 package org.hibernate.query.sqm.produce.path.spi;
 
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 
 /**
  * @asciidoc
@@ -31,7 +31,7 @@ public interface SemanticPathPart {
 			boolean isTerminal,
 			SqmCreationState creationState);
 
-	SqmRestrictedCollectionElementReference resolveIndexedAccess(
+	SqmPath resolveIndexedAccess(
 			SqmExpression selector,
 			String currentContextKey,
 			boolean isTerminal,

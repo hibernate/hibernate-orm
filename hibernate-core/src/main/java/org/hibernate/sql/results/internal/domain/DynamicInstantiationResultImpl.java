@@ -15,8 +15,8 @@ import java.util.function.Consumer;
 
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.sqm.tree.expression.Compatibility;
-import org.hibernate.sql.ast.tree.spi.expression.instantiation.ArgumentDomainResult;
-import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationNature;
+import org.hibernate.sql.ast.tree.expression.instantiation.ArgumentDomainResult;
+import org.hibernate.sql.ast.tree.expression.instantiation.DynamicInstantiationNature;
 import org.hibernate.sql.results.internal.instantiation.ArgumentReader;
 import org.hibernate.sql.results.internal.instantiation.DynamicInstantiationConstructorAssemblerImpl;
 import org.hibernate.sql.results.internal.instantiation.DynamicInstantiationInjectionAssemblerImpl;

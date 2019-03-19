@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.sql.ast.produce.spi.SqlAstSelectDescriptor;
-import org.hibernate.sql.ast.tree.spi.SelectStatement;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.results.spi.DomainResult;
 
 /**

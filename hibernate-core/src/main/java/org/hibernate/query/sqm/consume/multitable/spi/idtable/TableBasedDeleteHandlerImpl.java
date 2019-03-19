@@ -21,7 +21,7 @@ import org.hibernate.query.sqm.consume.multitable.spi.HandlerCreationContext;
 import org.hibernate.query.sqm.consume.multitable.spi.HandlerExecutionContext;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.sql.ast.consume.spi.SqlAstSelectToJdbcSelectConverter;
-import org.hibernate.sql.ast.tree.spi.QuerySpec;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcDelete;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;

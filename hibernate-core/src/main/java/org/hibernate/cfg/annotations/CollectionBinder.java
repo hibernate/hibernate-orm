@@ -107,7 +107,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.naming.Identifier;
-import org.hibernate.sql.ast.tree.spi.predicate.Junction;
+import org.hibernate.sql.ast.tree.predicate.Junction;
 
 import org.jboss.logging.Logger;
 

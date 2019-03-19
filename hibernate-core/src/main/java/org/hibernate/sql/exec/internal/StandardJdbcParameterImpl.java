@@ -11,7 +11,7 @@ import java.util.Objects;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.tree.spi.expression.AbstractParameter;
+import org.hibernate.sql.ast.tree.expression.AbstractParameter;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**

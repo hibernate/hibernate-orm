@@ -105,4 +105,14 @@ public class SqmIndexedCollectionAccessPath implements SqmPath {
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
 		return getReferencedNavigable().getJavaTypeDescriptor();
 	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return getReferencedNavigable().getPersistenceType();
+	}
+
+	@Override
+	public Class getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
+	}
 }

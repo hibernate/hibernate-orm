@@ -51,9 +51,9 @@
  *
  * All standard functions have dedicated node classes for both SQM and SQL AST
  * as sub-types of {@link org.hibernate.query.sqm.tree.expression.function.SqmStandardFunction} and
- * {@link org.hibernate.sql.ast.tree.spi.expression.StandardFunction} respectively.
+ * {@link org.hibernate.sql.ast.tree.expression.StandardFunction} respectively.
  * <p/>
  * Support for non-standard functions uses {@link org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction}
- * and {@link org.hibernate.sql.ast.tree.spi.expression.NonStandardFunction} instead.
+ * and {@link org.hibernate.sql.ast.tree.expression.NonStandardFunction} instead.
  */
 package org.hibernate.query.sqm.tree.expression.function;

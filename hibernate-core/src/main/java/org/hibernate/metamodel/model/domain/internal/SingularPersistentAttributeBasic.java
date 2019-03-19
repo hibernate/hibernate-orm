@@ -37,7 +37,7 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.internal.domain.basic.BasicFetch;
 import org.hibernate.sql.results.spi.DomainResultCreationState;

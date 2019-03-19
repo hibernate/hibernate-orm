@@ -101,7 +101,7 @@ public class AliasCollisionTest extends BaseSqmUnitTest {
 		final List<SqmRoot> roots = querySpec.getFromClause().getRoots();
 		assertThat( roots, hasSize( 1 ) );
 		assertThat( roots.get( 0 ).getJoins(), isEmpty() );
-		assertThat( roots.get( 0 ).getIdentificationVariable(), is( "a" ) );
+		assertThat( roots.get( 0 ).getExplicitAlias(), is( "a" ) );
 
 		assertThat( querySpec.getWhereClause().getPredicate(), instanceOf( InSubQuerySqmPredicate.class ) );
 		final InSubQuerySqmPredicate predicate = (InSubQuerySqmPredicate) querySpec.getWhereClause().getPredicate();
@@ -112,7 +112,7 @@ public class AliasCollisionTest extends BaseSqmUnitTest {
 				.getRoots()
 				.get( 0 );
 
-		assertThat( subQueryRoot.getIdentificationVariable(), is( "a" ) );
+		assertThat( subQueryRoot.getExplicitAlias(), is( "a" ) );
 	}
 
 	@Test
@@ -130,7 +130,7 @@ public class AliasCollisionTest extends BaseSqmUnitTest {
 		final List<SqmRoot> roots = querySpec.getFromClause().getRoots();
 		assertThat( roots, hasSize( 1 ) );
 		assertThat( roots.get( 0 ).getJoins(), isEmpty() );
-		assertThat( roots.get( 0 ).getIdentificationVariable(), is( "a" ) );
+		assertThat( roots.get( 0 ).getExplicitAlias(), is( "a" ) );
 
 		assertThat( querySpec.getWhereClause().getPredicate(), instanceOf( InSubQuerySqmPredicate.class ) );
 		final InSubQuerySqmPredicate predicate = (InSubQuerySqmPredicate) querySpec.getWhereClause().getPredicate();
@@ -138,19 +138,19 @@ public class AliasCollisionTest extends BaseSqmUnitTest {
 		final SqmQuerySpec subQuerySpec = predicate.getSubQueryExpression().getQuerySpec();
 
 		assertThat(
-				subQuerySpec.getFromClause().getRoots().get( 0 ).getIdentificationVariable(),
+				subQuerySpec.getFromClause().getRoots().get( 0 ).getExplicitAlias(),
 				is( "b" )
 		);
 
 		final SqmComparisonPredicate correlation = (SqmComparisonPredicate) subQuerySpec.getWhereClause().getPredicate();
 		final SqmNavigableReference leftHandExpression = (SqmNavigableReference) correlation.getLeftHandExpression();
 		assertThat(
-				leftHandExpression.getSourceReference().getExplicitAlias(),
+				leftHandExpression.getLhs().getExplicitAlias(),
 				is( "a" )
 		);
 		final SqmNavigableReference rightHandExpression = (SqmNavigableReference) correlation.getRightHandExpression();
 		assertThat(
-				rightHandExpression.getSourceReference().getExplicitAlias(),
+				rightHandExpression.getLhs().getExplicitAlias(),
 				is( "b" )
 		);
 	}

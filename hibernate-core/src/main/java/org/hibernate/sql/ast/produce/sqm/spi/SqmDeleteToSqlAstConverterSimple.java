@@ -11,9 +11,9 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.sql.ast.produce.internal.SqlAstProcessingStateImpl;
-import org.hibernate.sql.ast.tree.spi.DeleteStatement;
-import org.hibernate.sql.ast.tree.spi.from.TableReference;
-import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
+import org.hibernate.sql.ast.tree.delete.DeleteStatement;
+import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
  * @author Steve Ebersole

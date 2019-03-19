@@ -8,7 +8,7 @@ package org.hibernate.sql.ast.produce.spi;
 
 import java.util.Set;
 
-import org.hibernate.sql.ast.tree.spi.Statement;
+import org.hibernate.sql.ast.tree.Statement;
 
 /**
  * Base descriptor of SQL AST, including the tree ({link Statement})

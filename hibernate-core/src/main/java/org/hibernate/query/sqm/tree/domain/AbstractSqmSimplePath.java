@@ -11,8 +11,6 @@ import java.util.function.Supplier;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
@@ -73,11 +71,6 @@ public abstract class AbstractSqmSimplePath implements SqmNavigableReference {
 	}
 
 	@Override
-	public Class getJavaType() {
-		return getJavaTypeDescriptor().getJavaType();
-	}
-
-	@Override
 	public Navigable getExpressableType() {
 		return getReferencedNavigable();
 	}
@@ -88,32 +81,12 @@ public abstract class AbstractSqmSimplePath implements SqmNavigableReference {
 	}
 
 	@Override
-	public SqmFrom getExportedFromElement() {
-		throw new UnsupportedOperationException(  );
-	}
-
-	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
 		return getReferencedNavigable().getJavaTypeDescriptor();
 	}
 
 	@Override
-	public NavigableContainerReferenceInfo getNavigableContainerReferenceInfo() {
-		throw new UnsupportedOperationException(  );
-	}
-
-	@Override
-	public String getIdentificationVariable() {
-		return getExplicitAlias();
-	}
-
-	@Override
 	public String getUniqueIdentifier() {
 		return uid;
-	}
-
-	@Override
-	public SqmPath getSourceReference() {
-		return getLhs();
 	}
 }

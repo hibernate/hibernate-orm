@@ -17,9 +17,9 @@ import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.consume.spi.InsertToJdbcInsertConverter;
-import org.hibernate.sql.ast.tree.spi.InsertStatement;
-import org.hibernate.sql.ast.tree.spi.expression.PositionalParameter;
-import org.hibernate.sql.ast.tree.spi.from.TableReference;
+import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.expression.PositionalParameter;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.exec.spi.JdbcMutation;
 import org.hibernate.sql.exec.spi.JdbcParameter;
 

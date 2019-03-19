@@ -16,7 +16,7 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
-import org.hibernate.sql.ast.tree.spi.TrimSpecification;
+import org.hibernate.sql.TrimSpecification;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**

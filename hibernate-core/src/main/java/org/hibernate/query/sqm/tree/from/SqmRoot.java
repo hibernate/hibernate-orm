@@ -63,23 +63,29 @@ public class SqmRoot<E> extends AbstractSqmFrom {
 	}
 
 	@Override
-	public EntityTypeDescriptor<E> getIntrinsicSubclassEntityMetadata() {
-		// a root FromElement cannot indicate a subclass intrinsically (as part of its declaration)
-		return null;
-	}
-
-	@Override
 	public EntityJavaDescriptor getJavaTypeDescriptor() {
 		return getReferencedNavigable().getJavaTypeDescriptor();
 	}
 
 	@Override
 	public String toString() {
-		return getEntityName() + " as " + getIdentificationVariable();
+		return getExplicitAlias() == null
+				? getEntityName()
+				: getEntityName() + " as " + getExplicitAlias();
 	}
 
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return walker.visitRootEntityFromElement( this );
+		return walker.visitRootPath( this );
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.ENTITY;
+	}
+
+	@Override
+	public Class getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
 	}
 }

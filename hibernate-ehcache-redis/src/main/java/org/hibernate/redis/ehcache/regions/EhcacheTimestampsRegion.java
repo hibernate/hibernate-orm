@@ -1,22 +1,13 @@
 package org.hibernate.redis.ehcache.regions;
 
-import java.io.Serializable;
-import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
-import javax.persistence.Cacheable;
-import javax.persistence.metamodel.EntityType;
-
-import org.hibernate.redis.ehcache.strategy.EhcacheAccessStrategyFactory;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.EhCacheMessageLogger;
 import org.hibernate.cache.ehcache.internal.nonstop.HibernateNonstopCacheExceptionHandler;
 import org.hibernate.cache.spi.TimestampsRegion;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.redis.ehcache.strategy.EhcacheAccessStrategyFactory;
 import org.jboss.logging.Logger;
 import org.redisson.api.BatchOptions;
 import org.redisson.api.LocalCachedMapOptions;

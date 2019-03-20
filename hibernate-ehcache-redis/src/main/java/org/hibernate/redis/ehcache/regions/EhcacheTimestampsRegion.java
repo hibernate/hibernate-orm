@@ -1,22 +1,13 @@
 package org.hibernate.redis.ehcache.regions;
 
-import java.io.Serializable;
-import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
-import javax.persistence.Cacheable;
-import javax.persistence.metamodel.EntityType;
-
-import org.hibernate.redis.ehcache.strategy.EhcacheAccessStrategyFactory;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.EhCacheMessageLogger;
 import org.hibernate.cache.ehcache.internal.nonstop.HibernateNonstopCacheExceptionHandler;
 import org.hibernate.cache.spi.TimestampsRegion;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.redis.ehcache.strategy.EhcacheAccessStrategyFactory;
 import org.jboss.logging.Logger;
 import org.redisson.api.BatchOptions;
 import org.redisson.api.LocalCachedMapOptions;
@@ -28,10 +19,6 @@ import net.sf.ehcache.constructs.nonstop.NonStopCacheException;
 public class EhcacheTimestampsRegion extends EhcacheGeneralDataRegion implements TimestampsRegion {
 	private static final EhCacheMessageLogger LOG = Logger.getMessageLogger(EhCacheMessageLogger.class,
 			EhcacheTimestampsRegion.class.getName());
-
-	private static Boolean metadataInitialized = false;
-	private static final Set<Serializable> cacheableSpacesSet = java.util.Collections
-			.newSetFromMap(new ConcurrentHashMap<>());
 
 	/**
 	 * @param accessStrategyFactory
@@ -75,13 +62,8 @@ public class EhcacheTimestampsRegion extends EhcacheGeneralDataRegion implements
 	@Override
 	public void put(SharedSessionContractImplementor session, Object key, Object value) throws CacheException {
 		LOG.debugf("key: %s value: %s", key, value);
-		if (!metadataInitialized) {
-			initializeMetadata(session);
-		}
 		try {
-			if (cacheableSpacesSet.contains(key)) {
-				getDistributedNeutrinoCache().put(key, value);
-			}
+			getDistributedNeutrinoCache().put(key, value);
 		} catch (IllegalArgumentException e) {
 			throw new CacheException(e);
 		} catch (IllegalStateException e) {
@@ -128,32 +110,5 @@ public class EhcacheTimestampsRegion extends EhcacheGeneralDataRegion implements
 				throw new CacheException(e);
 			}
 		}
-	}
-
-	private synchronized void initializeMetadata(SharedSessionContractImplementor session) {
-		SessionFactoryImplementor factory = session.getFactory();
-		if (!metadataInitialized && factory != null && factory.getMetamodel() != null
-				&& factory.getMetamodel().getEntities() != null
-				&& factory.getMetamodel().collectionPersisters() != null) {
-
-			Set<EntityType<?>> entities = factory.getMetamodel().getEntities();
-			for (EntityType<?> en : entities) {
-				Class<?> clas = en.getJavaType();
-				Cacheable cacheable = clas.getDeclaredAnnotation(Cacheable.class);
-				if (cacheable != null) {
-					cacheableSpacesSet.add(factory.getMetamodel().locateEntityPersister(clas).getPropertySpaces()[0]);
-				}
-			}
-
-			Map<String, CollectionPersister> collectionPersister = factory.getMetamodel().collectionPersisters();
-			for (Map.Entry<String, CollectionPersister> entry : collectionPersister.entrySet()) {
-				if (entry.getValue().getCacheAccessStrategy() != null) {
-					for (Serializable space : entry.getValue().getCollectionSpaces()) {
-						cacheableSpacesSet.add(space);
-					}
-				}
-			}
-		}
-		metadataInitialized = true;
-	}
+	}	
 }

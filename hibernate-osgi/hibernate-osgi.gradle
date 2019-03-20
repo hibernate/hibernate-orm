@@ -67,6 +67,7 @@ dependencies {
 	testCompile( "org.apache.karaf:apache-karaf:${project.karafVersion}" ) {
 		// having trouble finding this one locally
 		exclude group: 'org.eclipse', module: 'org.eclipse.osgi'
+		exclude group: 'org.hibernate', module: 'hibernate-osgi'
 	}
 
 	karafDistro "org.apache.karaf:apache-karaf:${project.karafVersion}@tar.gz"

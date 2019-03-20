@@ -19,7 +19,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Carlos Gonzalez-Cadenas
  *
- * @see org.hibernate.Query
+ * @see org.hibernate.query.Query
  */
 @Target( { TYPE, PACKAGE })
 @Retention(RUNTIME)

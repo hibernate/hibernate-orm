@@ -111,9 +111,6 @@ public interface PropertyHolder {
 
 	/**
 	 * Determine the AttributeConverter to use for the given property.
-	 *
-	 * @param property
-	 * @return
 	 */
 	ConverterDescriptor resolveAttributeConverterDescriptor(XProperty property);
 }

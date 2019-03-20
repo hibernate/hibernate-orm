@@ -13,9 +13,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.spi.ServiceContributor;
 
 /**
+ * @asciidoc
+ *
  * Used to define the ServiceRegistry to be used for testing.  Can be used alone:
  *
  * [source, JAVA, indent=0]
@@ -40,7 +43,7 @@ import org.hibernate.service.spi.ServiceContributor;
  *
  * It can also be used as the basis for building a
  * {@link org.hibernate.boot.spi.MetadataImplementor} via {@link DomainModel}
- * or {@link org.hibernate.engine.spi.SessionFactoryImplementor} via {@link SessionFactory},
+ * or {@link SessionFactoryImplementor} via {@link SessionFactory},
  * with or without {@link ServiceRegistryScopeAware}.  E.g.
  *
  * [source, JAVA, indent=0]
@@ -52,8 +55,7 @@ import org.hibernate.service.spi.ServiceContributor;
  * ----
  *
  * Here, the managed ServiceRegistry is used to create the
- * {@link org.hibernate.boot.spi.MetadataImplementor} via
- * {@link org.hibernate.boot.MetadataSources#MetadataSources(org.hibernate.service.ServiceRegistry)}
+ * {@link org.hibernate.boot.spi.MetadataImplementor}
  *
  * @see ServiceRegistryScopeAware
  *

@@ -29,7 +29,7 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 	private final EmbeddedTypeDescriptor componentIdType;
 
 	/**
-	 * @deprecated use {@link #SerializableProxy(String, Class, Class[], Serializable, Boolean, String, boolean, Method, Method, EmbeddedTypeDescriptor)} instead.
+	 * @deprecated use {@link #SerializableProxy(String, Class, Class[], Object, Boolean, String, boolean, Method, Method, EmbeddedTypeDescriptor)} instead.
 	 */
 	@Deprecated
 	public SerializableProxy(

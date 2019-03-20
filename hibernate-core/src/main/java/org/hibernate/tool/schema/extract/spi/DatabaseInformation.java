@@ -61,9 +61,9 @@ public interface DatabaseInformation {
 	TableInformation getTableInformation(QualifiedTableName tableName);
 
 	/**
-	 * Obtain reference to all the {@link TableInformation) for a given {@link Namespace }
+	 * Obtain reference to all the {@link TableInformation} for a given {@link Namespace}
 	 *
-	 * @param namespace The {@link Namespace } which contains the {@link TableInformation)
+	 * @param namespace The {@link Namespace } which contains the {@link TableInformation}
 	 *
 	 * @return a {@link NameSpaceTablesInformation}
 	 */

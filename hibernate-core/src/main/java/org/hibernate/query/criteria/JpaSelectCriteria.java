@@ -13,7 +13,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.metamodel.EntityType;
 
 /**
- * Commonality between a JPA {@link JpaCriteriaQuery} and {@link JpaSubQuery,
+ * Commonality between a JPA {@link JpaCriteriaQuery} and {@link JpaSubQuery},
  * mainly in the form of delegation to {@link JpaQueryStructure}
  *
  * @author Steve Ebersole

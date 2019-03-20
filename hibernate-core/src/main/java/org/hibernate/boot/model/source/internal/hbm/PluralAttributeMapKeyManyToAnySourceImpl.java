@@ -172,11 +172,6 @@ public class PluralAttributeMapKeyManyToAnySourceImpl
 	}
 
 	@Override
-	public boolean isReferencedEntityAttribute() {
-		return false;
-	}
-
-	@Override
 	public PluralAttributeIndexNature getNature() {
 		return PluralAttributeIndexNature.MANY_TO_ANY;
 	}

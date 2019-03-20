@@ -40,7 +40,9 @@ public @interface Filter {
 	/**
 	 * If true, automatically determine all points within the condition fragment that an alias should be injected.
 	 * Otherwise, injection will only replace instances of explicit "{alias}" instances or
-	 * @SqlFragmentAlias descriptors.
+	 * {@code @SqlFragmentAlias} descriptors.
+	 *
+	 * @see SqlFragmentAlias
 	 */
 	boolean deduceAliasInjectionPoints() default true;
 

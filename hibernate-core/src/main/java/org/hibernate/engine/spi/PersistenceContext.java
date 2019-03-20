@@ -173,7 +173,8 @@ public interface PersistenceContext {
 	boolean containsEntity(EntityKey key);
 
 	/**
-	 * Remove an entity.  Also clears up all other state associated with the entity aside from the {@link EntityEntry}
+	 * Remove an entity.  Also clears up all other state associated with the entity
+	 * aside from the {@link EntityEntry}
 	 *
 	 * @param key The key whose matching entity should be removed
 	 *
@@ -495,8 +496,6 @@ public interface PersistenceContext {
 	/**
 	 * Provides access to the entity/EntityEntry combos associated with the persistence context in a manner that
 	 * is safe from reentrant access.  Specifically, it is safe from additions/removals while iterating.
-	 *
-	 * @return
 	 */
 	Map.Entry<Object,EntityEntry>[] reentrantSafeEntityEntries();
 

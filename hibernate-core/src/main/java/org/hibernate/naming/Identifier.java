@@ -87,10 +87,6 @@ public class Identifier implements Comparable<Identifier> {
 	 * <p/>
 	 * That final form using double-quote (") is the JPA-defined quoting pattern.  Although
 	 * it is the standard, it makes for ugly declarations.
-	 *
-	 * @param name
-	 *
-	 * @return
 	 */
 	public static boolean isQuoted(String name) {
 		return ( name.startsWith( "`" ) && name.endsWith( "`" ) )

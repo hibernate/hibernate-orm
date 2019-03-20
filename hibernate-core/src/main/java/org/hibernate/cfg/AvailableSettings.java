@@ -1188,20 +1188,16 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	// todo (6.0) : decide if/how to allow query plan caching
 
 	/**
-	 * The maximum number of entries including:
-	 * <ul>
-	 *     <li>{@link org.hibernate.engine.query.spi.HQLQueryPlan}</li>
-	 *     <li>{@link org.hibernate.engine.query.spi.FilterQueryPlan}</li>
-	 *     <li>{@link org.hibernate.engine.query.spi.NativeSQLQueryPlan}</li>
-	 * </ul>
+	 * The maximum number of entries in the Hibernate "Query Plan Cache".  The
+	 * default size is 2048.
 	 *
-	 * maintained by {@link org.hibernate.engine.query.spi.QueryPlanCache}. Default is 2048.
+	 * @see org.hibernate.query.spi.QueryPlanCache
 	 */
 	String QUERY_PLAN_CACHE_MAX_SIZE = "hibernate.query.plan_cache_max_size";
 
 	/**
 	 * The maximum number of {@link ParameterMetadataImpl} maintained
-	 * by {@link org.hibernate.engine.query.spi.QueryPlanCache}. Default is 128.
+	 * by {@link org.hibernate.query.spi.QueryPlanCache}. Default is 128.
 	 */
 	String QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE = "hibernate.query.plan_parameter_metadata_max_size";
 
@@ -1220,12 +1216,11 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 
 	/**
 	 * Setting to perform SchemaManagementTool actions automatically as part of
-	 * the SessionFactory lifecycle.  Valid options are defined by the
-	 * {@link org.hibernate.tool.schema.Action} enum.
+	 * the SessionFactory lifecycle.  Valid options are defined by the Action enum.
 	 * <p/>
 	 * Interpreted in combination with {@link #HBM2DDL_DATABASE_ACTION} and
 	 * {@link #HBM2DDL_SCRIPTS_ACTION}.  If no value is specified, the default
-	 * is "none" ({@link org.hibernate.tool.schema.Action#NONE}).
+	 * is "none" {@link org.hibernate.tool.schema.Action#NONE}.
 	 *
 	 * @see org.hibernate.tool.schema.Action
 	 */
@@ -1823,7 +1818,11 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * {@link org.hibernate.procedure.ParameterRegistration#enablePassingNulls(boolean)}
 	 * <p/>
 	 * Values are {@code true} (pass the NULLs) or {@code false} (do not pass the NULLs).
+	 *
+	 * @deprecated This is now implicitly determined based on whether a {@code null} value is
+	 * bound (pass the {@code null}) versus bind/set never being called (do not pass {@code null}).
 	 */
+	@Deprecated
 	String PROCEDURE_NULL_PARAM_PASSING = "hibernate.proc.param_null_passing";
 
 	/**

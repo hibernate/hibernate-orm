@@ -24,7 +24,7 @@ import org.hibernate.mapping.MetaAttribute;
  * @author Steve Ebersole
  */
 public class ToolingHintContext {
-	private final ConcurrentMap<String, ToolingHint> toolingHintMap = new ConcurrentHashMap<String, ToolingHint>();
+	private final ConcurrentMap<String, ToolingHint> toolingHintMap = new ConcurrentHashMap<>();
 
 	public ToolingHintContext(ToolingHintContext baseline) {
 		if ( baseline == null ) {
@@ -38,6 +38,7 @@ public class ToolingHintContext {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	public Collection<ToolingHint> getToolingHints() {
 		return toolingHintMap.values();
 	}
@@ -61,7 +62,7 @@ public class ToolingHintContext {
 	 * @return The underlying Map
 	 */
 	public Map<String,MetaAttribute> getMetaAttributeMap() {
-		final Map<String,MetaAttribute> collectedAttributeMap = new ConcurrentHashMap<String, MetaAttribute>();
+		final Map<String,MetaAttribute> collectedAttributeMap = new ConcurrentHashMap<>();
 		for ( ToolingHint toolingHint : toolingHintMap.values() ) {
 			collectedAttributeMap.put( toolingHint.getName(), toolingHint.asMetaAttribute() );
 		}

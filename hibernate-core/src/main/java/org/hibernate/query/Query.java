@@ -113,9 +113,9 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return the result iterator
 	 *
-	 * @deprecated Deprecated functionality with no real replacement.  Use
+	 * @deprecated Deprecated functionality with no real replacement.  Use one
 	 * {@link #list} / {@link #getResultList} instead and open Iterator
-	 * on returned List
+	 * on returned List or {@link #stream()} / {@link #getResultStream()}
 	 */
 	@Deprecated
 	default Iterator<R> iterate() {

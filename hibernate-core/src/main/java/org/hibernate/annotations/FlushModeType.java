@@ -13,7 +13,7 @@ package org.hibernate.annotations;
  */
 public enum FlushModeType {
 	/**
-	 * Corresponds to {@link org.hibernate.FlushMode#ALWAYS}.
+	 * Corresponds to {@link FlushMode#ALWAYS}.
 	 */
 	ALWAYS,
 	/**

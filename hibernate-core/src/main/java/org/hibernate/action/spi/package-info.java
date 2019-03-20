@@ -6,7 +6,12 @@
  */
 
 /**
- * Defines SPI hooks into the {@link org.hibernate.engine.spi.ActionQueue}.  Mainly for registering custom
- * {@link AfterTransactionCompletionProcess} and {@link BeforeTransactionCompletionProcess} hooks.
+ * Defines SPI hooks into the Hibernate ActionQueue.  Mainly intended for
+ * registering custom BeforeTransactionCompletionProcess and
+ * AfterTransactionCompletionProcess hooks
+ *
+ * @see org.hibernate.engine.spi.ActionQueue
+ * @see org.hibernate.action.spi.BeforeTransactionCompletionProcess
+ * @see org.hibernate.action.spi.AfterTransactionCompletionProcess
  */
 package org.hibernate.action.spi;

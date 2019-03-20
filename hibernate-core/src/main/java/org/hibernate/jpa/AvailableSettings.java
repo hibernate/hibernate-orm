@@ -265,7 +265,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Query hint (aka {@link javax.persistence.Query#setHint}) for applying
-	 * an alias specific lock mode (aka {@link org.hibernate.Query#setLockMode}).
+	 * an alias specific lock mode (aka {@link org.hibernate.query.Query#setLockMode}).
 	 * <p/>
 	 * Either {@link org.hibernate.LockMode} or {@link javax.persistence.LockModeType}
 	 * are accepted.  Also the String names of either are accepted as well.  <tt>null</tt>

@@ -77,8 +77,8 @@ public interface Column extends QualifiableSqlExpressable {
 	 * Create a clone of the Column setting the insertability and updability values
 	 * based on the passed parameters
 	 *
-	 * @param isInsertable, the value to set for the cloned Column insertability
-	 * @param isUpdatable, the value to set for the cloned Column updatability
+	 * @param isInsertable the value to set for the cloned Column insertability
+	 * @param isUpdatable the value to set for the cloned Column updatability
 	 *
 	 * @return A clone of the object
 	 */

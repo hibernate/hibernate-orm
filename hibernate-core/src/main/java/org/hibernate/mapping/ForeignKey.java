@@ -12,14 +12,11 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.boot.model.relational.ForeignKeyExporter;
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedForeignKey;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.JavaTypeHelper;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 
 /**
  * A foreign key constraint
@@ -181,7 +178,7 @@ public class ForeignKey extends Constraint implements MappedForeignKey {
 	}
 
 	/**
-	 * @deprecated since 6.0, use {@link #addReferencedColumns(List<? extends MappedColumn>()}.
+	 * @deprecated since 6.0, use {@link #addReferencedColumns(List)}.
 	 */
 	@Deprecated
 	public void addReferencedColumns(Iterator referencedColumnsIterator) {

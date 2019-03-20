@@ -96,7 +96,7 @@ public interface MetadataBuilder {
 	 * Specify the second-level cache mode to be used.  This is the cache mode in terms of whether or
 	 * not to cache.
 	 * <p/>
-	 * Its default is defined by the {@coce javax.persistence.sharedCache.mode} setting if using
+	 * Its default is defined by the `javax.persistence.sharedCache.mode` setting if using
 	 * property-based configuration.
 	 *
 	 * @param cacheMode The cache mode.

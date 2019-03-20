@@ -250,7 +250,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 	private AccessibleObject mirroredAttribute;
 
 	/**
-	 * @deprecated Use {@link JPAMetadataProvider(AnnotatedElement, XMLContext, BootstrapContext)} instead.
+	 * @deprecated Use {@link JPAMetadataProvider} instead.
 	 */
 	public JPAOverriddenAnnotationReader(AnnotatedElement el, XMLContext xmlContext, BootstrapContext bootstrapContext) {
 		this.element = el;

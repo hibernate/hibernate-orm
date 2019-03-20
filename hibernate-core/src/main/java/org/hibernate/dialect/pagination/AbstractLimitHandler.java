@@ -104,8 +104,7 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	 *
 	 * @return The corresponding db/dialect specific offset.
 	 *
-	 * @see org.hibernate.Query#setFirstResult
-	 * @see org.hibernate.Criteria#setFirstResult
+	 * @see org.hibernate.query.Query#setFirstResult
 	 */
 	public int convertToFirstRowValue(int zeroBasedFirstResult) {
 		return zeroBasedFirstResult;

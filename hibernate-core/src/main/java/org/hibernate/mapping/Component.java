@@ -118,7 +118,7 @@ public class Component extends SimpleValue
 	}
 
 	/**
-	 * @deprecated since 6.0 , use {@link #getDeclaredPersistentAttributes().size()} instead.
+	 * @deprecated since 6.0 , use the size of {@link #getDeclaredPersistentAttributes} instead.
 	 */
 	@Deprecated
 	public int getPropertySpan() {
@@ -126,7 +126,7 @@ public class Component extends SimpleValue
 	}
 
 	/**
-	 * @deprecated since 6.0 , use {@link #getDeclaredPersistentAttributes()} instead.
+	 * @deprecated since 6.0 , use {@link #getDeclaredPersistentAttributes} instead.
 	 */
 	@Deprecated
 	public Iterator getPropertyIterator() {

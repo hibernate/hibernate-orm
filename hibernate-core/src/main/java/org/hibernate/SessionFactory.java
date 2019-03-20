@@ -71,13 +71,15 @@ public interface SessionFactory extends EntityManagerFactory, AuditReaderFactory
 	Session openSession() throws HibernateException;
 
 	/**
-	 * Obtains the current session.  The definition of what exactly "current"
-	 * means controlled by the {@link org.hibernate.context.spi.CurrentSessionContext} impl configured
+	 * Obtains the current session.
+	 *
+	 * @apiNote The definition of what exactly "current" means is controlled by
+	 * the {@link org.hibernate.context.spi.CurrentSessionContext} impl configured
 	 * for use.
-	 * <p/>
-	 * Note that for backwards compatibility, if a {@link org.hibernate.context.spi.CurrentSessionContext}
-	 * is not configured but JTA is configured this will default to the {@link org.hibernate.context.internal.JTASessionContext}
-	 * impl.
+	 *
+	 * @implNote For backwards compatibility, if a CurrentSessionContext is not
+	 * specified but JTA is configured this will default to use
+	 * {@link org.hibernate.context.internal.JTASessionContext}.
 	 *
 	 * @return The current session.
 	 *

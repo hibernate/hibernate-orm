@@ -40,12 +40,26 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	private Map<QueryParameter, QueryParameterBinding> parameterBindingMap;
 
+	/**
+	 * Constructs a QueryParameterBindings based on the passed information
+	 *
+	 * @apiNote Calls {@link #from(ParameterMetadataImplementor,SessionFactoryImplementor,boolean)}
+	 * using {@link org.hibernate.boot.spi.SessionFactoryOptions#isQueryParametersValidationEnabled}
+	 * as `queryParametersValidationEnabled`
+	 */
 	public static QueryParameterBindingsImpl from(
 			ParameterMetadataImplementor parameterMetadata,
 			SessionFactoryImplementor sessionFactory) {
-		return from( parameterMetadata, sessionFactory, sessionFactory.getSessionFactoryOptions().isQueryParametersValidationEnabled() );
+		return from(
+				parameterMetadata,
+				sessionFactory,
+				sessionFactory.getSessionFactoryOptions().isQueryParametersValidationEnabled()
+		);
 	}
 
+	/**
+	 * Constructs a QueryParameterBindings based on the passed information
+	 */
 	public static QueryParameterBindingsImpl from(
 			ParameterMetadataImplementor parameterMetadata,
 			SessionFactoryImplementor sessionFactory,

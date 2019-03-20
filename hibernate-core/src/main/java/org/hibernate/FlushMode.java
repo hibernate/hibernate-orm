@@ -14,8 +14,7 @@ import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
  * and executing SQL statements.
  *
  * @see Session#setFlushMode(FlushMode)
- * @see Query#setFlushMode(FlushMode)
- * @see Criteria#setFlushMode(FlushMode)
+ * @see org.hibernate.query.Query#setHibernateFlushMode
  *
  * @author Gavin King
  */

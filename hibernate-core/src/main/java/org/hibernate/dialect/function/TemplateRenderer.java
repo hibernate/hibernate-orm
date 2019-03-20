@@ -94,11 +94,6 @@ public class TemplateRenderer {
 
 	/**
 	 * The rendering code.
-	 *
-	 * @param args The arguments to inject into the template
-	 * @param walker
-	 *@param factory The SessionFactory
-	 *  @return The rendered template with replacements
 	 */
 	@SuppressWarnings({ "UnusedDeclaration" })
 	public void render(

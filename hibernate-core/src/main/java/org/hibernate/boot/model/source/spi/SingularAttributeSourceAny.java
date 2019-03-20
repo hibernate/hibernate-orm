@@ -7,7 +7,7 @@
 package org.hibernate.boot.model.source.spi;
 
 /**
- * Describes an {@link <any/>} mapping
+ * Describes an `<any/>` mapping
  *
  * @author Steve Ebersole
  */

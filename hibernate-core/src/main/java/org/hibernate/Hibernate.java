@@ -144,16 +144,18 @@ public final class Hibernate {
 	}
 
 	/**
-	 * Close an {@link Iterator} instances obtained from {@link org.hibernate.Query#iterate()} immediately
-	 * instead of waiting until the session is closed or disconnected.
+	 * Close an {@link Iterator} instances obtained from
+	 * {@link org.hibernate.query.Query#iterate()} immediately instead of waiting until
+	 * the session is closed or disconnected.
 	 *
 	 * @param iterator an Iterator created by iterate()
 	 *
 	 * @throws HibernateException Indicates a problem closing the Hibernate iterator.
 	 * @throws IllegalArgumentException If the Iterator is not a "Hibernate Iterator".
 	 *
-	 * @see Query#iterate()
+	 * @deprecated {@link org.hibernate.query.Query#iterate()} has been deprecated
 	 */
+	@Deprecated
 	public static void close(Iterator iterator) throws HibernateException {
 		if ( iterator instanceof HibernateIterator ) {
 			( (HibernateIterator) iterator ).close();

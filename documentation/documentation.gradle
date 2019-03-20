@@ -118,13 +118,14 @@ task aggregateJavadocs(type: Javadoc) {
 	maxMemory = '512m'
 	destinationDir = javadocDir
 	configure( options ) {
-//		options.docletpath = configurations.asciidoclet.files.asType(List)
+//		docletpath = configurations.asciidoclet.files.asType(List)
+//		doclet = 'org.asciidoctor.Asciidoclet'
 		overview = project.file( 'src/main/javadoc/overview.html' )
 		windowTitle = 'Hibernate JavaDocs'
 		docTitle = "Hibernate JavaDoc ($project.version)"
 		bottom = "Copyright &copy; 2001-$currentYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
 		use = true
-		options.encoding = 'UTF-8'
+		encoding = 'UTF-8'
 
 		links = [
 				'https://docs.oracle.com/javase/8/docs/api/',
@@ -134,8 +135,15 @@ task aggregateJavadocs(type: Javadoc) {
 		]
 
 		if ( JavaVersion.current().isJava8Compatible() ) {
-			options.addStringOption( 'Xdoclint:none', '-quiet' )
+			addStringOption( 'Xdoclint:none', '-quiet' )
 		}
+
+		tags(
+				'todo:a:"To Do:"',
+				'apiNote:a:"API Note:"',
+				'implSpec:a:"Implementation Requirements:"',
+				'implNote:a:"Implementation Note:"'
+		)
 	}
 
     // process each project, building up:

@@ -9,10 +9,11 @@ package org.hibernate.boot.model.source.spi;
 import java.util.Map;
 
 /**
- * Defines the source of filter information.  May have an associated {@link FilterDefinitionSource}.
- * Relates to both {@code <filter/>} and {@link org.hibernate.annotations.Filter @Filter}
+ * Defines the source of filter information.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.engine.spi.FilterDefinition
  */
 public interface FilterSource {
 	/**
@@ -20,37 +21,35 @@ public interface FilterSource {
 	 *
 	 * @return The name.
 	 */
-	public String getName();
+	String getName();
 
 	/**
-	 * Get the condition associated with the filter.  Can be {@code null} in the case of a filter described
-	 * further by a "filter def" which contains the condition text.
+	 * Get the condition associated with the filter.  Can be {@code null}
+	 * in the case of a filter described further by a "filter def" which
+	 * contains the condition text.
 	 *
 	 * @return The condition defined on the filter.
-	 *
-	 * @see {@link FilterDefinitionSource#getCondition()}
 	 */
-	public String getCondition();
+	String getCondition();
 
 	/**
-	 * Should Hibernate perform automatic alias injection into the supplied condition string?  The default it to
-	 * perform auto injection *unless* explicit alias(es) are supplied.
-	 *
-	 * @return {@code true} indicates auto injection should occur; {@code false} that it should not
+	 * Should Hibernate perform automatic alias injection into the supplied
+	 * condition string?  The default it to perform auto injection *unless*
+	 * explicit alias(es) are supplied.
 	 */
-	public boolean shouldAutoInjectAliases();
+	boolean shouldAutoInjectAliases();
 
 	/**
 	 * Get the map of explicit alias to table name mappings.
 	 *
 	 * @return The alias to table map
 	 */
-	public Map<String, String> getAliasToTableMap();
+	Map<String, String> getAliasToTableMap();
 
 	/**
 	 * Get the map of explicit alias to entity name mappings.
 	 *
 	 * @return The alias to entity map
 	 */
-	public Map<String, String> getAliasToEntityMap();
+	Map<String, String> getAliasToEntityMap();
 }

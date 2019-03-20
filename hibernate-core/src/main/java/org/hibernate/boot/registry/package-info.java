@@ -9,18 +9,25 @@
  * Defines service registry contracts application are likely to want to utilize for
  * configuring Hibernate behavior.
  *
- * Service registries are designed to be hierarchical.  This works in 2 fashions.  First registries can "hide" or
- * "override" services from parent registries.  It also allows granular building of registries as services
- * become available.
+ * Service registries are designed to be hierarchical.  This works in 2 fashions.
+ * First registries can "hide" or "override" services from parent registries.  It
+ * also allows granular building of registries as services become available.
  *
- * {@link BootstrapServiceRegistry} is the base service registry, intended to be built via
- * {@link BootstrapServiceRegistryBuilder} if you need customization.  For non-customized
- * {@link BootstrapServiceRegistry} usage, the {@link BootstrapServiceRegistryBuilder} and
- * {@link BootstrapServiceRegistry} can be bypassed altogether.
+ * BootstrapServiceRegistry} is the base service registry, intended to be built via
+ * BootstrapServiceRegistryBuilder if you need customization.  For non-customized
+ * BootstrapServiceRegistry usage, the BootstrapServiceRegistryBuilder and
+ * BootstrapServiceRegistry can be bypassed altogether.
  *
- * Usually the next level in a standard registry set up is the {@link StandardServiceRegistry}, intended to be built
- * by the {@link StandardServiceRegistryBuilder} if you need customization.  The builder optionally takes the
- * {@link BootstrapServiceRegistry} to use as a base; if none is provided a default one is generated assuming sensible
- * defaults in Java SE and EE environments, particularly in respect to Class loading.
+ * Usually the next level in a standard registry set up is the
+ * StandardServiceRegistry, intended to be built by the StandardServiceRegistryBuilder
+ * if you need customization.  The builder optionally takes the
+ * BootstrapServiceRegistry to use as a base; if none is provided a default one is
+ * generated assuming sensible defaults in Java SE and EE environments, particularly
+ * in respect to Class loading.
+ *
+ * @see org.hibernate.boot.registry.BootstrapServiceRegistry
+ * @see org.hibernate.boot.registry.BootstrapServiceRegistryBuilder
+ * @see org.hibernate.boot.registry.StandardServiceRegistry
+ * @see org.hibernate.boot.registry.StandardServiceRegistryBuilder
  */
 package org.hibernate.boot.registry;

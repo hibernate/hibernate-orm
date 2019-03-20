@@ -13,8 +13,6 @@ package org.hibernate;
  * <br>
  * For HQL queries, use the <tt>FETCH</tt> keyword instead.
  *
- * @see Criteria#setFetchMode(java.lang.String, FetchMode)
- *
  * @author Gavin King
  */
 public enum FetchMode  {

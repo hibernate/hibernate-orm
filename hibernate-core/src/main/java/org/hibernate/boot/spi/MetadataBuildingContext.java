@@ -54,9 +54,7 @@ public interface MetadataBuildingContext extends ResolutionContext {
 	InFlightMetadataCollector getMetadataCollector();
 
 	/**
-	 * Not sure how I feel about this exposed here
-	 *
-	 * @return
+	 * @apiNote Not sure how I feel about this exposed here
 	 */
 	ObjectNameNormalizer getObjectNameNormalizer();
 

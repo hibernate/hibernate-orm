@@ -6,12 +6,6 @@
  */
 
 /**
- * Defines the SPI contracts for type information handling during bootstrap.  The
- * central contract here is {@link org.hibernate.boot.model.type.spi.TypeInformation}
- * and its registry : {@link org.hibernate.boot.model.type.spi.TypeInformationAliasRegistry}
- * <p/>
- * Ultimately would like to move to a "producer" paradigm where we create
- * a Type "producer" and store that into the mapping model; as opposed to the
- * current "information" paradigm.
+ * Defines the SPI contracts for type information handling during bootstrap.
  */
 package org.hibernate.boot.model.type.spi;

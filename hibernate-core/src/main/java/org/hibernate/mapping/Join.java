@@ -112,7 +112,7 @@ public class Join implements AttributeContainer, Serializable, MappedJoin {
 	}
 
 	/**
-	 * @deprecated since 6.0, use {@link #getPersistentAttributes()}.{@link List#size() size()}.
+	 * @deprecated since 6.0, use the size of {@link #getPersistentAttributes()} instead
 	 */
 	@Deprecated
 	public int getPropertySpan() {

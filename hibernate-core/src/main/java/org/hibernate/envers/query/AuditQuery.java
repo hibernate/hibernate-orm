@@ -26,8 +26,6 @@ import org.hibernate.envers.query.projection.AuditProjection;
  *
  * @author Adam Warski (adam at warski dot org)
  * @author Chris Cranford
- *
- * @see org.hibernate.Criteria
  */
 public interface AuditQuery {
 	/**
@@ -81,7 +79,6 @@ public interface AuditQuery {
 
 	/**
 	 * Used to specify that the query results will be a propagation (scalar in nature).
-	 * Implicitly specifies the {@link org.hibernate.Criteria#PROJECTION} result transformer.
 	 *
 	 * @param projection The projection representing the overall "shape" of the new query results.
 	 * @return this (for method chaining)

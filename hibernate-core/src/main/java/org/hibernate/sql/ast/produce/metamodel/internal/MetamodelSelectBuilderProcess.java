@@ -60,6 +60,7 @@ import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
+import org.hibernate.sql.results.spi.SimpleFromClauseAccessImpl;
 
 import org.jboss.logging.Logger;
 
@@ -112,7 +113,7 @@ public class MetamodelSelectBuilderProcess
 
 	private final SqlAliasBaseManager sqlAliasBaseManager = new SqlAliasBaseManager();
 
-	private final FromClauseAccess fromClauseAccess = new DomainResultCreationState.SimpleFromClauseAccessImpl();
+	private final FromClauseAccess fromClauseAccess = new SimpleFromClauseAccessImpl();
 
 
 	private MetamodelSelectBuilderProcess(

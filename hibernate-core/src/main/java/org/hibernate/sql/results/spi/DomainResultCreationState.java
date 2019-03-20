@@ -69,28 +69,6 @@ public interface DomainResultCreationState {
 
 	FromClauseAccess getFromClauseAccess();
 
-	class SimpleFromClauseAccessImpl implements FromClauseAccess {
-		protected final Map<NavigablePath, TableGroup> tableGroupMap = new HashMap<>();
-
-		@Override
-		public TableGroup findTableGroup(NavigablePath navigablePath) {
-			return tableGroupMap.get( navigablePath );
-		}
-
-		@Override
-		public void registerTableGroup(NavigablePath navigablePath, TableGroup tableGroup) {
-			final TableGroup previous = tableGroupMap.put( navigablePath, tableGroup );
-			if ( previous != null ) {
-				SqlAstCreationLogger.LOGGER.debugf(
-						"Registration of TableGroup [%s] for NavigablePath [%s] overrode previous registration : %s",
-						tableGroup,
-						navigablePath,
-						previous
-				);
-			}
-		}
-	}
-
 
 	// Things to go away
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

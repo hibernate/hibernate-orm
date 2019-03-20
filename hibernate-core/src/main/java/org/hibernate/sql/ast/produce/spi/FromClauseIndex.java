@@ -17,7 +17,7 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
+import org.hibernate.sql.results.spi.SimpleFromClauseAccessImpl;
 
 import org.jboss.logging.Logger;
 
@@ -26,7 +26,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class FromClauseIndex extends DomainResultCreationState.SimpleFromClauseAccessImpl {
+public class FromClauseIndex extends SimpleFromClauseAccessImpl {
 	private static final Logger log = Logger.getLogger( FromClauseIndex.class );
 
 	public FromClauseIndex() {

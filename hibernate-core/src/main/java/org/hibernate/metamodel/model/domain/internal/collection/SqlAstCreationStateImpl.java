@@ -25,6 +25,7 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
+import org.hibernate.sql.results.spi.SimpleFromClauseAccessImpl;
 
 /**
  * SqlAstCreationState and DomainResultCreationState implementation

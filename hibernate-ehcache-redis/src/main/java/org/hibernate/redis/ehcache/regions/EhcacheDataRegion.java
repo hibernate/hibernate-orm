@@ -6,13 +6,13 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.hibernate.redis.ehcache.strategy.AbstractReadWriteEhcacheAccessStrategy.Lock;
-import org.hibernate.redis.ehcache.strategy.EhcacheAccessStrategyFactory;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.EhCacheMessageLogger;
 import org.hibernate.cache.ehcache.internal.nonstop.HibernateNonstopCacheExceptionHandler;
 import org.hibernate.cache.internal.CacheKeyHelper;
 import org.hibernate.cache.spi.Region;
+import org.hibernate.redis.ehcache.strategy.AbstractReadWriteEhcacheAccessStrategy.Lock;
+import org.hibernate.redis.ehcache.strategy.EhcacheAccessStrategyFactory;
 import org.jboss.logging.Logger;
 import org.redisson.api.BatchOptions;
 import org.redisson.api.LocalCachedMapOptions;
@@ -200,7 +200,6 @@ public class EhcacheDataRegion implements Region {
 	}
 
 	protected void updateTimeStampInAll(Object key) {
-		System.out.println("Remote Put");
 		Long currentTime = System.currentTimeMillis();
 		Object id = CacheKeyHelper.getId(key);
 		distributedNeutrinoCache.put(id, currentTime);
@@ -208,7 +207,6 @@ public class EhcacheDataRegion implements Region {
 	}
 
 	protected void putLockInDistributedCache(Object key, Lock lock) {
-		System.out.println("Remote Put Lock");
 		Object id = CacheKeyHelper.getId(key);
 		distributedNeutrinoCache.put(id, lock);
 		localNeutrinoCache.put(id, System.currentTimeMillis());
@@ -219,21 +217,18 @@ public class EhcacheDataRegion implements Region {
 	}
 
 	protected void removeTimeStampFromAll(Object key) {
-		System.out.println("Remote Put");
 		Object id = CacheKeyHelper.getId(key);
 		distributedNeutrinoCache.remove(id);
 		localNeutrinoCache.remove(id);
 	}
 
 	protected void updateTimeStampInRemote(Object key) {
-		System.out.println("Remote Put");
 		Object id = CacheKeyHelper.getId(key);
 		distributedNeutrinoCache.put(id, System.currentTimeMillis());
 		localNeutrinoCache.remove(id);
 	}
 
 	protected void clearTimeStampInLocal() {
-		System.out.println("Remote Put");
 		distributedNeutrinoCache.clear();
 		localNeutrinoCache.clear();
 	}

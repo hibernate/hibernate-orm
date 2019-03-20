@@ -69,6 +69,7 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
+import org.hibernate.Transaction;
 import org.hibernate.TransientObjectException;
 import org.hibernate.TypeHelper;
 import org.hibernate.TypeMismatchException;
@@ -2472,13 +2473,20 @@ public final class SessionImpl
 
 	private transient LobHelperImpl lobHelper;
 
+	private Transaction getTransactionIfAccessible() {
+		// We do not want an exception to be thrown if the transaction
+		// is not accessible. If the transaction is not accessible,
+		// then return null.
+		return isTransactionAccessible() ? accessTransaction() : null;
+	}
+
 	@Override
 	public void beforeTransactionCompletion() {
 		log.tracef( "SessionImpl#beforeTransactionCompletion()" );
 		flushBeforeTransactionCompletion();
 		actionQueue.beforeTransactionCompletion();
 		try {
-			getInterceptor().beforeTransactionCompletion( getCurrentTransaction() );
+			getInterceptor().beforeTransactionCompletion( getTransactionIfAccessible() );
 		}
 		catch (Throwable t) {
 			log.exceptionInBeforeTransactionCompletionInterceptor( t );
@@ -2506,7 +2514,7 @@ public final class SessionImpl
 		}
 
 		try {
-			getInterceptor().afterTransactionCompletion( getCurrentTransaction() );
+			getInterceptor().afterTransactionCompletion( getTransactionIfAccessible() );
 		}
 		catch (Throwable t) {
 			log.exceptionInAfterTransactionCompletionInterceptor( t );
@@ -2727,7 +2735,7 @@ public final class SessionImpl
 				}
 				actionQueue.beforeTransactionCompletion();
 				try {
-					getInterceptor().beforeTransactionCompletion( getCurrentTransaction() );
+					getInterceptor().beforeTransactionCompletion( getTransactionIfAccessible() );
 				}
 				catch (Throwable t) {
 					log.exceptionInBeforeTransactionCompletionInterceptor( t );
@@ -3269,7 +3277,7 @@ public final class SessionImpl
 	@Override
 	public void afterTransactionBegin() {
 		checkOpenOrWaitingForAutoClose();
-		getInterceptor().afterTransactionBegin( getCurrentTransaction() );
+		getInterceptor().afterTransactionBegin( getTransactionIfAccessible() );
 	}
 
 	@Override

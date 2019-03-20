@@ -1614,12 +1614,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			throw new IllegalArgumentException( e );
 		}
 		catch ( HibernateException e) {
-			if ( getProducer().getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
-				throw getExceptionConverter().convert( e );
-			}
-			else {
-				throw e;
-			}
+			throw getExceptionConverter().convert( e );
 		}
 		finally {
 			afterQuery();

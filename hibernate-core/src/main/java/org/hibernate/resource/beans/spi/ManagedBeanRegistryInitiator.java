@@ -43,10 +43,10 @@ public class ManagedBeanRegistryInitiator implements StandardServiceInitiator<Ma
 	public ManagedBeanRegistry initiateService(
 			Map configurationValues,
 			ServiceRegistryImplementor serviceRegistry) {
-		return new ManagedBeanRegistryImpl( resoveBeanContainer( configurationValues, serviceRegistry ) );
+		return new ManagedBeanRegistryImpl( resolveBeanContainer( configurationValues, serviceRegistry ) );
 	}
 
-	private BeanContainer resoveBeanContainer(Map configurationValues, ServiceRegistryImplementor serviceRegistry) {
+	private BeanContainer resolveBeanContainer(Map configurationValues, ServiceRegistryImplementor serviceRegistry) {
 		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 		final ConfigurationService cfgSvc = serviceRegistry.getService( ConfigurationService.class );
 

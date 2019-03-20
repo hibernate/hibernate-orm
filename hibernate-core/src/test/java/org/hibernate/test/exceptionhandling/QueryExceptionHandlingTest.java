@@ -91,6 +91,20 @@ public class QueryExceptionHandlingTest extends BaseExceptionHandlingTest {
 		}
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-13300")
+	public void testExecuteUpdateWithConstraintViolation() {
+		try {
+			TransactionUtil2.inTransaction( sessionFactory(), s -> {
+				s.createQuery( "update A set id = 1 where id = 2" ).executeUpdate();
+			} );
+			fail( "should have thrown an exception" );
+		}
+		catch (RuntimeException expected) {
+			exceptionExpectations.onExecuteUpdateWithConstraintViolation( expected );
+		}
+	}
+
 	@Entity(name = "A")
 	public static class A {
 		@Id

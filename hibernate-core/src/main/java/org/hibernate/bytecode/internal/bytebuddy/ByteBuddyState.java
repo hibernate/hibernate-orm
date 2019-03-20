@@ -57,10 +57,9 @@ public final class ByteBuddyState {
 
 	private final ByteBuddy byteBuddy;
 
-	private final ForDeclaredMethods getDeclaredMethodMemberSubstitution;
-	private final ForDeclaredMethods getMethodMemberSubstitution;
-
 	private final ProxyDefinitionHelpers proxyDefinitionHelpers;
+
+	private final ClassRewriter classRewriter;
 
 	/**
 	 * It will be easier to maintain the cache and its state when it will no longer be static
@@ -78,12 +77,10 @@ public final class ByteBuddyState {
 		this.basicProxyCache = new TypeCache.WithInlineExpunction<TypeCache.SimpleKey>( TypeCache.Sort.WEAK );
 
 		if ( System.getSecurityManager() != null ) {
-			this.getDeclaredMethodMemberSubstitution = getDeclaredMethodMemberSubstitution();
-			this.getMethodMemberSubstitution = getMethodMemberSubstitution();
+			this.classRewriter = new SecurityManagerClassRewriter();
 		}
 		else {
-			this.getDeclaredMethodMemberSubstitution = null;
-			this.getMethodMemberSubstitution = null;
+			this.classRewriter = new StandardClassRewriter();
 		}
 
 		this.proxyDefinitionHelpers = new ProxyDefinitionHelpers();
@@ -189,10 +186,7 @@ public final class ByteBuddyState {
 	}
 
 	private Unloaded<?> make(TypePool typePool, DynamicType.Builder<?> builder) {
-		if ( System.getSecurityManager() != null ) {
-			builder = builder.visit( getDeclaredMethodMemberSubstitution );
-			builder = builder.visit( getMethodMemberSubstitution );
-		}
+		classRewriter.installReflectionMethodVisitors( builder );
 
 		Unloaded<?> unloadedClass;
 		if ( typePool != null ) {
@@ -211,34 +205,9 @@ public final class ByteBuddyState {
 			}
 		}
 
-		if ( System.getSecurityManager() != null ) {
-			// we authorize the proxy class to access the method lookup dispatcher
-			HibernateMethodLookupDispatcher.registerAuthorizedClass( unloadedClass.getTypeDescription().getName() );
-		}
+		classRewriter.registerAuthorizedClass( unloadedClass );
 
 		return unloadedClass;
-	}
-
-	private static ForDeclaredMethods getDeclaredMethodMemberSubstitution() {
-		// this should only be called if the security manager is enabled, thus the privileged calls
-		return MemberSubstitution.relaxed()
-				.method( ElementMatchers.is( AccessController.doPrivileged( new GetDeclaredMethodAction( Class.class,
-						"getDeclaredMethod", String.class, Class[].class ) ) ) )
-				.replaceWith(
-						AccessController.doPrivileged( new GetDeclaredMethodAction( HibernateMethodLookupDispatcher.class,
-								"getDeclaredMethod", Class.class, String.class, Class[].class ) ) )
-				.on( ElementMatchers.isTypeInitializer() );
-	}
-
-	private static ForDeclaredMethods getMethodMemberSubstitution() {
-		// this should only be called if the security manager is enabled, thus the privileged calls
-		return MemberSubstitution.relaxed()
-				.method( ElementMatchers.is( AccessController.doPrivileged( new GetDeclaredMethodAction( Class.class,
-						"getMethod", String.class, Class[].class ) ) ) )
-				.replaceWith(
-						AccessController.doPrivileged( new GetDeclaredMethodAction( HibernateMethodLookupDispatcher.class,
-								"getMethod", Class.class, String.class, Class[].class ) ) )
-				.on( ElementMatchers.isTypeInitializer() );
 	}
 
 	private static class GetDeclaredMethodAction implements PrivilegedAction<Method> {
@@ -328,6 +297,70 @@ public final class ByteBuddyState {
 
 		public FieldAccessor.PropertyConfigurable getInterceptorFieldAccessor() {
 			return interceptorFieldAccessor;
+		}
+	}
+
+	private interface ClassRewriter {
+		void installReflectionMethodVisitors(DynamicType.Builder<?> builder);
+
+		void registerAuthorizedClass(Unloaded<?> unloadedClass);
+	}
+
+	private static class SecurityManagerClassRewriter implements ClassRewriter {
+
+		private final ForDeclaredMethods getDeclaredMethodMemberSubstitution;
+		private final ForDeclaredMethods getMethodMemberSubstitution;
+
+		private SecurityManagerClassRewriter() {
+			this.getDeclaredMethodMemberSubstitution = getDeclaredMethodMemberSubstitution();
+			this.getMethodMemberSubstitution = getMethodMemberSubstitution();
+		}
+
+		@Override
+		public void installReflectionMethodVisitors(DynamicType.Builder<?> builder) {
+			builder = builder.visit( getDeclaredMethodMemberSubstitution );
+			builder = builder.visit( getMethodMemberSubstitution );
+		}
+
+		@Override
+		public void registerAuthorizedClass(Unloaded<?> unloadedClass) {
+			// we authorize the proxy class to access the method lookup dispatcher
+			HibernateMethodLookupDispatcher.registerAuthorizedClass( unloadedClass.getTypeDescription().getName() );
+		}
+
+		private static ForDeclaredMethods getDeclaredMethodMemberSubstitution() {
+			// this should only be called if the security manager is enabled, thus the privileged calls
+			return MemberSubstitution.relaxed()
+					.method( ElementMatchers.is( AccessController.doPrivileged( new GetDeclaredMethodAction( Class.class,
+							"getDeclaredMethod", String.class, Class[].class ) ) ) )
+					.replaceWith(
+							AccessController.doPrivileged( new GetDeclaredMethodAction( HibernateMethodLookupDispatcher.class,
+									"getDeclaredMethod", Class.class, String.class, Class[].class ) ) )
+					.on( ElementMatchers.isTypeInitializer() );
+		}
+
+		private static ForDeclaredMethods getMethodMemberSubstitution() {
+			// this should only be called if the security manager is enabled, thus the privileged calls
+			return MemberSubstitution.relaxed()
+					.method( ElementMatchers.is( AccessController.doPrivileged( new GetDeclaredMethodAction( Class.class,
+							"getMethod", String.class, Class[].class ) ) ) )
+					.replaceWith(
+							AccessController.doPrivileged( new GetDeclaredMethodAction( HibernateMethodLookupDispatcher.class,
+									"getMethod", Class.class, String.class, Class[].class ) ) )
+					.on( ElementMatchers.isTypeInitializer() );
+		}
+	}
+
+	private static class StandardClassRewriter implements ClassRewriter {
+
+		@Override
+		public void installReflectionMethodVisitors(DynamicType.Builder<?> builder) {
+			// do nothing
+		}
+
+		@Override
+		public void registerAuthorizedClass(Unloaded<?> unloadedClass) {
+			// do nothing
 		}
 	}
 }

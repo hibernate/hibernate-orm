@@ -133,7 +133,7 @@ ext {
             // EL required by Hibernate Validator at test runtime
             expression_language: "org.glassfish:javax.el:${elVersion}",
 
-            c3p0:            "com.mchange:c3p0:0.9.5.2",
+            c3p0:            "com.mchange:c3p0:0.9.5.3",
             ehcache:         "net.sf.ehcache:ehcache:2.10.6",
             ehcache3:        "org.ehcache:ehcache:3.6.1",
             jcache:          "javax.cache:cache-api:1.0.0",

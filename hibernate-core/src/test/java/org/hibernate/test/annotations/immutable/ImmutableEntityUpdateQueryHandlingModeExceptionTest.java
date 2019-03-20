@@ -8,6 +8,8 @@ package org.hibernate.test.annotations.immutable;
 
 import java.util.Map;
 
+import javax.persistence.PersistenceException;
+
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
 
@@ -18,6 +20,7 @@ import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -54,10 +57,14 @@ public class ImmutableEntityUpdateQueryHandlingModeExceptionTest extends BaseNon
 				.setParameter( "name", "N/A" )
 				.executeUpdate();
 			} );
-			fail("Should throw HibernateException");
+			fail("Should throw PersistenceException");
 		}
-		catch (HibernateException e) {
-			assertEquals( "The query: [update Country set name = :name] attempts to update an immutable entity: [Country]", e.getMessage() );
+		catch (PersistenceException e) {
+			assertTrue( e.getCause() instanceof HibernateException );
+			assertEquals(
+					"The query: [update Country set name = :name] attempts to update an immutable entity: [Country]",
+					e.getCause().getMessage()
+			);
 		}
 
 		doInHibernate( this::sessionFactory, session -> {

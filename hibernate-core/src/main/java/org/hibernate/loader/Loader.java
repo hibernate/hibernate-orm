@@ -20,7 +20,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+
+import javax.persistence.Cacheable;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -31,6 +34,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
+import org.hibernate.annotations.Cache;
 import org.hibernate.cache.spi.FilterKey;
 import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.QueryKey;
@@ -102,6 +106,10 @@ public abstract class Loader {
 
 	protected static final CoreMessageLogger LOG = CoreLogging.messageLogger( Loader.class );
 	protected static final boolean DEBUG_ENABLED = LOG.isDebugEnabled();
+	
+	private static Boolean metadataInitialized = false;
+	private static final Set<Serializable> cacheableSpacesSet = java.util.Collections
+			.newSetFromMap(new ConcurrentHashMap<>());
 
 	private final SessionFactoryImplementor factory;
 	private volatile ColumnNameCache columnNameCache;
@@ -2415,10 +2423,13 @@ public abstract class Loader {
 			final QueryParameters queryParameters,
 			final Set<Serializable> querySpaces,
 			final Type[] resultTypes) throws HibernateException {
+		if (!metadataInitialized) {
+			initializeMetadata();
+		}
 		final boolean cacheable = factory.getSessionFactoryOptions().isQueryCacheEnabled() &&
 				queryParameters.isCacheable();
-
-		if ( cacheable ) {
+		
+		if ( cacheable && validateSpaces(querySpaces) ) {
 			return listUsingQueryCache( session, queryParameters, querySpaces, resultTypes );
 		}
 		else {
@@ -2808,5 +2819,47 @@ public abstract class Loader {
 			}
 		}
 		return sql;
+	}
+	
+	public static boolean validateSpaces(Set<Serializable> querySpaces) {
+		if(querySpaces==null || querySpaces.isEmpty()) {
+			return true;
+		}
+		for(Serializable space : querySpaces) {
+			if(!cacheableSpacesSet.contains(space)) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	public static boolean validateSpace(Serializable space) {
+		return (space != null && cacheableSpacesSet.contains(space)) ? true : false;
+	}
+	
+	private synchronized void initializeMetadata() {
+		if (!metadataInitialized && factory != null && factory.getMetamodel() != null
+				&& factory.getMetamodel().entityPersisters() != null
+				&& factory.getMetamodel().collectionPersisters() != null) {
+
+			Map<String, EntityPersister> entityPersisters = factory.getMetamodel().entityPersisters();
+			for (Map.Entry<String, EntityPersister> entry : entityPersisters.entrySet()) {
+				if (entry.getValue().getCacheAccessStrategy() != null) {
+					for (Serializable space : entry.getValue().getQuerySpaces()) {
+						cacheableSpacesSet.add(space);
+					}
+				}
+			}
+
+			Map<String, CollectionPersister> collectionPersister = factory.getMetamodel().collectionPersisters();
+			for (Map.Entry<String, CollectionPersister> entry : collectionPersister.entrySet()) {
+				if (entry.getValue().getCacheAccessStrategy() != null) {
+					for (Serializable space : entry.getValue().getCollectionSpaces()) {
+						cacheableSpacesSet.add(space);
+					}
+				}
+			}
+		}
+		metadataInitialized = true;
 	}
 }

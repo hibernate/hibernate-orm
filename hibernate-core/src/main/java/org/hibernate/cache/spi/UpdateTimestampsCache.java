@@ -13,7 +13,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
-
+import org.hibernate.loader.Loader;
 import org.jboss.logging.Logger;
 
 /**
@@ -68,7 +68,9 @@ public class UpdateTimestampsCache {
 			if ( DEBUG_ENABLED ) {
 				LOG.debugf( "Pre-invalidating space [%s], timestamp: %s", space, ts );
 			}
-
+			if (!Loader.validateSpace(space)) {
+				continue;
+			}
 			try {
 				session.getEventListenerManager().cachePutStart();
 
@@ -103,6 +105,9 @@ public class UpdateTimestampsCache {
 		for (Serializable space : spaces) {
 			if ( DEBUG_ENABLED ) {
 				LOG.debugf( "Invalidating space [%s], timestamp: %s", space, ts );
+			}
+			if (!Loader.validateSpace(space)) {
+				continue;
 			}
 
 			try {

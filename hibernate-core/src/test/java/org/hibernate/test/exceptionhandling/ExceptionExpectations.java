@@ -94,6 +94,13 @@ interface ExceptionExpectations {
 				assertThat( e.getCause(), instanceOf( PersistenceException.class ) );
 				assertThat( e.getCause().getCause(), instanceOf( TransactionException.class ) );
 			}
+
+			@Override
+			public void onExecuteUpdateWithConstraintViolation(RuntimeException e) {
+				assertThat( e, instanceOf( PersistenceException.class ) );
+				assertThat( e.getCause(), instanceOf( ConstraintViolationException.class ) );
+				assertThat( e.getCause().getCause(), instanceOf( SQLException.class ) );
+			}
 		};
 	}
 
@@ -159,6 +166,12 @@ interface ExceptionExpectations {
 			@Override
 			public void onTransactionExceptionOnCommit(RuntimeException e) {
 				assertThat( e, instanceOf( TransactionException.class ) );
+			}
+
+			@Override
+			public void onExecuteUpdateWithConstraintViolation(RuntimeException e) {
+				assertThat( e, instanceOf( ConstraintViolationException.class ) );
+				assertThat( e.getCause(), instanceOf( SQLException.class ) );
 			}
 		};
 	}
@@ -233,6 +246,13 @@ interface ExceptionExpectations {
 				assertThat( e, instanceOf( PersistenceException.class ) );
 				assertThat( e.getCause(), instanceOf( TransactionException.class ) );
 			}
+
+			@Override
+			public void onExecuteUpdateWithConstraintViolation(RuntimeException e) {
+				assertThat( e, instanceOf( PersistenceException.class ) );
+				assertThat( e.getCause(), instanceOf( ConstraintViolationException.class ) );
+				assertThat( e.getCause().getCause(), instanceOf( SQLException.class ) );
+			}
 		};
 	}
 
@@ -259,4 +279,6 @@ interface ExceptionExpectations {
 	void onTransactionExceptionOnPersistAndMergeAndFlush(RuntimeException e);
 
 	void onTransactionExceptionOnCommit(RuntimeException e);
+
+	void onExecuteUpdateWithConstraintViolation(RuntimeException e);
 }

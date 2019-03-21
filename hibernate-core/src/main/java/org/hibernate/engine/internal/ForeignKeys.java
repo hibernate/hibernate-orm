@@ -100,11 +100,17 @@ public final class ForeignKeys {
 					// If value is lazy, it may need to be initialized to
 					// determine if the value is nullifiable.
 					final Object possiblyInitializedValue = initializeIfNecessary( value, propertyName, entityType );
-					// If the value is not nullifiable, make sure that the
-					// possibly initialized value is returned.
-					returnedValue = isNullifiable( entityType.getAssociatedEntityName(), possiblyInitializedValue )
-							? null
-							: possiblyInitializedValue;
+					if ( possiblyInitializedValue == null ) {
+						// The uninitialized value was initialized to null
+						returnedValue = null;
+					}
+					else {
+						// If the value is not nullifiable, make sure that the
+						// possibly initialized value is returned.
+						returnedValue = isNullifiable( entityType.getAssociatedEntityName(), possiblyInitializedValue )
+								? null
+								: possiblyInitializedValue;
+					}
 				}
 			}
 			else if ( type.isAnyType() ) {

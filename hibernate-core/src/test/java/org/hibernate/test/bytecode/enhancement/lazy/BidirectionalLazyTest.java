@@ -173,6 +173,40 @@ public class BidirectionalLazyTest extends BaseCoreFunctionalTestCase {
 		);
 	}
 
+	@Test
+	public void testRemoveEntityWithNullLazyManyToOne() {
+
+		doInHibernate(
+				this::sessionFactory, session -> {
+					Employer employer = new Employer( "RedHat" );
+					session.persist( employer );
+					Employee employee = new Employee( "Jack" );
+					session.persist( employee );
+				}
+		);
+
+		doInHibernate(
+				this::sessionFactory, session -> {
+					Employee employee = session.get( Employee.class, "Jack" );
+
+					// Get and delete an Employer that is not associated with employee
+					Employer employer = session.get( Employer.class, "RedHat" );
+					session.remove( employer );
+
+					// employee.employer is uninitialized. Since the column for employee.employer
+					// is a foreign key, and there is an Employer that has already been removed,
+					// employee.employer will need to be iniitialized to determine if
+					// employee.employee is nullifiable.
+					assertFalse( Hibernate.isPropertyInitialized( employee, "employer" ) );
+					session.remove( employee );
+					assertTrue( Hibernate.isPropertyInitialized( employee, "employer" ) );
+				}
+		);
+
+
+
+	}
+
 	private void checkEntityEntryState(
 			final Session session,
 			final Employee employee,

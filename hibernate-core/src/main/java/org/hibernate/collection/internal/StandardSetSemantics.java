@@ -48,10 +48,10 @@ public class StandardSetSemantics extends AbstractSetSemantics<Set<?>> {
 
 	@Override
 	public <E> PersistentCollection<E> wrap(
-			Set<?> rawCollection,
+			Object rawCollection,
 			PersistentCollectionDescriptor<?, Set<?>, E> collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentSet<>( session, collectionDescriptor, rawCollection );
+		return new PersistentSet( session, collectionDescriptor, (Set) rawCollection );
 	}
 
 }

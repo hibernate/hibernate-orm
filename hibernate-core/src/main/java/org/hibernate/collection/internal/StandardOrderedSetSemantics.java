@@ -8,6 +8,7 @@ package org.hibernate.collection.internal;
 
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -48,10 +49,10 @@ public class StandardOrderedSetSemantics extends AbstractSetSemantics<LinkedHash
 
 	@Override
 	public <E> PersistentCollection<E> wrap(
-			LinkedHashSet<?> rawCollection,
+			Object rawCollection,
 			PersistentCollectionDescriptor<?, LinkedHashSet<?>, E> collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentSet( session, collectionDescriptor, rawCollection );
+		return new PersistentSet( session, collectionDescriptor, (Set) rawCollection );
 	}
 
 	@Override

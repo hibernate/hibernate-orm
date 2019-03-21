@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
 
 
 import org.hibernate.testing.junit5.DialectFilterExtension;
-import org.hibernate.testing.junit5.FailureExpectedExtension;
+import org.hibernate.testing.orm.junit.FailureExpectedExtension;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 

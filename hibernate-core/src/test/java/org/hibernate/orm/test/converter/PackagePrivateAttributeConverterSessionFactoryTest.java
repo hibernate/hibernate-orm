@@ -13,19 +13,16 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Tuple;
 
-import org.hibernate.boot.MetadataSources;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-10778" )
+@TestForIssue(jiraKey = "HHH-10778")
 public class PackagePrivateAttributeConverterSessionFactoryTest
 		extends SessionFactoryBasedFunctionalTest {
 
@@ -36,28 +33,31 @@ public class PackagePrivateAttributeConverterSessionFactoryTest
 
 	@Test
 	public void test() {
-		doInHibernate( this::sessionFactory, session -> {
-			Tester tester = new Tester();
-			tester.setId( 1L );
-			tester.setCode( 123 );
+		inTransaction(
+				session -> {
+					Tester tester = new Tester();
+					tester.setId( 1L );
+					tester.setCode( 123 );
 
-			session.persist( tester );
-		} );
+					session.persist( tester );
+				} );
 
-		doInHibernate( this::sessionFactory, session -> {
-			Tuple tuple = session.createQuery(
-				"select t.code as code " +
-				"from Tester t " +
-				"where t.id = :id", Tuple.class )
-			.setParameter( "id", 1L )
-			.getSingleResult();
+		inTransaction(
+				session -> {
+					// todo (6.0) : when native query will be implemented try with a native query and check that tuple.get( "code" ) returns a String
+					Tuple tuple = session.createQuery(
+							"select t.code as code " +
+									"from Tester t " +
+									"where t.id = :id", Tuple.class )
+							.setParameter( "id", 1L )
+							.getSingleResult();
 
-			assertEquals( "123", tuple.get( "code" ) );
+					assertEquals( 123, tuple.get( "code" ) );
 
-			Tester tester = session.find( Tester.class, 1L );
+					Tester tester = session.find( Tester.class, 1L );
 
-			assertEquals( 123, (int) tester.getCode() );
-		} );
+					assertEquals( 123, (int) tester.getCode() );
+				} );
 	}
 
 	@Entity(name = "Tester")
@@ -65,7 +65,7 @@ public class PackagePrivateAttributeConverterSessionFactoryTest
 		@Id
 		private Long id;
 
-		@Convert( converter = IntegerToVarcharConverter.class )
+		@Convert(converter = IntegerToVarcharConverter.class)
 		private Integer code;
 
 		public Long getId() {
@@ -85,8 +85,8 @@ public class PackagePrivateAttributeConverterSessionFactoryTest
 		}
 	}
 
-	@Converter( autoApply = true )
-	static class IntegerToVarcharConverter implements AttributeConverter<Integer,String> {
+	@Converter(autoApply = true)
+	static class IntegerToVarcharConverter implements AttributeConverter<Integer, String> {
 		@Override
 		public String convertToDatabaseColumn(Integer attribute) {
 			return attribute == null ? null : attribute.toString();

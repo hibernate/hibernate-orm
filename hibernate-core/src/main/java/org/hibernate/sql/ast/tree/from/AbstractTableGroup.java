@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.AbstractColumnReferenceQualifier;
@@ -30,6 +31,7 @@ public abstract class AbstractTableGroup
 	private final LockMode lockMode;
 
 	private Set<TableGroupJoin> tableGroupJoins;
+	private boolean isInnerJoinPossible = true;
 
 	public AbstractTableGroup(
 			NavigablePath navigablePath,
@@ -39,6 +41,18 @@ public abstract class AbstractTableGroup
 		this.navigablePath = navigablePath;
 		this.navigable = navigable;
 		this.lockMode = lockMode;
+	}
+
+	public AbstractTableGroup(
+			NavigablePath navigablePath,
+			Navigable<?> navigable,
+			LockMode lockMode,
+			boolean isInnerJoinPossible) {
+		super();
+		this.navigablePath = navigablePath;
+		this.navigable = navigable;
+		this.lockMode = lockMode;
+		this.isInnerJoinPossible = isInnerJoinPossible;
 	}
 
 	@Override
@@ -122,5 +136,10 @@ public abstract class AbstractTableGroup
 		}
 
 		return buffer.append( "])" ).toString();
+	}
+
+	@Override
+	public boolean isInnerJoinPossible() {
+		return isInnerJoinPossible;
 	}
 }

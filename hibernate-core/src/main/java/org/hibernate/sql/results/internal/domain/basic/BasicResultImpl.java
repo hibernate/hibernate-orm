@@ -46,6 +46,21 @@ public class BasicResultImpl implements ScalarResult {
 		this.assembler = new BasicResultAssembler( sqlSelection, valueConverter, expressableType.getJavaTypeDescriptor() );
 	}
 
+	public BasicResultImpl(
+			String resultVariable,
+			SqlSelection sqlSelection,
+			SqlExpressableType expressableType,
+			BasicValueConverter valueConverter) {
+		this.resultVariable = resultVariable;
+		this.expressableType = expressableType;
+
+		this.assembler = new BasicResultAssembler(
+				sqlSelection,
+				valueConverter,
+				expressableType.getJavaTypeDescriptor()
+		);
+	}
+
 	@Override
 	public String getResultVariable() {
 		return resultVariable;

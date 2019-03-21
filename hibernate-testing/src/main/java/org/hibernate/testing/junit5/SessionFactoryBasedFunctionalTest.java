@@ -12,6 +12,7 @@ import java.util.function.Function;
 import javax.persistence.SharedCacheMode;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -87,7 +88,9 @@ public abstract class SessionFactoryBasedFunctionalTest
 	private MetadataImplementor buildMetadata(StandardServiceRegistry ssr) {
 		MetadataSources metadataSources = new MetadataSources( ssr );
 		applyMetadataSources( metadataSources );
-		return (MetadataImplementor) metadataSources.buildMetadata();
+		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder();
+		configureMetadataBuilder( metadataBuilder );
+		return (MetadataImplementor) metadataBuilder.build();
 	}
 
 	private void dropDatabase() {
@@ -99,6 +102,9 @@ public abstract class SessionFactoryBasedFunctionalTest
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
 		}
+	}
+
+	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
 	}
 
 	protected void applySettings(StandardServiceRegistryBuilder builer) {

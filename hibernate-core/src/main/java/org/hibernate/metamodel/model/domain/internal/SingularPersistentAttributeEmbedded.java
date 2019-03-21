@@ -22,6 +22,8 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
+import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
@@ -56,6 +58,7 @@ import org.hibernate.sql.results.internal.domain.embedded.CompositeFetchImpl;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
+import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -67,6 +70,7 @@ public class SingularPersistentAttributeEmbedded<O,J>
 		implements EmbeddedValuedNavigable<J>, Joinable<J>, Fetchable<J> {
 
 	private final EmbeddedTypeDescriptor<J> embeddedDescriptor;
+	private CascadeStyle cascadeStyle;
 
 	public SingularPersistentAttributeEmbedded(
 			ManagedTypeDescriptor<O> runtimeModelContainer,
@@ -83,10 +87,23 @@ public class SingularPersistentAttributeEmbedded<O,J>
 				disposition,
 				context
 		);
-
 		instantiationComplete( bootModelAttribute, context );
 	}
 
+	private CascadeStyle getCascadeStyle(EmbeddedTypeDescriptor<J> embeddedDescriptor) {
+		List<StateArrayContributor<?>> stateArrayContributors = embeddedDescriptor.getStateArrayContributors();
+		for ( int i = 0; i < stateArrayContributors.size(); i++ ) {
+			if ( stateArrayContributors.get( i ) != CascadeStyles.NONE ) {
+				return CascadeStyles.ALL;
+			}
+		}
+		return CascadeStyles.NONE;
+	}
+
+	@Override
+	public ForeignKeyDirection getForeignKeyDirection() {
+		return null;
+	}
 
 	@Override
 	public ManagedTypeDescriptor<O> getContainer() {
@@ -342,6 +359,14 @@ public class SingularPersistentAttributeEmbedded<O,J>
 	}
 
 	@Override
+	public CascadeStyle getCascadeStyle() {
+		if(cascadeStyle == null){
+			cascadeStyle = getCascadeStyle( embeddedDescriptor );
+		}
+		return cascadeStyle;
+	}
+
+	@Override
 	public void dehydrate(
 			Object value,
 			JdbcValueCollector jdbcValueCollector,
@@ -425,4 +450,6 @@ public class SingularPersistentAttributeEmbedded<O,J>
 
 		);
 	}
+
+
 }

@@ -179,6 +179,10 @@ public interface PersistentCollectionDescriptor<O,C,E>
 				|| "values".equals( navigableName ) || "{values}".equals( navigableName ) ) {
 			return (Navigable<N>) getElementDescriptor();
 		}
+		CollectionElement<E> elementDescriptor = getElementDescriptor();
+		if ( elementDescriptor instanceof NavigableContainer ) {
+			return ( (NavigableContainer<N>) getElementDescriptor() ).findNavigable( navigableName );
+		}
 
 		return null;
 	}
@@ -202,19 +206,10 @@ public interface PersistentCollectionDescriptor<O,C,E>
 		visitNavigables( visitor );
 	}
 
-	/**
-	 * todo (6.0) : remove this method
-	 *
-	 * @deprecated Use {@link #getSemantics()} ()} instead
-	 */
-	@Deprecated
-	CollectionSemantics getTuplizer();
-
 	@Override
 	default boolean canCompositeContainCollections() {
 		return false;
 	}
-
 
 	/**
 	 * @todo (6.0) what args?
@@ -612,4 +607,9 @@ public interface PersistentCollectionDescriptor<O,C,E>
 	default Object indexOf(Object collection, Object element) {
 		throw new UnsupportedOperationException( "Collection type does not support indexes" );
 	}
+
+	/**
+	 * Return the element class of an array, or null otherwise
+	 */
+	Class getElementClass();
 }

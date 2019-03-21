@@ -14,7 +14,6 @@ import java.util.function.Consumer;
 import javax.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
 import org.hibernate.boot.model.domain.spi.ManagedTypeMappingImplementor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -61,8 +60,6 @@ public class EmbeddedTypeDescriptorImpl<J>
 	private final EmbeddedContainer container;
 	private final NavigableRole navigableRole;
 
-	private final SingularPersistentAttribute.Disposition compositeDisposition;
-
 	private ManagedTypeRepresentationStrategy representationStrategy;
 	private Instantiator<J> instantiator;
 
@@ -86,12 +83,13 @@ public class EmbeddedTypeDescriptorImpl<J>
 		EmbeddableJavaDescriptorImpl javaTypeDescriptor = (EmbeddableJavaDescriptorImpl) embeddedMapping.getJavaTypeMapping().getJavaTypeDescriptor();
 		javaTypeDescriptor.setMutabilityPlan( new EmbeddedMutabilityPlanImpl( this ) );
 		this.container = container;
-		this.compositeDisposition = compositeDisposition;
 		this.navigableRole = container.getNavigableRole().append( localName );
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <T> EmbeddableJavaDescriptor<T> resolveJtd(RuntimeModelCreationContext creationContext, EmbeddedValueMappingImplementor embeddedMapping) {
+	private static <T> EmbeddableJavaDescriptor<T> resolveJtd(
+			RuntimeModelCreationContext creationContext,
+			EmbeddedValueMappingImplementor embeddedMapping) {
 		final JavaTypeDescriptorRegistry jtdr = creationContext.getTypeConfiguration().getJavaTypeDescriptorRegistry();
 
 		EmbeddableJavaDescriptor<T> jtd = (EmbeddableJavaDescriptor<T>) jtdr.getDescriptor( embeddedMapping.getName() );
@@ -307,15 +305,6 @@ public class EmbeddedTypeDescriptorImpl<J>
 		);
 	}
 
-	private Object[] breakDownValue(Object value) {
-		assert getJavaTypeDescriptor().isInstance( value );
-
-		final Object[] values = getEmbeddedDescriptor().getPropertyValues( value );
-		assert values.length == getStateArrayContributors().size();
-
-		return values;
-	}
-
 	@Override
 	public void dehydrate(
 			Object value,
@@ -327,9 +316,8 @@ public class EmbeddedTypeDescriptorImpl<J>
 
 		visitStateArrayContributors(
 				stateArrayContributor -> {
-					final Object subValue = subValues[stateArrayContributor.getStateArrayPosition()];
 					stateArrayContributor.dehydrate(
-							subValue,
+							subValues[stateArrayContributor.getStateArrayPosition()],
 							jdbcValueCollector,
 							clause,
 							session
@@ -345,7 +333,8 @@ public class EmbeddedTypeDescriptorImpl<J>
 
 	@Override
 	public void setPropertyValue(Object object, int i, Object value) {
-		getPersistentAttributes().get( i ).getPropertyAccess().getSetter().set( object, value, getTypeConfiguration().getSessionFactory() );
+		getPersistentAttributes().get( i ).getPropertyAccess()
+				.getSetter().set( object, value, getTypeConfiguration().getSessionFactory() );
 	}
 
 	@Override
@@ -364,17 +353,14 @@ public class EmbeddedTypeDescriptorImpl<J>
 	}
 
 	@Override
-	public boolean[] getPropertyNullability() {
-		throw new NotYetImplementedFor6Exception(  );
-	}
-
-	@Override
 	public CascadeStyle getCascadeStyle(int i) {
-		throw new NotYetImplementedFor6Exception( );
+		return getPersistentAttributes().get( i ).getCascadeStyle();
 	}
 
 	@Override
-	public AllowableParameterType resolveTemporalPrecision(TemporalType temporalType, TypeConfiguration typeConfiguration) {
+	public AllowableParameterType resolveTemporalPrecision(
+			TemporalType temporalType,
+			TypeConfiguration typeConfiguration) {
 		throw new ParameterMisuseException( "Cannot apply temporal precision to embeddable value" );
 	}
 

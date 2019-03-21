@@ -42,7 +42,6 @@ import org.hibernate.boot.spi.MetadataImplementor;
 
 import org.hibernate.testing.junit5.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -52,7 +51,6 @@ import org.junit.jupiter.api.Test;
 public class NestedEmbeddableTest extends BaseUnitTest {
 
 	@Test
-	@Disabled("Enable once @Embeddable mappings works")
 	public void test() {
 		StandardServiceRegistry standardServiceRegistry = new StandardServiceRegistryBuilder().build();
 

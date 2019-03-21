@@ -113,7 +113,7 @@ public class RowReaderStandardImpl<T> implements RowReader<T> {
 	@Override
 	public void finishUp(JdbcValuesSourceProcessingState processingState) {
 		for ( Initializer initializer : initializers ) {
-			initializer.endLoading( processingState );
+			initializer.endLoading( processingState.getExecutionContext() );
 		}
 
 		// todo : use Callback to execute AfterLoadActions

@@ -9,12 +9,12 @@ package org.hibernate.orm.test.annotations.manytomany;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
 
-import org.junit.jupiter.api.Disabled;
+import org.hibernate.testing.orm.junit.FailureExpected;
 
 /**
  * @author Andrea Boriero
  */
-@Disabled("Filtesr not yet implemented")
+@FailureExpected("Filters not yet implemented")
 public class ManyToManyWithFiltersMaxFetchDepth0Test extends ManyToManyWithFiltersTest {
 	@Override
 	protected void applySettings(StandardServiceRegistryBuilder builer) {

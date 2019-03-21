@@ -68,7 +68,7 @@ public class Map extends IndexedCollection {
 	private CollectionJavaTypeMapping resolveJavaTypeMapping() {
 		final Class<? extends java.util.Map> javaTypeMappingClass;
 
-		if ( getComparator() != null ) {
+		if ( isSorted() ) {
 			javaTypeMappingClass = java.util.SortedMap.class;
 		}
 		else if ( hasOrder() ) {

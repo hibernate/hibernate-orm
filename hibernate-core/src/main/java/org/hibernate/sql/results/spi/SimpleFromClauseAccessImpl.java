@@ -39,4 +39,5 @@ public class SimpleFromClauseAccessImpl implements FromClauseAccess {
 			);
 		}
 	}
+
 }

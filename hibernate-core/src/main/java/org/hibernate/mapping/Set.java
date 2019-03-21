@@ -20,6 +20,7 @@ import org.hibernate.collection.spi.CollectionSemantics;
 /**
  * A set with no nullable element columns. It will have a primary key
  * consisting of all table columns (ie. key columns + element columns).
+ *
  * @author Gavin King
  */
 public class Set extends Collection {
@@ -77,7 +78,7 @@ public class Set extends Collection {
 	}
 
 	public Object accept(ValueVisitor visitor) {
-		return visitor.accept(this);
+		return visitor.accept( this );
 	}
 
 	@Override
@@ -106,7 +107,7 @@ public class Set extends Collection {
 	private CollectionJavaTypeMapping resolveJavaTypeMapping() {
 		final Class<? extends java.util.Set> javaTypeMappingClass;
 
-		if ( getComparator() != null ) {
+		if ( isSorted() ) {
 			javaTypeMappingClass = java.util.SortedSet.class;
 		}
 		else if ( hasOrder() ) {

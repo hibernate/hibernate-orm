@@ -114,8 +114,6 @@ public class Property implements Serializable, PersistentAttributeMapping {
 		return false;
 	}
 
-
-	
 	public int getColumnSpan() {
 		return value.getColumnSpan();
 	}

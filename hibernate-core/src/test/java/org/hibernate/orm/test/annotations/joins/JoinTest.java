@@ -17,8 +17,8 @@ import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -163,7 +163,6 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
-	@Disabled("the generated query 'from Life l where l.owner.name = :name' is not correct")
 	public void testManyToOne() {
 		inTransaction(
 				session -> {
@@ -241,7 +240,7 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
-	@Disabled(value = "customSQL has not been yet implemented")
+	@FailureExpected(value = "customSQL has not been yet implemented")
 	public void testCustomSQL() {
 		final Cat cat = new Cat();
 		String storyPart2 = "My long story";
@@ -260,7 +259,7 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
-	@Disabled(value = "MappedSuperclass support has not yet been implemented ")
+	@FailureExpected(value = "MappedSuperclass support has not yet been implemented ")
 	public void testMappedSuperclassAndSecondaryTable() {
 		inTransaction(
 				session -> {

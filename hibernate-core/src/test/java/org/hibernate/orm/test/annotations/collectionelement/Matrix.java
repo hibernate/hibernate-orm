@@ -6,7 +6,8 @@
  */
 
 //$
-package org.hibernate.test.annotations.collectionelement;
+package org.hibernate.orm.test.annotations.collectionelement;
+
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -32,12 +33,12 @@ public class Matrix {
 	@Column(name="mId")
 	private Integer id;
 
-	@MapKeyType( @Type(type="integer") )
+	@MapKeyType(@Type(type = "integer"))
 	@ElementCollection
 	@Sort(type = SortType.NATURAL) 
 	@Type(type = "float")
 	@MapKeyColumn(nullable = false)
-	private SortedMap<Integer, Float> mvalues = new TreeMap<Integer, Float>();
+	private SortedMap<Integer, Float> mvalues = new TreeMap<>();
 
 	public Integer getId() {
 		return id;

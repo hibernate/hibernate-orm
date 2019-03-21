@@ -9,7 +9,6 @@ package org.hibernate.type.descriptor.java.internal;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.type.descriptor.java.spi.AbstractManagedJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
@@ -57,12 +56,12 @@ public class EmbeddableJavaDescriptorImpl<J>
 
 	@Override
 	public J wrap(Object value, SharedSessionContractImplementor session) {
-		throw new NotYetImplementedException(  );
+		throw new UnsupportedOperationException(  );
 	}
 
 	@Override
 	public <X> X unwrap(J value, Class<X> type, SharedSessionContractImplementor session) {
-		throw new NotYetImplementedException(  );
+		throw new UnsupportedOperationException(  );
 	}
 
 	@Override

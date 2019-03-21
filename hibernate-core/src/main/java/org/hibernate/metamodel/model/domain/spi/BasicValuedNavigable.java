@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.query.NavigablePath;
@@ -56,6 +57,10 @@ public interface BasicValuedNavigable<J> extends BasicValuedExpressableType<J>, 
 
 	@Override
 	default Object unresolve(Object value, SharedSessionContractImplementor session) {
+		if ( getValueMapper().getValueConverter() != null ) {
+			value = getValueMapper().getValueConverter().toRelationalValue( value, session );
+		}
+
 		return value;
 	}
 
@@ -123,6 +128,16 @@ public interface BasicValuedNavigable<J> extends BasicValuedExpressableType<J>, 
 				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 
-		return new BasicResultImpl( resultVariable, sqlSelection, getBoundColumn().getExpressableType() );
+		BasicValueConverter valueConverter = null;
+		if ( this instanceof ConvertibleNavigable ) {
+			valueConverter = ( (ConvertibleNavigable) this ).getValueConverter();
+		}
+
+		return new BasicResultImpl(
+				resultVariable,
+				sqlSelection,
+				getBoundColumn().getExpressableType(),
+				valueConverter
+		);
 	}
 }

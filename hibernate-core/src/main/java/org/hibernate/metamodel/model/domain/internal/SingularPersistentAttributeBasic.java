@@ -116,7 +116,7 @@ public class SingularPersistentAttributeBasic<O, J>
 
 	@Override
 	public BasicTypeDescriptor<J> getType() {
-		return (BasicTypeDescriptor<J>) this;
+		return this;
 	}
 
 	@Override
@@ -189,15 +189,6 @@ public class SingularPersistentAttributeBasic<O, J>
 		return Collections.singletonList(
 				qualifier.resolveColumnReference( getBoundColumn() )
 		);
-	}
-
-	@Override
-	public Object unresolve(Object value, SharedSessionContractImplementor session) {
-		if ( valueMapper.getValueConverter() != null ) {
-			value = valueMapper.getValueConverter().toRelationalValue( value, session );
-		}
-
-		return value;
 	}
 
 	@Override

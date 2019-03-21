@@ -19,6 +19,7 @@ import org.hibernate.Transaction;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -153,7 +154,7 @@ public class ManyToManyTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
-	@Disabled("Inheritance support not yet implemented")
+	@FailureExpected("Inheritance support not yet implemented")
 	public void testBasic() {
 		final Employer employer = new Employer();
 		final Employee employee = new Employee();
@@ -212,7 +213,7 @@ public class ManyToManyTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
-	@Disabled("Inheritance support not yet implemented")
+	@FailureExpected("Inheritance support not yet implemented")
 	public void testOrderByEmployee() {
 		inTransaction(
 				session -> {
@@ -251,7 +252,7 @@ public class ManyToManyTest extends SessionFactoryBasedFunctionalTest {
 
 	// HHH-4394
 	@Test
-	@Disabled("Inheritance support not yet implemented")
+	@FailureExpected("Inheritance support not yet implemented")
 	public void testOrderByContractor() {
 		inTransaction(
 				session -> {
@@ -296,7 +297,7 @@ public class ManyToManyTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
-	@Disabled("Inheritance support not yet implemented")
+	@FailureExpected("Inheritance support not yet implemented")
 	public void testRemoveInBetween() {
 		Employer employer = new Employer();
 		Employee employee = new Employee();
@@ -368,7 +369,7 @@ public class ManyToManyTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
-	@Disabled("Inheritance support not yet implemented")
+	@FailureExpected("Inheritance support not yet implemented")
 	public void testJoinedSubclassManyToMany() {
 		Zone a = new Zone();
 		InspectorPrefixes inspectorPrefixesp = new InspectorPrefixes( "dgi" );
@@ -393,7 +394,7 @@ public class ManyToManyTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
-	@Disabled("Inheritance support not yet implemented")
+	@FailureExpected("Inheritance support not yet implemented")
 	public void testJoinedSubclassManyToManyWithNonPkReference() {
 		Zone a = new Zone();
 		InspectorPrefixes inspectorPrefixes = new InspectorPrefixes( "dgi" );
@@ -423,7 +424,7 @@ public class ManyToManyTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
-	@Disabled("Inheritance support not yet implemented")
+	@FailureExpected("Inheritance support not yet implemented")
 	public void testReferencedColumnNameToSuperclass() {
 		inTransaction(
 				session -> {
@@ -444,7 +445,7 @@ public class ManyToManyTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-4685")
-	@Disabled("Inheritance support not yet implemented")
+	@FailureExpected("Inheritance support not yet implemented")
 	public void testManyToManyEmbeddableBiDirectionalDotNotationInMappedBy() {
 		// Section 11.1.25
 		// The ManyToMany annotation may be used within an embeddable class contained within an entity class to specify a
@@ -485,7 +486,7 @@ public class ManyToManyTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-4685")
-	@Disabled("Inheritance support not yet implemented")
+	@FailureExpected("Inheritance support not yet implemented")
 	public void testOneToManyEmbeddableBiDirectionalDotNotationInMappedBy() {
 		// Section 11.1.26
 		// The ManyToOne annotation may be used within an embeddable class to specify a relationship from the embeddable

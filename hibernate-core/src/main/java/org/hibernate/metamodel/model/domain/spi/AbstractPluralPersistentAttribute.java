@@ -29,6 +29,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -75,8 +76,9 @@ public abstract class AbstractPluralPersistentAttribute<O,C,E> extends AbstractP
 
 	private final PersistentCollectionDescriptor collectionDescriptor;
 	private final FetchStrategy fetchStrategy;
-	private final CascadeStyle cascadeStyle;
+	private CascadeStyle cascadeStyle;
 	private final boolean isNullable;
+	private final String cascade;
 
 	private int stateArrayPosition;
 
@@ -96,7 +98,7 @@ public abstract class AbstractPluralPersistentAttribute<O,C,E> extends AbstractP
 
 		this.isNullable = bootCollectionDescriptor.isNullable();
 		this.fetchStrategy = DomainModelHelper.determineFetchStrategy( bootCollectionDescriptor );
-		this.cascadeStyle = DomainModelHelper.determineCascadeStyle( bootProperty.getCascade() );
+		this.cascade = bootProperty.getCascade();
 	}
 
 	@Override
@@ -111,7 +113,26 @@ public abstract class AbstractPluralPersistentAttribute<O,C,E> extends AbstractP
 
 	@Override
 	public CascadeStyle getCascadeStyle() {
+		if ( cascadeStyle == null ) {
+			if ( collectionDescriptor.getElementDescriptor() instanceof CollectionElementEmbedded ) {
+				cascadeStyle = elementCascadeStyle( (CollectionElementEmbedded) collectionDescriptor.getElementDescriptor() );
+			}
+			else {
+				cascadeStyle = DomainModelHelper.determineCascadeStyle( cascade );
+			}
+		}
 		return cascadeStyle;
+	}
+
+	private CascadeStyle elementCascadeStyle(CollectionElementEmbedded element) {
+		EmbeddedTypeDescriptor embeddedDescriptor = element.getEmbeddedDescriptor();
+
+		for ( StateArrayContributor contributor : embeddedDescriptor.getStateArrayContributors() ) {
+			if ( contributor.getCascadeStyle() != CascadeStyles.NONE ) {
+				return CascadeStyles.ALL;
+			}
+		}
+		return DomainModelHelper.determineCascadeStyle( cascade );
 	}
 
 	@Override
@@ -645,4 +666,5 @@ public abstract class AbstractPluralPersistentAttribute<O,C,E> extends AbstractP
 			entry.resetStoredSnapshot( targetCollection, (Serializable) result );
 		}
 	}
+
 }

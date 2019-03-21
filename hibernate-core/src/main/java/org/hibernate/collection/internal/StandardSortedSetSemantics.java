@@ -51,10 +51,10 @@ public class StandardSortedSetSemantics extends AbstractSetSemantics<SortedSet<?
 	@Override
 	@SuppressWarnings("unchecked")
 	public PersistentCollection wrap(
-			SortedSet rawCollection,
+			Object rawCollection,
 			PersistentCollectionDescriptor collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentSortedSet( session, collectionDescriptor, rawCollection );
+		return new PersistentSortedSet( session, collectionDescriptor, (SortedSet) rawCollection );
 	}
 
 	@Override

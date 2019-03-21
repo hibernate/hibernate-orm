@@ -53,15 +53,15 @@ public class StandardArraySemantics implements CollectionSemantics<Object[]> {
 			Object key,
 			PersistentCollectionDescriptor<?, Object[], E> collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentArrayHolder<>( session, collectionDescriptor, (Serializable) key );
+		return new PersistentArrayHolder( key, session, collectionDescriptor );
 	}
 
 	@Override
 	public <E> PersistentCollection<E> wrap(
-			Object[] rawCollection,
+			Object rawCollection,
 			PersistentCollectionDescriptor<?, Object[], E> collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentArrayHolder<>( session, collectionDescriptor, (Object) rawCollection );
+		return new PersistentArrayHolder( session, collectionDescriptor, rawCollection );
 	}
 
 	@Override

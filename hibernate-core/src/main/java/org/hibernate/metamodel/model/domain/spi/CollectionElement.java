@@ -48,7 +48,7 @@ public interface CollectionElement<J> extends Navigable<J>, CollectionDomainType
 	SimpleTypeDescriptor getDomainTypeDescriptor();
 
 	@Override
-	default Class<J> getJavaType() {
+	default Class getJavaType() {
 		return getJavaTypeDescriptor().getJavaType();
 	}
 

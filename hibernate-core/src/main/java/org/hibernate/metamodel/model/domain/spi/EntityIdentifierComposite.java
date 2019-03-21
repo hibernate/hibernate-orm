@@ -24,4 +24,5 @@ public interface EntityIdentifierComposite<O,J>
 	default int getNumberOfJdbcParametersNeeded() {
 		return getColumns().size();
 	}
+
 }

@@ -257,7 +257,7 @@ public class SqmUpdateToSqlAstConverterMultiTable extends BaseSqmToSqlAstConvert
 		}
 	}
 
-	private class TableGroupMock extends AbstractTableGroup implements TableGroup {
+	private class TableGroupMock extends AbstractTableGroup {
 		private final TableGroup entityTableGroup;
 
 		private TableGroupMock(TableGroup entityTableGroup) {

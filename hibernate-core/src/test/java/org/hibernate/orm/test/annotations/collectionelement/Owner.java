@@ -4,26 +4,28 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.collectionelement;
+package org.hibernate.orm.test.annotations.collectionelement;
+
+import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OrderBy;
+import javax.persistence.IdClass;
+import javax.persistence.Table;
 
-@SuppressWarnings({"unchecked", "serial"})
+/**
+ * @author Gail Badner
+ */
+@Entity( name="OWNER")
+@Table( name="OWNER_TABLE")
+public class Owner {
+	private Integer id;
+	private Set<String> elements = new HashSet<>();
 
-@Entity
-public class BugSystem {
 	@Id
 	@GeneratedValue
-	private Integer id;
-
-	@ElementCollection
-	@OrderBy("reportedBy.lastName ASC,reportedBy.firstName ASC,summary")
-	private Set<Bug> bugs;
-
 	public Integer getId() {
 		return id;
 	}
@@ -32,12 +34,12 @@ public class BugSystem {
 		this.id = id;
 	}
 
-	public Set<Bug> getBugs() {
-		return bugs;
+	@ElementCollection
+	public Set<String> getElements() {
+		return elements;
 	}
 
-	public void setBugs(Set<Bug> bugs) {
-		this.bugs = bugs;
+	public void setElements(Set<String> elements) {
+		this.elements = elements;
 	}
-
 }

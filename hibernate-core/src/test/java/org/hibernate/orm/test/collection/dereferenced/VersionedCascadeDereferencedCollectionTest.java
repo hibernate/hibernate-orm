@@ -14,7 +14,7 @@ import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
 
 import org.hibernate.testing.TestForIssue;
-import org.junit.jupiter.api.Disabled;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Gail Badner
  */
-@Disabled
+@FailureExpected("@Version not yet properly implemented")
 public class VersionedCascadeDereferencedCollectionTest extends AbstractDereferencedCollectionTest {
 
 	@Test

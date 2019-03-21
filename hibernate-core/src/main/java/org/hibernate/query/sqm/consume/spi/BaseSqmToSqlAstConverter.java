@@ -113,7 +113,6 @@ import org.hibernate.sql.ast.produce.spi.FromClauseAccess;
 import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
 import org.hibernate.sql.ast.produce.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.produce.spi.SqlAstQuerySpecProcessingState;
@@ -197,7 +196,7 @@ import static org.hibernate.query.BinaryArithmeticOperator.SUBTRACT;
  */
 public abstract class BaseSqmToSqlAstConverter
 		extends BaseSemanticQueryWalker
-		implements SqmToSqlAstConverter, SqlAstCreationState, JdbcParameterBySqmParameterAccess {
+		implements SqmToSqlAstConverter, JdbcParameterBySqmParameterAccess {
 
 	private static final Logger log = Logger.getLogger( BaseSqmToSqlAstConverter.class );
 

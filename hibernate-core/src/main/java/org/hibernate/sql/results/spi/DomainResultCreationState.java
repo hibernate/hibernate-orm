@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.LockMode;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.produce.SqlAstCreationLogger;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
@@ -19,6 +20,7 @@ import org.hibernate.sql.ast.produce.spi.FromClauseAccess;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.sort.SortSpecification;
 import org.hibernate.sql.results.internal.values.JdbcValues;
 
 /**
@@ -33,6 +35,10 @@ public interface DomainResultCreationState {
 
 	default SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
 		return getSqlAstCreationState().getSqlAliasBaseGenerator();
+	}
+
+	default void addSortSpecification(SortSpecification sortSpecification){
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	/**

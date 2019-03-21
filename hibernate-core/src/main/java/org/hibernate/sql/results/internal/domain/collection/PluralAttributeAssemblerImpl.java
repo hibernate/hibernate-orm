@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.internal.domain.collection;
 
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.CollectionInitializer;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
@@ -26,7 +27,11 @@ public class PluralAttributeAssemblerImpl implements DomainResultAssembler {
 	public Object assemble(
 			RowProcessingState rowProcessingState,
 			JdbcValuesSourceProcessingOptions options) {
-		return initializer.getCollectionInstance();
+		PersistentCollection collectionInstance = initializer.getCollectionInstance();
+		if ( collectionInstance == null ) {
+			return null;
+		}
+		return collectionInstance.getValue();
 	}
 
 	@Override

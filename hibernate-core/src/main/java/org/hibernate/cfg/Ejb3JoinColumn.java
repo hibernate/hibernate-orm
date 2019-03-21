@@ -239,7 +239,8 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	 */
 	private static Ejb3JoinColumn buildJoinColumn(
 			JoinColumn ann,
-			String mappedBy, Map<String, Join> joins,
+			String mappedBy,
+			Map<String, Join> joins,
 			PropertyHolder propertyHolder,
 			String propertyName,
 			String suffixForDefaultColumnName,

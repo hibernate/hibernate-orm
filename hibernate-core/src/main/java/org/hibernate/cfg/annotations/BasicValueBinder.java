@@ -83,7 +83,6 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 
 	private Class<T> explicitJavaClass;
 	private BasicJavaDescriptor<T> javaDescriptor;
-	private SqlTypeDescriptor sqlTypeDescriptor;
 	private ConverterDescriptor converterDescriptor;
 	private boolean isNationalized;
 	private boolean isLob;
@@ -122,10 +121,6 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 	@Override
 	public EnumType getEnumeratedType() {
 		return enumType;
-	}
-
-	public SqlTypeDescriptor getSqlTypeDescriptor() {
-		return sqlTypeDescriptor;
 	}
 
 	@Override
@@ -206,10 +201,8 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 		}
 
 		XClass returnedClassOrElement = navigableXClass;
-		boolean isArray = false;
 		if ( navigableXProperty.isArray() ) {
 			returnedClassOrElement = navigableXProperty.getElementClass();
-			isArray = true;
 		}
 
 		// If we get into this method we know that there is a Java type for the value
@@ -663,7 +656,9 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 
 	public void fillSimpleValue() {
 		LOG.debugf( "Starting fillSimpleValue for %s", propertyName );
-		basicValue.setExplicitTypeName( explicitBasicTypeName );
+		if ( enumType == null ) {
+			basicValue.setExplicitTypeName( explicitBasicTypeName );
+		}
 		basicValue.setExplicitTypeParams( explicitLocalTypeParams );
 		basicValue.setEnumType( enumType );
 		basicValue.setTemporalPrecision( temporalPrecision );

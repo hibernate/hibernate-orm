@@ -42,9 +42,9 @@ public class StandardIdentifierBagSemantics<E> extends AbstractBagSemantics<Coll
 
 	@Override
 	public <E> PersistentCollection<E> wrap(
-			Collection<?> rawCollection,
+			Object rawCollection,
 			PersistentCollectionDescriptor<?, Collection<?>, E> collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentIdentifierBag( session, collectionDescriptor, rawCollection );
+		return new PersistentIdentifierBag( session, collectionDescriptor, (Collection) rawCollection );
 	}
 }

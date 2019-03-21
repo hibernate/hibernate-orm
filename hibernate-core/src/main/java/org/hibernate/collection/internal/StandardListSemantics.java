@@ -64,7 +64,7 @@ public class StandardListSemantics implements CollectionSemantics<List> {
 
 	@Override
 	public <E> PersistentCollection<E> wrap(
-			List rawCollection,
+			Object rawCollection,
 			PersistentCollectionDescriptor<?, List, E> collectionDescriptor,
 			SharedSessionContractImplementor session) {
 		return new PersistentList( session, collectionDescriptor, (List) rawCollection );

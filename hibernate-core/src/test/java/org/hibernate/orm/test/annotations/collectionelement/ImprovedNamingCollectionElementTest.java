@@ -4,13 +4,14 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.collectionelement;
+package org.hibernate.orm.test.annotations.collectionelement;
 
-import org.hibernate.boot.MetadataBuilder;
-import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.hibernate.cfg.AvailableSettings.IMPLICIT_NAMING_STRATEGY;
 
 /**
  * Tests @ElementCollection using the "improved" NamingStrategyDelegator which complies
@@ -18,14 +19,14 @@ import org.junit.Test;
  *
  * @author Gail Badner
  */
-public class ImprovedNamingCollectionElementTest extends DefaultNamingCollectionElementTest {
+public class ImprovedNamingCollectionElementTest extends LegacyHbmNamingCollectionElementTest {
 	@Override
-	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
-		metadataBuilder.applyImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE );
+	protected void applySettings(StandardServiceRegistryBuilder builer) {
+		builer.applySetting( IMPLICIT_NAMING_STRATEGY, "jpa" );
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9387")
+	@TestForIssue(jiraKey = "HHH-9387")
 	public void testDefaultTableNameOwnerEntityNameAndPKColumnOverride() {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -35,7 +36,7 @@ public class ImprovedNamingCollectionElementTest extends DefaultNamingCollection
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9387")
+	@TestForIssue(jiraKey = "HHH-9387")
 	public void testDefaultTableNameOwnerPrimaryTableAndEntityNamesOverride() {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -45,7 +46,7 @@ public class ImprovedNamingCollectionElementTest extends DefaultNamingCollection
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9389")
+	@TestForIssue(jiraKey = "HHH-9389")
 	public void testDefaultJoinColumnOwnerEntityNameAndPKColumnOverride() {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -55,7 +56,7 @@ public class ImprovedNamingCollectionElementTest extends DefaultNamingCollection
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9389")
+	@TestForIssue(jiraKey = "HHH-9389")
 	public void testDefaultJoinColumnOwnerPrimaryTableAndEntityNamesOverride() {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).

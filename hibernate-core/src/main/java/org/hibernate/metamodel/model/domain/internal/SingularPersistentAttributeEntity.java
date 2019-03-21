@@ -44,6 +44,7 @@ import org.hibernate.metamodel.model.domain.spi.AbstractNonIdSingularPersistentA
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.spi.DomainModelHelper;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifierComposite;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.JoinablePersistentAttribute;
@@ -91,6 +92,8 @@ import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.ImmutableMutabilityPlan;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.metamodel.model.domain.spi.CollectionElement.NAVIGABLE_NAME;
+import static org.hibernate.metamodel.model.domain.spi.EntityIdentifier.NAVIGABLE_ID;
 import static org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute.SingularAttributeClassification.MANY_TO_ONE;
 import static org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute.SingularAttributeClassification.ONE_TO_ONE;
 
@@ -118,7 +121,7 @@ public class SingularPersistentAttributeEntity<O, J>
 	private final FetchStrategy fetchStrategy;
 
 	private final NotFoundAction notFoundAction;
-	private final String cascade;
+	private final CascadeStyle cascadeStyle;
 
 	private StateArrayContributor referencedUkAttribute;
 	private SingleEntityLoader singleEntityLoader;
@@ -193,7 +196,7 @@ public class SingularPersistentAttributeEntity<O, J>
 
 		instantiationComplete( bootModelAttribute, context );
 
-		this.cascade = bootModelAttribute.getCascade();
+		this.cascadeStyle = CascadeStyles.getCascadeStyle(bootModelAttribute.getCascade());
 		this.fetchStrategy = DomainModelHelper.determineFetchStrategy(
 				bootModelAttribute,
 				runtimeModelContainer,
@@ -203,16 +206,65 @@ public class SingularPersistentAttributeEntity<O, J>
 
 	@Override
 	public CascadeStyle getCascadeStyle() {
-		return CascadeStyles.getCascadeStyle( this.cascade );
+		return this.cascadeStyle;
 	}
 
 	@Override
 	public boolean isCircular(FetchParent fetchParent) {
 		final NavigableContainer parentNavigableContainer = fetchParent.getNavigableContainer();
+
 		if ( parentNavigableContainer != null ) {
-			NavigableRole parentParentNavigableRole = parentNavigableContainer.getNavigableRole().getParent();
-			if ( parentParentNavigableRole != null &&
-					parentParentNavigableRole.getNavigableName().equals( getEntityDescriptor().getNavigableName() ) ) {
+			if ( parentNavigableContainer instanceof EntityIdentifierComposite ) {
+				/*
+					if we have the following mapping:
+
+					@Entity
+					public class Card{
+						...
+
+						@OneToMany( mappedBy = "primaryKey.card")
+						private Set<CardField> field
+					}
+
+					@Entity
+					public class CardField implements Serializable {
+						...
+
+						@EmbeddedId
+						private PrimaryKey primaryKey;
+					}
+
+					@Embeddable
+					public class PrimaryKey implements Serializable {
+						@ManyToOne(optional = false)
+						private Card card;
+
+						@ManyToOne(optional = false)
+						private Key key;
+					}
+
+				 retrieving an instance of a Card will produce a fetchable : "Card.CardField.{element}.{id}.card",
+				 in such a case fetchParent.getNavigablePath() = Card.CardField.{element}.{id}
+				  */
+
+				NavigablePath parent = fetchParent.getNavigablePath();
+				parent = parent.getParent();
+				// now parent = Card.CardField.{element}
+				if ( parent.getFullPath().endsWith( NAVIGABLE_NAME ) ) {
+					parent = parent.getParent();
+					// now parent is Card.CardField
+				}
+				NavigablePath parentParent = parent.getParent();
+				if ( parentParent != null && parentParent.getFullPath()
+						.equals( getEntityDescriptor().getNavigableName() ) ) {
+					return true;
+				}
+			}
+			else {
+				NavigableRole parentParentNavigableRole = parentNavigableContainer.getNavigableRole().getParent();
+				if ( parentParentNavigableRole != null &&
+						parentParentNavigableRole.getNavigableName()
+								.equals( getEntityDescriptor().getNavigableName() ) ) {
 				/*
 				if we have the following mapping
 				@Entity
@@ -247,12 +299,13 @@ public class SingularPersistentAttributeEntity<O, J>
 
 				checking parentParentNavigableRole.getNavigableName().equals( getEntityDescriptor().getNavigableName() ) ) helps to distinguish the 2 situations because for the first case it is true while in the second case it is false.
 				 */
-				if ( mappedBy != null && mappedBy.equals( fetchParent.getNavigablePath().getLocalName() ) ) {
-					return true;
-				}
-				String parentMappedBy = ( (EntityFetch) fetchParent ).getEntityValuedNavigable().getMappedBy();
-				if ( mappedBy == null && getNavigableName().equals( parentMappedBy ) ) {
-					return true;
+					if ( mappedBy != null && mappedBy.equals( fetchParent.getNavigablePath().getLocalName() ) ) {
+						return true;
+					}
+					String parentMappedBy = ( (EntityFetch) fetchParent ).getEntityValuedNavigable().getMappedBy();
+					if ( mappedBy == null && getNavigableName().equals( parentMappedBy ) ) {
+						return true;
+					}
 				}
 			}
 		}
@@ -517,7 +570,7 @@ public class SingularPersistentAttributeEntity<O, J>
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		if ( referencedUkAttributeName == null
-				|| referencedUkAttributeName.equals( EntityIdentifier.NAVIGABLE_ID )
+				|| referencedUkAttributeName.equals( NAVIGABLE_ID )
 				|| referencedUkAttributeName.equals( EntityIdentifier.LEGACY_NAVIGABLE_ID ) ) {
 			return new ImmediatePkEntityFetch(
 					fetchParent,
@@ -562,16 +615,19 @@ public class SingularPersistentAttributeEntity<O, J>
 		final String navigableName = getNavigableName();
 		final NavigablePath navigablePath = fetchParent.getNavigablePath().append( navigableName );
 
+		TableGroup tableGroup = creationState.getFromClauseAccess().getTableGroup( fetchParent.getNavigablePath() );
+
 		final TableGroupJoin tableGroupJoin = createTableGroupJoin(
 				navigablePath,
-				creationState.getFromClauseAccess().getTableGroup( fetchParent.getNavigablePath() ),
+				tableGroup,
 				resultVariable,
 				isNullable() ? JoinType.LEFT : JoinType.INNER,
 				lockMode,
 				creationState.getSqlAstCreationState()
 		);
 
-		creationState.getFromClauseAccess().getTableGroup( fetchParent.getNavigablePath() ).addTableGroupJoin( tableGroupJoin );
+		tableGroup.addTableGroupJoin( tableGroupJoin );
+
 		creationState.getFromClauseAccess().registerTableGroup( navigablePath, tableGroupJoin.getJoinedGroup() );
 
 		return new EntityFetchImpl(
@@ -616,7 +672,7 @@ public class SingularPersistentAttributeEntity<O, J>
 		);
 
 		// handle optional entity references to be outer joins.
-		if ( isNullable() && JoinType.INNER.equals( joinType ) ) {
+		if ( JoinType.INNER.equals( joinType ) && ( isNullable() || !lhs.isInnerJoinPossible() ) ) {
 			joinType = JoinType.LEFT;
 		}
 
@@ -626,11 +682,6 @@ public class SingularPersistentAttributeEntity<O, J>
 				sqlAliasBase,
 				joinCollector
 		);
-
-		// handle optional entity references to be outer joins.
-		if ( isNullable() && JoinType.INNER.equals( joinType ) ) {
-			joinType = JoinType.LEFT;
-		}
 
 		return joinCollector.generateTableGroup( joinType );
 	}

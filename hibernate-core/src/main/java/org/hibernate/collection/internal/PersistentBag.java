@@ -27,7 +27,6 @@ import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
  * @author Gavin King
  */
 public class PersistentBag<E> extends AbstractPersistentCollection<E> implements List<E> {
-	private Object key;
 	private List<E> bag;
 
 	/**
@@ -79,16 +78,8 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 	public PersistentBag(
 			SharedSessionContractImplementor session,
 			PersistentCollectionDescriptor descriptor,
-			Serializable key) {
-		this( session, descriptor, (Object) key );
-	}
-
-	public PersistentBag(
-			SharedSessionContractImplementor session,
-			PersistentCollectionDescriptor descriptor,
 			Object key) {
-		this( session, descriptor );
-		this.key = key;
+		super( session, descriptor, key );
 	}
 
 	@Override

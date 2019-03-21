@@ -28,7 +28,6 @@ import org.hibernate.metamodel.model.domain.spi.PluralValuedNavigable;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.ComparisonOperator;
-import org.hibernate.query.sqm.produce.internal.UniqueIdGenerator;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
@@ -115,7 +114,6 @@ public class MetamodelSelectBuilderProcess
 
 	private final FromClauseAccess fromClauseAccess = new SimpleFromClauseAccessImpl();
 
-
 	private MetamodelSelectBuilderProcess(
 			SqlAstCreationContext creationContext,
 			NavigableContainer rootNavigableContainer,
@@ -164,9 +162,6 @@ public class MetamodelSelectBuilderProcess
 		);
 
 		final SelectStatement selectStatement = new SelectStatement( rootQuerySpec );
-
-		final UniqueIdGenerator uidGenerator = new UniqueIdGenerator();
-		final String uid = uidGenerator.generateUniqueId();
 
 		final RootTableGroupProducer tableGroupProducer = (RootTableGroupProducer) rootNavigableContainer;
 		final TableGroup rootTableGroup = tableGroupProducer.createRootTableGroup(
@@ -273,7 +268,6 @@ public class MetamodelSelectBuilderProcess
 			}
 			rootQuerySpec.addRestriction( predicate );
 		}
-
 
 		return new SqlAstSelectDescriptorImpl(
 				selectStatement,

@@ -13,12 +13,11 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Tuple;
 
-import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
-
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
@@ -34,28 +33,31 @@ public class PackagePrivateAttributeConverterEntityManagerFactoryTest
 
 	@Test
 	public void test() {
-		inTransaction( entityManager -> {
-			Tester tester = new Tester();
-			tester.setId( 1L );
-			tester.setCode( 123 );
+		inTransaction(
+				entityManager -> {
+					Tester tester = new Tester();
+					tester.setId( 1L );
+					tester.setCode( 123 );
 
-			entityManager.persist( tester );
-		} );
+					entityManager.persist( tester );
+				} );
 
-		inTransaction( entityManager -> {
-			Tuple tuple = entityManager.createQuery(
-					"select t.code as code " +
-							"from Tester t " +
-							"where t.id = :id", Tuple.class )
-					.setParameter( "id", 1L )
-					.getSingleResult();
+		inTransaction(
+				entityManager -> {
+					// todo (6.0) : when native query will be implemented try with a native query and check that tuple.get( "code" ) returns a String
+					Tuple tuple = entityManager.createQuery(
+							"select t.code as code " +
+									"from Tester t " +
+									"where t.id = :id", Tuple.class )
+							.setParameter( "id", 1L )
+							.getSingleResult();
 
-			assertEquals( "123", tuple.get( "code" ) );
+					assertEquals( 123, tuple.get( "code" ) );
 
-			Tester tester = entityManager.find( Tester.class, 1L );
+					Tester tester = entityManager.find( Tester.class, 1L );
 
-			assertEquals( 123, (int) tester.getCode() );
-		} );
+					assertEquals( 123, (int) tester.getCode() );
+				} );
 	}
 
 	@Entity(name = "Tester")

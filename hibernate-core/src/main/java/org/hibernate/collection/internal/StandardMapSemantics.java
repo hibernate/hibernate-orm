@@ -50,7 +50,7 @@ public class StandardMapSemantics extends AbstractMapSemantics<Map<?,?>> {
 
 	@Override
 	public <E> PersistentCollection<E> wrap(
-			Map<?, ?> rawCollection,
+			Object rawCollection,
 			PersistentCollectionDescriptor<?, Map<?, ?>, E> collectionDescriptor,
 			SharedSessionContractImplementor session) {
 		return new PersistentMap<>( session, collectionDescriptor, (Map) rawCollection );

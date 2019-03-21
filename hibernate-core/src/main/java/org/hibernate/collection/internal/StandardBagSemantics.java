@@ -45,13 +45,13 @@ public class StandardBagSemantics extends AbstractBagSemantics<Collection<?>> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <E> PersistentCollection<E> wrap(
-			Collection<?> rawCollection,
+			Object rawCollection,
 			PersistentCollectionDescriptor<?, Collection<?>, E> collectionDescriptor,
 			SharedSessionContractImplementor session) {
 		if ( collectionDescriptor.getDescribedAttribute() instanceof IdentifierBagAttribute ) {
-			return new PersistentIdentifierBag( session, collectionDescriptor, rawCollection );
+			return new PersistentIdentifierBag( session, collectionDescriptor, (Collection) rawCollection );
 		}
-		return new PersistentBag( session, collectionDescriptor, rawCollection );
+		return new PersistentBag( session, collectionDescriptor, (Collection) rawCollection );
 	}
 
 }

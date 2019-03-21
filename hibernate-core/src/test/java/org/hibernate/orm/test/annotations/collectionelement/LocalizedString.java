@@ -6,7 +6,8 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations.collectionelement;
+package org.hibernate.orm.test.annotations.collectionelement;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Locale;
@@ -35,7 +36,7 @@ public class LocalizedString implements Serializable {
 	}
 
 	private Map<String, String> variations =
-			new HashMap<String, String>( 1 );
+			new HashMap<>( 1 );
 
 	@ElementCollection
 	@MapKeyColumn(name = "language_code" )

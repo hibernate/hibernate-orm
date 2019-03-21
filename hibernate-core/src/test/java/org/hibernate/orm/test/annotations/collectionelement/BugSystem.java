@@ -4,7 +4,8 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.collectionelement;
+package org.hibernate.orm.test.annotations.collectionelement;
+
 import java.util.Set;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -15,14 +16,14 @@ import javax.persistence.OrderBy;
 @SuppressWarnings({"unchecked", "serial"})
 
 @Entity
-public class Products {
+public class BugSystem {
 	@Id
 	@GeneratedValue
 	private Integer id;
-	
+
 	@ElementCollection
-	@OrderBy("name ASC")
-	private Set<Widgets> widgets;
+	@OrderBy("reportedBy.lastName ASC,reportedBy.firstName ASC,summary")
+	private Set<Bug> bugs;
 
 	public Integer getId() {
 		return id;
@@ -32,12 +33,12 @@ public class Products {
 		this.id = id;
 	}
 
-	public Set<Widgets> getWidgets() {
-		return widgets;
+	public Set<Bug> getBugs() {
+		return bugs;
 	}
 
-	public void setWidgets(Set<Widgets> widgets) {
-		this.widgets = widgets;
+	public void setBugs(Set<Bug> bugs) {
+		this.bugs = bugs;
 	}
 
 }

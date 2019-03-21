@@ -10,6 +10,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.domain.internal.PersistentArrayDescriptorImpl;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 
@@ -80,6 +81,11 @@ public class LoadingCollectionEntry {
 		else {
 			collectionEntry.postInitialize( collectionInstance );
 		}
+
+		if ( getCollectionDescriptor() instanceof PersistentArrayDescriptorImpl ) {
+			persistenceContext.addCollectionHolder( collectionInstance );
+		}
+
 
 		// todo (6.0) : there is other logic still needing to be implemented here.  caching, etc
 		// 		see org.hibernate.engine.loading.internal.CollectionLoadContext#endLoadingCollection in 5.x

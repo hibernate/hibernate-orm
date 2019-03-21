@@ -18,13 +18,12 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.junit.Rule;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -53,32 +52,34 @@ public class OneToOneMapsIdChangeParentTest extends EntityManagerFactoryBasedFun
 	}
 
 	@Test
-	@Disabled("Enable once updates work properly")
+	@FailureExpected("Enable once updates work properly")
 	public void test() {
-		Child _child = doInJPA( this::entityManagerFactory, entityManager -> {
-			Parent firstParent = new Parent();
-			firstParent.setId( 1L );
-			entityManager.persist(firstParent);
+		Child _child = inTransaction(
+				entityManager -> {
+					Parent firstParent = new Parent();
+					firstParent.setId( 1L );
+					entityManager.persist( firstParent );
 
-			Child child = new Child();
-			child.setParent(firstParent);
-			entityManager.persist( child );
+					Child child = new Child();
+					child.setParent( firstParent );
+					entityManager.persist( child );
 
-			return child;
-		} );
+					return child;
+				} );
 
 		triggerable.reset();
 		assertFalse( triggerable.wasTriggered() );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Parent secondParent = new Parent();
-			secondParent.setId( 2L );
-			entityManager.persist(secondParent);
+		inTransaction(
+				entityManager -> {
+					Parent secondParent = new Parent();
+					secondParent.setId( 2L );
+					entityManager.persist( secondParent );
 
-			_child.setParent(secondParent);
+					_child.setParent( secondParent );
 
-			entityManager.merge( _child );
-		} );
+					entityManager.merge( _child );
+				} );
 
 		assertTrue( triggerable.wasTriggered() );
 	}

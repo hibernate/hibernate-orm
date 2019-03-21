@@ -6,6 +6,7 @@
  */
 package org.hibernate.collection.internal;
 
+import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -50,9 +51,9 @@ public class StandardSortedMapSemantics extends AbstractMapSemantics<SortedMap<?
 	@Override
 	@SuppressWarnings("unchecked")
 	public PersistentCollection wrap(
-			SortedMap rawCollection,
+			Object rawCollection,
 			PersistentCollectionDescriptor collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentSortedMap( session, collectionDescriptor, rawCollection );
+		return new PersistentSortedMap( session, collectionDescriptor, (SortedMap) rawCollection );
 	}
 }

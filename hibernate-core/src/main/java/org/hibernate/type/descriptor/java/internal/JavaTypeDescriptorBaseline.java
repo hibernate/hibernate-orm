@@ -95,7 +95,7 @@ public class JavaTypeDescriptorBaseline {
 		target.addBaselineDescriptor( new CollectionJavaDescriptor( Set.class, StandardSetSemantics.INSTANCE ) );
 		target.addBaselineDescriptor( new CollectionJavaDescriptor( HashSet.class, StandardSetSemantics.INSTANCE ) );
 		target.addBaselineDescriptor( new CollectionJavaDescriptor( SortedSet.class, StandardSortedSetSemantics.INSTANCE ) );
-		target.addBaselineDescriptor( new CollectionJavaDescriptor( TreeSet.class, StandardSortedSetSemantics.INSTANCE ) );
+		target.addBaselineDescriptor( new CollectionJavaDescriptor( TreeSet.class, StandardOrderedSetSemantics.INSTANCE ) );
 		target.addBaselineDescriptor( new CollectionJavaDescriptor( LinkedHashSet.class, StandardOrderedSetSemantics.INSTANCE ) );
 		target.addBaselineDescriptor( new CollectionJavaDescriptor( Map.class, StandardMapSemantics.INSTANCE ) );
 		target.addBaselineDescriptor( new CollectionJavaDescriptor( HashMap.class, StandardMapSemantics.INSTANCE ) );

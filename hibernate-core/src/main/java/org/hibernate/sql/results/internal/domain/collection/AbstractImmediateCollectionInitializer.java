@@ -8,7 +8,6 @@ package org.hibernate.sql.results.internal.domain.collection;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
@@ -18,9 +17,9 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.internal.log.LoggingHelper;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
 import org.hibernate.sql.results.spi.FetchParentAccess;
-import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.spi.LoadingCollectionEntry;
 import org.hibernate.sql.results.spi.RowProcessingState;
 
@@ -193,7 +192,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 			}
 		}
 
-		if ( collectionInstance == null ) {
+		if ( collectionInstance == null && collectionKey != null ) {
 			collectionInstance = getCollectionDescriptor().instantiateWrapper(
 					session,
 					collectionKey.getKey()
@@ -229,9 +228,9 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 				);
 			}
 
-			if ( getCollectionDescriptor().getSemantics().getCollectionClassification() == CollectionClassification.ARRAY ) {
-				persistenceContext.addCollectionHolder( collectionInstance );
-			}
+//			if ( getCollectionDescriptor().getSemantics().getCollectionClassification() == CollectionClassification.ARRAY ) {
+//				persistenceContext.addCollectionHolder( collectionInstance );
+//			}
 		}
 	}
 
@@ -286,15 +285,15 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 	}
 
 	@Override
-	public void endLoading(JdbcValuesSourceProcessingState processingState) {
+	public void endLoading(ExecutionContext context) {
 		if ( collectionEmpty ) {
 			// collection is empty; handle special logic here.
-			final CollectionKey collectionKey = processingState.getExecutionContext().getCollectionKey();
+			final CollectionKey collectionKey = context.getCollectionKey();
 			if ( collectionKey != null ) {
 				// We expected to load a collection with this collection key but we found the collection
 				// contained no results, therefore we need to do the collection init phase here because
 				// the LoadingCollectionEntry won't finalize this for us without at least one row.
-				final PersistenceContext persistenceContext = processingState.getSession().getPersistenceContext();
+				final PersistenceContext persistenceContext = context.getSession().getPersistenceContext();
 				final PersistentCollection collection = persistenceContext.getCollection( collectionKey );
 				collection.beginRead();
 				collection.endRead();

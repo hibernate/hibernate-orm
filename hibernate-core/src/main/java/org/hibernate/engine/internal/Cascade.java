@@ -25,6 +25,7 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
 import org.hibernate.metamodel.model.domain.internal.entity.SingleTableEntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.BasicTypeDescriptor;
@@ -98,6 +99,8 @@ public final class Cascade {
 			final List<NonIdPersistentAttribute> persistentAttributes = descriptor.getPersistentAttributes();
 			final boolean hasUninitializedLazyProperties = descriptor.hasUninitializedLazyProperties( parent );
 			final int componentPathStackDepth = 0;
+			final Object[] propertyValues = descriptor.getPropertyValues( parent );
+
 			for ( int i = 0; i < persistentAttributes.size(); i++) {
 				final NonIdPersistentAttribute attribute = persistentAttributes.get( i );
 				final CascadeStyle style = attribute.getCascadeStyle();
@@ -137,7 +140,7 @@ public final class Cascade {
 						}
 					}
 					else {
-						child = descriptor.getPropertyValues( parent )[i];
+						child = propertyValues[i];
 					}
 					cascadeProperty(
 							action,
@@ -252,7 +255,19 @@ public final class Cascade {
 			final Object anything,
 			final boolean isCascadeDeleteEnabled) throws HibernateException {
 		if ( child != null ) {
-			if ( Joinable.class.isInstance( attribute ) ) {
+			if ( attribute instanceof SingularPersistentAttributeEmbedded ){
+				cascadeComponent(
+						action,
+						cascadePoint,
+						eventSource,
+						componentPathStackDepth,
+						parent,
+						child,
+						(EmbeddedValuedNavigable) attribute,
+						anything
+				);
+			}
+			else if ( Joinable.class.isInstance( attribute ) ) {
 				if ( cascadeAssociationNow( cascadePoint, (Joinable) attribute ) ) {
 					cascadeAssociation(
 							action,
@@ -267,18 +282,6 @@ public final class Cascade {
 							isCascadeDeleteEnabled
 						);
 				}
-			}
-			else if ( attribute.getPersistenceType() == PersistenceType.EMBEDDABLE ) {
-				cascadeComponent(
-						action,
-						cascadePoint,
-						eventSource,
-						componentPathStackDepth,
-						parent,
-						child,
-						(EmbeddedValuedNavigable) attribute,
-						anything
-				);
 			}
 		}
 

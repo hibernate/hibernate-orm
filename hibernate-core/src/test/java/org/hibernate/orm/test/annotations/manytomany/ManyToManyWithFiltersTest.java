@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
-import org.junit.jupiter.api.Disabled;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Andrea Boriero
  */
-@Disabled("Filtesr not yet implemented")
+@FailureExpected("Filtesr not yet implemented")
 public class ManyToManyWithFiltersTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test

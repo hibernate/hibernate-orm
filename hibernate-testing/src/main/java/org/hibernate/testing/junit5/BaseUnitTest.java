@@ -7,6 +7,7 @@
 package org.hibernate.testing.junit5;
 
 import org.hibernate.testing.orm.junit.ExpectedExceptionExtension;
+import org.hibernate.testing.orm.junit.FailureExpectedExtension;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.hamcrest.CoreMatchers.instanceOf;

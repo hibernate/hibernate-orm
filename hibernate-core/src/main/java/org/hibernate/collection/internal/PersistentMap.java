@@ -61,11 +61,6 @@ public class PersistentMap<K,V> extends AbstractPersistentCollection<V> implemen
 		setDirectlyAccessible( true );
 	}
 
-	private void setMap(Map<K,V> map) {
-		this.map = map;
-		setInitialized();
-	}
-
 	public PersistentMap(
 			SharedSessionContractImplementor session,
 			PersistentCollectionDescriptor<?,?,V> descriptor,
@@ -282,6 +277,11 @@ public class PersistentMap<K,V> extends AbstractPersistentCollection<V> implemen
 	public void load(K key, V value) {
 		assert isInitializing();
 		map.put( key, value );
+	}
+
+	private void setMap(Map<K,V> map) {
+		this.map = map;
+		setInitialized();
 	}
 
 	/**

@@ -17,7 +17,7 @@ import org.hibernate.mapping.ToOne;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
-import org.junit.jupiter.api.Disabled;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.cfg.AvailableSettings.IMPLICIT_NAMING_STRATEGY;
@@ -43,7 +43,7 @@ public class ManyToManyImplicitNamingTest extends SessionFactoryBasedFunctionalT
 	}
 
 	@Test
-	@Disabled("Inheritance support not yet implemented")
+	@FailureExpected("Inheritance support not yet implemented")
 	public void testBidirNoOverrides() {
 		// Employee.contactInfo.phoneNumbers: associated entity: PhoneNumber
 		// both have @Entity with no name configured and default primary table names;

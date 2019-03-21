@@ -18,7 +18,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
-
 /**
  * A persistent wrapper for a <tt>java.util.Set</tt>. The underlying
  * collection is a <tt>HashSet</tt>.
@@ -35,7 +34,6 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 			PersistentCollectionDescriptor<?,?,E> descriptor) {
 		super( session, descriptor );
 	}
-
 
 	/**
 	 * Instantiates a non-lazy set (the underlying set is constructed

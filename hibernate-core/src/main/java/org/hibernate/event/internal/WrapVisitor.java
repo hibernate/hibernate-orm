@@ -78,11 +78,11 @@ public class WrapVisitor extends ProxyVisitor {
 					return null;
 				}
 
-				PersistentCollection ah = persistenceContext.getCollectionHolder( collection );
-				if ( ah == null ) {
-					ah = collectionDescriptor.wrap( session, collection );
-					persistenceContext.addNewCollection( collectionDescriptor, ah );
-					persistenceContext.addCollectionHolder( ah );
+				PersistentCollection collectionHolder = persistenceContext.getCollectionHolder( collection );
+				if ( collectionHolder == null ) {
+					collectionHolder = collectionDescriptor.wrap( session, collection );
+					persistenceContext.addNewCollection( collectionDescriptor, collectionHolder );
+					persistenceContext.addCollectionHolder( collectionHolder );
 				}
 				return null;
 			}
@@ -95,11 +95,8 @@ public class WrapVisitor extends ProxyVisitor {
 				}
 
 				return persistentCollection; //Force a substitution!
-
 			}
-
 		}
-
 	}
 
 	@Override

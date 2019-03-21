@@ -15,7 +15,7 @@ import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
-import org.junit.jupiter.api.Disabled;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -254,7 +254,7 @@ public class CollectionTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
-	@Disabled("Inheritance support not yet implemented")
+	@FailureExpected("Inheritance support not yet implemented")
 	@TestForIssue(jiraKey = "HHH-3636")
 	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testCollectionInheritance() {

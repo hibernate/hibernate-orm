@@ -6,10 +6,9 @@
  */
 package org.hibernate.orm.test.annotations.array;
 
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
-
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.FailureExpected;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.orm.test.annotations.array.Contest.Month.December;
 import static org.hibernate.orm.test.annotations.array.Contest.Month.January;
@@ -19,7 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * @author Emmanuel Bernard
  */
-@Disabled("Array support not yet fully implemented")
 public class ArrayTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test

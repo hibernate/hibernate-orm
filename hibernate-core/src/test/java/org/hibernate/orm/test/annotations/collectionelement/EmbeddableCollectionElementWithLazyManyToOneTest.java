@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.collectionelement;
+package org.hibernate.orm.test.annotations.collectionelement;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -20,18 +20,18 @@ import javax.persistence.ManyToOne;
 import org.hibernate.Hibernate;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.FailureExpected;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gail Badner
  */
-public class EmbeddableCollectionElementWithLazyManyToOneTest extends BaseCoreFunctionalTestCase {
+public class EmbeddableCollectionElementWithLazyManyToOneTest extends SessionFactoryBasedFunctionalTest {
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
@@ -42,45 +42,45 @@ public class EmbeddableCollectionElementWithLazyManyToOneTest extends BaseCoreFu
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "???")
+	@TestForIssue(jiraKey = "???")
 	public void testLazyManyToOneInEmbeddable() {
 		Parent p = new Parent();
 		p.containedChild = new ContainedChild( new Child() );
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				session -> {
 					session.persist( p );
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				session -> {
 					Parent pRead = session.get( Parent.class, p.id );
 					assertFalse( Hibernate.isInitialized( pRead.containedChild.child ) );
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				session -> {
 					session.delete( p );
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "???")
+	@TestForIssue(jiraKey = "???")
 	public void testLazyManyToOneInCollectionElementEmbeddable() {
 		Parent p = new Parent();
 		p.containedChildren.add( new ContainedChild( new Child() ) );
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				session -> {
 					session.persist( p );
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				session -> {
 					Parent pRead = session.get( Parent.class, p.id );
 					assertFalse( Hibernate.isInitialized( pRead.containedChildren ) );
 					assertEquals( 1, pRead.containedChildren.size() );
@@ -89,29 +89,29 @@ public class EmbeddableCollectionElementWithLazyManyToOneTest extends BaseCoreFu
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				session -> {
 					session.delete( p );
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "???")
+	@TestForIssue(jiraKey = "???")
 	public void testLazyBoth() {
 		Parent p = new Parent();
 		ContainedChild containedChild = new ContainedChild( new Child() );
 		p.containedChild = containedChild;
 		p.containedChildren.add( containedChild );
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				session -> {
 					session.persist( p );
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				session -> {
 					Parent pRead = session.get( Parent.class, p.id );
 					assertFalse( Hibernate.isInitialized( pRead.containedChild.child ) );
 					assertFalse( Hibernate.isInitialized( pRead.containedChildren ) );
@@ -121,33 +121,37 @@ public class EmbeddableCollectionElementWithLazyManyToOneTest extends BaseCoreFu
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				session -> {
 					session.delete( p );
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13045")
+	@TestForIssue(jiraKey = "HHH-13045")
+	@FailureExpected(value = "hql query issue resolving where clause Expression")
 	public void testAccessIdOfManyToOneInEmbeddable() {
 		Parent p = new Parent();
 		p.containedChildren.add( new ContainedChild( new Child() ) );
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				session -> {
 					session.persist( p );
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					assertFalse( session.createQuery( "from Parent p join p.containedChildren c where c.child.id is not null" ).getResultList().isEmpty() );
+		inTransaction(
+				session -> {
+					assertFalse( session.createQuery(
+							"from Parent p join p.containedChildren c where c.child.id is not null" )
+										 .getResultList()
+										 .isEmpty() );
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				session -> {
 					session.delete( p );
 				}
 		);
@@ -162,7 +166,7 @@ public class EmbeddableCollectionElementWithLazyManyToOneTest extends BaseCoreFu
 		private ContainedChild containedChild;
 
 		@ElementCollection
-		private Set<ContainedChild> containedChildren = new HashSet<ContainedChild>();
+		private Set<ContainedChild> containedChildren = new HashSet<>();
 	}
 
 	@Entity(name = "Child")
@@ -186,5 +190,8 @@ public class EmbeddableCollectionElementWithLazyManyToOneTest extends BaseCoreFu
 		}
 	}
 
-
+	@Override
+	protected boolean isCleanupTestDataRequired() {
+		return true;
+	}
 }

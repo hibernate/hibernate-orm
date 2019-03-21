@@ -25,12 +25,12 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
 import org.hibernate.loader.MultipleBagFetchException;
 
-import org.junit.jupiter.api.Disabled;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
-@Disabled("Multiple Bag Fetch detection not yet implemented")
+@FailureExpected("Multiple Bag Fetch detection not yet implemented")
 public class MultipleBagFetchTest {
 
 	@Test

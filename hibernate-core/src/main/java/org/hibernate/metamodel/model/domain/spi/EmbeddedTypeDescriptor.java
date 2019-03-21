@@ -117,12 +117,23 @@ public interface EmbeddedTypeDescriptor<T>
 
 
 	/**
-	 * Get the nullability of the properties of this class
-	 */
-	boolean[] getPropertyNullability();
-
-	/**
 	 * Get the cascade style of a particular property
 	 */
 	CascadeStyle getCascadeStyle(int i);
+
+	default void setPropertyValues(Object object, Object[] values) {
+		// todo (6.0) : hook in BytecodeProvider's ReflectionOptimizer (if one) for this managed-type
+		visitStateArrayContributors(
+				contributor -> {
+					final Object value = values[ contributor.getStateArrayPosition() ];
+					if ( value != null ) {
+						contributor.getPropertyAccess().getSetter().set(
+								object,
+								value,
+								getTypeConfiguration().getSessionFactory()
+						);
+					}
+				}
+		);
+	}
 }

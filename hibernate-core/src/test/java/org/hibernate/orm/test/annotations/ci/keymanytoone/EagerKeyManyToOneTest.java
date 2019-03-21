@@ -8,7 +8,6 @@ package org.hibernate.orm.test.annotations.ci.keymanytoone;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -18,7 +17,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Steve Ebersole
  */
-@Disabled("We sql generated select for the Card entity is wrong ")
 public class EagerKeyManyToOneTest extends SessionFactoryBasedFunctionalTest {
 	public static final String CARD_ID = "cardId";
 	public static final String KEY_ID = "keyId";

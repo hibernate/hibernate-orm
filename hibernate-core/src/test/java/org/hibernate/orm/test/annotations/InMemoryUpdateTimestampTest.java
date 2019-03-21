@@ -16,8 +16,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.junit.Assert;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -37,7 +37,7 @@ public class InMemoryUpdateTimestampTest extends EntityManagerFactoryBasedFuncti
 	}
 
 	@Test
-	@Disabled("Enable once @UpdateTimestamp works")
+	@FailureExpected(value = "Enable once @UpdateTimestamp works")
 	public void test() throws InterruptedException {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Person person = new Person();

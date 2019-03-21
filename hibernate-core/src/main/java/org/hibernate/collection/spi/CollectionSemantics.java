@@ -7,6 +7,7 @@
 package org.hibernate.collection.spi;
 
 import java.util.Iterator;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -34,7 +35,7 @@ public interface CollectionSemantics<C> {
 			SharedSessionContractImplementor session);
 
 	<E> PersistentCollection<E> wrap(
-			C rawCollection,
+			Object rawCollection,
 			PersistentCollectionDescriptor<?,C,E> collectionDescriptor,
 			SharedSessionContractImplementor session);
 

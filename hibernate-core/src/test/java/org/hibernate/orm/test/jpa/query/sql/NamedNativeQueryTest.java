@@ -26,7 +26,7 @@ import javax.persistence.NamedNativeQuery;
 import javax.persistence.Query;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Andrea Boriero

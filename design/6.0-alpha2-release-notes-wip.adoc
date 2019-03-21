@@ -13,6 +13,9 @@ Alpha1:: http://in.relation.to/2018/12/06/hibernate-orm-600-alpha1-out/
 ** special handling for no restriction deletes
 ** special handling for deletes predicated on no non-id attributes
 ** table-based, inline and cte strategies for "multi-table" mutations ported
+
+* support for Association mapping
+
 ...
 
 
@@ -25,8 +28,7 @@ Gitter, IRC, ...
 
 === Next step
 
-The plan for Alpha2 includes:
+The plan for Alpha3 includes:
 
 * Inheritance
-* Complete association mapping support
 * Criteria

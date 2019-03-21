@@ -8,6 +8,7 @@ package org.hibernate.orm.test.annotations.idmanytoone;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 

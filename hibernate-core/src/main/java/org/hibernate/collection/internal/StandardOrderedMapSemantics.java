@@ -8,6 +8,7 @@ package org.hibernate.collection.internal;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -48,10 +49,10 @@ public class StandardOrderedMapSemantics extends AbstractMapSemantics<LinkedHash
 
 	@Override
 	public <E> PersistentCollection<E> wrap(
-			LinkedHashMap<?, ?> rawCollection,
+			Object rawCollection,
 			PersistentCollectionDescriptor<?, LinkedHashMap<?, ?>, E> collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentMap<>( session, collectionDescriptor, rawCollection );
+		return new PersistentMap<>( session, collectionDescriptor, (Map) rawCollection );
 	}
 
 	@Override

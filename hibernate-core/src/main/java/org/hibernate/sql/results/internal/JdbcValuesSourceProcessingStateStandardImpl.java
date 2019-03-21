@@ -6,7 +6,9 @@
  */
 package org.hibernate.sql.results.internal;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.engine.spi.CollectionKey;
@@ -24,6 +26,8 @@ import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.results.internal.domain.collection.ArrayInitializer;
+import org.hibernate.sql.results.spi.CollectionInitializer;
 import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.spi.LoadingCollectionEntry;
@@ -42,6 +46,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 
 	private Map<EntityKey,LoadingEntityEntry> loadingEntityMap;
 	private Map<CollectionKey,LoadingCollectionEntry> loadingCollectionMap;
+	private List<CollectionInitializer> arrayInitializers;
 
 	private FetchContext fetchContext;
 
@@ -196,6 +201,12 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 		}
 
 		loadingCollectionMap.put( key, loadingCollectionEntry );
+		if ( loadingCollectionEntry.getInitializer() instanceof ArrayInitializer ) {
+			if ( arrayInitializers == null ) {
+				arrayInitializers = new ArrayList<>();
+			}
+			arrayInitializers.add( loadingCollectionEntry.getInitializer() );
+		}
 	}
 
 	@Override
@@ -222,9 +233,11 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	}
 
 	private void finishLoadingArrays() {
-//		for ( CollectionReferenceInitializer arrayReferenceInitializer : arrayReferenceInitializers ) {
-//			arrayReferenceInitializer.endLoading( context );
-//		}
+		if ( arrayInitializers != null ) {
+			for ( CollectionInitializer collectionInitializer : arrayInitializers ) {
+				collectionInitializer.endLoading( executionContext );
+			}
+		}
 	}
 
 

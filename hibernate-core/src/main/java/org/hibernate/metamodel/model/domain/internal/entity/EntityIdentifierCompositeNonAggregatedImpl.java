@@ -44,8 +44,6 @@ public class EntityIdentifierCompositeNonAggregatedImpl<O,J>
 		implements EntityIdentifierCompositeNonAggregated<O,J> {
 	// todo : IdClass handling eventually
 
-	public static final String NAVIGABLE_NAME = "{id}";
-
 	private final EntityHierarchy runtimeModelHierarchy;
 	private final EmbeddedTypeDescriptor<J> embeddedDescriptor;
 

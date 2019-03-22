@@ -77,6 +77,8 @@ public abstract class AbstractDynamicTest<T extends DynamicExecutionContext> {
 			// First invoke all @DynamicBeforeAll annotated methods
 			beforeAllMethods.forEach( method -> {
 				if ( !method.isAnnotationPresent( Disabled.class ) && context.isExecutionAllowed( method ) ) {
+					final DynamicBeforeAll dynamicBeforeAllAnn = method.getAnnotation( DynamicBeforeAll.class );
+					final Class<? extends Throwable> expectedException = dynamicBeforeAllAnn.expected();
 					tests.add(
 							dynamicTest(
 									method.getName(),
@@ -84,6 +86,25 @@ public abstract class AbstractDynamicTest<T extends DynamicExecutionContext> {
 										Throwable exception = null;
 										try {
 											method.invoke( testInstance );
+
+											assertEquals(
+													DynamicBeforeAll.None.class,
+													expectedException,
+													"Expected: " + expectedException.getName()
+											);
+										}
+										catch( InvocationTargetException t ) {
+											// only throw if the exception was not expected
+											if ( !expectedException.isInstance( t.getTargetException() ) ) {
+												if ( t.getTargetException() != null ) {
+													exception = t.getTargetException();
+													throw t.getTargetException();
+												}
+												else {
+													exception = t;
+													throw t;
+												}
+											}
 										}
 										finally {
 											// guarantee that if any resources are allocated by the @DynamicBeforeAll

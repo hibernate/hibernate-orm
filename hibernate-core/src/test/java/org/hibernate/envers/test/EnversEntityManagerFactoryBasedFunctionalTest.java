@@ -38,6 +38,7 @@ import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.junit.jupiter.api.Tag;
 
+import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.junit4.Helper;
 import org.hibernate.testing.junit5.StandardTags;
 import org.hibernate.testing.junit5.dynamictests.DynamicAfterAll;
@@ -58,6 +59,7 @@ public class EnversEntityManagerFactoryBasedFunctionalTest
 	private EnversEntityManagerFactoryScope entityManagerFactoryScope;
 	private AuditReader auditReader;
 	private EntityManager entityManager;
+	private boolean useJta = false;
 
 	protected EntityManagerFactory entityManagerFactory() {
 		return entityManagerFactoryScope.getEntityManagerFactory();
@@ -73,6 +75,11 @@ public class EnversEntityManagerFactoryBasedFunctionalTest
 		settings.put( AvailableSettings.HBM2DDL_AUTO, exportSchema() ? "create-drop" : "none" );
 
 		addSettings( settings );
+
+		final Object transactionType = settings.get( "javax.persistence.transactionType" );
+		if ( "JTA".equals( transactionType ) ) {
+			useJta = true;
+		}
 
 		if ( exportSchema() ) {
 			final String secondSchemaName = secondSchema();
@@ -177,6 +184,10 @@ public class EnversEntityManagerFactoryBasedFunctionalTest
 
 	protected <R> R inJPA(Function<EntityManager, R> action) {
 		return entityManagerFactoryScope().inJPA( action );
+	}
+
+	protected void inJtaTransaction(Consumer<EntityManager> action) throws Exception {
+		entityManagerFactoryScope().inJtaTransaction( action );
 	}
 
 	protected void inTransaction(Consumer<EntityManager> action) {

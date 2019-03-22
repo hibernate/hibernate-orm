@@ -14,6 +14,7 @@ import java.util.function.Function;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
+import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.junit5.EntityManagerFactoryAccess;
 
 /**
@@ -44,6 +45,22 @@ public class EnversEntityManagerFactoryScope implements EntityManagerFactoryAcce
 			entityManagerFactory = entityManagerFactoryProducer.produceEntityManagerFactory( strategy );
 		}
 		return entityManagerFactory;
+	}
+
+	public void inJtaTransaction(Consumer<EntityManager> action) throws Exception {
+		inJtaTransaction( getEntityManagerFactory(), action );
+	}
+
+	public void inJtaTransaction(EntityManagerFactory factory, Consumer<EntityManager> action) throws Exception {
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
+		EntityManager entityManager = factory.createEntityManager();
+		try {
+			action.accept( entityManager );
+		}
+		finally {
+			entityManager.close();
+			TestingJtaPlatformImpl.tryCommit();
+		}
 	}
 
 	public void inTransaction(Consumer<EntityManager> action) {

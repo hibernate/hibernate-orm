@@ -9,7 +9,7 @@
 <hibernate-mapping>
 
 	<class
-		name="org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2.SimpleInterface"
+		name="org.hibernate.envers.test.interfaces.hbm.propertiesAudited2.SimpleInterface"
 		table="INTERFACE" abstract="true" >
 
 		<id name="id" column="ID" type="long">
@@ -21,8 +21,8 @@
 	</class>
 
 	<joined-subclass
-		name="org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2.AuditedImplementor"
-		extends="org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2.SimpleInterface"
+		name="org.hibernate.envers.test.interfaces.hbm.propertiesAudited2.AuditedImplementor"
+		extends="org.hibernate.envers.test.interfaces.hbm.propertiesAudited2.SimpleInterface"
 		table="AUDITED_IMPLEMENTOR" >
 		
 		<key column="ID"/>
@@ -34,8 +34,8 @@
 	</joined-subclass>
 
 	<joined-subclass
-		name="org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2.NonAuditedImplementor"
-		extends="org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2.SimpleInterface"
+		name="org.hibernate.envers.test.interfaces.hbm.propertiesAudited2.NonAuditedImplementor"
+		extends="org.hibernate.envers.test.interfaces.hbm.propertiesAudited2.SimpleInterface"
 		table="NON_AUDITED_IMPLEMENTOR" >
 		
 		<key column="ID"/>

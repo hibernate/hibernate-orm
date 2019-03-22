@@ -22,4 +22,17 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention( RUNTIME )
 @Inherited
 public @interface DynamicBeforeAll {
+	/**
+	 * Default empty exception.
+	 */
+	class None extends Throwable {
+		private None() {
+		}
+	}
+
+	/**
+	 * An expected {@link Throwable} to cause a test method to succeed, but only if an exception
+	 * of the <code>expected</code> type is thrown.
+	 */
+	Class<? extends Throwable> expected() default None.class;
 }

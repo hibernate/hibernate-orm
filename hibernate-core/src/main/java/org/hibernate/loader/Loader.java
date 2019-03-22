@@ -20,10 +20,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-
-import javax.persistence.Cacheable;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -34,7 +31,6 @@ import org.hibernate.ScrollMode;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
-import org.hibernate.annotations.Cache;
 import org.hibernate.cache.spi.FilterKey;
 import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.QueryKey;
@@ -108,8 +104,7 @@ public abstract class Loader {
 	protected static final boolean DEBUG_ENABLED = LOG.isDebugEnabled();
 	
 	private static Boolean metadataInitialized = false;
-	private static final Set<Serializable> cacheableSpacesSet = java.util.Collections
-			.newSetFromMap(new ConcurrentHashMap<>());
+	private static final Set<Serializable> cacheableSpacesSet = new HashSet<>();
 
 	private final SessionFactoryImplementor factory;
 	private volatile ColumnNameCache columnNameCache;

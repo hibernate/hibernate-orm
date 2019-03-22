@@ -122,45 +122,47 @@ public class Helper {
 
 	public static JdbcParameterBindings createJdbcParameterBindings(
 			QueryParameterBindings<QueryParameterBinding<?>> domainParamBindings,
-			Map<QueryParameterImplementor,List<JdbcParameter>> jdbcParamsByDomainParams,
+			Map<QueryParameterImplementor,List<List<JdbcParameter>>> jdbcParamsByDomainParams,
 			SharedSessionContractImplementor session) {
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl();
 
 		domainParamBindings.visitBindings(
 				(queryParameterImplementor, queryParameterBinding) -> {
-					final List<JdbcParameter> jdbcParameters = jdbcParamsByDomainParams.get( queryParameterImplementor );
+					final List<List<JdbcParameter>> jdbcParameterGroups = jdbcParamsByDomainParams.get( queryParameterImplementor );
 					final Object bindValue = domainParamBindings.getBinding( queryParameterImplementor ).getBindValue();
 
-					final AllowableParameterType parameterType = determineParameterType( queryParameterBinding, queryParameterImplementor, session );
+					final AllowableParameterType<?> parameterType = determineParameterType( queryParameterBinding, queryParameterImplementor, session );
 
-					parameterType.dehydrate(
-							parameterType.unresolve( bindValue, session ),
-							new ExpressableType.JdbcValueCollector() {
-								private int position = 0;
+					for ( List<JdbcParameter> jdbcParameterGroup : jdbcParameterGroups ) {
+						parameterType.dehydrate(
+								parameterType.unresolve( bindValue, session ),
+								new ExpressableType.JdbcValueCollector() {
+									private int position = 0;
 
-								@Override
-								public void collect(Object jdbcValue, SqlExpressableType type, Column boundColumn) {
-									final JdbcParameter jdbcParameter = jdbcParameters.get( position );
-									jdbcParameterBindings.addBinding(
-											jdbcParameter,
-											new JdbcParameterBinding() {
-												@Override
-												public SqlExpressableType getBindType() {
-													return jdbcParameter.getType();
+									@Override
+									public void collect(Object jdbcValue, SqlExpressableType type, Column boundColumn) {
+										final JdbcParameter jdbcParameter = jdbcParameterGroup.get( position );
+										jdbcParameterBindings.addBinding(
+												jdbcParameter,
+												new JdbcParameterBinding() {
+													@Override
+													public SqlExpressableType getBindType() {
+														return jdbcParameter.getType();
+													}
+
+													@Override
+													public Object getBindValue() {
+														return jdbcValue;
+													}
 												}
-
-												@Override
-												public Object getBindValue() {
-													return jdbcValue;
-												}
-											}
-									);
-									position++;
-								}
-							},
-							Clause.IRRELEVANT,
-							session
-					);
+										);
+										position++;
+									}
+								},
+								Clause.IRRELEVANT,
+								session
+						);
+					}
 				}
 		);
 //		for ( Map.Entry<QueryParameterImplementor, List<JdbcParameter>> entry : jdbcParamsByDomainParams.entrySet() ) {

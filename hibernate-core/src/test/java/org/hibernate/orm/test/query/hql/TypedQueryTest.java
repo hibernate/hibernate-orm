@@ -23,7 +23,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 
-public class ParameterizedHQLQueriesTest extends SessionFactoryBasedFunctionalTest {
+public class TypedQueryTest extends SessionFactoryBasedFunctionalTest {
 
 	final VideoGame GOD_OF_WAR = new VideoGame( "GOW_2018", "God of war", LocalDate.of( 2018, Month.APRIL, 20 ) );
 	final VideoGame THE_LAST_OF_US = new VideoGame( "TLOU_2013", "The last of us", LocalDate.of( 2013, Month.JUNE, 14 ) );

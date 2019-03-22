@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.internal;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,20 +53,20 @@ import org.hibernate.sql.exec.spi.RowTransformer;
  */
 public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private final SqmSelectStatement sqm;
-	private final Map<QueryParameterImplementor<?>, SqmParameter> sqmParamByQueryParam;
+	private final DomainParameterXref domainParameterXref;
 	private final RowTransformer<R> rowTransformer;
 
 	private JdbcSelect jdbcSelect;
-	private  Map<QueryParameterImplementor, List<JdbcParameter>> jdbcParamsByDomainParams;
+	private  Map<QueryParameterImplementor, List<List<JdbcParameter>>> jdbcParamsByDomainParams;
 
 	@SuppressWarnings("WeakerAccess")
 	public ConcreteSqmSelectQueryPlan(
 			SqmSelectStatement sqm,
-			Map<QueryParameterImplementor<?>, SqmParameter> sqmParamByQueryParam,
+			DomainParameterXref domainParameterXref,
 			Class<R> resultType,
 			QueryOptions queryOptions) {
 		this.sqm = sqm;
-		this.sqmParamByQueryParam = sqmParamByQueryParam;
+		this.domainParameterXref = domainParameterXref;
 
 		this.rowTransformer = determineRowTransformer( sqm, resultType, queryOptions );
 	}
@@ -162,8 +163,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 					executionContext.getSession().getSessionFactory()
 			);
 
-			jdbcParamsByDomainParams = generateJdbcParamsByQueryParamMap(
-					sqmConverter );
+			jdbcParamsByDomainParams = generateJdbcParamsByQueryParamMap( sqmConverter );
 		}
 
 		final JdbcParameterBindings jdbcParameterBindings = Helper.createJdbcParameterBindings(
@@ -208,14 +208,22 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		);
 	}
 
-	private Map<QueryParameterImplementor, List<JdbcParameter>> generateJdbcParamsByQueryParamMap(
+	private Map<QueryParameterImplementor, List<List<JdbcParameter>>> generateJdbcParamsByQueryParamMap(
 			SqmSelectToSqlAstConverter sqmConverter) {
-		final Map<QueryParameterImplementor,List<JdbcParameter>> jdbcParamsByDomainParams = new HashMap<>();
-
-		for ( Map.Entry<QueryParameterImplementor<?>, SqmParameter> paramEntry : sqmParamByQueryParam.entrySet() ) {
-			final List<JdbcParameter> jdbcParameters = sqmConverter.getJdbcParamsBySqmParam().get( paramEntry.getValue() );
-			jdbcParamsByDomainParams.put( paramEntry.getKey(), jdbcParameters );
+		if ( domainParameterXref == null || ! domainParameterXref.hasParameters() ) {
+			return Collections.emptyMap();
 		}
+
+		final Map<QueryParameterImplementor,List<List<JdbcParameter>>> jdbcParamsByDomainParams = new HashMap<>();
+
+		for ( Map.Entry<QueryParameterImplementor<?>, List<SqmParameter>> entry : domainParameterXref.getSqmParamByQueryParam().entrySet() ) {
+			final List<List<JdbcParameter>> jdbcParameters = new ArrayList<>();
+			for ( SqmParameter sqmParameter : entry.getValue() ) {
+				jdbcParameters.add( sqmConverter.getJdbcParamsBySqmParam().get( sqmParameter ) );
+			}
+			jdbcParamsByDomainParams.put( entry.getKey(), jdbcParameters );
+		}
+
 		return jdbcParamsByDomainParams;
 	}
 
@@ -242,8 +250,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				executionContext.getSession().getSessionFactory()
 		);
 
-		final Map<QueryParameterImplementor, List<JdbcParameter>> jdbcParamsByDomainParams
-				= generateJdbcParamsByQueryParamMap( sqmConverter );
+		final Map<QueryParameterImplementor, List<List<JdbcParameter>>> jdbcParamsByDomainParams = generateJdbcParamsByQueryParamMap( sqmConverter );
 
 		final JdbcParameterBindings jdbcParameterBindings = Helper.createJdbcParameterBindings(
 				executionContext.getParameterBindingContext().getQueryParameterBindings(),

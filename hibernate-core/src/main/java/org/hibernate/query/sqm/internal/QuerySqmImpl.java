@@ -6,9 +6,7 @@
  */
 package org.hibernate.query.sqm.internal;
 
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,16 +22,12 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.query.Query;
-import org.hibernate.query.criteria.sqm.JpaParameterSqmWrapper;
 import org.hibernate.query.internal.AbstractQuery;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
-import org.hibernate.query.internal.QueryParameterNamedImpl;
-import org.hibernate.query.internal.QueryParameterPositionalImpl;
 import org.hibernate.query.named.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.named.spi.NamedHqlQueryMemento;
 import org.hibernate.query.named.spi.ParameterMemento;
@@ -52,12 +46,11 @@ import org.hibernate.query.sqm.consume.multitable.spi.DeleteHandler;
 import org.hibernate.query.sqm.consume.multitable.spi.HandlerExecutionContext;
 import org.hibernate.query.sqm.consume.multitable.spi.UpdateHandler;
 import org.hibernate.query.sqm.consume.spi.QuerySplitter;
-import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.exec.spi.ParameterBindingContext;
 
@@ -74,7 +67,7 @@ public class QuerySqmImpl<R>
 	private final SqmStatement sqmStatement;
 	private final Class resultType;
 
-	private final Map<QueryParameterImplementor<?>, SqmParameter> sqmParamByQueryParam;
+	private final DomainParameterXref domainParameterXref;
 
 	private final ParameterMetadataImpl parameterMetadata;
 	private final QueryParameterBindingsImpl parameterBindings;
@@ -98,47 +91,16 @@ public class QuerySqmImpl<R>
 		this.sqmStatement = sqmStatement;
 		this.resultType = resultType;
 
-		if ( CollectionHelper.isEmpty( sqmStatement.getQueryParameters() ) ) {
-			this.sqmParamByQueryParam = Collections.emptyMap();
+		if ( sqmStatement.getSqmParameters().isEmpty() ) {
+			this.domainParameterXref = DomainParameterXref.empty();
 			this.parameterMetadata = ParameterMetadataImpl.EMPTY;
 		}
 		else {
-			this.sqmParamByQueryParam = buildParameterMapping( sqmStatement );
-			this.parameterMetadata = new ParameterMetadataImpl( sqmParamByQueryParam.keySet() );
+			this.domainParameterXref = DomainParameterXref.from( sqmStatement );
+			this.parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
 		}
 
 		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, producer.getFactory() );
-	}
-
-	private Map<QueryParameterImplementor<?>, SqmParameter> buildParameterMapping(SqmStatement sqmStatement) {
-		final Map<QueryParameterImplementor<?>, SqmParameter> paramMap = new IdentityHashMap<>();
-
-		for ( SqmParameter sqmParameter : sqmStatement.getQueryParameters() ) {
-			if ( paramMap.containsValue( sqmParameter ) ) {
-				continue;
-			}
-
-			if ( sqmParameter instanceof JpaParameterSqmWrapper ) {
-				paramMap.put(
-						( (JpaParameterSqmWrapper) sqmParameter ).getJpaParameterExpression(),
-						sqmParameter
-				);
-			}
-			else if ( sqmParameter.getName() != null ) {
-				paramMap.put(
-						QueryParameterNamedImpl.fromSqm( sqmParameter ),
-						sqmParameter
-				);
-			}
-			else if ( sqmParameter.getPosition() != null ) {
-				paramMap.put(
-						QueryParameterPositionalImpl.fromSqm( sqmParameter ),
-						sqmParameter
-				);
-			}
-		}
-
-		return paramMap;
 	}
 
 	@Override
@@ -349,7 +311,7 @@ public class QuerySqmImpl<R>
 			QueryOptions queryOptions) {
 		return new ConcreteSqmSelectQueryPlan<>(
 				concreteSqmStatement,
-				sqmParamByQueryParam,
+				domainParameterXref,
 				resultType,
 				queryOptions
 		);

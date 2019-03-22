@@ -12,6 +12,7 @@ import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.ParsingException;
+import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.SqmCreationHelper;
 import org.hibernate.query.sqm.produce.SqmPathRegistry;
@@ -55,6 +56,9 @@ public class SqmEmbeddedValuedSimplePath extends AbstractSqmSimplePath {
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		final Navigable subNavigable = getReferencedNavigable().findNavigable( name );
+		if ( subNavigable == null ) {
+			throw UnknownPathException.unknownSubPath( this, name );
+		}
 
 		prepareForSubNavigableReference( subNavigable, isTerminal, creationState );
 		return subNavigable.createSqmExpression(

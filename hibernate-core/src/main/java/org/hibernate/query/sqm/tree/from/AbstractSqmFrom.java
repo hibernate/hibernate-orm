@@ -9,13 +9,12 @@ package org.hibernate.query.sqm.tree.from;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.function.Consumer;
 
-import org.hibernate.QueryException;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 
@@ -74,19 +73,17 @@ public abstract class AbstractSqmFrom implements SqmFrom {
 			String currentContextKey,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		// these calls to
-		final Navigable navigable = getReferencedNavigable().findNavigable( name );
-		if ( navigable == null ) {
-			throw new QueryException(
-					String.format(
-							Locale.ROOT,
-							"could not resolve property: %s of: %s",
-							name,
-							getReferencedNavigable().getNavigableName()
-					)
-			);
-		}
-		return navigable.createSqmExpression( this, creationState );
+		final NavigablePath subNavPath = getNavigablePath().append( name );
+		return creationState.getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
+				subNavPath,
+				snp -> {
+					final Navigable navigable = getReferencedNavigable().findNavigable( name );
+					if ( navigable == null ) {
+						throw UnknownPathException.unknownSubPath( this, name );
+					}
+					return navigable.createSqmExpression( this, creationState );
+				}
+		);
 	}
 
 	@Override

@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -27,12 +28,8 @@ public abstract class AbstractSqmStatement implements SqmStatement, ParameterCol
 		parameters.add( parameter );
 	}
 
-	public void setParameters(Set<SqmParameter> parameters) {
-		this.parameters = parameters;
-	}
-
 	@Override
-	public Set<SqmParameter> getQueryParameters() {
-		return parameters;
+	public Set<SqmParameter> getSqmParameters() {
+		return parameters == null ? Collections.emptySet() : Collections.unmodifiableSet( parameters );
 	}
 }

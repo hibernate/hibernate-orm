@@ -9,9 +9,9 @@ package org.hibernate.query.sqm.consume.spi;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.function.Consumer;
 
 import org.hibernate.AssertionFailure;
@@ -118,8 +118,6 @@ import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.expression.AbsFunction;
 import org.hibernate.sql.ast.tree.expression.AvgFunction;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
@@ -169,7 +167,9 @@ import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.sort.SortSpecification;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
 import org.hibernate.sql.exec.internal.StandardJdbcParameterImpl;
@@ -662,24 +662,25 @@ public abstract class BaseSqmToSqlAstConverter
 		);
 	}
 
-	private final Map<SqmParameter,List<JdbcParameter>> jdbcParamsBySqmParam = new TreeMap<>(
-			(o1, o2) -> {
-				if ( o1 instanceof SqmNamedParameter ) {
-					final SqmNamedParameter one = (SqmNamedParameter) o1;
-					final SqmNamedParameter another = (SqmNamedParameter) o2;
-
-					return one.getName().compareTo( another.getName() );
-				}
-				else if ( o1 instanceof SqmPositionalParameter ) {
-					final SqmPositionalParameter one = (SqmPositionalParameter) o1;
-					final SqmPositionalParameter another = (SqmPositionalParameter) o2;
-
-					return one.getPosition().compareTo( another.getPosition() );
-				}
-
-				throw new HibernateException( "Unexpected SqmParameter type for comparison : " + o1 + " & " + o2 );
-			}
-	);
+	private final Map<SqmParameter,List<JdbcParameter>> jdbcParamsBySqmParam = new IdentityHashMap<>();
+//	private final Map<SqmParameter,List<JdbcParameter>> jdbcParamsBySqmParam = new TreeMap<>(
+//			(o1, o2) -> {
+//				if ( o1 instanceof SqmNamedParameter ) {
+//					final SqmNamedParameter one = (SqmNamedParameter) o1;
+//					final SqmNamedParameter another = (SqmNamedParameter) o2;
+//
+//					return one.getName().compareTo( another.getName() );
+//				}
+//				else if ( o1 instanceof SqmPositionalParameter ) {
+//					final SqmPositionalParameter one = (SqmPositionalParameter) o1;
+//					final SqmPositionalParameter another = (SqmPositionalParameter) o2;
+//
+//					return one.getPosition().compareTo( another.getPosition() );
+//				}
+//
+//				throw new HibernateException( "Unexpected SqmParameter type for comparison : " + o1 + " & " + o2 );
+//			}
+//	);
 
 	public Map<SqmParameter, List<JdbcParameter>> getJdbcParamsBySqmParam() {
 		return jdbcParamsBySqmParam;

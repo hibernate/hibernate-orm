@@ -115,7 +115,7 @@ task aggregateJavadocs(type: Javadoc) {
 
 
 	// apply standard config
-	maxMemory = '512m'
+	maxMemory = '1024m'
 	destinationDir = javadocDir
 	configure( options ) {
 //		docletpath = configurations.asciidoclet.files.asType(List)

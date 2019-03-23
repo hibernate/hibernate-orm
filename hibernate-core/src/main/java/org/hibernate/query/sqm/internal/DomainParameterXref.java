@@ -25,6 +25,8 @@ import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 
 /**
+ * Maintains a cross-reference between SqmParameter and QueryParameter references.
+ *
  * @author Steve Ebersole
  */
 @SuppressWarnings("WeakerAccess")
@@ -38,8 +40,8 @@ public class DomainParameterXref {
 		// SqmParameter and a QueryParameter.  Multiple SqmParameter references
 		// can map to the same QueryParameter.  Consider, e.g.,
 		// `.. where a.b = :param or a.c = :param`.  Here we have 2 SqmParameter
-		// references (one for each occurrence of `:p`) that both map to the same
-		// QueryParameter.
+		// references (one for each occurrence of `:param`) both of which map to
+		// the same QueryParameter.
 		final Map<SqmParameter,QueryParameterImplementor<?>> xrefMap = new TreeMap<>(
 				(o1, o2) -> {
 					if ( o1 instanceof SqmNamedParameter ) {

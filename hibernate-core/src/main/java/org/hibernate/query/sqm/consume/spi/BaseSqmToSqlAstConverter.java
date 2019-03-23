@@ -663,18 +663,10 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	private final Map<SqmParameter,List<JdbcParameter>> jdbcParamsBySqmParam = new IdentityHashMap<>();
+	private final JdbcParameters jdbcParameters = new JdbcParametersImpl();
 
 	public Map<SqmParameter, List<JdbcParameter>> getJdbcParamsBySqmParam() {
 		return jdbcParamsBySqmParam;
-	}
-
-	/**
-	 * Ultimately used for "parameter metadata" and as key for a JdbcParameterBinding
-	 */
-	private final JdbcParameters jdbcParameters = new JdbcParametersImpl();
-
-	public JdbcParameters getJdbcParameters() {
-		return jdbcParameters;
 	}
 
 	@Override

@@ -9,8 +9,8 @@ package org.hibernate.query.sqm.produce.internal;
 import java.lang.reflect.Field;
 import java.util.Locale;
 
+import org.hibernate.query.QueryLogger;
 import org.hibernate.query.criteria.sqm.JpaParameterSqmWrapper;
-import org.hibernate.query.spi.QueryMessageLogger;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -115,7 +115,7 @@ import org.jboss.logging.Logger;
 public class SqmTreePrinter implements SemanticQueryWalker {
 	private static final Logger log = Logger.getLogger( SqmTreePrinter.class );
 
-	private static final Logger LOGGER = Logger.getLogger( QueryMessageLogger.LOGGER_NAME + ".sqm.sqmTree" );
+	private static final Logger LOGGER = QueryLogger.subLogger( "sqm.sqmTree" );
 	private static final boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();
 
 	public static void logTree(SqmStatement sqmStatement) {

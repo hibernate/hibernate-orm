@@ -18,7 +18,7 @@ import org.jboss.logging.Logger;
  */
 @Internal
 public interface SqmTreeCreationLogger {
-	String LOGGER_NAME = QueryLogger.LOGGER_NAME + ".sqm.creation";
+	String LOGGER_NAME = QueryLogger.subLoggerName( "sqm.creation" );
 
 	Logger LOGGER = Logger.getLogger( LOGGER_NAME );
 

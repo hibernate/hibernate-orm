@@ -11,12 +11,13 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.QueryLogger;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.spi.CriteriaNodeBuilder;
 import org.hibernate.query.internal.QueryPlanCacheImpl;
+import org.hibernate.query.sqm.produce.SemanticQueryProducer;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.internal.SemanticQueryProducerImpl;
-import org.hibernate.query.sqm.produce.SemanticQueryProducer;
 
 /**
  * Aggregation and encapsulation of the components Hibernate uses
@@ -52,7 +53,7 @@ public class QueryEngine {
 				StringBuilder failingQueries = new StringBuilder( "Errors in named queries: " );
 				String sep = "";
 				for ( Map.Entry<String, HibernateException> entry : errors.entrySet() ) {
-					QueryMessageLogger.QUERY_LOGGER.namedQueryError( entry.getKey(), entry.getValue() );
+					QueryLogger.QUERY_LOGGER.namedQueryError( entry.getKey(), entry.getValue() );
 					failingQueries.append( sep ).append( entry.getKey() );
 					sep = ", ";
 				}

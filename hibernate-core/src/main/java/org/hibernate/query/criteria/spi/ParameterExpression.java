@@ -61,7 +61,7 @@ public class ParameterExpression<T>
 	}
 
 	@Override
-	public void allowMultiValuedBinding() {
+	public void disallowMultiValuedBinding() {
 		setAllowsMultiValuedBinding( true );
 	}
 

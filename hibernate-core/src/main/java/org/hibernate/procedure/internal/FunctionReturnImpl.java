@@ -103,7 +103,7 @@ public class FunctionReturnImpl implements FunctionReturnImplementor {
 	}
 
 	@Override
-	public void allowMultiValuedBinding() {
+	public void disallowMultiValuedBinding() {
 		// no-op
 	}
 

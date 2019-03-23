@@ -32,7 +32,7 @@ import org.hibernate.engine.jndi.JndiNameException;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.query.spi.QueryMessageLogger;
+import org.hibernate.query.QueryLogger;
 import org.hibernate.type.Type;
 import org.hibernate.type.spi.BasicType;
 
@@ -535,7 +535,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void missingEntityAnnotation(String className);
 
 	/**
-	 * @deprecated Use {@link QueryMessageLogger#namedQueryError} instead.
+	 * @deprecated Use {@link QueryLogger#namedQueryError} instead.
 	 */
 	@Deprecated
 	@LogMessage(level = ERROR)

@@ -13,7 +13,7 @@ import org.hibernate.query.named.spi.ParameterMemento;
  * @author Steve Ebersole
  */
 public interface QueryParameterImplementor<T> extends QueryParameter<T> {
-	void allowMultiValuedBinding();
+	void disallowMultiValuedBinding();
 
 	ParameterMemento toMemento();
 }

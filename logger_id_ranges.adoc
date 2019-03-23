@@ -64,7 +64,7 @@
 
 |90003001
 |90004000
-|org.hibernate.query.spi.QueryMessageLogger
+|org.hibernate.query.spi.QueryLogger
 
 |90004001
 |90005000

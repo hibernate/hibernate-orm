@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.hibernate.HibernateException;
+import org.hibernate.query.QueryLogger;
 import org.hibernate.query.criteria.sqm.JpaParameterSqmWrapper;
 import org.hibernate.query.internal.QueryParameterNamedImpl;
 import org.hibernate.query.internal.QueryParameterPositionalImpl;
@@ -36,6 +37,8 @@ public class DomainParameterXref {
 	 * SQM statement
 	 */
 	public static DomainParameterXref from(SqmStatement sqmStatement) {
+		final Map<QueryParameterImplementor<?>, List<SqmParameter>> sqmParamsByQueryParam = new IdentityHashMap<>();
+
 		// `xrefMap` is used to help maintain the proper cardinality between an
 		// SqmParameter and a QueryParameter.  Multiple SqmParameter references
 		// can map to the same QueryParameter.  Consider, e.g.,
@@ -69,9 +72,6 @@ public class DomainParameterXref {
 				}
 		);
 
-		final Map<QueryParameterImplementor<?>, List<SqmParameter>> sqmParamsByQueryParam = new IdentityHashMap<>();
-		final Map<SqmParameter, QueryParameterImplementor<?>> queryParamBySqmParam = new IdentityHashMap<>();
-
 		for ( SqmParameter sqmParameter : sqmStatement.getSqmParameters() ) {
 			final QueryParameterImplementor<?> queryParameter = xrefMap.computeIfAbsent(
 					sqmParameter,
@@ -91,40 +91,60 @@ public class DomainParameterXref {
 					}
 			);
 
+			if ( ! sqmParameter.allowMultiValuedBinding() ) {
+				if ( queryParameter.allowsMultiValuedBinding() ) {
+					QueryLogger.QUERY_LOGGER.debugf(
+							"SqmParameter [%s] does not allow multi-valued binding, " +
+									"but mapped to existing QueryParameter [%s] that does - " +
+									"disallowing multi-valued binding" ,
+							sqmParameter,
+							queryParameter
+					);
+					queryParameter.disallowMultiValuedBinding();
+				}
+			}
+
 			sqmParamsByQueryParam.computeIfAbsent( queryParameter, qp -> new ArrayList<>() ).add( sqmParameter );
-			queryParamBySqmParam.put( sqmParameter, queryParameter );
 		}
 
-		return new DomainParameterXref( sqmParamsByQueryParam, queryParamBySqmParam );
+		return new DomainParameterXref( sqmParamsByQueryParam );
 	}
 
+	/**
+	 * Creates an "empty" (no param) xref
+	 */
 	public static DomainParameterXref empty() {
-		return new DomainParameterXref( Collections.emptyMap(), Collections.emptyMap() );
+		return new DomainParameterXref( Collections.emptyMap() );
 	}
 
 	private final Map<QueryParameterImplementor<?>, List<SqmParameter>> sqmParamsByQueryParam;
-	private final Map<SqmParameter, QueryParameterImplementor<?>> queryParamBySqmParam;
 
-	public DomainParameterXref(
-			Map<QueryParameterImplementor<?>, List<SqmParameter>> sqmParamsByQueryParam,
-			Map<SqmParameter, QueryParameterImplementor<?>> queryParamBySqmParam) {
+	/**
+	 * @implSpec Constructor is defined as public for
+	 */
+	public DomainParameterXref(Map<QueryParameterImplementor<?>, List<SqmParameter>> sqmParamsByQueryParam) {
 		this.sqmParamsByQueryParam = sqmParamsByQueryParam;
-		this.queryParamBySqmParam = queryParamBySqmParam;
 	}
 
+	/**
+	 * Does this xref contain any parameters?
+	 */
 	public boolean hasParameters() {
 		return sqmParamsByQueryParam != null && ! sqmParamsByQueryParam.isEmpty();
 	}
 
+	/**
+	 * Get all of the QueryParameters mapped by this xref
+	 */
 	public Set<QueryParameterImplementor<?>> getQueryParameters() {
 		return sqmParamsByQueryParam.keySet();
 	}
 
+	/**
+	 * Get the mapping of all QueryParameters to the List of its corresponding
+	 * SqmParameters
+	 */
 	public Map<QueryParameterImplementor<?>, List<SqmParameter>> getSqmParamByQueryParam() {
 		return sqmParamsByQueryParam;
-	}
-
-	public Map<SqmParameter, QueryParameterImplementor<?>> getQueryParamBySqmParam() {
-		return queryParamBySqmParam;
 	}
 }

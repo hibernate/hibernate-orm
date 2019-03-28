@@ -7,26 +7,22 @@
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
 import static net.bytebuddy.matcher.ElementMatchers.isDefaultFinalizer;
-import static net.bytebuddy.matcher.ElementMatchers.isGetter;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.Transient;
 
-import org.hibernate.MappingException;
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
 import org.hibernate.bytecode.enhance.internal.tracker.DirtyTracker;
 import org.hibernate.bytecode.enhance.spi.CollectionTracker;
@@ -64,12 +60,10 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.description.type.TypeDescription.Generic;
 import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.dynamic.DynamicType;
-import net.bytebuddy.dynamic.scaffold.MethodGraph;
 import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.implementation.StubMethod;
-import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.pool.TypePool;
 
 public class EnhancerImpl implements Enhancer {
@@ -79,6 +73,7 @@ public class EnhancerImpl implements Enhancer {
 	protected final ByteBuddyEnhancementContext enhancementContext;
 	private final ByteBuddyState byteBuddyState;
 
+	private final EnhancerClassFileLocator classFileLocator;
 	private final TypePool typePool;
 
 	/**
@@ -112,7 +107,8 @@ public class EnhancerImpl implements Enhancer {
 	public EnhancerImpl(final EnhancementContext enhancementContext, final ByteBuddyState byteBuddyState) {
 		this.enhancementContext = new ByteBuddyEnhancementContext( enhancementContext );
 		this.byteBuddyState = byteBuddyState;
-		this.typePool = buildTypePool( this.enhancementContext );
+		this.classFileLocator = new EnhancerClassFileLocator( enhancementContext.getLoadingClassLoader() );
+		this.typePool = buildTypePool( classFileLocator );
 	}
 
 	/**
@@ -130,6 +126,7 @@ public class EnhancerImpl implements Enhancer {
 	public byte[] enhance(String className, byte[] originalBytes) throws EnhancementException {
 		//Classpool#describe does not accept '/' in the description name as it expects a class name. See HHH-12545
 		final String safeClassName = className.replace( '/', '.' );
+		classFileLocator.addNameAndBytes( safeClassName, originalBytes );
 		try {
 			final TypeDescription typeDescription = typePool.describe( safeClassName ).resolve();
 
@@ -143,8 +140,8 @@ public class EnhancerImpl implements Enhancer {
 		}
 	}
 
-	private TypePool buildTypePool(final ByteBuddyEnhancementContext enhancementContext) {
-		return TypePool.Default.WithLazyResolution.of( enhancementContext.getLoadingClassLoader() );
+	private TypePool buildTypePool(final ClassFileLocator classFileLocator) {
+		return TypePool.Default.WithLazyResolution.of( classFileLocator );
 	}
 
 	private DynamicType.Builder<?> doEnhance(DynamicType.Builder<?> builder, TypeDescription managedCtClass) {
@@ -537,6 +534,37 @@ public class EnhancerImpl implements Enhancer {
 
 				return fieldDescription.getDeclaredAnnotations();
 			}
+		}
+	}
+
+	private class EnhancerClassFileLocator extends ClassFileLocator.ForClassLoader {
+
+		private Map<String,Resolution> nameToResolutionMap = new HashMap<>();
+
+		/**
+		 * Creates a new class file locator for the given class loader.
+		 *
+		 * @param classLoader The class loader to query which must not be the bootstrap class loader, i.e. {@code null}.
+		 */
+		protected EnhancerClassFileLocator(ClassLoader classLoader) {
+			super( classLoader );
+		}
+
+		@Override
+		public Resolution locate(String name) throws IOException {
+			Resolution resolution = nameToResolutionMap.get( name );
+			if ( resolution != null ) {
+				return resolution;
+			}
+			else {
+				return super.locate( name );
+			}
+		}
+
+		void addNameAndBytes(String name, byte[] bytes ) {
+			assert name != null;
+			assert bytes != null;
+			nameToResolutionMap.put( name, new Resolution.Explicit( bytes) );
 		}
 	}
 }

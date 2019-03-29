@@ -15,7 +15,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.ParameterBindingContext;
+import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
 import org.hibernate.sql.results.spi.ResultSetMappingDescriptor;
 
 /**
@@ -31,7 +31,7 @@ public interface ResultContext extends ExecutionContext {
 	QueryOptions getQueryOptions();
 
 	@Override
-	ParameterBindingContext getParameterBindingContext();
+	DomainParameterBindingContext getDomainParameterBindingContext();
 
 	@Override
 	Callback getCallback();

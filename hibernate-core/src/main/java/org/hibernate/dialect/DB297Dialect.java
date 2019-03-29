@@ -9,12 +9,12 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.dialect.function.DB2SubstringFunctionTemplate;
-import org.hibernate.query.sqm.consume.multitable.internal.StandardIdTableSupport;
-import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTempTableExporter;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTemporaryTableStrategy;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTable;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTableSupport;
+import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
+import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTempTableExporter;
+import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
+import org.hibernate.query.sqm.mutation.spi.idtable.IdTableSupport;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
@@ -49,7 +49,7 @@ public class DB297Dialect extends DB2Dialect {
 	}
 
 	@Override
-	public IdTableStrategy getDefaultIdTableStrategy() {
+	public SqmMutationStrategy getDefaultIdTableStrategy() {
 		// Starting in DB2 9.7, "real" global temporary tables that can be shared between sessions
 		// are supported; (obviously) data is not shared between sessions.
 		return new GlobalTemporaryTableStrategy(

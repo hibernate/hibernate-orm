@@ -114,7 +114,7 @@ public class QualifiedObjectNameFormatterStandardImpl implements QualifiedObject
 		String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect);
 	}
 
-	private static class NoQualifierSupportFormat implements Format {
+	public static class NoQualifierSupportFormat implements Format {
 		/**
 		 * Singleton access
 		 */

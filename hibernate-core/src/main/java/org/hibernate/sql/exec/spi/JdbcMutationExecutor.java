@@ -28,20 +28,26 @@ public interface JdbcMutationExecutor {
 
 	int execute(
 			JdbcMutation jdbcMutation,
+			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			Function<String, PreparedStatement> statementCreator,
 			BiConsumer<Integer, PreparedStatement> expectationCkeck);
 
 	int execute(
 			JdbcMutation jdbcMutation,
+			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			Function<String, PreparedStatement> statementCreator);
 
 	int execute(
 			JdbcMutation jdbcMutation,
+			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			BiConsumer<Integer, PreparedStatement> expectationCkeck);
 
-	int execute(JdbcMutation jdbcMutation, ExecutionContext executionContext);
+	int execute(
+			JdbcMutation jdbcMutation,
+			JdbcParameterBindings jdbcParameterBindings,
+			ExecutionContext executionContext);
 
 }

@@ -34,11 +34,12 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
-import org.hibernate.query.sqm.consume.multitable.internal.StandardIdTableSupport;
-import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTempTableExporter;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTemporaryTableStrategy;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTableSupport;
+import org.hibernate.naming.Identifier;
+import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
+import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTempTableExporter;
+import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.spi.idtable.IdTableSupport;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.sql.CacheJoinFragment;
 import org.hibernate.sql.JoinFragment;
@@ -485,16 +486,18 @@ public class Cache71Dialect extends Dialect {
 	}
 
 	@Override
-	public IdTableStrategy getDefaultIdTableStrategy() {
+	public SqmMutationStrategy getDefaultIdTableStrategy() {
 		return new GlobalTemporaryTableStrategy( generateIdTableSupport() );
 	}
 
 	private IdTableSupport generateIdTableSupport() {
 		return new StandardIdTableSupport( new GlobalTempTableExporter() ) {
 			@Override
-			protected String determineIdTableName(String baseName) {
-				final String name = super.determineIdTableName( baseName );
-				return name.length() > 25 ? name.substring( 1, 25 ) : name;
+			protected Identifier determineIdTableName(Identifier baseName) {
+				final Identifier name = super.determineIdTableName( baseName );
+				return name.getText().length() > 25
+						? new Identifier( name.getText().substring( 1, 25 ), false )
+						: name;
 			}
 		};
 	}

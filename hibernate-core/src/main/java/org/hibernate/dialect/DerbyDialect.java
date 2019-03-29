@@ -13,9 +13,9 @@ import java.sql.Types;
 import java.util.Locale;
 
 import org.hibernate.MappingException;
-import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.AfterUseAction;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.LocalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.idtable.AfterUseAction;
+import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.spi.AnsiTrimFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.spi.DerbyConcatFunctionTemplate;
@@ -594,7 +594,7 @@ public class DerbyDialect extends DB2Dialect {
 	 * </p>
      */
 	@Override
-	public IdTableStrategy getDefaultIdTableStrategy() {
+	public SqmMutationStrategy getDefaultIdTableStrategy() {
 		return new LocalTemporaryTableStrategy( generateIdTableSupport() ) {
 			@Override
 			public AfterUseAction getAfterUseAction() {

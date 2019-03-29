@@ -18,10 +18,13 @@ import org.hibernate.annotations.Remove;
  * @author John O'Hara
  */
 public interface JdbcParameterBinder {
-	// todo (6.0) : remove the return value here.  Like below, is always 1
+	/**
+	 * todo (6.0) : remove the return value here.  Like {@link #getNumberOfJdbcParametersNeeded()}, is always 1
+	 */
 	int bindParameterValue(
 			PreparedStatement statement,
 			int startPosition,
+			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext) throws SQLException;
 
 	/**

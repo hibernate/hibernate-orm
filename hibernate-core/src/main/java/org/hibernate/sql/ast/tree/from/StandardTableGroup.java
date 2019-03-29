@@ -52,12 +52,12 @@ public class StandardTableGroup extends AbstractTableGroup {
 	}
 
 	@Override
-	protected TableReference getPrimaryTableReference() {
+	public TableReference getPrimaryTableReference() {
 		return primaryTableReference;
 	}
 
 	@Override
-	protected List<TableReferenceJoin> getTableReferenceJoins() {
+	public List<TableReferenceJoin> getTableReferenceJoins() {
 		return tableReferenceJoins;
 	}
 

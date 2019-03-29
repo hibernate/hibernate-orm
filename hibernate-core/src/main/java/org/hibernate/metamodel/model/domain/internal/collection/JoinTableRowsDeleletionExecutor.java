@@ -30,6 +30,7 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
+import org.hibernate.sql.exec.internal.LoadParameterBindingContext;
 import org.hibernate.sql.exec.spi.BasicExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcDelete;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
@@ -191,7 +192,10 @@ public class JoinTableRowsDeleletionExecutor implements CollectionRowsDeletionEx
 		if ( deletes.hasNext() ) {
 			int passes = 0;
 			final JdbcParameterBindingsImpl jdbcParameterBindings = new JdbcParameterBindingsImpl();
-			final BasicExecutionContext executionContext = new BasicExecutionContext( session, jdbcParameterBindings );
+			final BasicExecutionContext executionContext = new BasicExecutionContext(
+					session,
+					new LoadParameterBindingContext( session.getSessionFactory(), key )
+			);
 
 			while ( deletes.hasNext() ) {
 				Object entry = deletes.next();
@@ -207,7 +211,11 @@ public class JoinTableRowsDeleletionExecutor implements CollectionRowsDeletionEx
 						bindCollectionElement( entry, collection, jdbcParameterBindings, session );
 					}
 				}
-				JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute( removalOperation, executionContext );
+				JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute(
+						removalOperation,
+						jdbcParameterBindings,
+						executionContext
+				);
 
 				passes++;
 				jdbcParameterBindings.clear();

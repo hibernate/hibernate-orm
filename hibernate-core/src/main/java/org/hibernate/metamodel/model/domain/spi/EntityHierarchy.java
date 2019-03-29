@@ -6,11 +6,18 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.RepresentationMode;
+import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.type.descriptor.java.spi.EntityMutabilityPlan;
 
 /**
@@ -86,6 +93,13 @@ public interface EntityHierarchy {
 	 */
 	EntityDataAccess getEntityCacheAccess();
 
+	/**
+	 * todo (6.0) : Either this should return a more general "DynamicMutationStrategy" (simple and multi-table)
+	 * 		or this should somehow be restricted to multi-table hierarchies.
+	 * 		The more generalized `DynamicMutationStrategy` which we directly feed the `SqmDeleteOrUpdateStatement`
+	 */
+	SqmMutationStrategy getSqmMutationStrategy();
+
 	String getWhere();
 
 	// todo (6.0) : would love to override `EntityJavaDescriptor#getMutabilityPlan` to return `EntityMutabilityPlan` as a covariant
@@ -113,4 +127,6 @@ public interface EntityHierarchy {
 
 		return null;
 	}
+
+	void visitConstraintOrderedTables(BiConsumer<Table, List<Column>> tableConsumer);
 }

@@ -113,6 +113,13 @@ public final class StringHelper {
 		return buf.toString();
 	}
 
+	public static void repeat(String string, int times, String separator, StringBuilder buffer) {
+		buffer.append( string );
+		for ( int i = 1; i < times; i++ ) {
+			buffer.append( separator ).append( string );
+		}
+	}
+
 	public static String repeat(char character, int times) {
 		char[] buffer = new char[times];
 		Arrays.fill( buffer, character );

@@ -9,7 +9,9 @@ package org.hibernate.sql.ast.consume.spi;
 import java.util.Collections;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.sql.ast.consume.SqlAstPrinter;
 import org.hibernate.sql.ast.produce.spi.SqlAstSelectDescriptor;
+import org.hibernate.sql.ast.tree.SqlAstTreeLogger;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcSelectImpl;
@@ -27,8 +29,9 @@ import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
 public class SqlAstSelectToJdbcSelectConverter
 		extends AbstractSqlAstToJdbcOperationConverter
 		implements SqlSelectAstWalker, SqlTypeDescriptorIndicators {
+
 	/**
-	 * Perform interpretation of a select query, returning the SqlSelectInterpretation
+	 * Perform interpretation of a SQL AST QuerySpec
 	 *
 	 * @return The interpretation result
 	 */
@@ -47,14 +50,20 @@ public class SqlAstSelectToJdbcSelectConverter
 	}
 
 	public static JdbcSelect interpret(SqlAstSelectDescriptor sqlSelectPlan, SessionFactoryImplementor sessionFactory) {
+		final SelectStatement sqlAstStatement = sqlSelectPlan.getSqlAstStatement();
+
+		if ( SqlAstTreeLogger.DEBUG_ENABLED ) {
+			SqlAstPrinter.print( sqlAstStatement );
+		}
+
 		final SqlAstSelectToJdbcSelectConverter walker = new SqlAstSelectToJdbcSelectConverter( sessionFactory );
 
-		walker.visitSelectQuery( sqlSelectPlan.getSqlAstStatement() );
+		walker.visitSelectQuery( sqlAstStatement );
 		return new JdbcSelectImpl(
 				walker.getSql(),
 				walker.getParameterBinders(),
 				new StandardResultSetMappingDescriptor(
-						sqlSelectPlan.getSqlAstStatement().getQuerySpec().getSelectClause().getSqlSelections(),
+						sqlAstStatement.getQuerySpec().getSelectClause().getSqlSelections(),
 						sqlSelectPlan.getQueryResults()
 				),
 				sqlSelectPlan.getAffectedTableNames()

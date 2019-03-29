@@ -11,12 +11,12 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.sql.exec.spi.ParameterBindingContext;
+import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
 
 /**
  * @author Steve Ebersole
  */
-public class StandardParameterBindingContext implements ParameterBindingContext {
+public class StandardParameterBindingContext implements DomainParameterBindingContext {
 	private final SessionFactoryImplementor sessionFactory;
 	private final QueryParameterBindings parameterBindings;
 	private final List loadIdentifiers;

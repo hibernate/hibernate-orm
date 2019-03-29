@@ -14,7 +14,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
-import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 
 /**
  * Simple implementation of ExecutionContext taking just a Session
@@ -23,31 +22,22 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
  */
 public class BasicExecutionContext implements ExecutionContext {
 	private final SharedSessionContractImplementor session;
-	private final ParameterBindingContext parameterBindingContext;
-	private final JdbcParameterBindings jdbcParameterBindings;
+	private final DomainParameterBindingContext parameterBindingContext;
 
 	/**
 	 * Full constructor
 	 */
 	public BasicExecutionContext(
 			SharedSessionContractImplementor session,
-			ParameterBindingContext parameterBindingContext,
-			JdbcParameterBindings jdbcParameterBindings) {
+			DomainParameterBindingContext parameterBindingContext) {
 		this.session = session;
 		this.parameterBindingContext = parameterBindingContext;
-		this.jdbcParameterBindings = jdbcParameterBindings;
 	}
 
 	public BasicExecutionContext(SharedSessionContractImplementor session) {
-		this( session, JdbcParameterBindingsImpl.NO_BINDINGS );
-	}
-
-	public BasicExecutionContext(
-			SharedSessionContractImplementor session,
-			JdbcParameterBindings jdbcParameterBindings) {
 		this(
 				session,
-				new ParameterBindingContext() {
+				new DomainParameterBindingContext() {
 					@Override
 					public <T> List<T> getLoadIdentifiers() {
 						return Collections.emptyList();
@@ -62,14 +52,8 @@ public class BasicExecutionContext implements ExecutionContext {
 					public SessionFactoryImplementor getSessionFactory() {
 						return session.getSessionFactory();
 					}
-				},
-				jdbcParameterBindings
+				}
 		);
-	}
-
-	@Override
-	public JdbcParameterBindings getJdbcParameterBindings() {
-		return jdbcParameterBindings;
 	}
 
 	@Override
@@ -83,7 +67,7 @@ public class BasicExecutionContext implements ExecutionContext {
 	}
 
 	@Override
-	public ParameterBindingContext getParameterBindingContext() {
+	public DomainParameterBindingContext getDomainParameterBindingContext() {
 		return parameterBindingContext;
 	}
 

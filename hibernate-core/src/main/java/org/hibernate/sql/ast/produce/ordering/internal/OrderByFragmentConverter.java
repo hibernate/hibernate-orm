@@ -12,7 +12,9 @@ import java.util.List;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
+import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.sql.ast.Clause;
@@ -42,6 +44,8 @@ public class OrderByFragmentConverter extends BaseSqmToSqlAstConverter {
 		super(
 				creationContext,
 				QUERY_OPTIONS,
+				DomainParameterXref.empty(),
+				QueryParameterBindings.NO_PARAM_BINDINGS,
 				LoadQueryInfluencers.NONE,
 				afterLoadAction -> {}
 		);

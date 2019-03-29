@@ -50,9 +50,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 			QueryOptions queryOptions,
 			ResultSetMapping resultSetMapping,
 			ExecutionContext executionContext) {
-		super(
-				resolveQueryCachePutManager( executionContext, queryOptions, queryCacheKey )
-		);
+		super( resolveQueryCachePutManager( executionContext, queryOptions, queryCacheKey ) );
 		this.resultSetAccess = resultSetAccess;
 		this.resultSetMapping = resultSetMapping;
 		this.executionContext = executionContext;

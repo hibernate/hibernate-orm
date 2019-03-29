@@ -45,25 +45,25 @@ import org.hibernate.sql.ast.produce.spi.SqlAstSelectDescriptor;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.internal.LoadParameterBindingContext;
 import org.hibernate.sql.exec.internal.RowTransformerPassThruImpl;
 import org.hibernate.sql.exec.internal.RowTransformerSingularReturnImpl;
 import org.hibernate.sql.exec.internal.StandardJdbcParameterImpl;
+import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.exec.spi.ParameterBindingContext;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
@@ -103,7 +103,7 @@ public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> 
 
 	@Override
 	public T load(Object id, LockOptions lockOptions, SharedSessionContractImplementor session) {
-		final ParameterBindingContext parameterBindingContext = new LoadParameterBindingContext(
+		final DomainParameterBindingContext parameterBindingContext = new LoadParameterBindingContext(
 				session.getFactory(),
 				id
 		);
@@ -149,6 +149,7 @@ public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> 
 
 		final List<T> list = JdbcSelectExecutorStandardImpl.INSTANCE.list(
 				jdbcSelect,
+				jdbcParameterBindings,
 				new ExecutionContext() {
 					@Override
 					public SharedSessionContractImplementor getSession() {
@@ -161,13 +162,8 @@ public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> 
 					}
 
 					@Override
-					public ParameterBindingContext getParameterBindingContext() {
+					public DomainParameterBindingContext getDomainParameterBindingContext() {
 						return parameterBindingContext;
-					}
-
-					@Override
-					public JdbcParameterBindings getJdbcParameterBindings() {
-						return jdbcParameterBindings;
 					}
 
 					@Override
@@ -264,15 +260,36 @@ public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> 
 
 	@Override
 	public Object[] loadDatabaseSnapshot(Object id, SharedSessionContractImplementor session) {
-
 		final JdbcSelect jdbcSelect = SqlAstSelectToJdbcSelectConverter.interpret(
 				databaseSnapshotSelectAst,
 				session.getSessionFactory()
 		);
 
+		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl();
+		entityDescriptor.getHierarchy().getIdentifierDescriptor().dehydrate(
+				id,
+				(jdbcValue, type, boundColumn) -> jdbcParameterBindings.addBinding(
+						idParameter,
+						new JdbcParameterBinding() {
+							@Override
+							public SqlExpressableType getBindType() {
+								return type;
+							}
+
+							@Override
+							public Object getBindValue() {
+								return jdbcValue;
+							}
+						}
+				),
+				Clause.WHERE,
+				session
+		);
+
 		final List<T> list = JdbcSelectExecutorStandardImpl.INSTANCE.list(
 				jdbcSelect,
-				getExecutionContext( id, session ),
+				jdbcParameterBindings,
+				getExecutionContext( session ),
 				RowTransformerPassThruImpl.instance()
 		);
 
@@ -288,31 +305,10 @@ public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> 
 		return values;
 	}
 
-	private ExecutionContext getExecutionContext(Object id,SharedSessionContractImplementor session) {
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl();
-			entityDescriptor.getHierarchy().getIdentifierDescriptor().dehydrate(
-					id,
-					(jdbcValue, type, boundColumn) -> jdbcParameterBindings.addBinding(
-							idParameter,
-							new JdbcParameterBinding() {
-								@Override
-								public SqlExpressableType getBindType() {
-									return type;
-								}
-
-								@Override
-								public Object getBindValue() {
-									return jdbcValue;
-								}
-							}
-					),
-					Clause.WHERE,
-					session
-			);
-
-		final ParameterBindingContext parameterBindingContext = new ParameterBindingContext() {
+	private ExecutionContext getExecutionContext(SharedSessionContractImplementor session) {
+		final DomainParameterBindingContext parameterBindingContext = new DomainParameterBindingContext() {
 			@Override
-			public <T> List<T> getLoadIdentifiers() {
+			public <X> List<X> getLoadIdentifiers() {
 				return Collections.emptyList();
 			}
 
@@ -327,8 +323,7 @@ public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> 
 			}
 		};
 
-		return new ExecutionContext(){
-
+		return new ExecutionContext() {
 			@Override
 			public SharedSessionContractImplementor getSession() {
 				return session;
@@ -340,7 +335,7 @@ public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> 
 			}
 
 			@Override
-			public ParameterBindingContext getParameterBindingContext() {
+			public DomainParameterBindingContext getDomainParameterBindingContext() {
 				return parameterBindingContext;
 			}
 
@@ -348,11 +343,6 @@ public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> 
 			public Callback getCallback() {
 				return afterLoadAction -> {
 				};
-			}
-
-			@Override
-			public JdbcParameterBindings getJdbcParameterBindings() {
-				return jdbcParameterBindings;
 			}
 		};
 	}

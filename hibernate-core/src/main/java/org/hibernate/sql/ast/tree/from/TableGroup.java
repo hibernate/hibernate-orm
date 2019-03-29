@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.from;
 
+import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -42,6 +43,9 @@ public interface TableGroup extends SqlAstNode, NavigableReference, ColumnRefere
 	void render(SqlAppender sqlAppender, SqlAstWalker walker);
 
 	void applyAffectedTableNames(Consumer<String> nameCollector);
+
+	TableReference getPrimaryTableReference();
+	List<TableReferenceJoin> getTableReferenceJoins();
 
 	@Override
 	default DomainResult createDomainResult(String resultVariable, DomainResultCreationState creationState) {

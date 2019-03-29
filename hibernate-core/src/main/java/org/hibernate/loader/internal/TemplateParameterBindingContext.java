@@ -12,12 +12,12 @@ import java.util.List;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.sql.exec.spi.ParameterBindingContext;
+import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
 
 /**
  * @author Steve Ebersole
  */
-public class TemplateParameterBindingContext implements ParameterBindingContext {
+public class TemplateParameterBindingContext implements DomainParameterBindingContext {
 	private static final Object ID_VALUE_TOKEN = new Object();
 
 	private final SessionFactoryImplementor sessionFactory;

@@ -29,7 +29,6 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 is far more resistant to the reserved keyword usage. See HHH-12832.")
 public class SchemaMigratorHaltOnErrorTest extends EntityManagerFactoryBasedFunctionalTest {
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
@@ -53,9 +52,10 @@ public class SchemaMigratorHaltOnErrorTest extends EntityManagerFactoryBasedFunc
 			fail( "Should halt on error!" );
 		}
 		catch (Exception e) {
-			SchemaManagementException cause = (SchemaManagementException) e.getCause();
-			assertTrue( cause.getMessage().startsWith( "Halting on error : Error executing DDL" ) );
-			assertTrue( cause.getMessage().endsWith( "via JDBC Statement" ) );
+			System.out.printf( "SchemaMigratorHaltOnErrorTest#testHaltOnError exception : %s", e.getMessage() );
+			e.printStackTrace( System.out );
+			assertTrue( e.getCause().getMessage().startsWith( "Halting on error : Error executing DDL" ) );
+			assertTrue( e.getCause().getMessage().endsWith( "via JDBC Statement" ) );
 		}
 		// to avoid EntityManagerFactoryAccess.getDialect() throwing a NPE
 		return Bootstrap.getEntityManagerFactoryBuilder(

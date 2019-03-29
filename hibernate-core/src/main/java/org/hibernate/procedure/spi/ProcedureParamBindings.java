@@ -97,6 +97,11 @@ public class ProcedureParamBindings implements QueryParameterBindings<ProcedureP
 	}
 
 	@Override
+	public boolean hasAnyMultiValuedBindings() {
+		return false;
+	}
+
+	@Override
 	public void visitBindings(BiConsumer<QueryParameterImplementor<?>, QueryParameterBinding<?>> action) {
 		parameterMetadata.visitRegistrations(
 				queryParameter -> {

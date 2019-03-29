@@ -18,7 +18,9 @@ import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
+import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
@@ -56,12 +58,16 @@ public class SqmUpdateToSqlAstConverterMultiTable extends BaseSqmToSqlAstConvert
 			SqmUpdateStatement sqmStatement,
 			QuerySpec idTableSelect,
 			QueryOptions queryOptions,
+			DomainParameterXref domainParameterXref,
+			QueryParameterBindings domainParameterBindings,
 			SqlAstCreationContext creationContext) {
 
 		final SqmUpdateToSqlAstConverterMultiTable walker = new SqmUpdateToSqlAstConverterMultiTable(
 				sqmStatement,
 				idTableSelect,
 				queryOptions,
+				domainParameterXref,
+				domainParameterBindings,
 				creationContext
 		);
 
@@ -85,8 +91,10 @@ public class SqmUpdateToSqlAstConverterMultiTable extends BaseSqmToSqlAstConvert
 			SqmUpdateStatement sqmStatement,
 			QuerySpec idTableSelect,
 			QueryOptions queryOptions,
+			DomainParameterXref domainParameterXref,
+			QueryParameterBindings domainParameterBindings,
 			SqlAstCreationContext creationContext) {
-		super( creationContext, queryOptions, LoadQueryInfluencers.NONE, afterLoadAction -> {} );
+		super( creationContext, queryOptions, domainParameterXref, domainParameterBindings, LoadQueryInfluencers.NONE, afterLoadAction -> {} );
 		this.idTableSelect = idTableSelect;
 
 		final SqmRoot deleteTarget = sqmStatement.getTarget();
@@ -229,14 +237,14 @@ public class SqmUpdateToSqlAstConverterMultiTable extends BaseSqmToSqlAstConvert
 		}
 
 		@Override
-		protected TableReference getPrimaryTableReference() {
+		public TableReference getPrimaryTableReference() {
 			return entityTableGroup.locateTableReference(
 					( (EntityValuedNavigable<?>) entityTableGroup.getNavigable() ).getEntityDescriptor().getPrimaryTable()
 			);
 		}
 
 		@Override
-		protected List<TableReferenceJoin> getTableReferenceJoins() {
+		public List<TableReferenceJoin> getTableReferenceJoins() {
 			return null;
 		}
 	}

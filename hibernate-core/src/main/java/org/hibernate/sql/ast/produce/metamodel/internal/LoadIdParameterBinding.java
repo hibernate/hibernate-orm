@@ -34,11 +34,6 @@ public class LoadIdParameterBinding<T> implements QueryParameterBinding<T> {
 	}
 
 	@Override
-	public boolean allowsMultiValued() {
-		return false;
-	}
-
-	@Override
 	public boolean isMultiValued() {
 		return false;
 	}

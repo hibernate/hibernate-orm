@@ -81,16 +81,21 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 
 	/**
 	 * Obtain the statement preparer associated with this JDBC coordinator.
-	 *
-	 * @return This coordinator's statement preparer
 	 */
 	StatementPreparer getStatementPreparer();
+
+	default JdbcStatementSupport getJdbcStatementSupport() {
+		return getResultSetReturn();
+	}
 
 	/**
 	 * Obtain the resultset extractor associated with this JDBC coordinator.
 	 *
 	 * @return This coordinator's resultset extractor
+	 *
+	 * @deprecated (since 6.0) Use {@link #getJdbcStatementSupport()} instead.
 	 */
+	@Deprecated
 	ResultSetReturn getResultSetReturn();
 
 	/**

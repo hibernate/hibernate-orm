@@ -19,12 +19,13 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.query.sqm.consume.multitable.internal.StandardIdTableSupport;
-import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTempTableExporter;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTemporaryTableStrategy;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTable;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTableSupport;
+import org.hibernate.naming.Identifier;
+import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
+import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTempTableExporter;
+import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
+import org.hibernate.query.sqm.mutation.spi.idtable.IdTableSupport;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.spi.ConcatFunctionTemplate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOracleDatabaseImpl;
@@ -418,16 +419,18 @@ public class Oracle9Dialect extends Dialect {
 	}
 
 	@Override
-	public IdTableStrategy getDefaultIdTableStrategy() {
+	public SqmMutationStrategy getDefaultIdTableStrategy() {
 		return new GlobalTemporaryTableStrategy( generateIdTableSupport() );
 	}
 
 	private IdTableSupport generateIdTableSupport() {
 		return new StandardIdTableSupport( generateIdTableExporter() ) {
 			@Override
-			protected String determineIdTableName(String baseName) {
-				final String name = super.determineIdTableName( baseName );
-				return name.length() > 30 ? name.substring( 0, 30 ) : name;
+			protected Identifier determineIdTableName(Identifier baseName) {
+				final Identifier name = super.determineIdTableName( baseName );
+				return name.getText().length() > 30
+						? new Identifier( name.getText().substring( 0, 30 ), false )
+						: name;
 			}
 		};
 	}

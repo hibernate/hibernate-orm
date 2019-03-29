@@ -16,6 +16,7 @@ import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.exec.SqlExecLogger;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
+import org.hibernate.sql.exec.internal.LoadParameterBindingContext;
 import org.hibernate.sql.exec.spi.BasicExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 
@@ -43,7 +44,10 @@ public class JoinTableRowsInsertExecutor extends JoinTableCreationExecutor {
 		assert key != null;
 
 		final JdbcParameterBindingsImpl jdbcParameterBindings = new JdbcParameterBindingsImpl();
-		final BasicExecutionContext executionContext = new BasicExecutionContext( session, jdbcParameterBindings );
+		final BasicExecutionContext executionContext = new BasicExecutionContext(
+				session,
+				new LoadParameterBindingContext( session.getSessionFactory(), key )
+		);
 
 		final Iterator entries = collection.entries( getCollectionDescriptor() );
 		collection.preInsert( getCollectionDescriptor() );
@@ -67,7 +71,11 @@ public class JoinTableRowsInsertExecutor extends JoinTableCreationExecutor {
 				bindCollectionIndex( entry, passes, collection, jdbcParameterBindings, session );
 				bindCollectionElement( entry, collection, jdbcParameterBindings, session );
 
-				JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute( getCreationOperation(), executionContext );
+				JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute(
+						getCreationOperation(),
+						jdbcParameterBindings,
+						executionContext
+				);
 			}
 			passes++;
 			jdbcParameterBindings.clear();

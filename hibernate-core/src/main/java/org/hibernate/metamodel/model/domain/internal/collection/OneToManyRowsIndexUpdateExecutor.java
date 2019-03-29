@@ -39,6 +39,7 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
+import org.hibernate.sql.exec.internal.LoadParameterBindingContext;
 import org.hibernate.sql.exec.spi.BasicExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutation;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
@@ -76,7 +77,10 @@ public class OneToManyRowsIndexUpdateExecutor implements CollectionRowsIndexUpda
 		Iterator<?> entries = resolveEntries( collection, queuedOperations );
 		if ( entries.hasNext() ) {
 			final JdbcParameterBindingsImpl jdbcParameterBindings = new JdbcParameterBindingsImpl();
-			final BasicExecutionContext executionContext = new BasicExecutionContext( session, jdbcParameterBindings );
+			final BasicExecutionContext executionContext = new BasicExecutionContext(
+					session,
+					new LoadParameterBindingContext( session.getSessionFactory(), key )
+			);
 
 			int nextIndex = resetIndex ? 0 : collectionDescriptor.getSize( key, session );
 			while ( entries.hasNext() ) {
@@ -87,7 +91,7 @@ public class OneToManyRowsIndexUpdateExecutor implements CollectionRowsIndexUpda
 					bindCollectionIndex( entry, nextIndex, collection, jdbcParameterBindings, session );
 					bindCollectionElement( entry, collection, jdbcParameterBindings, session );
 
-					JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute( jdbcMutation, executionContext );
+					JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute( jdbcMutation, jdbcParameterBindings, executionContext );
 				}
 
 				nextIndex++;

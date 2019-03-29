@@ -20,7 +20,7 @@ import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.exec.spi.ParameterBindingContext;
+import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
 import org.hibernate.sql.results.spi.ResultSetMapping;
 
 import org.junit.jupiter.api.Test;
@@ -74,9 +74,14 @@ public class SqlAstGenSmokeTest extends BaseSqmSqlTest {
 							@Override
 							public void validate() {
 							}
+
+							@Override
+							public boolean hasAnyMultiValuedBindings() {
+								return false;
+							}
 						};
 
-						private final ParameterBindingContext parameterBindingContext = new ParameterBindingContext() {
+						private final DomainParameterBindingContext parameterBindingContext = new DomainParameterBindingContext() {
 							@Override
 							public SessionFactoryImplementor getSessionFactory() {
 								return sessionFactory();
@@ -104,7 +109,7 @@ public class SqlAstGenSmokeTest extends BaseSqmSqlTest {
 						}
 
 						@Override
-						public ParameterBindingContext getParameterBindingContext() {
+						public DomainParameterBindingContext getDomainParameterBindingContext() {
 							return parameterBindingContext;
 						}
 

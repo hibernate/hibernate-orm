@@ -16,7 +16,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
-import org.hibernate.sql.exec.spi.ParameterBindingContext;
+import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
 import org.hibernate.sql.results.spi.EntityFetch;
 import org.hibernate.sql.results.spi.Initializer;
 import org.hibernate.sql.results.spi.RowReader;
@@ -104,7 +104,7 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 	}
 
 	@Override
-	public ParameterBindingContext getParameterBindingContext() {
+	public DomainParameterBindingContext getDomainParameterBindingContext() {
 		throw new NotYetImplementedFor6Exception();
 	}
 

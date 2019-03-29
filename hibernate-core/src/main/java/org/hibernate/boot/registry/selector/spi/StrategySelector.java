@@ -93,15 +93,15 @@ public interface StrategySelector extends Service {
 	 */
 	<T, I extends T> I resolveStrategy(Class<T> strategy, Object strategyReference);
 
-	<T, I extends T> I resolveStrategy(Class<T> strategy, Object strategyReference, I defaultValue);
+	<T, I extends T> I resolveStrategy(Class<T> strategy, Object strategyReference, I fallbackValue);
 
-	<T, I extends T> I resolveStrategy(Class<T> strategy, Object strategyReference, Supplier<I> defaultValueSupplier);
+	<T, I extends T> I resolveStrategy(Class<T> strategy, Object strategyReference, Supplier<I> fallbackValueSupplier);
 
 	<T, I extends T> I resolveStrategy(Class<T> strategy, Object strategyReference, Function<Class<I>,I> creator);
 
-	<T, I extends T> I resolveStrategy(Class<T> strategy, Object strategyReference, I defaultValue, Function<Class<I>,I> creator);
+	<T, I extends T> I resolveStrategy(Class<T> strategy, Object strategyReference, I fallbackValue, Function<Class<I>,I> creator);
 
-	<T, I extends T> I resolveStrategy(Class<T> strategy, Object strategyReference, Supplier<I> defaultValueSupplier, Function<Class<I>,I> creator);
+	<T, I extends T> I resolveStrategy(Class<T> strategy, Object strategyReference, Supplier<I> fallbackValueSupplier, Function<Class<I>,I> creator);
 
 
 
@@ -115,13 +115,13 @@ public interface StrategySelector extends Service {
 	<T, I extends T> I resolveStrategy(
 			Class<T> strategy,
 			Object strategyReference,
-			Callable<I> defaultValueSupplier,
+			Callable<I> fallbackValueSupplier,
 			Function<Class<I>, I> creator);
 
 	/**
 	 * Resolve strategy instances. The incoming reference might be:<ul>
 	 * <li>
-	 * {@code null} - in which case defaultValue is returned.
+	 * {@code null} - in which case fallbackValue is returned.
 	 * </li>
 	 * <li>
 	 * An actual instance of the strategy type - it is returned, as is
@@ -138,7 +138,7 @@ public interface StrategySelector extends Service {
 	 *
 	 * @param strategy The type (interface) of the strategy to be resolved.
 	 * @param strategyReference The reference to the strategy for which we need to resolve an instance.
-	 * @param defaultValue THe default value to use if strategyReference is null
+	 * @param fallbackValue THe default value to use if strategyReference is null
 	 * @param <T> The type of the strategy.  Used to make sure that the strategy and implementation are type
 	 * compatible.
 	 *
@@ -147,7 +147,7 @@ public interface StrategySelector extends Service {
 	 * @deprecated (since 6.0) - Use one of the {@link #resolveStrategy} forms
 	 */
 	@Deprecated
-	<T, I extends T> I resolveDefaultableStrategy(Class<T> strategy, Object strategyReference, I defaultValue);
+	<T, I extends T> I resolveDefaultableStrategy(Class<T> strategy, Object strategyReference, I fallbackValue);
 
 	/**
 	 * Same as the other overloaded forms, but here accepting a Supplier for default values.
@@ -155,7 +155,7 @@ public interface StrategySelector extends Service {
 	 * @deprecated (since 6.0) - Use one of the {@link #resolveStrategy} forms
 	 */
 	@Deprecated
-	<T> T resolveDefaultableStrategy(Class<T> strategy, Object strategyReference, Supplier<T> defaultValueSupplier);
+	<T> T resolveDefaultableStrategy(Class<T> strategy, Object strategyReference, Supplier<T> fallbackValueSupplier);
 
 	/**
 	 * Resolve strategy instances. The incoming reference might be:<ul>
@@ -177,14 +177,16 @@ public interface StrategySelector extends Service {
 	 *
 	 * @param strategy The type (interface) of the strategy to be resolved.
 	 * @param strategyReference The reference to the strategy for which we need to resolve an instance.
-	 * @param defaultResolver A strategy for resolving the default value strategyReference resolves to null.
+	 * @param fallbackValueSupplier A strategy for resolving the default value strategyReference resolves to null.
 	 * @param <T> The type of the strategy.  Used to make sure that the strategy and implementation are type
 	 * compatible.
 	 *
 	 * @return The strategy instance
 	 *
-	 * @deprecated (since 6.0) - Use one of the {@link #resolveStrategy} forms
+	 * @deprecated (since 6.0) - Use one of the {@link #resolveStrategy} forms;
+	 * {@link StrategySelector#resolveStrategy(Class, Object, java.util.function.Supplier)}
+	 * matches most closely
 	 */
 	@Deprecated
-	<T, I extends T> I resolveDefaultableStrategy(Class<T> strategy, Object strategyReference, Callable<I> defaultResolver);
+	<T, I extends T> I resolveDefaultableStrategy(Class<T> strategy, Object strategyReference, Callable<I> fallbackValueSupplier);
 }

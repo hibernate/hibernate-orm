@@ -42,17 +42,18 @@ import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.QueryPlanCache;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.query.sqm.consume.multitable.spi.DeleteHandler;
-import org.hibernate.query.sqm.consume.multitable.spi.HandlerExecutionContext;
-import org.hibernate.query.sqm.consume.multitable.spi.UpdateHandler;
 import org.hibernate.query.sqm.consume.spi.QuerySplitter;
+import org.hibernate.query.sqm.mutation.spi.DeleteHandler;
+import org.hibernate.query.sqm.mutation.spi.UpdateHandler;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
-import org.hibernate.sql.exec.spi.ParameterBindingContext;
+import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 
 /**
  * {@link Query} implementation based on an SQM
@@ -61,7 +62,7 @@ import org.hibernate.sql.exec.spi.ParameterBindingContext;
  */
 public class QuerySqmImpl<R>
 		extends AbstractQuery<R>
-		implements HqlQueryImplementor<R>, HandlerExecutionContext, ParameterBindingContext {
+		implements HqlQueryImplementor<R>, ExecutionContext, DomainParameterBindingContext {
 
 	private final String sourceQueryString;
 	private final SqmStatement sqmStatement;
@@ -330,11 +331,7 @@ public class QuerySqmImpl<R>
 		SqmUtil.verifyIsNonSelectStatement( getSqmStatement() );
 		getSession().prepareForQueryExecution( true );
 
-		return resolveNonSelectQueryPlan().executeUpdate(
-				getSession(),
-				queryOptions,
-				this
-		);
+		return resolveNonSelectQueryPlan().executeUpdate( this );
 	}
 
 	private NonSelectQueryPlan resolveNonSelectQueryPlan() {
@@ -372,49 +369,34 @@ public class QuerySqmImpl<R>
 	}
 
 	private NonSelectQueryPlan buildDeleteQueryPlan() {
-		final SqmDeleteStatement sqmStatement = (SqmDeleteStatement) getSqmStatement();
+		final SqmDeleteStatement sqmDelete = (SqmDeleteStatement) getSqmStatement();
 
-		// If the entity to delete is multi-table we need to leverage the
-		// configured org.hibernate.hql.spi.id.MultiTableBulkIdStrategy
-		final EntityTypeDescriptor entityToDelete = sqmStatement.getTarget()
+		final EntityTypeDescriptor entityToDelete = sqmDelete.getTarget()
 				.getReferencedNavigable()
 				.getEntityDescriptor();
+		final DeleteHandler deleteHandler = entityToDelete.getHierarchy()
+				.getSqmMutationStrategy()
+				.buildDeleteHandler( sqmDelete, domainParameterXref, this::getSessionFactory );
 
-		if ( entityToDelete.isMultiTable() ) {
-			final DeleteHandler handler = getSession().getFactory()
-					.getSessionFactoryOptions()
-					.getIdTableStrategy()
-					.buildDeleteHandler( sqmStatement, getSession() );
-			return new MultiTableDeleteQueryPlan( handler );
-		}
-		else {
-			return new SimpleDeleteQueryPlan( sqmStatement );
-		}
+		return new DeleteQueryPlanImpl( sqmDelete, deleteHandler, this );
 	}
 
 	private NonSelectQueryPlan buildUpdateQueryPlan() {
 		final SqmUpdateStatement sqmStatement = (SqmUpdateStatement) getSqmStatement();
 
-		// If the entity to update is multi-table we need to leverage the
-		// configured org.hibernate.hql.spi.id.MultiTableBulkIdStrategy
-		final EntityTypeDescriptor entityToDelete = sqmStatement.getTarget()
+		final EntityTypeDescriptor entityToUpdate = sqmStatement.getTarget()
 				.getReferencedNavigable()
 				.getEntityDescriptor();
 
-		if ( entityToDelete.isMultiTable() ) {
-			final UpdateHandler handler = getSession().getFactory()
-					.getSessionFactoryOptions()
-					.getIdTableStrategy()
-					.buildUpdateHandler( sqmStatement, getSession() );
-			return new MultiTableUpdateQueryPlan( handler );
-		}
-		else {
-			return new SimpleUpdateQueryPlan( sqmStatement );
-		}
+		final UpdateHandler updateHandler = entityToUpdate.getHierarchy()
+				.getSqmMutationStrategy()
+				.buildUpdateHandler( sqmStatement, domainParameterXref, this::getSessionFactory );
+
+		return new UpdateQueryPlanImpl( sqmStatement, updateHandler, this );
 	}
 
 	@Override
-	public ParameterBindingContext getParameterBindingContext() {
+	public DomainParameterBindingContext getDomainParameterBindingContext() {
 		return this;
 	}
 

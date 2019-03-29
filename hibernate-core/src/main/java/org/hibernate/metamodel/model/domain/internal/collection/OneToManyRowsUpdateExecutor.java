@@ -122,7 +122,7 @@ public class OneToManyRowsUpdateExecutor implements CollectionRowsUpdateExecutor
 		public void execute(PersistentCollection collection, Object key, SharedSessionContractImplementor session) {
 			if ( isExecutionAllowed() ) {
 				final JdbcParameterBindingsImpl jdbcParameterBindings = new JdbcParameterBindingsImpl();
-				final BasicExecutionContext executionContext = new BasicExecutionContext( session, jdbcParameterBindings );
+				final BasicExecutionContext executionContext = new BasicExecutionContext( session );
 
 				int i = 0;
 				Iterator<?> entries = collection.entries( getCollectionDescriptor() );
@@ -133,7 +133,7 @@ public class OneToManyRowsUpdateExecutor implements CollectionRowsUpdateExecutor
 						bindCollectionIndex( entry, i, collection, jdbcParameterBindings, session, Clause.UPDATE );
 						bindCollectionElement( entry, i, collection, jdbcParameterBindings, session, Clause.UPDATE );
 
-						JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute( jdbcUpdate, executionContext );
+						JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute( jdbcUpdate, jdbcParameterBindings, executionContext );
 						jdbcParameterBindings.clear();
 					}
 					i++;

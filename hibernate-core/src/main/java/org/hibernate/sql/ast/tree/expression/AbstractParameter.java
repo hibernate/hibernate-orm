@@ -19,6 +19,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
@@ -66,8 +67,9 @@ public abstract class AbstractParameter
 	public int bindParameterValue(
 			PreparedStatement statement,
 			int startPosition,
+			JdbcParameterBindings jdbcParamBindings,
 			ExecutionContext executionContext) throws SQLException {
-		final JdbcParameterBinding binding = executionContext.getJdbcParameterBindings().getBinding( AbstractParameter.this );
+		final JdbcParameterBinding binding = jdbcParamBindings.getBinding( AbstractParameter.this );
 		if ( binding == null ) {
 			throw new ExecutionException( "JDBC parameter value not bound - " + this );
 		}

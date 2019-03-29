@@ -55,7 +55,7 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.criteria.LiteralHandlingMode;
-import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
+import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -186,7 +186,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean identifierRollbackEnabled;
 	private boolean checkNullability;
 	private boolean initializeLazyStateOutsideTransactions;
-	private IdTableStrategy idTableStrategy;
+	private SqmMutationStrategy sqmMutationStrategy;
 	private TempTableDdlTransactionHandling tempTableDdlTransactionHandling;
 	private BatchFetchStyle batchFetchStyle;
 	private boolean delayBatchFetchLoaderCreations;
@@ -334,7 +334,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				configurationSettings.get( MULTI_TENANT_IDENTIFIER_RESOLVER )
 		);
 
-		this.idTableStrategy = resolveIdTableStrategy( configurationSettings, jdbcServices, strategySelector );
+		this.sqmMutationStrategy = resolveIdTableStrategy( configurationSettings, jdbcServices, strategySelector );
 
 		this.batchFetchStyle = BatchFetchStyle.interpret( configurationSettings.get( BATCH_FETCH_STYLE ) );
 		this.delayBatchFetchLoaderCreations = cfgService.getSetting( DELAY_ENTITY_LOADER_CREATIONS, BOOLEAN, true );
@@ -541,7 +541,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		);
 	}
 
-	private IdTableStrategy resolveIdTableStrategy(
+	private SqmMutationStrategy resolveIdTableStrategy(
 			Map configurationSettings,
 			JdbcServices jdbcServices,
 			StrategySelector strategySelector) {
@@ -554,9 +554,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		}
 
 		return strategySelector.resolveStrategy(
-				IdTableStrategy.class,
-				coalesce( idTableStrategy, legacyIdTableStrategy),
-				(Supplier<IdTableStrategy>) () -> jdbcServices.getJdbcEnvironment().getDialect().getDefaultIdTableStrategy()
+				SqmMutationStrategy.class,
+				coalesce( idTableStrategy, legacyIdTableStrategy )
 		);
 	}
 
@@ -809,8 +808,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public IdTableStrategy getIdTableStrategy() {
-		return this.idTableStrategy;
+	public SqmMutationStrategy getSqmMutationStrategy() {
+		return this.sqmMutationStrategy;
 	}
 
 	@Override
@@ -1175,8 +1174,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.tempTableDdlTransactionHandling = handling;
 	}
 
-	public void applyIdTableStrategy(IdTableStrategy strategy){
-		this.idTableStrategy = strategy;
+	public void applyIdTableStrategy(SqmMutationStrategy strategy){
+		this.sqmMutationStrategy = strategy;
 	}
 
 	public void applyBatchFetchStyle(BatchFetchStyle style) {

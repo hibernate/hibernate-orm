@@ -9,6 +9,7 @@ package org.hibernate.metamodel.model.domain.internal.entity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.domain.BasicValueMapping;
@@ -23,9 +24,10 @@ import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.metamodel.model.domain.spi.DiscriminatorDescriptor;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.InheritanceStrategy;
 import org.hibernate.metamodel.model.domain.spi.NaturalIdDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NonIdPersistentAttribute;
@@ -33,6 +35,11 @@ import org.hibernate.metamodel.model.domain.spi.RowIdDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.TenantDiscrimination;
 import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
+import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
+import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
+import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.type.descriptor.java.spi.EntityMutabilityPlan;
 
 import org.jboss.logging.Logger;
@@ -57,6 +64,8 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	private final TenantDiscrimination tenantDiscrimination;
 
 	private EntityDataAccess caching;
+
+	private SqmMutationStrategy sqmMutationStrategy;
 
 	private final EntityMutabilityPlan mutabilityPlan;
 
@@ -298,6 +307,29 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 			}
 			( (NaturalIdDescriptorImpl) naturalIdentifierDescriptor ).injectAttributes( attributes );
 		}
+
+		// resolve SqmMutationStrategy
+		//		todo (6.0) : at the moment this is defined
+		this.sqmMutationStrategy = SqmMutationStrategyHelper.resolveStrategy(
+				mappingType.getEntityMappingHierarchy(),
+				this,
+				creationContext.getSessionFactory().getSessionFactoryOptions(),
+				creationContext.getSessionFactory().getServiceRegistry()
+		);
+	}
+
+	@Override
+	public void visitConstraintOrderedTables(BiConsumer<Table,List<Column>> tableConsumer) {
+		visitConstraintOrderedTables( rootEntityDescriptor, tableConsumer );
+	}
+
+	private void visitConstraintOrderedTables(IdentifiableTypeDescriptor<?> typeDescriptor, BiConsumer<Table,List<Column>> tableConsumer) {
+		typeDescriptor.visitSubTypeDescriptors(
+				subTypeDescriptor -> visitConstraintOrderedTables( subTypeDescriptor, tableConsumer )
+		);
+
+		typeDescriptor.visitConstraintOrderedTables( tableConsumer );
+
 	}
 
 	@Override
@@ -361,6 +393,11 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 			caching = rootEntityDescriptor.getFactory().getCache().getEntityRegionAccess( rootEntityDescriptor.getNavigableRole()  );
 		}
 		return caching;
+	}
+
+	@Override
+	public SqmMutationStrategy getSqmMutationStrategy() {
+		return sqmMutationStrategy;
 	}
 
 	@Override

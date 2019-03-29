@@ -147,21 +147,21 @@ public class StrategySelectorImpl implements StrategySelector {
 	}
 
 	@Override
-	public <T, I extends T> I resolveStrategy(Class<T> strategy, Object strategyReference, I defaultValue) {
+	public <T, I extends T> I resolveStrategy(Class<T> strategy, Object strategyReference, I fallbackValue) {
 		return resolveStrategy(
 				strategy,
 				strategyReference,
-				(Supplier<I>) () -> defaultValue,
+				(Supplier<I>) () -> fallbackValue,
 				getStandardCreator()
 		);
 	}
 
 	@Override
-	public <T, I extends T> I resolveStrategy(Class<T> strategy, Object strategyReference, Supplier<I> defaultValueSupplier) {
+	public <T, I extends T> I resolveStrategy(Class<T> strategy, Object strategyReference, Supplier<I> fallbackValueSupplier) {
 		return resolveStrategy(
 				strategy,
 				strategyReference,
-				defaultValueSupplier,
+				fallbackValueSupplier,
 				getStandardCreator()
 		);
 	}
@@ -175,12 +175,12 @@ public class StrategySelectorImpl implements StrategySelector {
 	public <T, I extends T> I resolveStrategy(
 			Class<T> strategy,
 			Object strategyReference,
-			I defaultValue,
+			I fallbackValue,
 			Function<Class<I>,I> creator) {
 		return resolveStrategy(
 				strategy,
 				strategyReference,
-				(Supplier<I>) () -> defaultValue,
+				(Supplier<I>) () -> fallbackValue,
 				creator
 		);
 	}
@@ -190,11 +190,11 @@ public class StrategySelectorImpl implements StrategySelector {
 	public <T, I extends T> I resolveStrategy(
 			Class<T> strategy,
 			Object strategyReference,
-			Supplier<I> defaultValueSupplier,
+			Supplier<I> fallbackValueSupplier,
 			Function<Class<I>, I> creator) {
 		if ( strategyReference == null ) {
 			try {
-				return defaultValueSupplier.get();
+				return fallbackValueSupplier.get();
 			}
 			catch (Exception e) {
 				throw new StrategySelectionException( "Default value supplier threw exception", e );
@@ -251,12 +251,12 @@ public class StrategySelectorImpl implements StrategySelector {
 	public <T, I extends T> I resolveStrategy(
 			Class<T> strategy,
 			Object strategyReference,
-			Callable<I> defaultValueSupplier,
+			Callable<I> fallbackValueSupplier,
 			Function<Class<I>,I> creator) {
 		return resolveStrategy(
 				strategy,
 				strategyReference,
-				supplier( defaultValueSupplier ),
+				supplier( fallbackValueSupplier ),
 				creator
 		);
 	}
@@ -278,21 +278,21 @@ public class StrategySelectorImpl implements StrategySelector {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T, I extends T> I resolveDefaultableStrategy(Class<T> strategy, Object strategyReference, I defaultValue) {
+	public <T, I extends T> I resolveDefaultableStrategy(Class<T> strategy, Object strategyReference, I fallbackValue) {
 		return resolveStrategy(
 				strategy,
 				strategyReference,
-				(Supplier<I>) () -> defaultValue
+				(Supplier<I>) () -> fallbackValue
 		);
 	}
 
 	@Override
 	public <T> T resolveDefaultableStrategy(
-			Class<T> strategy, Object strategyReference, Supplier<T> defaultValueSupplier) {
+			Class<T> strategy, Object strategyReference, Supplier<T> fallbackValueSupplier) {
 		return resolveDefaultableStrategy(
 				strategy,
 				strategyReference,
-				(Callable<T>) () -> defaultValueSupplier.get()
+				(Callable<T>) () -> fallbackValueSupplier.get()
 		);
 	}
 
@@ -301,7 +301,7 @@ public class StrategySelectorImpl implements StrategySelector {
 	public <T, I extends T> I resolveDefaultableStrategy(
 			Class<T> strategy,
 			Object strategyReference,
-			Callable<I> defaultResolver) {
-		return (I) resolveStrategy( strategy, strategyReference, defaultResolver, getStandardCreator() );
+			Callable<I> fallbackValueSupplier) {
+		return (I) resolveStrategy( strategy, strategyReference, fallbackValueSupplier, getStandardCreator() );
 	}
 }

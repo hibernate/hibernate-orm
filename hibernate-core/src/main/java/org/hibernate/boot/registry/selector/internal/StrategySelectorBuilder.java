@@ -89,10 +89,10 @@ import org.hibernate.engine.transaction.jta.platform.internal.WebSphereJtaPlatfo
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WeblogicJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTemporaryTableStrategy;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.LocalTemporaryTableStrategy;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.PersistentTableStrategy;
+import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.spi.idtable.PersistentTableStrategy;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -408,17 +408,17 @@ public class StrategySelectorBuilder {
 
 	private void addMultiTableBulkIdStrategies(StrategySelectorImpl strategySelector) {
 		strategySelector.registerStrategyImplementor(
-				IdTableStrategy.class,
+				SqmMutationStrategy.class,
 				PersistentTableStrategy.SHORT_NAME,
 				PersistentTableStrategy.class
 		);
 		strategySelector.registerStrategyImplementor(
-				IdTableStrategy.class,
+				SqmMutationStrategy.class,
 				GlobalTemporaryTableStrategy.SHORT_NAME,
 				GlobalTemporaryTableStrategy.class
 		);
 		strategySelector.registerStrategyImplementor(
-				IdTableStrategy.class,
+				SqmMutationStrategy.class,
 				LocalTemporaryTableStrategy.SHORT_NAME,
 				LocalTemporaryTableStrategy.class
 		);

@@ -23,8 +23,8 @@ import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.LiteralParameter;
 import org.hibernate.sql.ast.tree.expression.PositionalParameter;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.BasicExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcDelete;
@@ -105,7 +105,7 @@ public class JoinTableRemovalExecutor implements CollectionRemovalExecutor {
 	@Override
 	public void execute(Object key, SharedSessionContractImplementor session) {
 		final JdbcParameterBindingsImpl jdbcParameterBindings = new JdbcParameterBindingsImpl();
-		final BasicExecutionContext executionContext = new BasicExecutionContext( session, jdbcParameterBindings );
+		final BasicExecutionContext executionContext = new BasicExecutionContext( session );
 
 		collectionDescriptor.getCollectionKeyDescriptor().dehydrate(
 				collectionDescriptor.getCollectionKeyDescriptor().unresolve( key, session ),
@@ -120,7 +120,11 @@ public class JoinTableRemovalExecutor implements CollectionRemovalExecutor {
 				session
 		);
 
-		JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute( removalOperation, executionContext );
+		JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute(
+				removalOperation,
+				jdbcParameterBindings,
+				executionContext
+		);
 	}
 
 	@SuppressWarnings("WeakerAccess")

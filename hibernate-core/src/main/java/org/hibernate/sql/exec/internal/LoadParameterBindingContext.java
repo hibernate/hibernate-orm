@@ -11,14 +11,14 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.sql.exec.spi.ParameterBindingContext;
+import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
 
 /**
  * ParameterBindingContext implementation used in load-like operations
  *
  * @author Steve Ebersole
  */
-public class LoadParameterBindingContext implements ParameterBindingContext {
+public class LoadParameterBindingContext implements DomainParameterBindingContext {
 	private final SessionFactoryImplementor sessionFactory;
 	private final List<?> loadIdentifiers;
 

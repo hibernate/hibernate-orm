@@ -8,6 +8,7 @@ package org.hibernate.orm.test.query.sqm.sql;
 
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
+import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.consume.spi.SqlAstSelectToJdbcSelectConverter;
@@ -26,14 +27,16 @@ public class BaseSqmSqlTest extends BaseSqmUnitTest {
 
 		final SqmSelectStatement sqm = interpretSelect( hql );
 
-		final SqmSelectToSqlAstConverter sqmConveter = new SqmSelectToSqlAstConverter(
+		final SqmSelectToSqlAstConverter sqmConverter = new SqmSelectToSqlAstConverter(
 				executionContext.getQueryOptions(),
+				DomainParameterXref.from( sqm ),
+				executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
 				executionContext.getSession().getLoadQueryInfluencers(),
 				executionContext.getCallback(),
 				this
 		);
 
-		final SqlAstSelectDescriptor interpretation = sqmConveter.interpret( sqm );
+		final SqlAstSelectDescriptor interpretation = sqmConverter.interpret( sqm );
 
 		return SqlAstSelectToJdbcSelectConverter.interpret(
 				interpretation,

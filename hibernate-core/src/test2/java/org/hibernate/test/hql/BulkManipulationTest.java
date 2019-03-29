@@ -1407,7 +1407,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		
 		try {
-			// multitable (joined subclass)
+			// mutation (joined subclass)
 			s.createQuery( "delete from Human" ).executeUpdate();
 			assertEquals( s.createQuery( "from Human" ).list().size(), 0 );
 		}

@@ -16,6 +16,7 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
@@ -52,13 +53,14 @@ public class JdbcCallParameterBinderImpl implements JdbcParameterBinder {
 	public int bindParameterValue(
 			PreparedStatement statement,
 			int startPosition,
+			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext) throws SQLException {
 		final QueryParameterBinding binding;
 		if ( parameterName != null ) {
-			binding = executionContext.getParameterBindingContext().getQueryParameterBindings().getBinding( parameterName );
+			binding = executionContext.getDomainParameterBindingContext().getQueryParameterBindings().getBinding( parameterName );
 		}
 		else {
-			binding = executionContext.getParameterBindingContext().getQueryParameterBindings().getBinding( parameterPosition );
+			binding = executionContext.getDomainParameterBindingContext().getQueryParameterBindings().getBinding( parameterPosition );
 		}
 
 		if ( binding == null ) {

@@ -22,12 +22,15 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 @Incubating
 public interface QueryParameterBinding<T> {
+	/**
+	 * Is any value (including {@code null}) bound?  Asked another way,
+	 * were any of the `#set` methods called?
+	 */
 	boolean isBound();
 
-	// todo (6.0) : i think this is defined (or should be) on QueryParameter
-	boolean allowsMultiValued();
-
-	// this one should stay here though
+	/**
+	 * Is the binding multi-valued?
+	 */
 	boolean isMultiValued();
 
 	/**
@@ -66,6 +69,7 @@ public interface QueryParameterBinding<T> {
 	 * @return The currently bound value
 	 */
 	T getBindValue();
+
 	/**
 	 * Sets the parameter binding values.  The inherent parameter type (if known) is assumed in regards to the
 	 * individual values.
@@ -96,5 +100,4 @@ public interface QueryParameterBinding<T> {
 	 * @return The currently bound values
 	 */
 	Collection<T> getBindValues();
-
 }

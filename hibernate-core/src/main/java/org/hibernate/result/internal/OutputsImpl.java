@@ -24,7 +24,7 @@ import org.hibernate.result.Outputs;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.exec.internal.Helper;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.ParameterBindingContext;
+import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
 import org.hibernate.sql.results.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.results.internal.values.DirectResultSetAccess;
@@ -40,7 +40,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public abstract class OutputsImpl
-		implements Outputs, ExecutionContext, ParameterBindingContext, Callback {
+		implements Outputs, ExecutionContext, DomainParameterBindingContext, Callback {
 	private static final Logger log = CoreLogging.logger( OutputsImpl.class );
 
 	private final ResultContext context;

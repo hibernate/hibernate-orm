@@ -14,6 +14,7 @@ import java.util.function.BiConsumer;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
@@ -28,7 +29,6 @@ import org.hibernate.sql.exec.spi.BasicExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutation;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcParameter;
-import org.hibernate.internal.log.LoggingHelper;
 
 import org.jboss.logging.Logger;
 
@@ -86,7 +86,7 @@ public abstract class AbstractCreationExecutor implements CollectionCreationExec
 		assert key != null;
 
 		final JdbcParameterBindingsImpl jdbcParameterBindings = new JdbcParameterBindingsImpl();
-		final BasicExecutionContext executionContext = new BasicExecutionContext( session, jdbcParameterBindings );
+		final BasicExecutionContext executionContext = new BasicExecutionContext( session );
 
 		final Iterator entries = collection.entries( collectionDescriptor );
 
@@ -113,7 +113,11 @@ public abstract class AbstractCreationExecutor implements CollectionCreationExec
 				bindCollectionElement( entry, collection, jdbcParameterBindings, session );
 
 				count++;
-				JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute( creationOperation, executionContext );
+				JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute(
+						creationOperation,
+						jdbcParameterBindings,
+						executionContext
+				);
 				collection.afterRowInsert( collectionDescriptor, entry, passes );
 			}
 			passes++;

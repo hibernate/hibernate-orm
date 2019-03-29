@@ -6,13 +6,9 @@
  */
 package org.hibernate.query.sqm.internal;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.NonSelectQueryPlan;
-import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.sqm.consume.multitable.spi.HandlerExecutionContext;
-import org.hibernate.query.sqm.consume.multitable.spi.UpdateHandler;
-import org.hibernate.sql.ast.produce.sqm.spi.Callback;
-import org.hibernate.sql.exec.spi.ParameterBindingContext;
+import org.hibernate.query.sqm.mutation.spi.UpdateHandler;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 
 /**
  * @author Steve Ebersole
@@ -25,32 +21,7 @@ public class MultiTableUpdateQueryPlan implements NonSelectQueryPlan {
 	}
 
 	@Override
-	public int executeUpdate(
-			SharedSessionContractImplementor session,
-			QueryOptions queryOptions,
-			ParameterBindingContext parameterBindingContext) {
-		return updateHandler.execute(
-				new HandlerExecutionContext() {
-					@Override
-					public SharedSessionContractImplementor getSession() {
-						return session;
-					}
-
-					@Override
-					public QueryOptions getQueryOptions() {
-						return queryOptions;
-					}
-
-					@Override
-					public ParameterBindingContext getParameterBindingContext() {
-						return parameterBindingContext;
-					}
-
-					@Override
-					public Callback getCallback() {
-						return afterLoadAction -> {};
-					}
-				}
-		);
+	public int executeUpdate(ExecutionContext executionContext) {
+		return updateHandler.execute( executionContext );
 	}
 }

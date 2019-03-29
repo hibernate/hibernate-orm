@@ -59,7 +59,7 @@ class StatementPreparerImpl implements StatementPreparer {
 	public Statement createStatement() {
 		try {
 			final Statement statement = connection().createStatement();
-			jdbcCoordinator.getResourceRegistry().register( statement, true );
+			jdbcCoordinator.getLogicalConnection().getResourceRegistry().register( statement, true );
 			return statement;
 		}
 		catch (SQLException e) {
@@ -132,6 +132,7 @@ class StatementPreparerImpl implements StatementPreparer {
 			}
 			final PreparedStatement ps = new QueryStatementPreparationTemplate( sql ) {
 				public PreparedStatement doPrepare() throws SQLException {
+					//noinspection MagicConstant - the `#getResultSetType` values come directly from those constants
 					return isCallable
 							? connection().prepareCall( sql, scrollMode.toResultSetType(), ResultSet.CONCUR_READ_ONLY )
 							: connection().prepareStatement(
@@ -172,6 +173,7 @@ class StatementPreparerImpl implements StatementPreparer {
 			}
 			final PreparedStatement ps = new QueryStatementPreparationTemplate( sql ) {
 				public PreparedStatement doPrepare() throws SQLException {
+					//noinspection MagicConstant - the `#getResultSetType` values come directly from those constants
 					return connection().prepareStatement(
 							sql,
 							scrollMode.toResultSetType(),
@@ -235,7 +237,7 @@ class StatementPreparerImpl implements StatementPreparer {
 		protected abstract PreparedStatement doPrepare() throws SQLException;
 
 		public void postProcess(PreparedStatement preparedStatement) throws SQLException {
-			jdbcCoordinator.getResourceRegistry().register( preparedStatement, true );
+			jdbcCoordinator.getLogicalConnection().getResourceRegistry().register( preparedStatement, true );
 //			logicalConnection().notifyObserversStatementPrepared();
 		}
 

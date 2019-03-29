@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.BiConsumer;
 
 import org.hibernate.HibernateException;
@@ -65,24 +64,25 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.consume.spi.InsertToJdbcInsertConverter;
 import org.hibernate.sql.ast.consume.spi.SqlDeleteToJdbcDeleteConverter;
 import org.hibernate.sql.ast.consume.spi.UpdateToJdbcUpdateConverter;
+import org.hibernate.sql.ast.produce.internal.SqlAstDeleteDescriptorImpl;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.produce.spi.SqlAstDeleteDescriptor;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
-import org.hibernate.sql.ast.tree.update.UpdateStatement;
-import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.LiteralParameter;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
+import org.hibernate.sql.ast.tree.update.Assignment;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutation;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcUpdate;
-import org.hibernate.sql.exec.spi.ParameterBindingContext;
 
 /**
  * @author Steve Ebersole
@@ -381,7 +381,7 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 				insertStatement,
 				executionContext.getSession().getSessionFactory()
 		);
-		executeOperation( executionContext, jdbcInsert, (rows, prepareStatement) -> {} );
+		executeOperation( jdbcInsert, (rows, prepareStatement) -> {}, executionContext );
 	}
 
 	private void addInsertColumn(
@@ -502,23 +502,16 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 		final DeleteStatement deleteStatement = new DeleteStatement( tableReference, identifierJunction );
 
 		final JdbcMutation delete = SqlDeleteToJdbcDeleteConverter.interpret(
-				new SqlAstDeleteDescriptor() {
-					@Override
-					public DeleteStatement getSqlAstStatement() {
-						return deleteStatement;
-					}
-
-					@Override
-					public Set<String> getAffectedTableNames() {
-						return Collections.singleton(
+				new SqlAstDeleteDescriptorImpl(
+						deleteStatement,
+						Collections.singleton(
 								deleteStatement.getTargetTable().getTable().getTableExpression()
-						);
-					}
-				},
+						)
+				),
 				executionContext.getSession().getSessionFactory()
 		);
 
-		executeOperation( executionContext, delete , (rows, prepareStatement) -> {} );
+		executeOperation( delete, (rows, prepareStatement) -> {}, executionContext );
 	}
 
 	@Override
@@ -746,31 +739,35 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 					identifierJunction
 			);
 
-			return executeUpdate( executionContext, updateStatement, checker );
+			return executeUpdate( updateStatement, checker, executionContext );
 		}
 
 		return 0;
 	}
 
-	private int executeUpdate(ExecutionContext executionContext, UpdateStatement updateStatement,  RowToUpdateChecker checker) {
+	private int executeUpdate(
+			UpdateStatement updateStatement,
+			RowToUpdateChecker checker,
+			ExecutionContext executionContext) {
 		JdbcUpdate jdbcUpdate = UpdateToJdbcUpdateConverter.createJdbcUpdate(
 				updateStatement,
 				executionContext.getSession().getSessionFactory()
 		);
 		return executeOperation(
-				executionContext,
 				jdbcUpdate,
-				(rows, prepareStatement) -> checker.check( rows, prepareStatement )
+				(rows, prepareStatement) -> checker.check( rows, prepareStatement ),
+				executionContext
 		);
 	}
 
 	private int executeOperation(
-			ExecutionContext executionContext,
 			JdbcMutation operation,
-			BiConsumer<Integer, PreparedStatement> checker) {
+			BiConsumer<Integer, PreparedStatement> checker,
+			ExecutionContext executionContext) {
 		final JdbcMutationExecutor executor = JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL;
 		return executor.execute(
 				operation,
+				JdbcParameterBindings.NO_BINDINGS,
 				executionContext,
 				(rows, preparestatement) -> checker.accept( rows, preparestatement )
 		);
@@ -836,7 +833,7 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 
 	private ExecutionContext getExecutionContext(SharedSessionContractImplementor session) {
 		return new ExecutionContext() {
-			private final ParameterBindingContext parameterBindingContext = new TemplateParameterBindingContext( session.getFactory() );
+			private final DomainParameterBindingContext parameterBindingContext = new TemplateParameterBindingContext( session.getFactory() );
 
 			@Override
 			public SharedSessionContractImplementor getSession() {
@@ -849,7 +846,7 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 			}
 
 			@Override
-			public ParameterBindingContext getParameterBindingContext() {
+			public DomainParameterBindingContext getDomainParameterBindingContext() {
 				return parameterBindingContext;
 			}
 

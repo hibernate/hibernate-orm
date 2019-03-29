@@ -88,7 +88,7 @@ public class OneToManyRowsDeletionExecutor implements CollectionRowsDeletionExec
 		if ( deletes.hasNext() ) {
 			int passes = 0;
 			final JdbcParameterBindingsImpl jdbcParameterBindings = new JdbcParameterBindingsImpl();
-			final BasicExecutionContext executionContext = new BasicExecutionContext( session, jdbcParameterBindings );
+			final BasicExecutionContext executionContext = new BasicExecutionContext( session );
 
 			while ( deletes.hasNext() ) {
 				Object entry = deletes.next();
@@ -104,7 +104,11 @@ public class OneToManyRowsDeletionExecutor implements CollectionRowsDeletionExec
 						bindCollectionElement( entry, collection, jdbcParameterBindings, session );
 					}
 				}
-				JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute( jdbcMutation, executionContext );
+				JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute(
+						jdbcMutation,
+						jdbcParameterBindings,
+						executionContext
+				);
 
 				passes++;
 				jdbcParameterBindings.clear();

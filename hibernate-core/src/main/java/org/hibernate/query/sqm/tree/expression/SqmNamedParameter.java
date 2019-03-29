@@ -40,4 +40,9 @@ public class SqmNamedParameter extends AbstractSqmParameter {
 	public String getName() {
 		return name;
 	}
+
+	@Override
+	public SqmParameter copy() {
+		return new SqmNamedParameter( getName(), allowMultiValuedBinding() );
+	}
 }

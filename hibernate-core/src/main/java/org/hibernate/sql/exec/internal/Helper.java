@@ -7,6 +7,8 @@
 package org.hibernate.sql.exec.internal;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -20,6 +22,8 @@ import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.query.sqm.internal.DomainParameterXref;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.internal.StandardSqlExpressionResolver;
@@ -120,99 +124,4 @@ public class Helper {
 	}
 
 
-	public static JdbcParameterBindings createJdbcParameterBindings(
-			QueryParameterBindings<QueryParameterBinding<?>> domainParamBindings,
-			Map<QueryParameterImplementor,List<List<JdbcParameter>>> jdbcParamsByDomainParams,
-			SharedSessionContractImplementor session) {
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl();
-
-		domainParamBindings.visitBindings(
-				(queryParameterImplementor, queryParameterBinding) -> {
-					final List<List<JdbcParameter>> jdbcParameterGroups = jdbcParamsByDomainParams.get( queryParameterImplementor );
-					final Object bindValue = domainParamBindings.getBinding( queryParameterImplementor ).getBindValue();
-
-					final AllowableParameterType<?> parameterType = determineParameterType( queryParameterBinding, queryParameterImplementor, session );
-
-					for ( List<JdbcParameter> jdbcParameterGroup : jdbcParameterGroups ) {
-						parameterType.dehydrate(
-								parameterType.unresolve( bindValue, session ),
-								new ExpressableType.JdbcValueCollector() {
-									private int position = 0;
-
-									@Override
-									public void collect(Object jdbcValue, SqlExpressableType type, Column boundColumn) {
-										final JdbcParameter jdbcParameter = jdbcParameterGroup.get( position );
-										jdbcParameterBindings.addBinding(
-												jdbcParameter,
-												new JdbcParameterBinding() {
-													@Override
-													public SqlExpressableType getBindType() {
-														return jdbcParameter.getType();
-													}
-
-													@Override
-													public Object getBindValue() {
-														return jdbcValue;
-													}
-												}
-										);
-										position++;
-									}
-								},
-								Clause.IRRELEVANT,
-								session
-						);
-					}
-				}
-		);
-//		for ( Map.Entry<QueryParameterImplementor, List<JdbcParameter>> entry : jdbcParamsByDomainParams.entrySet() ) {
-//			final QueryParameterBinding<?> binding = domainParamBindings.getBinding( entry.getKey() );
-//			binding.getBindType().dehydrate(
-//					binding.getBindType().unresolve( binding.getBindValue(), session ),
-//					new Writeable.JdbcValueCollector() {
-//						private int position = 0;
-//
-//						@Override
-//						public void collect(Object jdbcValue, SqlExpressableType type, Column boundColumn) {
-//							jdbcParameterBindings.addBinding(
-//									entry.getValue().get( position ),
-//									new JdbcParameterBinding() {
-//										@Override
-//										public SqlExpressableType getBindType() {
-//											return type;
-//										}
-//
-//										@Override
-//										public Object getBindValue() {
-//											return jdbcValue;
-//										}
-//									}
-//							);
-//						}
-//					},
-//					clause,
-//					session
-//			);
-//		}
-
-		return jdbcParameterBindings;
-	}
-
-	private static AllowableParameterType determineParameterType(
-			QueryParameterBinding<?> binding,
-			QueryParameterImplementor<?> parameter,
-			SharedSessionContractImplementor session) {
-		if ( binding.getBindType() != null ) {
-			return binding.getBindType();
-		}
-
-		if ( parameter.getHibernateType() != null ) {
-			return parameter.getHibernateType();
-		}
-
-		final TypeConfiguration typeConfiguration = session.getFactory().getTypeConfiguration();
-
-		// assume we have (or can create) a mapping for the parameter's Java type
-		return typeConfiguration.standardExpressableTypeForJavaType( parameter.getParameterType() );
-	}
 }

@@ -28,6 +28,7 @@ import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.spi.InvalidatableWrapper;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.jdbc.spi.JdbcStatementSupport;
 import org.hibernate.engine.jdbc.spi.JdbcWrapper;
 import org.hibernate.engine.jdbc.spi.ResultSetReturn;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
@@ -232,14 +233,19 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		return statementPreparer;
 	}
 
-	private transient ResultSetReturn resultSetExtractor;
+	private transient JdbcStatementSupport jdbcStatementSupport;
+
+	@Override
+	public JdbcStatementSupport getJdbcStatementSupport() {
+		if ( jdbcStatementSupport == null ) {
+			jdbcStatementSupport = new JdbcStatementSupportImpl( this );
+		}
+		return jdbcStatementSupport;
+	}
 
 	@Override
 	public ResultSetReturn getResultSetReturn() {
-		if ( resultSetExtractor == null ) {
-			resultSetExtractor = new ResultSetReturnImpl( this );
-		}
-		return resultSetExtractor;
+		return (ResultSetReturn) getJdbcStatementSupport();
 	}
 
 	@Override

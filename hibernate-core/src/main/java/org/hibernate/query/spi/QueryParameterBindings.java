@@ -63,6 +63,8 @@ public interface QueryParameterBindings<B extends QueryParameterBinding<?>> {
 	 */
 	void validate();
 
+	boolean hasAnyMultiValuedBindings();
+
 	/**
 	 * Generate a "memento" for these parameter bindings that can be used
 	 * in creating a {@link org.hibernate.cache.spi.QueryKey}
@@ -75,7 +77,6 @@ public interface QueryParameterBindings<B extends QueryParameterBinding<?>> {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
-	@SuppressWarnings("unchecked")
 	QueryParameterBindings NO_PARAM_BINDINGS = new QueryParameterBindings() {
 		@Override
 		public boolean isBound(QueryParameterImplementor parameter) {
@@ -104,6 +105,10 @@ public interface QueryParameterBindings<B extends QueryParameterBinding<?>> {
 		@Override
 		public void validate() {
 		}
-	};
 
+		@Override
+		public boolean hasAnyMultiValuedBindings() {
+			return false;
+		}
+	};
 }

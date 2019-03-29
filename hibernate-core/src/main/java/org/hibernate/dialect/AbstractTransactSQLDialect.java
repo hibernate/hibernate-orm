@@ -20,9 +20,10 @@ import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.SybaseLocateEmulationFunctionTemplate;
 import org.hibernate.dialect.identity.AbstractTransactSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.query.sqm.consume.multitable.internal.StandardIdTableSupport;
-import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.LocalTemporaryTableStrategy;
+import org.hibernate.naming.Identifier;
+import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.spi.ConcatFunctionTemplate;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
@@ -265,11 +266,11 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	@Override
-	public IdTableStrategy getDefaultIdTableStrategy() {
+	public SqmMutationStrategy getDefaultIdTableStrategy() {
 		final StandardIdTableSupport idTableSupport = new StandardIdTableSupport( getIdTableExporter() ) {
 			@Override
-			protected String determineIdTableName(String baseName) {
-				return "#" + baseName;
+			protected Identifier determineIdTableName(Identifier baseName) {
+				return new Identifier( "#" + baseName.getText(), false );
 			}
 		};
 

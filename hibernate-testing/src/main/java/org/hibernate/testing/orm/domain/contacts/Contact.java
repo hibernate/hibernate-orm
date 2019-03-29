@@ -37,6 +37,16 @@ public class Contact {
 	private List<Address> addresses;
 	private List<PhoneNumber> phoneNumbers;
 
+	public Contact() {
+	}
+
+	public Contact(Integer id, Name name, Gender gender, LocalDate birthDay) {
+		this.id = id;
+		this.name = name;
+		this.gender = gender;
+		this.birthDay = birthDay;
+	}
+
 	@Id
 	public Integer getId() {
 		return id;
@@ -96,6 +106,14 @@ public class Contact {
 	public static class Name {
 		private String first;
 		private String last;
+
+		public Name() {
+		}
+
+		public Name(String first, String last) {
+			this.first = first;
+			this.last = last;
+		}
 
 		public String getFirst() {
 			return first;

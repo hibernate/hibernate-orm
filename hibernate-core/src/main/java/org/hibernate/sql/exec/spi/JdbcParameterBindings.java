@@ -7,6 +7,7 @@
 package org.hibernate.sql.exec.spi;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.function.BiConsumer;
 
 /**
@@ -30,4 +31,24 @@ public interface JdbcParameterBindings {
 	JdbcParameterBinding getBinding(JdbcParameter parameter);
 
 	void visitBindings(BiConsumer<JdbcParameter, JdbcParameterBinding> action);
+
+	JdbcParameterBindings NO_BINDINGS = new JdbcParameterBindings() {
+		@Override
+		public void addBinding(JdbcParameter parameter, JdbcParameterBinding binding) {
+		}
+
+		@Override
+		public Collection<JdbcParameterBinding> getBindings() {
+			return Collections.emptyList();
+		}
+
+		@Override
+		public JdbcParameterBinding getBinding(JdbcParameter parameter) {
+			return null;
+		}
+
+		@Override
+		public void visitBindings(BiConsumer<JdbcParameter, JdbcParameterBinding> action) {
+		}
+	};
 }

@@ -67,7 +67,7 @@ import org.hibernate.result.ResultSetOutput;
 import org.hibernate.result.UpdateCountOutput;
 import org.hibernate.result.internal.ResultContext;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
-import org.hibernate.sql.exec.spi.ParameterBindingContext;
+import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.type.Type;
 
@@ -999,7 +999,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public ParameterBindingContext getParameterBindingContext() {
+	public DomainParameterBindingContext getDomainParameterBindingContext() {
 		throw new NotYetImplementedFor6Exception();
 	}
 

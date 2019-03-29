@@ -17,6 +17,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 
 import org.jboss.logging.Logger;
@@ -28,6 +29,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 	private static final Logger log = CoreLogging.logger( DeferredResultSetAccess.class );
 
 	private final JdbcSelect jdbcSelect;
+	private final JdbcParameterBindings jdbcParameterBindings;
 	private final ExecutionContext executionContext;
 	private final Function<String, PreparedStatement> statementCreator;
 
@@ -36,9 +38,11 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 
 	public DeferredResultSetAccess(
 			JdbcSelect jdbcSelect,
+			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			Function<String, PreparedStatement> statementCreator) {
 		super( executionContext.getSession() );
+		this.jdbcParameterBindings = jdbcParameterBindings;
 		this.executionContext = executionContext;
 		this.jdbcSelect = jdbcSelect;
 		this.statementCreator = statementCreator;
@@ -86,6 +90,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 				paramBindingPosition += parameterBinder.bindParameterValue(
 						preparedStatement,
 						paramBindingPosition,
+						jdbcParameterBindings,
 						executionContext
 				);
 			}

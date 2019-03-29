@@ -123,14 +123,25 @@ public class JoinTest extends SessionFactoryBasedFunctionalTest {
 					dog.weight = 30;
 					dog.thoroughbredName = "Colley";
 					session.persist( dog );
-				} );
+
+					Dog dog2 = new Dog();
+					DogPk dog2id = new DogPk();
+					dog2id.name = "Pluto";
+					dog2id.ownerName = "Mickey";
+					dog2.id = dog2id;
+					dog2.weight = 5;
+					dog2.thoroughbredName = "Bloodhound";
+					session.persist( dog2 );
+				}
+		);
 
 		inTransaction(
 				session -> {
-					Query q = session.createQuery( "from Dog" );
+					Query q = session.createQuery( "from Dog where weight = 30" );
 					Dog dog = (Dog) q.uniqueResult();
 					assertThat( dog.thoroughbredName, is( "Colley" ) );
-				} );
+				}
+		);
 	}
 
 	@Test

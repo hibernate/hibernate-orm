@@ -10,11 +10,13 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.PhysicalTable;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.spi.SqlAstDeleteDescriptor;
+import org.hibernate.sql.ast.tree.CteStatement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.exec.spi.JdbcDelete;
-import org.hibernate.sql.exec.spi.JdbcMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 
 /**
@@ -24,7 +26,7 @@ public class SqlDeleteToJdbcDeleteConverter
 		extends AbstractSqlAstToJdbcOperationConverter
 		implements SqlMutationToJdbcMutationConverter {
 
-	public static JdbcMutation interpret(
+	public static JdbcDelete interpret(
 			SqlAstDeleteDescriptor sqlAstDescriptor,
 			SessionFactoryImplementor sessionFactory) {
 		return interpret( sqlAstDescriptor.getSqlAstStatement(), sessionFactory );
@@ -36,6 +38,51 @@ public class SqlDeleteToJdbcDeleteConverter
 		final SqlDeleteToJdbcDeleteConverter walker = new SqlDeleteToJdbcDeleteConverter( sessionFactory );
 
 		walker.processDeleteStatement( sqlAst );
+
+		return new JdbcDelete() {
+			@Override
+			public String getSql() {
+				return walker.getSql();
+			}
+
+			@Override
+			public List<JdbcParameterBinder> getParameterBinders() {
+				return walker.getParameterBinders();
+			}
+
+			@Override
+			public Set<String> getAffectedTableNames() {
+				return walker.getAffectedTableNames();
+			}
+		};
+	}
+
+	public static JdbcDelete interpret(
+			CteStatement sqlAst,
+			SessionFactoryImplementor sessionFactory) {
+		assert sqlAst.getCteConsumer() instanceof DeleteStatement;
+
+		final SqlDeleteToJdbcDeleteConverter walker = new SqlDeleteToJdbcDeleteConverter( sessionFactory );
+
+		walker.getSqlAppender().appendSql( "with " );
+		walker.getSqlAppender().appendSql( sqlAst.getCteLabel() );
+
+		walker.getSqlAppender().appendSql( " (" );
+
+		String separator = "";
+		for ( Column cteColumn : sqlAst.getCteTable().getColumns() ) {
+			walker.getSqlAppender().appendSql( separator );
+			walker.getSqlAppender().appendSql( cteColumn.render() );
+			separator = ", ";
+		}
+
+		walker.getSqlAppender().appendSql( ") as (" );
+
+		walker.visitQuerySpec( sqlAst.getCteDefinition() );
+
+		walker.getSqlAppender().appendSql( ") " );
+
+		walker.processDeleteStatement( (DeleteStatement) sqlAst.getCteConsumer() );
 
 		return new JdbcDelete() {
 			@Override
@@ -74,8 +121,14 @@ public class SqlDeleteToJdbcDeleteConverter
 		appendSql( tableName );
 
 		if ( deleteStatement.getRestriction() != null ) {
-			appendSql( " where " );
-			deleteStatement.getRestriction().accept( this );
+			getClauseStack().push( Clause.WHERE );
+			try {
+				appendSql( " where " );
+				deleteStatement.getRestriction().accept( this );
+			}
+			finally {
+				getClauseStack().pop();
+			}
 		}
 	}
 

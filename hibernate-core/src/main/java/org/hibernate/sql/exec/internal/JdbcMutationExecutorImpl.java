@@ -17,6 +17,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutation;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
 /**
  * @author Steve Ebersole
@@ -32,6 +33,7 @@ public class JdbcMutationExecutorImpl implements JdbcMutationExecutor {
 	@Override
 	public int execute(
 			JdbcMutation jdbcMutation,
+			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			Function<String, PreparedStatement> statementCreator,
 			BiConsumer<Integer, PreparedStatement> expectationCkeck) {
@@ -59,6 +61,7 @@ public class JdbcMutationExecutorImpl implements JdbcMutationExecutor {
 					paramBindingPosition += parameterBinder.bindParameterValue(
 							preparedStatement,
 							paramBindingPosition,
+							jdbcParameterBindings,
 							executionContext
 					);
 				}
@@ -86,22 +89,26 @@ public class JdbcMutationExecutorImpl implements JdbcMutationExecutor {
 	@Override
 	public int execute(
 			JdbcMutation jdbcMutation,
+			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			Function<String, PreparedStatement> statementCreator) {
 		return execute(
-				jdbcMutation, executionContext,
+				jdbcMutation,
+				jdbcParameterBindings,
+				executionContext,
 				statementCreator,
-				(integer, preparedStatement) -> {
-				}
+				(integer, preparedStatement) -> {}
 		);
 	}
 
 	public int execute(
 			JdbcMutation jdbcMutation,
+			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			BiConsumer<Integer, PreparedStatement> expectationCkeck) {
 		return execute(
 				jdbcMutation,
+				jdbcParameterBindings,
 				executionContext,
 				(sql) -> executionContext.getSession()
 						.getJdbcCoordinator()
@@ -111,9 +118,13 @@ public class JdbcMutationExecutorImpl implements JdbcMutationExecutor {
 		);
 	}
 
-	public int execute(JdbcMutation jdbcMutation, ExecutionContext executionContext) {
+	public int execute(
+			JdbcMutation jdbcMutation,
+			JdbcParameterBindings jdbcParameterBindings,
+			ExecutionContext executionContext) {
 		return execute(
 				jdbcMutation,
+				jdbcParameterBindings,
 				executionContext,
 				(sql) -> executionContext.getSession()
 						.getJdbcCoordinator()

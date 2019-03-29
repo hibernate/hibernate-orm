@@ -6,11 +6,16 @@
  */
 package org.hibernate.sql.ast.produce.sqm.spi;
 
+import java.util.Collections;
+
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
+import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.sql.ast.produce.internal.SqlAstProcessingStateImpl;
+import org.hibernate.sql.ast.produce.sqm.internal.SqmDeleteInterpretationImpl;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -19,28 +24,42 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
  * @author Steve Ebersole
  */
 public class SqmDeleteToSqlAstConverterSimple extends BaseSqmToSqlAstConverter {
-	public static DeleteStatement interpret(
+	public static SqmDeleteInterpretation interpret(
 			SqmDeleteStatement sqmStatement,
 			QueryOptions queryOptions,
+			DomainParameterXref domainParameterXref,
+			QueryParameterBindings domainParameterBindings,
 			SharedSessionContractImplementor session) {
 		final SqmDeleteToSqlAstConverterSimple walker = new SqmDeleteToSqlAstConverterSimple(
 				queryOptions,
+				domainParameterXref,
+				domainParameterBindings,
 				session
 		);
+
 		walker.visitDeleteStatement( sqmStatement );
-		return walker.deleteStatement;
+
+		return new SqmDeleteInterpretationImpl(
+				walker.deleteStatement,
+				Collections.singleton(
+						walker.deleteStatement.getTargetTable().getTable().getTableExpression()
+				),
+				walker.getJdbcParamsBySqmParam()
+		);
 	}
 
 	private DeleteStatement deleteStatement;
 
-	private SqmDeleteToSqlAstConverterSimple(
+	public SqmDeleteToSqlAstConverterSimple(
 			QueryOptions queryOptions,
+			DomainParameterXref domainParameterXref,
+			QueryParameterBindings domainParameterBindings,
 			SharedSessionContractImplementor session) {
-		super( session.getFactory(), queryOptions, session.getLoadQueryInfluencers(), afterLoadAction -> {} );
+		super( session.getFactory(), queryOptions, domainParameterXref, domainParameterBindings, session.getLoadQueryInfluencers(), afterLoadAction -> {} );
 	}
 
 	@Override
-	public Object visitDeleteStatement(SqmDeleteStatement sqmStatement) {
+	public DeleteStatement visitDeleteStatement(SqmDeleteStatement sqmStatement) {
 		getProcessingStateStack().push(
 				new SqlAstProcessingStateImpl(
 						null,

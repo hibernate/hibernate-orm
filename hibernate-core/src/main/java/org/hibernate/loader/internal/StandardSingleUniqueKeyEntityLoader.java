@@ -30,11 +30,11 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.internal.RowTransformerSingularReturnImpl;
 import org.hibernate.sql.exec.internal.StandardJdbcParameterImpl;
+import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.exec.spi.ParameterBindingContext;
 
 /**
  * @author Andrea Boriero
@@ -125,7 +125,8 @@ public class StandardSingleUniqueKeyEntityLoader<T> implements SingleUniqueKeyEn
 
 		final List<T> list = JdbcSelectExecutorStandardImpl.INSTANCE.list(
 				jdbcSelect,
-				getExecutionContext( session, jdbcParameterBindings ),
+				jdbcParameterBindings,
+				getExecutionContext( session ),
 				RowTransformerSingularReturnImpl.instance()
 		);
 
@@ -222,10 +223,8 @@ public class StandardSingleUniqueKeyEntityLoader<T> implements SingleUniqueKeyEn
 		return true;
 	}
 
-	private ExecutionContext getExecutionContext(
-			SharedSessionContractImplementor session,
-			JdbcParameterBindings jdbcParameterBindings) {
-		final ParameterBindingContext parameterBindingContext = new TemplateParameterBindingContext( session.getFactory() );
+	private ExecutionContext getExecutionContext(SharedSessionContractImplementor session) {
+		final DomainParameterBindingContext parameterBindingContext = new TemplateParameterBindingContext( session.getFactory() );
 
 		return new ExecutionContext() {
 			@Override
@@ -239,13 +238,8 @@ public class StandardSingleUniqueKeyEntityLoader<T> implements SingleUniqueKeyEn
 			}
 
 			@Override
-			public ParameterBindingContext getParameterBindingContext() {
+			public DomainParameterBindingContext getDomainParameterBindingContext() {
 				return parameterBindingContext;
-			}
-
-			@Override
-			public JdbcParameterBindings getJdbcParameterBindings() {
-				return jdbcParameterBindings;
 			}
 
 			@Override

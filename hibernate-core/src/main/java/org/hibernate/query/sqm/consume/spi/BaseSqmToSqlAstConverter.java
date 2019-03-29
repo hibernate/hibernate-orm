@@ -33,7 +33,11 @@ import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.criteria.sqm.JpaParameterSqmWrapper;
 import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryParameterBinding;
+import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.ParsingException;
+import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
@@ -116,6 +120,7 @@ import org.hibernate.sql.ast.produce.spi.SqlAstQuerySpecProcessingState;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
+import org.hibernate.sql.ast.produce.sqm.spi.JdbcParameterBySqmParameterAccess;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.tree.expression.AbsFunction;
@@ -192,7 +197,7 @@ import static org.hibernate.query.BinaryArithmeticOperator.SUBTRACT;
  */
 public abstract class BaseSqmToSqlAstConverter
 		extends BaseSemanticQueryWalker
-		implements SqmToSqlAstConverter, SqlAstCreationState {
+		implements SqmToSqlAstConverter, SqlAstCreationState, JdbcParameterBySqmParameterAccess {
 
 	private static final Logger log = Logger.getLogger( BaseSqmToSqlAstConverter.class );
 
@@ -205,6 +210,8 @@ public abstract class BaseSqmToSqlAstConverter
 
 	private final SqlAstCreationContext creationContext;
 	private final QueryOptions queryOptions;
+	private final DomainParameterXref domainParameterXref;
+	private final QueryParameterBindings domainParameterBindings;
 	private final LoadQueryInfluencers loadQueryInfluencers;
 	private final Callback callback;
 
@@ -226,11 +233,15 @@ public abstract class BaseSqmToSqlAstConverter
 	public BaseSqmToSqlAstConverter(
 			SqlAstCreationContext creationContext,
 			QueryOptions queryOptions,
+			DomainParameterXref domainParameterXref,
+			QueryParameterBindings domainParameterBindings,
 			LoadQueryInfluencers loadQueryInfluencers,
 			Callback callback) {
 		super( creationContext.getDomainModel().getTypeConfiguration(), creationContext.getServiceRegistry() );
 		this.creationContext = creationContext;
 		this.queryOptions = queryOptions;
+		this.domainParameterXref = domainParameterXref;
+		this.domainParameterBindings = domainParameterBindings;
 		this.loadQueryInfluencers = loadQueryInfluencers;
 		this.callback = callback;
 	}
@@ -657,7 +668,7 @@ public abstract class BaseSqmToSqlAstConverter
 	public Object visitLiteral(SqmLiteral literal) {
 		return new QueryLiteral(
 				literal.getLiteralValue(),
-				literal.getExpressableType().getSqlExpressableType(),
+				literal.getExpressableType().getSqlExpressableType( getTypeConfiguration() ),
 				getCurrentClauseStack().getCurrent()
 		);
 	}
@@ -665,159 +676,72 @@ public abstract class BaseSqmToSqlAstConverter
 	private final Map<SqmParameter,List<JdbcParameter>> jdbcParamsBySqmParam = new IdentityHashMap<>();
 	private final JdbcParameters jdbcParameters = new JdbcParametersImpl();
 
+	@Override
 	public Map<SqmParameter, List<JdbcParameter>> getJdbcParamsBySqmParam() {
 		return jdbcParamsBySqmParam;
 	}
 
 	@Override
 	public Expression visitNamedParameterExpression(SqmNamedParameter expression) {
-		final List<JdbcParameter> jdbcParameterList;
+		return consumeSqmParameter( expression );
+	}
 
-		// todo (6.0) : see note on `SqmExpression#getExpressableType` regarding the role of `#getExpressableType` and possibly adding a separate method triggering the "resolution"
-		//		here is where we would use that new one... as we walk that SQM - we know all inferences have been set
-		List<JdbcParameter> existing = this.jdbcParamsBySqmParam.get( expression );
+	private Expression consumeSqmParameter(SqmParameter sqmParameter) {
+		final List<JdbcParameter> jdbcParametersForSqm = new ArrayList<>();
 
-		AllowableParameterType expressableType = expression.getExpressableType();
+		resolveSqmParameter( sqmParameter, jdbcParametersForSqm::add );
 
+		jdbcParameters.addParameters( jdbcParametersForSqm );
+		jdbcParamsBySqmParam.put( sqmParameter, jdbcParametersForSqm );
 
-		if ( existing != null ) {
-			if ( expressableType != null ) {
-				final int number = expressableType.getNumberOfJdbcParametersNeeded();
-				assert existing.size() == number;
-			}
-			jdbcParameterList = existing;
+		if ( jdbcParametersForSqm.size() > 1 ) {
+			// todo (6.0) : in the case of multi-value bindings, not so sure wrapping in a tuple is the proper solution.
+			//		but what is?
+			return new SqlTuple( jdbcParametersForSqm );
 		}
 		else {
-			jdbcParameterList = new ArrayList<>();
-			if ( expressableType == null ) {
-				jdbcParameterList.add(
-						new StandardJdbcParameterImpl(
+			return jdbcParametersForSqm.get( 0 );
+		}
+	}
+
+	private void resolveSqmParameter(SqmParameter expression, Consumer<JdbcParameter> jdbcParameterConsumer) {
+		final AllowableParameterType expressableType = expression.getExpressableType();
+
+		if ( expressableType == null ) {
+			final StandardJdbcParameterImpl jdbcParameter = new StandardJdbcParameterImpl(
+					jdbcParameters.getJdbcParameters().size(),
+					null,
+					currentClauseStack.getCurrent(),
+					getCreationContext().getDomainModel().getTypeConfiguration()
+			);
+
+			jdbcParameterConsumer.accept( jdbcParameter );
+		}
+		else {
+			expressableType.visitJdbcTypes(
+					type -> {
+						final StandardJdbcParameterImpl jdbcParameter = new StandardJdbcParameterImpl(
 								jdbcParameters.getJdbcParameters().size(),
-								null,
+								type,
 								currentClauseStack.getCurrent(),
 								getCreationContext().getDomainModel().getTypeConfiguration()
-						)
-				);
-			}
-			else {
-				//noinspection Convert2Lambda
-				expressableType.visitJdbcTypes(
-						new Consumer<SqlExpressableType>() {
-							@Override
-							public void accept(SqlExpressableType type) {
-								jdbcParameterList.add(
-										new StandardJdbcParameterImpl(
-												jdbcParameters.getJdbcParameters().size(),
-												type,
-												currentClauseStack.getCurrent(),
-												getCreationContext().getDomainModel().getTypeConfiguration()
-										)
-								);
-							}
-						},
-						currentClauseStack.getCurrent(),
-						getCreationContext().getDomainModel().getTypeConfiguration()
-				);
-			}
-
-			jdbcParamsBySqmParam.put( expression, jdbcParameterList );
-			jdbcParameters.addParameters( jdbcParameterList );
-		}
-
-		if ( jdbcParameterList.size() > 1 ) {
-			return new SqlTuple( jdbcParameterList );
-		}
-		else {
-			return jdbcParameterList.get( 0 );
+						);
+						jdbcParameterConsumer.accept( jdbcParameter );
+					},
+					currentClauseStack.getCurrent(),
+					getCreationContext().getDomainModel().getTypeConfiguration()
+			);
 		}
 	}
 
 	@Override
 	public Object visitPositionalParameterExpression(SqmPositionalParameter expression) {
-		final List<JdbcParameter> jdbcParameterList;
-
-		List<JdbcParameter> existing = this.jdbcParamsBySqmParam.get( expression );
-		if ( existing != null ) {
-			final int number = expression.getExpressableType().getNumberOfJdbcParametersNeeded();
-			assert existing.size() == number;
-			jdbcParameterList = existing;
-		}
-		else {
-			jdbcParameterList = new ArrayList<>();
-
-			//noinspection Convert2Lambda
-			expression.getExpressableType().visitJdbcTypes(
-					new Consumer<SqlExpressableType>() {
-						@Override
-						public void accept(SqlExpressableType type) {
-							jdbcParameterList.add(
-									new StandardJdbcParameterImpl(
-											jdbcParameters.getJdbcParameters().size(),
-											type,
-											currentClauseStack.getCurrent(),
-											getCreationContext().getDomainModel().getTypeConfiguration()
-									)
-							);
-						}
-					},
-					currentClauseStack.getCurrent(),
-					getCreationContext().getDomainModel().getTypeConfiguration()
-			);
-
-			jdbcParamsBySqmParam.put( expression, jdbcParameterList );
-			jdbcParameters.addParameters( jdbcParameterList );
-		}
-
-		if ( jdbcParameterList.size() > 1 ) {
-			return new SqlTuple( jdbcParameterList );
-		}
-		else {
-			return jdbcParameterList.get( 0 );
-		}
+		return consumeSqmParameter( expression );
 	}
 
 	@Override
 	public Object visitJpaParameterWrapper(JpaParameterSqmWrapper expression) {
-		final List<JdbcParameter> jdbcParameterList;
-
-		List<JdbcParameter> existing = this.jdbcParamsBySqmParam.get( expression );
-		if ( existing != null ) {
-			final int number = expression.getExpressableType().getNumberOfJdbcParametersNeeded();
-			assert existing.size() == number;
-			jdbcParameterList = existing;
-		}
-		else {
-			jdbcParameterList = new ArrayList<>();
-
-			//noinspection Convert2Lambda
-			expression.getExpressableType().visitJdbcTypes(
-					new Consumer<SqlExpressableType>() {
-						@Override
-						public void accept(SqlExpressableType type) {
-							jdbcParameterList.add(
-									new StandardJdbcParameterImpl(
-											jdbcParameters.getJdbcParameters().size(),
-											type,
-											currentClauseStack.getCurrent(),
-											getCreationContext().getDomainModel().getTypeConfiguration()
-									)
-							);
-						}
-					},
-					currentClauseStack.getCurrent(),
-					getCreationContext().getDomainModel().getTypeConfiguration()
-			);
-
-			jdbcParamsBySqmParam.put( expression, jdbcParameterList );
-			jdbcParameters.addParameters( jdbcParameterList );
-		}
-
-		if ( jdbcParameterList.size() > 1 ) {
-			return new SqlTuple( jdbcParameterList );
-		}
-		else {
-			return jdbcParameterList.get( 0 );
-		}
+		return consumeSqmParameter( expression );
 	}
 
 
@@ -1529,13 +1453,54 @@ public abstract class BaseSqmToSqlAstConverter
 
 	@Override
 	public InListPredicate visitInListPredicate(InListSqmPredicate predicate) {
+		// special case:
+		//		if there is just a single element and it is an SqmParameter
+		//		and the corresponding QueryParameter binding is multi-valued...
+		//		lets expand the SQL AST for each bind value
+		if ( predicate.getListExpressions().size() == 1 ) {
+			final SqmExpression sqmExpression = predicate.getListExpressions().get( 0 );
+			if ( sqmExpression instanceof SqmParameter ) {
+				final SqmParameter sqmParameter = (SqmParameter) sqmExpression;
+				final QueryParameterImplementor<?> domainParam = domainParameterXref.getQueryParameter( sqmParameter );
+				final QueryParameterBinding domainParamBinding = domainParameterBindings.getBinding( domainParam );
+
+				if ( domainParamBinding.isMultiValued() ) {
+					final InListPredicate inListPredicate = new InListPredicate(
+							toExpression( predicate.getTestExpression().accept( this ) )
+					);
+
+					boolean first = true;
+					for ( Object bindValue : domainParamBinding.getBindValues() ) {
+						final SqmParameter sqmParamToConsume;
+						// for each bind value do the following:
+						//		1) create a pseudo-SqmParameter (though re-use the original for the first value)
+						if ( first ) {
+							sqmParamToConsume = sqmParameter;
+							first = false;
+						}
+						else {
+							sqmParamToConsume = sqmParameter.copy();
+							domainParameterXref.addExpansion( domainParam, sqmParameter, sqmParamToConsume );
+						}
+
+						inListPredicate.addExpression( consumeSqmParameter( sqmParamToConsume ) );
+					}
+
+					return inListPredicate;
+				}
+			}
+		}
+
+
 		final InListPredicate inPredicate = new InListPredicate(
 				toExpression( predicate.getTestExpression().accept( this ) ),
 				predicate.isNegated()
 		);
+
 		for ( SqmExpression expression : predicate.getListExpressions() ) {
 			inPredicate.addExpression( (Expression) expression.accept( this ) );
 		}
+
 		return inPredicate;
 	}
 

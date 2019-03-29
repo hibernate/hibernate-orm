@@ -11,7 +11,7 @@ import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 /**
  * @author Steve Ebersole
  */
-public class OrSqmPredicate implements SqmPredicate {
+public class OrSqmPredicate implements SqmJunctivePredicate {
 	private final SqmPredicate leftHandPredicate;
 	private final SqmPredicate rightHandPredicate;
 
@@ -20,10 +20,12 @@ public class OrSqmPredicate implements SqmPredicate {
 		this.rightHandPredicate = rightHandPredicate;
 	}
 
+	@Override
 	public SqmPredicate getLeftHandPredicate() {
 		return leftHandPredicate;
 	}
 
+	@Override
 	public SqmPredicate getRightHandPredicate() {
 		return rightHandPredicate;
 	}

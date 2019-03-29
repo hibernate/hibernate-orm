@@ -36,7 +36,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.exec.spi.ParameterBindingContext;
+import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
 
 /**
  * @author Steve Ebersole
@@ -64,7 +64,7 @@ public class CollectionLoaderImpl implements CollectionLoader {
 
 	@Override
 	public PersistentCollection load(Object key, LockOptions lockOptions, SharedSessionContractImplementor session) {
-		final ParameterBindingContext parameterBindingContext = new LoadParameterBindingContext(
+		final DomainParameterBindingContext parameterBindingContext = new LoadParameterBindingContext(
 				session.getFactory(),
 				key
 		);
@@ -114,6 +114,7 @@ public class CollectionLoaderImpl implements CollectionLoader {
 
 		JdbcSelectExecutorStandardImpl.INSTANCE.list(
 				jdbcSelect,
+				jdbcParameterBindings,
 				new ExecutionContext() {
 					@Override
 					public SharedSessionContractImplementor getSession() {
@@ -126,13 +127,8 @@ public class CollectionLoaderImpl implements CollectionLoader {
 					}
 
 					@Override
-					public ParameterBindingContext getParameterBindingContext() {
+					public DomainParameterBindingContext getDomainParameterBindingContext() {
 						return parameterBindingContext;
-					}
-
-					@Override
-					public JdbcParameterBindings getJdbcParameterBindings() {
-						return jdbcParameterBindings;
 					}
 
 					@Override

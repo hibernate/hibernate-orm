@@ -61,6 +61,7 @@ import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.exec.spi.BasicExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
@@ -186,6 +187,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 											updateDescriptor.getSqlAstStatement(),
 											executionContext.getSession().getSessionFactory()
 									),
+									JdbcParameterBindings.NO_BINDINGS,
 									executionContext
 							);
 

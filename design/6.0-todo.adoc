@@ -187,7 +187,7 @@ As always the "trigger" for Beta1 is (relatively) stable API.
 6.x release as resources dictate.  As we move along development for 6.0, these items will get
 scheduled appropriately.
 
-* Support for using anonymous call blocks as `org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy`
+* Support for using anonymous call blocks as `org.hibernate.query.sqm.mutation.spi.IdTableStrategy`
 
 * Move `org.hibernate.secure` to `org.hibernate.resource.jacc`? - https://hibernate.atlassian.net/browse/HHH-11478
 

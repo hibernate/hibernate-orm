@@ -37,8 +37,6 @@ import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.internal.SqlAstSelectDescriptorImpl;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.LiteralParameter;
@@ -47,7 +45,9 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.internal.RowTransformerSingularReturnImpl;
 import org.hibernate.sql.exec.spi.BasicExecutionContext;
@@ -91,10 +91,11 @@ public abstract class AbstractSelector {
 	}
 
 	protected List execute(JdbcParameterBindings jdbcParameterBindings, SharedSessionContractImplementor session) {
-		final BasicExecutionContext executionContext = new BasicExecutionContext( session, jdbcParameterBindings );
+		final BasicExecutionContext executionContext = new BasicExecutionContext( session );
 
 		return JdbcSelectExecutorStandardImpl.INSTANCE.list(
 				jdbcSelect,
+				jdbcParameterBindings,
 				executionContext,
 				RowTransformerSingularReturnImpl.INSTANCE
 		);

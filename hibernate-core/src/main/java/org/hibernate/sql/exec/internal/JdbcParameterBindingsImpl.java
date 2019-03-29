@@ -22,11 +22,6 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
  * @author Steve Ebersole
  */
 public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
-	/**
-	 * Singleton access
-	 */
-	public static final JdbcParameterBindingsImpl NO_BINDINGS = new JdbcParameterBindingsImpl();
-
 	private Map<JdbcParameter, JdbcParameterBinding> bindingMap;
 
 	@Override

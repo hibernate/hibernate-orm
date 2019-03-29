@@ -66,11 +66,6 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	}
 
 	@Override
-	public boolean allowsMultiValued() {
-		return queryParameter.allowsMultiValuedBinding();
-	}
-
-	@Override
 	public boolean isBound() {
 		return isBound;
 	}

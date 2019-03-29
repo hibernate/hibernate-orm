@@ -62,6 +62,10 @@ public class SqmInterpretationsKey implements QueryPlanCache.Key {
 			return false;
 		}
 
+		if ( query.getQueryParameterBindings().hasAnyMultiValuedBindings() ) {
+			return false;
+		}
+
 		return true;
 	}
 

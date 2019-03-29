@@ -85,6 +85,11 @@ public class JpaParameterSqmWrapper implements SqmParameter {
 	}
 
 	@Override
+	public SqmParameter copy() {
+		return new JpaParameterSqmWrapper( getJpaParameterExpression(), allowMultiValuedBinding() );
+	}
+
+	@Override
 	public Supplier<? extends ExpressableType> getInferableType() {
 		return () -> parameterType;
 	}

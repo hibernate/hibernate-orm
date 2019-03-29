@@ -38,18 +38,7 @@ public interface ExecutionContext {
 		return getSession().getLoadQueryInfluencers();
 	}
 
-	// todo (6.0) : ParameterBindingContext is not needed here, although should be available via SqlAstCreationContext
-	//		here, should just be JdbcParameterBindings and possibly a list of JdbcParameters
-
-	ParameterBindingContext getParameterBindingContext();
-
-	// todo (6.0) : this should go away also - it makes the execution context specific to an execution
-	//		see QuerySqmImpl implementing ExecutionContext as an example.. the ExecutionContext is
-	//		really scoped to the execution method (`#doScroll`, etc)
-
-	default JdbcParameterBindings getJdbcParameterBindings() {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+	DomainParameterBindingContext getDomainParameterBindingContext();
 
 	Callback getCallback();
 

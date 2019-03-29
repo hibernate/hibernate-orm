@@ -25,7 +25,9 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
+import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
@@ -34,16 +36,13 @@ import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationTarget;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.JoinType;
-import org.hibernate.sql.ast.produce.internal.SqlAstSelectDescriptorImpl;
+import org.hibernate.sql.ast.produce.sqm.internal.SqmSelectInterpretationImpl;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
 import org.hibernate.sql.ast.produce.spi.FromClauseAccess;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.produce.spi.SqlAstSelectDescriptor;
 import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.domain.EntityTypeLiteral;
@@ -51,6 +50,8 @@ import org.hibernate.sql.ast.tree.expression.instantiation.DynamicInstantiation;
 import org.hibernate.sql.ast.tree.expression.instantiation.DynamicInstantiationNature;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.results.spi.CircularFetchDetector;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
@@ -59,8 +60,6 @@ import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-
-import org.jboss.logging.Logger;
 
 /**
  * Interprets an SqmSelectStatement as a SQL-AST SelectQuery.
@@ -72,24 +71,25 @@ import org.jboss.logging.Logger;
 public class SqmSelectToSqlAstConverter
 		extends BaseSqmToSqlAstConverter
 		implements DomainResultCreationState {
-	private static final Logger log = Logger.getLogger( SqmSelectToSqlAstConverter.class );
-
 	private final List<DomainResult> domainResults = new ArrayList<>();
 	private final CircularFetchDetector circularFetchDetector = new CircularFetchDetector();
 
 	public SqmSelectToSqlAstConverter(
 			QueryOptions queryOptions,
+			DomainParameterXref domainParameterXref,
+			QueryParameterBindings domainParameterBindings,
 			LoadQueryInfluencers influencers,
 			Callback callback,
 			SqlAstCreationContext creationContext) {
-		super( creationContext, queryOptions, influencers, callback );
+		super( creationContext, queryOptions, domainParameterXref, domainParameterBindings, influencers, callback );
 	}
 
-	public SqlAstSelectDescriptor interpret(SqmSelectStatement statement) {
-		return new SqlAstSelectDescriptorImpl(
+	public SqmSelectInterpretation interpret(SqmSelectStatement statement) {
+		return new SqmSelectInterpretationImpl(
 				visitSelectStatement( statement ),
 				domainResults,
-				getFromClauseIndex().getAffectedTableNames()
+				getFromClauseIndex().getAffectedTableNames(),
+				getJdbcParamsBySqmParam()
 		);
 	}
 

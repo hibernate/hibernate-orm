@@ -10,12 +10,13 @@ import java.sql.DatabaseMetaData;
 import java.sql.Types;
 
 import org.hibernate.cfg.Environment;
-import org.hibernate.query.sqm.consume.multitable.internal.StandardIdTableSupport;
-import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTable;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTableSupport;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.LocalTempTableExporter;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.LocalTemporaryTableStrategy;
+import org.hibernate.naming.Identifier;
+import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
+import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
+import org.hibernate.query.sqm.mutation.spi.idtable.IdTableSupport;
+import org.hibernate.query.sqm.mutation.spi.idtable.LocalTempTableExporter;
+import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
@@ -229,15 +230,15 @@ public class SAPDBDialect extends Dialect {
 	}
 
 	@Override
-	public IdTableStrategy getDefaultIdTableStrategy() {
+	public SqmMutationStrategy getDefaultIdTableStrategy() {
 		return new LocalTemporaryTableStrategy( generateIdTableSupport() );
 	}
 
 	private IdTableSupport generateIdTableSupport() {
 		return new StandardIdTableSupport( generateIdTableExporter() ) {
 			@Override
-			protected String determineIdTableName(String baseName) {
-				return "temp." + super.determineIdTableName( baseName );
+			protected Identifier determineIdTableName(Identifier baseName) {
+				return new Identifier( "temp." + super.determineIdTableName( baseName ).getText(), false );
 			}
 		};
 	}

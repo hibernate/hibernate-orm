@@ -72,6 +72,8 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.io.StreamCopier;
 import org.hibernate.loader.BatchLoadSizingStrategy;
+import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifierComposite;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
 import org.hibernate.metamodel.model.relational.spi.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.model.relational.spi.ExportableTable;
@@ -83,10 +85,11 @@ import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTable;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTableExporterImpl;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.PersistentTableStrategy;
+import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
+import org.hibernate.query.sqm.mutation.spi.idtable.IdTableExporterImpl;
+import org.hibernate.query.sqm.mutation.spi.idtable.PersistentTableStrategy;
+import org.hibernate.query.sqm.mutation.spi.inline.InlineMutationStrategy;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.spi.CastFunctionTemplate;
@@ -1596,7 +1599,16 @@ public abstract class Dialect implements ConversionContext {
 		return getCreateTableString();
 	}
 
-	public IdTableStrategy getDefaultIdTableStrategy() {
+	public SqmMutationStrategy getFallbackSqmMutationStrategy(EntityHierarchy hierarchy) {
+		if ( hierarchy.getIdentifierDescriptor() instanceof EntityIdentifierComposite ) {
+			if ( !supportsTuplesInSubqueries() ) {
+				return new InlineMutationStrategy();
+			}
+		}
+		return getDefaultIdTableStrategy();
+	}
+
+	public SqmMutationStrategy getDefaultIdTableStrategy() {
 		return new PersistentTableStrategy( getIdTableExporter() );
 	}
 

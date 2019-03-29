@@ -305,10 +305,15 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 					sqmFunctionRegistry
 			);
 
-			settings.getMultiTableBulkIdStrategy().prepare(
-					metamodel,
-					sessionFactoryOptions,
-					buildLocalConnectionAccess()
+			final JdbcConnectionAccess jdbcConnectionAccess = buildLocalConnectionAccess();
+
+			// we only need to prepare the MultiTableMutationStrategy once for the hierarchy
+			metamodel.visitEntityHierarchies(
+					hierarchy -> hierarchy.getSqmMutationStrategy().prepare(
+							metamodel,
+							sessionFactoryOptions,
+							jdbcConnectionAccess
+					)
 			);
 
 			currentSessionContext = buildCurrentSessionContext();
@@ -709,10 +714,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		LOG.closing();
 		observer.sessionFactoryClosing( this );
 
-		isClosed = true;
-
-		settings.getMultiTableBulkIdStrategy().release( metamodel, buildLocalConnectionAccess() );
-
 		// NOTE : the null checks below handle cases where close is called from
 		//		a failed attempt to create the SessionFactory
 
@@ -725,6 +726,11 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		if ( metamodel != null ) {
+			final JdbcConnectionAccess jdbcConnectionAccess = buildLocalConnectionAccess();
+			metamodel.visitEntityHierarchies(
+					hierarchy -> hierarchy.getSqmMutationStrategy().release( metamodel, jdbcConnectionAccess )
+			);
+
 			metamodel.close();
 		}
 
@@ -738,6 +744,8 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				settings.isSessionFactoryNameAlsoJndiName(),
 				serviceRegistry.getService( JndiService.class )
 		);
+
+		isClosed = true;
 
 		observer.sessionFactoryClosed( this );
 		serviceRegistry.destroy();

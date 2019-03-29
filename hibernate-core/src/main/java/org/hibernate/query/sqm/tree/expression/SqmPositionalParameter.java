@@ -32,6 +32,11 @@ public class SqmPositionalParameter extends AbstractSqmParameter {
 	}
 
 	@Override
+	public SqmParameter copy() {
+		return new SqmPositionalParameter( getPosition(), allowMultiValuedBinding() );
+	}
+
+	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitPositionalParameterExpression( this );
 	}

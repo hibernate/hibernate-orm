@@ -31,11 +31,10 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.internal.RowTransformerSingularReturnImpl;
 import org.hibernate.sql.exec.internal.StandardJdbcParameterImpl;
+import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
-import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.exec.spi.ParameterBindingContext;
 
 import org.jboss.logging.Logger;
 
@@ -149,7 +148,7 @@ public class StandardNaturalIdLoader implements NaturalIdLoader {
 			);
 		}
 
-		final ParameterBindingContext parameterBindingContext = new StandardParameterBindingContext(
+		final DomainParameterBindingContext parameterBindingContext = new StandardParameterBindingContext(
 				session.getFactory(),
 				QueryParameterBindings.NO_PARAM_BINDINGS,
 				Collections.emptyList()
@@ -168,13 +167,8 @@ public class StandardNaturalIdLoader implements NaturalIdLoader {
 			}
 
 			@Override
-			public ParameterBindingContext getParameterBindingContext() {
+			public DomainParameterBindingContext getDomainParameterBindingContext() {
 				return parameterBindingContext;
-			}
-
-			@Override
-			public JdbcParameterBindings getJdbcParameterBindings() {
-				return jdbcParameterBindings;
 			}
 
 			@Override
@@ -185,6 +179,7 @@ public class StandardNaturalIdLoader implements NaturalIdLoader {
 
 		final List list = JdbcSelectExecutorStandardImpl.INSTANCE.list(
 				xrefSelect,
+				jdbcParameterBindings,
 				executionContext,
 				RowTransformerSingularReturnImpl.instance()
 		);

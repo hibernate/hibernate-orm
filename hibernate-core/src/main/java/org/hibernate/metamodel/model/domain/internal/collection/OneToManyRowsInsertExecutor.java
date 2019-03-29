@@ -52,7 +52,7 @@ public class OneToManyRowsInsertExecutor extends OneToManyCreationExecutor {
 		assert key != null;
 
 		final JdbcParameterBindingsImpl jdbcParameterBindings = new JdbcParameterBindingsImpl();
-		final BasicExecutionContext executionContext = new BasicExecutionContext( session, jdbcParameterBindings );
+		final BasicExecutionContext executionContext = new BasicExecutionContext( session );
 
 		final Iterator entries = collection.entries( getCollectionDescriptor() );
 
@@ -79,7 +79,11 @@ public class OneToManyRowsInsertExecutor extends OneToManyCreationExecutor {
 				bindCollectionElement( entry, collection, jdbcParameterBindings, session );
 
 				count++;
-				JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute( getCreationOperation(), executionContext );
+				JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute(
+						getCreationOperation(),
+						jdbcParameterBindings,
+						executionContext
+				);
 			}
 			passes++;
 			jdbcParameterBindings.clear();

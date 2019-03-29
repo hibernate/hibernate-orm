@@ -15,6 +15,7 @@ import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
@@ -80,6 +81,7 @@ public class LiteralParameter implements GenericParameter, JdbcParameterBinding,
 	public int bindParameterValue(
 			PreparedStatement statement,
 			int startPosition,
+			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext) throws SQLException {
 		getExpressableType().getJdbcValueBinder().bind( statement, startPosition, value, executionContext );
 		return 1;

@@ -7,30 +7,28 @@
 package org.hibernate.query.sqm.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.Tuple;
 import javax.persistence.TupleElement;
 
 import org.hibernate.ScrollMode;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.streams.StingArrayCollector;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.JpaTupleTransformer;
+import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
+import org.hibernate.query.sqm.consume.internal.SqmConsumeHelper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.consume.spi.SqlAstSelectToJdbcSelectConverter;
 import org.hibernate.sql.ast.produce.spi.SqlAstSelectDescriptor;
-import org.hibernate.sql.ast.produce.sqm.spi.Callback;
+import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectInterpretation;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
-import org.hibernate.sql.exec.internal.Helper;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.internal.RowTransformerJpaTupleImpl;
 import org.hibernate.sql.exec.internal.RowTransformerPassThruImpl;
@@ -41,7 +39,6 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.exec.spi.ParameterBindingContext;
 import org.hibernate.sql.exec.spi.RowTransformer;
 
 /**
@@ -57,7 +54,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private final RowTransformer<R> rowTransformer;
 
 	private JdbcSelect jdbcSelect;
-	private  Map<QueryParameterImplementor, List<List<JdbcParameter>>> jdbcParamsByDomainParams;
+	private Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamsXref;
 
 	@SuppressWarnings("WeakerAccess")
 	public ConcreteSqmSelectQueryPlan(
@@ -100,15 +97,6 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 					);
 				}
 				return (RowTransformer<R>) new RowTransformerJpaTupleImpl( tupleElementList );
-//				return (RowTransformer<R>) new RowTransformerTupleImpl(
-//						sqm.getQuerySpec().getSelectClause().getSelections()
-//								.stream()
-//								.map( selection -> (TupleElement<?>) new TupleElementImpl(
-//										( (SqmTypeImplementor) selection.asExpression().getExpressableType() ).getDomainType().getReturnedClass(),
-//										selection.getAlias()
-//								) )
-//								.collect( Collectors.toList() )
-//				);
 			}
 
 			// there can be a TupleTransformer IF it is a JpaTupleBuilder,
@@ -156,85 +144,48 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	@SuppressWarnings("unchecked")
 	public List<R> performList(ExecutionContext executionContext) {
 		if ( jdbcSelect == null ) {
-			SqmSelectToSqlAstConverter sqmConverter = getSqmSelectToSqlAstConverter( executionContext );
-			SqlAstSelectDescriptor interpretation = sqmConverter.interpret( sqm );
+			final SqmSelectToSqlAstConverter sqmConverter = getSqmSelectToSqlAstConverter( executionContext );
+			final SqmSelectInterpretation interpretation = sqmConverter.interpret( sqm );
 			jdbcSelect = SqlAstSelectToJdbcSelectConverter.interpret(
 					interpretation,
 					executionContext.getSession().getSessionFactory()
 			);
 
-			jdbcParamsByDomainParams = generateJdbcParamsByQueryParamMap( sqmConverter );
+			this.jdbcParamsXref = SqmConsumeHelper.generateJdbcParamsXref( domainParameterXref, interpretation );
 		}
 
-		final JdbcParameterBindings jdbcParameterBindings = Helper.createJdbcParameterBindings(
-				executionContext.getParameterBindingContext().getQueryParameterBindings(),
-				jdbcParamsByDomainParams,
+		final JdbcParameterBindings jdbcParameterBindings = QueryHelper.createJdbcParameterBindings(
+				executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
+				domainParameterXref,
+				jdbcParamsXref,
 				executionContext.getSession()
 		);
 
-		final ExecutionContext realExecutionContext = new ExecutionContext() {
-			@Override
-			public SharedSessionContractImplementor getSession() {
-				return executionContext.getSession();
-			}
-
-			@Override
-			public QueryOptions getQueryOptions() {
-				return executionContext.getQueryOptions();
-			}
-
-			@Override
-			public ParameterBindingContext getParameterBindingContext() {
-				return executionContext.getParameterBindingContext();
-			}
-
-			@Override
-			public Callback getCallback() {
-				return executionContext.getCallback();
-			}
-
-			@Override
-			public JdbcParameterBindings getJdbcParameterBindings() {
-				return jdbcParameterBindings;
-			}
-		};
-
-		// todo (6.0) : make these executors resolvable to allow plugging in custom ones.
-		//		Dialect?
-		return JdbcSelectExecutorStandardImpl.INSTANCE.list(
-				jdbcSelect,
-				realExecutionContext,
-				rowTransformer
-		);
-	}
-
-	private Map<QueryParameterImplementor, List<List<JdbcParameter>>> generateJdbcParamsByQueryParamMap(
-			SqmSelectToSqlAstConverter sqmConverter) {
-		if ( domainParameterXref == null || ! domainParameterXref.hasParameters() ) {
-			return Collections.emptyMap();
+		try {
+			// todo (6.0) : make these executors resolvable to allow plugging in custom ones.
+			//		Dialect?
+			return JdbcSelectExecutorStandardImpl.INSTANCE.list(
+					jdbcSelect,
+					jdbcParameterBindings,
+					executionContext,
+					rowTransformer
+			);
 		}
-
-		final Map<QueryParameterImplementor,List<List<JdbcParameter>>> jdbcParamsByDomainParams = new HashMap<>();
-
-		for ( Map.Entry<QueryParameterImplementor<?>, List<SqmParameter>> entry : domainParameterXref.getSqmParamByQueryParam().entrySet() ) {
-			final List<List<JdbcParameter>> jdbcParameters = new ArrayList<>();
-			for ( SqmParameter sqmParameter : entry.getValue() ) {
-				jdbcParameters.add( sqmConverter.getJdbcParamsBySqmParam().get( sqmParameter ) );
-			}
-			jdbcParamsByDomainParams.put( entry.getKey(), jdbcParameters );
+		finally {
+			domainParameterXref.clearExpansions();
 		}
-
-		return jdbcParamsByDomainParams;
 	}
 
 	private SqmSelectToSqlAstConverter getSqmSelectToSqlAstConverter(ExecutionContext executionContext) {
 		// todo (6.0) : for cases where we have no "load query influencers" we could use a cached SQL AST
 		return new SqmSelectToSqlAstConverter(
 				executionContext.getQueryOptions(),
+				domainParameterXref,
+				executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
 				executionContext.getLoadQueryInfluencers(),
 				afterLoadAction -> {},
 				executionContext.getSession().getFactory()
-			);
+		);
 	}
 
 	@Override
@@ -250,46 +201,27 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				executionContext.getSession().getSessionFactory()
 		);
 
-		final Map<QueryParameterImplementor, List<List<JdbcParameter>>> jdbcParamsByDomainParams = generateJdbcParamsByQueryParamMap( sqmConverter );
+		final Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamsXref =
+				SqmConsumeHelper.generateJdbcParamsXref( domainParameterXref, sqmConverter );
 
-		final JdbcParameterBindings jdbcParameterBindings = Helper.createJdbcParameterBindings(
-				executionContext.getParameterBindingContext().getQueryParameterBindings(),
-				jdbcParamsByDomainParams,
+		final JdbcParameterBindings jdbcParameterBindings = QueryHelper.createJdbcParameterBindings(
+				executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
+				domainParameterXref,
+				jdbcParamsXref,
 				executionContext.getSession()
 		);
 
-		final ExecutionContext realExecutionContext = new ExecutionContext() {
-			@Override
-			public SharedSessionContractImplementor getSession() {
-				return executionContext.getSession();
-			}
-
-			@Override
-			public QueryOptions getQueryOptions() {
-				return executionContext.getQueryOptions();
-			}
-
-			@Override
-			public ParameterBindingContext getParameterBindingContext() {
-				return executionContext.getParameterBindingContext();
-			}
-
-			@Override
-			public Callback getCallback() {
-				return executionContext.getCallback();
-			}
-
-			@Override
-			public JdbcParameterBindings getJdbcParameterBindings() {
-				return jdbcParameterBindings;
-			}
-		};
-
-		return JdbcSelectExecutorStandardImpl.INSTANCE.scroll(
-				jdbcSelect,
-				scrollMode,
-				realExecutionContext,
-				rowTransformer
-		);
+		try {
+			return JdbcSelectExecutorStandardImpl.INSTANCE.scroll(
+					jdbcSelect,
+					scrollMode,
+					jdbcParameterBindings,
+					executionContext,
+					rowTransformer
+			);
+		}
+		finally {
+			domainParameterXref.clearExpansions();
+		}
 	}
 }

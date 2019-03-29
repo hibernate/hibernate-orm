@@ -29,15 +29,16 @@ import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.consume.spi.UpdateToJdbcUpdateConverter;
-import org.hibernate.sql.ast.tree.update.UpdateStatement;
-import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.LiteralParameter;
 import org.hibernate.sql.ast.tree.expression.PositionalParameter;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
+import org.hibernate.sql.ast.tree.update.Assignment;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
+import org.hibernate.sql.exec.internal.LoadParameterBindingContext;
 import org.hibernate.sql.exec.spi.BasicExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcParameter;
@@ -87,8 +88,12 @@ public class JoinTableRowsUpdateExecutor implements CollectionRowsUpdateExecutor
 			elements.add( entries.next() );
 		}
 
+		final BasicExecutionContext executionContext = new BasicExecutionContext(
+				session,
+				new LoadParameterBindingContext( session.getSessionFactory(), key )
+		);
+
 		final JdbcParameterBindingsImpl jdbcParameterBindings = new JdbcParameterBindingsImpl();
-		final BasicExecutionContext executionContext = new BasicExecutionContext( session, jdbcParameterBindings );
 
 		int count = 0;
 		if ( collection.isElementRemoved() ) {
@@ -100,7 +105,11 @@ public class JoinTableRowsUpdateExecutor implements CollectionRowsUpdateExecutor
 					bindCollectionIndex( entry, collection, i, jdbcParameterBindings, session );
 					bindCollectionElement( entry, collection,jdbcParameterBindings, session );
 
-					JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute( jdbcUpdate, executionContext );
+					JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute(
+							jdbcUpdate,
+							jdbcParameterBindings,
+							executionContext
+					);
 					jdbcParameterBindings.clear();
 
 					count++;
@@ -116,7 +125,11 @@ public class JoinTableRowsUpdateExecutor implements CollectionRowsUpdateExecutor
 					bindCollectionIndex( entry, collection, i, jdbcParameterBindings, session );
 					bindCollectionElement( entry, collection, jdbcParameterBindings, session );
 
-					JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute( jdbcUpdate, executionContext );
+					JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute(
+							jdbcUpdate,
+							jdbcParameterBindings,
+							executionContext
+					);
 					jdbcParameterBindings.clear();
 
 					count++;

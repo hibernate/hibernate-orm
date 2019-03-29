@@ -14,10 +14,10 @@ import java.sql.Types;
 import java.util.UUID;
 
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.query.sqm.consume.multitable.internal.StandardIdTableSupport;
-import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.LocalTempTableExporter;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.LocalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
+import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.idtable.LocalTempTableExporter;
+import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.AbstractJdbcValueBinder;
 import org.hibernate.sql.AbstractJdbcValueExtractor;
@@ -50,7 +50,7 @@ public class PostgreSQL82Dialect extends PostgreSQL81Dialect {
 	}
 
 	@Override
-	public IdTableStrategy getDefaultIdTableStrategy() {
+	public SqmMutationStrategy getDefaultIdTableStrategy() {
 		return new LocalTemporaryTableStrategy(
 				new StandardIdTableSupport(
 						new LocalTempTableExporter() {

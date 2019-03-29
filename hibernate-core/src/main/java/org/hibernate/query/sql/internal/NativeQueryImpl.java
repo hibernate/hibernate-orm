@@ -72,8 +72,8 @@ import org.hibernate.query.sql.spi.NonSelectInterpretationsKey;
 import org.hibernate.query.sql.spi.SelectInterpretationsKey;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
+import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.ParameterBindingContext;
 import org.hibernate.sql.exec.spi.RowTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
@@ -83,7 +83,7 @@ import org.hibernate.type.Type;
  */
 public class NativeQueryImpl<R>
 		extends AbstractQuery<R>
-		implements NativeQueryImplementor<R>, ParameterBindingContext, ExecutionContext {
+		implements NativeQueryImplementor<R>, DomainParameterBindingContext, ExecutionContext {
 	private final String sqlString;
 
 	private LegacyResultSetMappingDescriptor legacyResultSetMappingDescriptor;
@@ -188,7 +188,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public ParameterBindingContext getParameterBindingContext() {
+	public DomainParameterBindingContext getDomainParameterBindingContext() {
 		return this;
 	}
 
@@ -548,11 +548,7 @@ public class NativeQueryImpl<R>
 		// trigger the transaction-in-progress checks...
 		getSession().prepareForQueryExecution( true );
 
-		return resolveNonSelectQueryPlan().executeUpdate(
-				getSession(),
-				getQueryOptions(),
-				this
-		);
+		return resolveNonSelectQueryPlan().executeUpdate( this );
 	}
 
 	private NonSelectQueryPlan resolveNonSelectQueryPlan() {

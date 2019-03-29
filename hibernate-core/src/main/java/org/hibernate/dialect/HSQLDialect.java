@@ -38,12 +38,13 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
-import org.hibernate.query.sqm.consume.multitable.internal.StandardIdTableSupport;
-import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTemporaryTableStrategy;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTable;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.LocalTempTableExporter;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.LocalTemporaryTableStrategy;
+import org.hibernate.naming.Identifier;
+import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
+import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
+import org.hibernate.query.sqm.mutation.spi.idtable.LocalTempTableExporter;
+import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.spi.StandardAnsiSqlSqmAggregationFunctionTemplates.AvgFunctionTemplate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHSQLDBDatabaseImpl;
@@ -508,7 +509,7 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
-	public IdTableStrategy getDefaultIdTableStrategy() {
+	public SqmMutationStrategy getDefaultIdTableStrategy() {
 		// Hibernate uses this information for temporary tables that it uses for its own operations
 		// therefore the appropriate strategy is taken with different versions of HSQLDB
 
@@ -525,10 +526,10 @@ public class HSQLDialect extends Dialect {
 			return new LocalTemporaryTableStrategy(
 					new StandardIdTableSupport( generateLocalTempTableExporter() ) {
 						@Override
-						protected String determineIdTableName(String baseName) {
+						protected Identifier determineIdTableName(Identifier baseName) {
 							// With HSQLDB 2.0, the table name is qualified with MODULE to assist the drop
 							// statement (in-case there is a global name beginning with HT_)
-							return "MODULE.HT_" + baseName;
+							return new Identifier( "MODULE.HT_" + baseName.getText(), false );
 						}
 					}
 			);

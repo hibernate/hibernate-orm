@@ -157,6 +157,9 @@ public abstract class AbstractSqlAstWalker
 				|| clauseStack.getCurrent() == Clause.HAVING;
 	}
 
+	protected Stack<Clause> getClauseStack() {
+		return clauseStack;
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -910,7 +913,7 @@ public abstract class AbstractSqlAstWalker
 		if ( inListPredicate.isNegated() ) {
 			appendSql( " not" );
 		}
-		appendSql( " in(" );
+		appendSql( " in (" );
 		if ( inListPredicate.getListExpressions().isEmpty() ) {
 			appendSql( "null" );
 		}
@@ -931,9 +934,8 @@ public abstract class AbstractSqlAstWalker
 		if ( inSubQueryPredicate.isNegated() ) {
 			appendSql( " not" );
 		}
-		appendSql( " in(" );
+		appendSql( " in " );
 		visitQuerySpec( inSubQueryPredicate.getSubQuery() );
-		appendSql( CLOSE_PARENTHESIS );
 	}
 
 	@Override

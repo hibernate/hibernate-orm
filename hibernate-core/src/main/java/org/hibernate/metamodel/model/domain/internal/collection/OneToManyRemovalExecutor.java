@@ -70,7 +70,7 @@ public class OneToManyRemovalExecutor implements CollectionRemovalExecutor {
 	@Override
 	public void execute(Object key, SharedSessionContractImplementor session) {
 		final JdbcParameterBindingsImpl jdbcParameterBindings = new JdbcParameterBindingsImpl();
-		final BasicExecutionContext executionContext = new BasicExecutionContext( session, jdbcParameterBindings );
+		final BasicExecutionContext executionContext = new BasicExecutionContext( session );
 
 		collectionDescriptor.getCollectionKeyDescriptor().dehydrate(
 				collectionDescriptor.getCollectionKeyDescriptor().unresolve( key, session ),
@@ -85,7 +85,7 @@ public class OneToManyRemovalExecutor implements CollectionRemovalExecutor {
 				session
 		);
 
-		JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute( updateMutation, executionContext );
+		JdbcMutationExecutor.WITH_AFTER_STATEMENT_CALL.execute( updateMutation, jdbcParameterBindings, executionContext );
 	}
 
 	private void createBinding(

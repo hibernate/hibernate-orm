@@ -62,4 +62,9 @@ public interface SqmParameter extends InferableTypeSqmExpression {
 
 	@Override
 	AllowableParameterType getExpressableType();
+
+	/**
+	 * Make a copy
+	 */
+	SqmParameter copy();
 }

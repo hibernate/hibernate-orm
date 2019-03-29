@@ -111,6 +111,10 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	@Override
 	public QueryParameterBinding<?> getBinding(QueryParameterImplementor parameter) {
+		if ( parameterBindingMap == null ) {
+			return null;
+		}
+
 		QueryParameterBinding binding = parameterBindingMap.get( parameter );
 
 		if ( binding == null ) {
@@ -152,6 +156,17 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 					}
 				}
 		);
+	}
+
+	@Override
+	public boolean hasAnyMultiValuedBindings() {
+		for ( QueryParameterBinding binding : parameterBindingMap.values() ) {
+			if ( binding.isMultiValued() ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	@Override

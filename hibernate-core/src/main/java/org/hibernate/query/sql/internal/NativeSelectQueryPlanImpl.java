@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sql.internal;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 
@@ -23,6 +21,7 @@ import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.internal.JdbcSelectImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 import org.hibernate.sql.exec.spi.RowTransformer;
@@ -67,14 +66,14 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 		// todo (6.0) : need to make this swappable (see note in executor class)
 		final JdbcSelectExecutor executor = JdbcSelectExecutorStandardImpl.INSTANCE;
 
-		return executor.list( jdbcSelect, executionContext, rowTransformer );
+		return executor.list( jdbcSelect, JdbcParameterBindings.NO_BINDINGS, executionContext, rowTransformer );
 	}
 
 	private List<JdbcParameterBinder> resolveJdbcParameterBinders(ExecutionContext executionContext) {
 		final List<JdbcParameterBinder> jdbcParameterBinders = CollectionHelper.arrayList( parameterList.size() );
 
 		for ( QueryParameterImplementor parameter : parameterList ) {
-			final QueryParameterBinding parameterBinding = executionContext.getParameterBindingContext()
+			final QueryParameterBinding parameterBinding = executionContext.getDomainParameterBindingContext()
 					.getQueryParameterBindings()
 					.getBinding( parameter );
 			AllowableParameterType type = parameterBinding.getBindType();
@@ -84,20 +83,18 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 
 			type.dehydrate(
 					type.unresolve( parameterBinding.getBindValue(), executionContext.getSession() ),
-					(jdbcValue, sqlExpressableType, boundColumn) -> {
-						jdbcParameterBinders.add(
-								new JdbcParameterBinder() {
-									@Override
-									public int bindParameterValue(
-											PreparedStatement statement,
-											int startPosition,
-											ExecutionContext executionContext) throws SQLException {
-										sqlExpressableType.getJdbcValueBinder().bind( statement, startPosition, jdbcValue, executionContext );
-										return 1;
-									}
-								}
-						);
-					},
+					(jdbcValue, sqlExpressableType, boundColumn) -> jdbcParameterBinders.add(
+							(statement, startPosition, jdbcParameterBindings, executionContext1) -> {
+								//noinspection unchecked
+								sqlExpressableType.getJdbcValueBinder().bind(
+										statement,
+										startPosition,
+										jdbcValue,
+										executionContext1
+								);
+								return 1;
+							}
+					),
 					Clause.IRRELEVANT,
 					executionContext.getSession()
 			);
@@ -120,6 +117,13 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 		);
 		final JdbcSelectExecutor executor = JdbcSelectExecutorStandardImpl.INSTANCE;
 
-		return executor.scroll( jdbcSelect, scrollMode, executionContext, rowTransformer );
+		return executor.scroll(
+				jdbcSelect,
+				scrollMode,
+				// the binders created here encapsulate their bind value
+				JdbcParameterBindings.NO_BINDINGS,
+				executionContext,
+				rowTransformer
+		);
 	}
 }

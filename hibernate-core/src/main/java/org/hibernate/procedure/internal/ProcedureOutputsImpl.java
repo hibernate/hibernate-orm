@@ -38,7 +38,8 @@ import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 import org.hibernate.sql.exec.spi.JdbcCallRefCursorExtractor;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
-import org.hibernate.sql.exec.spi.ParameterBindingContext;
+import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
 import org.jboss.logging.Logger;
 
@@ -48,7 +49,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class ProcedureOutputsImpl extends OutputsImpl
-		implements ProcedureOutputs, ExecutionContext, ParameterBindingContext, Callback {
+		implements ProcedureOutputs, ExecutionContext, DomainParameterBindingContext, Callback {
 	private static final Logger log = Logger.getLogger( ProcedureOutputsImpl.class );
 
 	private final ParameterStrategy parameterStrategy;
@@ -139,7 +140,12 @@ public class ProcedureOutputsImpl extends OutputsImpl
 				// todo : ok to bind right away?  Or do we need to wait until after all parameters are registered?
 				final JdbcParameterBinder binder = registration.getParameterBinder();
 				if ( binder != null ) {
-					binder.bindParameterValue( callableStatement, jdbcPosition, this );
+					binder.bindParameterValue(
+							callableStatement,
+							jdbcPosition,
+							JdbcParameterBindings.NO_BINDINGS,
+							this
+					);
 				}
 
 				final JdbcCallParameterExtractor parameterExtractor = registration.getParameterExtractor();
@@ -285,7 +291,7 @@ public class ProcedureOutputsImpl extends OutputsImpl
 	}
 
 	@Override
-	public ParameterBindingContext getParameterBindingContext() {
+	public DomainParameterBindingContext getDomainParameterBindingContext() {
 		return this;
 	}
 

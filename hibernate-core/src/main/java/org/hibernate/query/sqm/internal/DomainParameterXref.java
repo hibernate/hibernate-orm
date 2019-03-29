@@ -38,6 +38,7 @@ public class DomainParameterXref {
 	 */
 	public static DomainParameterXref from(SqmStatement sqmStatement) {
 		final Map<QueryParameterImplementor<?>, List<SqmParameter>> sqmParamsByQueryParam = new IdentityHashMap<>();
+		final Map<SqmParameter, QueryParameterImplementor<?>> queryParamBySqmParam = new IdentityHashMap<>();
 
 		// `xrefMap` is used to help maintain the proper cardinality between an
 		// SqmParameter and a QueryParameter.  Multiple SqmParameter references
@@ -105,25 +106,36 @@ public class DomainParameterXref {
 			}
 
 			sqmParamsByQueryParam.computeIfAbsent( queryParameter, qp -> new ArrayList<>() ).add( sqmParameter );
+			queryParamBySqmParam.put( sqmParameter, queryParameter );
 		}
 
-		return new DomainParameterXref( sqmParamsByQueryParam );
+		return new DomainParameterXref( sqmParamsByQueryParam, queryParamBySqmParam );
 	}
 
 	/**
 	 * Creates an "empty" (no param) xref
 	 */
 	public static DomainParameterXref empty() {
-		return new DomainParameterXref( Collections.emptyMap() );
+		return new DomainParameterXref( Collections.emptyMap(), Collections.emptyMap() );
 	}
 
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Instance state
+
 	private final Map<QueryParameterImplementor<?>, List<SqmParameter>> sqmParamsByQueryParam;
+	private final Map<SqmParameter, QueryParameterImplementor<?>> queryParamBySqmParam;
+
+	private Map<SqmParameter,List<SqmParameter>> expansions;
 
 	/**
 	 * @implSpec Constructor is defined as public for
 	 */
-	public DomainParameterXref(Map<QueryParameterImplementor<?>, List<SqmParameter>> sqmParamsByQueryParam) {
+	public DomainParameterXref(
+			Map<QueryParameterImplementor<?>, List<SqmParameter>> sqmParamsByQueryParam,
+			Map<SqmParameter, QueryParameterImplementor<?>> queryParamBySqmParam) {
 		this.sqmParamsByQueryParam = sqmParamsByQueryParam;
+		this.queryParamBySqmParam = queryParamBySqmParam;
 	}
 
 	/**
@@ -146,5 +158,50 @@ public class DomainParameterXref {
 	 */
 	public Map<QueryParameterImplementor<?>, List<SqmParameter>> getSqmParamByQueryParam() {
 		return sqmParamsByQueryParam;
+	}
+
+	public List<SqmParameter> getSqmParameters(QueryParameterImplementor<?> queryParameter) {
+		return sqmParamsByQueryParam.get( queryParameter );
+	}
+
+	public QueryParameterImplementor<?> getQueryParameter(SqmParameter sqmParameter) {
+		return queryParamBySqmParam.get( sqmParameter );
+	}
+
+	public void addExpansion(
+			QueryParameterImplementor<?> domainParam,
+			SqmParameter originalSqmParameter,
+			SqmParameter expansion) {
+		QueryLogger.QUERY_LOGGER.debugf( "Adding domain-param xref expansion : %s", originalSqmParameter );
+		queryParamBySqmParam.put( expansion, domainParam );
+
+		if ( expansions == null ) {
+			expansions = new IdentityHashMap<>();
+		}
+
+		expansions.computeIfAbsent( originalSqmParameter, p -> new ArrayList<>() ).add( expansion );
+	}
+
+	public List<SqmParameter> getExpansions(SqmParameter sqmParameter) {
+		if ( expansions == null ) {
+			return Collections.emptyList();
+		}
+
+		final List<SqmParameter> sqmParameters = expansions.get( sqmParameter );
+		return sqmParameters == null ? Collections.emptyList() : sqmParameters;
+	}
+
+	public void clearExpansions() {
+		if ( expansions == null ) {
+			return;
+		}
+
+		for ( List<SqmParameter> expansionList : expansions.values() ) {
+			for ( SqmParameter expansion : expansionList ) {
+				queryParamBySqmParam.remove( expansion );
+			}
+		}
+
+		expansions.clear();
 	}
 }

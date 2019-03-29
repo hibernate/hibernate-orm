@@ -19,7 +19,7 @@ import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.naming.Identifier;
-import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
+import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 
 import org.jboss.logging.Logger;
 
@@ -162,8 +162,8 @@ public final class Settings {
 		return sessionFactoryOptions.isInitializeLazyStateOutsideTransactionsEnabled();
 	}
 
-	public IdTableStrategy getMultiTableBulkIdStrategy() {
-		return sessionFactoryOptions.getIdTableStrategy();
+	public SqmMutationStrategy getMultiTableBulkIdStrategy() {
+		return sessionFactoryOptions.getSqmMutationStrategy();
 	}
 
 	public BatchFetchStyle getBatchFetchStyle() {

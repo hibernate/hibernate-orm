@@ -20,25 +20,24 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
  */
 @Incubating
 public interface JdbcSelectExecutor {
-
-	// todo (6.0) : need to pass some form of JdbcValuesSourceProcessingOptions to list to be able to have it handle single entity loads -
-	//		or just drop the form of loading an entity by passing an instance of itself as the one to load
-
 	// todo (6.0) : Ideally we'd have a singular place (JdbcServices? ServiceRegistry?) to obtain these executors
 
 	<R> List<R> list(
 			JdbcSelect jdbcSelect,
+			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer);
 
 	<R> ScrollableResultsImplementor<R> scroll(
 			JdbcSelect jdbcSelect,
 			ScrollMode scrollMode,
+			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer);
 
 	<R> Stream<R> stream(
 			JdbcSelect jdbcSelect,
+			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer);
 }

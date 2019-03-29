@@ -6,16 +6,24 @@
  */
 package org.hibernate.sql.ast.tree.expression.domain;
 
+import java.util.function.Consumer;
+
 import org.hibernate.metamodel.model.domain.spi.BasicValuedNavigable;
+import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.produce.sqm.spi.SqmUpdateToSqlAstConverterMultiTable;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.update.Assignment;
 
 /**
  * NavigableReference to a BasicValuedNavigable
  *
  * @author Steve Ebersole
  */
-public class BasicValuedNavigableReference implements NavigableReference {
+public class BasicValuedNavigableReference implements NavigableReference, AssignableNavigableReference {
 	private final NavigablePath navigablePath;
 	private final BasicValuedNavigable referencedNavigable;
 
@@ -35,5 +43,22 @@ public class BasicValuedNavigableReference implements NavigableReference {
 	@Override
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
+	}
+
+	@Override
+	public void applySqlAssignments(
+			Expression newValueExpression,
+			SqmUpdateToSqlAstConverterMultiTable.AssignmentContext assignmentProcessingState,
+			Consumer<Assignment> assignmentConsumer,
+			SqlAstCreationContext creationContext) {
+		final Column column = referencedNavigable.getBoundColumn();
+		final TableReference tableReference = assignmentProcessingState.resolveTableReference( column.getSourceTable() );
+
+		assignmentConsumer.accept(
+				new Assignment(
+						tableReference.resolveColumnReference( column ),
+						newValueExpression
+				)
+		);
 	}
 }

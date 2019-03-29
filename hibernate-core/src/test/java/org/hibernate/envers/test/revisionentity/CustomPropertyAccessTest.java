@@ -94,7 +94,6 @@ public class CustomPropertyAccessTest extends EnversEntityManagerFactoryBasedFun
 	}
 
 	@DynamicTest
-	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testFindRevision() {
 		final AuditReader reader = getAuditReader();
 

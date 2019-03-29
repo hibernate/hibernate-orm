@@ -49,12 +49,12 @@ public class UpdateStatement implements MutationStatement {
 
 
 	public static class UpdateStatementBuilder {
-		private final TableReference targetTable;
+		private final TableReference targetTableRef;
 		private List<Assignment> assignments;
 		private Predicate restriction;
 
-		public UpdateStatementBuilder(TableReference targetTable) {
-			this.targetTable = targetTable;
+		public UpdateStatementBuilder(TableReference targetTableRef) {
+			this.targetTableRef = targetTableRef;
 		}
 
 		public UpdateStatementBuilder addAssignment(Assignment assignment) {
@@ -77,15 +77,18 @@ public class UpdateStatement implements MutationStatement {
 		}
 
 		public SqlAstUpdateDescriptor createUpdateDescriptor() {
-			final UpdateStatement sqlAst = new UpdateStatement(
-					targetTable,
-					assignments != null ? assignments : Collections.emptyList(),
-					restriction != null ? restriction : new Junction( Junction.Nature.CONJUNCTION )
-			);
 			return new SqlAstUpdateDescriptorImpl(
-					sqlAst,
-					Collections.singleton( targetTable.getTable().getTableExpression() )
+					createUpdateAst(),
+					Collections.singleton( targetTableRef.getTable().getTableExpression() )
 			);
+		}
+
+		public UpdateStatement createUpdateAst() {
+			if ( assignments == null || assignments.isEmpty() ) {
+				return null;
+			}
+
+			return new UpdateStatement( targetTableRef, assignments, restriction );
 		}
 	}
 }

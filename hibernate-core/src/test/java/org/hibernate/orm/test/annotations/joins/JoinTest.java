@@ -10,14 +10,13 @@ import java.util.Date;
 import java.util.Locale;
 import javax.persistence.PersistenceException;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.mapping.Join;
-import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryImplementor;
 
+import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;

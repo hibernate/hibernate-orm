@@ -41,8 +41,11 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 				executionContext.getSession()
 		);
 
+		// the converter should enforce this, simple assertion here
+		assert sqmInterpretation.getSqlDeletes().size() == 1;
+
 		final JdbcMutation jdbcDelete = SqlDeleteToJdbcDeleteConverter.interpret(
-				sqmInterpretation,
+				sqmInterpretation.getSqlDeletes().get( 0 ),
 				executionContext.getSession().getSessionFactory()
 		);
 

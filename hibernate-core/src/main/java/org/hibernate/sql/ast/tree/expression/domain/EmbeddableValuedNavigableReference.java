@@ -6,19 +6,26 @@
  */
 package org.hibernate.sql.ast.tree.expression.domain;
 
+import java.util.function.Consumer;
+
 import org.hibernate.LockMode;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.produce.sqm.spi.SqmUpdateToSqlAstConverterMultiTable;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.update.Assignment;
 
 /**
  * @author Steve Ebersole
  */
-public class EmbeddableValuedNavigableReference implements NavigableContainerReference {
+public class EmbeddableValuedNavigableReference implements NavigableContainerReference, AssignableNavigableReference {
 	private final NavigablePath navigablePath;
-	private final EmbeddedValuedNavigable navigable;
+	private final EmbeddedValuedNavigable<?> navigable;
 	private final TableGroup ownerTableGroup;
 	private final LockMode lockMode;
 
@@ -48,4 +55,32 @@ public class EmbeddableValuedNavigableReference implements NavigableContainerRef
 		return navigable;
 	}
 
+	@Override
+	public void applySqlAssignments(
+			Expression newValueExpression,
+			SqmUpdateToSqlAstConverterMultiTable.AssignmentContext assignmentProcessingState,
+			Consumer<Assignment> assignmentConsumer,
+			SqlAstCreationContext creationContext) {
+		// the trouble is breaking down the `newValueExpression` into its constituent SQL pieces
+		throw new NotYetImplementedFor6Exception();
+//		navigable.getEmbeddedDescriptor().dehydrate(
+//				navigable.getEmbeddedDescriptor().unresolve(
+//
+//				)
+//		);
+//		navigable.getEmbeddedDescriptor().visitColumns(
+//				(sqlExpressableType, column) -> {
+//					final TableReference tableReference = assignmentProcessingState.resolveTableReference( column.getSourceTable() );
+//
+//					assignmentConsumer.accept(
+//							new Assignment(
+//									tableReference.resolveColumnReference( column ),
+//									newValueExpression
+//							)
+//					);
+//				},
+//				Clause.UPDATE,
+//				creationContext.getDomainModel().getTypeConfiguration()
+//		);
+	}
 }

@@ -32,6 +32,7 @@ import static org.hamcrest.Matchers.notNullValue;
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
+@SuppressWarnings("unused")
 public class CustomTrackingEntitiesTest extends EnversEntityManagerFactoryBasedFunctionalTest {
 	private Integer steId = null;
 	private Integer siteId = null;
@@ -76,7 +77,6 @@ public class CustomTrackingEntitiesTest extends EnversEntityManagerFactoryBasedF
 	}
 
 	@DynamicTest
-	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testTrackAddedEntities() {
 		ModifiedEntityTypeEntity steDescriptor = new ModifiedEntityTypeEntity( StrTestEntity.class.getName() );
 		ModifiedEntityTypeEntity siteDescriptor = new ModifiedEntityTypeEntity( StrIntTestEntity.class.getName() );
@@ -89,7 +89,6 @@ public class CustomTrackingEntitiesTest extends EnversEntityManagerFactoryBasedF
 	}
 
 	@DynamicTest
-	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testTrackModifiedEntities() {
 		ModifiedEntityTypeEntity siteDescriptor = new ModifiedEntityTypeEntity( StrIntTestEntity.class.getName() );
 
@@ -101,7 +100,6 @@ public class CustomTrackingEntitiesTest extends EnversEntityManagerFactoryBasedF
 	}
 
 	@DynamicTest
-	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testTrackDeletedEntities() {
 		ModifiedEntityTypeEntity steDescriptor = new ModifiedEntityTypeEntity( StrTestEntity.class.getName() );
 		ModifiedEntityTypeEntity siteDescriptor = new ModifiedEntityTypeEntity( StrIntTestEntity.class.getName() );

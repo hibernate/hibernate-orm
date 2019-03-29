@@ -19,7 +19,6 @@ import org.hibernate.envers.test.support.domains.basic.StrTestEntity;
 import org.hibernate.envers.tools.Pair;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Table;
-import org.junit.jupiter.api.Disabled;
 
 import org.hibernate.testing.hamcrest.CollectionMatchers;
 import org.hibernate.testing.junit5.dynamictests.DynamicBeforeAll;
@@ -92,7 +91,6 @@ public class DefaultTrackingEntitiesTest extends EnversEntityManagerFactoryBased
 	}
 
 	@DynamicTest
-	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testTrackAddedEntities() {
 		final StrTestEntity ste = new StrTestEntity( steId, "x" );
 		final StrIntTestEntity site = new StrIntTestEntity( "y", 1, siteId );
@@ -100,14 +98,12 @@ public class DefaultTrackingEntitiesTest extends EnversEntityManagerFactoryBased
 	}
 
 	@DynamicTest
-	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testTrackModifiedEntities() {
 		StrIntTestEntity site = new StrIntTestEntity( "y", 2, siteId );
 		assertThat( getCrossTypeRevisionReader().findEntities( 2 ), containsInAnyOrder( site ) );
 	}
 
 	@DynamicTest
-	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testTrackDeletedEntities() {
 		StrTestEntity ste = new StrTestEntity( steId, null );
 		StrIntTestEntity site = new StrIntTestEntity( null, null, siteId );
@@ -115,13 +111,11 @@ public class DefaultTrackingEntitiesTest extends EnversEntityManagerFactoryBased
 	}
 
 	@DynamicTest
-	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testFindChangesInInvalidRevision() {
 		assertThat( getCrossTypeRevisionReader().findEntities( 4 ), CollectionMatchers.isEmpty() );
 	}
 
 	@DynamicTest
-	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testTrackAddedEntitiesGroupByRevisionType() {
 		StrTestEntity ste = new StrTestEntity( steId, "x" );
 		StrIntTestEntity site = new StrIntTestEntity( "y", 1, siteId );
@@ -133,7 +127,6 @@ public class DefaultTrackingEntitiesTest extends EnversEntityManagerFactoryBased
 	}
 
 	@DynamicTest
-	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testTrackModifiedEntitiesGroupByRevisionType() {
 		StrIntTestEntity site = new StrIntTestEntity( "y", 2, siteId );
 
@@ -144,7 +137,6 @@ public class DefaultTrackingEntitiesTest extends EnversEntityManagerFactoryBased
 	}
 
 	@DynamicTest
-	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testTrackDeletedEntitiesGroupByRevisionType() {
 		StrTestEntity ste = new StrTestEntity( steId, null );
 		StrIntTestEntity site = new StrIntTestEntity( null, null, siteId );
@@ -156,7 +148,6 @@ public class DefaultTrackingEntitiesTest extends EnversEntityManagerFactoryBased
 	}
 
 	@DynamicTest
-	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testFindChangedEntitiesByRevisionTypeADD() {
 		StrTestEntity ste = new StrTestEntity( steId, "x" );
 		StrIntTestEntity site = new StrIntTestEntity( "y", 1, siteId );
@@ -165,7 +156,6 @@ public class DefaultTrackingEntitiesTest extends EnversEntityManagerFactoryBased
 	}
 
 	@DynamicTest
-	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testFindChangedEntitiesByRevisionTypeMOD() {
 		StrIntTestEntity site = new StrIntTestEntity( "y", 2, siteId );
 
@@ -173,7 +163,6 @@ public class DefaultTrackingEntitiesTest extends EnversEntityManagerFactoryBased
 	}
 
 	@DynamicTest
-	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testFindChangedEntitiesByRevisionTypeDEL() {
 		StrTestEntity ste = new StrTestEntity( steId, null );
 		StrIntTestEntity site = new StrIntTestEntity( null, null, siteId );
@@ -182,7 +171,6 @@ public class DefaultTrackingEntitiesTest extends EnversEntityManagerFactoryBased
 	}
 
 	@DynamicTest
-	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testFindEntityTypesChangedInRevision() {
 		assertThat(
 				getCrossTypeRevisionReader().findEntityTypes( 1 ),

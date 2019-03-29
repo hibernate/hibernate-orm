@@ -333,7 +333,7 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 				() -> {
 					logWithIndentation( "=" );
 					depth++;
-					logWithIndentation( "[%s]", assignment.getStateField().getNavigablePath() );
+					logWithIndentation( "[%s]", assignment.getTargetPath().getNavigablePath() );
 					assignment.getValue().accept( this );
 					depth--;
 				}

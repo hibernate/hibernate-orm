@@ -7,6 +7,7 @@
 package org.hibernate;
 
 import java.util.Iterator;
+import java.util.function.Consumer;
 
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -15,11 +16,14 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.Type;
+
+import org.jboss.logging.Logger;
 
 /**
  * <ul>
@@ -36,6 +40,9 @@ import org.hibernate.type.Type;
  */
 
 public final class Hibernate {
+	public static final String ACTION_COMPLETED_TXN = "Execution of action caused managed transaction to be completed";
+	private static final Logger log = Logger.getLogger( "org.hibernate.orm" );
+
 	/**
 	 * Cannot be instantiated.
 	 */
@@ -226,5 +233,84 @@ public final class Hibernate {
 	 */
 	public static <T> T unproxy(T proxy, Class<T> entityClass) {
 		return entityClass.cast( unproxy( proxy ) );
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <F extends SessionFactory, S extends Session> void inSession(F sessionfactory, Consumer<S> action) {
+		log.trace( "#inSession(factory,action)" );
+
+		try (S session = (S) sessionfactory.openSession()) {
+			log.trace( "Session opened, calling action" );
+			action.accept( session );
+			log.trace( "called action" );
+		}
+		finally {
+			log.trace( "Session closed (AutoCloseable)" );
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <F extends SessionFactory, S extends Session> void inTransaction(F factory, Consumer<S> action) {
+		log.trace( "#inTransaction(factory, action)");
+
+		inSession(
+				factory,
+				session -> inTransaction( (S) session, action )
+		);
+	}
+
+	public static <S extends Session> void inTransaction(S session, Consumer<S> action) {
+		log.trace( "inTransaction(session,action)" );
+
+		final Transaction txn = session.beginTransaction();
+		log.trace( "Started transaction" );
+
+		try {
+			log.trace( "Calling action in txn" );
+			action.accept( session );
+			log.trace( "Called action - in txn" );
+
+			if ( !txn.isActive() ) {
+				throw new TransactionManagementException( ACTION_COMPLETED_TXN );
+			}
+		}
+		catch (Exception e) {
+			// an error happened in the action
+			if ( ! txn.isActive() ) {
+				log.warn( ACTION_COMPLETED_TXN, e );
+			}
+			else {
+				log.trace( "Rolling back transaction due to action error" );
+				try {
+					txn.rollback();
+					log.trace( "Rolled back transaction due to action error" );
+				}
+				catch (Exception inner) {
+					log.trace( "Rolling back transaction due to action error failed; throwing original error" );
+				}
+			}
+
+			throw e;
+		}
+
+		// action completed with no errors - attempt to commit the transaction allowing
+		// 		any RollbackException to propagate.  Note that when we get here we know the
+		//		txn is active
+
+		log.trace( "Committing transaction after successful action execution" );
+		try {
+			txn.commit();
+			log.trace( "Committing transaction after successful action execution - success" );
+		}
+		catch (Exception e) {
+			log.trace( "Committing transaction after successful action execution - failure" );
+			throw e;
+		}
+	}
+
+	public static class TransactionManagementException extends RuntimeException {
+		TransactionManagementException(String message) {
+			super( message );
+		}
 	}
 }

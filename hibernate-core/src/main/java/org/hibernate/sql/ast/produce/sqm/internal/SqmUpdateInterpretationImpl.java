@@ -11,30 +11,29 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.sql.ast.produce.sqm.spi.SqmDeleteInterpretation;
-import org.hibernate.sql.ast.tree.delete.DeleteStatement;
+import org.hibernate.sql.ast.produce.sqm.spi.SqmUpdateInterpretation;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcParameter;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmDeleteInterpretationImpl implements SqmDeleteInterpretation {
-	private final List<DeleteStatement> sqlDeletes;
+public class SqmUpdateInterpretationImpl implements SqmUpdateInterpretation {
+	private final List<UpdateStatement> sqlUpdates;
 	private final Set<String> affectedTables;
 	private final Map<SqmParameter, List<JdbcParameter>> jdbcParamXref;
 
-	public SqmDeleteInterpretationImpl(
-			List<DeleteStatement> sqlDeletes,
+	public SqmUpdateInterpretationImpl(
+			List<UpdateStatement> sqlUpdates,
 			Set<String> affectedTables,
 			Map<SqmParameter, List<JdbcParameter>> jdbcParamXref) {
-		this.sqlDeletes = sqlDeletes;
+		this.sqlUpdates = sqlUpdates;
 		this.affectedTables = affectedTables;
 		this.jdbcParamXref = jdbcParamXref;
 	}
 
-	@Override
-	public List<DeleteStatement> getSqlDeletes() {
-		return sqlDeletes;
+	public List<UpdateStatement> getSqlUpdates() {
+		return sqlUpdates;
 	}
 
 	@Override

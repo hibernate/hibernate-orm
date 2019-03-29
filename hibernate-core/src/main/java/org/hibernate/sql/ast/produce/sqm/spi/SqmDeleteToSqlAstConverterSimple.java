@@ -40,7 +40,7 @@ public class SqmDeleteToSqlAstConverterSimple extends BaseSqmToSqlAstConverter {
 		walker.visitDeleteStatement( sqmStatement );
 
 		return new SqmDeleteInterpretationImpl(
-				walker.deleteStatement,
+				Collections.singletonList( walker.deleteStatement ),
 				Collections.singleton(
 						walker.deleteStatement.getTargetTable().getTable().getTableExpression()
 				),

@@ -85,8 +85,7 @@ import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmSubQuery;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
+import org.hibernate.query.sqm.tree.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.function.Distinctable;
 import org.hibernate.query.sqm.tree.expression.function.SqmAbsFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmAggregateFunction;
@@ -363,7 +362,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			);
 
 			for ( HqlParser.AssignmentContext assignmentContext : ctx.setClause().assignment() ) {
-				final SqmSingularAttributeReference stateField = (SqmSingularAttributeReference) visitDotIdentifierSequence( assignmentContext.dotIdentifierSequence() );
+				final SqmPath stateField = consumeDomainPath( assignmentContext.dotIdentifierSequence() );
 				// todo : validate "state field" expression
 				updateStatement.getSetClause().addAssignment(
 						stateField,
@@ -2368,6 +2367,18 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	private SqmPath consumeDomainPath(HqlParser.PathContext parserPath) {
 		parserPath.accept( this );
+		final DotIdentifierConsumer dotIdentifierConsumer = identifierConsumerStack.getCurrent();
+		final SemanticPathPart consumedPart = dotIdentifierConsumer.getConsumedPart();
+		if ( consumedPart instanceof SqmPath ) {
+			return (SqmPath) consumedPart;
+		}
+
+		throw new SemanticException( "Expecting domain-model path, but found : " + consumedPart );
+	}
+
+
+	private SqmPath consumeDomainPath(HqlParser.DotIdentifierSequenceContext sequence) {
+		sequence.accept( this );
 		final DotIdentifierConsumer dotIdentifierConsumer = identifierConsumerStack.getCurrent();
 		final SemanticPathPart consumedPart = dotIdentifierConsumer.getConsumedPart();
 		if ( consumedPart instanceof SqmPath ) {

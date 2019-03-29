@@ -17,7 +17,6 @@ import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.support.domains.basic.StrTestEntity;
 import org.hibernate.envers.test.support.domains.revisionentity.CustomRevEntity;
-import org.junit.jupiter.api.Disabled;
 
 import org.hibernate.testing.hamcrest.CollectionMatchers;
 import org.hibernate.testing.junit5.dynamictests.DynamicBeforeAll;
@@ -98,7 +97,6 @@ public class CustomRevisionEntityPrimitiveTypesTest extends EnversEntityManagerF
 	}
 
 	@DynamicTest
-	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testFindRevision() {
 		final AuditReader reader = getAuditReader();
 
@@ -112,7 +110,6 @@ public class CustomRevisionEntityPrimitiveTypesTest extends EnversEntityManagerF
 	}
 
 	@DynamicTest
-	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testFindRevisions() {
 		final AuditReader reader = getAuditReader();
 

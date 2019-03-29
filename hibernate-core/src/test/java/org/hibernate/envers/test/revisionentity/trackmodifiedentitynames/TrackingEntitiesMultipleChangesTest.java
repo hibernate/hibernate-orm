@@ -12,7 +12,6 @@ import org.hibernate.envers.CrossTypeRevisionChangesReader;
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.support.domains.basic.StrTestEntity;
-import org.junit.jupiter.api.Disabled;
 
 import org.hibernate.testing.junit5.dynamictests.DynamicBeforeAll;
 import org.hibernate.testing.junit5.dynamictests.DynamicTest;
@@ -23,6 +22,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
+@SuppressWarnings("unused")
 public class TrackingEntitiesMultipleChangesTest extends EnversEntityManagerFactoryBasedFunctionalTest {
 	private Integer steId1 = null;
 	private Integer steId2 = null;
@@ -71,7 +71,6 @@ public class TrackingEntitiesMultipleChangesTest extends EnversEntityManagerFact
 	}
 
 	@DynamicTest
-	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testTrackAddedTwoEntities() {
 		final StrTestEntity ste1 = new StrTestEntity( steId1, "x" );
 		final StrTestEntity ste2 = new StrTestEntity( steId2, "y" );
@@ -80,7 +79,6 @@ public class TrackingEntitiesMultipleChangesTest extends EnversEntityManagerFact
 	}
 
 	@DynamicTest
-	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testTrackUpdateAndRemoveDifferentEntities() {
 		final StrTestEntity ste1 = new StrTestEntity( steId1, "z" );
 		final StrTestEntity ste2 = new StrTestEntity( steId2, null );
@@ -89,7 +87,6 @@ public class TrackingEntitiesMultipleChangesTest extends EnversEntityManagerFact
 	}
 
 	@DynamicTest
-	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testTrackUpdateAndRemoveTheSameEntity() {
 		final StrTestEntity ste1 = new StrTestEntity( steId1, null );
 

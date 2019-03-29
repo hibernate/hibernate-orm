@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
@@ -27,7 +27,7 @@ public class SqmSetClause {
 		assignments.add( assignment );
 	}
 
-	public void addAssignment(SqmSingularAttributeReference stateField, SqmExpression value) {
-		addAssignment( new SqmAssignment( stateField, value ) );
+	public void addAssignment(SqmPath targetPath, SqmExpression value) {
+		addAssignment( new SqmAssignment( targetPath, value ) );
 	}
 }

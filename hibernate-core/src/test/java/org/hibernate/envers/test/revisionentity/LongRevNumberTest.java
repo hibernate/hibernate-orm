@@ -14,7 +14,6 @@ import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.support.domains.basic.StrTestEntity;
 import org.hibernate.envers.test.support.domains.revisionentity.LongRevNumberRevEntity;
-import org.junit.jupiter.api.Disabled;
 
 import org.hibernate.testing.hamcrest.CollectionMatchers;
 import org.hibernate.testing.junit5.dynamictests.DynamicBeforeAll;
@@ -55,7 +54,6 @@ public class LongRevNumberTest extends EnversEntityManagerFactoryBasedFunctional
 	}
 
 	@DynamicTest
-	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testFindRevision() {
 		final AuditReader reader = getAuditReader();
 		assertThat( reader.findRevision( LongRevNumberRevEntity.class, 1L ).getCustomId(), equalTo( 1L ) );
@@ -63,7 +61,6 @@ public class LongRevNumberTest extends EnversEntityManagerFactoryBasedFunctional
 	}
 
 	@DynamicTest
-	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testFindRevisions() {
 		final AuditReader reader = getAuditReader();
 

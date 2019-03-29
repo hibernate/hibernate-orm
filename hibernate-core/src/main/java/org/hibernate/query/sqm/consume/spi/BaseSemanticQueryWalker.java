@@ -146,7 +146,7 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 
 	@Override
 	public T visitAssignment(SqmAssignment assignment) {
-		assignment.getStateField().accept( this );
+		assignment.getTargetPath().accept( this );
 		assignment.getValue().accept( this );
 		return (T) assignment;
 	}

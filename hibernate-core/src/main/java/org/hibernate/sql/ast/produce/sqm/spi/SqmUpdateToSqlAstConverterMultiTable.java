@@ -6,11 +6,14 @@
  */
 package org.hibernate.sql.ast.produce.sqm.spi;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
@@ -33,8 +36,9 @@ import org.hibernate.sql.ast.produce.ConversionException;
 import org.hibernate.sql.ast.produce.SqlTreeException;
 import org.hibernate.sql.ast.produce.internal.SqlAstProcessingStateImpl;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.produce.spi.SqlAstUpdateDescriptor;
+import org.hibernate.sql.ast.produce.sqm.internal.SqmUpdateInterpretationImpl;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.domain.AssignableNavigableReference;
 import org.hibernate.sql.ast.tree.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.from.AbstractTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -43,6 +47,7 @@ import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.update.Assignment;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.ast.tree.update.UpdateStatement.UpdateStatementBuilder;
 
 import org.jboss.logging.Logger;
@@ -53,8 +58,7 @@ import org.jboss.logging.Logger;
 public class SqmUpdateToSqlAstConverterMultiTable extends BaseSqmToSqlAstConverter {
 	private static final Logger log = Logger.getLogger( SqmUpdateToSqlAstConverterMultiTable.class );
 
-
-	public static List<SqlAstUpdateDescriptor> interpret(
+	public static SqmUpdateInterpretation interpret(
 			SqmUpdateStatement sqmStatement,
 			QuerySpec idTableSelect,
 			QueryOptions queryOptions,
@@ -73,13 +77,27 @@ public class SqmUpdateToSqlAstConverterMultiTable extends BaseSqmToSqlAstConvert
 
 		walker.visitUpdateStatement( sqmStatement );
 
-		return walker.updateStatementBuilderMap.entrySet().stream()
-				.map( entry -> entry.getValue().createUpdateDescriptor() )
-				.collect( Collectors.toList() );
+		final List<UpdateStatement> updateStatements = new ArrayList<>();
+		final Set<String> affectedTableNames = new HashSet<>();
+
+		for ( UpdateStatementBuilder builder : walker.updateStatementBuilderMap.values() ) {
+			final UpdateStatement sqlAst = builder.createUpdateAst();
+			if ( sqlAst != null ) {
+				affectedTableNames.add( sqlAst.getTargetTable().getTable().getTableExpression() );
+				updateStatements.add( sqlAst );
+			}
+		}
+
+		return new SqmUpdateInterpretationImpl(
+				updateStatements,
+				affectedTableNames,
+				walker.getJdbcParamsBySqmParam()
+		);
 	}
 
-	private final EntityTypeDescriptor entityDescriptor;
+	private final EntityTypeDescriptor<?> entityDescriptor;
 	private final TableGroup entityTableGroup;
+
 
 	private final QuerySpec idTableSelect;
 
@@ -137,9 +155,44 @@ public class SqmUpdateToSqlAstConverterMultiTable extends BaseSqmToSqlAstConvert
 	}
 
 	@Override
+	public Object visitUpdateStatement(SqmUpdateStatement sqmStatement) {
+		getCurrentClauseStack().push( Clause.UPDATE );
+
+		try {
+			for ( SqmAssignment sqmAssignment : sqmStatement.getSetClause().getAssignments() ) {
+				currentAssignmentContext = new AssignmentContext( sqmAssignment );
+
+				final AssignableNavigableReference targetReference = (AssignableNavigableReference) sqmAssignment
+						.getTargetPath()
+						.accept( this );
+
+				assert currentAssignmentContext.tableReference != null;
+
+				// todo (6.0) : does not yet handle parameters
+
+				targetReference.applySqlAssignments(
+						(Expression) sqmAssignment.getValue().accept( this ),
+						currentAssignmentContext,
+						updateStatementBuilderMap.get( currentAssignmentContext.tableReference )::addAssignment,
+						getCreationContext()
+				);
+
+				currentAssignmentContext = null;
+			}
+		}
+		finally {
+			getCurrentClauseStack().pop();
+		}
+
+
+		return null;
+	}
+
+	@Override
 	public Object visitSetClause(SqmSetClause setClause) {
 		getCurrentClauseStack().push( Clause.UPDATE );
 		try {
+
 			return super.visitSetClause( setClause );
 		}
 		finally {
@@ -147,15 +200,21 @@ public class SqmUpdateToSqlAstConverterMultiTable extends BaseSqmToSqlAstConvert
 		}
 	}
 
+
 	@Override
 	@SuppressWarnings("unchecked")
 	public Assignment visitAssignment(SqmAssignment sqmAssignment) {
 		currentAssignmentContext = new AssignmentContext( sqmAssignment );
 
 		try {
-			final NavigableReference stateField = (NavigableReference) sqmAssignment.getStateField().accept( this );
+			final NavigableReference stateField = (NavigableReference) sqmAssignment.getTargetPath().accept( this );
 			currentAssignmentContext.endStateFieldProcessing();
-			final Expression assignedValue = (Expression) sqmAssignment.getStateField().accept( this );
+
+			if ( stateField instanceof AssignableNavigableReference ) {
+
+			}
+
+			final Expression assignedValue = (Expression) sqmAssignment.getValue().accept( this );
 
 			// todo (6.0) : consider SingularAttributeReference#generateSqlAssignments returning a List of Assignment references
 			//		representing the update of its (updatable) columns
@@ -176,7 +235,7 @@ public class SqmUpdateToSqlAstConverterMultiTable extends BaseSqmToSqlAstConvert
 //			final Assignment assignment = new Assignment( stateField, assignedValue, this );
 			final Assignment assignment = null;
 
-			final TableReference assignmentTableReference = currentAssignmentContext.stateFieldTableReference;
+			final TableReference assignmentTableReference = currentAssignmentContext.tableReference;
 			UpdateStatementBuilder concreteUpdateStatementBuilder = updateStatementBuilderMap.get( assignmentTableReference );
 			if ( concreteUpdateStatementBuilder == null ) {
 				concreteUpdateStatementBuilder = new UpdateStatementBuilder( assignmentTableReference );
@@ -249,43 +308,53 @@ public class SqmUpdateToSqlAstConverterMultiTable extends BaseSqmToSqlAstConvert
 		}
 	}
 
-	private static class AssignmentContext {
+	public class AssignmentContext {
 		private final String assignmentText;
 		private boolean processingStateField;
 
-		private TableReference stateFieldTableReference;
+		private TableReference tableReference;
 
 		private AssignmentContext(SqmAssignment assignment) {
-			this.assignmentText = assignment.getStateField().asLoggableText() + " = " +
+			this.assignmentText = assignment.getTargetPath().asLoggableText() + " = " +
 					assignment.getValue().asLoggableText();
+
 
 			log.debugf( "Initializing AssignmentContext [%s]", assignmentText );
 		}
 
 		private void injectTableReference(TableReference tableReference) {
 			if ( processingStateField ) {
-				if ( stateFieldTableReference != null ) {
-					throw new ConversionException( "Multiple TableReferences found for assignment state-field" );
-				}
-				else {
-					stateFieldTableReference = tableReference;
+				if ( tableReference != null && tableReference != this.tableReference ) {
+					throw new ConversionException(
+							String.format(
+									Locale.ROOT,
+									"Multiple TableReferences found for assignment [%s]",
+									assignmentText
+							)
+					);
 				}
 			}
 			else {
-				// `stateFieldTableReference != null` already validated during `endStateFieldProcessing`
-				if ( !stateFieldTableReference.equals( tableReference ) ) {
+				if ( ! this.tableReference .equals( tableReference ) ) {
 					throw new SqlTreeException( "Assignment as part of multi-table update query referenced multiple tables [" + assignmentText + "]" );
 				}
-				this.stateFieldTableReference = tableReference;
 			}
+
+			this.tableReference = tableReference;
 		}
 
 		private void endStateFieldProcessing() {
-			if ( stateFieldTableReference == null ) {
+			if ( tableReference == null ) {
 				throw new SqlTreeException( "Could not determine backing TableReference for assignment state-field" );
 			}
 
 			processingStateField = false;
 		}
+
+		public TableReference resolveTableReference(Table table) {
+			return entityTableGroup.locateTableReference( table );
+		}
+
+
 	}
 }

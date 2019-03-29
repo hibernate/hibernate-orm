@@ -18,7 +18,6 @@ import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.support.domains.basic.StrTestEntity;
 import org.hibernate.envers.test.support.domains.revisionentity.ListenerRevEntity;
 import org.hibernate.envers.test.support.domains.revisionentity.TestRevisionListener;
-import org.junit.jupiter.api.Disabled;
 
 import org.hibernate.testing.hamcrest.CollectionMatchers;
 import org.hibernate.testing.junit5.dynamictests.DynamicBeforeAll;
@@ -103,7 +102,6 @@ public class ListenerTest extends EnversEntityManagerFactoryBasedFunctionalTest 
 	}
 
 	@DynamicTest
-	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testFindRevision() {
 		final AuditReader reader = getAuditReader();
 
@@ -122,7 +120,6 @@ public class ListenerTest extends EnversEntityManagerFactoryBasedFunctionalTest 
 	}
 
 	@DynamicTest
-	@Disabled("NYI - IllegalStateException thrown when trying to bind multi-values")
 	public void testFindRevisions() {
 		final AuditReader reader = getAuditReader();
 

@@ -17,6 +17,7 @@ import java.util.Properties;
 import java.util.function.Consumer;
 import javax.persistence.SharedCacheMode;
 
+import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
@@ -46,7 +47,6 @@ import org.hibernate.testing.OnExpectedFailure;
 import org.hibernate.testing.OnFailure;
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.cache.CachingRegionFactory;
-import org.hibernate.testing.transaction.TransactionUtil2;
 import org.junit.After;
 import org.junit.Before;
 
@@ -507,14 +507,14 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	protected void inTransaction(Consumer<SessionImplementor> action) {
-		TransactionUtil2.inTransaction( sessionFactory(), action );
+		Hibernate.inTransaction( sessionFactory(), action );
 	}
 
 	protected void inTransaction(SessionImplementor session, Consumer<SessionImplementor> action) {
-		TransactionUtil2.inTransaction( session, action );
+		Hibernate.inTransaction( session, action );
 	}
 
 	protected void inSession(Consumer<SessionImplementor> action) {
-		TransactionUtil2.inSession( sessionFactory(), action );
+		Hibernate.inSession( sessionFactory(), action );
 	}
 }

@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.mutation.spi.idtable;
 
-import java.util.List;
-
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.spi.HandlerCreationContext;
@@ -15,9 +13,10 @@ import org.hibernate.query.sqm.mutation.spi.UpdateHandler;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.consume.spi.UpdateToJdbcUpdateConverter;
-import org.hibernate.sql.ast.produce.spi.SqlAstUpdateDescriptor;
+import org.hibernate.sql.ast.produce.sqm.spi.SqmUpdateInterpretation;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmUpdateToSqlAstConverterMultiTable;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -71,7 +70,7 @@ public class TableBasedUpdateHandlerImpl
 
 		final QuerySpec idTableSelectSubQuerySpec = createIdTableSubQuery( executionContext );
 
-		final List<SqlAstUpdateDescriptor> updateDescriptors = SqmUpdateToSqlAstConverterMultiTable.interpret(
+		final SqmUpdateInterpretation interpretation = SqmUpdateToSqlAstConverterMultiTable.interpret(
 				getSqmDeleteOrUpdateStatement(),
 				idTableSelectSubQuerySpec,
 				executionContext.getQueryOptions(),
@@ -80,12 +79,12 @@ public class TableBasedUpdateHandlerImpl
 				executionContext.getSession().getFactory()
 		);
 
-		for ( SqlAstUpdateDescriptor updateDescriptor : updateDescriptors ) {
+		for ( UpdateStatement sqlUpdateAst : interpretation.getSqlUpdates() ) {
 			// convert each SQL AST UpdateStatement into a JdbcUpdate operation
 			// 		and execute it
 
 			final JdbcUpdate jdbcUpdate = UpdateToJdbcUpdateConverter.createJdbcUpdate(
-					updateDescriptor.getSqlAstStatement(),
+					sqlUpdateAst,
 					executionContext.getSession().getSessionFactory()
 			);
 

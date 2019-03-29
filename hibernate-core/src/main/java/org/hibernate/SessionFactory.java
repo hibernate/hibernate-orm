@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.sql.Connection;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import javax.naming.Referenceable;
 import javax.persistence.EntityGraph;
 import javax.persistence.EntityManagerFactory;
@@ -181,4 +182,14 @@ public interface SessionFactory extends EntityManagerFactory, AuditReaderFactory
 	 * returned in case there are not entity graphs.
 	 */
 	<T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass);
+
+	default void inSession(Consumer<Session> action) {
+		final Session session = openSession();
+		try {
+			action.accept( session );
+		}
+		finally {
+			session.close();
+		}
+	}
 }

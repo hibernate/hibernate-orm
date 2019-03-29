@@ -6,10 +6,17 @@
  */
 package org.hibernate.sql.ast.produce.sqm.spi;
 
-import org.hibernate.sql.ast.produce.spi.SqlAstDescriptor;
+import java.util.Set;
 
 /**
  * @author Steve Ebersole
  */
-public interface SqmInterpretation extends SqlAstDescriptor, JdbcParameterBySqmParameterAccess {
+public interface SqmInterpretation extends JdbcParameterBySqmParameterAccess {
+	/**
+	 * The tables that are affected by this query.  This
+	 * is used to drive up-to-date checking on those tables
+	 * to see if we have any pending changes against them and,
+	 * if so, flush those changes.
+	 */
+	Set<String> getAffectedTableNames();
 }

@@ -6,25 +6,31 @@
  */
 package org.hibernate.query.sqm.tree.update;
 
-import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmAssignment {
-	private final SqmSingularAttributeReference stateField;
+	private final SqmPath targetPath;
 	private final SqmExpression value;
 
-	public SqmAssignment(SqmSingularAttributeReference stateField, SqmExpression value) {
-		this.stateField = stateField;
+	public SqmAssignment(SqmPath targetPath, SqmExpression value) {
+		this.targetPath = targetPath;
 		this.value = value;
 	}
 
-	public SqmSingularAttributeReference getStateField() {
-		return stateField;
+	/**
+	 * The attribute/path to be updated
+	 */
+	public SqmPath getTargetPath() {
+		return targetPath;
 	}
 
+	/**
+	 * The new value
+	 */
 	public SqmExpression getValue() {
 		return value;
 	}

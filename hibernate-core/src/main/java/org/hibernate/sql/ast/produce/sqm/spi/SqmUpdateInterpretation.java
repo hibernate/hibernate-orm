@@ -8,11 +8,11 @@ package org.hibernate.sql.ast.produce.sqm.spi;
 
 import java.util.List;
 
-import org.hibernate.sql.ast.tree.delete.DeleteStatement;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
 
 /**
  * @author Steve Ebersole
  */
-public interface SqmDeleteInterpretation extends SqmInterpretation {
-	List<DeleteStatement> getSqlDeletes();
+public interface SqmUpdateInterpretation extends SqmInterpretation {
+	List<UpdateStatement> getSqlUpdates();
 }

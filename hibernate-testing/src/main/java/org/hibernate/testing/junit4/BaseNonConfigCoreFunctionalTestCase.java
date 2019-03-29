@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
@@ -51,7 +52,6 @@ import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.OnExpectedFailure;
 import org.hibernate.testing.OnFailure;
 import org.hibernate.testing.cache.CachingRegionFactory;
-import org.hibernate.testing.transaction.TransactionUtil2;
 import org.junit.After;
 import org.junit.Before;
 
@@ -553,11 +553,11 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	public void inSession(Consumer<SessionImplementor> action) {
 		log.trace( "#inSession(action)" );
-		TransactionUtil2.inSession( sessionFactory(), action );
+		Hibernate.inSession( sessionFactory(), action );
 	}
 
 	public void inTransaction(Consumer<SessionImplementor> action) {
 		log.trace( "#inTransaction(action)" );
-		TransactionUtil2.inTransaction( sessionFactory(), action );
+		Hibernate.inTransaction( sessionFactory(), action );
 	}
 }

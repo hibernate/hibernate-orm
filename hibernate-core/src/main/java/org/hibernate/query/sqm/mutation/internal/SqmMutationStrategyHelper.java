@@ -7,7 +7,6 @@
 package org.hibernate.query.sqm.mutation.internal;
 
 import java.util.List;
-import java.util.function.Supplier;
 
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -55,9 +54,8 @@ public class SqmMutationStrategyHelper {
 	}
 
 	/**
-	 *  @param bootHierarchyDescriptor Planned support for per-entity config
-	 * @param entityHierarchy
-	 * @param options See if there is a defined fallback strategy
+	 * Standard resolution of SqmMutationStrategy to use for a given
+	 * entity hierarchy.
 	 */
 	public static SqmMutationStrategy resolveStrategy(
 			EntityMappingHierarchy bootHierarchyDescriptor,
@@ -77,13 +75,24 @@ public class SqmMutationStrategyHelper {
 	}
 
 	/**
-	 * Centralizes "special case" handling
+	 * Specialized "Supplier" or "tri Function" for creating the
+	 * fallback handler if the query matches no "special cases"
+	 */
+	public interface FallbackDeleteHandlerCreator {
+		DeleteHandler create(
+				SqmDeleteStatement sqmDelete,
+				DomainParameterXref domainParameterXref,
+				HandlerCreationContext creationContext);
+	}
+
+	/**
+	 * Standard DeleteHandler resolution applying "special case" resolution
 	 */
 	public static DeleteHandler resolveDeleteHandler(
 			SqmDeleteStatement sqmDelete,
 			DomainParameterXref domainParameterXref,
 			HandlerCreationContext creationContext,
-			Supplier<DeleteHandler> fallbackHandlerSupplier) {
+			FallbackDeleteHandlerCreator fallbackCreator) {
 		if ( sqmDelete.getWhereClause() == null ) {
 			// special case : unrestricted
 			// 		-> delete all rows, no need to use the id table
@@ -101,50 +110,14 @@ public class SqmMutationStrategyHelper {
 		}
 
 		// otherwise, use the fallback....
-		return fallbackHandlerSupplier.get();
+		return fallbackCreator.create( sqmDelete, domainParameterXref, creationContext );
 	}
 
-	public static List<Object> selectMatchingIds(
-			DomainParameterXref domainParameterXref,
-			SqmDeleteOrUpdateStatement sqmDeleteStatement,
-			ExecutionContext executionContext) {
-
-		final SqmQuerySpec sqmIdSelectQuerySpec = SqmIdSelectGenerator.generateSqmEntityIdSelect(
-				sqmDeleteStatement,
-				executionContext.getSession().getSessionFactory()
-		);
-
-		final SqmSelectToSqlAstConverter sqmConverter = new SqmSelectToSqlAstConverter(
-				executionContext.getQueryOptions(),
-				domainParameterXref,
-				executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
-				executionContext.getLoadQueryInfluencers(),
-				executionContext.getCallback(),
-				executionContext.getSession().getSessionFactory()
-		);
-
-		final SqmSelectStatement sqmIdSelect = new SqmSelectStatement( sqmIdSelectQuerySpec );
-
-		final SqmSelectInterpretation sqmSelectInterpretation = sqmConverter.interpret( sqmIdSelect );
-
-		final JdbcSelect jdbcSelect = SqlAstSelectToJdbcSelectConverter.interpret(
-				sqmSelectInterpretation,
-				executionContext.getSession().getSessionFactory()
-		);
-
-		return JdbcSelectExecutorStandardImpl.INSTANCE.list(
-				jdbcSelect,
-				QueryHelper.buildJdbcParameterBindings(
-						domainParameterXref,
-						SqmConsumeHelper.generateJdbcParamsXref( domainParameterXref, sqmConverter ),
-						executionContext
-				),
-				executionContext,
-				row -> row[0]
-		);
-	}
-
-	public interface UpdateHandlerCreator {
+	/**
+	 * Specialized "Supplier" or "tri Function" for creating the
+	 * fallback handler if the query mmatches no "special cases"
+	 */
+	public interface FallbackUpdateHandlerCreator {
 		UpdateHandler create(
 				SqmUpdateStatement sqmUpdate,
 				DomainParameterXref domainParameterXref,
@@ -152,13 +125,13 @@ public class SqmMutationStrategyHelper {
 	}
 
 	/**
-	 * Centralizes "special case" handling
+	 * Standard UpdateHandler resolution applying "special case" resolution
 	 */
 	public static UpdateHandler resolveUpdateHandler(
 			SqmUpdateStatement sqmUpdate,
 			DomainParameterXref domainParameterXref,
 			HandlerCreationContext creationContext,
-			UpdateHandlerCreator fallbackHandlerSupplier) {
+			FallbackUpdateHandlerCreator fallbackCreator) {
 		if ( sqmUpdate.getWhereClause() == null ) {
 			// special case : unrestricted
 			// 		-> delete all rows, no need to use the id table
@@ -178,7 +151,7 @@ public class SqmMutationStrategyHelper {
 		// todo (6.0) : implement the above special cases
 
 		// otherwise, use the fallback....
-		return fallbackHandlerSupplier.create( sqmUpdate, domainParameterXref, creationContext );
+		return fallbackCreator.create( sqmUpdate, domainParameterXref, creationContext );
 	}
 
 	/**
@@ -186,6 +159,7 @@ public class SqmMutationStrategyHelper {
 	 *
 	 * @see #isNonIdentifierReference
 	 */
+	@SuppressWarnings("WeakerAccess")
 	public static boolean hasNonIdReferences(SqmPredicate predicate) {
 		if ( predicate instanceof GroupedSqmPredicate ) {
 			return hasNonIdReferences( ( (GroupedSqmPredicate) predicate ).getSubPredicate() );
@@ -235,11 +209,55 @@ public class SqmMutationStrategyHelper {
 	 * @see SqmNavigableReference
 	 * @see EntityIdentifier
 	 */
+	@SuppressWarnings("WeakerAccess")
 	public static boolean isNonIdentifierReference(SqmExpression expression) {
 		if ( expression instanceof SqmNavigableReference ) {
 			return ! EntityIdentifier.class.isInstance( expression );
 		}
 
 		return false;
+	}
+
+	/**
+	 * Centralized selection of ids matching the restriction of the DELETE
+	 * or UPDATE SQM query
+	 */
+	public static List<Object> selectMatchingIds(
+			DomainParameterXref domainParameterXref,
+			SqmDeleteOrUpdateStatement sqmDeleteStatement,
+			ExecutionContext executionContext) {
+		final SqmQuerySpec sqmIdSelectQuerySpec = SqmIdSelectGenerator.generateSqmEntityIdSelect(
+				sqmDeleteStatement,
+				executionContext.getSession().getSessionFactory()
+		);
+
+		final SqmSelectToSqlAstConverter sqmConverter = new SqmSelectToSqlAstConverter(
+				executionContext.getQueryOptions(),
+				domainParameterXref,
+				executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
+				executionContext.getLoadQueryInfluencers(),
+				executionContext.getCallback(),
+				executionContext.getSession().getSessionFactory()
+		);
+
+		final SqmSelectStatement sqmIdSelect = new SqmSelectStatement( sqmIdSelectQuerySpec );
+
+		final SqmSelectInterpretation sqmSelectInterpretation = sqmConverter.interpret( sqmIdSelect );
+
+		final JdbcSelect jdbcSelect = SqlAstSelectToJdbcSelectConverter.interpret(
+				sqmSelectInterpretation,
+				executionContext.getSession().getSessionFactory()
+		);
+
+		return JdbcSelectExecutorStandardImpl.INSTANCE.list(
+				jdbcSelect,
+				QueryHelper.buildJdbcParameterBindings(
+						domainParameterXref,
+						SqmConsumeHelper.generateJdbcParamsXref( domainParameterXref, sqmConverter ),
+						executionContext
+				),
+				executionContext,
+				row -> row[0]
+		);
 	}
 }

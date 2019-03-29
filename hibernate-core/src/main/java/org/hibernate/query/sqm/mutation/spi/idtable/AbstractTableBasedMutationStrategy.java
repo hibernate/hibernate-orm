@@ -236,37 +236,41 @@ public abstract class AbstractTableBasedMutationStrategy implements SqmMutationS
 				sqmDelete,
 				domainParameterXref,
 				creationContext,
-				() -> {
-					final EntityTypeDescriptor entityDescriptor = sqmDelete.getTarget()
-							.getReferencedNavigable()
-							.getEntityDescriptor();
-
-					final TableBasedDeleteHandlerImpl.Builder builder = new TableBasedDeleteHandlerImpl.Builder(
-							sqmDelete,
-							idTableInfoMap.get( entityDescriptor ),
-							getIdTableSupport()
-					);
-
-					if ( getBeforeUseAction() != null ) {
-						builder.setBeforeUseAction( getBeforeUseAction() );
-					}
-
-					if ( getAfterUseAction() != null ) {
-						builder.setAfterUseAction( getAfterUseAction() );
-					}
-
-					if ( getTableManagementTransactionality() != null ) {
-						builder.setTransactionality( getTableManagementTransactionality() );
-					}
-
-					final SessionUidSupport sessionUidSupport = getSessionUidSupport();
-					if ( sessionUidSupport != null ) {
-						builder.setSessionUidSupport( sessionUidSupport );
-					}
-
-					return builder.build( creationContext, domainParameterXref );
-				}
+				this::buildFallbackDeleteHandler
 		);
+	}
+
+	private DeleteHandler buildFallbackDeleteHandler(
+			SqmDeleteStatement sqmDelete,
+			DomainParameterXref domainParameterXref,
+			HandlerCreationContext creationContext) {
+		final EntityTypeDescriptor entityDescriptor = sqmDelete.getTarget()
+				.getReferencedNavigable()
+				.getEntityDescriptor();
+		final TableBasedDeleteHandlerImpl.Builder builder = new TableBasedDeleteHandlerImpl.Builder(
+				sqmDelete,
+				idTableInfoMap.get( entityDescriptor ),
+				getIdTableSupport()
+		);
+
+		if ( getBeforeUseAction() != null ) {
+			builder.setBeforeUseAction( getBeforeUseAction() );
+		}
+
+		if ( getAfterUseAction() != null ) {
+			builder.setAfterUseAction( getAfterUseAction() );
+		}
+
+		if ( getTableManagementTransactionality() != null ) {
+			builder.setTransactionality( getTableManagementTransactionality() );
+		}
+
+		final SessionUidSupport sessionUidSupport = getSessionUidSupport();
+		if ( sessionUidSupport != null ) {
+			builder.setSessionUidSupport( sessionUidSupport );
+		}
+
+		return builder.build( creationContext, domainParameterXref );
 	}
 
 }

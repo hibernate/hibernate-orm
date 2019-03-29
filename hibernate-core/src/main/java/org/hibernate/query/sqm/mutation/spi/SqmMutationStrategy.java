@@ -10,6 +10,7 @@ import org.hibernate.Metamodel;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
+import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 
@@ -23,6 +24,11 @@ import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
  * The heavy lifting is handled by the {@link UpdateHandler} and {@link DeleteHandler}
  * delegates obtained via {@link #buildUpdateHandler} and {@link #buildDeleteHandler}
  * methods.
+ *
+ * @apiNote See {@link SqmMutationStrategyHelper#resolveStrategy} for standard resolution
+ * of the strategy to use.  See also {@link SqmMutationStrategyHelper#resolveDeleteHandler}
+ * and {@link SqmMutationStrategyHelper#resolveUpdateHandler} for standard resolution of
+ * the delete and update handler to use applying standard special-case handling
  *
  * @author Steve Ebersole
  */

@@ -168,6 +168,10 @@ public class SqmUpdateToSqlAstConverterMultiTable extends BaseSqmToSqlAstConvert
 
 				assert currentAssignmentContext.tableReference != null;
 
+				// See note in `EmbeddableValuedNavigableReference#applySqlAssignments`..
+				//		At this point we know the type of the assignment value (rhs)
+				//		because it should be the same as the `targetReference`
+
 				// todo (6.0) : does not yet handle parameters
 
 				targetReference.applySqlAssignments(

@@ -13,5 +13,5 @@ import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
  */
 public interface NavigableContainerReference extends NavigableReference {
 	@Override
-	NavigableContainer getNavigable();
+	NavigableContainer<?> getNavigable();
 }

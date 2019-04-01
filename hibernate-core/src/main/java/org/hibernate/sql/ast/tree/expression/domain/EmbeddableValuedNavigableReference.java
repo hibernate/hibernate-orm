@@ -13,12 +13,17 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.produce.SyntaxException;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmUpdateToSqlAstConverterMultiTable;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.update.Assignment;
+import org.hibernate.sql.results.spi.DomainResultCreationState;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -51,8 +56,34 @@ public class EmbeddableValuedNavigableReference implements NavigableContainerRef
 	}
 
 	@Override
-	public NavigableContainer getNavigable() {
+	public NavigableContainer<?> getNavigable() {
 		return navigable;
+	}
+
+	@Override
+	public void applySqlSelections(DomainResultCreationState creationState) {
+		final TypeConfiguration typeConfiguration = creationState.getSqlAstCreationState()
+				.getCreationContext()
+				.getDomainModel()
+				.getTypeConfiguration();
+
+		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
+
+		final TableGroup tableGroup = creationState.getFromClauseAccess()
+				.findTableGroup( getNavigablePath().getParent() );
+		if ( tableGroup == null ) {
+			throw new SyntaxException( "Could not locate TableGroup : " + getNavigablePath().getFullPath() );
+		}
+
+		getNavigable().visitColumns(
+				(sqlExpressableType, column) -> sqlExpressionResolver.resolveSqlSelection(
+						sqlExpressionResolver.resolveSqlExpression( tableGroup, column ),
+						sqlExpressableType.getJavaTypeDescriptor(),
+						typeConfiguration
+				),
+				Clause.SELECT,
+				typeConfiguration
+		);
 	}
 
 	@Override
@@ -61,6 +92,21 @@ public class EmbeddableValuedNavigableReference implements NavigableContainerRef
 			SqmUpdateToSqlAstConverterMultiTable.AssignmentContext assignmentProcessingState,
 			Consumer<Assignment> assignmentConsumer,
 			SqlAstCreationContext creationContext) {
+		// `newValueExpression` can be:
+		//		1) parameter
+		//		2) tuple
+		//		3) EmbeddableValuedNavigableReference
+		//		n) others?
+
+		// todo (6.0) : rather than passing in `newValueExpression` directly it might be necessary to
+		//		pass in some form of "supplier".  E.g., consider
+		//
+		//	... from Person p where p.name = ?
+		//
+		//		assuming `Person#name` is composite, that single SqmParameter would need to become
+		//		2 JdbcParameters (one for first-name, one for last-name).  This is the effect of
+		//		type inference at this level
+
 		// the trouble is breaking down the `newValueExpression` into its constituent SQL pieces
 		throw new NotYetImplementedFor6Exception();
 //		navigable.getEmbeddedDescriptor().dehydrate(

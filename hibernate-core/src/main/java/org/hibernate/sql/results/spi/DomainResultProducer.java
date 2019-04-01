@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results.spi;
 
+import org.hibernate.sql.ast.tree.expression.Expression;
+
 /**
  * Represents something that can produce a {@link DomainResult}
  * instances which can be used as selection items and
@@ -14,7 +16,25 @@ package org.hibernate.sql.results.spi;
  * @author Steve Ebersole
  */
 public interface DomainResultProducer {
+	/**
+	 * Produce the domain query
+	 */
 	DomainResult createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState);
+
+	/**
+	 * Used when this producer is a selection in a sub-query.  The
+	 * DomainResult is only needed for root query of a SELECT statement.
+	 *
+	 * This default impl assumes this producer is a true (Sql)Expression
+	 */
+	default void applySqlSelections(DomainResultCreationState creationState) {
+		// this form works for basic-valued nodes
+		creationState.getSqlExpressionResolver().resolveSqlSelection(
+				(Expression) this,
+				( (Expression) this ).getType().getJavaTypeDescriptor(),
+				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
+		);
+	}
 }

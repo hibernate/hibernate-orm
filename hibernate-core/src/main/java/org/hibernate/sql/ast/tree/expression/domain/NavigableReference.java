@@ -7,11 +7,12 @@
 package org.hibernate.sql.ast.tree.expression.domain;
 
 import org.hibernate.internal.util.Loggable;
+import org.hibernate.metamodel.model.domain.spi.DomainTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.produce.sqm.spi.SqmExpressionInterpretation;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**
  * Models a {@link Navigable} as an "intermediate resolution" of a
@@ -21,7 +22,7 @@ import org.hibernate.sql.results.spi.DomainResultProducer;
  *
  * @author Steve Ebersole
  */
-public interface NavigableReference extends DomainResultProducer, Loggable {
+public interface NavigableReference extends SqmExpressionInterpretation, Loggable {
 	NavigablePath getNavigablePath();
 
 	/**
@@ -29,7 +30,12 @@ public interface NavigableReference extends DomainResultProducer, Loggable {
 	 *
 	 * @return The Navigable
 	 */
-	Navigable getNavigable();
+	Navigable<?> getNavigable();
+
+	@Override
+	default DomainTypeDescriptor getDomainTypeDescriptor() {
+		return getNavigable();
+	}
 
 	@Override
 	default String toLoggableFragment() {

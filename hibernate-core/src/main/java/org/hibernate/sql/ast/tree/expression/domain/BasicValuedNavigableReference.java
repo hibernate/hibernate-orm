@@ -11,12 +11,14 @@ import java.util.function.Consumer;
 import org.hibernate.metamodel.model.domain.spi.BasicValuedNavigable;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmUpdateToSqlAstConverterMultiTable;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignment;
+import org.hibernate.sql.results.spi.DomainResultCreationState;
 
 /**
  * NavigableReference to a BasicValuedNavigable
@@ -59,6 +61,18 @@ public class BasicValuedNavigableReference implements NavigableReference, Assign
 						tableReference.resolveColumnReference( column ),
 						newValueExpression
 				)
+		);
+	}
+
+	@Override
+	public void applySqlSelections(DomainResultCreationState creationState) {
+		creationState.getSqlExpressionResolver().resolveSqlSelection(
+				creationState.getSqlExpressionResolver().resolveSqlExpression(
+						creationState.getFromClauseAccess().findTableGroup( getNavigablePath().getParent() ),
+						getNavigable().getBoundColumn()
+				),
+				getNavigable().getJavaTypeDescriptor(),
+				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 	}
 }

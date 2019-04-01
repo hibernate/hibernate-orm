@@ -36,13 +36,13 @@ import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationTarget;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.JoinType;
-import org.hibernate.sql.ast.produce.sqm.internal.SqmSelectInterpretationImpl;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
 import org.hibernate.sql.ast.produce.spi.FromClauseAccess;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
+import org.hibernate.sql.ast.produce.sqm.internal.SqmSelectInterpretationImpl;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.domain.EntityTypeLiteral;
@@ -58,7 +58,6 @@ import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
-import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
@@ -126,23 +125,17 @@ public class SqmSelectToSqlAstConverter
 		// todo (6.0) : this should actually be able to generate multiple SqlSelections
 		final DomainResultProducer resultProducer = (DomainResultProducer) sqmSelection.getSelectableNode().accept( this );
 
-		if ( getProcessingStateStack().depth() > 1 && Expression.class.isInstance( resultProducer ) ) {
-			// we only need the QueryResults if we are in the top-level select-clause.
-			// but we do need to at least resolve the sql selections
-			getSqlExpressionResolver().resolveSqlSelection(
-					(Expression) resultProducer,
-					(BasicJavaDescriptor) sqmSelection.getJavaTypeDescriptor(),
-					getCreationContext().getDomainModel().getTypeConfiguration()
-			);
-			return null;
+		if ( getProcessingStateStack().depth() > 1 ) {
+			resultProducer.applySqlSelections( this );
 		}
+		else {
+			final DomainResult domainResult = resultProducer.createDomainResult(
+					sqmSelection.getAlias(),
+					this
+			);
 
-		final DomainResult domainResult = resultProducer.createDomainResult(
-				sqmSelection.getAlias(),
-				this
-		);
-
-		domainResults.add( domainResult );
+			domainResults.add( domainResult );
+		}
 
 		return null;
 	}

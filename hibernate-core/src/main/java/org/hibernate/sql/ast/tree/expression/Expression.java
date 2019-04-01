@@ -20,20 +20,16 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public interface Expression extends SqlAstNode, SqlSelectionProducer {
+	//
 	/**
 	 * Access the type for this expression.  See {@link ExpressableType}
 	 * for more detailed description.
+	 *
+	 * todo (6.0) : given the move to have NavigableReference implement Expression,
+	 * 		it might be better to define this type in terms of DomainTypeDescriptor
 	 */
 	SqlExpressableType getType();
 
-
-//	default SqlExpressableType getType() {
-//		return getExpressable().getExpressableType();
-//	}
-//
-//	default SqlExpressable getExpressable() {
-//		throw new NotYetImplementedFor6Exception( getClass() );
-//	}
 	/**
 	 * If this expression is used as a selection in the SQL this method
 	 * will be called to generate the corresponding SqlSelection (reader,

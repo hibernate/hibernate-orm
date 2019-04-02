@@ -1094,7 +1094,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		if ( index >= subclassNamesBySubclassTable.length ) {
 			throw new IllegalArgumentException(
-					"Given subclass table number is outside expected range [" + subclassNamesBySubclassTable.length
+					"Given subclass table number is outside expected range [" + (subclassNamesBySubclassTable.length -1)
 							+ "] as defined by subclassTableNameClosure/subclassClosure"
 			);
 		}

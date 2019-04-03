@@ -171,3 +171,9 @@ task ciBuild( dependsOn: [test, publish] )
 
 task release( dependsOn: [test, bintrayUpload] )
 
+afterEvaluate { Project project ->
+	project.rootProject.subprojects { Project subproject ->
+		// NOTE : we want this even when `project == subproject`
+		project.tasks.bintrayUpload.dependsOn( subproject.tasks.build )
+	}
+}

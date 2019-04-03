@@ -49,14 +49,12 @@ allprojects {
 		}
 	}
 	apply plugin: 'idea'
+	apply plugin: 'eclipse'
 
 	// minimize changes, at least for now (gradle uses 'build' by default)..
 	buildDir = "target"
 
 	apply from: rootProject.file( 'gradle/base-information.gradle' )
-
-	apply plugin: 'idea'
-	apply plugin: 'eclipse'
 
 }
 

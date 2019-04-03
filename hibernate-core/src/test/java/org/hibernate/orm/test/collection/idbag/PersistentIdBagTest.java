@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class PersistentIdBagTest extends SessionFactoryBasedFunctionalTest {
 	@Override
-	public String[] getHmbMappingFiles() {
+	public String[] getHbmMappingFiles() {
 		return new String[] { "collection/idbag/Mappings.hbm.xml" };
 	}
 

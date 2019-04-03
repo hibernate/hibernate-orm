@@ -10,7 +10,7 @@
 	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping
-	package="org.hibernate.test.bidi">
+	package="org.hibernate.orm.test.bidi">
 
 	<class name="Auction" table="TAuction2">
 		<id name="id">

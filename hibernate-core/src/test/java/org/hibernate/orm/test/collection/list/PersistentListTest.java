@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class PersistentListTest extends SessionFactoryBasedFunctionalTest {
 
 	@Override
-	public String[] getHmbMappingFiles() {
+	public String[] getHbmMappingFiles() {
 		return new String[] { "collection/list/Mappings.hbm.xml" };
 	}
 

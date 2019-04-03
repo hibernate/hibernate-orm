@@ -4,29 +4,24 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.array;
 
+//$
+package org.hibernate.orm.test.annotations.collectionelement.indexedCollection;
+
+import javax.persistence.Embeddable;
 
 /**
  * @author Emmanuel Bernard
  */
-public class A {
-	private Integer id;
-	private B[] bs;
+@Embeddable
+public class Contact {
+	private String name;
 
-	public Integer getId() {
-		return id;
+	public String getName() {
+		return name;
 	}
 
-	public void setId(Integer id) {
-		this.id = id;
-	}
-
-	public B[] getBs() {
-		return bs;
-	}
-
-	public void setBs(B[] bs) {
-		this.bs = bs;
+	public void setName(String name) {
+		this.name = name;
 	}
 }

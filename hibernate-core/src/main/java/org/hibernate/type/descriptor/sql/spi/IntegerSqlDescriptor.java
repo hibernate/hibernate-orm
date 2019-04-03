@@ -60,7 +60,8 @@ public class IntegerSqlDescriptor extends AbstractTemplateSqlTypeDescriptor {
 			@Override
 			protected void doBind(
 					PreparedStatement st,
-					int index, X value,
+					int index,
+					X value,
 					ExecutionContext executionContext) throws SQLException {
 				st.setInt(
 						index,
@@ -71,7 +72,8 @@ public class IntegerSqlDescriptor extends AbstractTemplateSqlTypeDescriptor {
 			@Override
 			protected void doBind(
 					CallableStatement st,
-					String name, X value,
+					String name,
+					X value,
 					ExecutionContext executionContext)
 					throws SQLException {
 				st.setInt(

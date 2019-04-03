@@ -42,6 +42,7 @@ import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.metamodel.model.domain.spi.AbstractEntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.DiscriminatorDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
@@ -307,11 +308,12 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 		// todo (6.0) : account for non-generated identifiers
 		// todo (6.0) : account for post-insert generated identifiers
 
-		getHierarchy().getIdentifierDescriptor().dehydrate(
+		final EntityIdentifier<Object, Object> identifierDescriptor = getHierarchy().getIdentifierDescriptor();
+		identifierDescriptor.dehydrate(
 				// NOTE : at least according to the argument name (`unresolvedId`), the
 				// 		incoming id value should already be unresolved - so do not
 				// 		unresolve it again
-				getHierarchy().getIdentifierDescriptor().unresolve( unresolvedId, session ),
+				identifierDescriptor.unresolve( unresolvedId, session ),
 				//unresolvedId,
 				(jdbcValue, type, boundColumn) -> {
 					insertStatement.addTargetColumnReference( new ColumnReference( boundColumn ) );

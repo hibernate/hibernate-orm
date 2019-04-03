@@ -11,7 +11,9 @@ import java.sql.SQLException;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.jdbc.spi.JdbcStatementSupport;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutation;
@@ -37,12 +39,11 @@ public class JdbcMutationExecutorImpl implements JdbcMutationExecutor {
 			ExecutionContext executionContext,
 			Function<String, PreparedStatement> statementCreator,
 			BiConsumer<Integer, PreparedStatement> expectationCkeck) {
-		final LogicalConnectionImplementor logicalConnection = executionContext.getSession()
-				.getJdbcCoordinator()
-				.getLogicalConnection();
+		final JdbcCoordinator jdbcCoordinator = executionContext.getSession().getJdbcCoordinator();
 
-		final JdbcServices jdbcServices = executionContext.getSession().getFactory().getServiceRegistry().getService(
-				JdbcServices.class );
+		final JdbcStatementSupport jdbcStatementSupport = jdbcCoordinator.getJdbcStatementSupport();
+
+		final LogicalConnectionImplementor logicalConnection = jdbcCoordinator.getLogicalConnection();
 
 		final String sql = jdbcMutation.getSql();
 		try {
@@ -65,7 +66,7 @@ public class JdbcMutationExecutorImpl implements JdbcMutationExecutor {
 							executionContext
 					);
 				}
-				int rows = preparedStatement.executeUpdate();
+				int rows = jdbcStatementSupport.executeUpdate( preparedStatement );
 				expectationCkeck.accept( rows, preparedStatement );
 				return rows;
 			}
@@ -74,10 +75,9 @@ public class JdbcMutationExecutorImpl implements JdbcMutationExecutor {
 			}
 		}
 		catch (SQLException e) {
-			throw jdbcServices.getSqlExceptionHelper().convert(
-					e,
-					"JDBC exception executing SQL [" + sql + "]"
-			);
+			throw executionContext.getSession().getFactory()
+					.getServiceRegistry().getService( JdbcServices.class )
+					.getSqlExceptionHelper().convert( e, "JDBC exception executing SQL [" + sql + "]" );
 		}
 		finally {
 			if ( callAfterStatement ) {

@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @RequiresDialectFeature(DialectChecks.SupportsNoColumnInsert.class)
 public class CollectionTest extends SessionFactoryBasedFunctionalTest {
 	@Override
-	public String[] getHmbMappingFiles() {
+	public String[] getHbmMappingFiles() {
 		return new String[] { "collection/original/UserPermissions.hbm.xml", "collection/original/Zoo.hbm.xml" };
 	}
 

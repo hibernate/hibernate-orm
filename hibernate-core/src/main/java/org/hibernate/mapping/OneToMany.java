@@ -35,7 +35,7 @@ public class OneToMany implements ForeignKeyExporter, Value {
 
 	public OneToMany(MetadataBuildingContext buildingContext, PersistentClass owner) throws MappingException {
 		this.buildingContext = buildingContext;
-		this.referencingTable = ( owner == null ) ? null : owner.getTable();
+		this.referencingTable = ( owner == null ) ? null : owner.getMappedTable();
 	}
 
 	@Override

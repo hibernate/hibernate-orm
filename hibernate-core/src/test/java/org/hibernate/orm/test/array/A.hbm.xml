@@ -18,7 +18,7 @@
 -->
 
 <hibernate-mapping 
-	package="org.hibernate.test.array">
+	package="org.hibernate.orm.test.array">
 	
 	<class name="A" lazy="true" table="aaa">
 		

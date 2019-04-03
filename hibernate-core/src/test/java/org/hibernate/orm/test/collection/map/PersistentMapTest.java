@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class PersistentMapTest extends SessionFactoryBasedFunctionalTest {
 	@Override
-	public String[] getHmbMappingFiles() {
+	public String[] getHbmMappingFiles() {
 		return new String[] { "collection/map/Mappings.hbm.xml" };
 	}
 

@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @RequiresDialectFeature(DialectChecks.SupportsNoColumnInsert.class)
 public class PersistentBagTest extends SessionFactoryBasedFunctionalTest {
 	@Override
-	public String[] getHmbMappingFiles() {
+	public String[] getHbmMappingFiles() {
 		return new String[] { "collection/bag/Mappings.hbm.xml" };
 	}
 

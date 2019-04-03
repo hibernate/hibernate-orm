@@ -2621,8 +2621,7 @@ public class ModelBinder {
 			}
 		}
 
-		String nodeName = xmlNodeName;
-		if ( StringHelper.isNotEmpty( nodeName ) ) {
+		if ( StringHelper.isNotEmpty( xmlNodeName ) ) {
 			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfDomEntityModeSupport();
 		}
 
@@ -3367,7 +3366,7 @@ public class ModelBinder {
 						getCollectionBinding().getOwner()
 				);
 				collectionBinding.setElement( elementBinding );
-
+				elementBinding.setJavaTypeMapping( collectionBinding.getJavaTypeMapping() );
 				final PersistentClass referencedEntityBinding = mappingDocument.getMetadataCollector()
 						.getEntityBinding( elementSource.getReferencedEntityName() );
 

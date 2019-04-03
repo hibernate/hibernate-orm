@@ -1501,7 +1501,7 @@ public final class SessionImpl
 			// influence this decision if we were not able to based on the
 			// given entityName
 			try {
-				return getFactory().getMetamodel().findEntityDescriptor( entityName ).getSubclassEntityDescriptor( object, getFactory() );
+				return getFactory().getMetamodel().getEntityDescriptor( entityName ).getSubclassEntityDescriptor( object, getFactory() );
 			}
 			catch (HibernateException e) {
 				try {

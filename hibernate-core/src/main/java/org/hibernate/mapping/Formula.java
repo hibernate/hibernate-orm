@@ -63,7 +63,10 @@ public class Formula implements Selectable, Serializable {
 
 	@Override
 	public SqlTypeDescriptor getSqlTypeDescriptor() {
-		return sqlTypeDescriptorAccess.get();
+		if ( sqlTypeDescriptorAccess != null ) {
+			return sqlTypeDescriptorAccess.get();
+		}
+		return null;
 	}
 
 	@Override
@@ -82,12 +85,19 @@ public class Formula implements Selectable, Serializable {
 			PhysicalNamingStrategy namingStrategy,
 			JdbcEnvironment jdbcEnvironment,
 			TypeConfiguration typeConfiguration) {
+		BasicJavaDescriptor javaTypeDescriptor;
+		if ( getJavaTypeMapping() != null ) {
+			javaTypeDescriptor = (BasicJavaDescriptor) getJavaTypeMapping().getJavaTypeDescriptor();
+		}
+		else {
+			javaTypeDescriptor = null;
+		}
 		return new DerivedColumn(
 				runtimeTable,
 				formula,
 				getSqlTypeDescriptor(),
 				typeConfiguration,
-				(BasicJavaDescriptor) getJavaTypeMapping().getJavaTypeDescriptor(),
+				javaTypeDescriptor,
 				false,
 				false
 		);

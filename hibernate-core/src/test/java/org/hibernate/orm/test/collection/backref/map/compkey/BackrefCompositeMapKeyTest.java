@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  */
 public class BackrefCompositeMapKeyTest extends SessionFactoryBasedFunctionalTest {
 	@Override
-	public String[] getHmbMappingFiles() {
+	public String[] getHbmMappingFiles() {
 		return new String[] { "collection/backref/map/compkey/Mappings.hbm.xml" };
 	}
 

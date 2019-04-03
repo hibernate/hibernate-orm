@@ -128,7 +128,7 @@ public abstract class SessionFactoryBasedFunctionalTest
 		for ( Class annotatedClass : getAnnotatedClasses() ) {
 			metadataSources.addAnnotatedClass( annotatedClass );
 		}
-		for ( String mapping : getHmbMappingFiles() ) {
+		for ( String mapping : getHbmMappingFiles() ) {
 			metadataSources.addResource(
 					getBaseForMappings() + mapping
 			);
@@ -139,7 +139,7 @@ public abstract class SessionFactoryBasedFunctionalTest
 		return NO_CLASSES;
 	}
 
-	protected String[] getHmbMappingFiles() {
+	protected String[] getHbmMappingFiles() {
 		return NO_MAPPINGS;
 	}
 

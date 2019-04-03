@@ -3,6 +3,29 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.0.0.Alpha2 (April 3, 2019)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    * [HHH-13309] - Extended bean managers implementing the new interface are not correctly detected
+
+** New Feature
+    * [HHH-37] - Nested instantiation using "select new"
+    * [HHH-13215] - ProcedureCall should implement AutoCloseable
+
+** Task
+    * [HHH-11673] - Finish developing "strict JPQL compliance" checking
+    * [HHH-11688] - "select alias" recognition
+
+** Improvement
+    * [HHH-11697] - Remove QueryTranslator and friends in preference of new SQM-based "translation"
+    * [HHH-11760] - Base schema-tooling on the new run-time relational model
+    * [HHH-11839] - Adjust OrderByFragmentTranslator based on SQM work
+    * [HHH-13242] - Allow usage of custom BytecodeProvider
+    * [HHH-13253] - Support for versioned dialect resolution against a pre-configured database name
+
+
+
 Changes in 6.0.0.Alpha1 (December6, 2018)
 ------------------------------------------------------------------------------------------------------------------------
 

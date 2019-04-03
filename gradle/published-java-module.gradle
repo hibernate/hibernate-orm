@@ -148,7 +148,7 @@ publishing {
 
 publishing {
 	publications {
-		relocationArtifact( MavenPublication ) {
+		relocationArtifacts( MavenPublication ) {
 			pom {
 				name = project.name + ' - relocation'
 				groupId = 'org.hibernate'

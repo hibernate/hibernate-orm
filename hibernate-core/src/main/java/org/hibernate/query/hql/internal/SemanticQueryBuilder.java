@@ -34,6 +34,7 @@ import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PluralValuedNavigable;
 import org.hibernate.query.BinaryArithmeticOperator;
+import org.hibernate.query.QueryLogger;
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.hql.DotIdentifierConsumer;
 import org.hibernate.query.spi.ComparisonOperator;
@@ -675,7 +676,15 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@Override
 	public SqmSortSpecification visitSortSpecification(HqlParser.SortSpecificationContext ctx) {
-		final SqmExpression sortExpression = (SqmExpression) ctx.expression().accept( this );
+		final SqmExpression sortExpression = visitSortExpression( ctx.sortExpression() );
+		if ( sortExpression == null ) {
+			throw new ParsingException( "Could not resolve sort-expression : " + ctx.sortExpression().getText() );
+		}
+		if ( sortExpression instanceof SqmLiteral
+				|| sortExpression instanceof SqmParameter ) {
+			QueryLogger.QUERY_LOGGER.debugf( "Questionable sorting by constant value : %s", sortExpression );
+		}
+
 		final String collation;
 		if ( ctx.collationSpecification() != null && ctx.collationSpecification().collateName() != null ) {
 			collation = ctx.collationSpecification().collateName().dotIdentifierSequence().getText();
@@ -683,6 +692,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		else {
 			collation = null;
 		}
+
 		final SortOrder sortOrder;
 		if ( ctx.orderingSpecification() != null ) {
 			final String ordering = ctx.orderingSpecification().getText();
@@ -696,7 +706,45 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		else {
 			sortOrder = null;
 		}
+
 		return new SqmSortSpecification( sortExpression, collation, sortOrder );
+	}
+
+	@Override
+	public SqmExpression visitSortExpression(HqlParser.SortExpressionContext ctx) {
+		if ( ctx.INTEGER_LITERAL() != null ) {
+			final int position = Integer.parseInt( ctx.INTEGER_LITERAL().getText() );
+			final SqmSelection selection = getCurrentQuerySpecProcessingState().findSelectionByPosition( position );
+			if ( selection != null ) {
+				final SqmSelectableNode selectableNode = selection.getSelectableNode();
+				if ( selectableNode instanceof SqmExpression ) {
+					return (SqmExpression) selectableNode;
+				}
+			}
+
+			return new SqmLiteral<>( position, StandardSpiBasicTypes.INTEGER );
+		}
+
+		if ( ctx.identifier() != null ) {
+			final SqmSelection selection = getCurrentQuerySpecProcessingState().findSelectionByAlias( ctx.identifier().getText() );
+			if ( selection != null ) {
+				final SqmSelectableNode selectableNode = selection.getSelectableNode();
+				if ( selectableNode instanceof SqmExpression ) {
+					return (SqmExpression) selectableNode;
+				}
+			}
+
+			final DotIdentifierConsumer dotIdentifierConsumer = identifierConsumerStack.getCurrent();
+			dotIdentifierConsumer.consumeIdentifier(
+					ctx.identifier().getText(),
+					true,
+					true
+			);
+
+			return (SqmExpression) dotIdentifierConsumer.getConsumedPart();
+		}
+
+		return (SqmExpression) ctx.expression().accept( this );
 	}
 
 	@Override

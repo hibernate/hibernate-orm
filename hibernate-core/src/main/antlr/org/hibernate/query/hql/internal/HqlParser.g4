@@ -297,7 +297,13 @@ orderByClause
 	;
 
 sortSpecification
-	: expression collationSpecification? orderingSpecification?
+	: sortExpression collationSpecification? orderingSpecification?
+	;
+
+sortExpression
+	: identifier
+	| INTEGER_LITERAL
+	| expression
 	;
 
 collationSpecification

@@ -8,7 +8,6 @@ package org.hibernate.metamodel.model.domain.internal.collection;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import javax.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
@@ -16,7 +15,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractCollectionElement;
-import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.spi.CollectionElementEmbedded;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
@@ -25,7 +23,6 @@ import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.procedure.ParameterMisuseException;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
@@ -107,11 +104,6 @@ public class CollectionElementEmbeddedImpl<J>
 	@Override
 	public void visitFetchables(Consumer<Fetchable> fetchableConsumer) {
 		getEmbeddedDescriptor().visitFetchables( fetchableConsumer );
-	}
-
-	@Override
-	public AllowableParameterType resolveTemporalPrecision(TemporalType temporalType, TypeConfiguration typeConfiguration) {
-		throw new ParameterMisuseException( "Cannot apply temporal precision to embeddable value" );
 	}
 
 	@Override

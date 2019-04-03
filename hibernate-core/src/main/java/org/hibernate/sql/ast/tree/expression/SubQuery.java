@@ -8,6 +8,7 @@ package org.hibernate.sql.ast.tree.expression;
 
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
@@ -19,15 +20,24 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class SubQuery implements Expression {
 	private final QuerySpec querySpec;
 	private final SqlExpressableType expressableType;
+	private final ExpressableType domainType;
 
-	public SubQuery(QuerySpec querySpec, SqlExpressableType expressableType) {
+	public SubQuery(
+			QuerySpec querySpec,
+			SqlExpressableType expressableType,
+			ExpressableType domainType) {
 		this.querySpec = querySpec;
 		this.expressableType = expressableType;
+		this.domainType = domainType;
 	}
 
 	@Override
 	public SqlExpressableType getType() {
 		return expressableType;
+	}
+
+	public ExpressableType getDomainType() {
+		return domainType;
 	}
 
 	@Override

@@ -7,6 +7,7 @@
 package org.hibernate.query.hql.internal;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
@@ -36,7 +37,7 @@ public class SqmProcessingIndex implements SqmPathRegistry {
 
 	private final Map<String, SqmFrom> sqmFromByAlias = new HashMap<>();
 
-	private final Map<String, SqmSelection> sqmSelectionsByAlias = new HashMap<>();
+	private final LinkedHashMap<String, SqmSelection> sqmSelectionsByAlias = new LinkedHashMap<>();
 
 	public SqmProcessingIndex(SqmCreationProcessingState associatedProcessingState) {
 		this.associatedProcessingState = associatedProcessingState;
@@ -178,6 +179,22 @@ public class SqmProcessingIndex implements SqmPathRegistry {
 
 	public SqmSelection findSelectionByAlias(String alias) {
 		return sqmSelectionsByAlias.get( alias );
+	}
+
+	public SqmSelection findSelectionByPosition(int position) {
+		// NOTE : 1-based
+		//		so incoming position must be between >= 1 and <= map.size
+
+		if ( position >= 1 && position <= sqmSelectionsByAlias.size() ) {
+			int i = 1;
+			for ( Map.Entry<String, SqmSelection> entry : sqmSelectionsByAlias.entrySet() ) {
+				if ( position == i++ ) {
+					return entry.getValue();
+				}
+			}
+		}
+
+		return null;
 	}
 
 	public void registerSelection(SqmSelection selection) {

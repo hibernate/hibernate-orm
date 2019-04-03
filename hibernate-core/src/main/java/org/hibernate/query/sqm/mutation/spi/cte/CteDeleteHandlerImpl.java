@@ -178,7 +178,7 @@ public class CteDeleteHandlerImpl extends AbstractCteMutationHandler implements 
 			for ( Column toMatch : columnsToMatch ) {
 				columnsToMatchExpressions.add( targetTableReference.resolveColumnReference( toMatch ) );
 			}
-			columnsToMatchExpression = new SqlTuple( columnsToMatchExpressions );
+			columnsToMatchExpression = new SqlTuple( columnsToMatchExpressions, getEntityDescriptor().getIdType() );
 		}
 
 		return new DeleteStatement(

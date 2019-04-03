@@ -18,4 +18,5 @@ import org.hibernate.query.sqm.tree.select.SqmSelection;
 public interface SqmQuerySpecCreationProcessingState extends SqmCreationProcessingState {
 	void registerSelection(SqmSelection selection);
 	SqmSelection findSelectionByAlias(String alias);
+	SqmSelection findSelectionByPosition(int position);
 }

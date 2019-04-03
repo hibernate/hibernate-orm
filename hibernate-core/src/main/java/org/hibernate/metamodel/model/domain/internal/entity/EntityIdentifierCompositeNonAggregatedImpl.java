@@ -8,7 +8,6 @@ package org.hibernate.metamodel.model.domain.internal.entity;
 
 import java.util.List;
 import java.util.function.Consumer;
-import javax.persistence.TemporalType;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
@@ -16,7 +15,6 @@ import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedContainer;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
@@ -25,7 +23,6 @@ import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.procedure.ParameterMisuseException;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.produce.SqmPathRegistry;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
@@ -35,7 +32,6 @@ import org.hibernate.query.sqm.tree.domain.SqmNavigableReference;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -124,11 +120,6 @@ public class EntityIdentifierCompositeNonAggregatedImpl<O,J>
 	@Override
 	public IdentifierGenerator getIdentifierValueGenerator() {
 		throw new NotYetImplementedFor6Exception(  );
-	}
-
-	@Override
-	public AllowableParameterType resolveTemporalPrecision(TemporalType temporalType, TypeConfiguration typeConfiguration) {
-		throw new ParameterMisuseException( "Cannot apply temporal precision to embeddable value" );
 	}
 
 	@Override

@@ -6,11 +6,19 @@
  */
 package org.hibernate.sql.ast.tree.expression.domain;
 
+import java.util.List;
+
 import org.hibernate.internal.util.Loggable;
-import org.hibernate.metamodel.model.domain.spi.DomainTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.BasicValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.ParsingException;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmExpressionInterpretation;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 
@@ -33,7 +41,7 @@ public interface NavigableReference extends SqmExpressionInterpretation, Loggabl
 	Navigable<?> getNavigable();
 
 	@Override
-	default DomainTypeDescriptor getDomainTypeDescriptor() {
+	default ExpressableType getExpressableType() {
 		return getNavigable();
 	}
 
@@ -51,5 +59,38 @@ public interface NavigableReference extends SqmExpressionInterpretation, Loggabl
 				resultVariable,
 				creationState
 		);
+	}
+
+	@Override
+	default Expression toSqlExpression(SqlAstCreationState sqlAstCreationState) {
+		final TableGroup tableGroup;
+
+		if ( getNavigable() instanceof BasicValuedNavigable ) {
+			// maybe we should register the LHS TableGroup for the basic value
+			// under its NavigablePath, similar to what we do for embeddables
+			tableGroup = sqlAstCreationState.getFromClauseAccess().findTableGroup( getNavigablePath().getParent() );
+		}
+		else {
+			// for embeddable-, entity- and plural-valued Navigables we maybe do not have a TableGroup
+			final TableGroup thisTableGroup = sqlAstCreationState.getFromClauseAccess().findTableGroup( getNavigablePath() );
+			if ( thisTableGroup != null ) {
+				tableGroup = thisTableGroup;
+			}
+			else {
+				final NavigablePath lhsNavigablePath = getNavigablePath().getParent();
+				if ( lhsNavigablePath == null ) {
+					throw new ParsingException( "Could not find TableGroup to use - " + getNavigablePath().getFullPath() );
+				}
+				tableGroup = sqlAstCreationState.getFromClauseAccess().findTableGroup( lhsNavigablePath );
+			}
+		}
+
+		final List list = getNavigable().resolveColumnReferences( tableGroup, sqlAstCreationState );
+		if ( list.size() == 1 ) {
+			assert list.get( 0 ) instanceof Expression;
+			return (Expression) list.get( 0 );
+		}
+
+		return new SqlTuple( list, getExpressableType() );
 	}
 }

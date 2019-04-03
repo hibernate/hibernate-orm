@@ -134,7 +134,7 @@ public class InlineDeleteHandler extends AbstractInlineHandler implements Delete
 				;
 			}
 
-			restriction = new InListPredicate( new SqlTuple( keyColumnReferences ) );
+			restriction = new InListPredicate( new SqlTuple( keyColumnReferences, navigable ) );
 		}
 		else {
 			restriction = new InListPredicate(
@@ -157,7 +157,7 @@ public class InlineDeleteHandler extends AbstractInlineHandler implements Delete
 			);
 
 			if ( columns.size() > 1 ) {
-				restriction.addExpression( new SqlTuple( valueListElementExpressions ) );
+				restriction.addExpression( new SqlTuple( valueListElementExpressions, navigable ) );
 			}
 			else {
 				restriction.addExpression( valueListElementExpressions.get( 0 ) );

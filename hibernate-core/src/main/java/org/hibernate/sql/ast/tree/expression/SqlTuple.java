@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -18,10 +19,16 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public class SqlTuple implements Expression {
+	private final ExpressableType groupType;
 	private final List<Expression> expressions;
 
-	public SqlTuple(List expressions) {
+	public SqlTuple(List expressions, ExpressableType groupType) {
 		this.expressions = expressions;
+		this.groupType = groupType;
+	}
+
+	public ExpressableType getGroupType() {
+		return groupType;
 	}
 
 	@Override

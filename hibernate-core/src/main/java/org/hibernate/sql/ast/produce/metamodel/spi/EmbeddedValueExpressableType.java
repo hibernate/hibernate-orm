@@ -6,12 +6,9 @@
  */
 package org.hibernate.sql.ast.produce.metamodel.spi;
 
-import javax.persistence.TemporalType;
-
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -26,10 +23,6 @@ public interface EmbeddedValueExpressableType<T> extends ExpressableType<T>, All
 	@Override
 	default int getNumberOfJdbcParametersNeeded() {
 		return getEmbeddedDescriptor().getNumberOfJdbcParametersNeeded();
-	}
-
-	default AllowableParameterType resolveTemporalPrecision(TemporalType temporalType, TypeConfiguration typeConfiguration) {
-		return getEmbeddedDescriptor().resolveTemporalPrecision( temporalType, typeConfiguration );
 	}
 
 	@Override

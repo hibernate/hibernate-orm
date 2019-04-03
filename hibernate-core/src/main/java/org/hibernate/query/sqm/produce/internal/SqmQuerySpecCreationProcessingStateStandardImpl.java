@@ -45,4 +45,9 @@ public class SqmQuerySpecCreationProcessingStateStandardImpl
 	public SqmSelection findSelectionByAlias(String alias) {
 		return getProcessingIndex().findSelectionByAlias( alias );
 	}
+
+	@Override
+	public SqmSelection findSelectionByPosition(int position) {
+		return getProcessingIndex().findSelectionByPosition( position );
+	}
 }

@@ -248,8 +248,8 @@ public class MetamodelSelectBuilderProcess
 			keyParameterExpression = keyParameterReferences.get( 0 );
 		}
 		else {
-			keyColumnExpression = new SqlTuple( keyColumnReferences );
-			keyParameterExpression = new SqlTuple( keyParameterReferences );
+			keyColumnExpression = new SqlTuple( keyColumnReferences, restrictedNavigable );
+			keyParameterExpression = new SqlTuple( keyParameterReferences, restrictedNavigable );
 		}
 
 		if ( numberOfKeysToLoad <= 1 ) {

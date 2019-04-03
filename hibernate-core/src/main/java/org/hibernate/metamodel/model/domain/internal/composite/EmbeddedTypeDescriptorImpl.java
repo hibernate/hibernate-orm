@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import javax.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
@@ -25,7 +24,6 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.AbstractManagedType;
-import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedContainer;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.InheritanceCapable;
@@ -36,7 +34,6 @@ import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.NonIdPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.procedure.ParameterMisuseException;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.produce.SqmPathRegistry;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
@@ -355,13 +352,6 @@ public class EmbeddedTypeDescriptorImpl<J>
 	@Override
 	public CascadeStyle getCascadeStyle(int i) {
 		return getPersistentAttributes().get( i ).getCascadeStyle();
-	}
-
-	@Override
-	public AllowableParameterType resolveTemporalPrecision(
-			TemporalType temporalType,
-			TypeConfiguration typeConfiguration) {
-		throw new ParameterMisuseException( "Cannot apply temporal precision to embeddable value" );
 	}
 
 	@Override

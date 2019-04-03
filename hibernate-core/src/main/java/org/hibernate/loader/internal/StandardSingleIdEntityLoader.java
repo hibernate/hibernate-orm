@@ -510,7 +510,7 @@ public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> 
 			idExpression = columnReferences.get( 0 );
 		}
 		else {
-			idExpression = new SqlTuple( columnReferences );
+			idExpression = new SqlTuple( columnReferences, identifierDescriptor );
 		}
 
 		// todo (6.0) : is this correct and/or is there a better way to add the SqlSelection to the SelectClause?

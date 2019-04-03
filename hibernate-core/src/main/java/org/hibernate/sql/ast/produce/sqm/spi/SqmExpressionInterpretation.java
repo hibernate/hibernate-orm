@@ -6,7 +6,9 @@
  */
 package org.hibernate.sql.ast.produce.sqm.spi;
 
-import org.hibernate.metamodel.model.domain.spi.DomainTypeDescriptor;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**
@@ -20,5 +22,9 @@ import org.hibernate.sql.results.spi.DomainResultProducer;
  * @author Steve Ebersole
  */
 public interface SqmExpressionInterpretation<T> extends DomainResultProducer {
-	DomainTypeDescriptor<T> getDomainTypeDescriptor();
+	ExpressableType<T> getExpressableType();
+
+	default Expression toSqlExpression(SqlAstCreationState sqlAstCreationState) {
+		return (Expression) this;
+	}
 }

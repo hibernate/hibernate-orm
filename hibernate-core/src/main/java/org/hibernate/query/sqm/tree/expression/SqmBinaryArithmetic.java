@@ -6,37 +6,59 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import java.util.function.Supplier;
-
+import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmBinaryArithmetic implements SqmExpression {
-	private final BinaryArithmeticOperator operator;
+public class SqmBinaryArithmetic extends AbstractSqmExpression {
 	private final SqmExpression lhsOperand;
+	private final BinaryArithmeticOperator operator;
 	private final SqmExpression rhsOperand;
 
-	private BasicValuedExpressableType expressionType;
+	public SqmBinaryArithmetic(
+			BinaryArithmeticOperator operator,
+			SqmExpression lhsOperand,
+			SqmExpression rhsOperand,
+			MetamodelImplementor domainModel) {
+		super(
+				domainModel.getTypeConfiguration().resolveArithmeticType(
+						(BasicValuedExpressableType) lhsOperand.getExpressableType(),
+						(BasicValuedExpressableType) rhsOperand.getExpressableType(),
+						operator
+				)
+		);
+
+		this.lhsOperand = lhsOperand;
+		this.operator = operator;
+		this.rhsOperand = rhsOperand;
+
+		this.lhsOperand.applyInferableType( rhsOperand.getExpressableType() );
+		this.rhsOperand.applyInferableType( lhsOperand.getExpressableType() );
+	}
 
 	public SqmBinaryArithmetic(
-			SqmExpression lhsOperand,
 			BinaryArithmeticOperator operator,
+			SqmExpression lhsOperand,
 			SqmExpression rhsOperand,
-			BasicValuedExpressableType expressionType) {
+			BasicValuedExpressableType expressableType) {
+		super( expressableType );
+
 		this.operator = operator;
+
 		this.lhsOperand = lhsOperand;
 		this.rhsOperand = rhsOperand;
-		this.expressionType = expressionType;
+
+		applyInferableType( expressableType );
 	}
 
 	@Override
-	public BasicJavaDescriptor getJavaTypeDescriptor() {
-		return expressionType.getJavaTypeDescriptor();
+	public BasicValuedExpressableType<?> getExpressableType() {
+		return (BasicValuedExpressableType<?>) super.getExpressableType();
 	}
 
 	@Override
@@ -72,15 +94,12 @@ public class SqmBinaryArithmetic implements SqmExpression {
 	}
 
 	@Override
-	public BasicValuedExpressableType getExpressableType() {
-		return expressionType;
-	}
+	protected void internalApplyInferableType(ExpressableType<?> type) {
+		rhsOperand.applyInferableType( type );
+		lhsOperand.applyInferableType( type );
 
-	@Override
-	public Supplier<? extends BasicValuedExpressableType> getInferableType() {
-		return this::getExpressableType;
+		super.internalApplyInferableType( type );
 	}
-
 
 	@Override
 	public String asLoggableText() {

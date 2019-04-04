@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -27,6 +28,10 @@ import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 
 /**
  * Maintains a cross-reference between SqmParameter and QueryParameter references.
+ *
+ * @apiNote The difference between {@link #addCriteriaAdjustment} and {@link #addExpansion}
+ * is the durability of given parameter.  A Criteria-adjustment lives beyond
+ * {@link #clearExpansions()} while an expansion does not.
  *
  * @author Steve Ebersole
  */
@@ -64,8 +69,11 @@ public class DomainParameterXref {
 						if ( o1.getName() != null ) {
 							return o1.getName().compareTo( o2.getName() );
 						}
-						else {
+						else if ( o1.getPosition() != null ) {
 							return o1.getPosition().compareTo( o2.getPosition() );
+						}
+						else {
+							return Integer.compare( o1.hashCode(), o2.hashCode() );
 						}
 					}
 
@@ -166,6 +174,15 @@ public class DomainParameterXref {
 
 	public QueryParameterImplementor<?> getQueryParameter(SqmParameter sqmParameter) {
 		return queryParamBySqmParam.get( sqmParameter );
+	}
+
+	public void addCriteriaAdjustment(
+			QueryParameterImplementor<?> domainParam,
+			JpaParameterSqmWrapper originalSqmParameter,
+			SqmParameter adjustment) {
+		QueryLogger.QUERY_LOGGER.debugf( "Adding JPA-param xref adjustment : %s", originalSqmParameter );
+		sqmParamsByQueryParam.get( domainParam ).add( adjustment );
+		queryParamBySqmParam.put( adjustment, domainParam );
 	}
 
 	public void addExpansion(

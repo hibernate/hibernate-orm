@@ -33,6 +33,7 @@ import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmSubQuery;
+import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.expression.function.SqmAbsFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
@@ -67,12 +68,12 @@ import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.predicate.AndSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.BetweenSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.BooleanExpressionSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.EmptinessSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.GroupedSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.InListSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.InSubQuerySqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmInListPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmInSubQueryPredicate;
 import org.hibernate.query.sqm.tree.predicate.LikeSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.MemberOfSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.NegatedSqmPredicate;
@@ -161,10 +162,28 @@ public interface SemanticQueryWalker<T> {
 
 	T visitHavingClause(SqmHavingClause clause);
 
+	T visitDynamicInstantiation(SqmDynamicInstantiation sqmDynamicInstantiation);
+
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// expressions - general
+
+	T visitLiteral(SqmLiteral literal);
+
+	T visitTuple(SqmTuple sqmTuple);
+
+	T visitConcatExpression(SqmConcat expression);
+
+	T visitConcatFunction(SqmConcatFunction expression);
+
+	T visitBinaryArithmeticExpression(SqmBinaryArithmetic expression);
+
+	T visitSubQueryExpression(SqmSubQuery expression);
+
+	T visitSimpleCaseExpression(SqmCaseSimple expression);
+
+	T visitSearchedCaseExpression(SqmCaseSearched expression);
 
 	T visitPositionalParameterExpression(SqmPositionalParameter expression);
 
@@ -256,7 +275,7 @@ public interface SemanticQueryWalker<T> {
 
 	T visitIsNullPredicate(NullnessSqmPredicate predicate);
 
-	T visitBetweenPredicate(BetweenSqmPredicate predicate);
+	T visitBetweenPredicate(SqmBetweenPredicate predicate);
 
 	T visitLikePredicate(LikeSqmPredicate predicate);
 
@@ -264,9 +283,9 @@ public interface SemanticQueryWalker<T> {
 
 	T visitNegatedPredicate(NegatedSqmPredicate predicate);
 
-	T visitInListPredicate(InListSqmPredicate predicate);
+	T visitInListPredicate(SqmInListPredicate predicate);
 
-	T visitInSubQueryPredicate(InSubQuerySqmPredicate predicate);
+	T visitInSubQueryPredicate(SqmInSubQueryPredicate predicate);
 
 	T visitBooleanExpressionPredicate(BooleanExpressionSqmPredicate predicate);
 
@@ -287,31 +306,14 @@ public interface SemanticQueryWalker<T> {
 
 
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// misc
 
 	T visitPluralAttributeSizeFunction(SqmCollectionSize function);
 
 	T visitMapEntryFunction(SqmMapEntryReference function);
 
-	T visitLiteral(SqmLiteral literal);
-
-	T visitConcatExpression(SqmConcat expression);
-
-	T visitConcatFunction(SqmConcatFunction expression);
-
-	T visitBinaryArithmeticExpression(SqmBinaryArithmetic expression);
-
-	T visitSubQueryExpression(SqmSubQuery expression);
-
-	T visitSimpleCaseExpression(SqmCaseSimple expression);
-
-	T visitSearchedCaseExpression(SqmCaseSearched expression);
-
 	T visitExplicitColumnReference(SqmColumnReference sqmColumnReference);
-
-
-
-	T visitDynamicInstantiation(SqmDynamicInstantiation sqmDynamicInstantiation);
-
 
 	T visitFullyQualifiedClass(Class<?> namedClass);
 

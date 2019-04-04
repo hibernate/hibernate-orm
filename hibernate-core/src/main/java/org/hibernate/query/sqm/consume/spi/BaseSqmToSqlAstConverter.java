@@ -13,7 +13,6 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -21,14 +20,17 @@ import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.annotations.Remove;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.criteria.sqm.JpaParameterSqmWrapper;
+import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBinding;
@@ -50,6 +52,7 @@ import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmSubQuery;
+import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.expression.function.SqmAbsFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
@@ -83,10 +86,10 @@ import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.predicate.AndSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.BetweenSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.GroupedSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.InListSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.InSubQuerySqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmInListPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmInSubQueryPredicate;
 import org.hibernate.query.sqm.tree.predicate.LikeSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.NegatedSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.NullnessSqmPredicate;
@@ -179,10 +182,10 @@ import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameters;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.internal.util.NullnessHelper.coalesce;
 import static org.hibernate.query.BinaryArithmeticOperator.ADD;
 import static org.hibernate.query.BinaryArithmeticOperator.DIVIDE;
 import static org.hibernate.query.BinaryArithmeticOperator.MODULO;
@@ -664,20 +667,21 @@ public abstract class BaseSqmToSqlAstConverter
 
 	@Override
 	public Object visitLiteral(SqmLiteral literal) {
-		final ExpressableType<?> expressableType = determineExpressableType( literal );
-		if ( expressableType instanceof BasicValuedExpressableType<?> ) {
-			return new QueryLiteral(
-					literal.getLiteralValue(),
-					( (BasicValuedExpressableType<?>) expressableType ).getSqlExpressableType( getTypeConfiguration() ),
-					getCurrentClauseStack().getCurrent()
-			);
-		}
-
 		return new QueryLiteral(
 				literal.getLiteralValue(),
 				literal.getExpressableType().getSqlExpressableType( getTypeConfiguration() ),
 				getCurrentClauseStack().getCurrent()
 		);
+	}
+
+	@Override
+	public Object visitTuple(SqmTuple sqmTuple) {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public GraphImplementor getCurrentResultGraphNode() {
+		return null;
 	}
 
 	private final Map<SqmParameter,List<JdbcParameter>> jdbcParamsBySqmParam = new IdentityHashMap<>();
@@ -695,77 +699,63 @@ public abstract class BaseSqmToSqlAstConverter
 
 
 	private Expression consumeSqmParameter(SqmParameter sqmParameter) {
-		final ExpressableType<?> expressableType = determineExpressableType( sqmParameter );
-
 		final List<JdbcParameter> jdbcParametersForSqm = new ArrayList<>();
 
-		resolveSqmParameter( sqmParameter, expressableType, jdbcParametersForSqm::add );
+		if ( jdbcParamsBySqmParam.containsKey( sqmParameter ) ) {
+			// this is a "correction" in the case where a Criteria
+			assert sqmParameter instanceof JpaParameterSqmWrapper;
+			final SqmParameter copy = sqmParameter.copy();
+			domainParameterXref.addCriteriaAdjustment(
+					domainParameterXref.getQueryParameter( sqmParameter ),
+					(JpaParameterSqmWrapper) sqmParameter,
+					copy
+			);
+
+			sqmParameter = copy;
+		}
+
+		resolveSqmParameter( sqmParameter, jdbcParametersForSqm::add );
 
 		jdbcParameters.addParameters( jdbcParametersForSqm );
 		jdbcParamsBySqmParam.put( sqmParameter, jdbcParametersForSqm );
 
 		if ( jdbcParametersForSqm.size() > 1 ) {
-			// todo (6.0) [type-infer] : hook
-			return new SqlTuple( jdbcParametersForSqm, expressableType );
+			return new SqlTuple( jdbcParametersForSqm, sqmParameter.getExpressableType() );
 		}
 		else {
 			return jdbcParametersForSqm.get( 0 );
 		}
 	}
 
+	private void resolveSqmParameter(SqmParameter expression, Consumer<JdbcParameter> jdbcParameterConsumer) {
+		AllowableParameterType expressableType = expression.getExpressableType();
 
-	private final Stack<Supplier<ExpressableType>> inferableTypeAccessStack = new StandardStack<>(
-			() -> null
-	);
-
-	private ExpressableType<?> determineExpressableType(SqmExpression sqmExpression) {
-		if ( sqmExpression.getExpressableType() != null ) {
-			return sqmExpression.getExpressableType();
-		}
-		else {
-			final ExpressableType inferableType = inferableTypeAccessStack.getCurrent().get();
-			if ( inferableType != null ) {
-				return inferableType;
-			}
-		}
-
-		final Supplier<? extends ExpressableType> implicitTypeSupplier = sqmExpression.getInferableType();
-		if ( implicitTypeSupplier != null ) {
-			final ExpressableType implicitType = implicitTypeSupplier.get();
-			if ( implicitType != null ) {
-				return implicitType;
-			}
-		}
-
-		return null;
-	}
-
-	private void resolveSqmParameter(SqmParameter expression, ExpressableType<?> expressableType, Consumer<JdbcParameter> jdbcParameterConsumer) {
 		if ( expressableType == null ) {
-			final StandardJdbcParameterImpl jdbcParameter = new StandardJdbcParameterImpl(
-					jdbcParameters.getJdbcParameters().size(),
-					null,
-					currentClauseStack.getCurrent(),
-					getCreationContext().getDomainModel().getTypeConfiguration()
-			);
+			final QueryParameterImplementor<?> queryParameter = domainParameterXref.getQueryParameter( expression );
+			final QueryParameterBinding binding = domainParameterBindings.getBinding( queryParameter );
+			expressableType = QueryHelper.determineParameterType( binding, queryParameter, getTypeConfiguration() );
 
-			jdbcParameterConsumer.accept( jdbcParameter );
+			if ( expressableType == null ) {
+				log.debugf( "Could not determine ExpressableType for parameter [%s], falling back to Object-handling", expression );
+				expressableType = StandardSpiBasicTypes.OBJECT_STANDARD_BASIC_TYPE;
+			}
+
+			expression.applyInferableType( expressableType );
 		}
-		else {
-			expressableType.visitJdbcTypes(
-					type -> {
-						final StandardJdbcParameterImpl jdbcParameter = new StandardJdbcParameterImpl(
-								jdbcParameters.getJdbcParameters().size(),
-								type,
-								currentClauseStack.getCurrent(),
-								getCreationContext().getDomainModel().getTypeConfiguration()
-						);
-						jdbcParameterConsumer.accept( jdbcParameter );
-					},
-					currentClauseStack.getCurrent(),
-					getCreationContext().getDomainModel().getTypeConfiguration()
-			);
-		}
+
+		expressableType.visitJdbcTypes(
+				type -> {
+					final StandardJdbcParameterImpl jdbcParameter = new StandardJdbcParameterImpl(
+							jdbcParameters.getJdbcParameters().size(),
+							type,
+							currentClauseStack.getCurrent(),
+							getCreationContext().getDomainModel().getTypeConfiguration()
+					);
+					jdbcParameterConsumer.accept( jdbcParameter );
+				},
+				currentClauseStack.getCurrent(),
+				getCreationContext().getDomainModel().getTypeConfiguration()
+		);
 	}
 
 	@Override
@@ -838,14 +828,14 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public AvgFunction visitAvgFunction(SqmAvgFunction expression) {
+	public AvgFunction visitAvgFunction(SqmAvgFunction function) {
 		shallownessStack.push( Shallowness.FUNCTION );
 
 		try {
 			return new AvgFunction(
-					(Expression) expression.getArgument().accept( this ),
-					expression.isDistinct(),
-					expression.getExpressableType().getSqlExpressableType()
+					(Expression) function.getArgument().accept( this ),
+					function.isDistinct(),
+					function.getExpressableType().getSqlExpressableType()
 			);
 		}
 		finally {
@@ -869,14 +859,14 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public Object visitCastFunction(SqmCastFunction expression) {
+	public Object visitCastFunction(SqmCastFunction function) {
 		shallownessStack.push( Shallowness.FUNCTION );
 
 		try {
 			return new CastFunction(
-					(Expression) expression.getExpressionToCast().accept( this ),
-					( (BasicValuedExpressableType) expression.getExpressableType() ).getSqlExpressableType(),
-					expression.getExplicitSqlCastTarget()
+					(Expression) function.getExpressionToCast().accept( this ),
+					( (BasicValuedExpressableType) function.getExpressableType() ).getSqlExpressableType(),
+					function.getExplicitSqlCastTarget()
 			);
 		}
 		finally {
@@ -885,13 +875,13 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public CountFunction visitCountFunction(SqmCountFunction expression) {
+	public CountFunction visitCountFunction(SqmCountFunction function) {
 		shallownessStack.push( Shallowness.FUNCTION );
 
 		try {
 			return new CountFunction(
-					toSqlExpression( expression.getArgument().accept( this ) ),
-					expression.isDistinct(),
+					toSqlExpression( function.getArgument().accept( this ) ),
+					function.isDistinct(),
 					getCreationContext().getDomainModel().getTypeConfiguration()
 							.getBasicTypeRegistry()
 							.getBasicType( Long.class )
@@ -1184,7 +1174,7 @@ public abstract class BaseSqmToSqlAstConverter
 			if ( expression.getOperator() == MODULO ) {
 				return new NonStandardFunction(
 						"mod",
-						null, //(BasicType) extractOrmType( expression.getExpressableType() ),
+						expression.getExpressableType().getSqlExpressableType(),
 						(Expression) expression.getLeftHandOperand().accept( this ),
 						(Expression) expression.getRightHandOperand().accept( this )
 				);
@@ -1236,7 +1226,7 @@ public abstract class BaseSqmToSqlAstConverter
 	public Object visitSubQueryExpression(SqmSubQuery sqmSubQuery) {
 		final QuerySpec subQuerySpec = visitQuerySpec( sqmSubQuery.getQuerySpec() );
 
-		final ExpressableType<?> expressableType = determineExpressableType( sqmSubQuery );
+		final ExpressableType<?> expressableType = sqmSubQuery.getExpressableType();
 
 		return new SubQuery(
 				subQuerySpec,
@@ -1250,7 +1240,7 @@ public abstract class BaseSqmToSqlAstConverter
 	@Override
 	public CaseSimpleExpression visitSimpleCaseExpression(SqmCaseSimple expression) {
 		final CaseSimpleExpression result = new CaseSimpleExpression(
-				( (BasicValuedExpressableType) expression.getExpressableType() ).getSqlExpressableType(),
+				expression.getExpressableType().getSqlExpressableType(),
 				(Expression) expression.getFixture().accept( this )
 		);
 
@@ -1316,7 +1306,7 @@ public abstract class BaseSqmToSqlAstConverter
 	public ConcatFunction visitConcatExpression(SqmConcat expression) {
 		return new ConcatFunction(
 				Arrays.asList(
-						(Expression)expression.getLeftHandOperand().accept( this ),
+						(Expression) expression.getLeftHandOperand().accept( this ),
 						(Expression) expression.getRightHandOperand().accept( this )
 				),
 				expression.getExpressableType().getSqlExpressableType()
@@ -1384,30 +1374,16 @@ public abstract class BaseSqmToSqlAstConverter
 
 	@Override
 	public ComparisonPredicate visitComparisonPredicate(SqmComparisonPredicate predicate) {
-		inferableTypeAccessStack.push( predicate.getRightHandExpression()::getExpressableType );
+		final Expression lhs = toSqlExpression( predicate.getLeftHandExpression().accept( this ) );
+		final Expression rhs = toSqlExpression( predicate.getRightHandExpression().accept( this ) );
 
-		final Expression lhs;
-		try {
-			lhs = toSqlExpression( predicate.getLeftHandExpression().accept( this ) );
-		}
-		finally {
-			inferableTypeAccessStack.pop();
-		}
-
-		inferableTypeAccessStack.push( predicate.getLeftHandExpression()::getExpressableType );
-
-		final Expression rhs;
-		try {
-			rhs = toSqlExpression( predicate.getRightHandExpression().accept( this ) );
-		}
-		finally {
-			inferableTypeAccessStack.pop();
-		}
-
-		return new ComparisonPredicate( lhs, interpret( predicate.getOperator() ), rhs );
+		return new ComparisonPredicate(
+				lhs,
+				interpret( predicate.getOperator() ),
+				rhs
+		);
 	}
 
-	@SuppressWarnings("unchecked")
 	private Expression toSqlExpression(Object value) {
 		if ( value instanceof SqmExpressionInterpretation ) {
 			return ( (SqmExpressionInterpretation) value ).toSqlExpression( this );
@@ -1444,49 +1420,10 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public BetweenPredicate visitBetweenPredicate(BetweenSqmPredicate predicate) {
-		final Expression expression;
-		final Expression lowerBound;
-		final Expression upperBound;
-
-		inferableTypeAccessStack.push(
-				() -> coalesce(
-						() -> predicate.getLowerBound().getExpressableType(),
-						() -> predicate.getUpperBound().getExpressableType()
-				)
-		);
-		try {
-			expression = (Expression) predicate.getExpression().accept( this );
-		}
-		finally {
-			inferableTypeAccessStack.pop();
-		}
-
-		inferableTypeAccessStack.push(
-				() -> coalesce(
-						() -> predicate.getExpression().getExpressableType(),
-						() -> predicate.getUpperBound().getExpressableType()
-				)
-		);
-		try {
-			lowerBound = (Expression) predicate.getLowerBound().accept( this );
-		}
-		finally {
-			inferableTypeAccessStack.pop();
-		}
-
-		inferableTypeAccessStack.push(
-				() -> coalesce(
-						() -> predicate.getExpression().getExpressableType(),
-						() -> predicate.getLowerBound().getExpressableType()
-				)
-		);
-		try {
-			upperBound = (Expression) predicate.getUpperBound().accept( this );
-		}
-		finally {
-			inferableTypeAccessStack.pop();
-		}
+	public BetweenPredicate visitBetweenPredicate(SqmBetweenPredicate predicate) {
+		final Expression expression = (Expression) predicate.getExpression().accept( this );
+		final Expression lowerBound = (Expression) predicate.getLowerBound().accept( this );
+		final Expression upperBound = (Expression) predicate.getUpperBound().accept( this );
 
 		return new BetweenPredicate(
 				expression,
@@ -1519,7 +1456,7 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public InListPredicate visitInListPredicate(InListSqmPredicate predicate) {
+	public InListPredicate visitInListPredicate(SqmInListPredicate predicate) {
 		// special case:
 		//		if there is just a single element and it is an SqmParameter
 		//		and the corresponding QueryParameter binding is multi-valued...
@@ -1536,37 +1473,21 @@ public abstract class BaseSqmToSqlAstConverter
 							toSqlExpression( predicate.getTestExpression().accept( this ) )
 					);
 
-					inferableTypeAccessStack.push(
-							() -> {
-								final Supplier<? extends ExpressableType> inferableTypeSupplier = predicate.getTestExpression().getInferableType();
-								if ( inferableTypeSupplier != null ) {
-									return inferableTypeSupplier.get();
-								}
-
-								return null;
-							}
-					);
-
-					try {
-						boolean first = true;
-						for ( Object bindValue : domainParamBinding.getBindValues() ) {
-							final SqmParameter sqmParamToConsume;
-							// for each bind value do the following:
-							//		1) create a pseudo-SqmParameter (though re-use the original for the first value)
-							if ( first ) {
-								sqmParamToConsume = sqmParameter;
-								first = false;
-							}
-							else {
-								sqmParamToConsume = sqmParameter.copy();
-								domainParameterXref.addExpansion( domainParam, sqmParameter, sqmParamToConsume );
-							}
-
-							inListPredicate.addExpression( consumeSqmParameter( sqmParamToConsume ) );
+					boolean first = true;
+					for ( Object bindValue : domainParamBinding.getBindValues() ) {
+						final SqmParameter sqmParamToConsume;
+						// for each bind value do the following:
+						//		1) create a pseudo-SqmParameter (though re-use the original for the first value)
+						if ( first ) {
+							sqmParamToConsume = sqmParameter;
+							first = false;
 						}
-					}
-					finally {
-						inferableTypeAccessStack.pop();
+						else {
+							sqmParamToConsume = sqmParameter.copy();
+							domainParameterXref.addExpansion( domainParam, sqmParameter, sqmParamToConsume );
+						}
+
+						inListPredicate.addExpression( consumeSqmParameter( sqmParamToConsume ) );
 					}
 
 					return inListPredicate;
@@ -1588,7 +1509,7 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public InSubQueryPredicate visitInSubQueryPredicate(InSubQuerySqmPredicate predicate) {
+	public InSubQueryPredicate visitInSubQueryPredicate(SqmInSubQueryPredicate predicate) {
 		return new InSubQueryPredicate(
 				(Expression) predicate.getTestExpression().accept( this ),
 				(QuerySpec) predicate.getSubQueryExpression().accept( this ),

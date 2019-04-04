@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import java.util.function.Supplier;
-
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
@@ -26,16 +24,6 @@ public class SqmEntityValuedSimplePath extends AbstractSqmSimplePath {
 			EntityValuedNavigable<?> referencedNavigable,
 			SqmPath lhs) {
 		super( navigablePath, referencedNavigable, lhs );
-	}
-
-	@Override
-	public PersistenceType getPersistenceType() {
-		return PersistenceType.ENTITY;
-	}
-
-	@Override
-	public Class getJavaType() {
-		return getJavaTypeDescriptor().getJavaType();
 	}
 
 	@Override
@@ -87,11 +75,6 @@ public class SqmEntityValuedSimplePath extends AbstractSqmSimplePath {
 	@Override
 	public EntityValuedNavigable getExpressableType() {
 		return getReferencedNavigable();
-	}
-
-	@Override
-	public Supplier<? extends EntityValuedNavigable> getInferableType() {
-		return this::getReferencedNavigable;
 	}
 
 	@Override

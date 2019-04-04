@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import java.util.function.Supplier;
-
 import org.hibernate.metamodel.model.domain.spi.BasicValuedNavigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SemanticException;
@@ -36,16 +34,6 @@ public class SqmBasicValuedSimplePath extends AbstractSqmSimplePath {
 	}
 
 	@Override
-	public PersistenceType getPersistenceType() {
-		return PersistenceType.BASIC;
-	}
-
-	@Override
-	public Class getJavaType() {
-		return getJavaTypeDescriptor().getJavaType();
-	}
-
-	@Override
 	public SemanticPathPart resolvePathPart(
 			String name,
 			String currentContextKey,
@@ -67,11 +55,6 @@ public class SqmBasicValuedSimplePath extends AbstractSqmSimplePath {
 	@Override
 	public BasicValuedNavigable getExpressableType() {
 		return getReferencedNavigable();
-	}
-
-	@Override
-	public Supplier<? extends BasicValuedNavigable> getInferableType() {
-		return this::getReferencedNavigable;
 	}
 
 	@Override

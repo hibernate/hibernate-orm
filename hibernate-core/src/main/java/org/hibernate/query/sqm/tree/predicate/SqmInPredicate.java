@@ -11,6 +11,6 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 /**
  * @author Steve Ebersole
  */
-public interface InSqmPredicate extends NegatableSqmPredicate {
+public interface SqmInPredicate extends NegatableSqmPredicate {
 	SqmExpression getTestExpression();
 }

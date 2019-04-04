@@ -6,20 +6,8 @@
  */
 package org.hibernate.type.descriptor.sql.spi;
 
-import java.io.Serializable;
-import java.sql.CallableStatement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.hibernate.sql.AbstractJdbcValueBinder;
-import org.hibernate.sql.AbstractJdbcValueExtractor;
-import org.hibernate.sql.JdbcValueBinder;
-import org.hibernate.sql.JdbcValueExtractor;
-import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.internal.SqlTypeDescriptorBaseline;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -94,87 +82,4 @@ public class SqlTypeDescriptorRegistry implements SqlTypeDescriptorBaseline.Base
 				|| JdbcTypeFamilyInformation.INSTANCE.locateJdbcTypeFamilyByTypeCode( jdbcTypeCode ) != null;
 	}
 
-	public static class ObjectSqlTypeDescriptor extends AbstractTemplateSqlTypeDescriptor {
-		private final int jdbcTypeCode;
-
-		@SuppressWarnings("WeakerAccess")
-		public ObjectSqlTypeDescriptor(int jdbcTypeCode) {
-			this.jdbcTypeCode = jdbcTypeCode;
-		}
-
-		@Override
-		public int getJdbcTypeCode() {
-			return jdbcTypeCode;
-		}
-
-		@Override
-		public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
-			throw new UnsupportedOperationException( "No recommended Java-type mapping known for JDBC type code [" + jdbcTypeCode + "]" );
-		}
-
-		@Override
-		public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
-			// obviously no literal support here :)
-			return null;
-		}
-
-		@Override
-		public boolean canBeRemapped() {
-			return true;
-		}
-
-		@Override
-		@SuppressWarnings("unchecked")
-		public <X> JdbcValueBinder<X> createBinder(BasicJavaDescriptor<X> javaTypeDescriptor, TypeConfiguration typeConfiguration) {
-			if ( Serializable.class.isAssignableFrom( javaTypeDescriptor.getJavaType() ) ) {
-				return VarbinarySqlDescriptor.INSTANCE.getSqlExpressableType( javaTypeDescriptor, typeConfiguration ).getJdbcValueBinder();
-			}
-
-			return new AbstractJdbcValueBinder<X>( javaTypeDescriptor, this ) {
-				@Override
-				protected void doBind(
-						PreparedStatement st,
-						int index, X value,
-						ExecutionContext executionContext) throws SQLException {
-					st.setObject( index, value, jdbcTypeCode );
-				}
-
-				@Override
-				protected void doBind(
-						CallableStatement st,
-						String name,
-						X value,
-						ExecutionContext executionContext)
-						throws SQLException {
-					st.setObject( name, value, jdbcTypeCode );
-				}
-			};
-		}
-
-
-		@Override
-		@SuppressWarnings("unchecked")
-		public <X> JdbcValueExtractor<X> createExtractor(BasicJavaDescriptor<X> javaTypeDescriptor, TypeConfiguration typeConfiguration) {
-			if ( Serializable.class.isAssignableFrom( javaTypeDescriptor.getJavaType() ) ) {
-				return VarbinarySqlDescriptor.INSTANCE.getSqlExpressableType( javaTypeDescriptor, typeConfiguration ).getJdbcValueExtractor();
-			}
-
-			return new AbstractJdbcValueExtractor<X>( javaTypeDescriptor, this ) {
-				@Override
-				protected X doExtract(ResultSet rs, int position, ExecutionContext executionContext) throws SQLException {
-					return (X) rs.getObject( position );
-				}
-
-				@Override
-				protected X doExtract(CallableStatement statement, int position, ExecutionContext executionContext) throws SQLException {
-					return (X) statement.getObject( position );
-				}
-
-				@Override
-				protected X doExtract(CallableStatement statement, String name, ExecutionContext executionContext) throws SQLException {
-					return (X) statement.getObject( name );
-				}
-			};
-		}
-	}
 }

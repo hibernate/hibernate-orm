@@ -21,6 +21,7 @@ import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Models a reference to a part of the application's domain model (a Navigable)
@@ -38,7 +39,7 @@ import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
  *
  * @author Steve Ebersole
  */
-public interface SqmPath extends SqmExpression, SemanticPathPart, ExpressableType {
+public interface SqmPath extends SqmExpression, SemanticPathPart {
 
 	/**
 	 * Returns the NavigablePath.
@@ -167,5 +168,20 @@ public interface SqmPath extends SqmExpression, SemanticPathPart, ExpressableTyp
 		catch (IllegalArgumentException e) {
 			throw exceptionSupplier.get();
 		}
+	}
+
+	@Override
+	default ExpressableType<?> getExpressableType() {
+		return getReferencedNavigable();
+	}
+
+	@Override
+	default void applyInferableType(ExpressableType<?> type) {
+		// do nothing
+	}
+
+	@Override
+	default JavaTypeDescriptor getJavaTypeDescriptor() {
+		return getReferencedNavigable().getJavaTypeDescriptor();
 	}
 }

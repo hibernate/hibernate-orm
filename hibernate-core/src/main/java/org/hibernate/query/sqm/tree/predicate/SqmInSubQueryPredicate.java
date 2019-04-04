@@ -6,30 +6,40 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
+import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmSubQuery;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 
 /**
  * @author Steve Ebersole
  */
-public class InSubQuerySqmPredicate extends AbstractNegatableSqmPredicate implements InSqmPredicate {
+public class SqmInSubQueryPredicate extends AbstractNegatableSqmPredicate implements SqmInPredicate {
 	private final SqmExpression testExpression;
 	private final SqmSubQuery subQueryExpression;
 
-	public InSubQuerySqmPredicate(
+	public SqmInSubQueryPredicate(
 			SqmExpression testExpression,
 			SqmSubQuery subQueryExpression) {
 		this( testExpression, subQueryExpression, false );
 	}
 
-	public InSubQuerySqmPredicate(
+	public SqmInSubQueryPredicate(
 			SqmExpression testExpression,
 			SqmSubQuery subQueryExpression,
 			boolean negated) {
 		super( negated );
 		this.testExpression = testExpression;
 		this.subQueryExpression = subQueryExpression;
+
+		final ExpressableType<?> expressableType = QueryHelper.highestPrecedenceType(
+				testExpression.getExpressableType(),
+				subQueryExpression.getExpressableType()
+		);
+
+		testExpression.applyInferableType( expressableType );
+		subQueryExpression.applyInferableType( expressableType );
 	}
 
 	@Override

@@ -6,13 +6,10 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
-import java.util.function.Supplier;
-
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 import static org.hibernate.query.sqm.produce.SqmCreationHelper.buildRootNavigablePath;
@@ -49,16 +46,6 @@ public class SqmCrossJoin extends AbstractSqmFrom implements SqmJoin {
 		return (EntityTypeDescriptor<?>) super.getReferencedNavigable();
 	}
 
-	@Override
-	public EntityTypeDescriptor getExpressableType() {
-		return getReferencedNavigable();
-	}
-
-	@Override
-	public Supplier<? extends ExpressableType> getInferableType() {
-		return this::getReferencedNavigable;
-	}
-
 	public String getEntityName() {
 		return getReferencedNavigable().getEntityName();
 	}
@@ -81,15 +68,5 @@ public class SqmCrossJoin extends AbstractSqmFrom implements SqmJoin {
 	@Override
 	public SqmRoot findRoot() {
 		return getRoot();
-	}
-
-	@Override
-	public PersistenceType getPersistenceType() {
-		return PersistenceType.ENTITY;
-	}
-
-	@Override
-	public Class getJavaType() {
-		return getJavaTypeDescriptor().getJavaType();
 	}
 }

@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import java.util.function.Supplier;
-
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.query.sqm.SemanticException;
@@ -51,32 +49,7 @@ public class SqmMinElementPath extends AbstractSqmSpecificPluralPartPath {
 	}
 
 	@Override
-	public ExpressableType getExpressableType() {
-		return getReferencedNavigable();
-	}
-
-	@Override
-	public Supplier<? extends ExpressableType> getInferableType() {
-		return this::getReferencedNavigable;
-	}
-
-	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitMinElementPath( this );
-	}
-
-	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return getReferencedNavigable().getJavaTypeDescriptor();
-	}
-
-	@Override
-	public PersistenceType getPersistenceType() {
-		return getReferencedNavigable().getPersistenceType();
-	}
-
-	@Override
-	public Class getJavaType() {
-		return getJavaTypeDescriptor().getJavaType();
 	}
 }

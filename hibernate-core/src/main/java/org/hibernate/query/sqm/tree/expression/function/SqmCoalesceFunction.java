@@ -8,11 +8,11 @@ package org.hibernate.query.sqm.tree.expression.function;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
@@ -33,8 +33,7 @@ public class SqmCoalesceFunction implements SqmFunction {
 	}
 
 	@Override
-	public Supplier<? extends AllowableFunctionReturnType> getInferableType() {
-		return this::getExpressableType;
+	public void applyInferableType(ExpressableType<?> type) {
 	}
 
 	@Override

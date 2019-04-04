@@ -13,7 +13,8 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 /**
  * @author Steve Ebersole
  */
-public class SqmSumFunction extends AbstractSqmAggregateFunction
+public class SqmSumFunction
+		extends AbstractSqmAggregateFunction
 		implements SqmAggregateFunction {
 	public static final String NAME = "sum";
 

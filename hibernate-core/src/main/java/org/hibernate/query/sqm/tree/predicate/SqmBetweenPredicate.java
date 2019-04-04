@@ -6,18 +6,20 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
+import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 
 /**
  * @author Steve Ebersole
  */
-public class BetweenSqmPredicate extends AbstractNegatableSqmPredicate {
+public class SqmBetweenPredicate extends AbstractNegatableSqmPredicate {
 	private final SqmExpression expression;
 	private final SqmExpression lowerBound;
 	private final SqmExpression upperBound;
 
-	public BetweenSqmPredicate(
+	public SqmBetweenPredicate(
 			SqmExpression expression,
 			SqmExpression lowerBound,
 			SqmExpression upperBound,
@@ -26,6 +28,16 @@ public class BetweenSqmPredicate extends AbstractNegatableSqmPredicate {
 		this.expression = expression;
 		this.lowerBound = lowerBound;
 		this.upperBound = upperBound;
+
+		final ExpressableType<?> expressableType = QueryHelper.highestPrecedenceType(
+				expression.getExpressableType(),
+				lowerBound.getExpressableType(),
+				upperBound.getExpressableType()
+		);
+
+		expression.applyInferableType( expressableType );
+		lowerBound.applyInferableType( expressableType );
+		upperBound.applyInferableType( expressableType );
 	}
 
 	public SqmExpression getExpression() {

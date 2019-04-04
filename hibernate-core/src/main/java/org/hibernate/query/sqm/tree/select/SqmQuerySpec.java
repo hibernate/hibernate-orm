@@ -11,6 +11,7 @@ import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmFromClauseContainer;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClauseContainer;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * Defines the commonality between a root query and a subquery.
@@ -88,6 +89,9 @@ public class SqmQuerySpec implements SqmFromClauseContainer, SqmWhereClauseConta
 	}
 
 	public void setLimitExpression(SqmExpression limitExpression) {
+		if ( limitExpression != null ) {
+			limitExpression.applyInferableType( StandardSpiBasicTypes.INTEGER );
+		}
 		this.limitExpression = limitExpression;
 	}
 
@@ -96,6 +100,9 @@ public class SqmQuerySpec implements SqmFromClauseContainer, SqmWhereClauseConta
 	}
 
 	public void setOffsetExpression(SqmExpression offsetExpression) {
+		if ( offsetExpression != null ) {
+			offsetExpression.applyInferableType( StandardSpiBasicTypes.INTEGER );
+		}
 		this.offsetExpression = offsetExpression;
 	}
 }

@@ -7,7 +7,6 @@
 package org.hibernate.query.sqm.produce.path.internal;
 
 import java.lang.reflect.Field;
-import java.util.function.Supplier;
 
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
@@ -54,12 +53,12 @@ public class SqmStaticFieldReference<T> implements SemanticPathPart, SqmExpressi
 	}
 
 	@Override
-	public Supplier<? extends ExpressableType> getInferableType() {
-		return this::getExpressableType;
+	public void applyInferableType(ExpressableType<?> type) {
+		/// nothing to do
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitFullyQualifiedField( referencedField );
 	}
 

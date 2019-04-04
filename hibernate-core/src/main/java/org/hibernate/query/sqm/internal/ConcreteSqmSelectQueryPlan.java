@@ -26,6 +26,7 @@ import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.consume.spi.SqlAstSelectToJdbcSelectConverter;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlAstSelectDescriptor;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectInterpretation;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
@@ -194,7 +195,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 
 		final SqmSelectToSqlAstConverter sqmConverter = getSqmSelectToSqlAstConverter( executionContext );
 
-		final SqlAstSelectDescriptor interpretation = sqmConverter.interpret( sqm );
+		final SqmSelectInterpretation interpretation = sqmConverter.interpret( sqm );
 
 		final JdbcSelect jdbcSelect = SqlAstSelectToJdbcSelectConverter.interpret(
 				interpretation,

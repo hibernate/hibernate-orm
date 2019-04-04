@@ -56,11 +56,11 @@ import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.AndSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.BetweenSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.EmptinessSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.GroupedSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.InListSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.InSubQuerySqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmInListPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmInSubQueryPredicate;
 import org.hibernate.query.sqm.tree.predicate.LikeSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.MemberOfSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.NegatedSqmPredicate;
@@ -476,8 +476,8 @@ public class QuerySplitter {
 		}
 
 		@Override
-		public BetweenSqmPredicate visitBetweenPredicate(BetweenSqmPredicate predicate) {
-			return new BetweenSqmPredicate(
+		public SqmBetweenPredicate visitBetweenPredicate(SqmBetweenPredicate predicate) {
+			return new SqmBetweenPredicate(
 					(SqmExpression) predicate.getExpression().accept( this ),
 					(SqmExpression) predicate.getLowerBound().accept( this ),
 					(SqmExpression) predicate.getUpperBound().accept( this ),
@@ -508,8 +508,8 @@ public class QuerySplitter {
 		}
 
 		@Override
-		public InListSqmPredicate visitInListPredicate(InListSqmPredicate predicate) {
-			InListSqmPredicate copy = new InListSqmPredicate(
+		public SqmInListPredicate visitInListPredicate(SqmInListPredicate predicate) {
+			SqmInListPredicate copy = new SqmInListPredicate(
 					(SqmExpression) predicate.getTestExpression().accept( this )
 			);
 			for ( SqmExpression expression : predicate.getListExpressions() ) {
@@ -519,8 +519,8 @@ public class QuerySplitter {
 		}
 
 		@Override
-		public InSubQuerySqmPredicate visitInSubQueryPredicate(InSubQuerySqmPredicate predicate) {
-			return new InSubQuerySqmPredicate(
+		public SqmInSubQueryPredicate visitInSubQueryPredicate(SqmInSubQueryPredicate predicate) {
+			return new SqmInSubQueryPredicate(
 					(SqmExpression) predicate.getTestExpression().accept( this ),
 					visitSubQueryExpression( predicate.getSubQueryExpression() )
 			);
@@ -696,8 +696,7 @@ public class QuerySplitter {
 		@Override
 		public SqmBinaryArithmetic visitBinaryArithmeticExpression(SqmBinaryArithmetic expression) {
 			return new SqmBinaryArithmetic(
-					(SqmExpression) expression.getLeftHandOperand().accept( this ),
-					expression.getOperator(),
+					expression.getOperator(), (SqmExpression) expression.getLeftHandOperand().accept( this ),
 					(SqmExpression) expression.getRightHandOperand().accept( this ),
 					expression.getExpressableType()
 			);

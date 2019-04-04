@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.expression.function;
 
-import java.util.function.Supplier;
-
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 
@@ -19,9 +17,6 @@ import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 public interface SqmAggregateFunction extends SqmFunction, Distinctable {
 	@Override
 	BasicValuedExpressableType getExpressableType();
-
-	@Override
-	Supplier<? extends BasicValuedExpressableType> getInferableType();
 
 	SqmExpression getArgument();
 

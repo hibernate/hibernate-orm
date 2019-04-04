@@ -15,7 +15,6 @@ import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -44,7 +43,6 @@ public class BasicCriteriaExecutionTests extends BaseSessionFactoryFunctionalTes
 	}
 
 	@Test
-	@FailureExpected( "Criteria nodes do not currently track ExpressableType + StackOverflow resolving implied type" )
 	public void testExecutingBasicCriteriaQueryLiteralPredicate() {
 		final HibernateCriteriaBuilder criteriaBuilder = sessionFactory().getQueryEngine().getCriteriaBuilder();
 
@@ -62,7 +60,6 @@ public class BasicCriteriaExecutionTests extends BaseSessionFactoryFunctionalTes
 	}
 
 	@Test
-	@FailureExpected( "Criteria nodes do not currently track ExpressableType" )
 	public void testExecutingBasicCriteriaQueryParameterPredicate() {
 		final HibernateCriteriaBuilder criteriaBuilder = sessionFactory().getQueryEngine().getCriteriaBuilder();
 

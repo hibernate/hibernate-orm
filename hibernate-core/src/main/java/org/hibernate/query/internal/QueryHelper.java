@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -40,6 +41,46 @@ import static org.hibernate.query.sqm.consume.internal.SqmConsumeHelper.generate
 public class QueryHelper {
 	private QueryHelper() {
 		// disallow direct instantiation
+	}
+
+	public static ExpressableType<?> highestPrecedenceType(ExpressableType<?>... types) {
+		if ( types == null || types.length == 0 ) {
+			return null;
+		}
+
+		if ( types.length == 1 ) {
+			return types[0];
+		}
+
+		ExpressableType<?> highest = highestPrecedenceType( types[0], types[1] );
+		for ( int i = 2; i < types.length; i++ ) {
+			highest = highestPrecedenceType( highest, types[i] );
+		}
+		return highest;
+	}
+
+	public static ExpressableType<?> highestPrecedenceType(ExpressableType<?> type1, ExpressableType<?> type2) {
+		if ( type1 == null && type2 == null ) {
+			return null;
+		}
+		else if ( type1 == null ) {
+			return type2;
+		}
+		else if ( type2 == null ) {
+			return type1;
+		}
+
+		if ( type1 instanceof Navigable ) {
+			return type1;
+		}
+
+		if ( type2 instanceof Navigable ) {
+			return type2;
+		}
+
+		// any other precedence rules?
+
+		return type1;
 	}
 
 	public static JdbcParameterBindings buildJdbcParameterBindings(
@@ -95,11 +136,15 @@ public class QueryHelper {
 			final List<SqmParameter> sqmParameters = entry.getValue();
 
 			final QueryParameterBinding<?> domainParamBinding = domainParamBindings.getBinding( queryParam );
-			final AllowableParameterType<?> parameterType = determineParameterType( domainParamBinding, queryParam, session );
 
 			final Map<SqmParameter, List<JdbcParameter>> jdbcParamMap = jdbcParamXref.get( queryParam );
 			for ( SqmParameter sqmParameter : sqmParameters ) {
 				final List<JdbcParameter> jdbcParams = jdbcParamMap.get( sqmParameter );
+				final AllowableParameterType<?> parameterType = determineParameterType(
+						domainParamBinding,
+						queryParam,
+						session.getFactory().getTypeConfiguration()
+				);
 
 				if ( ! domainParamBinding.isBound() ) {
 					parameterType.visitJdbcTypes(
@@ -192,10 +237,10 @@ public class QueryHelper {
 		);
 	}
 
-	private static AllowableParameterType determineParameterType(
+	public static AllowableParameterType determineParameterType(
 			QueryParameterBinding<?> binding,
 			QueryParameterImplementor<?> parameter,
-			SharedSessionContractImplementor session) {
+			TypeConfiguration typeConfiguration) {
 		if ( binding.getBindType() != null ) {
 			return binding.getBindType();
 		}
@@ -204,9 +249,26 @@ public class QueryHelper {
 			return parameter.getHibernateType();
 		}
 
-		final TypeConfiguration typeConfiguration = session.getFactory().getTypeConfiguration();
+		Class<?> parameterJavaType = parameter.getParameterType();
 
-		// assume we have (or can create) a mapping for the parameter's Java type
-		return typeConfiguration.standardExpressableTypeForJavaType( parameter.getParameterType() );
+		if ( parameterJavaType == null ) {
+			if ( binding.isMultiValued() ) {
+
+			}
+			else {
+				final Object bindValue = binding.getBindValue();
+				if ( bindValue != null ) {
+					parameterJavaType = bindValue.getClass();
+				}
+			}
+		}
+
+		if ( parameterJavaType != null ) {
+			return typeConfiguration.standardExpressableTypeForJavaType( parameterJavaType );
+		}
+
+		// what else?
+
+		throw new IllegalStateException( "Unable to determine parameter type : " + parameter );
 	}
 }

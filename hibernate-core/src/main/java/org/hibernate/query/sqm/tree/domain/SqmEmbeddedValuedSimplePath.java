@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import java.util.function.Supplier;
-
 import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
@@ -40,16 +38,6 @@ public class SqmEmbeddedValuedSimplePath extends AbstractSqmSimplePath {
 	}
 
 	@Override
-	public PersistenceType getPersistenceType() {
-		return PersistenceType.EMBEDDABLE;
-	}
-
-	@Override
-	public Class getJavaType() {
-		return getJavaTypeDescriptor().getJavaType();
-	}
-
-	@Override
 	public SemanticPathPart resolvePathPart(
 			String name,
 			String currentContextKey,
@@ -75,11 +63,6 @@ public class SqmEmbeddedValuedSimplePath extends AbstractSqmSimplePath {
 	@Override
 	public EmbeddedValuedNavigable getExpressableType() {
 		return (EmbeddedValuedNavigable) super.getExpressableType();
-	}
-
-	@Override
-	public Supplier<? extends EmbeddedValuedNavigable> getInferableType() {
-		return this::getReferencedNavigable;
 	}
 
 	@Override

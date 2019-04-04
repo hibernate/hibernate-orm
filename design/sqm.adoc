@@ -230,7 +230,7 @@ interface SqmFromExporter
 interface SemanticPathPart
 interface SqmExpression {
 	ExpressableType getExpressableType();
-	ExpressableType getInferableType();
+	ExpressableType getFallbackType();
 }
 
 interface SqmSelectableNode

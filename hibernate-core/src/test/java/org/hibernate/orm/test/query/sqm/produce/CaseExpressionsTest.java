@@ -6,8 +6,10 @@
  */
 package org.hibernate.orm.test.query.sqm.produce;
 
+import org.hibernate.metamodel.model.domain.spi.BasicValuedNavigable;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.orm.test.query.sqm.produce.domain.Person;
+import org.hibernate.query.sqm.tree.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
@@ -16,6 +18,7 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.function.SqmCoalesceFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmNullifFunction;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 
 import org.hibernate.testing.orm.junit.TestingUtil;
 import org.junit.jupiter.api.Test;

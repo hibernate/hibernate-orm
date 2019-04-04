@@ -6,12 +6,10 @@
  */
 package org.hibernate.query.criteria.sqm;
 
-import java.util.Locale;
-import java.util.function.Supplier;
-
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.criteria.spi.ParameterExpression;
+import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
@@ -30,16 +28,13 @@ public class JpaParameterSqmWrapper implements SqmParameter {
 	private final ParameterExpression jpaParameterExpression;
 	private final boolean allowMultiValuedBinding;
 
-	private AllowableParameterType parameterType;
-	private Supplier<? extends ExpressableType> impliedTypeAccess;
+	private AllowableParameterType<?> parameterType;
 
 	public JpaParameterSqmWrapper(ParameterExpression jpaParameterExpression, boolean allowMultiValuedBinding) {
 		this.jpaParameterExpression = jpaParameterExpression;
 		this.allowMultiValuedBinding = allowMultiValuedBinding;
 
-		// todo (6.0) : how to best handle typing?
-		//		atm criteria support only defines typing in terms of JTD, but SQM
-		//		expects the ExpressableType hierarchy
+		this.parameterType = jpaParameterExpression.getExplicitType();
 	}
 
 	public ParameterExpression<?> getJpaParameterExpression() {
@@ -68,19 +63,7 @@ public class JpaParameterSqmWrapper implements SqmParameter {
 	}
 
 	@Override
-	public AllowableParameterType getExpressableType() {
-		if ( impliedTypeAccess != null ) {
-			final ExpressableType type = impliedTypeAccess.get();
-			if ( type != null ) {
-				if ( type instanceof AllowableParameterType ) {
-					return (AllowableParameterType) type;
-				}
-				throw new IllegalArgumentException(
-						"Parameter type inference returned a type that cannot be used as a parameter - " +  type
-				);
-			}
-		}
-
+	public AllowableParameterType<?> getExpressableType() {
 		return parameterType;
 	}
 
@@ -90,13 +73,8 @@ public class JpaParameterSqmWrapper implements SqmParameter {
 	}
 
 	@Override
-	public Supplier<? extends ExpressableType> getInferableType() {
-		return () -> parameterType;
-	}
-
-	@Override
-	public void impliedType(Supplier<? extends ExpressableType> inference) {
-		this.impliedTypeAccess = inference;
+	public void applyInferableType(ExpressableType<?> type) {
+		this.parameterType = (AllowableParameterType<?>) QueryHelper.highestPrecedenceType( parameterType, type );
 	}
 
 	@Override

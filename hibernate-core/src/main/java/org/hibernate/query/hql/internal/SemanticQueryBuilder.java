@@ -67,10 +67,10 @@ import org.hibernate.query.sqm.tree.domain.SqmMaxElementPath;
 import org.hibernate.query.sqm.tree.domain.SqmMaxIndexPath;
 import org.hibernate.query.sqm.tree.domain.SqmMinElementPath;
 import org.hibernate.query.sqm.tree.domain.SqmMinIndexPath;
+import org.hibernate.query.sqm.tree.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
-import org.hibernate.query.sqm.tree.expression.InferableTypeSqmExpression;
 import org.hibernate.query.sqm.tree.expression.LiteralHelper;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
@@ -86,7 +86,6 @@ import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmSubQuery;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
-import org.hibernate.query.sqm.tree.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.function.Distinctable;
 import org.hibernate.query.sqm.tree.expression.function.SqmAbsFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmAggregateFunction;
@@ -120,11 +119,10 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.internal.ParameterCollector;
 import org.hibernate.query.sqm.tree.predicate.AndSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.BetweenSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.EmptinessSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.GroupedSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.InListSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.InSubQuerySqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmInListPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmInSubQueryPredicate;
 import org.hibernate.query.sqm.tree.predicate.LikeSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.MemberOfSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.NegatableSqmPredicate;
@@ -144,15 +142,14 @@ import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.sql.TrimSpecification;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.sql.TrimSpecification;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
-import org.hibernate.type.spi.StandardSpiBasicTypes.StandardBasicType;
 
 import org.jboss.logging.Logger;
 
@@ -753,9 +750,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			return null;
 		}
 
-		SqmExpression sqmExpression = (SqmExpression) ctx.parameterOrNumberLiteral().accept( this );
-		applyImpliedType( sqmExpression, StandardSpiBasicTypes.INTEGER );
-		return sqmExpression;
+		return (SqmExpression) ctx.parameterOrNumberLiteral().accept( this );
 	}
 
 	@Override
@@ -764,16 +759,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			return null;
 		}
 
-		SqmExpression sqmExpression = (SqmExpression) ctx.parameterOrNumberLiteral().accept( this );
-		applyImpliedType( sqmExpression, StandardSpiBasicTypes.INTEGER );
-		return sqmExpression;
-	}
-
-	@SuppressWarnings("SameParameterValue")
-	private void applyImpliedType(SqmExpression sqmExpression, StandardBasicType impliedType) {
-		if ( sqmExpression instanceof InferableTypeSqmExpression ) {
-			( (InferableTypeSqmExpression) sqmExpression ).impliedType( () -> impliedType );
-		}
+		return (SqmExpression) ctx.parameterOrNumberLiteral().accept( this );
 	}
 
 	@Override
@@ -1133,28 +1119,6 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		final SqmExpression lhs = (SqmExpression) ctx.expression().get( 0 ).accept( this );
 		final SqmExpression rhs = (SqmExpression) ctx.expression().get( 1 ).accept( this );
 
-		// todo (6.0) : the problem with doing this in the HQL -> SQM translation is that we'd need to duplicate it for criteria
-		//		Do we need these types really prior to interpreting the SQM?  Couldn't we make the SQM walker
-		//		responsible for handling this?
-		//
-		// An expression has 3 associated types:
-		//
-		//		1) explicit type - the user has (somehow) explicitly told us the type.  (where does this exist?)
-		//		2) fallback type - generally this is one of the standard basic type
-		//		3) inferred type - a type that is inferred by its surroundings
-
-		if ( lhs.getInferableType() != null ) {
-			if ( rhs instanceof InferableTypeSqmExpression ) {
-				( (InferableTypeSqmExpression) rhs ).impliedType( lhs.getInferableType() );
-			}
-		}
-
-		if ( rhs.getInferableType() != null ) {
-			if ( lhs instanceof InferableTypeSqmExpression ) {
-				( (InferableTypeSqmExpression) lhs ).impliedType( rhs.getInferableType() );
-			}
-		}
-
 		return new SqmComparisonPredicate( lhs, ComparisonOperator.EQUAL, rhs );
 	}
 
@@ -1196,45 +1160,6 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		final SqmExpression rhs = (SqmExpression) ctx.expression().get( 1 ).accept( this );
 
 		return new SqmComparisonPredicate( lhs, ComparisonOperator.LESS_THAN_OR_EQUAL, rhs );
-	}
-
-	@Override
-	public Object visitBetweenPredicate(HqlParser.BetweenPredicateContext ctx) {
-		final SqmExpression expression = (SqmExpression) ctx.expression().get( 0 ).accept( this );
-		final SqmExpression lowerBound = (SqmExpression) ctx.expression().get( 1 ).accept( this );
-		final SqmExpression upperBound = (SqmExpression) ctx.expression().get( 2 ).accept( this );
-
-		if ( expression.getInferableType() != null ) {
-			if ( lowerBound instanceof InferableTypeSqmExpression ) {
-				( (InferableTypeSqmExpression) lowerBound ).impliedType( expression.getInferableType() );
-			}
-			if ( upperBound instanceof InferableTypeSqmExpression ) {
-				( (InferableTypeSqmExpression) upperBound ).impliedType( expression.getInferableType() );
-			}
-		}
-		else if ( lowerBound.getInferableType() != null ) {
-			if ( expression instanceof InferableTypeSqmExpression ) {
-				( (InferableTypeSqmExpression) expression ).impliedType( lowerBound.getInferableType() );
-			}
-			if ( upperBound instanceof InferableTypeSqmExpression ) {
-				( (InferableTypeSqmExpression) upperBound ).impliedType( lowerBound.getInferableType() );
-			}
-		}
-		else if ( upperBound.getInferableType() != null ) {
-			if ( expression instanceof InferableTypeSqmExpression ) {
-				( (InferableTypeSqmExpression) expression ).impliedType( upperBound.getInferableType() );
-			}
-			if ( lowerBound instanceof InferableTypeSqmExpression ) {
-				( (InferableTypeSqmExpression) lowerBound ).impliedType( upperBound.getInferableType() );
-			}
-		}
-
-		return new BetweenSqmPredicate(
-				expression,
-				lowerBound,
-				upperBound,
-				false
-		);
 	}
 
 	@Override
@@ -1280,16 +1205,10 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				for ( HqlParser.ExpressionContext expressionContext : tupleExpressionListContext.expression() ) {
 					final SqmExpression listItemExpression = (SqmExpression) expressionContext.accept( this );
 
-					if ( testExpression.getInferableType() != null ) {
-						if ( listItemExpression instanceof InferableTypeSqmExpression ) {
-							( (InferableTypeSqmExpression) listItemExpression ).impliedType( testExpression.getInferableType() );
-						}
-					}
-
 					listExpressions.add( listItemExpression );
 				}
 
-				return new InListSqmPredicate( testExpression, listExpressions );
+				return new SqmInListPredicate( testExpression, listExpressions );
 			}
 			finally {
 				parameterDeclarationContextStack.pop();
@@ -1306,7 +1225,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				);
 			}
 
-			return new InSubQuerySqmPredicate( testExpression, (SqmSubQuery) subQueryExpression );
+			return new SqmInSubQueryPredicate( testExpression, (SqmSubQuery) subQueryExpression );
 		}
 
 		// todo : handle PersistentCollectionReferenceInList labeled branch
@@ -1368,17 +1287,11 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			throw new ParsingException( "Expecting 2 operands to the + operator" );
 		}
 
-		final SqmExpression firstOperand = (SqmExpression) ctx.expression( 0 ).accept( this );
-		final SqmExpression secondOperand = (SqmExpression) ctx.expression( 1 ).accept( this );
 		return new SqmBinaryArithmetic(
-				firstOperand,
 				BinaryArithmeticOperator.ADD,
-				secondOperand,
-				creationContext.getDomainModel().getTypeConfiguration().resolveArithmeticType(
-						(BasicValuedExpressableType) firstOperand.getExpressableType(),
-						(BasicValuedExpressableType) secondOperand.getExpressableType(),
-						BinaryArithmeticOperator.ADD
-				)
+				(SqmExpression) ctx.expression( 0 ).accept( this ),
+				(SqmExpression) ctx.expression( 1 ).accept( this ),
+				creationContext.getDomainModel()
 		);
 	}
 
@@ -1388,17 +1301,11 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			throw new ParsingException( "Expecting 2 operands to the - operator" );
 		}
 
-		final SqmExpression firstOperand = (SqmExpression) ctx.expression( 0 ).accept( this );
-		final SqmExpression secondOperand = (SqmExpression) ctx.expression( 1 ).accept( this );
 		return new SqmBinaryArithmetic(
-				firstOperand,
 				BinaryArithmeticOperator.SUBTRACT,
-				secondOperand,
-				creationContext.getDomainModel().getTypeConfiguration().resolveArithmeticType(
-						(BasicValuedExpressableType) firstOperand.getExpressableType(),
-						(BasicValuedExpressableType) secondOperand.getExpressableType(),
-						BinaryArithmeticOperator.SUBTRACT
-				)
+				(SqmExpression) ctx.expression( 0 ).accept( this ),
+				(SqmExpression) ctx.expression( 1 ).accept( this ),
+				creationContext.getDomainModel()
 		);
 	}
 
@@ -1408,17 +1315,11 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			throw new ParsingException( "Expecting 2 operands to the * operator" );
 		}
 
-		final SqmExpression firstOperand = (SqmExpression) ctx.expression( 0 ).accept( this );
-		final SqmExpression secondOperand = (SqmExpression) ctx.expression( 1 ).accept( this );
 		return new SqmBinaryArithmetic(
-				firstOperand,
 				BinaryArithmeticOperator.MULTIPLY,
-				secondOperand,
-				creationContext.getDomainModel().getTypeConfiguration().resolveArithmeticType(
-						(BasicValuedExpressableType) firstOperand.getExpressableType(),
-						(BasicValuedExpressableType) secondOperand.getExpressableType(),
-						BinaryArithmeticOperator.MULTIPLY
-				)
+				(SqmExpression) ctx.expression( 0 ).accept( this ),
+				(SqmExpression) ctx.expression( 1 ).accept( this ),
+				creationContext.getDomainModel()
 		);
 	}
 
@@ -1428,17 +1329,11 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			throw new ParsingException( "Expecting 2 operands to the / operator" );
 		}
 
-		final SqmExpression firstOperand = (SqmExpression) ctx.expression( 0 ).accept( this );
-		final SqmExpression secondOperand = (SqmExpression) ctx.expression( 1 ).accept( this );
 		return new SqmBinaryArithmetic(
-				firstOperand,
 				BinaryArithmeticOperator.DIVIDE,
-				secondOperand,
-				creationContext.getDomainModel().getTypeConfiguration().resolveArithmeticType(
-						(BasicValuedExpressableType) firstOperand.getExpressableType(),
-						(BasicValuedExpressableType) secondOperand.getExpressableType(),
-						BinaryArithmeticOperator.DIVIDE
-				)
+				(SqmExpression) ctx.expression( 0 ).accept( this ),
+				(SqmExpression) ctx.expression( 1 ).accept( this ),
+				creationContext.getDomainModel()
 		);
 	}
 
@@ -1448,17 +1343,11 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			throw new ParsingException( "Expecting 2 operands to the % operator" );
 		}
 
-		final SqmExpression firstOperand = (SqmExpression) ctx.expression( 0 ).accept( this );
-		final SqmExpression secondOperand = (SqmExpression) ctx.expression( 1 ).accept( this );
 		return new SqmBinaryArithmetic(
-				firstOperand,
 				BinaryArithmeticOperator.MODULO,
-				secondOperand,
-				creationContext.getDomainModel().getTypeConfiguration().resolveArithmeticType(
-						(BasicValuedExpressableType) firstOperand.getExpressableType(),
-						(BasicValuedExpressableType) secondOperand.getExpressableType(),
-						BinaryArithmeticOperator.MODULO
-				)
+				(SqmExpression) ctx.expression( 0 ).accept( this ),
+				(SqmExpression) ctx.expression( 1 ).accept( this ),
+				creationContext.getDomainModel()
 		);
 	}
 

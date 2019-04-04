@@ -6,13 +6,13 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.EmbeddedValueExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.EmbeddedValuedExpressableType;
 
 /**
  * @author Steve Ebersole
  */
 public interface EntityIdentifierComposite<O,J>
-		extends EntityIdentifier<O,J>, EmbeddedValuedNavigable<J>, EmbeddedValueExpressableType<J> {
+		extends EntityIdentifier<O,J>, EmbeddedValuedNavigable<J>, EmbeddedValuedExpressableType<J> {
 	@Override
 	default boolean matchesNavigableName(String navigableName) {
 		return getNavigableName().equals( navigableName )

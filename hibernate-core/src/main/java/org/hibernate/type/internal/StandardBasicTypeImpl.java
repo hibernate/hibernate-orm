@@ -15,7 +15,6 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.spi.StandardSqlExpressableTypeImpl;
 import org.hibernate.type.spi.StandardSpiBasicTypes.StandardBasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 

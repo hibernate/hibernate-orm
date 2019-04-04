@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import java.util.function.Supplier;
-
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -23,13 +21,12 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  * @author Steve Ebersole
  * @author Gunnar Morling
  */
-public class SqmCollectionSize implements SqmExpression, DomainResultProducer {
+public class SqmCollectionSize extends AbstractSqmExpression implements DomainResultProducer {
 	private final SqmPath pluralPath;
-	private final BasicValuedExpressableType sizeType;
 
 	public SqmCollectionSize(SqmPath pluralPath, BasicValuedExpressableType sizeType) {
+		super( sizeType );
 		this.pluralPath = pluralPath;
-		this.sizeType = sizeType;
 	}
 
 	public SqmPath getPluralPath() {
@@ -37,13 +34,8 @@ public class SqmCollectionSize implements SqmExpression, DomainResultProducer {
 	}
 
 	@Override
-	public BasicValuedExpressableType getExpressableType() {
-		return sizeType;
-	}
-
-	@Override
-	public Supplier<? extends BasicValuedExpressableType> getInferableType() {
-		return this::getExpressableType;
+	public BasicValuedExpressableType<?> getExpressableType() {
+		return (BasicValuedExpressableType<?>) super.getExpressableType();
 	}
 
 	@Override

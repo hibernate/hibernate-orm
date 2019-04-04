@@ -16,7 +16,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
-import org.hibernate.sql.ast.produce.metamodel.spi.EmbeddedValueExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.EmbeddedValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
 import org.hibernate.sql.results.internal.domain.embedded.CompositeResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
@@ -28,7 +28,7 @@ import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface EmbeddedValuedNavigable<J> extends EmbeddedValueExpressableType<J>, Joinable<J> {
+public interface EmbeddedValuedNavigable<J> extends EmbeddedValuedExpressableType<J>, Joinable<J> {
 	@Override
 	EmbeddedContainer getContainer();
 

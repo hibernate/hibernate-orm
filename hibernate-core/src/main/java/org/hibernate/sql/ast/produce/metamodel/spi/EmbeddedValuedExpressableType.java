@@ -13,7 +13,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 /**
  * @author Steve Ebersole
  */
-public interface EmbeddedValueExpressableType<T> extends ExpressableType<T>, AllowableParameterType<T> {
+public interface EmbeddedValuedExpressableType<T> extends ExpressableType<T>, AllowableParameterType<T> {
 	EmbeddedTypeDescriptor getEmbeddedDescriptor();
 
 	default int getNumberOfJdbcParametersForRestriction() {

@@ -59,6 +59,7 @@ import org.hibernate.type.descriptor.java.internal.LocalTimeJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.LocaleJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.LongJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.NClobJavaDescriptor;
+import org.hibernate.type.descriptor.java.internal.ObjectJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.OffsetDateTimeJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.OffsetTimeJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.PrimitiveByteArrayJavaDescriptor;
@@ -87,6 +88,7 @@ import org.hibernate.type.descriptor.sql.spi.NCharSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.NClobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.NVarcharSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.NumericSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.ObjectSqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SmallIntSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.TimeSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.TimestampSqlDescriptor;
@@ -717,6 +719,11 @@ public final class StandardSpiBasicTypes {
 			VarcharSqlDescriptor.INSTANCE
 	);
 
+
+	public static final StandardBasicType<Object> OBJECT_STANDARD_BASIC_TYPE = new StandardBasicTypeImpl<>(
+			ObjectJavaDescriptor.INSTANCE,
+			ObjectSqlTypeDescriptor.INSTANCE
+	);
 
 	public static void prime(TypeConfiguration typeConfiguration) {
 

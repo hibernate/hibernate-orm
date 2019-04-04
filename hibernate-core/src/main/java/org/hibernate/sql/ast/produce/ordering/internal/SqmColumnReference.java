@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.ast.produce.ordering.internal;
 
-import java.util.function.Supplier;
-
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
@@ -51,12 +49,10 @@ public class SqmColumnReference implements SqmExpression, SqmNavigableReference 
 	}
 
 	@Override
-	public Supplier<? extends ExpressableType> getInferableType() {
-		return () -> null;
+	public void applyInferableType(ExpressableType<?> type) {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitExplicitColumnReference( this );
 	}
@@ -113,15 +109,5 @@ public class SqmColumnReference implements SqmExpression, SqmNavigableReference 
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		throw new UnsupportedOperationException(  );
-	}
-
-	@Override
-	public PersistenceType getPersistenceType() {
-		return PersistenceType.BASIC;
-	}
-
-	@Override
-	public Class getJavaType() {
-		return null;
 	}
 }

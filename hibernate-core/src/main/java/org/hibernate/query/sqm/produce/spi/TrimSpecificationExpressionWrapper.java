@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.produce.spi;
 
-import java.util.function.Supplier;
-
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
@@ -41,8 +39,8 @@ public class TrimSpecificationExpressionWrapper implements SqmExpression {
 	}
 
 	@Override
-	public Supplier<ExpressableType> getInferableType() {
-		return null;
+	public void applyInferableType(ExpressableType<?> type) {
+		// nothing to do
 	}
 
 	@Override

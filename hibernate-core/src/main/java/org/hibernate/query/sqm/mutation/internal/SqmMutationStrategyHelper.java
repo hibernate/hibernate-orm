@@ -24,9 +24,9 @@ import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.predicate.BetweenSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.GroupedSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.InListSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmInListPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmJunctivePredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
@@ -177,8 +177,8 @@ public class SqmMutationStrategyHelper {
 			return isNonIdentifierReference( lhs ) || isNonIdentifierReference( rhs );
 		}
 
-		if ( predicate instanceof InListSqmPredicate ) {
-			final InListSqmPredicate inPredicate = (InListSqmPredicate) predicate;
+		if ( predicate instanceof SqmInListPredicate ) {
+			final SqmInListPredicate inPredicate = (SqmInListPredicate) predicate;
 			if ( isNonIdentifierReference( inPredicate.getTestExpression() ) ) {
 				return true;
 			}
@@ -192,8 +192,8 @@ public class SqmMutationStrategyHelper {
 			return false;
 		}
 
-		if ( predicate instanceof BetweenSqmPredicate ) {
-			final BetweenSqmPredicate betweenPredicate = (BetweenSqmPredicate) predicate;
+		if ( predicate instanceof SqmBetweenPredicate ) {
+			final SqmBetweenPredicate betweenPredicate = (SqmBetweenPredicate) predicate;
 			return isNonIdentifierReference( betweenPredicate.getExpression() )
 					|| isNonIdentifierReference( betweenPredicate.getLowerBound() )
 					|| isNonIdentifierReference( betweenPredicate.getUpperBound() );

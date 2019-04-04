@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import java.util.function.Supplier;
-
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.PluralValuedNavigable;
@@ -34,19 +32,6 @@ public class SqmPluralValuedSimplePath extends AbstractSqmSimplePath {
 			SqmPath lhs,
 			String explicitAlias) {
 		super( navigablePath, referencedNavigable, lhs, explicitAlias );
-	}
-
-	@Override
-	public PersistenceType getPersistenceType() {
-		return getReferencedNavigable().getCollectionDescriptor()
-				.getElementDescriptor()
-				.getClassification()
-				.getCorrespondingJpaPersistenceType();
-	}
-
-	@Override
-	public Class getJavaType() {
-		return getJavaTypeDescriptor().getJavaType();
 	}
 
 	@Override
@@ -125,11 +110,6 @@ public class SqmPluralValuedSimplePath extends AbstractSqmSimplePath {
 	@Override
 	public PluralValuedNavigable getExpressableType() {
 		return getReferencedNavigable();
-	}
-
-	@Override
-	public Supplier<? extends PluralValuedNavigable> getInferableType() {
-		return this::getReferencedNavigable;
 	}
 
 	@Override

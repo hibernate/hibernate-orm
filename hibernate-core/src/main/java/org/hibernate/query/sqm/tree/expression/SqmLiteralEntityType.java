@@ -6,11 +6,10 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import java.util.function.Supplier;
-
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
@@ -38,13 +37,12 @@ public class SqmLiteralEntityType implements SqmExpression, DomainResultProducer
 	}
 
 	@Override
-	public EntityValuedExpressableType getExpressableType() {
+	public EntityValuedExpressableType<?> getExpressableType() {
 		return entityType;
 	}
 
 	@Override
-	public Supplier<? extends EntityValuedExpressableType> getInferableType() {
-		return this::getExpressableType;
+	public void applyInferableType(ExpressableType<?> type) {
 	}
 
 	@Override

@@ -37,6 +37,7 @@ import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmSubQuery;
+import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.expression.function.SqmAbsFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
@@ -72,12 +73,12 @@ import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.predicate.AndSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.BetweenSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.BooleanExpressionSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.EmptinessSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.GroupedSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.InListSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.InSubQuerySqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmInListPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmInSubQueryPredicate;
 import org.hibernate.query.sqm.tree.predicate.LikeSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.MemberOfSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.NegatedSqmPredicate;
@@ -809,7 +810,7 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 	}
 
 	@Override
-	public Object visitBetweenPredicate(BetweenSqmPredicate predicate) {
+	public Object visitBetweenPredicate(SqmBetweenPredicate predicate) {
 		processStanza(
 				predicate.isNegated() ? "is-not-between" : "is-between",
 				() -> {
@@ -845,12 +846,12 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 	}
 
 	@Override
-	public Object visitInListPredicate(InListSqmPredicate predicate) {
+	public Object visitInListPredicate(SqmInListPredicate predicate) {
 		return null;
 	}
 
 	@Override
-	public Object visitInSubQueryPredicate(InSubQuerySqmPredicate predicate) {
+	public Object visitInSubQueryPredicate(SqmInSubQueryPredicate predicate) {
 		return null;
 	}
 
@@ -911,6 +912,11 @@ public class SqmTreePrinter implements SemanticQueryWalker {
 
 	@Override
 	public Object visitLiteral(SqmLiteral literal) {
+		return null;
+	}
+
+	@Override
+	public Object visitTuple(SqmTuple sqmTuple) {
 		return null;
 	}
 

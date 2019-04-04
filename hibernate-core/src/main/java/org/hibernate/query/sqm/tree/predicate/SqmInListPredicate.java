@@ -10,37 +10,42 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * @author Steve Ebersole
  */
-public class InListSqmPredicate extends AbstractNegatableSqmPredicate implements InSqmPredicate {
+public class SqmInListPredicate extends AbstractNegatableSqmPredicate implements SqmInPredicate {
 	private final SqmExpression testExpression;
 	private final List<SqmExpression> listExpressions;
 
-	public InListSqmPredicate(SqmExpression testExpression) {
+	public SqmInListPredicate(SqmExpression testExpression) {
 		this( testExpression, new ArrayList<>() );
 	}
 
-	public InListSqmPredicate(SqmExpression testExpression, SqmExpression... listExpressions) {
+	public SqmInListPredicate(SqmExpression testExpression, SqmExpression... listExpressions) {
 		this( testExpression, ArrayHelper.toExpandableList( listExpressions ) );
 	}
 
-	public InListSqmPredicate(
+	public SqmInListPredicate(
 			SqmExpression testExpression,
 			List<SqmExpression> listExpressions) {
 		this( testExpression, listExpressions, false );
 	}
 
-	public InListSqmPredicate(
+	public SqmInListPredicate(
 			SqmExpression testExpression,
 			List<SqmExpression> listExpressions,
 			boolean negated) {
 		super( negated );
 		this.testExpression = testExpression;
 		this.listExpressions = listExpressions;
+		for ( SqmExpression listExpression : listExpressions ) {
+			implyListElementType( listExpression );
+		}
+
 	}
 
 	@Override
@@ -53,7 +58,18 @@ public class InListSqmPredicate extends AbstractNegatableSqmPredicate implements
 	}
 
 	public void addExpression(SqmExpression expression) {
+		implyListElementType( expression );
+
 		listExpressions.add( expression );
+	}
+
+	private void implyListElementType(SqmExpression expression) {
+		expression.applyInferableType(
+				QueryHelper.highestPrecedenceType(
+						getTestExpression().getExpressableType(),
+						expression.getExpressableType()
+				)
+		);
 	}
 
 	@Override

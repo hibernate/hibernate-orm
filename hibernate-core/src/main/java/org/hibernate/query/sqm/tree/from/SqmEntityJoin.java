@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
-import java.util.function.Supplier;
-
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.SqmCreationHelper;
@@ -58,16 +56,6 @@ public class SqmEntityJoin extends AbstractSqmJoin implements SqmQualifiedJoin {
 	}
 
 	@Override
-	public EntityTypeDescriptor getExpressableType() {
-		return getReferencedNavigable();
-	}
-
-	@Override
-	public Supplier<? extends EntityTypeDescriptor> getInferableType() {
-		return this::getReferencedNavigable;
-	}
-
-	@Override
 	public EntityJavaDescriptor getJavaTypeDescriptor() {
 		return getReferencedNavigable().getJavaTypeDescriptor();
 	}
@@ -88,15 +76,5 @@ public class SqmEntityJoin extends AbstractSqmJoin implements SqmQualifiedJoin {
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitQualifiedEntityJoinFromElement( this );
-	}
-
-	@Override
-	public PersistenceType getPersistenceType() {
-		return PersistenceType.ENTITY;
-	}
-
-	@Override
-	public Class getJavaType() {
-		return getJavaTypeDescriptor().getJavaType();
 	}
 }

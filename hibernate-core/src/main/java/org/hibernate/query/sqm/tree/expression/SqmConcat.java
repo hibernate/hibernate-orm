@@ -6,29 +6,36 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import java.util.function.Supplier;
-
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmConcat implements SqmExpression {
+public class SqmConcat extends AbstractSqmExpression {
 	private final SqmExpression lhsOperand;
 	private final SqmExpression rhsOperand;
 
-	private final BasicValuedExpressableType resultType;
-
 	public SqmConcat(SqmExpression lhsOperand, SqmExpression rhsOperand) {
-		this( lhsOperand, rhsOperand, (BasicValuedExpressableType) lhsOperand.getExpressableType() );
-	}
+		super( null );
 
-	public SqmConcat(SqmExpression lhsOperand, SqmExpression rhsOperand, BasicValuedExpressableType resultType) {
 		this.lhsOperand = lhsOperand;
 		this.rhsOperand = rhsOperand;
-		this.resultType = resultType;
+
+		applyInferableType( StandardSpiBasicTypes.STRING );
+	}
+
+	public SqmConcat(SqmExpression lhsOperand, SqmExpression rhsOperand, BasicValuedExpressableType<?> resultType) {
+		super( resultType );
+
+		this.lhsOperand = lhsOperand;
+		this.rhsOperand = rhsOperand;
+
+		this.lhsOperand.applyInferableType( resultType );
+		this.rhsOperand.applyInferableType( resultType );
 	}
 
 	public SqmExpression getLeftHandOperand() {
@@ -40,40 +47,16 @@ public class SqmConcat implements SqmExpression {
 	}
 
 	@Override
-	public BasicValuedExpressableType getExpressableType() {
-		return resultType;
+	public BasicValuedExpressableType<?> getExpressableType() {
+		return (BasicValuedExpressableType<?>) super.getExpressableType();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public Supplier<? extends BasicValuedExpressableType> getInferableType() {
-		return () -> {
-			// check LHS
-			{
-				final Supplier<? extends BasicValuedExpressableType> inference =
-						(Supplier<? extends BasicValuedExpressableType>) lhsOperand.getInferableType();
-				if ( inference != null ) {
-					final BasicValuedExpressableType inferableType = inference.get();
-					if ( inferableType != null ) {
-						return inferableType;
-					}
-				}
-			}
+	protected void internalApplyInferableType(ExpressableType<?> newType) {
+		lhsOperand.applyInferableType( newType );
+		rhsOperand.applyInferableType( newType );
 
-			// check RHS
-			{
-				final Supplier<? extends BasicValuedExpressableType> inference =
-						(Supplier<? extends BasicValuedExpressableType>) rhsOperand.getInferableType();
-				if ( inference != null ) {
-					final BasicValuedExpressableType inferableType = inference.get();
-					if ( inferableType != null ) {
-						return inferableType;
-					}
-				}
-			}
-
-			return resultType;
-		};
+		super.internalApplyInferableType( newType );
 	}
 
 	@Override

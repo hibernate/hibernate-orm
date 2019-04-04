@@ -11,6 +11,7 @@ import java.util.List;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.produce.function.spi.SelfRenderingFunctionSupport;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -22,12 +23,13 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 public class SelfRenderingSqmFunction implements SqlAstFunctionProducer {
 	private final SelfRenderingFunctionSupport renderingSupport;
 	private final List<SqmExpression> sqmArguments;
-	private final AllowableFunctionReturnType impliedResultType;
+
+	private AllowableFunctionReturnType<?> impliedResultType;
 
 	public SelfRenderingSqmFunction(
 			SelfRenderingFunctionSupport renderingSupport,
 			List<SqmExpression> sqmArguments,
-			AllowableFunctionReturnType impliedResultType) {
+			AllowableFunctionReturnType<?> impliedResultType) {
 		this.renderingSupport = renderingSupport;
 		this.sqmArguments = sqmArguments;
 		this.impliedResultType = impliedResultType;
@@ -49,6 +51,11 @@ public class SelfRenderingSqmFunction implements SqlAstFunctionProducer {
 	@Override
 	public AllowableFunctionReturnType getExpressableType() {
 		return impliedResultType;
+	}
+
+	@Override
+	public void applyInferableType(ExpressableType<?> type) {
+		this.impliedResultType = (AllowableFunctionReturnType<?>) type;
 	}
 
 	public SelfRenderingFunctionSupport getRenderingSupport() {

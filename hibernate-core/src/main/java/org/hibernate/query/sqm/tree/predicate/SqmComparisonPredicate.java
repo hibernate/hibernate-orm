@@ -6,11 +6,9 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
-import java.util.function.Supplier;
-
+import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.tree.expression.InferableTypeSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 
@@ -31,19 +29,13 @@ public class SqmComparisonPredicate implements SqmPredicate, NegatableSqmPredica
 		this.rightHandExpression = rightHandExpression;
 		this.operator = operator;
 
-		if ( rightHandExpression instanceof InferableTypeSqmExpression ) {
-			final Supplier<? extends ExpressableType> inference = leftHandExpression.getInferableType();
-			if ( inference != null ) {
-				( (InferableTypeSqmExpression) rightHandExpression ).impliedType( inference );
-			}
-		}
+		final ExpressableType<?> expressableType = QueryHelper.highestPrecedenceType(
+				leftHandExpression.getExpressableType(),
+				rightHandExpression.getExpressableType()
+		);
 
-		if ( leftHandExpression instanceof InferableTypeSqmExpression ) {
-			final Supplier<? extends ExpressableType> inference = rightHandExpression.getInferableType();
-			if ( inference != null ) {
-				( (InferableTypeSqmExpression) leftHandExpression ).impliedType( rightHandExpression.getInferableType() );
-			}
-		}
+		leftHandExpression.applyInferableType( expressableType );
+		rightHandExpression.applyInferableType( expressableType );
 	}
 
 	public SqmExpression getLeftHandExpression() {

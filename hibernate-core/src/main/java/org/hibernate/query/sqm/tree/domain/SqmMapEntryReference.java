@@ -7,11 +7,9 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import java.util.Map;
-import java.util.function.Supplier;
 
 import org.hibernate.metamodel.model.domain.spi.PluralValuedNavigable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
@@ -53,8 +51,7 @@ public class SqmMapEntryReference implements SqmExpression, ExpressableType {
 	}
 
 	@Override
-	public Supplier<? extends ExpressableType> getInferableType() {
-		return () -> this;
+	public void applyInferableType(ExpressableType<?> type) {
 	}
 
 	@Override

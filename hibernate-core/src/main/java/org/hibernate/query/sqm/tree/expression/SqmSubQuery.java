@@ -6,33 +6,19 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import java.util.function.Supplier;
-
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmSubQuery implements SqmExpression {
+public class SqmSubQuery extends AbstractSqmExpression {
 	private final SqmQuerySpec querySpec;
-	private final ExpressableType expressableType;
 
 	public SqmSubQuery(SqmQuerySpec querySpec, ExpressableType expressableType) {
+		super( expressableType );
 		this.querySpec = querySpec;
-		this.expressableType = expressableType;
-	}
-
-	@Override
-	public ExpressableType getExpressableType() {
-		return expressableType;
-	}
-
-	@Override
-	public Supplier<? extends ExpressableType> getInferableType() {
-		return this::getExpressableType;
 	}
 
 	public SqmQuerySpec getQuerySpec() {
@@ -48,15 +34,4 @@ public class SqmSubQuery implements SqmExpression {
 	public String asLoggableText() {
 		return "<subquery>";
 	}
-
-	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return expressableType.getJavaTypeDescriptor();
-	}
-
-//	@Override
-//	public QueryResult createDomainResult(
-//			Expression expression, String resultVariable, QueryResultCreationContext creationContext) {
-//		throw new TreeException( "Selecting a SubQuery type is not allowed.");
-//	}
 }

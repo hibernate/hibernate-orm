@@ -13,7 +13,7 @@ import org.hibernate.query.sqm.AliasCollisionException;
 import org.hibernate.query.sqm.produce.spi.ImplicitAliasGenerator;
 import org.hibernate.query.sqm.tree.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
-import org.hibernate.query.sqm.tree.predicate.InSubQuerySqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmInSubQueryPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -103,8 +103,8 @@ public class AliasCollisionTest extends BaseSqmUnitTest {
 		assertThat( roots.get( 0 ).getJoins(), isEmpty() );
 		assertThat( roots.get( 0 ).getExplicitAlias(), is( "a" ) );
 
-		assertThat( querySpec.getWhereClause().getPredicate(), instanceOf( InSubQuerySqmPredicate.class ) );
-		final InSubQuerySqmPredicate predicate = (InSubQuerySqmPredicate) querySpec.getWhereClause().getPredicate();
+		assertThat( querySpec.getWhereClause().getPredicate(), instanceOf( SqmInSubQueryPredicate.class ) );
+		final SqmInSubQueryPredicate predicate = (SqmInSubQueryPredicate) querySpec.getWhereClause().getPredicate();
 
 		final SqmRoot subQueryRoot = predicate.getSubQueryExpression()
 				.getQuerySpec()
@@ -132,8 +132,8 @@ public class AliasCollisionTest extends BaseSqmUnitTest {
 		assertThat( roots.get( 0 ).getJoins(), isEmpty() );
 		assertThat( roots.get( 0 ).getExplicitAlias(), is( "a" ) );
 
-		assertThat( querySpec.getWhereClause().getPredicate(), instanceOf( InSubQuerySqmPredicate.class ) );
-		final InSubQuerySqmPredicate predicate = (InSubQuerySqmPredicate) querySpec.getWhereClause().getPredicate();
+		assertThat( querySpec.getWhereClause().getPredicate(), instanceOf( SqmInSubQueryPredicate.class ) );
+		final SqmInSubQueryPredicate predicate = (SqmInSubQueryPredicate) querySpec.getWhereClause().getPredicate();
 
 		final SqmQuerySpec subQuerySpec = predicate.getSubQueryExpression().getQuerySpec();
 

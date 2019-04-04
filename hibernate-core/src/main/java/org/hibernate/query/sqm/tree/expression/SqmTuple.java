@@ -9,8 +9,6 @@ package org.hibernate.query.sqm.tree.expression;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
-import java.util.function.Supplier;
 
 import org.hibernate.QueryException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
@@ -24,7 +22,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class SqmTuple implements SqmExpression {
+public class SqmTuple extends AbstractSqmExpression {
 	private final List<SqmExpression> groupedExpressions;
 
 	public SqmTuple(SqmExpression groupedExpression) {
@@ -36,6 +34,7 @@ public class SqmTuple implements SqmExpression {
 	}
 
 	public SqmTuple(List<SqmExpression> groupedExpressions) {
+		super( null );
 		if ( groupedExpressions.isEmpty() ) {
 			throw new QueryException( "tuple grouping cannot be constructed over zero expressions" );
 		}
@@ -44,24 +43,24 @@ public class SqmTuple implements SqmExpression {
 
 	@Override
 	public ExpressableType getExpressableType() {
-		final Optional<SqmExpression> first = groupedExpressions.stream()
-				.filter( sqmExpression -> sqmExpression.getExpressableType() != null )
-				.findFirst();
-		if ( !first.isPresent() ) {
-			return null;
+		final ExpressableType<?> expressableType = super.getExpressableType();
+		if ( expressableType != null ) {
+			return expressableType;
 		}
 
-		return first.get().getExpressableType();
-	}
+		for ( SqmExpression groupedExpression : groupedExpressions ) {
+			final ExpressableType<?> groupedExpressionExpressableType = groupedExpression.getExpressableType();
+			if ( groupedExpressionExpressableType != null ) {
+				return groupedExpressionExpressableType;
+			}
+		}
 
-	@Override
-	public Supplier<ExpressableType> getInferableType() {
 		return null;
 	}
 
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return null;
+		return walker.visitTuple( this );
 	}
 
 	@Override

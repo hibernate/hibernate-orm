@@ -793,6 +793,7 @@ identifier
 	| LEFT
 	| LENGTH
 	| LIKE
+	| LIMIT
 	| LIST
 	| LOWER
 	| MAP
@@ -802,6 +803,7 @@ identifier
 	| MEMBER
 	| MONTH
 	| OBJECT
+	| OFFSET
 	| ON
 	| OR
 	| ORDER

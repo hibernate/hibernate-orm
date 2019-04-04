@@ -19,6 +19,8 @@ public class SqmAssignment {
 	public SqmAssignment(SqmPath targetPath, SqmExpression value) {
 		this.targetPath = targetPath;
 		this.value = value;
+
+		this.value.applyInferableType( targetPath.getExpressableType() );
 	}
 
 	/**

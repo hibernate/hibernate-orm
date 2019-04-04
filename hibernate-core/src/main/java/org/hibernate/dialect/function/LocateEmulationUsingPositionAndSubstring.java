@@ -135,16 +135,15 @@ public class LocateEmulationUsingPositionAndSubstring
 		);
 
 		final SqmExpression startMinusOne = new SqmBinaryArithmetic(
-				start,
-				BinaryArithmeticOperator.SUBTRACT,
+				BinaryArithmeticOperator.SUBTRACT, start,
 				LiteralHelper.INTEGER_ONE,
 				StandardSpiBasicTypes.INTEGER
 		);
 
 
 		final SqmExpression positionPluStartMinusOne = new SqmBinaryArithmetic(
-				positionCall,
 				BinaryArithmeticOperator.ADD,
+				positionCall,
 				startMinusOne,
 				StandardSpiBasicTypes.INTEGER
 		);

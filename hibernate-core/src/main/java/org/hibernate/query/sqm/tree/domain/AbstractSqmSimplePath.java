@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import java.util.function.Supplier;
-
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -63,16 +61,6 @@ public abstract class AbstractSqmSimplePath implements SqmNavigableReference {
 	@Override
 	public void setExplicitAlias(String explicitAlias) {
 		this.explicitAlias = explicitAlias;
-	}
-
-	@Override
-	public Navigable getExpressableType() {
-		return getReferencedNavigable();
-	}
-
-	@Override
-	public Supplier<? extends Navigable> getInferableType() {
-		return this::getReferencedNavigable;
 	}
 
 	@Override

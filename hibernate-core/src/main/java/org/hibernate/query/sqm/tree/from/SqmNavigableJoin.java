@@ -6,9 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
-import java.util.function.Supplier;
-
-import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.SqmCreationHelper;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
@@ -66,16 +63,6 @@ public class SqmNavigableJoin
 	}
 
 	@Override
-	public NavigableContainer getExpressableType() {
-		return getReferencedNavigable();
-	}
-
-	@Override
-	public Supplier<? extends NavigableContainer> getInferableType() {
-		return this::getReferencedNavigable;
-	}
-
-	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
 		return getReferencedNavigable().getJavaTypeDescriptor();
 	}
@@ -102,15 +89,5 @@ public class SqmNavigableJoin
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitQualifiedAttributeJoinFromElement( this );
-	}
-
-	@Override
-	public PersistenceType getPersistenceType() {
-		return getReferencedNavigable().getPersistenceType();
-	}
-
-	@Override
-	public Class getJavaType() {
-		return getReferencedNavigable().getJavaType();
 	}
 }

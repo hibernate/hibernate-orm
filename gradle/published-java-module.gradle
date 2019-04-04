@@ -155,6 +155,43 @@ publishing {
 				artifactId = project.name
 				version = project.version
 
+				description = project.description
+				url = 'http://hibernate.org/orm'
+
+				organization {
+					name = 'Hibernate.org'
+					url = 'http://hibernate.org'
+				}
+
+				licenses {
+					license {
+						name = 'GNU Library General Public License v2.1 or later'
+						url = 'http://www.opensource.org/licenses/LGPL-2.1'
+						comments = 'See discussion at http://hibernate.org/community/license/ for more details.'
+						distribution = 'repo'
+					}
+				}
+
+				scm {
+					url = 'http://github.com/hibernate/hibernate-orm'
+					connection = 'scm:git:http://github.com/hibernate/hibernate-orm.git'
+					developerConnection = 'scm:git:git@github.com:hibernate/hibernate-orm.git'
+				}
+
+				developers {
+					developer {
+						id = 'hibernate-team'
+						name = 'The Hibernate Development Team'
+						organization = 'Hibernate.org'
+						organizationUrl = 'http://hibernate.org'
+					}
+				}
+
+				issueManagement {
+					system = 'jira'
+					url = 'https://hibernate.atlassian.net/browse/HHH'
+				}
+
 				distributionManagement {
 					relocation {
 						groupId = 'org.hibernate.orm'

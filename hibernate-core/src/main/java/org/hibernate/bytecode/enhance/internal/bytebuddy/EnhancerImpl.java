@@ -14,7 +14,6 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -126,7 +125,7 @@ public class EnhancerImpl implements Enhancer {
 	public synchronized byte[] enhance(String className, byte[] originalBytes) throws EnhancementException {
 		//Classpool#describe does not accept '/' in the description name as it expects a class name. See HHH-12545
 		final String safeClassName = className.replace( '/', '.' );
-		classFileLocator.addNameAndBytes( safeClassName, originalBytes );
+		classFileLocator.setClassNameAndBytes( safeClassName, originalBytes );
 		try {
 			final TypeDescription typeDescription = typePool.describe( safeClassName ).resolve();
 
@@ -539,7 +538,10 @@ public class EnhancerImpl implements Enhancer {
 
 	private class EnhancerClassFileLocator extends ClassFileLocator.ForClassLoader {
 
-		private Map<String,Resolution> nameToResolutionMap = new HashMap<>();
+		// The name of the class to (possibly be) transformed.
+		private String className;
+		// The explicitly resolved Resolution for the class to (possibly be) transformed.
+		private Resolution resolution;
 
 		/**
 		 * Creates a new class file locator for the given class loader.
@@ -551,20 +553,21 @@ public class EnhancerImpl implements Enhancer {
 		}
 
 		@Override
-		public Resolution locate(String name) throws IOException {
-			Resolution resolution = nameToResolutionMap.get( name );
-			if ( resolution != null ) {
+		public Resolution locate(String className) throws IOException {
+			assert className != null;
+			if ( className.equals( this.className ) ) {
 				return resolution;
 			}
 			else {
-				return super.locate( name );
+				return super.locate( className );
 			}
 		}
 
-		void addNameAndBytes(String name, byte[] bytes ) {
-			assert name != null;
+		void setClassNameAndBytes(String className, byte[] bytes) {
+			assert className != null;
 			assert bytes != null;
-			nameToResolutionMap.put( name, new Resolution.Explicit( bytes) );
+			this.className = className;
+			this.resolution = new Resolution.Explicit( bytes);
 		}
 	}
 }

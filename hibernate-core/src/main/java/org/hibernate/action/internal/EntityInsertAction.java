@@ -31,7 +31,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
  *
  * @see EntityIdentityInsertAction
  */
-public final class EntityInsertAction extends AbstractEntityInsertAction {
+public class EntityInsertAction extends AbstractEntityInsertAction {
 	private Object version;
 	private Object cacheEntry;
 

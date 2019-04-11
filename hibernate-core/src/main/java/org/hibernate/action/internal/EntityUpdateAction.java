@@ -33,7 +33,7 @@ import org.hibernate.type.internal.TypeHelper;
 /**
  * The action for performing entity updates.
  */
-public final class EntityUpdateAction extends EntityAction {
+public class EntityUpdateAction extends EntityAction {
 	private final Object[] state;
 	private final Object[] previousState;
 	private final Object previousVersion;

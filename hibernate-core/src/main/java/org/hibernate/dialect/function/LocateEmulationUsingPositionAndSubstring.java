@@ -163,7 +163,7 @@ public class LocateEmulationUsingPositionAndSubstring
 				queryEngine.getCriteriaBuilder()
 		);
 
-		return new SqmTuple( positionPluStartMinusOne, queryEngine.getCriteriaBuilder() );
+		return positionPluStartMinusOne;
 	}
 
 	private SqmExpression build2ArgVariation(

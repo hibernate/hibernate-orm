@@ -44,6 +44,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
+import org.hibernate.metamodel.model.creation.internal.JpaStaticModelBindingProcess;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
@@ -61,6 +62,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting.DISABLED;
 import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting.determineJpaMetaModelPopulationSetting;
 
 /**
@@ -284,6 +286,8 @@ public class RuntimeModelCreationProcess implements ResolutionContext {
 		// todo (6.0) : this needs to happen earlier
 		//		specifically, needs to happen before we start creating the descriptors.  ideally
 		//		the descriptors can just get it from the context, etc
+		//		+
+		//		something like a `Future`?
 		sessionFactory.getCache().prime(
 				regionConfigBuilders.values()
 						.stream()
@@ -291,28 +295,13 @@ public class RuntimeModelCreationProcess implements ResolutionContext {
 						.collect( Collectors.toSet() )
 		);
 
-		return inFlightRuntimeModel.complete( sessionFactory, metadataBuildingContext );
+		final MetamodelImplementor completedDomainModel = inFlightRuntimeModel.complete( sessionFactory, metadataBuildingContext );
+		if ( jpaMetaModelPopulationSetting != DISABLED ) {
+			JpaStaticModelBindingProcess.processBindings( completedDomainModel, jpaMetaModelPopulationSetting );
+		}
+		return completedDomainModel;
 	}
 
-//	private void resolveForeignKeys(
-//			InFlightMetadataCollector mappingMetadata,
-//			RuntimeModelCreationContext creationContext) {
-//		final List<Function<RuntimeModelCreationContext, Boolean>> resolvers = mappingMetadata.getForeignKeyCreators();
-//
-//		while ( true ) {
-//			final boolean anyRemoved = resolvers.removeIf(
-//					resolver -> resolver.apply( creationContext )
-//			);
-//
-//			if ( ! anyRemoved ) {
-//				if ( ! resolvers.isEmpty() ) {
-//					throw new MappingException( "Unable to complete initialization of boot meta-model" );
-//				}
-//
-//				break;
-//			}
-//		}
-//	}
 
 	private void walkSupers(
 			EntityMappingHierarchy bootHierarchy,

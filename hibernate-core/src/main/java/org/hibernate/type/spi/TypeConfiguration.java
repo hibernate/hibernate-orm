@@ -207,6 +207,9 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	@SuppressWarnings("unchecked")
 	public <J> BasicTypeResolution<J> standardExpressableTypeForJavaType(BasicJavaDescriptor<J> javaTypeDescriptor) {
+		if ( javaTypeDescriptor == null ) {
+			return null;
+		}
 		return basicTypeResolutionsByJavaType.computeIfAbsent(
 				javaTypeDescriptor,
 				StandardJavaTypeResolutionImpl::new

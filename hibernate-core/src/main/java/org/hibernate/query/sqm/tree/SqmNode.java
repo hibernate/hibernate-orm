@@ -20,7 +20,7 @@ public interface SqmNode extends JpaCriteriaNode {
 	Logger log = Logger.getLogger( SqmNode.class );
 
 	default String asLoggableText() {
-		log.warnf( "#asLoggableText not defined for %s - using #toString", getClass().getName() );
+		log.debugf( "#asLoggableText not defined for %s - using #toString", getClass().getName() );
 		return toString();
 	}
 

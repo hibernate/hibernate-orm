@@ -831,7 +831,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 		try {
 			return new CastFunction(
-					(Expression) function.getExpressionToCast().accept( this ),
+					( (BasicValuedNavigableReference) function.getExpressionToCast().accept( this ) ).toSqlExpression( this ),
 					( (BasicValuedExpressableType) function.getExpressableType() ).getSqlExpressableType(),
 					function.getExplicitSqlCastTarget()
 			);

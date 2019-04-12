@@ -9,6 +9,10 @@ package org.hibernate.query.sqm.tree.expression;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.criteria.Expression;
+
+import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.criteria.JpaSearchedCase;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
@@ -18,7 +22,7 @@ import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 /**
  * @author Steve Ebersole
  */
-public class SqmCaseSearched<R> extends AbstractSqmExpression<R> {
+public class SqmCaseSearched<R> extends AbstractSqmExpression<R> implements JpaSearchedCase<R> {
 	private List<WhenFragment<R>> whenFragments = new ArrayList<>();
 	private SqmExpression<R> otherwise;
 
@@ -89,5 +93,35 @@ public class SqmCaseSearched<R> extends AbstractSqmExpression<R> {
 		public SqmExpression<R> getResult() {
 			return result;
 		}
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// JPA
+
+	@Override
+	public SqmCaseSearched<R> when(Expression<Boolean> condition, R result) {
+		when( nodeBuilder().wrap( condition ), nodeBuilder().literal( result ) );
+		return this;
+	}
+
+	@Override
+	public JpaSearchedCase<R> when(Expression<Boolean> condition, Expression<? extends R> result) {
+		//noinspection unchecked
+		when( nodeBuilder().wrap( condition ), (SqmExpression) result );
+		return this;
+	}
+
+	@Override
+	public JpaExpression<R> otherwise(R result) {
+		otherwise( nodeBuilder().literal( result ) );
+		return this;
+	}
+
+	@Override
+	public JpaExpression<R> otherwise(Expression<? extends R> result) {
+		//noinspection unchecked
+		otherwise( (SqmExpression) result );
+		return this;
 	}
 }

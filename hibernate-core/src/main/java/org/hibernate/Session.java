@@ -13,6 +13,7 @@ import java.util.List;
 import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
 import javax.persistence.FlushModeType;
+import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
@@ -21,6 +22,7 @@ import org.hibernate.graph.RootGraph;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.query.Query;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.stat.SessionStatistics;
 
 /**
@@ -1239,6 +1241,9 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 * @param listeners The listener(s) to add
 	 */
 	void addEventListeners(SessionEventListener... listeners);
+
+	@Override
+	HibernateCriteriaBuilder getCriteriaBuilder();
 
 	@Override
 	org.hibernate.query.Query createQuery(String queryString);

@@ -31,14 +31,12 @@ import javax.persistence.criteria.Subquery;
 
 import org.hibernate.NullPrecedence;
 import org.hibernate.SortOrder;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaExpression;
-import org.hibernate.query.criteria.JpaFunction;
-import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.criteria.JpaSearchedCase;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSimpleCase;
@@ -51,11 +49,12 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmRestrictedSubQueryExpression;
+import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
-import org.hibernate.query.sqm.tree.predicate.SqmInListPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -266,10 +265,10 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	<T> SqmExpression<T> nullLiteral(Class<T> resultClass);
 
 	@Override
-	<T> JpaParameterExpression<T> parameter(Class<T> paramClass);
+	<T> SqmParameter<T> parameter(Class<T> paramClass);
 
 	@Override
-	<T> JpaParameterExpression<T> parameter(Class<T> paramClass, String name);
+	<T> SqmParameter<T> parameter(Class<T> paramClass, String name);
 
 	@Override
 	SqmExpression<String> concat(Expression<String> x, Expression<String> y);
@@ -397,6 +396,26 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 
 	@Override
 	<R> JpaSearchedCase<R> selectCase();
+
+	@Override
+	<R> SqmTuple<R> tuple(
+			Class<R> tupleType,
+			JpaExpression<?>... expressions);
+
+	@Override
+	<R> SqmTuple<R> tuple(
+			Class<R> tupleType,
+			List<JpaExpression<?>> expressions);
+
+	@Override
+	<R> SqmTuple<R> tuple(
+			DomainType<R> tupleType,
+			JpaExpression<?>... expressions);
+
+	@Override
+	<R> SqmTuple<R> tuple(
+			DomainType<R> tupleType,
+			List<JpaExpression<?>> expressions);
 
 	@Override
 	SqmPredicate and(Expression<Boolean> x, Expression<Boolean> y);

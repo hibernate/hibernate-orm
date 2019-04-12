@@ -7,7 +7,6 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.QueryException;
@@ -23,17 +22,24 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  * Models a tuple of values, generally defined as a series of values
  * wrapped in parentheses, e.g. `(value1, value2, ..., valueN)`
  *
+ * todo (6.0) : possibly a place to centralize how a tuple is handled via a
+ * 		special EmbeddedValuedExpressableType as the tuple's `#getExpressableType`
+ * 		+
+ * 		it should honor `#
+ *
+ * it could implement EmbeddedValuedExpressableType
  * @author Steve Ebersole
  */
 public class SqmTuple<T> extends AbstractSqmExpression<T> implements JpaCompoundSelection<T> {
 	private final List<SqmExpression<?>> groupedExpressions;
 
-	public SqmTuple(SqmExpression<?> groupedExpression, NodeBuilder nodeBuilder) {
-		this( Collections.singletonList( groupedExpression ), nodeBuilder );
-	}
-
 	public SqmTuple(NodeBuilder nodeBuilder, SqmExpression<?>... groupedExpressions) {
 		this( Arrays.asList( groupedExpressions ), nodeBuilder );
+	}
+
+	public SqmTuple(NodeBuilder nodeBuilder, ExpressableType<T> type, SqmExpression<?>... groupedExpressions) {
+		this( Arrays.asList( groupedExpressions ), nodeBuilder );
+		applyInferableType( type );
 	}
 
 	public SqmTuple(List<SqmExpression<?>> groupedExpressions, NodeBuilder nodeBuilder) {
@@ -42,6 +48,11 @@ public class SqmTuple<T> extends AbstractSqmExpression<T> implements JpaCompound
 			throw new QueryException( "tuple grouping cannot be constructed over zero expressions" );
 		}
 		this.groupedExpressions = groupedExpressions;
+	}
+
+	public SqmTuple(List<SqmExpression<?>> groupedExpressions, ExpressableType<T> type, NodeBuilder nodeBuilder) {
+		this( groupedExpressions, nodeBuilder );
+		applyInferableType( type );
 	}
 
 	@Override
@@ -69,7 +80,7 @@ public class SqmTuple<T> extends AbstractSqmExpression<T> implements JpaCompound
 
 	@Override
 	public String asLoggableText() {
-		return null;
+		return toString();
 	}
 
 	@Override

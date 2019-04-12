@@ -37,6 +37,7 @@ import org.hibernate.NullPrecedence;
 import org.hibernate.QueryException;
 import org.hibernate.SortOrder;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.query.BinaryArithmeticOperator;
@@ -61,13 +62,17 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
+import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
+import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.SqmConcat;
 import org.hibernate.query.sqm.tree.expression.SqmCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmRestrictedSubQueryExpression;
+import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.expression.function.SqmAbsFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
@@ -324,6 +329,33 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 
 		//noinspection unchecked
 		return instantiation;
+	}
+
+
+
+	@Override
+	public SqmSortSpecification sort(JpaExpression<?> sortExpression, SortOrder sortOrder, NullPrecedence nullPrecedence) {
+		return new SqmSortSpecification( (SqmExpression) sortExpression, sortOrder, nullPrecedence );
+	}
+
+	@Override
+	public SqmSortSpecification sort(JpaExpression<?> sortExpression, SortOrder sortOrder) {
+		return new SqmSortSpecification( (SqmExpression) sortExpression, sortOrder );
+	}
+
+	@Override
+	public SqmSortSpecification sort(JpaExpression<?> sortExpression) {
+		return new SqmSortSpecification( (SqmExpression) sortExpression );
+	}
+
+	@Override
+	public SqmSortSpecification asc(Expression<?> x) {
+		return new SqmSortSpecification( (SqmExpression) x, SortOrder.ASCENDING );
+	}
+
+	@Override
+	public SqmSortSpecification desc(Expression<?> x) {
+		return new SqmSortSpecification( (SqmExpression) x, SortOrder.DESCENDING );
 	}
 
 	@Override
@@ -700,7 +732,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 	}
 
 	@Override
-	public <T> JpaParameterExpression<T> parameter(Class<T> paramClass) {
+	public <T> SqmCriteriaParameter<T> parameter(Class<T> paramClass) {
 		return new SqmCriteriaParameter<>(
 				getTypeConfiguration().standardExpressableTypeForJavaType( paramClass ),
 				false,
@@ -709,7 +741,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 	}
 
 	@Override
-	public <T> JpaParameterExpression<T> parameter(Class<T> paramClass, String name) {
+	public <T> SqmCriteriaParameter<T> parameter(Class<T> paramClass, String name) {
 		return new SqmCriteriaParameter<>(
 				name,
 				getTypeConfiguration().standardExpressableTypeForJavaType( paramClass ),
@@ -1287,14 +1319,75 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 	}
 
 	@Override
-	public <C, R> JpaSimpleCase<C, R> selectCase(Expression<? extends C> expression) {
-		return null;
+	public <C, R> SqmCaseSimple<C, R> selectCase(Expression<? extends C> expression) {
+		//noinspection unchecked
+		return new SqmCaseSimple<>( (SqmExpression) expression, this );
 	}
 
 	@Override
-	public <R> JpaSearchedCase<R> selectCase() {
-		return null;
+	public <R> SqmCaseSearched<R> selectCase() {
+		return new SqmCaseSearched<>( this );
 	}
+
+	@Override
+	public <R> SqmTuple<R> tuple(Class<R> tupleType, JpaExpression<?>... expressions) {
+		//noinspection unchecked
+		return new SqmTuple<R>(
+				(List) Arrays.asList( expressions ),
+//				getTypeConfiguration().standardExpressableTypeForJavaType( tupleType ),
+				this
+		);
+	}
+
+	@Override
+	public <R> SqmTuple<R> tuple(Class<R> tupleType, List<JpaExpression<?>> expressions) {
+		//noinspection unchecked
+		return new SqmTuple<R>(
+				(List) expressions,
+//				getTypeConfiguration().standardExpressableTypeForJavaType( tupleType ),
+				this
+		);
+	}
+
+	@Override
+	public <R> SqmTuple<R> tuple(DomainType<R> tupleType, JpaExpression<?>... expressions) {
+		//noinspection unchecked
+		return new SqmTuple<R>(
+				(List) Arrays.asList( expressions ),
+				tupleType,
+				this
+		);
+	}
+
+	@Override
+	public <R> SqmTuple<R> tuple(
+			DomainType<R> tupleType, List<JpaExpression<?>> expressions) {
+		//noinspection unchecked
+		return new SqmTuple<R>(
+				(List) Arrays.asList( expressions ),
+				tupleType,
+				this
+		);
+	}
+
+	@Override
+	public <M extends Map<?, ?>> SqmExpression<Integer> mapSize(JpaExpression<M> mapExpression) {
+		return new SqmCollectionSize( (SqmPath<?>) mapExpression, this );
+	}
+
+	@Override
+	public SqmExpression<Integer> mapSize(Map map) {
+		return new SqmLiteral<>( map.size(), StandardSpiBasicTypes.INTEGER, this );
+	}
+
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Predicates
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
 	public SqmPredicate and(Expression<Boolean> x, Expression<Boolean> y) {
@@ -1345,7 +1438,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 	@Override
 	public SqmPredicate not(Expression<Boolean> restriction) {
 		final SqmPredicate predicate = wrap( restriction );
-		return (SqmPredicate) predicate.not();
+		return predicate.not();
 	}
 
 	@Override
@@ -1792,40 +1885,5 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 	@Override
 	public <M extends Map<?, ?>> SqmPredicate isMapNotEmpty(JpaExpression<M> mapExpression) {
 		throw new NotYetImplementedFor6Exception();
-	}
-
-	@Override
-	public <M extends Map<?, ?>> SqmExpression<Integer> mapSize(JpaExpression<M> mapExpression) {
-		return new SqmCollectionSize( (SqmPath<?>) mapExpression, this );
-	}
-
-	@Override
-	public SqmExpression<Integer> mapSize(Map map) {
-		return new SqmLiteral<>( map.size(), StandardSpiBasicTypes.INTEGER, this );
-	}
-
-	@Override
-	public SqmSortSpecification sort(JpaExpression<?> sortExpression, SortOrder sortOrder, NullPrecedence nullPrecedence) {
-		return new SqmSortSpecification( (SqmExpression) sortExpression, sortOrder, nullPrecedence );
-	}
-
-	@Override
-	public SqmSortSpecification sort(JpaExpression<?> sortExpression, SortOrder sortOrder) {
-		return new SqmSortSpecification( (SqmExpression) sortExpression, sortOrder );
-	}
-
-	@Override
-	public SqmSortSpecification sort(JpaExpression<?> sortExpression) {
-		return new SqmSortSpecification( (SqmExpression) sortExpression );
-	}
-
-	@Override
-	public SqmSortSpecification asc(Expression<?> x) {
-		return new SqmSortSpecification( (SqmExpression) x, SortOrder.ASCENDING );
-	}
-
-	@Override
-	public SqmSortSpecification desc(Expression<?> x) {
-		return new SqmSortSpecification( (SqmExpression) x, SortOrder.DESCENDING );
 	}
 }

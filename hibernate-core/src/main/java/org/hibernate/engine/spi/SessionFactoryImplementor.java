@@ -9,8 +9,6 @@ package org.hibernate.engine.spi;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
-
 import javax.persistence.EntityGraph;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
@@ -42,7 +40,6 @@ import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.spi.ResultSetMappingDescriptor;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
@@ -125,6 +122,9 @@ public interface SessionFactoryImplementor
 	Interceptor getInterceptor();
 
 	QueryEngine getQueryEngine();
+
+	@Override
+	NodeBuilder getCriteriaBuilder();
 
 	/**
 	 * Retrieve fetch profile by name.

@@ -36,7 +36,6 @@ import javax.persistence.PersistenceException;
 import javax.persistence.PessimisticLockScope;
 import javax.persistence.StoredProcedureQuery;
 import javax.persistence.TransactionRequiredException;
-import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
@@ -145,6 +144,7 @@ import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.Query;
 import org.hibernate.query.named.spi.NamedCallableQueryMemento;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -3310,7 +3310,7 @@ public final class SessionImpl
 	}
 
 	@Override
-	public CriteriaBuilder getCriteriaBuilder() {
+	public NodeBuilder getCriteriaBuilder() {
 		checkOpen();
 		return getFactory().getCriteriaBuilder();
 	}

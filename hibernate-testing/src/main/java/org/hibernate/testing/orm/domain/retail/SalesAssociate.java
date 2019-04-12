@@ -20,6 +20,14 @@ public class SalesAssociate {
 
 	private Name name;
 
+	public SalesAssociate() {
+	}
+
+	public SalesAssociate(Integer id, Name name) {
+		this.id = id;
+		this.name = name;
+	}
+
 	@Id
 	public Integer getId() {
 		return id;

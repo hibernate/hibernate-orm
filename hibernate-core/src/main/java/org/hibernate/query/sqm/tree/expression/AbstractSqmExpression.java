@@ -11,15 +11,18 @@ import java.math.BigInteger;
 import java.util.Collection;
 import javax.persistence.criteria.Expression;
 
+import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.criteria.JpaSelection;
-import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.SqmTreeCreationLogger;
+import org.hibernate.query.sqm.tree.expression.function.SqmCastFunction;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
+
+import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
 
 /**
  * @author Steve Ebersole
@@ -43,7 +46,7 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 			return;
 		}
 
-		final ExpressableType newType = QueryHelper.highestPrecedenceType( this.type, type );
+		final ExpressableType newType = highestPrecedenceType( this.type, type );
 		if ( newType != null && newType != this.type ) {
 			internalApplyInferableType( newType );
 		}
@@ -57,7 +60,7 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 				this.type,
 				newType
 		);
-		this.type = (ExpressableType<T>) newType;
+		this.type = (ExpressableType<T>) highestPrecedenceType( newType, this.type );
 	}
 
 	@Override
@@ -67,97 +70,51 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public SqmExpression<Long> asLong() {
-		applyInferableType( StandardSpiBasicTypes.LONG );
-		return (SqmExpression) this;
+		return castAs( StandardSpiBasicTypes.LONG );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public SqmExpression<Integer> asInteger() {
-		applyInferableType( StandardSpiBasicTypes.INTEGER );
-		return (SqmExpression) this;
+		return castAs( StandardSpiBasicTypes.INTEGER );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public SqmExpression<Float> asFloat() {
-		applyInferableType( StandardSpiBasicTypes.FLOAT );
-		return (SqmExpression) this;
+		return castAs( StandardSpiBasicTypes.FLOAT );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public SqmExpression<Double> asDouble() {
-		applyInferableType( StandardSpiBasicTypes.DOUBLE );
-		return (SqmExpression) this;
+		return castAs( StandardSpiBasicTypes.DOUBLE );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public SqmExpression<BigDecimal> asBigDecimal() {
-		applyInferableType( StandardSpiBasicTypes.BIG_DECIMAL );
-		return (SqmExpression) this;
+		return castAs( StandardSpiBasicTypes.BIG_DECIMAL );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public SqmExpression<BigInteger> asBigInteger() {
-		applyInferableType( StandardSpiBasicTypes.BIG_INTEGER );
-		return (SqmExpression) this;
+		return castAs( StandardSpiBasicTypes.BIG_INTEGER );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public SqmExpression<String> asString() {
-		applyInferableType( StandardSpiBasicTypes.STRING );
-		return (SqmExpression) this;
+		return castAs( StandardSpiBasicTypes.STRING );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <X> SqmExpression<X> as(Class<X> type) {
-		applyInferableType(
+		return castAs(
 				nodeBuilder().getDomainModel()
 						.getTypeConfiguration()
 						.standardExpressableTypeForJavaType( type )
 		);
+	}
 
-		if ( type.isInstance( this ) ) {
-			//noinspection unchecked
-			return (SqmExpression<X>) this;
-		}
-
-		if ( String.class.equals( type ) ) {
-			return (SqmExpression<X>) asString();
-		}
-
-		if ( Integer.class.equals( type ) ) {
-			return (SqmExpression<X>) asInteger();
-		}
-
-		if ( Long.class.equals( type ) ) {
-			return (SqmExpression<X>) asLong();
-		}
-
-		if ( Double.class.equals( type ) ) {
-			return (SqmExpression<X>) asDouble();
-		}
-
-		if ( Float.class.equals( type ) ) {
-			return (SqmExpression<X>) asFloat();
-		}
-
-		if ( BigInteger.class.equals( type ) ) {
-			return (SqmExpression<X>) asBigInteger();
-		}
-
-		if ( BigDecimal.class.equals( type ) ) {
-			return (SqmExpression<X>) asBigDecimal();
-		}
-
-		throw new UnsupportedOperationException( "SqmStaticEnumReference cannot be cast as `" + type.getName() + "`" );
+	protected <X> SqmExpression<X> castAs(AllowableFunctionReturnType<X> type) {
+		return new SqmCastFunction<>( this, type, null );
 	}
 
 	@Override

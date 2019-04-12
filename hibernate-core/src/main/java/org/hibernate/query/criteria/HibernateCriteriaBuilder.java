@@ -32,6 +32,8 @@ import javax.persistence.criteria.Subquery;
 import org.hibernate.NullPrecedence;
 import org.hibernate.SessionFactory;
 import org.hibernate.SortOrder;
+import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.query.JpaTuple;
 
 /**
  * Hibernate extensions to the JPA CriteriaBuilder.
@@ -362,6 +364,65 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Override
 	<R> JpaSearchedCase<R> selectCase();
 
+	/**
+	 * Create a tuple, as in a composite value, usable in any
+	 * part of the query.
+	 *
+	 * @apiNote This is different from the purely JPA form
+	 * {@link CriteriaBuilder#tuple} which is intended only for use as
+	 * the selection in a root query.
+	 *
+	 * @param tupleType The Java type
+	 * @param expressions The individual expressions making up the tuple
+	 */
+	<R> JpaCompoundSelection<R> tuple(
+			Class<R> tupleType,
+			JpaExpression<?>... expressions);
+
+	/**
+	 * Create a tuple, as in a composite value, usable in any
+	 * part of the query.
+	 *
+	 * @apiNote This is different from the purely JPA form
+	 * {@link CriteriaBuilder#tuple} which is intended only for use as
+	 * the selection in a root query.
+	 *
+	 * @param tupleType The Java type
+	 * @param expressions The individual expressions making up the tuple
+	 */
+	<R> JpaCompoundSelection<R> tuple(
+			Class<R> tupleType,
+			List<JpaExpression<?>> expressions);
+
+	/**
+	 * Create a tuple, as in a composite value, usable in any
+	 * part of the query.
+	 *
+	 * @apiNote This is different from the purely JPA form
+	 * {@link CriteriaBuilder#tuple} which is intended only for use as
+	 * the selection in a root query.
+	 *
+	 * @param tupleType The metamodel DomainType descriptor to apply to the tuple
+	 * @param expressions The individual expressions making up the tuple
+	 */
+	<R> JpaCompoundSelection<R> tuple(
+			DomainType<R> tupleType,
+			JpaExpression<?>... expressions);
+
+	/**
+	 * Create a tuple, as in a composite value, usable in any
+	 * part of the query.
+	 *
+	 * @apiNote This is different from the purely JPA form
+	 * {@link CriteriaBuilder#tuple} which is intended only for use as
+	 * the selection in a root query.
+	 *
+	 * @param tupleType The metamodel DomainType descriptor to apply to the tuple
+	 * @param expressions The individual expressions making up the tuple
+	 */
+	<R> JpaCompoundSelection<R> tuple(
+			DomainType<R> tupleType,
+			List<JpaExpression<?>> expressions);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
